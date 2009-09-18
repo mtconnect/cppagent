@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices>
+  <Header version="0.9" sender="localhost" creationTime="2009-03-30T15:18:50-07:00" bufferSize="100000" instanceId="1236966574"/>
+  <Devices>
+    <Device iso841Class="6" name="CMP" id="4" uuid="CMP">
+      <DataItems>
+        <DataItem type="ALARM" name="device_alarm" category="EVENT" id="3"/>
+      </DataItems>
+      <Components>
+        <Axes name="Axes" id="5">
+          <Components>
+            <Linear name="Z" id="6">
+              <DataItems>
+                <DataItem type="FRICTION" name="Zfriction" category="SAMPLE" id="7">
+                  <Source>Friction</Source>
+                </DataItem>
+                <DataItem type="POSITION" nativeUnits="MILLIMETER" name="Zpos" category="SAMPLE" subType="ACTUAL" id="8" units="MILLIMETER">
+                  <Source>Head</Source>
+                </DataItem>
+              </DataItems>
+            </Linear>
+          </Components>
+        </Axes>
+        <Thermostat name="Thermostat" id="9">
+          <DataItems>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="Temp" category="SAMPLE" id="10" units="CELSIUS"/>
+          </DataItems>
+        </Thermostat>
+        <Power name="power" id="2">
+          <DataItems>
+            <DataItem type="POWER_STATUS" name="power" category="EVENT" id="1">
+              <Source>Power</Source>
+            </DataItem>
+          </DataItems>
+        </Power>
+      </Components>
+    </Device>
+    <Device iso841Class="6" name="MoriSeiki" id="14">
+      <DataItems>
+        <DataItem type="ALARM" name="device_alarm" category="EVENT" id="13"/>
+      </DataItems>
+      <Components>
+        <Axes name="Axes" id="15">
+          <DataItems>
+            <DataItem type="PATH_FEEDRATE" nativeUnits="MILLIMETER/SECOND" name="F" category="SAMPLE" subType="ACTUAL" id="22" units="MILLIMETER/SECOND">
+              <Source>path_feedrate</Source>
+            </DataItem>
+          </DataItems>
+          <Components>
+            <Spindle name="S" id="20">
+              <DataItems>
+                <DataItem type="SPINDLE_SPEED" nativeUnits="REVOLUTION/MINUTE" name="Sact" category="SAMPLE" subType="ACTUAL" id="21" units="REVOLUTION/MINUTE">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+                <DataItem type="LOAD" nativeUnits="NEWTON" name="SLoad" category="SAMPLE" id="23" units="NEWTON"/>
+              </DataItems>
+            </Spindle>
+            <Linear name="X" id="24">
+              <DataItems>
+                <DataItem type="POSITION" nativeUnits="MILLIMETER" name="Xact" category="SAMPLE" subType="ACTUAL" id="25" units="MILLIMETER"/>
+                <DataItem type="LOAD" nativeUnits="NEWTON" name="XLoad" category="SAMPLE" id="26" units="NEWTON"/>
+              </DataItems>
+            </Linear>
+            <Linear name="Y" id="27">
+              <DataItems>
+                <DataItem type="POSITION" nativeUnits="MILLIMETER" name="Yact" category="SAMPLE" subType="ACTUAL" id="29" units="MILLIMETER"/>
+                <DataItem type="LOAD" nativeUnits="NEWTON" name="YLoad" category="SAMPLE" id="30" units="NEWTON"/>
+              </DataItems>
+            </Linear>
+            <Linear name="Z" id="28">
+              <DataItems>
+                <DataItem type="POSITION" nativeUnits="MILLIMETER" name="Zact" category="SAMPLE" subType="ACTUAL" id="31" units="MILLIMETER"/>
+                <DataItem type="LOAD" nativeUnits="NEWTON" name="ZLoad" category="SAMPLE" id="32" units="NEWTON"/>
+              </DataItems>
+            </Linear>
+          </Components>
+        </Axes>
+        <Thermostat name="archrock" id="37">
+          <DataItems>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="node-1-ADC0ReadEvent" category="SAMPLE" id="38" units="CELSIUS"/>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="node-1-ADC1ReadEvent" category="SAMPLE" id="39" units="CELSIUS"/>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="node-2-ADC0ReadEvent" category="SAMPLE" id="40" units="CELSIUS"/>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="node-2-ADC1ReadEvent" category="SAMPLE" id="41" units="CELSIUS"/>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="node-3-ADC0ReadEvent " category="SAMPLE" id="42" units="CELSIUS"/>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="node-3-ADC1ReadEvent " category="SAMPLE" id="43" units="CELSIUS"/>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="node-4-ADC0ReadEvent " category="SAMPLE" id="44" units="CELSIUS"/>
+            <DataItem type="TEMPERATURE" nativeUnits="CELSIUS" name="node-4-ADC1ReadEvent " category="SAMPLE" id="45" units="CELSIUS"/>
+          </DataItems>
+        </Thermostat>
+        <Controller name="controller" id="33">
+          <DataItems>
+            <DataItem type="LINE" name="line" category="EVENT" subType="ACTUAL" id="34"/>
+            <DataItem type="EXECUTION" name="execution" category="EVENT" id="35"/>
+            <DataItem type="CONTROLLER_MODE" name="mode" category="EVENT" id="36"/>
+            <DataItem type="PART" name="part" category="EVENT" id="c01"/>
+            <DataItem type="OPERATION" name="operation" category="EVENT" id="c02"/>
+          </DataItems>
+        </Controller>
+        <Power name="power" id="12">
+          <DataItems>
+            <DataItem type="POWER_STATUS" name="power" category="EVENT" id="11"/>
+            <DataItem type="WATTAGE" nativeUnits="WATT" name="power_sum" category="SAMPLE" id="46" units="WATT"/>
+            <DataItem type="WATTAGE" nativeUnits="WATT" name="power_a" category="SAMPLE" id="47" units="WATT"/>
+            <DataItem type="WATTAGE" nativeUnits="WATT" name="power_b" category="SAMPLE" id="48" units="WATT"/>
+            <DataItem type="WATTAGE" nativeUnits="WATT" name="power_c" category="SAMPLE" id="49" units="WATT"/>
+            <DataItem type="VOLTAGE" nativeUnits="VOLT" name="volt_avg" category="SAMPLE" id="50" units="VOLT"/>
+            <DataItem type="VOLTAGE" nativeUnits="VOLT" name="volt_a" category="SAMPLE" id="51" units="VOLT"/>
+            <DataItem type="VOLTAGE" nativeUnits="VOLT" name="volt_b" category="SAMPLE" id="52" units="VOLT"/>
+            <DataItem type="VOLTAGE" nativeUnits="VOLT" name="volt_c" category="SAMPLE" id="53" units="VOLT"/>
+            <DataItem type="AMPERAGE" name="amp_a" category="SAMPLE" id="54"/>
+            <DataItem type="AMPERAGE" name="amp_b" category="SAMPLE" id="55"/>
+            <DataItem type="AMPERAGE" name="amp_c" category="SAMPLE" id="56"/>
+          </DataItems>
+        </Power>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>

@@ -1,0 +1,50 @@
+# The name of our project is "HELLO". CMakeLists files in this project can 
+# refer to the root source directory of the project as ${HELLO_SOURCE_DIR} and 
+# to the root binary directory of the project as ${HELLO_BINARY_DIR}. 
+cmake_minimum_required (VERSION 2.6) 
+
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake;${CMAKE_MODULE_PATH}")
+
+set(CMAKE_BUILD_TYPE DEBUG)
+set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
+set(CMAKE_FIND_APPBUNDLE NEVER)
+
+if(WIN32)
+  set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.7.3/include )
+  file(GLOB LibXML2_LIBRARIES ../win32/libxml2-2.7.3/lib/libxml2.lib )
+  set(Glibmm_INCLUDE_DIRS ../win32/glibmm-2.4/include)
+  file(GLOB Glibmm_LIBRARIES ../win32/glibmm-2.4/lib/glibmm.lib)
+  set(LibXML++_PKGCONF_INCLUDE_DIRS ../win32/libxml++-2.6/include)
+  set(LibXML++_PKGCONF_LIBRARY_DIRS ../win32/libxml++-2.6/lib)
+endif(WIN32)
+
+project (agent)
+
+set(agent_srcs cppagent.cpp 
+	       adapter.cpp 
+	       agent.cpp 
+	       component.cpp 
+	       component_event.cpp 
+	       connector.cpp
+	       data_item.cpp 
+	       device.cpp 
+	       globals.cpp 
+	       options.cpp
+	       xml_parser.cpp 
+	       xml_printer.cpp)
+
+include_directories(../lib)
+
+find_package(LibXML++ REQUIRED)
+
+add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
+include_directories(${LibXML++_INCLUDE_DIRS} ${Glib_INCLUDE_DIRS} ${Glibmm_INCLUDE_DIRS} 
+                    			  ${LibXML2_INCLUDE_DIRS} ${SigC++_INCLUDE_DIRS})
+
+add_executable(agent ${agent_srcs})
+target_link_libraries(agent ${LibXML++_LIBRARIES} ${Glibmm_LIBRARIES} 
+			    ${LibXML2_LIBRARIES})
+
+if(WIN32)
+  configure_file(../win32/libxml++-2.6/bin/xml++-2.6.dll ${RUNTIME_OUTPUT_DIRECTORY} COPYONLY)
+endif(WIN32)

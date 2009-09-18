@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectStreams xmlns:m="urn:mtconnect.com:MTConnectStreams:1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.com:MTConnectStreams:1.0" xsi:schemaLocation="urn:mtconnect.com:MTConnectStreams:1.0 /schemas/MTConnectStreams.xsd">
+  <Header creationTime="" sender="localhost" instanceId="" bufferSize="" version="1.0" nextSequence="1" firstSequence="1" lastSequence="0" />
+  <Streams />
+</MTConnectStreams>

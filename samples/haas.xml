@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices>
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.0"/>
+  <Devices>
+    <Device iso841Class="6" uuid="000" name="Haas_1" sampleRate="10.0" id="4">
+      <Description manufacturer="Haas" serialNumber=""/>
+      <DataItems>
+        <DataItem type="ALARM" category="EVENT" id="3" name="alarm"/>
+      </DataItems>
+      <Components>
+        <Axes name="Axes" id="5">
+          <Components>
+            <Spindle name="S" id="10">
+              <DataItems>
+                <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE" id="12" subType="ACTUAL" name="Sspeed">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+              </DataItems>
+            </Spindle>
+            <Linear name="X" id="7">
+              <DataItems>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="14" subType="ACTUAL" name="Xact"/>
+              </DataItems>
+            </Linear>
+            <Linear name="Y" id="8">
+              <DataItems>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="16" subType="ACTUAL" name="Yact"/>
+              </DataItems>
+            </Linear>
+            <Linear name="Z" id="9">
+              <DataItems>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="18" subType="ACTUAL" name="Zact"/>
+              </DataItems>
+            </Linear>
+          </Components>
+        </Axes>
+        <Controller name="Controller" id="11">
+          <DataItems>
+            <DataItem type="CONTROLLER_MODE" category="EVENT" id="21" name="mode"/>
+            <DataItem type="PROGRAM" category="EVENT" id="23" name="program"/>
+            <DataItem type="EXECUTION" category="EVENT" id="24" name="execution"/>
+          </DataItems>
+        </Controller>
+        <Power name="power" id="2">
+          <DataItems>
+            <DataItem type="POWER_STATUS" category="EVENT" id="1" name="power"/>
+          </DataItems>
+        </Power>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>

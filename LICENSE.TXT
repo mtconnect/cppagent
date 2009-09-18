@@ -1,0 +1,302 @@
+Discussion DRAFT  
+December 4, 2007
+March 27, 2008
+
+MTCONNECT SPECIFICATION 
+IMPLEMENTER LICENSE AGREEMENT 
+
+MTConnect, a forum sponsored by AMT Ð The Association For Manufacturing
+Technology ("AMT"), is a collaborative effort to develop open technical
+standards and specifications intended to foster greater interoperability
+between equipment automation/control applications, and field systems/devices in
+the manufacturing industry, as well as schema, prototype software examples, and
+related documentation (as defined below, the "MTConnect Specification" and
+"MTConnect Materials"), and to promote and facilitate implementation of the
+MTConnect Specification in compliant applications, drivers, and other services.
+This MTConnect Specification Implementer License Agreement ("Agreement") sets
+forth the license terms and other terms of use for you, as an MTConnect
+Implementer, to make use of the MTConnect Materials for purposes of adopting or
+implementing the MTConnect Specification in compliant products, whether
+hardware or software. By checking the box indicating that you accept the terms
+of this Agreement, and clicking "I agree" below or otherwise using any of the
+MTConnect Materials for purposes of implementation in compliant products, you
+(for yourself and for any other person or entity that employs you, that you
+represent or on whose behalf you act) hereby enter into this Agreement and, in
+consideration of the license and agreements contained herein, and other good
+and valuable consideration the receipt of which is hereby acknowledged, agree
+as follows.
+
+1.	DEFINITIONS
+
+You 
+"The term "you" and "your" as used in this Agreement includes you and any
+other person or entity you that employs you, that you represent or on whose
+behalf you are acting that will use the MTConnect Materials and/or implement
+the MTConnect Specification.
+
+Affiliate
+means any entity that is directly or indirectly controlled by, under 
+common control with, or that controls another entity.  For this purpose, 
+"control" means direct or indirect ownership of, or the right to exercise, 
+greater than 50% of the voting power, or greater than 50% of the 
+ownership interest representing the right to make the decisions for the 
+entity.
+
+MTConnect
+Specification or Specification means a final technical specification document,
+as adopted and approved by the Technical Steering Committee, following approval
+by majority vote of the Technical Advisory Group, for publication as an
+MTConnect Specification, that defines specifications, schemas, standard
+interfaces, objects, and methods for exchange of dynamic sensor data,
+configuration data, and data representation among machines, software
+applications and controllers. Specifications shall include or incorporate
+software code only as reference implementations, optional examples, or other
+code that will be used for illustrative purposes only and will not be a
+required portion of the Specification.
+
+MTConnect Materials
+means MTConnect Specifications, schema, optional software examples 
+or reference implementations, related documentation or guides, and any 
+materials, updates or modifications related to any of the foregoing.
+
+MTConnect Implementeror Implementor
+means any party that has entered into or later enters into a MTConnect 
+Implementer License Agreement.
+
+Necessary Claims
+means those claims of all patents and patent applications that an entity 
+owns or controls that would necessarily be infringed by implementation 
+of an MTConnect Specification.  A claim is "necessarily infringed" when 
+there is no reasonable non-infringing alternative for implementing the 
+required portions of the Specification.  Notwithstanding the foregoing, 
+Necessary Claims do not include the following:
+(a)	claims other than those set forth above even if contained in 
+the same patent or patent application as Necessary Claims;
+(b)	claims that are necessarily infringed only by portions of a 
+product or implementation that are not required for 
+compliance with the Specification;
+(c)	claims covering any enabling technologies that may be 
+necessary to make or use any product or portion thereof that 
+complies with a Specification, but are not themselves 
+expressly set forth in a Specification;
+(d)	claims covering reference implementations or other 
+implementation examples (i.e., examples that may be 
+included in the text of a Specification and which illustrate how 
+the Specification could be properly implemented); or
+(e)	claims covering the implementation of other published 
+specifications not developed by or for MTConnect or AMT, 
+but referred to in the body of a Specification. 
+
+Excluded Claims
+means Necessary Claims that a Participant has timely disclosed, with all 
+required information, and declared to be excluded from Participant's 
+obligations to license on royalty-free terms; provided that Excluded 
+Claims are subject to obligations to license on reasonable and non-
+discriminatory terms.
+
+[It is the general policy and intention of MTConnect to minimize 
+Excluded Claims by drafting MTConnect Specifications to avoid 
+infringing such Claim(s) once a Participant has given notice it intends to 
+designate a claim as an Excluded Claim.  The MTConnect website 
+provides information concerning such Excluded Claims, if any have in 
+fact been designated.]  [Confirm whether to include either one or both of 
+these sentences statement]  
+
+Participant
+means an entity, company, organization or individual who participates in 
+the work of the MTConnect Technical Advisory Group, Technical 
+Steering Committee, Drafting Committee, or any other committee or 
+group created by the Technical Steering Committee to assist in technical 
+work to develop MTConnect Materials.
+Implementer
+means an entity, company, organization or individual who makes use of 
+the MTConnect Materials for purposes of adopting or implementing the 
+MTConnect Specification in compliant products, whether hardware or 
+software.
+
+2.	LICENSES
+
+2.1 Limited Patent Licenses To You as an MTConnect Implementer. AMT hereby
+agrees that it will, and each MTConnect Participant has agreed, pursuant to the
+MTConnect IP Policy and as a condition of its Participation, that the
+Participant and its Affiliates will, upon request, grant to you a nonexclusive,
+worldwide license to their Necessary Claims, royalty-free and under otherwise
+reasonable and non-discriminatory (RAND) terms, solely to make, have made, use,
+import, offer to sell, sell and otherwise distribute and dispose of products,
+whether hardware or software, that comply with all relevant required portions
+of the MTConnect Specification; provided that (a) such license shall be
+conditioned upon your grant of a reciprocal royalty-free license as provided in
+Section 2.2 below; (b) such license does not extend to any part or function of
+a product that is not required for compliance with the Specification, including
+operational reference implementations or other reference examples (i.e.,
+examples that may be included in the text of a Specification and which
+illustrate how the Specification could be properly implemented); (c) such
+license need not extend to Necessary Claims for which a grant of such license
+would require payment of royalties or other consideration to unaffiliated
+parties; and (d) a Participant may charge a reasonable and nondiscriminatory
+royalty for certain Excluded Claims that it has specifically and timely
+identified and designated as Excluded prior to final adoption and publication
+of the MTConnect Specification.
+
+2.2 Reciprocal License by You to AMT and other MTConnect Implementers. In
+consideration of use of the MTConnect Materials for purposes of adopting or
+implementing the MTConnect Specification in compliant products, you hereby
+agree on behalf of yourself, all parties that employ you, that you represent or
+on whose behalf you are acting for use of MTConnect Materials, and their
+Affiliates, that you and they will grant to AMT, to each Participant and to all
+other MTConnect Implementers and their respective Affiliates (collectively
+"Licensees" for purposes of this Section 2.2), a reciprocal nonexclusive,
+worldwide license to their Necessary Claims, royalty-free and under otherwise
+reasonable and non-discriminatory (RAND) terms, solely to make, have made, use,
+import offer to sell, sell and otherwise distribute and dispose of products,
+whether hardware or software, that comply with all relevant required portions
+of the MTConnect Specification; provided that (a) such license may be
+conditioned upon the Licensee's grant of a reciprocal license fulfilling the
+commitments of Section 2.1 above; (b) such license need not extend to any part
+or function of a product that is not required for compliance with the
+Specification, including operational reference implementations or other
+reference examples (i.e., examples that may be included in the text of a
+Specification and which illustrate how the Specification could be properly
+implemented); and (c) such license need not extend to Necessary Claims for
+which a grant of such license would require payment of royalties or other
+consideration to unaffiliated parties.
+
+2.3 License representation and warranty. You represent and warrant that you
+have authority to enter into this Agreement and to make binding license
+commitments of Section 2.2 and other obligations of this Agreement on behalf of
+the parties that employ you, that you represent or on whose behalf you are
+acting in the use of MTConnect Materials. You further agree and warrant that
+any transfer or assignment of a patent having Necessary Claims to a third party
+shall be subject to and shall not affect any license granted pursuant to this
+Agreement.
+
+2.4 Copyright License. Based on your agreement to the terms and conditions of
+this Agreement, AMT hereby grants to you, during the term of the Agreement, a
+nonexclusive, non- transferable, revocable, non-sublicenseable, fully paid-up
+and royalty-free, worldwide copyright license to use and to reproduce the
+MTConnect Specification and other related MTConnect Materials made available to
+you as necessary in order to exercise the patent rights granted in Sections
+2.1. You agree that, to the extent copies and redistributions are permitted,
+you will only copy or redistribute the MTConnect Materials in the form in which
+you received them, without modifications, and that all copies and reproductions
+shall include all copyright notices and disclaimers contained in the MTConnect
+Materials.
+
+2.5 Use of Name and Trademarks. You may identify a product, whether hardware or
+software, as complying with the MTConnect Specification if and only if the
+product complies with all relevant required portions of the MTConnect
+Specification. You shall not, however, identify any product or service as being
+certified by, sanctioned by, sponsored by or associated with AMT or MTConnect,
+except as provided in a separate trademark agreement and in accordance with
+policies and procedures which AMT may establish, including, but not limited to,
+policies and procedures that require passing Compliance Tests as a condition of
+so identifying any product or service.
+
+3.	GENERAL
+
+3.1 No Obligation. AMT and MTConnect have no responsibility to identify
+Necessary Claims which may relate to a Specification, or to determine the legal
+validity or scope of Necessary Claims brought to their attention. Each
+MTConnect Implementer is responsible for securing its own licenses or rights to
+any patent or other intellectual property rights that may be necessary for such
+use, and neither AMT nor MTConnect have any obligation to secure any such
+rights.
+
+3.2 No Other Licenses; . Except for the rights expressly provided by this
+Agreement, neither you, nor AMT, MTConnect or any Participant, grants or
+receives, by implication, or estoppel, or otherwise, any rights under any
+patents or other intellectual property rights.
+
+3.3 DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
+BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
+AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
+RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
+(COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
+WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
+LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
+MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+
+3.4 LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
+PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
+OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
+CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
+WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
+THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
+SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
+
+3.5 Assignment.
+You acknowledge that AMT may, at its discretion, transfer, assign, or license
+its copyright in MTConnect Materials to another organization that will take
+over administration and development of the MTConnect Specification and other
+MTConnect Materials, and you agree that for that purpose AMT may also transfer
+or assign its rights in this Agreement to such other organization. 
+
+3.6 Governing Law and Jurisdiction. This Agreement shall be governed and
+construed by the substantive laws of Virginia without reference to conflict of
+laws principles. The parties agree that all disputes arising in any way out of
+this Agreement shall be heard exclusively in, and all parties irrevocably
+consent to jurisdiction and venue in, the federal courts having jurisdiction of
+the Eastern District of Virginia, or state courts having jurisdiction in the
+area in which such federal courts have jurisdiction.
+
+3.7 Complete Agreement; No Waiver. This Agreement sets forth the entire
+agreement and understanding of the parties with respect to the subject matter
+hereof and supersedes all prior agreements and understandings relating hereto.
+No modifications or amendment of this Agreement shall be binding unless
+accepted in writing by AMT, and the waiver of any breach or default will not
+constitute a waiver of any other right hereunder or any subsequent breach or
+default. 
+
+3.8 Interpretation; Severability. You agree that a printed version of
+the Agreement and of any notice given in electronic form shall be admissible in
+judicial or administrative proceedings based upon or relating to the Agreement
+to the same extent and subject to the same conditions as other business
+documents and records originally generated and maintained in printed form. The
+language of this Agreement shall be deemed to be the language mutually chosen
+by the parties and no role of strict construction shall be applied against or
+in favor of any party. In the event that any provision of this Agreement is
+held by a court of competent jurisdiction to be invalid, void, or
+unenforceable, then (a) such provision shall be deemed modified in a manner
+that, to the maximum extent possible, effectuates the intent of the parties in
+a legal, valid and enforceable manner, and (b) the remaining provisions shall
+continue in full force without being impaired or invalidated in any way. 
+
+3.9 Compliance with Laws. Anything contained in this Agreement to the contrary
+notwithstanding, the obligations of the parties hereto shall be subject to all
+laws, present and future, of any government having jurisdiction over the
+parties hereto, and to orders, regulations, directions or requests of any such
+government.
+
+4. ACCEPTANCE OF TERMS 
+
+4.1 Electronic Signature. This Agreement is an electronic contract that governs
+your use of the MTConnect Materials for purposes of adopting and implementing
+the MTConnect Specification in compliant products, whether hardware or
+software. By checking the box indicating you accept these terms, you create an
+electronic signature that has the same legal force and effect as a handwritten
+signature.
+
+4.2 Electronic Form. When you check the box indicating your acceptance of the
+Agreement, you also consent to have the Agreement provided to you in electronic
+form and agree to receive information about the Agreement electronically. AMT
+and the MTConnect reserve the right to send you information by postal mail.
+
+4.3 Notice to AMT and Request for Non-Electronic Copy. You have the right to
+receive this Agreement in non- electronic form. You may request a
+non-electronic copy of this Agreement either before or after you electronically
+sign it. To receive a non-electronic copy of the Agreement, or to notify AMT
+for any other purpose, please send an e-mail to Paul Warndorf
+(pwarndorf@AMTonline.org) or a letter and self-addressed, stamped envelope to:
+AMT - The Association For Manufacturing Technology 7901 Westpark Drive McLean,
+VA 22102 Attention: Paul Warndorf
+
+I need to better understand this.  This seems to address products and are these products that may be necessary to 
+implement the standard?
+ 
+Version 1.0, revised 12/4/2007		- 2 -
+ MTConnectª Implementer License Agreement
+ © AMT Ð The Association For Manufacturing Technology  2007
+Version 1.0, revised 12/4/2007
+ MTConnectª Implementer License Agreement
+ © AMT Ð The Association For Manufacturing Technology  2007
+MTConnect is a registered trademark of AMT Ð The Association For Manufacturing Technology.  

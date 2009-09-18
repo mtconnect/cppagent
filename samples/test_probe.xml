@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.com:MTConnectDevices:1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.com:MTConnectDevices:1.0" xsi:schemaLocation="urn:mtconnect.com:MTConnectDevices:1.0 /schemas/MTConnectDevices.xsd">
+  <Header creationTime="" sender="localhost" instanceId="" bufferSize="" version="1.0" />
+  <Devices>
+    <Device id="4" iso841Class="0" name="LinuxCNC" sampleRate="10" uuid="000">
+      <Description manufacturer="NIST" />
+      <DataItems>
+        <DataItem category="EVENT" id="3" name="alarm" significantDigits="0" type="ALARM" />
+      </DataItems>
+      <Components>
+        <Axes id="5" name="Axes">
+          <DataItems>
+            <DataItem category="SAMPLE" id="6" name="path_feedrate" nativeUnits="MILLIMETER/SECOND" significantDigits="0" subType="ACTUAL" type="PATH_FEEDRATE" units="MILLIMETER/SECOND" />
+            <DataItem category="SAMPLE" id="25" name="feed_ovr" nativeUnits="PERCENT" significantDigits="0" subType="OVERRIDE" type="PATH_FEEDRATE" units="PERCENT" />
+          </DataItems>
+          <Components>
+            <Spindle id="10" name="S">
+              <DataItems>
+                <DataItem category="SAMPLE" id="12" name="Sspeed" nativeUnits="REVOLUTION/MINUTE" significantDigits="0" subType="ACTUAL" type="SPINDLE_SPEED" units="REVOLUTION/MINUTE">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+                <DataItem category="SAMPLE" id="13" name="Sovr" nativeUnits="PERCENT" significantDigits="0" subType="OVERRIDE" type="SPINDLE_SPEED" units="PERCENT">
+                  <Source>SspeedOvr</Source>
+                </DataItem>
+              </DataItems>
+            </Spindle>
+            <Linear id="7" name="X">
+              <DataItems>
+                <DataItem category="SAMPLE" id="14" name="Xact" nativeUnits="MILLIMETER" significantDigits="0" subType="ACTUAL" type="POSITION" units="MILLIMETER" />
+                <DataItem category="SAMPLE" id="15" name="Xcom" nativeUnits="MILLIMETER" significantDigits="0" subType="COMMANDED" type="POSITION" units="MILLIMETER" />
+              </DataItems>
+            </Linear>
+            <Linear id="8" name="Y">
+              <DataItems>
+                <DataItem category="SAMPLE" id="16" name="Yact" nativeUnits="MILLIMETER" significantDigits="0" subType="ACTUAL" type="POSITION" units="MILLIMETER" />
+                <DataItem category="SAMPLE" id="17" name="Ycom" nativeUnits="MILLIMETER" significantDigits="0" subType="COMMANDED" type="POSITION" units="MILLIMETER" />
+              </DataItems>
+            </Linear>
+            <Linear id="9" name="Z">
+              <DataItems>
+                <DataItem category="SAMPLE" id="18" name="Zact" nativeUnits="MILLIMETER" significantDigits="0" subType="ACTUAL" type="POSITION" units="MILLIMETER" />
+                <DataItem category="SAMPLE" id="19" name="Zcom" nativeUnits="MILLIMETER" significantDigits="0" subType="COMMANDED" type="POSITION" units="MILLIMETER" />
+              </DataItems>
+            </Linear>
+          </Components>
+        </Axes>
+        <Controller id="11" name="Controller">
+          <DataItems>
+            <DataItem category="EVENT" id="20" name="block" significantDigits="0" type="BLOCK" />
+            <DataItem category="EVENT" id="21" name="mode" significantDigits="0" type="CONTROLLER_MODE" />
+            <DataItem category="EVENT" id="22" name="line" significantDigits="0" type="LINE" />
+            <DataItem category="EVENT" id="23" name="program" significantDigits="0" type="PROGRAM" />
+            <DataItem category="EVENT" id="24" name="execution" significantDigits="0" type="EXECUTION" />
+          </DataItems>
+        </Controller>
+        <Power id="2" name="power">
+          <DataItems>
+            <DataItem category="EVENT" id="1" name="power" significantDigits="0" type="POWER_STATUS" />
+          </DataItems>
+        </Power>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>

@@ -1,0 +1,21 @@
+
+Microsoft windows:
+
+Unzip agent_0.9.zip
+
+Download CMake:
+  http://www.cmake.org/cmake/resources/software.html
+
+Install CMake.
+
+Start CMake, and edit the following fields:
+  Where is the source code: <the path to the agent subdirectory directory> 
+  Where to build the binaries: <previous source path>/build
+
+Click Configure
+  Select Visual Studio 9 2008
+  And keep Use default native compilers
+
+Click Generate
+
+This will create a build directory below the source directory with a MS Windows 
