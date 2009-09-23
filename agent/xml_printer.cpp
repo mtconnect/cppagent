@@ -265,7 +265,7 @@ xmlpp::Document * XmlPrinter::initXmlDoc(
   string rootName = "MTConnect" + xmlType;
   string xmlns = "urn:mtconnect.com:MTConnect" + xmlType + ":1.0";
   string xsi = "urn:mtconnect.com:MTConnect" + xmlType +
-    ":1.0 /schemas/MTConnect" + xmlType + ".xsd";
+    ":1.0 http://www.mtconnect.org/schemas/MTConnect" + xmlType + ".xsd";
   
   // Root
   xmlpp::Element * root = doc->create_root_node(rootName);
