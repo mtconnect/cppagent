@@ -18,6 +18,12 @@ if(WIN32)
   set(LibXML++_PKGCONF_LIBRARY_DIRS ../win32/libxml++-2.6/lib)
 endif(WIN32)
 
+if(UNIX)
+  execute_process(COMMAND uname OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
+  if(CMAKE_SYSTEM_NAME MATCHES Linux)
+    set(LINUX_LIBRARIES pthread)
+  endif(CMAKE_SYSTEM_NAME MATCHES Linux)
+endif(UNIX)
 project (agent)
 
 set(agent_srcs cppagent.cpp 
@@ -39,11 +45,12 @@ find_package(LibXML++ REQUIRED)
 
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
 include_directories(${LibXML++_INCLUDE_DIRS} ${Glib_INCLUDE_DIRS} ${Glibmm_INCLUDE_DIRS} 
-                    			  ${LibXML2_INCLUDE_DIRS} ${SigC++_INCLUDE_DIRS})
+                    			  ${LibXML2_INCLUDE_DIRS} ${SigC++_INCLUDE_DIRS}
+					  )
 
 add_executable(agent ${agent_srcs})
 target_link_libraries(agent ${LibXML++_LIBRARIES} ${Glibmm_LIBRARIES} 
-			    ${LibXML2_LIBRARIES})
+			    ${LibXML2_LIBRARIES} ${LINUX_LIBRARIES})
 
 if(WIN32)
   configure_file(../win32/libxml++-2.6/bin/xml++-2.6.dll ${RUNTIME_OUTPUT_DIRECTORY} COPYONLY)
