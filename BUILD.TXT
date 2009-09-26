@@ -18,4 +18,8 @@ Click Configure
 
 Click Generate
 
-This will create a build directory below the source directory with a MS Windows 
+This will create a build directory below the source directory with a MS Windows
+project in place. Open the agent.sln in your build directory. Build your solution
+as normal.
+
+For more information, see the cmake web site for more configuration options.
