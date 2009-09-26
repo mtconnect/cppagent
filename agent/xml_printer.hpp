@@ -111,13 +111,15 @@ namespace XmlPrinter
   );
   
   /* Get a device stream from the element, else append a new device stream */
-  xmlpp::Element * getDeviceStream(xmlpp::Element *element, Device *device);
+  xmlpp::Element * getDeviceStream(xmlpp::Element *element, Device *device,
+				   std::map<std::string, xmlpp::Element *> &devices);
+
+  /* Add a sample or event to the xml document */
+  void addElement(ComponentEvent *result, xmlpp::Element *streams,
+		  std::map<std::string, xmlpp::Element *> &elements,
+		  std::map<std::string, xmlpp::Element *> &components,
+		  std::map<std::string, xmlpp::Element *> &devices);
   
-  /* Search an element's parents for the component id */
-  xmlpp::Element * searchParentsForId(
-    std::list<xmlpp::Element *> elements,
-    const std::string& componentId
-  );
 };
 
 #endif

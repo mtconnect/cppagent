@@ -209,7 +209,7 @@ int main(int aArgc, char *aArgv[])
       // Should have the format device:address:port
       string &adapter = *iter;
       string device, address, adapter_port;
-      unsigned int pos1 = adapter.find_first_of(':');
+      int pos1 = adapter.find_first_of(':');
       if (pos1 == string::npos) {
         cerr << "Bad format for adapter specification, must be: device:address:port" << endl;
         option_list.usage();
@@ -223,7 +223,7 @@ int main(int aArgc, char *aArgv[])
         option_list.usage();
       }
       
-      unsigned int pos2 = adapter.find_first_of(':', pos1 + 1);
+      int pos2 = adapter.find_first_of(':', pos1 + 1);
       if (pos2 == string::npos) {
         cerr << "Bad format for adapter specification, must be: device:address:port" << endl;
         option_list.usage();
