@@ -109,41 +109,41 @@ string XmlPrinter::printCurrent(
   );
   
   xmlpp::Element *streams = mSampleXml->get_root_node()->add_child("Streams");
-  
-  list<xmlpp::Element *> elements;
-  
+  std::map<string, xmlpp::Element *> elements; 
+  std::map<string, xmlpp::Element *> components; 
+ 
   list<DataItem *>::iterator dataItem;
   for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
   {
     if ((*dataItem)->getLatestEvent() != NULL)
     {
       Component *component = (*dataItem)->getComponent();
+      bool sample = (*dataItem)->isSample();
+      string dataName = (sample) ? "Samples" : "Events";
+      string key = component->getId() + dataName;
+      
+      xmlpp::Element *element = elements[key];
       
       xmlpp::Element *deviceStream = 
         getDeviceStream(streams, component->getDevice());
-      
-      xmlpp::Element *element = 
-        searchParentsForId(elements, component->getId());
       
       xmlpp::Element *child;
       
       if (element == NULL)
       {
-        
-        xmlpp::Element * componentStream =
-          deviceStream->add_child("ComponentStream");
-        
-        componentStream->set_attribute("component", component->getClass());
-        componentStream->set_attribute("name", component->getName());
-        componentStream->set_attribute("componentId", component->getId());
-        
-        bool sample = (*dataItem)->isSample();
-        
-        string dataName = (sample) ? "Samples" : "Events";
+	xmlpp::Element * componentStream = components[component->getId()];
+	if (componentStream == NULL)
+	{
+	  componentStream = deviceStream->add_child("ComponentStream");
+	  components[component->getId()] = componentStream;
+	  
+	  componentStream->set_attribute("component", component->getClass());
+	  componentStream->set_attribute("name", component->getName());
+	  componentStream->set_attribute("componentId", component->getId());
+	}
         
         xmlpp::Element *data = componentStream->add_child(dataName);
-        
-        elements.push_back(data);
+        elements[key] = data;
         
         child = data->add_child((*dataItem)->getTypeString(false));
       }
@@ -191,17 +191,17 @@ string XmlPrinter::printSample(
   );
     
   xmlpp::Element *streams = mSampleXml->get_root_node()->add_child("Streams");
-  
-  list<xmlpp::Element *> elements;
+  std::map<string, xmlpp::Element *> elements;
   
   list<ComponentEvent *>::iterator result;
   for (result = results.begin(); result != results.end(); result++)
   {
     Component *component = (*result)->getDataItem()->getComponent();
-    
-    xmlpp::Element *element = 
-      searchParentsForId(elements, component->getId());
-    
+    bool sample = (*result)->getDataItem()->isSample();
+    string dataName = (sample) ? "Samples" : "Events";
+    string key = component->getId() + dataName;
+
+    xmlpp::Element *element = elements[key];
     xmlpp::Element *child;
     
     if (element == NULL)
@@ -216,13 +216,8 @@ string XmlPrinter::printSample(
       componentStream->set_attribute("name", component->getName());
       componentStream->set_attribute("componentId", component->getId());
       
-      bool sample = (*result)->getDataItem()->isSample();
-      
-      string dataName = (sample) ? "Samples" : "Events";
-      
       xmlpp::Element *data = componentStream->add_child(dataName);
-      
-      elements.push_back(data);
+      elements[key] = data;
       
       child = data->add_child((*result)->getDataItem()->getTypeString(false));
     }
