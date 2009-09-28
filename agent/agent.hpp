@@ -90,6 +90,7 @@ public:
   
   /* Overridden method that is called per web request */  
   bool on_request(
+    const req_type rtype,
     const std::string& path,
     std::string& result,
     const map_type& queries,

@@ -95,6 +95,7 @@ Agent::~Agent()
 }
 
 bool Agent::on_request(
+    const req_type rtype,
     const string& path,
     string& result,
     const map_type& queries,
@@ -111,6 +112,14 @@ bool Agent::on_request(
 {
   try 
   {
+    if (rtype != get)
+    {
+      result = printError("UNSUPPORTED",
+			  "Only the HTTP GET request is supported by MTConnect");
+      return true;
+      
+    }
+    
     // Parse the URL path looking for '/'
     string::size_type loc1 = path.find("/", 1);
     

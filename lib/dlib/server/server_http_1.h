@@ -36,10 +36,13 @@ namespace dlib
     public:
         typedef map_ss_type map_type;
         typedef queue_string_type queue_type;
+        typedef enum _req_type {get, post, put} req_type;
+
 
     private:
 
         virtual bool on_request (
+	    const req_type rtype,
             const std::string& path,
             std::string& result,
             const map_type& queries,
@@ -111,8 +114,8 @@ namespace dlib
             bool my_fault = true;
             try
             {
-                enum req_type {get, post} rtype;
-
+	        req_type rtype;
+	      
                 using namespace std;
                 map_type cookies;
                 string word;
@@ -125,6 +128,10 @@ namespace dlib
                 else if ( word == "POST" || word == "post")
                 {
                     rtype = post;
+                }
+                else if ( word == "PUT" || word == "put")
+                {
+                    rtype = put;
                 }
                 else
                 {
@@ -263,7 +270,7 @@ namespace dlib
                 // If there is data being posted back to us as a query string then
                 // just stick it onto the end of the path so the following code can
                 // then just pick it out like we do for GET requests.
-                if (rtype == post && content_type == "application/x-www-form-urlencoded" 
+                if ((rtype == post || rtype == put) && content_type == "application/x-www-form-urlencoded" 
                     && content_length > 0)
                 {
                     line.resize(content_length);
@@ -308,7 +315,7 @@ namespace dlib
                 // then lets trigger this request callback.
                 bool finished = true;
                 if (in)
-                    finished = on_request(path,result,queries,cookies,new_cookies,incoming_headers, response_headers, foreign_ip,local_ip,foreign_port,local_port, out);
+		  finished = on_request(rtype, path,result,queries,cookies,new_cookies,incoming_headers, response_headers, foreign_ip,local_ip,foreign_port,local_port, out);
                 my_fault = true;
 
                 if (finished) 
