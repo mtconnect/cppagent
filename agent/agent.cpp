@@ -220,7 +220,7 @@ bool Agent::handleCall(
     const string path = queries.is_in_domain("path") ? queries["path"] : "";
     
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
-      FASTEST_FREQ, false, SLOWEST_FREQ);
+				FASTEST_FREQ, false, SLOWEST_FREQ);
     
     if (freq == PARAM_ERROR)
     {
@@ -228,7 +228,7 @@ bool Agent::handleCall(
     }
     
     return handleStream(out, result, devicesAndPath(path, deviceName), true,
-      freq);
+			freq);
   }
   else if (call == "probe" || call.empty())
   {
@@ -241,9 +241,9 @@ bool Agent::handleCall(
       queries["path"] : "";
     
     int count = checkAndGetParam(result, queries, "count", DEFAULT_COUNT,
-      1, true, SLIDING_BUFFER_SIZE);
+				 1, true, SLIDING_BUFFER_SIZE);
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
-      FASTEST_FREQ, false, SLOWEST_FREQ);
+				FASTEST_FREQ, false, SLOWEST_FREQ);
     
     int start = checkAndGetParam(result, queries, "start", NO_START);
     
@@ -258,7 +258,7 @@ bool Agent::handleCall(
     }
     
     return handleStream(out, result, devicesAndPath(path, deviceName), false,
-      freq, start, count);
+			freq, start, count);
   }
   else if ((mDeviceMap[call] != NULL) && device.empty())
   {
@@ -430,27 +430,25 @@ string Agent::fetchSampleData(
   start = (start <= firstSeq) ? firstSeq : start;
   unsigned int end = (count + start >= mSequence) ? mSequence : count + start;
   items = 0;
-  
+
+  printf("Responding from %d to %d\n", start, end);
+
   for (unsigned int i = start; i < end; i++)
   {
     // Filter out according to if it exists in the list
     const string dataName = (*mSlidingBuffer)[i]->getDataItem()->getName();
     if (hasDataItem(dataItems, dataName))
     {
+      ComponentEvent *event = (*mSlidingBuffer)[i];
+      results.push_back(event);
       items++;
-      results.push_back((*mSlidingBuffer)[i]);
-    }
-    else if (end < mSequence)
-    {
-      // Increase the end number if you are allowed to
-      end++;
     }
   }
   
   mSequenceLock->unlock();
   
   return XmlPrinter::printSample(mInstanceId, SLIDING_BUFFER_SIZE, seq, 
-    firstSeq, results);
+				 firstSeq, results);
 }
 
 string Agent::printError(const string& errorCode, const string& text)
