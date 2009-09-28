@@ -431,8 +431,6 @@ string Agent::fetchSampleData(
   unsigned int end = (count + start >= mSequence) ? mSequence : count + start;
   items = 0;
 
-  printf("Responding from %d to %d\n", start, end);
-
   for (unsigned int i = start; i < end; i++)
   {
     // Filter out according to if it exists in the list
