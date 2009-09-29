@@ -1,7 +1,9 @@
 
-0.9.1: Released 9/26/2009
-	Fixed mixed sample and event content issues
-	Improved performance of XML generation
+0.9.1: Released 9/28/2009
+	* : Fixed mixed sample and event content issues
+	* : Improved performance of XML generation
+	* : Fixed error when push (frequency) when filtering using path. Never advance window size.
+	* : Correctly handle PUT and POST verbs for HTTP. Returns unsupported error.
 
 0.9.0: 
 	First complete version
