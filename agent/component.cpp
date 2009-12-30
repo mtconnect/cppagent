@@ -60,13 +60,14 @@ Component::Component(const string& cls, std::map<string, string> attributes)
   
   mParent = NULL;
   mClass = cls;
+  mAttributes = buildAttributes();
 }
 
 Component::~Component()
 {
 }
 
-std::map<string, string> Component::getAttributes() const
+std::map<string, string> Component::buildAttributes() const
 {
   std::map<string, string> attributes;
   

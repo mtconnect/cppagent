@@ -296,7 +296,7 @@ void XmlPrinter::printProbeHelper(
   if (desc.size() > 0)
   {
     xmlpp::Element * description = element->add_child("Description");
-    addAttributes(description, desc);
+    addAttributes(description, &desc);
   }
   
   list<DataItem *> datum = component->getDataItems();
@@ -350,11 +350,11 @@ string XmlPrinter::printIndentation(unsigned int indentation)
 
 void XmlPrinter::addAttributes(
     xmlpp::Element *element,
-    std::map<string, string> attributes
+    std::map<string, string> *attributes
   )
 {
   std::map<string, string>::iterator attr;
-  for (attr=attributes.begin(); attr!=attributes.end(); attr++)
+  for (attr= attributes->begin(); attr!=attributes->end(); attr++)
   {
     element->set_attribute(attr->first, attr->second);
   }

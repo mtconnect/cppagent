@@ -46,6 +46,7 @@ ComponentEvent::ComponentEvent(
   mDataItem = &dataItem;
   mSequence = sequence;
   mTime = time;
+  mHasAttributes = false;
   
   fValue = 0.0f;
   convertValue(value);
@@ -59,46 +60,48 @@ ComponentEvent::ComponentEvent(ComponentEvent& ce)
   mAlarmData = ce.mAlarmData;
   fValue = ce.fValue;
   sValue = ce.sValue;
+  mHasAttributes = false;
 }
 
 ComponentEvent::~ComponentEvent()
 {
 }
 
-std::map<string, string> ComponentEvent::getAttributes()
+std::map<string, string> *ComponentEvent::getAttributes()
 {
-  std::map<string, string> attributes;
-  
-  attributes["dataItemId"] = mDataItem->getId();
-  attributes["timestamp"] = mTime;
-  if (!mDataItem->getSubType().empty())
+  if (!mHasAttributes) 
   {
-    attributes["subType"] = mDataItem->getSubType();
+    mAttributes["dataItemId"] = mDataItem->getId();
+    mAttributes["timestamp"] = mTime;
+    if (!mDataItem->getSubType().empty())
+    {
+      mAttributes["subType"] = mDataItem->getSubType();
+    }
+    
+    mAttributes["name"] = mDataItem->getName();
+    mAttributes["sequence"] = intToString(mSequence);
+    
+    if (getDataItem()->getType() == "ALARM")
+    {
+      // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
+      istringstream toParse(mAlarmData);
+      string token;
+      
+      getline(toParse, token, '|');
+      mAttributes["code"] = token;
+    
+      getline(toParse, token, '|');
+      mAttributes["nativeCode"] = token;
+      
+      getline(toParse, token, '|');
+      mAttributes["severity"] = token;
+      
+      getline(toParse, token, '|');
+      mAttributes["state"] = token;
+    }
+    mHasAttributes = true;
   }
-  
-  attributes["name"] = mDataItem->getName();
-  attributes["sequence"] = intToString(mSequence);
-  
-  if (getDataItem()->getType() == "ALARM")
-  {
-    // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
-    istringstream toParse(mAlarmData);
-    string token;
-    
-    getline(toParse, token, '|');
-    attributes["code"] = token;
-  
-    getline(toParse, token, '|');
-    attributes["nativeCode"] = token;
-    
-    getline(toParse, token, '|');
-    attributes["severity"] = token;
-    
-    getline(toParse, token, '|');
-    attributes["state"] = token;
-  }
-  
-  return attributes;
+  return &mAttributes;
 }
 
 /* ComponentEvent protected methods */

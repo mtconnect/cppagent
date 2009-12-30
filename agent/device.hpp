@@ -49,10 +49,7 @@ public:
   
   /* Destructor */
   ~Device();
-  
-  /* Retrieve the attributes of the device in an attribute map */
-  std::map<std::string, std::string> getAttributes() const;
-  
+    
   /* Add/get items to/from the device name to data item mapping */
   void addDeviceDataItem(DataItem& dataItem) {
     mDeviceDataItems[dataItem.getSourceOrName()] = &dataItem;
@@ -65,7 +62,7 @@ public:
   const std::map<std::string, DataItem *> getDeviceDataItems() const {
     return mDeviceDataItems;
   }
-  
+    
 protected:
   /* The iso841Class of the device */
   unsigned int mIso841Class;

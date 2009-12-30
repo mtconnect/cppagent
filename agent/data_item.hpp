@@ -93,7 +93,7 @@ public:
   ~DataItem();
   
   /* Get a map of all the attributes of this data item */
-  std::map<std::string, std::string> getAttributes() const;
+  std::map<std::string, std::string> *getAttributes() { return &mAttributes; }
   
   /* Getter methods for data item specs */
   std::string getId() const { return mId; }
@@ -135,6 +135,7 @@ public:
 
 protected:
   double simpleFactor(const std::string& units);
+  std::map<std::string, std::string> buildAttributes() const;
   
 protected:
   /* Unique ID for each component */
@@ -181,6 +182,9 @@ protected:
   
   /* Lock to update and retrieve the latest event */
   dlib::mutex * mLatestEventLock;
+  
+  /* Attrubutes */
+  std::map<std::string, std::string> mAttributes;
 
   /* Conversion factor */
   double mConversionFactor;

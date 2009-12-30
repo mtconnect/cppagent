@@ -62,7 +62,7 @@ public:
   virtual ~ComponentEvent();
   
   /* Extract the component event data into a map */
-  std::map<std::string, std::string> getAttributes();
+  std::map<std::string, std::string> *getAttributes();
   
   /* Get the data item associated with this event */
   DataItem * getDataItem() const { return mDataItem; }
@@ -89,6 +89,10 @@ protected:
   
   /* Hold the alarm data: CODE|NATIVECODE|SEVERITY|STATE */
   std::string mAlarmData;
+  
+  /* The attributes, created on demand */
+  bool mHasAttributes;
+  std::map<std::string, std::string> mAttributes;
 
 protected:
   /* Convert the value to the agent unit standards */

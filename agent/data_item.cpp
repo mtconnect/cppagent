@@ -113,6 +113,7 @@ DataItem::DataItem(std::map<string, string> attributes)
   
   mComponent = NULL;
   mLatestEvent = NULL;
+  mAttributes = buildAttributes();
   
   mLatestEventLock = new dlib::mutex;
 }
@@ -125,7 +126,7 @@ DataItem::~DataItem()
   }
 }
 
-std::map<string, string> DataItem::getAttributes() const
+std::map<string, string> DataItem::buildAttributes() const
 {
   std::map<string, string> attributes;
   

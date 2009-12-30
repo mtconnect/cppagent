@@ -107,7 +107,7 @@ namespace XmlPrinter
   /* Add attributes to an xml element */
   void addAttributes(
     xmlpp::Element *element,
-    std::map<std::string, std::string> attributes
+    std::map<std::string, std::string> *attributes
   );
   
   /* Get a device stream from the element, else append a new device stream */

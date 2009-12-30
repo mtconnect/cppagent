@@ -75,7 +75,7 @@ public:
   virtual ~Component();
   
   /* Return a map of attributes of all the component specs */
-  virtual std::map<std::string, std::string> getAttributes() const;
+  std::map<std::string, std::string> *getAttributes() { return &mAttributes; }
   
   /* Return what part of the component it is */
   const std::string& getClass() const { return mClass; }
@@ -103,6 +103,10 @@ public:
   /* Add to/get the component's std::list of data items */
   void addDataItem(DataItem& dataItem) { mDataItems.push_back(&dataItem); }
   std::list<DataItem *> getDataItems() const { return mDataItems; }
+  
+protected:
+  /* Return a map of attributes of all the component specs */
+  std::map<std::string, std::string> buildAttributes() const;
   
 protected:
   /* Unique ID for each component */
@@ -134,6 +138,9 @@ protected:
   
   /* Keep Track of all the data items associated with this component */
   std::list<DataItem *> mDataItems;
+  
+  /* The set of attribtues */
+  std::map<std::string, std::string> mAttributes;
 };
 
 #endif
