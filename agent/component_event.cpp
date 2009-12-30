@@ -52,19 +52,13 @@ ComponentEvent::ComponentEvent(
 }
 
 ComponentEvent::ComponentEvent(ComponentEvent& ce)
-{
-  std::map<string, string> attributes = ce.getAttributes();
-  
+{  
   mDataItem = ce.getDataItem();
-  
-  mTime = attributes["timestamp"];
-  mSequence = atoi(attributes["sequence"].c_str());
-  
-  mAlarmData = attributes["code"] + "|" + attributes["nativeCode"] + "|" +
-    attributes["severity"] + "|" + attributes["state"];
-  
-  fValue = ce.getFValue();
-  sValue = ce.getSValue();
+  mTime = ce.mTime;
+  mSequence = ce.mSequence;
+  mAlarmData = ce.mAlarmData;
+  fValue = ce.fValue;
+  sValue = ce.sValue;
 }
 
 ComponentEvent::~ComponentEvent()
