@@ -144,18 +144,13 @@ unsigned int getCurrentTimeInSec()
 
 void replaceIllegalCharacters(string& data)
 {
-  map<char, string> illegalCharacters;
-  illegalCharacters['&'] = "&amp;";
-  illegalCharacters['<'] = "&lt;";
-  illegalCharacters['>'] = "&gt;";
-  
   for (unsigned int i=0; i<data.length(); i++)
   {
-    string toReplace = illegalCharacters[data[i]];
-    if (!toReplace.empty())
-    {
-      data.erase(i, 1);
-      data.insert(i, toReplace);
+    char c = data[i];
+    switch (c) {
+      case '&': data.replace(i, 1, "&amp;"); break;
+      case '<': data.replace(i, 1, "&lt;"); break;
+      case '>': data.replace(i, 1, "&gt;"); break;
     }
   }
 }
