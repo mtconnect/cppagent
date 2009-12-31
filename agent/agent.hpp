@@ -83,7 +83,7 @@ public:
   
 public:
   /* Load agent with the xml configuration */
-  Agent(const std::string& configXmlPath);
+  Agent(const std::string& configXmlPath, int aBufferSize);
   
   /* Virtual destructor */
   virtual ~Agent();
@@ -218,6 +218,8 @@ protected:
   
   /* The sliding/circular buffer to hold all of the events/sample data */
   dlib::sliding_buffer_kernel_1<ComponentEvent *> *mSlidingBuffer;
+  
+  unsigned int mSlidingBufferSize;
   
   /* Data containers */
   std::list<Device *> mDevices;

@@ -155,6 +155,7 @@ int main(int aArgc, char *aArgv[])
   bool interactive = false;
   bool daemonize_proc = false;
   const char *adapters_file = 0;
+  int bufferSize = DEFAULT_SLIDING_BUFFER_EXP;
   gLogFile = "agent.log";
   
   //void initializeGlobals();
@@ -167,6 +168,7 @@ int main(int aArgc, char *aArgv[])
   option_list.append(new Option("d", daemonize_proc, "Daemonize\nDefault: false", false));
   option_list.append(new Option("c", adapters_file, "Adapter configuration file", "file"));
   option_list.append(new Option("a", adapters, "Location of adapter\n'device:address:port'", "adapters"));
+  option_list.append(new Option("b", bufferSize, "Sliding buffer size 2^b\nDefault: 17 -> 131072'", "buffer"));
   option_list.parse(aArgc, (const char**) aArgv);
   
   if (daemonize_proc)
@@ -176,7 +178,7 @@ int main(int aArgc, char *aArgv[])
   
   try
   {
-    Agent * agent = new Agent(config_file);
+    Agent * agent = new Agent(config_file, bufferSize);
     if (adapters_file)
     {
       ifstream ad_file(adapters_file);

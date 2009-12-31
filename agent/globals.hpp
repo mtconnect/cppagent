@@ -46,10 +46,10 @@
 const unsigned int SERVER_PORT = 8080;
 
 /* Size of sliding buffer */
-const unsigned int SLIDING_BUFFER_SIZE = 131072;
+const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 
 /* Size of buffer exponent: 2^SLIDING_BUFFER_EXP */
-const unsigned int SLIDING_BUFFER_EXP = 17;
+const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 
 /* Message for when enumerations do not exist in an array/enumeration */
 const int ENUM_MISS = -1;

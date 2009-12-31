@@ -36,7 +36,7 @@
 using namespace std;
 
 /* Agent public methods */
-Agent::Agent(const string& configXmlPath)
+Agent::Agent(const string& configXmlPath, int aBufferSize)
 {
   try
   {
@@ -74,8 +74,9 @@ Agent::Agent(const string& configXmlPath)
   
   // Sequence number and sliding buffer for data
   mSequence = 1;
+  mSlidingBufferSize = 1 << aBufferSize;
   mSlidingBuffer = new sliding_buffer_kernel_1<ComponentEvent *>();
-  mSlidingBuffer->set_size(SLIDING_BUFFER_EXP);
+  mSlidingBuffer->set_size(aBufferSize);
   
   // Initialize the buffer
   for (unsigned int i = 0; i < mSlidingBuffer->size(); i++)
@@ -250,7 +251,7 @@ bool Agent::handleCall(
       queries["path"] : "";
     
     int count = checkAndGetParam(result, queries, "count", DEFAULT_COUNT,
-				 1, true, SLIDING_BUFFER_SIZE);
+				 1, true, mSlidingBufferSize);
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
     
@@ -304,7 +305,7 @@ string Agent::handleProbe(const string& name)
     mDeviceList = mDevices;
   }
   
-  return XmlPrinter::printProbe(mInstanceId, SLIDING_BUFFER_SIZE, mSequence,
+  return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
     mDeviceList);
 }
 
@@ -410,10 +411,10 @@ void Agent::streamData(
 string Agent::fetchCurrentData(list<DataItem *>& dataItems)
 {
   mSequenceLock->lock();
-  unsigned int firstSeq = (mSequence > SLIDING_BUFFER_SIZE) ?
-    mSequence - SLIDING_BUFFER_SIZE : 1;
+  unsigned int firstSeq = (mSequence > mSlidingBufferSize) ?
+    mSequence - mSlidingBufferSize : 1;
   
-  string toReturn = XmlPrinter::printCurrent(mInstanceId, SLIDING_BUFFER_SIZE,
+  string toReturn = XmlPrinter::printCurrent(mInstanceId, mSlidingBufferSize,
     mSequence, firstSeq, dataItems);
   
   mSequenceLock->unlock();
@@ -432,8 +433,8 @@ string Agent::fetchSampleData(
   mSequenceLock->lock();
 
   unsigned int seq = mSequence;
-  unsigned int firstSeq = (mSequence > SLIDING_BUFFER_SIZE) ?
-    mSequence - SLIDING_BUFFER_SIZE : 1;
+  unsigned int firstSeq = (mSequence > mSlidingBufferSize) ?
+    mSequence - mSlidingBufferSize : 1;
   
   // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
   start = (start <= firstSeq) ? firstSeq : start;
@@ -454,13 +455,13 @@ string Agent::fetchSampleData(
   
   mSequenceLock->unlock();
   
-  return XmlPrinter::printSample(mInstanceId, SLIDING_BUFFER_SIZE, seq, 
+  return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, seq, 
 				 firstSeq, results);
 }
 
 string Agent::printError(const string& errorCode, const string& text)
 {
-  return XmlPrinter::printError(mInstanceId, SLIDING_BUFFER_SIZE, mSequence,
+  return XmlPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
     errorCode, text);
 }
 
