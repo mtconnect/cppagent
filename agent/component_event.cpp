@@ -46,9 +46,7 @@ ComponentEvent::ComponentEvent(
   mDataItem = &dataItem;
   mSequence = sequence;
   mTime = time;
-  mHasAttributes = false;
-  
-  fValue = 0.0f;
+  mHasAttributes = false;  
   convertValue(value);
 }
 
@@ -58,8 +56,7 @@ ComponentEvent::ComponentEvent(ComponentEvent& ce)
   mTime = ce.mTime;
   mSequence = ce.mSequence;
   mAlarmData = ce.mAlarmData;
-  fValue = ce.fValue;
-  sValue = ce.sValue;
+  mValue = ce.mValue;
   mHasAttributes = false;
 }
 
@@ -108,7 +105,11 @@ std::map<string, string> *ComponentEvent::getAttributes()
 void ComponentEvent::convertValue(const string& value)
 {
   // Check if the type is an alarm or if it doesn't have units
-  if (mDataItem->getType() == "ALARM")
+  if (value == "UNAVAILABLE")
+  {
+    mValue = value;
+  }
+  else if (mDataItem->getType() == "ALARM")
   {
     string::size_type lastPipe = value.rfind('|');
     
@@ -116,15 +117,15 @@ void ComponentEvent::convertValue(const string& value)
     mAlarmData = value.substr(0, lastPipe);
 
     // sValue = DESCRIPTION
-    sValue = value.substr(lastPipe+1);
+    mValue = value.substr(lastPipe+1);
   }
   else if (mDataItem->conversionRequired())
   {
-    fValue = mDataItem->convertValue(value);
+    mValue = floatToString(mDataItem->convertValue(value));
   }
   else
   {
-    sValue = value;
+    mValue = value;
   }
 }
 

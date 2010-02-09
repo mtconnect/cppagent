@@ -43,6 +43,7 @@
 #include "globals.hpp"
 
 class ComponentEvent;
+class Adapter;
 
 class DataItem
 {
@@ -132,6 +133,9 @@ public:
 
   bool conversionRequired();
   double convertValue(const std::string& value);
+  
+  Adapter *getDataSource() const { return mDataSource;  }
+  void setDataSource(Adapter *aSource) { if (mDataSource != aSource) mDataSource = aSource; }
 
 protected:
   double simpleFactor(const std::string& units);
@@ -185,11 +189,14 @@ protected:
   
   /* Attrubutes */
   std::map<std::string, std::string> mAttributes;
+  
+  /* The data source for this data item */
+  Adapter *mDataSource;
 
   /* Conversion factor */
   double mConversionFactor;
   double mConversionOffset;
-  bool mConversionDetermined, mConversionRequired, mHasFactor;
+  bool mConversionDetermined, mConversionRequired, mHasFactor;  
 };
 
 #endif

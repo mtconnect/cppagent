@@ -37,6 +37,7 @@ using namespace std;
 
 /* Connector public methods */
 Connector::Connector(const string& server, unsigned int port)
+: mConnected(false)
 {
   mServer = server;
   mPort = port;
@@ -48,6 +49,7 @@ Connector::~Connector()
 
 void Connector::connect()
 {
+  mConnected = false;
   try
   {
     // Connect to server:port, failure will throw dlib::socket_error exception
@@ -63,6 +65,7 @@ void Connector::connect()
     // Keep track of the status return, else status = character bytes read
     // Assuming it always enters the while loop, it should never be 1
     long status = 1;
+    mConnected = true;
     
     // Read from the socket, read is a blocking call
     while ((status = con->read(sockBuf, SOCKET_BUFFER_SIZE)) > 0)
@@ -102,6 +105,9 @@ void Connector::connect()
       }
     }
     
+    disconnected();
+    mConnected = false;
+    
     // Code should never get here, if it does, notify the exit status
     logEvent("Connector::connect", "Connection exited with status " + status);
     
@@ -112,5 +118,6 @@ void Connector::connect()
   {
     logEvent("Connector::connect", e.what());
   }
+  
 }
 

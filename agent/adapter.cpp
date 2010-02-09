@@ -41,7 +41,7 @@ Adapter::Adapter(
     const string& server,
     const unsigned int port
   )
-  : Connector(server, port), mDevice(device)
+: Connector(server, port), mDevice(device)
 {
   // Will start threaded object: Adapter::thread()
   start();
@@ -90,6 +90,7 @@ void Adapter::processData(const string& data)
     }
 
     // Add key->value pairings
+    dataItem->setDataSource(this);
     mAgent->addToBuffer(dataItem, value, time);
   }
   
@@ -102,10 +103,16 @@ void Adapter::processData(const string& data)
       logEvent("Agent", "Could not find data item: " + key);
     }
     else
-    { 
+    {
+      dataItem->setDataSource(this);
       mAgent->addToBuffer(dataItem, toUpperCase(value), time);
     }
   }
+}
+
+void Adapter::disconnected()
+{
+  mAgent->disconnected(this, mDevice);
 }
 
 /* Adapter private methods */

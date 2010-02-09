@@ -414,15 +414,7 @@ void XmlPrinter::addElement(ComponentEvent *result,
   }
 
   child = element->add_child(dataItem->getTypeString(false));
-  
-  if (dataItem->isSample())
-  {
-    child->add_child_text(floatToString(result->getFValue()));
-  }
-  else
-  {
-    child->add_child_text(result->getSValue());
-  }
+  child->add_child_text(result->getValue());
   
   addAttributes(child, result->getAttributes());
 }

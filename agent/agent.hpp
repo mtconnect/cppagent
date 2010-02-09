@@ -122,6 +122,9 @@ public:
     std::string time = ""
   );
   
+  /* Message when adapter has disconnected */
+  void disconnected(Adapter *anAdapter, const std::string aDevice);
+  
   DataItem * getDataItemByName(
     const std::string& device,
     const std::string& name
@@ -202,6 +205,8 @@ protected:
 
   /* Find if there's data item with that name/source name */
   bool hasDataItem(std::list<DataItem *>& dataItems, const std::string& name);
+  
+  std::string getTimeStamp();
   
 protected:
   /* Unique id based on the time of creation */

@@ -68,10 +68,10 @@ public:
   DataItem * getDataItem() const { return mDataItem; }
   
   /* Get the value */
-  float getFValue() const { return fValue; }
-  std::string getSValue() const { return sValue; }
-
+  const std::string &getValue() { return mValue; }
+  
   unsigned int getSequence() const { return mSequence; }
+  
     
 protected:
   /* Holds the data item from the device */
@@ -83,9 +83,10 @@ protected:
   /* Timestamp of the event's occurence */
   std::string mTime;
   
+  bool mIsFloat;
+  
   /* The value of the event, either as a float or a string */
-  float fValue;
-  std::string sValue;
+  std::string mValue;
   
   /* Hold the alarm data: CODE|NATIVECODE|SEVERITY|STATE */
   std::string mAlarmData;

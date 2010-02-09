@@ -35,6 +35,8 @@
 
 using namespace std;
 
+static const string sUnavailable("UNAVAILABLE");
+
 /* Agent public methods */
 Agent::Agent(const string& configXmlPath, int aBufferSize)
 {
@@ -53,21 +55,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize)
   
   // Grab data from configuration
   mDevices = mConfig->getDevices();
-  
-  list<Device *>::iterator device;
-  for (device = mDevices.begin(); device != mDevices.end(); device++) 
-  {
-    mDeviceMap[(*device)->getName()] = *device;
-    
-    std::map<string, DataItem*> items = (*device)->getDeviceDataItems();
-    
-    std::map<string, DataItem *>::iterator item;
-    for (item = items.begin(); item != items.end(); item++)
-    {
-      DataItem *d = item->second;
-      mDataItemMap[d->getId()] = d;
-    }
-  }
+  string time = getTimeStamp();
   
   // Unique id number for agent instance
   mInstanceId = getCurrentTimeInSec();
@@ -86,6 +74,23 @@ Agent::Agent(const string& configXmlPath, int aBufferSize)
   
   // Mutex used for synchronized access to sliding buffer and sequence number
   mSequenceLock = new dlib::mutex;
+  
+  /* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
+  list<Device *>::iterator device;
+  for (device = mDevices.begin(); device != mDevices.end(); device++) 
+  {
+    mDeviceMap[(*device)->getName()] = *device;
+    
+    std::map<string, DataItem*> items = (*device)->getDeviceDataItems();
+    
+    std::map<string, DataItem *>::iterator item;
+    for (item = items.begin(); item != items.end(); item++)
+    {
+      DataItem *d = item->second;
+      addToBuffer(d, sUnavailable, time);
+      mDataItemMap[d->getId()] = d;
+    }
+  }
 }
 
 Agent::~Agent()
@@ -203,6 +208,27 @@ unsigned int Agent::addToBuffer(
   
   mSequenceLock->unlock();
   return seqNum;
+}
+
+/* Add values for related data items UNAVAILABLE */
+void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
+{
+  string time = getTimeStamp();
+  
+  Device *dev = mDeviceMap[aDevice];
+  if (dev != NULL)
+  {
+    std::map<std::string, DataItem *> dataItems = dev->getDeviceDataItems();
+    std::map<std::string, DataItem*>::iterator dataItemAssoc;
+    for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); dataItemAssoc++)
+    {
+      DataItem *dataItem = (*dataItemAssoc).second;
+      if (dataItem->getDataSource() == anAdapter)
+      {
+        addToBuffer(dataItem, sUnavailable, time);
+      }
+    }
+  }
 }
 
 /* Agent protected methods */
@@ -633,3 +659,23 @@ bool Agent::hasDataItem(
   return false;
 }
 
+string Agent::getTimeStamp()
+{
+  
+  char timestamp[128];
+#ifdef WIN32
+  SYSTEMTIME st;
+  GetSystemTime(&st);
+  sprintf(timestamp, "%4d-%02d-%02dT%02d:%02d:%02d.%04d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+#else
+  struct timeval tv;
+  struct timezone tz;
+  
+  gettimeofday(&tv, &tz);
+  
+  strftime(timestamp, 64, "%Y-%m-%dT%H:%M:%S", gmtime(&tv.tv_sec));
+  sprintf(timestamp + strlen(timestamp), ".%06d", tv.tv_usec);
+#endif
+  
+  return timestamp;
+}

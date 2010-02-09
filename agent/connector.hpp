@@ -59,6 +59,12 @@ public:
   /* Abstract method to handle what to do with each line of data from Socket */
   virtual void processData(const std::string& data) = 0;
   
+  /* The connected state of this connection */
+  bool isConnected() { return mConnected; }
+  
+  /* Method called when connection is lost. */
+  virtual void disconnected() = 0;
+
 protected:
   /* Name of the server to connect to */
   std::string mServer;
@@ -67,7 +73,10 @@ protected:
   unsigned int mPort;
   
   /* The string buffer to hold the data from socket */
-  std::string mBuffer;  
+  std::string mBuffer;
+  
+  /* The connected state of this connector */
+  bool mConnected;
   
 private:
   /* Size of buffer to read at a time from the socket */  

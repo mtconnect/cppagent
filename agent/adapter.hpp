@@ -66,6 +66,9 @@ public:
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
   
+  /* Method called when connection is lost. */
+  virtual void disconnected();
+  
 protected:
   /* Pointer to the agent */
   Agent *mAgent;

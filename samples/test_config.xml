@@ -9,10 +9,6 @@
       </DataItems>
       <Components>
         <Axes iso841Class="0" name="Axes" sampleRate="0.0" id="5">
-          <DataItems>
-            <DataItem type="PATH_FEEDRATE" category="SAMPLE" units="MILLIMETER/SECOND" significantDigits="0" nativeUnits="MILLIMETER/SECOND" id="6" subType="ACTUAL" name="path_feedrate"/>
-            <DataItem type="PATH_FEEDRATE" category="SAMPLE" units="PERCENT" significantDigits="0" nativeUnits="PERCENT" id="25" subType="OVERRIDE" name="feed_ovr"/>
-          </DataItems>
           <Components>
             <Spindle iso841Class="0" name="S" sampleRate="0.0" id="10">
               <DataItems>
