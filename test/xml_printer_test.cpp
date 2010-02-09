@@ -203,41 +203,13 @@ void XmlPrinterTest::testAddAttributes()
   attributes["key1"] = "value1";
   attributes["key2"] = "value2";
   
-  XmlPrinter::addAttributes(element, attributes);
+  XmlPrinter::addAttributes(element, &attributes);
   
   CPPUNIT_ASSERT_EQUAL((Glib::ustring) "A", element->get_attribute_value("a"));
   CPPUNIT_ASSERT_EQUAL((Glib::ustring) "value1",
     element->get_attribute_value("key1"));
   CPPUNIT_ASSERT_EQUAL((Glib::ustring) "value2",
     element->get_attribute_value("key2"));
-}
-
-void XmlPrinterTest::testSearchParentForId()
-{
-  xmlpp::Document doc;
-  xmlpp::Element *root = doc.create_root_node("Root");
-  
-  xmlpp::Element *child1 = root->add_child("child1");
-  xmlpp::Element *child2 = child1->add_child("child2");
-  xmlpp::Element *child3 = child2->add_child("child3");
-  xmlpp::Element *child4 = child3->add_child("child4");
-  
-  root->set_attribute("componentId", "1");
-  child1->set_attribute("componentId", "2");
-  child2->set_attribute("componentId", "3");
-  child3->set_attribute("componentId", "4");
-  child4->set_attribute("componentId", "5");
-  
-  list<xmlpp::Element *> elements;
-  elements.push_back(child1);
-  elements.push_back(child2);
-  elements.push_back(child3);
-  elements.push_back(child4);
-  
-  CPPUNIT_ASSERT_EQUAL(child1, XmlPrinter::searchParentsForId(elements, "1"));
-  CPPUNIT_ASSERT_EQUAL(child2, XmlPrinter::searchParentsForId(elements, "2"));
-  CPPUNIT_ASSERT_EQUAL(child3, XmlPrinter::searchParentsForId(elements, "3"));
-  CPPUNIT_ASSERT_EQUAL(child4, XmlPrinter::searchParentsForId(elements, "4"));
 }
 
 void XmlPrinterTest::testGetDeviceStream()
@@ -271,10 +243,11 @@ void XmlPrinterTest::testGetDeviceStream()
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, root->get_children("DeviceStream").size());
   
+  std::map<std::string, xmlpp::Element *> devices;
   CPPUNIT_ASSERT_EQUAL(deviceStream1,
-    XmlPrinter::getDeviceStream(root, &device1));
+    XmlPrinter::getDeviceStream(root, &device1, devices));
   CPPUNIT_ASSERT_EQUAL(deviceStream2,
-    XmlPrinter::getDeviceStream(root, &device2));
+    XmlPrinter::getDeviceStream(root, &device2, devices));
   
   map<string, string> attributes3;
   attributes3["id"] = "5";
@@ -284,7 +257,8 @@ void XmlPrinterTest::testGetDeviceStream()
   attributes3["iso841Class"] = "12";
   Device device3(attributes3);
   
-  xmlpp::Element *deviceStream3 = XmlPrinter::getDeviceStream(root, &device3);
+
+  xmlpp::Element *deviceStream3 = XmlPrinter::getDeviceStream(root, &device3, devices);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 3, root->get_children("DeviceStream").size());
   CPPUNIT_ASSERT_EQUAL((Glib::ustring) "Device3",

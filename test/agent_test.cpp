@@ -40,7 +40,7 @@ using namespace std;
 
 void AgentTest::setUp()
 {
-  a = new Agent("../samples/test_config.xml");
+  a = new Agent("../samples/test_config.xml", 1 << 4);
   agentId = intToString(getCurrentTimeInSec());
   adapter = NULL;
 }
@@ -52,8 +52,8 @@ void AgentTest::tearDown()
 
 void AgentTest::testConstructor()
 {
-  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml"), string);
-  CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml"));
+  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 1 << 4), string);
+  CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 1 << 4));
 }
 
 void AgentTest::testBadPath()
@@ -259,14 +259,14 @@ void AgentTest::testAddToBuffer()
   
   // Streams are no longer empty
   path = "/current";
-  response = a->on_request(path, result, queries, cookies, new_cookies,
+  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
     incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
   
   CPPUNIT_ASSERT(response);
   CPPUNIT_ASSERT(emptyStr != result);
   
   path = "/sample";
-  response = a->on_request(path, result, queries, cookies, new_cookies,
+  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
     incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
   
   CPPUNIT_ASSERT(response);
@@ -280,20 +280,20 @@ void AgentTest::testAdapter()
   adapter = a->addAdapter("LinuxCNC", "server", 7878);
   CPPUNIT_ASSERT(adapter);
   
-  response = a->on_request(path, result, queries, cookies, new_cookies,
+  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
     incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
   
   CPPUNIT_ASSERT(string::npos == result.find("line"));
   
   adapter->processData("TIME|line|204");
-  response = a->on_request(path, result, queries, cookies, new_cookies,
+  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
     incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
   
   CPPUNIT_ASSERT(string::npos != result.find("line"));
   CPPUNIT_ASSERT(string::npos == result.find("alarm"));
   
   adapter->processData("TIME|alarm|code|nativeCode|severity|state|description");
-  response = a->on_request(path, result, queries, cookies, new_cookies,
+  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
     incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
   
   CPPUNIT_ASSERT(string::npos != result.find("alarm"));
@@ -312,7 +312,7 @@ void AgentTest::responseHelper(
     queries.add(key, value);
   }
   
-  response = a->on_request(path, result, queries, cookies, new_cookies,
+  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
     incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
   
   CPPUNIT_ASSERT(response);

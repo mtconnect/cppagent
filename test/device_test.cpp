@@ -79,7 +79,7 @@ void DeviceTest::testGetters()
 
 void DeviceTest::testGetAttributes()
 {
-  map<string, string> attributes1 = a->getAttributes();
+  map<string, string> &attributes1 = *a->getAttributes();
   
   CPPUNIT_ASSERT_EQUAL((string) "1",attributes1["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "DeviceTest1", attributes1["name"]);
@@ -87,7 +87,7 @@ void DeviceTest::testGetAttributes()
   CPPUNIT_ASSERT(attributes1["sampleRate"].empty());
   CPPUNIT_ASSERT_EQUAL((string) "4", attributes1["iso841Class"]);
   
-  map<string, string> attributes2 = b->getAttributes();
+  map<string, string> &attributes2 = *b->getAttributes();
   
   CPPUNIT_ASSERT_EQUAL((string) "3",attributes2["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "DeviceTest2", attributes2["name"]);

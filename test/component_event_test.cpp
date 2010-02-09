@@ -82,15 +82,12 @@ void ComponentEventTest::testConstructors()
   
   // But the values should be the same
   CPPUNIT_ASSERT_EQUAL(a->getDataItem(), ce.getDataItem());
-  CPPUNIT_ASSERT_EQUAL(a->getFValue(), ce.getFValue());
-  CPPUNIT_ASSERT_EQUAL(a->getSValue(), ce.getSValue());
+  CPPUNIT_ASSERT_EQUAL(a->getValue(), ce.getValue());
 }
 
 void ComponentEventTest::testGetAttributes()
 {
-  std::map<string, string> attributes1, attributes2;
-  
-  attributes1 = a->getAttributes();
+  std::map<string, string> &attributes1 = *a->getAttributes();
   CPPUNIT_ASSERT_EQUAL((string) "1", attributes1["dataItemId"]);
   CPPUNIT_ASSERT_EQUAL((string) "NOW", attributes1["timestamp"]);
   CPPUNIT_ASSERT(attributes1["subType"].empty());
@@ -103,7 +100,7 @@ void ComponentEventTest::testGetAttributes()
   CPPUNIT_ASSERT_EQUAL((string) "CRITICAL", attributes1["severity"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACTIVE", attributes1["state"]);
   
-  attributes2 = b->getAttributes();
+  std::map<string, string> &attributes2 = *b->getAttributes();
   CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["dataItemId"]);
   CPPUNIT_ASSERT_EQUAL((string) "LATER", attributes2["timestamp"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", attributes2["subType"]);
@@ -116,8 +113,8 @@ void ComponentEventTest::testGetters()
   CPPUNIT_ASSERT_EQUAL(d1, a->getDataItem());
   CPPUNIT_ASSERT_EQUAL(d2, b->getDataItem());
   
-  CPPUNIT_ASSERT_EQUAL((string) "DESCRIPTION", a->getSValue());
-  CPPUNIT_ASSERT_EQUAL(1.1231f, b->getFValue());
+  CPPUNIT_ASSERT_EQUAL((string) "DESCRIPTION", a->getValue());
+  CPPUNIT_ASSERT_EQUAL((string) "1.1231", b->getValue());
 }
 
 void ComponentEventTest::testConvertValue()
@@ -181,7 +178,7 @@ void ComponentEventTest::testValueHelper(
   
   ComponentEvent event(dataItem, 123, time, value);
   
-  CPPUNIT_ASSERT(abs(expected - event.getFValue()) < 0.00001);
-  CPPUNIT_ASSERT(event.getSValue().empty());
+  
+  CPPUNIT_ASSERT(abs(expected - atof(event.getValue().c_str())) < 0.00001);
 }
 

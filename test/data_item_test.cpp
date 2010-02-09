@@ -90,7 +90,7 @@ void DataItemTest::testGetters()
 
 void DataItemTest::testGetAttributes()
 {
-  std::map<string, string> attributes1 = a->getAttributes();
+  std::map<string, string> &attributes1 = *a->getAttributes();
   CPPUNIT_ASSERT_EQUAL((string) "1", attributes1["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", attributes1["name"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes1["type"]);
@@ -99,7 +99,7 @@ void DataItemTest::testGetAttributes()
   CPPUNIT_ASSERT(attributes1["getNativeScale"].empty());
   CPPUNIT_ASSERT(attributes1["coordinateSystem"].empty());
   
-  std::map<string, string> attributes2 = b->getAttributes();
+  std::map<string, string> &attributes2 = *b->getAttributes();
   CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", attributes2["name"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes2["type"]);
@@ -155,21 +155,20 @@ void DataItemTest::testComponentEvent()
   
   a->setLatestEvent(event1);
   
-  std::map<string, string> attributes =
-    a->getLatestEvent()->getAttributes();
+  std::map<string, string> &attributes = *a->getLatestEvent()->getAttributes();
   
   CPPUNIT_ASSERT_EQUAL((string) "10:30am Today", attributes["timestamp"]);
   CPPUNIT_ASSERT_EQUAL((string) "1", attributes["sequence"]);
-  CPPUNIT_ASSERT_EQUAL(1.34f, a->getLatestEvent()->getFValue());
+  CPPUNIT_ASSERT_EQUAL((string) "1.34", a->getLatestEvent()->getValue());
   
   ComponentEvent event2(*a, 3, (string) "12:00pm Tomorrow", (string) "4.31");
   
   a->setLatestEvent(event2);
-  attributes = a->getLatestEvent()->getAttributes();
+  std::map<string, string> &attributes2 = *a->getLatestEvent()->getAttributes();
   
-  CPPUNIT_ASSERT_EQUAL((string) "12:00pm Tomorrow", attributes["timestamp"]);
-  CPPUNIT_ASSERT_EQUAL((string) "3", attributes["sequence"]);
-  CPPUNIT_ASSERT_EQUAL(4.31f, a->getLatestEvent()->getFValue());
+  CPPUNIT_ASSERT_EQUAL((string) "12:00pm Tomorrow", attributes2["timestamp"]);
+  CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["sequence"]);
+  CPPUNIT_ASSERT_EQUAL((string) "4.31", a->getLatestEvent()->getValue());
 }
 
 void DataItemTest::testGetCamel()

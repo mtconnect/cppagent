@@ -59,7 +59,6 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testPrintNode);
   CPPUNIT_TEST(testPrintIndentation);
   CPPUNIT_TEST(testAddAttributes);
-  CPPUNIT_TEST(testSearchParentForId);
   CPPUNIT_TEST(testGetDeviceStream);
   CPPUNIT_TEST(testPrintError);
   CPPUNIT_TEST(testPrintProbe);
@@ -77,7 +76,6 @@ protected:
   void testPrintNode();
   void testPrintIndentation();
   void testAddAttributes();
-  void testSearchParentForId();
   void testGetDeviceStream();
   
   /* Main methods to test */
