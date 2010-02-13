@@ -68,14 +68,15 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
 
 /* DataItem public methods */
 DataItem::DataItem(std::map<string, string> attributes) 
-  : mHasNativeScale(false), mHasSignificantDigits(false), mHasConstraints(false), mConversionDetermined(false),
-    mConversionRequired(false), mHasFactor(false)
+  : mHasNativeScale(false), mHasSignificantDigits(false), mHasConstraints(false),
+    mConversionDetermined(false), mConversionRequired(false), mHasFactor(false)
 
 {
   mId = attributes["id"];
   mName = attributes["name"];
   mType = attributes["type"];
   mCamelType = getCamelType(mType);
+  mThreeD = false;
   
   if (!attributes["subType"].empty())
   {
@@ -238,68 +239,104 @@ bool DataItem::conversionRequired()
 }
 
 /* ComponentEvent protected methods */
-double DataItem::convertValue(const string& value)
+string DataItem::convertValue(const string& value)
 {
   // Check if the type is an alarm or if it doesn't have units
-  if (mHasFactor)
+  
+  if (!mConversionRequired)
   {
-    return (atof(value.c_str()) + mConversionOffset) * mConversionFactor;
+    return value;
   }
-  else if (!mConversionRequired)
+  else if (mHasFactor)
   {
-    return atof(value.c_str());
-  }
-  else
-  {
-    mConversionOffset = 0.0;
-    string units = mNativeUnits;
-    string::size_type slashLoc = units.find('/');
-
-    
-    // Convert units of numerator / denominator (^ power)
-    if (slashLoc == string::npos)
+    if (mThreeD)
     {
-      mConversionFactor = simpleFactor(units);
-    }
-    else if (units == "REVOLUTION/MINUTE")
-    {
-      mConversionFactor = 1.0;
+      ostringstream result;
+      string::size_type start = 0;
+      for (int i = 0; i < 3; i++)
+      {
+        string::size_type pos = value.find(" ", start);
+        result << floatToString((atof(value.substr(start, pos).c_str()) + mConversionOffset) * 
+                                mConversionFactor);
+        if (pos != string::npos)
+        {
+          start = value.find_first_not_of(" ", pos);
+          result << " ";
+        }
+      }
+      
+      return result.str();
     }
     else
     {
-      string numerator = units.substr(0, slashLoc);
-      string denominator = units.substr(slashLoc+1);
-      
-      string::size_type carotLoc = denominator.find('^');
-      
-      if (numerator == "REVOLUTION" && denominator == "SECOND")
-      {
-	mConversionFactor = 60.0;
-      }
-      else if (carotLoc == string::npos)
-      {
-	mConversionFactor = simpleFactor(numerator) / simpleFactor(denominator);
-      }
-      else
-      {
-	string unit = denominator.substr(0, carotLoc);
-	string power = denominator.substr(carotLoc+1);
-	
-	double div = pow((double) simpleFactor(unit), (double) atof(power.c_str()));
-	mConversionFactor = simpleFactor(numerator) / div;
-      }
+      return floatToString((atof(value.c_str()) + mConversionOffset) * 
+                           mConversionFactor);
     }
-    
-    if (mHasNativeScale)
-    {
-      mConversionFactor /= mNativeScale;
-    }
-
-    mHasFactor = true;
-
+  }
+  else
+  {
+    computeConversionFactors();
     return convertValue(value);
   }
 }
+
+void DataItem::computeConversionFactors()
+{
+  string units = mNativeUnits;
+  string::size_type threeD = units.find("_3D");
+  mConversionOffset = 0.0;
+  string::size_type slashLoc = units.find('/');
+  
+  // Convert units of numerator / denominator (^ power)
+  if (slashLoc == string::npos)
+  {
+    if (threeD != string::npos)
+    {
+      mThreeD = true;
+      units = units.substr(0, threeD);
+    }
+    mConversionFactor = simpleFactor(units);
+    if (mConversionFactor == 1.0)
+      mConversionRequired = false;
+  }
+  else if (units == "REVOLUTION/MINUTE")
+  {
+    mConversionFactor = 1.0;
+    mConversionRequired = false;
+  }
+  else
+  {
+    string numerator = units.substr(0, slashLoc);
+    string denominator = units.substr(slashLoc+1);
+    
+    string::size_type carotLoc = denominator.find('^');
+    
+    if (numerator == "REVOLUTION" && denominator == "SECOND")
+    {
+      mConversionFactor = 60.0;
+    }
+    else if (carotLoc == string::npos)
+    {
+      mConversionFactor = simpleFactor(numerator) / simpleFactor(denominator);
+    }
+    else
+    {
+      string unit = denominator.substr(0, carotLoc);
+      string power = denominator.substr(carotLoc+1);
+      
+      double div = pow((double) simpleFactor(unit), (double) atof(power.c_str()));
+      mConversionFactor = simpleFactor(numerator) / div;
+    }
+  }
+  
+  if (mHasNativeScale)
+  {
+    mConversionFactor /= mNativeScale;
+  }
+  
+  mHasFactor = true;
+}
+
 
 double DataItem::simpleFactor(const string& units)
 {

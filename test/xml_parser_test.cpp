@@ -76,10 +76,7 @@ void XmlParserTest::testGetDevices()
   {
     dataItems.push_back(iter->second);
   }
-  
-  CPPUNIT_ASSERT_EQUAL((size_t) 17, dataItems.size());
-  
-  
+    
   bool hasExec = false, hasZcom = false;
   
   list<DataItem *>::iterator dataItem;

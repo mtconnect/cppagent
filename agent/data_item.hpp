@@ -137,7 +137,7 @@ public:
   /* Constrainsts */
   bool hasConstraints() { return mHasConstraints; }
   std::string getMaximum() const { return mMaximum; }
-  std::string getMinimum() const { return mMaximum; }
+  std::string getMinimum() const { return mMinimum; }
   std::vector<std::string> &getConstrainedValues() { return mValues; }
   
   void setMaximum(std::string aMax) { mMaximum = aMax; mHasConstraints = true; }
@@ -145,7 +145,7 @@ public:
   void addConstrainedValue(std::string aValue) { mValues.push_back(aValue); mHasConstraints = true; }
 
   bool conversionRequired();
-  double convertValue(const std::string& value);
+  std::string convertValue(const std::string& value);
   
   Adapter *getDataSource() const { return mDataSource;  }
   void setDataSource(Adapter *aSource) { if (mDataSource != aSource) mDataSource = aSource; }
@@ -153,6 +153,7 @@ public:
 protected:
   double simpleFactor(const std::string& units);
   std::map<std::string, std::string> buildAttributes() const;
+  void computeConversionFactors();
   
 protected:
   /* Unique ID for each component */
@@ -180,6 +181,7 @@ protected:
   /* Native scale of data item */
   float mNativeScale;
   bool mHasNativeScale;
+  bool mThreeD;
   
   /* Sig figs of data item */
   unsigned int mSignificantDigits;

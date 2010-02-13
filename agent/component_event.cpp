@@ -121,7 +121,7 @@ void ComponentEvent::convertValue(const string& value)
   }
   else if (mDataItem->conversionRequired())
   {
-    mValue = floatToString(mDataItem->convertValue(value));
+    mValue = mDataItem->convertValue(value);
   }
   else
   {

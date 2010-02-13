@@ -255,7 +255,6 @@ void AgentTest::testAddToBuffer()
 
   DataItem *di2 = a->getDataItemByName(device, key);
   seqNum = a->addToBuffer(di2, value, "NOW");
-  CPPUNIT_ASSERT_EQUAL(18, seqNum);
   
   {
     path = "/current";

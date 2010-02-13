@@ -53,6 +53,7 @@ class DataItemTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testComponent);
   CPPUNIT_TEST(testComponentEvent);
   CPPUNIT_TEST(testGetCamel);
+  CPPUNIT_TEST(testConversion);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -66,6 +67,7 @@ protected:
   void testComponent();
   void testComponentEvent();
   void testGetCamel();
+  void testConversion();
   
 public:
   void setUp();

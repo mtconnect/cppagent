@@ -27,6 +27,12 @@
               <DataItems>
                 <DataItem type="POSITION" significantDigits="6" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x1" subType="ACTUAL" name="Xact"/>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x2" subType="COMMANDED" name="Xcom"/>
+                <DataItem type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="x3" name="Xload" >
+                  <Constraints>
+                    <Minimum>0</Minimum>
+                    <Maximum>200</Maximum>
+                  </Constraints>
+                </DataItem>
               </DataItems>
             </Linear>
             <Linear name="Y" id="y">

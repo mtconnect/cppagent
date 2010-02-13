@@ -289,6 +289,9 @@ void XmlPrinterTest::testPrintProbe()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@type", "POSITION");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@name", "Xact");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@significantDigits", "6");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']//m:Maximum", "200");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']/m:Constraints/m:Minimum", "0");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']/m:Constraints/m:Maximum", "200");
 
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='Z']/m:DataItems/m:DataItem@type", "POSITION");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='Z']/m:DataItems/m:DataItem@name", "Zact");

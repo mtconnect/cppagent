@@ -45,11 +45,11 @@ string intToString(int i)
   return stm.str();
 }
 
-string floatToString(float f)
+string floatToString(double f)
 {
-  ostringstream stm;
-  stm << f;
-  return stm.str();
+  char s[32];
+  sprintf(s, "%.7g", f);
+  return (string) s;
 }
 
 string toUpperCase(string& text)

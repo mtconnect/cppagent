@@ -181,3 +181,32 @@ void DataItemTest::testGetCamel()
     DataItem::getCamelType("A_B_CC"));
 }
 
+void DataItemTest::testConversion()
+{
+  std::map<string, string> attributes1;
+  attributes1["id"] = "p";
+  attributes1["name"] = "position";
+  attributes1["type"] = "POSITION";
+  attributes1["category"] = "SAMPLE";
+  attributes1["units"] = "MILLIMETER_3D";
+  attributes1["nativeUnits"] = "INCH_3D";
+  attributes1["coordinateSystem"] = "testCoordinateSystem";
+  DataItem item1(attributes1);
+  item1.conversionRequired();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "25.4 50.8 76.2", item1.convertValue("1 2 3"));
+  CPPUNIT_ASSERT_EQUAL((string) "25.4 50.8 76.2", item1.convertValue("1  2  3"));
+
+  std::map<string, string> attributes2;
+  attributes2["id"] = "p";
+  attributes2["name"] = "position";
+  attributes2["type"] = "POSITION";
+  attributes2["category"] = "SAMPLE";
+  attributes2["units"] = "DEGREE_3D";
+  attributes2["nativeUnits"] = "RADIAN_3D";
+  attributes2["coordinateSystem"] = "testCoordinateSystem";
+  DataItem item2(attributes2);
+  item2.conversionRequired();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "57.29578 114.5916 171.8873", item2.convertValue("1 2 3"));
+}

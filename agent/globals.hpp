@@ -71,7 +71,7 @@ enum TimeFormat
 std::string intToString(int i);
 
 /* Convert a float to string */
-std::string floatToString(float f);
+std::string floatToString(double f);
 
 /* Convert a string to the same string with all upper case letters */
 std::string toUpperCase(std::string& text);
