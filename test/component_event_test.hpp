@@ -71,7 +71,8 @@ protected:
     std::map<std::string, std::string>& attributes,
     const std::string& nativeUnits,
     float expected,
-    const std::string& value
+    const std::string& value,
+    CPPUNIT_NS::SourceLine sourceLine
   );
 };
 

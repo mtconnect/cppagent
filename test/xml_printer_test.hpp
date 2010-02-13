@@ -84,12 +84,12 @@ protected:
   void testPrintCurrent();
   void testPrintSample();
   
-  /* Retrieve a data item by id string */
-  DataItem * getDataItemById(const char *);
+  /* Retrieve a data item by name string */
+  DataItem * getDataItem(const char *name);
   
   /* Construct a component event and set it as the data item's latest event */
   ComponentEvent * addEventToDataItem(
-    const char *dataItemId,
+    const char *name,
     unsigned int sequence,
     std::string value
   );

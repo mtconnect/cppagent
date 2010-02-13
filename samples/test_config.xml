@@ -38,7 +38,7 @@
             <Linear name="Z" id="z">
               <DataItems>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="z1" subType="ACTUAL" name="Zact"/>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x2" subType="COMMANDED" name="Zcom"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="z2" subType="COMMANDED" name="Zcom"/>
               </DataItems>
             </Linear>
           </Components>

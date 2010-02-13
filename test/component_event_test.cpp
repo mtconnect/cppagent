@@ -38,6 +38,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ComponentEventTest);
 
 using namespace std;
 
+#define TEST_VALUE(attributes, nativeUnits, expected, value) \
+  testValueHelper(attributes, nativeUnits, expected, value, CPPUNIT_SOURCELINE())
+
+
 /* ComponentEventTest public methods */
 void ComponentEventTest::setUp()
 {
@@ -127,14 +131,14 @@ void ComponentEventTest::testConvertValue()
 
   string time("NOW"), value("2.0");
   
-  testValueHelper(attributes, "REVOLUTION/MINUTE", 2.0f, value);
-  testValueHelper(attributes, "REVOLUTION/SECOND", 2.0f * 60.0f, value);
-  testValueHelper(attributes, "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, value);
-  testValueHelper(attributes, "MILLIMETER/MINUTE^3",
+  TEST_VALUE(attributes, "REVOLUTION/MINUTE", 2.0f, value);
+  TEST_VALUE(attributes, "REVOLUTION/SECOND", 2.0f * 60.0f, value);
+  TEST_VALUE(attributes, "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, value);
+  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3",
     (2.0f) / (60.0f * 60.0f * 60.0f), value);
   
   attributes["nativeScale"] = "0.5";
-  testValueHelper(attributes, "MILLIMETER/MINUTE^3",
+  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3",
     (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), value);
 }
 
@@ -148,27 +152,28 @@ void ComponentEventTest::testConvertSimpleUnits()
   
   string value("2.0");
   
-  testValueHelper(attributes, "INCH", 2.0f * 25.4f, value);
-  testValueHelper(attributes, "FOOT", 2.0f * 304.8f, value);
-  testValueHelper(attributes, "CENTIMETER", 2.0f * 10.0f, value);
-  testValueHelper(attributes, "DECIMETER", 2.0f * 100.0f, value);
-  testValueHelper(attributes, "METER", 2.0f * 1000.0f, value);
-  testValueHelper(attributes, "FAHRENHEIT",
+  TEST_VALUE(attributes, "INCH", 2.0f * 25.4f, value);
+  TEST_VALUE(attributes, "FOOT", 2.0f * 304.8f, value);
+  TEST_VALUE(attributes, "CENTIMETER", 2.0f * 10.0f, value);
+  TEST_VALUE(attributes, "DECIMETER", 2.0f * 100.0f, value);
+  TEST_VALUE(attributes, "METER", 2.0f * 1000.0f, value);
+  TEST_VALUE(attributes, "FAHRENHEIT",
     (2.0f - 32.0f) * (5.0f / 9.0f), value);
-  testValueHelper(attributes, "POUND", 2.0f * 0.45359237f, value);
-  testValueHelper(attributes, "GRAM", 2.0f / 1000.0f, value);
-  testValueHelper(attributes, "RADIAN", 2.0f * 57.2957795f, value);
-  testValueHelper(attributes, "MINUTE", 2.0f * 60.0f, value);
-  testValueHelper(attributes, "HOUR", 2.0f * 3600.0f, value);
-  testValueHelper(attributes, "MILLIMETER", 2.0f, value);
-  testValueHelper(attributes, "PERCENT", 2.0f, value);
+  TEST_VALUE(attributes, "POUND", 2.0f * 0.45359237f, value);
+  TEST_VALUE(attributes, "GRAM", 2.0f / 1000.0f, value);
+  TEST_VALUE(attributes, "RADIAN", 2.0f * 57.2957795f, value);
+  TEST_VALUE(attributes, "MINUTE", 2.0f * 60.0f, value);
+  TEST_VALUE(attributes, "HOUR", 2.0f * 3600.0f, value);
+  TEST_VALUE(attributes, "MILLIMETER", 2.0f, value);
+  TEST_VALUE(attributes, "PERCENT", 2.0f, value);
 }
 
 void ComponentEventTest::testValueHelper(
     std::map<string, string>& attributes,
     const string& nativeUnits,
     float expected,
-    const string& value
+    const string& value,
+    CPPUNIT_NS::SourceLine sourceLine                                         
   )
 {
   string time("NOW");
@@ -179,6 +184,12 @@ void ComponentEventTest::testValueHelper(
   ComponentEvent event(dataItem, 123, time, value);
   
   
-  CPPUNIT_ASSERT(abs(expected - atof(event.getValue().c_str())) < 0.00001);
+  CPPUNIT_NS::OStringStream message;
+  double diff = abs(expected - atof(event.getValue().c_str()));
+  message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected << " and actual " << event.getValue()
+          << " differ (" << diff << ") by more than 0.001";
+  CPPUNIT_NS::Asserter::failIf(diff > 0.001,
+                               message.str(),
+                               sourceLine);
 }
 

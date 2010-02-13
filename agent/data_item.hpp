@@ -106,6 +106,7 @@ public:
   std::string getTypeString(bool uppercase) const;
   std::string getSubType() const { return mSubType; }
   std::string getNativeUnits() const { return mNativeUnits; }
+  std::string getUnits() const { return mUnits; }
   float getNativeScale() const { return mNativeScale; }
   double getConversionFactor() const;
   

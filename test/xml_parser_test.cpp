@@ -85,12 +85,12 @@ void XmlParserTest::testGetDevices()
   list<DataItem *>::iterator dataItem;
   for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
   {
-    if ((*dataItem)->getId() == "24" and (*dataItem)->getName() == "execution")
+    if ((*dataItem)->getId() == "p5" and (*dataItem)->getName() == "execution")
     {
       hasExec = true;
     }
     
-    if ((*dataItem)->getId() == "19" and (*dataItem)->getName() == "Zcom")
+    if ((*dataItem)->getId() == "z2" and (*dataItem)->getName() == "Zcom")
     {
       hasZcom = true;
     }

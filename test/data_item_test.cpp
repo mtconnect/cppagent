@@ -84,7 +84,7 @@ void DataItemTest::testGetters()
   CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", b->getTypeString(true));
   CPPUNIT_ASSERT_EQUAL((string) "Acceleration", b->getTypeString(false));
   CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", b->getSubType());
-  CPPUNIT_ASSERT(b->getNativeUnits().empty());
+  CPPUNIT_ASSERT_EQUAL(b->getNativeUnits(), b->getUnits());
   CPPUNIT_ASSERT_EQUAL(1.0f, b->getNativeScale());
 }
 
@@ -104,7 +104,7 @@ void DataItemTest::testGetAttributes()
   CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", attributes2["name"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes2["type"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", attributes2["subType"]);
-  CPPUNIT_ASSERT(attributes2["nativeUnits"].empty());
+  CPPUNIT_ASSERT_EQUAL(attributes2["nativeUnits"], attributes2["units"]);
   CPPUNIT_ASSERT_EQUAL((string) "1", attributes2["nativeScale"]);
   CPPUNIT_ASSERT_EQUAL((string) "testCoordinateSystem",
     attributes2["coordinateSystem"]);
