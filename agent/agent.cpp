@@ -86,8 +86,17 @@ Agent::Agent(const string& configXmlPath, int aBufferSize)
     std::map<string, DataItem *>::iterator item;
     for (item = items.begin(); item != items.end(); item++)
     {
+      // Check for single valued constrained data items.
       DataItem *d = item->second;
-      addToBuffer(d, sUnavailable, time);
+      const string *value = &sUnavailable;
+      if (d->hasConstraints())
+      { 
+        std::vector<std::string> &values = d->getConstrainedValues();
+        if (values.size() == 1)
+          value = &values[0];
+      }
+      
+      addToBuffer(d, *value, time);
       mDataItemMap[d->getId()] = d;
     }
   }
