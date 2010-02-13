@@ -214,16 +214,8 @@ void XmlPrinterTest::testAddAttributes()
 
 void XmlPrinterTest::testGetDeviceStream()
 {
-  /*
   xmlpp::Document doc;
-  
   xmlpp::Element *root = doc.create_root_node("Root");
-  
-  xmlpp::Element *deviceStream1 = root->add_child("DeviceStream");
-  xmlpp::Element *deviceStream2 = root->add_child("DeviceStream");
-  
-  deviceStream1->set_attribute("name", "Device1");
-  deviceStream2->set_attribute("name", "Device2");
   
   map<string, string> attributes1;
   attributes1["id"] = "3";
@@ -241,15 +233,6 @@ void XmlPrinterTest::testGetDeviceStream()
   attributes2["iso841Class"] = "12";
   Device device2(attributes2);
   
-  
-  CPPUNIT_ASSERT_EQUAL((size_t) 2, root->get_children("DeviceStream").size());
-  
-  std::map<std::string, xmlpp::Element *> devices;
-  CPPUNIT_ASSERT_EQUAL(deviceStream1,
-    XmlPrinter::getDeviceStream(root, &device1, devices));
-  CPPUNIT_ASSERT_EQUAL(deviceStream2,
-    XmlPrinter::getDeviceStream(root, &device2, devices));
-  
   map<string, string> attributes3;
   attributes3["id"] = "5";
   attributes3["name"] = "Device3";
@@ -258,13 +241,20 @@ void XmlPrinterTest::testGetDeviceStream()
   attributes3["iso841Class"] = "12";
   Device device3(attributes3);
   
-
-  xmlpp::Element *deviceStream3 = XmlPrinter::getDeviceStream(root, &device3, devices);
+  std::map<std::string, xmlpp::Element *> devices;
+  XmlPrinter::getDeviceStream(root, &device1, devices);
+  XmlPrinter::getDeviceStream(root, &device2, devices);
+  XmlPrinter::getDeviceStream(root, &device3, devices);
   
-  CPPUNIT_ASSERT_EQUAL((size_t) 3, root->get_children("DeviceStream").size());
-  CPPUNIT_ASSERT_EQUAL((Glib::ustring) "Device3",
-    deviceStream3->get_attribute_value("name"));
-   */
+  xmlpp::Node::NodeList list = root->get_children("DeviceStream");
+  CPPUNIT_ASSERT_EQUAL((size_t) 3, list.size());
+  
+  xmlpp::Element *e = (xmlpp::Element*) list.front(); list.pop_front();
+  CPPUNIT_ASSERT_EQUAL((string) e->get_attribute("name")->get_value(), (string) "Device1");
+  e = (xmlpp::Element*) list.front(); list.pop_front();
+  CPPUNIT_ASSERT_EQUAL((string) e->get_attribute("name")->get_value(), (string) "Device2");
+  e = (xmlpp::Element*) list.front(); list.pop_front();
+  CPPUNIT_ASSERT_EQUAL((string) e->get_attribute("name")->get_value(), (string) "Device3");
 }
 
 void XmlPrinterTest::testPrintError()
@@ -318,9 +308,9 @@ void XmlPrinterTest::testPrintCurrent()
   events.push_back(addEventToDataItem("Xcom", 10254803, "0"));
   events.push_back(addEventToDataItem("spindle_speed", 16, "100"));
   events.push_back(addEventToDataItem("Yact", 10254797, "0.00199"));
-  events.push_back(addEventToDataItem("Ycom", 10254800, "0.00199"));
+  events.push_back(addEventToDataItem("Ycom", 10254800, "0.00189"));
   events.push_back(addEventToDataItem("Zact", 10254798, "0.0002"));
-  events.push_back(addEventToDataItem("Zcom", 10254801, "0.0002"));
+  events.push_back(addEventToDataItem("Zcom", 10254801, "0.0003"));
   events.push_back(addEventToDataItem("block", 10254789, "x-0.132010 y-0.158143"));
   events.push_back(addEventToDataItem("mode", 13, "AUTOMATIC"));
   events.push_back(addEventToDataItem("line", 10254796, "0"));
@@ -337,7 +327,27 @@ void XmlPrinterTest::testPrintCurrent()
   }
   
   PARSE_XML(XmlPrinter::printCurrent(123, 131072, 10254805, 10123733, dataItems));
-    
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", "0");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Samples/m:SpindleSpeed[@name='Sovr']", "100");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom']", "0");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Samples/m:SpindleSpeed[@name='Sspeed']", "100");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact']", "0.00199");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom']", "0.00189");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Z']/m:Samples/m:Position[@name='Zact']", "0.0002");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Z']/m:Samples/m:Position[@name='Zcom']", "0.0003");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Block", 
+                                    "x-0.132010 y-0.158143");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Execution",
+                                    "READY");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:ControllerMode",
+                                    "AUTOMATIC");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Line",
+                                    "0");    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Program",
+                                    "/home/mtconnect/simulator/spiral.ngc");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='power']/m:Events/m:PowerStatus",
+                                    "ON");
   clearEvents(events);
 }
 
@@ -360,7 +370,31 @@ void XmlPrinterTest::testPrintSample()
     
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
   
-  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "/m:MTConnectStreams/m:Streams/m:DeviceStream/m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][1]", 
+                                    "0.553472");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][2]", 
+                                    "0.556826");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom'][1]", 
+                                    "0.551123");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom'][2]", 
+                                    "0.55582");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][3]", 
+                                    "0.560181");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][4]", 
+                                    "-0.895613");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact'][1]", 
+                                    "-0.900624");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact'][2]", 
+                                    "-0.897574");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom'][1]", 
+                                    "-0.89692");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom'][2]", 
+                                    "-0.894742");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Line",
+                                    "229");    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Block",
+                                    "x-1.149250 y1.048981");    
+
   clearEvents(events);
 }
 
