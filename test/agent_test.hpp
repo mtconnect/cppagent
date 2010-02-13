@@ -105,16 +105,27 @@ protected:
   void testAdapter();
   
   /* Helper method to test expected string, given optional query, & run tests */
-  void responseHelper(
-    const std::string& expected,
-    std::string key = "",
-    std::string value = ""
-  );
+  void responseHelper(xmlpp::DomParser *parser,
+                      CPPUNIT_NS::SourceLine sourceLine,
+                      std::string key = "",
+                      std::string value = "");
   
 public:
   void setUp();
   void tearDown();
 };
+
+#define PARSE_XML_RESPONSE \
+  xmlpp::DomParser parser; \
+  responseHelper(&parser, CPPUNIT_SOURCELINE()); \
+  CPPUNIT_ASSERT(parser); \
+  const xmlpp::Node* root = parser.get_document()->get_root_node();
+
+#define PARSE_XML_RESPONSE_QUERY(key, value) \
+  xmlpp::DomParser parser; \
+  responseHelper(&parser, CPPUNIT_SOURCELINE(), key, value); \
+  CPPUNIT_ASSERT(parser); \
+  const xmlpp::Node* root = parser.get_document()->get_root_node();
 
 #endif
 

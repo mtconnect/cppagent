@@ -40,6 +40,7 @@ using namespace std;
 
 void XmlParserTest::setUp()
 {
+  a = NULL;
   try
   {
     a = new XmlParser("../samples/test_config.xml");

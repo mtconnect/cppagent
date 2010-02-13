@@ -51,7 +51,9 @@ string XmlPrinter::printError(
     nextSeq
   );
   
-  xmlpp::Element * error = mErrorXml->get_root_node()->add_child("Error");
+  xmlpp::Element * errors = mErrorXml->get_root_node()->add_child("Errors");
+
+  xmlpp::Element * error = errors->add_child("Error");
   error->set_attribute("errorCode", errorCode);
   error->set_child_text(errorText);
   
@@ -177,9 +179,9 @@ xmlpp::Document * XmlPrinter::initXmlDoc(
   xmlpp::Document *doc = new xmlpp::Document;
   
   string rootName = "MTConnect" + xmlType;
-  string xmlns = "urn:mtconnect.com:MTConnect" + xmlType + ":1.0";
-  string xsi = "urn:mtconnect.com:MTConnect" + xmlType +
-    ":1.0 http://www.mtconnect.org/schemas/MTConnect" + xmlType + ".xsd";
+  string xmlns = "urn:mtconnect.org:MTConnect" + xmlType + ":1.1";
+  string xsi = "urn:mtconnect.org:MTConnect" + xmlType +
+    ":1.1 http://www.mtconnect.org/schemas/MTConnect" + xmlType + ".xsd";
   
   // Root
   xmlpp::Element * root = doc->create_root_node(rootName);
@@ -194,7 +196,7 @@ xmlpp::Document * XmlPrinter::initXmlDoc(
   header->set_attribute("sender", "localhost");
   header->set_attribute("instanceId", intToString(instanceId));
   header->set_attribute("bufferSize", intToString(bufferSize));
-  header->set_attribute("version", "1.0");
+  header->set_attribute("version", "1.1");
   
   if (xmlType == "Streams")
   {
@@ -314,6 +316,30 @@ void XmlPrinter::printProbeHelper(
       {
         xmlpp::Element * src = dataItem->add_child("Source");
         src->add_child_text(source);
+      }
+      
+      if ((*data)->hasConstraints())
+      {
+        xmlpp::Element * constraints = dataItem->add_child("Constraints");
+        string s = (*data)->getMaximum();
+        if (!s.empty())
+        {
+          xmlpp::Element *v = constraints->add_child("Maximum");
+          v->add_child_text(s);
+        }          
+        s = (*data)->getMinimum();
+        if (!s.empty())
+        {
+          xmlpp::Element *v = constraints->add_child("Minimum");
+          v->add_child_text(s);
+        }          
+        vector<string> values = (*data)->getConstrainedValues();
+        vector<string>::iterator value;
+        for (value = values.begin(); value != values.end(); value++)
+        {
+          xmlpp::Element *v = constraints->add_child("Value");
+          v->add_child_text(*value);
+        }
       }
     }
   }

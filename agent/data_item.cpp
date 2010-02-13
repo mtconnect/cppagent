@@ -60,14 +60,16 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
   "STATUS",
   "PERCENT",
   "NEWTON_MILLIMETER",
-  "HERTZ"
+  "HERTZ",
+  "MILLIMETER_3D",
+  "DEGREE_3D"
 };
 
 
 /* DataItem public methods */
 DataItem::DataItem(std::map<string, string> attributes) 
   : mHasNativeScale(false), mHasSignificantDigits(false), mConversionDetermined(false),
-    mConversionRequired(false), mHasFactor(false)
+    mConversionRequired(false), mHasFactor(false), mHasConstraints(false)
 
 {
   mId = attributes["id"];

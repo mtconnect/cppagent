@@ -205,9 +205,7 @@ protected:
 
   /* Find if there's data item with that name/source name */
   bool hasDataItem(std::list<DataItem *>& dataItems, const std::string& name);
-  
-  std::string getTimeStamp();
-  
+    
 protected:
   /* Unique id based on the time of creation */
   unsigned int mInstanceId;

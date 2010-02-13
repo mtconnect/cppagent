@@ -40,7 +40,7 @@ using namespace std;
 
 void AgentTest::setUp()
 {
-  a = new Agent("../samples/test_config.xml", 1 << 4);
+  a = new Agent("../samples/test_config.xml", 17);
   agentId = intToString(getCurrentTimeInSec());
   adapter = NULL;
 }
@@ -52,175 +52,176 @@ void AgentTest::tearDown()
 
 void AgentTest::testConstructor()
 {
-  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 1 << 4), string);
-  CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 1 << 4));
+  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17), string);
+  CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 17));
 }
 
 void AgentTest::testBadPath()
 {
   string pathError = getFile("../samples/test_error.xml");
-  
-  fillAttribute(pathError, "errorCode", "UNSUPPORTED");
-  fillAttribute(pathError, "instanceId", agentId);
-  fillAttribute(pathError, "bufferSize", "131072");
-  fillAttribute(pathError, "creationTime", getCurrentTime(GMT));
-  
-  path = "/bad_path";
-  fillErrorText(pathError, "The following path is invalid: " + path);
-  responseHelper(pathError);
-  
-  path = "/bad/path/";
-  fillErrorText(pathError, "The following path is invalid: " + path);
-  responseHelper(pathError);
     
-  path = "/LinuxCNC/current/blah";
-  fillErrorText(pathError, "The following path is invalid: " + path);
-  responseHelper(pathError);
+  {
+    path = "/bad_path";
+    PARSE_XML_RESPONSE
+    string message = (string) "The following path is invalid: " + path;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "UNSUPPORTED");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", message.c_str());
+  }
+  
+  {
+    path = "/bad/path/";
+    PARSE_XML_RESPONSE
+    string message = (string) "The following path is invalid: " + path;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "UNSUPPORTED");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", message.c_str());
+  }
+  
+  {
+    path = "/LinuxCNC/current/blah";
+    PARSE_XML_RESPONSE
+    string message = (string) "The following path is invalid: " + path;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "UNSUPPORTED");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", message.c_str());
+  }
 }
 
 void AgentTest::testBadXPath()
 {
-  string errorStr = getFile("../samples/test_error.xml");
-  fillAttribute(errorStr, "instanceId", agentId);
-  fillAttribute(errorStr, "bufferSize", "131072");
-  fillAttribute(errorStr, "creationTime", getCurrentTime(GMT));
-  fillAttribute(errorStr, "errorCode", "INVALID_XPATH");
-  
   string key("path"), value;
   path = "/current";
   
-  value = "//////Linear";
-  fillErrorText(errorStr, "Invalid XPath: " + value);
-  responseHelper(errorStr, key, value);
+  {
+    value = "//////Linear";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    string message = (string) "Invalid XPath: //m://m://m:Linear";
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "INVALID_XPATH");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", message.c_str());
+  }
   
-  value = "//Axes?//Linear";
-  fillErrorText(errorStr, "Invalid XPath: " + value);
-  responseHelper(errorStr, key, value);
+  {
+    value = "//Axes?//Linear";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    string message = (string) "Invalid XPath: //m:Axes?//m:Linear";
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "INVALID_XPATH");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", message.c_str());
+  }
   
-  value = "//Devices/Device[@name=\"I_DON'T_EXIST\"";
-  fillErrorText(errorStr, "Invalid XPath: " + value);
-  responseHelper(errorStr, key, value);
+  {
+    value = "//Devices/Device[@name=\"I_DON'T_EXIST\"";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    string message = (string) "Invalid XPath: //m:Devices/m:Device[@name=\"I_DON'T_EXIST\"";
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "INVALID_XPATH");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", message.c_str());
+  }
 }
 
 void AgentTest::testBadCount()
 {
-  string errorStr = getFile("../samples/test_error.xml");
-  fillAttribute(errorStr, "instanceId", agentId);
-  fillAttribute(errorStr, "bufferSize", "131072");
-  fillAttribute(errorStr, "creationTime", getCurrentTime(GMT));
-  fillAttribute(errorStr, "errorCode", "QUERY_ERROR");
-  
   path = "/sample";
   string key("count"), value;
   
-  //value = "";
-  //fillErrorText(errorStr, "'count' cannot be empty.");
-  //responseHelper(errorStr, key, value);
+  {
+    value = "NON_INTEGER";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'count' must be a positive integer.");
+  }
   
-  value = "NON_INTEGER";
-  fillErrorText(errorStr, "'count' must be a positive integer.");
-  responseHelper(errorStr, key, value);
+  {
+    value = "-123";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'count' must be a positive integer.");
+  }
   
-  value = "-123";
-  responseHelper(errorStr, key, value);
+  {
+    value = "0";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'count' must be greater than 1.");
+  }
   
-  value = "0";
-  fillErrorText(errorStr, "'count' must be greater than 1.");
-  responseHelper(errorStr, key, value);
-  
-  value = "999999999999999999";
-  fillErrorText(errorStr, "'count' must be less than 131072.");
-  responseHelper(errorStr, key, value);
+  {
+    value = "999999999999999999";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'count' must be less than 131072.");
+  }
+
 }
 
 void AgentTest::testBadFreq()
 {
-  string errorStr = getFile("../samples/test_error.xml");
-  fillAttribute(errorStr, "instanceId", agentId);
-  fillAttribute(errorStr, "bufferSize", "131072");
-  fillAttribute(errorStr, "creationTime", getCurrentTime(GMT));
-  fillAttribute(errorStr, "errorCode", "QUERY_ERROR");
-  
   path = "/sample";
   string key("frequency"), value;
   
-  /*value = "";
-  fillErrorText(errorStr, "'freq' cannot be empty.");
-  responseHelper(errorStr, key, value);*/
+  {
+    value = "NON_INTEGER";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'frequency' must be a positive integer.");
+  }
   
-  value = "NON_INTEGER";
-  fillErrorText(errorStr, "'frequency' must be a positive integer.");
-  responseHelper(errorStr, key, value);
+  {
+    value = "-123";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'frequency' must be a positive integer.");
+  }
   
-  value = "-123";
-  responseHelper(errorStr, key, value);
-  
-  value = "999999999999999999";
-  fillErrorText(errorStr, "'frequency' must be less than 2147483646.");
-  responseHelper(errorStr, key, value);
-  
-  path = "/current";
-  responseHelper(errorStr, key, value);
+  {
+    value = "999999999999999999";
+    PARSE_XML_RESPONSE_QUERY(key, value)
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'frequency' must be less than 2147483646.");
+  }
 }
 
 void AgentTest::testProbe()
 {
-  string probeStr = getFile("../samples/test_probe.xml");
+  {
+    path = "/probe";
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Devices/m:Device@name", "LinuxCNC");
+  }
   
-  fillAttribute(probeStr, "instanceId", agentId);
-  fillAttribute(probeStr, "bufferSize", "131072");
-  fillAttribute(probeStr, "creationTime", getCurrentTime(GMT));
+  {
+    path = "/";
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Devices/m:Device@name", "LinuxCNC");
+  }
   
-  path = "/probe";
-  responseHelper(probeStr);
-    
-  path = "/";
-  responseHelper(probeStr);
-  
-  path = "/LinuxCNC";
-  responseHelper(probeStr);
-  
-  path = "/LinuxCNC/probe";
-  responseHelper(probeStr);
-  
-  string key("device"), value("LinuxCNC");
-  path = "/probe";
-  responseHelper(probeStr, key, value);
+  {
+    path = "/LinuxCNC";
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Devices/m:Device@name", "LinuxCNC");
+  }
 }
 
 void AgentTest::testEmptyStream()
 {
-  string emptyStr = getFile("../samples/test_empty_stream.xml");
+  {
+    path = "/current";
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:PowerStatus", "UNAVAILABLE");
+  }
   
-  fillAttribute(emptyStr, "instanceId", agentId);
-  fillAttribute(emptyStr, "bufferSize", "131072");
-  fillAttribute(emptyStr, "creationTime", getCurrentTime(GMT));
-  
-  path = "/current";
-  responseHelper(emptyStr);
-  
-  path = "/sample";
-  responseHelper(emptyStr);
+  {
+    path = "/sample";
+    PARSE_XML_RESPONSE_QUERY("from", "20");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Streams", 0);
+  }
 }
 
 void AgentTest::testBadDevices()
 {
-  string key("device"), value("LinuxCN");
-  
-  string errorStr = getFile("../samples/test_error.xml");
-  
-  fillAttribute(errorStr, "instanceId", agentId);
-  fillAttribute(errorStr, "bufferSize", "131072");
-  fillAttribute(errorStr, "creationTime", getCurrentTime(GMT));
-  
-  fillAttribute(errorStr, "errorCode", "NO_DEVICE");
-  fillErrorText(errorStr, "Could not find the device '" + value + "'");
-  
-  path = "/probe";
-  responseHelper(errorStr, key, value);
-  
-  path = "/LinuxCN/probe";
-  responseHelper(errorStr);
+  {
+    path = "/LinuxCN/probe";
+    PARSE_XML_RESPONSE
+    string message = (string) "Could not find the device 'LinuxCN'";
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "NO_DEVICE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", message.c_str());
+  }
 }
 
 void AgentTest::testAddAdapter()
@@ -233,44 +234,41 @@ void AgentTest::testAddAdapter()
 void AgentTest::testAddToBuffer()
 {
   string device("LinuxCNC"), key("badKey"), value("ON");
-  int seqNum;
-  
+  int seqNum;  
   DataItem *di1 = a->getDataItemByName(device, key);
-  seqNum = a->addToBuffer(di1, key, value);
+  seqNum = a->addToBuffer(di1, value, "NOW");
   CPPUNIT_ASSERT_EQUAL(0, seqNum);
   
-  string emptyStr = getFile("../samples/test_empty_stream.xml");
+  {
+    path = "/current";
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream", "");
+  }
   
-  fillAttribute(emptyStr, "instanceId", agentId);
-  fillAttribute(emptyStr, "bufferSize", "131072");
-  fillAttribute(emptyStr, "creationTime", getCurrentTime(GMT));
-  
-  path = "/current";
-  responseHelper(emptyStr);
-  
-  path = "/sample";
-  responseHelper(emptyStr);
+  {
+    path = "/sample";
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream", "");
+  }
   
   key = "power";
 
   DataItem *di2 = a->getDataItemByName(device, key);
-  seqNum = a->addToBuffer(di2, key, value);
-  CPPUNIT_ASSERT_EQUAL(1, seqNum);
+  seqNum = a->addToBuffer(di2, value, "NOW");
+  CPPUNIT_ASSERT_EQUAL(18, seqNum);
   
-  // Streams are no longer empty
-  path = "/current";
-  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
-    incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
-  
-  CPPUNIT_ASSERT(response);
-  CPPUNIT_ASSERT(emptyStr != result);
-  
-  path = "/sample";
-  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
-    incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
-  
-  CPPUNIT_ASSERT(response);
-  CPPUNIT_ASSERT(emptyStr != result);
+  {
+    path = "/current";
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:PowerStatus", "ON");
+  }
+ 
+  {
+    path = "/sample";
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:PowerStatus[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:PowerStatus[2]", "ON");
+  }
 }
 
 void AgentTest::testAdapter()
@@ -279,31 +277,37 @@ void AgentTest::testAdapter()
   
   adapter = a->addAdapter("LinuxCNC", "server", 7878);
   CPPUNIT_ASSERT(adapter);
-  
-  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
-    incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
-  
-  CPPUNIT_ASSERT(string::npos == result.find("line"));
+    
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
   
   adapter->processData("TIME|line|204");
-  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
-    incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
   
-  CPPUNIT_ASSERT(string::npos != result.find("line"));
-  CPPUNIT_ASSERT(string::npos == result.find("alarm"));
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Line[2]", "204");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
+  }
   
   adapter->processData("TIME|alarm|code|nativeCode|severity|state|description");
-  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
-    incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
-  
-  CPPUNIT_ASSERT(string::npos != result.find("alarm"));
+
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Line[2]", "204");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Alarm[2]", "description");
+  }
 }
 
-void AgentTest::responseHelper(
-    const string& expected,
-    string key,
-    string value
-  )
+
+void AgentTest::responseHelper(xmlpp::DomParser *parser,
+                               CPPUNIT_NS::SourceLine sourceLine,
+                               string key,
+                               string value)
 {
   bool query = !key.empty() and !value.empty();
   
@@ -314,13 +318,16 @@ void AgentTest::responseHelper(
   
   response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
     incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
-  
-  CPPUNIT_ASSERT(response);
-  CPPUNIT_ASSERT_EQUAL(expected, result);
+
+  string message = (string) "No response to request" + path + " with: (" + key + ", " + value + ")";
+
+  CPPUNIT_NS::Asserter::failIf(!response, message, sourceLine);
   
   if (query)
   {
     queries.remove_any(key, value);
   }
+  
+  parser->parse_memory(result);
 }
 

@@ -58,7 +58,7 @@ void XmlPrinterTest::testInitXmlDoc()
   // Root
   xmlpp::Element *root1 = initXml1->get_root_node();
   CPPUNIT_ASSERT_EQUAL(
-    (Glib::ustring) "urn:mtconnect.com:MTConnectDevices:1.0",
+    (Glib::ustring) "urn:mtconnect.org:MTConnectDevices:1.1",
     root1->get_attribute_value("xmlns:m")
   );
   CPPUNIT_ASSERT_EQUAL(
@@ -66,12 +66,12 @@ void XmlPrinterTest::testInitXmlDoc()
     root1->get_attribute_value("xmlns:xsi")
   );
   CPPUNIT_ASSERT_EQUAL(
-    (Glib::ustring) "urn:mtconnect.com:MTConnectDevices:1.0",
+    (Glib::ustring) "urn:mtconnect.org:MTConnectDevices:1.1",
     root1->get_attribute_value("xmlns")
   );
   CPPUNIT_ASSERT_EQUAL(
-    (Glib::ustring) "urn:mtconnect.com:MTConnectDevices:1.0"
-      + " /schemas/MTConnectDevices.xsd",
+    (Glib::ustring) "urn:mtconnect.org:MTConnectDevices:1.1"
+      + " http://www.mtconnect.org/schemas/MTConnectDevices.xsd",
     root1->get_attribute_value("xsi:schemaLocation")
   );
   
@@ -89,7 +89,7 @@ void XmlPrinterTest::testInitXmlDoc()
     header1->get_attribute_value("instanceId"));
   CPPUNIT_ASSERT_EQUAL((Glib::ustring) "100000",
     header1->get_attribute_value("bufferSize"));
-  CPPUNIT_ASSERT_EQUAL((Glib::ustring) "1.0",
+  CPPUNIT_ASSERT_EQUAL((Glib::ustring) "1.1",
     header1->get_attribute_value("version"));
   
   CPPUNIT_ASSERT(header1->get_attribute_value("nextSequence").empty());
@@ -103,7 +103,7 @@ void XmlPrinterTest::testInitXmlDoc()
   // Root
   xmlpp::Element *root2 = initXml2->get_root_node();
   CPPUNIT_ASSERT_EQUAL(
-    (Glib::ustring) "urn:mtconnect.com:MTConnectStreams:1.0",
+    (Glib::ustring) "urn:mtconnect.org:MTConnectStreams:1.1",
     root2->get_attribute_value("xmlns:m")
   );
   CPPUNIT_ASSERT_EQUAL(
@@ -111,12 +111,12 @@ void XmlPrinterTest::testInitXmlDoc()
     root2->get_attribute_value("xmlns:xsi")
   );
   CPPUNIT_ASSERT_EQUAL(
-    (Glib::ustring) "urn:mtconnect.com:MTConnectStreams:1.0",
+    (Glib::ustring) "urn:mtconnect.org:MTConnectStreams:1.1",
     root2->get_attribute_value("xmlns")
   );
   CPPUNIT_ASSERT_EQUAL(
-    (Glib::ustring) "urn:mtconnect.com:MTConnectStreams:1.0"
-      + " /schemas/MTConnectStreams.xsd",
+    (Glib::ustring) "urn:mtconnect.org:MTConnectStreams:1.1"
+      + " http://www.mtconnect.org/schemas/MTConnectStreams.xsd",
     root2->get_attribute_value("xsi:schemaLocation")
   );
   
@@ -134,7 +134,7 @@ void XmlPrinterTest::testInitXmlDoc()
     header2->get_attribute_value("instanceId"));
   CPPUNIT_ASSERT_EQUAL((Glib::ustring) "100000",
     header2->get_attribute_value("bufferSize"));
-  CPPUNIT_ASSERT_EQUAL((Glib::ustring) "1.0",
+  CPPUNIT_ASSERT_EQUAL((Glib::ustring) "1.1",
     header2->get_attribute_value("version"));
   
   CPPUNIT_ASSERT_EQUAL((Glib::ustring) "10",
@@ -267,35 +267,48 @@ void XmlPrinterTest::testGetDeviceStream()
 
 void XmlPrinterTest::testPrintError()
 {
-  string errorString = getFile("../samples/test_error.xml");
+  PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
   
-  fillAttribute(errorString, "instanceId", "123");
-  fillAttribute(errorString, "bufferSize", "9999");
-  fillAttribute(errorString, "creationTime", getCurrentTime(GMT));
-  
-  fillAttribute(errorString, "errorCode", "ERROR_CODE");
-  fillErrorText(errorString, "ERROR TEXT!");
-  
-  CPPUNIT_ASSERT_EQUAL(errorString,
-    XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@instanceId", "123");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@bufferSize", "9999");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "ERROR_CODE");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "ERROR TEXT!");
 }
 
 void XmlPrinterTest::testPrintProbe()
-{
-  string probeString = getFile("../samples/test_probe.xml");
+{  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@instanceId", "123");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@bufferSize", "9999");
   
-  fillAttribute(probeString, "instanceId", "123");
-  fillAttribute(probeString, "bufferSize", "9999");
-  fillAttribute(probeString, "creationTime", getCurrentTime(GMT));
+  // Check Axes
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Axes@name", "Axes");
   
-  CPPUNIT_ASSERT_EQUAL(probeString,
-    XmlPrinter::printProbe(123, 9999, 1, devices));
+  // Check Spindle
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Rotary@name", "C");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Rotary/m:DataItems/m:DataItem@type", "SPINDLE_SPEED");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Rotary/m:DataItems/m:DataItem[@type='ROTARY_MODE']@name",
+                                    "Smode");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Rotary/m:DataItems/m:DataItem[@type='ROTARY_MODE']/m:Constraints/m:Value",
+                                    "SPINDLE");
+  
+  // Check Linear Axis
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@type", "POSITION");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@name", "Xact");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@significantDigits", "6");
+
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='Z']/m:DataItems/m:DataItem@type", "POSITION");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='Z']/m:DataItems/m:DataItem@name", "Zact");
+  
+  // Check for Path component
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Controller//m:Path/m:DataItems/m:DataItem[@type='PATH_POSITION']@name",
+                                    "Ppos");
+
 }
 
 void XmlPrinterTest::testPrintCurrent()
 {
-  string currentString = getFile("../samples/test_current.xml");
-  
   list<ComponentEvent *> events;
   
   events.push_back(addEventToDataItem("6", 10254804, "0"));
@@ -311,34 +324,25 @@ void XmlPrinterTest::testPrintCurrent()
   events.push_back(addEventToDataItem("20", 10254789, "x-0.132010 y-0.158143"));
   events.push_back(addEventToDataItem("21", 13, "AUTOMATIC"));
   events.push_back(addEventToDataItem("22", 10254796, "0"));
-  events.push_back(addEventToDataItem("23", 12,
-    "/home/mtconnect/simulator/spiral.ngc"));
+  events.push_back(addEventToDataItem("23", 12, "/home/mtconnect/simulator/spiral.ngc"));
   events.push_back(addEventToDataItem("24", 10254795, "READY"));
   events.push_back(addEventToDataItem("1", 1, "ON"));
   
   list<DataItem *> dataItems;
-  map<string, DataItem *> dataItemsMap = devices.front()->getDeviceDataItems();
-  
+  map<string, DataItem *> dataItemsMap = devices.front()->getDeviceDataItems();  
   map<string, DataItem*>::iterator data;
   for (data = dataItemsMap.begin(); data != dataItemsMap.end(); data++)
   {
     dataItems.push_back(data->second);
   }
   
-  fillAttribute(currentString, "instanceId", "123");
-  fillAttribute(currentString, "bufferSize", "9999");
-  fillAttribute(currentString, "creationTime", getCurrentTime(GMT));
-  
-  CPPUNIT_ASSERT_EQUAL(currentString,
-    XmlPrinter::printCurrent(123, 9999, 10254805, 10123733, dataItems));
-  
+  PARSE_XML(XmlPrinter::printCurrent(123, 131072, 10254805, 10123733, dataItems));
+    
   clearEvents(events);
 }
 
 void XmlPrinterTest::testPrintSample()
 {
-  string sampleString = getFile("../samples/test_sample.xml");
-  
   list<ComponentEvent *> events;
   
   events.push_back(addEventToDataItem("17", 10843512, "0.553472"));
@@ -353,30 +357,19 @@ void XmlPrinterTest::testPrintSample()
   events.push_back(addEventToDataItem("14", 10843521, "-0.895613"));
   events.push_back(addEventToDataItem("22", 11351720, "229"));
   events.push_back(addEventToDataItem("20", 11351726, "x-1.149250 y1.048981"));
+    
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
   
-  fillAttribute(sampleString, "instanceId", "123");
-  fillAttribute(sampleString, "bufferSize", "9999");
-  fillAttribute(sampleString, "creationTime", getCurrentTime(GMT));
-  
-  CPPUNIT_ASSERT_EQUAL(sampleString,
-    XmlPrinter::printSample(123, 9999, 10974584, 10843512, events));
   
   clearEvents(events);
 }
 
 DataItem * XmlPrinterTest::getDataItemById(const char *id)
 {
-  map<string, DataItem*> dataItems = devices.front()->getDeviceDataItems();
+  Device *device = devices.front();
+  CPPUNIT_ASSERT(device);
   
-  map<string, DataItem*>::iterator dataItem;
-  for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
-  {
-    if ((dataItem->second)->getId() == id)
-    {
-      return (dataItem->second);
-    }
-  }
-  return NULL;
+  return device->getDeviceDataItem(id);
 }
 
 ComponentEvent * XmlPrinterTest::addEventToDataItem(

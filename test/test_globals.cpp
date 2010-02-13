@@ -32,6 +32,7 @@
 */
 
 #include "test_globals.hpp"
+#include <libxml/tree.h>
 
 using namespace std;
 
@@ -84,3 +85,112 @@ void fillAttribute(
   xmlString.insert(pos, value);
 }
 
+void xpathTest(const xmlpp::Node* node, const char *xpath, const char *expected,
+               CPPUNIT_NS::SourceLine sourceLine)
+{
+  string path(xpath), attribute;
+  size_t pos = path.find_first_of('@');
+  while (pos != string::npos && attribute.empty()) {
+    if (xpath[pos - 1] != '[') {
+      attribute = path.substr(pos + 1);
+      path = path.substr(0, pos);
+    }
+    pos = path.find_first_of('@', pos + 1);
+  }
+  
+  xmlpp::Node::PrefixNsMap spaces;
+  spaces.insert(pair<Glib::ustring, Glib::ustring>("m", node->get_namespace_uri()));
+  xmlpp::NodeSet set = node->find(path, spaces);
+  
+  if (set.size() < 1)
+  {
+    CPPUNIT_NS::OStringStream message;
+    message << "Xpath " << xpath << " did not match any nodes in XML document";
+    CPPUNIT_NS::Asserter::fail(message.str(), sourceLine);
+    return;
+  }
+  
+  // Special case when no children are expected
+  xmlpp::Node *first = set.front();
+  if (expected == 0)
+  {
+    CPPUNIT_NS::OStringStream message;
+    message << "Xpath " << xpath << " was not supposed to have any children.";
+    xmlpp::Node::NodeList children = first->get_children();
+    bool has_content = false;
+    xmlpp::Node::NodeList::iterator child;
+    for (child = children.begin(); !has_content && child != children.end(); child++)
+    {
+      if ((*child)->cobj()->type == XML_ELEMENT_NODE)
+      {
+        has_content = true;
+      } 
+      else if (first->cobj()->type == XML_TEXT_NODE)
+      {
+        string res = ((xmlpp::TextNode*) *child)->get_content();
+        has_content = !trim(res).empty();
+      }
+    }
+    
+    CPPUNIT_NS::Asserter::failIf(has_content, message.str(), sourceLine);    
+    return;
+  }
+  
+  string actual;
+  xmlpp::Element *ele;
+  switch(first->cobj()->type)
+  {
+    case XML_ELEMENT_NODE:
+      ele = (xmlpp::Element*) first;
+      if (!attribute.empty())
+      {
+        actual = ele->get_attribute(attribute)->get_value();
+      } else {
+        actual = ele->get_child_text()->get_content();
+      }
+      break;
+      
+    case XML_ATTRIBUTE_NODE:
+      actual = ((xmlpp::Attribute*) first)->get_value();
+      break;
+      
+      
+    case XML_TEXT_NODE:
+      actual = ((xmlpp::TextNode*) first)->get_content();
+      break;
+      
+    default:
+      cerr << "Cannot handle type: " << first->cobj()->type << endl;
+  }
+  
+  trim(actual);
+  
+  string message = (string) "Incorrect value for path " + xpath;  
+  CPPUNIT_NS::Asserter::failNotEqualIf(actual != expected,
+                                       expected,
+                                       actual,
+                                       sourceLine,
+                                       message);
+}
+
+string &trim(string &str)
+{
+  char const* delims = " \t\r\n";
+  
+  // trim leading whitespace
+  string::size_type not_white = str.find_first_not_of(delims);
+  if (not_white == string::npos)
+    str.erase();
+  else if (not_white > 0)
+    str.erase(0, not_white);
+  
+  if (not_white != string::npos)
+  {  
+    // trim trailing whitespace
+    not_white = str.find_last_not_of(delims); 
+    if (not_white < (str.length() - 1))
+      str.erase(not_white + 1);
+  }
+  
+  return str;
+}

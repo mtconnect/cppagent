@@ -1,57 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MTConnectDevices>
-  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.0"/>
+<MTConnectDevices xmlns:m="urn:mtconnect.com:MTConnectDevices:1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.1">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.1"/>
   <Devices>
-    <Device iso841Class="0" uuid="000" name="LinuxCNC" sampleRate="10.0" id="4">
+    <Device uuid="000" name="LinuxCNC" sampleRate="10.0" id="d">
       <Description manufacturer="NIST" serialNumber=""/>
       <DataItems>
-        <DataItem type="ALARM" category="EVENT" significantDigits="0" id="3" name="alarm"/>
+	<DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
       </DataItems>
       <Components>
-        <Axes iso841Class="0" name="Axes" sampleRate="0.0" id="5">
+        <Axes name="Axes" id="axes">
           <Components>
-            <Spindle iso841Class="0" name="S" sampleRate="0.0" id="10">
+            <Rotary name="C" id="c">
               <DataItems>
-                <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="REVOLUTION/MINUTE" significantDigits="0" nativeUnits="REVOLUTION/MINUTE" id="12" subType="ACTUAL" name="Sspeed">
+                <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE" id="c1" subType="ACTUAL" name="Sspeed">
                   <Source>spindle_speed</Source>
+		</DataItem>
+		<DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c2">
+		  <Constraints><Value>SPINDLE</Value></Constraints>
                 </DataItem>
-                <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="PERCENT" significantDigits="0" nativeUnits="PERCENT" id="13" subType="OVERRIDE" name="Sovr">
+                <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="c3" subType="OVERRIDE" name="Sovr">
                   <Source>SspeedOvr</Source>
                 </DataItem>
               </DataItems>
-            </Spindle>
-            <Linear iso841Class="0" name="X" sampleRate="0.0" id="7">
+            </Rotary>
+            <Linear name="X" id="x">
               <DataItems>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" significantDigits="0" nativeUnits="MILLIMETER" id="14" subType="ACTUAL" name="Xact"/>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" significantDigits="0" nativeUnits="MILLIMETER" id="15" subType="COMMANDED" name="Xcom"/>
+                <DataItem type="POSITION" significantDigits="6" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x1" subType="ACTUAL" name="Xact"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x2" subType="COMMANDED" name="Xcom"/>
               </DataItems>
             </Linear>
-            <Linear iso841Class="0" name="Y" sampleRate="0.0" id="8">
+            <Linear name="Y" id="y">
               <DataItems>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" significantDigits="0" nativeUnits="MILLIMETER" id="16" subType="ACTUAL" name="Yact"/>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" significantDigits="0" nativeUnits="MILLIMETER" id="17" subType="COMMANDED" name="Ycom"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y1" subType="ACTUAL" name="Yact"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y2" subType="COMMANDED" name="Ycom"/>
               </DataItems>
             </Linear>
-            <Linear iso841Class="0" name="Z" sampleRate="0.0" id="9">
+            <Linear name="Z" id="z">
               <DataItems>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" significantDigits="0" nativeUnits="MILLIMETER" id="18" subType="ACTUAL" name="Zact"/>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" significantDigits="0" nativeUnits="MILLIMETER" id="19" subType="COMMANDED" name="Zcom"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="z1" subType="ACTUAL" name="Zact"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x2" subType="COMMANDED" name="Zcom"/>
               </DataItems>
             </Linear>
           </Components>
         </Axes>
-        <Controller iso841Class="0" name="Controller" sampleRate="0.0" id="11">
-          <DataItems>
-            <DataItem type="BLOCK" category="EVENT" significantDigits="0" id="20" name="block"/>
-            <DataItem type="CONTROLLER_MODE" category="EVENT" significantDigits="0" id="21" name="mode"/>
-            <DataItem type="LINE" category="EVENT" significantDigits="0" id="22" name="line"/>
-            <DataItem type="PROGRAM" category="EVENT" significantDigits="0" id="23" name="program"/>
-            <DataItem type="EXECUTION" category="EVENT" significantDigits="0" id="24" name="execution"/>
-          </DataItems>
+        <Controller name="Controller" id="cont">
+	  <Components>
+	    <Path name="path" id="path">
+              <DataItems>
+		<DataItem type="BLOCK" category="EVENT" id="p1" name="block"/>
+		<DataItem type="CONTROLLER_MODE" category="EVENT" id="p2" name="mode"/>
+		<DataItem type="LINE" category="EVENT" id="p3" name="line"/>
+		<DataItem type="PROGRAM" category="EVENT" id="p4" name="program"/>
+		<DataItem type="EXECUTION" category="EVENT" id="p5" name="execution"/>
+		<DataItem type="PATH_POSITION" category="EVENT" id="p6" name="Ppos" />
+              </DataItems>
+	    </Path>
+	  </Components>
         </Controller>
-        <Power iso841Class="0" name="power" sampleRate="0.0" id="2">
+        <Power name="power" id="power">
           <DataItems>
-            <DataItem type="POWER_STATUS" category="EVENT" significantDigits="0" id="1" name="power"/>
+            <DataItem type="POWER_STATUS" category="EVENT" id="pw1" name="power"/>
           </DataItems>
         </Power>
       </Components>

@@ -80,10 +80,12 @@ public:
     STATUS,
     PERCENT,
     NEWTON_MILLIMETER,
-    HERTZ
+    HERTZ,
+    MILLIMETER_3D,
+    DEGREE_3D
   };
   
-  static const unsigned int NumSimpleUnits = 23;
+  static const unsigned int NumSimpleUnits = 25;
   static const std::string SSimpleUnits[];
   
 public:
@@ -130,6 +132,16 @@ public:
   
   /* Transform a name to camel casing */
   static std::string getCamelType(const std::string& aType);
+  
+  /* Constrainsts */
+  bool hasConstraints() { return mHasConstraints; }
+  std::string getMaximum() const { return mMaximum; }
+  std::string getMinimum() const { return mMaximum; }
+  std::vector<std::string> &getConstrainedValues() { return mValues; }
+  
+  void setMaximum(std::string aMax) { mMaximum = aMax; mHasConstraints = true; }
+  void setMinimum(std::string aMin) { mMinimum = aMin; mHasConstraints = true; }
+  void addConstrainedValue(std::string aValue) { mValues.push_back(aValue); mHasConstraints = true; }
 
   bool conversionRequired();
   double convertValue(const std::string& value);
@@ -177,6 +189,11 @@ protected:
   
   /* Extra source information of data item */
   std::string mSource;
+  
+  /* Constraints for this data item */
+  std::string mMaximum, mMinimum;
+  std::vector<std::string> mValues;
+  bool mHasConstraints;
   
   /* Component that data item is associated with */  
   Component * mComponent;

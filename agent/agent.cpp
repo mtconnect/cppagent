@@ -55,7 +55,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize)
   
   // Grab data from configuration
   mDevices = mConfig->getDevices();
-  string time = getTimeStamp();
+  string time = getCurrentTime(GMT_UV_SEC);
   
   // Unique id number for agent instance
   mInstanceId = getCurrentTimeInSec();
@@ -213,7 +213,7 @@ unsigned int Agent::addToBuffer(
 /* Add values for related data items UNAVAILABLE */
 void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
 {
-  string time = getTimeStamp();
+  string time = getCurrentTime(GMT_UV_SEC);
   
   Device *dev = mDeviceMap[aDevice];
   if (dev != NULL)
@@ -657,25 +657,4 @@ bool Agent::hasDataItem(
     }
   }
   return false;
-}
-
-string Agent::getTimeStamp()
-{
-  
-  char timestamp[128];
-#ifdef WIN32
-  SYSTEMTIME st;
-  GetSystemTime(&st);
-  sprintf(timestamp, "%4d-%02d-%02dT%02d:%02d:%02d.%04d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-#else
-  struct timeval tv;
-  struct timezone tz;
-  
-  gettimeofday(&tv, &tz);
-  
-  strftime(timestamp, 64, "%Y-%m-%dT%H:%M:%S", gmtime(&tv.tv_sec));
-  sprintf(timestamp + strlen(timestamp), ".%06d", tv.tv_usec);
-#endif
-  
-  return timestamp;
 }

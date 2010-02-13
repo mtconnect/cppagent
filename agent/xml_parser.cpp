@@ -52,7 +52,7 @@ XmlParser::XmlParser(const string& xmlPath)
 
     xmlpp::Node *root = getRootNode();
     std::string path = "//Devices/*";
-    
+        
     xmlpp::NodeSet devices;    
     if (root->get_namespace_uri().empty())
       devices = root->find(path);
@@ -223,6 +223,38 @@ void XmlParser::loadDataItem(
         d->addSource(nodeText->get_content());
       }
     }
+    
+    children = dataItem->get_children("Constraints");
+    if (children.size() == 1)
+    {
+      xmlpp::Node *constraints = children.front();
+      
+      // Check for Minimum and Maximum or Values.
+      xmlpp::Node::NodeList values = constraints->get_children("Value");
+      if (values.size() > 0)
+      {
+        xmlpp::Node::NodeList::iterator child;
+        for (child = values.begin(); child != values.end(); ++child)
+        {
+          xmlpp::Element *value = dynamic_cast<xmlpp::Element *>(*child);
+          d->addConstrainedValue(value->get_child_text()->get_content());
+        }
+      }
+      else
+      {
+        xmlpp::Node::NodeList values = constraints->get_children("Minimum");
+        if (values.size() == 1) { 
+          xmlpp::Element *value = dynamic_cast<xmlpp::Element *>(values.front());
+          d->setMinimum(value->get_child_text()->get_content()); 
+        }
+        values = constraints->get_children("Maximum");
+        if (values.size() == 1) { 
+          xmlpp::Element *value = dynamic_cast<xmlpp::Element *>(values.front());
+          d->setMaximum(value->get_child_text()->get_content()); 
+        }        
+      }
+    }
+    
   }
   
   parent->addDataItem(*d);
