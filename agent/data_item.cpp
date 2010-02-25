@@ -123,10 +123,6 @@ DataItem::DataItem(std::map<string, string> attributes)
 
 DataItem::~DataItem()
 {
-  if (mLatestEvent != NULL)
-  {
-    delete mLatestEvent;
-  }
 }
 
 std::map<string, string> DataItem::buildAttributes() const
@@ -184,14 +180,8 @@ bool DataItem::hasName(const string& name)
 
 void DataItem::setLatestEvent(ComponentEvent& event)
 {
-  mLatestEventLock->lock();
-  
-  if (mLatestEvent != NULL)
-  {
-    delete mLatestEvent;
-  }
-  mLatestEvent = new ComponentEvent(event);
-  
+  mLatestEventLock->lock();  
+  mLatestEvent = &event;
   mLatestEventLock->unlock();
 }
 

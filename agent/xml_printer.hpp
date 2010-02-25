@@ -76,7 +76,7 @@ namespace XmlPrinter
     const unsigned int bufferSize,
     const unsigned int nextSeq,
     const unsigned int firstSeq,
-    std::list<ComponentEvent *>& results
+    std::list<ComponentEventPtr>& results
   );
   
   /***** Helper Methods *****/

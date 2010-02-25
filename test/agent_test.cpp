@@ -236,9 +236,13 @@ void AgentTest::testAddToBuffer()
 {
   string device("LinuxCNC"), key("badKey"), value("ON");
   int seqNum;  
+  ComponentEvent *event1, *event2;
   DataItem *di1 = a->getDataItemByName(device, key);
   seqNum = a->addToBuffer(di1, value, "NOW");
   CPPUNIT_ASSERT_EQUAL(0, seqNum);
+  
+  event1 = a->getFromBuffer(seqNum);
+  CPPUNIT_ASSERT(NULL == event1);
   
   {
     path = "/current";
@@ -256,6 +260,8 @@ void AgentTest::testAddToBuffer()
 
   DataItem *di2 = a->getDataItemByName(device, key);
   seqNum = a->addToBuffer(di2, value, "NOW");
+  event2 = a->getFromBuffer(seqNum);
+  CPPUNIT_ASSERT_EQUAL(2, (int) event2->refCount());
   
   {
     path = "/current";

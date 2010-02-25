@@ -130,6 +130,8 @@ public:
     const std::string& name
   );
   
+  ComponentEvent *getFromBuffer(unsigned int aSeq) const { return (*mSlidingBuffer)[aSeq]; }
+  
 protected:
   /* HTTP methods to handle the 3 basic calls */
   bool handleCall(
@@ -220,7 +222,7 @@ protected:
   unsigned int mSequence;
   
   /* The sliding/circular buffer to hold all of the events/sample data */
-  dlib::sliding_buffer_kernel_1<ComponentEvent *> *mSlidingBuffer;
+  dlib::sliding_buffer_kernel_1<ComponentEventPtr> *mSlidingBuffer;
   
   unsigned int mSlidingBufferSize;
   

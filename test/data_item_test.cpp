@@ -151,9 +151,9 @@ void DataItemTest::testComponentEvent()
 {
   CPPUNIT_ASSERT(a->getLatestEvent() == NULL);
   
-  ComponentEvent event1(*a, 1, (string) "10:30am Today", (string) "1.34");
+  ComponentEventPtr event1(new ComponentEvent(*a, 1, (string) "10:30am Today", (string) "1.34"), true);
   
-  a->setLatestEvent(event1);
+  a->setLatestEvent(*event1);
   
   std::map<string, string> &attributes = *a->getLatestEvent()->getAttributes();
   
@@ -161,9 +161,10 @@ void DataItemTest::testComponentEvent()
   CPPUNIT_ASSERT_EQUAL((string) "1", attributes["sequence"]);
   CPPUNIT_ASSERT_EQUAL((string) "1.34", a->getLatestEvent()->getValue());
   
-  ComponentEvent event2(*a, 3, (string) "12:00pm Tomorrow", (string) "4.31");
+  ComponentEventPtr event2(new ComponentEvent(*a, 3, (string) "12:00pm Tomorrow", (string) "4.31"),
+                        true);
   
-  a->setLatestEvent(event2);
+  a->setLatestEvent(*event2);
   std::map<string, string> &attributes2 = *a->getLatestEvent()->getAttributes();
   
   CPPUNIT_ASSERT_EQUAL((string) "12:00pm Tomorrow", attributes2["timestamp"]);

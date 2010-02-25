@@ -94,9 +94,6 @@ protected:
     std::string value
   );
   
-  /* Delete all the events on the list from memory */
-  void clearEvents(std::list<ComponentEvent *> events);
-  
 public:
   void setUp();
   void tearDown();

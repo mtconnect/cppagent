@@ -63,14 +63,8 @@ Agent::Agent(const string& configXmlPath, int aBufferSize)
   // Sequence number and sliding buffer for data
   mSequence = 1;
   mSlidingBufferSize = 1 << aBufferSize;
-  mSlidingBuffer = new sliding_buffer_kernel_1<ComponentEvent *>();
+  mSlidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
   mSlidingBuffer->set_size(aBufferSize);
-  
-  // Initialize the buffer
-  for (unsigned int i = 0; i < mSlidingBuffer->size(); i++)
-  {
-    (*mSlidingBuffer)[i] = 0;
-  }
   
   // Mutex used for synchronized access to sliding buffer and sequence number
   mSequenceLock = new dlib::mutex;
@@ -196,11 +190,6 @@ unsigned int Agent::addToBuffer(
   
   mSequenceLock->lock();
   
-  if ((*mSlidingBuffer)[mSequence] != NULL)
-  {
-    delete (*mSlidingBuffer)[mSequence];
-  }
-  
   // If this function is being used as an API, add the current time in
   if (time.empty())
   {
@@ -214,6 +203,7 @@ unsigned int Agent::addToBuffer(
   
   (*mSlidingBuffer)[seqNum] = event;
   dataItem->setLatestEvent(*event);
+  event->unrefer();
   
   mSequenceLock->unlock();
   return seqNum;
@@ -463,7 +453,7 @@ string Agent::fetchSampleData(
     unsigned int &items
   )
 {
-  list<ComponentEvent *> results;
+  list<ComponentEventPtr> results;
   
   mSequenceLock->lock();
 
@@ -479,8 +469,8 @@ string Agent::fetchSampleData(
   for (unsigned int i = start; i < end; i++)
   {
     // Filter out according to if it exists in the list
-    const string dataName = (*mSlidingBuffer)[i]->getDataItem()->getName();
-    if (hasDataItem(dataItems, dataName))
+    const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
+    if (hasDataItem(dataItems, dataId))
     {
       ComponentEvent *event = (*mSlidingBuffer)[i];
       results.push_back(event);
@@ -654,13 +644,13 @@ DataItem * Agent::getDataItemByName(const string& device, const string& name)
 
 bool Agent::hasDataItem(
     list<DataItem *>& dataItems,
-    const string& name
+    const string& aId
   )
 {
   list<DataItem *>::iterator dataItem;
   for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
   {
-    if ((*dataItem)->hasName(name))
+    if ((*dataItem)->getId() == aId)
     {
       return true;
     }

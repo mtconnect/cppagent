@@ -138,7 +138,7 @@ string XmlPrinter::printSample(
     const unsigned int bufferSize,
     const unsigned int nextSeq,
     const unsigned int firstSeq,
-    list<ComponentEvent *>& results
+    list<ComponentEventPtr>& results
   )
 {
   xmlpp::Document * mSampleXml = initXmlDoc(
@@ -154,7 +154,7 @@ string XmlPrinter::printSample(
   std::map<string, xmlpp::Element *> components; 
   std::map<string, xmlpp::Element *> devices; 
   
-  list<ComponentEvent *>::iterator result;
+  list<ComponentEventPtr>::iterator result;
   for (result = results.begin(); result != results.end(); result++)
   {
     addElement(*result, streams, elements, components, devices);

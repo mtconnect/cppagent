@@ -42,7 +42,6 @@
 #include "component_event.hpp"
 #include "globals.hpp"
 
-class ComponentEvent;
 class Adapter;
 
 class DataItem
@@ -202,7 +201,7 @@ protected:
   Component * mComponent;
   
   /* Pointer to the latest component event that occured for this data item */
-  ComponentEvent * mLatestEvent;
+  ComponentEventPtr mLatestEvent;
   
   /* Lock to update and retrieve the latest event */
   dlib::mutex * mLatestEventLock;

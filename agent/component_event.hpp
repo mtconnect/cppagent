@@ -38,7 +38,6 @@
 #include <cmath>
 
 #include "component.hpp"
-#include "data_item.hpp"
 #include "globals.hpp"
 
 class DataItem;
@@ -58,9 +57,6 @@ public:
   /* Copy constructor */
   ComponentEvent(ComponentEvent& ce);
   
-  /* Virtual destructor */
-  virtual ~ComponentEvent();
-  
   /* Extract the component event data into a map */
   std::map<std::string, std::string> *getAttributes();
   
@@ -72,8 +68,20 @@ public:
   
   unsigned int getSequence() const { return mSequence; }
   
-    
+  /* Reference count management */
+  void referTo();
+  void unrefer();
+  
+  unsigned int refCount() { return mRefCount; }
+
 protected:
+  /* Virtual destructor */
+  virtual ~ComponentEvent();
+  
+protected:
+  /* Reference count */
+  unsigned int mRefCount;
+  
   /* Holds the data item from the device */
   DataItem * mDataItem;
   
@@ -98,6 +106,56 @@ protected:
 protected:
   /* Convert the value to the agent unit standards */
   void convertValue(const std::string& value);
+};
+
+class ComponentEventPtr {
+public:
+  // Constructors
+  ComponentEventPtr() { mEvent = NULL; }
+  ComponentEventPtr(ComponentEventPtr &aPtr, bool aTakeRef = false) {
+    mEvent = aPtr.getObject();
+    if (mEvent != NULL && !aTakeRef)
+      mEvent->referTo();
+  }
+  ComponentEventPtr(ComponentEvent &aEvent, bool aTakeRef = false) {
+    mEvent = &aEvent;
+    if (!aTakeRef)
+      mEvent->referTo();
+  }
+  ComponentEventPtr(ComponentEvent *aEvent, bool aTakeRef = false) {
+    mEvent = aEvent;
+    if (aEvent != NULL && !aTakeRef) {
+      mEvent->referTo();
+    }
+  }
+  
+    
+  // Destructor
+  ~ComponentEventPtr() {
+    if (mEvent)
+      mEvent->unrefer();
+  }
+
+  // Getters
+  ComponentEvent *getObject() const { return mEvent; }
+  ComponentEvent *operator->(void) const { return mEvent; }
+  operator ComponentEvent*(void ) const { return mEvent; }
+  
+  // Setters
+  ComponentEvent *setObject(ComponentEvent *aEvent, bool aTakeRef = false) {
+    if (mEvent != NULL)
+      mEvent->unrefer();
+    mEvent = aEvent;
+    if (aEvent != NULL && !aTakeRef)
+      mEvent->referTo();
+    
+    return aEvent;
+  }
+  ComponentEvent *operator=(ComponentEvent *aEvent) { return setObject(aEvent); }  
+  ComponentEvent *operator=(ComponentEventPtr &aPtr) { return setObject(aPtr.getObject()); }
+  
+protected:
+  ComponentEvent *mEvent;
 };
 
 #endif

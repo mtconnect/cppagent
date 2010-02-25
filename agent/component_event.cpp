@@ -32,8 +32,11 @@
 */
 
 #include "component_event.hpp"
+#include "data_item.hpp"
+#include "dlib/threads.h"
 
 using namespace std;
+static dlib::mutex sRefMutex;
 
 /* ComponentEvent public methods */
 ComponentEvent::ComponentEvent(
@@ -48,6 +51,7 @@ ComponentEvent::ComponentEvent(
   mTime = time;
   mHasAttributes = false;  
   convertValue(value);
+  mRefCount = 1;
 }
 
 ComponentEvent::ComponentEvent(ComponentEvent& ce)
@@ -58,10 +62,26 @@ ComponentEvent::ComponentEvent(ComponentEvent& ce)
   mAlarmData = ce.mAlarmData;
   mValue = ce.mValue;
   mHasAttributes = false;
+  mRefCount = 1;
 }
 
 ComponentEvent::~ComponentEvent()
 {
+}
+
+void ComponentEvent::referTo()
+{
+  dlib::auto_mutex lock(sRefMutex);
+  mRefCount++;
+}
+
+void ComponentEvent::unrefer()
+{
+  dlib::auto_mutex lock(sRefMutex);
+  if (--mRefCount == 0)
+  {
+    delete this;
+  }
 }
 
 std::map<string, string> *ComponentEvent::getAttributes()

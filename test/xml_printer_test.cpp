@@ -304,22 +304,20 @@ void XmlPrinterTest::testPrintProbe()
 
 void XmlPrinterTest::testPrintCurrent()
 {
-  list<ComponentEvent *> events;
-  
-  events.push_back(addEventToDataItem("Xact", 10254804, "0"));
-  events.push_back(addEventToDataItem("SspeedOvr", 15, "100"));
-  events.push_back(addEventToDataItem("Xcom", 10254803, "0"));
-  events.push_back(addEventToDataItem("spindle_speed", 16, "100"));
-  events.push_back(addEventToDataItem("Yact", 10254797, "0.00199"));
-  events.push_back(addEventToDataItem("Ycom", 10254800, "0.00189"));
-  events.push_back(addEventToDataItem("Zact", 10254798, "0.0002"));
-  events.push_back(addEventToDataItem("Zcom", 10254801, "0.0003"));
-  events.push_back(addEventToDataItem("block", 10254789, "x-0.132010 y-0.158143"));
-  events.push_back(addEventToDataItem("mode", 13, "AUTOMATIC"));
-  events.push_back(addEventToDataItem("line", 10254796, "0"));
-  events.push_back(addEventToDataItem("program", 12, "/home/mtconnect/simulator/spiral.ngc"));
-  events.push_back(addEventToDataItem("execution", 10254795, "READY"));
-  events.push_back(addEventToDataItem("power", 1, "ON"));
+  addEventToDataItem("Xact", 10254804, "0");
+  addEventToDataItem("SspeedOvr", 15, "100");
+  addEventToDataItem("Xcom", 10254803, "0");
+  addEventToDataItem("spindle_speed", 16, "100");
+  addEventToDataItem("Yact", 10254797, "0.00199");
+  addEventToDataItem("Ycom", 10254800, "0.00189");
+  addEventToDataItem("Zact", 10254798, "0.0002");
+  addEventToDataItem("Zcom", 10254801, "0.0003");
+  addEventToDataItem("block", 10254789, "x-0.132010 y-0.158143");
+  addEventToDataItem("mode", 13, "AUTOMATIC");
+  addEventToDataItem("line", 10254796, "0");
+  addEventToDataItem("program", 12, "/home/mtconnect/simulator/spiral.ngc");
+  addEventToDataItem("execution", 10254795, "READY");
+  addEventToDataItem("power", 1, "ON");
   
   list<DataItem *> dataItems;
   map<string, DataItem *> dataItemsMap = devices.front()->getDeviceDataItems();  
@@ -351,12 +349,11 @@ void XmlPrinterTest::testPrintCurrent()
                                     "/home/mtconnect/simulator/spiral.ngc");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='power']/m:Events/m:PowerStatus",
                                     "ON");
-  clearEvents(events);
 }
 
 void XmlPrinterTest::testPrintSample()
 {
-  list<ComponentEvent *> events;
+  list<ComponentEventPtr> events;
   
   events.push_back(addEventToDataItem("Xact", 10843512, "0.553472"));
   events.push_back(addEventToDataItem("Xcom", 10843514, "0.551123"));
@@ -397,8 +394,6 @@ void XmlPrinterTest::testPrintSample()
                                     "229");    
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Block",
                                     "x-1.149250 y1.048981");    
-
-  clearEvents(events);
 }
 
 DataItem * XmlPrinterTest::getDataItem(const char *name)
@@ -426,12 +421,4 @@ ComponentEvent * XmlPrinterTest::addEventToDataItem(
   return event;
 }
 
-void XmlPrinterTest::clearEvents(list<ComponentEvent *> events)
-{
-  list<ComponentEvent *>::iterator event;
-  for (event = events.begin(); event != events.end(); event++)
-  {
-    delete (*event);
-  }
-}
 

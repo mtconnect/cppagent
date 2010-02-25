@@ -32,6 +32,8 @@
 */
 
 #include "component_event_test.hpp"
+#include "data_item.hpp"
+#include <list>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(ComponentEventTest);
@@ -71,22 +73,24 @@ void ComponentEventTest::setUp()
 
 void ComponentEventTest::tearDown()
 {
-  delete a;
-  delete b;
+  a->unrefer();
+  b->unrefer();
   delete d1;
   delete d2;
 }
 
 void ComponentEventTest::testConstructors()
 {
-  ComponentEvent ce(*a);
+  ComponentEvent *ce = new ComponentEvent(*a);
   
   // Copy constructor allocates different objects, so it has different addresses
-  CPPUNIT_ASSERT(a != &ce);
+  CPPUNIT_ASSERT(a != ce);
   
   // But the values should be the same
-  CPPUNIT_ASSERT_EQUAL(a->getDataItem(), ce.getDataItem());
-  CPPUNIT_ASSERT_EQUAL(a->getValue(), ce.getValue());
+  CPPUNIT_ASSERT_EQUAL(a->getDataItem(), ce->getDataItem());
+  CPPUNIT_ASSERT_EQUAL(a->getValue(), ce->getValue());
+  
+  ce->unrefer();
 }
 
 void ComponentEventTest::testGetAttributes()
@@ -181,15 +185,72 @@ void ComponentEventTest::testValueHelper(
   attributes["nativeUnits"] = nativeUnits;
   DataItem dataItem(attributes);
   
-  ComponentEvent event(dataItem, 123, time, value);
+  ComponentEventPtr event(new ComponentEvent(dataItem, 123, time, value), true);
   
   
   CPPUNIT_NS::OStringStream message;
-  double diff = abs(expected - atof(event.getValue().c_str()));
-  message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected << " and actual " << event.getValue()
-          << " differ (" << diff << ") by more than 0.001";
+  double diff = abs(expected - atof(event->getValue().c_str()));
+  message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected << " and actual " 
+    << event->getValue() << " differ (" << diff << ") by more than 0.001";
   CPPUNIT_NS::Asserter::failIf(diff > 0.001,
                                message.str(),
                                sourceLine);
 }
 
+void ComponentEventTest::testRefCounts()
+{
+  string time("NOW"), value("111");
+  ComponentEvent *event = new ComponentEvent(*d1, 123, time, value);
+
+  CPPUNIT_ASSERT(event->refCount() == 1);
+  
+  event->referTo();
+  CPPUNIT_ASSERT(event->refCount() == 2);
+
+  event->referTo();
+  CPPUNIT_ASSERT(event->refCount() == 3);
+
+  event->unrefer();
+  CPPUNIT_ASSERT(event->refCount() == 2);
+
+  event->unrefer();
+  CPPUNIT_ASSERT(event->refCount() == 1);
+  
+  {
+    ComponentEventPtr prt(event);
+    CPPUNIT_ASSERT(event->refCount() == 2);
+  }
+  
+  CPPUNIT_ASSERT(event->refCount() == 1);
+  event->referTo();
+  CPPUNIT_ASSERT(event->refCount() == 2);
+  {
+    ComponentEventPtr prt(event, true);
+    CPPUNIT_ASSERT(event->refCount() == 2);
+  }
+  CPPUNIT_ASSERT(event->refCount() == 1);
+  
+  {
+    ComponentEventPtr prt;
+    prt = event;
+    CPPUNIT_ASSERT(prt->refCount() == 2);
+  }    
+  CPPUNIT_ASSERT(event->refCount() == 1);
+}
+
+void ComponentEventTest::testStlLists()
+{
+  std::vector<ComponentEventPtr> vector;
+  
+  string time("NOW"), value("111");
+  ComponentEvent *event = new ComponentEvent(*d1, 123, time, value);
+
+  CPPUNIT_ASSERT_EQUAL(1, (int) event->refCount());
+  vector.push_back(event);
+  CPPUNIT_ASSERT_EQUAL(2, (int) event->refCount());
+  
+  std::list<ComponentEventPtr> list;
+  list.push_back(event);
+  CPPUNIT_ASSERT_EQUAL(3, (int) event->refCount());
+
+}
