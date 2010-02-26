@@ -46,6 +46,7 @@ class XmlParserTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testConstructor);
   CPPUNIT_TEST(testGetDevices);
   CPPUNIT_TEST(testGetRootNode);
+  CPPUNIT_TEST(testCondition);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -55,6 +56,7 @@ protected:
   void testConstructor();
   void testGetDevices();
   void testGetRootNode();
+  void testCondition();
   
 public:
   void setUp();

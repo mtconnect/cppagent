@@ -126,3 +126,19 @@ void XmlParserTest::testGetRootNode()
   CPPUNIT_ASSERT(hasDevices);
 }
 
+void XmlParserTest::testCondition()
+{
+  list<Device *> devices = a->getDevices();
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, devices.size());
+  
+  Device *device = devices.front();
+  list<DataItem*> dataItems;
+  std::map<string, DataItem *> dataItemsMap = device->getDeviceDataItems();  
+  
+  DataItem *item = dataItemsMap["clc"];
+  CPPUNIT_ASSERT(item);
+  
+  CPPUNIT_ASSERT_EQUAL((string) "clc", item->getId());
+  CPPUNIT_ASSERT(item->isCondition());
+}
+

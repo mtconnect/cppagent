@@ -83,6 +83,7 @@ public:
   /* Getter methods for the component ID/Name */
   std::string getId() const { return mId; }
   std::string getName() const { return mName; }
+  std::string getNativeName() const { return mNativeName; }
   std::string getUuid() const { return mUuid; }
   
   /* Add/get description specifications using an attribute map */
@@ -114,6 +115,7 @@ protected:
   
   /* Name for itself */
   std::string mName;
+  std::string mNativeName;
 
   /* The class */
   std::string mClass;

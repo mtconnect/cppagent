@@ -40,7 +40,7 @@ using namespace std;
 
 void DataItemTest::setUp()
 {
-  std::map<string, string> attributes1, attributes2;
+  std::map<string, string> attributes1, attributes2, attributes3;
   
   attributes1["id"] = "1";
   attributes1["name"] = "DataItemTest1";
@@ -59,12 +59,19 @@ void DataItemTest::setUp()
   attributes2["significantDigits"] = "1";
   attributes2["coordinateSystem"] = "testCoordinateSystem";
   b = new DataItem(attributes2);
+
+  attributes3["id"] = "4";
+  attributes3["name"] = "DataItemTest3";
+  attributes3["type"] = "LOAD";
+  attributes3["category"] = "CONDITION";
+  c = new DataItem(attributes3);
 }
 
 void DataItemTest::tearDown()
 {
   delete a;
   delete b;
+  delete c;
 }
 
 void DataItemTest::testGetters()
@@ -210,4 +217,9 @@ void DataItemTest::testConversion()
   item2.conversionRequired();
   
   CPPUNIT_ASSERT_EQUAL((string) "57.29578 114.5916 171.8873", item2.convertValue("1 2 3"));
+}
+
+void DataItemTest::testCondition()
+{
+  CPPUNIT_ASSERT_EQUAL(DataItem::CONDITION, c->getCategory());
 }

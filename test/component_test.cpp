@@ -44,6 +44,7 @@ void ComponentTest::setUp()
   std::map<string, string> attributes1;
   attributes1["id"] = "1";
   attributes1["name"] = "ComponentTest1";
+  attributes1["nativeName"] = "NativeName";
   attributes1["uuid"] = "UnivUniqId1";
   a = new Component("Axes", attributes1);
   
@@ -68,11 +69,13 @@ void ComponentTest::testGetters()
   CPPUNIT_ASSERT_EQUAL((string) "1", a->getId());
   CPPUNIT_ASSERT_EQUAL((string) "ComponentTest1", a->getName());
   CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", a->getUuid());
+  CPPUNIT_ASSERT_EQUAL((string) "NativeName", a->getNativeName());
   
   CPPUNIT_ASSERT_EQUAL((string) "Controller", b->getClass());
   CPPUNIT_ASSERT_EQUAL((string) "3", b->getId());
   CPPUNIT_ASSERT_EQUAL((string) "ComponentTest2", b->getName());
   CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", b->getUuid());
+  CPPUNIT_ASSERT(b->getNativeName().empty());
 }
 
 void ComponentTest::testGetAttributes()

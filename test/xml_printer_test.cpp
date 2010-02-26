@@ -299,6 +299,7 @@ void XmlPrinterTest::testPrintProbe()
   // Check for Path component
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Controller//m:Path/m:DataItems/m:DataItem[@type='PATH_POSITION']@name",
                                     "Ppos");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DataItem[@id='clc']@category", "CONDITION");
 
 }
 

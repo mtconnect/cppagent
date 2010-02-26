@@ -51,7 +51,8 @@ public:
   enum ECategory
   {
     SAMPLE,
-    EVENT
+    EVENT,
+    CONDITION
   };
   
   /* Enumeration for the simple units for simple conversions */
@@ -108,6 +109,7 @@ public:
   std::string getUnits() const { return mUnits; }
   float getNativeScale() const { return mNativeScale; }
   double getConversionFactor() const;
+  ECategory getCategory() const { return mCategory; }
   
   /* Returns if data item has this attribute */
   bool hasName(const std::string& name);
@@ -118,7 +120,9 @@ public:
   
   /* Returns true if data item is a sample */
   bool isSample() const { return mCategory == SAMPLE; }
-  
+  bool isEvent() const { return mCategory == EVENT; }
+  bool isCondition() const { return mCategory == CONDITION; }
+    
   /* Set/get component that data item is associated with */
   void setComponent(Component& component) { mComponent = &component; }
   Component * getComponent() const { return mComponent; }
@@ -128,7 +132,7 @@ public:
   ComponentEvent * getLatestEvent() const;
 
   /* Get the name for the adapter feed */
-  std::string getSourceOrName() { return mSource.empty() ? mName : mSource; }
+  std::string getSourceOrName() { return mSource.empty() ? (mName.empty() ? mId : mName) : mSource; }
   
   /* Transform a name to camel casing */
   static std::string getCamelType(const std::string& aType);

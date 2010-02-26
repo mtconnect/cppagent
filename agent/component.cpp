@@ -53,6 +53,7 @@ Component::Component(const string& cls, std::map<string, string> attributes)
 {
   mId = attributes["id"];
   mName = attributes["name"];
+  mNativeName = attributes["nativeName"];
   
   mUuid = attributes["uuid"];
   mSampleRate = (float) (attributes["sampleRate"].empty()) ?
@@ -84,6 +85,11 @@ std::map<string, string> Component::buildAttributes() const
     attributes["uuid"] = mUuid;
   }
   
+  if (!mNativeName.empty())
+  {
+    attributes["nativeName"] = mNativeName;
+  }
+
   return attributes;
 }
 

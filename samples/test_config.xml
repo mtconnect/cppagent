@@ -21,6 +21,7 @@
                 <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="c3" subType="OVERRIDE" name="Sovr">
                   <Source>SspeedOvr</Source>
                 </DataItem>
+		<DataItem type="LOAD" category="CONDITION" id="clc" />
               </DataItems>
             </Rotary>
             <Linear name="X" id="x">

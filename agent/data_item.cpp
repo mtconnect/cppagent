@@ -83,8 +83,17 @@ DataItem::DataItem(std::map<string, string> attributes)
     mSubType = attributes["subType"];
   }
   
-  mCategory = (attributes["category"] == "SAMPLE") ? SAMPLE : EVENT;
-  
+  if (attributes["category"] == "SAMPLE")
+    mCategory = SAMPLE;
+  else if (attributes["category"] == "CONDITION")
+    mCategory = CONDITION;
+  else if (attributes["category"] == "EVENT")
+    mCategory = EVENT;
+  else
+  {
+    // Raise an invlaid category exception...
+  }
+    
   if (!attributes["nativeUnits"].empty())
   {
     mNativeUnits = attributes["nativeUnits"];
@@ -138,8 +147,21 @@ std::map<string, string> DataItem::buildAttributes() const
     attributes["subType"] = mSubType;
   }
   
-  attributes["category"] = (mCategory == SAMPLE) ? "SAMPLE" : "EVENT";
-  
+  switch(mCategory)
+  {
+    case SAMPLE:
+      attributes["category"] = "SAMPLE";
+      break;
+      
+    case EVENT:
+      attributes["category"] = "EVENT";
+      break;
+
+    case CONDITION:
+      attributes["category"] = "CONDITION";
+      break;
+  }
+
   if (!mNativeUnits.empty())
   {
     attributes["nativeUnits"] = mNativeUnits;
@@ -175,7 +197,7 @@ string DataItem::getTypeString(bool uppercase) const
 
 bool DataItem::hasName(const string& name)
 {
-  return mName == name || (!mSource.empty() && mSource == name);
+  return mId == name || mName == name || (!mSource.empty() && mSource == name);
 }
 
 void DataItem::setLatestEvent(ComponentEvent& event)

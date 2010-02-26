@@ -573,7 +573,7 @@ list<DataItem *> Agent::getDataItems(const string& path, xmlpp::Node * node)
         list<DataItem *> toMerge = getDataItems("*", elements[i]);
         items.merge(toMerge);
       }
-      else // Hopefully "Component"
+      else // Hopefully a subtype of component.
       {
         list<DataItem *> toMerge =
           getDataItems("Components/*|DataItems/*", elements[i]);
