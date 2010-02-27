@@ -49,6 +49,7 @@
 #include "globals.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
+#include "checkpoint.hpp"
 
 class Adapter;
 class ComponentEvent;
@@ -83,7 +84,8 @@ public:
   
 public:
   /* Load agent with the xml configuration */
-  Agent(const std::string& configXmlPath, int aBufferSize);
+  Agent(const std::string& configXmlPath, int aBufferSize,
+        int aCheckpointFreq = 1000);
   
   /* Virtual destructor */
   virtual ~Agent();
@@ -223,8 +225,12 @@ protected:
   
   /* The sliding/circular buffer to hold all of the events/sample data */
   dlib::sliding_buffer_kernel_1<ComponentEventPtr> *mSlidingBuffer;
-  
   unsigned int mSlidingBufferSize;
+
+  /* Checkpoints */
+  Checkpoint mLatest;
+  Checkpoint mFirst;
+  Checkpoint *mCheckpoints;
   
   /* Data containers */
   std::list<Device *> mDevices;

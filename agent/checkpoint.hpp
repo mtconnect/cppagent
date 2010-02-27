@@ -31,21 +31,27 @@
  * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
+#ifndef CHECKPOINT_HPP
+#define CHECKPOINT_HPP
+
 #include "component_event.hpp"
 #include <map>
 #include <string>
 
 class Checkpoint {
 public:
-  Checkpoint(unsigned int aSequence);
+  Checkpoint();
   Checkpoint(Checkpoint &aCheckpoint);
   ~Checkpoint();
+  
   void addComponentEvent(ComponentEvent *aEvent);
+  void copy(Checkpoint &aCheckpoint);
+  void clear();
 
   std::map<std::string, ComponentEventPtr*> &getEvents() { return mEvents; }
-  unsigned int getSequence() { return mSequence; }
   
 protected:
   std::map<std::string, ComponentEventPtr*> mEvents;
-  unsigned int mSequence;
 };
+
+#endif

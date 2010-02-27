@@ -36,24 +36,29 @@
 
 using namespace std;
 
-Checkpoint::Checkpoint(unsigned int aSequence)
+Checkpoint::Checkpoint()
 {
-  mSequence = aSequence;
 }
 
 Checkpoint::Checkpoint(Checkpoint &aCheck)
 {
   mEvents = aCheck.mEvents;
-  mSequence = aCheck.mSequence;
 }
 
-Checkpoint::~Checkpoint()
+void Checkpoint::clear()
 {
   map<string, ComponentEventPtr*>::iterator it;
   for (it = mEvents.begin(); it != mEvents.end(); it++)
   {
     delete (*it).second;
   }
+  mEvents.clear();
+}
+
+
+Checkpoint::~Checkpoint()
+{
+  clear();
 }
 
 void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
@@ -73,3 +78,10 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
     mEvents[id] = new ComponentEventPtr(anEvent);
   }
 }
+
+void Checkpoint::copy(Checkpoint &aCheck)
+{
+  clear();
+  mEvents = aCheck.mEvents;
+}
+

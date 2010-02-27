@@ -38,7 +38,7 @@ using namespace std;
 static const string sUnavailable("UNAVAILABLE");
 
 /* Agent public methods */
-Agent::Agent(const string& configXmlPath, int aBufferSize)
+Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
 {
   try
   {
@@ -65,6 +65,8 @@ Agent::Agent(const string& configXmlPath, int aBufferSize)
   mSlidingBufferSize = 1 << aBufferSize;
   mSlidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
   mSlidingBuffer->set_size(aBufferSize);
+
+  mCheckpoints = new Checkpoint[mSlidingBufferSize / aCheckpointFreq];
   
   // Mutex used for synchronized access to sliding buffer and sequence number
   mSequenceLock = new dlib::mutex;
@@ -101,6 +103,7 @@ Agent::~Agent()
   delete mSlidingBuffer;
   delete mSequenceLock;
   delete mConfig;
+  delete[] mCheckpoints;
 }
 
 bool Agent::on_request(

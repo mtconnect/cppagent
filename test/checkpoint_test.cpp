@@ -77,7 +77,7 @@ void CheckpointTest::setUp()
   mAgent = new Agent("../samples/min_config.xml", 4);
   mAgentId = intToString(getCurrentTimeInSec());
   mAdapter = NULL;
-  mCheckpoint = new Checkpoint(0);
+  mCheckpoint = new Checkpoint();
   
   std::map<string, string> attributes1, attributes2;
   
