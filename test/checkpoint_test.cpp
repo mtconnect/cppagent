@@ -151,3 +151,27 @@ void CheckpointTest::testAddComponentEvents()
   CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p4->getPrev());
   CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
 }
+
+void CheckpointTest::testCopy()
+{
+  ComponentEventPtr p1, p2, p3, p4, p5, p6;
+  string time("NOW"), value("123"), warning("WARNING|CODE|HIGH|Over..."),
+    normal("NORMAL|CODE|HIGH|Over...");
+  
+  p1 = new ComponentEvent(*mDataItem1, 2, time, warning);
+  p1->unrefer();
+  mCheckpoint->addComponentEvent(p1);
+  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
+  
+  p2 = new ComponentEvent(*mDataItem1, 2, time, warning);
+  p2->unrefer();
+  mCheckpoint->addComponentEvent(p2);
+  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
+  CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
+
+  Checkpoint *copy = new Checkpoint(*mCheckpoint);
+  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
+  CPPUNIT_ASSERT_EQUAL(3, (int) p2->refCount());
+  delete copy;
+}
+

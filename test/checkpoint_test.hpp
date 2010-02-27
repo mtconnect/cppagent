@@ -49,6 +49,7 @@ class CheckpointTest : public CppUnit::TestFixture
 {
   CPPUNIT_TEST_SUITE(CheckpointTest);
   CPPUNIT_TEST(testAddComponentEvents);
+  CPPUNIT_TEST(testCopy);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -60,6 +61,7 @@ protected:
   
 protected:
   void testAddComponentEvents();
+  void testCopy();
   
 public:
   void setUp();

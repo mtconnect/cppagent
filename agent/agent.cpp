@@ -66,6 +66,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
   mSlidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
   mSlidingBuffer->set_size(aBufferSize);
 
+  // Create the checkpoints at a regular frequency
   mCheckpoints = new Checkpoint[mSlidingBufferSize / aCheckpointFreq];
   
   // Mutex used for synchronized access to sliding buffer and sequence number
@@ -194,8 +195,7 @@ unsigned int Agent::addToBuffer(
   mSequenceLock->lock();
   
   // If this function is being used as an API, add the current time in
-  if (time.empty())
-  {
+  if (time.empty()) {
     time = getCurrentTime(GMT_UV_SEC);
   }
   

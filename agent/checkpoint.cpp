@@ -42,7 +42,7 @@ Checkpoint::Checkpoint()
 
 Checkpoint::Checkpoint(Checkpoint &aCheck)
 {
-  mEvents = aCheck.mEvents;
+  copy(aCheck);
 }
 
 void Checkpoint::clear()
@@ -82,6 +82,10 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
 void Checkpoint::copy(Checkpoint &aCheck)
 {
   clear();
-  mEvents = aCheck.mEvents;
+  map<string, ComponentEventPtr*>::iterator it;
+  for (it = aCheck.mEvents.begin(); it != aCheck.mEvents.end(); it++)
+  {
+    mEvents[(*it).first] = new ComponentEventPtr((*it).second->getObject());
+  }
 }
 
