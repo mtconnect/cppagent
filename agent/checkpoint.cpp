@@ -32,12 +32,44 @@
  */
 
 #include "checkpoint.hpp"
+#include "data_item.hpp"
 
-Checkpoint::Checkpoint(int aSequence)
+using namespace std;
+
+Checkpoint::Checkpoint(unsigned int aSequence)
 {
+  mSequence = aSequence;
+}
+
+Checkpoint::Checkpoint(Checkpoint &aCheck)
+{
+  mEvents = aCheck.mEvents;
+  mSequence = aCheck.mSequence;
+}
+
+Checkpoint::~Checkpoint()
+{
+  map<string, ComponentEventPtr*>::iterator it;
+  for (it = mEvents.begin(); it != mEvents.end(); it++)
+  {
+    delete (*it).second;
+  }
 }
 
 void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
 {
-  
+  DataItem *item = anEvent->getDataItem();
+  string id = item->getId();
+  ComponentEventPtr *ptr = mEvents[id];
+  if (ptr != NULL) {
+    if (item->isCondition()) {
+      if ((*ptr)->getLevel() != ComponentEvent::NORMAL &&
+	  anEvent->getLevel() != ComponentEvent::NORMAL) {
+	anEvent->appendTo(*ptr);
+      }
+    }
+    (*ptr) = anEvent;
+  } else {
+    mEvents[id] = new ComponentEventPtr(anEvent);
+  }
 }

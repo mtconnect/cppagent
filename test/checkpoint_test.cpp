@@ -102,21 +102,52 @@ void CheckpointTest::tearDown()
   delete mCheckpoint;
 }
 
-void CheckpointTest::testConstructor()
-{
-  
-}
-
 void CheckpointTest::testAddComponentEvents()
 {
-  ComponentEventPtr p1, p2;
-  string time("NOW"), value("CODE");
-  p1 = new ComponentEvent(*mDataItem1, 2, time, value);
+  ComponentEventPtr p1, p2, p3, p4, p5, p6;
+  string time("NOW"), value("123"), warning("WARNING|CODE|HIGH|Over..."),
+    normal("NORMAL|CODE|HIGH|Over...");
+  
+  p1 = new ComponentEvent(*mDataItem1, 2, time, warning);
   p1->unrefer();
   
   CPPUNIT_ASSERT_EQUAL(1, (int) p1->refCount());
   mCheckpoint->addComponentEvent(p1);
   CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
   
+  p2 = new ComponentEvent(*mDataItem1, 2, time, warning);
+  p2->unrefer();
+
+  mCheckpoint->addComponentEvent(p2);
+  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
+
+  p3 = new ComponentEvent(*mDataItem1, 2, time, normal);
+  p3->unrefer();
+
+  mCheckpoint->addComponentEvent(p3);
+  CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p3->getPrev());
+  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
+  CPPUNIT_ASSERT_EQUAL(1, (int) p2->refCount());
+
+  p4 = new ComponentEvent(*mDataItem1, 2, time, warning);
+  p4->unrefer();
+
+  mCheckpoint->addComponentEvent(p4);
+  CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p4->getPrev());
+  CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
+
+  // Test non condition
+  p3 = new ComponentEvent(*mDataItem2, 2, time, value);
+  p3->unrefer();
+  mCheckpoint->addComponentEvent(p3);
+  CPPUNIT_ASSERT_EQUAL(2, (int) p3->refCount());
   
+  p4 = new ComponentEvent(*mDataItem2, 2, time, value);
+  p4->unrefer();
+
+  mCheckpoint->addComponentEvent(p4);
+  CPPUNIT_ASSERT_EQUAL(2, (int) p4->refCount());
+  
+  CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p4->getPrev());
+  CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
 }

@@ -121,6 +121,7 @@ public:
   unsigned int refCount() { return mRefCount; }
   
   ComponentEvent *getFirst();
+  ComponentEvent *getPrev() { return mPrev; }
   void getList(std::list<ComponentEventPtr> &aList);
   void appendTo(ComponentEvent *aEvent) { mPrev = aEvent; }
 

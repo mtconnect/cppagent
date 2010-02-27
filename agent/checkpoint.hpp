@@ -32,11 +32,20 @@
  */
 
 #include "component_event.hpp"
+#include <map>
+#include <string>
 
 class Checkpoint {
 public:
-  Checkpoint(int aSequence);
+  Checkpoint(unsigned int aSequence);
+  Checkpoint(Checkpoint &aCheckpoint);
+  ~Checkpoint();
   void addComponentEvent(ComponentEvent *aEvent);
+
+  std::map<std::string, ComponentEventPtr*> &getEvents() { return mEvents; }
+  unsigned int getSequence() { return mSequence; }
   
 protected:
+  std::map<std::string, ComponentEventPtr*> mEvents;
+  unsigned int mSequence;
 };
