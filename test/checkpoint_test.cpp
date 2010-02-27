@@ -77,12 +77,29 @@ void CheckpointTest::setUp()
   mAgent = new Agent("../samples/min_config.xml", 4);
   mAgentId = intToString(getCurrentTimeInSec());
   mAdapter = NULL;
-  mCheckpoint = NULL;
+  mCheckpoint = new Checkpoint(0);
+  
+  std::map<string, string> attributes1, attributes2;
+  
+  attributes1["id"] = "1";
+  attributes1["name"] = "DataItemTest1";
+  attributes1["type"] = "LOAD";
+  attributes1["category"] = "CONDITION";
+  mDataItem1 = new DataItem(attributes1);
+  
+  attributes2["id"] = "3";
+  attributes2["name"] = "DataItemTest2";
+  attributes2["type"] = "POSITION";
+  attributes2["nativeUnits"] = "MILLIMETER";
+  attributes2["subType"] = "ACTUAL";
+  attributes2["category"] = "SAMPLE";
+  mDataItem2 = new DataItem(attributes2);
 }
 
 void CheckpointTest::tearDown()
 {
   delete mAgent;
+  delete mCheckpoint;
 }
 
 void CheckpointTest::testConstructor()
@@ -90,3 +107,16 @@ void CheckpointTest::testConstructor()
   
 }
 
+void CheckpointTest::testAddComponentEvents()
+{
+  ComponentEventPtr p1, p2;
+  string time("NOW"), value("CODE");
+  p1 = new ComponentEvent(*mDataItem1, 2, time, value);
+  p1->unrefer();
+  
+  CPPUNIT_ASSERT_EQUAL(1, (int) p1->refCount());
+  mCheckpoint->addComponentEvent(p1);
+  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
+  
+  
+}

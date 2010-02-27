@@ -31,9 +31,12 @@
  * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
+#include "component_event.hpp"
+
 class Checkpoint {
 public:
   Checkpoint(int aSequence);
+  void addComponentEvent(ComponentEvent *aEvent);
   
 protected:
 };

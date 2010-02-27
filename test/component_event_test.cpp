@@ -254,3 +254,68 @@ void ComponentEventTest::testStlLists()
   CPPUNIT_ASSERT_EQUAL(3, (int) event->refCount());
 
 }
+
+void ComponentEventTest::testEventChaining()
+{
+  string time("NOW"), value("111");
+  ComponentEventPtr event1(new ComponentEvent(*d1, 123, time, value), true);
+  ComponentEventPtr event2(new ComponentEvent(*d1, 123, time, value), true);
+  ComponentEventPtr event3(new ComponentEvent(*d1, 123, time, value), true);
+  
+  CPPUNIT_ASSERT_EQUAL(event1.getObject(), event1->getFirst());
+  
+  event1->appendTo(event2);
+  CPPUNIT_ASSERT_EQUAL(event1->getFirst(), event2.getObject());
+
+  event2->appendTo(event3);
+  CPPUNIT_ASSERT_EQUAL(event1->getFirst(), event3.getObject());
+  
+  CPPUNIT_ASSERT_EQUAL(1, (int) event1->refCount());
+  CPPUNIT_ASSERT_EQUAL(2, (int) event2->refCount());  
+  CPPUNIT_ASSERT_EQUAL(2, (int) event3->refCount());
+  
+  std::list<ComponentEventPtr> list;
+  event1->getList(list);
+  CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
+  CPPUNIT_ASSERT_EQUAL(list.front().getObject(), event3.getObject());
+  CPPUNIT_ASSERT_EQUAL(list.back().getObject(), event1.getObject());
+  
+  std::list<ComponentEventPtr> list2;
+  event2->getList(list2);
+  CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
+  CPPUNIT_ASSERT_EQUAL(list2.front().getObject(), event3.getObject());
+  CPPUNIT_ASSERT_EQUAL(list2.back().getObject(), event2.getObject());  
+}
+
+void ComponentEventTest::testCondition()
+{
+  string time("NOW");
+  std::map<string, string> attributes1;
+  attributes1["id"] = "1";
+  attributes1["name"] = "DataItemTest1";
+  attributes1["type"] = "TEMPERATURE";
+  attributes1["category"] = "CONDITION";
+  DataItem *d = new DataItem(attributes1);
+  
+  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "FAULT|4321|HIGH|Overtemp"), true);
+  
+  CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event1->getLevel());
+  CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event1->getValue());
+  
+  std::map<string, string> *attrs1 = event1->getAttributes();
+  CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", (*attrs1)["type"]);
+  CPPUNIT_ASSERT_EQUAL((string) "123", (*attrs1)["sequence"]);
+  CPPUNIT_ASSERT_EQUAL((string) "4321", (*attrs1)["nativeCode"]);
+  CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs1)["subType"]);
+
+  ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4321|HIGH|Overtemp"), true);
+  
+  CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event2->getLevel());
+  CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event2->getValue());
+  
+  std::map<string, string> *attrs2 = event2->getAttributes();
+  CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", (*attrs2)["type"]);
+  CPPUNIT_ASSERT_EQUAL((string) "123", (*attrs2)["sequence"]);
+  CPPUNIT_ASSERT_EQUAL((string) "4321", (*attrs2)["nativeCode"]);
+  CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs2)["subType"]);
+}

@@ -36,3 +36,8 @@
 Checkpoint::Checkpoint(int aSequence)
 {
 }
+
+void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
+{
+  
+}

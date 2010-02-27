@@ -41,10 +41,55 @@
 #include "globals.hpp"
 
 class DataItem;
+class ComponentEvent;
+
+class ComponentEventPtr {
+public:
+  // Constructors
+  ComponentEventPtr() { mEvent = NULL; }
+  ComponentEventPtr(ComponentEventPtr &aPtr, bool aTakeRef = false) {
+    mEvent = NULL;
+    setObject(aPtr.getObject(), aTakeRef);
+  }
+  ComponentEventPtr(ComponentEvent &aEvent, bool aTakeRef = false) {
+    mEvent = NULL;
+    setObject(&aEvent, aTakeRef);
+  }
+  ComponentEventPtr(ComponentEvent *aEvent, bool aTakeRef = false) {
+    mEvent = NULL;
+    setObject(aEvent, aTakeRef);
+  }
+  
+  
+  // Destructor
+  ~ComponentEventPtr();
+  
+  // Getters
+  ComponentEvent *getObject() const { return mEvent; }
+  ComponentEvent *operator->(void) const { return mEvent; }
+  operator ComponentEvent*(void ) const { return mEvent; }
+  
+  // Setters
+  ComponentEvent *setObject(ComponentEvent *aEvent, bool aTakeRef = false);
+  ComponentEvent *operator=(ComponentEvent *aEvent) { return setObject(aEvent); }  
+  ComponentEvent *operator=(ComponentEventPtr &aPtr) { return setObject(aPtr.getObject()); }
+  
+protected:
+  ComponentEvent *mEvent;
+};
+
 
 /* Component Event */
 class ComponentEvent
 {
+public:
+  enum ELevel {
+    NORMAL,
+    WARNING,
+    FAULT
+  };
+    
+  
 public:
   /* Initialize with the data item reference, sequence number, time and value */
   ComponentEvent(
@@ -64,7 +109,8 @@ public:
   DataItem * getDataItem() const { return mDataItem; }
   
   /* Get the value */
-  const std::string &getValue() { return mValue; }
+  const std::string &getValue() const { return mValue; }
+  ELevel getLevel();
   
   unsigned int getSequence() const { return mSequence; }
   
@@ -73,6 +119,10 @@ public:
   void unrefer();
   
   unsigned int refCount() { return mRefCount; }
+  
+  ComponentEvent *getFirst();
+  void getList(std::list<ComponentEventPtr> &aList);
+  void appendTo(ComponentEvent *aEvent) { mPrev = aEvent; }
 
 protected:
   /* Virtual destructor */
@@ -91,72 +141,48 @@ protected:
   /* Timestamp of the event's occurence */
   std::string mTime;
   
-  bool mIsFloat;
+  /* Hold the alarm data: CODE|NATIVECODE|SEVERITY|STATE */
+  /* or the Conditon data: SEVERITY|NATIVE_CODE|[SUB_TYPE] */
+  std::string mAlarmData;
+  ELevel mLevel;
   
   /* The value of the event, either as a float or a string */
   std::string mValue;
-  
-  /* Hold the alarm data: CODE|NATIVECODE|SEVERITY|STATE */
-  std::string mAlarmData;
+  bool mIsFloat;
   
   /* The attributes, created on demand */
   bool mHasAttributes;
   std::map<std::string, std::string> mAttributes;
+  
+  // For back linking of condition
+  ComponentEventPtr mPrev;
 
 protected:
   /* Convert the value to the agent unit standards */
   void convertValue(const std::string& value);
 };
 
-class ComponentEventPtr {
-public:
-  // Constructors
-  ComponentEventPtr() { mEvent = NULL; }
-  ComponentEventPtr(ComponentEventPtr &aPtr, bool aTakeRef = false) {
-    mEvent = aPtr.getObject();
-    if (mEvent != NULL && !aTakeRef)
-      mEvent->referTo();
-  }
-  ComponentEventPtr(ComponentEvent &aEvent, bool aTakeRef = false) {
-    mEvent = &aEvent;
-    if (!aTakeRef)
-      mEvent->referTo();
-  }
-  ComponentEventPtr(ComponentEvent *aEvent, bool aTakeRef = false) {
-    mEvent = aEvent;
-    if (aEvent != NULL && !aTakeRef) {
-      mEvent->referTo();
-    }
-  }
-  
-    
-  // Destructor
-  ~ComponentEventPtr() {
-    if (mEvent)
-      mEvent->unrefer();
-  }
+inline ComponentEventPtr::~ComponentEventPtr()
+{
+  if (mEvent)
+    mEvent->unrefer();
+}
 
-  // Getters
-  ComponentEvent *getObject() const { return mEvent; }
-  ComponentEvent *operator->(void) const { return mEvent; }
-  operator ComponentEvent*(void ) const { return mEvent; }
+inline ComponentEvent *ComponentEventPtr::setObject(ComponentEvent *aEvent, bool aTakeRef) {
+  if (mEvent != NULL)
+    mEvent->unrefer();
+  mEvent = aEvent;
+  if (aEvent != NULL && !aTakeRef)
+    mEvent->referTo();
   
-  // Setters
-  ComponentEvent *setObject(ComponentEvent *aEvent, bool aTakeRef = false) {
-    if (mEvent != NULL)
-      mEvent->unrefer();
-    mEvent = aEvent;
-    if (aEvent != NULL && !aTakeRef)
-      mEvent->referTo();
-    
-    return aEvent;
-  }
-  ComponentEvent *operator=(ComponentEvent *aEvent) { return setObject(aEvent); }  
-  ComponentEvent *operator=(ComponentEventPtr &aPtr) { return setObject(aPtr.getObject()); }
-  
-protected:
-  ComponentEvent *mEvent;
-};
+  return aEvent;
+}
+
+inline ComponentEvent::ELevel ComponentEvent::getLevel()
+{
+  if (!mHasAttributes) getAttributes();
+  return mLevel;
+}
 
 #endif
 

@@ -36,7 +36,7 @@
 #include "dlib/threads.h"
 
 using namespace std;
-static dlib::mutex sRefMutex;
+static dlib::rmutex sRefMutex;
 
 /* ComponentEvent public methods */
 ComponentEvent::ComponentEvent(
@@ -90,32 +90,60 @@ std::map<string, string> *ComponentEvent::getAttributes()
   {
     mAttributes["dataItemId"] = mDataItem->getId();
     mAttributes["timestamp"] = mTime;
-    if (!mDataItem->getSubType().empty())
-    {
-      mAttributes["subType"] = mDataItem->getSubType();
-    }
-    
     mAttributes["name"] = mDataItem->getName();
     mAttributes["sequence"] = intToString(mSequence);
     
-    if (getDataItem()->getType() == "ALARM")
+    if (mDataItem->isCondition())
     {
-      // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
+      // Conditon data: LEVEL|NATIVE_CODE|[SUB_TYPE]
       istringstream toParse(mAlarmData);
       string token;
       
       getline(toParse, token, '|');
-      mAttributes["code"] = token;
-    
+      if (strcasecmp(token.c_str(), "normal") == 0)
+        mLevel = NORMAL;
+      else if (strcasecmp(token.c_str(), "warning") == 0)
+        mLevel = WARNING;
+      else if (strcasecmp(token.c_str(), "fault") == 0)
+        mLevel = FAULT;
+      else // Throw...
+        mLevel = NORMAL;
+      
       getline(toParse, token, '|');
       mAttributes["nativeCode"] = token;
       
       getline(toParse, token, '|');
-      mAttributes["severity"] = token;
+      mAttributes["subType"] = token;
       
-      getline(toParse, token, '|');
-      mAttributes["state"] = token;
+      mAttributes["type"] = mDataItem->getType();
     }
+    else
+    {    
+      if (!mDataItem->getSubType().empty())
+      {
+        mAttributes["subType"] = mDataItem->getSubType();
+      }
+      
+      if (getDataItem()->getType() == "ALARM")
+      {
+        // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
+        istringstream toParse(mAlarmData);
+        string token;
+        
+        getline(toParse, token, '|');
+        mAttributes["code"] = token;
+      
+        getline(toParse, token, '|');
+        mAttributes["nativeCode"] = token;
+        
+        getline(toParse, token, '|');
+        mAttributes["severity"] = token;
+        
+        getline(toParse, token, '|');
+        mAttributes["state"] = token;
+      }
+    }
+    
     mHasAttributes = true;
   }
   return &mAttributes;
@@ -129,11 +157,12 @@ void ComponentEvent::convertValue(const string& value)
   {
     mValue = value;
   }
-  else if (mDataItem->getType() == "ALARM")
+  else if (mDataItem->isCondition() || mDataItem->getType() == "ALARM")
   {
     string::size_type lastPipe = value.rfind('|');
     
     // Alarm data = CODE|NATIVECODE|SEVERITY|STATE
+    // Conditon data: SEVERITY|NATIVE_CODE|[SUB_TYPE]
     mAlarmData = value.substr(0, lastPipe);
 
     // sValue = DESCRIPTION
@@ -148,5 +177,22 @@ void ComponentEvent::convertValue(const string& value)
     mValue = value;
   }
 }
+
+ComponentEvent *ComponentEvent::getFirst()
+{
+  if (mPrev.getObject() != NULL)
+    return mPrev->getFirst();
+  else
+    return this;
+}
+
+void ComponentEvent::getList(std::list<ComponentEventPtr> &aList)
+{
+  if (mPrev.getObject() != NULL)
+    mPrev->getList(aList);
+  
+  aList.push_back(this);
+}
+
 
 

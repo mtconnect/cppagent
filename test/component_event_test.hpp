@@ -51,6 +51,8 @@ class ComponentEventTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testConvertSimpleUnits);
   CPPUNIT_TEST(testRefCounts);
   CPPUNIT_TEST(testStlLists);
+  CPPUNIT_TEST(testEventChaining);
+  CPPUNIT_TEST(testCondition);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -69,6 +71,8 @@ protected:
   void testConvertSimpleUnits();
   void testRefCounts();
   void testStlLists();
+  void testEventChaining();
+  void testCondition();
   
   /* Helper to test values */
   void testValueHelper(
