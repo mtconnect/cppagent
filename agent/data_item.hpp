@@ -127,10 +127,6 @@ public:
   void setComponent(Component& component) { mComponent = &component; }
   Component * getComponent() const { return mComponent; }
   
-  /* Set/get latest component event the data item is associated with */
-  void setLatestEvent(ComponentEvent& event);
-  ComponentEvent * getLatestEvent() const;
-
   /* Get the name for the adapter feed */
   std::string getSourceOrName() { return mSource.empty() ? (mName.empty() ? mId : mName) : mSource; }
   
@@ -203,12 +199,6 @@ protected:
   
   /* Component that data item is associated with */  
   Component * mComponent;
-  
-  /* Pointer to the latest component event that occured for this data item */
-  ComponentEventPtr mLatestEvent;
-  
-  /* Lock to update and retrieve the latest event */
-  dlib::mutex * mLatestEventLock;
   
   /* Attrubutes */
   std::map<std::string, std::string> mAttributes;

@@ -60,15 +60,7 @@ namespace XmlPrinter
     const unsigned int instanceId,
     const unsigned int bufferSize,
     const unsigned int nextSeq,
-    std::list<Device *>& devices
-  );
-  
-  std::string printCurrent(
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const unsigned int nextSeq,
-    const unsigned int firstSeq,
-    std::list<DataItem *>& dataItems
+    std::vector<Device *>& devices
   );
   
   std::string printSample(
@@ -76,7 +68,7 @@ namespace XmlPrinter
     const unsigned int bufferSize,
     const unsigned int nextSeq,
     const unsigned int firstSeq,
-    std::list<ComponentEventPtr>& results
+    std::vector<ComponentEventPtr>& results
   );
   
   /***** Helper Methods *****/

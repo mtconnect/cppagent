@@ -65,11 +65,11 @@ void XmlParserTest::testConstructor()
 
 void XmlParserTest::testGetDevices()
 {
-  list<Device *> devices = a->getDevices();
+  vector<Device *> devices = a->getDevices();
   CPPUNIT_ASSERT_EQUAL((size_t) 1, devices.size());
 
   Device *device = devices.front();
-  list<DataItem*> dataItems;
+  vector<DataItem*> dataItems;
   std::map<string, DataItem *> dataItemsMap = device->getDeviceDataItems();  
   std::map<string, DataItem *>::iterator iter;
   for (iter = dataItemsMap.begin(); iter != dataItemsMap.end(); iter++)
@@ -79,7 +79,7 @@ void XmlParserTest::testGetDevices()
     
   bool hasExec = false, hasZcom = false;
   
-  list<DataItem *>::iterator dataItem;
+  vector<DataItem *>::iterator dataItem;
   for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
   {
     if ((*dataItem)->getId() == "p5" and (*dataItem)->getName() == "execution")
@@ -128,7 +128,7 @@ void XmlParserTest::testGetRootNode()
 
 void XmlParserTest::testCondition()
 {
-  list<Device *> devices = a->getDevices();
+  vector<Device *> devices = a->getDevices();
   CPPUNIT_ASSERT_EQUAL((size_t) 1, devices.size());
   
   Device *device = devices.front();

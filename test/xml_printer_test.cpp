@@ -305,30 +305,25 @@ void XmlPrinterTest::testPrintProbe()
 
 void XmlPrinterTest::testPrintCurrent()
 {
-  addEventToDataItem("Xact", 10254804, "0");
-  addEventToDataItem("SspeedOvr", 15, "100");
-  addEventToDataItem("Xcom", 10254803, "0");
-  addEventToDataItem("spindle_speed", 16, "100");
-  addEventToDataItem("Yact", 10254797, "0.00199");
-  addEventToDataItem("Ycom", 10254800, "0.00189");
-  addEventToDataItem("Zact", 10254798, "0.0002");
-  addEventToDataItem("Zcom", 10254801, "0.0003");
-  addEventToDataItem("block", 10254789, "x-0.132010 y-0.158143");
-  addEventToDataItem("mode", 13, "AUTOMATIC");
-  addEventToDataItem("line", 10254796, "0");
-  addEventToDataItem("program", 12, "/home/mtconnect/simulator/spiral.ngc");
-  addEventToDataItem("execution", 10254795, "READY");
-  addEventToDataItem("power", 1, "ON");
+  Checkpoint checkpoint;
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
+  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100");
+  addEventToCheckpoint(checkpoint, "Yact", 10254797, "0.00199");
+  addEventToCheckpoint(checkpoint, "Ycom", 10254800, "0.00189");
+  addEventToCheckpoint(checkpoint, "Zact", 10254798, "0.0002");
+  addEventToCheckpoint(checkpoint, "Zcom", 10254801, "0.0003");
+  addEventToCheckpoint(checkpoint, "block", 10254789, "x-0.132010 y-0.158143");
+  addEventToCheckpoint(checkpoint, "mode", 13, "AUTOMATIC");
+  addEventToCheckpoint(checkpoint, "line", 10254796, "0");
+  addEventToCheckpoint(checkpoint, "program", 12, "/home/mtconnect/simulator/spiral.ngc");
+  addEventToCheckpoint(checkpoint, "execution", 10254795, "READY");
+  addEventToCheckpoint(checkpoint, "power", 1, "ON");
   
-  list<DataItem *> dataItems;
-  map<string, DataItem *> dataItemsMap = devices.front()->getDeviceDataItems();  
-  map<string, DataItem*>::iterator data;
-  for (data = dataItemsMap.begin(); data != dataItemsMap.end(); data++)
-  {
-    dataItems.push_back(data->second);
-  }
-  
-  PARSE_XML(XmlPrinter::printCurrent(123, 131072, 10254805, 10123733, dataItems));
+  vector<ComponentEventPtr> list;
+  checkpoint.getComponentEvents(list);
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", "0");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Samples/m:SpindleSpeed[@name='Sovr']", "100");
@@ -354,20 +349,20 @@ void XmlPrinterTest::testPrintCurrent()
 
 void XmlPrinterTest::testPrintSample()
 {
-  list<ComponentEventPtr> events;
+  vector<ComponentEventPtr> events;
   
-  events.push_back(addEventToDataItem("Xact", 10843512, "0.553472"));
-  events.push_back(addEventToDataItem("Xcom", 10843514, "0.551123"));
-  events.push_back(addEventToDataItem("Xact", 10843516, "0.556826"));
-  events.push_back(addEventToDataItem("Xcom", 10843518, "0.55582"));
-  events.push_back(addEventToDataItem("Xact", 10843520, "0.560181"));
-  events.push_back(addEventToDataItem("Yact", 10843513, "-0.900624"));
-  events.push_back(addEventToDataItem("Ycom", 10843515, "-0.89692"));
-  events.push_back(addEventToDataItem("Yact", 10843517, "-0.897574"));
-  events.push_back(addEventToDataItem("Ycom", 10843519, "-0.894742"));
-  events.push_back(addEventToDataItem("Xact", 10843521, "-0.895613"));
-  events.push_back(addEventToDataItem("line", 11351720, "229"));
-  events.push_back(addEventToDataItem("block", 11351726, "x-1.149250 y1.048981"));
+  events.push_back(newEvent("Xact", 10843512, "0.553472"));
+  events.push_back(newEvent("Xcom", 10843514, "0.551123"));
+  events.push_back(newEvent("Xact", 10843516, "0.556826"));
+  events.push_back(newEvent("Xcom", 10843518, "0.55582"));
+  events.push_back(newEvent("Xact", 10843520, "0.560181"));
+  events.push_back(newEvent("Yact", 10843513, "-0.900624"));
+  events.push_back(newEvent("Ycom", 10843515, "-0.89692"));
+  events.push_back(newEvent("Yact", 10843517, "-0.897574"));
+  events.push_back(newEvent("Ycom", 10843519, "-0.894742"));
+  events.push_back(newEvent("Xact", 10843521, "-0.895613"));
+  events.push_back(newEvent("line", 11351720, "229"));
+  events.push_back(newEvent("block", 11351726, "x-1.149250 y1.048981"));
     
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
   
@@ -405,10 +400,10 @@ DataItem * XmlPrinterTest::getDataItem(const char *name)
   return device->getDeviceDataItem(name);
 }
 
-ComponentEvent * XmlPrinterTest::addEventToDataItem(
-    const char *name,
-    unsigned int sequence,
-    string value
+ComponentEvent *XmlPrinterTest::newEvent(
+  const char *name,
+  unsigned int sequence,
+  string value
   )
 {
   string time("TIME");
@@ -417,8 +412,19 @@ ComponentEvent * XmlPrinterTest::addEventToDataItem(
   DataItem *d = getDataItem(name);
   CPPUNIT_ASSERT_MESSAGE((string) "Could not find data item " + name, d); 
   
-  ComponentEvent *event = new ComponentEvent(*d, sequence, time, value);
-  d->setLatestEvent(*event);
+  return new ComponentEvent(*d, sequence, time, value);
+}
+
+
+ComponentEvent * XmlPrinterTest::addEventToCheckpoint(
+  Checkpoint &aCheckpoint,
+  const char *name,
+  unsigned int sequence,
+  string value
+  )
+{
+  ComponentEvent *event = newEvent(name, sequence, value);
+  aCheckpoint.addComponentEvent(event);
   return event;
 }
 

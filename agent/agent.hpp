@@ -36,8 +36,9 @@
 
 #include <sstream>
 #include <string>
-#include <list>
+#include <vector>
 #include <map>
+#include <set>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -162,7 +163,7 @@ protected:
   /* Stream the data to the user */
   void streamData(
     std::ostream& out,
-    std::list<DataItem *>& dataItems,
+    std::set<std::string> &aFilterSet,
     bool current,
     unsigned int frequency,
     unsigned int start = 1,
@@ -170,9 +171,9 @@ protected:
   );
   
   /* Fetch the current/sample data and return the XML in a std::string */
-  std::string fetchCurrentData(std::list<DataItem *>& dataItems);
+  std::string fetchCurrentData(std::set<std::string> &aFilter);
   std::string fetchSampleData(
-    std::list<DataItem *>& dataItems,
+    std::set<std::string> &aFilterSet,
     unsigned int start,
     unsigned int count,
     unsigned int &items
@@ -188,7 +189,8 @@ protected:
   );
   
   /* Get std::list of data items in path */
-  std::list<DataItem *> getDataItems(
+  void getDataItems(
+    std::set<std::string> &aFilterSet,
     const std::string& path,
     xmlpp::Node * node = NULL
   );
@@ -207,9 +209,6 @@ protected:
   /* Find data items by name/id */
   DataItem * getDataItemById(const std::string& id) { return mDataItemMap[id]; }
 
-  /* Find if there's data item with that name/source name */
-  bool hasDataItem(std::list<DataItem *>& dataItems, const std::string& name);
-    
 protected:
   /* Unique id based on the time of creation */
   unsigned int mInstanceId;
@@ -233,7 +232,7 @@ protected:
   Checkpoint *mCheckpoints;
   
   /* Data containers */
-  std::list<Device *> mDevices;
+  std::vector<Device *> mDevices;
   std::map<std::string, Device *> mDeviceMap;
   std::map<std::string, DataItem *> mDataItemMap;
 };

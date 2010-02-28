@@ -37,6 +37,8 @@
 #include "component_event.hpp"
 #include <map>
 #include <string>
+#include <vector>
+#include <set>
 
 class Checkpoint {
 public:
@@ -49,6 +51,8 @@ public:
   void clear();
 
   std::map<std::string, ComponentEventPtr*> &getEvents() { return mEvents; }
+  void getComponentEvents(std::vector<ComponentEventPtr> &list,
+			  std::set<std::string> *aFilter = NULL);
   
 protected:
   std::map<std::string, ComponentEventPtr*> mEvents;

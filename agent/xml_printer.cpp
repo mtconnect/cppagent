@@ -68,7 +68,7 @@ string XmlPrinter::printProbe(
     const unsigned int instanceId,
     const unsigned int bufferSize,
     const unsigned int nextSeq,
-    list<Device *>& deviceList
+    vector<Device *>& deviceList
   )
 {
   xmlpp::Document *mProbeXml = initXmlDoc(
@@ -80,7 +80,7 @@ string XmlPrinter::printProbe(
   
   xmlpp::Element *devices = mProbeXml->get_root_node()->add_child("Devices");
   
-  list<Device *>::iterator dev;
+  vector<Device *>::iterator dev;
   for (dev = deviceList.begin(); dev != deviceList.end(); dev++)
   {
     xmlpp::Element *device = devices->add_child("Device");
@@ -94,51 +94,12 @@ string XmlPrinter::printProbe(
   return appendXmlEncode(toReturn);
 }
 
-string XmlPrinter::printCurrent(
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const unsigned int nextSeq,
-    const unsigned int firstSeq,
-    list<DataItem *>& dataItems
-  )
-{
-  xmlpp::Document *mSampleXml = initXmlDoc(
-    "Streams",
-    instanceId,
-    bufferSize,
-    nextSeq,
-    firstSeq
-  );
-  
-  xmlpp::Element *streams = mSampleXml->get_root_node()->add_child("Streams");
-  std::map<string, xmlpp::Element *> elements; 
-  std::map<string, xmlpp::Element *> components; 
-  std::map<string, xmlpp::Element *> devices; 
- 
-  list<DataItem *>::iterator dataItem;
-  for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
-  {
-    if ((*dataItem)->getLatestEvent() != NULL)
-    {
-      addElement((*dataItem)->getLatestEvent(),
-		 streams, elements, components, devices);
-      
-    }
-  }
-  
-  string toReturn = printNode(mSampleXml->get_root_node());
-  
-  delete mSampleXml;
-  
-  return appendXmlEncode(toReturn);
-}
-
 string XmlPrinter::printSample(
     const unsigned int instanceId,
     const unsigned int bufferSize,
     const unsigned int nextSeq,
     const unsigned int firstSeq,
-    list<ComponentEventPtr>& results
+    vector<ComponentEventPtr>& results
   )
 {
   xmlpp::Document * mSampleXml = initXmlDoc(
@@ -154,7 +115,7 @@ string XmlPrinter::printSample(
   std::map<string, xmlpp::Element *> components; 
   std::map<string, xmlpp::Element *> devices; 
   
-  list<ComponentEventPtr>::iterator result;
+  vector<ComponentEventPtr>::iterator result;
   for (result = results.begin(); result != results.end(); result++)
   {
     addElement(*result, streams, elements, components, devices);

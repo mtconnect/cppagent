@@ -49,6 +49,7 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "globals.hpp"
+#include "checkpoint.hpp"
 
 #include "test_globals.hpp"
 
@@ -68,7 +69,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   
 protected:
   XmlParser *config;
-  std::list<Device *> devices;
+  std::vector<Device *> devices;
   
 protected:
   /* Helper methods to test */
@@ -88,7 +89,14 @@ protected:
   DataItem * getDataItem(const char *name);
   
   /* Construct a component event and set it as the data item's latest event */
-  ComponentEvent * addEventToDataItem(
+  ComponentEvent * addEventToCheckpoint(
+    Checkpoint &aCheckpoint,
+    const char *name,
+    unsigned int sequence,
+    std::string value
+  );
+  
+  ComponentEvent * newEvent(
     const char *name,
     unsigned int sequence,
     std::string value

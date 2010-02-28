@@ -124,10 +124,7 @@ DataItem::DataItem(std::map<string, string> attributes)
   }
   
   mComponent = NULL;
-  mLatestEvent = NULL;
   mAttributes = buildAttributes();
-  
-  mLatestEventLock = new dlib::mutex;
 }
 
 DataItem::~DataItem()
@@ -198,22 +195,6 @@ string DataItem::getTypeString(bool uppercase) const
 bool DataItem::hasName(const string& name)
 {
   return mId == name || mName == name || (!mSource.empty() && mSource == name);
-}
-
-void DataItem::setLatestEvent(ComponentEvent& event)
-{
-  mLatestEventLock->lock();  
-  mLatestEvent = &event;
-  mLatestEventLock->unlock();
-}
-
-ComponentEvent * DataItem::getLatestEvent() const
-{
-  mLatestEventLock->lock();
-  ComponentEvent * toReturn = mLatestEvent;
-  mLatestEventLock->unlock();
-  
-  return toReturn;
 }
 
 string DataItem::getCamelType(const string& aType)

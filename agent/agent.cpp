@@ -73,7 +73,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
   mSequenceLock = new dlib::mutex;
   
   /* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
-  list<Device *>::iterator device;
+  vector<Device *>::iterator device;
   for (device = mDevices.begin(); device != mDevices.end(); device++) 
   {
     mDeviceMap[(*device)->getName()] = *device;
@@ -205,7 +205,7 @@ unsigned int Agent::addToBuffer(
   unsigned int seqNum = mSequence++;
   
   (*mSlidingBuffer)[seqNum] = event;
-  dataItem->setLatestEvent(*event);
+  mLatest.addComponentEvent(event);
   event->unrefer();
   
   mSequenceLock->unlock();
@@ -313,7 +313,7 @@ bool Agent::handleCall(
 
 string Agent::handleProbe(const string& name)
 {
-  list<Device *> mDeviceList;
+  vector<Device *> mDeviceList;
   
   if (!name.empty())
   {
@@ -347,10 +347,10 @@ bool Agent::handleStream(
     unsigned int count
   )
 {
-  list<DataItem *> dataItems;
+  std::set<string> filter;
   try
   {
-    dataItems = getDataItems(path);
+    getDataItems(filter, path);
   }
   catch (exception& e)
   {
@@ -359,10 +359,10 @@ bool Agent::handleStream(
     return true;
   }
   
-  if (dataItems.empty())
+  if (filter.empty())
   {
     result = printError("INVALID_XPATH",
-      "The path could not be parsed. Invalid syntax: " + path);
+			"The path could not be parsed. Invalid syntax: " + path);
     return true;
   }
   
@@ -371,31 +371,31 @@ bool Agent::handleStream(
   {
     if (current)
     {
-      streamData(out, dataItems, true, frequency);
+      streamData(out, filter, true, frequency);
     }
     else
     {
-      streamData(out, dataItems, false, frequency, start, count);
+      streamData(out, filter, false, frequency, start, count);
     }
     return false;
   }
   else
   {
     unsigned int items;
-    result = (current) ?
-	     fetchCurrentData(dataItems) : fetchSampleData(dataItems, start,
-							   count, items);
+    if (current)
+      result = fetchCurrentData(filter);
+    else
+      result = fetchSampleData(filter, start, count, items);
     return true;
   }
 }
 
-void Agent::streamData(
-    ostream& out,
-    list<DataItem *>& dataItems,
-    bool current,
-    unsigned int frequency,
-    unsigned int start,
-    unsigned int count
+void Agent::streamData(ostream& out,
+                       std::set<string> &aFilter,
+                       bool current,
+                       unsigned int frequency,
+                       unsigned int start,
+                       unsigned int count
   )
 {
   // Create header
@@ -416,8 +416,11 @@ void Agent::streamData(
   while (out.good())
   {
     unsigned int items;
-    string content = (current) ?
-	   fetchCurrentData(dataItems) : fetchSampleData(dataItems, start, count, items);
+    string content;
+    if (current)
+      content = fetchCurrentData(aFilter);
+    else
+      content = fetchSampleData(aFilter, start, count, items);
     
     start = (start + count < mSequence) ? (start + count) : mSequence;
 
@@ -436,27 +439,29 @@ void Agent::streamData(
   }
 }
 
-string Agent::fetchCurrentData(list<DataItem *>& dataItems)
+string Agent::fetchCurrentData(std::set<string> &aFilter)
 {
   mSequenceLock->lock();
   unsigned int firstSeq = (mSequence > mSlidingBufferSize) ?
     mSequence - mSlidingBufferSize : 1;
+
+  vector<ComponentEventPtr> events;
+  mLatest.getComponentEvents(events, &aFilter);
   
-  string toReturn = XmlPrinter::printCurrent(mInstanceId, mSlidingBufferSize,
-    mSequence, firstSeq, dataItems);
+  string toReturn = XmlPrinter::printSample(mInstanceId, mSlidingBufferSize,
+					    mSequence, firstSeq, events);
   
   mSequenceLock->unlock();
   return toReturn;
 }
 
-string Agent::fetchSampleData(
-    list<DataItem *>& dataItems,
-    unsigned int start,
-    unsigned int count,
-    unsigned int &items
+string Agent::fetchSampleData(std::set<string> &aFilter,
+                              unsigned int start,
+                              unsigned int count,
+                              unsigned int &items
   )
 {
-  list<ComponentEventPtr> results;
+  vector<ComponentEventPtr> results;
   
   mSequenceLock->lock();
 
@@ -473,7 +478,7 @@ string Agent::fetchSampleData(
   {
     // Filter out according to if it exists in the list
     const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
-    if (hasDataItem(dataItems, dataId))
+    if (aFilter.count(dataId) > 0)
     {
       ComponentEvent *event = (*mSlidingBuffer)[i];
       results.push_back(event);
@@ -527,10 +532,9 @@ string Agent::devicesAndPath(const string& path, const string& device)
   return dataPath;
 }
 
-list<DataItem *> Agent::getDataItems(const string& path, xmlpp::Node * node)
+void Agent::getDataItems(std::set<string> &aFilterSet,
+			 const string& path, xmlpp::Node * node)
 {
-  list<DataItem *> items;
-  
   if (node == NULL)
   {
     node = mConfig->getRootNode();
@@ -558,34 +562,19 @@ list<DataItem *> Agent::getDataItems(const string& path, xmlpp::Node * node)
       const string nodename = nodeElement->get_name();
       if (nodeElement->get_name() == "DataItem")
       {
-        DataItem *item =
-          getDataItemById(nodeElement->get_attribute_value("id"));
-        
-        if (item != NULL)
-        {
-          items.push_back(item);
-        }
-        else
-        {
-          logEvent("Agent", "Data item not found: " + nodename);
-        }
+	aFilterSet.insert(nodeElement->get_attribute_value("id"));
       }
       else if (nodename == "Components" || nodename == "DataItems")
       {
         // Recursive call
-        list<DataItem *> toMerge = getDataItems("*", elements[i]);
-        items.merge(toMerge);
+        getDataItems(aFilterSet, "*", elements[i]);
       }
       else // Hopefully a subtype of component.
       {
-        list<DataItem *> toMerge =
-          getDataItems("Components/*|DataItems/*", elements[i]);
-        items.merge(toMerge);
+        getDataItems(aFilterSet, "Components/*|DataItems/*", elements[i]);
       }
     }
   }
-  
-  return items;
 }
 
 int Agent::checkAndGetParam(
@@ -645,18 +634,3 @@ DataItem * Agent::getDataItemByName(const string& device, const string& name)
   return (dev) ? dev->getDeviceDataItem(name) : NULL;
 }
 
-bool Agent::hasDataItem(
-    list<DataItem *>& dataItems,
-    const string& aId
-  )
-{
-  list<DataItem *>::iterator dataItem;
-  for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
-  {
-    if ((*dataItem)->getId() == aId)
-    {
-      return true;
-    }
-  }
-  return false;
-}

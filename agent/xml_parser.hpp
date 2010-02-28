@@ -53,7 +53,7 @@ public:
   virtual ~XmlParser();
   
   /* Get list of devices and data items */
-  std::list<Device *> getDevices() const { return mDevices; }
+  std::vector<Device *> getDevices() const { return mDevices; }
   
   /* Return the root node of the xml */
   xmlpp::Node * getRootNode() const;
@@ -63,7 +63,7 @@ protected:
   xmlpp::DomParser * mParser;
   
   /* Arrays to keep track of all devices and dataItems */
-  std::list<Device *> mDevices;
+  std::vector<Device *> mDevices;
 
 protected:
   /* Main method to process the nodes and return the objects */

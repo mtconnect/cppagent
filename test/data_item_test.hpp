@@ -51,7 +51,6 @@ class DataItemTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testHasNameAndSource);
   CPPUNIT_TEST(testIsSample);
   CPPUNIT_TEST(testComponent);
-  CPPUNIT_TEST(testComponentEvent);
   CPPUNIT_TEST(testGetCamel);
   CPPUNIT_TEST(testConversion);
   CPPUNIT_TEST(testCondition);
@@ -66,7 +65,6 @@ protected:
   void testHasNameAndSource();
   void testIsSample();
   void testComponent();
-  void testComponentEvent();
   void testGetCamel();
   void testConversion();
   void testCondition();
