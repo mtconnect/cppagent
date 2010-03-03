@@ -66,8 +66,12 @@
 								<DataItem type="PROGRAM" category="EVENT" id="cn5" name="program"/>
 								<DataItem type="EXECUTION" category="EVENT" id="cn6" name="execution"/>
 								<DataItem type="PATH_POSITION" category="SAMPLE" id="Ppos" subType="ACTUAL" units="MILLIMETER_3D" nativeUnits="MILLIMETER_3D"/>
-								<DataItem type="PATH_FEEDRATE" category="SAMPLE" id="Frt" units="MILLIMETER/SECOND" nativeUnits="MILLIMETER/SECOND"/>
-								<DataItem type="PATH_FEEDRATE" category="SAMPLE" id="Fovr" units="PERCENT" nativeUnits="PERCENT"/>
+								<DataItem type="PATH_FEEDRATE" category="SAMPLE" id="Frt" units="MILLIMETER/SECOND" nativeUnits="MILLIMETER/SECOND"> 
+								  <Source>path_feedrate</Source>
+								</DataItem>
+								<DataItem type="PATH_FEEDRATE" category="SAMPLE" id="Fovr" units="PERCENT" nativeUnits="PERCENT">
+								  <Source>feed_ovr</Source>
+								</DataItem>
 							</DataItems>
 						</Path>
 					</Components>

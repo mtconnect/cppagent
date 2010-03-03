@@ -262,6 +262,8 @@ void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
       
         if (value != NULL)
           addToBuffer(dataItem, *value, time);
+      } else if (dataItem == NULL) {
+	logEvent("Agent::disconnected", (string) "No data Item for " + (*dataItemAssoc).first);
       }
     }
   }
