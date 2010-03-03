@@ -42,7 +42,8 @@ const string ComponentEvent::SLevels[NumLevels] =
 {
   "Normal",
   "Warning",
-  "Fault"
+  "Fault",
+  "Unavailable"
 };
 
 /* ComponentEvent public methods */
@@ -114,8 +115,8 @@ std::map<string, string> *ComponentEvent::getAttributes()
 	mLevel = WARNING;
       else if (strcasecmp(token.c_str(), "fault") == 0)
 	mLevel = FAULT;
-      else // Throw...
-	mLevel = NORMAL;
+      else // Assume unavailable
+	mLevel = UNAVAILABLE;
       
       
       if (!toParse.eof()) {

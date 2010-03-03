@@ -86,10 +86,11 @@ public:
   enum ELevel {
     NORMAL,
     WARNING,
-    FAULT
+    FAULT,
+    UNAVAILABLE
   };
     
-  static const unsigned int NumLevels = 3;
+  static const unsigned int NumLevels = 4;
   static const std::string SLevels[];
   
 public:

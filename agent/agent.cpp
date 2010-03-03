@@ -36,7 +36,7 @@
 using namespace std;
 
 static const string sUnavailable("UNAVAILABLE");
-static const string sNormal("normal||UNAVAILABLE|");
+static const string sConditionUnavailable("UNAVAILABLE|||");
 
 /* Agent public methods */
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
@@ -90,7 +90,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
       DataItem *d = item->second;
       const string *value = &sUnavailable;
       if (d->isCondition()) {
-	value = &sNormal;
+	value = &sConditionUnavailable;
       } else if (d->hasConstraints()) { 
 	std::vector<std::string> &values = d->getConstrainedValues();
 	if (values.size() == 1)
@@ -251,7 +251,7 @@ void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
       {
 	const string *value = NULL;
 	if (dataItem->isCondition()) {
-	  value = &sNormal;
+	  value = &sConditionUnavailable;
 	} else if (dataItem->hasConstraints()) { 
 	  std::vector<std::string> &values = dataItem->getConstrainedValues();
 	  if (values.size() > 1)
@@ -501,12 +501,16 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, unsigned int at)
     long beg = (long) mSlidingBuffer->get_element_id(firstSeq);
     Checkpoint *ref;
     
-    // Compute the closest checkpoint
+    // Compute the closest checkpoint. If the checkpoint is after the
+    // first checkpoint and before the next incremental checkpoint,
+    // use first.
     unsigned long index;
     long delta = (pos - beg);
     if (delta >= 0 && delta < mCheckpointFreq)
     {
       ref = &mFirst;
+      // The checkpoint is inclusive of the "beg" event. So we add one
+      // so we don't duplicate effort.
       index = beg + 1;
     }
     else
