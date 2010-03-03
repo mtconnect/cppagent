@@ -306,7 +306,8 @@ void ComponentEventTest::testCondition()
   CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", (*attrs1)["type"]);
   CPPUNIT_ASSERT_EQUAL((string) "123", (*attrs1)["sequence"]);
   CPPUNIT_ASSERT_EQUAL((string) "4321", (*attrs1)["nativeCode"]);
-  CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs1)["subType"]);
+  CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs1)["qualifier"]);
+  CPPUNIT_ASSERT_EQUAL((string) "Fault", event1->getLevelString());
 
   ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4321|HIGH|Overtemp"), true);
   
@@ -317,5 +318,7 @@ void ComponentEventTest::testCondition()
   CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", (*attrs2)["type"]);
   CPPUNIT_ASSERT_EQUAL((string) "123", (*attrs2)["sequence"]);
   CPPUNIT_ASSERT_EQUAL((string) "4321", (*attrs2)["nativeCode"]);
-  CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs2)["subType"]);
+  CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs2)["qualifier"]);
+  CPPUNIT_ASSERT_EQUAL((string) "Fault", event2->getLevelString());
+ 
 }

@@ -38,6 +38,13 @@
 using namespace std;
 static dlib::rmutex sRefMutex;
 
+const string ComponentEvent::SLevels[NumLevels] = 
+{
+  "Normal",
+  "Warning",
+  "Fault"
+};
+
 /* ComponentEvent public methods */
 ComponentEvent::ComponentEvent(
     DataItem& dataItem,
@@ -90,7 +97,8 @@ std::map<string, string> *ComponentEvent::getAttributes()
   {
     mAttributes["dataItemId"] = mDataItem->getId();
     mAttributes["timestamp"] = mTime;
-    mAttributes["name"] = mDataItem->getName();
+    if (!mDataItem->getName().empty())
+      mAttributes["name"] = mDataItem->getName();
     mAttributes["sequence"] = intToString(mSequence);
     
     if (mDataItem->isCondition())
@@ -110,15 +118,17 @@ std::map<string, string> *ComponentEvent::getAttributes()
         mLevel = NORMAL;
       
       getline(toParse, token, '|');
-      mAttributes["nativeCode"] = token;
+      if (!token.empty())
+	mAttributes["nativeCode"] = token;
       
       getline(toParse, token, '|');
-      mAttributes["subType"] = token;
+      if (!token.empty())
+	mAttributes["qualifier"] = token;
       
       mAttributes["type"] = mDataItem->getType();
     }
     else
-    {    
+    {
       if (!mDataItem->getSubType().empty())
       {
         mAttributes["subType"] = mDataItem->getSubType();

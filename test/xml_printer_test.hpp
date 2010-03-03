@@ -65,6 +65,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testPrintProbe);
   CPPUNIT_TEST(testPrintCurrent);
   CPPUNIT_TEST(testPrintSample);
+  CPPUNIT_TEST(testCondition);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -84,6 +85,9 @@ protected:
   void testPrintProbe();
   void testPrintCurrent();
   void testPrintSample();
+
+  // Test new condition handling
+  void testCondition();
   
   /* Retrieve a data item by name string */
   DataItem * getDataItem(const char *name);

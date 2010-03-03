@@ -211,7 +211,9 @@ void AgentTest::testEmptyStream()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY("from", "20");
+    char line[80];
+    sprintf(line, "%d", a->getSequence());
+    PARSE_XML_RESPONSE_QUERY("from", line);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Streams", 0);
   }
 }
@@ -398,10 +400,10 @@ void AgentTest::testCurrentAt()
   {
     int i = a->getSequence() - a->getBufferSize() - seq - 1;       
     value = intToString(i + seq);
-    sprintf(line, "%d", i + 1);
+    sprintf(line, "'at' must be greater than or equal to %d.", i + seq + 1);
     PARSE_XML_RESPONSE_QUERY(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'at' must be greater than or equal to 65.");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", line);
   }
 }
 

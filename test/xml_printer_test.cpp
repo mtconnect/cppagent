@@ -392,6 +392,57 @@ void XmlPrinterTest::testPrintSample()
                                     "x-1.149250 y1.048981");    
 }
 
+void XmlPrinterTest::testCondition()
+{
+
+  Checkpoint checkpoint;
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
+  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100");
+  addEventToCheckpoint(checkpoint, "Yact", 10254797, "0.00199");
+  addEventToCheckpoint(checkpoint, "Ycom", 10254800, "0.00189");
+  addEventToCheckpoint(checkpoint, "Zact", 10254798, "0.0002");
+  addEventToCheckpoint(checkpoint, "Zcom", 10254801, "0.0003");
+  addEventToCheckpoint(checkpoint, "block", 10254789, "x-0.132010 y-0.158143");
+  addEventToCheckpoint(checkpoint, "mode", 13, "AUTOMATIC");
+  addEventToCheckpoint(checkpoint, "line", 10254796, "0");
+  addEventToCheckpoint(checkpoint, "program", 12, "/home/mtconnect/simulator/spiral.ngc");
+  addEventToCheckpoint(checkpoint, "execution", 10254795, "READY");
+  addEventToCheckpoint(checkpoint, "power", 1, "ON");
+  addEventToCheckpoint(checkpoint, "ctmp", 18, "WARNING|OTEMP|HIGH|Spindle Overtemp");
+  addEventToCheckpoint(checkpoint, "cmp", 18, "NORMAL|||");
+  addEventToCheckpoint(checkpoint, "lp", 18, "FAULT|LOGIC||PLC Error");
+  
+  vector<ComponentEventPtr> list;
+  checkpoint.getComponentEvents(list);
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning",
+                                    "Spindle Overtemp");    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@type",
+                                    "TEMPERATURE");    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@qualifier",
+                                    "HIGH");    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeCode",
+                                    "OTEMP");    
+
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal",
+                                    0);
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal@qualifier",
+                                    0);    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal@nativeCode",
+                                    0);    
+
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeCode",
+                                    "LOGIC");    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault",
+                                    "PLC Error");    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@qualifier",
+                                    0);    
+
+}
+
 DataItem * XmlPrinterTest::getDataItem(const char *name)
 {
   Device *device = devices.front();

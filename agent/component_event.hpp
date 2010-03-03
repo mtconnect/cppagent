@@ -89,6 +89,8 @@ public:
     FAULT
   };
     
+  static const unsigned int NumLevels = 3;
+  static const std::string SLevels[];
   
 public:
   /* Initialize with the data item reference, sequence number, time and value */
@@ -111,6 +113,7 @@ public:
   /* Get the value */
   const std::string &getValue() const { return mValue; }
   ELevel getLevel();
+  const std::string &getLevelString() { return SLevels[getLevel()]; }
   
   unsigned int getSequence() const { return mSequence; }
   

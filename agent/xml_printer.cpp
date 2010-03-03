@@ -374,8 +374,22 @@ void XmlPrinter::addElement(ComponentEvent *result,
 {
   DataItem *dataItem = result->getDataItem();
   Component *component = dataItem->getComponent();
-  bool sample = dataItem->isSample();
-  string dataName = (sample) ? "Samples" : "Events";
+  string dataName;
+  switch (dataItem->getCategory())
+  {
+  case DataItem::SAMPLE:
+    dataName = "Samples";
+    break;
+
+  case DataItem::EVENT:
+    dataName = "Events";
+    break;
+
+  case DataItem::CONDITION:
+    dataName = "Condition";
+    break;
+  }
+  
   string key = component->getId() + dataName;
 
   xmlpp::Element *element = elements[key];
@@ -400,9 +414,13 @@ void XmlPrinter::addElement(ComponentEvent *result,
     elements[key] = element = componentStream->add_child(dataName);
   }
 
-  child = element->add_child(dataItem->getTypeString(false));
-  child->add_child_text(result->getValue());
-  
+  if (dataItem->isCondition()) {
+    child = element->add_child(result->getLevelString());
+  } else {
+    child = element->add_child(dataItem->getTypeString(false));
+  }
+  if (!result->getValue().empty())
+    child->add_child_text(result->getValue());
   addAttributes(child, result->getAttributes());
 }
 
