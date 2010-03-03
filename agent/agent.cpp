@@ -247,7 +247,7 @@ void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
     for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
     {
       DataItem *dataItem = (*dataItemAssoc).second;
-      if (dataItem->getDataSource() == anAdapter)
+      if (dataItem != NULL && dataItem->getDataSource() == anAdapter)
       {
 	const string *value = NULL;
 	if (dataItem->isCondition()) {
