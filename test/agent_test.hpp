@@ -62,6 +62,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAddAdapter);
   CPPUNIT_TEST(testAddToBuffer);
   CPPUNIT_TEST(testAdapter);
+  CPPUNIT_TEST(testCurrentAt);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -74,6 +75,7 @@ protected:
   
   bool response;
   std::string path;
+  std::string at;
   map_type queries;
   std::string result;
   map_type cookies;
@@ -100,6 +102,7 @@ protected:
   void testBadDevices();
   void testAddAdapter();
   void testAddToBuffer();
+  void testCurrentAt();
   
   /* Test Adapter */
   void testAdapter();

@@ -215,7 +215,61 @@ void CheckpointTest::testGetComponentEvents()
   mCheckpoint->getComponentEvents(list, &filter);
 
   CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
+  
+  std::set<string> filter2;
+  filter2.insert(mDataItem1->getId());
 
+  vector<ComponentEventPtr> list2;
+  mCheckpoint->getComponentEvents(list2, &filter2);
+
+  CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
+  
   delete d1;
 }
+
+void CheckpointTest::testFilter()
+{
+  ComponentEventPtr p;
+  string time("NOW"), value("123"), warning("WARNING|CODE|HIGH|Over..."),
+    normal("NORMAL|CODE|HIGH|Over...");
+  std::set<string> filter;
+  filter.insert(mDataItem1->getId());
+  
+  p = new ComponentEvent(*mDataItem1, 2, time, warning);
+  mCheckpoint->addComponentEvent(p);
+  p->unrefer();
+  
+  p = new ComponentEvent(*mDataItem1, 2, time, warning);
+  mCheckpoint->addComponentEvent(p);
+  p->unrefer();
+
+  p = new ComponentEvent(*mDataItem2, 2, time, value);
+  mCheckpoint->addComponentEvent(p);
+  p->unrefer();
+  
+  std::map<string, string> attributes;
+  attributes["id"] = "4";
+  attributes["name"] = "DataItemTest2";
+  attributes["type"] = "POSITION";
+  attributes["nativeUnits"] = "MILLIMETER";
+  attributes["subType"] = "ACTUAL";
+  attributes["category"] = "SAMPLE";
+  DataItem *d1 = new DataItem(attributes);
+  
+  p = new ComponentEvent(*d1, 2, time, value);
+  mCheckpoint->addComponentEvent(p);
+  p->unrefer();
+
+  vector<ComponentEventPtr> list;
+  mCheckpoint->getComponentEvents(list);
+
+  CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
+  list.clear();
+  
+  mCheckpoint->filter(filter);
+  mCheckpoint->getComponentEvents(list);
+
+  CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
+}
+
 

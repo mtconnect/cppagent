@@ -134,6 +134,14 @@ public:
   );
   
   ComponentEvent *getFromBuffer(unsigned int aSeq) const { return (*mSlidingBuffer)[aSeq]; }
+  int getSequence() const { return mSequence; }
+  int getBufferSize() const { return mSlidingBufferSize; }
+  int getFirstSequence() const {
+    if (mSequence > mSlidingBufferSize)
+      return mSequence - mSlidingBufferSize;
+    else
+      return 1;
+  }
   
 protected:
   /* HTTP methods to handle the 3 basic calls */
@@ -171,7 +179,7 @@ protected:
   );
   
   /* Fetch the current/sample data and return the XML in a std::string */
-  std::string fetchCurrentData(std::set<std::string> &aFilter);
+  std::string fetchCurrentData(std::set<std::string> &aFilter, unsigned int at);
   std::string fetchSampleData(
     std::set<std::string> &aFilterSet,
     unsigned int start,
@@ -230,6 +238,8 @@ protected:
   Checkpoint mLatest;
   Checkpoint mFirst;
   Checkpoint *mCheckpoints;
+
+  int mCheckpointFreq, mCheckpointCount;
   
   /* Data containers */
   std::vector<Device *> mDevices;

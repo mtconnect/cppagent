@@ -65,23 +65,25 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
   mSlidingBufferSize = 1 << aBufferSize;
   mSlidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
   mSlidingBuffer->set_size(aBufferSize);
+  mCheckpointFreq = aCheckpointFreq;
+  mCheckpointCount = (mSlidingBufferSize / aCheckpointFreq) + 1;
 
   // Create the checkpoints at a regular frequency
-  mCheckpoints = new Checkpoint[mSlidingBufferSize / aCheckpointFreq];
+  mCheckpoints = new Checkpoint[mCheckpointCount];
   
   // Mutex used for synchronized access to sliding buffer and sequence number
   mSequenceLock = new dlib::mutex;
   
   /* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
   vector<Device *>::iterator device;
-  for (device = mDevices.begin(); device != mDevices.end(); device++) 
+  for (device = mDevices.begin(); device != mDevices.end(); ++device) 
   {
     mDeviceMap[(*device)->getName()] = *device;
     
     std::map<string, DataItem*> items = (*device)->getDeviceDataItems();
     
     std::map<string, DataItem *>::iterator item;
-    for (item = items.begin(); item != items.end(); item++)
+    for (item = items.begin(); item != items.end(); ++item)
     {
       // Check for single valued constrained data items.
       DataItem *d = item->second;
@@ -192,23 +194,41 @@ unsigned int Agent::addToBuffer(
 {
   if (dataItem == 0) return 0;
   
-  mSequenceLock->lock();
+  dlib::auto_mutex lock(*mSequenceLock);
   
   // If this function is being used as an API, add the current time in
   if (time.empty()) {
     time = getCurrentTime(GMT_UV_SEC);
   }
-  
-  ComponentEvent *event =
-    new ComponentEvent(*dataItem, mSequence, time, value);
-  
+
   unsigned int seqNum = mSequence++;
-  
+  ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
+					     time, value);
   (*mSlidingBuffer)[seqNum] = event;
   mLatest.addComponentEvent(event);
   event->unrefer();
+
+  // Special case for the first event in the series to prime the first checkpoint.
+  if (seqNum == 1) {
+    mFirst.addComponentEvent(event);
+  }
   
-  mSequenceLock->unlock();
+  // Checkpoint management
+  int index = mSlidingBuffer->get_element_id(seqNum);
+  if (mCheckpointCount > 0 && index % mCheckpointFreq == 0) {
+    // Copy the checkpoint from the current into the slot
+    mCheckpoints[index / mCheckpointFreq].copy(mLatest);
+  }
+
+  
+  // See if the next sequence has an event. If the event exists it
+  // should be added to the first checkpoint.
+  if ((*mSlidingBuffer)[mSequence] != NULL)
+  {
+    // Keep the last checkpoint up to date with the last.
+    mFirst.addComponentEvent((*mSlidingBuffer)[mSequence]);
+  }
+  
   return seqNum;
 }
 
@@ -222,7 +242,7 @@ void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
   {
     std::map<std::string, DataItem *> dataItems = dev->getDeviceDataItems();
     std::map<std::string, DataItem*>::iterator dataItemAssoc;
-    for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); dataItemAssoc++)
+    for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
     {
       DataItem *dataItem = (*dataItemAssoc).second;
       if (dataItem->getDataSource() == anAdapter)
@@ -259,14 +279,21 @@ bool Agent::handleCall(
     
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
-    
-    if (freq == PARAM_ERROR)
+    int at = checkAndGetParam(result, queries, "at", NO_START, getFirstSequence(), true,
+			      mSequence);
+    if (freq == PARAM_ERROR || at == PARAM_ERROR)
     {
       return true;
     }
+
+    if (freq != NO_FREQ && at != NO_START) {
+      result =  printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
+      return true;
+    }
+    
     
     return handleStream(out, result, devicesAndPath(path, deviceName), true,
-			freq);
+			freq, at);
   }
   else if (call == "probe" || call.empty())
   {
@@ -283,18 +310,20 @@ bool Agent::handleCall(
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
     
-    int start = checkAndGetParam(result, queries, "start", NO_START);
+    int start = checkAndGetParam(result, queries, "start", NO_START, getFirstSequence(),
+				 true, mSequence);
     
     if (start == NO_START) // If there was no data in queries
     {
-      start = checkAndGetParam(result, queries, "from", 1);
+      start = checkAndGetParam(result, queries, "from", 1,
+			       getFirstSequence(), true, mSequence);
     }
     
     if (freq == PARAM_ERROR || count == PARAM_ERROR || start == PARAM_ERROR)
     {
       return true;
     }
-    
+
     return handleStream(out, result, devicesAndPath(path, deviceName), false,
 			freq, start, count);
   }
@@ -383,7 +412,7 @@ bool Agent::handleStream(
   {
     unsigned int items;
     if (current)
-      result = fetchCurrentData(filter);
+      result = fetchCurrentData(filter, start);
     else
       result = fetchSampleData(filter, start, count, items);
     return true;
@@ -418,7 +447,7 @@ void Agent::streamData(ostream& out,
     unsigned int items;
     string content;
     if (current)
-      content = fetchCurrentData(aFilter);
+      content = fetchCurrentData(aFilter, start);
     else
       content = fetchSampleData(aFilter, start, count, items);
     
@@ -439,19 +468,53 @@ void Agent::streamData(ostream& out,
   }
 }
 
-string Agent::fetchCurrentData(std::set<string> &aFilter)
+string Agent::fetchCurrentData(std::set<string> &aFilter, unsigned int at)
 {
-  mSequenceLock->lock();
-  unsigned int firstSeq = (mSequence > mSlidingBufferSize) ?
-    mSequence - mSlidingBufferSize : 1;
-
+  dlib::auto_mutex lock(*mSequenceLock);
+  
   vector<ComponentEventPtr> events;
-  mLatest.getComponentEvents(events, &aFilter);
+  unsigned int firstSeq = (mSequence > mSlidingBufferSize) ?
+	       mSequence - mSlidingBufferSize : 1;
+  if (at == (unsigned int) NO_START)
+  {
+    mLatest.getComponentEvents(events, &aFilter);
+  }
+  else
+  {
+    long pos = (long) mSlidingBuffer->get_element_id(at);
+    long beg = (long) mSlidingBuffer->get_element_id(firstSeq);
+    Checkpoint *ref;
+    
+    // Compute the closest checkpoint
+    unsigned long index;
+    long delta = (pos - beg);
+    if (delta >= 0 && delta < mCheckpointFreq)
+    {
+      ref = &mFirst;
+      index = beg + 1;
+    }
+    else
+    {
+      long check = pos / mCheckpointFreq;
+      index = check * mCheckpointFreq + 1;
+      ref = &mCheckpoints[check];
+    }
+
+    Checkpoint check(*ref);
+    check.filter(aFilter);
+    
+    // Roll forward from the checkpoint.
+    for (; index <= (unsigned long) pos; index++)
+    {
+      check.addComponentEvent(((*mSlidingBuffer)[(unsigned long)index]).getObject());
+    }
+
+    check.getComponentEvents(events);
+  }
   
   string toReturn = XmlPrinter::printSample(mInstanceId, mSlidingBufferSize,
 					    mSequence, firstSeq, events);
   
-  mSequenceLock->unlock();
   return toReturn;
 }
 
@@ -463,7 +526,7 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
 {
   vector<ComponentEventPtr> results;
   
-  mSequenceLock->lock();
+  dlib::auto_mutex lock(*mSequenceLock);
 
   unsigned int seq = mSequence;
   unsigned int firstSeq = (mSequence > mSlidingBufferSize) ?
@@ -485,8 +548,6 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
       items++;
     }
   }
-  
-  mSequenceLock->unlock();
   
   return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, seq, 
 				 firstSeq, results);
@@ -612,7 +673,7 @@ int Agent::checkAndGetParam(
     if (minError)
     {
       result = printError("QUERY_ERROR",
-        "'" + param + "' must be greater than " + intToString(minValue) + ".");
+        "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
       return PARAM_ERROR;
     }
     return minValue;
@@ -621,7 +682,7 @@ int Agent::checkAndGetParam(
   if (maxValue != NO_VALUE && value > maxValue)
   {
     result = printError("QUERY_ERROR",
-      "'" + param + "' must be less than " + intToString(maxValue) + ".");
+      "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
     return PARAM_ERROR;
   }
   

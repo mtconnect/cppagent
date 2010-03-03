@@ -40,7 +40,7 @@ using namespace std;
 
 void AgentTest::setUp()
 {
-  a = new Agent("../samples/test_config.xml", 17);
+  a = new Agent("../samples/test_config.xml", 8, 25);
   agentId = intToString(getCurrentTimeInSec());
   adapter = NULL;
 }
@@ -138,14 +138,16 @@ void AgentTest::testBadCount()
     value = "0";
     PARSE_XML_RESPONSE_QUERY(key, value)
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'count' must be greater than 1.");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'count' must be greater than or equal to 1.");
   }
   
   {
     value = "999999999999999999";
     PARSE_XML_RESPONSE_QUERY(key, value)
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'count' must be less than 131072.");
+    string value("'count' must be less than or equal to ");
+    value += intToString(a->getBufferSize()) + ".";
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", value.c_str());
   }
 
 }
@@ -173,7 +175,7 @@ void AgentTest::testBadFreq()
     value = "999999999999999999";
     PARSE_XML_RESPONSE_QUERY(key, value)
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'frequency' must be less than 2147483646.");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'frequency' must be less than or equal to 2147483646.");
   }
 }
 
@@ -335,5 +337,71 @@ void AgentTest::responseHelper(xmlpp::DomParser *parser,
   }
   
   parser->parse_memory(result);
+}
+
+void AgentTest::testCurrentAt()
+{
+  path = "/current";
+  string key("at"), value;
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878);
+  CPPUNIT_ASSERT(adapter);
+
+  // Get the current position
+  int seq = a->getSequence();
+  char line[80];
+
+  // Add a large many events
+  for (int i = 1; i <= 100; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    adapter->processData(line);
+  }
+
+  // Check each current at all the positions.
+  for (int i = 0; i < 100; i++)
+  {
+    value = intToString(i + seq);
+    sprintf(line, "%d", i + 1);
+    PARSE_XML_RESPONSE_QUERY(key, value);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Line", line);
+  }
+
+  // Test buffer wrapping
+  // Add a large many events
+  for (int i = 101; i <= 301; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    adapter->processData(line);
+  }
+
+  // Check each current at all the positions.
+  for (int i = 100; i < 301; i++)
+  {
+    value = intToString(i + seq);
+    sprintf(line, "%d", i + 1);
+    PARSE_XML_RESPONSE_QUERY(key, value);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Line", line);
+  }
+
+  // Check the first couple of items in the list
+  for (int j = 0; j < 10; j ++)
+  {
+    int i = a->getSequence() - a->getBufferSize() - seq + j;       
+    value = intToString(i + seq);
+    sprintf(line, "%d", i + 1);
+    PARSE_XML_RESPONSE_QUERY(key, value);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:Line", line);
+  }
+  
+  // Test out of range...
+  {
+    int i = a->getSequence() - a->getBufferSize() - seq - 1;       
+    value = intToString(i + seq);
+    sprintf(line, "%d", i + 1);
+    PARSE_XML_RESPONSE_QUERY(key, value);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "'at' must be greater than or equal to 65.");
+  }
 }
 

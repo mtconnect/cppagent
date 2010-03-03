@@ -49,6 +49,7 @@ public:
   void addComponentEvent(ComponentEvent *aEvent);
   void copy(Checkpoint &aCheckpoint);
   void clear();
+  void filter(std::set<std::string> &aFilter);
 
   std::map<std::string, ComponentEventPtr*> &getEvents() { return mEvents; }
   void getComponentEvents(std::vector<ComponentEventPtr> &list,
@@ -56,6 +57,8 @@ public:
   
 protected:
   std::map<std::string, ComponentEventPtr*> mEvents;
+  std::set<std::string> mFilter;
+  bool mHasFilter;
 };
 
 #endif

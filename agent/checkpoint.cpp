@@ -37,12 +37,15 @@
 using namespace std;
 
 Checkpoint::Checkpoint()
+  : mHasFilter(false)
 {
 }
 
 Checkpoint::Checkpoint(Checkpoint &aCheck)
 {
   copy(aCheck);
+  mHasFilter = aCheck.mHasFilter;
+  mFilter = aCheck.mFilter;
 }
 
 void Checkpoint::clear()
@@ -63,6 +66,12 @@ Checkpoint::~Checkpoint()
 
 void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
 {
+  if (mHasFilter)
+  {
+    if (mFilter.count(anEvent->getDataItem()->getId()) == 0)
+      return;
+  }
+  
   DataItem *item = anEvent->getDataItem();
   string id = item->getId();
   ComponentEventPtr *ptr = mEvents[id];
@@ -83,7 +92,7 @@ void Checkpoint::copy(Checkpoint &aCheck)
 {
   clear();
   map<string, ComponentEventPtr*>::iterator it;
-  for (it = aCheck.mEvents.begin(); it != aCheck.mEvents.end(); it++)
+  for (it = aCheck.mEvents.begin(); it != aCheck.mEvents.end(); ++it)
   {
     mEvents[(*it).first] = new ComponentEventPtr((*it).second->getObject());
   }
@@ -93,7 +102,7 @@ void Checkpoint::getComponentEvents(vector<ComponentEventPtr> &aList,
 				    std::set<string> *aFilter)
 {
   map<string, ComponentEventPtr*>::iterator it;
-  for (it = mEvents.begin(); it != mEvents.end(); it++)
+  for (it = mEvents.begin(); it != mEvents.end(); ++it)
   {
     ComponentEvent *e = *((*it).second);
     if (aFilter == NULL || aFilter->count(e->getDataItem()->getId()) > 0)
@@ -103,6 +112,21 @@ void Checkpoint::getComponentEvents(vector<ComponentEventPtr> &aList,
 	aList.push_back(e);
 	e = e->getPrev();
       }
+    }
+  }
+}
+
+void Checkpoint::filter(std::set<std::string> &aFilter)
+{
+  mFilter = aFilter;
+  if (!aFilter.empty()) {
+    map<string, ComponentEventPtr*>::iterator it = mEvents.begin();
+    while (it != mEvents.end())
+    {
+      if (mFilter.count(it->first) == 0)
+	mEvents.erase(it);
+      
+      ++it;
     }
   }
 }
