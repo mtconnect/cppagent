@@ -71,7 +71,7 @@ void XmlPrinterTest::testInitXmlDoc()
   );
   CPPUNIT_ASSERT_EQUAL(
     (Glib::ustring) "urn:mtconnect.org:MTConnectDevices:1.1"
-      + " http://www.mtconnect.org/schemas/MTConnectDevices.xsd",
+      + " http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd",
     root1->get_attribute_value("xsi:schemaLocation")
   );
   
@@ -116,7 +116,7 @@ void XmlPrinterTest::testInitXmlDoc()
   );
   CPPUNIT_ASSERT_EQUAL(
     (Glib::ustring) "urn:mtconnect.org:MTConnectStreams:1.1"
-      + " http://www.mtconnect.org/schemas/MTConnectStreams.xsd",
+      + " http://www.mtconnect.org/schemas/MTConnectStreams_1.1.xsd",
     root2->get_attribute_value("xsi:schemaLocation")
   );
   

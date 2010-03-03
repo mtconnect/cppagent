@@ -489,8 +489,7 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, unsigned int at)
   dlib::auto_mutex lock(*mSequenceLock);
   
   vector<ComponentEventPtr> events;
-  unsigned int firstSeq = (mSequence > mSlidingBufferSize) ?
-	       mSequence - mSlidingBufferSize : 1;
+  unsigned int firstSeq = getFirstSequence();
   if (at == (unsigned int) NO_START)
   {
     mLatest.getComponentEvents(events, &aFilter);
@@ -498,26 +497,27 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, unsigned int at)
   else
   {
     long pos = (long) mSlidingBuffer->get_element_id(at);
-    long beg = (long) mSlidingBuffer->get_element_id(firstSeq);
+    long first = (long) mSlidingBuffer->get_element_id(firstSeq);
+    long checkIndex = pos / mCheckpointFreq;
+    long closestCp = checkIndex * mCheckpointFreq;
+    unsigned long index;
+    
     Checkpoint *ref;
     
     // Compute the closest checkpoint. If the checkpoint is after the
     // first checkpoint and before the next incremental checkpoint,
     // use first.
-    unsigned long index;
-    long delta = (pos - beg);
-    if (delta >= 0 && delta < mCheckpointFreq)
+    if (first > closestCp && pos >= first)
     {
       ref = &mFirst;
-      // The checkpoint is inclusive of the "beg" event. So we add one
+      // The checkpoint is inclusive of the "first" event. So we add one
       // so we don't duplicate effort.
-      index = beg + 1;
+      index = first + 1;
     }
     else
     {
-      long check = pos / mCheckpointFreq;
-      index = check * mCheckpointFreq + 1;
-      ref = &mCheckpoints[check];
+      index = closestCp + 1;
+      ref = &mCheckpoints[checkIndex];
     }
 
     Checkpoint check(*ref);
