@@ -29,6 +29,7 @@ project (agent)
 set(agent_srcs cppagent.cpp 
 	       adapter.cpp 
 	       agent.cpp 
+	       checkpoint.cpp
 	       component.cpp 
 	       component_event.cpp 
 	       connector.cpp

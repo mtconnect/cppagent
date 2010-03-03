@@ -14,6 +14,7 @@ project (test)
 set(test_srcs test.cpp
 	       ../agent/adapter.cpp 
 	       ../agent/agent.cpp 
+	       ../agent/checkpoint.cpp
 	       ../agent/component.cpp 
 	       ../agent/component_event.cpp 
 	       ../agent/connector.cpp
@@ -23,8 +24,8 @@ set(test_srcs test.cpp
 	       ../agent/options.cpp
 	       ../agent/xml_parser.cpp 
 	       ../agent/xml_printer.cpp
-               ../agent/checkpoint.cpp
 	       agent_test.cpp
+	       checkpoint_test.cpp
 	       component_test.cpp
 	       component_event_test.cpp
 	       data_item_test.cpp
@@ -32,8 +33,7 @@ set(test_srcs test.cpp
 	       globals_test.cpp
 	       xml_parser_test.cpp
 	       test_globals.cpp
-	       xml_printer_test.cpp
-               checkpoint_test.cpp)
+	       xml_printer_test.cpp)
 
 
 include_directories(../lib ../agent)

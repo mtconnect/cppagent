@@ -206,6 +206,9 @@ void AgentTest::testEmptyStream()
     path = "/current";
     PARSE_XML_RESPONSE
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:PowerStatus", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal", 0);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal@qualifier",
+				      "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DeviceStream//m:RotaryMode", "SPINDLE");
   }
   

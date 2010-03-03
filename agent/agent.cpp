@@ -36,6 +36,7 @@
 using namespace std;
 
 static const string sUnavailable("UNAVAILABLE");
+static const string sNormal("normal||UNAVAILABLE|");
 
 /* Agent public methods */
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
@@ -88,11 +89,12 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
       // Check for single valued constrained data items.
       DataItem *d = item->second;
       const string *value = &sUnavailable;
-      if (d->hasConstraints())
-      { 
-        std::vector<std::string> &values = d->getConstrainedValues();
-        if (values.size() == 1)
-          value = &values[0];
+      if (d->isCondition()) {
+	value = &sNormal;
+      } else if (d->hasConstraints()) { 
+	std::vector<std::string> &values = d->getConstrainedValues();
+	if (values.size() == 1)
+	  value = &values[0];
       }
       
       addToBuffer(d, *value, time);
