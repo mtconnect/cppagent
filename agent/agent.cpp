@@ -249,7 +249,19 @@ void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
       DataItem *dataItem = (*dataItemAssoc).second;
       if (dataItem->getDataSource() == anAdapter)
       {
-        addToBuffer(dataItem, sUnavailable, time);
+	const string *value = NULL;
+	if (dataItem->isCondition()) {
+	  value = &sNormal;
+	} else if (dataItem->hasConstraints()) { 
+	  std::vector<std::string> &values = dataItem->getConstrainedValues();
+	  if (values.size() > 1)
+	    value = &sUnavailable;
+	} else {
+          value = &sUnavailable;
+        }
+      
+        if (value != NULL)
+          addToBuffer(dataItem, *value, time);
       }
     }
   }

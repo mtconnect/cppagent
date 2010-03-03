@@ -96,7 +96,8 @@
 				<HydrolicSystem id="hsys" name="hydrolic">
 					<DataItems>
 						<DataItem id="hlow" type="LEVEL" category="CONDITION" />
-						<DataItem id="hpres" type="PRESSURE" category="CONDITION" />
+ 						<DataItem id="hpres" type="PRESSURE" category="CONDITION" />
+ 						<DataItem id="htemp" type="TEMPERATURE" category="CONDITION" />
 					</DataItems>
 				</HydrolicSystem>
 			</Components>

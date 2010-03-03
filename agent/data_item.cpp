@@ -136,14 +136,13 @@ std::map<string, string> DataItem::buildAttributes() const
   std::map<string, string> attributes;
   
   attributes["id"] = mId;
-  attributes["name"] = mName;
   attributes["type"] = mType;
   
   if (!mSubType.empty())
   {
     attributes["subType"] = mSubType;
   }
-  
+
   switch(mCategory)
   {
     case SAMPLE:
@@ -159,6 +158,11 @@ std::map<string, string> DataItem::buildAttributes() const
       break;
   }
 
+  if (!mName.empty())
+  {
+    attributes["name"] = mName;
+  }
+  
   if (!mNativeUnits.empty())
   {
     attributes["nativeUnits"] = mNativeUnits;

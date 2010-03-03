@@ -106,24 +106,29 @@ std::map<string, string> *ComponentEvent::getAttributes()
       // Conditon data: LEVEL|NATIVE_CODE|[SUB_TYPE]
       istringstream toParse(mAlarmData);
       string token;
-      
+
       getline(toParse, token, '|');
       if (strcasecmp(token.c_str(), "normal") == 0)
-        mLevel = NORMAL;
+	mLevel = NORMAL;
       else if (strcasecmp(token.c_str(), "warning") == 0)
-        mLevel = WARNING;
+	mLevel = WARNING;
       else if (strcasecmp(token.c_str(), "fault") == 0)
-        mLevel = FAULT;
+	mLevel = FAULT;
       else // Throw...
-        mLevel = NORMAL;
+	mLevel = NORMAL;
       
-      getline(toParse, token, '|');
-      if (!token.empty())
-	mAttributes["nativeCode"] = token;
       
-      getline(toParse, token, '|');
-      if (!token.empty())
-	mAttributes["qualifier"] = token;
+      if (!toParse.eof()) {
+	getline(toParse, token, '|');
+	if (!token.empty())
+	  mAttributes["nativeCode"] = token;
+      }
+      
+      if (!toParse.eof()) {
+	getline(toParse, token, '|');
+	if (!token.empty())
+	  mAttributes["qualifier"] = token;
+      }
       
       mAttributes["type"] = mDataItem->getType();
     }

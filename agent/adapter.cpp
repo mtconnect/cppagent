@@ -83,7 +83,7 @@ void Adapter::processData(const string& data)
   else
   {
     string rest;
-    if (dataItem->getType() == "ALARM")
+    if (dataItem->isCondition() || dataItem->getType() == "ALARM")
     {
       getline(toParse, rest);
       value = value + "|" + rest;
