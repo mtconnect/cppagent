@@ -410,9 +410,9 @@ void XmlPrinterTest::testCondition()
   addEventToCheckpoint(checkpoint, "program", 12, "/home/mtconnect/simulator/spiral.ngc");
   addEventToCheckpoint(checkpoint, "execution", 10254795, "READY");
   addEventToCheckpoint(checkpoint, "power", 1, "ON");
-  addEventToCheckpoint(checkpoint, "ctmp", 18, "WARNING|OTEMP|HIGH|Spindle Overtemp");
-  addEventToCheckpoint(checkpoint, "cmp", 18, "NORMAL|||");
-  addEventToCheckpoint(checkpoint, "lp", 18, "FAULT|LOGIC||PLC Error");
+  addEventToCheckpoint(checkpoint, "ctmp", 18, "WARNING|OTEMP|1|HIGH|Spindle Overtemp");
+  addEventToCheckpoint(checkpoint, "cmp", 18, "NORMAL||||");
+  addEventToCheckpoint(checkpoint, "lp", 18, "FAULT|LOGIC|2||PLC Error");
   
   vector<ComponentEventPtr> list;
   checkpoint.getComponentEvents(list);
@@ -426,6 +426,8 @@ void XmlPrinterTest::testCondition()
                                     "HIGH");    
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeCode",
                                     "OTEMP");    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeSeverity",
+                                    "1");    
 
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal",
                                     0);
@@ -440,7 +442,8 @@ void XmlPrinterTest::testCondition()
                                     "PLC Error");    
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@qualifier",
                                     0);    
-
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeSeverity",
+                                    "2");
 }
 
 DataItem * XmlPrinterTest::getDataItem(const char *name)

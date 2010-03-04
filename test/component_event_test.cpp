@@ -297,7 +297,7 @@ void ComponentEventTest::testCondition()
   attributes1["category"] = "CONDITION";
   DataItem *d = new DataItem(attributes1);
   
-  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "FAULT|4321|HIGH|Overtemp"), true);
+  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "FAULT|4321|1|HIGH|Overtemp"), true);
   
   CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event1->getLevel());
   CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event1->getValue());
@@ -307,9 +307,10 @@ void ComponentEventTest::testCondition()
   CPPUNIT_ASSERT_EQUAL((string) "123", (*attrs1)["sequence"]);
   CPPUNIT_ASSERT_EQUAL((string) "4321", (*attrs1)["nativeCode"]);
   CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs1)["qualifier"]);
+  CPPUNIT_ASSERT_EQUAL((string) "1", (*attrs1)["nativeSeverity"]);
   CPPUNIT_ASSERT_EQUAL((string) "Fault", event1->getLevelString());
 
-  ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4321|HIGH|Overtemp"), true);
+  ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4321|2|HIGH|Overtemp"), true);
   
   CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event2->getLevel());
   CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event2->getValue());
@@ -319,6 +320,7 @@ void ComponentEventTest::testCondition()
   CPPUNIT_ASSERT_EQUAL((string) "123", (*attrs2)["sequence"]);
   CPPUNIT_ASSERT_EQUAL((string) "4321", (*attrs2)["nativeCode"]);
   CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs2)["qualifier"]);
+  CPPUNIT_ASSERT_EQUAL((string) "2", (*attrs2)["nativeSeverity"]);
   CPPUNIT_ASSERT_EQUAL((string) "Fault", event2->getLevelString());
  
 }

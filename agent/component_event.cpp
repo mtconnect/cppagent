@@ -104,7 +104,7 @@ std::map<string, string> *ComponentEvent::getAttributes()
     
     if (mDataItem->isCondition())
     {
-      // Conditon data: LEVEL|NATIVE_CODE|[SUB_TYPE]
+      // Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER
       istringstream toParse(mAlarmData);
       string token;
 
@@ -123,6 +123,12 @@ std::map<string, string> *ComponentEvent::getAttributes()
 	getline(toParse, token, '|');
 	if (!token.empty())
 	  mAttributes["nativeCode"] = token;
+      }
+      
+      if (!toParse.eof()) {
+	getline(toParse, token, '|');
+	if (!token.empty())
+	  mAttributes["nativeSeverity"] = token;
       }
       
       if (!toParse.eof()) {
