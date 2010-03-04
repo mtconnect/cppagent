@@ -55,6 +55,6 @@ include_directories(${LibXML++_INCLUDE_DIRS} ${Glib_INCLUDE_DIRS} ${Glibmm_INCLU
 
 add_executable(test ${test_srcs})
 target_link_libraries(test ${LibXML++_LIBRARIES} ${Glibmm_LIBRARIES} 
-			    ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY})
+			    ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})
 
 
