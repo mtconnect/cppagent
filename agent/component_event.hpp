@@ -39,8 +39,8 @@
 
 #include "component.hpp"
 #include "globals.hpp"
+#include "data_item.hpp"
 
-class DataItem;
 class ComponentEvent;
 
 class ComponentEventPtr {
@@ -73,6 +73,8 @@ public:
   ComponentEvent *setObject(ComponentEvent *aEvent, bool aTakeRef = false);
   ComponentEvent *operator=(ComponentEvent *aEvent) { return setObject(aEvent); }  
   ComponentEvent *operator=(ComponentEventPtr &aPtr) { return setObject(aPtr.getObject()); }
+
+  bool operator<(ComponentEventPtr &aOther);
   
 protected:
   ComponentEvent *mEvent;
@@ -129,6 +131,15 @@ public:
   void getList(std::list<ComponentEventPtr> &aList);
   void appendTo(ComponentEvent *aEvent) { mPrev = aEvent; }
 
+  bool operator<(ComponentEvent &aOther) {
+    if ((*mDataItem) < (*aOther.mDataItem))
+      return true;
+    else if (*mDataItem == *aOther.mDataItem)
+      return mSequence < aOther.mSequence;
+    else
+      return false;
+  }
+  
 protected:
   /* Virtual destructor */
   virtual ~ComponentEvent();
@@ -188,6 +199,12 @@ inline ComponentEvent::ELevel ComponentEvent::getLevel()
   if (!mHasAttributes) getAttributes();
   return mLevel;
 }
+
+inline bool ComponentEventPtr::operator<(ComponentEventPtr &aOther)
+{
+  return (*mEvent) < (*aOther.mEvent);
+}
+
 
 #endif
 

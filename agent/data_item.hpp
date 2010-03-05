@@ -39,7 +39,6 @@
 #include "dlib/threads.h"
 
 #include "component.hpp"
-#include "component_event.hpp"
 #include "globals.hpp"
 
 class Adapter;
@@ -149,6 +148,19 @@ public:
   Adapter *getDataSource() const { return mDataSource;  }
   void setDataSource(Adapter *aSource) { if (mDataSource != aSource) mDataSource = aSource; }
 
+  bool operator<(DataItem &aOther) {
+    if (mCategory < aOther.mCategory)
+      return true;
+    else if (mCategory == aOther.mCategory)
+      return mId < aOther.mId;
+    else
+      return false;
+  }
+
+  bool operator==(DataItem &aOther) {
+    return mId == aOther.mId;
+  }
+  
 protected:
   double simpleFactor(const std::string& units);
   std::map<std::string, std::string> buildAttributes() const;

@@ -41,11 +41,14 @@ Checkpoint::Checkpoint()
 {
 }
 
-Checkpoint::Checkpoint(Checkpoint &aCheck)
+Checkpoint::Checkpoint(Checkpoint &aCheck, std::set<std::string> *aFilter)
 {
-  copy(aCheck);
-  mHasFilter = aCheck.mHasFilter;
-  mFilter = aCheck.mFilter;
+  if (aFilter == NULL && aCheck.mHasFilter) {
+    aFilter = &aCheck.mFilter;
+  } else {
+    mHasFilter = false;
+  }
+  copy(aCheck, aFilter);
 }
 
 void Checkpoint::clear()
@@ -88,13 +91,21 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
   }
 }
 
-void Checkpoint::copy(Checkpoint &aCheck)
+void Checkpoint::copy(Checkpoint &aCheck, std::set<std::string> *aFilter)
 {
   clear();
+  if (aFilter != NULL) {
+    mHasFilter = true;
+    mFilter = *aFilter;
+  } else if (mHasFilter) {
+    aFilter = &mFilter;
+  }
+    
   map<string, ComponentEventPtr*>::iterator it;
   for (it = aCheck.mEvents.begin(); it != aCheck.mEvents.end(); ++it)
   {
-    mEvents[(*it).first] = new ComponentEventPtr((*it).second->getObject());
+    if (aFilter == NULL || aFilter->count(it->first) > 0)
+      mEvents[(*it).first] = new ComponentEventPtr((*it).second->getObject());
   }
 }
 

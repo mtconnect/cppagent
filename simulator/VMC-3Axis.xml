@@ -1,109 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MTConnectDevices xmlns="urn:mtconnect.com:MTConnectDevices:1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.com:MTConnectDevices:1.1 ..\..\schema\MTConnectDevices_1.1.xsd">
-	<Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.0"/>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.1" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.1 http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd">
+	<Header creationTime="2010-03-04T18:44:40+00:00" sender="localhost" instanceId="1267728234" bufferSize="131072" version="1.1"/>
 	<Devices>
-		<Device iso841Class="6" uuid="000" name="VMC-3Axis" sampleRate="10.0" id="dev">
-			<Description manufacturer="SystemInsights" serialNumber=""/>
+		<Device id="dev" iso841Class="6" name="VMC-3Axis" sampleRate="10" uuid="000">
+			<Description manufacturer="SystemInsights"/>
 			<DataItems>
-				<DataItem type="MESSAGE" category="EVENT" id="msg"/>
+				<DataItem category="EVENT" id="msg" type="MESSAGE"/>
 			</DataItems>
 			<Components>
-				<Axes name="Axes" id="ax">
+				<Axes id="ax" name="Axes">
 					<Components>
-						<Rotary name="C" id="c1">
+						<Rotary id="c1" name="C">
 							<DataItems>
-								<DataItem type="SPINDLE_SPEED" category="SAMPLE" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE" id="c2" subType="ACTUAL" name="Sspeed">
+								<DataItem category="SAMPLE" id="c2" name="Sspeed" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="SPINDLE_SPEED" units="REVOLUTION/MINUTE">
 									<Source>spindle_speed</Source>
 								</DataItem>
-								<DataItem type="SPINDLE_SPEED" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="c3" subType="OVERRIDE" name="Sovr">
+								<DataItem category="SAMPLE" id="c3" name="Sovr" nativeUnits="PERCENT" subType="OVERRIDE" type="SPINDLE_SPEED" units="PERCENT">
 									<Source>SspeedOvr</Source>
 								</DataItem>
-								<DataItem type="ROTARY_MODE" category="EVENT" id="cm" name="Cmode">
+								<DataItem category="EVENT" id="cm" name="Cmode" type="ROTARY_MODE">
 									<Constraints>
 										<Value>SPINDLE</Value>
 									</Constraints>
 								</DataItem>
-								<DataItem id="Cload" category="CONDITION" type="LOAD"/>
+								<DataItem category="CONDITION" id="Cload" type="LOAD"/>
 							</DataItems>
 						</Rotary>
-						<Linear name="X" id="x1">
+						<Linear id="x1" name="X">
 							<DataItems>
-								<DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x2" subType="ACTUAL" name="Xact"/>
-								<DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x3" subType="COMMANDED" name="Xcom"/>
-								<DataItem name="Xload" type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="n3"/>
-								<DataItem id="Xload" category="CONDITION" type="LOAD"/>
+								<DataItem category="SAMPLE" id="x2" name="Xact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="x3" name="Xcom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="n3" name="Xload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+								<DataItem category="CONDITION" id="Xload" type="LOAD"/>
 							</DataItems>
 						</Linear>
-						<Linear name="Y" id="y1">
+						<Linear id="y1" name="Y">
 							<DataItems>
-								<DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y2" subType="ACTUAL" name="Yact"/>
-								<DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y3" subType="COMMANDED" name="Ycom"/>
-								<DataItem name="Yload" type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="y4"/>
-								<DataItem id="Yload" category="CONDITION" type="LOAD"/>
+								<DataItem category="SAMPLE" id="y2" name="Yact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="y3" name="Ycom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="y4" name="Yload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+								<DataItem category="CONDITION" id="Yload" type="LOAD"/>
 							</DataItems>
 						</Linear>
-						<Linear name="Z" id="z1">
+						<Linear id="z1" name="Z">
 							<DataItems>
-								<DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="z2" subType="ACTUAL" name="Zact"/>
-								<DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="z3" subType="COMMANDED" name="Zcom"/>
-								<DataItem name="Zload" type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="z4"/>
-								<DataItem id="Zload" category="CONDITION" type="LOAD"/>
+								<DataItem category="SAMPLE" id="z2" name="Zact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="z3" name="Zcom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="z4" name="Zload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+								<DataItem category="CONDITION" id="Zload" type="LOAD"/>
 							</DataItems>
 						</Linear>
 					</Components>
 				</Axes>
-				<Controller name="controller" id="cn1">
+				<Controller id="cn1" name="controller">
 					<DataItems>
-						<DataItem type="ESTOP" category="EVENT" id="estop"/>
-						<DataItem type="LOGIC_PROGRAM" category="CONDITION" id="clp"/>
+						<DataItem category="EVENT" id="estop" type="EMERGENCY_STOP"/>
+						<DataItem category="CONDITION" id="clp" type="LOGIC_PROGRAM"/>
 					</DataItems>
 					<Components>
-						<Path name="path" id="pth">
+						<Path id="pth" name="path">
 							<DataItems>
-								<DataItem type="BLOCK" category="EVENT" id="cn2" name="block"/>
-								<DataItem type="CONTROLLER_MODE" category="EVENT" id="cn3" name="mode"/>
-								<DataItem type="LINE" category="EVENT" id="cn4" name="line"/>
-								<DataItem type="PROGRAM" category="EVENT" id="cn5" name="program"/>
-								<DataItem type="EXECUTION" category="EVENT" id="cn6" name="execution"/>
-								<DataItem type="PATH_POSITION" category="SAMPLE" id="Ppos" subType="ACTUAL" units="MILLIMETER_3D" nativeUnits="MILLIMETER_3D"/>
-								<DataItem type="PATH_FEEDRATE" category="SAMPLE" id="Frt" units="MILLIMETER/SECOND" nativeUnits="MILLIMETER/SECOND"> 
-								  <Source>path_feedrate</Source>
+								<DataItem category="EVENT" id="cn2" name="block" type="BLOCK"/>
+								<DataItem category="EVENT" id="cn3" name="mode" type="CONTROLLER_MODE"/>
+								<DataItem category="EVENT" id="cn4" name="line" type="LINE"/>
+								<DataItem category="EVENT" id="cn5" name="program" type="PROGRAM"/>
+								<DataItem category="EVENT" id="cn6" name="execution" type="EXECUTION"/>
+								<DataItem category="SAMPLE" id="Ppos" nativeUnits="MILLIMETER_3D" subType="ACTUAL" type="PATH_POSITION" units="MILLIMETER_3D"/>
+								<DataItem category="SAMPLE" id="Frt" nativeUnits="MILLIMETER/SECOND" type="PATH_FEEDRATE" units="MILLIMETER/SECOND">
+									<Source>path_feedrate</Source>
 								</DataItem>
-								<DataItem type="PATH_FEEDRATE" category="SAMPLE" id="Fovr" units="PERCENT" nativeUnits="PERCENT">
-								  <Source>feed_ovr</Source>
+								<DataItem category="SAMPLE" id="Fovr" nativeUnits="PERCENT" type="PATH_FEEDRATE" units="PERCENT">
+									<Source>feed_ovr</Source>
 								</DataItem>
 							</DataItems>
 						</Path>
 					</Components>
 				</Controller>
-				<Power name="power" id="p1">
+				<Power id="p1" name="power">
 					<DataItems>
-						<DataItem type="POWER_STATUS" category="EVENT" id="p2" name="power"/>
-						<DataItem type="FREQUENCY" category="SAMPLE" id="freq" name="frequency" units="HERTZ" nativeUnits="HERTZ"/>
-						<DataItem type="WATTS" category="SAMPLE" id="power_sum" units="WATT" nativeUnits="WATT"/>
-						<DataItem type="WATTS" category="SAMPLE" id="power_a" units="WATT" nativeUnits="WATT"/>
-						<DataItem type="WATTS" category="SAMPLE" id="power_b" units="WATT" nativeUnits="WATT"/>
-						<DataItem type="WATTS" category="SAMPLE" id="power_c" units="WATT" nativeUnits="WATT"/>
-						<DataItem type="VOLTAGE" category="SAMPLE" id="volt_a" units="VOLT" nativeUnits="VOLT"/>
-						<DataItem type="VOLTAGE" category="SAMPLE" id="volt_b" units="VOLT" nativeUnits="VOLT"/>
-						<DataItem type="VOLTAGE" category="SAMPLE" id="volt_c" name="volt_c" units="VOLT" nativeUnits="VOLT"/>
-						<DataItem type="AMPERAGE" category="SAMPLE" id="amp_a" units="AMPERE" nativeUnits="AMPERE"/>
-						<DataItem type="AMPERAGE" category="SAMPLE" id="amp_b" units="AMPERE" nativeUnits="AMPERE"/>
-						<DataItem type="AMPERAGE" category="SAMPLE" id="amp_c" units="AMPERE" nativeUnits="AMPERE"/>
+						<DataItem category="EVENT" id="p2" name="power" type="POWER_STATE"/>
+						<DataItem category="SAMPLE" id="freq" name="frequency" nativeUnits="HERTZ" type="FREQUENCY" units="HERTZ"/>
+						<DataItem category="SAMPLE" id="power_sum" nativeUnits="WATT" type="WATTS" units="WATT"/>
+						<DataItem category="SAMPLE" id="power_a" nativeUnits="WATT" type="WATTS" units="WATT"/>
+						<DataItem category="SAMPLE" id="power_b" nativeUnits="WATT" type="WATTS" units="WATT"/>
+						<DataItem category="SAMPLE" id="power_c" nativeUnits="WATT" type="WATTS" units="WATT"/>
+						<DataItem category="SAMPLE" id="volt_a" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
+						<DataItem category="SAMPLE" id="volt_b" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
+						<DataItem category="SAMPLE" id="volt_c" name="volt_c" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
+						<DataItem category="SAMPLE" id="amp_a" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
+						<DataItem category="SAMPLE" id="amp_b" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
+						<DataItem category="SAMPLE" id="amp_c" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
 					</DataItems>
 				</Power>
-				<CoolantSystem id="cool" name="coolant">
-					<DataItems>
-						<DataItem id="clow" type="LEVEL" category="CONDITION" />
-					</DataItems>
-				</CoolantSystem>
-				<HydrolicSystem id="hsys" name="hydrolic">
-					<DataItems>
-						<DataItem id="hlow" type="LEVEL" category="CONDITION" />
- 						<DataItem id="hpres" type="PRESSURE" category="CONDITION" />
- 						<DataItem id="htemp" type="TEMPERATURE" category="CONDITION" />
-					</DataItems>
-				</HydrolicSystem>
+				<Systems id="systems" name="systems">
+					<Components>
+						<Coolant id="cool" name="coolant">
+							<DataItems>
+								<DataItem category="CONDITION" id="clow" type="LEVEL"/>
+							</DataItems>
+						</Coolant>
+						<Hydraulic id="hsys" name="hydrolic">
+							<DataItems>
+								<DataItem category="CONDITION" id="hlow" type="LEVEL"/>
+								<DataItem category="CONDITION" id="hpres" type="PRESSURE"/>
+								<DataItem category="CONDITION" id="htemp" type="TEMPERATURE"/>
+							</DataItems>
+						</Hydraulic>
+					</Components>
+				</Systems>
 			</Components>
 		</Device>
 	</Devices>

@@ -113,7 +113,10 @@ string XmlPrinter::printSample(
   xmlpp::Element *streams = mSampleXml->get_root_node()->add_child("Streams");
   std::map<string, xmlpp::Element *> elements;
   std::map<string, xmlpp::Element *> components; 
-  std::map<string, xmlpp::Element *> devices; 
+  std::map<string, xmlpp::Element *> devices;
+
+  // Sort the vector by category.
+  std::sort(results.begin(), results.end());
   
   vector<ComponentEventPtr>::iterator result;
   for (result = results.begin(); result != results.end(); result++)
@@ -374,7 +377,7 @@ void XmlPrinter::addElement(ComponentEvent *result,
 {
   DataItem *dataItem = result->getDataItem();
   Component *component = dataItem->getComponent();
-  string dataName;
+  const char *dataName;
   switch (dataItem->getCategory())
   {
   case DataItem::SAMPLE:
@@ -410,7 +413,7 @@ void XmlPrinter::addElement(ComponentEvent *result,
       componentStream->set_attribute("name", component->getName());
       componentStream->set_attribute("componentId", component->getId());
     }
-    
+
     elements[key] = element = componentStream->add_child(dataName);
   }
 

@@ -520,12 +520,10 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, unsigned int at)
       ref = &mCheckpoints[checkIndex];
     }
 
-    Checkpoint check(*ref);
-    check.filter(aFilter);
+    Checkpoint check(*ref, &aFilter);
     
     // Roll forward from the checkpoint.
-    for (; index <= (unsigned long) pos; index++)
-    {
+    for (; index <= (unsigned long) pos; index++) {
       check.addComponentEvent(((*mSlidingBuffer)[(unsigned long)index]).getObject());
     }
 

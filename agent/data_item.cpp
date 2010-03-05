@@ -207,7 +207,7 @@ string DataItem::getCamelType(const string& aType)
   {
     return "";
   }
-  
+
   string camel = aType;
   string::iterator second = camel.begin();
   second++;

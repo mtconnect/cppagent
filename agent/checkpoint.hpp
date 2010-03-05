@@ -43,11 +43,11 @@
 class Checkpoint {
 public:
   Checkpoint();
-  Checkpoint(Checkpoint &aCheckpoint);
+  Checkpoint(Checkpoint &aCheckpoint, std::set<std::string> *aFilter = NULL);
   ~Checkpoint();
   
   void addComponentEvent(ComponentEvent *aEvent);
-  void copy(Checkpoint &aCheckpoint);
+  void copy(Checkpoint &aCheckpoint, std::set<std::string> *aFilter = NULL);
   void clear();
   void filter(std::set<std::string> &aFilter);
 

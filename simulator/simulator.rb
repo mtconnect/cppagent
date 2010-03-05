@@ -14,6 +14,7 @@ loop do
   puts "> <key>|<value>"
   puts "> <key>|<value>|<key>|<value> ..."
   puts "> <alarm>|<code>|<native code>|<severity:CRITICAL|ERROR|WARNING|INFO>|<state:ACTIVE|CLEARED|INSTANT>|<message>"
+  puts "> <condition>|<level:unavailable,normal,warning,fault>|<native code>|<native severity>|<qualifier>|<message>"
   loop do
     line = Readline::readline('> ')
     Readline::HISTORY.push(line)
