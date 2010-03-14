@@ -81,7 +81,10 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
   if (ptr != NULL) {
     if (item->isCondition()) {
       if ((*ptr)->getLevel() != ComponentEvent::NORMAL &&
-	  anEvent->getLevel() != ComponentEvent::NORMAL) {
+	  anEvent->getLevel() != ComponentEvent::NORMAL &&
+	  (*ptr)->getLevel() != ComponentEvent::UNAVAILABLE &&
+	  anEvent->getLevel() != ComponentEvent::UNAVAILABLE
+	) {
 	anEvent->appendTo(*ptr);
       }
     }

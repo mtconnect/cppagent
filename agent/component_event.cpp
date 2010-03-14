@@ -188,7 +188,7 @@ void ComponentEvent::convertValue(const string& value)
   {
     mValue = value;
   }
-  else if (mDataItem->isCondition() || mDataItem->getType() == "ALARM")
+  else if (mDataItem->isCondition() || mDataItem->isAlarm() || mDataItem->isMessage())
   {
     string::size_type lastPipe = value.rfind('|');
     

@@ -106,7 +106,8 @@ void CheckpointTest::testAddComponentEvents()
 {
   ComponentEventPtr p1, p2, p3, p4, p5, p6;
   string time("NOW"), value("123"), warning("WARNING|CODE|HIGH|Over..."),
-    normal("NORMAL|CODE|HIGH|Over...");
+    normal("NORMAL|CODE|HIGH|Over..."),
+    unavailable("UNAVAILABLE|CODE|HIGH|Over...");
   
   p1 = new ComponentEvent(*mDataItem1, 2, time, warning);
   p1->unrefer();
