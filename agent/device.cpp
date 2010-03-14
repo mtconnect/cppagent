@@ -40,8 +40,13 @@ using namespace std;
 Device::Device(std::map<std::string, std::string> attributes)
   : Component("Device", attributes)
 {
-  mIso841Class = atoi(attributes["iso841Class"].c_str());
-  mAttributes["iso841Class"] = attributes["iso841Class"];
+  if (!attributes["iso841Class"].empty())
+  {
+    mIso841Class = atoi(attributes["iso841Class"].c_str());
+    mAttributes["iso841Class"] = attributes["iso841Class"];
+  } else {
+    mIso841Class = -1;
+  }
 }
 
 Device::~Device()

@@ -121,6 +121,8 @@ public:
   bool isSample() const { return mCategory == SAMPLE; }
   bool isEvent() const { return mCategory == EVENT; }
   bool isCondition() const { return mCategory == CONDITION; }
+  bool isAlarm() const { return mIsAlarm; }
+  bool isMessage() const { return mIsMessage; }
     
   /* Set/get component that data item is associated with */
   void setComponent(Component& component) { mComponent = &component; }
@@ -193,6 +195,7 @@ protected:
   float mNativeScale;
   bool mHasNativeScale;
   bool mThreeD;
+  bool mIsMessage, mIsAlarm;
   
   /* Sig figs of data item */
   unsigned int mSignificantDigits;

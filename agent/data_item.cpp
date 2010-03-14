@@ -75,6 +75,9 @@ DataItem::DataItem(std::map<string, string> attributes)
   mId = attributes["id"];
   mName = attributes["name"];
   mType = attributes["type"];
+  mIsAlarm = (mType == "ALARM");
+  mIsMessage = (mType == "MESSAGE");
+  
   mCamelType = getCamelType(mType);
   mThreeD = false;
   
@@ -122,7 +125,7 @@ DataItem::DataItem(std::map<string, string> attributes)
   {
     mCoordinateSystem = attributes["coordinateSystem"];
   }
-  
+
   mComponent = NULL;
   mAttributes = buildAttributes();
 }

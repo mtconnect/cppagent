@@ -145,8 +145,17 @@ std::map<string, string> *ComponentEvent::getAttributes()
       {
         mAttributes["subType"] = mDataItem->getSubType();
       }
-      
-      if (getDataItem()->getType() == "ALARM")
+
+      if (mDataItem->isMessage())
+      {
+        // Format to parse: NATIVECODE
+        istringstream toParse(mAlarmData);	
+        string token;
+        
+        getline(toParse, token, '|');
+        mAttributes["nativeCode"] = token;
+      }
+      else if (mDataItem->isAlarm())
       {
         // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
         istringstream toParse(mAlarmData);

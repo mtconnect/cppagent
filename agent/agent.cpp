@@ -463,7 +463,7 @@ void Agent::streamData(ostream& out,
     unsigned int items;
     string content;
     if (current)
-      content = fetchCurrentData(aFilter, start);
+      content = fetchCurrentData(aFilter, NO_START);
     else
       content = fetchSampleData(aFilter, start, count, items);
     
