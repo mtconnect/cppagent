@@ -99,7 +99,7 @@ public:
   /* Initialize with the data item reference, sequence number, time and value */
   ComponentEvent(
     DataItem& dataItem,
-    unsigned int sequence,
+    Uns64 sequence,
     const std::string& time,
     const std::string& value
   );
@@ -118,7 +118,7 @@ public:
   ELevel getLevel();
   const std::string &getLevelString() { return SLevels[getLevel()]; }
   
-  unsigned int getSequence() const { return mSequence; }
+  Uns64 getSequence() const { return mSequence; }
   
   /* Reference count management */
   void referTo();
@@ -152,7 +152,7 @@ protected:
   DataItem * mDataItem;
   
   /* Sequence number of the event */
-  unsigned int mSequence;
+  Uns64 mSequence;
   
   /* Timestamp of the event's occurence */
   std::string mTime;

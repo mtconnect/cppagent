@@ -66,6 +66,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testPrintCurrent);
   CPPUNIT_TEST(testPrintSample);
   CPPUNIT_TEST(testCondition);
+  CPPUNIT_TEST(testVeryLargeSequence);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -89,6 +90,9 @@ protected:
   // Test new condition handling
   void testCondition();
   
+  // Test overflow
+  void testVeryLargeSequence();
+  
   /* Retrieve a data item by name string */
   DataItem * getDataItem(const char *name);
   
@@ -96,13 +100,13 @@ protected:
   ComponentEvent * addEventToCheckpoint(
     Checkpoint &aCheckpoint,
     const char *name,
-    unsigned int sequence,
+    Uns64 sequence,
     std::string value
   );
   
   ComponentEvent * newEvent(
     const char *name,
-    unsigned int sequence,
+    Uns64 sequence,
     std::string value
   );
   

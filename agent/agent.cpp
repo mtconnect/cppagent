@@ -203,7 +203,7 @@ unsigned int Agent::addToBuffer(
     time = getCurrentTime(GMT_UV_SEC);
   }
 
-  unsigned int seqNum = mSequence++;
+  Uns64 seqNum = mSequence++;
   ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
 					     time, value);
   (*mSlidingBuffer)[seqNum] = event;

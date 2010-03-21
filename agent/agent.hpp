@@ -133,10 +133,10 @@ public:
     const std::string& name
   );
   
-  ComponentEvent *getFromBuffer(unsigned int aSeq) const { return (*mSlidingBuffer)[aSeq]; }
-  int getSequence() const { return mSequence; }
+  ComponentEvent *getFromBuffer(Uns64 aSeq) const { return (*mSlidingBuffer)[aSeq]; }
+  Uns64 getSequence() const { return mSequence; }
   int getBufferSize() const { return mSlidingBufferSize; }
-  int getFirstSequence() const {
+  Uns64 getFirstSequence() const {
     if (mSequence > mSlidingBufferSize)
       return mSequence - mSlidingBufferSize;
     else
@@ -228,7 +228,7 @@ protected:
   dlib::mutex *mSequenceLock;
   
   /* Sequence number */
-  unsigned int mSequence;
+  Uns64 mSequence;
   
   /* The sliding/circular buffer to hold all of the events/sample data */
   dlib::sliding_buffer_kernel_1<ComponentEventPtr> *mSlidingBuffer;

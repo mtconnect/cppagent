@@ -35,6 +35,11 @@
 #include "data_item.hpp"
 #include "dlib/threads.h"
 
+#ifdef WIN32
+#define strcasecmp stricmp
+#define strncasecmp strnicmp
+#endif
+
 using namespace std;
 static dlib::rmutex sRefMutex;
 
@@ -49,7 +54,7 @@ const string ComponentEvent::SLevels[NumLevels] =
 /* ComponentEvent public methods */
 ComponentEvent::ComponentEvent(
     DataItem& dataItem,
-    unsigned int sequence,
+    Uns64 sequence,
     const string& time,
     const string& value
   )

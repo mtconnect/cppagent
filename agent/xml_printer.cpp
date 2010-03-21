@@ -39,7 +39,7 @@ using namespace std;
 string XmlPrinter::printError(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const unsigned int nextSeq,
+    const Uns64 nextSeq,
     const string& errorCode,
     const string& errorText
   )
@@ -67,7 +67,7 @@ string XmlPrinter::printError(
 string XmlPrinter::printProbe(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const unsigned int nextSeq,
+    const Uns64 nextSeq,
     vector<Device *>& deviceList
   )
 {
@@ -97,8 +97,8 @@ string XmlPrinter::printProbe(
 string XmlPrinter::printSample(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const unsigned int nextSeq,
-    const unsigned int firstSeq,
+    const Uns64 nextSeq,
+    const Uns64 firstSeq,
     vector<ComponentEventPtr>& results
   )
 {
@@ -136,8 +136,8 @@ xmlpp::Document * XmlPrinter::initXmlDoc(
     const string& xmlType,
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const unsigned int nextSeq,
-    const unsigned int firstSeq
+    const Uns64 nextSeq,
+    const Uns64 firstSeq
   )
 {
   xmlpp::Document *doc = new xmlpp::Document;

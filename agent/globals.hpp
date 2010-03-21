@@ -40,6 +40,12 @@
 #include <sstream>
 #include <fstream>
 
+#ifdef WIN32
+typedef  unsigned __int64 Uns64;
+#else
+typedef long long Uns64;
+#endif
+
 /***** CONSTANTS *****/
 
 /* Port number to put server on */
@@ -67,8 +73,7 @@ enum TimeFormat
 };
 
 /***** METHODS *****/
-/* Convert an unsigned integer to string */
-std::string intToString(int i);
+std::string intToString(Uns64 i);
 
 /* Convert a float to string */
 std::string floatToString(double f);
@@ -99,6 +104,7 @@ int getEnumeration(
 );
 
 std::string addNamespace(const std::string aPath, const std::string aPrefix);
+
 
 #endif
 

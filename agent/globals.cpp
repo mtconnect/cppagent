@@ -38,12 +38,14 @@
 
 using namespace std;
 
-string intToString(int i)
+string intToString(Uns64 i)
 {
   ostringstream stm;
   stm << i;
   return stm.str();
 }
+
+
 
 string floatToString(double f)
 {

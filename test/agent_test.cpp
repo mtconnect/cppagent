@@ -215,7 +215,7 @@ void AgentTest::testEmptyStream()
   {
     path = "/sample";
     char line[80];
-    sprintf(line, "%d", a->getSequence());
+    sprintf(line, "%d", (int) a->getSequence());
     PARSE_XML_RESPONSE_QUERY("from", line);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Streams", 0);
   }

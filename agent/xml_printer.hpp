@@ -51,7 +51,7 @@ namespace XmlPrinter
   std::string printError(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const unsigned int nextSeq,
+    const Uns64 nextSeq,
     const std::string& errorCode,
     const std::string& errorText
   );
@@ -59,15 +59,15 @@ namespace XmlPrinter
   std::string printProbe(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const unsigned int nextSeq,
+    const Uns64 nextSeq,
     std::vector<Device *>& devices
   );
   
   std::string printSample(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const unsigned int nextSeq,
-    const unsigned int firstSeq,
+    const Uns64 nextSeq,
+    const Uns64 firstSeq,
     std::vector<ComponentEventPtr>& results
   );
   
@@ -77,8 +77,8 @@ namespace XmlPrinter
     const std::string& xmlType,
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const unsigned int nextSeq,
-    const unsigned int firstSeq = 0
+    const Uns64 nextSeq,
+    const Uns64 firstSeq = 0
   );
   
   /* Function to parse and write XML */
