@@ -377,7 +377,7 @@ void XmlPrinter::addElement(ComponentEvent *result,
 {
   DataItem *dataItem = result->getDataItem();
   Component *component = dataItem->getComponent();
-  const char *dataName;
+  const char *dataName = "";
   switch (dataItem->getCategory())
   {
   case DataItem::SAMPLE:
