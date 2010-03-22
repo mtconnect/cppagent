@@ -322,7 +322,7 @@ void AgentTest::responseHelper(xmlpp::DomParser *parser,
                                string key,
                                string value)
 {
-  bool query = !key.empty() and !value.empty();
+  bool query = !key.empty() && !value.empty();
   
   if (query)
   {

@@ -18,11 +18,11 @@ namespace Glib {
 		ustring ( std::string &str );
 		ustring (const std::string &str ) : std::string(str) {}
 
-;
 		template<class InputIterator> ustring (InputIterator begin, InputIterator end) : std::string(begin, end) { }
 
 		size_type bytes() const { return length(); }
 		std::string &raw();
+
 	};
 }
 

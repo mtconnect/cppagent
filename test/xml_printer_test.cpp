@@ -58,8 +58,8 @@ void XmlPrinterTest::testInitXmlDoc()
   // Root
   xmlpp::Element *root1 = initXml1->get_root_node();
   CPPUNIT_ASSERT_EQUAL(
-    (Glib::ustring) "urn:mtconnect.org:MTConnectDevices:1.1",
-    root1->get_attribute_value("xmlns:m")
+    (std::string) "urn:mtconnect.org:MTConnectDevices:1.1",
+    (std::string) root1->get_attribute_value("xmlns:m")
   );
   CPPUNIT_ASSERT_EQUAL(
     (Glib::ustring) "http://www.w3.org/2001/XMLSchema-instance",
@@ -70,9 +70,9 @@ void XmlPrinterTest::testInitXmlDoc()
     root1->get_attribute_value("xmlns")
   );
   CPPUNIT_ASSERT_EQUAL(
-    (Glib::ustring) "urn:mtconnect.org:MTConnectDevices:1.1"
+    (std::string) "urn:mtconnect.org:MTConnectDevices:1.1"
       + " http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd",
-    root1->get_attribute_value("xsi:schemaLocation")
+      (std::string) root1->get_attribute_value("xsi:schemaLocation")
   );
   
   // Header

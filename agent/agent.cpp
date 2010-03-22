@@ -38,6 +38,10 @@ using namespace std;
 static const string sUnavailable("UNAVAILABLE");
 static const string sConditionUnavailable("UNAVAILABLE|||");
 
+#ifdef WIN32
+#define strtoll _strtoi64
+#endif
+
 /* Agent public methods */
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
 {
