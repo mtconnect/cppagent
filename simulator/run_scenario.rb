@@ -42,7 +42,7 @@ end
 puts "Waiting on 0.0.0.0 #{port}"
 server = TCPServer.new(port)
 socket = server.accept
-
+puts "Client connected"
 def format_time
   time = Time.now.utc
   time.strftime("%Y-%m-%dT%H:%M:%S.") + ("%06d" % time.usec)
