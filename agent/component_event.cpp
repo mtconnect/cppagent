@@ -54,7 +54,7 @@ const string ComponentEvent::SLevels[NumLevels] =
 /* ComponentEvent public methods */
 ComponentEvent::ComponentEvent(
     DataItem& dataItem,
-    Uns64 sequence,
+    Int64 sequence,
     const string& time,
     const string& value
   )
@@ -105,7 +105,7 @@ std::map<string, string> *ComponentEvent::getAttributes()
     mAttributes["timestamp"] = mTime;
     if (!mDataItem->getName().empty())
       mAttributes["name"] = mDataItem->getName();
-    mAttributes["sequence"] = intToString(mSequence);
+    mAttributes["sequence"] = int64ToString(mSequence);
     
     if (mDataItem->isCondition())
     {

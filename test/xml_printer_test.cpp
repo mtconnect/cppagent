@@ -449,12 +449,12 @@ void XmlPrinterTest::testCondition()
 void XmlPrinterTest::testVeryLargeSequence()
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xact", (((Uns64)1) << 48) + 1, "0");
-  addEventToCheckpoint(checkpoint, "Xcom", (((Uns64) 1) << 48) + 3, "123");
+  addEventToCheckpoint(checkpoint, "Xact", (((Int64)1) << 48) + 1, "0");
+  addEventToCheckpoint(checkpoint, "Xcom", (((Int64) 1) << 48) + 3, "123");
   
   vector<ComponentEventPtr> list;
   checkpoint.getComponentEvents(list);
-  PARSE_XML(XmlPrinter::printSample(123, 131072, (((Uns64)1) << 48) + 3, (((Uns64)1) << 48) + 1, list));
+  PARSE_XML(XmlPrinter::printSample(123, 131072, (((Int64)1) << 48) + 3, (((Int64)1) << 48) + 1, list));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", 
                                     "0");
@@ -483,7 +483,7 @@ DataItem * XmlPrinterTest::getDataItem(const char *name)
 
 ComponentEvent *XmlPrinterTest::newEvent(
   const char *name,
-  Uns64 sequence,
+  Int64 sequence,
   string value
   )
 {
@@ -500,7 +500,7 @@ ComponentEvent *XmlPrinterTest::newEvent(
 ComponentEvent * XmlPrinterTest::addEventToCheckpoint(
   Checkpoint &aCheckpoint,
   const char *name,
-  Uns64 sequence,
+  Int64 sequence,
   string value
   )
 {

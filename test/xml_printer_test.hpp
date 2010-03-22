@@ -100,13 +100,13 @@ protected:
   ComponentEvent * addEventToCheckpoint(
     Checkpoint &aCheckpoint,
     const char *name,
-    Uns64 sequence,
+    Int64 sequence,
     std::string value
   );
   
   ComponentEvent * newEvent(
     const char *name,
-    Uns64 sequence,
+    Int64 sequence,
     std::string value
   );
   

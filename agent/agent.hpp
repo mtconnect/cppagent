@@ -133,15 +133,18 @@ public:
     const std::string& name
   );
   
-  ComponentEvent *getFromBuffer(Uns64 aSeq) const { return (*mSlidingBuffer)[aSeq]; }
-  Uns64 getSequence() const { return mSequence; }
+  ComponentEvent *getFromBuffer(Int64 aSeq) const { return (*mSlidingBuffer)[aSeq]; }
+  Int64 getSequence() const { return mSequence; }
   int getBufferSize() const { return mSlidingBufferSize; }
-  Uns64 getFirstSequence() const {
+  Int64 getFirstSequence() const {
     if (mSequence > mSlidingBufferSize)
       return mSequence - mSlidingBufferSize;
     else
       return 1;
   }
+
+  // For testing...
+  void setSequence(Int64 aSeq) { mSequence = aSeq; }
   
 protected:
   /* HTTP methods to handle the 3 basic calls */
@@ -164,7 +167,7 @@ protected:
     const std::string& path,
     bool current,  
     unsigned int frequency,
-    unsigned int start = 0,
+    Int64 start = 0,
     unsigned int count = 0
   );
   
@@ -174,15 +177,15 @@ protected:
     std::set<std::string> &aFilterSet,
     bool current,
     unsigned int frequency,
-    unsigned int start = 1,
+    Int64 start = 1,
     unsigned int count = 0
   );
   
   /* Fetch the current/sample data and return the XML in a std::string */
-  std::string fetchCurrentData(std::set<std::string> &aFilter, unsigned int at);
+  std::string fetchCurrentData(std::set<std::string> &aFilter, Int64 at);
   std::string fetchSampleData(
     std::set<std::string> &aFilterSet,
-    unsigned int start,
+    Int64 start,
     unsigned int count,
     unsigned int &items
   );
@@ -214,6 +217,17 @@ protected:
     const int maxValue = NO_VALUE
   );
   
+  /* Perform a check on parameter and return a value or a code */
+  Int64 checkAndGetParam64(
+    std::string& result,
+    const map_type& queries,
+    const std::string& param,
+    const Int64 defaultValue,
+    const Int64 minValue = NO_VALUE,
+    bool minError = false,
+    const Int64 maxValue = NO_VALUE
+  );
+  
   /* Find data items by name/id */
   DataItem * getDataItemById(const std::string& id) { return mDataItemMap[id]; }
 
@@ -228,7 +242,7 @@ protected:
   dlib::mutex *mSequenceLock;
   
   /* Sequence number */
-  Uns64 mSequence;
+  Int64 mSequence;
   
   /* The sliding/circular buffer to hold all of the events/sample data */
   dlib::sliding_buffer_kernel_1<ComponentEventPtr> *mSlidingBuffer;

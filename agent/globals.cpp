@@ -38,7 +38,14 @@
 
 using namespace std;
 
-string intToString(Uns64 i)
+string int64ToString(Int64 i)
+{
+  ostringstream stm;
+  stm << i;
+  return stm.str();
+}
+
+string intToString(unsigned int i)
 {
   ostringstream stm;
   stm << i;

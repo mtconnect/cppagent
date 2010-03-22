@@ -203,7 +203,7 @@ unsigned int Agent::addToBuffer(
     time = getCurrentTime(GMT_UV_SEC);
   }
 
-  Uns64 seqNum = mSequence++;
+  Int64 seqNum = mSequence++;
   ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
 					     time, value);
   (*mSlidingBuffer)[seqNum] = event;
@@ -295,8 +295,8 @@ bool Agent::handleCall(
     
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
-    int at = checkAndGetParam(result, queries, "at", NO_START, getFirstSequence(), true,
-			      mSequence);
+    Int64 at = checkAndGetParam64(result, queries, "at", NO_START, getFirstSequence(), true,
+				  mSequence);
     if (freq == PARAM_ERROR || at == PARAM_ERROR)
     {
       return true;
@@ -326,13 +326,13 @@ bool Agent::handleCall(
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
     
-    int start = checkAndGetParam(result, queries, "start", NO_START, getFirstSequence(),
-				 true, mSequence);
+    Int64 start = checkAndGetParam64(result, queries, "start", NO_START, getFirstSequence(),
+				     true, mSequence);
     
     if (start == NO_START) // If there was no data in queries
     {
-      start = checkAndGetParam(result, queries, "from", 1,
-			       getFirstSequence(), true, mSequence);
+      start = checkAndGetParam64(result, queries, "from", 1,
+				 getFirstSequence(), true, mSequence);
     }
     
     if (freq == PARAM_ERROR || count == PARAM_ERROR || start == PARAM_ERROR)
@@ -388,7 +388,7 @@ bool Agent::handleStream(
     const string& path,
     bool current,
     unsigned int frequency,
-    unsigned int start,
+    Int64 start,
     unsigned int count
   )
 {
@@ -439,7 +439,7 @@ void Agent::streamData(ostream& out,
                        std::set<string> &aFilter,
                        bool current,
                        unsigned int frequency,
-                       unsigned int start,
+                       Int64 start,
                        unsigned int count
   )
 {
@@ -484,13 +484,13 @@ void Agent::streamData(ostream& out,
   }
 }
 
-string Agent::fetchCurrentData(std::set<string> &aFilter, unsigned int at)
+string Agent::fetchCurrentData(std::set<string> &aFilter, Int64 at)
 {
   dlib::auto_mutex lock(*mSequenceLock);
   
   vector<ComponentEventPtr> events;
   unsigned int firstSeq = getFirstSequence();
-  if (at == (unsigned int) NO_START)
+  if (at == NO_START)
   {
     mLatest.getComponentEvents(events, &aFilter);
   }
@@ -537,7 +537,7 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, unsigned int at)
 }
 
 string Agent::fetchSampleData(std::set<string> &aFilter,
-                              unsigned int start,
+                              Int64 start,
                               unsigned int count,
                               unsigned int &items
   )
@@ -546,16 +546,16 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
   
   dlib::auto_mutex lock(*mSequenceLock);
 
-  unsigned int seq = mSequence;
-  unsigned int firstSeq = (mSequence > mSlidingBufferSize) ?
+  Int64 seq = mSequence;
+  Int64 firstSeq = (mSequence > mSlidingBufferSize) ?
     mSequence - mSlidingBufferSize : 1;
   
   // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
   start = (start <= firstSeq) ? firstSeq : start;
-  unsigned int end = (count + start >= mSequence) ? mSequence : count + start;
+  Int64 end = (count + start >= mSequence) ? mSequence : count + start;
   items = 0;
 
-  for (unsigned int i = start; i < end; i++)
+  for (Int64 i = start; i < end; i++)
   {
     // Filter out according to if it exists in the list
     const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
@@ -706,6 +706,58 @@ int Agent::checkAndGetParam(
   
   return value;
 }
+
+Int64 Agent::checkAndGetParam64(
+    string& result,
+    const map_type& queries,
+    const string& param,
+    const Int64 defaultValue,
+    const Int64 minValue,
+    bool minError,
+    const Int64 maxValue
+  )
+{
+  if (!queries.is_in_domain(param))
+  {
+    return defaultValue;
+  }
+  
+  if (queries[param].empty())
+  {
+    result = printError("QUERY_ERROR", "'" + param + "' cannot be empty.");
+    return PARAM_ERROR;
+  }
+  
+  if (!isNonNegativeInteger(queries[param]))
+  {
+    result = printError("QUERY_ERROR",
+      "'" + param + "' must be a positive integer.");
+    return PARAM_ERROR;
+  }
+  
+  Int64 value = strtoll(queries[param].c_str(), NULL, 10);
+  
+  if (minValue != NO_VALUE && value < minValue)
+  {
+    if (minError)
+    {
+      result = printError("QUERY_ERROR",
+        "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
+      return PARAM_ERROR;
+    }
+    return minValue;
+  }
+  
+  if (maxValue != NO_VALUE && value > maxValue)
+  {
+    result = printError("QUERY_ERROR",
+      "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
+    return PARAM_ERROR;
+  }
+  
+  return value;
+}
+
 
 DataItem * Agent::getDataItemByName(const string& device, const string& name)
 {

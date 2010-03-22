@@ -41,9 +41,9 @@
 #include <fstream>
 
 #ifdef WIN32
-typedef  unsigned __int64 Uns64;
+typedef  __int64 Int64;
 #else
-typedef long long Uns64;
+typedef long long Int64;
 #endif
 
 /***** CONSTANTS *****/
@@ -73,7 +73,9 @@ enum TimeFormat
 };
 
 /***** METHODS *****/
-std::string intToString(Uns64 i);
+std::string int64ToString(Int64 i);
+
+std::string intToString(unsigned int i);
 
 /* Convert a float to string */
 std::string floatToString(double f);

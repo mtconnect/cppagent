@@ -39,7 +39,7 @@ using namespace std;
 string XmlPrinter::printError(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const Uns64 nextSeq,
+    const Int64 nextSeq,
     const string& errorCode,
     const string& errorText
   )
@@ -67,7 +67,7 @@ string XmlPrinter::printError(
 string XmlPrinter::printProbe(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const Uns64 nextSeq,
+    const Int64 nextSeq,
     vector<Device *>& deviceList
   )
 {
@@ -97,8 +97,8 @@ string XmlPrinter::printProbe(
 string XmlPrinter::printSample(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const Uns64 nextSeq,
-    const Uns64 firstSeq,
+    const Int64 nextSeq,
+    const Int64 firstSeq,
     vector<ComponentEventPtr>& results
   )
 {
@@ -136,8 +136,8 @@ xmlpp::Document * XmlPrinter::initXmlDoc(
     const string& xmlType,
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const Uns64 nextSeq,
-    const Uns64 firstSeq
+    const Int64 nextSeq,
+    const Int64 firstSeq
   )
 {
   xmlpp::Document *doc = new xmlpp::Document;
@@ -164,9 +164,9 @@ xmlpp::Document * XmlPrinter::initXmlDoc(
   
   if (xmlType == "Streams")
   {
-    header->set_attribute("nextSequence", intToString(nextSeq));
-    header->set_attribute("firstSequence", intToString(firstSeq));
-    header->set_attribute("lastSequence", intToString(nextSeq - 1));
+    header->set_attribute("nextSequence", int64ToString(nextSeq));
+    header->set_attribute("firstSequence", int64ToString(firstSeq));
+    header->set_attribute("lastSequence", int64ToString(nextSeq - 1));
   }
   
   return doc;
