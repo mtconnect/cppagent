@@ -102,8 +102,7 @@ void daemonize()
   
   i=fork();
   if (i<0) exit(1); /* fork error */
-  if (i>0)
-  {
+  if (i>0) {
     std::cout << "Parent process now exiting, child process started" << std::endl;
     exit(0); /* parent exits */
   }
@@ -150,11 +149,11 @@ void daemonize()
 int main(int aArgc, char *aArgv[])
 {
   int listenPort = 5000;
-  const char *config_file = "probe.xml";
+  const char *devices_file = "probe.xml";
   list<string> adapters;
   bool interactive = false;
   bool daemonize_proc = false;
-  const char *adapters_file = 0;
+  const char *config_file = 0;
   int bufferSize = DEFAULT_SLIDING_BUFFER_EXP;
   gLogFile = "agent.log";
   
@@ -162,11 +161,11 @@ int main(int aArgc, char *aArgv[])
   
   OptionsList option_list;
   option_list.append(new Option("p", listenPort, "HTTP Server Port\nDefault: 5000", "port"));
-  option_list.append(new Option("f", config_file, "Configuration file\nDefault: probe.xml", "file"));
+  option_list.append(new Option("f", devices_file, "Devices configuration file\nDefault: probe.xml", "file"));
   option_list.append(new Option("l", gLogFile, "Log file\nDefault: agent.log", "file"));
   option_list.append(new Option("i", interactive, "Interactive shell", false));
   option_list.append(new Option("d", daemonize_proc, "Daemonize\nDefault: false", false));
-  option_list.append(new Option("c", adapters_file, "Adapter configuration file", "file"));
+  option_list.append(new Option("c", config_file, "Options configuration file", "file"));
   option_list.append(new Option("a", adapters, "Location of adapter\n'device:address:port'", "adapters"));
   option_list.append(new Option("b", bufferSize, "Sliding buffer size 2^b\nDefault: 17 -> 131072'", "buffer"));
   option_list.parse(aArgc, (const char**) aArgv);
@@ -178,16 +177,16 @@ int main(int aArgc, char *aArgv[])
   
   try
   {
-    Agent * agent = new Agent(config_file, bufferSize);
-    if (adapters_file)
+    Agent * agent = new Agent(devices_file, bufferSize);
+    if (config_file)
     {
-      ifstream ad_file(adapters_file);
-      if (ad_file)
+      ifstream con_file(config_file);
+      if (con_file)
       {
-        while (ad_file.good())
+        while (con_file.good())
         {
           char line[256];
-          ad_file.getline(line, 255);
+          con_file.getline(line, 255);
           line[255] = '\0';
           if (strchr(line, ':')) 
             adapters.push_back(line);
@@ -195,7 +194,7 @@ int main(int aArgc, char *aArgv[])
       }
       else
       {
-        cerr << "Cannot open file for adapters: " << adapters_file << endl;
+        cerr << "Cannot open file for adapters: " << config_file << endl;
         option_list.usage();
       }
     }

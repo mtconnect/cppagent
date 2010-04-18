@@ -49,6 +49,11 @@ XmlParser::XmlParser(const string& xmlPath)
     mParser->set_substitute_entities();
     
     mParser->parse_file(xmlPath);
+    if (!*mParser)
+    {
+      logEvent("XmlParser::XmlParser", "File " + xmlPath + " could not be parsed");
+      throw "Cannot parse file: " + xmlPath;
+    }
 
     xmlpp::Node *root = getRootNode();
     std::string path = "//Devices/*";

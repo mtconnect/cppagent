@@ -33,6 +33,14 @@
 
 #include "xml_printer.hpp"
 
+#define strfy(line) #line
+#define THROW_IF_XML2_ERROR(expr) \
+  if ((expr) < 0) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+#define THROW_IF_XML2_NULL(expr) \
+  if ((expr) == NULL) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+
+static xmlChar *ConvertInput(const char *in, const char *encoding);
+
 using namespace std;
 
 /* XmlPrinter main methods */
@@ -44,24 +52,49 @@ string XmlPrinter::printError(
     const string& errorText
   )
 {
-  xmlpp::Document * mErrorXml = initXmlDoc(
-    "Error",
-    instanceId,
-    bufferSize,
-    nextSeq
-  );
+  xmlTextWriterPtr writer;
+  xmlBufferPtr buf;
+  string ret;
   
-  xmlpp::Element * errors = mErrorXml->get_root_node()->add_child("Errors");
+  try {
+    THROW_IF_XML2_NULL(buf = xmlBufferCreate());
+    THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+  
+    initXmlDoc2(writer,
+                "Error",
+                instanceId,
+                bufferSize,
+                nextSeq);
+  
+    xmlChar *text = ConvertInput(errorText.c_str(), "UTF-8");
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Errors"));
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Error"));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "errorCode", 
+                                                    BAD_CAST errorCode.c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    xmlFree(text);
 
-  xmlpp::Element * error = errors->add_child("Error");
-  error->set_attribute("errorCode", errorCode);
-  error->set_child_text(errorText);
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Error
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Errors
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnect
+    THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
+    
+    // Cleanup
+    xmlFreeTextWriter(writer);
+    ret = (string) ((char*) buf->content);
+    xmlBufferFree(buf);
+  }
+  catch (string error) {
+    cerr << error << endl;
+  }
+  catch (...) {
+    cerr << "Unknown error" << endl;
+  }
   
-  string toReturn = printNode(mErrorXml->get_root_node());
-  
-  delete mErrorXml;
-  
-  return appendXmlEncode(toReturn);
+  return ret;
 }
 
 string XmlPrinter::printProbe(
@@ -129,6 +162,62 @@ string XmlPrinter::printSample(
   delete mSampleXml;
   
   return appendXmlEncode(toReturn);
+}
+
+/* XmlPrinter helper Methods */
+void XmlPrinter::initXmlDoc2(
+    xmlTextWriterPtr writer,
+    const string& xmlType,
+    const unsigned int instanceId,
+    const unsigned int bufferSize,
+    const Int64 nextSeq,
+    const Int64 firstSeq
+  )
+{
+  THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL));
+  
+  // Write the root element
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST ((string) "MTConnect" + xmlType).c_str()));
+  
+  string rootName = "MTConnect" + xmlType;
+  string xmlns = "urn:mtconnect.org:MTConnect" + xmlType + ":1.1";
+  string xsi = "urn:mtconnect.org:MTConnect" + xmlType +
+    ":1.1 http://www.mtconnect.org/schemas/MTConnect" + xmlType + "_1.1.xsd";
+  
+  // Add root element attribtues
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "xmlns:m",
+                                                  BAD_CAST xmlns.c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "xmlns",
+                                                  BAD_CAST xmlns.c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "xsi:schemaLocation",
+                                                  BAD_CAST xsi.c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "xmlns:xsi",
+                                                  BAD_CAST "http://www.w3.org/2001/XMLSchema-instance"));
+  
+  // Create the header
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Header"));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "creationTime", BAD_CAST getCurrentTime(GMT).c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "sender", BAD_CAST "localhost"));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId", BAD_CAST intToString(instanceId).c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize", BAD_CAST intToString(bufferSize).c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST "1.1"));
+    
+  // Add additional attribtues for streams
+  if (xmlType == "Streams")
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "nextSequence", 
+                                                    BAD_CAST int64ToString(nextSeq).c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST  "firstSequence", 
+                                                    BAD_CAST int64ToString(firstSeq).c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "lastSequence", 
+                                                    BAD_CAST int64ToString(nextSeq - 1).c_str()));
+  }
+  
+  THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 }
 
 /* XmlPrinter helper Methods */
@@ -427,4 +516,62 @@ void XmlPrinter::addElement(ComponentEvent *result,
   addAttributes(child, result->getAttributes());
 }
 
+/**
+ * ConvertInput:
+ * @in: string in a given encoding
+ * @encoding: the encoding used
+ *
+ * Converts @in into UTF-8 for processing with libxml2 APIs
+ *
+ * Returns the converted UTF-8 string, or NULL in case of error.
+ */
+xmlChar *
+ConvertInput(const char *in, const char *encoding)
+{
+  xmlChar *out;
+  int ret;
+  int size;
+  int out_size;
+  int temp;
+  xmlCharEncodingHandlerPtr handler;
+  
+  if (in == 0)
+    return 0;
+  
+  handler = xmlFindCharEncodingHandler(encoding);
+  
+  if (!handler) {
+    printf("ConvertInput: no encoding handler found for '%s'\n",
+           encoding ? encoding : "");
+    return 0;
+  }
+  
+  size = (int) strlen(in) + 1;
+  out_size = size * 2 - 1;
+  out = (unsigned char *) xmlMalloc((size_t) out_size);
+  
+  if (out != 0) {
+    temp = size - 1;
+    ret = handler->input(out, &out_size, (const xmlChar *) in, &temp);
+    if ((ret < 0) || (temp - size + 1)) {
+      if (ret < 0) {
+        printf("ConvertInput: conversion wasn't successful.\n");
+      } else {
+        printf
+        ("ConvertInput: conversion wasn't successful. converted: %i octets.\n",
+         temp);
+      }
+      
+      xmlFree(out);
+      out = 0;
+    } else {
+      out = (unsigned char *) xmlRealloc(out, out_size + 1);
+      out[out_size] = 0;  /*null terminating out */
+    }
+  } else {
+    printf("ConvertInput: no mem\n");
+  }
+  
+  return out;
+}
 

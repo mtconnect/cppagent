@@ -38,6 +38,8 @@
 #include <list>
 
 #include <libxml++/libxml++.h>
+#include <libxml/encoding.h>
+#include <libxml/xmlwriter.h>
 
 #include "component_event.hpp"
 #include "device.hpp"
@@ -70,7 +72,17 @@ namespace XmlPrinter
     const Int64 firstSeq,
     std::vector<ComponentEventPtr>& results
   );
-  
+
+  /***** Helper Methods *****/
+  /* Initiate all documents */
+  void initXmlDoc2(xmlTextWriterPtr writer,
+    const std::string& xmlType,
+    const unsigned int instanceId,
+    const unsigned int bufferSize,
+    const Int64 nextSeq,
+    const Int64 firstSeq = 0
+  );  
+
   /***** Helper Methods *****/
   /* Initiate all documents */
   xmlpp::Document * initXmlDoc(
