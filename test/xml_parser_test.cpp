@@ -122,5 +122,10 @@ void XmlParserTest::testGetDataItems()
   std::set<string> filter;
   
   a->getDataItems(filter, "//Linear");
-  CPPUNIT_ASSERT_EQUAL(5, (int) filter.size());
+  CPPUNIT_ASSERT_EQUAL(10, (int) filter.size());
+
+  filter.clear();
+  a->getDataItems(filter, "//Linear//DataItem[@category='CONDITION']");
+  CPPUNIT_ASSERT_EQUAL(3, (int) filter.size());
+
 }

@@ -160,7 +160,7 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
       }
       else // Find all the data items below this node
       {
-        getDataItems(aFilterSet, "//DataItem", n);
+        getDataItems(aFilterSet, "*//DataItem", n);
       }
     }
     

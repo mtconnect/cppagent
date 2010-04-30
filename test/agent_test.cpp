@@ -93,7 +93,7 @@ void AgentTest::testBadXPath()
   {
     value = "//////Linear";
     PARSE_XML_RESPONSE_QUERY(key, value)
-    string message = (string) "Invalid XPath: //m://m://m:Linear";
+    string message = (string) "The path could not be parsed. Invalid syntax: //////Linear";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
@@ -101,7 +101,7 @@ void AgentTest::testBadXPath()
   {
     value = "//Axes?//Linear";
     PARSE_XML_RESPONSE_QUERY(key, value)
-    string message = (string) "Invalid XPath: //m:Axes?//m:Linear";
+    string message = (string) "The path could not be parsed. Invalid syntax: //Axes?//Linear";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
@@ -109,7 +109,7 @@ void AgentTest::testBadXPath()
   {
     value = "//Devices/Device[@name=\"I_DON'T_EXIST\"";
     PARSE_XML_RESPONSE_QUERY(key, value)
-    string message = (string) "Invalid XPath: //m:Devices/m:Device[@name=\"I_DON'T_EXIST\"";
+    string message = (string) "The path could not be parsed. Invalid syntax: //Devices/Device[@name=\"I_DON'T_EXIST\"";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
@@ -253,14 +253,14 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/current";
-    PARSE_XML_RESPONSE
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream", "");
+//    PARSE_XML_RESPONSE_QUERY("at", "1")
+//    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream", "");
   }
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream", "");
+//    PARSE_XML_RESPONSE_QUERY("count", "1")
+//    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream", "");
   }
   
   key = "power";

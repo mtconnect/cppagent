@@ -145,15 +145,15 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   }
   
   string actual;
+  xmlChar *text = NULL;
   switch(first->type)
   {
     case XML_ELEMENT_NODE:
-      xmlChar *text;
-      if (first->properties != NULL) {
-        text = xmlGetProp(first, BAD_CAST attribute.c_str());
-      } else {
+      if (attribute.empty()) {
         text = xmlNodeGetContent(first);
-      }
+      } else if (first->properties != NULL) {
+        text = xmlGetProp(first, BAD_CAST attribute.c_str());
+      } 
       if (text != NULL) {
         actual = (const char*) text;
         xmlFree(text);
