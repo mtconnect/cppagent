@@ -121,22 +121,34 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   xmlNodePtr first = obj->nodesetval->nodeTab[0];
   if (expected == 0)
   {
-    CPPUNIT_NS::OStringStream message;
-    message << "Xpath " << xpath << " was not supposed to have any children.";
     bool has_content = false;
-    for (xmlNodePtr child = first->children; !has_content && child != NULL; child = child->next)
+    CPPUNIT_NS::OStringStream message;
+    if (attribute.empty())
     {
-      if (child->type == XML_ELEMENT_NODE)
+      message << "Xpath " << xpath << " was not supposed to have any children.";
+      for (xmlNodePtr child = first->children; !has_content && child != NULL; child = child->next)
       {
-        has_content = true;
-      } 
-      else if (child->type == XML_TEXT_NODE)
-      {
-        string res = (const char*) child->content;
-        has_content = !trim(res).empty();
+        if (child->type == XML_ELEMENT_NODE)
+        {
+          has_content = true;
+        } 
+        else if (child->type == XML_TEXT_NODE)
+        {
+          string res = (const char*) child->content;
+          has_content = !trim(res).empty();
+        }
       }
     }
-    
+    else
+    {
+      message << "Xpath " << xpath << " was not supposed to have an attribute.";
+      xmlChar *text = xmlGetProp(first, BAD_CAST attribute.c_str());
+      if (text != NULL)
+      {
+        has_content = true;
+        xmlFree(text);
+      }
+    }
     xmlXPathFreeObject(obj);
     xmlXPathFreeContext(xpathCtx);
     
