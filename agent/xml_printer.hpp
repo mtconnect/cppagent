@@ -37,7 +37,6 @@
 #include <map>
 #include <list>
 
-#include <libxml++/libxml++.h>
 #include <libxml/encoding.h>
 #include <libxml/xmlwriter.h>
 
@@ -75,7 +74,7 @@ namespace XmlPrinter
 
   /***** Helper Methods *****/
   /* Initiate all documents */
-  void initXmlDoc2(xmlTextWriterPtr writer,
+  void initXmlDoc(xmlTextWriterPtr writer,
     const std::string& xmlType,
     const unsigned int instanceId,
     const unsigned int bufferSize,
@@ -84,46 +83,24 @@ namespace XmlPrinter
   );  
 
   /***** Helper Methods *****/
-  /* Initiate all documents */
-  xmlpp::Document * initXmlDoc(
-    const std::string& xmlType,
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const Int64 nextSeq,
-    const Int64 firstSeq = 0
-  );
-  
-  /* Function to parse and write XML */
-  std::string printNode(
-    const xmlpp::Node *node,
-    const unsigned int indentation = 0
-  );
   
   /* Helper to print individual components and details */
-  void printProbeHelper(xmlpp::Element *element, Component *component);
+  void printProbeHelper(xmlTextWriterPtr writer, Component *component);
+  void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem);
   
-  /* Append the xml encoding at the top of the document */
-  std::string appendXmlEncode(const std::string& xml);
-  
-  /* Simple helper function to put indentations into the XML stream */
-  std::string printIndentation(const unsigned int indentation);
   
   /* Add attributes to an xml element */
-  void addAttributes(
-    xmlpp::Element *element,
-    std::map<std::string, std::string> *attributes
-  );
+  void addDeviceStream(xmlTextWriterPtr writer, Device *device);
+  void addComponentStream(xmlTextWriterPtr writer, Component *component);
+  void addCategory(xmlTextWriterPtr writer, DataItem::ECategory category);
+  void addSimpleElement(xmlTextWriterPtr writer, std::string element, std::string &body, 
+                        std::map<std::string, std::string> *attributes = NULL);
   
-  /* Get a device stream from the element, else append a new device stream */
-  xmlpp::Element * getDeviceStream(xmlpp::Element *element, Device *device,
-				   std::map<std::string, xmlpp::Element *> &devices);
-
-  /* Add a sample or event to the xml document */
-  void addElement(ComponentEvent *result, xmlpp::Element *streams,
-		  std::map<std::string, xmlpp::Element *> &elements,
-		  std::map<std::string, xmlpp::Element *> &components,
-		  std::map<std::string, xmlpp::Element *> &devices);
+  void addAttributes(xmlTextWriterPtr writer,
+                      std::map<std::string, std::string> *attributes);
   
+  void addEvent(xmlTextWriterPtr writer, ComponentEvent *result);
+                   
 };
 
 #endif

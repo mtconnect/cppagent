@@ -56,11 +56,6 @@
 class XmlPrinterTest : public CppUnit::TestFixture
 {
   CPPUNIT_TEST_SUITE(XmlPrinterTest);
-  CPPUNIT_TEST(testInitXmlDoc);
-  CPPUNIT_TEST(testPrintNode);
-  CPPUNIT_TEST(testPrintIndentation);
-  CPPUNIT_TEST(testAddAttributes);
-  CPPUNIT_TEST(testGetDeviceStream);
   CPPUNIT_TEST(testPrintError);
   CPPUNIT_TEST(testPrintProbe);
   CPPUNIT_TEST(testPrintCurrent);
@@ -75,11 +70,6 @@ protected:
   
 protected:
   /* Helper methods to test */
-  void testInitXmlDoc();
-  void testPrintNode();
-  void testPrintIndentation();
-  void testAddAttributes();
-  void testGetDeviceStream();
   
   /* Main methods to test */
   void testPrintError();

@@ -74,6 +74,8 @@ using namespace std;
 void CheckpointTest::setUp()
 {
   // Create an agent with only 16 slots and 8 data items.
+  mAgent = NULL;
+  mCheckpoint = NULL;
   mAgent = new Agent("../samples/min_config.xml", 4);
   mAgentId = intToString(getCurrentTimeInSec());
   mAdapter = NULL;

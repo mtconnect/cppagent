@@ -32,6 +32,7 @@
 */
 
 #include "data_item.hpp"
+#include "device.hpp"
 
 using namespace std;
 
@@ -383,3 +384,24 @@ double DataItem::simpleFactor(const string& units)
       return 1.0;
   }
 }
+
+// Sort by: Device, Component, Category, DataItem
+bool DataItem::operator<(DataItem &aOther) 
+{
+  Device *dev = mComponent->getDevice();
+  if (dev->getId() < aOther.getComponent()->getDevice()->getId())
+    return true;
+  else if (dev->getId() > aOther.getComponent()->getDevice()->getId())
+    return false;
+  else if (mComponent->getId() < aOther.getComponent()->getId())
+    return true;
+  else if (mComponent->getId() > aOther.getComponent()->getId())
+    return false;
+  else if (mCategory < aOther.mCategory)
+    return true;
+  else if (mCategory == aOther.mCategory)
+    return mId < aOther.mId;
+  else
+    return false;
+}
+

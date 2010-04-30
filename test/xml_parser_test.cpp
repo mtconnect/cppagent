@@ -69,6 +69,10 @@ void XmlParserTest::testGetDevices()
   CPPUNIT_ASSERT_EQUAL((size_t) 1, devices.size());
 
   Device *device = devices.front();
+  
+  // Check for Description
+  CPPUNIT_ASSERT_EQUAL((string) "Linux CNC Device", device->getDescriptionBody());
+  
   vector<DataItem*> dataItems;
   std::map<string, DataItem *> dataItemsMap = device->getDeviceDataItems();  
   std::map<string, DataItem *>::iterator iter;
@@ -97,35 +101,6 @@ void XmlParserTest::testGetDevices()
   CPPUNIT_ASSERT(hasZcom);
 }
 
-void XmlParserTest::testGetRootNode()
-{
-  const xmlpp::Element *nodeElement =
-    dynamic_cast<const xmlpp::Element *>(a->getRootNode());
-  
-  CPPUNIT_ASSERT(nodeElement);
-  
-  xmlpp::Node::NodeList children = nodeElement->get_children();
-  
-  bool hasHeader = false, hasDevices = false;
-  
-  xmlpp::Node::NodeList::iterator child;
-  for (child = children.begin(); child != children.end(); child++)
-  {
-    if ((*child)->get_name() == "Header")
-    {
-      hasHeader = true;
-    }
-    
-    if ((*child)->get_name() == "Devices")
-    {
-      hasDevices = true;
-    }
-  }
-  
-  CPPUNIT_ASSERT(hasHeader);
-  CPPUNIT_ASSERT(hasDevices);
-}
-
 void XmlParserTest::testCondition()
 {
   vector<Device *> devices = a->getDevices();
@@ -142,3 +117,10 @@ void XmlParserTest::testCondition()
   CPPUNIT_ASSERT(item->isCondition());
 }
 
+void XmlParserTest::testGetDataItems()
+{
+  std::set<string> filter;
+  
+  a->getDataItems(filter, "//Linear");
+  CPPUNIT_ASSERT_EQUAL(5, (int) filter.size());
+}

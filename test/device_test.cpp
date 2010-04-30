@@ -102,20 +102,24 @@ void DeviceTest::testDescription()
   attributes["manufacturer"] = "MANUFACTURER";
   attributes["serialNumber"] = "SERIAL_NUMBER";
   
-  a->addDescription(attributes);
+  a->addDescription((string) "Machine 1", attributes);
   map<string, string> description1 = a->getDescription();
   
   CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description1["manufacturer"]);
   CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description1["serialNumber"]);
   CPPUNIT_ASSERT(description1["station"].empty());
   
+  CPPUNIT_ASSERT_EQUAL((string) "Machine 1", a->getDescriptionBody());
+  
   attributes["station"] = "STATION";
-  b->addDescription(attributes);
+  b->addDescription((string) "Machine 2", attributes);
   map<string, string> description2 = b->getDescription();
   
   CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description2["manufacturer"]);
   CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description2["serialNumber"]);
   CPPUNIT_ASSERT_EQUAL((string) "STATION", description2["station"]);
+
+  CPPUNIT_ASSERT_EQUAL((string) "Machine 2", b->getDescriptionBody());
 }
 
 void DeviceTest::testRelationships()

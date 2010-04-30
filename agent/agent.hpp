@@ -44,8 +44,6 @@
 #include "dlib/server.h"
 #include "dlib/sliding_buffer.h"
 
-#include <libxml++/libxml++.h>
-
 #include "adapter.hpp"
 #include "globals.hpp"
 #include "xml_parser.hpp"
@@ -197,13 +195,6 @@ protected:
   std::string devicesAndPath(
     const std::string& path,
     const std::string& device
-  );
-  
-  /* Get std::list of data items in path */
-  void getDataItems(
-    std::set<std::string> &aFilterSet,
-    const std::string& path,
-    xmlpp::Node * node = NULL
   );
   
   /* Perform a check on parameter and return a value or a code */

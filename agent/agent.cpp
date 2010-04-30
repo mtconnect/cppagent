@@ -399,7 +399,7 @@ bool Agent::handleStream(
   std::set<string> filter;
   try
   {
-    getDataItems(filter, path);
+    mConfig->getDataItems(filter, path);
   }
   catch (exception& e)
   {
@@ -613,51 +613,6 @@ string Agent::devicesAndPath(const string& path, const string& device)
   }
   
   return dataPath;
-}
-
-void Agent::getDataItems(std::set<string> &aFilterSet,
-			 const string& path, xmlpp::Node * node)
-{
-  if (node == NULL)
-  {
-    node = mConfig->getRootNode();
-  }
-
-  xmlpp::NodeSet elements;
-  if (node->get_namespace_uri().empty())
-    elements = node->find(path);
-  else
-  {
-    xmlpp::Node::PrefixNsMap spaces;
-    spaces.insert(
-      pair<Glib::ustring, Glib::ustring>("m", node->get_namespace_uri())
-      );
-    elements = node->find(addNamespace(path, "m"), spaces);
-  }
-    
-  for (unsigned int i = 0; i < elements.size(); i++)
-  {
-    const xmlpp::Element *nodeElement =
-      dynamic_cast<const xmlpp::Element *>(elements[i]);
-    
-    if (nodeElement)
-    {
-      const string nodename = nodeElement->get_name();
-      if (nodeElement->get_name() == "DataItem")
-      {
-	aFilterSet.insert(nodeElement->get_attribute_value("id"));
-      }
-      else if (nodename == "Components" || nodename == "DataItems")
-      {
-        // Recursive call
-        getDataItems(aFilterSet, "*", elements[i]);
-      }
-      else // Hopefully a subtype of component.
-      {
-        getDataItems(aFilterSet, "Components/*|DataItems/*", elements[i]);
-      }
-    }
-  }
 }
 
 int Agent::checkAndGetParam(

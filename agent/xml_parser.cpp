@@ -35,67 +35,152 @@
 
 using namespace std;
 
+#define strfy(line) #line
+#define THROW_IF_XML2_ERROR(expr) \
+if ((expr) < 0) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+#define THROW_IF_XML2_NULL(expr) \
+if ((expr) == NULL) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+
 /* XmlParser public methods */
 XmlParser::XmlParser(const string& xmlPath)
 {
+  xmlXPathContextPtr xpathCtx = NULL;
+  xmlXPathObjectPtr devices = NULL;
+  mDoc = NULL;
+  
   try
   {
-    mParser = new xmlpp::DomParser;
+    xmlInitParser();
+    xmlXPathInit();
+    THROW_IF_XML2_NULL(mDoc = xmlReadFile(xmlPath.c_str(), NULL, 
+                       XML_PARSE_NOENT | XML_PARSE_NOBLANKS));
     
-    // Set to false now because XML does not contain DTD
-    mParser->set_validate(false);
-    
-    // We want the text to be resolved/unescaped automatically.
-    mParser->set_substitute_entities();
-    
-    mParser->parse_file(xmlPath);
-    if (!*mParser)
-    {
-      logEvent("XmlParser::XmlParser", "File " + xmlPath + " could not be parsed");
-      throw "Cannot parse file: " + xmlPath;
-    }
-
-    xmlpp::Node *root = getRootNode();
     std::string path = "//Devices/*";
-        
-    xmlpp::NodeSet devices;    
-    if (root->get_namespace_uri().empty())
-      devices = root->find(path);
-    else
+    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(mDoc));
+    
+    xmlNodePtr root = xmlDocGetRootElement(mDoc);
+    xpathCtx->node = root;
+    if (root->nsDef != NULL)
     {
-      xmlpp::Node::PrefixNsMap spaces;
-      spaces.insert(
-	pair<Glib::ustring, Glib::ustring>("m", root->get_namespace_uri()));
-      devices = root->find(addNamespace(path, "m"), spaces);
+      path = addNamespace(path, "m");
+      THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->nsDef->href));
     }
-
-    for (unsigned int i = 0; i < devices.size(); i++)
+    
+    devices = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
+    if (devices == NULL)
     {
-      // MAKE SURE FIRST ITEMS IN HIERARCHIES ARE DEVICES
-      mDevices.push_back(static_cast<Device *>(handleComponent(devices[i])));
+      throw (string) xpathCtx->lastError.message;
     }
+    
+    xmlNodeSetPtr nodeset = devices->nodesetval;
+    if (nodeset == NULL || nodeset->nodeNr == 0)
+    {
+      throw (string) "Could not find Device in XML configuration";
+    }
+    
+    // Collect the Devices...
+    for (int i = 0; i != nodeset->nodeNr; ++i)
+    {
+      mDevices.push_back(static_cast<Device *>(handleComponent(nodeset->nodeTab[i])));
+    }
+    
+    xmlXPathFreeObject(devices);    
+    xmlXPathFreeContext(xpathCtx);
   }
-  catch (exception & e)
+  catch (string e)
   {
-    logEvent("XmlParser::XmlParser", e.what());
-    delete mParser;
-    throw (string) e.what();
+    if (devices != NULL)
+      xmlXPathFreeObject(devices);    
+    if (xpathCtx != NULL)
+      xmlXPathFreeContext(xpathCtx);
+    logEvent("Cannot parse XML file: ", e);
+    throw e;
+  }
+  catch (...)
+  {
+    if (devices != NULL)
+      xmlXPathFreeObject(devices);    
+    if (xpathCtx != NULL)
+      xmlXPathFreeContext(xpathCtx);
+    throw;
   }
 }
 
 XmlParser::~XmlParser()
 {
-  delete mParser;
+  if (mDoc != NULL)    
+    xmlFreeDoc(mDoc);
 }
 
-xmlpp::Node * XmlParser::getRootNode() const
+void XmlParser::getDataItems(set<string> &aFilterSet,
+                             const string& aPath, xmlNodePtr node)
 {
-  return mParser->get_document()->get_root_node();
+  xmlNodePtr root = xmlDocGetRootElement(mDoc);
+  if (node == NULL) node = root;
+  
+  xmlXPathContextPtr xpathCtx = NULL;
+  xmlXPathObjectPtr objs = NULL;
+
+  try 
+  {
+    string path;
+    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(mDoc));
+    xpathCtx->node = node;
+    
+    if (root->nsDef != NULL)
+    {
+      path = addNamespace(aPath, "m");
+      THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->nsDef->href));
+    }
+    else
+    {
+      path = aPath;
+    }
+  
+    objs = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
+    if (objs == NULL)
+    {
+      xmlXPathFreeContext(xpathCtx);
+      return;
+    }
+    
+    xmlNodeSetPtr nodeset = objs->nodesetval;
+    for (int i = 0; i != nodeset->nodeNr; ++i)
+    {
+      xmlNodePtr n = nodeset->nodeTab[i];
+      
+      if (xmlStrcmp(n->name, BAD_CAST "DataItem") == 0)
+      {
+        xmlChar *id = xmlGetProp(n, BAD_CAST "id");
+        if (id != NULL)
+        {
+          aFilterSet.insert((const char *) id);
+          xmlFree(id);
+        }
+      }
+      else // Find all the data items below this node
+      {
+        getDataItems(aFilterSet, "//DataItem", n);
+      }
+    }
+    
+    xmlXPathFreeObject(objs);    
+    xmlXPathFreeContext(xpathCtx);
+  }
+  catch (...)
+  {
+    if (objs != NULL)
+      xmlXPathFreeObject(objs);
+    if (xpathCtx != NULL)
+      xmlXPathFreeContext(xpathCtx);
+
+    logEvent("XmlPaser::getDataItems", "Could not parse path");
+  }
 }
 
 /* XmlParser protected methods */
 Component * XmlParser::handleComponent(
-    xmlpp::Node * component,
+    xmlNodePtr component,
     Component * parent,
     Device *device
   )
@@ -103,7 +188,7 @@ Component * XmlParser::handleComponent(
   Component * toReturn = NULL;
   Component::EComponentSpecs spec =
     (Component::EComponentSpecs) getEnumeration(
-      component->get_name(),
+      (const char*) component->name,
       Component::SComponentSpecs,
       Component::NumComponentSpecs
     );
@@ -112,7 +197,7 @@ Component * XmlParser::handleComponent(
   switch (spec)
   {
   case Component::DEVICE:
-    name = component->get_name().raw();
+    name = (const char *) component->name;
     toReturn = device = (Device*) loadComponent(component, spec, name);
     break;
     
@@ -130,7 +215,7 @@ Component * XmlParser::handleComponent(
     
   default:
     // Assume component
-    name = component->get_name().raw();
+    name = (const char*) component->name;
     toReturn = loadComponent(component, spec, name);
     break;
   }
@@ -143,22 +228,27 @@ Component * XmlParser::handleComponent(
   }
   
   // Check if there are children
-  if (toReturn != NULL && !dynamic_cast<const xmlpp::ContentNode*>(component))
+  if (toReturn != NULL && component->children)
   {
-    xmlpp::Node::NodeList children = component->get_children();
-    
-    xmlpp::Node::NodeList::iterator child;
-    for (child = children.begin(); child != children.end(); ++child)
+    for (xmlNodePtr child = component->children; child != NULL; child = child->next)
     {
-      if ((*child)->get_name() == "Description")
+      if (child->type != XML_ELEMENT_NODE)
+        continue;
+      
+      if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
       {
-        const xmlpp::Element *nodeElement =
-          dynamic_cast<const xmlpp::Element *>(*child);
-        toReturn->addDescription(getAttributes(nodeElement));
+        xmlChar *text = xmlNodeGetContent(child);
+        
+        if (text != NULL)
+        {
+          toReturn->addDescription((string) (const char *) text, getAttributes(child));
+          xmlFree(text);
+        }
+        
       }
       else
       {
-        handleComponent(*child, toReturn, device);
+        handleComponent(child, toReturn, device);
       }
     }
   }
@@ -167,13 +257,12 @@ Component * XmlParser::handleComponent(
 }
 
 Component * XmlParser::loadComponent(
-    xmlpp::Node *node,
+    xmlNodePtr node,
     Component::EComponentSpecs spec,
     string& name
   )
 {
-  const xmlpp::Element *nodeElement = dynamic_cast<const xmlpp::Element*>(node);
-  std::map<string, string> attributes = getAttributes(nodeElement);
+  std::map<string, string> attributes = getAttributes(node);
   
   switch (spec)
   {
@@ -184,82 +273,73 @@ Component * XmlParser::loadComponent(
   }
 }
 
-std::map<string, string> XmlParser::getAttributes(const xmlpp::Element *element)
+std::map<string, string> XmlParser::getAttributes(const xmlNodePtr node)
 {
   std::map<string, string> toReturn;
   
-  // Load all the attributes into the map to return
-  const xmlpp::Element::AttributeList& attributes =
-    element->get_attributes();
-    
-  xmlpp::Element::AttributeList::const_iterator attr;
-  for (attr = attributes.begin(); attr != attributes.end(); attr++)
+  for (xmlAttrPtr attr = node->properties; attr != NULL; attr = attr->next)
   {
-    toReturn[(*attr)->get_name()] = (*attr)->get_value();
+    if (attr->type == XML_ATTRIBUTE_NODE) {
+      toReturn[(const char *) attr->name] = (const char*) attr->children->content;
+    }
   }
   
   return toReturn;
 }
 
 void XmlParser::loadDataItem(
-    xmlpp::Node *dataItem,
+    xmlNodePtr dataItem,
     Component *parent,
     Device *device
   )
 {
-  const xmlpp::Element* nodeElement =
-    dynamic_cast<const xmlpp::Element*>(dataItem);
-  DataItem *d = new DataItem(getAttributes(nodeElement));
+  DataItem *d = new DataItem(getAttributes(dataItem));
   d->setComponent(*parent);
   
-  // Check children for "source"
-  if (!dynamic_cast<const xmlpp::ContentNode*>(dataItem))
+  if (dataItem->children != NULL)
   {
-    xmlpp::Node::NodeList children = dataItem->get_children("Source");
     
-    if (children.size() == 1)
+    for (xmlNodePtr child = dataItem->children; child != NULL; child = child->next)
     {
-      xmlpp::Element * source =
-        dynamic_cast<xmlpp::Element *>(children.front());
+      if (child->type != XML_ELEMENT_NODE)
+        continue;
       
-      if (source && source->has_child_text())
+      if (xmlStrcmp(child->name, BAD_CAST "Source") == 0)
       {
-        xmlpp::TextNode * nodeText = source->get_child_text();
-        d->addSource(nodeText->get_content());
-      }
-    }
-    
-    children = dataItem->get_children("Constraints");
-    if (children.size() == 1)
-    {
-      xmlpp::Node *constraints = children.front();
-      
-      // Check for Minimum and Maximum or Values.
-      xmlpp::Node::NodeList values = constraints->get_children("Value");
-      if (values.size() > 0)
-      {
-        xmlpp::Node::NodeList::iterator child;
-        for (child = values.begin(); child != values.end(); ++child)
+        xmlChar *text = xmlNodeGetContent(child);
+        if (text != NULL)
         {
-          xmlpp::Element *value = dynamic_cast<xmlpp::Element *>(*child);
-          d->addConstrainedValue(value->get_child_text()->get_content());
+          d->addSource((const char *) text);
+          xmlFree(text);
         }
       }
-      else
+      else if (xmlStrcmp(child->name, BAD_CAST "Constraints") == 0)
       {
-        xmlpp::Node::NodeList values = constraints->get_children("Minimum");
-        if (values.size() == 1) { 
-          xmlpp::Element *value = dynamic_cast<xmlpp::Element *>(values.front());
-          d->setMinimum(value->get_child_text()->get_content()); 
+        for (xmlNodePtr constraint = child->children; constraint != NULL; constraint = constraint->next)
+        {
+          if (constraint->type != XML_ELEMENT_NODE)
+            continue;
+
+          xmlChar *text = xmlNodeGetContent(constraint);
+          if (text == NULL)
+            continue;
+
+          if (xmlStrcmp(constraint->name, BAD_CAST "Value") == 0)
+          {
+            d->addConstrainedValue((const char *) text);
+          }
+          else if (xmlStrcmp(constraint->name, BAD_CAST "Minimum") == 0)
+          {
+            d->setMinimum((const char *) text);
+          }
+          else if (xmlStrcmp(constraint->name, BAD_CAST "Maximum") == 0)
+          {
+            d->setMaximum((const char *) text);
+          }
+          xmlFree(text);
         }
-        values = constraints->get_children("Maximum");
-        if (values.size() == 1) { 
-          xmlpp::Element *value = dynamic_cast<xmlpp::Element *>(values.front());
-          d->setMaximum(value->get_child_text()->get_content()); 
-        }        
       }
-    }
-    
+    }   
   }
   
   parent->addDataItem(*d);
@@ -267,20 +347,17 @@ void XmlParser::loadDataItem(
 }
 
 void XmlParser::handleChildren(
-    xmlpp::Node *components,
+    xmlNodePtr components,
     Component *parent,
     Device *device
   )
 {
-  if (!dynamic_cast<const xmlpp::ContentNode*>(components))
+  for (xmlNodePtr child = components->children; child != NULL; child = child->next)
   {
-    xmlpp::Node::NodeList children = components->get_children();
-    
-    xmlpp::Node::NodeList::iterator child;
-    for (child = children.begin(); child != children.end(); ++child)
-    {
-      handleComponent(*child, parent, device);
-    }
+    if (child->type != XML_ELEMENT_NODE)
+      continue;
+
+    handleComponent(child, parent, device);
   }
 }
 

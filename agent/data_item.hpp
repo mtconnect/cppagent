@@ -149,15 +149,7 @@ public:
   
   Adapter *getDataSource() const { return mDataSource;  }
   void setDataSource(Adapter *aSource) { if (mDataSource != aSource) mDataSource = aSource; }
-
-  bool operator<(DataItem &aOther) {
-    if (mCategory < aOther.mCategory)
-      return true;
-    else if (mCategory == aOther.mCategory)
-      return mId < aOther.mId;
-    else
-      return false;
-  }
+  bool operator<(DataItem &aOther);
 
   bool operator==(DataItem &aOther) {
     return mId == aOther.mId;

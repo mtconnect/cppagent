@@ -85,13 +85,14 @@ public:
   std::string getName() const { return mName; }
   std::string getNativeName() const { return mNativeName; }
   std::string getUuid() const { return mUuid; }
+  std::string getDescriptionBody() const { return mDescriptionBody; }
   
   /* Add/get description specifications using an attribute map */
-  void addDescription(std::map<std::string, std::string> attributes);
+  void addDescription(std::string body, std::map<std::string, std::string> attributes);
   std::map<std::string, std::string> getDescription() const;
   
   /* Get the device that any component is associated with */
-  Device * getDevice() const;
+  Device * getDevice();
   
   /* Set/Get the component's parent component */
   void setParent(Component& parent) { mParent = &parent; }
@@ -105,6 +106,9 @@ public:
   void addDataItem(DataItem& dataItem) { mDataItems.push_back(&dataItem); }
   std::list<DataItem *> getDataItems() const { return mDataItems; }
   
+  bool operator<(const Component &comp) const { return mId < comp.getId(); }
+  bool operator==(const Component &comp) const { return mId == comp.getId(); }
+
 protected:
   /* Return a map of attributes of all the component specs */
   std::map<std::string, std::string> buildAttributes() const;
@@ -130,10 +134,12 @@ protected:
   std::string mManufacturer;
   std::string mSerialNumber;
   std::string mStation;
+  std::string mDescriptionBody;
   
   /* Component relationships */
   /* Pointer to the parent component */
   Component * mParent;
+  Device *mDevice;
   
   /* Each component keeps track of it's children in a std::list */
   std::list<Component *> mChildren;
@@ -143,6 +149,12 @@ protected:
   
   /* The set of attribtues */
   std::map<std::string, std::string> mAttributes;
+};
+
+struct ComponentComp {
+  bool operator()(const Component *lhs, const Component *rhs) const {
+    return *lhs < *rhs;
+  }
 };
 
 #endif

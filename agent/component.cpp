@@ -49,7 +49,7 @@ const string Component::SComponentSpecs[NumComponentSpecs] = {
 };
 
 /* Component public methods */
-Component::Component(const string& cls, std::map<string, string> attributes)
+Component::Component(const string& cls, map<string, string> attributes)
 {
   mId = attributes["id"];
   mName = attributes["name"];
@@ -60,6 +60,7 @@ Component::Component(const string& cls, std::map<string, string> attributes)
     0.0f : atof(attributes["sampleRate"].c_str());
   
   mParent = NULL;
+  mDevice = NULL;
   mClass = cls;
   mAttributes = buildAttributes();
 }
@@ -93,7 +94,7 @@ std::map<string, string> Component::buildAttributes() const
   return attributes;
 }
 
-void Component::addDescription(std::map<string, string> attributes)
+void Component::addDescription(string body, map<string, string> attributes)
 {
   if (!attributes["manufacturer"].empty())
   {
@@ -108,6 +109,11 @@ void Component::addDescription(std::map<string, string> attributes)
   if (!attributes["station"].empty())
   {
     mStation = attributes["station"];
+  }
+  
+  if (!body.empty())
+  {
+    mDescriptionBody = body;
   }
 }
 
@@ -133,19 +139,19 @@ std::map<string, string> Component::getDescription() const
   return description;
 }
 
-Device * Component::getDevice() const
+Device * Component::getDevice()
 {
-  if (getClass() == "Device")
+  if (mDevice == NULL) 
   {
-    return (Device *) (this);
-  }
-  else if (mParent != NULL)
-  {
-    return mParent->getDevice();
-  }
-  else // Should never get here
-  {
-    return NULL;
-  }
+    if (getClass() == "Device")
+    {
+      mDevice = (Device*) this;
+    }
+    else if (mParent != NULL)
+    {
+      mDevice = mParent->getDevice();
+    }
+  }  
+  return mDevice;
 }
 

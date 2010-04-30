@@ -35,8 +35,12 @@
 #define XML_PARSER_HPP
 
 #include <list>
+#include <set>
 
-#include <libxml++/libxml++.h>
+#include <libxml/tree.h>
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 
 #include "component.hpp"
 #include "device.hpp"
@@ -55,12 +59,15 @@ public:
   /* Get list of devices and data items */
   std::vector<Device *> getDevices() const { return mDevices; }
   
-  /* Return the root node of the xml */
-  xmlpp::Node * getRootNode() const;
+  /* Get std::list of data items in path */
+  void getDataItems(std::set<std::string> &aFilterSet,
+                    const std::string& path, xmlNodePtr node = NULL);
+  
+  
   
 protected:
-  /* LibXML++ XML DOM Parser */
-  xmlpp::DomParser * mParser;
+  /* LibXML XML Doc */
+  xmlDocPtr mDoc;
   
   /* Arrays to keep track of all devices and dataItems */
   std::vector<Device *> mDevices;
@@ -68,33 +75,32 @@ protected:
 protected:
   /* Main method to process the nodes and return the objects */
   Component * handleComponent(
-    xmlpp::Node *component,
-    Component *parent = NULL,
-    Device *device = NULL
-  );
+        xmlNodePtr component,
+        Component *parent = NULL,
+        Device *device = NULL);
   
   /* Helper to handle/return each component of the device */
   Component * loadComponent(
-    xmlpp::Node *node,
+    xmlNodePtr node,
     Component::EComponentSpecs spec,
     std::string &name
   );
   
   /* Put all of the attributes of an element into a map */
   std::map<std::string, std::string> getAttributes(
-    const xmlpp::Element *element
+    const xmlNodePtr element
   );
   
   /* Load the data items */
   void loadDataItem(
-    xmlpp::Node *dataItems,
+    xmlNodePtr dataItems,
     Component *component,
     Device *device
   );
   
   /* Perform loading on children and set up relationships */
   void handleChildren(
-    xmlpp::Node *components,
+    xmlNodePtr components,
     Component *parent = NULL,
     Device *device = NULL
   );

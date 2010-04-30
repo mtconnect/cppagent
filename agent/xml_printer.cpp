@@ -62,24 +62,24 @@ string XmlPrinter::printError(
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
   
-    initXmlDoc2(writer,
+    initXmlDoc(writer,
                 "Error",
                 instanceId,
                 bufferSize,
                 nextSeq);
   
-    xmlChar *text = ConvertInput(errorText.c_str(), "UTF-8");
     
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Errors"));
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Error"));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "errorCode", 
                                                     BAD_CAST errorCode.c_str()));
+    xmlChar *text = ConvertInput(errorText.c_str(), "UTF-8");
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
     xmlFree(text);
 
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Error
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Errors
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnect
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectError
     THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
     
     // Cleanup
@@ -104,27 +104,134 @@ string XmlPrinter::printProbe(
     vector<Device *>& deviceList
   )
 {
-  xmlpp::Document *mProbeXml = initXmlDoc(
-    "Devices",
-    instanceId,
-    bufferSize,
-    nextSeq
-  );
+  xmlTextWriterPtr writer;
+  xmlBufferPtr buf;
+  string ret;
   
-  xmlpp::Element *devices = mProbeXml->get_root_node()->add_child("Devices");
-  
-  vector<Device *>::iterator dev;
-  for (dev = deviceList.begin(); dev != deviceList.end(); dev++)
-  {
-    xmlpp::Element *device = devices->add_child("Device");
-    printProbeHelper(device, *dev);
+  try {
+    THROW_IF_XML2_NULL(buf = xmlBufferCreate());
+    THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+    
+    initXmlDoc(writer,
+                "Devices",
+                instanceId,
+                bufferSize,
+                nextSeq);
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Devices"));
+    
+    
+    vector<Device *>::iterator dev;
+    for (dev = deviceList.begin(); dev != deviceList.end(); dev++)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Device"));
+      printProbeHelper(writer, *dev);
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Device
+    }      
+
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Devices
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectDevices
+    THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
+    
+    xmlFreeTextWriter(writer);
+    ret = (string) ((char*) buf->content);
+    xmlBufferFree(buf);    
+  }
+  catch (string error) {
+    cerr << error << endl;
+  }
+  catch (...) {
+    cerr << "Unknown error" << endl;
   }
   
-  string toReturn = printNode(mProbeXml->get_root_node());
+  return ret;
+ }
+
+void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer,
+                                  Component * component)
+{
+  addAttributes(writer, component->getAttributes());
   
-  delete mProbeXml;
+  std::map<string, string> desc = component->getDescription();
+  string body = component->getDescriptionBody();
   
-  return appendXmlEncode(toReturn);
+  if (desc.size() > 0 || !body.empty())
+  {
+    addSimpleElement(writer, "Description", body, &desc);
+  }
+  
+  list<DataItem *> datum = component->getDataItems();
+  if (datum.size() > 0)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItems"));
+    
+    list<DataItem *>::iterator data;
+    for (data = datum.begin(); data!= datum.end(); data++)
+    {
+      printDataItem(writer, *data);
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItems    
+  }
+  
+  list<Component *> children = component->getChildren();
+  
+  if (children.size() > 0)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Components"));
+    
+    list<Component *>::iterator child;
+    for (child = children.begin(); child != children.end(); child++)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST (*child)->getClass().c_str()));
+      printProbeHelper(writer, *child);
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Component 
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Components    
+  }
+}
+
+void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
+{
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItem"));
+
+  addAttributes(writer, dataItem->getAttributes());
+  string source = dataItem->getSource();
+  if (!source.empty())
+  {
+    addSimpleElement(writer, "Source", source);
+  }
+  
+  if (dataItem->hasConstraints())
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Constraints"));
+
+    string s = dataItem->getMaximum();
+    if (!s.empty())
+    {
+      addSimpleElement(writer, "Maximum", s);
+    }
+    
+    s = dataItem->getMinimum();
+    if (!s.empty())
+    {
+      addSimpleElement(writer, "Minimum", s);
+    }
+    
+    vector<string> values = dataItem->getConstrainedValues();
+    vector<string>::iterator value;
+    for (value = values.begin(); value != values.end(); value++)
+    {
+      addSimpleElement(writer, "Value", *value);
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints   
+  }
+  
+  THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItem   
 }
 
 string XmlPrinter::printSample(
@@ -135,44 +242,178 @@ string XmlPrinter::printSample(
     vector<ComponentEventPtr>& results
   )
 {
-  xmlpp::Document * mSampleXml = initXmlDoc(
-    "Streams",
-    instanceId,
-    bufferSize,
-    nextSeq,
-    firstSeq
-  );
-    
-  xmlpp::Element *streams = mSampleXml->get_root_node()->add_child("Streams");
-  std::map<string, xmlpp::Element *> elements;
-  std::map<string, xmlpp::Element *> components; 
-  std::map<string, xmlpp::Element *> devices;
-
-  // Sort the vector by category.
-  std::sort(results.begin(), results.end());
+  xmlTextWriterPtr writer;
+  xmlBufferPtr buf;
+  string ret;
   
-  vector<ComponentEventPtr>::iterator result;
-  for (result = results.begin(); result != results.end(); result++)
-  {
-    addElement(*result, streams, elements, components, devices);
+  try {
+    THROW_IF_XML2_NULL(buf = xmlBufferCreate());
+    THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+    
+    initXmlDoc(writer,
+               "Streams",
+               instanceId,
+               bufferSize,
+               nextSeq,
+               firstSeq);
+        
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Streams"));
+    
+    // Sort the vector by category.
+    std::sort(results.begin(), results.end());
+
+    Device *lastDevice = NULL;
+    Component *lastComponent = NULL;
+    int lastCategory = -1;
+    
+    vector<ComponentEventPtr>::iterator result;
+    for (result = results.begin(); result != results.end(); result++)
+    {
+      DataItem *dataItem = (*result)->getDataItem();
+      Component *component = dataItem->getComponent();
+      Device *device = component->getDevice();
+      
+      if (device != lastDevice)
+      {
+        if (lastDevice != NULL)
+          THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DeviceStream
+        lastDevice = device;
+        if (lastComponent != NULL)
+          THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
+        lastComponent = NULL;
+        if (lastCategory != -1)
+          THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
+        lastCategory = -1;
+        addDeviceStream(writer, device);
+      }
+      
+      if (component != lastComponent)
+      {
+        if (lastComponent != NULL)
+          THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
+        lastComponent = component;
+        if (lastCategory != -1)
+          THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
+        lastCategory = -1;
+        addComponentStream(writer, component);        
+      }
+      
+      if (lastCategory != dataItem->getCategory())
+      {
+        if (lastCategory != -1)
+          THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
+        lastCategory = dataItem->getCategory();
+        addCategory(writer, dataItem->getCategory());
+      }
+      
+      addEvent(writer, *result);
+    }
+    
+    if (lastCategory != -1)
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
+    if (lastDevice != NULL)
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DeviceStream
+    if (lastComponent != NULL)
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Streams    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectStreams
+    THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
+    
+    xmlFreeTextWriter(writer);
+    ret = (string) ((char*) buf->content);
+    xmlBufferFree(buf);    
+  }
+  catch (string error) {
+    cerr << error << endl;
+  }
+  catch (...) {
+    cerr << "Unknown error" << endl;
   }
   
-  string toReturn = printNode(mSampleXml->get_root_node());
+  return ret;
+}
+
+void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, Device *device)
+{
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DeviceStream"));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", 
+                                                  BAD_CAST device->getName().c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "uuid", 
+                                                  BAD_CAST device->getUuid().c_str()));
+}
+
+void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, Component *component)
+{
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentStream"));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "component", 
+                                                  BAD_CAST component->getClass().c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", 
+                                                  BAD_CAST component->getName().c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "componentId", 
+                                                  BAD_CAST component->getId().c_str()));
+}
+
+void XmlPrinter::addCategory(xmlTextWriterPtr writer, DataItem::ECategory category)
+{
+  switch (category)
+  {
+    case DataItem::SAMPLE:
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Samples"));
+      break;
+      
+    case DataItem::EVENT:
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Events"));
+      break;
+      
+    case DataItem::CONDITION:
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Condition"));
+      break;
+  }
   
-  delete mSampleXml;
+}
+
+void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
+{
+  DataItem *dataItem = result->getDataItem();
+  if (dataItem->isCondition()) {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST result->getLevelString().c_str()));
+  } else {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST dataItem->getTypeString(false).c_str()));
+  }
+  addAttributes(writer, result->getAttributes());
   
-  return appendXmlEncode(toReturn);
+  if (!result->getValue().empty()) {
+    xmlChar *text = ConvertInput(result->getValue().c_str(), "UTF-8");
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    xmlFree(text);
+  }
+  
+  THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Streams    
+}
+
+void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
+                               std::map<string, string> *attributes)
+{
+  std::map<string, string>::iterator attr;
+  for (attr= attributes->begin(); attr!=attributes->end(); attr++)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr->first.c_str(), 
+                                                    BAD_CAST attr->second.c_str()));
+
+  }
 }
 
 /* XmlPrinter helper Methods */
-void XmlPrinter::initXmlDoc2(
-    xmlTextWriterPtr writer,
-    const string& xmlType,
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const Int64 nextSeq,
-    const Int64 firstSeq
-  )
+void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
+                             const string& xmlType,
+                             const unsigned int instanceId,
+                             const unsigned int bufferSize,
+                             const Int64 nextSeq,
+                             const Int64 firstSeq
+                             )
 {
   THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL));
   
@@ -182,7 +423,7 @@ void XmlPrinter::initXmlDoc2(
   string rootName = "MTConnect" + xmlType;
   string xmlns = "urn:mtconnect.org:MTConnect" + xmlType + ":1.1";
   string xsi = "urn:mtconnect.org:MTConnect" + xmlType +
-    ":1.1 http://www.mtconnect.org/schemas/MTConnect" + xmlType + "_1.1.xsd";
+  ":1.1 http://www.mtconnect.org/schemas/MTConnect" + xmlType + "_1.1.xsd";
   
   // Add root element attribtues
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
@@ -205,7 +446,7 @@ void XmlPrinter::initXmlDoc2(
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId", BAD_CAST intToString(instanceId).c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize", BAD_CAST intToString(bufferSize).c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST "1.1"));
-    
+  
   // Add additional attribtues for streams
   if (xmlType == "Streams")
   {
@@ -220,301 +461,25 @@ void XmlPrinter::initXmlDoc2(
   THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 }
 
-/* XmlPrinter helper Methods */
-xmlpp::Document * XmlPrinter::initXmlDoc(
-    const string& xmlType,
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const Int64 nextSeq,
-    const Int64 firstSeq
-  )
+
+void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, string &body, 
+                      map<string, string> *attributes)
 {
-  xmlpp::Document *doc = new xmlpp::Document;
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST element.c_str()));
   
-  string rootName = "MTConnect" + xmlType;
-  string xmlns = "urn:mtconnect.org:MTConnect" + xmlType + ":1.1";
-  string xsi = "urn:mtconnect.org:MTConnect" + xmlType +
-    ":1.1 http://www.mtconnect.org/schemas/MTConnect" + xmlType + "_1.1.xsd";
+  if (attributes != NULL && attributes->size() > 0) 
+    addAttributes(writer, attributes);
   
-  // Root
-  xmlpp::Element * root = doc->create_root_node(rootName);
-  root->set_attribute("xmlns:m", xmlns);
-  root->set_attribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-  root->set_attribute("xmlns", xmlns);
-  root->set_attribute("xsi:schemaLocation", xsi);
-  
-  // Header
-  xmlpp::Element * header = doc->get_root_node()->add_child("Header");
-  header->set_attribute("creationTime", getCurrentTime(GMT));
-  header->set_attribute("sender", "localhost");
-  header->set_attribute("instanceId", intToString(instanceId));
-  header->set_attribute("bufferSize", intToString(bufferSize));
-  header->set_attribute("version", "1.1");
-  
-  if (xmlType == "Streams")
+  if (!body.empty())
   {
-    header->set_attribute("nextSequence", int64ToString(nextSeq));
-    header->set_attribute("firstSequence", int64ToString(firstSeq));
-    header->set_attribute("lastSequence", int64ToString(nextSeq - 1));
+    xmlChar *text = ConvertInput(body.c_str(), "UTF-8");
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    xmlFree(text);
   }
   
-  return doc;
+  THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Element    
 }
 
-string XmlPrinter::printNode(
-    const xmlpp::Node *node,
-    const unsigned int indentation
-  )
-{
-  // Constant node data determined for each node
-  const xmlpp::TextNode* nodeText = dynamic_cast<const xmlpp::TextNode*>(node);
-  const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(node);
-  
-  xmlpp::Node::NodeList children = node->get_children();
-  bool hasChildren = (children.size() > 0);
-  
-  string toReturn;
-
-  // Ignore empty whitespace
-  if (nodeText && nodeText->is_white_space())
-  {
-    return "";
-  }
-  
-  Glib::ustring nodename = node->get_name();
-  
-  // Element node: i.e. "<element"
-  if (!nodeText && !nodename.empty())
-  {
-    toReturn += printIndentation(indentation) + "<" + nodename;
-  }
-  
-  if (nodeText)
-  {
-    string text = nodeText->get_content();
-    replaceIllegalCharacters(text);
-    toReturn += text;
-  }
-  else if (nodeElement)
-  {
-    // Print attributes for the element: i.e. attribute1="value1"
-    const xmlpp::Element::AttributeList& attributes =
-      nodeElement->get_attributes();
-    
-    xmlpp::Element::AttributeList::const_iterator attr;
-    for (attr = attributes.begin(); attr != attributes.end(); attr++)
-    {
-      toReturn += " " + (*attr)->get_name() +
-       "=\"" + (*attr)->get_value() + "\"";
-    }
-    
-    toReturn += (hasChildren) ? ">" : " />";
-    
-    if (!nodeElement->has_child_text())
-    {
-      toReturn += "\n";
-    }
-  }
-  
-  // If node does NOT have content, then it may have children
-  if (!dynamic_cast<const xmlpp::ContentNode*>(node))
-  {
-    xmlpp::Node::NodeList::iterator child;
-    for (child = children.begin(); child != children.end(); child++)
-    {
-      toReturn += printNode(*child, indentation + 2);
-    }
-  }
-  
-  // Close off xml tag, i.e. </tag>
-  if (!nodeText && !nodename.empty() && hasChildren)// || indentation == 0)
-  {
-    if (!nodeElement->has_child_text())
-    {
-      toReturn += printIndentation(indentation);
-    }
-    toReturn += "</" + nodename + ">\n";
-  }
-  
-  return toReturn;
-}
-
-void XmlPrinter::printProbeHelper(
-    xmlpp::Element * element,
-    Component * component
-  )
-{
-  addAttributes(element, component->getAttributes());
-    
-  std::map<string, string> desc = component->getDescription();
-  
-  if (desc.size() > 0)
-  {
-    xmlpp::Element * description = element->add_child("Description");
-    addAttributes(description, &desc);
-  }
-  
-  list<DataItem *> datum = component->getDataItems();
-  if (datum.size() > 0)
-  {
-    xmlpp::Element * dataItems = element->add_child("DataItems");
-    
-    list<DataItem *>::iterator data;
-    for (data = datum.begin(); data!= datum.end(); data++)
-    {
-      xmlpp::Element * dataItem = dataItems->add_child("DataItem");
-      addAttributes(dataItem, (*data)->getAttributes());
-      string source = (*data)->getSource();
-      if (!source.empty())
-      {
-        xmlpp::Element * src = dataItem->add_child("Source");
-        src->add_child_text(source);
-      }
-      
-      if ((*data)->hasConstraints())
-      {
-        xmlpp::Element * constraints = dataItem->add_child("Constraints");
-        string s = (*data)->getMaximum();
-        if (!s.empty())
-        {
-          xmlpp::Element *v = constraints->add_child("Maximum");
-          v->add_child_text(s);
-        }          
-        s = (*data)->getMinimum();
-        if (!s.empty())
-        {
-          xmlpp::Element *v = constraints->add_child("Minimum");
-          v->add_child_text(s);
-        }          
-        vector<string> values = (*data)->getConstrainedValues();
-        vector<string>::iterator value;
-        for (value = values.begin(); value != values.end(); value++)
-        {
-          xmlpp::Element *v = constraints->add_child("Value");
-          v->add_child_text(*value);
-        }
-      }
-    }
-  }
-
-  list<Component *> children = component->getChildren();
-  
-  if (children.size() > 0)
-  {
-    xmlpp::Element * components = element->add_child("Components");
-    
-    list<Component *>::iterator child;
-    for (child = children.begin(); child != children.end(); child++)
-    {
-      xmlpp::Element * component = components->add_child((*child)->getClass());
-      printProbeHelper(component, *child);
-    }
-  }
-}
-
-string XmlPrinter::appendXmlEncode(const string& xml)
-{
-  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xml;
-}
-
-string XmlPrinter::printIndentation(unsigned int indentation)
-{
-  string indents;
-  for (unsigned int i = 0; i < indentation; i++)
-  {
-    indents += " ";
-  }
-  return indents;
-}
-
-void XmlPrinter::addAttributes(
-    xmlpp::Element *element,
-    std::map<string, string> *attributes
-  )
-{
-  std::map<string, string>::iterator attr;
-  for (attr= attributes->begin(); attr!=attributes->end(); attr++)
-  {
-    element->set_attribute(attr->first, attr->second);
-  }
-}
-
-xmlpp::Element * XmlPrinter::getDeviceStream(
-    xmlpp::Element *element,
-    Device *device,
-    std::map<string, xmlpp::Element *> &devices
-  )
-{
-  xmlpp::Element *deviceStream = devices[device->getName()];
-  if (deviceStream != NULL)
-    return deviceStream;
-  
-  // No element for device found, create a new one
-  deviceStream = element->add_child("DeviceStream");
-  deviceStream->set_attribute("name", device->getName());
-  deviceStream->set_attribute("uuid", device->getUuid());
-  devices[device->getName()] = deviceStream;
-  
-  return deviceStream;
-}
-
-void XmlPrinter::addElement(ComponentEvent *result,
-			    xmlpp::Element *streams,
-			    std::map<string, xmlpp::Element *> &elements,
-			    std::map<string, xmlpp::Element *> &components,
-			    std::map<string, xmlpp::Element *> &devices)
-{
-  DataItem *dataItem = result->getDataItem();
-  Component *component = dataItem->getComponent();
-  const char *dataName = "";
-  switch (dataItem->getCategory())
-  {
-  case DataItem::SAMPLE:
-    dataName = "Samples";
-    break;
-
-  case DataItem::EVENT:
-    dataName = "Events";
-    break;
-
-  case DataItem::CONDITION:
-    dataName = "Condition";
-    break;
-  }
-  
-  string key = component->getId() + dataName;
-
-  xmlpp::Element *element = elements[key];
-  xmlpp::Element *child;
-  
-  if (element == NULL)
-  {
-    xmlpp::Element * componentStream = components[component->getId()];
-    if (componentStream == NULL)
-    {
-      xmlpp::Element *deviceStream = 
-        getDeviceStream(streams, component->getDevice(), devices);
-      
-      componentStream = deviceStream->add_child("ComponentStream");
-      components[component->getId()] = componentStream;
-      
-      componentStream->set_attribute("component", component->getClass());
-      componentStream->set_attribute("name", component->getName());
-      componentStream->set_attribute("componentId", component->getId());
-    }
-
-    elements[key] = element = componentStream->add_child(dataName);
-  }
-
-  if (dataItem->isCondition()) {
-    child = element->add_child(result->getLevelString());
-  } else {
-    child = element->add_child(dataItem->getTypeString(false));
-  }
-  if (!result->getValue().empty())
-    child->add_child_text(result->getValue());
-  addAttributes(child, result->getAttributes());
-}
 
 /**
  * ConvertInput:
