@@ -53,50 +53,50 @@ void XmlPrinterTest::testPrintError()
 {
   PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
   
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@instanceId", "123");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@bufferSize", "9999");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error@errorCode", "ERROR_CODE");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Error", "ERROR TEXT!");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "ERROR_CODE");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "ERROR TEXT!");
 }
 
 void XmlPrinterTest::testPrintProbe()
 {  
   PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
     
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@instanceId", "123");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@bufferSize", "9999");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
   
   // Check Description
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Description@manufacturer", "NIST");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Description@serialNumber", "1122");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Description", "Linux CNC Device");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "NIST");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "1122");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description", "Linux CNC Device");
   
   // Check Axes
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Axes@name", "Axes");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Axes@name", "Axes");
   
   // Check Spindle
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Rotary@name", "C");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Rotary/m:DataItems/m:DataItem@type", "SPINDLE_SPEED");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Rotary/m:DataItems/m:DataItem[@type='ROTARY_MODE']@name",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Rotary@name", "C");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Rotary/m:DataItems/m:DataItem@type", "SPINDLE_SPEED");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Rotary/m:DataItems/m:DataItem[@type='ROTARY_MODE']@name",
                                     "Smode");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Rotary/m:DataItems/m:DataItem[@type='ROTARY_MODE']/m:Constraints/m:Value",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Rotary/m:DataItems/m:DataItem[@type='ROTARY_MODE']/m:Constraints/m:Value",
                                     "SPINDLE");
   
   // Check Linear Axis
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@type", "POSITION");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@name", "Xact");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem@significantDigits", "6");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']//m:Maximum", "200");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']/m:Constraints/m:Minimum", "0");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']/m:Constraints/m:Maximum", "200");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Linear[@name='X']/m:DataItems/m:DataItem@type", "POSITION");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Linear[@name='X']/m:DataItems/m:DataItem@name", "Xact");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Linear[@name='X']/m:DataItems/m:DataItem@significantDigits", "6");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']//m:Maximum", "200");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']/m:Constraints/m:Minimum", "0");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Linear[@name='X']/m:DataItems/m:DataItem[@type='LOAD']/m:Constraints/m:Maximum", "200");
 
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='Z']/m:DataItems/m:DataItem@type", "POSITION");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Linear[@name='Z']/m:DataItems/m:DataItem@name", "Zact");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Linear[@name='Z']/m:DataItems/m:DataItem@type", "POSITION");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Linear[@name='Z']/m:DataItems/m:DataItem@name", "Zact");
   
   // Check for Path component
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Controller//m:Path/m:DataItems/m:DataItem[@type='PATH_POSITION']@name",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Controller//m:Path/m:DataItems/m:DataItem[@type='PATH_POSITION']@name",
                                     "Ppos");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:DataItem[@id='clc']@category", "CONDITION");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='clc']@category", "CONDITION");
 
 }
 
@@ -122,25 +122,25 @@ void XmlPrinterTest::testPrintCurrent()
   checkpoint.getComponentEvents(list);
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
   
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", "0");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Samples/m:SpindleSpeed[@name='Sovr']", "100");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom']", "0");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Samples/m:SpindleSpeed[@name='Sspeed']", "100");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact']", "0.00199");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom']", "0.00189");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Z']/m:Samples/m:Position[@name='Zact']", "0.0002");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Z']/m:Samples/m:Position[@name='Zcom']", "0.0003");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Block", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", "0");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Samples/m:SpindleSpeed[@name='Sovr']", "100");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom']", "0");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Samples/m:SpindleSpeed[@name='Sspeed']", "100");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact']", "0.00199");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom']", "0.00189");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Z']/m:Samples/m:Position[@name='Zact']", "0.0002");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Z']/m:Samples/m:Position[@name='Zcom']", "0.0003");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Block", 
                                     "x-0.132010 y-0.158143");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Execution",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Execution",
                                     "READY");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:ControllerMode",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:ControllerMode",
                                     "AUTOMATIC");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Line",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Line",
                                     "0");    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Program",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Program",
                                     "/home/mtconnect/simulator/spiral.ngc");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='power']/m:Events/m:PowerStatus",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='power']/m:Events/m:PowerStatus",
                                     "ON");
 }
 
@@ -163,29 +163,29 @@ void XmlPrinterTest::testPrintSample()
     
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
   
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "/m:MTConnectStreams/m:Streams/m:DeviceStream/m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][1]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams/m:Streams/m:DeviceStream/m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][1]", 
                                     "0.553472");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][2]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][2]", 
                                     "0.556826");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom'][1]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom'][1]", 
                                     "0.551123");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom'][2]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom'][2]", 
                                     "0.55582");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][3]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][3]", 
                                     "0.560181");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][4]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][4]", 
                                     "-0.895613");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact'][1]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact'][1]", 
                                     "-0.900624");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact'][2]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Yact'][2]", 
                                     "-0.897574");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom'][1]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom'][1]", 
                                     "-0.89692");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom'][2]", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom'][2]", 
                                     "-0.894742");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Line",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Line",
                                     "229");    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Events/m:Block",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Block",
                                     "x-1.149250 y1.048981");    
 }
 
@@ -215,31 +215,31 @@ void XmlPrinterTest::testCondition()
   checkpoint.getComponentEvents(list);
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
 
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning",
                                     "Spindle Overtemp");    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@type",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@type",
                                     "TEMPERATURE");    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@qualifier",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@qualifier",
                                     "HIGH");    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeCode",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeCode",
                                     "OTEMP");    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeSeverity",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeSeverity",
                                     "1");    
 
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Condition/m:Normal",
                                     0);
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal@qualifier",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Condition/m:Normal@qualifier",
                                     0);    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='path']/m:Condition/m:Normal@nativeCode",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Condition/m:Normal@nativeCode",
                                     0);    
 
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeCode",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeCode",
                                     "LOGIC");    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault",
                                     "PLC Error");    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@qualifier",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@qualifier",
                                     0);    
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeSeverity",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeSeverity",
                                     "2");
 }
 
@@ -253,19 +253,19 @@ void XmlPrinterTest::testVeryLargeSequence()
   checkpoint.getComponentEvents(list);
   PARSE_XML(XmlPrinter::printSample(123, 131072, (((Int64)1) << 48) + 3, (((Int64)1) << 48) + 1, list));
   
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", 
                                     "0");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']@sequence", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']@sequence", 
                                     "281474976710657");
   
 
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom']", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom']", 
                                     "123");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom']@sequence", 
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xcom']@sequence", 
                                     "281474976710659");
   
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@firstSequence", "281474976710657");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(root, "//m:Header@nextSequence", "281474976710659");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@firstSequence", "281474976710657");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", "281474976710659");
 
   
 }

@@ -36,7 +36,9 @@
 #include <string>
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
-#include <libxml++/libxml++.h>
+#include <libxml/tree.h>
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
 
 #include "globals.hpp"
 
@@ -58,16 +60,14 @@ std::string &trim(std::string &str);
 
 
 /// Asserts that two XML strings are equivalent.
-#define CPPUNITTEST_ASSERT_XML_PATH_EQUAL(node, path, expected) \
- ::xpathTest(node, path, expected, CPPUNIT_SOURCELINE() )
+#define CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, path, expected) \
+ ::xpathTest(doc, path, expected, CPPUNIT_SOURCELINE() )
 
-void xpathTest(const xmlpp::Node* node, const char *xpath, const char *expected,
+void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
                CPPUNIT_NS::SourceLine sourceLine);
 
 #define PARSE_XML(expr) \
   string result = expr;\
-  xmlpp::DomParser parser; \
-  parser.parse_memory(result); \
-  CPPUNIT_ASSERT(parser); \
-  const xmlpp::Node* root = parser.get_document()->get_root_node();
+  xmlDocPtr doc = xmlParseMemory(result.c_str(), result.length()); \
+  CPPUNIT_ASSERT(doc);
 

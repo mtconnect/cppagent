@@ -34,7 +34,6 @@
 #ifndef XML_PARSER_TEST_HPP
 #define XML_PARSER_TEST_HPP
 
-#include <libxml++/libxml++.h>
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 

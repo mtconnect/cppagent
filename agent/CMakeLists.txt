@@ -11,11 +11,6 @@ set(CMAKE_FIND_APPBUNDLE NEVER)
 
 if(WIN32)
   set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.7.3/include )
-  file(GLOB LibXML2_LIBRARIES ../win32/libxml2-2.7.3/lib/libxml2.lib )
-  set(Glibmm_INCLUDE_DIRS ../win32/glibmm-2.4/include)
-  file(GLOB Glibmm_LIBRARIES ../win32/glibmm-2.4/lib/glibmm.lib)
-  set(LibXML++_PKGCONF_INCLUDE_DIRS ../win32/libxml++-2.6/include)
-  set(LibXML++_PKGCONF_LIBRARY_DIRS ../win32/libxml++-2.6/lib)
 endif(WIN32)
 
 if(UNIX)
@@ -42,17 +37,10 @@ set(agent_srcs cppagent.cpp
 
 include_directories(../lib)
 
-find_package(LibXML++ REQUIRED)
+find_package(LibXML2 REQUIRED)
 
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
-include_directories(${LibXML++_INCLUDE_DIRS} ${Glib_INCLUDE_DIRS} ${Glibmm_INCLUDE_DIRS} 
-                    			  ${LibXML2_INCLUDE_DIRS} ${SigC++_INCLUDE_DIRS}
-					  )
+include_directories(${LibXML2_INCLUDE_DIRS})
 
 add_executable(agent ${agent_srcs})
-target_link_libraries(agent ${LibXML++_LIBRARIES} ${Glibmm_LIBRARIES} 
-			    ${LibXML2_LIBRARIES} ${LINUX_LIBRARIES})
-
-if(WIN32)
-  configure_file(../win32/libxml++-2.6/bin/xml++-2.6.dll ${RUNTIME_OUTPUT_DIRECTORY} COPYONLY)
-endif(WIN32)
+target_link_libraries(agent ${LibXML2_LIBRARIES})

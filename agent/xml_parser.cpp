@@ -73,7 +73,7 @@ XmlParser::XmlParser(const string& xmlPath)
     }
     
     xmlNodeSetPtr nodeset = devices->nodesetval;
-    if (nodeset == NULL || nodeset->nodeNr == 0)
+    if (nodeset->nodeNr == 0)
     {
       throw (string) "Could not find Device in XML configuration";
     }

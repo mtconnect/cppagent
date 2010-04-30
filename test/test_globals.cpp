@@ -33,6 +33,7 @@
 
 #include "test_globals.hpp"
 #include <libxml/tree.h>
+#include <libxml/xpathInternals.h>
 
 using namespace std;
 
@@ -85,9 +86,11 @@ void fillAttribute(
   xmlString.insert(pos, value);
 }
 
-void xpathTest(const xmlpp::Node* node, const char *xpath, const char *expected,
+void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
                CPPUNIT_NS::SourceLine sourceLine)
 {
+  xmlNodePtr root = xmlDocGetRootElement(doc);
+  
   string path(xpath), attribute;
   size_t pos = path.find_first_of('@');
   while (pos != string::npos && attribute.empty()) {
@@ -98,69 +101,76 @@ void xpathTest(const xmlpp::Node* node, const char *xpath, const char *expected,
     pos = path.find_first_of('@', pos + 1);
   }
   
-  xmlpp::Node::PrefixNsMap spaces;
-  spaces.insert(pair<Glib::ustring, Glib::ustring>("m", node->get_namespace_uri()));
-  xmlpp::NodeSet set = node->find(path, spaces);
+  xmlXPathContextPtr xpathCtx = xmlXPathNewContext(doc);
+  xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->nsDef->href);
   
-  if (set.size() < 1)
+  xmlXPathObjectPtr obj = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
+  
+  if (obj == NULL || obj->nodesetval->nodeNr == 0)
   {
     CPPUNIT_NS::OStringStream message;
     message << "Xpath " << xpath << " did not match any nodes in XML document";
     CPPUNIT_NS::Asserter::fail(message.str(), sourceLine);
+    if (obj != NULL)
+      xmlXPathFreeObject(obj);
+    xmlXPathFreeContext(xpathCtx);
     return;
   }
   
   // Special case when no children are expected
-  xmlpp::Node *first = set.front();
+  xmlNodePtr first = obj->nodesetval->nodeTab[0];
   if (expected == 0)
   {
     CPPUNIT_NS::OStringStream message;
     message << "Xpath " << xpath << " was not supposed to have any children.";
-    xmlpp::Node::NodeList children = first->get_children();
     bool has_content = false;
-    xmlpp::Node::NodeList::iterator child;
-    for (child = children.begin(); !has_content && child != children.end(); child++)
+    for (xmlNodePtr child = first->children; !has_content && child != NULL; child = child->next)
     {
-      if ((*child)->cobj()->type == XML_ELEMENT_NODE)
+      if (child->type == XML_ELEMENT_NODE)
       {
         has_content = true;
       } 
-      else if (first->cobj()->type == XML_TEXT_NODE)
+      else if (child->type == XML_TEXT_NODE)
       {
-        string res = ((xmlpp::TextNode*) *child)->get_content();
+        string res = (const char*) child->content;
         has_content = !trim(res).empty();
       }
     }
     
-    CPPUNIT_NS::Asserter::failIf(has_content, message.str(), sourceLine);    
+    xmlXPathFreeObject(obj);
+    xmlXPathFreeContext(xpathCtx);
+    
+    CPPUNIT_NS::Asserter::failIf(has_content, message.str(), sourceLine);
     return;
   }
   
   string actual;
-  xmlpp::Element *ele;
-  switch(first->cobj()->type)
+  switch(first->type)
   {
     case XML_ELEMENT_NODE:
-      ele = (xmlpp::Element*) first;
-      if (!attribute.empty())
-      {
-        actual = ele->get_attribute(attribute)->get_value();
+      xmlChar *text;
+      if (first->properties != NULL) {
+        text = xmlGetProp(first, BAD_CAST attribute.c_str());
       } else {
-        actual = ele->get_child_text()->get_content();
+        text = xmlNodeGetContent(first);
       }
+      if (text != NULL) {
+        actual = (const char*) text;
+        xmlFree(text);
+      }      
       break;
       
     case XML_ATTRIBUTE_NODE:
-      actual = ((xmlpp::Attribute*) first)->get_value();
+      actual = (const char *) first->content;
       break;
       
       
     case XML_TEXT_NODE:
-      actual = ((xmlpp::TextNode*) first)->get_content();
+      actual = (const char *) first->content;
       break;
       
     default:
-      cerr << "Cannot handle type: " << first->cobj()->type << endl;
+      cerr << "Cannot handle type: " << first->type << endl;
   }
   
   trim(actual);
