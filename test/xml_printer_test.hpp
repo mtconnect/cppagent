@@ -41,8 +41,6 @@
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
-#include <libxml++/libxml++.h>
-
 #include "component_event.hpp"
 #include "data_item.hpp"
 #include "device.hpp"

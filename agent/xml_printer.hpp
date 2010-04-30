@@ -37,7 +37,6 @@
 #include <map>
 #include <list>
 
-#include <libxml/encoding.h>
 #include <libxml/xmlwriter.h>
 
 #include "component_event.hpp"
