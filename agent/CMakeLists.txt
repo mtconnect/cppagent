@@ -10,7 +10,8 @@ set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
 set(CMAKE_FIND_APPBUNDLE NEVER)
 
 if(WIN32)
-  set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.7.3/include )
+  set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.7.7/include )
+  file(GLOB LibXML2_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2.lib )
 endif(WIN32)
 
 if(UNIX)

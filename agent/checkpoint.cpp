@@ -137,17 +137,17 @@ void Checkpoint::filter(std::set<std::string> &aFilter)
     map<string, ComponentEventPtr*>::iterator it = mEvents.begin();
     while (it != mEvents.end())
     {
-      if (mFilter.count(it->first) == 0) {
 #ifdef WIN32
-	it = 
-#endif
-	  mEvents.erase(it);
-#ifndef WIN32
-	++it;
-#endif
+      if (mFilter.count(it->first) == 0) {
+        it = mEvents.erase(it);
       } else {
- 	++it;
+        ++it;
       }
+#else
+      if (mFilter.count(it->first) == 0)
+          mEvents.erase(it);        
+        ++it;
+#endif
     }
   }
 }
