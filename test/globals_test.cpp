@@ -1,3 +1,4 @@
+
 /*
 * Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
 * All rights reserved.
@@ -32,6 +33,11 @@
 */
 
 #include "globals_test.hpp"
+
+#ifdef WIN32
+#include <windows.h>
+#define sleep(s) ::Sleep(s * 1000)
+#endif
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(GlobalsTest);

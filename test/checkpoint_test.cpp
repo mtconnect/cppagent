@@ -232,23 +232,23 @@ void CheckpointTest::testGetComponentEvents()
 
 void CheckpointTest::testFilter()
 {
-  ComponentEventPtr p;
+  ComponentEventPtr p1, p2, p3, p4;
   string time("NOW"), value("123"), warning("WARNING|CODE|HIGH|Over..."),
     normal("NORMAL|CODE|HIGH|Over...");
   std::set<string> filter;
   filter.insert(mDataItem1->getId());
   
-  p = new ComponentEvent(*mDataItem1, 2, time, warning);
-  mCheckpoint->addComponentEvent(p);
-  p->unrefer();
+  p1 = new ComponentEvent(*mDataItem1, 2, time, warning);
+  mCheckpoint->addComponentEvent(p1);
+  p1->unrefer();
   
-  p = new ComponentEvent(*mDataItem1, 2, time, warning);
-  mCheckpoint->addComponentEvent(p);
-  p->unrefer();
+  p2 = new ComponentEvent(*mDataItem1, 2, time, warning);
+  mCheckpoint->addComponentEvent(p2);
+  p2->unrefer();
 
-  p = new ComponentEvent(*mDataItem2, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
-  p->unrefer();
+  p3 = new ComponentEvent(*mDataItem2, 2, time, value);
+  mCheckpoint->addComponentEvent(p3);
+  p3->unrefer();
   
   std::map<string, string> attributes;
   attributes["id"] = "4";
@@ -259,9 +259,9 @@ void CheckpointTest::testFilter()
   attributes["category"] = "SAMPLE";
   DataItem *d1 = new DataItem(attributes);
   
-  p = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
-  p->unrefer();
+  p4 = new ComponentEvent(*d1, 2, time, value);
+  mCheckpoint->addComponentEvent(p4);
+  p4->unrefer();
 
   vector<ComponentEventPtr> list;
   mCheckpoint->getComponentEvents(list);
