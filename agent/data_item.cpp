@@ -211,8 +211,13 @@ string DataItem::getCamelType(const string& aType)
   {
     return "";
   }
+  
+  string camel;
+  if (aType[0] == 'x' && aType[1] == ':')
+    camel = aType.substr(2);
+  else
+    camel = aType;
 
-  string camel = aType;
   string::iterator second = camel.begin();
   second++;
   transform(second, camel.end(), second, ::tolower);

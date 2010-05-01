@@ -140,7 +140,7 @@ void XmlPrinterTest::testPrintCurrent()
                                     "0");    
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Program",
                                     "/home/mtconnect/simulator/spiral.ngc");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='power']/m:Events/m:PowerStatus",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='power']/m:Events/m:PowerState",
                                     "ON");
 }
 
