@@ -31,55 +31,69 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef ADAPTER_HPP
-#define ADAPTER_HPP
+#ifndef COMPONENT_EVENT_TEST_HPP
+#define COMPONENT_EVENT_TEST_HPP
 
+#include <map>
 #include <string>
+#include <dlib/sockets.h>
 
-#include "dlib/sockets.h"
-#include "dlib/threads.h"
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
 
-#include "agent.hpp"
 #include "connector.hpp"
-#include "globals.hpp"
 
-class Agent;
-
-using namespace dlib;
-
-class Adapter : public Connector, public threaded_object
+// Simple subclass for testing
+class TestConnector : public Connector 
 {
 public:
-  /* Associate adapter with a device & connect to the server & port */
-  Adapter(
-    const std::string& device,
-    const std::string& server, 
-    const unsigned int port
-  );
+  TestConnector(const std::string& server, unsigned int port)
+    : Connector(server, port), mDisconnected(false) {}
   
-  /* Virtual destructor */
-  virtual ~Adapter();
+  virtual void processData(const std::string& data) {
+    mData = data;
+  }
+
+  virtual void protocolCommand(const std::string& data) {
+    mCommand = data;
+  }
+
+  virtual void disconnected() { mDisconnected = true; }
+  bool heartbeats() { return mHeartbeats; }
+
+public:
+  std::string mData;
+  std::string mCommand;
+  bool mDisconnected;
+};
   
-  /* Set pointer to the agent */
-  void setAgent(Agent& agent) { mAgent = &agent; }
+class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
+{
+  CPPUNIT_TEST_SUITE(ConnectorTest);
+  CPPUNIT_TEST(testConnection);
+  CPPUNIT_TEST(testDataCapture);
+  CPPUNIT_TEST(testDisconnect);
+  CPPUNIT_TEST(testProtocolCommand);
+  CPPUNIT_TEST(testHeartbeat);
+  CPPUNIT_TEST_SUITE_END();
   
-  /* Inherited method to incoming data from the server */
-  virtual void processData(const std::string& data);
-  virtual void protocolCommand(const std::string& data) {}
-  
-  /* Method called when connection is lost. */
-  virtual void disconnected();
+public:
+  void setUp();
+  void tearDown();
+  void thread();
   
 protected:
-  /* Pointer to the agent */
-  Agent *mAgent;
+  dlib::scoped_ptr<dlib::listener> mServer;
+  dlib::scoped_ptr<dlib::connection> mServerSocket;
+  dlib::scoped_ptr<TestConnector> mConnector;
+  unsigned short mPort;
   
-  /* Name of device associated with adapter */
-  std::string mDevice;
-    
-private:
-  /* Inherited and is run as part of the threaded_object */
-  void thread();
+protected:
+  void testConnection();
+  void testDataCapture();
+  void testDisconnect();
+  void testProtocolCommand();
+  void testHeartbeat();
 };
 
 #endif

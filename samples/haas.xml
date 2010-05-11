@@ -2,46 +2,46 @@
 <MTConnectDevices>
   <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.0"/>
   <Devices>
-    <Device iso841Class="6" uuid="000" name="Haas_1" sampleRate="10.0" id="4">
+    <Device iso841Class="6" uuid="000" name="Haas_1" sampleRate="10.0" id="d">
       <Description manufacturer="Haas" serialNumber=""/>
       <DataItems>
-        <DataItem type="ALARM" category="EVENT" id="3" name="alarm"/>
+        <DataItem type="ALARM" category="EVENT" id="al" name="alarm"/>
       </DataItems>
       <Components>
-        <Axes name="Axes" id="5">
+        <Axes name="Axes" id="ax">
           <Components>
-            <Spindle name="S" id="10">
+            <Spindle name="S" id="s">
               <DataItems>
                 <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE" id="12" subType="ACTUAL" name="Sspeed">
                   <Source>spindle_speed</Source>
                 </DataItem>
               </DataItems>
             </Spindle>
-            <Linear name="X" id="7">
+            <Linear name="X" id="x">
               <DataItems>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="14" subType="ACTUAL" name="Xact"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x1" subType="ACTUAL" name="Xact"/>
               </DataItems>
             </Linear>
-            <Linear name="Y" id="8">
+            <Linear name="Y" id="y">
               <DataItems>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="16" subType="ACTUAL" name="Yact"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y1" subType="ACTUAL" name="Yact"/>
               </DataItems>
             </Linear>
-            <Linear name="Z" id="9">
+            <Linear name="Z" id="z">
               <DataItems>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="18" subType="ACTUAL" name="Zact"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="z1" subType="ACTUAL" name="Zact"/>
               </DataItems>
             </Linear>
           </Components>
         </Axes>
-        <Controller name="Controller" id="11">
+        <Controller name="Controller" id="c">
           <DataItems>
-            <DataItem type="CONTROLLER_MODE" category="EVENT" id="21" name="mode"/>
-            <DataItem type="PROGRAM" category="EVENT" id="23" name="program"/>
-            <DataItem type="EXECUTION" category="EVENT" id="24" name="execution"/>
+            <DataItem type="CONTROLLER_MODE" category="EVENT" id="c1" name="mode"/>
+            <DataItem type="PROGRAM" category="EVENT" id="c2" name="program"/>
+            <DataItem type="EXECUTION" category="EVENT" id="c3" name="execution"/>
           </DataItems>
         </Controller>
-        <Power name="power" id="2">
+        <Power name="power" id="p">
           <DataItems>
             <DataItem type="POWER_STATUS" category="EVENT" id="1" name="power"/>
           </DataItems>

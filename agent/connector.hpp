@@ -58,6 +58,7 @@ public:
   
   /* Abstract method to handle what to do with each line of data from Socket */
   virtual void processData(const std::string& data) = 0;
+  virtual void protocolCommand(const std::string& data) = 0;
   
   /* The connected state of this connection */
   bool isConnected() { return mConnected; }
@@ -66,8 +67,15 @@ public:
   virtual void disconnected() = 0;
 
 protected:
+  void startHeartbeats(const std::string &buf);
+  void close();
+
+protected:
   /* Name of the server to connect to */
   std::string mServer;
+
+  // Connection
+  dlib::scoped_ptr<dlib::connection> mConnection;  
   
   /* The port number to connect to */
   unsigned int mPort;
@@ -77,6 +85,10 @@ protected:
   
   /* The connected state of this connector */
   bool mConnected;
+  
+  // Heartbeats
+  bool mHeartbeats;
+  int mHeartbeatFrequency;
   
 private:
   /* Size of buffer to read at a time from the socket */  

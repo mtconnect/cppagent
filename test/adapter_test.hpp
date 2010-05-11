@@ -31,55 +31,31 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef ADAPTER_HPP
-#define ADAPTER_HPP
+#ifndef COMPONENT_EVENT_TEST_HPP
+#define COMPONENT_EVENT_TEST_HPP
 
+#include <map>
 #include <string>
 
-#include "dlib/sockets.h"
-#include "dlib/threads.h"
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
 
-#include "agent.hpp"
-#include "connector.hpp"
-#include "globals.hpp"
+#include "adapter.hpp"
 
-class Agent;
-
-using namespace dlib;
-
-class Adapter : public Connector, public threaded_object
+class AdapterTest : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(AdapterTest);
+  CPPUNIT_TEST(testAdapter);
+  CPPUNIT_TEST_SUITE_END();
+  
 public:
-  /* Associate adapter with a device & connect to the server & port */
-  Adapter(
-    const std::string& device,
-    const std::string& server, 
-    const unsigned int port
-  );
-  
-  /* Virtual destructor */
-  virtual ~Adapter();
-  
-  /* Set pointer to the agent */
-  void setAgent(Agent& agent) { mAgent = &agent; }
-  
-  /* Inherited method to incoming data from the server */
-  virtual void processData(const std::string& data);
-  virtual void protocolCommand(const std::string& data) {}
-  
-  /* Method called when connection is lost. */
-  virtual void disconnected();
+  void setUp();
+  void tearDown();
   
 protected:
-  /* Pointer to the agent */
-  Agent *mAgent;
   
-  /* Name of device associated with adapter */
-  std::string mDevice;
-    
-private:
-  /* Inherited and is run as part of the threaded_object */
-  void thread();
+protected:
+  void testAdapter();
 };
 
 #endif

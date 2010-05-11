@@ -37,7 +37,7 @@ using namespace std;
 
 /* Connector public methods */
 Connector::Connector(const string& server, unsigned int port)
-: mConnected(false)
+: mConnected(false), mHeartbeats(false)
 {
   mServer = server;
   mPort = port;
@@ -54,7 +54,9 @@ void Connector::connect()
   {
     // Connect to server:port, failure will throw dlib::socket_error exception
     // Using a smart pointer to ensure connection is deleted if exception thrown
-    scoped_ptr<connection> con(dlib::connect(mServer, mPort));
+    mConnection = dlib::connect(mServer, mPort);
+
+    // Check to see if this connection supports heartbeats.
     
     // Make sure connection buffer is clear
     mBuffer.clear();
@@ -68,7 +70,7 @@ void Connector::connect()
     mConnected = true;
     
     // Read from the socket, read is a blocking call
-    while ((status = con->read(sockBuf, SOCKET_BUFFER_SIZE)) > 0)
+    while ((status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE)) > 0)
     { 
       // Give a null terminator for the end of buffer
       sockBuf[status] = '\0';
@@ -87,8 +89,7 @@ void Connector::connect()
         if (newLine != mBuffer.length() - 1)
         {
           overflow = mBuffer.substr(newLine + 1);
-          string newBuffer = mBuffer.substr(0, newLine);
-          mBuffer = newBuffer;
+          mBuffer = mBuffer.substr(0, newLine);
         }
         
         // Search the buffer for new complete lines
@@ -97,7 +98,21 @@ void Connector::connect()
         
         while (stream.getline(buf, LINE_BUFFER_SIZE))
         {
-          processData(buf);
+	  // Check for heartbeats
+	  if (buf[0] == '*')
+	  {
+	    if (strncmp(buf.c_str(), "* PONG", 6) == 0)
+	    {
+	      if (!mHeartbeats)
+		startHeartbeats(buf);
+	    }
+	    else
+	    {
+	      protocolCommand(buf);
+	    }
+	  }
+	  else
+	    processData(buf);
         }
         
         // Clear buffer/insert overflow data
@@ -105,19 +120,48 @@ void Connector::connect()
       }
     }
     
-    disconnected();
-    mConnected = false;
-    
     // Code should never get here, if it does, notify the exit status
     logEvent("Connector::connect", "Connection exited with status " + status);
-    
-    // Close the connection gracefully
-    close_gracefully(con);
+
+    close();
   }
   catch (exception & e)
   {
     logEvent("Connector::connect", e.what());
   }
   
+}
+
+void Connector::startHeartbeats(const string aArg)
+{
+  size_t pos = aArg.find_last_of(' ');
+  if (pos != npos)
+  {
+    string freq = atoi(aArg.substr(pos + 1));
+    if (freq > 0 && freq < 20000)
+    {
+      mHeartbeats = true;
+      mHeartbeatFrequency = freq;
+    }
+    else
+    {
+      logEvent("Connector::startHeartbeats", "Bad heartbeat command " + aArg);
+      close();
+    }
+  }
+}
+
+void Connector::close()
+{
+  if (mConnected && mConnection.get() != NULL)
+  {
+    // Close the connection gracefully
+    close_gracefully(mConnection);
+    mConnection.reset();
+
+    // Call the disconnected callback.
+    mConnected = false;
+    disconnected();
+  }
 }
 

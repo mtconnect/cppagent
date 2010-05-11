@@ -31,56 +31,24 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef ADAPTER_HPP
-#define ADAPTER_HPP
+#include "adapter_test.hpp"
 
-#include <string>
+// Registers the fixture into the 'registry'
+CPPUNIT_TEST_SUITE_REGISTRATION(AdapterTest);
 
-#include "dlib/sockets.h"
-#include "dlib/threads.h"
+using namespace std;
 
-#include "agent.hpp"
-#include "connector.hpp"
-#include "globals.hpp"
-
-class Agent;
-
-using namespace dlib;
-
-class Adapter : public Connector, public threaded_object
+/* ComponentTest public methods */
+void AdapterTest::setUp()
 {
-public:
-  /* Associate adapter with a device & connect to the server & port */
-  Adapter(
-    const std::string& device,
-    const std::string& server, 
-    const unsigned int port
-  );
-  
-  /* Virtual destructor */
-  virtual ~Adapter();
-  
-  /* Set pointer to the agent */
-  void setAgent(Agent& agent) { mAgent = &agent; }
-  
-  /* Inherited method to incoming data from the server */
-  virtual void processData(const std::string& data);
-  virtual void protocolCommand(const std::string& data) {}
-  
-  /* Method called when connection is lost. */
-  virtual void disconnected();
-  
-protected:
-  /* Pointer to the agent */
-  Agent *mAgent;
-  
-  /* Name of device associated with adapter */
-  std::string mDevice;
-    
-private:
-  /* Inherited and is run as part of the threaded_object */
-  void thread();
-};
+}
 
-#endif
+void AdapterTest::tearDown()
+{
+}
+
+/* ComponentTest protected methods */
+void AdapterTest::testAdapter()
+{
+}
 

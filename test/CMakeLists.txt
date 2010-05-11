@@ -38,10 +38,12 @@ set(test_srcs test.cpp
 	       ../agent/options.cpp
 	       ../agent/xml_parser.cpp 
 	       ../agent/xml_printer.cpp
+	       adapter_test.cpp
 	       agent_test.cpp
 	       checkpoint_test.cpp
 	       component_test.cpp
 	       component_event_test.cpp
+	       connector_test.cpp
 	       data_item_test.cpp
 	       device_test.cpp
 	       globals_test.cpp
