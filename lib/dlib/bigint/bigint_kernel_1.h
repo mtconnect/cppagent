@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_BIGINT_KERNEl_1_
 #define DLIB_BIGINT_KERNEl_1_
@@ -354,7 +354,7 @@ namespace dlib
                 - rhs != 0 
                 - result->size >= lhs->digits_used 
                 - remainder->size >= lhs->digits_used 
-                - each parameter is unique (i.e. lhs != result, lhs != remainder, etc...)
+                - each parameter is unique (i.e. lhs != result, lhs != remainder, etc.)
             ensures
                 - result == lhs / rhs
                 - remainder == lhs % rhs

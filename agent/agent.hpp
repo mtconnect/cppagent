@@ -90,21 +90,10 @@ public:
   virtual ~Agent();
   
   /* Overridden method that is called per web request */  
-  bool on_request(
-    const req_type rtype,
-    const std::string& path,
-    std::string& result,
-    const map_type& queries,
-    const map_type& cookies,
-    queue_type& new_cookies,
-    const map_type& incoming_headers,
-    map_type& response_headers,
-    const std::string& foreign_ip,
-    const std::string& local_ip,
-    unsigned short foreign_port,
-    unsigned short local_port,
-    std::ostream& out // Added to allow streaming of data
-  );
+  virtual const std::string on_request (
+    const incoming_things& incoming,
+    outgoing_things& outgoing
+    );
   
   /* Add an adapter to the agent */
   Adapter * addAdapter(
@@ -146,11 +135,10 @@ public:
   
 protected:
   /* HTTP methods to handle the 3 basic calls */
-  bool handleCall(
+  std::string handleCall(
     std::ostream& out,
     const std::string& path,
-    std::string& result,
-    const map_type& queries,
+    const key_value_map& queries,
     const std::string& call,
     const std::string& device = ""
   );
@@ -159,9 +147,8 @@ protected:
   std::string handleProbe(const std::string& device);
   
   /* Handle stream calls, which includes both current and sample */
-  bool handleStream(
+  std::string handleStream(
     std::ostream& out,
-    std::string& result,
     const std::string& path,
     bool current,  
     unsigned int frequency,
@@ -200,7 +187,7 @@ protected:
   /* Perform a check on parameter and return a value or a code */
   int checkAndGetParam(
     std::string& result,
-    const map_type& queries,
+    const key_value_map& queries,
     const std::string& param,
     const int defaultValue,
     const int minValue = NO_VALUE,
@@ -211,7 +198,7 @@ protected:
   /* Perform a check on parameter and return a value or a code */
   Int64 checkAndGetParam64(
     std::string& result,
-    const map_type& queries,
+    const key_value_map& queries,
     const std::string& param,
     const Int64 defaultValue,
     const Int64 minValue = NO_VALUE,

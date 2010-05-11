@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_SOCKETS_EXTENSIONs_CPP
 #define DLIB_SOCKETS_EXTENSIONs_CPP
@@ -225,7 +225,7 @@ namespace dlib
 
             char junk[100];
             // wait for the other end to close their side
-            while (con->read(junk,sizeof(junk)) > 0);
+            while (con->read(junk,sizeof(junk)) > 0) ;
         }
         catch (...)
         {

@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_SVm_FUNCTION_ABSTRACT_
 #ifdef DLIB_SVm_FUNCTION_ABSTRACT_
@@ -31,6 +31,7 @@ namespace dlib
                 learned by a kernel based learning algorithm.  
         !*/
 
+        typedef K kernel_type;
         typedef typename K::scalar_type scalar_type;
         typedef typename K::sample_type sample_type;
         typedef typename K::mem_manager_type mem_manager_type;
@@ -41,7 +42,7 @@ namespace dlib
         scalar_vector_type alpha;
         scalar_type        b;
         K                  kernel_function;
-        sample_vector_type support_vectors;
+        sample_vector_type basis_vectors;
 
         decision_function (
         );
@@ -49,7 +50,7 @@ namespace dlib
             ensures
                 - #b == 0
                 - #alpha.nr() == 0
-                - #support_vectors.nr() == 0
+                - #basis_vectors.nr() == 0
         !*/
 
         decision_function (
@@ -64,11 +65,11 @@ namespace dlib
             const scalar_vector_type& alpha_,
             const scalar_type& b_,
             const K& kernel_function_,
-            const sample_vector_type& support_vectors_
-        ) : alpha(alpha_), b(b_), kernel_function(kernel_function_), support_vectors(support_vectors_) {}
+            const sample_vector_type& basis_vectors_
+        ) : alpha(alpha_), b(b_), kernel_function(kernel_function_), basis_vectors(basis_vectors_) {}
         /*!
             ensures
-                - populates the decision function with the given support vectors, weights(i.e. alphas),
+                - populates the decision function with the given basis vectors, weights(i.e. alphas),
                   b term, and kernel function.
         !*/
 
@@ -92,7 +93,7 @@ namespace dlib
         {
             scalar_type temp = 0;
             for (long i = 0; i < alpha.nr(); ++i)
-                temp += alpha(i) * kernel_function(x,support_vectors(i));
+                temp += alpha(i) * kernel_function(x,basis_vectors(i));
 
             return temp - b;
         }
@@ -137,20 +138,21 @@ namespace dlib
                 estimate of the probability that a given sample is in the +1 class.
         !*/
 
+        typedef K kernel_type;
         typedef typename K::scalar_type scalar_type;
         typedef typename K::sample_type sample_type;
         typedef typename K::mem_manager_type mem_manager_type;
 
-        scalar_type a;
-        scalar_type b;
+        scalar_type alpha;
+        scalar_type beta;
         decision_function<K> decision_funct;
 
         probabilistic_decision_function (
         );
         /*!
             ensures
-                - #a == 0
-                - #b == 0
+                - #alpha == 0
+                - #beta == 0
                 - #decision_function has its initial value
         !*/
 
@@ -163,13 +165,13 @@ namespace dlib
         !*/
 
         probabilistic_decision_function (
-            const scalar_type a_,
-            const scalar_type b_,
+            const scalar_type a,
+            const scalar_type b,
             const decision_function<K>& decision_funct_ 
-        ) : a(a_), b(b_), decision_funct(decision_funct_) {}
+        ) : alpha(a), beta(b), decision_funct(decision_funct_) {}
         /*!
             ensures
-                - populates the probabilistic decision function with the given a, b, 
+                - populates the probabilistic decision function with the given alpha, beta, 
                   and decision_function.
         !*/
 
@@ -193,12 +195,12 @@ namespace dlib
                       the class +1
         !*/
         {
-            // Evaluate the normal SVM decision function
+            // Evaluate the normal decision function
             scalar_type f = decision_funct(x);
             // Now basically normalize the output so that it is a properly
             // conditioned probability of x being in the +1 class given
-            // the output of the SVM.
-            return 1/(1 + std::exp(a*f + b));
+            // the output of the decision function.
+            return 1/(1 + std::exp(alpha*f + beta));
         }
     };
 
@@ -239,9 +241,19 @@ namespace dlib
             WHAT THIS OBJECT REPRESENTS 
                 This object represents a point in kernel induced feature space. 
                 You may use this object to find the distance from the point it 
-                represents to points in input space.
+                represents to points in input space as well as other points
+                represented by distance_functions.
+
+                Any routine that creates a distance_function should always
+                automatically populate the this->b field.  But for reference, 
+                this->b is supposed to contain the squared norm of the point
+                in kernel feature space.  So this means that if this function
+                is to compute a proper distance then this->b should always be equal 
+                to the following:
+                    trans(alpha)*kernel_matrix(kernel_function,basis_vectors)*alpha
         !*/
 
+        typedef K kernel_type;
         typedef typename K::scalar_type scalar_type;
         typedef typename K::sample_type sample_type;
         typedef typename K::mem_manager_type mem_manager_type;
@@ -252,7 +264,7 @@ namespace dlib
         scalar_vector_type alpha;
         scalar_type        b;
         K                  kernel_function;
-        sample_vector_type support_vectors;
+        sample_vector_type basis_vectors;
 
         distance_function (
         );
@@ -260,7 +272,7 @@ namespace dlib
             ensures
                 - #b == 0
                 - #alpha.nr() == 0
-                - #support_vectors.nr() == 0
+                - #basis_vectors.nr() == 0
         !*/
 
         distance_function (
@@ -275,11 +287,11 @@ namespace dlib
             const scalar_vector_type& alpha_,
             const scalar_type& b_,
             const K& kernel_function_,
-            const sample_vector_type& support_vectors_
-        ) : alpha(alpha_), b(b_), kernel_function(kernel_function_), support_vectors(support_vectors_) {}
+            const sample_vector_type& basis_vectors_
+        ) : alpha(alpha_), b(b_), kernel_function(kernel_function_), basis_vectors(basis_vectors_) {}
         /*!
             ensures
-                - populates the decision function with the given support vectors, weights(i.e. alphas),
+                - populates the distance function with the given basis vectors, weights(i.e. alphas),
                   b term, and kernel function.
         !*/
 
@@ -298,15 +310,15 @@ namespace dlib
         /*!
             ensures
                 - Let O(x) represent the point x projected into kernel induced feature space.
-                - let c == sum alpha(i)*O(support_vectors(i)) == the point in kernel space that
+                - let c == sum alpha(i)*O(basis_vectors(i)) == the point in kernel space that
                   this object represents.
-                - Then this object returns the distance between the points O(x) and c in kernel
+                - Then this object returns the distance between the point O(x) and c in kernel
                   space. 
         !*/
         {
             scalar_type temp = 0;
             for (long i = 0; i < alpha.nr(); ++i)
-                temp += alpha(i) * kernel_function(x,support_vectors(i));
+                temp += alpha(i) * kernel_function(x,basis_vectors(i));
 
             temp = b + kernel_function(x,x) - 2*temp; 
             if (temp > 0)
@@ -326,7 +338,7 @@ namespace dlib
             scalar_type temp = 0;
             for (long i = 0; i < alpha.nr(); ++i)
                 for (long j = 0; j < x.alpha.nr(); ++j)
-                    temp += alpha(i)*x.alpha(j) * kernel_function(support_vectors(i), x.support_vectors(j));
+                    temp += alpha(i)*x.alpha(j) * kernel_function(basis_vectors(i), x.basis_vectors(j));
 
             temp = b + x.b - 2*temp;
             if (temp > 0)
@@ -361,7 +373,8 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
-        typename function_type
+        typename function_type,
+        typename normalizer_type = vector_normalizer<typename function_type::sample_type>
         >
     struct normalized_function 
     {
@@ -370,22 +383,25 @@ namespace dlib
                 - function_type must be a function object with an overloaded
                   operator() similar to the other function objects defined in
                   this file.
-                - function_type::sample_type must be a dlib::matrix column
-                  matrix type
+
+            REQUIREMENTS ON normalizer_type
+                - normalizer_type must be a function object with an overloaded
+                  operator() that takes a sample_type and returns a sample_type.
 
             WHAT THIS OBJECT REPRESENTS 
                 This object represents a container for another function
-                object and an instance of the vector_normalizer object.  
+                object and an instance of a normlizer function.  
 
                 It automatically noramlizes all inputs before passing them
                 off to the contained function object.
         !*/
 
+        typedef typename function_type::kernel_type kernel_type;
         typedef typename function_type::scalar_type scalar_type;
         typedef typename function_type::sample_type sample_type;
         typedef typename function_type::mem_manager_type mem_manager_type;
 
-        vector_normalizer<sample_type> normalizer;
+        normalizer_type normalizer;
         function_type function;
 
         normalized_function (
@@ -431,10 +447,11 @@ namespace dlib
     };
 
     template <
-        typename K
+        typename function_type,
+        typename normalizer_type 
         >
     void serialize (
-        const normalized_function<K>& item,
+        const normalized_function<function_type, normalizer_type>& item,
         std::ostream& out
     );
     /*!
@@ -442,14 +459,138 @@ namespace dlib
     !*/
 
     template <
-        typename K
+        typename function_type,
+        typename normalizer_type 
         >
     void deserialize (
-        normalized_function<K>& item,
+        normalized_function<function_type, normalizer_type>& item,
         std::istream& in 
     );
     /*!
         provides serialization support for normalized_function
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename K
+        >
+    struct projection_function 
+    {
+        /*!
+            REQUIREMENTS ON K
+                K must be a kernel function object type as defined at the
+                top of dlib/svm/kernel_abstract.h
+
+            WHAT THIS OBJECT REPRESENTS 
+                This object represents a function that takes a data sample and projects
+                it into kernel feature space.  The result is a real valued column vector that 
+                represents a point in a kernel feature space.
+        !*/
+
+        typedef K kernel_type;
+        typedef typename K::scalar_type scalar_type;
+        typedef typename K::sample_type sample_type;
+        typedef typename K::mem_manager_type mem_manager_type;
+
+        typedef matrix<scalar_type,0,1,mem_manager_type> scalar_vector_type;
+        typedef matrix<scalar_type,0,0,mem_manager_type> scalar_matrix_type;
+        typedef matrix<sample_type,0,1,mem_manager_type> sample_vector_type;
+
+        scalar_matrix_type weights;
+        K                  kernel_function;
+        sample_vector_type basis_vectors;
+
+        projection_function (
+        );
+        /*!
+            ensures
+                - #weights.size() == 0
+                - #basis_vectors.size() == 0
+        !*/
+
+        projection_function (
+            const projection_function& f
+        );
+        /*!
+            ensures
+                - #*this is a copy of f
+        !*/
+
+        projection_function (
+            const scalar_matrix_type& weights_,
+            const K& kernel_function_,
+            const sample_vector_type& basis_vectors_
+        ) : weights(weights_), kernel_function(kernel_function_), basis_vectors(basis_vectors_) {}
+        /*!
+            ensures
+                - populates the projection function with the given basis vectors, weights,
+                  and kernel function.
+        !*/
+
+        projection_function& operator= (
+            const projection_function& d
+        );
+        /*!
+            ensures
+                - #*this is identical to d
+                - returns *this
+        !*/
+
+        long out_vector_size (
+        ) const;
+        /*!
+            ensures
+                - returns weights.nr()
+                  (i.e. returns the dimensionality of the vectors output by this projection_function.)
+        !*/
+
+        const scalar_vector_type& operator() (
+            const sample_type& x
+        ) const
+        /*!
+            requires
+                - weights.nc() == basis_vectors.size()
+                - out_vector_size() > 0
+            ensures
+                - Takes the given x sample and projects it onto part of the kernel feature 
+                  space spanned by the basis_vectors.  The exact projection arithmetic is 
+                  defined below.
+        !*/
+        {
+            // Run the x sample through all the basis functions we have and then
+            // multiply it by the weights matrix and return the result.  Note that
+            // the temp vectors are here to avoid reallocating their memory every
+            // time this function is called.
+            temp1 = kernel_matrix(kernel_function, basis_vectors, x);
+            temp2 = weights*temp1;
+            return temp2;
+        }
+
+    private:
+        mutable scalar_vector_type temp1, temp2;
+    };
+
+    template <
+        typename K
+        >
+    void serialize (
+        const projection_function<K>& item,
+        std::ostream& out
+    );
+    /*!
+        provides serialization support for projection_function
+    !*/
+
+    template <
+        typename K
+        >
+    void deserialize (
+        projection_function<K>& item,
+        std::istream& in 
+    );
+    /*!
+        provides serialization support for projection_function
     !*/
 
 // ----------------------------------------------------------------------------------------

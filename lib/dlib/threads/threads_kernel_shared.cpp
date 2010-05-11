@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_THREADS_KERNEL_SHARED_CPp_
 #define DLIB_THREADS_KERNEL_SHARED_CPp_
@@ -109,6 +109,13 @@ namespace dlib
                 data_mutex.unlock();
                 delete this;
             }
+            else
+            {
+                // There are still some user threads running so there isn't
+                // much we can really do.  Just let the program end without
+                // cleaning up threading resources.  
+                data_mutex.unlock();
+            }
         }
 
 // ----------------------------------------------------------------------------------------
@@ -120,12 +127,11 @@ namespace dlib
             reg.m.lock();
             const thread_id_type id = get_thread_id();
             thread_id_type id_copy;
-            unsigned long count = reg.reg.count(id);
             member_function_pointer<>::kernel_1a mfp;
 
             // Remove all the member function pointers for this thread from the tree 
             // and call them.
-            for (unsigned long i = 0; i < count; ++i)
+            while (reg.reg[id] != 0)
             {
                 reg.reg.remove(id,id_copy,mfp);
                 reg.m.unlock();
@@ -226,35 +232,11 @@ namespace dlib
                     self.data_empty.signal();
 
                     self.data_mutex.unlock();
-                    // call funct with its intended parameter
-                    try
-                    {
-                        funct(param);
-                        self.call_end_handlers();
-                    }
-                    catch (std::exception& e)
-                    {
-                        std::cerr << "An exception was thrown in a thread and was not caught.  Its what() string is:\n"
-                             << e.what() << std::endl;
-
-                        self.data_mutex.lock();
-                        --self.total_count;
-                        self.destructed.signal();
-                        self.data_mutex.unlock();
-
-                        abort();
-                    }
-                    catch (...)
-                    {
-                        std::cerr << "An exception was thrown in a thread and was not caught." << std::endl;
-
-                        self.data_mutex.lock();
-                        --self.total_count;
-                        self.destructed.signal();
-                        self.data_mutex.unlock();
-
-                        abort();
-                    }
+                    // Call funct with its intended parameter.  If this function throws then
+                    // we intentionally let the exception escape the thread and result in whatever
+                    // happens when it gets caught by the OS (generally the program is terminated).
+                    funct(param);
+                    self.call_end_handlers();
 
                     self.data_mutex.lock();
 

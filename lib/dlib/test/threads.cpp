@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
@@ -30,8 +30,8 @@ namespace
         {}
 
         thread_specific_data<int> tsd;
-        mutex cm;
-        signaler sm;
+        rmutex cm;
+        rsignaler sm;
         int count;
         bool failure;
 
@@ -65,7 +65,7 @@ namespace
                 sm.wait();
 
 
-            DLIB_CASSERT(!failure,"");
+            DLIB_TEST(!failure);
         }
 
         void thread_end_handler (
@@ -104,7 +104,10 @@ namespace
             for (int i = 0; i < 0x3FFFF; ++i)
             {
                 if ((i&0xFFF) == 0)
+                {
+                    print_spinner();
                     dlib::sleep(10);
+                }
                 // if this isn't equal to num then there is a problem with the thread specific data stuff
                 if (tsd.data() != num)
                 {

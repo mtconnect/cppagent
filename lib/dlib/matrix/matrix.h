@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_MATRIx_
 #define DLIB_MATRIx_
@@ -64,6 +64,7 @@ namespace dlib
     struct matrix_traits
     {
         typedef typename EXP::type type;
+        typedef typename EXP::const_ret_type const_ret_type;
         typedef typename EXP::mem_manager_type mem_manager_type;
         typedef typename EXP::layout_type layout_type;
         const static long NR = EXP::NR;
@@ -84,6 +85,7 @@ namespace dlib
 
     public:
         typedef typename matrix_traits<EXP>::type type;
+        typedef typename matrix_traits<EXP>::const_ret_type const_ret_type;
         typedef typename matrix_traits<EXP>::mem_manager_type mem_manager_type;
         typedef typename matrix_traits<EXP>::layout_type layout_type;
         const static long NR = matrix_traits<EXP>::NR;
@@ -93,12 +95,12 @@ namespace dlib
         typedef matrix<type,NR,NC,mem_manager_type,layout_type> matrix_type;
         typedef EXP exp_type;
 
-        inline const type operator() (
+        inline const_ret_type operator() (
             long r,
             long c
         ) const 
         { 
-            DLIB_ASSERT(r < nr() && c < nc() && r >= 0 && c >= c, 
+            DLIB_ASSERT(r < nr() && c < nc() && r >= 0 && c >= 0, 
                 "\tconst type matrix_exp::operator(r,c)"
                 << "\n\tYou must give a valid row and column"
                 << "\n\tr:    " << r 
@@ -107,10 +109,10 @@ namespace dlib
                 << "\n\tnc(): " << nc() 
                 << "\n\tthis: " << this
                 );
-            return ref_(r,c); 
+            return ref()(r,c); 
         }
 
-        const type operator() (
+        const_ret_type operator() (
             long i
         ) const 
         {
@@ -132,32 +134,32 @@ namespace dlib
                 << "\n\tthis: " << this
                 );
             if (nc() == 1)
-                return ref_(i,0);
+                return ref()(i,0);
             else
-                return ref_(0,i);
+                return ref()(0,i);
         }
 
         long size (
         ) const { return nr()*nc(); }
 
         long nr (
-        ) const { return get_nr_helper<exp_type,NR>::get(ref_); }
+        ) const { return get_nr_helper<exp_type,NR>::get(ref()); }
 
         long nc (
-        ) const { return get_nc_helper<exp_type,NC>::get(ref_); }
+        ) const { return get_nc_helper<exp_type,NC>::get(ref()); }
 
-        template <typename U, long iNR, long iNC, typename mm, typename l >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
-        ) const { return ref_.aliases(item); }
+            const matrix_exp<U>& item
+        ) const { return ref().aliases(item); }
 
-        template <typename U, long iNR, long iNC , typename mm, typename l>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
-        ) const { return ref_.destructively_aliases(item); }
+            const matrix_exp<U>& item
+        ) const { return ref().destructively_aliases(item); }
 
-        const exp_type& ref (
-        ) const { return ref_; }
+        inline const exp_type& ref (
+        ) const { return *static_cast<const exp_type*>(this); }
 
         inline operator const type (
         ) const 
@@ -165,7 +167,7 @@ namespace dlib
             COMPILE_TIME_ASSERT(NC == 1 || NC == 0);
             COMPILE_TIME_ASSERT(NR == 1 || NR == 0);
             DLIB_ASSERT(nr() == 1 && nc() == 1, 
-                "\tmatrix_exp::operator const type&() const"
+                "\tmatrix_exp::operator const type() const"
                 << "\n\tYou can only use this operator on a 1x1 matrix"
                 << "\n\tnr(): " << nr()
                 << "\n\tnc(): " << nc()
@@ -176,25 +178,17 @@ namespace dlib
             // a temporary 1x1 matrix so that the expression will encounter
             // all the overloads of matrix_assign() and have the chance to
             // go through any applicable optimizations.
-            matrix<type,1,1> temp(ref_);
+            matrix<type,1,1,mem_manager_type,layout_type> temp(ref());
             return temp(0);
         }
 
     protected:
-        explicit matrix_exp (
-            const EXP& exp
-        ) : ref_(exp) {}
-
+        matrix_exp() {}
+        matrix_exp(const matrix_exp& ) {}
 
     private:
 
-        // you can't copy a matrix_exp at all.  Things that inherit from it must
-        // define their own copy constructors that call the above protected 
-        // constructor so that the reference below is maintained correctly.
-        matrix_exp(const matrix_exp& item);
         matrix_exp& operator= (const matrix_exp&);
-
-        const exp_type& ref_;
     };
 
 // ----------------------------------------------------------------------------------------
@@ -224,12 +218,12 @@ namespace dlib
         inline const static type  eval (
             const RHS_& rhs,
             const LHS_& lhs,
-            long r, 
-            long c
+            const long r, 
+            const long c
         )  
         { 
-            type temp = type();
-            for (long i = 0; i < rhs.nr(); ++i)
+            type temp = lhs(r,0)*rhs(0,c);
+            for (long i = 1; i < rhs.nr(); ++i)
             {
                 temp += lhs(r,i)*rhs(i,c);
             }
@@ -249,12 +243,12 @@ namespace dlib
         inline const static type  eval (
             const RHS_& rhs,
             const LHS_& lhs,
-            long r, 
-            long c
+            const long r, 
+            const long c
         )  
         { 
-            type temp = type();
-            for (long i = 0; i < lhs.nc(); ++i)
+            type temp = lhs(r,0)*rhs(0,c);
+            for (long i = 1; i < lhs.nc(); ++i)
             {
                 temp += lhs(r,i)*rhs(i,c);
             }
@@ -269,13 +263,21 @@ namespace dlib
     struct matrix_traits<matrix_multiply_exp<LHS,RHS> >
     {
         typedef typename LHS::type type;
+        typedef typename LHS::type const_ret_type;
         typedef typename LHS::mem_manager_type mem_manager_type;
         typedef typename LHS::layout_type layout_type;
         const static long NR = LHS::NR;
         const static long NC = RHS::NC;
 
+#ifdef DLIB_USE_BLAS
+        // if there are BLAS functions to be called then we want to make sure we
+        // always evaluate any complex expressions so that the BLAS bindings can happen.
+        const static bool lhs_is_costly = (LHS::cost > 1)&&(RHS::NC != 1 || LHS::cost >= 10000);
+        const static bool rhs_is_costly = (RHS::cost > 1)&&(LHS::NR != 1 || RHS::cost >= 10000);
+#else
         const static bool lhs_is_costly = (LHS::cost > 4)&&(RHS::NC != 1);
         const static bool rhs_is_costly = (RHS::cost > 4)&&(LHS::NR != 1);
+#endif
 
         // Note that if we decide that one of the matrices is too costly we will evaluate it
         // into a temporary.  Doing this resets its cost back to 1.
@@ -285,8 +287,7 @@ namespace dlib
         // The cost of evaluating an element of a matrix multiply is the cost of evaluating elements from
         // RHS and LHS times the number of rows/columns in the RHS/LHS matrix.  If we don't know the matrix
         // dimensions then just assume it is really large.
-        const static long cost = (lhs_cost+rhs_cost)*
-                                 ((tmax<LHS::NC,RHS::NR>::value!=0)? (tmax<LHS::NC,RHS::NR>::value):(10000));
+        const static long cost = ((tmax<LHS::NC,RHS::NR>::value!=0)? ((lhs_cost+rhs_cost)*tmax<LHS::NC,RHS::NR>::value):(10000));
     };
 
     template <typename T, bool is_ref> struct conditional_matrix_temp { typedef typename T::matrix_type type; };
@@ -305,6 +306,7 @@ namespace dlib
     public:
 
         typedef typename matrix_traits<matrix_multiply_exp>::type type;
+        typedef typename matrix_traits<matrix_multiply_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_multiply_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_multiply_exp>::NR;
         const static long NC = matrix_traits<matrix_multiply_exp>::NC;
@@ -320,10 +322,6 @@ namespace dlib
         typedef typename conditional_matrix_temp<const LHS,lhs_is_costly == false>::type LHS_ref_type;
         typedef typename conditional_matrix_temp<const RHS,rhs_is_costly == false>::type RHS_ref_type;
 
-        matrix_multiply_exp (
-            const matrix_multiply_exp& item
-        ) : matrix_exp<matrix_multiply_exp>(*this), lhs(item.lhs), rhs(item.rhs) {}
-
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1, typename T2>
@@ -333,14 +331,13 @@ namespace dlib
             const LHS& lhs_,
             const RHS& rhs_
         ) :
-            matrix_exp<matrix_multiply_exp>(*this),
             lhs(lhs_),
             rhs(rhs_)
         {
             // You are trying to multiply two incompatible matrices together.  The number of columns 
             // in the matrix on the left must match the number of rows in the matrix on the right.
             COMPILE_TIME_ASSERT(LHS::NC == RHS::NR || LHS::NC*RHS::NR == 0);
-            DLIB_ASSERT(lhs.nc() == rhs.nr(), 
+            DLIB_ASSERT(lhs.nc() == rhs.nr() && lhs.size() > 0 && rhs.size() > 0, 
                 "\tconst matrix_exp operator*(const matrix_exp& lhs, const matrix_exp& rhs)"
                 << "\n\tYou are trying to multiply two incompatible matrices together"
                 << "\n\tlhs.nr(): " << lhs.nr()
@@ -356,8 +353,8 @@ namespace dlib
         }
 
         inline const type operator() (
-            long r, 
-            long c
+            const long r, 
+            const long c
         ) const 
         { 
             return matrix_multiply_helper<LHS,RHS>::eval(rhs,lhs,r,c);
@@ -372,14 +369,14 @@ namespace dlib
         long nc (
         ) const { return rhs.nc(); }
 
-        template <typename U, long iNR, long iNC, typename mm, typename l >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return lhs.aliases(item) || rhs.aliases(item); }
 
-        template <typename U, long iNR, long iNC , typename mm, typename l>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return aliases(item); }
 
         LHS_ref_type lhs;
@@ -457,6 +454,7 @@ namespace dlib
     struct matrix_traits<matrix_add_exp<LHS,RHS> >
     {
         typedef typename LHS::type type;
+        typedef typename LHS::type const_ret_type;
         typedef typename LHS::mem_manager_type mem_manager_type;
         typedef typename LHS::layout_type layout_type;
         const static long NR = (RHS::NR > LHS::NR) ? RHS::NR : LHS::NR;
@@ -476,15 +474,12 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_add_exp>::type type;
+        typedef typename matrix_traits<matrix_add_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_add_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_add_exp>::NR;
         const static long NC = matrix_traits<matrix_add_exp>::NC;
         const static long cost = matrix_traits<matrix_add_exp>::cost;
         typedef typename matrix_traits<matrix_add_exp>::layout_type layout_type;
-
-        matrix_add_exp (
-            const matrix_add_exp& item
-        ) : matrix_exp<matrix_add_exp>(*this), lhs(item.lhs), rhs(item.rhs) {}
 
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
@@ -495,7 +490,6 @@ namespace dlib
             const LHS& lhs_,
             const RHS& rhs_
         ) :
-            matrix_exp<matrix_add_exp>(*this),
             lhs(lhs_),
             rhs(rhs_)
         {
@@ -526,14 +520,14 @@ namespace dlib
         inline const type operator() ( long i ) const 
         { return matrix_exp<matrix_add_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC , typename mm, typename l>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return lhs.aliases(item) || rhs.aliases(item); }
 
-        template <typename U, long iNR, long iNC, typename mm, typename l >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return lhs.destructively_aliases(item) || rhs.destructively_aliases(item); }
 
         long nr (
@@ -567,6 +561,7 @@ namespace dlib
     struct matrix_traits<matrix_subtract_exp<LHS,RHS> >
     {
         typedef typename LHS::type type;
+        typedef typename LHS::type const_ret_type;
         typedef typename LHS::mem_manager_type mem_manager_type;
         typedef typename LHS::layout_type layout_type;
         const static long NR = (RHS::NR > LHS::NR) ? RHS::NR : LHS::NR;
@@ -586,15 +581,13 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_subtract_exp>::type type;
+        typedef typename matrix_traits<matrix_subtract_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_subtract_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_subtract_exp>::NR;
         const static long NC = matrix_traits<matrix_subtract_exp>::NC;
         const static long cost = matrix_traits<matrix_subtract_exp>::cost;
         typedef typename matrix_traits<matrix_subtract_exp>::layout_type layout_type;
 
-        matrix_subtract_exp (
-            const matrix_subtract_exp& item
-        ) : matrix_exp<matrix_subtract_exp>(*this), lhs(item.lhs), rhs(item.rhs) {}
 
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
@@ -604,7 +597,7 @@ namespace dlib
         matrix_subtract_exp (
             const LHS& lhs_,
             const RHS& rhs_
-        ) : matrix_exp<matrix_subtract_exp>(*this),
+        ) : 
             lhs(lhs_),
             rhs(rhs_)
         {
@@ -635,14 +628,14 @@ namespace dlib
         inline const type operator() ( long i ) const 
         { return matrix_exp<matrix_subtract_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename mm, typename l >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC, mm,l>& item
+            const matrix_exp<U>& item
         ) const { return lhs.aliases(item) || rhs.aliases(item); }
 
-        template <typename U, long iNR, long iNC , typename mm, typename l>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return lhs.destructively_aliases(item) || rhs.destructively_aliases(item); }
 
         long nr (
@@ -676,6 +669,7 @@ namespace dlib
     struct matrix_traits<matrix_div_scal_exp<M> >
     {
         typedef typename M::type type;
+        typedef typename M::type const_ret_type;
         typedef typename M::mem_manager_type mem_manager_type;
         typedef typename M::layout_type layout_type;
         const static long NR = M::NR;
@@ -694,15 +688,13 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_div_scal_exp>::type type;
+        typedef typename matrix_traits<matrix_div_scal_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_div_scal_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_div_scal_exp>::NR;
         const static long NC = matrix_traits<matrix_div_scal_exp>::NC;
         const static long cost = matrix_traits<matrix_div_scal_exp>::cost;
         typedef typename matrix_traits<matrix_div_scal_exp>::layout_type layout_type;
 
-        matrix_div_scal_exp (
-            const matrix_div_scal_exp& item
-        ) : matrix_exp<matrix_div_scal_exp>(*this), m(item.m), s(item.s) {}
 
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
@@ -713,7 +705,6 @@ namespace dlib
             const M& m_,
             const type& s_
         ) :
-            matrix_exp<matrix_div_scal_exp>(*this),
             m(m_),
             s(s_)
         {}
@@ -726,14 +717,14 @@ namespace dlib
         inline const type operator() ( long i ) const 
         { return matrix_exp<matrix_div_scal_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename mm , typename l>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item); }
 
-        template <typename U, long iNR, long iNC, typename mm, typename l >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return m.destructively_aliases(item); }
 
         long nr (
@@ -764,6 +755,7 @@ namespace dlib
     struct matrix_traits<matrix_mul_scal_exp<M,use_reference> >
     {
         typedef typename M::type type;
+        typedef typename M::type const_ret_type;
         typedef typename M::mem_manager_type mem_manager_type;
         typedef typename M::layout_type layout_type;
         const static long NR = M::NR;
@@ -788,15 +780,15 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_mul_scal_exp>::type type;
+        typedef typename matrix_traits<matrix_mul_scal_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_mul_scal_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_mul_scal_exp>::NR;
         const static long NC = matrix_traits<matrix_mul_scal_exp>::NC;
         const static long cost = matrix_traits<matrix_mul_scal_exp>::cost;
         typedef typename matrix_traits<matrix_mul_scal_exp>::layout_type layout_type;
 
-        matrix_mul_scal_exp (
-            const matrix_mul_scal_exp& item
-        ) : matrix_exp<matrix_mul_scal_exp>(*this), m(item.m), s(item.s) {}
+        // You aren't allowed to multiply a matrix of matrices by a scalar.   
+        COMPILE_TIME_ASSERT(is_matrix<type>::value == false);
 
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
@@ -807,7 +799,6 @@ namespace dlib
             const M& m_,
             const type& s_
         ) :
-            matrix_exp<matrix_mul_scal_exp>(*this),
             m(m_),
             s(s_)
         {}
@@ -820,14 +811,14 @@ namespace dlib
         inline const type operator() ( long i ) const 
         { return matrix_exp<matrix_mul_scal_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC , typename mm, typename l>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item); }
 
-        template <typename U, long iNR, long iNC, typename mm, typename l >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const { return m.destructively_aliases(item); }
 
         long nr (
@@ -994,6 +985,7 @@ namespace dlib
     struct matrix_traits<matrix<T,num_rows, num_cols, mem_manager, layout> >
     {
         typedef T type;
+        typedef const T& const_ret_type;
         typedef mem_manager mem_manager_type;
         typedef layout layout_type;
         const static long NR = num_rows;
@@ -1016,19 +1008,20 @@ namespace dlib
 
     public:
         typedef typename matrix_traits<matrix>::type type;
+        typedef typename matrix_traits<matrix>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix>::mem_manager_type mem_manager_type;
         typedef typename matrix_traits<matrix>::layout_type layout_type;
         const static long NR = matrix_traits<matrix>::NR;
         const static long NC = matrix_traits<matrix>::NC;
         const static long cost = matrix_traits<matrix>::cost;
 
-        matrix () : matrix_exp<matrix>(*this) 
+        matrix () 
         {
         }
 
         explicit matrix (
             long length 
-        ) : matrix_exp<matrix>(*this) 
+        ) 
         {
             // This object you are trying to call matrix(length) on is not a column or 
             // row vector.
@@ -1073,7 +1066,7 @@ namespace dlib
         matrix (
             long rows,
             long cols 
-        ) : matrix_exp<matrix>(*this) 
+        )  
         {
             DLIB_ASSERT( (NR == 0 || NR == rows) && ( NC == 0 || NC == cols) && 
                     rows >= 0 && cols >= 0, 
@@ -1090,7 +1083,7 @@ namespace dlib
         template <typename EXP>
         matrix (
             const matrix_exp<EXP>& m
-        ): matrix_exp<matrix>(*this) 
+        )
         {
             // You get an error on this line if the matrix m contains a type that isn't
             // the same as the type contained in the target matrix.
@@ -1118,16 +1111,16 @@ namespace dlib
 
         matrix (
             const matrix& m
-        ): matrix_exp<matrix>(*this) 
+        ) : matrix_exp<matrix>(*this) 
         {
             data.set_size(m.nr(),m.nc());
             matrix_assign(*this, m);
         }
 
         template <typename U, size_t len>
-        matrix (
+        explicit matrix (
             U (&array)[len]
-        ): matrix_exp<matrix>(*this) 
+        ) 
         {
             COMPILE_TIME_ASSERT(NR*NC == len && len > 0);
             size_t idx = 0;
@@ -1191,13 +1184,12 @@ namespace dlib
                 << "\n\tnc(): " << nc()
                 << "\n\tthis: " << this
                 );
-            DLIB_ASSERT( ((nc() == 1 && i < nr()) || (nr() == 1 && i < nc())) && i >= 0, 
+            DLIB_ASSERT( 0 <= i && i < size(), 
                 "\tconst type matrix::operator(i)"
                 << "\n\tYou must give a valid row/column number"
-                << "\n\ti:    " << i
-                << "\n\tnr(): " << nr()
-                << "\n\tnc(): " << nc()
-                << "\n\tthis: " << this
+                << "\n\ti:      " << i
+                << "\n\tsize(): " << size()
+                << "\n\tthis:   " << this
                 );
             return data(i);
         }
@@ -1216,13 +1208,12 @@ namespace dlib
                 << "\n\tnc(): " << nc()
                 << "\n\tthis: " << this
                 );
-            DLIB_ASSERT( ((nc() == 1 && i < nr()) || (nr() == 1 && i < nc())) && i >= 0, 
+            DLIB_ASSERT( 0 <= i && i < size(), 
                 "\tconst type matrix::operator(i)"
                 << "\n\tYou must give a valid row/column number"
-                << "\n\ti:    " << i
-                << "\n\tnr(): " << nr()
-                << "\n\tnc(): " << nc()
-                << "\n\tthis: " << this
+                << "\n\ti:      " << i
+                << "\n\tsize(): " << size()
+                << "\n\tthis:   " << this
                 );
             return data(i);
         }
@@ -1519,19 +1510,19 @@ namespace dlib
             data.swap(item.data);
         }
 
-        template <typename U, long iNR, long iNC, typename mm, typename l >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
-        ) const  { return false; }
-
-        template <typename U, long iNR, long iNC, typename mm, typename l>
-        bool destructively_aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
         bool aliases (
-            const matrix& item
+            const matrix_exp<matrix<T,num_rows,num_cols, mem_manager,layout> >& item
         ) const { return (this == &item); }
+
+        template <typename U>
+        bool destructively_aliases (
+            const matrix_exp<U>& 
+        ) const { return false; }
 
     private:
         struct literal_assign_helper
@@ -1746,6 +1737,7 @@ namespace dlib
     struct matrix_traits<const_temp_matrix<EXP> >
     {
         typedef typename EXP::type type;
+        typedef typename EXP::const_ret_type const_ret_type;
         typedef typename EXP::mem_manager_type mem_manager_type;
         typedef typename EXP::layout_type layout_type;
         const static long NR = EXP::NR;
@@ -1758,6 +1750,7 @@ namespace dlib
     {
     public:
         typedef typename matrix_traits<const_temp_matrix>::type type;
+        typedef typename matrix_traits<const_temp_matrix>::const_ret_type const_ret_type;
         typedef typename matrix_traits<const_temp_matrix>::mem_manager_type mem_manager_type;
         typedef typename matrix_traits<const_temp_matrix>::layout_type layout_type;
         const static long NR = matrix_traits<const_temp_matrix>::NR;
@@ -1767,32 +1760,30 @@ namespace dlib
         const_temp_matrix (
             const matrix_exp<EXP>& item
         ) :
-            matrix_exp<const_temp_matrix>(*this),
             ref_(item.ref())
         {}
         const_temp_matrix (
             const EXP& item
         ) :
-            matrix_exp<const_temp_matrix>(*this),
             ref_(item)
         {}
 
-        const type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return ref_(r,c); }
 
-        const type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return ref_(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return ref_.aliases(item); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return ref_.destructively_aliases(item); }
 
         long nr (

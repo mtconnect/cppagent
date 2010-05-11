@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_MATRIx_MATH_FUNCTIONS_ABSTRACT_
 #ifdef DLIB_MATRIx_MATH_FUNCTIONS_ABSTRACT_
@@ -88,6 +88,24 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename T>
+    const matrix_exp pow (
+        const T& b,
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - matrix_exp::type == float, double, or long double 
+        ensures
+            - returns a matrix R such that:
+                - R::type == the same type that was in m
+                - R has the same dimensions as m
+                - for all valid r and c:
+                  R(r,c) == pow(b, m(r,c)) 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     const matrix_exp squared (
         const matrix_exp& m
     );
@@ -172,6 +190,25 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp reciprocal_max (
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - matrix_exp::type == float, double, long double
+        ensures
+            - returns a matrix R such that:
+                - R::type == the same type that was in m
+                - R has the same dimensions as m
+                - for all valid r and c:
+                    - if (m(r,c) != 0) then
+                        - R(r,c) == 1.0/m(r,c) 
+                    - else
+                        - R(r,c) == std::numeric_limits<R::type>::max() 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     const matrix_exp normalize (
         const matrix_exp& m
     );
@@ -197,7 +234,7 @@ namespace dlib
     /*!
         requires
             - is_built_in_scalar_type<matrix_exp::type>::value == true
-              (i.e. m must contain a type like int, float, double, long, etc...)
+              (i.e. m must contain a type like int, float, double, long, etc.)
         ensures
             - if (m contains integers) then
                 - returns m unmodified
@@ -245,7 +282,7 @@ namespace dlib
     /*!
         requires
             - is_built_in_scalar_type<matrix_exp::type>::value == true
-              (i.e. m must contain a type like int, float, double, long, etc...)
+              (i.e. m must contain a type like int, float, double, long, etc.)
         ensures
             - if (m contains integers) then
                 - returns m unmodified
@@ -270,7 +307,7 @@ namespace dlib
     /*!
         requires
             - is_built_in_scalar_type<matrix_exp::type>::value == true
-              (i.e. m must contain a type like int, float, double, long, etc...)
+              (i.e. m must contain a type like int, float, double, long, etc.)
         ensures
             - returns a matrix R such that:
                 - R::type == the same type that was in m
@@ -349,6 +386,20 @@ namespace dlib
                 - R has the same dimensions as m
                 - for all valid r and c:
                   R(r,c) == std::real(m(r,c))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp complex_matrix (
+        const matrix_exp& real_part
+    );
+    /*!
+        ensures
+            - returns a matrix R such that:
+                - R::type == std::complex<T> where T is whatever type real_part used.
+                - R has the same dimensions as real_part. 
+                - for all valid r and c:
+                  R(r,c) == std::complex(real_part(r,c), 0)
     !*/
 
 // ----------------------------------------------------------------------------------------

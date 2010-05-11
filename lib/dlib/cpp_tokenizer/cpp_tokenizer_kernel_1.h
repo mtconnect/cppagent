@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2005  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_CPP_TOKENIZER_KERNEl_1_
 #define DLIB_CPP_TOKENIZER_KERNEl_1_
@@ -444,12 +444,13 @@ namespace dlib
                         }
 
                     }
-                    // or this could be a floating point value
-                    else if (tokenizer.peek_type() == tok::CHAR && tokenizer.peek_token()[0] == '.')
+                    // or this could be a floating point value or something with an 'e' or 'E' in it.
+                    else if ((tokenizer.peek_type() == tok::CHAR && tokenizer.peek_token()[0] == '.') ||
+                             (tokenizer.peek_type() == tok::IDENTIFIER && std::tolower(tokenizer.peek_token()[0]) == 'e'))
                     {
                         std::string temp;
                         tokenizer.get_token(type,temp);
-                        token += '.';
+                        token += temp;
                         // now get the rest of the floating point value
                         while (tokenizer.peek_type() == tok::IDENTIFIER ||
                                tokenizer.peek_type() == tok::NUMBER

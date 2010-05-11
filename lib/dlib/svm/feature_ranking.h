@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_KERNEL_FEATURE_RANKINg_H_
 #define DLIB_KERNEL_FEATURE_RANKINg_H_
@@ -8,6 +8,9 @@
 
 #include "feature_ranking_abstract.h"
 #include "kcentroid.h"
+#include "../optimization.h"
+#include "../statistics.h"
+#include <iostream>
 
 namespace dlib
 {
@@ -272,6 +275,199 @@ namespace dlib
         {
             return rank_features_impl(kc, vector_to_matrix(samples), vector_to_matrix(labels), num_features);
         }
+    }
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+    namespace rank_features_helpers
+    {
+        template <
+            typename K,
+            typename sample_matrix_type,
+            typename label_matrix_type
+            >
+        typename K::scalar_type centroid_gap (
+            const kcentroid<K>& kc,
+            const sample_matrix_type& samples,
+            const label_matrix_type& labels
+        )
+        {
+            kcentroid<K> kc1(kc);
+            kcentroid<K> kc2(kc);
+
+            // toss all the samples into our kcentroids
+            for (long i = 0; i < samples.size(); ++i)
+            {
+                if (labels(i) > 0)
+                    kc1.train(samples(i));
+                else
+                    kc2.train(samples(i));
+            }
+
+            // now return the separation between the mean of these two centroids
+            return kc1(kc2);
+        }
+
+        template <
+            typename sample_matrix_type,
+            typename label_matrix_type
+            >
+        class test
+        {
+            typedef typename sample_matrix_type::type sample_type;
+            typedef typename sample_type::type scalar_type;
+            typedef typename sample_type::mem_manager_type mem_manager_type;
+
+        public:
+            test (
+                const sample_matrix_type& samples_,
+                const label_matrix_type& labels_,
+                unsigned long num_sv_,
+                bool verbose_
+            ) : samples(samples_), labels(labels_), num_sv(num_sv_), verbose(verbose_)
+            {
+            }
+
+            double operator() (
+                double gamma
+            ) const
+            {
+                using namespace std;
+
+                // we are doing the optimization in log space so don't forget to convert back to normal space
+                gamma = std::exp(gamma);
+
+                typedef radial_basis_kernel<sample_type> kernel_type;
+                // Make a kcentroid and find out what the gap is at the current gamma.  Try to pick a reasonable
+                // tolerance.
+                const double tolerance = std::min(gamma*0.01, 0.01);
+                kcentroid<kernel_type> kc(kernel_type(gamma), tolerance, num_sv);
+                scalar_type temp = centroid_gap(kc, samples, labels);
+
+                if (verbose)
+                {
+                    cout << "\rChecking goodness of gamma = " << gamma << ".  Goodness = " 
+                         << temp << "                    " << flush;
+                }
+                return temp;
+            }
+
+            const sample_matrix_type& samples;
+            const label_matrix_type& labels;
+            unsigned long num_sv;
+            bool verbose;
+
+        };
+
+        template <
+            typename sample_matrix_type,
+            typename label_matrix_type
+            >
+        double find_gamma_with_big_centroid_gap_impl (
+            const sample_matrix_type& samples,
+            const label_matrix_type& labels,
+            double initial_gamma,
+            unsigned long num_sv,
+            bool verbose
+        )
+        {
+            typedef typename sample_matrix_type::type sample_type;
+            using namespace std;
+
+            if (verbose)
+            {
+                cout << endl;
+            }
+
+            test<sample_matrix_type, label_matrix_type> funct(samples, labels, num_sv, verbose);
+            double best_gamma = std::log(initial_gamma);
+            double goodness = find_max_single_variable(funct, best_gamma, -15, 15, 1e-3, 100);
+            
+            if (verbose)
+            {
+                cout << "\rBest gamma = " << std::exp(best_gamma) << ".  Goodness = " 
+                    << goodness << "                    " << endl;
+            }
+
+            return std::exp(best_gamma);
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename sample_matrix_type,
+        typename label_matrix_type
+        >
+    double find_gamma_with_big_centroid_gap (
+        const sample_matrix_type& samples,
+        const label_matrix_type& labels,
+        double initial_gamma = 0.1,
+        unsigned long num_sv = 40
+    )
+    {
+        DLIB_ASSERT(initial_gamma > 0 && num_sv > 0 && is_binary_classification_problem(samples, labels),
+            "\t double find_gamma_with_big_centroid_gap()"
+            << "\n\t initial_gamma: " << initial_gamma
+            << "\n\t num_sv:        " << num_sv 
+            << "\n\t is_binary_classification_problem(): " << is_binary_classification_problem(samples, labels) 
+            );
+
+        return rank_features_helpers::find_gamma_with_big_centroid_gap_impl(vector_to_matrix(samples), 
+                                                             vector_to_matrix(labels),
+                                                             initial_gamma,
+                                                             num_sv,
+                                                             false);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename sample_matrix_type,
+        typename label_matrix_type
+        >
+    double verbose_find_gamma_with_big_centroid_gap (
+        const sample_matrix_type& samples,
+        const label_matrix_type& labels,
+        double initial_gamma = 0.1,
+        unsigned long num_sv = 40
+    )
+    {
+        DLIB_ASSERT(initial_gamma > 0 && num_sv > 0 && is_binary_classification_problem(samples, labels),
+            "\t double verbose_find_gamma_with_big_centroid_gap()"
+            << "\n\t initial_gamma: " << initial_gamma
+            << "\n\t num_sv:        " << num_sv 
+            << "\n\t is_binary_classification_problem(): " << is_binary_classification_problem(samples, labels) 
+            );
+
+        return rank_features_helpers::find_gamma_with_big_centroid_gap_impl(vector_to_matrix(samples), 
+                                                             vector_to_matrix(labels),
+                                                             initial_gamma,
+                                                             num_sv,
+                                                             true);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename vector_type
+        >
+    double compute_mean_squared_distance (
+        const vector_type& samples
+    )
+    {
+        running_stats<double> rs;
+        for (unsigned long i = 0; i < samples.size(); ++i)
+        {
+            for (unsigned long j = i+1; j < samples.size(); ++j)
+            {
+                rs.add(length_squared(samples[i] - samples[j]));
+            }
+        }
+
+        return rs.mean();
     }
 
 // ----------------------------------------------------------------------------------------

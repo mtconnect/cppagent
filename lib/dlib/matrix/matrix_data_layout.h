@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_MATRIx_DATA_LAYOUT_
 #define DLIB_MATRIx_DATA_LAYOUT_
@@ -168,8 +168,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long nr,
-                long nc
+                long ,
+                long 
             )
             {
             }
@@ -231,8 +231,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long nr,
-                long nc
+                long ,
+                long 
             )
             {
             }
@@ -581,8 +581,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long nr,
-                long nc
+                long,
+                long 
             )
             {
             }
@@ -644,8 +644,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long nr,
-                long nc
+                long ,
+                long 
             )
             {
             }

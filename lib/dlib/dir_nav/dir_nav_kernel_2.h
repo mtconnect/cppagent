@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_DIR_NAV_KERNEl_2_
 #define DLIB_DIR_NAV_KERNEl_2_
@@ -66,6 +66,7 @@ namespace dlib
             unsigned long count;
         };
 
+        void init(const std::string& name);
 
     public:
 
@@ -99,7 +100,11 @@ namespace dlib
 
         file (
             const std::string& name
-        );
+        ) { init(name); }
+
+        file (
+            const char* name
+        ) { init(name); }
 
         inline file (
             const file& item
@@ -187,6 +192,8 @@ namespace dlib
 
         !*/
 
+        void init(const std::string& name);
+
     public:
         struct private_constructor{};
         inline directory (
@@ -224,7 +231,11 @@ namespace dlib
 
         directory (
             const std::string& name
-        );
+        ) { init(name); }
+
+        directory (
+            const char* name
+        ) { init(name); }
 
         inline directory (
             const directory& item
@@ -650,7 +661,7 @@ namespace dlib
         typename queue_of_dir
         >
     typename enable_if<is_std_vector<queue_of_dir>,void>::type get_filesystem_roots (
-        const std::vector<directory>& roots
+        std::vector<directory>& roots
     )
     {
         roots.clear();

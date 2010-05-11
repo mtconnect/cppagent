@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_BOUND_FUNCTION_POINTER_KERNEl_ABSTRACT_
 #ifdef DLIB_BOUND_FUNCTION_POINTER_KERNEl_ABSTRACT_
@@ -118,6 +118,58 @@ namespace dlib
             ensures
                 - swaps *this and item
         !*/ 
+
+        // ----------------------
+
+        template <typename F>
+        void set (
+            F& function_object
+        );
+        /*!
+            requires
+                - function_object() is a valid expression 
+            ensures
+                - #is_set() == true
+                - calls to this->operator() will call function_object()
+                  (This seems pointless but it is a useful base case)
+        !*/
+
+        template < typename T>
+        void set (
+            T& object,
+            void (T::*funct)()
+        );
+        /*!
+            requires
+                - funct == a valid member function pointer for class T
+            ensures
+                - #is_set() == true
+                - calls to this->operator() will call (object.*funct)()
+        !*/
+
+        template < typename T>
+        void set (
+            const T& object,
+            void (T::*funct)()const
+        );
+        /*!
+            requires
+                - funct == a valid bound function pointer for class T
+            ensures
+                - #is_set() == true
+                - calls to this->operator() will call (object.*funct)()
+        !*/
+
+        void set (
+            void (*funct)()
+        );
+        /*!
+            requires
+                - funct == a valid function pointer 
+            ensures
+                - #is_set() == true
+                - calls to this->operator() will call funct()
+        !*/
 
         // ----------------------
 

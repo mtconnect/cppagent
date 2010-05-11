@@ -1,4 +1,4 @@
-// Copyright (C) 2004  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2004  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_QUEUE_KERNEl_2_
 #define DLIB_QUEUE_KERNEl_2_
@@ -46,7 +46,7 @@ namespace dlib
                     out->item[out_pos] == current()
 
                     when enqueuing elements inside each node item[0] is filled first, then 
-                    item[1], then item[2], etc...
+                    item[1], then item[2], etc.
                                                          
 
                     each node points to the node inserted after it except for the most 

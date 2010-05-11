@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2005  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_SERIALIZe_
 #define DLIB_SERIALIZe_
@@ -52,6 +52,7 @@
         - std::map
         - std::complex
         - dlib::uint64
+        - dlib::int64
         - enumerable<T> where T is a serializable type
         - map_pair<D,R> where D and R are both serializable types.
         - C style arrays of serializable types
@@ -64,6 +65,7 @@
         - std::map
         - std::complex
         - dlib::uint64
+        - dlib::int64
         - C style arrays of serializable types
 
     Support for deserialization of objects which implement the enumerable or
@@ -374,13 +376,14 @@ namespace dlib
     USE_DEFAULT_INT_SERIALIZATION_FOR(unsigned int)
     USE_DEFAULT_INT_SERIALIZATION_FOR(unsigned long)
     USE_DEFAULT_INT_SERIALIZATION_FOR(uint64)
+    USE_DEFAULT_INT_SERIALIZATION_FOR(int64)
 
     USE_DEFAULT_BYTE_SERIALIZATION_FOR(char)
     USE_DEFAULT_BYTE_SERIALIZATION_FOR(signed char)
     USE_DEFAULT_BYTE_SERIALIZATION_FOR(unsigned char)
 
-    // Don't define serialization for wchar_t when using a version of visual studio
-    // older than 8.0 (visual studio 2005) since before then they improperly set
+    // Don't define serialization for wchar_t when using visual studio and
+    // _NATIVE_WCHAR_T_DEFINED isn't defined since if it isn't they improperly set
     // wchar_t to be a typedef rather than its own type as required by the C++ 
     // standard.
 #if !defined(_MSC_VER) || _NATIVE_WCHAR_T_DEFINED
@@ -510,7 +513,7 @@ namespace dlib
 
     template <typename T, typename alloc>
     void deserialize (
-        std::vector<T>& item,
+        std::vector<T,alloc>& item,
         std::istream& in
     );
 

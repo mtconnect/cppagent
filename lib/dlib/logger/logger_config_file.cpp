@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_LOGGER_CONFIg_FILE_CPP
 #define DLIB_LOGGER_CONFIg_FILE_CPP
@@ -19,7 +19,7 @@ namespace dlib
 
     namespace logger_config_file_helpers 
     {
-        typedef config_reader::kernel_1a_c cr_type;
+        typedef config_reader::kernel_1a cr_type;
 
 // ----------------------------------------------------------------------------------------
 
@@ -122,9 +122,12 @@ namespace dlib
             } // if (cr.is_key_defined("output"))
 
             // now configure all the sub-blocks
-            cr.reset();
-            while (cr.move_next())
-                configure_sub_blocks(cr.element(), name + "." + cr.current_block_name());
+            std_vector_c<std::string> blocks;
+            cr.get_blocks(blocks);
+            for (unsigned long i = 0; i < blocks.size(); ++i)
+            {
+                configure_sub_blocks(cr.block(blocks[i]), name + "." + blocks[i]);
+            }
 
         }
 
@@ -184,9 +187,12 @@ namespace dlib
             } // if (cr.is_key_defined("output"))
 
             // now configure all the sub-blocks
-            cr.reset();
-            while (cr.move_next())
-                configure_sub_blocks(cr.element(),cr.current_block_name());
+            std_vector_c<std::string> blocks;
+            cr.get_blocks(blocks);
+            for (unsigned long i = 0; i < blocks.size(); ++i)
+            {
+                configure_sub_blocks(cr.block(blocks[i]), blocks[i]);
+            }
 
         }
     }

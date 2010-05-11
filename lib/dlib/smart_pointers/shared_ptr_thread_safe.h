@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_SHARED_THREAD_SAFE_PTr_
 #define DLIB_SHARED_THREAD_SAFE_PTr_ 
@@ -9,7 +9,7 @@
 #include <string>       // for the exceptions
 #include "../algs.h"
 #include "shared_ptr_thread_safe_abstract.h"
-#include "../threads.h"
+#include "../threads/threads_kernel.h"
 
 
 namespace dlib 

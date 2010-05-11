@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_STRINg_ABSTRACT_
 #ifdef DLIB_STRINg_ABSTRACT_
@@ -154,6 +154,38 @@ namespace dlib
             - returns a copy of str S such that:
                 - #S.size() == str.size()
                 - #S[i] == std::toupper(str[i])
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename traits,
+        typename alloc
+        >
+    bool strings_equal_ignore_case (
+        const std::basic_string<char,traits,alloc>& str1,
+        const std::basic_string<char,traits,alloc>& str2
+    );
+    /*!
+        ensures
+            - returns tolower(str1) == tolower(str2)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename traits,
+        typename alloc
+        >
+    bool strings_equal_ignore_case (
+        const std::basic_string<char,traits,alloc>& str1,
+        const std::basic_string<char,traits,alloc>& str2,
+        unsigned long num
+    );
+    /*!
+        ensures
+            - returns tolower(str1.substr(0,num)) == tolower(str2.substr(0,num))
+              (i.e. only compares the first num characters)
     !*/
 
 // ----------------------------------------------------------------------------------------

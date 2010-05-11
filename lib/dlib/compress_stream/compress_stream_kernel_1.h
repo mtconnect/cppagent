@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_COMPRESS_STREAM_KERNEl_1_
 #define DLIB_COMPRESS_STREAM_KERNEl_1_
@@ -6,6 +6,7 @@
 #include "../algs.h"
 #include <iostream>
 #include <streambuf>
+#include <cstdio>
 #include "compress_stream_kernel_abstract.h"
 
 namespace dlib

@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_DIR_NAV_KERNEL_2_CPp_
 #define DLIB_DIR_NAV_KERNEL_2_CPp_
@@ -23,8 +23,8 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
-    file::
-    file (
+    void file::
+    init (
         const std::string& name
     )
     {
@@ -100,8 +100,8 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
-    directory::
-    directory (
+    void directory::
+    init (
         const std::string& name
     )
     {

@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2005  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
@@ -97,34 +97,34 @@ namespace
 
 
             dlen.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
             dlit.decode(temp);
-            DLIB_CASSERT(temp == 9,"");
+            DLIB_TEST(temp == 9);
 
             dlen.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
             dlit.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
 
             dlen.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
             dlit.decode(temp);
-            DLIB_CASSERT(temp == 4,"");
+            DLIB_TEST(temp == 4);
 
             dlen.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
             dlit.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
 
             dlen.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
             dlit.decode(temp);
-            DLIB_CASSERT(temp == 2,"");
+            DLIB_TEST(temp == 2);
 
             dlen.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
             dlit.decode(temp);
-            DLIB_CASSERT(temp == 0,"");
+            DLIB_TEST(temp == 0);
 
 
 

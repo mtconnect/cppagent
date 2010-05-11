@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_SOCKSTREAMBUF_KERNEl_2_
 #define DLIB_SOCKSTREAMBUF_KERNEl_2_
@@ -128,9 +128,9 @@ namespace dlib
 
         // member data
         connection&  con;
-        static const int max_putback = 4;
-        static const int out_buffer_size = 10000;
-        static const int in_buffer_size = 10000;
+        static const std::streamsize max_putback = 4;
+        static const std::streamsize out_buffer_size = 10000;
+        static const std::streamsize in_buffer_size = 10000;
         char* out_buffer;
         char* in_buffer;
     

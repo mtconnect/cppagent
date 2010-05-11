@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_LISf__
 #define DLIB_LISf__
@@ -54,6 +54,13 @@ namespace dlib
         typedef typename kernel_type::sample_type sample_type;
         typedef typename kernel_type::mem_manager_type mem_manager_type;
 
+        linearly_independent_subset_finder (
+        ) : 
+            my_max_dictionary_size(100),
+            min_tolerance(0.001)
+        {
+            clear_dictionary();
+        }
 
         linearly_independent_subset_finder (
             const kernel_type& kernel_, 
@@ -108,14 +115,18 @@ namespace dlib
             const scalar_type kx = kernel(x,x);
             if (dictionary.size() == 0)
             {
-                // set initial state since this is the first sample we have seen
-                K_inv.set_size(1,1);
-                K_inv(0,0) = 1/kx;
+                // just ignore this sample if it is the zero vector (or really close to being zero)
+                if (std::abs(kx) > std::numeric_limits<scalar_type>::epsilon())
+                {
+                    // set initial state since this is the first sample we have seen
+                    K_inv.set_size(1,1);
+                    K_inv(0,0) = 1/kx;
 
-                K.set_size(1,1);
-                K(0,0) = kx;
+                    K.set_size(1,1);
+                    K(0,0) = kx;
 
-                dictionary.push_back(x);
+                    dictionary.push_back(x);
+                }
             }
             else
             {
@@ -135,6 +146,9 @@ namespace dlib
                 {
                     if (dictionary.size() == my_max_dictionary_size)
                     {
+                        // if we have never computed the min_strength then we should compute it 
+                        if (min_strength == 0)
+                            recompute_min_strength();
 
                         const long i = min_vect_idx;
 

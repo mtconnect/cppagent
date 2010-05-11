@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_IS_KINd_H_
 #define DLIB_IS_KINd_H_
@@ -69,6 +69,19 @@ namespace dlib
                 - is_std_vector<T>::value == true
             - else
                 - is_std_vector<T>::value == false
+        !*/
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T>
+    struct is_rand : public default_is_kind_value  
+    {
+        /*!
+            - if (T is an implementation of rand/rand_kernel_abstract.h) then
+                - is_rand<T>::value == true
+            - else
+                - is_rand<T>::value == false
         !*/
     };
 

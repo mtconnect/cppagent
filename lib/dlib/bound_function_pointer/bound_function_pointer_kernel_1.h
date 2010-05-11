@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_BOUND_FUNCTION_POINTER_KERNEl_1_
 #define DLIB_BOUND_FUNCTION_POINTER_KERNEl_1_
@@ -47,7 +47,7 @@ namespace dlib
 
     // ----------------
 
-        template <typename F, typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
+        template <typename F, typename T1 = void, typename T2 = void, typename T3 = void, typename T4 = void>
         class bound_function_helper : public bound_function_helper_base<T1,T2,T3,T4>
         {
         public:
@@ -70,6 +70,33 @@ namespace dlib
             }
 
             void (*fp)(T1, T2, T3, T4);
+        };
+
+    // ----------------
+
+        template <typename F>
+        class bound_function_helper<F,void,void,void,void> : public bound_function_helper_base<void,void,void,void>
+        {
+        public:
+            void call() const
+            {
+                (*fp)();
+            }
+
+            typename strip<F>::type* fp;
+        };
+
+        template <>
+        class bound_function_helper<void,void,void,void,void> : public bound_function_helper_base<void,void,void,void>
+        {
+        public:
+            void call() const
+            {
+                if (this->mfp)    this->mfp();
+                else if (fp) fp();
+            }
+
+            void (*fp)();
         };
 
     // ----------------
@@ -169,13 +196,13 @@ namespace dlib
             }
 
             template <unsigned long mem_size>
-            void safe_clone(char (&buf)[mem_size])
+            void safe_clone(stack_based_memory_block<mem_size>& buf)
             {
                 // This is here just to validate the assumption that our block of memory we have made
-                // in bf_memory.data is the right size to store the data for this object.  If you
+                // in bf_memory is the right size to store the data for this object.  If you
                 // get a compiler error on this line then email me :)
                 COMPILE_TIME_ASSERT(sizeof(bound_function_helper_T) <= mem_size);
-                clone(buf);
+                clone(buf.get());
             }
 
             void clone   (void* ptr) const  
@@ -200,11 +227,11 @@ namespace dlib
 
     public:
         bound_function_pointer_kernel_1 (
-        ) { bf_null_type().safe_clone(bf_memory.data); }
+        ) { bf_null_type().safe_clone(bf_memory); }
 
         bound_function_pointer_kernel_1 ( 
             const bound_function_pointer_kernel_1& item
-        ) { item.bf()->clone(bf_memory.data); }
+        ) { item.bf()->clone(bf_memory.get()); }
 
         ~bound_function_pointer_kernel_1()
         { destroy_bf_memory(); }
@@ -232,12 +259,12 @@ namespace dlib
             // destory the stuff in item
             item.destroy_bf_memory();
             // copy *this into item
-            bf()->clone(item.bf_memory.data);
+            bf()->clone(item.bf_memory.get());
 
             // destory the stuff in this 
             destroy_bf_memory();
             // copy temp into *this
-            temp.bf()->clone(bf_memory.data);
+            temp.bf()->clone(bf_memory.get());
         }
 
         void operator() (
@@ -258,6 +285,24 @@ namespace dlib
     //      set function object overloads
     // -------------------------------------------
 
+        template <typename F>
+        void set (
+            F& function_object
+        )
+        {
+            COMPILE_TIME_ASSERT(is_function<F>::value == false);
+            COMPILE_TIME_ASSERT(is_pointer_type<F>::value == false);
+            
+            using namespace bfp1_helpers;
+            destroy_bf_memory();
+            typedef bound_function_helper_T<bound_function_helper<F> > bf_helper_type;
+
+            bf_helper_type temp;
+            temp.fp = &function_object;
+
+            temp.safe_clone(bf_memory);
+        }
+
         template <typename F, typename A1 >
         void set (
             F& function_object,
@@ -275,7 +320,7 @@ namespace dlib
             temp.arg1 = &arg1;
             temp.fp = &function_object;
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename F, typename A1, typename A2 >
@@ -297,7 +342,7 @@ namespace dlib
             temp.arg2 = &arg2;
             temp.fp = &function_object;
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename F, typename A1, typename A2, typename A3 >
@@ -321,7 +366,7 @@ namespace dlib
             temp.arg3 = &arg3;
             temp.fp = &function_object;
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename F, typename A1, typename A2, typename A3, typename A4>
@@ -347,11 +392,45 @@ namespace dlib
             temp.arg4 = &arg4;
             temp.fp = &function_object;
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
     // -------------------------------------------
     //      set mfp overloads
+    // -------------------------------------------
+
+        template <typename T>
+        void set (
+            T& object,
+            void (T::*funct)()
+        )
+        {
+            using namespace bfp1_helpers;
+            destroy_bf_memory();
+            typedef bound_function_helper_T<bound_function_helper<void> > bf_helper_type;
+
+            bf_helper_type temp;
+            temp.mfp.set(object,funct);
+
+            temp.safe_clone(bf_memory);
+        }
+
+        template <typename T >
+        void set (
+            const T& object,
+            void (T::*funct)()const
+        )
+        {
+            using namespace bfp1_helpers;
+            destroy_bf_memory();
+            typedef bound_function_helper_T<bound_function_helper<void> > bf_helper_type;
+
+            bf_helper_type temp;
+            temp.mfp.set(object,funct);
+
+            temp.safe_clone(bf_memory);
+        }
+
     // -------------------------------------------
 
         template <typename T, typename T1, typename A1 >
@@ -369,7 +448,7 @@ namespace dlib
             temp.arg1 = &arg1;
             temp.mfp.set(object,funct);
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename T, typename T1, typename A1 >
@@ -387,7 +466,7 @@ namespace dlib
             temp.arg1 = &arg1;
             temp.mfp.set(object,funct);
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
     // ----------------
@@ -410,7 +489,7 @@ namespace dlib
             temp.arg2 = &arg2;
             temp.mfp.set(object,funct);
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename T, typename T1, typename A1,
@@ -431,7 +510,7 @@ namespace dlib
             temp.arg2 = &arg2;
             temp.mfp.set(object,funct);
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
     // ----------------
@@ -457,7 +536,7 @@ namespace dlib
             temp.arg3 = &arg3;
             temp.mfp.set(object,funct);
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename T, typename T1, typename A1,
@@ -481,7 +560,7 @@ namespace dlib
             temp.arg3 = &arg3;
             temp.mfp.set(object,funct);
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
     // ----------------
@@ -510,7 +589,7 @@ namespace dlib
             temp.arg4 = &arg4;
             temp.mfp.set(object,funct);
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename T, typename T1, typename A1,
@@ -537,12 +616,26 @@ namespace dlib
             temp.arg4 = &arg4;
             temp.mfp.set(object,funct);
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
     // -------------------------------------------
     //      set fp overloads
     // -------------------------------------------
+
+        void set (
+            void (*funct)()
+        )
+        {
+            using namespace bfp1_helpers;
+            destroy_bf_memory();
+            typedef bound_function_helper_T<bound_function_helper<void> > bf_helper_type;
+
+            bf_helper_type temp;
+            temp.fp = funct;
+
+            temp.safe_clone(bf_memory);
+        }
 
         template <typename T1, typename A1>
         void set (
@@ -558,7 +651,7 @@ namespace dlib
             temp.arg1 = &arg1;
             temp.fp = funct;
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename T1, typename A1,
@@ -578,7 +671,7 @@ namespace dlib
             temp.arg2 = &arg2;
             temp.fp = funct;
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename T1, typename A1,
@@ -601,7 +694,7 @@ namespace dlib
             temp.arg3 = &arg3;
             temp.fp = funct;
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
         template <typename T1, typename A1,
@@ -627,28 +720,14 @@ namespace dlib
             temp.arg4 = &arg4;
             temp.fp = funct;
 
-            temp.safe_clone(bf_memory.data);
+            temp.safe_clone(bf_memory);
         }
 
     // -------------------------------------------
 
     private:
 
-        union data_block_type
-        {
-            // All of this garbage is to make sure this union is properly aligned 
-            // (a union is always aligned such that everything in it would be properly
-            // aligned.  So the assumption here is that one of these things big good
-            // alignment to satisfy mp_null_impl objects (or other objects like it).
-            void* void_ptr;
-            long double dtemp;
-            struct {
-                void (bfp1_helpers::bound_function_helper_base_base::*callback)();
-                bfp1_helpers::bound_function_helper_base_base* o; 
-            } stuff;
-
-            char data[sizeof(bf_null_type)];
-        } bf_memory;
+        stack_based_memory_block<sizeof(bf_null_type)> bf_memory;
 
         void destroy_bf_memory (
         )
@@ -659,10 +738,10 @@ namespace dlib
         }
 
         bfp1_helpers::bound_function_helper_base_base*       bf ()       
-        { void* ptr = bf_memory.data;       return static_cast<bfp1_helpers::bound_function_helper_base_base*>(ptr); }
+        { return static_cast<bfp1_helpers::bound_function_helper_base_base*>(bf_memory.get()); }
 
         const bfp1_helpers::bound_function_helper_base_base* bf () const 
-        { const void* ptr = bf_memory.data; return static_cast<const bfp1_helpers::bound_function_helper_base_base*>(ptr); }
+        { return static_cast<const bfp1_helpers::bound_function_helper_base_base*>(bf_memory.get()); }
 
     };
 

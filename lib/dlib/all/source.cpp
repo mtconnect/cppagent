@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_ALL_SOURCe_
 #define DLIB_ALL_SOURCe_
@@ -13,7 +13,6 @@
 #include "../entropy_encoder/entropy_encoder_kernel_1.cpp"
 #include "../entropy_encoder/entropy_encoder_kernel_2.cpp"
 #include "../md5/md5_kernel_1.cpp"
-#include "../pixel.cpp"
 #include "../tokenizer/tokenizer_kernel_1.cpp"
 #include "../unicode/unicode.cpp"
 
@@ -26,6 +25,7 @@
 
 #include "../dir_nav/dir_nav_kernel_1.cpp"
 #include "../dir_nav/dir_nav_kernel_2.cpp"
+#include "../dir_nav/dir_nav_extensions.cpp"
 #include "../linker/linker_kernel_1.cpp"
 #include "../logger/extra_logger_headers.cpp"
 #include "../logger/logger_kernel_1.cpp"

@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net), Keita Mochizuki
+// Copyright (C) 2005  Davis E. King (davis@dlib.net), Keita Mochizuki
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_GUI_CORE_KERNEl_ABSTRACT_
 #ifdef DLIB_GUI_CORE_KERNEl_ABSTRACT_
@@ -730,7 +730,7 @@ namespace dlib
                   typematic action begins (note that some keys might not have any 
                   typematic action on some platforms).
                 - if (is_printable) then
-                    - key == the character that was pressed. (e.g. 'a', 'b', '1' etc...)
+                    - key == the character that was pressed. (e.g. 'a', 'b', '1' etc.)
                     - this is a printable character.  Note that ' ', '\t', and 
                       '\n' (this is the return/enter key) are all considered printable.
                 - else

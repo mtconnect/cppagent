@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_KCENTROId_ABSTRACT_
 #ifdef DLIB_KCENTROId_ABSTRACT_
@@ -24,20 +24,28 @@ namespace dlib
                 - samples_trained() == 0
 
             WHAT THIS OBJECT REPRESENTS
-                This is an implementation of an online algorithm for recursively estimating the
-                centroid of a sequence of training points.  It uses the sparsification technique
-                described in the paper The Kernel Recursive Least Squares Algorithm by Yaakov Engel.
+                This object represents a weighted sum of sample points in a kernel induced
+                feature space.  It can be used to kernelize any algorithm that requires only
+                the ability to perform vector addition, subtraction, scalar multiplication,
+                and inner products.  
 
-                This object then allows you to compute the distance between the centroid 
-                and any test points.  So you can use this object to predict how similar a test
-                point is to the data this object has been trained on (larger distances from the
-                centroid indicate dissimilarity/anomalous points).
+                An example use of this object is as an online algorithm for recursively estimating 
+                the centroid of a sequence of training points.  This object then allows you to 
+                compute the distance between the centroid and any test points.  So you can use 
+                this object to predict how similar a test point is to the data this object has 
+                been trained on (larger distances from the centroid indicate dissimilarity/anomalous 
+                points).  
 
                 Also note that the algorithm internally keeps a set of "dictionary vectors" 
                 that are used to represent the centroid.  You can force the algorithm to use 
                 no more than a set number of vectors by setting the 3rd constructor argument 
-                to whatever you want.  However, note that doing this causes the algorithm 
-                to bias it's results towards more recent training examples.  
+                to whatever you want.  
+
+                This object uses the sparsification technique described in the paper The 
+                Kernel Recursive Least Squares Algorithm by Yaakov Engel.  This technique
+                allows us to keep the number of dictionary vectors down to a minimum.  In fact,
+                the object has a user selectable tolerance parameter that controls the trade off
+                between accuracy and number of stored dictionary vectors.
         !*/
 
     public:
@@ -45,20 +53,33 @@ namespace dlib
         typedef typename kernel_type::sample_type sample_type;
         typedef typename kernel_type::mem_manager_type mem_manager_type;
 
+        kcentroid (
+        );
+        /*!
+            ensures
+                - this object is properly initialized
+                - #tolerance() == 0.001 
+                - #get_kernel() == kernel_type() (i.e. whatever the kernel's default value is) 
+                - #max_dictionary_size() == 1000000
+                - #remove_oldest_first() == false 
+        !*/
 
         explicit kcentroid (
             const kernel_type& kernel_, 
             scalar_type tolerance_ = 0.001,
-            unsigned long max_dictionary_size_ = 1000000
+            unsigned long max_dictionary_size_ = 1000000,
+            bool remove_oldest_first_ = false 
         );
         /*!
             requires
                 - tolerance >= 0
+                - max_dictionary_size_ > 0
             ensures
                 - this object is properly initialized
                 - #tolerance() == tolerance_
                 - #get_kernel() == kernel_
                 - #max_dictionary_size() == max_dictionary_size_
+                - #remove_oldest_first() == remove_oldest_first_
         !*/
 
         const kernel_type& get_kernel (
@@ -72,9 +93,38 @@ namespace dlib
         ) const;
         /*!
             ensures
-                - returns the maximum number of dictionary vectors this object
-                  will use at a time.  That is, dictionary_size() will never be
-                  greater than max_dictionary_size().
+                - returns the maximum number of dictionary vectors this object will 
+                  use at a time.  That is, dictionary_size() will never be greater 
+                  than max_dictionary_size().
+        !*/
+
+        bool remove_oldest_first (
+        ) const;
+        /*!
+            ensures
+                - When the maximum dictionary size is reached this object sometimes
+                  needs to discard dictionary vectors when new samples are added via
+                  one of the train functions.  When this happens this object chooses 
+                  the dictionary vector to discard based on the setting of the
+                  remove_oldest_first() parameter.
+                - if (remove_oldest_first() == true) then
+                    - This object discards the oldest dictionary vectors when necessary.  
+                      This is an appropriate mode when using this object in an online
+                      setting and the input training samples come from a slowly 
+                      varying distribution.
+                - else (remove_oldest_first() == false) then
+                    - This object discards the most linearly dependent dictionary vectors 
+                      when necessary.  This it the default behavior and should be used 
+                      in most cases.
+        !*/
+
+        unsigned long dictionary_size (
+        ) const;
+        /*!
+            ensures
+                - returns the number of basis vectors in the dictionary.  These are
+                  the basis vectors used by this object to represent a point in kernel
+                  feature space.
         !*/
 
         scalar_type samples_trained (
@@ -91,10 +141,20 @@ namespace dlib
                 - returns the tolerance to use for the approximately linearly dependent 
                   test used for sparsification (see the KRLS paper for details).  This is 
                   a number which governs how accurately this object will approximate the 
-                  centroid it is learning.  Smaller values generally result in a more accurate 
-                  estimate while also resulting in a bigger set of support vectors in 
-                  the learned dictionary.  Bigger tolerances values result in a 
-                  less accurate estimate but also in less support vectors.
+                  centroid it is learning.  Smaller values generally result in a more 
+                  accurate estimate while also resulting in a bigger set of vectors in 
+                  the dictionary.  Bigger tolerances values result in a less accurate 
+                  estimate but also in less dictionary vectors.  (Note that in any case, 
+                  the max_dictionary_size() limits the number of dictionary vectors no 
+                  matter the setting of the tolerance)
+                - The exact meaning of the tolerance parameter is the following: 
+                  Imagine that we have an empirical_kernel_map that contains all
+                  the current dictionary vectors.  Then the tolerance is the minimum
+                  projection error (as given by empirical_kernel_map::project()) required
+                  to cause us to include a new vector in the dictionary.  So each time
+                  you call train() the kcentroid basically just computes the projection
+                  error for that new sample and if it is larger than the tolerance
+                  then that new sample becomes part of the dictionary.
         !*/
 
         void clear_dictionary (
@@ -126,6 +186,34 @@ namespace dlib
                   to this object so far.
         !*/
 
+        scalar_type inner_product (
+            const sample_type& x
+        ) const;
+        /*!
+            ensures
+                - returns the inner product of the given x point and the current
+                  estimate of the centroid of the training samples given to this object
+                  so far.
+        !*/
+
+        scalar_type inner_product (
+            const kcentroid& x
+        ) const;
+        /*!
+            requires
+                - x.get_kernel() == get_kernel()
+            ensures
+                - returns the inner product between x and this centroid object.
+        !*/
+
+        scalar_type squared_norm (
+        ) const;
+        /*!
+            ensures
+                - returns the squared norm of the centroid vector represented by this
+                  object.  I.e. returns this->inner_product(*this)
+        !*/
+
         void train (
             const sample_type& x
         );
@@ -149,6 +237,17 @@ namespace dlib
                     - new_centroid = cscale*old_centroid + xscale*x
                 - This function allows you to weight different samples however 
                   you want.
+        !*/
+
+        void scale_by (
+            scalar_type cscale
+        );
+        /*!
+            ensures
+                - multiplies the current centroid vector by the given scale value.  
+                  This function is equivalent to calling train(some_x_value, cscale, 0).
+                  So it performs:   
+                    - new_centroid == cscale*old_centroid
         !*/
 
         scalar_type test_and_train (
@@ -183,13 +282,6 @@ namespace dlib
         /*!
             ensures
                 - swaps *this with item
-        !*/
-
-        unsigned long dictionary_size (
-        ) const;
-        /*!
-            ensures
-                - returns the number of "support vectors" in the dictionary.  
         !*/
 
         distance_function<kernel_type> get_distance_function (

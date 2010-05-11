@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_LOGGER_KERNEL_1_CPp_
 #define DLIB_LOGGER_KERNEL_1_CPp_
@@ -22,9 +22,14 @@ namespace dlib
         while (gd.loggers.move_next())
         {
             gd.loggers.element()->out.rdbuf(out_.rdbuf());
+            gd.loggers.element()->hook.clear();
         }
 
         gd.set_output_stream("",out_);
+
+        // set the default hook to be an empty member function pointer
+        logger::hook_mfp hook;
+        gd.set_output_hook("",hook);
     }
 
     void set_all_logging_levels (
@@ -118,6 +123,9 @@ namespace dlib
         auto_flush_table.val = true;
         streambuf_table.val = std::cout.rdbuf(); 
         header_table.val = print_default_logger_header;
+
+        // also allocate an initial buffer for hook based logging
+        hookbuf.buffer.reserve(1000);
     }
 
     logger::global_data::level_container::
@@ -257,6 +265,41 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    void logger::global_data::
+    set_output_stream (
+        const std::string& name,
+        std::streambuf& buf 
+    )
+    {
+        auto_mutex M(m);
+        assign_tables( streambuf_table, name, &buf);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    logger::hook_mfp logger::global_data::
+    output_hook (
+        const std::string& name
+    )
+    {
+        auto_mutex M(m);
+        return search_tables(hook_table, name).val;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void logger::global_data::
+    set_output_hook (
+        const std::string& name,
+        const hook_mfp& hook
+    )
+    {
+        auto_mutex M(m);
+        assign_tables( hook_table, name, hook);
+    }
+
+// ----------------------------------------------------------------------------------------
+
     logger::print_header_type logger::global_data::
     logger_header (
         const std::string& name
@@ -339,7 +382,20 @@ namespace dlib
         if (!been_used)
         {
             log.gd.m.lock();
-            log.logger_header()(log.out,log.name(),l,log.gd.get_thread_name());
+
+            // Check if the output hook is setup.  If it isn't then we print the logger
+            // header like normal.  Otherwise we need to remember to clear out the output
+            // stringstream we always write to.
+            if (log.hook.is_set() == false)
+            {
+                log.logger_header()(log.out,log.name(),l,log.gd.get_thread_name());
+            }
+            else
+            {
+                // Make sure the hook buffer doesn't have any old data in it before we start
+                // logging a new message into it.
+                log.gd.hookbuf.buffer.resize(0);
+            }
             been_used = true;
         }
     }
@@ -351,10 +407,21 @@ namespace dlib
     )
     {
         auto_unlock M(log.gd.m);
-        if (log.auto_flush_enabled)
-            log.out << std::endl;
+
+        if (log.hook.is_set() == false)
+        {
+            if (log.auto_flush_enabled)
+                log.out << std::endl;
+            else
+                log.out << "\n";
+        }
         else
-            log.out << "\n";
+        {
+            // Make sure the buffer is a proper C-string
+            log.gd.hookbuf.buffer.push_back('\0');
+            // call the output hook with all the info regarding this log message.
+            log.hook(log.name(), l, log.gd.get_thread_name(), &log.gd.hookbuf.buffer[0]);
+        }
     }
 
 // ----------------------------------------------------------------------------------------
@@ -385,6 +452,7 @@ namespace dlib
         // load the appropriate settings
         print_header        = gd.logger_header(logger_name);
         auto_flush_enabled  = gd.auto_flush(logger_name);
+        hook                = gd.output_hook(logger_name);
     }
 
 // ----------------------------------------------------------------------------------------

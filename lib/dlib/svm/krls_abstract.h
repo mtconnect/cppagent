@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_KRLs_ABSTRACT_
 #ifdef DLIB_KRLs_ABSTRACT_
@@ -72,9 +72,17 @@ namespace dlib
                   test in the KRLS algorithm.  This is a number which governs how 
                   accurately this object will approximate the decision function it is 
                   learning.  Smaller values generally result in a more accurate 
-                  estimate while also resulting in a bigger set of support vectors in 
+                  estimate while also resulting in a bigger set of dictionary vectors in 
                   the learned decision function.  Bigger tolerances values result in a 
-                  less accurate decision function but also in less support vectors.
+                  less accurate decision function but also in less dictionary vectors.
+                - The exact meaning of the tolerance parameter is the following: 
+                  Imagine that we have an empirical_kernel_map that contains all
+                  the current dictionary vectors.  Then the tolerance is the minimum
+                  projection error (as given by empirical_kernel_map::project()) required
+                  to cause us to include a new vector in the dictionary.  So each time
+                  you call train() the krls object basically just computes the projection
+                  error for that new sample and if it is larger than the tolerance
+                  then that new sample becomes part of the dictionary.
         !*/
 
         const kernel_type& get_kernel (
@@ -98,7 +106,7 @@ namespace dlib
         /*!
             ensures
                 - clears out all learned data 
-                  (e.g. #get_decision_function().support_vectors.size() == 0)
+                  (e.g. #get_decision_function().basis_vectors.size() == 0)
         !*/
 
         scalar_type operator() (
@@ -135,8 +143,8 @@ namespace dlib
         ) const;
         /*!
             ensures
-                - returns the number of "support vectors" in the dictionary.  That is,
-                  returns a number equal to get_decision_function().support_vectors.size()
+                - returns the number of vectors in the dictionary.  That is,
+                  returns a number equal to get_decision_function().basis_vectors.size()
         !*/
 
         decision_function<kernel_type> get_decision_function (

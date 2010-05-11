@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2005  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_RECTANGLe_
 #define DLIB_RECTANGLe_
@@ -125,6 +125,18 @@ namespace dlib
         void set_bottom (
             long bottom_
         ) { b = bottom_; }
+
+        const point tl_corner (
+        ) const { return point(left(), top()); }
+
+        const point bl_corner (
+        ) const { return point(left(), bottom()); } 
+
+        const point tr_corner (
+        ) const { return point(right(), top()); }
+
+        const point br_corner (
+        ) const { return point(right(), bottom()); }
        
         unsigned long width (
         ) const 
@@ -385,6 +397,26 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    inline const rectangle shrink_rect (
+        const rectangle& rect,
+        long num 
+    )
+    {
+        return rectangle(rect.left()+num, rect.top()+num, rect.right()-num, rect.bottom()-num);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline const rectangle grow_rect (
+        const rectangle& rect,
+        long num 
+    )
+    {
+        return shrink_rect(rect, -num);
+    }
+
+// ----------------------------------------------------------------------------------------
+
     inline const rectangle translate_rect (
         const rectangle& rect,
         const point& p
@@ -470,6 +502,18 @@ namespace dlib
     )
     {
         return rectangle(x, y, x+rect.width()-1, y+rect.height()-1);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T 
+        >
+    inline const rectangle get_rect (
+        const T& m
+    )
+    {
+        return rectangle(0, 0, m.nc()-1, m.nr()-1);
     }
 
 // ----------------------------------------------------------------------------------------

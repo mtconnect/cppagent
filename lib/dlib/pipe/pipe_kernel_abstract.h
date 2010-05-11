@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_PIPE_KERNEl_ABSTRACT_ 
 #ifdef DLIB_PIPE_KERNEl_ABSTRACT_ 
@@ -85,7 +85,7 @@ namespace dlib
         ) const;
         /*!
             ensures
-                - blocls until one of the following is the case: 
+                - blocks until one of the following is the case: 
                     - size() == 0 and the number of threads blocked on calls 
                       to dequeue() and dequeue_or_timeout() is greater than 
                       or equal to num.
@@ -99,9 +99,10 @@ namespace dlib
                 - returns true if the enqueue() and enqueue_or_timeout() functions are 
                   currently enabled, returns false otherwise.  (note that the higher 
                   level is_enabled() function can overrule this one.  So if 
-                  is_enabled() == false then enqueue functions are still disabled. 
-                  But if is_enqueue_enabled() == false then enqueue functions are always 
-                  disabled no matter the state of is_enabled())
+                  is_enabled() == false then enqueue functions are still disabled even
+                  if is_enqueue_enabled() returns true.  But if is_enqueue_enabled() == false 
+                  then enqueue functions are always disabled no matter the state of 
+                  is_enabled())
         !*/
 
         void disable_enqueue (
@@ -165,8 +166,8 @@ namespace dlib
                 - if (size() == max_size()) then
                     - this call to enqueue() blocks until one of the following is the case:
                         - there is room in the pipe for another item
-                        - another thread is trying to dequeue from this pipe and we can pass 
-                          our item object directly to that thread.
+                        - max_size() == 0 and another thread is trying to dequeue from this 
+                          pipe and we can pass our item object directly to that thread.
                         - someone calls disable() 
                         - someone calls disable_enqueue()
                 - else
@@ -192,10 +193,10 @@ namespace dlib
         /*!
             ensures
                 - if (size() == max_size() && timeout > 0) then
-                    - this call to enqueue() blocks until one of the following is the case:
+                    - this call to enqueue_or_timeout() blocks until one of the following is the case:
                         - there is room in the pipe to add another item
-                        - another thread is trying to dequeue from this pipe and we can pass 
-                          our item object directly to that thread.
+                        - max_size() == 0 and another thread is trying to dequeue from this pipe 
+                          and we can pass our item object directly to that thread.
                         - someone calls disable() 
                         - someone calls disable_enqueue() 
                         - timeout milliseconds passes
@@ -223,8 +224,8 @@ namespace dlib
                 - if (size() == 0) then
                     - this call to dequeue() blocks until one of the following is the case:
                         - there is something in the pipe we can dequeue
-                        - another thread is trying to enqueue an item onto this pipe
-                          and we can receive our item directly from that thread.  
+                        - max_size() == 0 and another thread is trying to enqueue an item 
+                          onto this pipe and we can receive our item directly from that thread.  
                         - someone calls disable()
                 - else
                     - this call does not block.
@@ -244,10 +245,10 @@ namespace dlib
         /*!
             ensures
                 - if (size() == 0 && timeout > 0) then
-                    - this call to dequeue() blocks until one of the following is the case:
+                    - this call to dequeue_or_timeout() blocks until one of the following is the case:
                         - there is something in the pipe we can dequeue 
-                        - another thread is trying to enqueue an item onto this pipe
-                          and we can receive our item directly from that thread.  
+                        - max_size() == 0 and another thread is trying to enqueue an item onto this 
+                          pipe and we can receive our item directly from that thread.  
                         - someone calls disable() 
                         - timeout milliseconds passes
                 - else

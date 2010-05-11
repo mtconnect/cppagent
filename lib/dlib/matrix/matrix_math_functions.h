@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_MATRIx_MATH_FUNCTIONS
 #define DLIB_MATRIx_MATH_FUNCTIONS 
@@ -23,8 +23,9 @@ namespace dlib
     {                                                                           \
         const static long cost = EXP::cost+(extra_cost);                        \
         typedef typename EXP::type type;                                        \
+        typedef const typename EXP::type const_ret_type;                        \
         template <typename M>                                                   \
-        static type apply ( const M& m, long r, long c)                         \
+        static const_ret_type apply ( const M& m, long r, long c)               \
         { return static_cast<type>(std::name(m(r,c))); }                        \
     };};                                                                        \
     template < typename EXP >                                                   \
@@ -65,8 +66,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+7;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { 
                 return static_cast<type>(1/(1 + std::exp(-m(r,c))));
             }
@@ -92,8 +94,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+7;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M, typename T>
-            static type apply ( const M& m, const T& eps, long r, long c)
+            static const_ret_type apply ( const M& m, const T& eps, long r, long c)
             { 
                 const type temp = m(r,c);
                 if (temp >= eps || temp <= -eps)
@@ -111,7 +114,7 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         const matrix_exp<EXP>& m
     )
     {
-        // you can only round matrices that contain built in scalar types like double, long, float, etc...
+        // you can only round matrices that contain built in scalar types like double, long, float, etc.
         COMPILE_TIME_ASSERT(is_built_in_scalar_type<typename EXP::type>::value);
         typedef matrix_scalar_binary_exp<EXP,typename EXP::type, op_round_zeros> exp;
         return exp(m.ref(),10*std::numeric_limits<typename EXP::type>::epsilon());
@@ -125,7 +128,7 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         typename EXP::type eps 
     )
     {
-        // you can only round matrices that contain built in scalar types like double, long, float, etc...
+        // you can only round matrices that contain built in scalar types like double, long, float, etc.
         COMPILE_TIME_ASSERT(is_built_in_scalar_type<typename EXP::type>::value);
         return matrix_scalar_binary_exp<EXP,typename EXP::type, op_round_zeros>(m.ref(),eps);
     }
@@ -139,8 +142,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+7;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { 
                 const type temp = m(r,c);
                 return temp*temp*temp; 
@@ -167,8 +171,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+6;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { 
                 const type temp = m(r,c);
                 return temp*temp; 
@@ -195,8 +200,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+7;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M, typename S>
-            static type apply ( const M& m, const S& s, long r, long c)
+            static const_ret_type apply ( const M& m, const S& s, long r, long c)
             { return static_cast<type>(std::pow(m(r,c),s)); }
         };
     };
@@ -221,6 +227,40 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
 
 // ----------------------------------------------------------------------------------------
 
+    struct op_pow2
+    {
+        template <typename EXP>
+        struct op : has_nondestructive_aliasing, preserves_dimensions<EXP>
+        {
+            const static long cost = EXP::cost+7;
+            typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
+            template <typename M, typename S>
+            static const_ret_type apply ( const M& m, const S& s, long r, long c)
+            { return static_cast<type>(std::pow(s,m(r,c))); }
+        };
+    };
+
+    template <
+        typename EXP,
+        typename S
+        >
+    const matrix_scalar_binary_exp<EXP,typename EXP::type,op_pow2> pow (
+        const S& s,
+        const matrix_exp<EXP>& m
+    )
+    {
+        // you can only round matrices that contain floats, doubles or long doubles.
+        COMPILE_TIME_ASSERT((
+                is_same_type<typename EXP::type,float>::value == true || 
+                is_same_type<typename EXP::type,double>::value == true || 
+                is_same_type<typename EXP::type,long double>::value == true 
+        ));
+        return matrix_scalar_binary_exp<EXP,typename EXP::type,op_pow2>(m.ref(),s);
+    }
+
+// ----------------------------------------------------------------------------------------
+
     struct op_reciprocal
     {
         template <typename EXP>
@@ -228,12 +268,13 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+6;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { 
                 const type temp = m(r,c);
                 if (temp != static_cast<type>(0))
-                    return static_cast<type>(1.0/temp);
+                    return static_cast<type>((type)1.0/temp);
                 else
                     return 0;
             }
@@ -261,6 +302,44 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
 
 // ----------------------------------------------------------------------------------------
 
+    struct op_reciprocal_max
+    {
+        template <typename EXP>
+        struct op : has_nondestructive_aliasing, preserves_dimensions<EXP>
+        {
+            const static long cost = EXP::cost+6;
+            typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
+            template <typename M>
+            static const_ret_type apply ( const M& m, long r, long c)
+            { 
+                const type temp = m(r,c);
+                if (temp != static_cast<type>(0))
+                    return static_cast<type>((type)1.0/temp);
+                else
+                    return std::numeric_limits<type>::max();
+            }
+        };
+    };
+
+    template <
+        typename EXP
+        >
+    const matrix_unary_exp<EXP,op_reciprocal_max> reciprocal_max (
+        const matrix_exp<EXP>& m
+    )
+    {
+        // you can only compute reciprocal_max matrices that contain floats, doubles or long doubles.
+        COMPILE_TIME_ASSERT((
+                is_same_type<typename EXP::type,float>::value == true || 
+                is_same_type<typename EXP::type,double>::value == true || 
+                is_same_type<typename EXP::type,long double>::value == true 
+        ));
+        return matrix_unary_exp<EXP,op_reciprocal_max>(m.ref());
+    }
+
+// ----------------------------------------------------------------------------------------
+
     struct op_normalize
     {
         template <typename EXP>
@@ -268,8 +347,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+5;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, const type& s, long r, long c)
+            static const_ret_type apply ( const M& m, const type& s, long r, long c)
             { 
                 return m(r,c)*s;
             }
@@ -307,8 +387,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+7;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { 
                 return static_cast<type>(std::floor(m(r,c)+0.5)); 
             }
@@ -320,8 +401,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost;
             typedef typename EXP::type type;
+            typedef typename EXP::const_ret_type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { 
                 return m(r,c);
             }
@@ -335,7 +417,7 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         const matrix_exp<EXP>& m
     )
     {
-        // you can only round matrices that contain built in scalar types like double, long, float, etc...
+        // you can only round matrices that contain built in scalar types like double, long, float, etc.
         COMPILE_TIME_ASSERT(is_built_in_scalar_type<typename EXP::type>::value);
         typedef matrix_unary_exp<EXP,op_round> exp;
         return exp(m.ref());
@@ -350,8 +432,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+7;
             typedef typename EXP::type type;
+            typedef const typename EXP::type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { 
                 return static_cast<type>(std::abs(m(r,c))); 
             }
@@ -362,8 +445,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost;
             typedef T type;
+            typedef const T const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { 
                 return static_cast<type>(std::abs(m(r,c))); 
             }
@@ -383,16 +467,45 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
 
 // ----------------------------------------------------------------------------------------
 
-    struct op_complex_matrix
+    struct op_complex_matrix 
+    {
+        template <typename EXP>
+        struct op : has_nondestructive_aliasing, preserves_dimensions<EXP>
+        {
+            const static long cost = EXP::cost+1;
+            typedef std::complex<typename EXP::type> type;
+            typedef const std::complex<typename EXP::type> const_ret_type;
+            template <typename M>
+            static const_ret_type apply ( const M& m, long r, long c)
+            { 
+                return type(m(r,c));
+            }
+        };
+    };
+
+    template <
+        typename EXP
+        >
+    const matrix_unary_exp<EXP,op_complex_matrix> complex_matrix (
+        const matrix_exp<EXP>& m
+    )
+    {
+        return matrix_unary_exp<EXP,op_complex_matrix>(m.ref());
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    struct op_complex_matrix2
     {
         template <typename EXP1, typename EXP2>
         struct op : has_nondestructive_aliasing, preserves_dimensions<EXP1,EXP2>
         {
             const static long cost = EXP1::cost+EXP2::cost+1;
             typedef std::complex<typename EXP1::type> type;
+            typedef const std::complex<typename EXP1::type> const_ret_type;
 
             template <typename M1, typename M2>
-            static type apply ( const M1& m1, const M2& m2 , long r, long c)
+            static const_ret_type apply ( const M1& m1, const M2& m2 , long r, long c)
             { return type(m1(r,c),m2(r,c)); }
         };
     };
@@ -401,7 +514,7 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         typename EXP1,
         typename EXP2
         >
-    const matrix_binary_exp<EXP1,EXP2,op_complex_matrix> complex_matrix (
+    const matrix_binary_exp<EXP1,EXP2,op_complex_matrix2> complex_matrix (
         const matrix_exp<EXP1>& real_part,
         const matrix_exp<EXP2>& imag_part 
     )
@@ -419,7 +532,7 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
             << "\n\timag_part.nr(): " << imag_part.nr()
             << "\n\timag_part.nc(): " << imag_part.nc() 
             );
-        typedef matrix_binary_exp<EXP1,EXP2,op_complex_matrix> exp;
+        typedef matrix_binary_exp<EXP1,EXP2,op_complex_matrix2> exp;
         return exp(real_part.ref(),imag_part.ref());
     }
 
@@ -432,8 +545,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost+6;
             typedef typename EXP::type::value_type type;
+            typedef const typename EXP::type::value_type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { return std::norm(m(r,c)); }
         };
     };
@@ -458,8 +572,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost;
             typedef typename EXP::type::value_type type;
+            typedef const typename EXP::type::value_type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { return std::real(m(r,c)); }
         };
     };
@@ -484,8 +599,9 @@ DLIB_MATRIX_SIMPLE_STD_FUNCTION(atan,7)
         {
             const static long cost = EXP::cost;
             typedef typename EXP::type::value_type type;
+            typedef const typename EXP::type::value_type const_ret_type;
             template <typename M>
-            static type apply ( const M& m, long r, long c)
+            static const_ret_type apply ( const M& m, long r, long c)
             { return std::imag(m(r,c)); }
         };
     };

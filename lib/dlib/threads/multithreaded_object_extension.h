@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_MULTITHREADED_OBJECT_EXTENSIOn_
 #define DLIB_MULTITHREADED_OBJECT_EXTENSIOn_ 
@@ -112,6 +112,16 @@ namespace dlib
         }
 
     private:
+
+        class raii_thread_helper
+        {
+        public:
+            raii_thread_helper(multithreaded_object& self_, thread_id_type id_);
+            ~raii_thread_helper();
+
+            multithreaded_object& self;
+            thread_id_type id;
+        };
 
         void thread_helper(
         );

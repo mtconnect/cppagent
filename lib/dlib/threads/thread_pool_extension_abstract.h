@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_THREAD_POOl_ABSTRACT_H__
 #ifdef DLIB_THREAD_POOl_ABSTRACT_H__ 
@@ -76,11 +76,6 @@ namespace dlib
         ~future (
         );
         /*!
-            requires
-                - if (item.is_ready() == false) then
-                    - The thread_pool that this future was passed to should still exist
-                      (i.e. You can't pass a future to a thread_pool and then destruct the
-                      thread_pool before you destruct the future).
             ensures
                 - if (item.is_ready() == false) then
                     - the call to this function blocks until the thread processing the task related
@@ -195,17 +190,17 @@ namespace dlib
     template <typename T> bool operator>  (const future<T>& a, const future<T>& b) { return a.get() >  b.get(); }
 
     template <typename T> bool operator== (const future<T>& a, const T& b)         { return a.get() == b; }
-    template <typename T> bool operator== (const T& a,         const future<T>& b) { return a.get() == b; }
+    template <typename T> bool operator== (const T& a,         const future<T>& b) { return a       == b.get(); }
     template <typename T> bool operator!= (const future<T>& a, const T& b)         { return a.get() != b; }
-    template <typename T> bool operator!= (const T& a,         const future<T>& b) { return a.get() != b; }
+    template <typename T> bool operator!= (const T& a,         const future<T>& b) { return a       != b.get(); }
     template <typename T> bool operator<= (const future<T>& a, const T& b)         { return a.get() <= b; }
-    template <typename T> bool operator<= (const T& a,         const future<T>& b) { return a.get() <= b; }
+    template <typename T> bool operator<= (const T& a,         const future<T>& b) { return a       <= b.get(); }
     template <typename T> bool operator>= (const future<T>& a, const T& b)         { return a.get() >= b; }
-    template <typename T> bool operator>= (const T& a,         const future<T>& b) { return a.get() >= b; }
+    template <typename T> bool operator>= (const T& a,         const future<T>& b) { return a       >= b.get(); }
     template <typename T> bool operator<  (const future<T>& a, const T& b)         { return a.get() <  b; }
-    template <typename T> bool operator<  (const T& a,         const future<T>& b) { return a.get() <  b; }
+    template <typename T> bool operator<  (const T& a,         const future<T>& b) { return a       <  b.get(); }
     template <typename T> bool operator>  (const future<T>& a, const T& b)         { return a.get() >  b; }
-    template <typename T> bool operator>  (const T& a,         const future<T>& b) { return a.get() >  b; }
+    template <typename T> bool operator>  (const T& a,         const future<T>& b) { return a       >  b.get(); }
 
 // ----------------------------------------------------------------------------------------
 
@@ -222,6 +217,12 @@ namespace dlib
                 the tasks are processed within the calling thread.  So in this
                 mode any thread that calls add_task() is considered to be
                 a thread_pool thread capable of executing tasks.
+
+                Also note that all function objects are passed to the tasks
+                by reference.  This means you should ensure that your function
+                objects are not destroyed while tasks are still using them.
+                (e.g. Don't let them go out of scope right after a call to 
+                add_task())
 
             EXCEPTIONS
                 Note that if an exception is thrown inside a task thread and 
@@ -248,7 +249,7 @@ namespace dlib
         );
         /*!
             ensures
-                - all resources allocated by *this have been freed.  
+                - blocks until all tasks in the pool have finished.
         !*/
 
         bool is_task_thread (
@@ -450,7 +451,8 @@ namespace dlib
 
         // --------------------------------------------------------------------------------
         // The remainder of this class just contains overloads for add_task() that take up 
-        // to 4 futures.  Their behavior is identical to the above add_task() functions.
+        // to 4 futures (as well as 0 futures).  Their behavior is identical to the above 
+        // add_task() functions.
         // --------------------------------------------------------------------------------
 
         template <typename F, typename A1, typename A2>
@@ -576,6 +578,23 @@ namespace dlib
             future<A3>& arg3,
             future<A4>& arg4
         );
+
+        // --------------------
+
+        template <typename F>
+        uint64 add_task (
+            F& function_object
+        );
+
+        template <typename T>
+        uint64 add_task (
+            const T& obj,
+            void (T::*funct)() const,
+        ); 
+        
+        uint64 add_task (
+            void (*funct)()
+        ); 
 
         // --------------------
 

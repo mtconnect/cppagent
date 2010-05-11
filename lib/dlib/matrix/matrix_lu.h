@@ -1,4 +1,4 @@
-// Copyright (C) 2009  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2009  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 // This code was adapted from code from the JAMA part of NIST's TNT library.
 //    See: http://math.nist.gov/tnt/ 
@@ -111,7 +111,7 @@ namespace dlib
         // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
 
 
-        piv = range(0,m-1);
+        piv = trans(range(0,m-1));
         pivsign = 1;
 
         column_vector_type LUcolj(m);
@@ -128,7 +128,11 @@ namespace dlib
             {
                 // Most of the time is spent in the following dot product.
                 const long kmax = std::min(i,j);
-                const type s = rowm(LU,i, kmax)*colm(LUcolj,0,kmax);
+                type s;
+                if (kmax > 0)
+                    s = rowm(LU,i, kmax)*colm(LUcolj,0,kmax);
+                else 
+                    s = 0;
 
                 LU(i,j) = LUcolj(i) -= s;
             }
@@ -215,13 +219,15 @@ namespace dlib
             << "\n\tthis: " << this
             );
 
-        type eps = max(abs(diag(LU)));
+        type max_val, min_val;
+        find_min_and_max (abs(diag(LU)), min_val, max_val);
+        type eps = max_val;
         if (eps != 0)
             eps *= std::sqrt(std::numeric_limits<type>::epsilon())/10;
         else
             eps = 1;  // there is no max so just use 1
 
-        return min(abs(diag(LU))) < eps;
+        return min_val < eps;
     }
 
 // ----------------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_MATRIx_EXPRESSIONS_H_
 #define DLIB_MATRIx_EXPRESSIONS_H_
@@ -102,34 +102,34 @@ namespace dlib
 
     struct has_destructive_aliasing
     {
-        template <typename M, typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename M, typename U>
         static bool destructively_aliases (
             const M& m,
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) { return m.aliases(item); }
 
-        template <typename M1, typename M2, typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename M1, typename M2, typename U>
         static bool destructively_aliases (
             const M1& m1,
             const M2& m2,
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) { return m1.aliases(item) || m2.aliases(item) ; }
 
-        template <typename M1, typename M2, typename M3, typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename M1, typename M2, typename M3, typename U>
         static bool destructively_aliases (
             const M1& m1,
             const M2& m2,
             const M3& m3,
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) { return m1.aliases(item) || m2.aliases(item) || m3.aliases(item); }
 
-        template <typename M1, typename M2, typename M3, typename M4, typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename M1, typename M2, typename M3, typename M4, typename U>
         static bool destructively_aliases (
             const M1& m1,
             const M2& m2,
             const M3& m3,
             const M4& m4,
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) { return m1.aliases(item) || m2.aliases(item) || m3.aliases(item) || m4.aliases(item); }
     };
 
@@ -137,34 +137,34 @@ namespace dlib
 
     struct has_nondestructive_aliasing
     {
-        template <typename M, typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename M, typename U>
         static bool destructively_aliases (
             const M& m,
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) { return m.destructively_aliases(item); }
 
-        template <typename M1, typename M2, typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename M1, typename M2, typename U>
         static bool destructively_aliases (
             const M1& m1,
             const M2& m2,
-            const matrix<U,iNR,iNC, MM, L>& item
+            const matrix_exp<U>& item
         ) { return m1.destructively_aliases(item) || m2.destructively_aliases(item) ; }
 
-        template <typename M1, typename M2, typename M3, typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename M1, typename M2, typename M3, typename U>
         static bool destructively_aliases (
             const M1& m1,
             const M2& m2,
             const M3& m3,
-            const matrix<U,iNR,iNC, MM, L>& item
+            const matrix_exp<U>& item
         ) { return m1.destructively_aliases(item) || m2.destructively_aliases(item) || m3.destructively_aliases(item) ; }
 
-        template <typename M1, typename M2, typename M3, typename M4, typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename M1, typename M2, typename M3, typename M4, typename U>
         static bool destructively_aliases (
             const M1& m1,
             const M2& m2,
             const M3& m3,
             const M4& m4,
-            const matrix<U,iNR,iNC, MM, L>& item
+            const matrix<U>& item
         ) { return m1.destructively_aliases(item) || 
                    m2.destructively_aliases(item) || 
                    m3.destructively_aliases(item) || 
@@ -215,6 +215,7 @@ namespace dlib
     {
         typedef typename OP_::template op<M> OP;
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         typedef typename M::layout_type layout_type;
         const static long NR = OP::NR;
@@ -236,47 +237,42 @@ namespace dlib
 
     public:
         typedef typename matrix_traits<matrix_unary_exp>::type type;
+        typedef typename matrix_traits<matrix_unary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_unary_exp>::mem_manager_type mem_manager_type;
         typedef typename matrix_traits<matrix_unary_exp>::layout_type layout_type;
         const static long NR = matrix_traits<matrix_unary_exp>::NR;
         const static long NC = matrix_traits<matrix_unary_exp>::NC;
         const static long cost = matrix_traits<matrix_unary_exp>::cost;
 
-        matrix_unary_exp (
-            const matrix_unary_exp& item
-        ) :
-            matrix_exp<matrix_unary_exp>(*this),
-            m(item.m)
-        {}
-
+    private:
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1>
         matrix_unary_exp (T1); 
+    public:
 
         matrix_unary_exp (
             const M& m_
         ) :
-            matrix_exp<matrix_unary_exp>(*this),
             m(m_)
         {}
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(m,r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_unary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return OP::destructively_aliases(m,item); }
 
         long nr (
@@ -299,6 +295,7 @@ namespace dlib
     {
         typedef typename OP_::template op<M> OP;
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         const static long NR = OP::NR;
         const static long NC = OP::NC;
@@ -321,52 +318,47 @@ namespace dlib
 
     public:
         typedef typename matrix_traits<matrix_scalar_binary_exp>::type type;
+        typedef typename matrix_traits<matrix_scalar_binary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_scalar_binary_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_scalar_binary_exp>::NR;
         const static long NC = matrix_traits<matrix_scalar_binary_exp>::NC;
         const static long cost = matrix_traits<matrix_scalar_binary_exp>::cost;
         typedef typename matrix_traits<matrix_scalar_binary_exp>::layout_type layout_type;
 
-        matrix_scalar_binary_exp (
-            const matrix_scalar_binary_exp& item
-        ) :
-            matrix_exp<matrix_scalar_binary_exp>(*this),
-            m(item.m),
-            s(item.s)
-        {}
-
+ 
+    private:
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1>
         matrix_scalar_binary_exp (T1,const S&); 
+    public:
 
         matrix_scalar_binary_exp (
             const M& m_,
             const S& s_
         ) :
-            matrix_exp<matrix_scalar_binary_exp>(*this),
             m(m_),
             s(s_)
         {
             COMPILE_TIME_ASSERT(is_matrix<S>::value == false);
         }
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(m,s,r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_scalar_binary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item); }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return OP::destructively_aliases(m,item); }
 
         long nr (
@@ -390,6 +382,7 @@ namespace dlib
     {
         typedef typename OP_::template op<M> OP;
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         const static long NR = OP::NR;
         const static long NC = OP::NC;
@@ -412,33 +405,26 @@ namespace dlib
 
     public:
         typedef typename matrix_traits<matrix_scalar_ternary_exp>::type type;
+        typedef typename matrix_traits<matrix_scalar_ternary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_scalar_ternary_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_scalar_ternary_exp>::NR;
         const static long NC = matrix_traits<matrix_scalar_ternary_exp>::NC;
         const static long cost = matrix_traits<matrix_scalar_ternary_exp>::cost;
         typedef typename matrix_traits<matrix_scalar_ternary_exp>::layout_type layout_type;
 
-        matrix_scalar_ternary_exp (
-            const matrix_scalar_ternary_exp& item
-        ) :
-            matrix_exp<matrix_scalar_ternary_exp>(*this),
-            m(item.m),
-            s1(item.s1),
-            s2(item.s2)
-        {
-        }
-
+ 
+    private:
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1>
         matrix_scalar_ternary_exp (T1, const S&, const S&); 
+    public:
 
         matrix_scalar_ternary_exp (
             const M& m_,
             const S& s1_,
             const S& s2_
         ) :
-            matrix_exp<matrix_scalar_ternary_exp>(*this),
             m(m_),
             s1(s1_),
             s2(s2_)
@@ -446,22 +432,22 @@ namespace dlib
             COMPILE_TIME_ASSERT(is_matrix<S>::value == false);
         }
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(m,s1,s2,r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_scalar_ternary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item); }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return OP::destructively_aliases(m,item); }
 
         long nr (
@@ -486,6 +472,7 @@ namespace dlib
     {
         typedef typename OP_::template op<M1,M2> OP;
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         const static long NR = OP::NR;
         const static long NC = OP::NC;
@@ -508,50 +495,45 @@ namespace dlib
 
     public:
         typedef typename matrix_traits<matrix_binary_exp>::type type;
+        typedef typename matrix_traits<matrix_binary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_binary_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_binary_exp>::NR;
         const static long NC = matrix_traits<matrix_binary_exp>::NC;
         const static long cost = matrix_traits<matrix_binary_exp>::cost;
         typedef typename matrix_traits<matrix_binary_exp>::layout_type layout_type;
 
-        matrix_binary_exp (
-            const matrix_binary_exp& item
-        ) :
-            matrix_exp<matrix_binary_exp>(*this),
-            m1(item.m1),
-            m2(item.m2)
-        {}
 
+    private:
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1, typename T2>
         matrix_binary_exp (T1,T2); 
+    public:
 
         matrix_binary_exp (
             const M1& m1_,
             const M2& m2_
         ) :
-            matrix_exp<matrix_binary_exp>(*this),
             m1(m1_),
             m2(m2_)
         {}
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(m1,m2,r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_binary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m1.aliases(item) || m2.aliases(item); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return OP::destructively_aliases(m1,m2,item); }
 
         long nr (
@@ -576,6 +558,7 @@ namespace dlib
     {
         typedef typename OP_::template op<M1,M2,M3> OP;
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         const static long NR = OP::NR;
         const static long NC = OP::NC;
@@ -599,53 +582,47 @@ namespace dlib
 
     public:
         typedef typename matrix_traits<matrix_ternary_exp>::type type;
+        typedef typename matrix_traits<matrix_ternary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_ternary_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_ternary_exp>::NR;
         const static long NC = matrix_traits<matrix_ternary_exp>::NC;
         const static long cost = matrix_traits<matrix_ternary_exp>::cost;
         typedef typename matrix_traits<matrix_ternary_exp>::layout_type layout_type;
 
-        matrix_ternary_exp (
-            const matrix_ternary_exp& item
-        ) :
-            matrix_exp<matrix_ternary_exp>(*this),
-            m1(item.m1),
-            m2(item.m2),
-            m3(item.m3)
-        {}
 
+    private:
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1, typename T2, typename T3>
         matrix_ternary_exp ( T1, T2, T3 ); 
+    public:
 
         matrix_ternary_exp (
             const M1& m1_,
             const M2& m2_,
             const M3& m3_
         ) :
-            matrix_exp<matrix_ternary_exp>(*this),
             m1(m1_),
             m2(m2_),
             m3(m3_)
         {}
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(m1,m2,m3,r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_ternary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m1.aliases(item) || m2.aliases(item) || m3.aliases(item); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return OP::destructively_aliases(m1,m2,m3,item); }
 
         long nr (
@@ -671,6 +648,7 @@ namespace dlib
     {
         typedef typename OP_::template op<M1,M2,M3,M4> OP;
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         const static long NR = OP::NR;
         const static long NC = OP::NC;
@@ -695,26 +673,20 @@ namespace dlib
 
     public:
         typedef typename matrix_traits<matrix_fourary_exp>::type type;
+        typedef typename matrix_traits<matrix_fourary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_fourary_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_fourary_exp>::NR;
         const static long NC = matrix_traits<matrix_fourary_exp>::NC;
         const static long cost = matrix_traits<matrix_fourary_exp>::cost;
         typedef typename matrix_traits<matrix_fourary_exp>::layout_type layout_type;
 
-        matrix_fourary_exp (
-            const matrix_fourary_exp& item
-        ) :
-            matrix_exp<matrix_fourary_exp>(*this),
-            m1(item.m1),
-            m2(item.m2),
-            m3(item.m3),
-            m4(item.m4)
-        {}
 
+    private:
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1, typename T2, typename T3, typename T4>
         matrix_fourary_exp (T1,T2,T3,T4); 
+    public:
 
         matrix_fourary_exp (
             const M1& m1_,
@@ -722,29 +694,28 @@ namespace dlib
             const M3& m3_,
             const M4& m4_
         ) :
-            matrix_exp<matrix_fourary_exp>(*this),
             m1(m1_),
             m2(m2_),
             m3(m3_),
             m4(m4_)
         {}
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(m1,m2,m3,m4,r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_fourary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m1.aliases(item) || m2.aliases(item) || m3.aliases(item) || m4.aliases(item); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return OP::destructively_aliases(m1,m2,m3,m4,item); }
 
         long nr (
@@ -770,6 +741,7 @@ namespace dlib
     struct matrix_traits<dynamic_matrix_scalar_unary_exp<S,OP> >
     {
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         const static long NR = OP::NR;
         const static long NC = OP::NC;
@@ -789,27 +761,19 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<dynamic_matrix_scalar_unary_exp>::type type;
+        typedef typename matrix_traits<dynamic_matrix_scalar_unary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<dynamic_matrix_scalar_unary_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<dynamic_matrix_scalar_unary_exp>::NR;
         const static long NC = matrix_traits<dynamic_matrix_scalar_unary_exp>::NC;
         const static long cost = matrix_traits<dynamic_matrix_scalar_unary_exp>::cost;
         typedef typename matrix_traits<dynamic_matrix_scalar_unary_exp>::layout_type layout_type;
 
-        dynamic_matrix_scalar_unary_exp (
-            const dynamic_matrix_scalar_unary_exp& item
-        ) :
-            matrix_exp<dynamic_matrix_scalar_unary_exp>(*this),
-            nr_(item.nr_),
-            nc_(item.nc_),
-            s(item.s)
-        {}
 
         dynamic_matrix_scalar_unary_exp (
             long nr__,
             long nc__,
             const S& s_
         ) :
-            matrix_exp<dynamic_matrix_scalar_unary_exp>(*this),
             nr_(nr__),
             nc_(nc__),
             s(s_)
@@ -817,22 +781,22 @@ namespace dlib
             COMPILE_TIME_ASSERT(is_matrix<S>::value == false);
         }
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(s,r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<dynamic_matrix_scalar_unary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
         long nr (
@@ -857,6 +821,7 @@ namespace dlib
     struct matrix_traits<matrix_scalar_unary_exp<S,OP> >
     {
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         const static long NR = OP::NR;
         const static long NC = OP::NC;
@@ -876,44 +841,38 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_scalar_unary_exp>::type type;
+        typedef typename matrix_traits<matrix_scalar_unary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_scalar_unary_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_scalar_unary_exp>::NR;
         const static long NC = matrix_traits<matrix_scalar_unary_exp>::NC;
         const static long cost = matrix_traits<matrix_scalar_unary_exp>::cost;
         typedef typename matrix_traits<matrix_scalar_unary_exp>::layout_type layout_type;
 
-        matrix_scalar_unary_exp (
-            const matrix_scalar_unary_exp& item
-        ) :
-            matrix_exp<matrix_scalar_unary_exp>(*this),
-            s(item.s)
-        {}
 
         matrix_scalar_unary_exp (
             const S& s_
         ) :
-            matrix_exp<matrix_scalar_unary_exp>(*this),
             s(s_)
         {
             COMPILE_TIME_ASSERT(is_matrix<S>::value == false);
         }
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(s,r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_scalar_unary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
         long nr (
@@ -936,6 +895,7 @@ namespace dlib
     struct matrix_traits<matrix_zeroary_exp<OP> >
     {
         typedef typename OP::type type;
+        typedef typename OP::const_ret_type const_ret_type;
         typedef typename OP::mem_manager_type mem_manager_type;
         const static long NR = OP::NR;
         const static long NC = OP::NC;
@@ -950,39 +910,33 @@ namespace dlib
     {
     public:
         typedef typename matrix_traits<matrix_zeroary_exp>::type type;
+        typedef typename matrix_traits<matrix_zeroary_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_zeroary_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_zeroary_exp>::NR;
         const static long NC = matrix_traits<matrix_zeroary_exp>::NC;
         const static long cost = matrix_traits<matrix_zeroary_exp>::cost;
         typedef typename matrix_traits<matrix_zeroary_exp>::layout_type layout_type;
 
-        matrix_zeroary_exp (
-            const matrix_zeroary_exp& item
-        ) :
-            matrix_exp<matrix_zeroary_exp>(*this)
-        {}
 
         matrix_zeroary_exp (
-        ) :
-            matrix_exp<matrix_zeroary_exp>(*this)
-        {}
+        ) {}
 
-        const typename OP::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return OP::apply(r,c); }
 
-        const typename OP::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_zeroary_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return false; }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return false; }
 
         long nr (
@@ -1006,10 +960,11 @@ namespace dlib
     struct matrix_traits<matrix_sub_range_exp<M,EXPr,EXPc> >
     {
         typedef typename M::type type;
+        typedef typename M::const_ret_type const_ret_type;
         typedef typename M::mem_manager_type mem_manager_type;
         typedef typename M::layout_type layout_type;
         const static long NR = EXPr::NR*EXPr::NC;
-        const static long NC = EXPc::NR*EXPr::NC;
+        const static long NC = EXPc::NR*EXPc::NC;
         const static long cost = EXPr::cost+EXPc::cost+M::cost;
     };
 
@@ -1026,55 +981,48 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_sub_range_exp>::type type;
+        typedef typename matrix_traits<matrix_sub_range_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_sub_range_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_sub_range_exp>::NR;
         const static long NC = matrix_traits<matrix_sub_range_exp>::NC;
         const static long cost = matrix_traits<matrix_sub_range_exp>::cost;
         typedef typename matrix_traits<matrix_sub_range_exp>::layout_type layout_type;
 
-        matrix_sub_range_exp (
-            const matrix_sub_range_exp& item
-        ) :
-            matrix_exp<matrix_sub_range_exp>(*this),
-            m(item.m),
-            rows(item.rows),
-            cols(item.cols)
-        {
-        }
 
+    private:
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1, typename T2, typename T3>
         matrix_sub_range_exp (T1,T2,T3); 
+    public:
 
         matrix_sub_range_exp (
             const M& m_,
             const EXPr& rows_,
             const EXPc& cols_
         ) :
-            matrix_exp<matrix_sub_range_exp>(*this),
             m(m_),
             rows(rows_),
             cols(cols_)
         {
         }
 
-        const typename M::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return m(rows(r),cols(c)); }
 
-        const typename M::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_sub_range_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item) || rows.aliases(item) || cols.aliases(item); }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item) || rows.aliases(item) || cols.aliases(item); }
 
         long nr (
@@ -1099,6 +1047,7 @@ namespace dlib
     struct matrix_traits<matrix_std_vector_exp<M> >
     {
         typedef typename M::value_type type;
+        typedef const typename M::value_type& const_ret_type;
         typedef typename memory_manager<char>::kernel_1a mem_manager_type;
         const static long NR = 0;
         const static long NC = 1;
@@ -1118,49 +1067,44 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_std_vector_exp>::type type;
+        typedef typename matrix_traits<matrix_std_vector_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_std_vector_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_std_vector_exp>::NR;
         const static long NC = matrix_traits<matrix_std_vector_exp>::NC;
         const static long cost = matrix_traits<matrix_std_vector_exp>::cost;
         typedef typename matrix_traits<matrix_std_vector_exp>::layout_type layout_type;
 
-        matrix_std_vector_exp (
-            const matrix_std_vector_exp& item
-        ) :
-            matrix_exp<matrix_std_vector_exp>(*this),
-            m(item.m)
-        {
-        }
 
+    private:
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1>
         matrix_std_vector_exp (T1); 
+    public:
 
         matrix_std_vector_exp (
             const M& m_
         ) :
-            matrix_exp<matrix_std_vector_exp>(*this),
             m(m_)
         {
         }
 
-        const typename M::value_type operator() (
+        const_ret_type operator() (
             long r, 
             long 
         ) const { return m[r]; }
 
-        const typename M::value_type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return m[i]; }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
         long nr (
@@ -1182,6 +1126,7 @@ namespace dlib
     struct matrix_traits<matrix_array_exp<M> >
     {
         typedef typename M::type type;
+        typedef const typename M::type& const_ret_type;
         typedef typename M::mem_manager_type mem_manager_type;
         typedef row_major_layout layout_type;
         const static long NR = 0;
@@ -1201,20 +1146,14 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_array_exp>::type type;
+        typedef typename matrix_traits<matrix_array_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_array_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_array_exp>::NR;
         const static long NC = matrix_traits<matrix_array_exp>::NC;
         const static long cost = matrix_traits<matrix_array_exp>::cost;
         typedef typename matrix_traits<matrix_array_exp>::layout_type layout_type;
 
-        matrix_array_exp (
-            const matrix_array_exp& item
-        ) :
-            matrix_exp<matrix_array_exp>(*this),
-            m(item.m)
-        {
-        }
-
+ 
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
         template <typename T1>
@@ -1223,27 +1162,26 @@ namespace dlib
         matrix_array_exp (
             const M& m_
         ) :
-            matrix_exp<matrix_array_exp>(*this),
             m(m_)
         {
         }
 
-        const typename M::type operator() (
+        const_ret_type operator() (
             long r, 
             long 
         ) const { return m[r]; }
 
-        const typename M::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return m[i]; }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return false; }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return false; }
 
         long nr (
@@ -1265,6 +1203,7 @@ namespace dlib
     struct matrix_traits<matrix_array2d_exp<M> >
     {
         typedef typename M::type type;
+        typedef const typename M::type& const_ret_type;
         typedef typename M::mem_manager_type mem_manager_type;
         typedef row_major_layout layout_type;
         const static long NR = 0;
@@ -1284,19 +1223,13 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_array2d_exp>::type type;
+        typedef typename matrix_traits<matrix_array2d_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_array2d_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_array2d_exp>::NR;
         const static long NC = matrix_traits<matrix_array2d_exp>::NC;
         const static long cost = matrix_traits<matrix_array2d_exp>::cost;
         typedef typename matrix_traits<matrix_array2d_exp>::layout_type layout_type;
 
-        matrix_array2d_exp (
-            const matrix_array2d_exp& item
-        ) :
-            matrix_exp<matrix_array2d_exp>(*this),
-            m(item.m)
-        {
-        }
 
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
@@ -1306,27 +1239,26 @@ namespace dlib
         matrix_array2d_exp (
             const M& m_
         ) :
-            matrix_exp<matrix_array2d_exp>(*this),
             m(m_)
         {
         }
 
-        const typename M::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return m[r][c]; }
 
-        const typename M::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_array2d_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
         long nr (
@@ -1348,6 +1280,7 @@ namespace dlib
     struct matrix_traits<matrix_sub_exp<M> >
     {
         typedef typename M::type type;
+        typedef typename M::const_ret_type const_ret_type;
         typedef typename M::mem_manager_type mem_manager_type;
         typedef typename M::layout_type layout_type;
         const static long NR = 0;
@@ -1366,23 +1299,13 @@ namespace dlib
         !*/
     public:
         typedef typename matrix_traits<matrix_sub_exp>::type type;
+        typedef typename matrix_traits<matrix_sub_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_sub_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_sub_exp>::NR;
         const static long NC = matrix_traits<matrix_sub_exp>::NC;
         const static long cost = matrix_traits<matrix_sub_exp>::cost;
         typedef typename matrix_traits<matrix_sub_exp>::layout_type layout_type;
 
-        matrix_sub_exp (
-            const matrix_sub_exp& item
-        ) :
-            matrix_exp<matrix_sub_exp>(*this),
-            m(item.m),
-            r_(item.r_),
-            c_(item.c_),
-            nr_(item.nr_),
-            nc_(item.nc_)
-        {
-        }
 
         // This constructor exists simply for the purpose of causing a compile time error if
         // someone tries to create an instance of this object with the wrong kind of objects.
@@ -1396,7 +1319,6 @@ namespace dlib
             const long& nr__,
             const long& nc__
         ) :
-            matrix_exp<matrix_sub_exp>(*this),
             m(m_),
             r_(r__),
             c_(c__),
@@ -1405,22 +1327,22 @@ namespace dlib
         {
         }
 
-        const typename M::type operator() (
+        const_ret_type operator() (
             long r, 
             long c
         ) const { return m(r+r_,c+c_); }
 
-        const typename M::type operator() ( long i ) const 
+        const_ret_type operator() ( long i ) const 
         { return matrix_exp<matrix_sub_exp>::operator()(i); }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item); }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return m.aliases(item); }
 
         long nr (
@@ -1436,94 +1358,189 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename T>
     class matrix_range_exp;
 
-    template <>
-    struct matrix_traits<matrix_range_exp>
+    template <typename T>
+    struct matrix_traits<matrix_range_exp<T> >
     {
-        typedef long type;
+        typedef T type;
+        typedef const T const_ret_type;
         typedef memory_manager<char>::kernel_1a mem_manager_type;
         typedef row_major_layout layout_type;
-        const static long NR = 0;
-        const static long NC = 1;
+        const static long NR = 1;
+        const static long NC = 0;
         const static long cost = 1;
     };
 
-    class matrix_range_exp : public matrix_exp<matrix_range_exp>
+    template <typename T>
+    class matrix_range_exp : public matrix_exp<matrix_range_exp<T> >
     {
     public:
-        typedef matrix_traits<matrix_range_exp>::type type;
-        typedef matrix_traits<matrix_range_exp>::mem_manager_type mem_manager_type;
+        typedef typename matrix_traits<matrix_range_exp>::type type;
+        typedef typename matrix_traits<matrix_range_exp>::const_ret_type const_ret_type;
+        typedef typename matrix_traits<matrix_range_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_range_exp>::NR;
         const static long NC = matrix_traits<matrix_range_exp>::NC;
         const static long cost = matrix_traits<matrix_range_exp>::cost;
-        typedef matrix_traits<matrix_range_exp>::layout_type layout_type;
+        typedef typename matrix_traits<matrix_range_exp>::layout_type layout_type;
+
 
         matrix_range_exp (
-            const matrix_range_exp& item
-        ) :
-            matrix_exp<matrix_range_exp>(*this),
-            nr_(item.nr_),
-            start(item.start),
-            inc(item.inc)
-        {}
-
-        matrix_range_exp (
-            long start_,
-            long end_
-        ) :
-            matrix_exp<matrix_range_exp>(*this)
+            T start_,
+            T end_
+        ) 
         {
             start = start_;
             if (start_ <= end_)
                 inc = 1;
             else 
                 inc = -1;
-            nr_ = std::abs(end_ - start_) + 1;
+            nc_ = std::abs(end_ - start_) + 1;
         }
         matrix_range_exp (
-            long start_,
-            long inc_,
-            long end_
-        ) :
-            matrix_exp<matrix_range_exp>(*this)
+            T start_,
+            T inc_,
+            T end_
+        ) 
         {
             start = start_;
-            nr_ = std::abs(end_ - start_)/inc_ + 1;
+            nc_ = std::abs(end_ - start_)/inc_ + 1;
             if (start_ <= end_)
                 inc = inc_;
             else
                 inc = -inc_;
         }
 
-        long operator() (
-            long r, 
+        matrix_range_exp (
+            T start_,
+            T end_,
+            long num,
+            bool
+        ) 
+        {
+            start = start_;
+            nc_ = num;
+            if (num > 1)
+            {
+                inc = (end_-start_)/(num-1);
+            }
+            else 
+            {
+                inc = 0;
+                start = end_;
+            }
+
+        }
+
+        const_ret_type operator() (
+            long, 
             long c
-        ) const { return start + r*inc;  }
+        ) const { return start + c*inc;  }
 
-        long operator() (
-            long r
-        ) const { return start + r*inc;  }
+        const_ret_type operator() (
+            long c
+        ) const { return start + c*inc;  }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& 
         ) const { return false; }
 
         long nr (
-        ) const { return nr_; }
+        ) const { return NR; }
 
         long nc (
-        ) const { return NC; }
+        ) const { return nc_; }
 
-        long nr_;
-        long start;
-        long inc;
+        long nc_;
+        T start;
+        T inc;
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T>
+    class matrix_log_range_exp;
+
+    template <typename T>
+    struct matrix_traits<matrix_log_range_exp<T> >
+    {
+        typedef T type;
+        typedef const T const_ret_type;
+        typedef memory_manager<char>::kernel_1a mem_manager_type;
+        typedef row_major_layout layout_type;
+        const static long NR = 1;
+        const static long NC = 0;
+        const static long cost = 1;
+    };
+
+    template <typename T>
+    class matrix_log_range_exp : public matrix_exp<matrix_log_range_exp<T> >
+    {
+    public:
+        typedef typename matrix_traits<matrix_log_range_exp>::type type;
+        typedef typename matrix_traits<matrix_log_range_exp>::const_ret_type const_ret_type;
+        typedef typename matrix_traits<matrix_log_range_exp>::mem_manager_type mem_manager_type;
+        const static long NR = matrix_traits<matrix_log_range_exp>::NR;
+        const static long NC = matrix_traits<matrix_log_range_exp>::NC;
+        const static long cost = matrix_traits<matrix_log_range_exp>::cost;
+        typedef typename matrix_traits<matrix_log_range_exp>::layout_type layout_type;
+
+
+        matrix_log_range_exp (
+            T start_,
+            T end_,
+            long num
+        ) 
+        {
+            start = start_;
+            nc_ = num;
+            if (num > 1)
+            {
+                inc = (end_-start_)/(num-1);
+            }
+            else 
+            {
+                inc = 0;
+                start = end_;
+            }
+
+        }
+
+        const_ret_type operator() (
+            long,
+            long c
+        ) const { return std::pow((T)10,start + c*inc);  }
+
+        const_ret_type operator() (
+            long c
+        ) const { return std::pow(10,start + c*inc);  }
+
+        template <typename U>
+        bool aliases (
+            const matrix_exp<U>& 
+        ) const { return false; }
+
+        template <typename U>
+        bool destructively_aliases (
+            const matrix_exp<U>& 
+        ) const { return false; }
+
+        long nr (
+        ) const { return NR; }
+
+        long nc (
+        ) const { return nc_; }
+
+        long nc_;
+        T start;
+        T inc;
     };
 
 // ----------------------------------------------------------------------------------------
@@ -1535,9 +1552,10 @@ namespace dlib
     struct matrix_traits<matrix_range_static_exp<start,inc_,end> >
     {
         typedef long type;
+        typedef const long const_ret_type;
         typedef memory_manager<char>::kernel_1a mem_manager_type;
-        const static long NR = tabs<(end - start)>::value/inc_ + 1;
-        const static long NC = 1;
+        const static long NR = 1;
+        const static long NC = tabs<(end - start)>::value/inc_ + 1;
         const static long cost = 1;
         typedef row_major_layout layout_type;
     };
@@ -1547,6 +1565,7 @@ namespace dlib
     {
     public:
         typedef typename matrix_traits<matrix_range_static_exp>::type type;
+        typedef typename matrix_traits<matrix_range_static_exp>::const_ret_type const_ret_type;
         typedef typename matrix_traits<matrix_range_static_exp>::mem_manager_type mem_manager_type;
         const static long NR = matrix_traits<matrix_range_static_exp>::NR;
         const static long NC = matrix_traits<matrix_range_static_exp>::NC;
@@ -1555,34 +1574,27 @@ namespace dlib
 
         const static long inc = (start <= end)?inc_:-inc_;
 
-        matrix_range_static_exp (
-            const matrix_range_static_exp& item
-        ) :
-            matrix_exp<matrix_range_static_exp>(*this)
-        {}
 
         matrix_range_static_exp (
-        ) :
-            matrix_exp<matrix_range_static_exp>(*this)
-        {}
+        ) {}
 
-        long operator() (
-            long r, 
+        const_ret_type operator() (
+            long , 
             long c
-        ) const { return start + r*inc;  }
+        ) const { return start + c*inc;  }
 
-        long operator() (
-            long r
-        ) const { return start + r*inc;  }
+        const_ret_type operator() (
+            long c
+        ) const { return start + c*inc;  }
 
-        template <typename U, long iNR, long iNC , typename MM, typename L>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return false; }
 
-        template <typename U, long iNR, long iNC, typename MM, typename L >
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,MM,L>& item
+            const matrix_exp<U>& item
         ) const { return false; }
 
         long nr (

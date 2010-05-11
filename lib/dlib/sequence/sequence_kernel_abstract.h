@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_SEQUENCE_KERNEl_ABSTRACT_
 #ifdef DLIB_SEQUENCE_KERNEl_ABSTRACT_
@@ -126,7 +126,7 @@ namespace dlib
                 ensures
                     - item has been concatenated onto the end of *this 
                       i.e. item[0] becomes (#*this)[size()], item[1] 
-                      becomes (#*this)[size()+1], etc...
+                      becomes (#*this)[size()+1], etc.
                     - #size() == size() + item.size() 
                     - #item has its initial value 
                     - #at_start() == true

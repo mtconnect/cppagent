@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net), Miguel Grinberg
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_SOCKETS_KERNEl_1_
 #define DLIB_SOCKETS_KERNEl_1_
@@ -13,6 +13,7 @@
 #include <string>
 #include "../threads.h"
 #include "../smart_pointers.h"
+#include "../uintn.h"
 
 
 namespace dlib
@@ -110,6 +111,11 @@ namespace dlib
             long num
         );
 
+        long read (
+            char* buf, 
+            long num,
+            unsigned long timeout
+        );
 
         unsigned short get_local_port (
         ) const {  return connection_local_port; }
@@ -129,8 +135,29 @@ namespace dlib
         int shutdown (
         );
 
+        // I would use SOCKET here but I don't want to include the windows
+        // header files since they bring in a bunch of unpleasantness.  So
+        // I'm doing this instead which should ultimately be the same type
+        // as the SOCKET win the windows API.
+        typedef unsigned_type<void*>::type socket_descriptor_type;
+
+        socket_descriptor_type get_socket_descriptor (
+        ) const;
+
     private:
-   
+
+        bool readable (
+            unsigned long timeout 
+        ) const;
+        /*! 
+            requires 
+                - timeout < 2000000  
+            ensures 
+                - returns true if a read call on this connection will not block. 
+                - returns false if a read call on this connection will block or if 
+                  there was an error. 
+        !*/ 
+
         bool sd_called (
         )const
         /*!

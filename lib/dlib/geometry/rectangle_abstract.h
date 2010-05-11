@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2005  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_RECTANGLe_ABSTRACT_
 #ifdef DLIB_RECTANGLe_ABSTRACT_
@@ -18,8 +18,8 @@ namespace dlib
 
             WHAT THIS OBJECT REPRESENTS
                 This object represents a rectangular region inside a Cartesian 
-                coordinate system.  The region is the rectangle with its upper 
-                left corner at position (left(),top()) and its lower right corner 
+                coordinate system.  The region is the rectangle with its top 
+                left corner at position (left(),top()) and its bottom right corner 
                 at (right(),bottom()).
 
                 Note that the origin of the coordinate system, i.e. (0,0), is located
@@ -189,6 +189,38 @@ namespace dlib
         /*!
             ensures
                 - #bottom() == bottom_
+        !*/
+
+        const point tl_corner (
+        ) const;
+        /*!
+            ensures
+                - returns point(left(), top()) 
+                  (i.e. returns the top left corner point for this rectangle)
+        !*/
+
+        const point bl_corner (
+        ) const;
+        /*!
+            ensures
+                - returns point(left(), bottom()) 
+                  (i.e. returns the bottom left corner point for this rectangle)
+        !*/
+
+        const point tr_corner (
+        ) const;
+        /*!
+            ensures
+                - returns point(right(), top()) 
+                  (i.e. returns the top right corner point for this rectangle)
+        !*/
+
+        const point br_corner (
+        ) const;
+        /*!
+            ensures
+                - returns point(right(), bottom()) 
+                  (i.e. returns the bottom right corner point for this rectangle)
         !*/
 
         bool is_empty (
@@ -385,6 +417,7 @@ namespace dlib
                 - else
                     - R.width() == width
                     - R.height() == height 
+                - R.tl_corner() == point(p.x()-width/2, p.y()-height/2)
                 - The center of R is a the point p 
     !*/
 
@@ -405,6 +438,7 @@ namespace dlib
                 - else
                     - R.width() == width
                     - R.height() == height 
+                - R.tl_corner() == point(x-width/2, y-height/2)
                 - The center of R is a the point (x,y)
     !*/
 
@@ -417,14 +451,33 @@ namespace dlib
     );
     /*!
         ensures
-            - returns a rectangle R such that:
-                - if (width == 0 || height == 0)
-                    - R.width() == 0 
-                    - R.height() == 0 
-                - else
-                    - R.width() == width
-                    - R.height() == height 
-                - The center of R is at the center of rect 
+            - returns centered_rect( (rect.tl_corner() + rect.br_corner())/2, width, height)
+              (i.e. returns a rectangle centered on rect but with the given width
+              and height)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    inline const rectangle shrink_rect (
+        const rectangle& rect,
+        long num 
+    );
+    /*!
+        ensures
+            - returns rectangle(rect.left()+num, rect.top()+num, rect.right()-num, rect.bottom()-num)
+              (i.e. shrinks the given rectangle by shrinking its border by num)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    inline const rectangle grow_rect (
+        const rectangle& rect,
+        long num 
+    );
+    /*!
+        ensures
+            - return shrink_rect(rect, -num)
+              (i.e. grows the given rectangle by expanding its border by num)
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -551,6 +604,24 @@ namespace dlib
                 - returns p
             - else
                 - returns the point in rect that is closest to p
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T 
+        >
+    const rectangle get_rect (
+        const T& m
+    );
+    /*!
+        requires
+            - T has nr() and nc() functions that return longs
+        ensures
+            - returns rectangle(0, 0, m.nc()-1, m.nr()-1)
+              (i.e. assuming T represents some kind of rectangular grid, such as
+              the dlib::matrix or dlib::array2d objects, this function returns the
+              bounding rectangle for that gridded object.)
     !*/
 
 // ----------------------------------------------------------------------------------------

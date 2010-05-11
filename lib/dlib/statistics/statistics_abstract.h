@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_STATISTICs_ABSTRACT_
 #ifdef DLIB_STATISTICs_ABSTRACT_
@@ -118,6 +118,16 @@ namespace dlib
                   object so far.
         !*/
 
+        T stddev (
+        ) const;
+        /*!
+            requires
+                - current_n() > 1
+            ensures
+                - returns the standard deviation of all the values presented to this
+                  object so far.
+        !*/
+
         T max (
         ) const;
         /*!
@@ -152,6 +162,115 @@ namespace dlib
     template <
         typename matrix_type
         >
+    class running_covariance
+    {
+        /*!
+            REQUIREMENTS ON matrix_type
+                Must be some type of dlib::matrix.
+
+            INITIAL VALUE
+                - in_vector_size() == 0
+                - current_n() == 0
+
+            WHAT THIS OBJECT REPRESENTS
+                This object is a simple tool for computing the mean and
+                covariance of a sequence of vectors.  
+        !*/
+    public:
+
+        typedef typename matrix_type::mem_manager_type mem_manager_type;
+        typedef typename matrix_type::type scalar_type;
+        typedef typename matrix_type::layout_type layout_type;
+        typedef matrix<scalar_type,0,0,mem_manager_type,layout_type> general_matrix;
+        typedef matrix<scalar_type,0,1,mem_manager_type,layout_type> column_matrix;
+
+        running_covariance(
+        );
+        /*!
+            ensures
+                - this object is properly initialized
+        !*/
+
+        void clear(
+        );
+        /*!
+            ensures
+                - this object has its initial value
+                - clears all memory of any previous data points
+        !*/
+
+        long current_n (
+        ) const;
+        /*!
+            ensures
+                - returns the number of samples that have been presented to this object
+        !*/
+
+        long in_vector_size (
+        ) const;
+        /*!
+            ensures
+                - if (this object has been presented with any input vectors) then
+                    - returns the dimension of the column vectors used with this object
+                - else
+                    - returns 0
+        !*/
+
+        void add (
+            const matrix_exp& val
+        );
+        /*!
+            requires
+                - is_col_vector(val) == true
+                - if (in_vector_size() != 0) then
+                    - val.size() == in_vector_size()
+            ensures
+                - updates the mean and covariance stored in this object so that
+                  the new value is factored into them.
+                - #in_vector_size() == val.size()
+        !*/
+
+        const column_matrix mean (
+        ) const;
+        /*!
+            requires
+                - in_vector_size() != 0 
+            ensures
+                - returns the mean of all the vectors presented to this object 
+                  so far.
+        !*/
+
+        const general_matrix covariance (
+        ) const;
+        /*!
+            requires
+                - in_vector_size() != 0 
+                - current_n() > 1
+            ensures
+                - returns the unbiased sample covariance matrix for all the vectors 
+                  presented to this object so far.
+        !*/
+
+        const running_covariance operator+ (
+            const running_covariance& item
+        ) const;
+        /*!
+            requires
+                - in_vector_size() == 0 || item.in_vector_size() == 0 || in_vector_size() == item.in_vector_size()
+                  (i.e. the in_vector_size() of *this and item must match or one must be zero)
+            ensures
+                - returns a new running_covariance object that represents the combination of all 
+                  the vectors given to *this and item.  That is, this function returns a
+                  running_covariance object, R, that is equivalent to what you would obtain if all
+                  calls to this->add() and item.add() had instead been done to R.
+        !*/
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename matrix_type
+        >
     class vector_normalizer
     {
         /*!
@@ -164,7 +283,6 @@ namespace dlib
                 - out_vector_size() == 0
                 - means().size() == 0
                 - std_devs().size() == 0
-                - pca_matrix().size() == 0
 
             WHAT THIS OBJECT REPRESENTS
                 This object represents something that can learn to normalize a set 
@@ -174,6 +292,13 @@ namespace dlib
                 Also, if desired, this object can use principal component 
                 analysis for the purposes of reducing the number of elements in a 
                 vector.  
+
+            THREAD SAFETY
+                Note that this object contains a cached matrix object it uses 
+                to store intermediate results for normalization.  This avoids
+                needing to reallocate it every time this object performs normalization
+                but also makes it non-thread safe.  So make sure you don't share
+                this object between threads. 
         !*/
 
     public:
@@ -197,11 +322,146 @@ namespace dlib
                   vectors in the given set of samples.  
                 - #means() == mean(samples)
                 - #std_devs() == reciprocal(sqrt(variance(samples)));
-                - #pca_matrix().size() == 0
         !*/
 
+        long in_vector_size (
+        ) const;
+        /*!
+            ensures
+                - returns the number of rows that input vectors are
+                  required to contain if they are to be normalized by
+                  this object.
+        !*/
+
+        long out_vector_size (
+        ) const;
+        /*!
+            ensures
+                - returns the number of rows in the normalized vectors
+                  that come out of this object.
+        !*/
+
+        const matrix_type& means (
+        ) const;
+        /*!
+            ensures               
+                - returns a matrix M such that:
+                    - M.nc() == 1
+                    - M.nr() == in_vector_size()
+                    - M(i) == the mean of the ith input feature shown to train()
+        !*/
+
+        const matrix_type& std_devs (
+        ) const;
+        /*!
+            ensures               
+                - returns a matrix SD such that:
+                    - SD.nc() == 1
+                    - SD.nr() == in_vector_size()
+                    - SD(i) == the reciprocal of the standard deviation of the ith 
+                      input feature shown to train() 
+        !*/
+ 
+        const matrix_type& operator() (
+            const matrix_type& x
+        ) const;
+        /*!
+            requires
+                - x.nr() == in_vector_size()
+                - x.nc() == 1
+            ensures
+                - returns a normalized version of x, call it Z, that has the 
+                  following properties: 
+                    - Z.nr() == out_vector_size()
+                    - Z.nc() == 1
+                    - the expected value of each element of Z is 0 
+                    - the expected variance of each element of Z is 1
+                    - Z == pointwise_multiply(x-means(), std_devs());
+        !*/
+
+        void swap (
+            vector_normalizer& item
+        );
+        /*!
+            ensures
+                - swaps *this and item
+        !*/
+    };
+
+    template <
+        typename matrix_type
+        >
+    inline void swap (
+        vector_normalizer<matrix_type>& a, 
+        vector_normalizer<matrix_type>& b 
+    ) { a.swap(b); }   
+    /*!
+        provides a global swap function
+    !*/
+
+    template <
+        typename matrix_type,
+        >
+    void deserialize (
+        vector_normalizer<matrix_type>& item, 
+        std::istream& in
+    );   
+    /*!
+        provides deserialization support 
+    !*/
+
+    template <
+        typename matrix_type,
+        >
+    void serialize (
+        const vector_normalizer<matrix_type>& item, 
+        std::ostream& out 
+    );   
+    /*!
+        provides serialization support 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename matrix_type
+        >
+    class vector_normalizer_pca
+    {
+        /*!
+            REQUIREMENTS ON matrix_type
+                - must be a dlib::matrix object capable of representing column 
+                  vectors
+
+            INITIAL VALUE
+                - in_vector_size() == 0
+                - out_vector_size() == 0
+                - means().size() == 0
+                - std_devs().size() == 0
+                - pca_matrix().size() == 0
+
+            WHAT THIS OBJECT REPRESENTS
+                This object represents something that can learn to normalize a set 
+                of column vectors.  In particular, normalized column vectors should 
+                have zero mean and a variance of one.  
+
+                Also, this object uses principal component analysis for the purposes 
+                of reducing the number of elements in a vector.  
+
+            THREAD SAFETY
+                Note that this object contains a cached matrix object it uses 
+                to store intermediate results for normalization.  This avoids
+                needing to reallocate it every time this object performs normalization
+                but also makes it non-thread safe.  So make sure you don't share
+                this object between threads. 
+        !*/
+
+    public:
+        typedef typename matrix_type::mem_manager_type mem_manager_type;
+        typedef typename matrix_type::type scalar_type;
+
         template <typename vector_type>
-        void train_pca (
+        void train (
             const vector_type& samples,
             const double eps = 0.99
         );
@@ -253,7 +513,6 @@ namespace dlib
                     - M.nc() == 1
                     - M.nr() == in_vector_size()
                     - M(i) == the mean of the ith input feature shown to train()
-                      or train_pca()
         !*/
 
         const matrix<scalar_type,0,1,mem_manager_type>& std_devs (
@@ -264,21 +523,18 @@ namespace dlib
                     - SD.nc() == 1
                     - SD.nr() == in_vector_size()
                     - SD(i) == the reciprocal of the standard deviation of the ith 
-                      input feature shown to train() or train_pca()
+                      input feature shown to train() 
         !*/
  
         const matrix<scalar_type,0,0,mem_manager_type>& pca_matrix (
         ) const;
         /*!
             ensures
-                - if (PCA is used in normalization) then
-                    - returns a matrix PCA such that:
-                        - PCA.nr() == out_vector_size()
-                        - PCA.nc() == in_vector_size()
-                        - PCA == the principal component analysis transformation 
-                          matrix 
-                - else
-                    - returns an empty matrix object (i.e. it has size() == 0)
+                - returns a matrix PCA such that:
+                    - PCA.nr() == out_vector_size()
+                    - PCA.nc() == in_vector_size()
+                    - PCA == the principal component analysis transformation 
+                      matrix 
         !*/
 
         const matrix<scalar_type,0,1,mem_manager_type>& operator() (
@@ -295,14 +551,11 @@ namespace dlib
                     - Z.nc() == 1
                     - the expected value of each element of Z is 0 
                     - the expected variance of each element of Z is 1
-                    - if (pca_matrix().size() > 0) then
-                        - Z == pca_matrix()*pointwise_multiply(x-means(), std_devs());
-                    - else
-                        - Z == pointwise_multiply(x-means(), std_devs());
+                    - Z == pca_matrix()*pointwise_multiply(x-means(), std_devs());
         !*/
 
         void swap (
-            vector_normalizer& item
+            vector_normalizer_pca& item
         );
         /*!
             ensures
@@ -314,8 +567,8 @@ namespace dlib
         typename matrix_type
         >
     inline void swap (
-        vector_normalizer<matrix_type>& a, 
-        vector_normalizer<matrix_type>& b 
+        vector_normalizer_pca<matrix_type>& a, 
+        vector_normalizer_pca<matrix_type>& b 
     ) { a.swap(b); }   
     /*!
         provides a global swap function
@@ -325,7 +578,7 @@ namespace dlib
         typename matrix_type,
         >
     void deserialize (
-        vector_normalizer<matrix_type>& item, 
+        vector_normalizer_pca<matrix_type>& item, 
         std::istream& in
     );   
     /*!
@@ -336,7 +589,7 @@ namespace dlib
         typename matrix_type,
         >
     void serialize (
-        const vector_normalizer<matrix_type>& item, 
+        const vector_normalizer_pca<matrix_type>& item, 
         std::ostream& out 
     );   
     /*!

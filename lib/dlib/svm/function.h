@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_SVm_FUNCTION
 #define DLIB_SVm_FUNCTION
@@ -12,6 +12,7 @@
 #include "../serialize.h"
 #include "../rand.h"
 #include "../statistics.h"
+#include "kernel_matrix.h"
 
 namespace dlib
 {
@@ -23,6 +24,7 @@ namespace dlib
         >
     struct decision_function
     {
+        typedef K kernel_type;
         typedef typename K::scalar_type scalar_type;
         typedef typename K::sample_type sample_type;
         typedef typename K::mem_manager_type mem_manager_type;
@@ -33,7 +35,7 @@ namespace dlib
         scalar_vector_type alpha;
         scalar_type b;
         K kernel_function;
-        sample_vector_type support_vectors;
+        sample_vector_type basis_vectors;
 
         decision_function (
         ) : b(0), kernel_function(K()) {}
@@ -44,19 +46,19 @@ namespace dlib
             alpha(d.alpha), 
             b(d.b),
             kernel_function(d.kernel_function),
-            support_vectors(d.support_vectors) 
+            basis_vectors(d.basis_vectors) 
         {}
 
         decision_function (
             const scalar_vector_type& alpha_,
             const scalar_type& b_,
             const K& kernel_function_,
-            const sample_vector_type& support_vectors_
+            const sample_vector_type& basis_vectors_
         ) :
             alpha(alpha_),
             b(b_),
             kernel_function(kernel_function_),
-            support_vectors(support_vectors_)
+            basis_vectors(basis_vectors_)
         {}
 
         decision_function& operator= (
@@ -68,7 +70,7 @@ namespace dlib
                 alpha = d.alpha;
                 b = d.b;
                 kernel_function = d.kernel_function;
-                support_vectors = d.support_vectors;
+                basis_vectors = d.basis_vectors;
             }
             return *this;
         }
@@ -79,7 +81,7 @@ namespace dlib
         {
             scalar_type temp = 0;
             for (long i = 0; i < alpha.nr(); ++i)
-                temp += alpha(i) * kernel_function(x,support_vectors(i));
+                temp += alpha(i) * kernel_function(x,basis_vectors(i));
 
             return temp - b;
         }
@@ -98,9 +100,9 @@ namespace dlib
             serialize(item.alpha, out);
             serialize(item.b,     out);
             serialize(item.kernel_function, out);
-            serialize(item.support_vectors, out);
+            serialize(item.basis_vectors, out);
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             throw serialization_error(e.info + "\n   while serializing object of type decision_function"); 
         }
@@ -119,9 +121,9 @@ namespace dlib
             deserialize(item.alpha, in);
             deserialize(item.b, in);
             deserialize(item.kernel_function, in);
-            deserialize(item.support_vectors, in);
+            deserialize(item.basis_vectors, in);
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             throw serialization_error(e.info + "\n   while deserializing object of type decision_function"); 
         }
@@ -134,22 +136,23 @@ namespace dlib
         >
     struct probabilistic_decision_function
     {
+        typedef K kernel_type;
         typedef typename K::scalar_type scalar_type;
         typedef typename K::sample_type sample_type;
         typedef typename K::mem_manager_type mem_manager_type;
 
-        scalar_type a;
-        scalar_type b;
+        scalar_type alpha;
+        scalar_type beta;
         decision_function<K> decision_funct;
 
         probabilistic_decision_function (
-        ) : a(0), b(0), decision_funct(decision_function<K>()) {}
+        ) : alpha(0), beta(0), decision_funct(decision_function<K>()) {}
 
         probabilistic_decision_function (
             const probabilistic_decision_function& d
         ) : 
-            a(d.a),
-            b(d.b),
+            alpha(d.alpha),
+            beta(d.beta),
             decision_funct(d.decision_funct)
         {}
 
@@ -158,8 +161,8 @@ namespace dlib
             const scalar_type b_,
             const decision_function<K>& decision_funct_ 
         ) :
-            a(a_),
-            b(b_),
+            alpha(a_),
+            beta(b_),
             decision_funct(decision_funct_)
         {}
 
@@ -169,8 +172,8 @@ namespace dlib
         {
             if (this != &d)
             {
-                a = d.a;
-                b = d.b;
+                alpha = d.alpha;
+                beta = d.beta;
                 decision_funct = d.decision_funct;
             }
             return *this;
@@ -181,7 +184,7 @@ namespace dlib
         ) const
         {
             scalar_type f = decision_funct(x);
-            return 1/(1 + std::exp(a*f + b));
+            return 1/(1 + std::exp(alpha*f + beta));
         }
     };
 
@@ -195,8 +198,8 @@ namespace dlib
     {
         try
         {
-            serialize(item.a, out);
-            serialize(item.b, out);
+            serialize(item.alpha, out);
+            serialize(item.beta, out);
             serialize(item.decision_funct, out);
         }
         catch (serialization_error& e)
@@ -216,8 +219,8 @@ namespace dlib
         typedef typename K::scalar_type scalar_type;
         try
         {
-            deserialize(item.a, in);
-            deserialize(item.b, in);
+            deserialize(item.alpha, in);
+            deserialize(item.beta, in);
             deserialize(item.decision_funct, in);
         }
         catch (serialization_error& e)
@@ -233,6 +236,7 @@ namespace dlib
         >
     struct distance_function
     {
+        typedef K kernel_type;
         typedef typename K::scalar_type scalar_type;
         typedef typename K::sample_type sample_type;
         typedef typename K::mem_manager_type mem_manager_type;
@@ -243,7 +247,7 @@ namespace dlib
         scalar_vector_type alpha;
         scalar_type b;
         K kernel_function;
-        sample_vector_type support_vectors;
+        sample_vector_type basis_vectors;
 
         distance_function (
         ) : b(0), kernel_function(K()) {}
@@ -254,19 +258,19 @@ namespace dlib
             alpha(d.alpha), 
             b(d.b),
             kernel_function(d.kernel_function),
-            support_vectors(d.support_vectors) 
+            basis_vectors(d.basis_vectors) 
         {}
 
         distance_function (
             const scalar_vector_type& alpha_,
             const scalar_type& b_,
             const K& kernel_function_,
-            const sample_vector_type& support_vectors_
+            const sample_vector_type& basis_vectors_
         ) :
             alpha(alpha_),
             b(b_),
             kernel_function(kernel_function_),
-            support_vectors(support_vectors_)
+            basis_vectors(basis_vectors_)
         {}
 
         distance_function& operator= (
@@ -278,7 +282,7 @@ namespace dlib
                 alpha = d.alpha;
                 b = d.b;
                 kernel_function = d.kernel_function;
-                support_vectors = d.support_vectors;
+                basis_vectors = d.basis_vectors;
             }
             return *this;
         }
@@ -289,7 +293,7 @@ namespace dlib
         {
             scalar_type temp = 0;
             for (long i = 0; i < alpha.nr(); ++i)
-                temp += alpha(i) * kernel_function(x,support_vectors(i));
+                temp += alpha(i) * kernel_function(x,basis_vectors(i));
 
             temp = b + kernel_function(x,x) - 2*temp; 
             if (temp > 0)
@@ -305,7 +309,7 @@ namespace dlib
             scalar_type temp = 0;
             for (long i = 0; i < alpha.nr(); ++i)
                 for (long j = 0; j < x.alpha.nr(); ++j)
-                    temp += alpha(i)*x.alpha(j) * kernel_function(support_vectors(i), x.support_vectors(j));
+                    temp += alpha(i)*x.alpha(j) * kernel_function(basis_vectors(i), x.basis_vectors(j));
 
             temp = b + x.b - 2*temp;
             if (temp > 0)
@@ -328,9 +332,9 @@ namespace dlib
             serialize(item.alpha, out);
             serialize(item.b,     out);
             serialize(item.kernel_function, out);
-            serialize(item.support_vectors, out);
+            serialize(item.basis_vectors, out);
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             throw serialization_error(e.info + "\n   while serializing object of type distance_function"); 
         }
@@ -349,9 +353,9 @@ namespace dlib
             deserialize(item.alpha, in);
             deserialize(item.b, in);
             deserialize(item.kernel_function, in);
-            deserialize(item.support_vectors, in);
+            deserialize(item.basis_vectors, in);
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             throw serialization_error(e.info + "\n   while deserializing object of type distance_function"); 
         }
@@ -360,15 +364,17 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
-        typename function_type
+        typename function_type,
+        typename normalizer_type = vector_normalizer<typename function_type::sample_type>
         >
     struct normalized_function 
     {
+        typedef typename function_type::kernel_type kernel_type;
         typedef typename function_type::scalar_type scalar_type;
         typedef typename function_type::sample_type sample_type;
         typedef typename function_type::mem_manager_type mem_manager_type;
 
-        vector_normalizer<sample_type> normalizer;
+        normalizer_type normalizer;
         function_type function;
 
         normalized_function (
@@ -392,10 +398,11 @@ namespace dlib
     };
 
     template <
-        typename function_type
+        typename function_type,
+        typename normalizer_type 
         >
     void serialize (
-        const normalized_function<function_type>& item,
+        const normalized_function<function_type,normalizer_type>& item,
         std::ostream& out
     )
     {
@@ -404,17 +411,18 @@ namespace dlib
             serialize(item.normalizer, out);
             serialize(item.function,     out);
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             throw serialization_error(e.info + "\n   while serializing object of type normalized_function"); 
         }
     }
 
     template <
-        typename function_type
+        typename function_type,
+        typename normalizer_type 
         >
     void deserialize (
-        normalized_function<function_type>& item,
+        normalized_function<function_type,normalizer_type>& item,
         std::istream& in 
     )
     {
@@ -423,13 +431,107 @@ namespace dlib
             deserialize(item.normalizer, in);
             deserialize(item.function, in);
         }
-        catch (serialization_error e)
+        catch (serialization_error& e)
         { 
             throw serialization_error(e.info + "\n   while deserializing object of type normalized_function"); 
         }
     }
 
 // ----------------------------------------------------------------------------------------
+
+    template <
+        typename K
+        >
+    struct projection_function 
+    {
+        typedef K kernel_type;
+        typedef typename K::scalar_type scalar_type;
+        typedef typename K::sample_type sample_type;
+        typedef typename K::mem_manager_type mem_manager_type;
+
+        typedef matrix<scalar_type,0,1,mem_manager_type> scalar_vector_type;
+        typedef matrix<scalar_type,0,0,mem_manager_type> scalar_matrix_type;
+        typedef matrix<sample_type,0,1,mem_manager_type> sample_vector_type;
+
+        scalar_matrix_type weights;
+        K                  kernel_function;
+        sample_vector_type basis_vectors;
+
+        projection_function (
+        ) {}
+
+        projection_function (
+            const projection_function& f
+        ) : weights(f.weights), kernel_function(f.kernel_function), basis_vectors(f.basis_vectors) {}
+
+        projection_function (
+            const scalar_matrix_type& weights_,
+            const K& kernel_function_,
+            const sample_vector_type& basis_vectors_
+        ) : weights(weights_), kernel_function(kernel_function_), basis_vectors(basis_vectors_) {}
+
+        long out_vector_size (
+        ) const { return weights.nr(); }
+
+        const scalar_vector_type& operator() (
+            const sample_type& x
+        ) const
+        {
+            // Run the x sample through all the basis functions we have and then
+            // multiply it by the weights matrix and return the result.  Note that
+            // the temp vectors are here to avoid reallocating their memory every
+            // time this function is called.
+            temp1 = kernel_matrix(kernel_function, basis_vectors, x);
+            temp2 = weights*temp1;
+            return temp2;
+        }
+
+    private:
+        mutable scalar_vector_type temp1, temp2;
+    };
+
+    template <
+        typename K
+        >
+    void serialize (
+        const projection_function<K>& item,
+        std::ostream& out
+    )
+    {
+        try
+        {
+            serialize(item.weights, out);
+            serialize(item.kernel_function,     out);
+            serialize(item.basis_vectors,     out);
+        }
+        catch (serialization_error& e)
+        { 
+            throw serialization_error(e.info + "\n   while serializing object of type projection_function"); 
+        }
+    }
+
+    template <
+        typename K
+        >
+    void deserialize (
+        projection_function<K>& item,
+        std::istream& in 
+    )
+    {
+        try
+        {
+            deserialize(item.weights, in);
+            deserialize(item.kernel_function,     in);
+            deserialize(item.basis_vectors,     in);
+        }
+        catch (serialization_error& e)
+        { 
+            throw serialization_error(e.info + "\n   while deserializing object of type projection_function"); 
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
 
 }
 

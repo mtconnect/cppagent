@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_DIR_NAV_KERNEl_ABSTRACT_
 #ifdef DLIB_DIR_NAV_KERNEl_ABSTRACT_
@@ -35,7 +35,7 @@ namespace dlib
         ensures
             - #roots == a queue containing directories that represent all the roots 
               of the filesystem on this machine.   (e.g. in windows you have c:\, d:\ 
-              etc...)
+              etc.)
         throws
             - std::bad_alloc
     !*/
@@ -94,6 +94,14 @@ namespace dlib
                 - file_not_found
                     This exception is thrown if the file can not be found or
                     accessed.                    
+        !*/
+
+        file (
+            const char* name
+        );
+        /*!
+            ensures
+                - this function is idential to file(const std::string& name)
         !*/
 
         file (
@@ -228,6 +236,14 @@ namespace dlib
                 - dir_not_found
                     This exception is thrown if the directory can not be found or
                     accessed.    
+        !*/
+
+        directory (
+            const char* name
+        );
+        /*!
+            ensures
+                - this function is idential to directory(const std::string& name)
         !*/
 
         directory (

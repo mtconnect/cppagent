@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2005  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_ENTROPY_ENCODER_MODEL_KERNEl_4_
 #define DLIB_ENTROPY_ENCODER_MODEL_KERNEl_4_
@@ -92,7 +92,7 @@ namespace dlib
                         - The "child context set" of a node is a set of nodes with
                           contexts that are one symbol longer and prefixed by the node's 
                           context.  For example, if a node has a context "abc" then the 
-                          nodes for contexts "abca", "abcb", "abcc", etc... are all in 
+                          nodes for contexts "abca", "abcb", "abcc", etc. are all in 
                           the child context set of the node.
                         - The "parent context" of a node is the context that is one 
                           symbol shorter than the node's context and includes the 

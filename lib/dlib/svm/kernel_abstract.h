@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_SVm_KERNEL_ABSTRACT_
 #ifdef DLIB_SVm_KERNEL_ABSTRACT_
@@ -28,7 +28,7 @@ namespace dlib
                   long double type.
                 - an overloaded operator() that operates on two items of sample_type 
                   and returns a scalar_type.  
-                  (e.g. scalar_type val = kernel_function(sample(i),sample(j)); 
+                  (e.g. scalar_type val = kernel_function(sample1,sample2); 
                    would be a valid expression)
                 - a public typedef named mem_manager_type that is an implementation of 
                   dlib/memory_manager/memory_manager_kernel_abstract.h or
@@ -130,7 +130,7 @@ namespace dlib
     !*/
 
     template <
-        typename K
+        typename T
         >
     void deserialize (
         radial_basis_kernel<T>& item,
@@ -171,7 +171,7 @@ namespace dlib
         !*/
 
         sigmoid_kernel(
-            const radial_basis_kernel& k
+            const sigmoid_kernel& k
         );
         /*!
             ensures
@@ -236,7 +236,7 @@ namespace dlib
     !*/
 
     template <
-        typename K
+        typename T
         >
     void deserialize (
         sigmoid_kernel<T>& item,
@@ -280,7 +280,7 @@ namespace dlib
         !*/
 
         polynomial_kernel(
-            const radial_basis_kernel& k
+            const polynomial_kernel& k
         );
         /*!
             ensures
@@ -349,7 +349,7 @@ namespace dlib
     !*/
 
     template <
-        typename K
+        typename T
         >
     void deserialize (
         polynomial_kernel<T>& item,
@@ -412,7 +412,7 @@ namespace dlib
     !*/
 
     template <
-        typename K
+        typename T
         >
     void deserialize (
         linear_kernel<T>& item,
@@ -425,6 +425,109 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
+        typename T
+        >
+    struct offset_kernel
+    {
+        /*!
+            REQUIREMENTS ON T
+                T must be a kernel object (e.g. radial_basis_kernel, polynomial_kernel, etc.) 
+
+            WHAT THIS OBJECT REPRESENTS
+                This object represents a kernel with a fixed value offset
+                added to it.
+        !*/
+
+        typedef typename T::scalar_type scalar_type;
+        typedef typename T::sample_type sample_type;
+        typedef typename T::mem_manager_type mem_manager_type;
+
+        const T kernel;
+        const scalar_type offset;
+
+        offset_kernel(
+        );
+        /*!
+            ensures
+                - #offset == 0.01 
+        !*/
+
+        offset_kernel(
+            const offset_kernel& k
+        );
+        /*!
+            ensures
+                - #offset == k.offset
+                - #kernel == k.kernel
+        !*/
+
+        offset_kernel(
+            const T& k,
+            const scalar_type& off
+        );
+        /*!
+            ensures
+                - #kernel == k 
+                - #offset == off 
+        !*/
+
+        scalar_type operator() (
+            const sample_type& a,
+            const sample_type& b
+        ) const;
+        /*!
+            ensures
+                - returns kernel(a,b) + offset
+        !*/
+
+        offset_kernel& operator= (
+            const offset_kernel& k
+        );
+        /*!
+            ensures
+                - #offset == k.offset
+                - #kernel == k.kernel
+        !*/
+
+        bool operator== (
+            const offset_kernel& k
+        ) const;
+        /*!
+            ensures
+                - if (k and *this are identical) then
+                    - returns true
+                - else
+                    - returns false
+        !*/
+    };
+
+    template <
+        typename T
+        >
+    void serialize (
+        const offset_kernel<T>& item,
+        std::ostream& out
+    );
+    /*!
+        provides serialization support for offset_kernel
+    !*/
+
+    template <
+        typename T
+        >
+    void deserialize (
+        offset_kernel<T>& item,
+        std::istream& in 
+    );
+    /*!
+        provides deserialization support for offset_kernel
+    !*/
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+    template <
         typename kernel_type
         >
     struct kernel_derivative
@@ -434,6 +537,9 @@ namespace dlib
                 kernel_type must be one of the following kernel types:
                     - radial_basis_kernel
                     - polynomial_kernel 
+                    - sigmoid_kernel
+                    - linear_kernel
+                    - offset_kernel
 
             WHAT THIS OBJECT REPRESENTS
                 This is a function object that computes the derivative of a kernel 
@@ -459,7 +565,7 @@ namespace dlib
         ) const;
         /*!
             ensures
-                - returns the derivative of k with respect to y.  Or in other words, k(x, y+dy)/dy 
+                - returns the derivative of k with respect to y.  
         !*/
 
         const kernel_type& k;

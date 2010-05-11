@@ -66,6 +66,10 @@ public:
   /* Method called when connection is lost. */
   virtual void disconnected() = 0;
 
+  /* heartbeats */
+  bool heartbeats() const { return mHeartbeats; }
+  int heartbeatFrequency() const { return mHeartbeatFrequency; }
+
 protected:
   void startHeartbeats(const std::string &buf);
   void close();

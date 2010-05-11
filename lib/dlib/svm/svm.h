@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_SVm_
 #define DLIB_SVm_
@@ -103,6 +103,8 @@ namespace dlib
         const U& x_labels
     )
     {
+        bool seen_neg_class = false;
+        bool seen_pos_class = false;
         if (x.nc() != 1 || x_labels.nc() != 1) return false; 
         if (x.nr() != x_labels.nr()) return false;
         if (x.nr() <= 1) return false;
@@ -110,9 +112,14 @@ namespace dlib
         {
             if (x_labels(r) != -1 && x_labels(r) != 1)
                 return false;
+
+            if (x_labels(r) == 1)
+                seen_pos_class = true;
+            if (x_labels(r) == -1)
+                seen_neg_class = true;
         }
 
-        return true;
+        return seen_pos_class && seen_neg_class;
     }
 
     template <
@@ -136,7 +143,9 @@ namespace dlib
         >
     class kernel_matrix_cache
     {
-        typedef typename K::scalar_type scalar_type;
+    public:
+        typedef float scalar_type;
+        //typedef typename K::scalar_type scalar_type;
         typedef typename K::sample_type sample_type;
         typedef typename K::mem_manager_type mem_manager_type;
 
@@ -203,6 +212,24 @@ namespace dlib
             return (lookup(r) != -1);
         }
 
+        const scalar_type* col(long i) const 
+        { 
+            if (is_cached(i) == false)
+                add_col_to_cache(i);
+
+            // find where this column is in the cache
+            long idx = lookup(i);
+            if (idx == next)
+            {
+                // if this column was the next to be replaced
+                // then make sure that doesn't happen
+                next = (next + 1)%cache.nr();
+            }
+
+            return &cache(idx,0); 
+        }
+        const scalar_type* diag() const { return &diag_cache(0); }
+
         inline scalar_type operator () (
             long r,
             long c
@@ -223,22 +250,29 @@ namespace dlib
             }
             else
             {
-                // if the lookup table is pointing to cache(next,*) then clear lookup(next)
-                if (rlookup(next) != -1)
-                    lookup(rlookup(next)) = -1;
-
-                // make the lookup table os that it says c is now cached at the spot indicated by next
-                lookup(c) = next;
-                rlookup(next) = c;
-
-                // compute this column in the kernel matrix and store it in the cache
-                for (long i = 0; i < cache.nc(); ++i)
-                    cache(next,i) = y(c)*y(i)*kernel_function(x(c),x(i));
-
-                scalar_type val = cache(next,r);
-                next = (next + 1)%cache.nr();
-                return val;
+                add_col_to_cache(c);
+                return cache(lookup(c),r);
             }
+        }
+
+    private:
+        void add_col_to_cache(
+            long c
+        ) const
+        {
+            // if the lookup table is pointing to cache(next,*) then clear lookup(next)
+            if (rlookup(next) != -1)
+                lookup(rlookup(next)) = -1;
+
+            // make the lookup table so that it says c is now cached at the spot indicated by next
+            lookup(c) = next;
+            rlookup(next) = c;
+
+            // compute this column in the kernel matrix and store it in the cache
+            for (long i = 0; i < cache.nc(); ++i)
+                cache(next,i) = y(c)*y(i)*kernel_function(x(c),x(i));
+
+            next = (next + 1)%cache.nr();
         }
 
     };
@@ -448,8 +482,17 @@ namespace dlib
                 train_neg_idx = (train_neg_idx+1)%x.nr();
             }
 
-            // do the training and testing
-            res += test_binary_decision_function(trainer.train(x_train,y_train),x_test,y_test);
+            try
+            {
+                // do the training and testing
+                res += test_binary_decision_function(trainer.train(x_train,y_train),x_test,y_test);
+            }
+            catch (invalid_svm_nu_error&)
+            {
+                // Just ignore the error in this case since we are going to
+                // interpret an invalid nu value the same as generating a decision
+                // function that miss-classifies everything.
+            }
 
         } // for (long i = 0; i < folds; ++i)
 
@@ -497,12 +540,12 @@ namespace dlib
 
         /*
             This function fits a sigmoid function to the output of the 
-            svm trained by svm_nu_train().  The technique used is the one
+            svm trained by svm_nu_trainer.  The technique used is the one
             described in the paper:
                 
                 Probabilistic Outputs for Support Vector Machines and
                 Comparisons to Regularized Likelihood Methods by 
-                John C. Platt.  Match 26, 1999
+                John C. Platt.  March 26, 1999
         */
 
         // make sure requires clause is not broken
@@ -762,19 +805,30 @@ namespace dlib
     }
 
 // ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
 
     template <
         typename T,
-        typename U
+        typename U,
+        typename rand_type 
         >
     typename enable_if<is_matrix<T>,void>::type randomize_samples (
         T& t,
-        U& u
+        U& u,
+        rand_type& r
     )
     {
-        rand::kernel_1a r;
+        // make sure requires clause is not broken
+        DLIB_ASSERT(is_vector(t) && is_vector(u) && u.size() == t.size(),
+            "\t randomize_samples(t,u)"
+            << "\n\t invalid inputs were given to this function"
+            << "\n\t t.size(): " << t.size()
+            << "\n\t u.size(): " << u.size()
+            << "\n\t is_vector(t): " << (is_vector(t)? "true" : "false")
+            << "\n\t is_vector(u): " << (is_vector(u)? "true" : "false")
+            );
 
-        long n = t.nr()-1;
+        long n = t.size()-1;
         while (n > 0)
         {
             // put a random integer into idx
@@ -795,14 +849,22 @@ namespace dlib
 
     template <
         typename T,
-        typename U
+        typename U,
+        typename rand_type
         >
     typename disable_if<is_matrix<T>,void>::type randomize_samples (
         T& t,
-        U& u
+        U& u,
+        rand_type& r
     )
     {
-        rand::kernel_1a r;
+        // make sure requires clause is not broken
+        DLIB_ASSERT(u.size() == t.size(),
+            "\t randomize_samples(t,u)"
+            << "\n\t invalid inputs were given to this function"
+            << "\n\t t.size(): " << t.size()
+            << "\n\t u.size(): " << u.size()
+            );
 
         long n = t.size()-1;
         while (n > 0)
@@ -824,15 +886,37 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
-        typename T
+        typename T,
+        typename U
         >
-    typename enable_if<is_matrix<T>,void>::type randomize_samples (
-        T& t
+    typename disable_if<is_rand<U>,void>::type randomize_samples (
+        T& t,
+        U& u
     )
     {
         rand::kernel_1a r;
+        randomize_samples(t,u,r);
+    }
 
-        long n = t.nr()-1;
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename rand_type
+        >
+    typename enable_if_c<is_matrix<T>::value && is_rand<rand_type>::value,void>::type randomize_samples (
+        T& t,
+        rand_type& r
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(is_vector(t),
+            "\t randomize_samples(t)"
+            << "\n\t invalid inputs were given to this function"
+            << "\n\t is_vector(t): " << (is_vector(t)? "true" : "false")
+            );
+
+        long n = t.size()-1;
         while (n > 0)
         {
             // put a random integer into idx
@@ -851,14 +935,14 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
-        typename T
+        typename T,
+        typename rand_type
         >
-    typename disable_if<is_matrix<T>,void>::type randomize_samples (
-        T& t
+    typename disable_if_c<(is_matrix<T>::value==true)||(is_rand<rand_type>::value==false),void>::type randomize_samples (
+        T& t,
+        rand_type& r
     )
     {
-        rand::kernel_1a r;
-
         long n = t.size()-1;
         while (n > 0)
         {
@@ -873,6 +957,19 @@ namespace dlib
 
             --n;
         }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    void randomize_samples (
+        T& t
+    )
+    {
+        rand::kernel_1a r;
+        randomize_samples(t,r);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -1042,6 +1139,7 @@ namespace dlib
             scalar_vector_type alpha;
 
             kernel_matrix_cache<K, in_sample_vector_type, in_scalar_vector_type> Q(x,y,kernel_function,cache_size);
+            typedef typename kernel_matrix_cache<K, in_sample_vector_type, in_scalar_vector_type>::scalar_type cache_type;
 
             alpha.set_size(x.nr());
             df.set_size(x.nr());
@@ -1050,14 +1148,17 @@ namespace dlib
             set_initial_alpha(y, nu, alpha);
 
 
+            set_all_elements(df, 0);
             // initialize df.  Compute df = Q*alpha
             for (long r = 0; r < df.nr(); ++r)
             {
-                df(r) = 0;
-                for (long c = 0; c < alpha.nr(); ++c)
+                if (alpha(r) != 0)
                 {
-                    if (alpha(c) != 0)
-                        df(r) += Q(c,r)*alpha(c);
+                    const cache_type* Q_r = Q.col(r);
+                    for (long c = 0; c < alpha.nr(); ++c)
+                    {
+                        df(c) += alpha(r)*Q_r[c];
+                    }
                 }
             }
 
@@ -1073,8 +1174,12 @@ namespace dlib
                 // update the df vector now that we have modified alpha(i) and alpha(j)
                 scalar_type delta_alpha_i = alpha(i) - old_alpha_i;
                 scalar_type delta_alpha_j = alpha(j) - old_alpha_j;
+
+                const cache_type* Q_i = Q.col(i);
+                const cache_type* Q_j = Q.col(j);
+
                 for(long k = 0; k < df.nr(); ++k)
-                    df(k) += Q(k,i)*delta_alpha_i + Q(k,j)*delta_alpha_j;
+                    df(k) += Q_i[k]*delta_alpha_i + Q_j[k]*delta_alpha_j;
 
             }
 
@@ -1132,6 +1237,7 @@ namespace dlib
             long num = (long)std::floor(temp);
             long num_total = (long)std::ceil(temp);
 
+            bool has_slack = false;
             int count = 0;
             for (int i = 0; i < alpha.nr(); ++i)
             {
@@ -1144,6 +1250,7 @@ namespace dlib
                     }
                     else 
                     {
+                        has_slack = true;
                         if (temp > num)
                         {
                             ++count;
@@ -1154,13 +1261,14 @@ namespace dlib
                 }
             }
 
-            if (count != num_total)
+            if (count != num_total || has_slack == false)
             {
                 std::ostringstream sout;
-                sout << "invalid nu of " << nu << ".  Must be between 0 and " << (scalar_type)count/y.nr();
+                sout << "Invalid nu of " << nu << ".  It is required that: 0 < nu < " << 2*(scalar_type)count/y.nr();
                 throw invalid_svm_nu_error(sout.str(),nu);
             }
 
+            has_slack = false;
             count = 0;
             for (int i = 0; i < alpha.nr(); ++i)
             {
@@ -1173,6 +1281,7 @@ namespace dlib
                     }
                     else 
                     {
+                        has_slack = true;
                         if (temp > num)
                         {
                             ++count;
@@ -1183,10 +1292,10 @@ namespace dlib
                 }
             }
 
-            if (count != num_total)
+            if (count != num_total || has_slack == false)
             {
                 std::ostringstream sout;
-                sout << "invalid nu of " << nu << ".  Must be between 0 and " << (scalar_type)count/y.nr();
+                sout << "Invalid nu of " << nu << ".  It is required that: 0 < nu < " << 2*(scalar_type)count/y.nr();
                 throw invalid_svm_nu_error(sout.str(),nu);
             }
         }
@@ -1215,6 +1324,9 @@ namespace dlib
             long jp = -1;
             long in = -1;
             long jn = -1;
+
+
+            typedef typename kernel_matrix_cache<K, sample_vector_type, scalar_vector_type2>::scalar_type cache_type;
 
             scalar_type ip_val = -numeric_limits<scalar_type>::infinity();
             scalar_type jp_val = numeric_limits<scalar_type>::infinity();
@@ -1253,6 +1365,18 @@ namespace dlib
             scalar_type bp = -numeric_limits<scalar_type>::infinity();
             scalar_type bn = -numeric_limits<scalar_type>::infinity();
 
+            // As a speed hack, pull out pointers to the columns of the
+            // kernel matrix we will be using below rather than accessing
+            // them through the Q(r,c) syntax.
+            const cache_type* Q_ip = 0;
+            const cache_type* Q_in = 0;
+            const cache_type* Q_diag = Q.diag();
+            if (ip != -1)
+                Q_ip = Q.col(ip);
+            if (in != -1)
+                Q_in = Q.col(in);
+
+
             // now we need to find the minimum jp and jn indices
             for (long j = 0; j < alpha.nr(); ++j)
             {
@@ -1264,10 +1388,10 @@ namespace dlib
                         if (-df(j) < Mp)
                             Mp = -df(j);
 
-                        if (b > 0 && (Q.is_cached(j) || b > bp || jp == -1 ))
+                        if (b > 0)
                         {
                             bp = b;
-                            scalar_type a = Q(ip,ip) + Q(j,j) - 2*Q(j,ip); 
+                            scalar_type a = Q_ip[ip] + Q_diag[j] - 2*Q_ip[j]; 
                             if (a <= 0)
                                 a = tau;
                             scalar_type temp = -b*b/a;
@@ -1287,10 +1411,10 @@ namespace dlib
                         if (df(j) < Mn)
                             Mn = df(j);
 
-                        if (b > 0 && (Q.is_cached(j) || b > bn || jn == -1 ))
+                        if (b > 0)
                         {
                             bn = b;
-                            scalar_type a = Q(in,in) + Q(j,j) - 2*Q(j,in); 
+                            scalar_type a = Q_in[in] + Q_diag[j] - 2*Q_in[j]; 
                             if (a <= 0)
                                 a = tau;
                             scalar_type temp = -b*b/a;
@@ -1416,7 +1540,7 @@ namespace dlib
             typename scalar_type
             >
         inline void optimize_working_pair (
-            const scalar_vector_type2& y,
+            const scalar_vector_type2& ,
             scalar_vector_type& alpha,
             const kernel_matrix_cache<K, sample_vector_type, scalar_vector_type2>& Q,
             const scalar_vector_type& df,

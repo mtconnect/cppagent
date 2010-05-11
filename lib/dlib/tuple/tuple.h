@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_TUPLe_H_
 #define DLIB_TUPLe_H_
@@ -234,7 +234,7 @@ namespace dlib
         ) { return tuple_helpers::get_helper<idx,tuple>::get(*this); }
 
         template < class Q>  
-        const long index (
+        long index (
         ) const { return tuple_helpers::get_index<Q>(*this); }
 
         template <class Q>  

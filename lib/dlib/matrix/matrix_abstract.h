@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_MATRIx_ABSTRACT_
 #ifdef DLIB_MATRIx_ABSTRACT_
@@ -49,10 +49,19 @@ namespace dlib
                 are going to be accessing the same element over and over it might 
                 be faster to assign the matrix_exp to a temporary matrix and then 
                 use that temporary.
+
+
+                const_ret_type typedef (defined below)
+                    The purpose of the const_ret_type typedef is to allow matrix expressions
+                    to return their elements by reference when appropriate.  So const_ret_type 
+                    should be one of the following types:
+                        - const type
+                        - const type& 
         !*/
 
     public:
         typedef typename EXP::type type;
+        typedef typename EXP::const_ret_type const_ret_type;
         typedef typename EXP::mem_manager_type mem_manager_type;
         typedef typename EXP::layout_type layout_type;
         const static long cost = EXP::cost;
@@ -61,7 +70,7 @@ namespace dlib
         typedef matrix<type,NR,NC, mem_manager_type,layout_type> matrix_type;
         typedef EXP exp_type;
 
-        const type operator() (
+        const_ret_type operator() (
             long r,
             long c
         ) const;
@@ -75,7 +84,7 @@ namespace dlib
                   the matrix represented by this matrix expression)
         !*/
 
-        const type operator() (
+        const_ret_type operator() (
             long i
         ) const;
         /*!
@@ -123,22 +132,23 @@ namespace dlib
                 - returns nr()*nc()
         !*/
 
-        template <typename U, long iNR, long iNC , typename mm, typename l>
+        template <typename U>
         bool aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const;
         /*!
             ensures
-                - if (this matrix expression contains/aliases the given matrix or contains
-                  any subexpressions that contain/alias the given matrix) then
+                - if (A change to the state of item could cause a change to the state of *this
+                      matrix_exp object.  ) then
                     - returns true
+                    - This happens when this matrix_exp contains item in some way. 
                 - else
                     - returns false
         !*/
 
-        template <typename U, long iNR, long iNC, typename mm, typename l>
+        template <typename U>
         bool destructively_aliases (
-            const matrix<U,iNR,iNC,mm,l>& item
+            const matrix_exp<U>& item
         ) const; 
         /*!
             ensures
@@ -148,7 +158,7 @@ namespace dlib
                           (i.e. if this expression has different dimensions than item then
                           we have destructive aliasing)
 
-                    - returns true if the following expression would evaluate incorrectly:
+                    - returns true if the following assignment would evaluate incorrectly:
                       for (long r = 0; r < nr(); ++r)
                         for (long c = 0; c < nc(); ++c)
                           item(r,c) = (*this)(r,c)
@@ -161,29 +171,22 @@ namespace dlib
                     - returns false
         !*/
 
-        const exp_type& ref (
+        inline const exp_type& ref (
         ) const; 
         /*!
             ensures
                 - returns a reference to the expression contained in *this.
+                  (i.e. returns *static_cast<const exp_type*>(this) )
         !*/
 
     protected:
 
-        explicit matrix_exp (
-            const EXP& exp
-        ); 
-        /*!
-            ensures
-                - #ref() == exp.ref()
-        !*/
+        // Only derived classes of matrix_exp may call the matrix_exp constructors.
+        matrix_exp(const matrix_exp&); 
+        matrix_exp();
 
     private:
-
-        // you can't copy a matrix_exp at all.  Things that inherit from it must
-        // define their own copy constructors that call the above protected 
-        // constructor so that the reference below is maintained correctly.
-        matrix_exp(const matrix_exp& item);
+        // no one may ever use the assignment operator on a matrix_exp
         matrix_exp& operator= (const matrix_exp&);
     };
 
@@ -203,6 +206,8 @@ namespace dlib
     /*!
         requires
             - m1.nc() == m2.nr()
+            - m1.size() > 0 && m2.size() > 0
+              (you can't multiply any sort of empty matrices together)
             - m1 and m2 both contain elements of the same type
         ensures
             - returns the result of doing the matrix multiplication m1*m2.  The resulting
@@ -436,7 +441,7 @@ namespace dlib
         !*/
 
         template <typename U, size_t len>
-        matrix (
+        explicit matrix (
             U (&array)[len]
         );
         /*!
@@ -483,10 +488,7 @@ namespace dlib
         /*!
             requires
                 - nc() == 1 || nr() == 1 (i.e. this must be a column or row vector)
-                - if (nc() == 1) then
-                    - 0 <= i < nr()
-                - else
-                    - 0 <= i < nc()
+                - 0 <= i < size()
             ensures
                 - if (nc() == 1) then
                     - returns a reference to (*this)(i,0)
@@ -500,10 +502,7 @@ namespace dlib
         /*!
             requires
                 - nc() == 1 || nr() == 1 (i.e. this must be a column or row vector)
-                - if (nc() == 1) then
-                    - 0 <= i < nr()
-                - else
-                    - 0 <= i < nc()
+                - 0 <= i < size()
             ensures
                 - if (nc() == 1) then
                     - returns a reference to (*this)(i,0)

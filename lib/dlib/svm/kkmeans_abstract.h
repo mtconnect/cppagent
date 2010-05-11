@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_KKMEANs_ABSTRACT_
 #ifdef DLIB_KKMEANs_ABSTRACT_
@@ -204,13 +204,14 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
-        typename vector_type, 
+        typename vector_type1, 
+        typename vector_type2, 
         typename kernel_type
         >
     void pick_initial_centers(
         long num_centers, 
-        vector_type& centers, 
-        const vector_type& samples, 
+        vector_type1& centers, 
+        const vector_type2& samples, 
         const kernel_type& k, 
         double percentile = 0.01
     );
@@ -219,8 +220,11 @@ namespace dlib
             - num_centers > 1
             - 0 <= percentile < 1
             - samples.size() > 1
-            - vector_type == something with an interface compatible with std::vector
+            - vector_type1 == something with an interface compatible with std::vector
+            - vector_type2 == something with an interface compatible with std::vector
             - k(samples[0],samples[0]) must be a valid expression that returns a double
+            - both centers and samples must be able to contain kernel_type::sample_type 
+              objects
         ensures
             - finds num_centers candidate cluster centers in the data in the samples 
               vector.  Assumes that k is the kernel that will be used during clustering 
@@ -231,6 +235,36 @@ namespace dlib
               set percentile to the fraction of outliers you expect the data to contain.
             - #centers.size() == num_centers
             - #centers == a vector containing the candidate centers found
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename vector_type, 
+        typename sample_type,
+        typename alloc
+        >
+    void find_clusters_using_kmeans (
+        const vector_type& samples,
+        std::vector<sample_type, alloc>& centers,
+        unsigned long max_iter = 1000
+    );
+    /*!
+        requires
+            - samples.size() > 0
+            - samples == a bunch of row or column vectors and they all must be of the
+              same length.
+            - centers.size() > 0
+            - vector_type == something with an interface compatible with std::vector
+              and it must contain row or column vectors capable of being stored in 
+              sample_type objects
+            - sample_type == a dlib::matrix capable of representing vectors
+        ensures
+            - performs regular old linear kmeans clustering on the samples.  The clustering
+              begins with the initial set of centers given as an argument to this function.
+              When it finishes #centers will contain the resulting centers.
+            - no more than max_iter iterations will be performed before this function
+              terminates.
     !*/
 
 // ----------------------------------------------------------------------------------------

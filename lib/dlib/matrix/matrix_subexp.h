@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_MATRIx_SUBEXP_
 #define DLIB_MATRIx_SUBEXP_
@@ -32,15 +32,15 @@ namespace dlib
         return matrix_range_static_exp<start,1,end>(); 
     }
 
-    inline const matrix_range_exp range (
+    inline const matrix_range_exp<long> range (
         long start,
         long end
     ) 
     { 
-        return matrix_range_exp(start,end); 
+        return matrix_range_exp<long>(start,end); 
     }
 
-    inline const matrix_range_exp range (
+    inline const matrix_range_exp<long> range (
         long start,
         long inc,
         long end
@@ -48,25 +48,13 @@ namespace dlib
     { 
         DLIB_ASSERT(inc > 0, 
             "\tconst matrix_exp range(start, inc, end)"
-            << "\n\tstart can't be bigger than end"
+            << "\n\tInvalid inputs to this function"
             << "\n\tstart: " << start 
             << "\n\tinc:   " << inc
             << "\n\tend:   " << end
             );
 
-        return matrix_range_exp(start,inc,end); 
-    }
-
-// ----------------------------------------------------------------------------------------
-
-    template <
-        typename EXP
-        >
-    const rectangle get_rect (
-        const matrix_exp<EXP>& m
-    )
-    {
-        return rectangle(0, 0, m.nc()-1, m.nr()-1);
+        return matrix_range_exp<long>(start,inc,end); 
     }
 
 // ----------------------------------------------------------------------------------------
@@ -82,7 +70,7 @@ namespace dlib
         long nc
     )
     {
-        DLIB_ASSERT(r >= 0 && c >= 0 && r+nr <= m.nr() && c+nc <= m.nc(), 
+        DLIB_ASSERT(r >= 0 && c >= 0 && nr >= 0 && nc >= 0 && r+nr <= m.nr() && c+nc <= m.nc(), 
             "\tconst matrix_exp subm(const matrix_exp& m, r, c, nr, nc)"
             << "\n\tYou have specified invalid sub matrix dimensions"
             << "\n\tm.nr(): " << m.nr()
@@ -170,13 +158,14 @@ namespace dlib
             const static long NR = 1;
             const static long NC = EXP::NC;
             typedef typename EXP::type type;
+            typedef typename EXP::const_ret_type const_ret_type;
             typedef typename EXP::mem_manager_type mem_manager_type;
             template <typename M>
-            static type apply ( const M& m, long row, long, long c)
+            static const_ret_type apply ( const M& m, long row, long, long c)
             { return m(row,c); }
 
             template <typename M>
-            static long nr (const M& m) { return 1; }
+            static long nr (const M& ) { return 1; }
             template <typename M>
             static long nc (const M& m) { return m.nc(); }
         };
@@ -213,15 +202,16 @@ namespace dlib
             const static long NR = 1;
             const static long NC = 0;
             typedef typename EXP::type type;
+            typedef typename EXP::const_ret_type const_ret_type;
             typedef typename EXP::mem_manager_type mem_manager_type;
             template <typename M>
-            static type apply ( const M& m, long row, long length, long r, long c)
+            static const_ret_type apply ( const M& m, long row, long , long , long c)
             { return m(row,c); }
 
             template <typename M>
-            static long nr (const M& m, long, long) { return 1; }
+            static long nr (const M& , long, long) { return 1; }
             template <typename M>
-            static long nc (const M& m, long, long length) { return length; }
+            static long nc (const M& , long, long length) { return length; }
         };
     };
 
@@ -257,16 +247,17 @@ namespace dlib
         {
             const static long cost = EXP1::cost+EXP2::cost;
             typedef typename EXP1::type type;
+            typedef typename EXP1::const_ret_type const_ret_type;
             typedef typename EXP1::mem_manager_type mem_manager_type;
             const static long NR = EXP2::NC*EXP2::NR;
             const static long NC = EXP1::NC;
 
             template <typename M1, typename M2>
-            static type apply ( const M1& m1, const M2& rows , long r, long c)
+            static const_ret_type apply ( const M1& m1, const M2& rows , long r, long c)
             { return m1(rows(r),c); }
 
             template <typename M1, typename M2>
-            static long nr (const M1& m1, const M2& rows ) { return rows.size(); }
+            static long nr (const M1& , const M2& rows ) { return rows.size(); }
             template <typename M1, typename M2>
             static long nc (const M1& m1, const M2& ) { return m1.nc(); }
         };
@@ -310,15 +301,16 @@ namespace dlib
             const static long NR = EXP::NR;
             const static long NC = 1;
             typedef typename EXP::type type;
+            typedef typename EXP::const_ret_type const_ret_type;
             typedef typename EXP::mem_manager_type mem_manager_type;
             template <typename M>
-            static type apply ( const M& m, long col, long r, long)
+            static const_ret_type apply ( const M& m, long col, long r, long)
             { return m(r,col); }
 
             template <typename M>
             static long nr (const M& m) { return m.nr(); }
             template <typename M>
-            static long nc (const M& m) { return 1; }
+            static long nc (const M& ) { return 1; }
         };
     };
 
@@ -353,15 +345,16 @@ namespace dlib
             const static long NR = 0;
             const static long NC = 1;
             typedef typename EXP::type type;
+            typedef typename EXP::const_ret_type const_ret_type;
             typedef typename EXP::mem_manager_type mem_manager_type;
             template <typename M>
-            static type apply ( const M& m, long col, long length, long r, long c)
+            static const_ret_type apply ( const M& m, long col, long , long r, long )
             { return m(r,col); }
 
             template <typename M>
-            static long nr (const M& m, long, long length) { return length; }
+            static long nr (const M&, long, long length) { return length; }
             template <typename M>
-            static long nc (const M& m, long, long) { return 1; }
+            static long nc (const M&, long, long) { return 1; }
         };
     };
 
@@ -396,19 +389,20 @@ namespace dlib
         struct op : has_destructive_aliasing
         {
             typedef typename EXP1::type type;
+            typedef typename EXP1::const_ret_type const_ret_type;
             typedef typename EXP1::mem_manager_type mem_manager_type;
             const static long NR = EXP1::NR;
             const static long NC = EXP2::NC*EXP2::NR;
             const static long cost = EXP1::cost+EXP2::cost;
 
             template <typename M1, typename M2>
-            static type apply ( const M1& m1, const M2& cols , long r, long c)
+            static const_ret_type apply ( const M1& m1, const M2& cols , long r, long c)
             { return m1(r,cols(c)); }
 
             template <typename M1, typename M2>
-            static long nr (const M1& m1, const M2& cols ) { return m1.nr(); }
+            static long nr (const M1& m1, const M2&  ) { return m1.nr(); }
             template <typename M1, typename M2>
-            static long nc (const M1& m1, const M2& cols ) { return cols.size(); }
+            static long nc (const M1& , const M2& cols ) { return cols.size(); }
         };
     };
 
@@ -554,7 +548,7 @@ namespace dlib
         long nc
     )
     {
-        DLIB_ASSERT(r >= 0 && c >= 0 && r+nr <= m.nr() && c+nc <= m.nc(), 
+        DLIB_ASSERT(r >= 0 && c >= 0 && nr >= 0 && nc >= 0 && r+nr <= m.nr() && c+nc <= m.nc(), 
                     "\tassignable_matrix_expression set_subm(matrix& m, r, c, nr, nc)"
                     << "\n\tYou have specified invalid sub matrix dimensions"
                     << "\n\tm.nr(): " << m.nr()
@@ -675,7 +669,7 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <typename T, long NR, long NC, typename mm, typename l, typename EXPr>
-    assignable_sub_range_matrix<T,NR,NC,mm,l,EXPr,matrix_range_exp > set_rowm (
+    assignable_sub_range_matrix<T,NR,NC,mm,l,EXPr,matrix_range_exp<long> > set_rowm (
         matrix<T,NR,NC,mm,l>& m,
         const matrix_exp<EXPr>& rows
     )
@@ -691,13 +685,13 @@ namespace dlib
             << "\n\trows.nc():  " << rows.nc()
             );
 
-        return assignable_sub_range_matrix<T,NR,NC,mm,l,EXPr,matrix_range_exp >(m,rows.ref(),range(0,m.nc()-1));
+        return assignable_sub_range_matrix<T,NR,NC,mm,l,EXPr,matrix_range_exp<long> >(m,rows.ref(),range(0,m.nc()-1));
     }
 
 // ----------------------------------------------------------------------------------------
 
     template <typename T, long NR, long NC, typename mm, typename l, typename EXPc>
-    assignable_sub_range_matrix<T,NR,NC,mm,l,matrix_range_exp,EXPc > set_colm (
+    assignable_sub_range_matrix<T,NR,NC,mm,l,matrix_range_exp<long>,EXPc > set_colm (
         matrix<T,NR,NC,mm,l>& m,
         const matrix_exp<EXPc>& cols
     )
@@ -713,7 +707,7 @@ namespace dlib
             << "\n\tcols.nc():  " << cols.nc()
             );
 
-        return assignable_sub_range_matrix<T,NR,NC,mm,l,matrix_range_exp,EXPc >(m,range(0,m.nr()-1),cols.ref());
+        return assignable_sub_range_matrix<T,NR,NC,mm,l,matrix_range_exp<long>,EXPc >(m,range(0,m.nr()-1),cols.ref());
     }
 
 // ----------------------------------------------------------------------------------------
@@ -733,7 +727,7 @@ namespace dlib
 
         T& operator() (
             long r,
-            long c
+            long 
         )
         {
             return m(r,col);
@@ -741,7 +735,7 @@ namespace dlib
 
         const T& operator() (
             long r,
-            long c
+            long 
         ) const
         {
             return m(r,col);
@@ -831,7 +825,7 @@ namespace dlib
 
 
         T& operator() (
-            long r,
+            long ,
             long c
         )
         {
@@ -839,7 +833,7 @@ namespace dlib
         }
 
         const T& operator() (
-            long r,
+            long ,
             long c
         ) const
         {

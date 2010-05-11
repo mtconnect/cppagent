@@ -1,4 +1,4 @@
-// Copyright (C) 2008 Keita Mochizuki, Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008 Keita Mochizuki, Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_UNICODe_CPp_
 #define DLIB_UNICODe_CPp_
@@ -49,7 +49,7 @@ namespace dlib
 
     template <int N> void wstr2ustring_t(const wchar_t *src, size_t src_len, ustring &dest);
 
-    template <> void wstr2ustring_t<4>(const wchar_t *src, size_t src_len, ustring &dest)
+    template <> void wstr2ustring_t<4>(const wchar_t *src, size_t , ustring &dest)
     {
         dest.assign((const unichar *)(src));
     }

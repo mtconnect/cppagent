@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_CONFIG_READEr_
 #define DLIB_CONFIG_READEr_
@@ -31,29 +31,15 @@ namespace dlib
                         map<std::string,void*>::kernel_1b,
                         tokenizer::kernel_1a
                         > kernel_1a;
-        // kernel_1a_c        
-        typedef     config_reader_kernel_1<
-                        map<std::string,std::string>::kernel_1b,
-                        map<std::string,void*>::kernel_1b,
-                        tokenizer::kernel_1a,
-                        true
-                        > kernel_1a_c;
  
  
 #ifndef DLIB_ISO_CPP_ONLY
         // thread_safe_1a
         typedef     config_reader_thread_safe_1<
                         kernel_1a,
-                        map<std::string,void*>::kernel_1b,
-                        false
+                        map<std::string,void*>::kernel_1b
                         > thread_safe_1a;
 
-        // thread_safe_1a_c
-        typedef     config_reader_thread_safe_1<
-                        kernel_1a_c,
-                        map<std::string,void*>::kernel_1b,
-                        true
-                        > thread_safe_1a_c;
 #endif // DLIB_ISO_CPP_ONLY
 
     };

@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_LOGGER_KERNEl_1_
 #define DLIB_LOGGER_KERNEl_1_
@@ -14,6 +14,9 @@
 #include "../uintn.h"
 #include "../map.h"
 #include "../smart_pointers.h"
+#include "../member_function_pointer.h"
+#include <streambuf>
+#include <vector>
 
 namespace dlib
 {
@@ -75,10 +78,16 @@ namespace dlib
                 - out.rdbuf() == std::cout.rdbuf()
                 - cur_level == LERROR
                 - auto_flush_enabled == true 
+                - hook.is_set() == false
 
             CONVENTION
                 - print_header == logger_header()
-                - out.rdbuf() == output_streambuf()
+                - if (hook.is_set() == false) then
+                    - out.rdbuf() == output_streambuf()
+                - else
+                    - out.rdbuf() == &gd.hookbuf
+                    - output_streambuf() == 0
+
                 - cur_level == level()
                 - logger_name == name()
                 - auto_flush_enabled == auto_flush()
@@ -89,6 +98,9 @@ namespace dlib
                 - logger::gd::next_thread_name == the next thread name that will be given out
                   to a thread when we find that it isn't already in thread_names.
         !*/
+
+    // ------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------
 
         class logger_stream
         {
@@ -171,10 +183,16 @@ namespace dlib
             logger& log;
             bool been_used;
             const bool enabled;
-        };
+        }; // end of class logger_stream
+
+    // ------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------
 
         friend class logger_stream;
     public:
+
+        typedef member_function_pointer<const std::string&, const log_level&, 
+                                        const uint64, const char*>::kernel_1a_c hook_mfp;
 
         logger (  
             const char* name_
@@ -245,7 +263,40 @@ namespace dlib
         )
         {
             auto_mutex M(gd.m);
-            return out.rdbuf();
+
+            // if there is an output hook set then we are supposed to return 0.
+            if (hook)
+                return 0;
+            else
+                return out.rdbuf();
+        }
+
+        template <
+            typename T
+            >
+        void set_output_hook (
+            T& object,
+            void (T::*hook_)(const std::string& logger_name, 
+                            const log_level& l,
+                            const uint64 thread_id,
+                            const char* message_to_log)
+        )
+        {
+            auto_mutex M(gd.m);
+            hook.set(object, hook_);
+
+            gd.loggers.reset();
+            while (gd.loggers.move_next())
+            {
+                if (gd.loggers.element()->is_child_of(*this))
+                {
+                    gd.loggers.element()->out.rdbuf(&gd.hookbuf);
+                    gd.loggers.element()->hook = hook;
+                }
+            }
+
+            gd.set_output_hook(logger_name, hook);
+            gd.set_output_stream(logger_name, gd.hookbuf);
         }
 
         void set_output_stream (
@@ -257,10 +308,16 @@ namespace dlib
             while (gd.loggers.move_next())
             {
                 if (gd.loggers.element()->is_child_of(*this))
+                {
                     gd.loggers.element()->out.rdbuf(out_.rdbuf());
+                    gd.loggers.element()->hook.clear();
+                }
             }
 
             gd.set_output_stream(logger_name, out_);
+
+            hook.clear();
+            gd.set_output_hook(logger_name, hook);
         }
 
         typedef void (*print_header_type)(
@@ -290,6 +347,8 @@ namespace dlib
 
     private:
 
+    // ------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------
 
         struct global_data
         {
@@ -297,6 +356,30 @@ namespace dlib
             set<logger*>::kernel_1b loggers;
             map<thread_id_type,uint64>::kernel_1b thread_names;
             uint64 next_thread_name;
+
+            // Make a very simple streambuf that writes characters into a std::vector<char>.  We can
+            // use this as the output target for hooks.  The reason we don't just use a std::ostringstream
+            // instead is that this way we can be guaranteed that logging doesn't perform memory allocations.
+            // This is because a std::vector never frees memory.  I.e. its capacity() doesn't go down when
+            // you resize it back to 0.  It just stays the same.
+            class hook_streambuf : public std::streambuf
+            {
+            public:
+                std::vector<char> buffer;
+                int_type overflow ( int_type c)
+                {
+                    if (c != EOF) buffer.push_back(static_cast<char>(c));
+                    return c;
+                }
+
+                std::streamsize xsputn ( const char* s, std::streamsize num)
+                {
+                    buffer.insert(buffer.end(), s, s+num);
+                    return num;
+                }
+            };
+
+            hook_streambuf hookbuf;
 
             global_data (
             );
@@ -407,6 +490,47 @@ namespace dlib
                             - #output_streambuf(L) == out_.rdbuf() 
             !*/
 
+            void set_output_stream (
+                const std::string& name,
+                std::streambuf& buf 
+            );
+            /*!
+                ensures
+                    - for all children C of name:
+                        - #output_streambuf(C) == &buf 
+                    - if name == "" then
+                        - for all loggers L:
+                            - #output_streambuf(L) == &buf 
+            !*/
+
+            struct output_hook_container
+            {
+                hook_mfp val;
+                map<std::string,scoped_ptr<output_hook_container> >::kernel_1b_c table;
+            } hook_table;
+
+            hook_mfp output_hook (
+                const std::string& name
+            );
+            /*!
+                ensures
+                    - returns the hook loggers with the given name are supposed 
+                      to have
+            !*/
+
+            void set_output_hook (
+                const std::string& name,
+                const hook_mfp& hook
+            );
+            /*!
+                ensures
+                    - for all children C of name:
+                        - #output_hook(C) == hook 
+                    - if name == "" then
+                        - for all loggers L:
+                            - #output_hook(L) == hook 
+            !*/
+
             struct logger_header_container
             {
                 print_header_type val;
@@ -439,6 +563,9 @@ namespace dlib
 
         static global_data& get_global_data();
 
+    // ------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------
+
         friend void set_all_logging_levels (
             const log_level& new_level
         );
@@ -447,6 +574,34 @@ namespace dlib
             std::ostream& out
         );
 
+        template <
+            typename T
+            >
+        friend void set_all_logging_output_hooks (
+            T& object,
+            void (T::*hook_)(const std::string& logger_name, 
+                            const log_level& l,
+                            const uint64 thread_id,
+                            const char* message_to_log)
+        )
+        {
+            logger::hook_mfp hook;
+            hook.set(object, hook_);
+
+            logger::global_data& gd = logger::get_global_data();
+            auto_mutex M(gd.m);
+            gd.loggers.reset();
+            while (gd.loggers.move_next())
+            {
+                gd.loggers.element()->out.rdbuf(&gd.hookbuf);
+                gd.loggers.element()->hook = hook;
+            }
+
+            gd.set_output_stream("",gd.hookbuf);
+            gd.set_output_hook("",hook);
+        }
+
+    // ------------------------------------------------------------------------------------
 
         global_data& gd;
 
@@ -457,6 +612,8 @@ namespace dlib
         std::ostream out;
         log_level cur_level;
 
+        hook_mfp hook;
+
 
         // restricted functions
         logger(const logger&);        // copy constructor
@@ -465,6 +622,7 @@ namespace dlib
     };    
 
 // ----------------------------------------------------------------------------------------
+
 
 }
 

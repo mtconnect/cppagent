@@ -57,6 +57,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testBadXPath);
   CPPUNIT_TEST(testBadCount);
   CPPUNIT_TEST(testBadFreq);
+  CPPUNIT_TEST(testGoodPath);
   CPPUNIT_TEST(testEmptyStream);
   CPPUNIT_TEST(testBadDevices);
   CPPUNIT_TEST(testAddAdapter);
@@ -77,12 +78,11 @@ protected:
   bool response;
   std::string path;
   std::string at;
-  map_type queries;
+  Agent::key_value_map queries;
   std::string result;
-  map_type cookies;
+  Agent::key_value_map cookies;
   queue_type new_cookies;
-  map_type incoming_headers;
-  map_type response_headers;
+  Agent::key_value_map incoming_headers;
   std::string foreign_ip;
   std::string local_ip;
   unsigned short foreign_port;
@@ -92,11 +92,16 @@ protected:
 protected:
   /* Test Basic */
   void testConstructor();
+  
   /* Test Errors */
   void testBadPath();
   void testBadXPath();
   void testBadCount();
   void testBadFreq();
+
+  /* test good */
+  void testGoodPath();
+  
   /* Test calls */
   void testProbe();
   void testEmptyStream();

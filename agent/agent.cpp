@@ -115,33 +115,25 @@ Agent::~Agent()
   delete[] mCheckpoints;
 }
 
-bool Agent::on_request(
-    const req_type rtype,
-    const string& path,
-    string& result,
-    const map_type& queries,
-    const map_type& cookies,
-    queue_type& new_cookies,
-    const map_type& incoming_headers,
-    map_type& response_headers,
-    const string& foreign_ip,
-    const string& local_ip,
-    unsigned short foreign_port,
-    unsigned short local_port,
-    ostream& out
+const string Agent::on_request (
+    const incoming_things& incoming,
+    outgoing_things& outgoing
   )
 {
+  string result;
   try 
   {
-    if (rtype != get)
+    if (incoming.request_type != "GET")
     {
-      result = printError("UNSUPPORTED",
-			  "Only the HTTP GET request is supported by MTConnect");
-      return true;
-      
+      return printError("UNSUPPORTED",
+			"Only the HTTP GET request is supported by MTConnect");
     }
     
     // Parse the URL path looking for '/'
+    string path = incoming.path;
+    size_t qm = path.find_last_of('?');
+    if (qm != string::npos)
+      path = path.substr(0, qm);
     string::size_type loc1 = path.find("/", 1);
     
     string::size_type end = (path[path.length()-1] == '/') ?
@@ -155,21 +147,19 @@ bool Agent::on_request(
       
       if (loc2 == end)
       {
-        return handleCall(out, path, result, queries, 
-          path.substr(loc1+1, loc2-loc1-1), path.substr(1, loc1-1));
+        return handleCall(*outgoing.out, path, incoming.queries, 
+                   path.substr(loc1+1, loc2-loc1-1), path.substr(1, loc1-1));
       }
       else
       {
         // Path is too long
-        result = printError("UNSUPPORTED",
-          "The following path is invalid: " + path);
-        return true;
+        return printError("UNSUPPORTED", "The following path is invalid: " + path);
       }
     }
     else
     {
       // Try to handle the call
-      return handleCall(out, path, result, queries, path.substr(1, loc1-1));
+      result = handleCall(*outgoing.out, path, incoming.queries, path.substr(1, loc1-1));
     }
   }
   catch (exception & e)
@@ -177,8 +167,8 @@ bool Agent::on_request(
     logEvent("Agent", (string) e.what());
     printError("SERVER_EXCEPTION",(string) e.what()); 
   }
-  
-  return true;
+
+  return result;
 }
 
 Adapter * Agent::addAdapter(
@@ -274,11 +264,10 @@ void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
 }
 
 /* Agent protected methods */
-bool Agent::handleCall(
+string Agent::handleCall(
     ostream& out,
     const string& path,
-    string& result,
-    const map_type& queries,
+    const key_value_map& queries,
     const string& call,
     const string& device
   )
@@ -288,14 +277,11 @@ bool Agent::handleCall(
   {
     deviceName = device;
   }
-  else if (queries.is_in_domain("device"))
-  {
-    deviceName = queries["device"];
-  }
   
   if (call == "current")
   {
-    const string path = queries.is_in_domain("path") ? queries["path"] : "";
+    const string path = queries[(string) "path"];
+    string result;
     
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
@@ -303,27 +289,25 @@ bool Agent::handleCall(
 				  mSequence);
     if (freq == PARAM_ERROR || at == PARAM_ERROR)
     {
-      return true;
+      return result;
     }
 
     if (freq != NO_FREQ && at != NO_START) {
-      result =  printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
-      return true;
+      return printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
     }
     
     
-    return handleStream(out, result, devicesAndPath(path, deviceName), true,
+    return handleStream(out, devicesAndPath(path, deviceName), true,
 			freq, at);
   }
   else if (call == "probe" || call.empty())
   {
-    result = handleProbe(deviceName);
-    return true;
+    return handleProbe(deviceName);
   }
   else if (call == "sample")
   {
-    string path = queries.is_in_domain("path") ?
-      queries["path"] : "";
+    string path = queries[(string) "path"];
+    string result;
     
     int count = checkAndGetParam(result, queries, "count", DEFAULT_COUNT,
 				 1, true, mSlidingBufferSize);
@@ -341,22 +325,20 @@ bool Agent::handleCall(
     
     if (freq == PARAM_ERROR || count == PARAM_ERROR || start == PARAM_ERROR)
     {
-      return true;
+      return result;
     }
 
-    return handleStream(out, result, devicesAndPath(path, deviceName), false,
+    return handleStream(out, devicesAndPath(path, deviceName), false,
 			freq, start, count);
   }
   else if ((mDeviceMap[call] != NULL) && device.empty())
   {
-    result = handleProbe(call);
-    return true;
+    return handleProbe(call);
   }
   else
   {
-    result = printError("UNSUPPORTED",
-      "The following path is invalid: " + path);
-    return true;
+    return printError("UNSUPPORTED",
+		      "The following path is invalid: " + path);
   }
 }
 
@@ -386,9 +368,8 @@ string Agent::handleProbe(const string& name)
     mDeviceList);
 }
 
-bool Agent::handleStream(
+string Agent::handleStream(
     ostream& out,
-    string& result,
     const string& path,
     bool current,
     unsigned int frequency,
@@ -403,16 +384,14 @@ bool Agent::handleStream(
   }
   catch (exception& e)
   {
-    result = printError("INVALID_XPATH", e.what());
     logEvent("Agent::handleStream", e.what());
-    return true;
+    return printError("INVALID_XPATH", e.what());
   }
   
   if (filter.empty())
   {
-    result = printError("INVALID_XPATH",
-			"The path could not be parsed. Invalid syntax: " + path);
-    return true;
+    return printError("INVALID_XPATH",
+		      "The path could not be parsed. Invalid syntax: " + path);
   }
   
   // Check if there is a frequency to stream data or not
@@ -426,16 +405,15 @@ bool Agent::handleStream(
     {
       streamData(out, filter, false, frequency, start, count);
     }
-    return false;
+    return "";
   }
   else
   {
     unsigned int items;
     if (current)
-      result = fetchCurrentData(filter, start);
+      return fetchCurrentData(filter, start);
     else
-      result = fetchSampleData(filter, start, count, items);
-    return true;
+      return fetchSampleData(filter, start, count, items);
   }
 }
 
@@ -453,7 +431,6 @@ void Agent::streamData(ostream& out,
   out << "Date: " << getCurrentTime(HUM_READ) << endl;
   out << "Status: 200 OK" << endl;
   out << "Content-Disposition: inline" << endl;
-  out << "X-Runtime: 144ms" << endl;
   out << "Content-Type: multipart/x-mixed-replace;";
   
   string boundary = md5(intToString(time(NULL)));
@@ -617,7 +594,7 @@ string Agent::devicesAndPath(const string& path, const string& device)
 
 int Agent::checkAndGetParam(
     string& result,
-    const map_type& queries,
+    const key_value_map& queries,
     const string& param,
     const int defaultValue,
     const int minValue,
@@ -625,7 +602,7 @@ int Agent::checkAndGetParam(
     const int maxValue
   )
 {
-  if (!queries.is_in_domain(param))
+  if (queries.count(param) == 0)
   {
     return defaultValue;
   }
@@ -668,7 +645,7 @@ int Agent::checkAndGetParam(
 
 Int64 Agent::checkAndGetParam64(
     string& result,
-    const map_type& queries,
+    const key_value_map& queries,
     const string& param,
     const Int64 defaultValue,
     const Int64 minValue,
@@ -676,7 +653,7 @@ Int64 Agent::checkAndGetParam64(
     const Int64 maxValue
   )
 {
-  if (!queries.is_in_domain(param))
+  if (queries.count(param) == 0)
   {
     return defaultValue;
   }

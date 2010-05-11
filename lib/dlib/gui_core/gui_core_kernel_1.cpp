@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net), Keita Mochizuki
+// Copyright (C) 2005  Davis E. King (davis@dlib.net), Keita Mochizuki
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_GUI_CORE_KERNEL_1_CPp_
 #define DLIB_GUI_CORE_KERNEL_1_CPp_
@@ -408,7 +408,7 @@ namespace dlib
                 result = keycode;
 
                 // make the result lower case if we need to.
-                if (shift && caps || !caps && !shift)
+                if ((shift && caps) || (!caps && !shift))
                     result = result - 'A' + 'a';               
             }
             else

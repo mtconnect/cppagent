@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_SVm_ABSTRACT_
 #ifdef DLIB_SVm_ABSTRACT_
@@ -59,7 +59,7 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    bool template <
+    template <
         typename T,
         typename U
         >
@@ -73,10 +73,12 @@ namespace dlib
             - U == a matrix or something convertible to a matrix via vector_to_matrix()
         ensures
             - returns true if all of the following are true and false otherwise:
-                - x.nc()        == 1 (i.e. x is a column vector)
-                - x_labels.nc() == 1 (i.e. x_labels is a column vector)
-                - x.nr() == x_labels.nr() 
-                - x.nr() > 1
+                - is_col_vector(x) == true
+                - is_col_vector(x_labels) == true
+                - x.size() == x_labels.size() 
+                - x.size() > 1
+                - there exists at least one sample from both the +1 and -1 classes.
+                  (i.e. all samples can't have the same label)
                 - for all valid i:
                     - x_labels(i) == -1 or +1
     !*/
@@ -213,8 +215,10 @@ namespace dlib
                   1.  It is the parameter that determines the trade off between
                   trying to fit the training data exactly or allowing more errors 
                   but hopefully improving the generalization ability of the 
-                  resulting classifier.  For more information you should consult
-                  the papers referenced above.
+                  resulting classifier.  Smaller values encourage exact fitting 
+                  while larger values of nu may encourage better generalization. 
+                  For more information you should consult the papers referenced 
+                  above.
         !*/
 
         template <
@@ -242,7 +246,7 @@ namespace dlib
                         - F(new_x) < 0
             throws
                 - invalid_svm_nu_error
-                  This exception is thrown if get_nu() > maximum_nu(y)
+                  This exception is thrown if get_nu() >= maximum_nu(y)
                 - std::bad_alloc
         !*/
 
@@ -282,7 +286,7 @@ namespace dlib
         requires
             - 1 < folds <= x.nr()
             - is_binary_classification_problem(x,y) == true
-            - trainer_type == some kind of trainer object (e.g. svm_nu_trainer)
+            - trainer_type == some kind of batch trainer object (e.g. svm_nu_trainer)
         ensures
             - trains a nu support vector classifier given the training samples in x and 
               labels in y.  
@@ -323,11 +327,8 @@ namespace dlib
               given binary classification problem for the given number of folds.
               Each fold is tested using the output of the trainer and the average 
               classification accuracy from all folds is returned.  
-            - The accuracy is returned in a column vector, let us call it R.  Both 
-              quantities in R are numbers between 0 and 1 which represent the fraction 
-              of examples correctly classified.  R(0) is the fraction of +1 examples 
-              correctly classified and R(1) is the fraction of -1 examples correctly 
-              classified.
+            - The average accuracy is computed by running test_binary_decision_function()
+              on each fold and its output is averaged and returned.
             - The number of folds used is given by the folds argument.
         throws
             - any exceptions thrown by trainer.train()
@@ -343,7 +344,7 @@ namespace dlib
         >
     const matrix<typename dec_funct_type::scalar_type, 1, 2, typename dec_funct_type::mem_manager_type> 
     test_binary_decision_function (
-        const dec_funct_type& trainer,
+        const dec_funct_type& dec_funct,
         const in_sample_vector_type& x_test,
         const in_scalar_vector_type& y_test
     );
@@ -352,8 +353,10 @@ namespace dlib
             - is_binary_classification_problem(x_test,y_test) == true
             - dec_funct_type == some kind of decision function object (e.g. decision_function)
         ensures
-            - tests the given decision function by calling on the x_test and y_test samples.
-            - The test accuracy is returned in a column vector, let us call it R.  Both 
+            - Tests the given decision function by calling it on the x_test and y_test samples.
+              The output of dec_funct is interpreted as a prediction for the +1 class
+              if its output is >= 0 and as a prediction for the -1 class otherwise.
+            - The test accuracy is returned in a row vector, let us call it R.  Both 
               quantities in R are numbers between 0 and 1 which represent the fraction 
               of examples correctly classified.  R(0) is the fraction of +1 examples 
               correctly classified and R(1) is the fraction of -1 examples correctly 
@@ -362,6 +365,7 @@ namespace dlib
             - std::bad_alloc
     !*/
 
+// ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
     template <
@@ -374,14 +378,50 @@ namespace dlib
     );
     /*!
         requires
-            - T == a matrix object that contains a swappable type
-            - U == a matrix object that contains a swappable type
-            - samples.nc() == 1
-            - labels.nc() == 1
-            - samples.nr() == labels.nr()
+            - T == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - U == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - if samples or labels are matrix objects then is_vector(samples) == true and
+              is_vector(labels) == true
+            - samples.size() == labels.size()
         ensures
             - randomizes the order of the samples and labels but preserves
               the pairing between each sample and its label
+            - A default initialized random number generator is used to perform the randomizing.
+              Note that this means that each call this this function does the same thing.  
+              That is, the random number generator always uses the same seed.
+            - for all valid i:
+                - let r == the random index samples(i) was moved to.  then:
+                    - #labels(r) == labels(i)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename U,
+        typename rand_type
+        >
+    void randomize_samples (
+        T& samples,
+        U& labels,
+        rand_type& rnd
+    );
+    /*!
+        requires
+            - T == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - U == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - if samples or labels are matrix objects then is_vector(samples) == true and
+              is_vector(labels) == true
+            - samples.size() == labels.size()
+            - rand_type == a type that implements the dlib/rand/rand_kernel_abstract.h interface
+        ensures
+            - randomizes the order of the samples and labels but preserves
+              the pairing between each sample and its label
+            - the given rnd random number generator object is used to do the randomizing
             - for all valid i:
                 - let r == the random index samples(i) was moved to.  then:
                     - #labels(r) == labels(i)
@@ -397,50 +437,37 @@ namespace dlib
     );
     /*!
         requires
-            - T == a matrix object that contains a swappable type
-            - samples.nc() == 1
+            - T == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - if samples is a matrix then is_vector(samples) == true 
         ensures
             - randomizes the order of the elements inside samples 
+            - A default initialized random number generator is used to perform the randomizing.
+              Note that this means that each call this this function does the same thing.  
+              That is, the random number generator always uses the same seed.
     !*/
 
 // ----------------------------------------------------------------------------------------
 
     template <
         typename T,
-        typename U
+        typename rand_type
         >
     void randomize_samples (
         T& samples,
-        U& labels 
+        rand_type& rnd
     );
     /*!
         requires
-            - T == an object compatible with std::vector that contains a swappable type 
-            - U == an object compatible with std::vector that contains a swappable type 
-            - samples.size() == labels.size()
+            - T == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - if samples is a matrix then is_vector(samples) == true 
         ensures
-            - randomizes the order of the samples and labels but preserves
-              the pairing between each sample and its label
-            - for all valid i:
-                - let r == the random index samples[i] was moved to.  then:
-                    - #labels[r] == labels[i]
+            - randomizes the order of the elements inside samples 
+            - the given rnd random number generator object is used to do the randomizing
     !*/
 
 // ----------------------------------------------------------------------------------------
-
-    template <
-        typename T
-        >
-    void randomize_samples (
-        T& samples
-    );
-    /*!
-        requires
-            - T == an object compatible with std::vector that contains a swappable type 
-        ensures
-            - randomizes the order of the elements inside samples 
-    !*/
-
 // ----------------------------------------------------------------------------------------
 
 }

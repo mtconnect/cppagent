@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 #include "tester.h"
@@ -41,14 +41,17 @@ namespace
             dlog << dlib::LINFO << "some message you want to log";
 
             // This test is considered a success if this function doesn't throw an exception.  
-            // So we can use the DLIB_CASSERT macro to perform our tests since it throws an 
+            // So we can use the DLIB_TEST_MSG macro to perform our tests since it throws an 
             // exception containing a message if its first argument is false.  
 
             // make sure 3 is bigger than 2
-            DLIB_CASSERT(3 > 2,"This message prints if your compiler doesn't know 3 is bigger than 2");
+            DLIB_TEST_MSG(3 > 2,"This message prints if your compiler doesn't know 3 is bigger than 2");
 
             // make sure 5 is not equal to 9
-            DLIB_CASSERT(5 != 9,"This message prints if your compiler thinks 5 is the same as 9");
+            DLIB_TEST_MSG(5 != 9,"This message prints if your compiler thinks 5 is the same as 9");
+
+            // This is a form of test you can use when you don't care about having a message
+            DLIB_TEST(5 != 8);
 
             // If your test takes a long time to run you can also call print_spinner() 
             // periodically.  This will cause a spinning / character to display on the
@@ -61,7 +64,7 @@ namespace
     // Create an instance of this object.  Doing this causes this test
     // to be automatically inserted into the testing framework whenever this cpp file
     // is linked into the project.  Note that since we are inside an unnamed-namespace 
-    // we won't get any linker errors about the symbol a being defined multple times. 
+    // we won't get any linker errors about the symbol a being defined multiple times. 
     example_tester a;
 
 }

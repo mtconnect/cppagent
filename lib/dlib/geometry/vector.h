@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_VECTOr_H_
 #define DLIB_VECTOr_H_
@@ -240,11 +240,8 @@ namespace dlib
 
         vector (
             const vector& item
-        )
+        ) : matrix<T,3,1>(item)
         {
-            x() = item.x();
-            y() = item.y();
-            z() = item.z();
         }
 
         // ---------------------------------------
@@ -491,50 +488,10 @@ namespace dlib
 
         // ---------------------------------------
 
-        template <typename U, long N>
-        typename vc_rebind_promote<T,U,3>::type operator + (
-            const vector<U,N>& rhs
-        ) const
-        {
-            typedef vector<typename promote<T,U>::type,3> ret_type;
-            return ret_type(x()+rhs.x(), y()+rhs.y(), z()+rhs.z());
-        }
-
-        // ---------------------------------------
-
-        vector operator + (
-            const vector& rhs
-        ) const
-        {
-            return vector(x()+rhs.x(), y()+rhs.y(), z()+rhs.z());
-        }
-
-        // ---------------------------------------
-
-        template <typename U, long N>
-        typename vc_rebind_promote<T,U,3>::type operator - (
-            const vector<U,N>& rhs
-        ) const
-        {
-            typedef vector<typename promote<T,U>::type,3> ret_type;
-            return ret_type(x()-rhs.x(), y()-rhs.y(), z()-rhs.z());
-        }
-
-        // ---------------------------------------
-
         vector operator - (
         ) const
         {
             return vector(-x(), -y(), -z());
-        }
-
-        // ---------------------------------------
-
-        vector operator - (
-            const vector& rhs
-        ) const
-        {
-            return vector(x()-rhs.x(), y()-rhs.y(), z()-rhs.z());
         }
 
         // ---------------------------------------
@@ -652,10 +609,8 @@ namespace dlib
 
         vector (
             const vector& item
-        )
+        ) : matrix<T,2,1>(item)
         {
-            x() = item.x();
-            y() = item.y();
         }
 
         // ---------------------------------------
@@ -857,50 +812,10 @@ namespace dlib
 
         // ---------------------------------------
 
-        vector operator + (
-            const vector& rhs
-        ) const
-        {
-            return vector(x()+rhs.x(), y()+rhs.y());
-        }
-
-        // ---------------------------------------
-
-        template <typename U, long N>
-        typename vc_rebind_promote<T,U,N>::type operator + (
-            const vector<U,N>& rhs
-        ) const
-        {
-            typedef vector<typename promote<T,U>::type,N> ret_type;
-            return ret_type(*this) + ret_type(rhs);
-        }
-
-        // ---------------------------------------
-
         vector operator - (
         ) const
         {
             return vector(-x(), -y());
-        }
-
-        // ---------------------------------------
-
-        vector operator - (
-            const vector& rhs
-        ) const
-        {
-            return vector(x()-rhs.x(), y()-rhs.y());
-        }
-
-        // ---------------------------------------
-
-        template <typename U, long N>
-        typename vc_rebind_promote<T,U,N>::type operator - (
-            const vector<U,N>& rhs
-        ) const
-        {
-            typedef vector<typename promote<T,U>::type,N> ret_type;
-            return ret_type(*this) - ret_type(rhs);
         }
 
         // ---------------------------------------
@@ -985,6 +900,105 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
+    template <typename T, typename U>
+    inline const typename vc_rebind_promote<T,U,2>::type operator+ (
+        const vector<T,2>& lhs,
+        const vector<U,2>& rhs 
+    )
+    {
+        typedef typename vc_rebind_promote<T,U,2>::type ret_type;
+        return ret_type(lhs.x()+rhs.x(), lhs.y()+rhs.y());
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T, typename U>
+    inline const typename vc_rebind_promote<T,U,3>::type operator+ (
+        const vector<T,3>& lhs,
+        const vector<U,3>& rhs 
+    )
+    {
+        typedef typename vc_rebind_promote<T,U,3>::type ret_type;
+        return ret_type(lhs.x()+rhs.x(), lhs.y()+rhs.y(), lhs.z()+rhs.z());
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T, typename U>
+    inline const typename vc_rebind_promote<T,U,3>::type operator+ (
+        const vector<T,2>& lhs,
+        const vector<U,3>& rhs 
+    )
+    {
+        typedef typename vc_rebind_promote<T,U,3>::type ret_type;
+        return ret_type(lhs.x()+rhs.x(), lhs.y()+rhs.y(), rhs.z());
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T, typename U>
+    inline const typename vc_rebind_promote<T,U,3>::type operator+ (
+        const vector<T,3>& lhs,
+        const vector<U,2>& rhs 
+    )
+    {
+        typedef typename vc_rebind_promote<T,U,3>::type ret_type;
+        return ret_type(lhs.x()+rhs.x(), lhs.y()+rhs.y(), lhs.z());
+    }
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+    template <typename T, typename U>
+    inline const typename vc_rebind_promote<T,U,2>::type operator- (
+        const vector<T,2>& lhs,
+        const vector<U,2>& rhs 
+    )
+    {
+        typedef typename vc_rebind_promote<T,U,2>::type ret_type;
+        return ret_type(lhs.x()-rhs.x(), lhs.y()-rhs.y());
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T, typename U>
+    inline const typename vc_rebind_promote<T,U,3>::type operator- (
+        const vector<T,3>& lhs,
+        const vector<U,3>& rhs 
+    )
+    {
+        typedef typename vc_rebind_promote<T,U,3>::type ret_type;
+        return ret_type(lhs.x()-rhs.x(), lhs.y()-rhs.y(), lhs.z()-rhs.z());
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T, typename U>
+    inline const typename vc_rebind_promote<T,U,3>::type operator- (
+        const vector<T,2>& lhs,
+        const vector<U,3>& rhs 
+    )
+    {
+        typedef typename vc_rebind_promote<T,U,3>::type ret_type;
+        return ret_type(lhs.x()-rhs.x(), lhs.y()-rhs.y(), -rhs.z());
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T, typename U>
+    inline const typename vc_rebind_promote<T,U,3>::type operator- (
+        const vector<T,3>& lhs,
+        const vector<U,2>& rhs 
+    )
+    {
+        typedef typename vc_rebind_promote<T,U,3>::type ret_type;
+        return ret_type(lhs.x()-rhs.x(), lhs.y()-rhs.y(), lhs.z());
+    }
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
 
     template <typename T, typename U>
     inline typename disable_if<is_matrix<U>, const typename vc_rebind_promote<T,U,2>::type >::type operator* (
@@ -1243,6 +1257,48 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     typedef vector<long,2> point;
+
+// ----------------------------------------------------------------------------------------
+
+    class point_rotator
+    {
+    public:
+        point_rotator (
+            const double& angle
+        )
+        {
+            sin_angle = std::sin(angle);
+            cos_angle = std::cos(angle);
+        }
+
+        template <typename T>
+        const dlib::vector<T,2> operator() (
+            const dlib::vector<T,2>& p
+        ) const
+        {
+            double x = cos_angle*p.x() - sin_angle*p.y();
+            double y = sin_angle*p.x() + cos_angle*p.y();
+
+            return dlib::vector<double,2>(x,y);
+        }
+
+    private:
+        double sin_angle;
+        double cos_angle;
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T>
+    const dlib::vector<T,2> rotate_point (
+        const dlib::vector<T,2>& center,
+        const dlib::vector<T,2>& p,
+        double angle
+    )
+    {
+        point_rotator rot(angle);
+        return rot(p-center)+center;
+    }
 
 // ----------------------------------------------------------------------------------------
 

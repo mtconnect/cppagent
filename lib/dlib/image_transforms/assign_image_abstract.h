@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_ASSIGN_IMAGe_ABSTRACT
 #ifdef DLIB_ASSIGN_IMAGe_ABSTRACT
@@ -87,7 +87,7 @@ namespace dlib
     template <
         typename image_type
         >
-    void assign_border_pixels (
+    void zero_border_pixels (
         image_type& img,
         long x_border_size,
         long y_border_size
@@ -101,9 +101,10 @@ namespace dlib
             - #img.nc() == img.nc()
             - #img.nr() == img.nr()
               (i.e. the size of img isn't changed by this function)
-            - let p be a pixel such that get_pixel_intensity(p) == 0
-            - performs assign_border_pixels(img, x_border_size, y_border_size, p)
-              (i.e. zeros the border of the given image)
+            - for all valid r such that r+y_border_size or r-y_border_size gives an invalid row
+                - for all valid c such that c+x_border_size or c-x_border_size gives an invalid column 
+                    - performs assign_pixel(#img[r][c], 0 ) 
+                      (i.e. assigns 0 to every pixel in the border of img)
     !*/
 
 // ----------------------------------------------------------------------------------------

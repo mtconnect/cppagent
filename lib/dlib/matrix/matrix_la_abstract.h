@@ -1,4 +1,4 @@
-// Copyright (C) 2009  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2009  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_MATRIx_LA_FUNCTS_ABSTRACT_
 #ifdef DLIB_MATRIx_LA_FUNCTS_ABSTRACT_ 
@@ -151,6 +151,19 @@ namespace dlib
             - m is a square matrix
         ensures
             - returns the determinant of m
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp::type trace (
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - m is a square matrix
+        ensures
+            - returns the trace of m
+              (i.e. returns sum(diag(m)))
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -617,7 +630,7 @@ namespace dlib
                           All you need are the get_real_eigenvalues() and
                           get_pseudo_v() functions.  
                     - V*trans(V) should be equal to the identity matrix.  That is, all the
-                      eigenvectors in V should be linearly independent. 
+                      eigenvectors in V should be orthonormal. 
                         - So A == V*D*trans(V)
 
                 On the other hand, if A is not symmetric then:

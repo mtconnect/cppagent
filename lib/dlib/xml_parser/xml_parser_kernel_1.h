@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_XML_PARSER_KERNEl_1_
 #define DLIB_XML_PARSER_KERNEl_1_
@@ -8,6 +8,7 @@
 #include "xml_parser_kernel_interfaces.h"
 #include "xml_parser_kernel_abstract.h"
 #include "../algs.h"
+#include <cstdio>
 
 namespace dlib
 {
@@ -621,6 +622,8 @@ namespace dlib
             // restore the old exception settings to in
             in.exceptions(old_exceptions);
 
+            // don't forget to rethrow the exception
+            throw;
         }
 
         // restore the old exception settings to in

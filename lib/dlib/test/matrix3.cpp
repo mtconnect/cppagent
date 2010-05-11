@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
@@ -26,7 +26,7 @@ namespace
     logger dlog("test.matrix3");
 
 
-    const double eps_mul = 500000;
+    const double eps_mul = 200;
 
     template <typename T, typename U>
     void check_equal (
@@ -34,16 +34,16 @@ namespace
         const U& b
     )
     {
-        DLIB_CASSERT(a.nr() == b.nr(),"");
-        DLIB_CASSERT(a.nc() == b.nc(),"");
+        DLIB_TEST(a.nr() == b.nr());
+        DLIB_TEST(a.nc() == b.nc());
         typedef typename T::type type;
         for (long r = 0; r < a.nr(); ++r)
         {
             for (long c = 0; c < a.nc(); ++c)
             {
                 type error = std::abs(a(r,c) - b(r,c));
-                DLIB_CASSERT(error < std::numeric_limits<type>::epsilon()*eps_mul, "error: " << error <<
-                             "    eps: " << std::numeric_limits<type>::epsilon()*eps_mul);
+                DLIB_TEST_MSG(error < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul, "error: " << error <<
+                             "    eps: " << std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul);
             }
         }
     }
@@ -54,16 +54,16 @@ namespace
         const U& b
     )
     {
-        DLIB_CASSERT(a.nr() == b.nr(),"");
-        DLIB_CASSERT(a.nc() == b.nc(),"");
+        DLIB_TEST(a.nr() == b.nr());
+        DLIB_TEST(a.nc() == b.nc());
         typedef typename T::type type;
         for (long r = 0; r < a.nr(); ++r)
         {
             for (long c = 0; c < a.nc(); ++c)
             {
                 typename type::value_type error = std::abs(a(r,c) - b(r,c));
-                DLIB_CASSERT(error < std::numeric_limits<typename type::value_type>::epsilon()*eps_mul, "error: " << error <<
-                             "    eps: " << std::numeric_limits<typename type::value_type>::epsilon()*eps_mul);
+                DLIB_TEST_MSG(error < std::sqrt(std::numeric_limits<typename type::value_type>::epsilon())*eps_mul, "error: " << error <<
+                             "    eps: " << std::sqrt(std::numeric_limits<typename type::value_type>::epsilon())*eps_mul);
             }
         }
     }
@@ -75,8 +75,8 @@ namespace
     )
     {
         T& a = const_cast<T&>(a_);
-        DLIB_CASSERT(a.nr() == b.nr(),"");
-        DLIB_CASSERT(a.nc() == b.nc(),"");
+        DLIB_TEST(a.nr() == b.nr());
+        DLIB_TEST(a.nc() == b.nc());
         for (long r = 0; r < a.nr(); ++r)
         {
             for (long c = 0; c < a.nc(); ++c)
@@ -115,7 +115,7 @@ namespace
             matrix<type> at;
             at = trans(a);
 
-            matrix<complex<type> > c_a(rows,cols), c_at;
+            matrix<complex<type> > c_a(rows,cols), c_at, c_sqr;
             for (long r= 0; r < a.nr(); ++r)
             {
                 for (long c = 0; c < a.nc(); ++c)
@@ -124,6 +124,9 @@ namespace
                 }
             }
             c_at = trans(c_a);
+            const int size = max(rows,cols);
+            c_sqr = 10*matrix_cast<complex<type> >(complex_matrix(randm(size,size,rnd), randm(size,size,rnd)));
+
 
             matrix<complex<type> > c_temp(cols,cols), c_temp2(cols,cols);
             const complex<type> i(0,1);
@@ -188,10 +191,22 @@ namespace
 
             print_spinner();
             c_check_equal(tmp(conj(trans(c_a))*c_a),   trans(conj(c_a))*c_a);
+            dlog << LTRACE << "1.5.1";
             c_check_equal(tmp(trans(conj(trans(c_a))*c_a)),   trans(trans(conj(c_a))*c_a));
+            dlog << LTRACE << "1.5.2";
+            c_check_equal(tmp((conj(trans(c_sqr))*trans(c_sqr))),   (trans(conj(c_sqr))*trans(c_sqr)));
+            dlog << LTRACE << "1.5.3";
+            c_check_equal(tmp(trans(conj(trans(c_sqr))*trans(c_sqr))),   trans(trans(conj(c_sqr))*trans(c_sqr)));
             dlog << LTRACE << "1.6";
             c_check_equal(tmp(c_at*trans(conj(c_at))),   c_at*conj(trans(c_at)));
+            dlog << LTRACE << "1.6.1";
             c_check_equal(tmp(trans(c_at*trans(conj(c_at)))),   trans(c_at*conj(trans(c_at))));
+            dlog << LTRACE << "1.6.2";
+            c_check_equal(tmp((c_sqr)*trans(conj(c_sqr))),   (c_sqr)*conj(trans(c_sqr)));
+            dlog << LTRACE << "1.6.2.1";
+            c_check_equal(tmp(trans(c_sqr)*trans(conj(c_sqr))),   trans(c_sqr)*conj(trans(c_sqr)));
+            dlog << LTRACE << "1.6.3";
+            c_check_equal(tmp(trans(trans(c_sqr)*trans(conj(c_sqr)))),   trans(trans(c_sqr)*conj(trans(c_sqr))));
             dlog << LTRACE << "1.7";
             c_check_equal(tmp(conj(trans(c_at))*trans(conj(c_a))),  conj(trans(c_at))*trans(conj(c_a)));
             c_check_equal(tmp(trans(conj(trans(c_at))*trans(conj(c_a)))), trans(conj(trans(c_at))*trans(conj(c_a))));
@@ -257,6 +272,43 @@ namespace
                 check_equal(temp, temp3);
             }
 
+            dlog << LTRACE << "1.17.1";
+            {
+                matrix<type> m1, m2;
+
+                m1 = matrix_cast<type>(randm(rows, cols, rnd));
+                m2 = matrix_cast<type>(randm(cols, rows + 8, rnd));
+                check_equal(tmp(m1*m2), m1*m2);
+                check_equal(tmp(trans(m1*m2)), trans(m1*m2));
+
+                m1 = trans(m1);
+                check_equal(tmp(trans(m1)*m2), trans(m1)*m2);
+                check_equal(tmp(trans(trans(m1)*m2)), trans(trans(m1)*m2));
+
+                m2 = trans(m2);
+                check_equal(tmp(trans(m1)*trans(m2)), trans(m1)*trans(m2));
+                check_equal(tmp(trans(trans(m1)*trans(m2))), trans(trans(m1)*trans(m2)));
+
+                m1 = trans(m1);
+                check_equal(tmp(m1*trans(m2)), m1*trans(m2));
+                check_equal(tmp(trans(m1*trans(m2))), trans(m1*trans(m2)));
+            }
+
+            dlog << LTRACE << "1.17.5";
+            {
+                matrix<type,1,0> r;
+                matrix<type,0,1> c;
+
+                r = matrix_cast<type>(randm(1, rows+9, rnd));
+                c = matrix_cast<type>(randm(rows, 1, rnd));
+
+                check_equal(tmp(c*r), c*r);
+                check_equal(tmp(trans(c*r)), trans(c*r));
+
+                check_equal(tmp(trans(r)*trans(c)), trans(r)*trans(c));
+                check_equal(tmp(trans(trans(r)*trans(c))), trans(trans(r)*trans(c)));
+            }
+
             dlog << LTRACE << "1.18";
 
             // GEMV tests
@@ -280,6 +332,16 @@ namespace
             c_check_equal(tmp(conj(trans(c_a))*trans(c_rv3)),  trans(conj(c_a))*trans(c_rv3));
             c_check_equal(tmp(c_rv4*conj(c_at)),  c_rv4*conj(c_at));
             c_check_equal(tmp(trans(c_cv4)*conj(c_at)),  trans(c_cv4)*conj(c_at));
+
+            dlog << LTRACE << "2.00";
+
+            c_check_equal(tmp(trans(trans(conj(c_a))*c_cv3)),           trans(trans(conj(c_a))*c_cv3));
+            c_check_equal(tmp(trans(c_rv4*trans(conj(c_a)))),           trans(c_rv4*trans(conj(c_a))));
+            c_check_equal(tmp(trans(trans(c_cv3)*trans(conj(c_at)))),   trans(trans(c_cv3)*trans(conj(c_at))));
+            dlog << LTRACE << "2.20";
+            c_check_equal(tmp(trans(conj(trans(c_a))*trans(c_rv3))),    trans(trans(conj(c_a))*trans(c_rv3)));
+            c_check_equal(tmp(trans(c_rv4*conj(c_at))),                 trans(c_rv4*conj(c_at)));
+            c_check_equal(tmp(trans(trans(c_cv4)*conj(c_at))),          trans(trans(c_cv4)*conj(c_at)));
 
 
 
@@ -436,7 +498,61 @@ namespace
             assign_no_blas(c_temp2, c_temp2 + trans(c_rv4)*trans(conj(c_cv4)));
             c_check_equal(c_temp, c_temp2);
 
+
+            dlog << LTRACE << "9.4";
+            c_temp += conj(c_cv4)*c_rv4;
+            assign_no_blas(c_temp2, c_temp2 + conj(c_cv4)*c_rv4);
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "9.5";
+            c_temp += conj(c_cv4)*conj(c_rv4);
+            assign_no_blas(c_temp2, c_temp2 + conj(c_cv4)*conj(c_rv4));
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "9.6";
+            c_temp = conj(c_cv4)*conj(c_rv4) + c_temp;
+            assign_no_blas(c_temp2, c_temp2 + conj(c_cv4)*conj(c_rv4));
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "9.7";
+            c_temp = conj(trans(c_rv4))*trans(conj(c_cv4)) + c_temp;
+            assign_no_blas(c_temp2, c_temp2 + conj(trans(c_rv4))*trans(conj(c_cv4)));
+            c_check_equal(c_temp, c_temp2);
+
+
             dlog << LTRACE << "10";
+            c_temp += trans(c_cv4*c_rv4);
+            assign_no_blas(c_temp2, c_temp2 + trans(c_cv4*c_rv4));
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "10.1";
+            c_temp += trans(c_cv4*conj(c_rv4));
+            assign_no_blas(c_temp2, c_temp2 + trans(c_cv4*conj(c_rv4)));
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "10.2";
+            c_temp = trans(c_cv4*conj(c_rv4)) + c_temp;
+            assign_no_blas(c_temp2, c_temp2 + trans(c_cv4*conj(c_rv4)));
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "10.3";
+            c_temp = trans(trans(c_rv4)*trans(conj(c_cv4))) + c_temp;
+            assign_no_blas(c_temp2, c_temp2 + trans(trans(c_rv4)*trans(conj(c_cv4))));
+            c_check_equal(c_temp, c_temp2);
+
+
+            dlog << LTRACE << "10.4";
+            c_temp += trans(conj(c_cv4)*c_rv4);
+            assign_no_blas(c_temp2, c_temp2 + trans(conj(c_cv4)*c_rv4));
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "10.5";
+            c_temp += trans(conj(c_cv4)*conj(c_rv4));
+            assign_no_blas(c_temp2, c_temp2 + trans(conj(c_cv4)*conj(c_rv4)));
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "10.6";
+            c_temp = trans(conj(c_cv4)*conj(c_rv4)) + c_temp;
+            assign_no_blas(c_temp2, c_temp2 + trans(conj(c_cv4)*conj(c_rv4)));
+            c_check_equal(c_temp, c_temp2);
+            dlog << LTRACE << "10.7";
+            c_temp = trans(conj(trans(c_rv4))*trans(conj(c_cv4))) + c_temp;
+            assign_no_blas(c_temp2, c_temp2 + trans(conj(trans(c_rv4))*trans(conj(c_cv4))));
+            c_check_equal(c_temp, c_temp2);
+
+            dlog << LTRACE << "10.8";
 
 
             print_spinner();
@@ -449,6 +565,16 @@ namespace
             check_equal( tmp(trans(cv4)*3.9*trans(rv4)), trans(cv4)*3.9*trans(rv4));
             check_equal( tmp(rv4*cv4*3.9), rv4*3.9*cv4);
             check_equal( tmp(trans(cv4)*trans(rv4)*3.9), trans(cv4)*3.9*trans(rv4));
+
+
+            check_equal( tmp(trans(rv4*cv4)),                    trans(rv4*cv4));
+            check_equal( tmp(trans(trans(rv4*cv4))),             trans(trans(rv4*cv4)));
+            check_equal( tmp(trans(trans(cv4)*trans(rv4))),      trans(trans(cv4)*trans(rv4)));
+            check_equal( tmp(trans(rv4*3.9*cv4)),                trans(rv4*3.9*cv4));
+            check_equal( tmp(trans(trans(cv4)*3.9*trans(rv4))),  trans(trans(cv4)*3.9*trans(rv4)));
+            check_equal( tmp(trans(rv4*cv4*3.9)),                trans(rv4*3.9*cv4));
+            check_equal( tmp(trans(trans(cv4)*trans(rv4)*3.9)),  trans(trans(cv4)*3.9*trans(rv4)));
+
 
             temp.set_size(1,1);
             temp = 4;
@@ -470,8 +596,32 @@ namespace
             c_check_equal( tmp(c_temp + conj(c_rv4)*c_cv4), c_temp + conj(c_rv4)*c_cv4);
             c_check_equal( tmp(c_temp + trans(conj(c_cv4))*trans(c_rv4)), c_temp + trans(conj(c_cv4))*trans(c_rv4));
 
-            DLIB_CASSERT(abs((static_cast<complex<type> >(c_rv4*c_cv4) + i) - ((c_rv4*c_cv4)(0) + i)) < std::numeric_limits<type>::epsilon()*eps_mul ,"");
-            DLIB_CASSERT(abs((rv4*cv4 + 1.0) - ((rv4*cv4)(0) + 1.0)) < std::numeric_limits<type>::epsilon()*eps_mul,"");
+            DLIB_TEST(abs((static_cast<complex<type> >(c_rv4*c_cv4) + i) - ((c_rv4*c_cv4)(0) + i)) < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul );
+            DLIB_TEST(abs((rv4*cv4 + 1.0) - ((rv4*cv4)(0) + 1.0)) < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul);
+
+        }
+
+        {
+            matrix<int> m(2,3), m2(6,1);
+
+            m = 1,2,3,
+                4,5,6;
+
+            m2 = 1,2,3,4,5,6;
+
+            DLIB_TEST(reshape_to_column_vector(m) == m2);
+
+        }
+        {
+            matrix<int,2,3> m(2,3);
+            matrix<int> m2(6,1);
+
+            m = 1,2,3,
+                4,5,6;
+
+            m2 = 1,2,3,4,5,6;
+
+            DLIB_TEST(reshape_to_column_vector(m) == m2);
 
         }
     }
@@ -498,10 +648,10 @@ namespace
             6, 7;
 
 
-            DLIB_CASSERT(subm(tensor_product(m1,m2),range(0,1), range(0,1)) == 1*m2,"");
-            DLIB_CASSERT(subm(tensor_product(m1,m2),range(0,1), range(2,3)) == 2*m2,"");
-            DLIB_CASSERT(subm(tensor_product(m1,m2),range(2,3), range(0,1)) == 3*m2,"");
-            DLIB_CASSERT(subm(tensor_product(m1,m2),range(2,3), range(2,3)) == 4*m2,"");
+            DLIB_TEST(subm(tensor_product(m1,m2),range(0,1), range(0,1)) == 1*m2);
+            DLIB_TEST(subm(tensor_product(m1,m2),range(0,1), range(2,3)) == 2*m2);
+            DLIB_TEST(subm(tensor_product(m1,m2),range(2,3), range(0,1)) == 3*m2);
+            DLIB_TEST(subm(tensor_product(m1,m2),range(2,3), range(2,3)) == 4*m2);
         }
 
         {
@@ -538,8 +688,8 @@ namespace
                  0,0,9,0;
 
 
-            DLIB_CASSERT(lowerm(m) == ml,"");
-            DLIB_CASSERT(upperm(m) == mu,"");
+            DLIB_TEST(lowerm(m) == ml);
+            DLIB_TEST(upperm(m) == mu);
 
             ml = 3,0,0,0,
                  4,3,0,0,
@@ -549,8 +699,8 @@ namespace
                  0,4,6,7,
                  0,0,4,0;
 
-            DLIB_CASSERT(lowerm(m,3) == ml,"");
-            DLIB_CASSERT(upperm(m,4) == mu,"");
+            DLIB_TEST(lowerm(m,3) == ml);
+            DLIB_TEST(upperm(m,4) == mu);
 
         }
 
@@ -563,12 +713,68 @@ namespace
             row = 4,5,6;
             col = 3,6;
 
-            DLIB_CASSERT(rowm(m, 1, 3) == row,"");
-            DLIB_CASSERT(colm(m, 2, 2) == col,"");
+            DLIB_TEST(rowm(m, 1, 3) == row);
+            DLIB_TEST(colm(m, 2, 2) == col);
 
         }
 
 
+        {
+            std::vector<double> v(34, 8);
+            std::vector<double> v2(34, 9);
+
+            DLIB_TEST(pointer_to_column_vector(&v[0], v.size()) == vector_to_matrix(v));
+            DLIB_TEST(pointer_to_column_vector(&v2[0], v.size()) != vector_to_matrix(v));
+        }
+
+        {
+            std::vector<long> v(1, 3);
+            std::vector<long> v2(1, 2);
+
+            DLIB_TEST(pointer_to_column_vector(&v[0], v.size()) == vector_to_matrix(v));
+            DLIB_TEST(pointer_to_column_vector(&v2[0], v.size()) != vector_to_matrix(v));
+        }
+
+        {
+            matrix<double> a(3,3), b(3,3);
+            a = 1,   2.5, 1,
+                3,   4,   5,
+                0.5, 2.2, 3;
+
+            b = 0, 1, 0,
+                1, 1, 1,
+                0, 1, 1;
+
+            DLIB_TEST((a>1) == b);
+            DLIB_TEST((1<a) == b);
+
+            b = 1, 1, 1,
+                1, 1, 1,
+                0, 1, 1;
+
+            DLIB_TEST((a>=1) == b);
+            DLIB_TEST((1<=a) == b);
+
+            b = 0, 0, 0,
+                0, 0, 0,
+                0, 1, 0;
+            DLIB_TEST((a==2.2) == b);
+            DLIB_TEST((a!=2.2) == (b==0));
+            DLIB_TEST((2.2==a) == b);
+            DLIB_TEST((2.2!=a) == (0==b));
+
+            b = 0, 0, 0,
+                0, 0, 0,
+                1, 0, 0;
+            DLIB_TEST((a<1) == b);
+            DLIB_TEST((1>a) == b);
+
+            b = 1, 0, 1,
+                0, 0, 0,
+                1, 0, 0;
+            DLIB_TEST((a<=1) == b);
+            DLIB_TEST((1>=a) == b);
+        }
 
     }
 

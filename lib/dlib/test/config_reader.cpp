@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
@@ -20,6 +20,10 @@ namespace
     using namespace dlib;
     using namespace std;
 
+    // Declare the logger we will use in this test.  The name of the tester 
+    // should start with "test."
+    logger dlog("test.config_reader");
+
     template <
         typename config_reader
         >
@@ -27,70 +31,126 @@ namespace
         config_reader& cr
     )
     {
-        DLIB_CASSERT(cr.is_key_defined("global"),"");
-        DLIB_CASSERT(cr.is_block_defined("all"),"");
-        DLIB_CASSERT(cr.is_key_defined("globalasfd") == false,"");
-        DLIB_CASSERT(cr.is_block_defined("all!") == false,"");
-        DLIB_CASSERT(cr.size() == 1,"");
-        DLIB_CASSERT(cr["global"] == "hmm","");
-        DLIB_CASSERT(cr["global2"] == "hmm2","");
-        DLIB_CASSERT(cr.block("all").size() == 4,""); 
-        DLIB_CASSERT(cr.block("all").block("block1").size() == 0,""); 
-        DLIB_CASSERT(cr.block("all").block("block2").size() == 0,""); 
-        DLIB_CASSERT(cr.block("all").block("block3").size() == 0,""); 
-        DLIB_CASSERT(cr.block("all").block("block4").size() == 0,""); 
+        DLIB_TEST(cr.is_key_defined("global"));
+        DLIB_TEST(cr.is_block_defined("all"));
+        DLIB_TEST(cr.is_key_defined("globalasfd") == false);
+        DLIB_TEST(cr.is_block_defined("all!") == false);
+        DLIB_TEST(cr["global"] == "hmm");
+        DLIB_TEST(cr["global2"] == "hmm2");
 
-        DLIB_CASSERT(cr.block("all").block("block1").is_key_defined("name"),""); 
-        DLIB_CASSERT(cr.block("all").block("block2").is_key_defined("name"),""); 
-        DLIB_CASSERT(cr.block("all").block("block3").is_key_defined("name"),""); 
-        DLIB_CASSERT(cr.block("all").block("block4").is_key_defined("name"),""); 
-        DLIB_CASSERT(cr.block("all").block("block1").is_key_defined("age"),""); 
-        DLIB_CASSERT(cr.block("all").block("block2").is_key_defined("age"),""); 
-        DLIB_CASSERT(cr.block("all").block("block3").is_key_defined("age"),""); 
-        DLIB_CASSERT(cr.block("all").block("block4").is_key_defined("age"),""); 
+        std_vector_c<string> blocks;
+        cr.block("all").get_blocks(blocks);
+        DLIB_TEST(blocks.size() == 4); 
+        cr.block("all").block("block1").get_blocks(blocks); DLIB_TEST(blocks.size() == 0); 
+        cr.block("all").block("block2").get_blocks(blocks); DLIB_TEST(blocks.size() == 0); 
+        cr.block("all").block("block3").get_blocks(blocks); DLIB_TEST(blocks.size() == 0); 
+        cr.block("all").block("block4").get_blocks(blocks); DLIB_TEST(blocks.size() == 0); 
 
-        DLIB_CASSERT(cr.block("all").block("block1")["name"] == "davis king",""); 
-        DLIB_CASSERT(cr.block("all").block("block2")["name"] == "joel",""); 
-        DLIB_CASSERT(cr.block("all").block("block3")["name"] == "john",""); 
-        DLIB_CASSERT(cr.block("all").block("block4")["name"] == "dude",""); 
-        DLIB_CASSERT(cr.block("all").block("block1")["age"] == "24",""); 
-        DLIB_CASSERT(cr.block("all").block("block2")["age"] == "24",""); 
-        DLIB_CASSERT(cr.block("all").block("block3")["age"] == "24",""); 
-        DLIB_CASSERT(cr.block("all").block("block4")["age"] == "53",""); 
+        DLIB_TEST(cr.block("all").block("block1").is_key_defined("name")); 
+        DLIB_TEST(cr.block("all").block("block2").is_key_defined("name")); 
+        DLIB_TEST(cr.block("all").block("block3").is_key_defined("name")); 
+        DLIB_TEST(cr.block("all").block("block4").is_key_defined("name")); 
+        DLIB_TEST(cr.block("all").block("block1").is_key_defined("age")); 
+        DLIB_TEST(cr.block("all").block("block2").is_key_defined("age")); 
+        DLIB_TEST(cr.block("all").block("block3").is_key_defined("age")); 
+        DLIB_TEST(cr.block("all").block("block4").is_key_defined("age")); 
+
+        DLIB_TEST(cr.block("all").block("block1")["name"] == "davis king"); 
+        DLIB_TEST(cr.block("all").block("block2")["name"] == "joel"); 
+        DLIB_TEST(cr.block("all").block("block3")["name"] == "john"); 
+        DLIB_TEST(cr.block("all").block("block4")["name"] == "dude"); 
+        DLIB_TEST(cr.block("all").block("block1")["age"] == "24"); 
+        DLIB_TEST(cr.block("all").block("block2")["age"] == "24"); 
+        DLIB_TEST(cr.block("all").block("block3")["age"] == "24"); 
+        DLIB_TEST(cr.block("all").block("block4")["age"] == "53"); 
 
 
-        int count1 = 0;
         int count2 = 0;
-        while (cr.move_next())
+        cr.get_blocks(blocks);
+        DLIB_TEST(blocks.size() == 1);
+        DLIB_TEST(blocks[0] == "all");
+
+
+        DLIB_TEST(cr.block("all").is_key_defined("global") == false);
+        DLIB_TEST(cr.block("all").is_key_defined("global2") == false);
+        DLIB_TEST(cr.block("all").is_key_defined("name") == false);
+        DLIB_TEST(cr.block("all").is_key_defined("age") == false);
+
+        cr.block("all").get_blocks(blocks);
+        DLIB_TEST(blocks.size() == 4);
+        std::vector<string> temp_blocks;
+        for (unsigned long i = 0; i < blocks.size(); ++i)
         {
-            ++count1;
-            DLIB_CASSERT(cr.current_block_name() == "all","");
-            DLIB_CASSERT(cr.element().is_key_defined("global") == false,"");
-            DLIB_CASSERT(cr.element().is_key_defined("global2") == false,"");
-            DLIB_CASSERT(cr.element().is_key_defined("name") == false,"");
-            DLIB_CASSERT(cr.element().is_key_defined("age") == false,"");
-            while (cr.element().move_next())
-            {
-                ++count2;
-                ostringstream sout;
-                sout << "block" << count2;
-                DLIB_CASSERT(cr.element().current_block_name() == sout.str(),"");
-                DLIB_CASSERT(cr.element().size() == 4,"");
-                DLIB_CASSERT(cr.element().element().size() == 0,"");
-                DLIB_CASSERT(cr.element().element().is_key_defined("name"),"");
-                DLIB_CASSERT(cr.element().element().is_key_defined("age"),"");
-            }
+            ++count2;
+            ostringstream sout;
+            sout << "block" << count2;
+            DLIB_TEST(blocks[i] == sout.str());
+
+            cr.block("all").block(blocks[i]).get_blocks(temp_blocks);
+            DLIB_TEST(temp_blocks.size() == 0);
+
+            DLIB_TEST(cr.block("all").block(blocks[i]).is_key_defined("name"));
+            DLIB_TEST(cr.block("all").block(blocks[i]).is_key_defined("age"));
         }
 
-        DLIB_CASSERT(count1 == 1,"");
-        DLIB_CASSERT(count2 == 4,"");
+
+
+        bool found_error = false;
+        try
+        {
+            cr.block("bogus_block");
+        }
+        catch (typename config_reader::config_reader_access_error& e)
+        {
+            DLIB_TEST(e.block_name == "bogus_block");
+            DLIB_TEST(e.key_name == "");
+            found_error = true;
+        }
+        DLIB_TEST(found_error);
+
+        found_error = false;
+        try
+        {
+            cr["bogus_key"];
+        }
+        catch (typename config_reader::config_reader_access_error& e)
+        {
+            DLIB_TEST(e.block_name == "");
+            DLIB_TEST(e.key_name == "bogus_key");
+            found_error = true;
+        }
+        DLIB_TEST(found_error);
+
+
+        found_error = false;
+        try
+        {
+            cr.block("all").block("block10");
+        }
+        catch (typename config_reader::config_reader_access_error& e)
+        {
+            DLIB_TEST(e.block_name == "block10");
+            DLIB_TEST(e.key_name == "");
+            found_error = true;
+        }
+        DLIB_TEST(found_error);
+
+        found_error = false;
+        try
+        {
+            cr.block("all")["msdofg"];
+        }
+        catch (typename config_reader::config_reader_access_error& e)
+        {
+            DLIB_TEST(e.block_name == "");
+            DLIB_TEST(e.key_name == "msdofg");
+            found_error = true;
+        }
+        DLIB_TEST(found_error);
 
     }
 
 
-    // Declare the logger we will use in this test.  The name of the tester 
-    // should start with "test."
-    logger dlog("test.config_reader");
 
     template <
         typename config_reader
@@ -163,8 +223,7 @@ namespace
             do_the_tests(cr2);
 
             cr.clear();
-            DLIB_CASSERT(cr.size() == 0,"");
-            DLIB_CASSERT(cr.is_key_defined("global") == false,"");
+            DLIB_TEST(cr.is_key_defined("global") == false);
         }
 
 
@@ -215,10 +274,10 @@ namespace
             catch (typename config_reader::config_reader_error& e)
             {
                 error_found = true;
-                DLIB_CASSERT(e.line_number == 16,"");
-                DLIB_CASSERT(e.redefinition == false,"");
+                DLIB_TEST(e.line_number == 16);
+                DLIB_TEST(e.redefinition == false);
             }
-            DLIB_CASSERT(error_found,"");
+            DLIB_TEST(error_found);
         }
 
         {
@@ -268,10 +327,10 @@ namespace
             catch (typename config_reader::config_reader_error& e)
             {
                 error_found = true;
-                DLIB_CASSERT(e.line_number == 31,e.line_number);
-                DLIB_CASSERT(e.redefinition == true,"");
+                DLIB_TEST_MSG(e.line_number == 31,e.line_number);
+                DLIB_TEST(e.redefinition == true);
             }
-            DLIB_CASSERT(error_found,"");
+            DLIB_TEST(error_found);
         }
 
 
@@ -321,10 +380,10 @@ namespace
             catch (typename config_reader::config_reader_error& e)
             {
                 error_found = true;
-                DLIB_CASSERT(e.line_number == 13,e.line_number);
-                DLIB_CASSERT(e.redefinition == true,"");
+                DLIB_TEST_MSG(e.line_number == 13,e.line_number);
+                DLIB_TEST(e.redefinition == true);
             }
-            DLIB_CASSERT(error_found,"");
+            DLIB_TEST(error_found);
         }
 
 
@@ -355,17 +414,9 @@ namespace
             print_spinner();
             config_reader_test<config_reader::kernel_1a>();
 
-            dlog << LINFO << "testing kernel_1a_c";
-            print_spinner();
-            config_reader_test<config_reader::kernel_1a_c>();
-
             dlog << LINFO << "testing thread_safe_1a";
             print_spinner();
             config_reader_test<config_reader::thread_safe_1a>();
-
-            dlog << LINFO << "testing thread_safe_1a_c";
-            print_spinner();
-            config_reader_test<config_reader::thread_safe_1a_c>();
         }
     } a;
 

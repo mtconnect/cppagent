@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_LISf_ABSTRACT_
 #ifdef DLIB_LISf_ABSTRACT_
@@ -44,6 +44,15 @@ namespace dlib
         typedef typename kernel_type::sample_type sample_type;
         typedef typename kernel_type::mem_manager_type mem_manager_type;
 
+        linearly_independent_subset_finder (
+        );
+        /*!
+            ensures
+                - #minimum_tolerance() == 0.001 
+                - this object is properly initialized
+                - #get_kernel() == kernel_type()  (i.e. whatever the default is for the supplied kernel) 
+                - #max_dictionary_size() == 100 
+        !*/
 
         linearly_independent_subset_finder (
             const kernel_type& kernel_, 
@@ -86,6 +95,14 @@ namespace dlib
                   a sample must be for it to even be considered for addition to the dictionary.  
                   Moreover, bigger values of this field will make the algorithm run faster but 
                   might give less accurate results.
+                - The exact meaning of the tolerance parameter is the following: 
+                  Imagine that we have an empirical_kernel_map that contains all the current 
+                  dictionary vectors.  Then the tolerance is the minimum projection error 
+                  (as given by empirical_kernel_map::project()) required to cause us to 
+                  include a new vector in the dictionary.  So each time you call add() this 
+                  object basically just computes the projection error for that new sample 
+                  and if it is larger than the tolerance then that new sample becomes part 
+                  of the dictionary.  
         !*/
 
         void clear_dictionary (

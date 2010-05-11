@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_REDUCEd_TRAINERS_
 #define DLIB_REDUCEd_TRAINERS_
@@ -32,27 +32,21 @@ namespace dlib
         typedef typename trainer_type::trained_function_type trained_function_type;
 
         reduced_decision_function_trainer (
-        ) :num_sv(0) {}
+        ) :num_bv(0) {}
 
         reduced_decision_function_trainer (
             const trainer_type& trainer_,
-            const unsigned long num_sv_ 
+            const unsigned long num_sb_ 
         ) :
             trainer(trainer_),
-            num_sv(num_sv_)
+            num_bv(num_sb_)
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(num_sv > 0,
+            DLIB_ASSERT(num_bv > 0,
                         "\t reduced_decision_function_trainer()"
                         << "\n\t you have given invalid arguments to this function"
-                        << "\n\t num_sv: " << num_sv 
+                        << "\n\t num_bv: " << num_bv 
             );
-        }
-
-        const kernel_type& get_kernel (
-        ) const
-        {
-            return trainer.get_kernel();
         }
 
         template <
@@ -65,10 +59,10 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(num_sv > 0,
+            DLIB_ASSERT(num_bv > 0,
                         "\t reduced_decision_function_trainer::train(x,y)"
                         << "\n\t You have tried to use an uninitialized version of this object"
-                        << "\n\t num_sv: " << num_sv );
+                        << "\n\t num_bv: " << num_bv );
             return do_train(vector_to_matrix(x), vector_to_matrix(y));
         }
 
@@ -88,8 +82,8 @@ namespace dlib
             // get the decision function object we are going to try and approximate
             const decision_function<kernel_type> dec_funct = trainer.train(x,y);
             
-            // now find a linearly independent subset of the training points of num_sv points.
-            linearly_independent_subset_finder<kernel_type> lisf(trainer.get_kernel(), num_sv);
+            // now find a linearly independent subset of the training points of num_bv points.
+            linearly_independent_subset_finder<kernel_type> lisf(dec_funct.kernel_function, num_bv);
             for (long i = 0; i < x.nr(); ++i)
             {
                 lisf.add(x(i));
@@ -107,7 +101,7 @@ namespace dlib
             matrix<scalar_type, 0, 0, mem_manager_type> K_inv(num, num); 
             matrix<scalar_type, 0, 0, mem_manager_type> K(num, dec_funct.alpha.size()); 
 
-            const kernel_type kernel(trainer.get_kernel());
+            const kernel_type kernel(dec_funct.kernel_function);
 
             for (long r = 0; r < K_inv.nr(); ++r)
             {
@@ -123,7 +117,7 @@ namespace dlib
             {
                 for (long c = 0; c < K.nc(); ++c)
                 {
-                    K(r,c) = kernel(lisf[r], dec_funct.support_vectors(c));
+                    K(r,c) = kernel(lisf[r], dec_funct.basis_vectors(c));
                 }
             }
 
@@ -151,7 +145,7 @@ namespace dlib
     // ------------------------------------------------------------------------------------
 
         trainer_type trainer;
-        unsigned long num_sv; 
+        unsigned long num_bv; 
 
 
     }; // end of class reduced_decision_function_trainer
@@ -159,17 +153,17 @@ namespace dlib
     template <typename trainer_type>
     const reduced_decision_function_trainer<trainer_type> reduced (
         const trainer_type& trainer,
-        const unsigned long num_sv
+        const unsigned long num_bv
     )
     {
         // make sure requires clause is not broken
-        DLIB_ASSERT(num_sv > 0,
+        DLIB_ASSERT(num_bv > 0,
                     "\tconst reduced_decision_function_trainer reduced()"
                     << "\n\t you have given invalid arguments to this function"
-                    << "\n\t num_sv: " << num_sv 
+                    << "\n\t num_bv: " << num_bv 
         );
 
-        return reduced_decision_function_trainer<trainer_type>(trainer, num_sv);
+        return reduced_decision_function_trainer<trainer_type>(trainer, num_bv);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -189,31 +183,25 @@ namespace dlib
         typedef typename trainer_type::mem_manager_type mem_manager_type;
         typedef typename trainer_type::trained_function_type trained_function_type;
 
-        reduced_decision_function_trainer2 () : num_sv(0) {}
+        reduced_decision_function_trainer2 () : num_bv(0) {}
         reduced_decision_function_trainer2 (
             const trainer_type& trainer_,
-            const long num_sv_,
+            const long num_sb_,
             const double eps_ = 1e-3
         ) :
             trainer(trainer_),
-            num_sv(num_sv_),
+            num_bv(num_sb_),
             eps(eps_)
         {
             COMPILE_TIME_ASSERT(is_matrix<sample_type>::value);
 
             // make sure requires clause is not broken
-            DLIB_ASSERT(num_sv > 0 && eps > 0,
+            DLIB_ASSERT(num_bv > 0 && eps > 0,
                         "\t reduced_decision_function_trainer2()"
                         << "\n\t you have given invalid arguments to this function"
-                        << "\n\t num_sv: " << num_sv 
+                        << "\n\t num_bv: " << num_bv 
                         << "\n\t eps:    " << eps 
             );
-        }
-
-        const kernel_type& get_kernel (
-        ) const
-        {
-            return trainer.get_kernel();
         }
 
         template <
@@ -226,10 +214,10 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(num_sv > 0,
+            DLIB_ASSERT(num_bv > 0,
                         "\t reduced_decision_function_trainer2::train(x,y)"
                         << "\n\t You have tried to use an uninitialized version of this object"
-                        << "\n\t num_sv: " << num_sv );
+                        << "\n\t num_bv: " << num_bv );
             return do_train(vector_to_matrix(x), vector_to_matrix(y));
         }
 
@@ -267,7 +255,7 @@ namespace dlib
                     for (long j = 0; j < dec_funct.alpha.size(); ++j)
                     {
                         bias += dec_funct.alpha(i)*dec_funct.alpha(j)*
-                            k(dec_funct.support_vectors(i), dec_funct.support_vectors(j));
+                            k(dec_funct.basis_vectors(i), dec_funct.basis_vectors(j));
                     }
                 }
             }
@@ -344,9 +332,9 @@ namespace dlib
                 double temp = 0;
                 for (long i = 0; i < out_vectors.size(); ++i)
                 {
-                    for (long j = 0; j < dec_funct.support_vectors.nr(); ++j)
+                    for (long j = 0; j < dec_funct.basis_vectors.nr(); ++j)
                     {
-                        temp -= b(i)*dec_funct.alpha(j)*k(out_vectors(i), dec_funct.support_vectors(j));
+                        temp -= b(i)*dec_funct.alpha(j)*k(out_vectors(i), dec_funct.basis_vectors(j));
                     }
                 }
 
@@ -368,8 +356,8 @@ namespace dlib
             scalar_type bias;
 
             const decision_function<kernel_type>& dec_funct;
-            mutable matrix<scalar_type,0,1,mem_manager_type>& b;
-            mutable matrix<sample_type,0,1,mem_manager_type>& out_vectors;
+            matrix<scalar_type,0,1,mem_manager_type>& b;
+            matrix<sample_type,0,1,mem_manager_type>& out_vectors;
 
         };
 
@@ -448,9 +436,9 @@ namespace dlib
                 }
                 for (long i = 0; i < out_vectors.size(); ++i)
                 {
-                    for (long j = 0; j < dec_funct.support_vectors.size(); ++j)
+                    for (long j = 0; j < dec_funct.basis_vectors.size(); ++j)
                     {
-                        res(i) -= dec_funct.alpha(j)*k(out_vectors(i), dec_funct.support_vectors(j)); 
+                        res(i) -= dec_funct.alpha(j)*k(out_vectors(i), dec_funct.basis_vectors(j)); 
                     }
                 }
 
@@ -466,9 +454,9 @@ namespace dlib
                     {
                         temp += b(j)*K_der(out_vectors(j), out_vectors(i));
                     }
-                    for (long j = 0; j < dec_funct.support_vectors.nr(); ++j)
+                    for (long j = 0; j < dec_funct.basis_vectors.nr(); ++j)
                     {
-                        temp -= dec_funct.alpha(j)*K_der(dec_funct.support_vectors(j), out_vectors(i) );
+                        temp -= dec_funct.alpha(j)*K_der(dec_funct.basis_vectors(j), out_vectors(i) );
                     }
 
                     // store the gradient for out_vectors[i] into result in the proper spot
@@ -487,8 +475,8 @@ namespace dlib
             mutable sample_type temp;
 
             const decision_function<kernel_type>& dec_funct;
-            mutable matrix<scalar_type,0,1,mem_manager_type>& b;
-            mutable matrix<sample_type,0,1,mem_manager_type>& out_vectors;
+            matrix<scalar_type,0,1,mem_manager_type>& b;
+            matrix<sample_type,0,1,mem_manager_type>& out_vectors;
 
         };
 
@@ -506,8 +494,8 @@ namespace dlib
             // get the decision function object we are going to try and approximate
             const decision_function<kernel_type> dec_funct = trainer.train(x,y);
             
-            // now find a linearly independent subset of the training points of num_sv points.
-            linearly_independent_subset_finder<kernel_type> lisf(trainer.get_kernel(), num_sv);
+            // now find a linearly independent subset of the training points of num_bv points.
+            linearly_independent_subset_finder<kernel_type> lisf(dec_funct.kernel_function, num_bv);
             for (long i = 0; i < x.nr(); ++i)
             {
                 lisf.add(x(i));
@@ -525,7 +513,7 @@ namespace dlib
             matrix<scalar_type, 0, 0, mem_manager_type> K_inv(num, num); 
             matrix<scalar_type, 0, 0, mem_manager_type> K(num, dec_funct.alpha.size()); 
 
-            const kernel_type kernel(trainer.get_kernel());
+            const kernel_type kernel(dec_funct.kernel_function);
 
             for (long r = 0; r < K_inv.nr(); ++r)
             {
@@ -541,7 +529,7 @@ namespace dlib
             {
                 for (long c = 0; c < K.nc(); ++c)
                 {
-                    K(r,c) = kernel(lisf[r], dec_funct.support_vectors(c));
+                    K(r,c) = kernel(lisf[r], dec_funct.basis_vectors(c));
                 }
             }
 
@@ -558,13 +546,35 @@ namespace dlib
 
 
             // perform the actual optimization
-            find_min_conjugate_gradient(obj, obj_der, opt_starting_point, 0, eps); 
+            find_min(lbfgs_search_strategy(20),
+                     objective_delta_stop_strategy(eps),
+                     obj, obj_der, opt_starting_point, 0); 
 
             // now make sure that the final optimized value is loaded into the beta and
             // out_vectors matrices
             obj.vector_to_state(opt_starting_point);
 
-            decision_function<kernel_type> new_df(beta, 
+
+            // Do a final reoptimization of beta just to make sure it is optimal given the new
+            // set of basis vectors.
+            for (long r = 0; r < K_inv.nr(); ++r)
+            {
+                for (long c = 0; c < K_inv.nc(); ++c)
+                {
+                    K_inv(r,c) = kernel(out_vectors(r), out_vectors(c));
+                }
+            }
+            K_inv = pinv(K_inv);
+            for (long r = 0; r < K.nr(); ++r)
+            {
+                for (long c = 0; c < K.nc(); ++c)
+                {
+                    K(r,c) = kernel(out_vectors(r), dec_funct.basis_vectors(c));
+                }
+            }
+
+
+            decision_function<kernel_type> new_df(K_inv*K*dec_funct.alpha, 
                                                   0,
                                                   kernel, 
                                                   out_vectors);
@@ -586,7 +596,7 @@ namespace dlib
     // ------------------------------------------------------------------------------------
 
         trainer_type trainer;
-        long num_sv;
+        long num_bv;
         double eps;
 
 
@@ -595,21 +605,21 @@ namespace dlib
     template <typename trainer_type>
     const reduced_decision_function_trainer2<trainer_type> reduced2 (
         const trainer_type& trainer,
-        const long num_sv,
+        const long num_bv,
         double eps = 1e-3
     )
     {
         COMPILE_TIME_ASSERT(is_matrix<typename trainer_type::sample_type>::value);
 
         // make sure requires clause is not broken
-        DLIB_ASSERT(num_sv > 0 && eps > 0,
+        DLIB_ASSERT(num_bv > 0 && eps > 0,
                     "\tconst reduced_decision_function_trainer2 reduced2()"
                     << "\n\t you have given invalid arguments to this function"
-                    << "\n\t num_sv: " << num_sv 
+                    << "\n\t num_bv: " << num_bv 
                     << "\n\t eps:    " << eps 
         );
 
-        return reduced_decision_function_trainer2<trainer_type>(trainer, num_sv, eps);
+        return reduced_decision_function_trainer2<trainer_type>(trainer, num_bv, eps);
     }
 
 // ----------------------------------------------------------------------------------------

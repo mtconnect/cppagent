@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_MATRIx_SUBEXP_ABSTRACT_
 #ifdef DLIB_MATRIx_SUBEXP_ABSTRACT_
@@ -11,18 +11,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    const rectangle get_rect (  
-        const matrix_exp& m
-    );
-    /*!
-        ensures
-            - returns rectangle(0, 0, m.nc()-1, m.nr()-1)
-              (i.e. returns a rectangle that has the same dimensions as
-              the matrix m)
-    !*/
-
-// ----------------------------------------------------------------------------------------
-
     template <long start, long inc, long end>
     const matrix_exp range (
     );
@@ -32,8 +20,8 @@ namespace dlib
         ensures
             - returns a matrix R such that:
                 - R::type == long
-                - R.nr() == abs(end - start)/inc + 1
-                - R.nc() == 1
+                - R.nr() == 1
+                - R.nc() == abs(end - start)/inc + 1
                 - if (start <= end) then
                     - R(i) == start + i*inc
                 - else
@@ -55,8 +43,8 @@ namespace dlib
         ensures
             - returns a matrix R such that:
                 - R::type == long
-                - R.nr() == abs(end - start)/inc + 1
-                - R.nc() == 1
+                - R.nr() == 1
+                - R.nc() == abs(end - start)/inc + 1
                 - if (start <= end) then
                     - R(i) == start + i*inc
                 - else
@@ -104,8 +92,10 @@ namespace dlib
     /*!
         requires
             - row >= 0
-            - row + nr <= m.nr()
             - col >= 0
+            - nr >= 0
+            - nc >= 0
+            - row + nr <= m.nr()
             - col + nc <= m.nc()
         ensures
             - returns a matrix R such that:
@@ -259,8 +249,10 @@ namespace dlib
     /*!
         requires
             - row >= 0
-            - row + nr <= m.nr()
             - col >= 0
+            - nr >= 0
+            - nc >= 0
+            - row + nr <= m.nr()
             - col + nc <= m.nc()
         ensures
             - statements of the following form:

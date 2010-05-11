@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
@@ -132,9 +132,9 @@ namespace
         // all points are correctly identified.
         for (unsigned long i = 0; i < samples.size()/3; ++i)
         {
-            DLIB_CASSERT(test(samples[i]) == class1, " ");
-            DLIB_CASSERT(test(samples[i+num]) == class2, "");
-            DLIB_CASSERT(test(samples[i+2*num]) == class3, "");
+            DLIB_TEST(test(samples[i]) == class1);
+            DLIB_TEST(test(samples[i+num]) == class2);
+            DLIB_TEST(test(samples[i+2*num]) == class3);
         }
 
         dlog << LINFO << "   end test_clutering()";
@@ -201,20 +201,20 @@ namespace
 
         // now we output the value of the sinc function for a few test points as well as the 
         // value predicted by krls object.
-        m(0) = 2.5; dlog << LDEBUG << "krls: " << sinc(m(0)) << "   " << test(m); DLIB_CASSERT(abs(sinc(m(0)) - test(m)) < 0.01,"");
-        m(0) = 0.1; dlog << LDEBUG << "krls: " << sinc(m(0)) << "   " << test(m); DLIB_CASSERT(abs(sinc(m(0)) - test(m)) < 0.01,"");
-        m(0) = -4;  dlog << LDEBUG << "krls: " << sinc(m(0)) << "   " << test(m); DLIB_CASSERT(abs(sinc(m(0)) - test(m)) < 0.01,"");
-        m(0) = 5.0; dlog << LDEBUG << "krls: " << sinc(m(0)) << "   " << test(m); DLIB_CASSERT(abs(sinc(m(0)) - test(m)) < 0.01,"");
+        m(0) = 2.5; dlog << LDEBUG << "krls: " << sinc(m(0)) << "   " << test(m); DLIB_TEST(abs(sinc(m(0)) - test(m)) < 0.01);
+        m(0) = 0.1; dlog << LDEBUG << "krls: " << sinc(m(0)) << "   " << test(m); DLIB_TEST(abs(sinc(m(0)) - test(m)) < 0.01);
+        m(0) = -4;  dlog << LDEBUG << "krls: " << sinc(m(0)) << "   " << test(m); DLIB_TEST(abs(sinc(m(0)) - test(m)) < 0.01);
+        m(0) = 5.0; dlog << LDEBUG << "krls: " << sinc(m(0)) << "   " << test(m); DLIB_TEST(abs(sinc(m(0)) - test(m)) < 0.01);
 
-        m(0) = 2.5; dlog << LDEBUG << "rvm: " << sinc(m(0)) << "   " << test2(m); DLIB_CASSERT(abs(sinc(m(0)) - test2(m)) < 0.01,"");
-        m(0) = 0.1; dlog << LDEBUG << "rvm: " << sinc(m(0)) << "   " << test2(m); DLIB_CASSERT(abs(sinc(m(0)) - test2(m)) < 0.01,"");
-        m(0) = -4;  dlog << LDEBUG << "rvm: " << sinc(m(0)) << "   " << test2(m); DLIB_CASSERT(abs(sinc(m(0)) - test2(m)) < 0.01,"");
-        m(0) = 5.0; dlog << LDEBUG << "rvm: " << sinc(m(0)) << "   " << test2(m); DLIB_CASSERT(abs(sinc(m(0)) - test2(m)) < 0.01,"");
+        m(0) = 2.5; dlog << LDEBUG << "rvm: " << sinc(m(0)) << "   " << test2(m); DLIB_TEST(abs(sinc(m(0)) - test2(m)) < 0.01);
+        m(0) = 0.1; dlog << LDEBUG << "rvm: " << sinc(m(0)) << "   " << test2(m); DLIB_TEST(abs(sinc(m(0)) - test2(m)) < 0.01);
+        m(0) = -4;  dlog << LDEBUG << "rvm: " << sinc(m(0)) << "   " << test2(m); DLIB_TEST(abs(sinc(m(0)) - test2(m)) < 0.01);
+        m(0) = 5.0; dlog << LDEBUG << "rvm: " << sinc(m(0)) << "   " << test2(m); DLIB_TEST(abs(sinc(m(0)) - test2(m)) < 0.01);
 
-        m(0) = 2.5; dlog << LDEBUG << "rbf: " << sinc(m(0)) << "   " << test3(m); DLIB_CASSERT(abs(sinc(m(0)) - test3(m)) < 0.01,"");
-        m(0) = 0.1; dlog << LDEBUG << "rbf: " << sinc(m(0)) << "   " << test3(m); DLIB_CASSERT(abs(sinc(m(0)) - test3(m)) < 0.01,"");
-        m(0) = -4;  dlog << LDEBUG << "rbf: " << sinc(m(0)) << "   " << test3(m); DLIB_CASSERT(abs(sinc(m(0)) - test3(m)) < 0.01,"");
-        m(0) = 5.0; dlog << LDEBUG << "rbf: " << sinc(m(0)) << "   " << test3(m); DLIB_CASSERT(abs(sinc(m(0)) - test3(m)) < 0.01,"");
+        m(0) = 2.5; dlog << LDEBUG << "rbf: " << sinc(m(0)) << "   " << test3(m); DLIB_TEST(abs(sinc(m(0)) - test3(m)) < 0.01);
+        m(0) = 0.1; dlog << LDEBUG << "rbf: " << sinc(m(0)) << "   " << test3(m); DLIB_TEST(abs(sinc(m(0)) - test3(m)) < 0.01);
+        m(0) = -4;  dlog << LDEBUG << "rbf: " << sinc(m(0)) << "   " << test3(m); DLIB_TEST(abs(sinc(m(0)) - test3(m)) < 0.01);
+        m(0) = 5.0; dlog << LDEBUG << "rbf: " << sinc(m(0)) << "   " << test3(m); DLIB_TEST(abs(sinc(m(0)) - test3(m)) < 0.01);
         dlog << LINFO << "   end test_regression()";
     }
 
@@ -264,13 +264,13 @@ namespace
         m(0) = -1.5; m(1) = sinc(m(0)); dlog << LDEBUG << "   " << test(m);  rs.add(test(m));
         m(0) = -0.5; m(1) = sinc(m(0)); dlog << LDEBUG << "   " << test(m);  rs.add(test(m));
 
-        m(0) = -1.5; m(1) = sinc(m(0)); DLIB_CASSERT(rs.scale(test(m)) < 2, rs.scale(test(m)));
-        m(0) = -1.5; m(1) = sinc(m(0)); DLIB_CASSERT(rs.scale(test(m)) < 2, rs.scale(test(m)));
-        m(0) = -0;   m(1) = sinc(m(0)); DLIB_CASSERT(rs.scale(test(m)) < 2, rs.scale(test(m)));
-        m(0) = -0.5; m(1) = sinc(m(0)); DLIB_CASSERT(rs.scale(test(m)) < 2, rs.scale(test(m)));
-        m(0) = -4.1; m(1) = sinc(m(0)); DLIB_CASSERT(rs.scale(test(m)) < 2, rs.scale(test(m)));
-        m(0) = -1.5; m(1) = sinc(m(0)); DLIB_CASSERT(rs.scale(test(m)) < 2, rs.scale(test(m)));
-        m(0) = -0.5; m(1) = sinc(m(0)); DLIB_CASSERT(rs.scale(test(m)) < 2, rs.scale(test(m)));
+        m(0) = -1.5; m(1) = sinc(m(0)); DLIB_TEST_MSG(rs.scale(test(m)) < 2, rs.scale(test(m)));
+        m(0) = -1.5; m(1) = sinc(m(0)); DLIB_TEST_MSG(rs.scale(test(m)) < 2, rs.scale(test(m)));
+        m(0) = -0;   m(1) = sinc(m(0)); DLIB_TEST_MSG(rs.scale(test(m)) < 2, rs.scale(test(m)));
+        m(0) = -0.5; m(1) = sinc(m(0)); DLIB_TEST_MSG(rs.scale(test(m)) < 2, rs.scale(test(m)));
+        m(0) = -4.1; m(1) = sinc(m(0)); DLIB_TEST_MSG(rs.scale(test(m)) < 2, rs.scale(test(m)));
+        m(0) = -1.5; m(1) = sinc(m(0)); DLIB_TEST_MSG(rs.scale(test(m)) < 2, rs.scale(test(m)));
+        m(0) = -0.5; m(1) = sinc(m(0)); DLIB_TEST_MSG(rs.scale(test(m)) < 2, rs.scale(test(m)));
 
         dlog << LDEBUG;
         // Lets output the distance from the centroid to some points that are NOT from the sinc function.
@@ -281,31 +281,31 @@ namespace
         dlog << LDEBUG << "Points that are NOT on the sinc function:\n";
         m(0) = -1.5; m(1) = sinc(m(0))+4;   
         dlog << LDEBUG << "   " << test(m) << " is " << rs.scale(test(m)) << " standard deviations from sinc.";
-        DLIB_CASSERT(rs.scale(test(m)) > 6, rs.scale(test(m)));
+        DLIB_TEST_MSG(rs.scale(test(m)) > 6, rs.scale(test(m)));
 
         m(0) = -1.5; m(1) = sinc(m(0))+3;   
         dlog << LDEBUG << "   " << test(m) << " is " << rs.scale(test(m)) << " standard deviations from sinc.";
-        DLIB_CASSERT(rs.scale(test(m)) > 6, rs.scale(test(m)));
+        DLIB_TEST_MSG(rs.scale(test(m)) > 6, rs.scale(test(m)));
 
         m(0) = -0;   m(1) = -sinc(m(0));    
         dlog << LDEBUG << "   " << test(m) << " is " << rs.scale(test(m)) << " standard deviations from sinc.";
-        DLIB_CASSERT(rs.scale(test(m)) > 6, rs.scale(test(m)));
+        DLIB_TEST_MSG(rs.scale(test(m)) > 6, rs.scale(test(m)));
 
         m(0) = -0.5; m(1) = -sinc(m(0));    
         dlog << LDEBUG << "   " << test(m) << " is " << rs.scale(test(m)) << " standard deviations from sinc.";
-        DLIB_CASSERT(rs.scale(test(m)) > 6, rs.scale(test(m)));
+        DLIB_TEST_MSG(rs.scale(test(m)) > 6, rs.scale(test(m)));
 
         m(0) = -4.1; m(1) = sinc(m(0))+2;   
         dlog << LDEBUG << "   " << test(m) << " is " << rs.scale(test(m)) << " standard deviations from sinc.";
-        DLIB_CASSERT(rs.scale(test(m)) > 6, rs.scale(test(m)));
+        DLIB_TEST_MSG(rs.scale(test(m)) > 6, rs.scale(test(m)));
 
         m(0) = -1.5; m(1) = sinc(m(0))+0.9; 
         dlog << LDEBUG << "   " << test(m) << " is " << rs.scale(test(m)) << " standard deviations from sinc.";
-        DLIB_CASSERT(rs.scale(test(m)) > 6, rs.scale(test(m)));
+        DLIB_TEST_MSG(rs.scale(test(m)) > 6, rs.scale(test(m)));
 
         m(0) = -0.5; m(1) = sinc(m(0))+1;   
         dlog << LDEBUG << "   " << test(m) << " is " << rs.scale(test(m)) << " standard deviations from sinc.";
-        DLIB_CASSERT(rs.scale(test(m)) > 6, rs.scale(test(m)));
+        DLIB_TEST_MSG(rs.scale(test(m)) > 6, rs.scale(test(m)));
 
         dlog << LINFO << "   end test_anomaly_detection()";
     }
@@ -327,6 +327,7 @@ namespace
         typedef matrix<scalar_type,2,1> sample_type;
 
         std::vector<sample_type> x;
+        std::vector<matrix<double,0,1> > x_linearized;
         std::vector<scalar_type> y;
 
         get_checkerboard_problem(x,y, 300, 3);
@@ -335,15 +336,29 @@ namespace
         typedef radial_basis_kernel<sample_type> kernel_type;
 
         rbf_network_trainer<kernel_type> rbf_trainer;
-        rbf_trainer.set_kernel(kernel_type(gamma));
-        rbf_trainer.set_num_centers(30);
+        rbf_trainer.set_kernel(kernel_type(0.5*gamma));
+        rbf_trainer.set_num_centers(100);
 
         rvm_trainer<kernel_type> rvm_trainer;
-        rvm_trainer.set_kernel(kernel_type(gamma));
+        rvm_trainer.set_kernel(kernel_type(2*gamma));
+
+        svm_pegasos<kernel_type> pegasos_trainer;
+        pegasos_trainer.set_kernel(kernel_type(gamma));
+        pegasos_trainer.set_lambda(0.00001);
+
 
         svm_nu_trainer<kernel_type> trainer;
         trainer.set_kernel(kernel_type(gamma));
         trainer.set_nu(0.05);
+
+        svm_c_linear_trainer<linear_kernel<matrix<double,0,1> > > lin_trainer;
+        lin_trainer.set_c(100000);
+        // use an ekm to linearize this dataset so we can use it with the lin_trainer
+        empirical_kernel_map<kernel_type> ekm;
+        ekm.load(kernel_type(gamma), x);
+        for (unsigned long i = 0; i < x.size(); ++i)
+            x_linearized.push_back(ekm.project(x[i]));
+
 
         print_spinner();
         matrix<scalar_type> rvm_cv = cross_validate_trainer_threaded(rvm_trainer, x,y, 4, 2);
@@ -352,24 +367,40 @@ namespace
         print_spinner();
         matrix<scalar_type> rbf_cv = cross_validate_trainer_threaded(rbf_trainer, x,y, 4, 2);
         print_spinner();
+        matrix<scalar_type> lin_cv = cross_validate_trainer_threaded(lin_trainer, x_linearized, y, 4, 2);
+        print_spinner();
+        matrix<scalar_type> peg_cv = cross_validate_trainer_threaded(batch(pegasos_trainer,1.0), x,y, 4, 2);
+        print_spinner();
+        matrix<scalar_type> peg_c_cv = cross_validate_trainer_threaded(batch_cached(pegasos_trainer,1.0), x,y, 4, 2);
+        print_spinner();
 
         dlog << LDEBUG << "rvm cv: " << rvm_cv;
         dlog << LDEBUG << "svm cv: " << svm_cv;
         dlog << LDEBUG << "rbf cv: " << rbf_cv;
+        dlog << LDEBUG << "lin cv: " << lin_cv;
+        dlog << LDEBUG << "peg cv: " << peg_cv;
+        dlog << LDEBUG << "peg cached cv: " << peg_c_cv;
 
-        DLIB_CASSERT(mean(rvm_cv) > 0.9, rvm_cv);
-        DLIB_CASSERT(mean(svm_cv) > 0.9, svm_cv);
-        DLIB_CASSERT(mean(rbf_cv) > 0.9, rbf_cv);
+        // make sure the cached version of pegasos computes the same result
+        DLIB_TEST_MSG(sum(abs(peg_cv - peg_c_cv)) < std::sqrt(std::numeric_limits<double>::epsilon()),
+                      sum(abs(peg_cv - peg_c_cv)) << "   \n" << peg_cv << peg_c_cv  );
 
-        const long num_sv = trainer.train(x,y).support_vectors.size();
+        DLIB_TEST_MSG(mean(rvm_cv) > 0.9, rvm_cv);
+        DLIB_TEST_MSG(mean(svm_cv) > 0.9, svm_cv);
+        DLIB_TEST_MSG(mean(rbf_cv) > 0.9, rbf_cv);
+        DLIB_TEST_MSG(mean(lin_cv) > 0.9, lin_cv);
+        DLIB_TEST_MSG(mean(peg_cv) > 0.9, peg_cv);
+        DLIB_TEST_MSG(mean(peg_c_cv) > 0.9, peg_c_cv);
+
+        const long num_sv = trainer.train(x,y).basis_vectors.size();
         print_spinner();
-        const long num_rv = rvm_trainer.train(x,y).support_vectors.size();
+        const long num_rv = rvm_trainer.train(x,y).basis_vectors.size();
         print_spinner();
         dlog << LDEBUG << "num sv: " << num_sv;
         dlog << LDEBUG << "num rv: " << num_rv;
 
-        DLIB_CASSERT(num_rv <= 17, "");
-        DLIB_CASSERT(num_sv <= 45, "");
+        DLIB_TEST(num_rv <= 17);
+        DLIB_TEST_MSG(num_sv <= 45, num_sv);
 
         decision_function<kernel_type> df = reduced2(trainer, 19).train(x,y);
         print_spinner();
@@ -377,22 +408,73 @@ namespace
         matrix<scalar_type> svm_reduced_error = test_binary_decision_function(df, x, y);
         print_spinner();
         dlog << LDEBUG << "svm reduced test error: " << svm_reduced_error;
-        dlog << LDEBUG << "svm reduced num sv: " << df.support_vectors.size();
-        DLIB_CASSERT(mean(svm_reduced_error) > 0.9, "");
+        dlog << LDEBUG << "svm reduced num sv: " << df.basis_vectors.size();
+        DLIB_TEST(mean(svm_reduced_error) > 0.9);
 
         svm_cv = cross_validate_trainer(reduced(trainer,30), x,y, 4);
         dlog << LDEBUG << "svm reduced cv: " << svm_cv;
-        DLIB_CASSERT(mean(svm_cv) > 0.9, svm_cv);
+        DLIB_TEST_MSG(mean(svm_cv) > 0.9, svm_cv);
 
-        DLIB_CASSERT(df.support_vectors.size() == 19,"");
+        DLIB_TEST(df.basis_vectors.size() == 19);
         dlog << LINFO << "   end test_binary_classification()";
     }
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename kernel_type>
+    struct kernel_der_obj
+    {
+        typename kernel_type::sample_type x;
+        kernel_type k;
+
+        double operator()(const typename kernel_type::sample_type& y) const { return k(x,y); }
+    };
 
 
+    template <typename kernel_type>
+    void test_kernel_derivative (
+        const kernel_type& k,
+        const typename kernel_type::sample_type& x, 
+        const typename kernel_type::sample_type& y 
+    )
+    {
+        kernel_der_obj<kernel_type> obj;
+        obj.x = x;
+        obj.k = k;
+        kernel_derivative<kernel_type> der(obj.k);
+        DLIB_TEST(dlib::equal(derivative(obj)(y) , der(obj.x,y), 1e-5));
+    }
 
+    void test_kernel_derivative (
+    )
+    {
+        typedef matrix<double, 2, 1> sample_type;
+
+        sigmoid_kernel<sample_type> k1;
+        radial_basis_kernel<sample_type> k2;
+        linear_kernel<sample_type> k3;
+        polynomial_kernel<sample_type> k4(2,3,4);
+
+        offset_kernel<sigmoid_kernel<sample_type> > k5;
+        offset_kernel<radial_basis_kernel<sample_type> > k6;
+
+        dlib::rand::float_1a rnd;
+
+        sample_type x, y;
+        for (int i = 0; i < 10; ++i)
+        {
+            x = randm(2,1,rnd);
+            y = randm(2,1,rnd);
+            test_kernel_derivative(k1, x, y);
+            test_kernel_derivative(k2, x, y);
+            test_kernel_derivative(k3, x, y);
+            test_kernel_derivative(k4, x, y);
+            test_kernel_derivative(k5, x, y);
+            test_kernel_derivative(k6, x, y);
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
 
     class svm_tester : public tester
     {
@@ -406,6 +488,7 @@ namespace
         void perform_test (
         )
         {
+            test_kernel_derivative();
             test_binary_classification();
             test_clutering();
             test_regression();

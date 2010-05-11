@@ -50,13 +50,22 @@ Connector::~Connector()
 void Connector::connect()
 {
   mConnected = false;
+  const char *ping = "* PING\n";
+
   try
   {
     // Connect to server:port, failure will throw dlib::socket_error exception
     // Using a smart pointer to ensure connection is deleted if exception thrown
-    mConnection = dlib::connect(mServer, mPort);
+    mConnection.reset(dlib::connect(mServer, mPort));
 
     // Check to see if this connection supports heartbeats.
+    int status = mConnection->write(ping, strlen(ping));
+    if (status < 0)
+    {
+      logEvent("Connector::connect", "Could not write heartbeat  " + intToString(status));
+      close();
+      return;
+    }
     
     // Make sure connection buffer is clear
     mBuffer.clear();
@@ -66,12 +75,44 @@ void Connector::connect()
     
     // Keep track of the status return, else status = character bytes read
     // Assuming it always enters the while loop, it should never be 1
-    long status = 1;
     mConnected = true;
+
+    // If we have heartbeats, make sure we receive something every
+    // freq milliseconds.
+    dlib::timestamper stamper;
+    uint64 last_heartbeat = stamper.get_timestamp();
     
     // Read from the socket, read is a blocking call
-    while ((status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE)) > 0)
-    { 
+    while (true)
+    {
+      if (mHeartbeats)
+	status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, mHeartbeatFrequency);
+      else
+	status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE);
+
+      // Check for timeout
+      if (mHeartbeats && status == TIMEOUT)
+      {
+	// Heartbeat
+	uint64 now = stamper.get_timestamp();
+	if (now - last_heartbeat > (uint64) (mHeartbeatFrequency * 2000))
+	{
+	  logEvent("Connector::connect", "Did not receive heartbeat for over " + intToString(mHeartbeatFrequency * 2));
+	  break;
+	}
+
+	status = mConnection->write(ping, strlen(ping));
+	if (status <= 0)
+	{
+	  logEvent("Connector::connect", "Could not write heartbeat  " + intToString(status));
+	  break;
+	}
+      }
+      else if (status <= 0)
+      {
+	break;
+      }
+      
       // Give a null terminator for the end of buffer
       sockBuf[status] = '\0';
       
@@ -101,10 +142,14 @@ void Connector::connect()
 	  // Check for heartbeats
 	  if (buf[0] == '*')
 	  {
-	    if (strncmp(buf.c_str(), "* PONG", 6) == 0)
+	    if (strncmp(buf, "* PONG", 6) == 0)
 	    {
 	      if (!mHeartbeats)
 		startHeartbeats(buf);
+	      else
+	      {
+		last_heartbeat = stamper.get_timestamp();
+	      }
 	    }
 	    else
 	    {
@@ -121,7 +166,7 @@ void Connector::connect()
     }
     
     // Code should never get here, if it does, notify the exit status
-    logEvent("Connector::connect", "Connection exited with status " + status);
+    logEvent("Connector::connect", "Connection exited with status " + intToString(status));
 
     close();
   }
@@ -132,12 +177,12 @@ void Connector::connect()
   
 }
 
-void Connector::startHeartbeats(const string aArg)
+void Connector::startHeartbeats(const string &aArg)
 {
   size_t pos = aArg.find_last_of(' ');
-  if (pos != npos)
+  if (pos != string::npos)
   {
-    string freq = atoi(aArg.substr(pos + 1));
+    int freq = atoi(aArg.substr(pos + 1).c_str());
     if (freq > 0 && freq < 20000)
     {
       mHeartbeats = true;
@@ -156,7 +201,6 @@ void Connector::close()
   if (mConnected && mConnection.get() != NULL)
   {
     // Close the connection gracefully
-    close_gracefully(mConnection);
     mConnection.reset();
 
     // Call the disconnected callback.

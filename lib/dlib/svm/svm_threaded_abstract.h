@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_SVm_THREADED_ABSTRACT_
 #ifdef DLIB_SVm_THREADED_ABSTRACT_
@@ -37,7 +37,7 @@ namespace dlib
               Each fold is tested using the output of the trainer and the average 
               classification accuracy from all folds is returned.  
             - uses num_threads threads of execution in doing the cross validation.  
-            - The accuracy is returned in a column vector, let us call it R.  Both 
+            - The accuracy is returned in a row vector, let us call it R.  Both 
               quantities in R are numbers between 0 and 1 which represent the fraction 
               of examples correctly classified.  R(0) is the fraction of +1 examples 
               correctly classified and R(1) is the fraction of -1 examples correctly 

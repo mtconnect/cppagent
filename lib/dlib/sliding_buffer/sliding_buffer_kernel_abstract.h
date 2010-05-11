@@ -1,4 +1,4 @@
-// Copyright (C) 2004  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2004  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_SLIDING_BUFFER_KERNEl_ABSTRACT_
 #ifdef DLIB_SLIDING_BUFFER_KERNEl_ABSTRACT_
@@ -83,9 +83,9 @@ namespace dlib
         );
         /*!
             requires
-                - 0 < expsize < 32
+                - 0 < exp_size < 32
             ensures
-                - #size() == 2^expsize
+                - #size() == 2^exp_size
                 - the value of all elements in the buffer are undefined
                 - #at_start() == true
             throws

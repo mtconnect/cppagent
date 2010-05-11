@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_SOCKETS_KERNEl_ABSTRACT_
 #ifdef DLIB_SOCKETS_KERNEl_ABSTRACT_
@@ -13,7 +13,10 @@ namespace dlib
 
     /*!
         GENERAL COMMENTS:
-            Nothing in here will throw exceptions
+            Nothing in here will throw exceptions.   
+            
+            All ip address strings in this file refer to IPv4 addresses.  For 
+            example "192.168.1.1"
 
             Timeouts:
                 All timeout values are measured in milliseconds but you are not 
@@ -273,6 +276,34 @@ namespace dlib
                 - returns SHUTDOWN if the connection has been shutdown locally
         !*/
 
+        long read (
+            char* buf, 
+            long num,
+            unsigned long timeout 
+        );
+        /*!
+            requires
+                - num > 0 
+                - buf points to an array of at least num bytes
+                - timeout < 2000000                
+            ensures
+                - read() will not read more than num bytes of data into #buf 
+                - if (timeout > 0) then read() blocks until ONE of the following happens:
+                    - there is some data available and it has been written into #buf 
+                    - the remote end of the connection is closed 
+                    - an error has occurred
+                    - the connection has been shutdown locally
+                    - timeout milliseconds has elapsed
+                - else
+                    - read() does not block
+
+                - returns the number of bytes read into #buf if there was any data.
+                - returns 0 if the connection has ended/terminated and there is no more data.
+                - returns TIMEOUT if timeout milliseconds elapsed before we got any data.
+                - returns OTHER_ERROR if there was an error.
+                - returns SHUTDOWN if the connection has been shutdown locally
+        !*/
+
         unsigned short get_local_port (
         ) const;
         /*!
@@ -329,6 +360,20 @@ namespace dlib
 
                 - returns 0 upon success 
                 - returns OTHER_ERROR if there was an error 
+        !*/
+
+        typedef platform_specific_type socket_descriptor_type;
+        socket_descriptor_type get_socket_descriptor (
+        ) const;
+        /*!
+            ensures
+                - returns the underlying socket descriptor for this connection
+                  object.  The reason you might want access to this is to 
+                  pass it to some other library that requires a socket file 
+                  descriptor.  However, if you do this then you probably shouldn't 
+                  use the dlib::connection read() and write() anymore since
+                  whatever you are doing with the socket descriptor is probably 
+                  doing I/O with the socket.
         !*/
 
     private:

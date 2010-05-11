@@ -56,6 +56,7 @@ void ConnectorTest::tearDown()
   mServer.reset();
   mServerSocket.reset();
   dlib::sleep(500);
+  stop();
   mConnector.reset();
 }
 
@@ -106,12 +107,12 @@ void ConnectorTest::testProtocolCommand()
   CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket, 1000));
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
 
-  string command("* Hello Connector\n");
-  CPPUNIT_ASSERT((size_t) mServerSocket->write(command.c_str(), command.length()) == command.length());
+  const char *cmd ="* Hello Connector\n";
+  CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) mServerSocket->write(cmd, strlen(cmd)));
   dlib::sleep(500);
 
   // \n is stripped from the posted data.
-  CPPUNIT_ASSERT_EQUAL(command.substr(0, command.length() - 1), mConnector->mCommand); 
+  CPPUNIT_ASSERT(strncmp(cmd, mConnector->mCommand.c_str(), strlen(cmd) - 1) == 0); 
 }
 
 void ConnectorTest::testHeartbeat()
@@ -122,9 +123,57 @@ void ConnectorTest::testHeartbeat()
   CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket, 1000));
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
 
+  dlib::sleep(100);
+
   // Receive initial heartbeat request "* PING\n"
-  mServerSocket->
+  char buf[1024];
+  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 1000));
+  CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+
+  // Respond to the heartbeat of 1/2 second
+  const char *pong = "* PONG 500\n";
+  CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) mServerSocket->write(pong, strlen(pong)));
+  dlib::sleep(100);
+  
+  CPPUNIT_ASSERT(mConnector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(500, mConnector->heartbeatFrequency());
 }
 
+void ConnectorTest::testHeartbeatPong()
+{
+  testHeartbeat();
+
+  dlib::timestamper stamper;
+  uint64 last_heartbeat = stamper.get_timestamp();
+  
+  // Test to make sure we can send and receive 5 heartbeats
+  for (int i = 0; i < 5; i++)
+  {
+    // Receive initial heartbeat request "* PING\n"
+    
+    char buf[1024];
+    CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 1000));
+    CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+
+    uint64 now = stamper.get_timestamp();
+    CPPUNIT_ASSERT(now - last_heartbeat < (uint64) (1000 * 1000));
+    last_heartbeat = now;
+    
+    // Respond to the heartbeat of 1/2 second
+    const char *pong = "* PONG 500\n";
+    CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) mServerSocket->write(pong, strlen(pong)));
+    dlib::sleep(100);
+
+    CPPUNIT_ASSERT(!mConnector->mDisconnected);
+  }
+}
+
+void ConnectorTest::testHeartbeatTimeout()
+{
+  testHeartbeat();
+  dlib::sleep(1100);
+  
+  CPPUNIT_ASSERT(mConnector->mDisconnected);
+}
 
 

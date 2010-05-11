@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_TESTEr_
 #define DLIB_TESTEr_
@@ -17,6 +17,18 @@
 #endif
 
 
+#define DLIB_TEST(_exp) check_test(_exp, __LINE__, __FILE__, #_exp);
+
+#define DLIB_TEST_MSG(_exp,_message)                                        \
+    {if ( !(_exp) )                                                         \
+    {                                                                       \
+        std::ostringstream dlib__out;                                       \
+        dlib__out << "\n\nError occurred at line " << __LINE__ << ".\n";    \
+        dlib__out << "Error occurred in file " << __FILE__ << ".\n";      \
+        dlib__out << "Failing expression was " << #_exp << ".\n";           \
+        dlib__out << _message << "\n";                                      \
+        throw dlib::error(dlib__out.str());      \
+    }}                                                                      
 
 namespace test
 {
@@ -25,6 +37,21 @@ namespace test
 
     map_of_testers& testers (
     );
+
+// -----------------------------------------------------------------------------
+
+    void check_test (
+        bool _exp,
+        long line,
+        const char* file,
+        const char* _exp_str
+    );
+    
+// -----------------------------------------------------------------------------
+
+// This bool controls any cout statements in this program.  Only print to 
+// standard out if we should be verbose.  The default is true
+    extern bool be_verbose;
 
 // -----------------------------------------------------------------------------
 

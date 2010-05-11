@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_CMD_LINE_PARSER_CHECk_ABSTRACT_
 #ifdef DLIB_CMD_LINE_PARSER_CHECk_ABSTRACT_ 
@@ -112,7 +112,7 @@ namespace dlib
             ensures
                 - for each argument to the given option:
                     - this argument is convertable by string_cast<T>() to an object of
-                      type T and the resulting value is equal to some string in the
+                      type T and the resulting value is equal to some element in the
                       arg_set array.
             throws
                 - std::bad_alloc

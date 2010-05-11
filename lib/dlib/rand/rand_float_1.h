@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_RAND_FLOAt_1_
 #define DLIB_RAND_FLOAt_1_ 
@@ -88,6 +88,14 @@ namespace dlib
         rand_float_1<rand_base>& a, 
         rand_float_1<rand_base>& b 
     ) { a.swap(b); }   
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename rand_base>
+    struct is_rand<rand_float_1<rand_base> >
+    {
+        static const bool value = true; 
+    };
 
 // ----------------------------------------------------------------------------------------
 

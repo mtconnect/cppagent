@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
@@ -218,8 +218,8 @@ namespace  {
         srv.clear();
 
         dlog << LTRACE << "ending successful test";
-        DLIB_CASSERT( !srv.error_occurred,""); 
-        DLIB_CASSERT( srv.got_connections,""); 
+        DLIB_TEST( !srv.error_occurred); 
+        DLIB_TEST( srv.got_connections); 
     }
 
 // ----------------------------------------------------------------------------------------

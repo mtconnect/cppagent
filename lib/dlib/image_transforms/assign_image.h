@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_ASSIGN_IMAGe_
 #define DLIB_ASSIGN_IMAGe_
@@ -73,6 +73,9 @@ namespace dlib
             << "\n\tx_border_size: " << x_border_size
             << "\n\ty_border_size: " << y_border_size
             );
+
+        y_border_size = std::min(y_border_size, img.nr()/2+1);
+        x_border_size = std::min(x_border_size, img.nc()/2+1);
 
         // assign the top border
         for (long r = 0; r < y_border_size; ++r)

@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_GRAPH_KERNEl_1_
 #define DLIB_GRAPH_KERNEl_1_
@@ -161,13 +161,13 @@ namespace dlib
     template <typename node_type, typename graph>
     struct graph_checker_helper <node_type, graph, false>
     { 
-        static inline void check_edge ( unsigned long edge_index, const node_type& self) { }
-        static inline void check_neighbor ( unsigned long edge_index, const node_type& self) { }
-        static inline void check_node ( unsigned long index, const graph& self) { }
+        static inline void check_edge ( unsigned long , const node_type& ) { }
+        static inline void check_neighbor ( unsigned long , const node_type& ) { }
+        static inline void check_node ( unsigned long , const graph& ) { }
         static inline void check_has_edge ( unsigned long , unsigned long , const graph& ) { }
         static inline void check_add_edge ( unsigned long , unsigned long , const graph& ) { }
         static inline void check_remove_edge ( unsigned long , unsigned long , const graph& ) { }
-        static inline void check_remove_node ( unsigned long index, const graph& self) { }
+        static inline void check_remove_node ( unsigned long , const graph& ) { }
     };
 
 // ----------------------------------------------------------------------------------------

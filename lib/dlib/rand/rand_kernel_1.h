@@ -1,4 +1,4 @@
-// Copyright (C) 2007  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_RAND_KERNEl_1_
 #define DLIB_RAND_KERNEl_1_
@@ -7,6 +7,7 @@
 #include "../algs.h"
 #include "rand_kernel_abstract.h"
 #include "mersenne_twister.h"
+#include "../is_kind.h"
 
 namespace dlib
 {
@@ -102,11 +103,6 @@ namespace dlib
             mt19937 mt;
 
             std::string seed;
-
-            // restricted functions
-            rand_kernel_1(rand_kernel_1&);        // copy constructor
-            rand_kernel_1& operator=(rand_kernel_1&);    // assignment operator
-
     };
 
 
@@ -114,6 +110,13 @@ namespace dlib
         rand_kernel_1& a, 
         rand_kernel_1& b 
     ) { a.swap(b); }   
+
+
+    template <>
+    struct is_rand<rand_kernel_1>
+    {
+        static const bool value = true; 
+    };
 
 }
 

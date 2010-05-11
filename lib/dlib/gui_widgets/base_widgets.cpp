@@ -1,4 +1,4 @@
-// Copyright (C) 2005  Davis E. King (davisking@users.sourceforge.net), Keita Mochizuki
+// Copyright (C) 2005  Davis E. King (davis@dlib.net), Keita Mochizuki
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_BASE_WIDGETs_CPP_
 #define DLIB_BASE_WIDGETs_CPP_
@@ -328,10 +328,10 @@ namespace dlib
 
     void draggable::
     on_mouse_up (
-        unsigned long btn,
+        unsigned long ,
         unsigned long state,
-        long x,
-        long y
+        long ,
+        long 
     )
     {
         if (drag && (state & base_window::LEFT) == 0)
@@ -385,7 +385,7 @@ namespace dlib
 
     void mouse_over_event::
     on_mouse_move (
-        unsigned long state,
+        unsigned long ,
         long x,
         long y
     )
@@ -1826,7 +1826,7 @@ namespace dlib
 
     void popup_menu::
     on_mouse_move (
-        unsigned long state,
+        unsigned long ,
         long x,
         long y
     )
@@ -1963,7 +1963,7 @@ namespace dlib
         drawable(w,MOUSE_CLICK | MOUSE_WHEEL | MOUSE_MOVE | events),
         min_scale(0.15),
         max_scale(1.0),
-        zoom_increment_(0.02),
+        zoom_increment_(0.90),
         vsb(w, scroll_bar::VERTICAL),
         hsb(w, scroll_bar::HORIZONTAL)
     {
@@ -2010,6 +2010,13 @@ namespace dlib
         double zi
     )
     {
+        DLIB_ASSERT(0.0 < zi && zi < 1.0,
+                    "\tvoid zoomable_region::set_zoom_increment(zi)"
+                    << "\n\t the zoom increment must be between 0 and 1"
+                    << "\n\t zi:   " << zi
+                    << "\n\t this: " << this
+        );
+
         auto_mutex M(m);
         zoom_increment_ = zi;
     }
@@ -2031,6 +2038,13 @@ namespace dlib
         double ms 
     )
     {
+        DLIB_ASSERT(ms > 0,
+                    "\tvoid zoomable_region::set_max_zoom_scale(ms)"
+                    << "\n\t the max zoom scale must be greater than 0"
+                    << "\n\t ms:   " << ms 
+                    << "\n\t this: " << this
+        );
+
         auto_mutex M(m);
         max_scale = ms;
         if (scale > ms)
@@ -2048,14 +2062,23 @@ namespace dlib
         double ms 
     )
     {
+        DLIB_ASSERT(ms > 0,
+                    "\tvoid zoomable_region::set_min_zoom_scale(ms)"
+                    << "\n\t the min zoom scale must be greater than 0"
+                    << "\n\t ms:   " << ms 
+                    << "\n\t this: " << this
+        );
+
         auto_mutex M(m);
         min_scale = ms;
+
         if (scale < ms)
         {
             scale = min_scale;
-            lr_point = gui_to_graph_space(point(display_rect_.right(),display_rect_.bottom()));
-            redraw_graph();
         }
+
+        // just call set_size so that everything gets redrawn right
+        set_size(rect.width(), rect.height());
     }
 
 // ----------------------------------------------------------------------------------------
@@ -2082,8 +2105,8 @@ namespace dlib
 
     void zoomable_region::
     set_size (
-        long width,
-        long height
+        unsigned long width,
+        unsigned long height
     )
     {
         auto_mutex M(m);
@@ -2231,15 +2254,22 @@ namespace dlib
         double new_scale
     )
     {
-        if (min_scale <= new_scale && new_scale <= max_scale)
+        // if new_scale isn't in the right range then put it back in range before we do the 
+        // rest of this function
+        if (!(min_scale <= new_scale && new_scale <= max_scale))
         {
-            // find the point in the center of the graph area
-            point center((display_rect_.left()+display_rect_.right())/2,  (display_rect_.top()+display_rect_.bottom())/2);
-            point graph_p(gui_to_graph_space(center));
-            scale = new_scale;
-            adjust_origin(center, graph_p);
-            redraw_graph();
+            if (new_scale > max_scale)
+                new_scale = max_scale;
+            else
+                new_scale = min_scale;
         }
+
+        // find the point in the center of the graph area
+        point center((display_rect_.left()+display_rect_.right())/2,  (display_rect_.top()+display_rect_.bottom())/2);
+        point graph_p(gui_to_graph_space(center));
+        scale = new_scale;
+        adjust_origin(center, graph_p);
+        redraw_graph();
     }
 
 // ----------------------------------------------------------------------------------------
@@ -2259,7 +2289,7 @@ namespace dlib
 
     void zoomable_region::
     on_wheel_down (
-        unsigned long state
+        unsigned long 
     )
     {
         // zoom out
@@ -2267,7 +2297,7 @@ namespace dlib
         {
             point gui_p(lastx,lasty);
             point graph_p(gui_to_graph_space(gui_p));
-            scale -= zoom_increment_;
+            scale *= zoom_increment_;
             if (scale < min_scale)
                 scale = min_scale;
             redraw_graph(); 
@@ -2279,7 +2309,7 @@ namespace dlib
 
     void zoomable_region::
     on_wheel_up (
-        unsigned long state
+        unsigned long 
     )
     {
         // zoom in 
@@ -2287,7 +2317,7 @@ namespace dlib
         {
             point gui_p(lastx,lasty);
             point graph_p(gui_to_graph_space(gui_p));
-            scale += zoom_increment_;
+            scale /= zoom_increment_;
             if (scale > max_scale)
                 scale = max_scale;
             redraw_graph(); 
@@ -2321,10 +2351,10 @@ namespace dlib
 
     void zoomable_region::
     on_mouse_up (
-        unsigned long btn,
-        unsigned long state,
-        long x,
-        long y
+        unsigned long ,
+        unsigned long ,
+        long ,
+        long 
     )
     {
         mouse_drag_screen = false;
@@ -2335,10 +2365,10 @@ namespace dlib
     void zoomable_region::
     on_mouse_down (
         unsigned long btn,
-        unsigned long state,
+        unsigned long ,
         long x,
         long y,
-        bool is_double_click
+        bool 
     )
     {
         if (enabled && !hidden && display_rect_.contains(x,y) && btn == base_window::LEFT)
@@ -2919,7 +2949,7 @@ namespace dlib
 
     void scrollable_region::
     on_wheel_down (
-        unsigned long state
+        unsigned long 
     )
     {
         if (rect.contains(lastx,lasty) && enabled && !hidden)
@@ -2966,10 +2996,10 @@ namespace dlib
     void scrollable_region::
     on_mouse_down (
         unsigned long btn,
-        unsigned long state,
+        unsigned long ,
         long x,
         long y,
-        bool is_double_click
+        bool 
     )
     {
         if (mouse_drag_enabled_ && enabled && !hidden && display_rect().contains(x,y) && (btn==base_window::LEFT))
@@ -2987,10 +3017,10 @@ namespace dlib
 
     void scrollable_region::
     on_mouse_up   (
-        unsigned long btn,
-        unsigned long state,
-        long x,
-        long y
+        unsigned long ,
+        unsigned long ,
+        long ,
+        long 
     )
     {
         user_is_dragging_mouse = false;
@@ -3000,7 +3030,7 @@ namespace dlib
 
     void scrollable_region::
     on_wheel_up (
-        unsigned long state
+        unsigned long 
     )
     {
         if (rect.contains(lastx,lasty) && enabled && !hidden)
@@ -3125,8 +3155,8 @@ namespace dlib
 
     void popup_menu_region::
     set_size (
-        long width, 
-        long height
+        unsigned long width, 
+        unsigned long height
     )
     {
         auto_mutex M(m);
@@ -3256,10 +3286,10 @@ namespace dlib
     void popup_menu_region::
     on_mouse_down (
         unsigned long btn,
-        unsigned long state,
+        unsigned long ,
         long x,
         long y,
-        bool is_double_click
+        bool 
     )
     {
         if (enabled && !hidden && rect.contains(x,y) && btn == base_window::RIGHT)

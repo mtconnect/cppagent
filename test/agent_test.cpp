@@ -179,6 +179,18 @@ void AgentTest::testBadFreq()
   }
 }
 
+void AgentTest::testGoodPath()
+{
+  {
+    path = "/current?path=//Power";
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Power']//m:PowerState",
+				      "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Path']//m:Condition",
+				      "");
+  }
+}
+
 void AgentTest::testProbe()
 {
   {
@@ -320,19 +332,28 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
   
   if (query)
   {
-    queries.add(key, value);
+    queries[key] = value;
   }
   
-  response = a->on_request(Agent::get, path, result, queries, cookies, new_cookies,
-    incoming_headers, response_headers, foreign_ip, local_ip, 123, 321, out);
+  struct Agent::incoming_things incoming;
+  struct Agent::outgoing_things outgoing;
+  incoming.request_type = "GET";
+  incoming.path = path;
+  incoming.queries = queries;
+  incoming.cookies = cookies;
+  incoming.headers = incoming_headers;
+  
+  outgoing.out = &out;
+    
+  result = a->on_request(incoming, outgoing);
 
   string message = (string) "No response to request" + path + " with: (" + key + ", " + value + ")";
 
-  CPPUNIT_NS::Asserter::failIf(!response, message, sourceLine);
+  CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, sourceLine);
   
   if (query)
   {
-    queries.remove_any(key, value);
+    queries.erase(key);
   }
   
   return xmlParseMemory(result.c_str(), result.length());

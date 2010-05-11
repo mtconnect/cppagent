@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net), Steven Van Ingelgem
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_SERVER_HTTp_1_
 #define DLIB_SERVER_HTTp_1_
@@ -10,19 +10,23 @@
 #include <sstream>
 #include <string>
 #include "../logger.h"
+#include "../string.h"
 
 #ifdef  __INTEL_COMPILER
 // ignore the bogus warning about hiding on_connect()
 #pragma warning (disable: 1125)
 #endif
 
+#if _MSC_VER
+#  pragma warning( disable: 4503 )
+#endif // _MSC_VER
+
+
 namespace dlib
 {
 
     template <
-        typename server_base,
-        typename map_ss_type,
-        typename queue_string_type
+        typename server_base
         >
     class server_http_1 : public server_base 
     {
@@ -34,30 +38,100 @@ namespace dlib
 
 
     public:
-        typedef map_ss_type map_type;
-        typedef queue_string_type queue_type;
-        typedef enum _req_type {get, post, put} req_type;
+
+        template <typename Key, typename Value>
+        class constmap : public std::map<Key, Value>
+        {
+        public:
+            const Value& operator[](const Key& k) const
+            {
+                static const Value dummy = Value();
+
+                typename std::map<Key, Value>::const_iterator ci = std::map<Key, Value>::find(k);
+
+                if ( ci == this->end() )
+                    return dummy;
+                else
+                    return ci->second;
+            }
+
+            Value& operator[](const Key& k)
+            {
+                return std::map<Key, Value>::operator [](k);
+            }
+        };
+
+        typedef constmap< std::string, std::string > key_value_map;
+
+
+        struct incoming_things 
+        {
+            incoming_things() : foreign_port(0), local_port(0) {}
+
+            std::string path;
+            std::string request_type;
+            std::string content_type;
+            std::string body;
+
+            key_value_map queries;
+            key_value_map cookies;
+            key_value_map headers;
+
+            std::string foreign_ip;
+            unsigned short foreign_port;
+            std::string local_ip;
+            unsigned short local_port;
+        };
+
+        struct outgoing_things 
+        {
+            outgoing_things() : http_return(200) { }
+
+            key_value_map  cookies;
+            key_value_map  headers;
+            unsigned short http_return;
+            std::string    http_return_status;
+            std::ostream  *out;
+        };
 
 
     private:
-
-        virtual bool on_request (
-	    const req_type rtype,
-            const std::string& path,
-            std::string& result,
-            const map_type& queries,
-            const map_type& cookies,
-            queue_type& new_cookies,
-            const map_type& incoming_headers,
-            map_type& response_headers,
-            const std::string& foreign_ip,
-            const std::string& local_ip,
-            unsigned short foreign_port,
-            unsigned short local_port,
-            std::ostream& out
+        virtual const std::string on_request (
+            const incoming_things& incoming,
+            outgoing_things& outgoing
         ) = 0;
 
-        unsigned char to_hex (
+        unsigned char to_hex( unsigned char x ) const 
+        {
+            return x + (x > 9 ? ('A'-10) : '0');
+        }
+
+        const std::string urlencode( const std::string& s ) const 
+        {
+            std::ostringstream os;
+
+            for ( std::string::const_iterator ci = s.begin(); ci != s.end(); ++ci )
+            {
+                if ( (*ci >= 'a' && *ci <= 'z') ||
+                     (*ci >= 'A' && *ci <= 'Z') ||
+                     (*ci >= '0' && *ci <= '9') )
+                { // allowed
+                    os << *ci;
+                }
+                else if ( *ci == ' ')
+                {
+                    os << '+';
+                }
+                else
+                {
+                    os << '%' << to_hex(*ci >> 4) << to_hex(*ci % 16);
+                }
+            }
+
+            return os.str();
+        }
+
+        unsigned char from_hex (
             unsigned char ch
         ) const
         {
@@ -72,7 +146,7 @@ namespace dlib
             return ch;
         }
 
-        const std::string decode_query_string (
+        const std::string urldecode (
             const std::string& str
         ) const
         {
@@ -87,8 +161,8 @@ namespace dlib
                 }
                 else if (str[i] == '%' && str.size() > i+2)
                 {
-                    const unsigned char ch1 = to_hex(str[i+1]);
-                    const unsigned char ch2 = to_hex(str[i+2]);
+                    const unsigned char ch1 = from_hex(str[i+1]);
+                    const unsigned char ch2 = from_hex(str[i+2]);
                     const unsigned char ch = (ch1 << 4) | ch2;
                     result += ch;
                     i += 2;
@@ -99,6 +173,36 @@ namespace dlib
                 }
             }
             return result;
+        }
+
+        void parse_url(std::string word, key_value_map& queries)
+        /*!
+            Parses the query string of a URL.  word should be the stuff that comes
+            after the ? in the query URL.
+        !*/
+        {
+            std::string::size_type pos;
+
+            for (pos = 0; pos < word.size(); ++pos)
+            {
+                if (word[pos] == '&')
+                    word[pos] = ' ';
+            }
+
+            std::istringstream sin(word);
+            sin >> word;
+            while (sin)
+            {
+                pos = word.find_first_of("=");
+                if (pos != std::string::npos)
+                {
+                    std::string key = urldecode(word.substr(0,pos));
+                    std::string value = urldecode(word.substr(pos+1));
+
+                    queries[key] = value;
+                }
+                sin >> word;
+            }
         }
 
         void on_connect (
@@ -112,99 +216,55 @@ namespace dlib
         )
         {
             bool my_fault = true;
+
+            using namespace std;
+
             try
             {
-	        req_type rtype;
-	      
-                using namespace std;
-                map_type cookies;
-                string word;
-                string path;
-                in >> word;
-                if (word == "GET" || word == "get")
-                {
-                    rtype = get;
-                }
-                else if ( word == "POST" || word == "post")
-                {
-                    rtype = post;
-                }
-                else if ( word == "PUT" || word == "put")
-                {
-                    rtype = put;
-                }
-                else
-                {
-                    // this isn't a GET or POST request so just drop the connection
-                    return;
-                }
+                incoming_things incoming;
+                outgoing_things outgoing;
+
+                incoming.foreign_ip   = foreign_ip;
+                incoming.foreign_port = foreign_port;
+                incoming.local_ip     = local_ip;
+                incoming.local_port   = local_port;
+
+                in >> incoming.request_type;
 
                 // get the path
-                in >> path;
+                in >> incoming.path;
 
-                // now loop over all the incoming_headers
+                key_value_map& incoming_headers = incoming.headers;
+                key_value_map& cookies          = incoming.cookies;
+                std::string& path               = incoming.path;
+                std::string& content_type       = incoming.content_type;
+                unsigned long content_length = 0;
+
                 string line;
                 getline(in,line);
-                unsigned long content_length = 0;
-                string content_type;
-                map_type incoming_headers;
                 string first_part_of_header;
                 string::size_type position_of_double_point;
+                // now loop over all the incoming_headers
                 while (line.size() > 2)
                 {
                     position_of_double_point = line.find_first_of(':');
                     if ( position_of_double_point != string::npos )
                     {
-                        first_part_of_header = line.substr(0, position_of_double_point);
-                        if ( incoming_headers.is_in_domain(first_part_of_header) )
-                        {
-                            incoming_headers[ first_part_of_header ] += " " + line.substr(position_of_double_point+1);
-                        }
-                        else
-                        {
-                            string second_part_of_header(line.substr(position_of_double_point+1));
-                            incoming_headers.add( first_part_of_header, second_part_of_header );
-                        }
+                        first_part_of_header = dlib::trim(line.substr(0, position_of_double_point));
+
+                        if ( !incoming_headers[first_part_of_header].empty() )
+                            incoming_headers[ first_part_of_header ] += " ";
+                        incoming_headers[first_part_of_header] += dlib::trim(line.substr(position_of_double_point+1));
 
                         // look for Content-Type:
-                        if (line.size() > 14 &&
-                            line[0] == 'C' &&
-                            line[1] == 'o' &&
-                            line[2] == 'n' &&
-                            line[3] == 't' &&
-                            line[4] == 'e' &&
-                            line[5] == 'n' &&
-                            line[6] == 't' &&
-                            line[7] == '-' &&
-                            (line[8] == 'T' || line[8] == 't') &&
-                            line[9] == 'y' &&
-                            line[10] == 'p' &&
-                            line[11] == 'e' &&
-                            line[12] == ':' 
-                        )
+                        if (line.size() > 14 && strings_equal_ignore_case(line, "Content-Type:", 13))
                         {
                             content_type = line.substr(14);
                             if (content_type[content_type.size()-1] == '\r')
                                 content_type.erase(content_type.size()-1);
                         }
                         // look for Content-Length:
-                        else if (line.size() > 16 &&
-                                 line[0] == 'C' &&
-                                 line[1] == 'o' &&
-                                 line[2] == 'n' &&
-                                 line[3] == 't' &&
-                                 line[4] == 'e' &&
-                                 line[5] == 'n' &&
-                                 line[6] == 't' &&
-                                 line[7] == '-' &&
-                                 (line[8] == 'L' || line[8] == 'l') &&
-                                 line[9] == 'e' &&
-                                 line[10] == 'n' &&
-                                 line[11] == 'g' &&
-                                 line[12] == 't' &&
-                                 line[13] == 'h' &&
-                                 line[14] == ':' 
-                        )
+                        else if (line.size() > 16 && strings_equal_ignore_case(line, "Content-Length:", 15))
                         {
                             istringstream sin(line.substr(16));
                             sin >> content_length;
@@ -212,15 +272,7 @@ namespace dlib
                                 content_length = 0;
                         }
                         // look for any cookies
-                        else if (line.size() > 6 &&
-                                 line[0] == 'C' &&
-                                 line[1] == 'o' &&
-                                 line[2] == 'o' &&
-                                 line[3] == 'k' &&
-                                 line[4] == 'i' &&
-                                 line[5] == 'e' &&
-                                 line[6] == ':' 
-                        )
+                        else if (line.size() > 6 && strings_equal_ignore_case(line, "Cookie:", 7))
                         {
                             string::size_type pos = 6;
                             string key, value;
@@ -249,10 +301,11 @@ namespace dlib
                                 {
                                     if (line[pos] == ';')
                                     {
-                                        if (cookies.is_in_domain(key) == false)
-                                            cookies.add(key,value);
+                                        cookies[urldecode(key)] = urldecode(value);
                                         seen_equal_sign = false;
                                         seen_key_start = false;
+                                        key.clear();
+                                        value.clear();
                                     }
                                     else
                                     {
@@ -260,68 +313,102 @@ namespace dlib
                                     }
                                 }
                             }
-                            if (key.size() > 0 && cookies.is_in_domain(key) == false)
-                                cookies.add(key,value);
+                            if (key.size() > 0)
+                            {
+                                cookies[urldecode(key)] = urldecode(value);
+                                key.clear();
+                                value.clear();
+                            }
                         }
                     } // no ':' in it!
                     getline(in,line);
                 } // while (line.size() > 2 )
 
-                // If there is data being posted back to us as a query string then
-                // just stick it onto the end of the path so the following code can
-                // then just pick it out like we do for GET requests.
-                if ((rtype == post || rtype == put) && content_type == "application/x-www-form-urlencoded" 
-                    && content_length > 0)
+                // If there is data being posted back to us then load it into the incoming.body
+                // string.
+                if ( content_length > 0 )
                 {
-                    line.resize(content_length);
-                    in.read(&line[0],content_length);
-                    path += "?" + line;
+                    incoming.body.resize(content_length);
+                    in.read(&incoming.body[0],content_length);
                 }
 
-                string result;
-                map_type queries;
+                // If there is data being posted back to us as a query string then
+                // pick out the queries using parse_url.
+                if (strings_equal_ignore_case(incoming.request_type, "POST") && 
+                    strings_equal_ignore_case(left_substr(content_type,";"), "application/x-www-form-urlencoded"))
+                {
+                    parse_url(incoming.body, incoming.queries);
+                }
+
                 string::size_type pos = path.find_first_of("?");
                 if (pos != string::npos)
                 {
-                    word = path.substr(pos+1);
-                    path = path.substr(0,pos);
-                    for (pos = 0; pos < word.size(); ++pos)
-                    {
-                        if (word[pos] == '&')
-                            word[pos] = ' ';
-                    }
-
-                    istringstream sin(word);
-                    sin >> word;
-                    while (sin)
-                    {
-                        pos = word.find_first_of("=");
-                        if (pos != string::npos)
-                        {
-                            string key = decode_query_string(word.substr(0,pos));
-                            string value = decode_query_string(word.substr(pos+1));
-                            if (queries.is_in_domain(key) == false)
-                                queries.add(key,value);
-                        }
-                        sin >> word;
-                    }
+                    parse_url(path.substr(pos+1), incoming.queries);
                 }
 
 
                 my_fault = false;
-                queue_type new_cookies;
-                map_type response_headers;
+                key_value_map& new_cookies      = outgoing.cookies;
+                key_value_map& response_headers = outgoing.headers;
+
+                // Set some defaults
+                outgoing.http_return        = 200;
+                outgoing.http_return_status = "OK";
+                outgoing.out = &out;
+
                 // if there wasn't a problem with the input stream at some point
                 // then lets trigger this request callback.
-                bool finished = true;
+                std::string result;
                 if (in)
-		  finished = on_request(rtype, path,result,queries,cookies,new_cookies,incoming_headers, response_headers, foreign_ip,local_ip,foreign_port,local_port, out);
+                    result = on_request(incoming, outgoing);
                 my_fault = true;
 
-                if (finished) 
+                // only send this header if the user hasn't told us to send another kind
+                bool has_content_type(false),
+                     has_location(false);
+                for( typename key_value_map::const_iterator ci = response_headers.begin(); ci != response_headers.end(); ++ci )
                 {
-                    write_header(out, response_headers, new_cookies, result);
+                    if ( !has_content_type && strings_equal_ignore_case(ci->first , "content-type") )
+                    {
+                        has_content_type = true;
+                    }
+                    else if ( !has_location && strings_equal_ignore_case(ci->first , "location") )
+                    {
+                        has_location = true;
+                    }
                 }
+
+                if ( has_location )
+                {
+                    outgoing.http_return = 302;
+                }
+
+                if ( !has_content_type )
+                {
+                    response_headers["Content-Type"] = "text/html";
+                }
+
+                {
+                    ostringstream os;
+                    os << result.size();
+
+                    response_headers["Content-Length"] = os.str();
+                }
+
+                out << "HTTP/1.0 " << outgoing.http_return << " " << outgoing.http_return_status << "\r\n";
+
+                // Set any new headers
+                for( typename key_value_map::const_iterator ci = response_headers.begin(); ci != response_headers.end(); ++ci )
+                {
+                    out << ci->first << ": " << ci->second << "\r\n";
+                }
+
+                // set any cookies 
+                for( typename key_value_map::const_iterator ci = new_cookies.begin(); ci != new_cookies.end(); ++ci )
+                {
+                    out << "Set-Cookie: " << urlencode(ci->first) << '=' << urlencode(ci->second) << "\r\n";
+                }
+                out << "\r\n" << result;
             }
             catch (std::bad_alloc&)
             {
@@ -334,47 +421,14 @@ namespace dlib
             }
 
         }
-        
-        void write_header(std::ostream& out,
-                          map_type& response_headers,
-                          queue_type& new_cookies,
-                          const std::string& result) 
-        {
-            out << "HTTP/1.0 200 OK\r\n";
-            // only send this header if the user hasn't told us to send another kind
-            if (response_headers.is_in_domain("Content-Type") == false && 
-                response_headers.is_in_domain("content-type") == false)
-            {
-                out << "Content-Type: text/xml\r\n";
-            }
-            out << "Content-Length: " << result.size() << "\r\n";
 
-            // Set any new headers
-            response_headers.reset();
-            while (response_headers.move_next())
-                out << response_headers.element().key() << ':' << response_headers.element().value() << "\r\n";
-
-            // set any cookies 
-            new_cookies.reset();
-            while (new_cookies.move_next())
-            {
-                out << "Set-Cookie: " << new_cookies.element() << "\r\n";
-            }
-            out << "\r\n" << result;
-
-        }
-        
-
-        const static logger dlog;    
+        const static logger dlog;
     };
-    
 
     template <
-        typename server_base,
-        typename map_ss_type,
-        typename queue_string_type
+        typename server_base
         >
-    const logger server_http_1<server_base,map_ss_type,queue_string_type>::dlog("dlib.server");
+    const logger server_http_1<server_base>::dlog("dlib.server");
 }
 
 #endif // DLIB_SERVER_HTTp_1_

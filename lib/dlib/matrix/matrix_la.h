@@ -1,4 +1,4 @@
-// Copyright (C) 2009  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2009  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_MATRIx_LA_FUNCTS_
 #define DLIB_MATRIx_LA_FUNCTS_ 
@@ -118,7 +118,7 @@ namespace dlib
             COMPILE_TIME_ASSERT(rX == 0 || rX == 1);
 
             const T one = 1.0;
-            const long max_iter = 30;
+            const long max_iter = 300;
             const long n = a.nc();
             const long m = a.nr();
             const T eps = std::numeric_limits<T>::epsilon();
@@ -477,6 +477,8 @@ namespace dlib
 
                 if (j < n-1)
                 {
+                    if (a(j,j) == 0)
+                        return false;
                     dum = 1/a(j,j);
                     for (long i = j+1; i < n; ++i)
                         a(i,j) *= dum;
@@ -859,7 +861,7 @@ test_f_convergence:
 
             /* shift from bottom 2x2 minor */
             iter++;
-            if (iter > 30) 
+            if (iter > 300) 
             {
                 retval = k;
                 break;
@@ -1278,9 +1280,15 @@ convergence:
     template <
         typename EXP
         >
-    inline const matrix<typename EXP::type,EXP::NC,EXP::NR,typename EXP::mem_manager_type> pinv ( 
+    const matrix<typename EXP::type,EXP::NC,EXP::NR,typename EXP::mem_manager_type> pinv_helper ( 
         const matrix_exp<EXP>& m
     )
+    /*!
+        ensures
+            - computes the results of pinv(m) but does so using a method that is fastest
+              when m.nc() <= m.nr().  So if m.nc() > m.nr() then it is best to use
+              trans(pinv_helper(trans(m))) to compute pinv(m).
+    !*/
     { 
         typename matrix_exp<EXP>::matrix_type u;
         typedef typename EXP::mem_manager_type MM1;
@@ -1305,6 +1313,21 @@ convergence:
 
         // now compute the pseudoinverse
         return tmp(scale_columns(v,reciprocal(round_zeros(w,eps))))*trans(u);
+    }
+
+    template <
+        typename EXP
+        >
+    const matrix<typename EXP::type,EXP::NC,EXP::NR,typename EXP::mem_manager_type> pinv ( 
+        const matrix_exp<EXP>& m
+    )
+    { 
+        // if m has more columns then rows then it is more efficient to
+        // compute the pseudo-inverse of its transpose (given the way I'm doing it below).
+        if (m.nc() > m.nr())
+            return trans(pinv_helper(trans(m)));
+        else
+            return pinv_helper(m);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -1386,6 +1409,28 @@ convergence:
         matrix<T,matrix_exp<EXP>::NC,1,MM1> W;
         svd3(m,u,W,v);
         w = diagm(W);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP
+        >
+    const typename matrix_exp<EXP>::type trace (
+        const matrix_exp<EXP>& m
+    ) 
+    { 
+        COMPILE_TIME_ASSERT(matrix_exp<EXP>::NR == matrix_exp<EXP>::NC ||
+                            matrix_exp<EXP>::NR == 0 ||
+                            matrix_exp<EXP>::NC == 0 
+                            );
+        DLIB_ASSERT(m.nr() == m.nc(), 
+            "\tconst matrix_exp::type trace(const matrix_exp& m)"
+            << "\n\tYou can only apply trace() to a square matrix"
+            << "\n\tm.nr(): " << m.nr()
+            << "\n\tm.nc(): " << m.nc() 
+            );
+        return sum(diag(m));
     }
 
 // ----------------------------------------------------------------------------------------

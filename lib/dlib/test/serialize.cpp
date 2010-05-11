@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
@@ -32,6 +32,7 @@ namespace
         unsigned short i5;
         unsigned long i6;
         uint64 i7;
+        int64 i8;
 
         signed char i1_0;
         signed short i2_0;
@@ -40,6 +41,7 @@ namespace
         unsigned short i5_0;
         unsigned long i6_0;
         uint64 i7_0;
+        int64 i8_0;
 
         signed char i1_n;
         signed short i2_n;
@@ -81,6 +83,7 @@ namespace
             i5 = 5;
             i6 = 6;
             i7 = 7;
+            i8 = 8;
 
             i1_0 = 0;
             i2_0 = 0;
@@ -89,6 +92,7 @@ namespace
             i5_0 = 0;
             i6_0 = 0;
             i7_0 = 0;
+            i8_0 = 0;
 
             i1_n = -1;
             i2_n = -2;
@@ -131,6 +135,7 @@ namespace
             i5 = 50;
             i6 = 60;
             i7 = 70;
+            i8 = 80;
 
             i1_0 = 5;
             i2_0 = 6;
@@ -139,6 +144,7 @@ namespace
             i5_0 = 9;
             i6_0 = 10;
             i7_0 = 11;
+            i8_0 = 12;
 
             i1_n = -13;
             i2_n = -25;
@@ -174,105 +180,109 @@ namespace
         void assert_in_state_1 (
         )
         {
-            DLIB_CASSERT (i1 == 1,"");
-            DLIB_CASSERT (i2 == 2,"");
-            DLIB_CASSERT (i3 == 3,"");
-            DLIB_CASSERT (i4 == 4,"");
-            DLIB_CASSERT (i5 == 5,"");
-            DLIB_CASSERT (i6 == 6,"");
-            DLIB_CASSERT (i7 == 7,"");
+            DLIB_TEST (i1 == 1);
+            DLIB_TEST (i2 == 2);
+            DLIB_TEST (i3 == 3);
+            DLIB_TEST (i4 == 4);
+            DLIB_TEST (i5 == 5);
+            DLIB_TEST (i6 == 6);
+            DLIB_TEST (i7 == 7);
+            DLIB_TEST (i8 == 8);
 
-            DLIB_CASSERT (i1_0 == 0,"");
-            DLIB_CASSERT (i2_0 == 0,"");
-            DLIB_CASSERT (i3_0 == 0,"");
-            DLIB_CASSERT (i4_0 == 0,"");
-            DLIB_CASSERT (i5_0 == 0,"");
-            DLIB_CASSERT (i6_0 == 0,"");
-            DLIB_CASSERT (i7_0 == 0,"");
+            DLIB_TEST (i1_0 == 0);
+            DLIB_TEST (i2_0 == 0);
+            DLIB_TEST (i3_0 == 0);
+            DLIB_TEST (i4_0 == 0);
+            DLIB_TEST (i5_0 == 0);
+            DLIB_TEST (i6_0 == 0);
+            DLIB_TEST (i7_0 == 0);
+            DLIB_TEST (i8_0 == 0);
 
-            DLIB_CASSERT (i1_n == -1,"");
-            DLIB_CASSERT (i2_n == -2,"");
-            DLIB_CASSERT (i3_n == -3,"");
+            DLIB_TEST (i1_n == -1);
+            DLIB_TEST (i2_n == -2);
+            DLIB_TEST (i3_n == -3);
 
-            DLIB_CASSERT (abs(f1 -123.456) < 1e-5,"");
-            DLIB_CASSERT (abs(f2 - 543.341) < 1e-10,"");
-            DLIB_CASSERT (abs(f3 - 5234234.23) < 1e-10,"");
+            DLIB_TEST (abs(f1 -123.456) < 1e-5);
+            DLIB_TEST (abs(f2 - 543.341) < 1e-10);
+            DLIB_TEST (abs(f3 - 5234234.23) < 1e-10);
 
-            DLIB_CASSERT (f1_inf == numeric_limits<float>::infinity(),"");
-            DLIB_CASSERT (f2_inf == numeric_limits<double>::infinity(),"");
-            DLIB_CASSERT (f3_inf == numeric_limits<long double>::infinity(),"");
-            DLIB_CASSERT (f1_ninf == -numeric_limits<float>::infinity(),"");
-            DLIB_CASSERT (f2_ninf == -numeric_limits<double>::infinity(),"");
-            DLIB_CASSERT (f3_ninf == -numeric_limits<long double>::infinity(),"");
-            DLIB_CASSERT (!(f1_qnan <= numeric_limits<float>::infinity() && f1_qnan >= -numeric_limits<float>::infinity() ),"");
-            DLIB_CASSERT (!(f2_qnan <= numeric_limits<double>::infinity() && f1_qnan >= -numeric_limits<double>::infinity() ),"");
-            DLIB_CASSERT (!(f3_qnan <= numeric_limits<long double>::infinity() && f1_qnan >= -numeric_limits<long double>::infinity() ),"");
-            DLIB_CASSERT (!(f1_snan <= numeric_limits<float>::infinity() && f1_qnan >= -numeric_limits<float>::infinity() ),"");
-            DLIB_CASSERT (!(f2_snan <= numeric_limits<double>::infinity() && f1_qnan >= -numeric_limits<double>::infinity() ),"");
-            DLIB_CASSERT (!(f3_snan <= numeric_limits<long double>::infinity() && f1_qnan >= -numeric_limits<long double>::infinity() ),"");
+            DLIB_TEST (f1_inf == numeric_limits<float>::infinity());
+            DLIB_TEST (f2_inf == numeric_limits<double>::infinity());
+            DLIB_TEST (f3_inf == numeric_limits<long double>::infinity());
+            DLIB_TEST (f1_ninf == -numeric_limits<float>::infinity());
+            DLIB_TEST (f2_ninf == -numeric_limits<double>::infinity());
+            DLIB_TEST (f3_ninf == -numeric_limits<long double>::infinity());
+            DLIB_TEST (!(f1_qnan <= numeric_limits<float>::infinity() && f1_qnan >= -numeric_limits<float>::infinity() ));
+            DLIB_TEST (!(f2_qnan <= numeric_limits<double>::infinity() && f1_qnan >= -numeric_limits<double>::infinity() ));
+            DLIB_TEST (!(f3_qnan <= numeric_limits<long double>::infinity() && f1_qnan >= -numeric_limits<long double>::infinity() ));
+            DLIB_TEST (!(f1_snan <= numeric_limits<float>::infinity() && f1_qnan >= -numeric_limits<float>::infinity() ));
+            DLIB_TEST (!(f2_snan <= numeric_limits<double>::infinity() && f1_qnan >= -numeric_limits<double>::infinity() ));
+            DLIB_TEST (!(f3_snan <= numeric_limits<long double>::infinity() && f1_qnan >= -numeric_limits<long double>::infinity() ));
 
-            DLIB_CASSERT (s1 == "davis","");
-            DLIB_CASSERT (s2 == L"yo yo yo","");
+            DLIB_TEST (s1 == "davis");
+            DLIB_TEST (s2 == L"yo yo yo");
 
             for (int i = 0; i < 10; ++i)
             {
-                DLIB_CASSERT (array[i] == i,"");
+                DLIB_TEST (array[i] == i);
             }
 
-            DLIB_CASSERT (b_true == true,"");
-            DLIB_CASSERT (b_false == false,"");
+            DLIB_TEST (b_true == true);
+            DLIB_TEST (b_false == false);
 
         }
 
         void assert_in_state_2 (
         )
         {
-            DLIB_CASSERT (i1 == 10,"");
-            DLIB_CASSERT (i2 == 20,"");
-            DLIB_CASSERT (i3 == 30,"");
-            DLIB_CASSERT (i4 == 40,"");
-            DLIB_CASSERT (i5 == 50,"");
-            DLIB_CASSERT (i6 == 60,"");
-            DLIB_CASSERT (i7 == 70,"");
+            DLIB_TEST (i1 == 10);
+            DLIB_TEST (i2 == 20);
+            DLIB_TEST (i3 == 30);
+            DLIB_TEST (i4 == 40);
+            DLIB_TEST (i5 == 50);
+            DLIB_TEST (i6 == 60);
+            DLIB_TEST (i7 == 70);
+            DLIB_TEST (i8 == 80);
 
-            DLIB_CASSERT (i1_0 == 5,"");
-            DLIB_CASSERT (i2_0 == 6,"");
-            DLIB_CASSERT (i3_0 == 7,"");
-            DLIB_CASSERT (i4_0 == 8,"");
-            DLIB_CASSERT (i5_0 == 9,"");
-            DLIB_CASSERT (i6_0 == 10,"");
-            DLIB_CASSERT (i7_0 == 11,"");
+            DLIB_TEST (i1_0 == 5);
+            DLIB_TEST (i2_0 == 6);
+            DLIB_TEST (i3_0 == 7);
+            DLIB_TEST (i4_0 == 8);
+            DLIB_TEST (i5_0 == 9);
+            DLIB_TEST (i6_0 == 10);
+            DLIB_TEST (i7_0 == 11);
+            DLIB_TEST (i8_0 == 12);
 
-            DLIB_CASSERT (i1_n == -13,"");
-            DLIB_CASSERT (i2_n == -25,"");
-            DLIB_CASSERT (i3_n == -12,"");
+            DLIB_TEST (i1_n == -13);
+            DLIB_TEST (i2_n == -25);
+            DLIB_TEST (i3_n == -12);
 
-            DLIB_CASSERT (abs(f1 - 45.3) < 1e-5,"");
-            DLIB_CASSERT (abs(f2 - 0.001) < 1e-10,"");
-            DLIB_CASSERT (abs(f3 - 2.332) < 1e-10,"");
-            DLIB_CASSERT (abs(f1_inf - 45.3) < 1e-5,"");
-            DLIB_CASSERT (abs(f2_inf - 0.001) < 1e-10,"");
-            DLIB_CASSERT (abs(f3_inf - 2.332) < 1e-10,"");
-            DLIB_CASSERT (abs(f1_ninf - 45.3) < 1e-5,"");
-            DLIB_CASSERT (abs(f2_ninf - 0.001) < 1e-10,"");
-            DLIB_CASSERT (abs(f3_ninf - 2.332) < 1e-10,"");
-            DLIB_CASSERT (abs(f1_qnan - 45.3) < 1e-5,"");
-            DLIB_CASSERT (abs(f2_qnan - 0.001) < 1e-10,"");
-            DLIB_CASSERT (abs(f3_qnan - 2.332) < 1e-10,"");
-            DLIB_CASSERT (abs(f1_snan - 45.3) < 1e-5,"");
-            DLIB_CASSERT (abs(f2_snan - 0.001) < 1e-10,"");
-            DLIB_CASSERT (abs(f3_snan - 2.332) < 1e-10,"");
+            DLIB_TEST (abs(f1 - 45.3) < 1e-5);
+            DLIB_TEST (abs(f2 - 0.001) < 1e-10);
+            DLIB_TEST (abs(f3 - 2.332) < 1e-10);
+            DLIB_TEST (abs(f1_inf - 45.3) < 1e-5);
+            DLIB_TEST (abs(f2_inf - 0.001) < 1e-10);
+            DLIB_TEST (abs(f3_inf - 2.332) < 1e-10);
+            DLIB_TEST (abs(f1_ninf - 45.3) < 1e-5);
+            DLIB_TEST (abs(f2_ninf - 0.001) < 1e-10);
+            DLIB_TEST (abs(f3_ninf - 2.332) < 1e-10);
+            DLIB_TEST (abs(f1_qnan - 45.3) < 1e-5);
+            DLIB_TEST (abs(f2_qnan - 0.001) < 1e-10);
+            DLIB_TEST (abs(f3_qnan - 2.332) < 1e-10);
+            DLIB_TEST (abs(f1_snan - 45.3) < 1e-5);
+            DLIB_TEST (abs(f2_snan - 0.001) < 1e-10);
+            DLIB_TEST (abs(f3_snan - 2.332) < 1e-10);
 
-            DLIB_CASSERT (s1 == "","");
-            DLIB_CASSERT (s2 == L"","");
+            DLIB_TEST (s1 == "");
+            DLIB_TEST (s2 == L"");
 
             for (int i = 0; i < 10; ++i)
             {
-                DLIB_CASSERT (array[i] == 10-i,"");
+                DLIB_TEST (array[i] == 10-i);
             }
 
-            DLIB_CASSERT (b_true == false,"");
-            DLIB_CASSERT (b_false == true,"");
+            DLIB_TEST (b_true == false);
+            DLIB_TEST (b_false == true);
 
         }
 
@@ -292,6 +302,7 @@ namespace
         dlib::serialize(item.i5,out);
         dlib::serialize(item.i6,out);
         dlib::serialize(item.i7,out);
+        dlib::serialize(item.i8,out);
 
         dlib::serialize(item.i1_0,out);
         dlib::serialize(item.i2_0,out);
@@ -300,6 +311,7 @@ namespace
         dlib::serialize(item.i5_0,out);
         dlib::serialize(item.i6_0,out);
         dlib::serialize(item.i7_0,out);
+        dlib::serialize(item.i8_0,out);
 
         dlib::serialize(item.i1_n,out);
         dlib::serialize(item.i2_n,out);
@@ -346,6 +358,7 @@ namespace
         dlib::deserialize(item.i5,in);
         dlib::deserialize(item.i6,in);
         dlib::deserialize(item.i7,in);
+        dlib::deserialize(item.i8,in);
 
         dlib::deserialize(item.i1_0,in);
         dlib::deserialize(item.i2_0,in);
@@ -354,6 +367,7 @@ namespace
         dlib::deserialize(item.i5_0,in);
         dlib::deserialize(item.i6_0,in);
         dlib::deserialize(item.i7_0,in);
+        dlib::deserialize(item.i8_0,in);
 
         dlib::deserialize(item.i1_n,in);
         dlib::deserialize(item.i2_n,in);
@@ -398,11 +412,11 @@ namespace
 
 
         // The base64 encoded data from the file 'stuff.bin' we want to decode and return.
-        sout << "AVaifX9zEbXbpgarAlucU9BNkSZXOyTKOGxr7taGvaQqrWOaCnaFVnAkSoI4sZ3Va8+I4DqkUa10";
-        sout << "6im2LoQqVlfhtRzCgI93x19uWen15Lk+zylZTc34P6aBwSuYMo957IjLhCcBsxIqIbXnWN/7zQSv";
-        sout << "c7Anq5STW+yvKzSohWor56pGXDTtZrm9bFTsaztlavtnauYvgn7RZkp4a9MrbgnDzdzmzAnE7+w1";
-        sout << "hl94IKktATHIBtMUJsrENvx+np3m01ygEPIftRmEa4KpW1JkZORjqUR/j211oUweh+LYIMR+s4cX";
-        sout << "0L7bwPBmULwA";
+        sout << "AVaifX9zEbXa9aocsrcRuvnNrR3WLuuU5eLWiy0UeXmnKXGLKZz8V44gzT4CM6wnCmAHFQug8G3C";
+        sout << "4cuLdNgp2ApkeLcvwFNJRENE0ShrRaxEBFEA8nah7vm8B2VmgImNblCejuP5IcDt60EaCKlqiit8";
+        sout << "+JGrzYxqBm3xFS4P+qlOROdbxc7pXBmUdh0rqNSEvn0FBPdoqY/5SpHgA2yAcH8XFrM1cdu0xS3P";
+        sout << "8PBcmLMJ7bFdzplwhrjuxtm4NfEOi6Rl9sU44AXycYgJd0+uH+dyoI9X3co5b3YWJtjvdVeztNAr";
+        sout << "BfSPfR6oAVNfiMBG7QA=";
 
 
         // Put the data into the istream sin

@@ -1,13 +1,26 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_WINDOWS_MAGIc_ 
 #define DLIB_WINDOWS_MAGIc_ 
+
+#include "platform.h"
+
+#ifdef WIN32
 
 // This file contains all the magical #defines you have to setup  before you
 // include the windows header files.  
 
 #ifndef NOMINMAX
 #define NOMINMAX // prevent windows from messing with std::min and std::max
+#endif
+
+// now just for good measure undefine min and max if they are defined
+#ifdef min
+#undef min
+#endif
+
+#ifdef max 
+#undef max 
 #endif
 
 #ifdef NO_MAKEFILE
@@ -25,6 +38,8 @@
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
 #endif
+
+#endif // WIN32
 
 #endif // DLIB_WINDOWS_MAGIc_
 

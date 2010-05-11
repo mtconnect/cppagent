@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
@@ -28,7 +28,8 @@ int main (int argc, char** argv)
         parser.add_option("n","How many times to run the selected tests. The default is 1.",1);
         parser.add_option("d","log debugging statements to file debug.txt.");
         parser.add_option("l","Set the logging level (all, trace, debug, info, warn, error, or fatal), the default is all.",1);
-        parser.add_option("a","Append debugging messsages to debug.txt rather than clearning the file at program startup.");
+        parser.add_option("a","Append debugging messages to debug.txt rather than clearing the file at program startup.");
+        parser.add_option("q","Be quiet.  Don't print the testing progress or results to standard out.");
 
         unsigned long num = 1;
 
@@ -43,7 +44,7 @@ int main (int argc, char** argv)
         parser.parse(argc,argv);
 
         parser.check_option_arg_range("n",1,1000000000);
-        const char* singles[] = {"d","l","a","n","h","runall"};
+        const char* singles[] = {"d","l","a","n","h","runall","q"};
         parser.check_one_time_options(singles);
         const char* d_sub[] = {"l","a"};
         const char* l_args[] = {"all", "trace", "debug", "info", "warn", "error", "fatal"};
@@ -54,6 +55,11 @@ int main (int argc, char** argv)
         if (parser.option("n"))
         {
             num = string_cast<unsigned long>(parser.option("n").argument());
+        }
+
+        if (parser.option("q"))
+        {
+            be_verbose = false;
         }
 
         if (parser.option("h"))
@@ -67,34 +73,33 @@ int main (int argc, char** argv)
         ofstream fout;
         if (parser.option("d"))
         {
-            logger l("test");
             if (parser.option("a"))
                 fout.open("debug.txt",ios::app);
             else
                 fout.open("debug.txt");
 
-            l.set_output_stream(fout);
+            set_all_logging_output_streams(fout);
+
             if (parser.option("l").count() == 0)
-                l.set_level(LALL);
+                set_all_logging_levels(LALL);
             else if (parser.option("l").argument() == "all")
-                l.set_level(LALL);
+                set_all_logging_levels(LALL);
             else if (parser.option("l").argument() == "trace")
-                l.set_level(LTRACE);
+                set_all_logging_levels(LTRACE);
             else if (parser.option("l").argument() == "debug")
-                l.set_level(LDEBUG);
+                set_all_logging_levels(LDEBUG);
             else if (parser.option("l").argument() == "info")
-                l.set_level(LINFO);
+                set_all_logging_levels(LINFO);
             else if (parser.option("l").argument() == "warn")
-                l.set_level(LWARN);
+                set_all_logging_levels(LWARN);
             else if (parser.option("l").argument() == "error")
-                l.set_level(LERROR);
+                set_all_logging_levels(LERROR);
             else if (parser.option("l").argument() == "fatal")
-                l.set_level(LFATAL);
+                set_all_logging_levels(LFATAL);
         }
         else
         {
-            logger l("test");
-            l.set_level(LNONE);
+            set_all_logging_levels(LNONE);
         }
 
         unsigned long num_of_failed_tests = 0;
@@ -117,7 +122,9 @@ int main (int argc, char** argv)
                     if (test.num_of_args() > 0 && j == opt.count())
                         break;
 
-                    cout << "Running " << test.cmd_line_switch() << "   " << flush;
+                    if (be_verbose)
+                        cout << "Running " << test.cmd_line_switch() << "   " << flush;
+
                     dlog << LINFO << "Running " << test.cmd_line_switch();
                     try
                     {
@@ -139,17 +146,22 @@ int main (int argc, char** argv)
                                     << " arguments but only 2 are supported.";
                                 break;
                         }
-                        cout << "\r                                                                               \r";
+                        if (be_verbose)
+                            cout << "\r                                                                               \r";
+
                         ++num_of_passed_tests;
 
                     }
                     catch (std::exception& e)
                     {
-                        cout << "\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-                        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST FAILED: " << test.cmd_line_switch() 
-                            << " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-                        cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
-                        cout << "Failure message from test: " << e.what() << endl;
+                        if (be_verbose)
+                        {
+                            cout << "\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+                            cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST FAILED: " << test.cmd_line_switch() 
+                                << " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+                            cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+                            cout << "Failure message from test: " << e.what() << endl;
+                        }
 
 
                         dlog << LERROR << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
@@ -170,18 +182,26 @@ int main (int argc, char** argv)
         }
         else if (num_of_failed_tests == 0)
         {
-            cout << "\n\nTesting Finished\n";
-            cout << "All tests completed successfully\n\n";
+            if (be_verbose)
+            {
+                cout << "\n\nTesting Finished\n";
+                cout << "All tests completed successfully\n\n";
+            }
             dlog << LINFO << "All tests completed successfully";
         }
         else
         {
-            cout << "\n\nTesting Finished\n";
-            cout << "Number of failed tests: " << num_of_failed_tests << "\n";
-            cout << "Number of passed tests: " << num_of_passed_tests << "\n\n";
+            if (be_verbose)
+            {
+                cout << "\n\nTesting Finished\n";
+                cout << "Number of failed tests: " << num_of_failed_tests << "\n";
+                cout << "Number of passed tests: " << num_of_passed_tests << "\n\n";
+            }
             dlog << LWARN << "Number of failed tests: " << num_of_failed_tests;
             dlog << LWARN << "Number of passed tests: " << num_of_passed_tests;
         }
+
+        return num_of_failed_tests;
     }
     catch (exception& e)
     {

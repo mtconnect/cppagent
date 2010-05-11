@@ -1,9 +1,8 @@
-// Copyright (C) 2008  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_RVm_ABSTRACT_
 #ifdef DLIB_RVm_ABSTRACT_
 
-#include "rvm_abstract.h"
 #include <cmath>
 #include <limits>
 #include "../matrix.h"

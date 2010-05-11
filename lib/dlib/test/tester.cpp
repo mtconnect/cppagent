@@ -1,4 +1,4 @@
-// Copyright (C) 2006  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 #include <string>
@@ -8,8 +8,32 @@
 
 namespace test
 {
+// -----------------------------------------------------------------------------
+
+    bool be_verbose = true;
+
+// -----------------------------------------------------------------------------
 
     static dlib::mutex spinner_mutex;
+
+// -----------------------------------------------------------------------------
+
+    void check_test (
+        bool _exp,
+        long line,
+        const char* file,
+        const char* _exp_str
+    )
+    {
+        if ( !(_exp) )                                                         
+        {                                                                       
+            std::ostringstream dlib__out;                                       
+                dlib__out << "\n\nError occurred at line " << line << ".\n";    
+                dlib__out << "Error occurred in file " << file << ".\n";      
+                dlib__out << "Failing expression was " << _exp_str << ".\n";           
+                throw dlib::error(dlib__out.str());      
+        }
+    }                                                                      
 
 // -----------------------------------------------------------------------------
 
@@ -103,19 +127,22 @@ namespace test
     void print_spinner (
     )
     {
-        using namespace std;
-        dlib::auto_mutex M(spinner_mutex);
-        static int i = 0;
-        cout << "\b\b";
-        switch (i)
+        if (be_verbose)
         {
-            case 0: cout << '|'; break;
-            case 1: cout << '/'; break;
-            case 2: cout << '-'; break;
-            case 3: cout << '\\'; break;
+            using namespace std;
+            dlib::auto_mutex M(spinner_mutex);
+            static int i = 0;
+            cout << "\b\b";
+            switch (i)
+            {
+                case 0: cout << '|'; break;
+                case 1: cout << '/'; break;
+                case 2: cout << '-'; break;
+                case 3: cout << '\\'; break;
+            }
+            cout << " " << flush;
+            i = (i+1)%4;
         }
-        cout << " " << flush;
-        i = (i+1)%4;
     }
 
 // -----------------------------------------------------------------------------

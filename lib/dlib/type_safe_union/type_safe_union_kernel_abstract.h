@@ -1,4 +1,4 @@
-// Copyright (C) 2009  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2009  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #undef DLIB_TYPE_SAFE_UNION_KERNEl_ABSTRACT_
 #ifdef DLIB_TYPE_SAFE_UNION_KERNEl_ABSTRACT_
@@ -21,7 +21,17 @@ namespace dlib
         typename T7 = T1,
         typename T8 = T1,
         typename T9 = T1,
-        typename T10 = T1
+        typename T10 = T1,
+        typename T11 = T1,
+        typename T12 = T1,
+        typename T13 = T1,
+        typename T14 = T1,
+        typename T15 = T1,
+        typename T16 = T1,
+        typename T17 = T1,
+        typename T18 = T1,
+        typename T19 = T1,
+        typename T20 = T1
         >
     class type_safe_union : noncopyable
     {
@@ -63,6 +73,18 @@ namespace dlib
         /*!
             ensures
                 - all resources associated with this object have been freed
+        !*/
+
+        template <typename T>
+        static int get_type_id (
+        );
+        /*!
+           ensures
+              - if (T is the same type as one of the template arguments) then
+                 - returns a number indicating which template argument it is.
+                   (e.g. if T is the same type as T3 then this function returns 3)
+               - else
+                  - returns -1
         !*/
 
         template <typename T>
@@ -120,6 +142,8 @@ namespace dlib
         T& get(
         );
         /*!
+            requires
+                - T must be one of the types given to this object's template arguments
             ensures
                 - #is_empty() == false
                 - #contains<T>() == true
@@ -145,16 +169,40 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    template <
-        typename T1, typename T2, typename T3, typename T4, typename T5,
-        typename T6, typename T7, typename T8, typename T9, typename T10
-        >
+    template < ...  >
     inline void swap (
-        type_safe_union<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>& a, 
-        type_safe_union<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10>& b 
+        type_safe_union<...>& a, 
+        type_safe_union<...>& b 
     ) { a.swap(b); }   
     /*!
         provides a global swap function
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template < ... >
+    void serialize (
+        const type_safe_union<...>& item, 
+        std::ostream& out 
+    );   
+    /*!
+        provides serialization support 
+
+        Note that type_safe_union objects are serialized as follows:
+         - if (item.is_empty()) then
+            - perform: serialize(0, out)
+         - else
+            - perform: serialize(item.get_type_id<type_of_object_in_item>(), out);
+                       serialize(item.get<type_of_object_in_item>(), out);
+    !*/
+
+    template < ...  >
+    void deserialize (
+        type_safe_union<...>& item, 
+        std::istream& in
+    );   
+    /*!
+        provides deserialization support 
     !*/
 
 // ----------------------------------------------------------------------------------------

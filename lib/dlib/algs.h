@@ -1,4 +1,4 @@
-// Copyright (C) 2003  Davis E. King (davisking@users.sourceforge.net)
+// Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_ALGs_
 #define DLIB_ALGs_
@@ -60,12 +60,13 @@ namespace std
 }
 #endif
 
+#include "platform.h"
+#include "windows_magic.h"
 
 
 #include <algorithm>    // for std::swap
 #include <new>          // for std::bad_alloc
 #include <cstdlib>
-#include "platform.h"
 #include "assert.h"
 #include "error.h"
 #include "noncopyable.h"
@@ -428,21 +429,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    /*!A is_signed_type 
-
-        This is a template where is_signed_type<T>::value == true when T is a signed
-        integral type and false when T is an unsigned integral type.
-    !*/
-    template <
-        typename T
-        >
-    struct is_signed_type
-    {
-        static const bool value = static_cast<T>((static_cast<T>(0)-static_cast<T>(1))) < 0;
-    };
-
-// ----------------------------------------------------------------------------------------
-
     /*!A is_unsigned_type 
 
         This is a template where is_unsigned_type<T>::value == true when T is an unsigned
@@ -454,6 +440,21 @@ namespace dlib
     struct is_unsigned_type
     {
         static const bool value = static_cast<T>((static_cast<T>(0)-static_cast<T>(1))) > 0;
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    /*!A is_signed_type 
+
+        This is a template where is_signed_type<T>::value == true when T is a signed
+        integral type and false when T is an unsigned integral type.
+    !*/
+    template <
+        typename T
+        >
+    struct is_signed_type
+    {
+        static const bool value = !is_unsigned_type<T>::value;
     };
 
 // ----------------------------------------------------------------------------------------
@@ -514,7 +515,7 @@ namespace dlib
     /*!A is_built_in_scalar_type
         
         This is a template that allows you to determine if the given type is a built
-        in scalar type such as an int, char, float, short, etc...
+        in scalar type such as an int, char, float, short, etc.
 
         For example, is_built_in_scalar_type<char>::value == true
         For example, is_built_in_scalar_type<std::string>::value == false 
@@ -751,6 +752,68 @@ namespace dlib
     funct_wrap4<T,A0,A1,A2,A3> wrap_function(T (&f)(A0, A1, A2, A3)) { return funct_wrap4<T,A0,A1,A2,A3>(f); }
     template <typename T, typename A0, typename A1, typename A2, typename A3, typename A4>
     funct_wrap5<T,A0,A1,A2,A3,A4> wrap_function(T (&f)(A0, A1, A2, A3, A4)) { return funct_wrap5<T,A0,A1,A2,A3,A4>(f); }
+
+// ----------------------------------------------------------------------------------------
+
+    template <unsigned long bSIZE>
+    class stack_based_memory_block : noncopyable
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This object is a simple container for a block of memory
+                of bSIZE bytes.  This memory block is located on the stack
+                and properly aligned to hold any kind of object.
+        !*/
+    public:
+        static const unsigned long size = bSIZE;
+
+        stack_based_memory_block(): data(mem.data) {}
+
+        void* get () { return data; }
+        /*!
+            ensures
+                - returns a pointer to the block of memory contained in this object
+        !*/
+
+        const void* get () const { return data; }
+        /*!
+            ensures
+                - returns a pointer to the block of memory contained in this object
+        !*/
+
+    private:
+
+        // You obviously can't have a block of memory that has zero bytes in it.
+        COMPILE_TIME_ASSERT(bSIZE > 0);
+        
+        union mem_block
+        {
+            // All of this garbage is to make sure this union is properly aligned 
+            // (a union is always aligned such that everything in it would be properly
+            // aligned.  So the assumption here is that one of these objects has 
+            // a large enough alignment requirement to satisfy any object this
+            // block of memory might be cast into).
+            void* void_ptr;
+            int integer;
+            struct {
+                void (stack_based_memory_block::*callback)();
+                stack_based_memory_block* o; 
+            } stuff;
+            long double more_stuff;
+
+            uint64 var1;
+            uint32 var2;
+            double var3;
+
+            char data[size]; 
+        } mem;
+
+        // The reason for having this variable is that doing it this way avoids
+        // warnings from gcc about violations of strict-aliasing rules.
+        void* const data; 
+    };
+
+// ----------------------------------------------------------------------------------------
 
 }
 
