@@ -86,10 +86,19 @@ void Connector::connect()
     // Read from the socket, read is a blocking call
     while (true)
     {
+      uint64 now;
       if (mHeartbeats)
-	status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, mHeartbeatFrequency);
+      {
+	now = stamper.get_timestamp();
+	int timeout = (int) mHeartbeatFrequency - ((int) (now - mLastSent) / 1000);
+	if (timeout < 0)
+	  timeout = 1;
+	status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
+      }
       else
+      {
 	status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE);
+      }
 
       if (status > 0)
       {
@@ -104,7 +113,7 @@ void Connector::connect()
 
       if (mHeartbeats)
       {
-	uint64 now = stamper.get_timestamp();
+	now = stamper.get_timestamp();
 	if ((now - mLastHeartbeat) > (uint64) (mHeartbeatFrequency * 2000))
 	{
 	  logEvent("Connector::connect", "Did not receive heartbeat for over " + intToString(mHeartbeatFrequency * 2));
