@@ -67,6 +67,11 @@ void Connector::connect()
       return;
     }
     
+    // If we have heartbeats, make sure we receive something every
+    // freq milliseconds.
+    dlib::timestamper stamper;
+    mLastSent = mLastHeartbeat = stamper.get_timestamp();
+    
     // Make sure connection buffer is clear
     mBuffer.clear();
     
@@ -77,10 +82,6 @@ void Connector::connect()
     // Assuming it always enters the while loop, it should never be 1
     mConnected = true;
 
-    // If we have heartbeats, make sure we receive something every
-    // freq milliseconds.
-    dlib::timestamper stamper;
-    uint64 last_heartbeat = stamper.get_timestamp();
     
     // Read from the socket, read is a blocking call
     while (true)
@@ -90,78 +91,35 @@ void Connector::connect()
       else
 	status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE);
 
-      // Check for timeout
-      if (mHeartbeats && status == TIMEOUT)
+      if (status > 0)
       {
-	// Heartbeat
+	// Give a null terminator for the end of buffer
+	sockBuf[status] = '\0';
+	parseBuffer(sockBuf);	
+      }
+      else if (status != TIMEOUT) // We don't stop on heartbeats
+      {
+	break;
+      }
+
+      if (mHeartbeats)
+      {
 	uint64 now = stamper.get_timestamp();
-	if (now - last_heartbeat > (uint64) (mHeartbeatFrequency * 2000))
+	if ((now - mLastHeartbeat) > (uint64) (mHeartbeatFrequency * 2000))
 	{
 	  logEvent("Connector::connect", "Did not receive heartbeat for over " + intToString(mHeartbeatFrequency * 2));
 	  break;
 	}
-
-	status = mConnection->write(ping, strlen(ping));
-	if (status <= 0)
+	else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
 	{
-	  logEvent("Connector::connect", "Could not write heartbeat  " + intToString(status));
-	  break;
-	}
-      }
-      else if (status <= 0)
-      {
-	break;
-      }
-      
-      // Give a null terminator for the end of buffer
-      sockBuf[status] = '\0';
-      
-      // Append the temporary buffer to the socket buffer
-      mBuffer += sockBuf;
-      
-      size_t newLine = mBuffer.find_last_of('\n');
-      
-      // Check to see if there is even a '\n' in buffer
-      if (newLine != string::npos)
-      {
-        // If the '\n' is not at the end of the buffer, then save the overflow
-        string overflow = "";
-        
-        if (newLine != mBuffer.length() - 1)
-        {
-          overflow = mBuffer.substr(newLine + 1);
-          mBuffer = mBuffer.substr(0, newLine);
-        }
-        
-        // Search the buffer for new complete lines
-        char buf[LINE_BUFFER_SIZE];
-        stringstream stream (mBuffer);
-        
-        while (stream.getline(buf, LINE_BUFFER_SIZE))
-        {
-	  // Check for heartbeats
-	  if (buf[0] == '*')
+	  status = mConnection->write(ping, strlen(ping));
+	  if (status <= 0)
 	  {
-	    if (strncmp(buf, "* PONG", 6) == 0)
-	    {
-	      if (!mHeartbeats)
-		startHeartbeats(buf);
-	      else
-	      {
-		last_heartbeat = stamper.get_timestamp();
-	      }
-	    }
-	    else
-	    {
-	      protocolCommand(buf);
-	    }
+	    logEvent("Connector::connect", "Could not write heartbeat  " + intToString(status));
+	    break;
 	  }
-	  else
-	    processData(buf);
-        }
-        
-        // Clear buffer/insert overflow data
-        mBuffer = overflow;
+	  mLastSent = now;
+	}
       }
     }
     
@@ -174,7 +132,60 @@ void Connector::connect()
   {
     logEvent("Connector::connect", e.what());
   }
-  
+}
+
+void Connector::parseBuffer(const char *aBuffer)
+{
+  // Append the temporary buffer to the socket buffer
+  mBuffer.append(aBuffer);
+	
+  size_t newLine = mBuffer.find_last_of('\n');
+	
+  // Check to see if there is even a '\n' in buffer
+  if (newLine != string::npos)
+  {
+    // If the '\n' is not at the end of the buffer, then save the overflow
+    string overflow = "";
+	  
+    if (newLine != mBuffer.length() - 1)
+    {
+      overflow = mBuffer.substr(newLine + 1);
+      mBuffer = mBuffer.substr(0, newLine);
+    }
+	  
+    // Search the buffer for new complete lines
+    char buf[LINE_BUFFER_SIZE];
+    stringstream stream(mBuffer);
+	  
+    while (stream.getline(buf, LINE_BUFFER_SIZE))
+    {
+      // Check for heartbeats
+      if (buf[0] == '*')
+      {
+	if (strncmp(buf, "* PONG", 6) == 0)
+	{
+	  if (!mHeartbeats)
+	    startHeartbeats(buf);
+	  else
+	  {
+	    dlib::timestamper stamper;
+	    mLastHeartbeat = stamper.get_timestamp();
+	  }
+	}
+	else
+	{
+	  protocolCommand(buf);
+	}
+      }
+      else
+      {
+	processData(buf);
+      }
+    }
+	  
+    // Clear buffer/insert overflow data
+    mBuffer = overflow;
+  }
 }
 
 void Connector::startHeartbeats(const string &aArg)
@@ -183,7 +194,7 @@ void Connector::startHeartbeats(const string &aArg)
   if (pos != string::npos)
   {
     int freq = atoi(aArg.substr(pos + 1).c_str());
-    if (freq > 0 && freq < 20000)
+    if (freq > 0 && freq < 120000)
     {
       mHeartbeats = true;
       mHeartbeatFrequency = freq;

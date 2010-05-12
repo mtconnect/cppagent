@@ -73,6 +73,7 @@ public:
 protected:
   void startHeartbeats(const std::string &buf);
   void close();
+  void parseBuffer(const char *aBuffer);
 
 protected:
   /* Name of the server to connect to */
@@ -93,6 +94,8 @@ protected:
   // Heartbeats
   bool mHeartbeats;
   int mHeartbeatFrequency;
+  dlib::uint64 mLastHeartbeat;
+  dlib::uint64 mLastSent;
   
 private:
   /* Size of buffer to read at a time from the socket */  
