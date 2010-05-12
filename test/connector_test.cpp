@@ -177,3 +177,22 @@ void ConnectorTest::testHeartbeatTimeout()
 }
 
 
+void ConnectorTest::testParseBuffer()
+{
+  // Test data fragmentation
+  mConnector->pushData("Hello");
+  CPPUNIT_ASSERT_EQUAL((string) "", mConnector->mData);
+
+  mConnector->pushData(" There\n");
+  CPPUNIT_ASSERT_EQUAL((string) "Hello There", mConnector->mData);
+  mConnector->mData.clear();
+
+  mConnector->pushData("Hello");
+  CPPUNIT_ASSERT_EQUAL((string) "", mConnector->mData);
+
+  mConnector->pushData(" There\nAnd ");
+  CPPUNIT_ASSERT_EQUAL((string) "Hello There", mConnector->mData);
+
+  mConnector->pushData("Again\nXXX");
+  CPPUNIT_ASSERT_EQUAL((string) "And Again", mConnector->mData);
+}

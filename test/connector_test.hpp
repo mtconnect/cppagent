@@ -61,6 +61,8 @@ public:
   virtual void disconnected() { mDisconnected = true; }
   bool heartbeats() { return mHeartbeats; }
 
+  void pushData(const char *data) { parseBuffer(data); }
+
 public:
   std::string mData;
   std::string mCommand;
@@ -77,6 +79,7 @@ class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
   CPPUNIT_TEST(testHeartbeat);
   CPPUNIT_TEST(testHeartbeatPong);
   CPPUNIT_TEST(testHeartbeatTimeout);
+  CPPUNIT_TEST(testParseBuffer);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -98,6 +101,7 @@ protected:
   void testHeartbeat();
   void testHeartbeatPong();
   void testHeartbeatTimeout();
+  void testParseBuffer();
 };
 
 #endif

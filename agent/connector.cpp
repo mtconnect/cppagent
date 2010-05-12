@@ -154,15 +154,16 @@ void Connector::parseBuffer(const char *aBuffer)
     }
 	  
     // Search the buffer for new complete lines
-    char buf[LINE_BUFFER_SIZE];
-    stringstream stream(mBuffer);
+    stringbuf line;
+    stringstream stream(mBuffer, stringstream::in);
 	  
-    while (stream.getline(buf, LINE_BUFFER_SIZE))
+    while (stream.get(line))
     {
+      string buf(line.str());
       // Check for heartbeats
       if (buf[0] == '*')
       {
-	if (strncmp(buf, "* PONG", 6) == 0)
+	if (buf.compare(0, 6, "* PONG") == 0)
 	{
 	  if (!mHeartbeats)
 	    startHeartbeats(buf);
