@@ -43,8 +43,6 @@ Adapter::Adapter(
   )
 : Connector(server, port), mDevice(device)
 {
-  // Will start threaded object: Adapter::thread()
-  start();
 }
 
 Adapter::~Adapter()

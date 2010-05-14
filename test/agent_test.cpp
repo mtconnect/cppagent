@@ -248,7 +248,7 @@ void AgentTest::testBadDevices()
 void AgentTest::testAddAdapter()
 {
   CPPUNIT_ASSERT(adapter == NULL);
-  adapter = a->addAdapter("LinuxCNC", "server", 7878);
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
 }
 
@@ -295,7 +295,7 @@ void AgentTest::testAdapter()
 {
   path = "/sample";
   
-  adapter = a->addAdapter("LinuxCNC", "server", 7878);
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
     
   {
@@ -364,7 +364,7 @@ void AgentTest::testCurrentAt()
   path = "/current";
   string key("at"), value;
   
-  adapter = a->addAdapter("LinuxCNC", "server", 7878);
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
 
   // Get the current position
@@ -430,7 +430,7 @@ void AgentTest::testCurrentAt64()
   path = "/current";
   string key("at"), value;
   
-  adapter = a->addAdapter("LinuxCNC", "server", 7878);
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
 
   // Get the current position

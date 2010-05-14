@@ -99,7 +99,8 @@ public:
   Adapter * addAdapter(
     const std::string& device,
     const std::string& host,
-    const unsigned int port
+    const unsigned int port,
+    bool start = true
   );
   
   /* Get device from device map */

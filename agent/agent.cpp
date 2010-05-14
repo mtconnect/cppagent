@@ -174,11 +174,14 @@ const string Agent::on_request (
 Adapter * Agent::addAdapter(
     const string& device,
     const string& host,
-    const unsigned int port
+    const unsigned int port,
+    bool start
   )
 {
   Adapter *adapter = new Adapter(device, host, port);
   adapter->setAgent(*this);
+  if (start)
+    adapter->start();
   return adapter;
 }
 

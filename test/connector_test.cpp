@@ -55,18 +55,17 @@ void ConnectorTest::tearDown()
 {
   mServer.reset();
   mServerSocket.reset();
-  dlib::sleep(500);
   stop();
+  wait();
   mConnector.reset();
 }
 
 /* ConnectorTest protected methods */
 void ConnectorTest::testConnection()
 {
-  // Start the accept thread
   start();
-  
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket, 1000));
+
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
 }
 
@@ -75,12 +74,12 @@ void ConnectorTest::testDataCapture()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket, 1000));
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
 
   string command("Hello Connector\n");
   CPPUNIT_ASSERT((size_t) mServerSocket->write(command.c_str(), command.length()) == command.length());
-  dlib::sleep(500);
+  dlib::sleep(1000);
 
   // \n is stripped from the posted data.
   CPPUNIT_ASSERT_EQUAL(command.substr(0, command.length() - 1), mConnector->mData); 
@@ -91,7 +90,7 @@ void ConnectorTest::testDisconnect()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket, 1000));
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
   CPPUNIT_ASSERT(!mConnector->mDisconnected);
   mServerSocket.reset();
@@ -104,12 +103,12 @@ void ConnectorTest::testProtocolCommand()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket, 1000));
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
 
   const char *cmd ="* Hello Connector\n";
   CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) mServerSocket->write(cmd, strlen(cmd)));
-  dlib::sleep(500);
+  dlib::sleep(1000);
 
   // \n is stripped from the posted data.
   CPPUNIT_ASSERT(strncmp(cmd, mConnector->mCommand.c_str(), strlen(cmd) - 1) == 0); 
@@ -120,20 +119,19 @@ void ConnectorTest::testHeartbeat()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket, 1000));
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
-
-  dlib::sleep(100);
 
   // Receive initial heartbeat request "* PING\n"
   char buf[1024];
-  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 1000));
+  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 5000));
+  buf[7] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
   // Respond to the heartbeat of 1/2 second
   const char *pong = "* PONG 500\n";
   CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) mServerSocket->write(pong, strlen(pong)));
-  dlib::sleep(100);
+  dlib::sleep(1000);
   
   CPPUNIT_ASSERT(mConnector->heartbeats());
   CPPUNIT_ASSERT_EQUAL(500, mConnector->heartbeatFrequency());
@@ -152,7 +150,8 @@ void ConnectorTest::testHeartbeatPong()
     // Receive initial heartbeat request "* PING\n"
     
     char buf[1024];
-    CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 1000));
+    CPPUNIT_ASSERT(mServerSocket->read(buf, 1023, 1000) > 0);
+    buf[7] = '\0';
     CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
     uint64 now = stamper.get_timestamp();
