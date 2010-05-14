@@ -129,12 +129,12 @@ void ConnectorTest::testHeartbeat()
   CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
   // Respond to the heartbeat of 1/2 second
-  const char *pong = "* PONG 500\n";
+  const char *pong = "* PONG 1000\n";
   CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) mServerSocket->write(pong, strlen(pong)));
   dlib::sleep(1000);
   
   CPPUNIT_ASSERT(mConnector->heartbeats());
-  CPPUNIT_ASSERT_EQUAL(500, mConnector->heartbeatFrequency());
+  CPPUNIT_ASSERT_EQUAL(1000, mConnector->heartbeatFrequency());
 }
 
 void ConnectorTest::testHeartbeatPong()
@@ -155,13 +155,13 @@ void ConnectorTest::testHeartbeatPong()
     CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
     uint64 now = stamper.get_timestamp();
-    CPPUNIT_ASSERT(now - last_heartbeat < (uint64) (1000 * 1000));
+    CPPUNIT_ASSERT(now - last_heartbeat < (uint64) (1000 * 2000));
     last_heartbeat = now;
     
     // Respond to the heartbeat of 1/2 second
-    const char *pong = "* PONG 500\n";
+    const char *pong = "* PONG 1000\n";
     CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) mServerSocket->write(pong, strlen(pong)));
-    dlib::sleep(100);
+    dlib::sleep(10);
 
     CPPUNIT_ASSERT(!mConnector->mDisconnected);
   }
@@ -170,7 +170,7 @@ void ConnectorTest::testHeartbeatPong()
 void ConnectorTest::testHeartbeatTimeout()
 {
   testHeartbeat();
-  dlib::sleep(1100);
+  dlib::sleep(2100);
   
   CPPUNIT_ASSERT(mConnector->mDisconnected);
 }
