@@ -31,9 +31,9 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#include "test_globals.hpp"
 #include <libxml/tree.h>
 #include <libxml/xpathInternals.h>
+#include "test_globals.hpp"
 
 using namespace std;
 

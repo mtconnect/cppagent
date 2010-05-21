@@ -81,11 +81,11 @@ public:
   const std::string& getClass() const { return mClass; }
   
   /* Getter methods for the component ID/Name */
-  std::string getId() const { return mId; }
-  std::string getName() const { return mName; }
-  std::string getNativeName() const { return mNativeName; }
-  std::string getUuid() const { return mUuid; }
-  std::string getDescriptionBody() const { return mDescriptionBody; }
+  const std::string &getId() const { return mId; }
+  const std::string &getName() const { return mName; }
+  const std::string &getNativeName() const { return mNativeName; }
+  const std::string &getUuid() const { return mUuid; }
+  const std::string &getDescriptionBody() const { return mDescriptionBody; }
   
   /* Add/get description specifications using an attribute map */
   void addDescription(std::string body, std::map<std::string, std::string> attributes);

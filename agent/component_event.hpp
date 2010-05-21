@@ -150,7 +150,7 @@ protected:
   
 protected:
   /* Reference count */
-  unsigned int mRefCount;
+  AtomicInt mRefCount;
   
   /* Holds the data item from the device */
   DataItem * mDataItem;

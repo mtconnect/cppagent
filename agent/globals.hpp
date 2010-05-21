@@ -107,13 +107,15 @@ int getEnumeration(
 
 std::string addNamespace(const std::string aPath, const std::string aPrefix);
 
-struct ConstCharCmp
-{
-  bool operator()(const char* s1, const char* s2) const
-  {
-    return strcmp(s1, s2) ;
-  }
-};
+#ifdef WIN32
+typedef long volatile AtomicInt;
+#else
+#ifdef MACOSX
+typedef _Atomic_word AtomicInt;
+#else
+typedef int AtomicInt;
+#endif
+#endif
 
 
 #endif
