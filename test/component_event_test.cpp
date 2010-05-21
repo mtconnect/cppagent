@@ -95,7 +95,10 @@ void ComponentEventTest::testConstructors()
 
 void ComponentEventTest::testGetAttributes()
 {
-  std::map<string, string> &attributes1 = *a->getAttributes();
+  AttributeList *attr_list = a->getAttributes();
+  map<string, string> attributes1;
+  AttributeList::iterator attr;
+  for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attributes1[attr->first] = attr->second; }
   CPPUNIT_ASSERT_EQUAL((string) "1", attributes1["dataItemId"]);
   CPPUNIT_ASSERT_EQUAL((string) "NOW", attributes1["timestamp"]);
   CPPUNIT_ASSERT(attributes1["subType"].empty());
@@ -108,7 +111,9 @@ void ComponentEventTest::testGetAttributes()
   CPPUNIT_ASSERT_EQUAL((string) "CRITICAL", attributes1["severity"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACTIVE", attributes1["state"]);
   
-  std::map<string, string> &attributes2 = *b->getAttributes();
+  attr_list = b->getAttributes();
+  map<string, string> attributes2;
+  for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attributes2[attr->first] = attr->second; }
   CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["dataItemId"]);
   CPPUNIT_ASSERT_EQUAL((string) "LATER", attributes2["timestamp"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", attributes2["subType"]);
@@ -301,26 +306,30 @@ void ComponentEventTest::testCondition()
   
   CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event1->getLevel());
   CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event1->getValue());
-  
-  std::map<string, string> *attrs1 = event1->getAttributes();
-  CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", (*attrs1)["type"]);
-  CPPUNIT_ASSERT_EQUAL((string) "123", (*attrs1)["sequence"]);
-  CPPUNIT_ASSERT_EQUAL((string) "4321", (*attrs1)["nativeCode"]);
-  CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs1)["qualifier"]);
-  CPPUNIT_ASSERT_EQUAL((string) "1", (*attrs1)["nativeSeverity"]);
+
+  AttributeList *attr_list = event1->getAttributes();
+  map<string, string> attrs1;
+  AttributeList::iterator attr;
+  for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs1[attr->first] = attr->second; }
+  CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", attrs1["type"]);
+  CPPUNIT_ASSERT_EQUAL((string) "123", attrs1["sequence"]);
+  CPPUNIT_ASSERT_EQUAL((string) "4321", attrs1["nativeCode"]);
+  CPPUNIT_ASSERT_EQUAL((string) "HIGH", attrs1["qualifier"]);
+  CPPUNIT_ASSERT_EQUAL((string) "1", attrs1["nativeSeverity"]);
   CPPUNIT_ASSERT_EQUAL((string) "Fault", event1->getLevelString());
 
-  ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4321|2|HIGH|Overtemp"), true);
+  ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4322|2|LOW|Overtemp"), true);
   
   CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event2->getLevel());
   CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event2->getValue());
   
-  std::map<string, string> *attrs2 = event2->getAttributes();
-  CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", (*attrs2)["type"]);
-  CPPUNIT_ASSERT_EQUAL((string) "123", (*attrs2)["sequence"]);
-  CPPUNIT_ASSERT_EQUAL((string) "4321", (*attrs2)["nativeCode"]);
-  CPPUNIT_ASSERT_EQUAL((string) "HIGH", (*attrs2)["qualifier"]);
-  CPPUNIT_ASSERT_EQUAL((string) "2", (*attrs2)["nativeSeverity"]);
+  attr_list = event2->getAttributes();
+  map<string, string> attrs2;
+  for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs2[attr->first] = attr->second; }
+  CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", attrs2["type"]);
+  CPPUNIT_ASSERT_EQUAL((string) "123", attrs2["sequence"]);
+  CPPUNIT_ASSERT_EQUAL((string) "4322", attrs2["nativeCode"]);
+  CPPUNIT_ASSERT_EQUAL((string) "LOW", attrs2["qualifier"]);
+  CPPUNIT_ASSERT_EQUAL((string) "2", attrs2["nativeSeverity"]);
   CPPUNIT_ASSERT_EQUAL((string) "Fault", event2->getLevelString());
- 
 }

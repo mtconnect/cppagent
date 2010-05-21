@@ -97,15 +97,16 @@ void ComponentEvent::unrefer()
   }
 }
 
-std::map<string, string> *ComponentEvent::getAttributes()
+AttributeList *ComponentEvent::getAttributes()
 {
   if (!mHasAttributes) 
   {
-    mAttributes["dataItemId"] = mDataItem->getId();
-    mAttributes["timestamp"] = mTime;
+    mAttributes.push_back(AttributeItem("dataItemId", mDataItem->getId()));
+    mAttributes.push_back(AttributeItem("timestamp", mTime));
     if (!mDataItem->getName().empty())
-      mAttributes["name"] = mDataItem->getName();
-    mAttributes["sequence"] = int64ToString(mSequence);
+      mAttributes.push_back(AttributeItem("name", mDataItem->getName()));
+    mSequenceStr = int64ToString(mSequence);
+    mAttributes.push_back(AttributeItem("sequence",mSequenceStr));
     
     if (mDataItem->isCondition())
     {
@@ -127,28 +128,28 @@ std::map<string, string> *ComponentEvent::getAttributes()
       if (!toParse.eof()) {
 	getline(toParse, token, '|');
 	if (!token.empty())
-	  mAttributes["nativeCode"] = token;
+	  mAttributes.push_back(AttributeItem("nativeCode", token));
       }
       
       if (!toParse.eof()) {
 	getline(toParse, token, '|');
 	if (!token.empty())
-	  mAttributes["nativeSeverity"] = token;
+	  mAttributes.push_back(AttributeItem("nativeSeverity", token));
       }
       
       if (!toParse.eof()) {
 	getline(toParse, token, '|');
 	if (!token.empty())
-	  mAttributes["qualifier"] = token;
+	  mAttributes.push_back(AttributeItem("qualifier", token));
       }
       
-      mAttributes["type"] = mDataItem->getType();
+      mAttributes.push_back(AttributeItem("type", mDataItem->getType()));
     }
     else
     {
       if (!mDataItem->getSubType().empty())
       {
-        mAttributes["subType"] = mDataItem->getSubType();
+        mAttributes.push_back(AttributeItem("subType", mDataItem->getSubType()));
       }
 
       if (mDataItem->isMessage())
@@ -158,7 +159,7 @@ std::map<string, string> *ComponentEvent::getAttributes()
         string token;
         
         getline(toParse, token, '|');
-        mAttributes["nativeCode"] = token;
+        mAttributes.push_back(AttributeItem("nativeCode", token));
       }
       else if (mDataItem->isAlarm())
       {
@@ -167,16 +168,16 @@ std::map<string, string> *ComponentEvent::getAttributes()
         string token;
         
         getline(toParse, token, '|');
-        mAttributes["code"] = token;
+        mAttributes.push_back(AttributeItem("code", token));
       
         getline(toParse, token, '|');
-        mAttributes["nativeCode"] = token;
+        mAttributes.push_back(AttributeItem("nativeCode", token));
         
         getline(toParse, token, '|');
-        mAttributes["severity"] = token;
+        mAttributes.push_back(AttributeItem("severity", token));
         
         getline(toParse, token, '|');
-        mAttributes["state"] = token;
+        mAttributes.push_back(AttributeItem("state", token));
       }
     }
     

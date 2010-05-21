@@ -406,6 +406,18 @@ void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
   }
 }
 
+void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
+                               AttributeList *attributes)
+{
+  AttributeList::iterator attr;
+  for (attr= attributes->begin(); attr!=attributes->end(); attr++)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr->first, 
+                                                    BAD_CAST attr->second.c_str()));
+    
+  }
+}
+
 /* XmlPrinter helper Methods */
 void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
                              const string& xmlType,

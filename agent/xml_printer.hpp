@@ -97,7 +97,9 @@ namespace XmlPrinter
   
   void addAttributes(xmlTextWriterPtr writer,
                       std::map<std::string, std::string> *attributes);
-  
+  void addAttributes(xmlTextWriterPtr writer,
+                     AttributeList *attributes);
+ 
   void addEvent(xmlTextWriterPtr writer, ComponentEvent *result);
                    
 };

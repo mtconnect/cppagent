@@ -98,14 +98,14 @@ public:
   std::map<std::string, std::string> *getAttributes() { return &mAttributes; }
   
   /* Getter methods for data item specs */
-  std::string getId() const { return mId; }
-  std::string getName() const { return mName; }
-  std::string getSource() const { return mSource; }
-  std::string getType() const { return mType; }
-  std::string getTypeString(bool uppercase) const;
-  std::string getSubType() const { return mSubType; }
-  std::string getNativeUnits() const { return mNativeUnits; }
-  std::string getUnits() const { return mUnits; }
+  const std::string &getId() const { return mId; }
+  const std::string &getName() const { return mName; }
+  const std::string &getSource() const { return mSource; }
+  const std::string &getType() const { return mType; }
+  const std::string &getTypeString(bool uppercase) const;
+  const std::string &getSubType() const { return mSubType; }
+  const std::string &getNativeUnits() const { return mNativeUnits; }
+  const std::string &getUnits() const { return mUnits; }
   float getNativeScale() const { return mNativeScale; }
   double getConversionFactor() const;
   ECategory getCategory() const { return mCategory; }

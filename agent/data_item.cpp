@@ -195,7 +195,7 @@ std::map<string, string> DataItem::buildAttributes() const
   return attributes;
 }
 
-string DataItem::getTypeString(bool uppercase) const
+const string &DataItem::getTypeString(bool uppercase) const
 {
   return (uppercase) ? mType : mCamelType;
 }

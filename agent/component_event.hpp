@@ -35,6 +35,7 @@
 #define COMPONENT_EVENT_HPP
 
 #include <string>
+#include <vector>
 #include <cmath>
 
 #include "component.hpp"
@@ -80,10 +81,13 @@ protected:
   ComponentEvent *mEvent;
 };
 
+typedef std::pair<const char*, std::string> AttributeItem;
+typedef std::vector<AttributeItem> AttributeList;
 
 /* Component Event */
 class ComponentEvent
 {
+  
 public:
   enum ELevel {
     NORMAL,
@@ -108,7 +112,7 @@ public:
   ComponentEvent(ComponentEvent& ce);
   
   /* Extract the component event data into a map */
-  std::map<std::string, std::string> *getAttributes();
+  AttributeList *getAttributes();
   
   /* Get the data item associated with this event */
   DataItem * getDataItem() const { return mDataItem; }
@@ -153,6 +157,7 @@ protected:
   
   /* Sequence number of the event */
   Int64 mSequence;
+  std::string mSequenceStr;
   
   /* Timestamp of the event's occurence */
   std::string mTime;
@@ -168,7 +173,7 @@ protected:
   
   /* The attributes, created on demand */
   bool mHasAttributes;
-  std::map<std::string, std::string> mAttributes;
+  AttributeList mAttributes;
   
   // For back linking of condition
   ComponentEventPtr mPrev;
