@@ -106,13 +106,13 @@ void ComponentEvent::unrefer()
 #else
 #ifdef MACOSX
   if (__gnu_cxx::__exchange_and_add_dispatch(&this->mRefCount,
-                                             -1) <= 0)
+                                             -1) <= 1)
   {
     delete this;
   }
 #else
   dlib::auto_mutex lock(sRefMutex);
-  if (--mRefCount == 0)
+  if (--mRefCount <= 0)
   {
     delete this;
   }
