@@ -53,6 +53,7 @@ class GlobalsTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testIllegalCharacters);
   CPPUNIT_TEST(testLogEvent);
   CPPUNIT_TEST(testGetEnumerations);
+  CPPUNIT_TEST(testGetCurrentTime);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -64,6 +65,7 @@ protected:
   void testIllegalCharacters();
   void testLogEvent();
   void testGetEnumerations();
+  void testGetCurrentTime();
   
 public:
   void setUp();

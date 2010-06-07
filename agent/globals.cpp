@@ -95,18 +95,24 @@ string getCurrentTime(TimeFormat format)
   
   if (format == GMT_UV_SEC)
   {
-    sprintf(timestamp + strlen(timestamp), ".%04d", st.wMilliseconds);
+    sprintf(timestamp + strlen(timestamp), ".%04dZ", st.wMilliseconds);
+  }
+  else
+  {
+    strcat(timestamp, "Z");
   }
   
   return timestamp;
 #else
-  char timeBuffer[50];
-  time_t rawtime;
-  struct tm * timeinfo;
-
-  time (&rawtime);
   
-  timeinfo = (format == LOCAL) ? localtime(&rawtime) : gmtime(&rawtime);
+  
+  char timeBuffer[50];
+  struct tm * timeinfo;
+  struct timeval tv;
+  struct timezone tz;
+
+  gettimeofday(&tv, &tz);
+  timeinfo = (format == LOCAL) ? localtime(&tv.tv_sec) : gmtime(&tv.tv_sec);
   
   switch (format)
   {
@@ -114,35 +120,23 @@ string getCurrentTime(TimeFormat format)
       strftime(timeBuffer, 50, "%a, %d %b %Y %H:%M:%S %Z", timeinfo);
       break;
     case GMT:
-      strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S+00:00", timeinfo);
+      strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%SZ", timeinfo);
       break;
     case GMT_UV_SEC:
-    case LOCAL:
       strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S", timeinfo);
+      break;
+    case LOCAL:
+      strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S%z", timeinfo);
       break;
   }
   
-  string toReturn(timeBuffer);
   
   if (format == GMT_UV_SEC)
   {
-    timeval timEval;
-    gettimeofday(&timEval, NULL);
-    
-    ostringstream ostm;
-    ostm << timEval.tv_usec;
-    string toAppend = ostm.str();
-    
-    // Precision is 6 digits
-    toReturn += ".";
-    for (unsigned int i = toAppend.length(); i < 6; i++)
-    {
-      toReturn += "0";
-    }
-    toReturn += toAppend;
+    sprintf(timeBuffer + strlen(timeBuffer), ".%06dZ", tv.tv_usec);
   }
   
-  return toReturn;
+  return string(timeBuffer);
 #endif
 }
 

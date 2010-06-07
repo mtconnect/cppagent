@@ -179,3 +179,16 @@ void GlobalsTest::testGetEnumerations()
   CPPUNIT_ASSERT_EQUAL(ENUM_MISS, getEnumeration("Notaday", week, size));
   CPPUNIT_ASSERT_EQUAL(ENUM_MISS, getEnumeration("SUNDAY", week, size));
 }
+
+
+void GlobalsTest::testGetCurrentTime()
+{
+  string gmt = getCurrentTime(GMT);
+  string gmtUsec = getCurrentTime(GMT_UV_SEC);
+  string local = getCurrentTime(LOCAL);
+  
+  cout << gmt << endl;
+  cout << gmtUsec << endl;
+  cout << local << endl;
+  
+}
