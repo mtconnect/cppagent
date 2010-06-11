@@ -65,6 +65,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAdapter);
   CPPUNIT_TEST(testCurrentAt);
   CPPUNIT_TEST(testCurrentAt64);
+  CPPUNIT_TEST(testAdapterCommands);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -113,6 +114,9 @@ protected:
   
   /* Test Adapter */
   void testAdapter();
+  
+  // Adapter commands
+  void testAdapterCommands();
   
   /* Helper method to test expected string, given optional query, & run tests */
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine,

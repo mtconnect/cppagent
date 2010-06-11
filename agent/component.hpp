@@ -87,6 +87,12 @@ public:
   const std::string &getUuid() const { return mUuid; }
   const std::string &getDescriptionBody() const { return mDescriptionBody; }
   
+  // Setter methods
+  void setUuid(std::string &aUuid) { mUuid = aUuid; reBuildAttributes(); }
+  void setManufacturer(std::string &aManufacturer) { mManufacturer = aManufacturer; reBuildAttributes(); }
+  void setSerialNumber(std::string &aSerialNumber) { mSerialNumber = aSerialNumber; reBuildAttributes(); }
+  void setStation(std::string &aStation) { mStation = aStation; reBuildAttributes(); }
+  
   /* Add/get description specifications using an attribute map */
   void addDescription(std::string body, std::map<std::string, std::string> attributes);
   std::map<std::string, std::string> getDescription() const;
@@ -112,6 +118,7 @@ public:
 protected:
   /* Return a map of attributes of all the component specs */
   std::map<std::string, std::string> buildAttributes() const;
+  void reBuildAttributes() { mAttributes = buildAttributes(); }
   
 protected:
   /* Unique ID for each component */

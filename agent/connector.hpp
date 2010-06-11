@@ -70,10 +70,12 @@ public:
   bool heartbeats() const { return mHeartbeats; }
   int heartbeatFrequency() const { return mHeartbeatFrequency; }
 
+  // Collect data and until it is \n terminated
+  void parseBuffer(const char *aBuffer);
+
 protected:
   void startHeartbeats(const std::string &buf);
   void close();
-  void parseBuffer(const char *aBuffer);
 
 protected:
   /* Name of the server to connect to */

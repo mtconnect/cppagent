@@ -32,6 +32,7 @@
 */
 
 #include "adapter.hpp"
+#include "device.hpp"
 
 using namespace std;
 
@@ -106,6 +107,47 @@ void Adapter::processData(const string& data)
       mAgent->addToBuffer(dataItem, toUpperCase(value), time);
     }
   }
+}
+
+inline static void trim(std::string str)
+{
+  size_t index = str.find_first_not_of(" \t");
+  if (index != string::npos)
+    str.erase(0, index);
+  index = str.find_last_not_of(" \t");
+  if (index != string::npos)
+    str.erase(index);
+}
+
+void Adapter::protocolCommand(const std::string& data)
+{
+  // Handle initial push of settings for uuid, serial number and manufacturer. 
+  // This will override the settings in the device from the xml
+  size_t index = data.find(':', 2);
+  if (index != string::npos)
+  {
+    Device *device = mAgent->getDeviceByName(mDevice);
+    if (device != NULL)
+    {
+      // Slice from the second character to the :, without the colon
+      string key = data.substr(2, index - 2);
+      trim(key);        
+      string value = data.substr(index + 1);
+      trim(value);
+      
+      if (key == "uuid")
+        device->setUuid(value);
+      else if (key == "manufacturer")
+        device->setManufacturer(value);
+      else if (key == "station")
+        device->setStation(value);
+      else if (key == "serialNumber")
+        device->setSerialNumber(value);
+      else
+        logEvent("Agent", "Unknown command '" + data + "' for device '" + mDevice);
+    }
+  }
+  
 }
 
 void Adapter::disconnected()

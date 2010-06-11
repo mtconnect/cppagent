@@ -60,6 +60,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testPrintSample);
   CPPUNIT_TEST(testCondition);
   CPPUNIT_TEST(testVeryLargeSequence);
+  CPPUNIT_TEST(testChangeDeviceAttributes);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -80,6 +81,8 @@ protected:
   
   // Test overflow
   void testVeryLargeSequence();
+  
+  void testChangeDeviceAttributes();
   
   /* Retrieve a data item by name string */
   DataItem * getDataItem(const char *name);

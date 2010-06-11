@@ -270,6 +270,30 @@ void XmlPrinterTest::testVeryLargeSequence()
   
 }
 
+void XmlPrinterTest::testChangeDeviceAttributes()
+{
+  Device *device = devices.front();
+  
+  string v = "Some_Crazy_Uuid";
+  device->setUuid(v);
+  v = "Big Tool MFG";
+  device->setManufacturer(v);
+  v = "111999333444";
+  device->setSerialNumber(v);
+  v = "99999999";
+  device->setStation(v);
+  
+  device = devices.front();
+  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+    
+  // Check Description
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "Some_Crazy_Uuid");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "Big Tool MFG");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "111999333444");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "99999999");
+}
+
 DataItem * XmlPrinterTest::getDataItem(const char *name)
 {
   Device *device = devices.front();
@@ -305,5 +329,7 @@ ComponentEvent * XmlPrinterTest::addEventToCheckpoint(
   aCheckpoint.addComponentEvent(event);
   return event;
 }
+
+
 
 

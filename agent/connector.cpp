@@ -89,46 +89,46 @@ void Connector::connect()
       uint64 now;
       if (mHeartbeats)
       {
-	now = stamper.get_timestamp();
-	int timeout = (int) mHeartbeatFrequency - ((int) (now - mLastSent) / 1000);
-	if (timeout < 0)
-	  timeout = 1;
-	status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
+        now = stamper.get_timestamp();
+        int timeout = (int) mHeartbeatFrequency - ((int) (now - mLastSent) / 1000);
+        if (timeout < 0)
+          timeout = 1;
+        status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
       }
       else
       {
-	status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE);
+        status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE);
       }
 
       if (status > 0)
       {
-	// Give a null terminator for the end of buffer
-	sockBuf[status] = '\0';
-	parseBuffer(sockBuf);	
+        // Give a null terminator for the end of buffer
+        sockBuf[status] = '\0';
+        parseBuffer(sockBuf);   
       }
       else if (status != TIMEOUT) // We don't stop on heartbeats
       {
-	break;
+        break;
       }
 
       if (mHeartbeats)
       {
-	now = stamper.get_timestamp();
-	if ((now - mLastHeartbeat) > (uint64) (mHeartbeatFrequency * 2000))
-	{
-	  logEvent("Connector::connect", "Did not receive heartbeat for over " + intToString(mHeartbeatFrequency * 2));
-	  break;
-	}
-	else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
-	{
-	  status = mConnection->write(ping, strlen(ping));
-	  if (status <= 0)
-	  {
-	    logEvent("Connector::connect", "Could not write heartbeat  " + intToString(status));
-	    break;
-	  }
-	  mLastSent = now;
-	}
+        now = stamper.get_timestamp();
+        if ((now - mLastHeartbeat) > (uint64) (mHeartbeatFrequency * 2000))
+        {
+          logEvent("Connector::connect", "Did not receive heartbeat for over " + intToString(mHeartbeatFrequency * 2));
+          break;
+        }
+        else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
+        {
+          status = mConnection->write(ping, strlen(ping));
+          if (status <= 0)
+          {
+            logEvent("Connector::connect", "Could not write heartbeat  " + intToString(status));
+            break;
+          }
+          mLastSent = now;
+        }
       }
     }
     
@@ -147,52 +147,52 @@ void Connector::parseBuffer(const char *aBuffer)
 {
   // Append the temporary buffer to the socket buffer
   mBuffer.append(aBuffer);
-	
+        
   size_t newLine = mBuffer.find_last_of('\n');
-	
+        
   // Check to see if there is even a '\n' in buffer
   if (newLine != string::npos)
   {
     // If the '\n' is not at the end of the buffer, then save the overflow
     string overflow = "";
-	  
+          
     if (newLine != mBuffer.length() - 1)
     {
       overflow = mBuffer.substr(newLine + 1);
       mBuffer = mBuffer.substr(0, newLine);
     }
-	  
+          
     // Search the buffer for new complete lines
     stringbuf line;
     stringstream stream(mBuffer, stringstream::in);
-	  
+          
     while (stream.get(line))
     {
       string buf(line.str());
       // Check for heartbeats
       if (buf[0] == '*')
       {
-	if (buf.compare(0, 6, "* PONG") == 0)
-	{
-	  if (!mHeartbeats)
-	    startHeartbeats(buf);
-	  else
-	  {
-	    dlib::timestamper stamper;
-	    mLastHeartbeat = stamper.get_timestamp();
-	  }
-	}
-	else
-	{
-	  protocolCommand(buf);
-	}
+        if (buf.compare(0, 6, "* PONG") == 0)
+        {
+          if (!mHeartbeats)
+            startHeartbeats(buf);
+          else
+          {
+            dlib::timestamper stamper;
+            mLastHeartbeat = stamper.get_timestamp();
+          }
+        }
+        else
+        {
+          protocolCommand(buf);
+        }
       }
       else
       {
-	processData(buf);
+        processData(buf);
       }
     }
-	  
+          
     // Clear buffer/insert overflow data
     mBuffer = overflow;
   }

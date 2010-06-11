@@ -52,3 +52,4 @@ void AdapterTest::testAdapter()
 {
 }
 
+
