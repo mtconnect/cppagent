@@ -44,4 +44,4 @@ add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
 include_directories(${LibXML2_INCLUDE_DIRS})
 
 add_executable(agent ${agent_srcs})
-target_link_libraries(agent ${LibXML2_LIBRARIES})
+target_link_libraries(agent ${LibXML2_LIBRARIES} ${LINUX_LIBRARIES})
