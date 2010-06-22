@@ -266,8 +266,8 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY("from", "25")
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream", "");
+    PARSE_XML_RESPONSE_QUERY("from", "27")
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
   key = "power";

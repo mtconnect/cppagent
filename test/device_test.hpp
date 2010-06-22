@@ -53,6 +53,7 @@ class DeviceTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testRelationships);
   CPPUNIT_TEST(testDataItems);
   CPPUNIT_TEST(testDeviceDataItem);
+  CPPUNIT_TEST(testGetDataItem);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -65,6 +66,7 @@ protected:
   void testRelationships();
   void testDataItems();
   void testDeviceDataItem();
+  void testGetDataItem();
   
 public:
   void setUp();

@@ -177,17 +177,51 @@ void DeviceTest::testDeviceDataItem()
   CPPUNIT_ASSERT(a->getDeviceDataItem("DataItemTest2") == NULL);
 
   map<string, string> attributes;
-  attributes["name"] = "DataItemTest1";
+  attributes["id"] = "DataItemTest1";
   
   DataItem data1(attributes);
   a->addDeviceDataItem(data1);
   
-  attributes["name"] = "DataItemTest2";
+  attributes["id"] = "DataItemTest2";
   DataItem data2(attributes);
   a->addDeviceDataItem(data2);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, a->getDeviceDataItems().size());
   CPPUNIT_ASSERT_EQUAL(&data1, a->getDeviceDataItem("DataItemTest1"));
   CPPUNIT_ASSERT_EQUAL(&data2, a->getDeviceDataItem("DataItemTest2"));
+}
+
+void DeviceTest::testGetDataItem()
+{
+  map<string, string> attributes;
+  attributes["id"] = "by_id";
+  DataItem data1(attributes);
+  a->addDeviceDataItem(data1);
+  
+  map<string, string> attributes2;
+  attributes2["id"] = "by_id2";
+  attributes2["name"] = "by_name2";
+  DataItem data2(attributes2);
+  a->addDeviceDataItem(data2);
+  
+  map<string, string> attributes3;
+  attributes3["id"] = "by_id3";
+  attributes3["name"] = "by_name3";
+  DataItem data3(attributes3);
+  data3.addSource("by_source3");
+  a->addDeviceDataItem(data3);
+  
+  
+  CPPUNIT_ASSERT_EQUAL(&data1, a->getDeviceDataItem("by_id"));
+  CPPUNIT_ASSERT_EQUAL((DataItem*) 0, a->getDeviceDataItem("by_name"));
+  CPPUNIT_ASSERT_EQUAL((DataItem*) 0, a->getDeviceDataItem("by_source"));
+  
+  CPPUNIT_ASSERT_EQUAL(&data2, a->getDeviceDataItem("by_id2"));
+  CPPUNIT_ASSERT_EQUAL(&data2, a->getDeviceDataItem("by_name2"));
+  CPPUNIT_ASSERT_EQUAL((DataItem*) 0, a->getDeviceDataItem("by_source2"));
+
+  CPPUNIT_ASSERT_EQUAL(&data3, a->getDeviceDataItem("by_id3"));
+  CPPUNIT_ASSERT_EQUAL(&data3, a->getDeviceDataItem("by_name3"));
+  CPPUNIT_ASSERT_EQUAL(&data3, a->getDeviceDataItem("by_source3"));
 }
 

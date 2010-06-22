@@ -52,3 +52,25 @@ Device::Device(std::map<std::string, std::string> attributes)
 Device::~Device()
 {
 }
+
+void Device::addDeviceDataItem(DataItem& dataItem) {
+  if (!dataItem.getSource().empty())
+    mDeviceDataItemsBySource[dataItem.getSource()] = &dataItem;
+  if (!dataItem.getName().empty())
+    mDeviceDataItemsByName[dataItem.getName()] = &dataItem;
+  mDeviceDataItemsById[dataItem.getId()] = &dataItem;
+}
+
+DataItem * Device::getDeviceDataItem(const std::string& aName) {
+  DataItem * di;
+  if (mDeviceDataItemsBySource.count(aName) > 0 && (di = mDeviceDataItemsBySource[aName]))
+    return di;
+  else if (mDeviceDataItemsByName.count(aName)> 0 && (di = mDeviceDataItemsByName[aName]))
+    return di;
+  else if (mDeviceDataItemsById.count(aName) > 0)
+    di = mDeviceDataItemsById[aName];
+  else
+    di = NULL;
+  return di;
+}
+

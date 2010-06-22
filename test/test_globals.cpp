@@ -106,7 +106,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   
   xmlXPathObjectPtr obj = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
   
-  if (obj == NULL || obj->nodesetval->nodeNr == 0)
+  if (obj == NULL || obj->nodesetval == NULL || obj->nodesetval->nodeNr == 0)
   {
     CPPUNIT_NS::OStringStream message;
     message << "Xpath " << xpath << " did not match any nodes in XML document";

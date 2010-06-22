@@ -51,16 +51,12 @@ public:
   ~Device();
     
   /* Add/get items to/from the device name to data item mapping */
-  void addDeviceDataItem(DataItem& dataItem) {
-    mDeviceDataItems[dataItem.getSourceOrName()] = &dataItem;
-  }
-  DataItem * getDeviceDataItem(const std::string& aName) {
-    return mDeviceDataItems[aName];
-  }
+  void addDeviceDataItem(DataItem& dataItem);
+  DataItem * getDeviceDataItem(const std::string& aName);
   
   /* Return the mapping of Device to data items */
   const std::map<std::string, DataItem *> getDeviceDataItems() const {
-    return mDeviceDataItems;
+    return mDeviceDataItemsById;
   }
     
 protected:
@@ -68,7 +64,9 @@ protected:
   unsigned int mIso841Class;
   
   /* Mapping of device names to data items*/
-  std::map<std::string, DataItem *> mDeviceDataItems;
+  std::map<std::string, DataItem *> mDeviceDataItemsByName;
+  std::map<std::string, DataItem *> mDeviceDataItemsById;
+  std::map<std::string, DataItem *> mDeviceDataItemsBySource;
 };
 
 #endif
