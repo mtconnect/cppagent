@@ -31,7 +31,7 @@
 								<DataItem category="SAMPLE" id="x2" name="Xact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="x3" name="Xcom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="n3" name="Xload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
-								<DataItem category="CONDITION" id="Xload" type="LOAD"/>
+								<DataItem category="CONDITION" id="Xload" name="xloadc" type="LOAD"/>
 							</DataItems>
 						</Linear>
 						<Linear id="y1" name="Y">
@@ -39,7 +39,7 @@
 								<DataItem category="SAMPLE" id="y2" name="Yact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="y3" name="Ycom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="y4" name="Yload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
-								<DataItem category="CONDITION" id="Yload" type="LOAD"/>
+								<DataItem category="CONDITION" id="Yload" name="Yloadc" type="LOAD"/>
 							</DataItems>
 						</Linear>
 						<Linear id="z1" name="Z">
@@ -47,7 +47,7 @@
 								<DataItem category="SAMPLE" id="z2" name="Zact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="z3" name="Zcom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="z4" name="Zload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
-								<DataItem category="CONDITION" id="Zload" type="LOAD"/>
+								<DataItem category="CONDITION" id="Zload" name="Zloadc" type="LOAD"/>
 							</DataItems>
 						</Linear>
 					</Components>
