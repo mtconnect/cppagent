@@ -5,7 +5,7 @@
 		<Device id="dev" iso841Class="6" name="VMC-3Axis" sampleRate="10" uuid="000">
 			<Description manufacturer="SystemInsights"/>
 			<DataItems>
-				<DataItem category="EVENT" id="msg" type="MESSAGE"/>
+				<DataItem category="EVENT" id="avail" type="AVAILABILITY"/>
 			</DataItems>
 			<Components>
 				<Axes id="ax" name="Axes">
@@ -54,6 +54,7 @@
 				</Axes>
 				<Controller id="cn1" name="controller">
 					<DataItems>
+    				<DataItem category="EVENT" id="msg" type="MESSAGE"/>
 						<DataItem category="EVENT" id="estop" type="EMERGENCY_STOP"/>
 						<DataItem category="CONDITION" id="clp" type="LOGIC_PROGRAM"/>
 					</DataItems>
@@ -76,24 +77,24 @@
 						</Path>
 					</Components>
 				</Controller>
-				<Power id="p1" name="power">
-					<DataItems>
-						<DataItem category="EVENT" id="p2" name="power" type="POWER_STATE"/>
-						<DataItem category="SAMPLE" id="freq" name="frequency" nativeUnits="HERTZ" type="FREQUENCY" units="HERTZ"/>
-						<DataItem category="SAMPLE" id="power_sum" nativeUnits="WATT" type="WATTS" units="WATT"/>
-						<DataItem category="SAMPLE" id="power_a" nativeUnits="WATT" type="WATTS" units="WATT"/>
-						<DataItem category="SAMPLE" id="power_b" nativeUnits="WATT" type="WATTS" units="WATT"/>
-						<DataItem category="SAMPLE" id="power_c" nativeUnits="WATT" type="WATTS" units="WATT"/>
-						<DataItem category="SAMPLE" id="volt_a" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
-						<DataItem category="SAMPLE" id="volt_b" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
-						<DataItem category="SAMPLE" id="volt_c" name="volt_c" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
-						<DataItem category="SAMPLE" id="amp_a" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
-						<DataItem category="SAMPLE" id="amp_b" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
-						<DataItem category="SAMPLE" id="amp_c" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
-					</DataItems>
-				</Power>
 				<Systems id="systems" name="systems">
 					<Components>
+					  <Electric id="el" name="electric">
+    					<DataItems>
+    						<DataItem category="EVENT" id="p2" name="power" type="POWER_STATE"/>
+    						<DataItem category="SAMPLE" id="freq" name="frequency" nativeUnits="HERTZ" type="FREQUENCY" units="HERTZ"/>
+    						<DataItem category="SAMPLE" id="power_sum" nativeUnits="WATT" type="WATTS" units="WATT"/>
+    						<DataItem category="SAMPLE" id="power_a" nativeUnits="WATT" type="WATTS" units="WATT"/>
+    						<DataItem category="SAMPLE" id="power_b" nativeUnits="WATT" type="WATTS" units="WATT"/>
+    						<DataItem category="SAMPLE" id="power_c" nativeUnits="WATT" type="WATTS" units="WATT"/>
+    						<DataItem category="SAMPLE" id="volt_a" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
+    						<DataItem category="SAMPLE" id="volt_b" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
+    						<DataItem category="SAMPLE" id="volt_c" name="volt_c" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
+    						<DataItem category="SAMPLE" id="amp_a" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
+    						<DataItem category="SAMPLE" id="amp_b" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
+    						<DataItem category="SAMPLE" id="amp_c" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
+    					</DataItems>
+				    </Electric>
 						<Coolant id="cool" name="coolant">
 							<DataItems>
 								<DataItem category="CONDITION" id="clow" type="LEVEL"/>
