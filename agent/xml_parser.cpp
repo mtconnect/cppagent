@@ -148,22 +148,25 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
     }
     
     xmlNodeSetPtr nodeset = objs->nodesetval;
-    for (int i = 0; i != nodeset->nodeNr; ++i)
+    if (nodeset != NULL) 
     {
-      xmlNodePtr n = nodeset->nodeTab[i];
+      for (int i = 0; i != nodeset->nodeNr; ++i)
+      {
+        xmlNodePtr n = nodeset->nodeTab[i];
       
-      if (xmlStrcmp(n->name, BAD_CAST "DataItem") == 0)
-      {
-        xmlChar *id = xmlGetProp(n, BAD_CAST "id");
-        if (id != NULL)
+        if (xmlStrcmp(n->name, BAD_CAST "DataItem") == 0)
         {
-          aFilterSet.insert((const char *) id);
-          xmlFree(id);
+          xmlChar *id = xmlGetProp(n, BAD_CAST "id");
+          if (id != NULL)
+          {
+            aFilterSet.insert((const char *) id);
+            xmlFree(id);
+          }
         }
-      }
-      else // Find all the data items below this node
-      {
-        getDataItems(aFilterSet, "*//DataItem", n);
+        else // Find all the data items below this node
+        {
+          getDataItems(aFilterSet, "*//DataItem", n);
+        }
       }
     }
     

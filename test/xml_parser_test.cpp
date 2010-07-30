@@ -128,4 +128,7 @@ void XmlParserTest::testGetDataItems()
   a->getDataItems(filter, "//Linear//DataItem[@category='CONDITION']");
   CPPUNIT_ASSERT_EQUAL(3, (int) filter.size());
 
+  filter.clear();
+  a->getDataItems(filter, "//Controller/electric/*");
+  CPPUNIT_ASSERT_EQUAL(0, (int) filter.size());
 }
