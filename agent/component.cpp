@@ -32,6 +32,7 @@
 */
 
 #include "component.hpp"
+#include <stdlib.h>
 
 using namespace std;
 

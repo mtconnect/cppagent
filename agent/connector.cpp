@@ -149,7 +149,7 @@ void Connector::parseBuffer(const char *aBuffer)
   // Append the temporary buffer to the socket buffer
   mBuffer.append(aBuffer);
         
-  size_t newLine = mBuffer.find_first_of('\n');
+  size_t newLine = mBuffer.find_last_of('\n');
         
   // Check to see if there is even a '\n' in buffer
   if (newLine != string::npos)
@@ -164,19 +164,21 @@ void Connector::parseBuffer(const char *aBuffer)
     }
           
     // Search the buffer for new complete lines
-    stringbuf line;
+    string line;
     stringstream stream(mBuffer, stringstream::in);
           
-    while (stream.get(line))
+    while (!stream.eof())
     {
-      string buf(line.str());
+      getline(stream, line);
+      if (line.empty()) continue;
+
       // Check for heartbeats
-      if (buf[0] == '*')
+      if (line[0] == '*')
       {
-        if (buf.compare(0, 6, "* PONG") == 0)
+        if (line.compare(0, 6, "* PONG") == 0)
         {
           if (!mHeartbeats)
-            startHeartbeats(buf);
+            startHeartbeats(line);
           else
           {
             dlib::timestamper stamper;
@@ -185,12 +187,12 @@ void Connector::parseBuffer(const char *aBuffer)
         }
         else
         {
-          protocolCommand(buf);
+          protocolCommand(line);
         }
       }
       else
       {
-        processData(buf);
+        processData(line);
       }
     }
           

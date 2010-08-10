@@ -36,6 +36,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 #include <dlib/sockets.h>
 
 #include <cppunit/TestFixture.h>
@@ -52,6 +53,7 @@ public:
   
   virtual void processData(const std::string& data) {
     mData = data;
+    mList.push_back(mData);
   }
 
   virtual void protocolCommand(const std::string& data) {
@@ -64,6 +66,7 @@ public:
   void pushData(const char *data) { parseBuffer(data); }
 
 public:
+  std::vector<std::string> mList;
   std::string mData;
   std::string mCommand;
   bool mDisconnected;
@@ -80,6 +83,7 @@ class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
   CPPUNIT_TEST(testHeartbeatPong);
   CPPUNIT_TEST(testHeartbeatTimeout);
   CPPUNIT_TEST(testParseBuffer);
+  CPPUNIT_TEST(testParseBufferFraming);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -102,6 +106,7 @@ protected:
   void testHeartbeatPong();
   void testHeartbeatTimeout();
   void testParseBuffer();
+  void testParseBufferFraming();
 };
 
 #endif

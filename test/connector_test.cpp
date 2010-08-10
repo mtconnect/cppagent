@@ -195,3 +195,15 @@ void ConnectorTest::testParseBuffer()
   mConnector->pushData("Again\nXXX");
   CPPUNIT_ASSERT_EQUAL((string) "And Again", mConnector->mData);
 }
+  
+void ConnectorTest::testParseBufferFraming()
+{
+  mConnector->mList.clear();
+  mConnector->pushData("first\nseco");
+  mConnector->pushData("nd\nthird\nfourth\nfifth");
+  CPPUNIT_ASSERT_EQUAL((size_t) 4, mConnector->mList.size());
+  CPPUNIT_ASSERT_EQUAL((string) "first", mConnector->mList[0]);
+  CPPUNIT_ASSERT_EQUAL((string) "second", mConnector->mList[1]);
+  CPPUNIT_ASSERT_EQUAL((string) "third", mConnector->mList[2]);
+  CPPUNIT_ASSERT_EQUAL((string) "fourth", mConnector->mList[3]);
+}
