@@ -1,6 +1,7 @@
 require 'time'
 require 'socket'
 require 'optparse'
+require 'thread'
 
 loop_file = false
 port = 7878
@@ -43,6 +44,24 @@ puts "Waiting on 0.0.0.0 #{port}"
 server = TCPServer.new(port)
 socket = server.accept
 puts "Client connected"
+
+mutex = Mutex.new
+
+Thread.new do
+  while (select([socket], nil, nil))
+    begin
+      if (r = socket.read_nonblock(256)) =~ /\* PING/
+        puts "Recived #{r.strip}, responding with pong"
+        mutex.synchronize {
+          socket.puts "* PONG 10000"
+        }
+      end
+    rescue
+    end
+  end
+end
+
+
 def format_time
   time = Time.now.utc
   time.strftime("%Y-%m-%dT%H:%M:%S.") + ("%06d" % time.usec)
@@ -56,7 +75,9 @@ if scenario
         r = 1 unless r
         
         line = "#{format_time}|#{f}"
-        socket.puts line
+        mutex.synchronize {
+          socket.puts line
+        }
         puts line if verbose
         sleep(r.to_i)
       end
@@ -78,19 +99,10 @@ else
         end
         
         line = "#{format_time}|#{r}"
-        socket.puts line
-        puts  line if verbose
-        
-        if select([socket], nil, nil, 0.00001)
-          begin
-            if (r = socket.read_nonblock(256)) =~ /\* PING/
-              puts "Recived #{r.strip}, responding with pong"
-              socket.puts "* PONG 10000"
-              socket.flush
-            end
-          rescue
-          end
-        end
+        mutex.synchronize {
+          socket.puts line
+        }
+        puts  line if verbose        
         last = time
       end
     end
