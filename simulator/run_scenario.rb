@@ -81,6 +81,16 @@ else
         socket.puts line
         puts  line if verbose
         
+        if select([socket], nil, nil, 0.00001)
+          begin
+            if (r = socket.read_nonblock(256)) =~ /\* PING/
+              puts "Recived #{r.strip}, responding with pong"
+              socket.puts "* PONG 10000"
+              socket.flush
+            end
+          rescue
+          end
+        end
         last = time
       end
     end

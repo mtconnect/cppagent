@@ -57,6 +57,7 @@ void Connector::connect()
     // Connect to server:port, failure will throw dlib::socket_error exception
     // Using a smart pointer to ensure connection is deleted if exception thrown
     mConnection.reset(dlib::connect(mServer, mPort));
+    
 
     // Check to see if this connection supports heartbeats.
     int status = mConnection->write(ping, strlen(ping));
@@ -148,7 +149,7 @@ void Connector::parseBuffer(const char *aBuffer)
   // Append the temporary buffer to the socket buffer
   mBuffer.append(aBuffer);
         
-  size_t newLine = mBuffer.find_last_of('\n');
+  size_t newLine = mBuffer.find_first_of('\n');
         
   // Check to see if there is even a '\n' in buffer
   if (newLine != string::npos)

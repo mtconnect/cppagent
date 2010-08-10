@@ -101,7 +101,7 @@ protected:
   
 private:
   /* Size of buffer to read at a time from the socket */  
-  static const unsigned int SOCKET_BUFFER_SIZE = 80;
+  static const unsigned int SOCKET_BUFFER_SIZE = 2048;
   
   /* Size of buffer to search in the buffer stream */  
   static const unsigned int LINE_BUFFER_SIZE = 8192;
