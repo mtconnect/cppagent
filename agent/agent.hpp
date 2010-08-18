@@ -49,6 +49,7 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "checkpoint.hpp"
+#include "service.hpp"
 
 class Adapter;
 class ComponentEvent;
@@ -133,7 +134,7 @@ public:
 
   // For testing...
   void setSequence(Int64 aSeq) { mSequence = aSeq; }
-  
+    
 protected:
   /* HTTP methods to handle the 3 basic calls */
   std::string handleCall(

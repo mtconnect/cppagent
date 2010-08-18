@@ -158,12 +158,12 @@ void replaceIllegalCharacters(string& data)
   }
 }
 
-const char *gLogFile;
+string gLogFile;
 
 void logEvent(const string& source, const string& message)
 {
   ofstream logFile;
-  logFile.open(gLogFile, ios::app);
+  logFile.open(gLogFile.c_str(), ios::app);
   if (logFile.is_open())
   {
     logFile << "[" << getCurrentTime(LOCAL) << "] ";

@@ -88,10 +88,10 @@ public:
   const std::string &getDescriptionBody() const { return mDescriptionBody; }
   
   // Setter methods
-  void setUuid(std::string &aUuid) { mUuid = aUuid; reBuildAttributes(); }
-  void setManufacturer(std::string &aManufacturer) { mManufacturer = aManufacturer; reBuildAttributes(); }
-  void setSerialNumber(std::string &aSerialNumber) { mSerialNumber = aSerialNumber; reBuildAttributes(); }
-  void setStation(std::string &aStation) { mStation = aStation; reBuildAttributes(); }
+  void setUuid(const std::string &aUuid) { mUuid = aUuid; reBuildAttributes(); }
+  void setManufacturer(const std::string &aManufacturer) { mManufacturer = aManufacturer; reBuildAttributes(); }
+  void setSerialNumber(const std::string &aSerialNumber) { mSerialNumber = aSerialNumber; reBuildAttributes(); }
+  void setStation(const std::string &aStation) { mStation = aStation; reBuildAttributes(); }
   
   /* Add/get description specifications using an attribute map */
   void addDescription(std::string body, std::map<std::string, std::string> attributes);

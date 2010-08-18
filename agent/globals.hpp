@@ -39,6 +39,7 @@
 #include <map>
 #include <sstream>
 #include <fstream>
+#include <string>
 
 #ifdef WIN32
 typedef  __int64 Int64;
@@ -61,7 +62,7 @@ const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 const int ENUM_MISS = -1;
 
 /* Log file for logging events */
-extern const char *gLogFile;
+extern std::string gLogFile;
 
 /* Time format */
 enum TimeFormat

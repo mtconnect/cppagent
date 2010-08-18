@@ -34,48 +34,12 @@
 #include "agent.hpp"
 #include "fcntl.h"
 #include "sys/stat.h"
-#include "options.hpp"
 #include "string.h"
+#include "config.hpp"
+#include "dlib/config_reader.h"
 
 using namespace std;
 using namespace dlib;
-
-void terminateServerThread(Agent *server)
-{
-  std::cout << "Press enter at anytime to terminate web server" << std::endl;
-  std::cin.get();
- 
-  // Shut down server by unblocking Agent::start()
-  server->clear();
-}
-
-void addToBufferThread(Agent *server)
-{
-  while (true)
-  {
-    std::string device, dataItem, value;
-
-    std::cout << std::endl << "Device: ";
-    std::cin >> device;
-
-    std::cout << std::endl << "Data item: ";
-    std::cin >> dataItem;
-    
-    std::cout << "Value: ";
-    std::cin >> value;
-
-    DataItem *di = server->getDataItemByName(device, dataItem);
-    if (di != NULL)
-    {
-      unsigned int seqNum = server->addToBuffer(di, value);
-      std::cout << "Sequence Number: " << seqNum << std::endl;
-    }
-    else
-    {
-      std::cout << "Could not find data item: " << dataItem << endl;
-    }
-  }
-}
 
 #ifndef WIN32
 void signal_handler(int sig)
@@ -93,7 +57,7 @@ void signal_handler(int sig)
 }
 #endif
 
-void daemonize()
+void daemonize(int aArgc, char *aArgv[])
 {
 #ifndef WIN32
   int i,lfp;
@@ -146,133 +110,10 @@ void daemonize()
 }
 
 
-int main(int aArgc, char *aArgv[])
+int main(int aArgc, const char *aArgv[])
 {
-  int listenPort = 5000;
-  const char *devices_file = "probe.xml";
-  list<string> adapters;
-  bool interactive = false;
-  bool daemonize_proc = false;
-  const char *config_file = 0;
-  int bufferSize = DEFAULT_SLIDING_BUFFER_EXP;
-  gLogFile = "agent.log";
-  
-  //void initializeGlobals();
-  
-  OptionsList option_list;
-  option_list.append(new Option("p", listenPort, "HTTP Server Port\nDefault: 5000", "port"));
-  option_list.append(new Option("f", devices_file, "Devices configuration file\nDefault: probe.xml", "file"));
-  option_list.append(new Option("l", gLogFile, "Log file\nDefault: agent.log", "file"));
-  option_list.append(new Option("i", interactive, "Interactive shell", false));
-  option_list.append(new Option("d", daemonize_proc, "Daemonize\nDefault: false", false));
-  option_list.append(new Option("c", config_file, "Options configuration file", "file"));
-  option_list.append(new Option("a", adapters, "Location of adapter\n'device:address:port'", "adapters"));
-  option_list.append(new Option("b", bufferSize, "Sliding buffer size 2^b\nDefault: 17 -> 131072'", "buffer"));
-  option_list.parse(aArgc, (const char**) aArgv);
-  
-  if (daemonize_proc)
-  {
-    daemonize();
-  }
-  
-  try
-  {
-    Agent * agent = new Agent(devices_file, bufferSize);
-    if (config_file)
-    {
-      ifstream con_file(config_file);
-      if (con_file)
-      {
-        while (con_file.good())
-        {
-          char line[256];
-          con_file.getline(line, 255);
-          line[255] = '\0';
-          if (strchr(line, ':')) 
-            adapters.push_back(line);
-        }
-      }
-      else
-      {
-        cerr << "Cannot open file for adapters: " << config_file << endl;
-        option_list.usage();
-      }
-    }
-
-    if (adapters.empty())
-    {
-      cerr << "Either -a or -c must be specified" << endl;
-      option_list.usage();
-    }
-    
-    for (list<string>::iterator iter = adapters.begin(); iter != adapters.end(); iter++)
-    {
-      // Should have the format device:address:port
-      string &adapter = *iter;
-      string device, address, adapter_port;
-      size_t pos1 = adapter.find_first_of(':');
-      if (pos1 == string::npos) {
-        cerr << "Bad format for adapter specification, must be: device:address:port" << endl;
-        option_list.usage();
-      }
-      
-      device = adapter.substr(0, pos1);
-      // Make sure the device exists
-      if (agent->getDeviceByName(device) == 0)
-      {
-        cerr << "Can't locate device " << device << " in XML configuration file." << endl;
-        option_list.usage();
-      }
-      
-      size_t pos2 = adapter.find_first_of(':', pos1 + 1);
-      if (pos2 == string::npos) {
-        cerr << "Bad format for adapter specification, must be: device:address:port" << endl;
-        option_list.usage();
-      }
-      address = adapter.substr(pos1 + 1, pos2 - pos1 - 1);
-
-      if (adapter.length() <= pos2) {
-        cerr << "Bad format for adapter specification, must be: device:address:port" << endl;
-        option_list.usage();
-      }
-      adapter_port = adapter.substr(pos2 + 1);
-      
-      cout << "Device " << device << endl;
-      cout << "Address " << address << endl;
-      cout << "Port " << adapter_port << endl;
-
-      agent->addAdapter(device, address, atoi(adapter_port.c_str()));
-    }
-        
-    // ***** DEBUGGING TOOLS *****
-    
-    // Create a thread that will listen for the user to end this program
-    //thread_function t(terminateServerThread, &agent);
-    cout << "Listening on port " << listenPort << endl;
-    
-    thread_function *interactiveThread = 0;
-    
-    if (interactive)
-    {
-      // Use the addToBuffer API to allow user input for data
-      interactiveThread = new thread_function(addToBufferThread, agent);
-    }
-    
-    agent->set_listening_port(listenPort);
-    agent->start();
-
-    if (interactive)
-      delete interactiveThread;
-    
-    delete agent;
-  }
-  catch (std::exception & e)
-  {
-    logEvent("Cppagent::Main", e.what());
-    std::cerr << "Agent failed to load: " << e.what() << std::endl;
-    return -1;
-  }
-  
-  return 0;
+  Sleep(10000);
+  AgentConfiguration config;
+  return config.main(aArgc, aArgv);
 }
 

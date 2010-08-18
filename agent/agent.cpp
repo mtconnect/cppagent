@@ -115,6 +115,7 @@ Agent::~Agent()
   delete[] mCheckpoints;
 }
 
+// Methods for service
 const string Agent::on_request (
     const incoming_things& incoming,
     outgoing_things& outgoing

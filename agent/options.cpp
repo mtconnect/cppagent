@@ -261,16 +261,15 @@ int OptionsList::parse(int &aArgc, const char **aArgv)
 {
   sort();
   
+  // This assumes that the first option (app name) has already been removed.
+  
   int order = 0, count = 0;
 
   program_ = *aArgv;
 	
   Option *opt;
-  const char **argp = aArgv + 1;
+  const char **argp = aArgv;
   const char *cp;
-
-  // Get rid of application name
-  aArgc--;
 	
   while (aArgc > 0)
   {
