@@ -516,7 +516,7 @@ int MTConnectService::main(int argc, const char *argv[])
   return 0;
 } 
 
-void MTConnectService::install(int argc, const char *argv[])
+void MTConnectService::install()
 {
 }
 

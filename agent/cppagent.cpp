@@ -112,7 +112,6 @@ void daemonize(int aArgc, char *aArgv[])
 
 int main(int aArgc, const char *aArgv[])
 {
-  Sleep(10000);
   AgentConfiguration config;
   return config.main(aArgc, aArgv);
 }

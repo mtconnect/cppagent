@@ -7,6 +7,7 @@
 #include <fstream>
 #include <vector>
 #include <dlib/config_reader.h>
+#include <stdexcept>
 
 using namespace std;
 using namespace dlib;
