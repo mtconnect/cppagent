@@ -122,6 +122,7 @@ const string Agent::on_request (
   )
 {
   string result;
+  outgoing.headers["Content-Type"] = "text/xml";
   try 
   {
     if (incoming.request_type != "GET")
