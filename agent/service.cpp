@@ -163,9 +163,6 @@ void MTConnectService::install()
       CloseServiceHandle(manager);
       return;
     }
-    else {
-      printf("Service installed successfully\n"); 
-    }
   }
 
   CloseServiceHandle(service); 
@@ -183,7 +180,6 @@ void MTConnectService::install()
   res = RegOpenKey(software, "MTConnect", &mtc);
   if (res != ERROR_SUCCESS)
   {
-    printf("Could not open MTConnect, creating: %d\n", res);
     res = RegCreateKey(software, "MTConnect", &mtc);
     RegCloseKey(software);
     if (res != ERROR_SUCCESS)
@@ -199,7 +195,6 @@ void MTConnectService::install()
   res = RegOpenKey(mtc, mName.c_str(), &agent);
   if (res != ERROR_SUCCESS)
   {
-    printf("Could not open %s, creating: %d\n", mName, res);
     res = RegCreateKey(mtc, mName.c_str(), &agent);
     if (res != ERROR_SUCCESS)
     {
@@ -222,6 +217,8 @@ void MTConnectService::install()
   RegSetValueEx(agent, "ConfigurationFile", 0, REG_SZ, (const BYTE*) mConfigFile.c_str(), 
 		mConfigFile.size() + 1);
   RegCloseKey(agent);
+
+  printf("Service installed successfully\n"); 
 }
 
 //
