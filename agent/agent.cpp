@@ -234,35 +234,34 @@ unsigned int Agent::addToBuffer(
 }
 
 /* Add values for related data items UNAVAILABLE */
-void Agent::disconnected(Adapter *anAdapter, const std::string aDevice)
+void Agent::disconnected(Adapter *anAdapter, Device *aDevice)
 {
   string time = getCurrentTime(GMT_UV_SEC);
-  
-  Device *dev = mDeviceMap[aDevice];
-  if (dev != NULL)
+
+  if (aDevice != NULL)
   {
-    std::map<std::string, DataItem *> dataItems = dev->getDeviceDataItems();
+    std::map<std::string, DataItem *> dataItems = aDevice->getDeviceDataItems();
     std::map<std::string, DataItem*>::iterator dataItemAssoc;
     for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
     {
       DataItem *dataItem = (*dataItemAssoc).second;
       if (dataItem != NULL && dataItem->getDataSource() == anAdapter)
       {
-	const string *value = NULL;
-	if (dataItem->isCondition()) {
-	  value = &sConditionUnavailable;
-	} else if (dataItem->hasConstraints()) { 
-	  std::vector<std::string> &values = dataItem->getConstrainedValues();
-	  if (values.size() > 1)
-	    value = &sUnavailable;
-	} else {
+        const string *value = NULL;
+        if (dataItem->isCondition()) {
+          value = &sConditionUnavailable;
+        } else if (dataItem->hasConstraints()) { 
+          std::vector<std::string> &values = dataItem->getConstrainedValues();
+          if (values.size() > 1)
+            value = &sUnavailable;
+        } else {
           value = &sUnavailable;
         }
-      
+
         if (value != NULL)
           addToBuffer(dataItem, *value, time);
       } else if (dataItem == NULL) {
-	logEvent("Agent::disconnected", (string) "No data Item for " + (*dataItemAssoc).first);
+        logEvent("Agent::disconnected", (string) "No data Item for " + (*dataItemAssoc).first);
       }
     }
   }

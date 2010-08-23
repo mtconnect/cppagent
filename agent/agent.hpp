@@ -105,7 +105,8 @@ public:
   );
   
   /* Get device from device map */
-  Device * getDeviceByName(const std::string& name) { return mDeviceMap[name]; } 
+  Device * getDeviceByName(const std::string& name) { return mDeviceMap[name]; }
+  const std::vector<Device *> &getDevices() { return mDevices; }
   
   /* Add component events to the sliding buffer */
   unsigned int addToBuffer(
@@ -115,7 +116,7 @@ public:
   );
   
   /* Message when adapter has disconnected */
-  void disconnected(Adapter *anAdapter, const std::string aDevice);
+  void disconnected(Adapter *anAdapter, Device *aDevice);
   
   DataItem * getDataItemByName(
     const std::string& device,

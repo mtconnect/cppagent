@@ -5,6 +5,7 @@
 #include <string>
 
 class Agent;
+class Device;
 
 class AgentConfiguration : public MTConnectService {
 public:
@@ -18,6 +19,7 @@ public:
   
 protected:
   void loadConfig();
+  Device *defaultDevice();
   
 protected:
   Agent *mAgent;

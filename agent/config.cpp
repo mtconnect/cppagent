@@ -12,6 +12,30 @@
 using namespace std;
 using namespace dlib;
 
+static inline const char *get_with_default(const config_reader::kernel_1a &reader, 
+      const char *aKey, const char *aDefault) {
+  if (reader.is_key_defined(aKey))
+    return reader[aKey].c_str();
+  else
+    return aDefault;
+}
+
+static inline int get_with_default(const config_reader::kernel_1a &reader, 
+      const char *aKey, int aDefault) {
+  if (reader.is_key_defined(aKey))
+    return atoi(reader[aKey].c_str());
+  else
+    return aDefault;
+}
+
+static inline const string &get_with_default(const config_reader::kernel_1a &reader, 
+      const char *aKey, const string &aDefault) {
+  if (reader.is_key_defined(aKey))
+    return reader[aKey];
+  else
+    return aDefault;
+}
+
 AgentConfiguration::AgentConfiguration()
 {
 }
@@ -55,37 +79,30 @@ void AgentConfiguration::stop()
   mAgent->clear();
 }
 
+Device *AgentConfiguration::defaultDevice()
+{
+  const vector<Device*> &devices = mAgent->getDevices();
+  if (devices.size() == 1)
+    return devices[0];
+  else
+    return NULL;
+}
+
 void AgentConfiguration::loadConfig()
 {
   ifstream file(mConfigFile.c_str());
   config_reader::kernel_1a reader(file);
   
-  int port = 5000;
-  if (reader.is_key_defined("Port"))
-    port = atoi(reader["Port"].c_str());
-  
-  int bufferSize = DEFAULT_SLIDING_BUFFER_EXP;
-  if (reader.is_key_defined("BufferSize"))
-    bufferSize = atoi(reader["BufferSize"].c_str());
-  
-  int checkpointFrequency = 1000;
-  if (reader.is_key_defined("CheckpointFrequency"))
-    checkpointFrequency = atoi(reader["CheckpointFrequency"].c_str());
-
-  const char *probe = "probe.xml";
-  if (reader.is_key_defined("Devices"))
-    probe = reader["Devices"].c_str();
-  
-  if (reader.is_key_defined("ServiceName"))
-    mName = reader["ServiceName"];
-    
-  gLogFile = "agent.log";
-  if (reader.is_key_defined("LogFile"))
-    gLogFile = reader["LogFile"];
+  int port = get_with_default(reader, "Port", 5000);
+  int bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
+  int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
+  const char *probe = get_with_default(reader, "Devices", "probe.xml");
+  mName = get_with_default(reader, "ServiceName", "MTConnect Agent"); 
+  gLogFile = get_with_default(reader, "agent.log", "agent.log");
   
   mAgent = new Agent(probe, bufferSize, checkpointFrequency);
   mAgent->set_listening_port(port);
-  
+  Device *device;
   if (reader.is_block_defined("Adapters")) {
     const config_reader::kernel_1a &adapters = reader.block("Adapters");
     vector<string> blocks;
@@ -94,41 +111,38 @@ void AgentConfiguration::loadConfig()
     vector<string>::iterator block;
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
-      if (mAgent->getDeviceByName(*block) == 0)
-      {
+      device;
+      if (*block == "*")
+        device = defaultDevice();
+      else
+        device = mAgent->getDeviceByName(*block);
+      if (device == NULL) {
         throw new runtime_error("Can't locate device " + *block + " in XML configuration file.");
       }
       
       const config_reader::kernel_1a &adapter = adapters.block(*block);
-      if (!adapter.is_key_defined("Host"))
-      {
-        throw new runtime_error("Host must be defined for " + *block);
-      }
+      const string &host = get_with_default(adapter, "Host", (string)"localhost");
+      int port = get_with_default(adapter, "Port", 7878);
       
-      const string &host = adapter["Host"];
-      int port = 7878;
-      if (adapter.is_key_defined("Port"))
-        port = atoi(adapter["Port"].c_str());
-      
-      mAgent->addAdapter(*block, host, port);
+      mAgent->addAdapter(device->getName(), host, port);
 
       // Add additional device information
-      Device *device = mAgent->getDeviceByName(*block);
-      if (device != NULL)
-      {
-        if (adapter.is_key_defined("UUID"))
-          device->setUuid(adapter["UUID"]);
-        if (adapter.is_key_defined("Manufacturer"))
-          device->setManufacturer(adapter["Manufacturer"]);
-        if (adapter.is_key_defined("Station"))
-          device->setStation(adapter["Station"]);
-        if (adapter.is_key_defined("SerialNumber"))
-          device->setSerialNumber(adapter["SerialNumber"]);
-      }
+      if (adapter.is_key_defined("UUID"))
+        device->setUuid(adapter["UUID"]);
+      if (adapter.is_key_defined("Manufacturer"))
+        device->setManufacturer(adapter["Manufacturer"]);
+      if (adapter.is_key_defined("Station"))
+        device->setStation(adapter["Station"]);
+      if (adapter.is_key_defined("SerialNumber"))
+        device->setSerialNumber(adapter["SerialNumber"]);
     }
+  }
+  else if ((device = defaultDevice()) != NULL)
+  {
+    mAgent->addAdapter(device->getName(), "localhost", 7878);
   }
   else
   {
-    throw new runtime_error("Adapters must be defined");
+    throw new runtime_error("Adapters must be defined if more than one device is present");
   }
 }

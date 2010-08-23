@@ -42,8 +42,9 @@ Adapter::Adapter(
     const string& server,
     const unsigned int port
   )
-: Connector(server, port), mDevice(device)
+: Connector(server, port), mDeviceName(device)
 {
+  
 }
 
 Adapter::~Adapter()
@@ -51,6 +52,12 @@ Adapter::~Adapter()
   // Will stop threaded object gracefully Adapter::thread()
   stop();
   wait();
+}
+
+void Adapter::setAgent(Agent &aAgent)
+{
+   mAgent = &aAgent;
+   mDevice = mAgent->getDeviceByName(mDeviceName);
 }
 
 /**
@@ -74,7 +81,7 @@ void Adapter::processData(const string& data)
   string value;
   getline(toParse, value, '|');
 
-  DataItem *dataItem = mAgent->getDataItemByName(mDevice, key);
+  DataItem *dataItem = mDevice->getDeviceDataItem(key);
   if (dataItem == NULL)
   {
     logEvent("Agent", "Could not find data item: " + key);
@@ -96,7 +103,7 @@ void Adapter::processData(const string& data)
   // Look for more key->value pairings in the rest of the data
   while (getline(toParse, key, '|') && getline(toParse, value, '|'))
   {
-    dataItem = mAgent->getDataItemByName(mDevice, key);
+    dataItem = mDevice->getDeviceDataItem(key);
     if (dataItem == NULL)
     {
       logEvent("Agent", "Could not find data item: " + key);
@@ -126,26 +133,22 @@ void Adapter::protocolCommand(const std::string& data)
   size_t index = data.find(':', 2);
   if (index != string::npos)
   {
-    Device *device = mAgent->getDeviceByName(mDevice);
-    if (device != NULL)
-    {
-      // Slice from the second character to the :, without the colon
-      string key = data.substr(2, index - 2);
-      trim(key);        
-      string value = data.substr(index + 1);
-      trim(value);
-      
-      if (key == "uuid")
-        device->setUuid(value);
-      else if (key == "manufacturer")
-        device->setManufacturer(value);
-      else if (key == "station")
-        device->setStation(value);
-      else if (key == "serialNumber")
-        device->setSerialNumber(value);
-      else
-        logEvent("Agent", "Unknown command '" + data + "' for device '" + mDevice);
-    }
+    // Slice from the second character to the :, without the colon
+    string key = data.substr(2, index - 2);
+    trim(key);        
+    string value = data.substr(index + 1);
+    trim(value);
+    
+    if (key == "uuid")
+      mDevice->setUuid(value);
+    else if (key == "manufacturer")
+      mDevice->setManufacturer(value);
+    else if (key == "station")
+      mDevice->setStation(value);
+    else if (key == "serialNumber")
+      mDevice->setSerialNumber(value);
+    else
+      logEvent("Agent", "Unknown command '" + data + "' for device '" + mDeviceName);
   }
   
 }

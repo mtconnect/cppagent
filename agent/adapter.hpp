@@ -44,6 +44,7 @@
 #include "globals.hpp"
 
 class Agent;
+class Device;
 
 using namespace dlib;
 
@@ -61,7 +62,7 @@ public:
   virtual ~Adapter();
   
   /* Set pointer to the agent */
-  void setAgent(Agent& agent) { mAgent = &agent; }
+  void setAgent(Agent& agent);
   
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
@@ -73,9 +74,10 @@ public:
 protected:
   /* Pointer to the agent */
   Agent *mAgent;
+  Device *mDevice;
   
   /* Name of device associated with adapter */
-  std::string mDevice;
+  std::string mDeviceName;
     
 private:
   /* Inherited and is run as part of the threaded_object */
