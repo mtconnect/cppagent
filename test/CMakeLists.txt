@@ -38,6 +38,9 @@ set(test_srcs test.cpp
 	       ../agent/options.cpp
 	       ../agent/xml_parser.cpp 
 	       ../agent/xml_printer.cpp
+	       ../agent/config.cpp
+	       ../agent/service.cpp
+	       ../agent/logger.cpp
 	       adapter_test.cpp
 	       agent_test.cpp
 	       checkpoint_test.cpp

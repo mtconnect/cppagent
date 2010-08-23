@@ -142,7 +142,7 @@ void GlobalsTest::testLogEvent()
   logEvent(source, message);
   
   ifstream logFile;
-  logFile.open(gLogFile);
+  logFile.open(gLogFile.c_str());
   
   stringstream stream;
   stream << logFile.rdbuf();
