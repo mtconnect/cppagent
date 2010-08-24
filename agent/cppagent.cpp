@@ -41,6 +41,10 @@
 using namespace std;
 using namespace dlib;
 
+#include <dlib/logger.h>
+
+static logger sLogger("main");
+
 int main(int aArgc, const char *aArgv[])
 {
   AgentConfiguration config;

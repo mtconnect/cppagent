@@ -61,9 +61,6 @@ const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 /* Message for when enumerations do not exist in an array/enumeration */
 const int ENUM_MISS = -1;
 
-/* Log file for logging events */
-extern std::string gLogFile;
-
 /* Time format */
 enum TimeFormat
 {
@@ -95,9 +92,6 @@ unsigned int getCurrentTimeInSec();
 
 /* Replace illegal XML characters with the correct corresponding characters */
 void replaceIllegalCharacters(std::string& data);
-
-/* Log events in a log file for error logging */
-void logEvent(const std::string& source, const std::string& message);
 
 /* Return enumeration values according to a string name and array */
 int getEnumeration(

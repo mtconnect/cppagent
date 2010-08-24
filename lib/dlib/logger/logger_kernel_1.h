@@ -573,6 +573,10 @@ namespace dlib
         friend void set_all_logging_output_streams (
             std::ostream& out
         );
+        
+        friend void set_all_logger_headers (
+            print_header_type ph
+        );
 
         template <
             typename T

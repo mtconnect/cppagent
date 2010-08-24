@@ -1,5 +1,9 @@
 #include "service.hpp"
 #include "string.h"
+#include <fstream>
+#include "dlib/logger.h"
+
+static dlib::logger sLogger("service");
 
 #ifdef WIN32
 #define stricmp _stricmp
@@ -14,10 +18,6 @@ mIsService(false)
 
 void MTConnectService::initialize(int aArgc, const char *aArgv[])
 {
-  if (mIsService)
-    gLogger = new ServiceLogger();
-  else
-    gLogger = new Logger();
 }
 
 #ifdef WIN32
@@ -75,11 +75,13 @@ int MTConnectService::main(int argc, const char *argv[])
       return 0;
     } else if (stricmp( argv[1], "debug") == 0 || stricmp( argv[1], "run") == 0) {
       initialize(argc - 2, argv + 2);
+      if (stricmp( argv[1], "debug") == 0)
+        dlib::set_all_logging_levels(dlib::LDEBUG);
       start();
       return 0;
     }
   }
-
+  
   gService = this;
   mIsService = true;
   SERVICE_TABLE_ENTRY DispatchTable[] = 
@@ -104,7 +106,7 @@ void MTConnectService::install()
 
   if( !GetModuleFileName(NULL, path, MAX_PATH ) )
   {
-    printf("Cannot install service (%d)\n", GetLastError());
+    sLogger << dlib::LERROR << "Cannot install service (" << GetLastError() << ")";
     return;
   }
 
@@ -117,13 +119,13 @@ void MTConnectService::install()
 
   if (NULL == manager) 
   {
-    printf("OpenSCManager failed (%d)\n", GetLastError());
+    sLogger << dlib::LERROR << "OpenSCManager failed (" << GetLastError << ")";
     return;
   }
 
   service = OpenService(manager, mName.c_str(), SC_MANAGER_ALL_ACCESS);
   if (service != NULL) {
-    if (! ChangeServiceConfig( 
+    if (!ChangeServiceConfig( 
       service,            // handle of service 
       SERVICE_NO_CHANGE,     // service type: no change 
       SERVICE_NO_CHANGE,  // service start type 
@@ -136,10 +138,10 @@ void MTConnectService::install()
       NULL,                  // password: no change 
       NULL) )                // display name: no change
     {
-      printf("ChangeServiceConfig failed (%d)\n", GetLastError());
-    } else {
-     printf("Service updated successfully.\n"); 
-   }
+      sLogger << dlib::LERROR << "ChangeServiceConfig failed (" << GetLastError << ")";
+      CloseServiceHandle(manager);
+      return;
+    } 
   } else {
     // Create the service
     service = CreateService( 
@@ -159,7 +161,7 @@ void MTConnectService::install()
 
     if (service == NULL) 
     {
-      printf("CreateService failed (%d)\n", GetLastError()); 
+      sLogger << dlib::LERROR << "CreateService failed (" << GetLastError << ")";
       CloseServiceHandle(manager);
       return;
     }
@@ -172,7 +174,7 @@ void MTConnectService::install()
   LONG res = RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
   if (res != ERROR_SUCCESS)
   {
-    printf("Could not open software key: %d\n", res);
+    sLogger << dlib::LERROR << "Could not open software key (" << res << ")";
     return;
   }
 
@@ -184,7 +186,7 @@ void MTConnectService::install()
     RegCloseKey(software);
     if (res != ERROR_SUCCESS)
     {
-      printf("Could not create MTConnect: %d\n", res);
+      sLogger << dlib::LERROR << "Could not create MTConnect (" << res << ")";
       return;
     }
   }
@@ -199,7 +201,7 @@ void MTConnectService::install()
     if (res != ERROR_SUCCESS)
     {
       RegCloseKey(mtc);
-      printf("Could not create %s: %d\n", mName.c_str(), res);
+      sLogger << dlib::LERROR << "Could not create " << mName << " (" << res << ")";
       return;
     }
   }
@@ -218,7 +220,7 @@ void MTConnectService::install()
 		mConfigFile.size() + 1);
   RegCloseKey(agent);
 
-  printf("Service installed successfully\n"); 
+  sLogger << dlib::LINFO << "Service installed successfully.";
 }
 
 //
@@ -242,7 +244,7 @@ VOID WINAPI SvcMain( DWORD dwArgc, LPTSTR *lpszArgv )
   char path[MAX_PATH];
   if( !GetModuleFileName(NULL, path, MAX_PATH ) )
   {
-    printf("Cannot install service (%d)\n", GetLastError());
+    sLogger << dlib::LERROR << "Cannot get path of executable (" << GetLastError << ")";
     return;
   }
 
@@ -337,7 +339,14 @@ VOID SvcInit( DWORD dwArgc, LPTSTR *lpszArgv)
   argp[0] = (char*) configFile;
   argp[1] = 0;
   gService->initialize(1, argp);
-
+  
+  // Set up logging. The default logging destination is cout, but if this is a service
+  // make sure we are logging to a log file if one was not specified.
+  if (sLogger.output_streambuf() == std::cout.rdbuf()) {
+    std::ostream* file = new std::ofstream("agent.log");
+    dlib::set_all_logging_output_streams(*file);
+  }
+  
   // Report running status when initialization is complete.
 
   ReportSvcStatus( SERVICE_RUNNING, NO_ERROR, 0 );
@@ -488,35 +497,6 @@ VOID SvcLogEvent(WORD aType, DWORD aId, LPSTR aText)
   }
 }
 
-
-void ServiceLogger::error(const char *aFormat, ...)
-{
-  char buffer[LOGGER_BUFFER_SIZE];
-  va_list args;
-  va_start (args, aFormat);
-  SvcLogEvent(EVENTLOG_ERROR_TYPE, SVC_ERROR, (LPSTR) format(buffer, LOGGER_BUFFER_SIZE, aFormat, args));
-  va_end (args);
-}
-
-void ServiceLogger::warning(const char *aFormat, ...)
-{
-  char buffer[LOGGER_BUFFER_SIZE];
-  va_list args;
-  va_start (args, aFormat);
-  SvcLogEvent(EVENTLOG_WARNING_TYPE, SVC_WARNING, (LPSTR) format(buffer, LOGGER_BUFFER_SIZE, aFormat, args));
-  va_end (args);
-}
-
-void ServiceLogger::info(const char *aFormat, ...)
-{
-  char buffer[LOGGER_BUFFER_SIZE];
-  va_list args;
-  va_start (args, aFormat);
-  SvcLogEvent(EVENTLOG_INFORMATION_TYPE, SVC_INFO, (LPSTR) format(buffer, LOGGER_BUFFER_SIZE, aFormat, args));
-  va_end (args);
-}
-
-
 #else
 #include "fcntl.h"
 #include "sys/stat.h"
@@ -526,11 +506,11 @@ static void signal_handler(int sig)
 {
   switch(sig) {
   case SIGHUP:
-    std::cout << "hangup signal catched" << std::endl;
+    sLogger << dlib::LWARN << "hangup signal catched";
     break;
     
   case SIGTERM:
-    std::cout << "terminate signal catched" << std::endl;
+    sLogger << dlib::LWARN << "terminate signal catched";
     exit(0);
     break;
   }
@@ -594,6 +574,8 @@ static void daemonize()
 
 int MTConnectService::main(int argc, const char *argv[]) 
 {
+  bool debug = false;
+  bool daemon = false;
   if(argc > 1) {
     if (strcasecmp( argv[1], "help") == 0 || strncmp(argv[1], "-h", 2) == 0)
     {
@@ -609,10 +591,20 @@ int MTConnectService::main(int argc, const char *argv[])
       
     } else if (strcasecmp( argv[1], "daemonize") == 0 ) {
       daemonize();
+      daemon= true;
+    } else if (strcasecmp( argv[1], "debug") == 0) {
+      debug = true;
     }
   }
   
   initialize(argc - 2, argv + 2);
+  if (debug) {  dlib::set_all_logging_levels(dlib::LDEBUG); }
+  if (daemon) {
+    if (sLogger.output_streambuf() == std::cout.rdbuf()) {
+      std::ostream* file = new std::ofstream("agent.log");
+      dlib::set_all_logging_output_streams(*file);
+    }
+  }
   start();
   return 0;
 } 

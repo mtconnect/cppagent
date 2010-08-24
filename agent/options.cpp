@@ -347,9 +347,9 @@ int OptionsList::parse(int &aArgc, const char **aArgv)
     if (opt->isRequired() && !opt->isSet())
     {
       if (opt->getName() != NULL)
-	cerr << "Required option -" << opt->getName() << " is not specified" << endl;
+      	cerr << "Required option -" << opt->getName() << " is not specified" << endl;
       else
-	cerr << "Required option <" << opt->getArgDesc() << "> is not specified" << endl;
+      	cerr << "Required option <" << opt->getArgDesc() << "> is not specified" << endl;
       usage();
     }
   }

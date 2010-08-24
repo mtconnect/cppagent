@@ -34,7 +34,6 @@ set(agent_srcs cppagent.cpp
 	       globals.cpp 
 	       options.cpp
 	       service.cpp
-	       logger.cpp
 	       config.cpp
 	       xml_parser.cpp 
 	       xml_printer.cpp)

@@ -32,6 +32,7 @@
 */
 
 #include "agent.hpp"
+#include "dlib/logger.h"
 
 using namespace std;
 
@@ -41,6 +42,8 @@ static const string sConditionUnavailable("UNAVAILABLE|||");
 #ifdef WIN32
 #define strtoll _strtoi64
 #endif
+
+static dlib::logger sLogger("agent");
 
 /* Agent public methods */
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
@@ -52,8 +55,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
   }
   catch (exception & e)
   {
-    logEvent("Agent::Agent",
-      "Error loading xml configuration: " + configXmlPath);
+    sLogger << LFATAL << "Error loading xml configuration: " + configXmlPath;
     delete mConfig;
     throw (string) e.what();
   }
@@ -166,7 +168,7 @@ const string Agent::on_request (
   }
   catch (exception & e)
   {
-    logEvent("Agent", (string) e.what());
+    sLogger << LWARN << "Server Exception: (string)" << e.what();
     printError("SERVER_EXCEPTION",(string) e.what()); 
   }
 
@@ -261,7 +263,7 @@ void Agent::disconnected(Adapter *anAdapter, Device *aDevice)
         if (value != NULL)
           addToBuffer(dataItem, *value, time);
       } else if (dataItem == NULL) {
-        logEvent("Agent::disconnected", (string) "No data Item for " + (*dataItemAssoc).first);
+        sLogger << LWARN << "No data Item for " << (*dataItemAssoc).first;
       }
     }
   }
@@ -388,7 +390,7 @@ string Agent::handleStream(
   }
   catch (exception& e)
   {
-    logEvent("Agent::handleStream", e.what());
+    sLogger << LWARN << "Exeption in handleStream: " << e.what();
     return printError("INVALID_XPATH", e.what());
   }
   

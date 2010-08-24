@@ -33,8 +33,11 @@
 
 #include "adapter.hpp"
 #include "device.hpp"
+#include "dlib/logger.h"
 
 using namespace std;
+
+static dlib::logger sLogger("adapter");
 
 /* Adapter public methods */
 Adapter::Adapter(
@@ -84,7 +87,7 @@ void Adapter::processData(const string& data)
   DataItem *dataItem = mDevice->getDeviceDataItem(key);
   if (dataItem == NULL)
   {
-    logEvent("Agent", "Could not find data item: " + key);
+    sLogger << LERROR << "Could not find data item: " << key;
   }
   else
   {
@@ -106,7 +109,7 @@ void Adapter::processData(const string& data)
     dataItem = mDevice->getDeviceDataItem(key);
     if (dataItem == NULL)
     {
-      logEvent("Agent", "Could not find data item: " + key);
+      sLogger << LERROR << "Could not find data item: " << key;
     }
     else
     {
@@ -148,7 +151,7 @@ void Adapter::protocolCommand(const std::string& data)
     else if (key == "serialNumber")
       mDevice->setSerialNumber(value);
     else
-      logEvent("Agent", "Unknown command '" + data + "' for device '" + mDeviceName);
+      sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
   }
   
 }

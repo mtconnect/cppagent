@@ -2,7 +2,7 @@
 #define SERVICE_HPP
 
 #include <string>
-#include "logger.hpp"
+#include "dlib/logger.h"
 
 #define NAME_LEN 80
 
@@ -26,16 +26,4 @@ protected:
 
 };
 
-#ifdef WIN32
-class ServiceLogger : public Logger {
-public:
-  virtual void error(const char *aFormat, ...);
-  virtual void warning(const char *aFormat, ...);
-  virtual void info(const char *aFormat, ...);  
-
-protected:
-};
-#else
-class ServiceLogger : public Logger {};
-#endif
 #endif

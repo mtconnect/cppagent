@@ -7,10 +7,13 @@
 #include <fstream>
 #include <vector>
 #include <dlib/config_reader.h>
+#include <dlib/logger.h>
 #include <stdexcept>
 
 using namespace std;
 using namespace dlib;
+
+static logger sLogger("config");
 
 static inline const char *get_with_default(const config_reader::kernel_1a &reader, 
       const char *aKey, const char *aDefault) {
@@ -58,8 +61,8 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
   }
   catch (std::exception & e)
   {
-    logEvent("Cppagent::Main", e.what());
-    std::cerr << "Agent failed to load: " << e.what() << std::endl;
+    sLogger << LFATAL << "Agent failed to load: " << e.what();
+    cerr << "Agent failed to load: " << e.what() << std::endl;
     optionList.usage();
   }
 }
@@ -88,8 +91,45 @@ Device *AgentConfiguration::defaultDevice()
     return NULL;
 }
 
+static const char *timestamp(char *aBuffer)
+{
+#ifdef WIN32
+  SYSTEMTIME st;
+  GetSystemTime(&st);
+  sprintf(aBuffer, "%4d-%02d-%02dT%02d:%02d:%02d.%04dZ", st.wYear, st.wMonth, st.wDay, st.wHour, 
+          st.wMinute, st.wSecond, st.wMilliseconds);
+#else
+  struct timeval tv;
+  struct timezone tz;
+
+  gettimeofday(&tv, &tz);
+
+  strftime(aBuffer, 64, "%Y-%m-%dT%H:%M:%S", gmtime(&tv.tv_sec));
+  sprintf(aBuffer + strlen(aBuffer), ".%06dZ", tv.tv_usec);
+#endif
+  
+  return aBuffer;
+}
+
+static void print_ts_logger_header (
+    std::ostream& out,
+    const std::string& logger_name,
+    const dlib::log_level& l,
+    const uint64 thread_id
+)
+{
+  char buffer[64];
+  timestamp(buffer);
+  out << buffer << ": " << l.name << " [" << thread_id << "] " << logger_name << ": ";
+}
+
 void AgentConfiguration::loadConfig()
 {
+  // Load logger configuration
+  dlib::set_all_logger_headers((dlib::logger::print_header_type) print_ts_logger_header);
+  configure_loggers_from_file(mConfigFile.c_str());
+  
+  // Now get our configuration
   ifstream file(mConfigFile.c_str());
   config_reader::kernel_1a reader(file);
   
@@ -98,8 +138,8 @@ void AgentConfiguration::loadConfig()
   int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
   const char *probe = get_with_default(reader, "Devices", "probe.xml");
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent"); 
-  gLogFile = get_with_default(reader, "agent.log", "agent.log");
   
+  sLogger << LINFO << "Starting agent on port " << port;
   mAgent = new Agent(probe, bufferSize, checkpointFrequency);
   mAgent->set_listening_port(port);
   Device *device;
@@ -111,7 +151,6 @@ void AgentConfiguration::loadConfig()
     vector<string>::iterator block;
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
-      device;
       if (*block == "*")
         device = defaultDevice();
       else
@@ -124,6 +163,7 @@ void AgentConfiguration::loadConfig()
       const string &host = get_with_default(adapter, "Host", (string)"localhost");
       int port = get_with_default(adapter, "Port", 7878);
       
+      sLogger << LINFO << "Adding adapter for " << device->getName() << " on " << host << ":" << port;
       mAgent->addAdapter(device->getName(), host, port);
 
       // Add additional device information
@@ -139,6 +179,7 @@ void AgentConfiguration::loadConfig()
   }
   else if ((device = defaultDevice()) != NULL)
   {
+    sLogger << LINFO << "Adding default adapter for " << device->getName() << " on localhost:7878";
     mAgent->addAdapter(device->getName(), "localhost", 7878);
   }
   else
