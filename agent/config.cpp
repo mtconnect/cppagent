@@ -126,8 +126,16 @@ static void print_ts_logger_header (
 void AgentConfiguration::loadConfig()
 {
   // Load logger configuration
-  dlib::set_all_logger_headers((dlib::logger::print_header_type) print_ts_logger_header);
+  set_all_logging_headers((dlib::logger::print_header_type) print_ts_logger_header);
   configure_loggers_from_file(mConfigFile.c_str());
+  
+  if (mIsDebug) {
+    set_all_logging_output_streams(cout);
+    set_all_logging_levels(LDEBUG);
+  } else if (mIsService && sLogger.output_streambuf() == cout.rdbuf()) {
+    ostream *file = new std::ofstream("agent.log");
+    set_all_logging_output_streams(*file);
+  }
   
   // Now get our configuration
   ifstream file(mConfigFile.c_str());

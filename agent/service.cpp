@@ -12,7 +12,7 @@ static dlib::logger sLogger("service");
 #endif
 
 MTConnectService::MTConnectService() :
-mIsService(false)
+mIsService(false), mIsDebug(false)
 {
 }
 
@@ -51,7 +51,7 @@ VOID SvcReportEvent( LPTSTR );
 MTConnectService *gService = NULL;
 
 int MTConnectService::main(int argc, const char *argv[]) 
-{ 
+{
   // If command-line parameter is "install", install the service. If debug or run
   // is specified than just run it as a command line process. 
   // Otherwise, the service is probably being started by the SCM.
@@ -74,9 +74,9 @@ int MTConnectService::main(int argc, const char *argv[])
       install();
       return 0;
     } else if (stricmp( argv[1], "debug") == 0 || stricmp( argv[1], "run") == 0) {
-      initialize(argc - 2, argv + 2);
       if (stricmp( argv[1], "debug") == 0)
-        dlib::set_all_logging_levels(dlib::LDEBUG);
+        mIsDebug = true;
+      initialize(argc - 2, argv + 2);
       start();
       return 0;
     }
@@ -574,8 +574,6 @@ static void daemonize()
 
 int MTConnectService::main(int argc, const char *argv[]) 
 {
-  bool debug = false;
-  bool daemon = false;
   if(argc > 1) {
     if (strcasecmp( argv[1], "help") == 0 || strncmp(argv[1], "-h", 2) == 0)
     {
@@ -591,20 +589,13 @@ int MTConnectService::main(int argc, const char *argv[])
       
     } else if (strcasecmp( argv[1], "daemonize") == 0 ) {
       daemonize();
-      daemon= true;
+      mIsService = true;
     } else if (strcasecmp( argv[1], "debug") == 0) {
-      debug = true;
+      mIsDebug = true;
     }
   }
   
   initialize(argc - 2, argv + 2);
-  if (debug) {  dlib::set_all_logging_levels(dlib::LDEBUG); }
-  if (daemon) {
-    if (sLogger.output_streambuf() == std::cout.rdbuf()) {
-      std::ostream* file = new std::ofstream("agent.log");
-      dlib::set_all_logging_output_streams(*file);
-    }
-  }
   start();
   return 0;
 } 

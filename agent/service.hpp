@@ -21,6 +21,7 @@ protected:
   std::string mName;
   std::string mConfigFile;
   bool mIsService;
+  bool mIsDebug;
   
   void install();
 

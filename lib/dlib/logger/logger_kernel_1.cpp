@@ -47,7 +47,7 @@ namespace dlib
         gd.set_level("",new_level);
     }
     
-    void set_all_logger_headers (
+    void set_all_logging_headers (
         logger::print_header_type ph
     )
     {
