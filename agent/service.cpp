@@ -371,14 +371,7 @@ VOID SvcInit( DWORD dwArgc, LPTSTR *lpszArgv)
   argp[0] = (char*) configFile;
   argp[1] = 0;
   gService->initialize(1, argp);
-  
-  // Set up logging. The default logging destination is cout, but if this is a service
-  // make sure we are logging to a log file if one was not specified.
-  if (sLogger.output_streambuf() == std::cout.rdbuf()) {
-    std::ostream* file = new std::ofstream("agent.log");
-    dlib::set_all_logging_output_streams(*file);
-  }
-  
+    
   // Report running status when initialization is complete.
 
   ReportSvcStatus( SERVICE_RUNNING, NO_ERROR, 0 );
@@ -484,6 +477,7 @@ VOID SvcReportEvent(LPTSTR szFunction)
   if( NULL != hEventSource )
   {
     sprintf_s(Buffer, 80, "%s failed with %d", szFunction, GetLastError());
+    sLogger << dlib::LERROR << Buffer;
 
     lpszStrings[0] = gService->name().c_str();
     lpszStrings[1] = Buffer;
