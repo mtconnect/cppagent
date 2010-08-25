@@ -20,10 +20,16 @@ public:
 protected:
   std::string mName;
   std::string mConfigFile;
+  std::string mPidFile;
   bool mIsService;
   bool mIsDebug;
   
   void install();
+  void remove();
+  
+#ifndef WIN32
+  void daemonize();  
+#endif
 
 };
 

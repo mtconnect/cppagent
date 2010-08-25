@@ -33,8 +33,8 @@ void MTConnectService::initialize(int aArgc, const char *aArgv[])
 
 #pragma comment(lib, "advapi32.lib")
 
-#define SVC_ERROR                        ((DWORD)0xC0000001L)
-#define SVC_WARNING                        ((DWORD)0x90000001L)
+#define SVC_ERROR                       ((DWORD)0xC0000001L)
+#define SVC_WARNING                     ((DWORD)0x90000001L)
 #define SVC_INFO                        ((DWORD)0x50000001L)
 
 SERVICE_STATUS          gSvcStatus; 
@@ -62,6 +62,7 @@ int MTConnectService::main(int argc, const char *argv[])
              "       help           Prints this message\n"
              "       install        Installs the service\n"
              "                      install with -h will display additional options\n"
+             "       remove         Remove the service\n"
              "       debug          Runs the agent on the command line with verbose logging\n"
              "       run            Runs the agent on the command line\n"
              "       config_file    The configuration file to load\n"
@@ -72,6 +73,10 @@ int MTConnectService::main(int argc, const char *argv[])
     } else if (stricmp( argv[1], "install") == 0 ) {
       initialize(argc - 2, argv + 2);
       install();
+      return 0;
+    } else if (stricmp( argv[1], "remove") == 0 ) {
+      initialize(argc - 2, argv + 2);
+      remove();
       return 0;
     } else if (stricmp( argv[1], "debug") == 0 || stricmp( argv[1], "run") == 0) {
       if (stricmp( argv[1], "debug") == 0)
@@ -222,6 +227,33 @@ void MTConnectService::install()
 
   sLogger << dlib::LINFO << "Service installed successfully.";
 }
+
+void MTConnectService::remove()
+{
+	SC_HANDLE manager;
+	SC_HANDLE service;
+	manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+  
+	if (manager == NULL) {
+    sLogger << dlib::LERROR << "Could not open Service Control Manager";
+		return;
+  }
+	service = ::OpenService(manager, mName.c_str(), SERVICE_ALL_ACCESS);
+  CloseServiceHandle(manager);
+	if (service == NULL) {
+    sLogger << dlib::LERROR << "Could not open Service " << mName;
+		return;
+  }
+  
+	if(::DeleteService(service) == 0) {
+    sLogger << dlib::LERROR << "Could delete service " << mName;
+  } else {
+    sLogger << dlib::LINFO << "Successfully removed service " << mName;
+  }
+  
+	::CloseServiceHandle(service);
+}
+
 
 //
 // Purpose: 
@@ -497,6 +529,7 @@ VOID SvcLogEvent(WORD aType, DWORD aId, LPSTR aText)
   }
 }
 
+
 #else
 #include "fcntl.h"
 #include "sys/stat.h"
@@ -516,12 +549,13 @@ static void signal_handler(int sig)
   }
 }
 
+static std::string sPidFile;
 static void cleanup_pid() 
 {
-  unlink("agent.pid");
+  unlink(sPidFile.c_str());
 }
 
-static void daemonize()
+void MTConnectService::daemonize()
 {
   int i,lfp;
   char str[10];
@@ -534,7 +568,6 @@ static void daemonize()
     exit(0); /* parent exits */
   }
   
-  
   /* child (daemon) continues */
   setsid(); /* obtain a new process group */
 
@@ -546,14 +579,15 @@ static void daemonize()
   close(1);
   close(2);
   umask(027); /* set newly created file permissions */
-  i = open("agent.log", O_WRONLY | O_CREAT, 0640);
+  i = open("agent.output", O_WRONLY | O_CREAT, 0640);
   dup(i); /* handle standart I/O */
 
   // Set cleanup handler
   atexit(cleanup_pid);
   
   // Create the pid file.
-  lfp = open("agent.pid", O_RDWR|O_CREAT, 0640);
+  sPidFile = mPidFile;
+  lfp = open(mPidFile.c_str(), O_RDWR|O_CREAT, 0640);
   if (lfp<0) exit(1); /* can not open */
 
   // Lock the pid file.
@@ -588,14 +622,21 @@ int MTConnectService::main(int argc, const char *argv[])
              "When the agent is started without any arguments it will default to run\n");
       
     } else if (strcasecmp( argv[1], "daemonize") == 0 ) {
-      daemonize();
       mIsService = true;
+      mPidFile = "agent.pid";
+      initialize(argc - 2, argv + 2);
+      daemonize();
+      sLogger << dlib::LINFO << "Starting daemon";
     } else if (strcasecmp( argv[1], "debug") == 0) {
       mIsDebug = true;
+      initialize(argc - 2, argv + 2);
+    } else {
+      initialize(argc - 2, argv + 2);
     }
+  } else {
+    initialize(argc - 2, argv + 2);
   }
   
-  initialize(argc - 2, argv + 2);
   start();
   return 0;
 } 

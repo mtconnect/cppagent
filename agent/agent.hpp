@@ -58,7 +58,7 @@ class Device;
 
 using namespace dlib;
 
-class Agent : public server::http_1a_c
+class Agent : public server::http_1a
 {
 public:
   /* Slowest frequency allowed */
@@ -101,7 +101,7 @@ public:
     const std::string& device,
     const std::string& host,
     const unsigned int port,
-    bool start = true
+    bool start = false
   );
   
   /* Get device from device map */
@@ -135,6 +135,9 @@ public:
 
   // For testing...
   void setSequence(Int64 aSeq) { mSequence = aSeq; }
+  
+  // Starting
+  virtual void start();
     
 protected:
   /* HTTP methods to handle the 3 basic calls */
@@ -237,6 +240,7 @@ protected:
   int mCheckpointFreq, mCheckpointCount;
   
   /* Data containers */
+  std::vector<Adapter *> mAdapters;
   std::vector<Device *> mDevices;
   std::map<std::string, Device *> mDeviceMap;
   std::map<std::string, DataItem *> mDataItemMap;
