@@ -36,7 +36,7 @@
 
 using namespace std;
 
-static dlib::logger sLogger("connector");
+static dlib::logger sLogger("input.connector");
 
 /* Connector public methods */
 Connector::Connector(const string& server, unsigned int port)
@@ -59,10 +59,12 @@ void Connector::connect()
   {
     // Connect to server:port, failure will throw dlib::socket_error exception
     // Using a smart pointer to ensure connection is deleted if exception thrown
+    sLogger << LDEBUG << "Connecting to data source: " << mServer << " on port: " << mPort;
     mConnection.reset(dlib::connect(mServer, mPort));
     
 
     // Check to see if this connection supports heartbeats.
+    sLogger << LDEBUG << "Sending initial PING";
     int status = mConnection->write(ping, strlen(ping));
     if (status < 0)
     {
@@ -136,9 +138,12 @@ void Connector::connect()
       }
     }
     
-    // Code should never get here, if it does, notify the exit status
-    sLogger << LERROR << "connect: Connection exited with status: " << intToString(status);
+    sLogger << LWARN << "connect: Connection exited with status: " << intToString(status);
     close();
+  }
+  catch (dlib::socket_error &e)
+  {
+    sLogger << LWARN << "connect: Socket exception: " << e.what();
   }
   catch (exception & e)
   {
@@ -211,6 +216,7 @@ void Connector::startHeartbeats(const string &aArg)
     int freq = atoi(aArg.substr(pos + 1).c_str());
     if (freq > 0 && freq < 120000)
     {
+      sLogger << LDEBUG << "Received PONG, starting heartbeats every " << freq << "ms";
       mHeartbeats = true;
       mHeartbeatFrequency = freq;
     }

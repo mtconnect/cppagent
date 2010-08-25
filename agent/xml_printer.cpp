@@ -35,7 +35,7 @@
 #include "dlib/sockets.h"
 #include "dlib/logger.h"
 
-static dlib::logger sLogger("xml_printer");
+static dlib::logger sLogger("xml.printer");
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr) \

@@ -78,6 +78,9 @@ protected:
   
   /* Name of device associated with adapter */
   std::string mDeviceName;
+  
+  /* If the connector has been running */
+  bool mRunning;
     
 private:
   /* Inherited and is run as part of the threaded_object */

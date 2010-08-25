@@ -37,7 +37,7 @@
 
 using namespace std;
 
-static dlib::logger sLogger("adapter");
+static dlib::logger sLogger("input.adapter");
 
 /* Adapter public methods */
 Adapter::Adapter(
@@ -45,7 +45,7 @@ Adapter::Adapter(
     const string& server,
     const unsigned int port
   )
-: Connector(server, port), mDeviceName(device)
+: Connector(server, port), mDeviceName(device), mRunning(true)
 {
   
 }
@@ -53,6 +53,7 @@ Adapter::Adapter(
 Adapter::~Adapter()
 {
   // Will stop threaded object gracefully Adapter::thread()
+  mRunning = false;
   stop();
   wait();
 }
@@ -87,7 +88,7 @@ void Adapter::processData(const string& data)
   DataItem *dataItem = mDevice->getDeviceDataItem(key);
   if (dataItem == NULL)
   {
-    sLogger << LERROR << "Could not find data item: " << key;
+    sLogger << LWARN << "Could not find data item: " << key;
   }
   else
   {
@@ -109,7 +110,7 @@ void Adapter::processData(const string& data)
     dataItem = mDevice->getDeviceDataItem(key);
     if (dataItem == NULL)
     {
-      sLogger << LERROR << "Could not find data item: " << key;
+      sLogger << LWARN << "Could not find data item: " << key;
     }
     else
     {
@@ -165,10 +166,11 @@ void Adapter::disconnected()
 void Adapter::thread()
 {
   // Start the connection to the socket
-  while (true)
+  while (mRunning)
   {
     connect();
     // Try to reconnect every 10 seconds
+    sLogger << LINFO << "Will try to reconnect in 10 seconds";
     dlib::sleep(10 * 1000);
   }
 }

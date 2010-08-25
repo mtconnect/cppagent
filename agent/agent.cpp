@@ -127,10 +127,12 @@ const string Agent::on_request (
   outgoing.headers["Content-Type"] = "text/xml";
   try 
   {
+    sLogger << LDEBUG << "Request: " << incoming.request_type << " " << 
+      incoming.path << " from " << incoming.foreign_ip << ":" << incoming.foreign_port;
     if (incoming.request_type != "GET")
     {
       return printError("UNSUPPORTED",
-			"Only the HTTP GET request is supported by MTConnect");
+                        "Only the HTTP GET request is supported by MTConnect");
     }
     
     // Parse the URL path looking for '/'
@@ -168,7 +170,6 @@ const string Agent::on_request (
   }
   catch (exception & e)
   {
-    sLogger << LWARN << "Server Exception: (string)" << e.what();
     printError("SERVER_EXCEPTION",(string) e.what()); 
   }
 
@@ -239,6 +240,7 @@ unsigned int Agent::addToBuffer(
 void Agent::disconnected(Adapter *anAdapter, Device *aDevice)
 {
   string time = getCurrentTime(GMT_UV_SEC);
+  sLogger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
   if (aDevice != NULL)
   {
@@ -390,7 +392,6 @@ string Agent::handleStream(
   }
   catch (exception& e)
   {
-    sLogger << LWARN << "Exeption in handleStream: " << e.what();
     return printError("INVALID_XPATH", e.what());
   }
   
@@ -560,6 +561,7 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
 
 string Agent::printError(const string& errorCode, const string& text)
 {
+  sLogger << LDEBUG << "Returning error " << errorCode << ": " << text;
   return XmlPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
     errorCode, text);
 }

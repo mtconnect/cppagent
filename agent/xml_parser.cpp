@@ -39,7 +39,7 @@
 
 using namespace std;
 
-static dlib::logger sLogger("xml_parser");
+static dlib::logger sLogger("xml.parser");
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr) \

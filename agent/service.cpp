@@ -3,7 +3,7 @@
 #include <fstream>
 #include "dlib/logger.h"
 
-static dlib::logger sLogger("service");
+static dlib::logger sLogger("init.service");
 
 #ifdef WIN32
 #define stricmp _stricmp

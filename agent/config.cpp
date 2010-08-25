@@ -13,7 +13,7 @@
 using namespace std;
 using namespace dlib;
 
-static logger sLogger("config");
+static logger sLogger("init.config");
 
 static inline const char *get_with_default(const config_reader::kernel_1a &reader, 
       const char *aKey, const char *aDefault) {

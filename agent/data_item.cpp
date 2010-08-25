@@ -33,8 +33,11 @@
 
 #include "data_item.hpp"
 #include "device.hpp"
+#include "dlib/logger.h"
 
 using namespace std;
+
+dlib::logger sLogger("data_item");
 
 /* ComponentEvent public static constants */
 const string DataItem::SSimpleUnits[NumSimpleUnits] =
