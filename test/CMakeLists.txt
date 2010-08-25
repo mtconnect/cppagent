@@ -40,7 +40,6 @@ set(test_srcs test.cpp
 	       ../agent/xml_printer.cpp
 	       ../agent/config.cpp
 	       ../agent/service.cpp
-	       ../agent/logger.cpp
 	       adapter_test.cpp
 	       agent_test.cpp
 	       checkpoint_test.cpp
