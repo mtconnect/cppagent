@@ -9,6 +9,7 @@
 #include <dlib/config_reader.h>
 #include <dlib/logger.h>
 #include <stdexcept>
+#include <sys/stat.h>
 
 using namespace std;
 using namespace dlib;
@@ -144,7 +145,25 @@ void AgentConfiguration::loadConfig()
   int port = get_with_default(reader, "Port", 5000);
   int bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
   int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
-  const char *probe = get_with_default(reader, "Devices", "probe.xml");
+  const char *probe;
+  struct stat buf;
+  if (reader.is_key_defined("Devices")) {
+    probe = reader["Devices"].c_str();
+    if (stat(probe, &buf) != 0) {
+      throw runtime_error(((string) "Please make sure the Devices XML configuration "
+                              "file " + probe + " is in the current path ").c_str());
+    }
+  } else {
+    probe = "probe.xml";
+    if (stat(probe, &buf) != 0)
+      probe = "Devices.xml";    
+    if (stat(probe, &buf) != 0) {
+      throw runtime_error(((string) "Please make sure the configuration "
+                              "file probe.xml or Devices.xml is in the current directory or specify the correct file "
+                              "in the configuration file " + mConfigFile + " using Devices = <file>").c_str());
+    }
+  }
+    
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent"); 
   
   sLogger << LINFO << "Starting agent on port " << port;
@@ -192,6 +211,6 @@ void AgentConfiguration::loadConfig()
   }
   else
   {
-    throw new runtime_error("Adapters must be defined if more than one device is present");
+    throw runtime_error("Adapters must be defined if more than one device is present");
   }
 }
