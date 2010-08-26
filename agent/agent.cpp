@@ -120,11 +120,14 @@ Agent::~Agent()
 void Agent::start()
 {
   try {
-    server::http_1a::start();
+    // Start all the adapters
     vector<Adapter*>::iterator iter;
     for (iter = mAdapters.begin(); iter != mAdapters.end(); iter++) {
       (*iter)->start();
     }
+    
+    // Start the server. This blocks until the server stops.
+    server::http_1a::start();
   }
   catch (dlib::socket_error &e) {
     sLogger << LFATAL << "Cannot start server: " << e.what();
