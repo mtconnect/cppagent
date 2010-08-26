@@ -127,6 +127,7 @@ static void print_ts_logger_header (
 void AgentConfiguration::loadConfig()
 {
   // Load logger configuration
+  set_all_logging_levels(LINFO);
   set_all_logging_headers((dlib::logger::print_header_type) print_ts_logger_header);
   configure_loggers_from_file(mConfigFile.c_str());
   

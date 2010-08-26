@@ -437,10 +437,11 @@ VOID WINAPI SvcCtrlHandler( DWORD dwCtrl )
   switch(dwCtrl) 
   {  
     case SERVICE_CONTROL_STOP: 
-    ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
-    if (gService != NULL)
-      gService->stop();
-    ReportSvcStatus(gSvcStatus.dwCurrentState, NO_ERROR, 0);
+      sLogger << dlib::LINFO << "Service stop requested";
+      ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
+      if (gService != NULL)
+        gService->stop();
+      ReportSvcStatus(gSvcStatus.dwCurrentState, NO_ERROR, 0);
 
     return;
 
