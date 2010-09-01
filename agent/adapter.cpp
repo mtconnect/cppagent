@@ -64,6 +64,19 @@ void Adapter::setAgent(Agent &aAgent)
    mDevice = mAgent->getDeviceByName(mDeviceName);
 }
 
+inline static bool splitKey(string &key, string &dev) 
+{
+  size_t found = key.find_first_of(':');
+  if (found == string::npos) {
+    return false;
+  } else {
+    dev = key;
+    dev.erase(found);
+    key.erase(0, found + 1);
+    return true;
+  }
+}
+
 /**
  * Expected data to parse in SDHR format:
  *   Time|Alarm|Code|NativeCode|Severity|State|Description
@@ -74,40 +87,58 @@ void Adapter::setAgent(Agent &aAgent)
 void Adapter::processData(const string& data)
 {
   istringstream toParse(data);
-  string key;
+  string key, value, dev;
+  Device *device;
   
   getline(toParse, key, '|');
   string time = key;
   
   getline(toParse, key, '|');
-  string type = key;
-  
-  string value;
   getline(toParse, value, '|');
 
-  DataItem *dataItem = mDevice->getDeviceDataItem(key);
-  if (dataItem == NULL)
-  {
-    sLogger << LWARN << "Could not find data item: " << key;
+  DataItem *dataItem;
+  if (splitKey(key, dev)) {
+    device = mAgent->getDeviceByName(dev);
+  } else {
+    device = mDevice;
   }
-  else
-  {
-    string rest;
-    if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage())
+  
+  if (device != NULL) {
+    dataItem = device->getDeviceDataItem(key);    
+  
+    if (dataItem == NULL)
     {
-      getline(toParse, rest);
-      value = value + "|" + rest;
-    }
+      sLogger << LWARN << "Could not find data item: " << key;
+    } else {
+      string rest;
+      if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage())
+      {
+        getline(toParse, rest);
+        value = value + "|" + rest;
+      }
 
-    // Add key->value pairings
-    dataItem->setDataSource(this);
-    mAgent->addToBuffer(dataItem, value, time);
+      // Add key->value pairings
+      dataItem->setDataSource(this);
+      mAgent->addToBuffer(dataItem, value, time);
+    }
+  } else {
+    sLogger << LDEBUG << "Could not find device: " << dev;
   }
   
   // Look for more key->value pairings in the rest of the data
   while (getline(toParse, key, '|') && getline(toParse, value, '|'))
   {
-    dataItem = mDevice->getDeviceDataItem(key);
+    if (splitKey(key, dev)) {
+      device = mAgent->getDeviceByName(dev);
+    } else {
+      device = mDevice;
+    }
+    if (device == NULL) {
+      sLogger << LDEBUG << "Could not find device: " << dev;
+      continue;
+    }
+    
+    dataItem = device->getDeviceDataItem(key);    
     if (dataItem == NULL)
     {
       sLogger << LWARN << "Could not find data item: " << key;
