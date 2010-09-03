@@ -340,6 +340,7 @@ void DataItem::computeConversionFactors()
   
   if (mHasNativeScale)
   {
+    mConversionRequired = true;
     mConversionFactor /= mNativeScale;
   }
   
