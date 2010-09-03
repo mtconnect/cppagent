@@ -192,6 +192,21 @@ void DataItemTest::testConversion()
   item2.conversionRequired();
   
   CPPUNIT_ASSERT_EQUAL((string) "57.29578 114.5916 171.8873", item2.convertValue("1 2 3"));
+  
+  std::map<string, string> attributes3;
+  attributes3["id"] = "p";
+  attributes3["name"] = "position";
+  attributes3["type"] = "POSITION";
+  attributes3["category"] = "SAMPLE";
+  attributes3["units"] = "MILLIMETER";
+  attributes3["nativeUnits"] = "MILLIMETER";
+  attributes3["nativeScale"] = "10";
+  attributes3["coordinateSystem"] = "testScale";
+  DataItem item3(attributes3);
+  item3.conversionRequired();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "1.3", item3.convertValue("13"));
+  
 }
 
 void DataItemTest::testCondition()
