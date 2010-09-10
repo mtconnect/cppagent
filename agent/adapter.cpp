@@ -77,6 +77,16 @@ inline static bool splitKey(string &key, string &dev)
   }
 }
 
+inline static void trim(std::string &str)
+{
+  size_t index = str.find_first_not_of(" \r\t");
+  if (index != string::npos && index > 0)
+    str.erase(0, index);
+  index = str.find_last_not_of(" \r\t");
+  if (index != string::npos)
+    str.erase(index + 1);
+}
+
 /**
  * Expected data to parse in SDHR format:
  *   Time|Alarm|Code|NativeCode|Severity|State|Description
@@ -119,7 +129,8 @@ void Adapter::processData(const string& data)
 
       // Add key->value pairings
       dataItem->setDataSource(this);
-      mAgent->addToBuffer(dataItem, toUpperCase(trim(value)), time);
+      trim(value);
+      mAgent->addToBuffer(dataItem, toUpperCase(value), time);
     }
   } else {
     sLogger << LDEBUG << "Could not find device: " << dev;
@@ -146,19 +157,10 @@ void Adapter::processData(const string& data)
     else
     {
       dataItem->setDataSource(this);
-      mAgent->addToBuffer(dataItem, toUpperCase(trim(value)), time);
+      trim(value);
+      mAgent->addToBuffer(dataItem, toUpperCase(value), time);
     }
   }
-}
-
-inline static void trim(std::string str)
-{
-  size_t index = str.find_first_not_of(" \r\t");
-  if (index != string::npos)
-    str.erase(0, index);
-  index = str.find_last_not_of(" \r\t");
-  if (index != string::npos)
-    str.erase(index);
 }
 
 void Adapter::protocolCommand(const std::string& data)

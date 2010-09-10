@@ -31,6 +31,8 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
+#define _CRT_SECURE_NO_WARNINGS 1
+
 #include <sys/stat.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -43,8 +45,8 @@
 using namespace std;
 
 #ifdef WIN32
-#define strcasecmp stricmp
-#define strncasecmp strnicmp
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #endif
 
 // For arguments which have no switch char but appear in a special order.
