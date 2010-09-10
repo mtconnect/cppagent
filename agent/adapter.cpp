@@ -119,7 +119,7 @@ void Adapter::processData(const string& data)
 
       // Add key->value pairings
       dataItem->setDataSource(this);
-      mAgent->addToBuffer(dataItem, value, time);
+      mAgent->addToBuffer(dataItem, toUpperCase(trim(value)), time);
     }
   } else {
     sLogger << LDEBUG << "Could not find device: " << dev;
@@ -146,17 +146,17 @@ void Adapter::processData(const string& data)
     else
     {
       dataItem->setDataSource(this);
-      mAgent->addToBuffer(dataItem, toUpperCase(value), time);
+      mAgent->addToBuffer(dataItem, toUpperCase(trim(value)), time);
     }
   }
 }
 
 inline static void trim(std::string str)
 {
-  size_t index = str.find_first_not_of(" \t");
+  size_t index = str.find_first_not_of(" \r\t");
   if (index != string::npos)
     str.erase(0, index);
-  index = str.find_last_not_of(" \t");
+  index = str.find_last_not_of(" \r\t");
   if (index != string::npos)
     str.erase(index);
 }
