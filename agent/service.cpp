@@ -69,7 +69,7 @@ int MTConnectService::main(int argc, const char *argv[])
              "                      Default: agent.cfg in current directory\n\n"
              "When the agent is started without any arguments it is assumed it will be running\n"
              "as a service and will begin the service initialization sequence\n");
-      
+      exit(0);
     } else if (stricmp( argv[1], "install") == 0 ) {
       initialize(argc - 2, argv + 2);
       install();
@@ -529,6 +529,7 @@ VOID SvcLogEvent(WORD aType, DWORD aId, LPSTR aText)
 #include "fcntl.h"
 #include "sys/stat.h"
 #include <iostream>
+#include <signal.h>
 
 static void signal_handler(int sig)
 {
@@ -615,7 +616,7 @@ int MTConnectService::main(int argc, const char *argv[])
              "       config_file    The configuration file to load\n"
              "                      Default: agent.cfg in current directory\n\n"
              "When the agent is started without any arguments it will default to run\n");
-      
+     exit(0);
     } else if (strcasecmp( argv[1], "daemonize") == 0 ) {
       mIsService = true;
       mPidFile = "agent.pid";
