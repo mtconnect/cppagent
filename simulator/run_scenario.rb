@@ -51,10 +51,12 @@ Thread.new do
   while (select([socket], nil, nil))
     begin
       if (r = socket.read_nonblock(256)) =~ /\* PING/
-        puts "Recived #{r.strip}, responding with pong" if verbose
+        puts "Received #{r.strip}, responding with pong" if verbose
         mutex.synchronize {
           socket.puts "* PONG 10000"
         }
+      else
+        puts "Received '#{r.strip}'"
       end
     rescue
     end

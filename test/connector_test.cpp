@@ -207,3 +207,24 @@ void ConnectorTest::testParseBufferFraming()
   CPPUNIT_ASSERT_EQUAL((string) "third", mConnector->mList[2]);
   CPPUNIT_ASSERT_EQUAL((string) "fourth", mConnector->mList[3]);
 }
+
+void ConnectorTest::testSendCommand()
+{
+  // Start the accept thread
+  start();
+  
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
+  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  
+  // Receive initial heartbeat request "* PING\n"
+  char buf[1024];
+  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 5000));
+  buf[7] = '\0';
+  CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+  
+  mConnector->sendCommand("Hello There;");
+
+  CPPUNIT_ASSERT_EQUAL(15L, mServerSocket->read(buf, 1023, 5000));
+  buf[15] = '\0';
+  CPPUNIT_ASSERT(strcmp(buf, "* Hello There;\n") == 0);  
+}

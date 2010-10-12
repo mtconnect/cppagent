@@ -60,8 +60,9 @@ Adapter::~Adapter()
 
 void Adapter::setAgent(Agent &aAgent)
 {
-   mAgent = &aAgent;
-   mDevice = mAgent->getDeviceByName(mDeviceName);
+  mAgent = &aAgent;
+  mDevice = mAgent->getDeviceByName(mDeviceName);
+  mDevice->addAdapter(this);
 }
 
 inline static bool splitKey(string &key, string &dev) 

@@ -147,10 +147,11 @@ const string Agent::on_request (
   {
     sLogger << LDEBUG << "Request: " << incoming.request_type << " " << 
       incoming.path << " from " << incoming.foreign_ip << ":" << incoming.foreign_port;
-    if (incoming.request_type != "GET")
-    {
+      
+    if (incoming.request_type != "GET" && incoming.request_type != "PUT" &&
+        incoming.request_type != "POST") {
       return printError("UNSUPPORTED",
-        "Only the HTTP GET request is supported by MTConnect");
+        "Only the HTTP GET and PUT requests are supported by MTConnect");
     }
 
     // Parse the URL path looking for '/'
@@ -162,6 +163,8 @@ const string Agent::on_request (
 
     string::size_type end = (path[path.length()-1] == '/') ?
       path.length()-1 : string::npos;
+      
+    string device, call;
 
     // If a '/' was found
     if (loc1 < end)
@@ -171,8 +174,8 @@ const string Agent::on_request (
 
       if (loc2 == end)
       {
-        return handleCall(*outgoing.out, path, incoming.queries, 
-          path.substr(loc1+1, loc2-loc1-1), path.substr(1, loc1-1));
+        call = path.substr(loc1+1, loc2-loc1-1);
+        device = path.substr(1, loc1-1);
       }
       else
       {
@@ -183,8 +186,13 @@ const string Agent::on_request (
     else
     {
       // Try to handle the call
-      result = handleCall(*outgoing.out, path, incoming.queries, path.substr(1, loc1-1));
+      call = path.substr(1, loc1-1);
     }
+    
+    if (incoming.request_type == "GET")
+      result = handleCall(*outgoing.out, path, incoming.queries, call, device);    
+    else
+      result = handlePut(*outgoing.out, path, incoming.queries, call, device);
   }
   catch (exception & e)
   {
@@ -367,6 +375,44 @@ string Agent::handleCall(
     return printError("UNSUPPORTED",
       "The following path is invalid: " + path);
   }
+}
+
+/* Agent protected methods */
+string Agent::handlePut(
+  ostream& out,
+  const string& path,
+  const key_value_map& queries,
+  const string& adapter,
+  const string& deviceName
+  )
+{
+  string device = deviceName;
+  if (device.empty() && adapter.empty())
+  {
+    return printError("UNSUPPORTED",
+              "Device must be specified for PUT");
+  } else if (device.empty()) {
+    device = adapter;
+  }
+  
+  Device *dev = mDeviceMap[device];
+  if (dev == NULL) {
+    string message = ((string) "Cannot find device: ") + device;
+    return printError("UNSUPPORTED", message);
+  }
+  
+  std::vector<Adapter*>::iterator adpt;
+  
+  for (adpt = dev->mAdapters.begin(); adpt != dev->mAdapters.end(); adpt++) {
+    key_value_map::const_iterator kv;
+    for (kv = queries.begin(); kv != queries.end(); kv++) {
+      string command = kv->first + "=" + kv->second + ";";
+      sLogger << LDEBUG << "Sending command '" << command << "' to " << device;
+      (*adpt)->sendCommand(command);
+    }
+  }
+  
+  return "";
 }
 
 string Agent::handleProbe(const string& name)

@@ -146,9 +146,18 @@ protected:
     const std::string& path,
     const key_value_map& queries,
     const std::string& call,
-    const std::string& device = ""
+    const std::string& device
   );
   
+  /* HTTP methods to handle the 3 basic calls */
+  std::string handlePut(
+    std::ostream& out,
+    const std::string& path,
+    const key_value_map& queries,
+    const std::string& call,
+    const std::string& device
+  );
+
   /* Handle probe calls */
   std::string handleProbe(const std::string& device);
   

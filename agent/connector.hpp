@@ -72,6 +72,9 @@ public:
 
   // Collect data and until it is \n terminated
   void parseBuffer(const char *aBuffer);
+  
+  // Send a command to the adapter
+  void sendCommand(const std::string &aCommand);
 
 protected:
   void startHeartbeats(const std::string &buf);
@@ -98,6 +101,8 @@ protected:
   int mHeartbeatFrequency;
   dlib::uint64 mLastHeartbeat;
   dlib::uint64 mLastSent;
+  
+  dlib::mutex *mCommandLock;
   
 private:
   /* Size of buffer to read at a time from the socket */  

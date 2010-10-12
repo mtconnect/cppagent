@@ -44,10 +44,12 @@ Connector::Connector(const string& server, unsigned int port)
 {
   mServer = server;
   mPort = port;
+  mCommandLock = new dlib::mutex;
 }
 
 Connector::~Connector()
 {
+  delete mCommandLock;
 }
 
 void Connector::connect()
@@ -127,6 +129,7 @@ void Connector::connect()
         }
         else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
         {
+          dlib::auto_mutex lock(*mCommandLock);
           status = mConnection->write(ping, strlen(ping));
           if (status <= 0)
           {
@@ -205,6 +208,18 @@ void Connector::parseBuffer(const char *aBuffer)
           
     // Clear buffer/insert overflow data
     mBuffer = overflow;
+  }
+}
+
+void Connector::sendCommand(const string &aCommand)
+{
+  dlib::auto_mutex lock(*mCommandLock);
+  string command = "* " + aCommand + "\n";
+  int status = mConnection->write(command.c_str(), command.length());
+  if (status <= 0)
+  {
+    sLogger << LWARN << "sendCommand: Could not write command: '" << aCommand << "' - " 
+            << intToString(status);
   }
 }
 
