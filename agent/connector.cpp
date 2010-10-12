@@ -213,13 +213,15 @@ void Connector::parseBuffer(const char *aBuffer)
 
 void Connector::sendCommand(const string &aCommand)
 {
-  dlib::auto_mutex lock(*mCommandLock);
-  string command = "* " + aCommand + "\n";
-  int status = mConnection->write(command.c_str(), command.length());
-  if (status <= 0)
-  {
-    sLogger << LWARN << "sendCommand: Could not write command: '" << aCommand << "' - " 
-            << intToString(status);
+  if (mConnected) {
+    dlib::auto_mutex lock(*mCommandLock);
+    string command = "* " + aCommand + "\n";
+    int status = mConnection->write(command.c_str(), command.length());
+    if (status <= 0)
+    {
+      sLogger << LWARN << "sendCommand: Could not write command: '" << aCommand << "' - " 
+              << intToString(status);
+    }
   }
 }
 
