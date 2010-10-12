@@ -406,7 +406,7 @@ string Agent::handlePut(
   for (adpt = dev->mAdapters.begin(); adpt != dev->mAdapters.end(); adpt++) {
     key_value_map::const_iterator kv;
     for (kv = queries.begin(); kv != queries.end(); kv++) {
-      string command = kv->first + "=" + kv->second + ";";
+      string command = kv->first + "=" + kv->second;
       sLogger << LDEBUG << "Sending command '" << command << "' to " << device;
       (*adpt)->sendCommand(command);
     }
