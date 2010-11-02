@@ -9,9 +9,14 @@ set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
 set(CMAKE_FIND_APPBUNDLE NEVER)
 
+
 if(WIN32)
+  add_library(libxml2 STATIC IMPORTED)
   set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.7.7/include )
-  file(GLOB LibXML2_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2.lib )
+  file(GLOB LibXML2_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2.lib)
+  file(GLOB LibXML2_DEBUG_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2d.lib)
+  set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION_RELEASE ${LibXML2_LIBRARIES})
+  set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION_DEBUG ${LibXML2_DEBUG_LIBRARIES})
 endif(WIN32)
 
 if(UNIX)
@@ -33,15 +38,32 @@ set(agent_srcs cppagent.cpp
 	       device.cpp 
 	       globals.cpp 
 	       options.cpp
+	       service.cpp
+	       config.cpp
 	       xml_parser.cpp 
 	       xml_printer.cpp)
 
 include_directories(../lib)
 
 find_package(LibXML2 REQUIRED)
+if(UNIX)
+  add_library(libxml2 UNKNOWN IMPORTED)
+  set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION ${LibXML2_LIBRARIES})
+endif(UNIX)
+
 
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
 include_directories(${LibXML2_INCLUDE_DIRS})
 
 add_executable(agent ${agent_srcs})
-target_link_libraries(agent ${LibXML2_LIBRARIES} ${LINUX_LIBRARIES})
+target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
+
+if(WIN32)
+  foreach(flag_var
+          CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+          CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+     if(${flag_var} MATCHES "/MD")
+        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+     endif(${flag_var} MATCHES "/MD")
+  endforeach(flag_var)
+endif(WIN32)

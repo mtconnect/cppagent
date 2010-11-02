@@ -10,9 +10,7 @@
 #include "globals.hpp"
 
 int main (int argc, char* argv[])
-{
-  gLogFile = "test.log";
-  
+{  
   // informs test-listener about testresults
   CPPUNIT_NS :: TestResult testresult;
 

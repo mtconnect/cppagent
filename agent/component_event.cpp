@@ -130,7 +130,7 @@ AttributeList *ComponentEvent::getAttributes()
       mAttributes.push_back(AttributeItem("name", mDataItem->getName()));
     mSequenceStr = int64ToString(mSequence);
     mAttributes.push_back(AttributeItem("sequence",mSequenceStr));
-    
+
     if (mDataItem->isCondition())
     {
       // Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER
@@ -139,33 +139,33 @@ AttributeList *ComponentEvent::getAttributes()
 
       getline(toParse, token, '|');
       if (strcasecmp(token.c_str(), "normal") == 0)
-	mLevel = NORMAL;
+        mLevel = NORMAL;
       else if (strcasecmp(token.c_str(), "warning") == 0)
-	mLevel = WARNING;
+        mLevel = WARNING;
       else if (strcasecmp(token.c_str(), "fault") == 0)
-	mLevel = FAULT;
+        mLevel = FAULT;
       else // Assume unavailable
-	mLevel = UNAVAILABLE;
-      
-      
+        mLevel = UNAVAILABLE;
+
+
       if (!toParse.eof()) {
-	getline(toParse, token, '|');
-	if (!token.empty())
-	  mAttributes.push_back(AttributeItem("nativeCode", token));
+        getline(toParse, token, '|');
+        if (!token.empty())
+          mAttributes.push_back(AttributeItem("nativeCode", token));
       }
-      
+
       if (!toParse.eof()) {
-	getline(toParse, token, '|');
-	if (!token.empty())
-	  mAttributes.push_back(AttributeItem("nativeSeverity", token));
+        getline(toParse, token, '|');
+        if (!token.empty())
+          mAttributes.push_back(AttributeItem("nativeSeverity", token));
       }
-      
+
       if (!toParse.eof()) {
-	getline(toParse, token, '|');
-	if (!token.empty())
-	  mAttributes.push_back(AttributeItem("qualifier", token));
+        getline(toParse, token, '|');
+        if (!token.empty())
+          mAttributes.push_back(AttributeItem("qualifier", token));
       }
-      
+
       mAttributes.push_back(AttributeItem("type", mDataItem->getType()));
     }
     else
@@ -178,9 +178,9 @@ AttributeList *ComponentEvent::getAttributes()
       if (mDataItem->isMessage())
       {
         // Format to parse: NATIVECODE
-        istringstream toParse(mAlarmData);	
+        istringstream toParse(mAlarmData);  
         string token;
-        
+
         getline(toParse, token, '|');
         mAttributes.push_back(AttributeItem("nativeCode", token));
       }
@@ -189,21 +189,21 @@ AttributeList *ComponentEvent::getAttributes()
         // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
         istringstream toParse(mAlarmData);
         string token;
-        
+
         getline(toParse, token, '|');
         mAttributes.push_back(AttributeItem("code", token));
-      
+
         getline(toParse, token, '|');
         mAttributes.push_back(AttributeItem("nativeCode", token));
-        
+
         getline(toParse, token, '|');
         mAttributes.push_back(AttributeItem("severity", token));
-        
+
         getline(toParse, token, '|');
         mAttributes.push_back(AttributeItem("state", token));
       }
     }
-    
+
     mHasAttributes = true;
   }
   return &mAttributes;

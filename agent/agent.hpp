@@ -49,6 +49,7 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "checkpoint.hpp"
+#include "service.hpp"
 
 class Adapter;
 class ComponentEvent;
@@ -57,7 +58,7 @@ class Device;
 
 using namespace dlib;
 
-class Agent : public server::http_1a_c
+class Agent : public server::http_1a
 {
 public:
   /* Slowest frequency allowed */
@@ -100,11 +101,12 @@ public:
     const std::string& device,
     const std::string& host,
     const unsigned int port,
-    bool start = true
+    bool start = false
   );
   
   /* Get device from device map */
-  Device * getDeviceByName(const std::string& name) { return mDeviceMap[name]; } 
+  Device * getDeviceByName(const std::string& name) { return mDeviceMap[name]; }
+  const std::vector<Device *> &getDevices() { return mDevices; }
   
   /* Add component events to the sliding buffer */
   unsigned int addToBuffer(
@@ -114,7 +116,7 @@ public:
   );
   
   /* Message when adapter has disconnected */
-  void disconnected(Adapter *anAdapter, const std::string aDevice);
+  void disconnected(Adapter *anAdapter, Device *aDevice);
   
   DataItem * getDataItemByName(
     const std::string& device,
@@ -134,6 +136,9 @@ public:
   // For testing...
   void setSequence(Int64 aSeq) { mSequence = aSeq; }
   
+  // Starting
+  virtual void start();
+    
 protected:
   /* HTTP methods to handle the 3 basic calls */
   std::string handleCall(
@@ -141,9 +146,18 @@ protected:
     const std::string& path,
     const key_value_map& queries,
     const std::string& call,
-    const std::string& device = ""
+    const std::string& device
   );
   
+  /* HTTP methods to handle the 3 basic calls */
+  std::string handlePut(
+    std::ostream& out,
+    const std::string& path,
+    const key_value_map& queries,
+    const std::string& call,
+    const std::string& device
+  );
+
   /* Handle probe calls */
   std::string handleProbe(const std::string& device);
   
@@ -235,6 +249,7 @@ protected:
   int mCheckpointFreq, mCheckpointCount;
   
   /* Data containers */
+  std::vector<Adapter *> mAdapters;
   std::vector<Device *> mDevices;
   std::map<std::string, Device *> mDeviceMap;
   std::map<std::string, DataItem *> mDataItemMap;

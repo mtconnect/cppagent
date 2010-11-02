@@ -33,6 +33,9 @@
 
 #include "xml_printer.hpp"
 #include "dlib/sockets.h"
+#include "dlib/logger.h"
+
+static dlib::logger sLogger("xml.printer");
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr) \
@@ -89,10 +92,10 @@ string XmlPrinter::printError(
     xmlBufferFree(buf);
   }
   catch (string error) {
-    cerr << error << endl;
+    sLogger << dlib::LERROR << "printError: " << error;
   }
   catch (...) {
-    cerr << "Unknown error" << endl;
+    sLogger << dlib::LERROR << "printError: unknown error";
   }
   
   return ret;
@@ -141,10 +144,10 @@ string XmlPrinter::printProbe(
     xmlBufferFree(buf);    
   }
   catch (string error) {
-    cerr << error << endl;
+    sLogger << dlib::LERROR << "printProbe: " << error;
   }
   catch (...) {
-    cerr << "Unknown error" << endl;
+    sLogger << dlib::LERROR << "printProbe: unknown error";
   }
   
   return ret;
@@ -328,10 +331,10 @@ string XmlPrinter::printSample(
     xmlBufferFree(buf);    
   }
   catch (string error) {
-    cerr << error << endl;
+    sLogger << dlib::LERROR << "printProbe: " << error;
   }
   catch (...) {
-    cerr << "Unknown error" << endl;
+    sLogger << dlib::LERROR << "printProbe: unknown error";
   }
   
   return ret;

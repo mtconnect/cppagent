@@ -32,8 +32,11 @@
 */
 
 #include "connector.hpp"
+#include "dlib/logger.h"
 
 using namespace std;
+
+static dlib::logger sLogger("input.connector");
 
 /* Connector public methods */
 Connector::Connector(const string& server, unsigned int port)
@@ -41,10 +44,12 @@ Connector::Connector(const string& server, unsigned int port)
 {
   mServer = server;
   mPort = port;
+  mCommandLock = new dlib::mutex;
 }
 
 Connector::~Connector()
 {
+  delete mCommandLock;
 }
 
 void Connector::connect()
@@ -56,14 +61,16 @@ void Connector::connect()
   {
     // Connect to server:port, failure will throw dlib::socket_error exception
     // Using a smart pointer to ensure connection is deleted if exception thrown
+    sLogger << LDEBUG << "Connecting to data source: " << mServer << " on port: " << mPort;
     mConnection.reset(dlib::connect(mServer, mPort));
     
 
     // Check to see if this connection supports heartbeats.
+    sLogger << LDEBUG << "Sending initial PING";
     int status = mConnection->write(ping, strlen(ping));
     if (status < 0)
     {
-      logEvent("Connector::connect", "Could not write heartbeat  " + intToString(status));
+      sLogger << LWARN << "connect: Could not write initial heartbeat: " << intToString(status);
       close();
       return;
     }
@@ -117,15 +124,16 @@ void Connector::connect()
         now = stamper.get_timestamp();
         if ((now - mLastHeartbeat) > (uint64) (mHeartbeatFrequency * 2000))
         {
-          logEvent("Connector::connect", "Did not receive heartbeat for over " + intToString(mHeartbeatFrequency * 2));
+          sLogger << LWARN << "connect: Did not receive heartbeat for over: " << intToString(mHeartbeatFrequency * 2);
           break;
         }
         else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
         {
+          dlib::auto_mutex lock(*mCommandLock);
           status = mConnection->write(ping, strlen(ping));
           if (status <= 0)
           {
-            logEvent("Connector::connect", "Could not write heartbeat  " + intToString(status));
+            sLogger << LWARN << "connect: Could not write heartbeat: " << intToString(status);
             break;
           }
           mLastSent = now;
@@ -133,14 +141,16 @@ void Connector::connect()
       }
     }
     
-    // Code should never get here, if it does, notify the exit status
-    logEvent("Connector::connect", "Connection exited with status " + intToString(status));
-
+    sLogger << LWARN << "connect: Connection exited with status: " << intToString(status);
     close();
+  }
+  catch (dlib::socket_error &e)
+  {
+    sLogger << LWARN << "connect: Socket exception: " << e.what();
   }
   catch (exception & e)
   {
-    logEvent("Connector::connect", e.what());
+    sLogger << LERROR << "connect: Exception in connect: " << e.what();
   }
 }
 
@@ -201,6 +211,20 @@ void Connector::parseBuffer(const char *aBuffer)
   }
 }
 
+void Connector::sendCommand(const string &aCommand)
+{
+  if (mConnected) {
+    dlib::auto_mutex lock(*mCommandLock);
+    string command = "* " + aCommand + "\n";
+    int status = mConnection->write(command.c_str(), command.length());
+    if (status <= 0)
+    {
+      sLogger << LWARN << "sendCommand: Could not write command: '" << aCommand << "' - " 
+              << intToString(status);
+    }
+  }
+}
+
 void Connector::startHeartbeats(const string &aArg)
 {
   size_t pos = aArg.find_last_of(' ');
@@ -209,12 +233,13 @@ void Connector::startHeartbeats(const string &aArg)
     int freq = atoi(aArg.substr(pos + 1).c_str());
     if (freq > 0 && freq < 120000)
     {
+      sLogger << LDEBUG << "Received PONG, starting heartbeats every " << freq << "ms";
       mHeartbeats = true;
       mHeartbeatFrequency = freq;
     }
     else
     {
-      logEvent("Connector::startHeartbeats", "Bad heartbeat command " + aArg);
+      sLogger << LERROR << "startHeartbeats: Bad heartbeat command " << aArg;
       close();
     }
   }

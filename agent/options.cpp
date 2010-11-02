@@ -31,6 +31,8 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
+#define _CRT_SECURE_NO_WARNINGS 1
+
 #include <sys/stat.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -43,8 +45,8 @@
 using namespace std;
 
 #ifdef WIN32
-#define strcasecmp stricmp
-#define strncasecmp strnicmp
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #endif
 
 // For arguments which have no switch char but appear in a special order.
@@ -261,16 +263,15 @@ int OptionsList::parse(int &aArgc, const char **aArgv)
 {
   sort();
   
+  // This assumes that the first option (app name) has already been removed.
+  
   int order = 0, count = 0;
 
   program_ = *aArgv;
 	
   Option *opt;
-  const char **argp = aArgv + 1;
+  const char **argp = aArgv;
   const char *cp;
-
-  // Get rid of application name
-  aArgc--;
 	
   while (aArgc > 0)
   {
@@ -348,9 +349,9 @@ int OptionsList::parse(int &aArgc, const char **aArgv)
     if (opt->isRequired() && !opt->isSet())
     {
       if (opt->getName() != NULL)
-	cerr << "Required option -" << opt->getName() << " is not specified" << endl;
+      	cerr << "Required option -" << opt->getName() << " is not specified" << endl;
       else
-	cerr << "Required option <" << opt->getArgDesc() << "> is not specified" << endl;
+      	cerr << "Required option <" << opt->getArgDesc() << "> is not specified" << endl;
       usage();
     }
   }

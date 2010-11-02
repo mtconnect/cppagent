@@ -84,6 +84,7 @@ class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
   CPPUNIT_TEST(testHeartbeatTimeout);
   CPPUNIT_TEST(testParseBuffer);
   CPPUNIT_TEST(testParseBufferFraming);
+  CPPUNIT_TEST(testSendCommand);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -107,6 +108,7 @@ protected:
   void testHeartbeatTimeout();
   void testParseBuffer();
   void testParseBufferFraming();
+  void testSendCommand();
 };
 
 #endif

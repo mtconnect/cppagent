@@ -40,6 +40,7 @@
 #include "data_item.hpp"
 
 class Component;
+class Adapter;
 
 class Device : public Component
 { 
@@ -53,12 +54,15 @@ public:
   /* Add/get items to/from the device name to data item mapping */
   void addDeviceDataItem(DataItem& dataItem);
   DataItem * getDeviceDataItem(const std::string& aName);
+  void addAdapter(Adapter *anAdapter) { mAdapters.push_back(anAdapter); }
   
   /* Return the mapping of Device to data items */
   const std::map<std::string, DataItem *> getDeviceDataItems() const {
     return mDeviceDataItemsById;
   }
-    
+
+  std::vector<Adapter*> mAdapters;
+
 protected:
   /* The iso841Class of the device */
   unsigned int mIso841Class;

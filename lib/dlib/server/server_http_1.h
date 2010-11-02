@@ -334,7 +334,8 @@ namespace dlib
 
                 // If there is data being posted back to us as a query string then
                 // pick out the queries using parse_url.
-                if (strings_equal_ignore_case(incoming.request_type, "POST") && 
+                if ((strings_equal_ignore_case(incoming.request_type, "POST") || 
+                     strings_equal_ignore_case(incoming.request_type, "PUT")) && 
                     strings_equal_ignore_case(left_substr(content_type,";"), "application/x-www-form-urlencoded"))
                 {
                     parse_url(incoming.body, incoming.queries);

@@ -35,8 +35,11 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+#include "dlib/logger.h"
 
 using namespace std;
+
+static dlib::logger sLogger("xml.parser");
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr) \
@@ -96,7 +99,7 @@ XmlParser::XmlParser(const string& xmlPath)
       xmlXPathFreeObject(devices);    
     if (xpathCtx != NULL)
       xmlXPathFreeContext(xpathCtx);
-    logEvent("Cannot parse XML file: ", e);
+    sLogger << dlib::LFATAL << "Cannot parse XML file: " << e;
     throw e;
   }
   catch (...)
@@ -180,7 +183,7 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
     if (xpathCtx != NULL)
       xmlXPathFreeContext(xpathCtx);
 
-    logEvent("XmlPaser::getDataItems", "Could not parse path");
+    sLogger << dlib::LWARN << "getDataItems: Could not parse path: " << aPath;
   }
 }
 

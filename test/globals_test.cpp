@@ -132,29 +132,6 @@ void GlobalsTest::testIllegalCharacters()
   CPPUNIT_ASSERT_EQUAL(before3, after3);
 }
 
-void GlobalsTest::testLogEvent()
-{
-  gLogFile = "test.log";
-  
-  string source("GlobalsTest"), message("Just testing");
-  string time = getCurrentTime(LOCAL);
-  
-  logEvent(source, message);
-  
-  ifstream logFile;
-  logFile.open(gLogFile);
-  
-  stringstream stream;
-  stream << logFile.rdbuf();
-  
-  string expected;
-  expected += "[" + time + "] ";
-  expected += source + ": ";
-  expected += message + "\n";
-  
-  CPPUNIT_ASSERT(stream.str().find(expected) != string::npos);
-}
-
 void GlobalsTest::testGetEnumerations()
 {
   unsigned int size = 7;

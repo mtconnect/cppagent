@@ -33,8 +33,11 @@
 
 #include "adapter.hpp"
 #include "device.hpp"
+#include "dlib/logger.h"
 
 using namespace std;
+
+static dlib::logger sLogger("input.adapter");
 
 /* Adapter public methods */
 Adapter::Adapter(
@@ -42,15 +45,47 @@ Adapter::Adapter(
     const string& server,
     const unsigned int port
   )
-: Connector(server, port), mDevice(device)
+: Connector(server, port), mDeviceName(device), mRunning(true)
 {
+  
 }
 
 Adapter::~Adapter()
 {
   // Will stop threaded object gracefully Adapter::thread()
+  mRunning = false;
   stop();
   wait();
+}
+
+void Adapter::setAgent(Agent &aAgent)
+{
+  mAgent = &aAgent;
+  mDevice = mAgent->getDeviceByName(mDeviceName);
+  mDevice->addAdapter(this);
+}
+
+inline static bool splitKey(string &key, string &dev) 
+{
+  size_t found = key.find_first_of(':');
+  if (found == string::npos) {
+    return false;
+  } else {
+    dev = key;
+    dev.erase(found);
+    key.erase(0, found + 1);
+    return true;
+  }
+}
+
+inline static void trim(std::string &str)
+{
+  size_t index = str.find_first_not_of(" \r\t");
+  if (index != string::npos && index > 0)
+    str.erase(0, index);
+  index = str.find_last_not_of(" \r\t");
+  if (index != string::npos)
+    str.erase(index + 1);
 }
 
 /**
@@ -63,60 +98,70 @@ Adapter::~Adapter()
 void Adapter::processData(const string& data)
 {
   istringstream toParse(data);
-  string key;
+  string key, value, dev;
+  Device *device;
   
   getline(toParse, key, '|');
   string time = key;
   
   getline(toParse, key, '|');
-  string type = key;
-  
-  string value;
   getline(toParse, value, '|');
 
-  DataItem *dataItem = mAgent->getDataItemByName(mDevice, key);
-  if (dataItem == NULL)
-  {
-    logEvent("Agent", "Could not find data item: " + key);
+  DataItem *dataItem;
+  if (splitKey(key, dev)) {
+    device = mAgent->getDeviceByName(dev);
+  } else {
+    device = mDevice;
   }
-  else
-  {
-    string rest;
-    if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage())
+  
+  if (device != NULL) {
+    dataItem = device->getDeviceDataItem(key);    
+  
+    if (dataItem == NULL)
     {
-      getline(toParse, rest);
-      value = value + "|" + rest;
-    }
+      sLogger << LWARN << "Could not find data item: " << key;
+    } else {
+      string rest;
+      if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage())
+      {
+        getline(toParse, rest);
+        value = value + "|" + rest;
+      }
 
-    // Add key->value pairings
-    dataItem->setDataSource(this);
-    mAgent->addToBuffer(dataItem, value, time);
+      // Add key->value pairings
+      dataItem->setDataSource(this);
+      trim(value);
+      mAgent->addToBuffer(dataItem, toUpperCase(value), time);
+    }
+  } else {
+    sLogger << LDEBUG << "Could not find device: " << dev;
   }
   
   // Look for more key->value pairings in the rest of the data
   while (getline(toParse, key, '|') && getline(toParse, value, '|'))
   {
-    dataItem = mAgent->getDataItemByName(mDevice, key);
+    if (splitKey(key, dev)) {
+      device = mAgent->getDeviceByName(dev);
+    } else {
+      device = mDevice;
+    }
+    if (device == NULL) {
+      sLogger << LDEBUG << "Could not find device: " << dev;
+      continue;
+    }
+    
+    dataItem = device->getDeviceDataItem(key);    
     if (dataItem == NULL)
     {
-      logEvent("Agent", "Could not find data item: " + key);
+      sLogger << LWARN << "Could not find data item: " << key;
     }
     else
     {
       dataItem->setDataSource(this);
+      trim(value);
       mAgent->addToBuffer(dataItem, toUpperCase(value), time);
     }
   }
-}
-
-inline static void trim(std::string str)
-{
-  size_t index = str.find_first_not_of(" \t");
-  if (index != string::npos)
-    str.erase(0, index);
-  index = str.find_last_not_of(" \t");
-  if (index != string::npos)
-    str.erase(index);
 }
 
 void Adapter::protocolCommand(const std::string& data)
@@ -126,26 +171,26 @@ void Adapter::protocolCommand(const std::string& data)
   size_t index = data.find(':', 2);
   if (index != string::npos)
   {
-    Device *device = mAgent->getDeviceByName(mDevice);
-    if (device != NULL)
-    {
-      // Slice from the second character to the :, without the colon
-      string key = data.substr(2, index - 2);
-      trim(key);        
-      string value = data.substr(index + 1);
-      trim(value);
-      
-      if (key == "uuid")
-        device->setUuid(value);
-      else if (key == "manufacturer")
-        device->setManufacturer(value);
-      else if (key == "station")
-        device->setStation(value);
-      else if (key == "serialNumber")
-        device->setSerialNumber(value);
-      else
-        logEvent("Agent", "Unknown command '" + data + "' for device '" + mDevice);
-    }
+    // Slice from the second character to the :, without the colon
+    string key = data.substr(2, index - 2);
+    trim(key);        
+    string value = data.substr(index + 1);
+    trim(value);
+    
+    if (key == "uuid")
+      mDevice->setUuid(value);
+    else if (key == "manufacturer")
+      mDevice->setManufacturer(value);
+    else if (key == "station")
+      mDevice->setStation(value);
+    else if (key == "serialNumber")
+      mDevice->setSerialNumber(value);
+    else if (key == "description")
+      mDevice->setDescription(value);
+    else if (key == "nativeName")
+      mDevice->setNativeName(value);
+    else
+      sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
   }
   
 }
@@ -159,10 +204,11 @@ void Adapter::disconnected()
 void Adapter::thread()
 {
   // Start the connection to the socket
-  while (true)
+  while (mRunning)
   {
     connect();
     // Try to reconnect every 10 seconds
+    sLogger << LINFO << "Will try to reconnect in 10 seconds";
     dlib::sleep(10 * 1000);
   }
 }

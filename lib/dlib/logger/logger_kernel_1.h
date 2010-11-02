@@ -58,6 +58,19 @@ namespace dlib
     void set_all_logging_levels (
         const log_level& new_level
     );
+  
+  typedef void (*print_header_type)(
+      std::ostream& out, 
+      const std::string& logger_name, 
+      const log_level& l,
+      const uint64 thread_id
+      );
+  
+   void set_all_logging_headers (
+       print_header_type ph
+   );
+
+  
 
 // ----------------------------------------------------------------------------------------
 
@@ -572,6 +585,10 @@ namespace dlib
 
         friend void set_all_logging_output_streams (
             std::ostream& out
+        );
+        
+        friend void set_all_logging_headers (
+            print_header_type ph
         );
 
         template <

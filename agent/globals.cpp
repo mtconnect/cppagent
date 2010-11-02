@@ -158,20 +158,6 @@ void replaceIllegalCharacters(string& data)
   }
 }
 
-const char *gLogFile;
-
-void logEvent(const string& source, const string& message)
-{
-  ofstream logFile;
-  logFile.open(gLogFile, ios::app);
-  if (logFile.is_open())
-  {
-    logFile << "[" << getCurrentTime(LOCAL) << "] ";
-    logFile << source << ": " << message << endl; 
-  }
-  logFile.close();
-}
-
 int getEnumeration(const string& name, const string *array, unsigned int size)
 {
   for (unsigned int i = 0; i < size; i++)
