@@ -92,6 +92,9 @@ public:
   void setManufacturer(const std::string &aManufacturer) { mManufacturer = aManufacturer; reBuildAttributes(); }
   void setSerialNumber(const std::string &aSerialNumber) { mSerialNumber = aSerialNumber; reBuildAttributes(); }
   void setStation(const std::string &aStation) { mStation = aStation; reBuildAttributes(); }
+  void setDescription(const std::string &aDescription) { mDescriptionBody = aDescription; reBuildAttributes(); }
+  void setNativeName(const std::string &aNativeName) { mNativeName = aNativeName; reBuildAttributes(); }
+  
   
   /* Add/get description specifications using an attribute map */
   void addDescription(std::string body, std::map<std::string, std::string> attributes);

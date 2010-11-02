@@ -185,6 +185,10 @@ void Adapter::protocolCommand(const std::string& data)
       mDevice->setStation(value);
     else if (key == "serialNumber")
       mDevice->setSerialNumber(value);
+    else if (key == "description")
+      mDevice->setDescription(value);
+    else if (key == "nativeName")
+      mDevice->setNativeName(value);
     else
       sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
   }

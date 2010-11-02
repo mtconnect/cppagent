@@ -328,45 +328,29 @@ VOID WINAPI SvcMain( DWORD dwArgc, LPTSTR *lpszArgv )
 VOID SvcInit( DWORD dwArgc, LPTSTR *lpszArgv)
 {
 // Get the real arguments from the registry
-  HKEY software;
-  LONG res = RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
+  char key[1024];
+  sprintf(key, "SOFTWARE\\MTConnect\\%s", gService->name().c_str());
+  
+  HKEY agent;
+  LONG res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, key, 0, KEY_READ, &agent);
   if (res != ERROR_SUCCESS)
   {
-    SvcReportEvent("RegOpenKey: Could not open SOFTWARE");
+    SvcReportEvent("RegOpenKey: Could not open MTConnect Agent Key");
+    ReportSvcStatus( SERVICE_STOPPED, 1, 0 );
     return;
   }
-
-  HKEY mtc;
-  res = RegOpenKey(software, "MTConnect", &mtc);
-  if (res != ERROR_SUCCESS)
-  {
-    SvcReportEvent("RegOpenKey: Could not open MTConnect");
-    RegCloseKey(software);
-    return;
-  }
-
-  // Create Service Key
-  HKEY adapter;
-  res = RegOpenKey(mtc, gService->name().c_str(), &adapter);
-  RegCloseKey(software);
-  if (res != ERROR_SUCCESS)
-  {
-    SvcReportEvent("RegOpenKey: Could not open Adapter");
-    RegCloseKey(mtc);
-    return;
-  }
-
+  
   const char *argp[2];
   BYTE configFile[2048];
-  DWORD len, type;
-  res = RegQueryValueEx(adapter, "ConfigurationFile", 0, &type, (BYTE*) configFile, &len);
-  RegCloseKey(mtc);
+  DWORD len = sizeof(configFile) - 1, type;
+  res = RegQueryValueEx(agent, "ConfigurationFile", 0, &type, (BYTE*) configFile, &len);
+  RegCloseKey(agent);
   if (res != ERROR_SUCCESS)
   {
     SvcReportEvent("RegOpenKey: Could not open ConfigurationFile");
+    ReportSvcStatus( SERVICE_STOPPED, 1, 0 );
     return;
   }
-  RegCloseKey(adapter);
 
   argp[0] = (char*) configFile;
   argp[1] = 0;
