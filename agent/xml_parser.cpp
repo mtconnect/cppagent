@@ -36,16 +36,32 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 #include "dlib/logger.h"
+#include <stdexcept>
 
 using namespace std;
 
 static dlib::logger sLogger("xml.parser");
 
-#define strfy(line) #line
+#define strstrfy(x) #x
+#define strfy(x) strstrfy(x)
 #define THROW_IF_XML2_ERROR(expr) \
-if ((expr) < 0) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+if ((expr) < 0) { throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
 #define THROW_IF_XML2_NULL(expr) \
-if ((expr) == NULL) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+if ((expr) == NULL) { throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+
+extern "C" void XMLCDECL
+agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
+{
+  va_list args;
+
+  char buffer[2048];
+  va_start(args, msg);
+  vsnprintf(buffer, 2046, msg, args);
+  buffer[2047] = '0';
+  va_end(args);
+
+  sLogger << dlib::LERROR << "XML: " << buffer;
+}
 
 /* XmlParser public methods */
 XmlParser::XmlParser(const string& xmlPath)
@@ -58,6 +74,8 @@ XmlParser::XmlParser(const string& xmlPath)
   {
     xmlInitParser();
     xmlXPathInit();
+    xmlSetGenericErrorFunc(NULL, agentXMLErrorFunc);
+    
     THROW_IF_XML2_NULL(mDoc = xmlReadFile(xmlPath.c_str(), NULL, 
                        XML_PARSE_NOENT | XML_PARSE_NOBLANKS));
     

@@ -56,8 +56,9 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
   catch (exception & e)
   {
     sLogger << LFATAL << "Error loading xml configuration: " + configXmlPath;
-    delete mConfig;
-    throw (string) e.what();
+    sLogger << LFATAL << "Error detail: " << e.what();
+    cerr << e.what() << endl;
+    throw e;
   }
 
   // Grab data from configuration

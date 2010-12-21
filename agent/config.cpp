@@ -181,13 +181,23 @@ void AgentConfiguration::loadConfig()
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {      
       const config_reader::kernel_1a &adapter = adapters.block(*block);
-      const string &deviceName = get_with_default(adapter, "Device", (string) "*");
-      if (deviceName == "*")
-        device = defaultDevice();
-      else
+      string deviceName;      
+      if (adapter.is_key_defined("Device")) {
+	deviceName = adapter["Device"].c_str();
+	if (deviceName == "*")
+	  device = defaultDevice();
+	else
+	  device = mAgent->getDeviceByName(deviceName);
+      } else {
+	deviceName = *block;
         device = mAgent->getDeviceByName(deviceName);
+	
+	if (device == NULL && mAgent->getDevices().size() == 1)
+	  device = defaultDevice();
+      }
+	
       if (device == NULL) {
-        throw new runtime_error("Can't locate device " + *block + " in XML configuration file.");
+        throw runtime_error(static_cast<string>("Can't locate device '") + deviceName + "' in XML configuration file.");
       }
 
       const string &host = get_with_default(adapter, "Host", (string)"localhost");

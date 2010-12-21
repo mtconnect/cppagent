@@ -267,7 +267,7 @@ int OptionsList::parse(int &aArgc, const char **aArgv)
   
   int order = 0, count = 0;
 
-  program_ = *aArgv;
+  program_ = "agent";
 	
   Option *opt;
   const char **argp = aArgv;

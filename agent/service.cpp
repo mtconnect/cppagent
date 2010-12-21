@@ -7,6 +7,7 @@ static dlib::logger sLogger("init.service");
 
 #ifdef WIN32
 #define stricmp _stricmp
+#define snprintf _snprintf
 #else
 #define strncpy_s strncpy
 #endif
@@ -50,56 +51,77 @@ VOID SvcReportEvent( LPTSTR );
 
 MTConnectService *gService = NULL;
 
+static void agent_termination_handler()
+{
+  
+}
+
+
 int MTConnectService::main(int argc, const char *argv[]) 
 {
-  // If command-line parameter is "install", install the service. If debug or run
-  // is specified than just run it as a command line process. 
-  // Otherwise, the service is probably being started by the SCM.
-  if(argc > 1) {
-    if (stricmp( argv[1], "help") == 0 || strncmp(argv[1], "-h", 2) == 0)
-    {
-      printf("Usage: agent [help|install|debug|run] [configuration_file]\n"
-             "       help           Prints this message\n"
-             "       install        Installs the service\n"
-             "                      install with -h will display additional options\n"
-             "       remove         Remove the service\n"
-             "       debug          Runs the agent on the command line with verbose logging\n"
-             "       run            Runs the agent on the command line\n"
-             "       config_file    The configuration file to load\n"
-             "                      Default: agent.cfg in current directory\n\n"
-             "When the agent is started without any arguments it is assumed it will be running\n"
-             "as a service and will begin the service initialization sequence\n");
-      exit(0);
-    } else if (stricmp( argv[1], "install") == 0 ) {
-      initialize(argc - 2, argv + 2);
-      install();
-      return 0;
-    } else if (stricmp( argv[1], "remove") == 0 ) {
-      initialize(argc - 2, argv + 2);
-      remove();
-      return 0;
-    } else if (stricmp( argv[1], "debug") == 0 || stricmp( argv[1], "run") == 0) {
-      if (stricmp( argv[1], "debug") == 0)
-        mIsDebug = true;
-      initialize(argc - 2, argv + 2);
-      start();
-      return 0;
+  std::set_terminate(agent_termination_handler);
+  
+  try 
+  {
+    // If command-line parameter is "install", install the service. If debug or run
+    // is specified than just run it as a command line process. 
+    // Otherwise, the service is probably being started by the SCM.
+    if(argc > 1) {
+      if (stricmp( argv[1], "help") == 0 || strncmp(argv[1], "-h", 2) == 0)
+      {
+	printf("Usage: agent [help|install|debug|run] [configuration_file]\n"
+	       "       help           Prints this message\n"
+	       "       install        Installs the service\n"
+	       "                      install with -h will display additional options\n"
+	       "       remove         Remove the service\n"
+	       "       debug          Runs the agent on the command line with verbose logging\n"
+	       "       run            Runs the agent on the command line\n"
+	       "       config_file    The configuration file to load\n"
+	       "                      Default: agent.cfg in current directory\n\n"
+	       "When the agent is started without any arguments it is assumed it will be running\n"
+	       "as a service and will begin the service initialization sequence\n");
+	exit(0);
+      } else if (stricmp( argv[1], "install") == 0 ) {
+	initialize(argc - 2, argv + 2);
+	install();
+	return 0;
+      } else if (stricmp( argv[1], "remove") == 0 ) {
+	initialize(argc - 2, argv + 2);
+	remove();
+	return 0;
+      } else if (stricmp( argv[1], "debug") == 0 || stricmp( argv[1], "run") == 0) {
+	if (stricmp( argv[1], "debug") == 0)
+	  mIsDebug = true;
+	initialize(argc - 2, argv + 2);
+	start();
+	return 0;
+      }
     }
+  
+    gService = this;
+    mIsService = true;
+    SERVICE_TABLE_ENTRY DispatchTable[] = 
+      { 
+	{  "", (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
+	{ NULL, NULL } 
+      }; 
+
+    if (!StartServiceCtrlDispatcher( DispatchTable )) 
+    { 
+      SvcReportEvent("StartServiceCtrlDispatcher"); 
+    } 
+  }
+  catch (std::exception & e)
+  {
+    sLogger << dlib::LFATAL << "Agent top level exception: " << e.what();
+    std::cerr << "Agent top level exception: " << e.what() << std::endl;
+  }
+  catch (std::string &s)
+  {
+    sLogger << dlib::LFATAL << "Agent top level exception: " << s;
+    std::cerr << "Agent top level exception: " << s << std::endl;
   }
   
-  gService = this;
-  mIsService = true;
-  SERVICE_TABLE_ENTRY DispatchTable[] = 
-  { 
-    {  "", (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
-      { NULL, NULL } 
-  }; 
-
-  if (!StartServiceCtrlDispatcher( DispatchTable )) 
-  { 
-    SvcReportEvent("StartServiceCtrlDispatcher"); 
-  } 
-
   return 0;
 } 
 
@@ -329,7 +351,7 @@ VOID SvcInit( DWORD dwArgc, LPTSTR *lpszArgv)
 {
 // Get the real arguments from the registry
   char key[1024];
-  sprintf(key, "SOFTWARE\\MTConnect\\%s", gService->name().c_str());
+  snprintf(key, 1023, "SOFTWARE\\MTConnect\\%s", gService->name().c_str());
   
   HKEY agent;
   LONG res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, key, 0, KEY_READ, &agent);
