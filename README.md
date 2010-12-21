@@ -10,7 +10,7 @@ the devices and the location of the adapter.
 
 Version 1.1.0.8 add the ability to run the C++ Agent as a Windows
 service and support for a configuration file instead of command line
-arguments. The agent can accept input from a socket in a pipe (|)
+arguments. The agent can accept input from a socket in a pipe (`|`)
 delimited stream according to the descriptions given in the adapter
 guide.
 
@@ -30,7 +30,10 @@ Usage
        config_file    The configuration file to load
                       Default: agent.cfg in current directory
 
-When the agent is started without any arguments it is assumed it will be running as a service and will begin the service initialization sequence. The full path to the configuration file is stored in the registry in the following location: 
+When the agent is started without any arguments it is assumed it will
+be running as a service and will begin the service initialization
+sequence. The full path to the configuration file is stored in the
+registry in the following location:
 
     \\HKEY_LOCAL_MACHINE\SOFTWARE\MTConnect\MTConnect Agent\ConfigurationFile
 
@@ -58,30 +61,37 @@ standard system libraries, the agent only requires winsock
 libraries. The agent has been test with version of Windows 2000 and
 later.
 
-bin/		Win32 binary (no dependencies required).
+* bin/		Win32 binary (no dependencies required).
 
 Building
 -------
 
 Download cmake from [cmake](http://www.cmake.org/cmake/resources/software.html)
 
-Configure cmake using the CMakeLists.txt file in the agent
+Configure cmake using the `CMakeLists.txt` file in the agent
 directory. This will generate a project file for the target
 platform. See CMake documentation for more information.
 
 Configuration
 ------
 
-The configuration file is using the standard Boost C++ file format. The configuration file format is flexible and allows for both many adapters to be served from one agent and an adapter to feed multiple agents. The format is: 
+The configuration file is using the standard Boost C++ file
+format. The configuration file format is flexible and allows for both
+many adapters to be served from one agent and an adapter to feed
+multiple agents. The format is:
 
     Key = Value
 
-The key can only occur once within a section and the value can be any sequence of characters followed by a <CR>. There no significance to the order of the keys, so the file can be specified in free form. We will go over some configurations from a minimal configuration to more complex multi-adapter configurations.
+The key can only occur once within a section and the value can be any
+sequence of characters followed by a `<CR>`. There no significance to
+the order of the keys, so the file can be specified in free form. We
+will go over some configurations from a minimal configuration to more
+complex multi-adapter configurations.
 
 ###Example 1:###
 
-Here’s an example configuration file. The # character can be used to
-comment sections of the file. Everything on the line after the # is
+Here’s an example configuration file. The `#` character can be used to
+comment sections of the file. Everything on the line after the `#` is
 ignored. We will start with a extremely simple configuration file.
 
     # A very simple file...
@@ -90,8 +100,8 @@ ignored. We will start with a extremely simple configuration file.
 This is a one line configuration that specifies the XML file to load
 for the devices. Since all the values are defaulted, an empty
 configuration configuration file can be specified. This configuration
-file will load the VMC-3Axis.xml file and try to connect to an adapter
-located on the localhost at port 7878. VMC-3Axis.xml must only contain
+file will load the `VMC-3Axis.xml` file and try to connect to an adapter
+located on the localhost at port 7878. `VMC-3Axis.xml` must only contain
 the definition for one device, if more devices exist, and error will
 be raised and the process will exit.
 
@@ -115,8 +125,8 @@ adapter. Multiple adapters can be specified for one device as well.
     }
 
 This example loads the devices file as before, but specifies the list
-of adapters. The device is taken from the name VMC-3Axis that starts
-the nested block and connects to the adapter on 192.168.10.22 and port
+of adapters. The device is taken from the name `VMC-3Axis` that starts
+the nested block and connects to the adapter on `192.168.10.22` and port
 7878. Another way of specifying the equivalent configuration is:
 
     Devices = VMC-3Axis.xml
@@ -160,9 +170,9 @@ each.
         }
     }
 
-Both Adapter_1 and Adapter_2 will feed the VMC-3Axis device with
-different data items.  The Adapter_1 name is arbitrary and could just
-as well be named EnergySensor if desired as illustrated below.
+Both `Adapter_1` and `Adapter_2` will feed the `VMC-3Axis` device with
+different data items.  The `Adapter_1` name is arbitrary and could just
+as well be named `EnergySensor` if desired as illustrated below.
 
     Devices = VMC-3Axis.xml
 
@@ -217,13 +227,13 @@ adapter feeding each device.
     }
 
 This will map associate the adapters for these two machines to the VMC
-and HMC devices in MyDevices.xml file. The ports are defaulted to
+and HMC devices in `MyDevices.xml` file. The ports are defaulted to
 7878, so we are not required to specify them.
 
 ###Example 6:###
 
-Logging configuration is specified using the logger_config block. You
-can change the logging_level to specify the verbosity of the logging
+Logging configuration is specified using the `logger_config` block. You
+can change the `logging_level` to specify the verbosity of the logging
 as well as the destination of the logging output.
 
     logger_config
@@ -241,7 +251,7 @@ debug.log. For only fatal errors you can specify the following:
     }
 
 The default file is agent.log in the same directory as the agent.exe
-file resides. The default logging level is info. To have the agent log
+file resides. The default logging level is `info`. To have the agent log
 to the command window:
 
     logger_config
@@ -259,9 +269,9 @@ Configuration Parameters
 
 ###Top level configuration items####
 
-* BufferSize	The 2X number of slots available in the circular buffer for samples, events, and conditions.
+* BufferSize	The 2^X number of slots available in the circular buffer for samples, events, and conditions.
 
-    *Default*: 17 -> 217 = 131,072 slots.
+    *Default*: 17 -> 2^17 = 131,072 slots.
 
 * CheckpointFrequency	The frequency checkpoints are created in the stream. This is used for current with the at argument. This is an advanced configuration item and should not be changed unless you understand the internal workings of the agent.
 
@@ -327,14 +337,14 @@ logger_config configuration items
 
 * logger_config	The logging configuration section.
 
-    * logging_level The logging level: trace, debug, info, warn,
-        error, or fatal.
+    * logging_level The logging level: `trace`, `debug`, `info`, `warn`,
+        `error`, or `fatal`.
 
-        *Default*: info
+        *Default*: `info`
 
     * output The output file or stream. If a file is specified specify
       as:  "file <filename>". cout and cerr can be used to specify the
       standard output and standard error streams. *Default*s to the same
       directory as the executable.
 
-        *Default*: file adapter.log
+        *Default*: file `adapter.log`
