@@ -40,17 +40,17 @@ registry in the following location:
 Directories
 -----
 
-* agent/        - This contains the main application entry point and the Makefile
+* `agent/`        - This contains the main application entry point and the Makefile
 
-* lib/          - Third party library source. Contains source for cppunit, dlib, and libxml++.
+* `lib/`          - Third party library source. Contains source for cppunit, dlib, and libxml++.
 
-* samples/	- Sample XML configuration files.
+* `samples/`	- Sample XML configuration files.
 
-* src/		- The main source for the app.
+* `src/`		- The main source for the app.
 
-* test/         - Various unit tests.
+* `test/`         - Various unit tests.
 
-* win32/        - Libraries required only for the win32 build and the win32 solution.
+* `win32/`        - Libraries required only for the win32 build and the win32 solution.
 
 Windows Binary Release
 -----
@@ -61,7 +61,7 @@ standard system libraries, the agent only requires winsock
 libraries. The agent has been test with version of Windows 2000 and
 later.
 
-* bin/		Win32 binary (no dependencies required).
+* `bin/`         - Win32 binary (no dependencies required).
 
 Building
 -------
@@ -269,29 +269,36 @@ Configuration Parameters
 
 ###Top level configuration items####
 
-* BufferSize	The 2^X number of slots available in the circular buffer for samples, events, and conditions.
+* `BufferSize` - The 2^X number of slots available in the circular
+  buffer for samples, events, and conditions.
 
     *Default*: 17 -> 2^17 = 131,072 slots.
 
-* CheckpointFrequency	The frequency checkpoints are created in the stream. This is used for current with the at argument. This is an advanced configuration item and should not be changed unless you understand the internal workings of the agent.
+* `CheckpointFrequency` - The frequency checkpoints are created in the
+  stream. This is used for current with the at argument. This is an
+  advanced configuration item and should not be changed unless you
+  understand the internal workings of the agent.
 
     *Default*: 1000
 
-* Devices	The XML file to load that specifies the devices and is supplied as the result of a probe request. If the key is not found the defaults are tried.
+* `Devices` - The XML file to load that specifies the devices and is
+  supplied as the result of a probe request. If the key is not found
+  the defaults are tried.
 
     *Default*s: probe.xml or Devices.xml 
 
-* PidFile	UNIX only. The full path of the file that contains the process id of the daemon. This is not supported in Windows.
+* `PidFile` - UNIX only. The full path of the file that contains the
+  process id of the daemon. This is not supported in Windows.
 
     *Default*: agent.pid
 
-* Port	The port number the agent binds to for requests.
+* `Port`	- The port number the agent binds to for requests.
 
     *Default*: 5000
 
 ###Adapter configuration items###
 
-* Adapters Adapters begins a list of device blocks. If the Adapters
+* `Adapters` - Adapters begins a list of device blocks. If the Adapters
   are not specified and the Devices file only contains one device, a
   default device entry will be created with an adapter located on the
   localhost and port 7878 associated with the device in the devices
@@ -299,7 +306,7 @@ Configuration Parameters
 
     *Default*: localhost 5000 associated with the default device
 
-    * Device The name of the device that corresponds to the name of
+    * `Device` - The name of the device that corresponds to the name of
       the device in the Devices file. Each adapter can map to one
       device. Specifying a "*" will map to the default device.
 
@@ -308,41 +315,41 @@ Configuration Parameters
         in the devices file.
 
 
-    * Host	The host the adapter is located on.
+    * `Host` - The host the adapter is located on.
 
         *Default*: localhost
 
-    * Port	The port to connect to the adapter.
+    * `Port` - The port to connect to the adapter.
 
         *Default*: 7878
 
-    * Manufacturer	Replaces the manufacturer attribute in the device XML.
+    * `Manufacturer` - Replaces the manufacturer attribute in the device XML.
 
         *Default*: Current value in device XML.
 
-    * Station	Replaces the Station attribute in the device XML.
+    * `Station` - Replaces the Station attribute in the device XML.
 
         *Default*: Current value in device XML.
 
-    * SerialNumber	Replaces the SerialNumber attribute in the device XML.
+    * `SerialNumber` - Replaces the SerialNumber attribute in the device XML.
 
         *Default*: Current value in device XML.
 
-    * UUID	Replaces the UUID attribute in the device XML.
+    * `UUID` - Replaces the UUID attribute in the device XML.
 
         *Default*: Current value in device XML.
 
 logger_config configuration items
 -----
 
-* logger_config	The logging configuration section.
+* `logger_config` - The logging configuration section.
 
-    * logging_level The logging level: `trace`, `debug`, `info`, `warn`,
+    * `logging_level` - The logging level: `trace`, `debug`, `info`, `warn`,
         `error`, or `fatal`.
 
         *Default*: `info`
 
-    * output The output file or stream. If a file is specified specify
+    * `output` - The output file or stream. If a file is specified specify
       as:  "file <filename>". cout and cerr can be used to specify the
       standard output and standard error streams. *Default*s to the same
       directory as the executable.
