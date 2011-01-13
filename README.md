@@ -24,8 +24,7 @@ Usage
        help           Prints this message
        install        Installs the service
        remove         Remove the service
-       debug          Runs the agent on the command line with 
-					verbose logging
+       debug          Runs the agent on the command line with verbose logging
        run            Runs the agent on the command line
        config_file    The configuration file to load
                       Default: agent.cfg in current directory

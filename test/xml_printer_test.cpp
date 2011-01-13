@@ -144,6 +144,14 @@ void XmlPrinterTest::testPrintCurrent()
                                     "ON");
 }
 
+void XmlPrinterTest::testChangeNamespace()
+{
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
+            "urn:mtconnect.org:MTConnectDevices:1.1 http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd");
+}
+
+
 void XmlPrinterTest::testPrintSample()
 {
   vector<ComponentEventPtr> events;
@@ -269,6 +277,7 @@ void XmlPrinterTest::testVeryLargeSequence()
 
   
 }
+
 
 void XmlPrinterTest::testChangeDeviceAttributes()
 {
