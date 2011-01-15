@@ -31,9 +31,10 @@
 # Description:       Provides MTConnect web server functionality
 ### END INIT INFO
 
+AGENT_DIR=/etc/mtconnect
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/bin/agent
-DAEMON_OPTS='daemonize /home/mtconnect/devices/agent.cfg'
+DAEMON_OPTS="daemonize $AGENT_DIR/agent.cfg"
 NAME=Agent
 DESC=MTConnectAgent
 
@@ -42,20 +43,20 @@ test -x $DAEMON || exit 0
 
 . /lib/lsb/init-functions
 
-LOGDIR=/home/mtconnect/devices
-PIDFILE=/home/mtconnect/devices/agent.pid
+LOGDIR=/var/log/
+PIDFILE=/var/run/agent.pid
 DIETIME=10                   # Time to wait for the server to die, in seconds
                             # If this value is set too low you might not
                             # let some servers to die gracefully and
                             # 'restart' will not work
 
-LOGFILE=$LOGDIR/$NAME.log  # Server logfile
-
-
 # Include mongodb defaults if available
 if [ -f /etc/default/$NAME ] ; then
         . /etc/default/$NAME
 fi
+
+# make sure the log directory exists
+[ ! -d "$LOGDIR" ] || mkdir -p $LOGDIR
 
 DAEMONUSER=si-admin
 # Check that the user exists (if we set a user)
