@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2007 Javier Fernandez-Sanguino <jfs@debian.org>
 #
-cd /et# This is free software; you may redistribute it and/or modify
+# This is free software; you may redistribute it and/or modify
 # it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2,
 # or (at your option) any later version.
@@ -33,7 +33,7 @@ cd /et# This is free software; you may redistribute it and/or modify
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/bin/agent
-DAEMON_OPTS='daemonize /home/si-admin/devices/agent.cfg'
+DAEMON_OPTS='daemonize /home/mtconnect/devices/agent.cfg'
 NAME=Agent
 DESC=MTConnectAgent
 
@@ -42,8 +42,8 @@ test -x $DAEMON || exit 0
 
 . /lib/lsb/init-functions
 
-LOGDIR=/home/si-admin/devices
-PIDFILE=/home/si-admin/devices/agent.pid
+LOGDIR=/home/mtconnect/devices
+PIDFILE=/home/mtconnect/devices/agent.pid
 DIETIME=10                   # Time to wait for the server to die, in seconds
                             # If this value is set too low you might not
                             # let some servers to die gracefully and

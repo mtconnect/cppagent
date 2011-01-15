@@ -5,7 +5,6 @@ cmake_minimum_required (VERSION 2.6)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake;${CMAKE_MODULE_PATH}")
 
-set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
 set(CMAKE_FIND_APPBUNDLE NEVER)
 
@@ -67,3 +66,5 @@ if(WIN32)
      endif(${flag_var} MATCHES "/MD")
   endforeach(flag_var)
 endif(WIN32)
+
+INSTALL(TARGETS agent RUNTIME DESTINATION bin)
