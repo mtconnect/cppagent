@@ -76,6 +76,7 @@ ComponentEvent::ComponentEvent(ComponentEvent& ce)
   mValue = ce.mValue;
   mHasAttributes = false;
   mRefCount = 1;
+  mCode = ce.mCode;
 }
 
 ComponentEvent::~ComponentEvent()
@@ -150,8 +151,10 @@ AttributeList *ComponentEvent::getAttributes()
 
       if (!toParse.eof()) {
         getline(toParse, token, '|');
-        if (!token.empty())
+        if (!token.empty()) {
+	  mCode = token;
           mAttributes.push_back(AttributeItem("nativeCode", token));
+	}
       }
 
       if (!toParse.eof()) {
@@ -254,5 +257,61 @@ void ComponentEvent::getList(std::list<ComponentEventPtr> &aList)
   aList.push_back(this);
 }
 
+ComponentEvent *ComponentEvent::find(const std::string &aCode)
+{
+  if (mCode == aCode)
+    return this;
+  
+  if (mPrev.getObject() != NULL)
+    return mPrev->find(aCode);
+
+  return NULL;
+}
+
+bool ComponentEvent::replace(ComponentEvent *aOld,
+			     ComponentEvent *aNew)
+{
+  ComponentEvent *obj = mPrev.getObject();
+  if (obj == NULL)
+    return false;
+  
+  if (obj == aOld) 
+  {
+    aNew->mPrev = aOld->mPrev;
+    mPrev = aNew;
+    return true;
+  }
+
+  return mPrev->replace(aOld, aNew);
+}
+
+ComponentEvent *ComponentEvent::deepCopy()
+{
+  ComponentEvent *n = new ComponentEvent(*this);
+  if (mPrev.getObject() != NULL) {
+    n->mPrev = mPrev->deepCopy();
+    n->mPrev->unrefer();
+  }
+  return n;
+}
+
+ComponentEvent *ComponentEvent::deepCopyAndRemove(ComponentEvent *aOld)
+{
+  if (this == aOld)
+  {
+    if (mPrev.getObject() != NULL)
+      return mPrev->deepCopy();
+    else
+      return NULL;
+  }
+    
+  ComponentEvent *n = new ComponentEvent(*this);
+  if (mPrev.getObject() != NULL) {
+    n->mPrev = mPrev->deepCopyAndRemove(aOld);
+    n->mPrev->unrefer();
+  }
+  
+  return n;
+}
 
 

@@ -110,6 +110,9 @@ public:
   
   /* Copy constructor */
   ComponentEvent(ComponentEvent& ce);
+
+  ComponentEvent *deepCopy();
+  ComponentEvent *deepCopyAndRemove(ComponentEvent *aOld);
   
   /* Extract the component event data into a map */
   AttributeList *getAttributes();
@@ -121,6 +124,7 @@ public:
   const std::string &getValue() const { return mValue; }
   ELevel getLevel();
   const std::string &getLevelString() { return SLevels[getLevel()]; }
+  const std::string &getCode() { getAttributes(); return mCode; }
   
   Int64 getSequence() const { return mSequence; }
   
@@ -134,6 +138,9 @@ public:
   ComponentEvent *getPrev() { return mPrev; }
   void getList(std::list<ComponentEventPtr> &aList);
   void appendTo(ComponentEvent *aEvent) { mPrev = aEvent; }
+  ComponentEvent *find(const std::string &aNativeCode);
+  bool replace(ComponentEvent *aOld,
+	       ComponentEvent *aNew); 
 
   bool operator<(ComponentEvent &aOther) {
     if ((*mDataItem) < (*aOther.mDataItem))
@@ -162,8 +169,9 @@ protected:
   /* Timestamp of the event's occurence */
   std::string mTime;
   
-  /* Hold the alarm data: CODE|NATIVECODE|SEVERITY|STATE */
-  /* or the Conditon data: SEVERITY|NATIVE_CODE|[SUB_TYPE] */
+  /* Hold the alarm data:  CODE|NATIVECODE|SEVERITY|STATE */
+  /* or the Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER */
+  /* or the message data:  NATIVE_CODE */
   std::string mAlarmData;
   ELevel mLevel;
   
@@ -174,6 +182,9 @@ protected:
   /* The attributes, created on demand */
   bool mHasAttributes;
   AttributeList mAttributes;
+
+  // For condition tracking
+  std::string mCode;
   
   // For back linking of condition
   ComponentEventPtr mPrev;
@@ -209,7 +220,6 @@ inline bool ComponentEventPtr::operator<(ComponentEventPtr &aOther)
 {
   return (*mEvent) < (*aOther.mEvent);
 }
-
 
 #endif
 

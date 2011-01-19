@@ -32,6 +32,8 @@
 */
 
 #include "agent_test.hpp"
+#include <stdexcept>
+
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(AgentTest);
@@ -52,7 +54,7 @@ void AgentTest::tearDown()
 
 void AgentTest::testConstructor()
 {
-  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17), string);
+  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17), std::exception);
   CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 17));
 }
 

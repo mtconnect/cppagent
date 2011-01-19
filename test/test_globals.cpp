@@ -145,6 +145,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
       xmlChar *text = xmlGetProp(first, BAD_CAST attribute.c_str());
       if (text != NULL)
       {
+	message << "Value was: " << text;
         has_content = true;
         xmlFree(text);
       }

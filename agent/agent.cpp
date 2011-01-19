@@ -235,7 +235,7 @@ unsigned int Agent::addToBuffer(
 
   Int64 seqNum = mSequence++;
   ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
-    time, value);
+					     time, value);
   (*mSlidingBuffer)[seqNum] = event;
   mLatest.addComponentEvent(event);
   event->unrefer();

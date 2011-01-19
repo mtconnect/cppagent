@@ -80,15 +80,42 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
   ComponentEventPtr *ptr = mEvents[id];
   if (ptr != NULL) {
     if (item->isCondition()) {
+      // Chain event only if it is normal or unavailable and the
+      // previous condition was not normal or unavailable
       if ((*ptr)->getLevel() != ComponentEvent::NORMAL &&
 	  anEvent->getLevel() != ComponentEvent::NORMAL &&
 	  (*ptr)->getLevel() != ComponentEvent::UNAVAILABLE &&
 	  anEvent->getLevel() != ComponentEvent::UNAVAILABLE
 	) {
+	// Check to see if the native code matches an existing
+	// active condition
+	ComponentEvent *e = (*ptr)->find(anEvent->getCode());
+	if (e != NULL) {
+	  // Replace in chain.
+	  ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
+	  (*ptr) = n;
+	  n->unrefer();
+	}
+
 	anEvent->appendTo(*ptr);
       }
     }
-    (*ptr) = anEvent;
+
+    if (anEvent->getLevel() == ComponentEvent::NORMAL &&
+	anEvent->getCode()[0] != '\0') {
+      ComponentEvent *e = (*ptr)->find(anEvent->getCode());
+      if (e != NULL) {
+	ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
+	(*ptr) = n;
+	n->unrefer();
+      } else {
+	// Not sure if we should register code specific normals if
+	// previous normal was not found
+	// (*ptr) = anEvent;
+      }
+    } else {
+      (*ptr) = anEvent;
+    }
   } else {
     mEvents[id] = new ComponentEventPtr(anEvent);
   }

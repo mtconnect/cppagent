@@ -32,6 +32,7 @@
 */
 
 #include "xml_parser_test.hpp"
+#include <stdexcept>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(XmlParserTest);
@@ -58,7 +59,7 @@ void XmlParserTest::tearDown()
 
 void XmlParserTest::testConstructor()
 {
-  CPPUNIT_ASSERT_THROW(new XmlParser("../samples/badPath.xml"), string);
+  CPPUNIT_ASSERT_THROW(new XmlParser("../samples/badPath.xml"), std::runtime_error);
   CPPUNIT_ASSERT_NO_THROW(new
    XmlParser("../samples/test_config.xml"));
 }
