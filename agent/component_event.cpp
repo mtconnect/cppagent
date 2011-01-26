@@ -308,7 +308,8 @@ ComponentEvent *ComponentEvent::deepCopyAndRemove(ComponentEvent *aOld)
   ComponentEvent *n = new ComponentEvent(*this);
   if (mPrev.getObject() != NULL) {
     n->mPrev = mPrev->deepCopyAndRemove(aOld);
-    n->mPrev->unrefer();
+    if (n->mPrev.getObject() != NULL)
+      n->mPrev->unrefer();
   }
   
   return n;

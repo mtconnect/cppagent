@@ -94,12 +94,17 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
 	if (e != NULL) {
 	  // Replace in chain.
 	  ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
+	  // Check if this is the only event...
 	  (*ptr) = n;
-	  n->unrefer();
+	  if (n != NULL) {
+	    n->unrefer();
+	  }
 	}
 
 	// Chain the event
-	anEvent->appendTo(*ptr);
+	if (ptr->getObject() != NULL)
+	  anEvent->appendTo(*ptr);
+	
       } else  if (anEvent->getLevel() == ComponentEvent::NORMAL) {
 	// Check for a normal that clears an active condition by code
 	if (anEvent->getCode()[0] != '\0') {
