@@ -79,6 +79,7 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
   string id = item->getId();
   ComponentEventPtr *ptr = mEvents[id];
   if (ptr != NULL) {
+    bool assigned = false;
     if (item->isCondition()) {
       // Chain event only if it is normal or unavailable and the
       // previous condition was not normal or unavailable
@@ -97,23 +98,28 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
 	  n->unrefer();
 	}
 
+	// Chain the event
 	anEvent->appendTo(*ptr);
+      } else  if (anEvent->getLevel() == ComponentEvent::NORMAL) {
+	// Check for a normal that clears an active condition by code
+	if (anEvent->getCode()[0] != '\0') {
+	  ComponentEvent *e = (*ptr)->find(anEvent->getCode());
+	  if (e != NULL) {
+	    // Clear the one condition by removing it from the chain
+	    ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
+	    (*ptr) = n;
+	    n->unrefer();
+	  } else {
+	    // Not sure if we should register code specific normals if
+	    // previous normal was not found
+	    // (*ptr) = anEvent;
+	  }
+	  assigned = true;
+	}
       }
     }
-
-    if (anEvent->getLevel() == ComponentEvent::NORMAL &&
-	anEvent->getCode()[0] != '\0') {
-      ComponentEvent *e = (*ptr)->find(anEvent->getCode());
-      if (e != NULL) {
-	ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
-	(*ptr) = n;
-	n->unrefer();
-      } else {
-	// Not sure if we should register code specific normals if
-	// previous normal was not found
-	// (*ptr) = anEvent;
-      }
-    } else {
+    
+    if (!assigned) {
       (*ptr) = anEvent;
     }
   } else {

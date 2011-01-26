@@ -119,7 +119,7 @@ void Adapter::processData(const string& data)
   
     if (dataItem == NULL)
     {
-      sLogger << LWARN << "Could not find data item: " << key;
+      sLogger << LWARN << "Could not find data item: " << key << "\n\tdata: " << data;
     } else {
       string rest;
       if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage())
