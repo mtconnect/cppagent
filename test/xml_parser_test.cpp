@@ -54,7 +54,8 @@ void XmlParserTest::setUp()
 
 void XmlParserTest::tearDown()
 {
-  delete a;
+  if (a != NULL)
+    delete a;
 }
 
 void XmlParserTest::testConstructor()
@@ -132,4 +133,57 @@ void XmlParserTest::testGetDataItems()
   filter.clear();
   a->getDataItems(filter, "//Controller/electric/*");
   CPPUNIT_ASSERT_EQUAL(0, (int) filter.size());
+
+  // For the rest we will check with the extended schema
+  delete a; a = NULL;
+  try
+  {
+    a = new XmlParser("../samples/extension.xml");
+  }
+  catch (exception & e)
+  {
+    CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
+  }
+  
+  filter.clear();
+  a->getDataItems(filter, "//Device//Pump");
+  CPPUNIT_ASSERT_EQUAL(0, (int) filter.size());
+
+  filter.clear();
+  a->getDataItems(filter, "//Device//x:Pump");
+  CPPUNIT_ASSERT_EQUAL(1, (int) filter.size());
+
+}
+
+void XmlParserTest::testExtendedSchema()
+{
+  delete a; a = NULL;
+  try
+  {
+    a = new XmlParser("../samples/extension.xml");
+  }
+  catch (exception & e)
+  {
+    CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
+  }
+  
+  vector<Device *> devices = a->getDevices();
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, devices.size());
+  
+  Device *device = devices.front();
+  
+  // Check for Description
+  CPPUNIT_ASSERT_EQUAL((string) "Extended Schema.", device->getDescriptionBody());
+  
+  Component *pump = device->getChildren().front();
+  CPPUNIT_ASSERT_EQUAL((string) "pump", pump->getName());
+  CPPUNIT_ASSERT_EQUAL((string) "Pump", pump->getClass());
+  CPPUNIT_ASSERT_EQUAL((string) "x", pump->getPrefix());
+  
+  DataItem *item = pump->getDataItems().front();
+  CPPUNIT_ASSERT_EQUAL((string) "x:FLOW", item->getType());
+  CPPUNIT_ASSERT_EQUAL((string) "Flow", item->getElementName());
+  CPPUNIT_ASSERT_EQUAL((string) "x", item->getPrefix());
+  
+  
 }

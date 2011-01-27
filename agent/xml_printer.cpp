@@ -47,6 +47,129 @@ static xmlChar *ConvertInput(const char *in, const char *encoding);
 
 using namespace std;
 
+struct SchemaNamespace {
+  string mNamespace;
+  string mSchemaLocation;
+};
+
+static map<string, SchemaNamespace> sDevicesNamespaces;
+static map<string, SchemaNamespace> sStreamsNamespaces;
+static map<string, SchemaNamespace> sErrorNamespaces;
+
+enum EDocumentType {
+  eERROR,
+  eSTREAMS,
+  eDEVICES
+};
+
+namespace XmlPrinter {
+  /***** Helper Methods *****/
+  /* Initiate all documents */
+  void initXmlDoc(xmlTextWriterPtr writer,
+                  EDocumentType aDocType,
+                  const unsigned int instanceId,
+                  const unsigned int bufferSize,
+                  const Int64 nextSeq,
+                  const Int64 firstSeq = 0);  
+
+  /* Helper to print individual components and details */
+  void printProbeHelper(xmlTextWriterPtr writer, Component *component);
+  void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem);
+
+
+  /* Add attributes to an xml element */
+  void addDeviceStream(xmlTextWriterPtr writer, Device *device);
+  void addComponentStream(xmlTextWriterPtr writer, Component *component);
+  void addCategory(xmlTextWriterPtr writer, DataItem::ECategory category);
+  void addSimpleElement(xmlTextWriterPtr writer, std::string element, std::string &body, 
+                        std::map<std::string, std::string> *attributes = NULL);
+
+  void addAttributes(xmlTextWriterPtr writer,
+                     std::map<std::string, std::string> *attributes);
+  void addAttributes(xmlTextWriterPtr writer,
+                     AttributeList *attributes);
+
+  void addEvent(xmlTextWriterPtr writer, ComponentEvent *result);
+};
+
+
+void XmlPrinter::addDevicesNamespace(const std::string &aNs, const std::string &aLocation, 
+                         const std::string &aPrefix)
+{
+  pair<string, SchemaNamespace> item;
+  item.second.mNamespace = aNs;
+  item.second.mSchemaLocation = aLocation;
+  item.first = aPrefix;
+  
+  sDevicesNamespaces.insert(item);
+}
+
+void XmlPrinter::clearDevicesNamespaces()
+{
+  sDevicesNamespaces.clear();
+}
+
+const string XmlPrinter::getDevicesNamespace(const std::string &aPrefix)
+{
+  map<string, SchemaNamespace>::iterator ns = sDevicesNamespaces.find(aPrefix);
+  if (ns != sDevicesNamespaces.end())
+    return ns->second.mNamespace;
+  else
+    return "";
+}
+
+void XmlPrinter::addErrorNamespace(const std::string &aNs, const std::string &aLocation, 
+                       const std::string &aPrefix)
+{
+  pair<string, SchemaNamespace> item;
+  item.second.mNamespace = aNs;
+  item.second.mSchemaLocation = aLocation;
+  item.first = aPrefix;
+  
+  sErrorNamespaces.insert(item);  
+}
+
+void XmlPrinter::clearErrorNamespaces()
+{
+  sErrorNamespaces.clear();
+}
+
+const string XmlPrinter::getErrorNamespace(const std::string &aPrefix)
+{
+  map<string, SchemaNamespace>::iterator ns = sErrorNamespaces.find(aPrefix);
+  if (ns != sErrorNamespaces.end())
+    return ns->second.mNamespace;
+  else
+    return "";
+}
+
+void XmlPrinter::addStreamsNamespace(const std::string &aNs, const std::string &aLocation, 
+                         const std::string &aPrefix)
+{
+  pair<string, SchemaNamespace> item;
+  item.second.mNamespace = aNs;
+  item.second.mSchemaLocation = aLocation;
+  item.first = aPrefix;
+  
+  sStreamsNamespaces.insert(item);  
+}
+
+void XmlPrinter::clearStreamsNamespaces()
+{
+  sStreamsNamespaces.clear();
+}
+
+const string XmlPrinter::getStreamsNamespace(const std::string &aPrefix)
+{
+  map<string, SchemaNamespace>::iterator ns = sStreamsNamespaces.find(aPrefix);
+  if (ns != sStreamsNamespaces.end())
+    return ns->second.mNamespace;
+  else
+    return "";
+}
+
+
+
 /* XmlPrinter main methods */
 string XmlPrinter::printError(
     const unsigned int instanceId,
@@ -66,11 +189,8 @@ string XmlPrinter::printError(
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
   
-    initXmlDoc(writer,
-                "Error",
-                instanceId,
-                bufferSize,
-                nextSeq);
+    initXmlDoc(writer, eERROR, instanceId,
+               bufferSize, nextSeq);
   
     
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Errors"));
@@ -118,8 +238,7 @@ string XmlPrinter::printProbe(
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
     
-    initXmlDoc(writer,
-                "Devices",
+    initXmlDoc(writer, eDEVICES,
                 instanceId,
                 bufferSize,
                 nextSeq);
@@ -189,7 +308,18 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer,
     list<Component *>::iterator child;
     for (child = children.begin(); child != children.end(); child++)
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST (*child)->getClass().c_str()));
+      xmlChar *name = NULL;
+      if (!(*child)->getPrefix().empty()) 
+      {
+        map<string, SchemaNamespace>::iterator ns = sDevicesNamespaces.find((*child)->getPrefix());
+        if (ns != sDevicesNamespaces.end()) {
+          name = BAD_CAST (*child)->getPrefixedClass().c_str();
+        }
+      }
+      if (name == NULL) name = BAD_CAST (*child)->getClass().c_str();
+      
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, name));
+      
       printProbeHelper(writer, *child);
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Component 
     }
@@ -256,8 +386,7 @@ string XmlPrinter::printSample(
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
     
-    initXmlDoc(writer,
-               "Streams",
+    initXmlDoc(writer, eSTREAMS,
                instanceId,
                bufferSize,
                nextSeq,
@@ -385,8 +514,19 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
   if (dataItem->isCondition()) {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST result->getLevelString().c_str()));
   } else {
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST dataItem->getTypeString(false).c_str()));
+    xmlChar *element = NULL;
+    if (!dataItem->getPrefix().empty()) 
+    {
+      map<string, SchemaNamespace>::iterator ns = sStreamsNamespaces.find(dataItem->getPrefix());
+      if (ns != sStreamsNamespaces.end()) {
+        element = BAD_CAST dataItem->getPrefixedElementName().c_str();
+      }
+    }
+    if (element == NULL) element = BAD_CAST dataItem->getElementName().c_str();
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, element));
   }
+  
   addAttributes(writer, result->getAttributes());
   
   if (!result->getValue().empty()) {
@@ -423,37 +563,81 @@ void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
 }
 
 /* XmlPrinter helper Methods */
-void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
-                             const string& xmlType,
-                             const unsigned int instanceId,
-                             const unsigned int bufferSize,
-                             const Int64 nextSeq,
-                             const Int64 firstSeq
-                             )
+void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
+                            const unsigned int instanceId,
+                            const unsigned int bufferSize,
+                            const Int64 nextSeq,
+                            const Int64 firstSeq
+                            )
 {
   THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL));
   
-  // Write the root element
-  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST ((string) "MTConnect" + xmlType).c_str()));
+  // Write the root element  
+  string xmlType;
+  map<string, SchemaNamespace> *namespaces;
+  switch (aType) {
+  case eERROR:
+      namespaces = &sErrorNamespaces;
+      xmlType = "Error";
+      break;
+      
+  case eSTREAMS:
+      namespaces = &sStreamsNamespaces;
+      xmlType = "Streams";
+      break;
+      
+  case eDEVICES:
+      namespaces = &sDevicesNamespaces;
+      xmlType = "Devices";
+      break;
+  }
+  
   
   string rootName = "MTConnect" + xmlType;
-  string xmlns = "urn:mtconnect.org:MTConnect" + xmlType + ":1.1";
-  string xsi = "urn:mtconnect.org:MTConnect" + xmlType +
-  ":1.1 http://www.mtconnect.org/schemas/MTConnect" + xmlType + "_1.1.xsd";
+  string xmlns = "urn:mtconnect.org:" + rootName + ":1.1";  
+  string location;
   
-  // Add root element attribtues
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST rootName.c_str()));
+
+  
+  // Always make the default namespace and the m: namespace MTConnect default.
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                   BAD_CAST "xmlns:m",
                                                   BAD_CAST xmlns.c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                   BAD_CAST "xmlns",
                                                   BAD_CAST xmlns.c_str()));
-  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                  BAD_CAST "xsi:schemaLocation",
-                                                  BAD_CAST xsi.c_str()));
+  
+  // Alwats add the xsi namespace
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                   BAD_CAST "xmlns:xsi",
                                                   BAD_CAST "http://www.w3.org/2001/XMLSchema-instance"));
+  
+  // Add in the other namespaces if they exist
+  map<string, SchemaNamespace>::iterator ns;
+  for (ns = namespaces->begin(); ns != namespaces->end(); ns++)
+  {
+    string attr = "xmlns:" + ns->first;
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                    BAD_CAST attr.c_str(),
+                                                    BAD_CAST ns->second.mNamespace.c_str()));
+    
+    // Always take the first location. There should only be one location!
+    if (location.empty() && !ns->second.mSchemaLocation.empty())
+    {
+      location = ns->second.mNamespace + " " + ns->second.mSchemaLocation;
+    }
+  }
+  
+  // Write the schema location
+  if (location.empty()) {
+    location = xmlns + " http://www.mtconnect.org/schemas/" + rootName + "_1.1.xsd";
+  }
+  
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "xsi:schemaLocation",
+                                                  BAD_CAST location.c_str()));
+  
   
   // Create the header
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Header"));

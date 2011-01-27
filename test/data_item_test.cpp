@@ -79,8 +79,7 @@ void DataItemTest::testGetters()
   CPPUNIT_ASSERT_EQUAL((string) "1", a->getId());
   CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", a->getName());
   CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", a->getType());
-  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", a->getTypeString(true));
-  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", a->getTypeString(false));
+  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", a->getElementName());
   CPPUNIT_ASSERT_EQUAL((string) "PERCENT", a->getNativeUnits());
   CPPUNIT_ASSERT(a->getSubType().empty());
   CPPUNIT_ASSERT(!a->hasNativeScale());
@@ -88,8 +87,7 @@ void DataItemTest::testGetters()
   CPPUNIT_ASSERT_EQUAL((string) "3", b->getId());
   CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", b->getName());
   CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", b->getType());
-  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", b->getTypeString(true));
-  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", b->getTypeString(false));
+  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", b->getElementName());
   CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", b->getSubType());
   CPPUNIT_ASSERT_EQUAL(b->getNativeUnits(), b->getUnits());
   CPPUNIT_ASSERT_EQUAL(1.0f, b->getNativeScale());
@@ -156,12 +154,15 @@ void DataItemTest::testComponent()
 
 void DataItemTest::testGetCamel()
 {
-  CPPUNIT_ASSERT(DataItem::getCamelType("").empty());
-  CPPUNIT_ASSERT_EQUAL((string) "Camels", DataItem::getCamelType("CAMELS"));
-  CPPUNIT_ASSERT_EQUAL((string) "CamelCase",
-    DataItem::getCamelType("CAMEL_CASE"));
-  CPPUNIT_ASSERT_EQUAL((string) "ABCc",
-    DataItem::getCamelType("A_B_CC"));
+  string prefix;
+  CPPUNIT_ASSERT(DataItem::getCamelType("", prefix).empty());
+  CPPUNIT_ASSERT_EQUAL((string) "Camels", DataItem::getCamelType("CAMELS", prefix));
+  CPPUNIT_ASSERT(prefix.empty());
+  CPPUNIT_ASSERT_EQUAL((string) "CamelCase", DataItem::getCamelType("CAMEL_CASE", prefix));
+  CPPUNIT_ASSERT_EQUAL((string) "ABCc", DataItem::getCamelType("A_B_CC", prefix));
+  prefix.clear();
+  CPPUNIT_ASSERT_EQUAL((string) "CamelCase", DataItem::getCamelType("x:CAMEL_CASE", prefix));
+  CPPUNIT_ASSERT_EQUAL((string) "x", prefix);
 }
 
 void DataItemTest::testConversion()

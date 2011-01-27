@@ -169,3 +169,22 @@ void GlobalsTest::testGetCurrentTime()
   cout << local << endl;
   
 }
+
+void GlobalsTest::testAddNamespace()
+{
+  string result;
+  result = addNamespace("//Device//Foo", "m");
+  CPPUNIT_ASSERT_EQUAL(string("//m:Device//m:Foo"), result);
+
+  result = addNamespace("//Device//*", "m");
+  CPPUNIT_ASSERT_EQUAL(string("//m:Device//*"), result);
+
+  result = addNamespace("//Device//*|//Foo", "m");
+  CPPUNIT_ASSERT_EQUAL(string("//m:Device//*|//m:Foo"), result);
+
+  result = addNamespace("//Device//x:Foo", "m");
+  CPPUNIT_ASSERT_EQUAL(string("//m:Device//x:Foo"), result);
+
+  result = addNamespace("//Device//*|//x:Foo", "m");
+  CPPUNIT_ASSERT_EQUAL(string("//m:Device//*|//x:Foo"), result);
+}

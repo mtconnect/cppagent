@@ -50,7 +50,8 @@ const string Component::SComponentSpecs[NumComponentSpecs] = {
 };
 
 /* Component public methods */
-Component::Component(const string& cls, map<string, string> attributes)
+Component::Component(const string& cls, map<string, string> attributes,
+                     const string &aPrefix)
 {
   mId = attributes["id"];
   mName = attributes["name"];
@@ -63,6 +64,8 @@ Component::Component(const string& cls, map<string, string> attributes)
   mParent = NULL;
   mDevice = NULL;
   mClass = cls;
+  mPrefix = aPrefix;
+  mPrefixedClass = aPrefix + ":" + cls;
   mAttributes = buildAttributes();
 }
 

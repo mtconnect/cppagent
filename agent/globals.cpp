@@ -181,6 +181,21 @@ static string::size_type insertPrefix(string &aPath, string::size_type &aPos,
   return aPos;
 }
 
+static bool hasNamespace(const string &aPath, string::size_type aStart)
+{
+  string::size_type len = aPath.length(), pos = aStart;
+  while (pos < len) 
+  {
+    if (aPath[pos] == ':')
+      return true;
+    else if (!isalpha(aPath[pos]))
+      return false;
+    pos++;
+  }
+
+  return false;
+}
+
 string addNamespace(const string aPath, const string aPrefix)
 {
   if (aPrefix.empty())
@@ -191,7 +206,8 @@ string addNamespace(const string aPath, const string aPrefix)
   // Special case for relative pathing
   if (newPath[pos] != '/')
   {
-    insertPrefix(newPath, pos, aPrefix);
+    if (!hasNamespace(newPath, pos))
+      insertPrefix(newPath, pos, aPrefix);
   }
   
   
@@ -200,7 +216,9 @@ string addNamespace(const string aPath, const string aPrefix)
     pos ++;
     if (newPath[pos] == '/')
       pos++;
-    if (newPath[pos] != '*')
+
+    // Make sure there are no existing prefixes
+    if (newPath[pos] != '*' && !hasNamespace(newPath, pos))
       insertPrefix(newPath, pos, aPrefix);
   }
 
@@ -208,7 +226,7 @@ string addNamespace(const string aPath, const string aPrefix)
   while ((pos = newPath.find('|', pos)) != string::npos)
   {
     pos ++;
-    if (newPath[pos] != '/')
+    if (newPath[pos] != '/' && !hasNamespace(newPath, pos))
       insertPrefix(newPath, pos, aPrefix);
   }
   

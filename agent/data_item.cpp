@@ -82,7 +82,11 @@ DataItem::DataItem(std::map<string, string> attributes)
   mIsAlarm = (mType == "ALARM");
   mIsMessage = (mType == "MESSAGE");
   
-  mCamelType = getCamelType(mType);
+  mCamelType = getCamelType(mType, mPrefix);
+  if (!mPrefix.empty())
+    mPrefixedCamelType = mPrefix + ":" + mCamelType;
+  else
+    mPrefixedCamelType = mCamelType;
   mThreeD = false;
   
   if (!attributes["subType"].empty())
@@ -198,17 +202,12 @@ std::map<string, string> DataItem::buildAttributes() const
   return attributes;
 }
 
-const string &DataItem::getTypeString(bool uppercase) const
-{
-  return (uppercase) ? mType : mCamelType;
-}
-
 bool DataItem::hasName(const string& name)
 {
   return mId == name || mName == name || (!mSource.empty() && mSource == name);
 }
 
-string DataItem::getCamelType(const string& aType)
+string DataItem::getCamelType(const string& aType, string &aPrefix)
 {
   if (aType.empty())
   {
@@ -216,10 +215,13 @@ string DataItem::getCamelType(const string& aType)
   }
   
   string camel;
-  if (aType[0] == 'x' && aType[1] == ':')
-    camel = aType.substr(2);
-  else
+  size_t colon = aType.find(':');
+  if (colon != string::npos) {
+    aPrefix = aType.substr(0, colon);
+    camel = aType.substr(colon + 1);
+  } else {
     camel = aType;
+  }
 
   string::iterator second = camel.begin();
   second++;

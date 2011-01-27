@@ -32,6 +32,7 @@
 */
 
 #include "xml_parser.hpp"
+#include "xml_printer.hpp"
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
@@ -77,17 +78,59 @@ XmlParser::XmlParser(const string& xmlPath)
     xmlSetGenericErrorFunc(NULL, agentXMLErrorFunc);
     
     THROW_IF_XML2_NULL(mDoc = xmlReadFile(xmlPath.c_str(), NULL, 
-                       XML_PARSE_NOENT | XML_PARSE_NOBLANKS));
+                       XML_PARSE_NOBLANKS));
     
     std::string path = "//Devices/*";
     THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(mDoc));
     
     xmlNodePtr root = xmlDocGetRootElement(mDoc);
-    xpathCtx->node = root;
-    if (root->nsDef != NULL)
+    if (root->ns != NULL)
     {
       path = addNamespace(path, "m");
-      THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->nsDef->href));
+      THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
+    }
+
+    // Add additional namespaces to the printer if they are referenced
+    // here.
+    string locationUrn;
+    const char *location = (const char*) xmlGetProp(root, BAD_CAST "schemaLocation");
+    if (location != NULL && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34) != 0) 
+    {
+      string loc = location;
+      size_t pos = loc.find(' ');
+      if (pos != string::npos)
+      {
+        locationUrn = loc.substr(0, pos);
+        string uri = loc.substr(pos + 1);
+        
+        // Try to find the prefix for this urn...
+        xmlNsPtr ns = xmlSearchNsByHref(mDoc, root, BAD_CAST locationUrn.c_str());
+        string prefix;
+        if (ns->prefix != NULL)
+          prefix = (const char*) ns->prefix;
+        
+        XmlPrinter::addDevicesNamespace(locationUrn, uri, prefix);
+      }
+    }
+    
+    // Add the rest of the namespaces...
+    if (root->nsDef) {
+      xmlNsPtr ns = root->nsDef;
+      while (ns != NULL)
+      {
+        // Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the 
+        // schema location again.
+        if (strncmp((const char*) ns->href, "urn:mtconnect.org:MTConnectDevices", 34) != 0 &&
+            strncmp((const char*) ns->href, "http://www.w3.org/", 18) != 0 &&
+            locationUrn != (const char*) ns->href &&
+            ns->prefix != NULL) {
+          string urn = (const char*) ns->href;
+          string prefix = (const char*) ns->prefix;
+          XmlPrinter::addDevicesNamespace(urn, "", prefix);          
+        }
+        
+        ns = ns->next;
+      }
     }
     
     devices = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
@@ -97,7 +140,7 @@ XmlParser::XmlParser(const string& xmlPath)
     }
     
     xmlNodeSetPtr nodeset = devices->nodesetval;
-    if (nodeset->nodeNr == 0)
+    if (nodeset == NULL || nodeset->nodeNr == 0)
     {
       throw (string) "Could not find Device in XML configuration";
     }
@@ -150,18 +193,28 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
     string path;
     THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(mDoc));
     xpathCtx->node = node;
-    
-    if (root->nsDef != NULL)
+
+    if (root->ns)
     {
+      bool any = false;
+      for (xmlNsPtr ns = root->nsDef; ns != NULL; ns = ns->next)
+      {
+        if (ns->prefix != NULL)
+        {
+          THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
+          any = true;
+        }
+      }
+      
+      if (!any)
+        THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
+      
       path = addNamespace(aPath, "m");
-      THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->nsDef->href));
-    }
-    else
-    {
+    } else {
       path = aPath;
     }
   
-    objs = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
+    objs = xmlXPathEvalExpression(BAD_CAST path.c_str(), xpathCtx);
     if (objs == NULL)
     {
       xmlXPathFreeContext(xpathCtx);
@@ -293,10 +346,17 @@ Component * XmlParser::loadComponent(
   
   switch (spec)
   {
-  case Component::DEVICE:
-    return new Device(attributes);
-  default:
-    return new Component(name, attributes);
+    case Component::DEVICE:
+      return new Device(attributes);
+    default:
+      string prefix;
+      if (node->ns->prefix != 0 && 
+          strncmp((const char*) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 
+                  34) != 0) {
+        prefix = (const char*) node->ns->prefix;
+      }
+      
+      return new Component(name, attributes, prefix);
   }
 }
 

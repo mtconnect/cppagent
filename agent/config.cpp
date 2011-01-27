@@ -3,6 +3,7 @@
 #include "agent.hpp"
 #include "options.hpp"
 #include "device.hpp"
+#include "xml_printer.hpp"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -166,7 +167,34 @@ void AgentConfiguration::loadConfig()
     }
   }
     
-  mName = get_with_default(reader, "ServiceName", "MTConnect Agent"); 
+  mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
+  
+  // Load namespaces
+  
+  // Devices
+  if (reader.is_key_defined("DevicesNamespace")) {
+//    XmlPrinter::setDevicesNamespace(reader["DevicesNamespace"]);
+  }
+  if (reader.is_key_defined("DevicesSchemaLocation")) {
+//    XmlPrinter::setDevicesNamespace(reader["DevicesSchemaLocation"]);
+  }
+
+  // Error
+  if (reader.is_key_defined("ErrorNamespace")) {
+ //   XmlPrinter::setDevicesNamespace(reader["ErrorNamespace"]);
+  }
+  if (reader.is_key_defined("ErrorSchemaLocation")) {
+ //   XmlPrinter::setDevicesNamespace(reader["ErrorSchemaLocation"]);
+  }
+
+  // Streams
+  if (reader.is_key_defined("StreamsNamespace")) {
+ //   XmlPrinter::setDevicesNamespace(reader["StreamsNamespace"]);
+  }
+  if (reader.is_key_defined("StreamsSchemaLocation")) {
+ //   XmlPrinter::setDevicesNamespace(reader["StreamsSchemaLocation"]);
+  }
+  
   
   sLogger << LINFO << "Starting agent on port " << port;
   mAgent = new Agent(probe, bufferSize, checkpointFrequency);

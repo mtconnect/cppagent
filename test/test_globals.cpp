@@ -102,9 +102,22 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   }
   
   xmlXPathContextPtr xpathCtx = xmlXPathNewContext(doc);
-  xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->nsDef->href);
   
-  xmlXPathObjectPtr obj = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
+  bool any = false;
+  for (xmlNsPtr ns = root->nsDef; ns != NULL; ns = ns->next)
+  {
+    if (ns->prefix != NULL)
+    {
+      xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href);
+      any = true;
+    }
+  }
+  
+  if (!any)
+    xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href);
+    
+  
+  xmlXPathObjectPtr obj = xmlXPathEvalExpression(BAD_CAST path.c_str(), xpathCtx);
   
   if (obj == NULL || obj->nodesetval == NULL || obj->nodesetval->nodeNr == 0)
   {

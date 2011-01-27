@@ -144,6 +144,130 @@ void XmlPrinterTest::testPrintCurrent()
                                     "ON");
 }
 
+void XmlPrinterTest::testChangeDevicesNamespace()
+{
+  // Devices
+  XmlPrinter::clearDevicesNamespaces();
+  
+  {
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
+            "urn:mtconnect.org:MTConnectDevices:1.1 http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd");
+  }
+
+  {
+    XmlPrinter::addDevicesNamespace("urn:machine.com:MachineDevices:1.1",
+                                    "http://www.machine.com/schemas/MachineDevices_1.1.xsd",
+                                    "e");
+    
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));  
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
+                    "urn:machine.com:MachineDevices:1.1 http://www.machine.com/schemas/MachineDevices_1.1.xsd");
+    
+    XmlPrinter::clearDevicesNamespaces();
+  }
+  
+  {
+    XmlParser ext("../samples/extension.xml");
+    std::vector<Device *> extdevs = ext.getDevices();
+
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, extdevs));  
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
+                          "urn:example.com:ExampleDevices:1.1 ExtensionDevices_1.1.xsd");
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Device//x:Pump@name", "pump");
+  }
+  
+  XmlPrinter::clearDevicesNamespaces();
+}  
+
+void XmlPrinterTest::testChangeStreamsNamespace()
+{
+  XmlPrinter::clearStreamsNamespaces();
+  
+  Checkpoint checkpoint;
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
+  
+  // Streams
+  {
+    vector<ComponentEventPtr> list;
+    checkpoint.getComponentEvents(list);
+    
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
+                 "urn:mtconnect.org:MTConnectStreams:1.1 http://www.mtconnect.org/schemas/MTConnectStreams_1.1.xsd");
+  }
+
+  XmlPrinter::clearStreamsNamespaces();
+  
+  {
+    
+    XmlPrinter::addStreamsNamespace("urn:machine.com:MachineStreams:1.1",
+                                    "http://www.machine.com/schemas/MachineStreams_1.1.xsd",
+                                    "e");
+
+    vector<ComponentEventPtr> list;
+    checkpoint.getComponentEvents(list);
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+        
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
+                "urn:machine.com:MachineStreams:1.1 http://www.machine.com/schemas/MachineStreams_1.1.xsd");
+  }
+
+  XmlPrinter::clearStreamsNamespaces();
+
+  {
+    XmlParser ext("../samples/extension.xml");
+    devices = ext.getDevices();
+
+    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.1",
+                                    "ExtensionDevices_1.1.xsd",
+                                    "x");
+
+    Checkpoint checkpoint2;
+    addEventToCheckpoint(checkpoint2, "flow", 10254804, "100");
+    
+    vector<ComponentEventPtr> list;
+    checkpoint2.getComponentEvents(list);
+    
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//x:Flow", "100");
+  }
+  
+  XmlPrinter::clearStreamsNamespaces();
+  XmlPrinter::clearDevicesNamespaces();
+  
+}
+
+void XmlPrinterTest::testChangeErrorNamespace()
+{
+  // Error
+  
+  {
+    PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation", 
+              "urn:mtconnect.org:MTConnectError:1.1 http://www.mtconnect.org/schemas/MTConnectError_1.1.xsd");
+  }
+  
+  {
+    XmlPrinter::addErrorNamespace("urn:machine.com:MachineError:1.1",
+                                  "http://www.machine.com/schemas/MachineError_1.1.xsd",
+                                  "e");
+    
+    PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation", 
+                                      "urn:machine.com:MachineError:1.1 http://www.machine.com/schemas/MachineError_1.1.xsd");
+  }
+}
+
+
 void XmlPrinterTest::testPrintSample()
 {
   vector<ComponentEventPtr> events;
@@ -269,6 +393,7 @@ void XmlPrinterTest::testVeryLargeSequence()
 
   
 }
+
 
 void XmlPrinterTest::testChangeDeviceAttributes()
 {
