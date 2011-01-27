@@ -71,6 +71,8 @@ protected:
   std::map<std::string, DataItem *> mDeviceDataItemsByName;
   std::map<std::string, DataItem *> mDeviceDataItemsById;
   std::map<std::string, DataItem *> mDeviceDataItemsBySource;
+  
+  
 };
 
 #endif

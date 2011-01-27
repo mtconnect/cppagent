@@ -102,10 +102,13 @@ public:
   const std::string &getName() const { return mName; }
   const std::string &getSource() const { return mSource; }
   const std::string &getType() const { return mType; }
-  const std::string &getTypeString(bool uppercase) const;
+  const std::string &getElementName() const { return mCamelType; }
+  const std::string &getPrefixedElementName() const { return mPrefixedCamelType; }
   const std::string &getSubType() const { return mSubType; }
   const std::string &getNativeUnits() const { return mNativeUnits; }
   const std::string &getUnits() const { return mUnits; }
+  const std::string &getPrefix() const { return mPrefix; }
+  
   float getNativeScale() const { return mNativeScale; }
   double getConversionFactor() const;
   ECategory getCategory() const { return mCategory; }
@@ -132,7 +135,8 @@ public:
   std::string getSourceOrName() { return mSource.empty() ? (mName.empty() ? mId : mName) : mSource; }
   
   /* Transform a name to camel casing */
-  static std::string getCamelType(const std::string& aType);
+  static std::string getCamelType(const std::string& aType, 
+                                  std::string &aPrefix);
   
   /* Constrainsts */
   bool hasConstraints() { return mHasConstraints; }
@@ -170,6 +174,8 @@ protected:
   /* Type of data item */
   std::string mType;
   std::string mCamelType;
+  std::string mPrefixedCamelType;
+  std::string mPrefix;
   
   /* Subtype of data item */
   std::string mSubType;

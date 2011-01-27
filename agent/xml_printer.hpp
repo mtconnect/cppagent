@@ -36,6 +36,7 @@
 
 #include <map>
 #include <list>
+#include <string>
 
 #include <libxml/xmlwriter.h>
 
@@ -71,37 +72,22 @@ namespace XmlPrinter
     std::vector<ComponentEventPtr>& results
   );
 
-  /***** Helper Methods *****/
-  /* Initiate all documents */
-  void initXmlDoc(xmlTextWriterPtr writer,
-    const std::string& xmlType,
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const Int64 nextSeq,
-    const Int64 firstSeq = 0
-  );  
+  
+  void addDevicesNamespace(const std::string &aNs, const std::string &aLocation, 
+                           const std::string &aPrefix);
+  void addErrorNamespace(const std::string &aNs, const std::string &aLocation, 
+                         const std::string &aPrefix);
+  void addStreamsNamespace(const std::string &aNs, const std::string &aLocation, 
+                           const std::string &aPrefix);
 
-  /***** Helper Methods *****/
-  
-  /* Helper to print individual components and details */
-  void printProbeHelper(xmlTextWriterPtr writer, Component *component);
-  void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem);
-  
-  
-  /* Add attributes to an xml element */
-  void addDeviceStream(xmlTextWriterPtr writer, Device *device);
-  void addComponentStream(xmlTextWriterPtr writer, Component *component);
-  void addCategory(xmlTextWriterPtr writer, DataItem::ECategory category);
-  void addSimpleElement(xmlTextWriterPtr writer, std::string element, std::string &body, 
-                        std::map<std::string, std::string> *attributes = NULL);
-  
-  void addAttributes(xmlTextWriterPtr writer,
-                      std::map<std::string, std::string> *attributes);
-  void addAttributes(xmlTextWriterPtr writer,
-                     AttributeList *attributes);
- 
-  void addEvent(xmlTextWriterPtr writer, ComponentEvent *result);
-                   
+  // For testing
+  void clearDevicesNamespaces();
+  void clearErrorNamespaces();
+  void clearStreamsNamespaces();
+
+  const std::string getDevicesNamespace(const std::string &aPrefix);
+  const std::string getErrorNamespace(const std::string &aPrefix);
+  const std::string getStreamsNamespace(const std::string &aPrefix);
 };
 
 #endif

@@ -170,31 +170,71 @@ void AgentConfiguration::loadConfig()
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
   
   // Load namespaces
-  
-  // Devices
-  if (reader.is_key_defined("DevicesNamespace")) {
-//    XmlPrinter::setDevicesNamespace(reader["DevicesNamespace"]);
-  }
-  if (reader.is_key_defined("DevicesSchemaLocation")) {
-//    XmlPrinter::setDevicesNamespace(reader["DevicesSchemaLocation"]);
-  }
-
-  // Error
-  if (reader.is_key_defined("ErrorNamespace")) {
- //   XmlPrinter::setDevicesNamespace(reader["ErrorNamespace"]);
-  }
-  if (reader.is_key_defined("ErrorSchemaLocation")) {
- //   XmlPrinter::setDevicesNamespace(reader["ErrorSchemaLocation"]);
-  }
-
-  // Streams
-  if (reader.is_key_defined("StreamsNamespace")) {
- //   XmlPrinter::setDevicesNamespace(reader["StreamsNamespace"]);
-  }
-  if (reader.is_key_defined("StreamsSchemaLocation")) {
- //   XmlPrinter::setDevicesNamespace(reader["StreamsSchemaLocation"]);
+  if (reader.is_block_defined("DevicesNamespaces")) {
+    const config_reader::kernel_1a &namespaces = reader.block("DevicesNamespaces");
+    vector<string> blocks;
+    namespaces.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &ns = namespaces.block(*block);
+      if (!ns.is_key_defined("Namespace") || !ns.is_key_defined("Prefix"))
+      {
+        sLogger << LERROR << "Name space must have a Namespace and a Prefix: " << *block;
+      } else {
+        string location;
+        if (ns.is_key_defined("Location"))
+          location = ns["Location"];
+        XmlPrinter::addDevicesNamespace(ns["Namespace"], location,
+                                        ns["Prefix"]);
+      }
+    }
   }
   
+  if (reader.is_block_defined("SchemaNamespaces")) {
+    const config_reader::kernel_1a &namespaces = reader.block("SchemaNamespaces");
+    vector<string> blocks;
+    namespaces.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &ns = namespaces.block(*block);
+      if (!ns.is_key_defined("Namespace") || !ns.is_key_defined("Prefix"))
+      {
+        sLogger << LERROR << "Name space must have a Namespace and a Prefix: " << *block;
+      } else {
+        string location;
+        if (ns.is_key_defined("Location"))
+          location = ns["Location"];
+          XmlPrinter::addStreamsNamespace(ns["Namespace"], location,
+                                          ns["Prefix"]);
+      }
+    }
+  }
+  
+  if (reader.is_block_defined("ErrorNamespaces")) {
+    const config_reader::kernel_1a &namespaces = reader.block("ErrorNamespaces");
+    vector<string> blocks;
+    namespaces.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &ns = namespaces.block(*block);
+      if (!ns.is_key_defined("Namespace") || !ns.is_key_defined("Prefix"))
+      {
+        sLogger << LERROR << "Name space must have a Namespace and a Prefix: " << *block;
+      } else {
+        string location;
+        if (ns.is_key_defined("Location"))
+          location = ns["Location"];
+        XmlPrinter::addErrorNamespace(ns["Namespace"], location,
+                                      ns["Prefix"]);
+      }
+    }
+  }
   
   sLogger << LINFO << "Starting agent on port " << port;
   mAgent = new Agent(probe, bufferSize, checkpointFrequency);
@@ -211,17 +251,17 @@ void AgentConfiguration::loadConfig()
       const config_reader::kernel_1a &adapter = adapters.block(*block);
       string deviceName;      
       if (adapter.is_key_defined("Device")) {
-	deviceName = adapter["Device"].c_str();
-	if (deviceName == "*")
-	  device = defaultDevice();
-	else
-	  device = mAgent->getDeviceByName(deviceName);
+        deviceName = adapter["Device"].c_str();
+        if (deviceName == "*")
+          device = defaultDevice();
+        else
+          device = mAgent->getDeviceByName(deviceName);
       } else {
-	deviceName = *block;
+        deviceName = *block;
         device = mAgent->getDeviceByName(deviceName);
 	
-	if (device == NULL && mAgent->getDevices().size() == 1)
-	  device = defaultDevice();
+        if (device == NULL && mAgent->getDevices().size() == 1)
+          device = defaultDevice();
       }
 	
       if (device == NULL) {

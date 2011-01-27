@@ -68,7 +68,8 @@ public:
   /* Take in a class name & mapping of attributes */
   Component(
     const std::string& cls,
-    std::map<std::string, std::string> attributes
+    std::map<std::string, std::string> attributes,
+    const std::string &aPrefix = ""
   );
   
   /* Virtual destructor */
@@ -79,6 +80,7 @@ public:
   
   /* Return what part of the component it is */
   const std::string& getClass() const { return mClass; }
+  const std::string& getPrefixedClass() const { return mPrefixedClass; }
   
   /* Getter methods for the component ID/Name */
   const std::string &getId() const { return mId; }
@@ -86,6 +88,7 @@ public:
   const std::string &getNativeName() const { return mNativeName; }
   const std::string &getUuid() const { return mUuid; }
   const std::string &getDescriptionBody() const { return mDescriptionBody; }
+  const std::string &getPrefix() const { return mPrefix; }
   
   // Setter methods
   void setUuid(const std::string &aUuid) { mUuid = aUuid; reBuildAttributes(); }
@@ -109,7 +112,7 @@ public:
   
   /* Add to/get the component's std::list of children */
   void addChild(Component& child) { mChildren.push_back(&child); }
-  std::list<Component *> getChildren() { return mChildren; }
+  std::list<Component *> &getChildren() { return mChildren; }
   
   /* Add to/get the component's std::list of data items */
   void addDataItem(DataItem& dataItem) { mDataItems.push_back(&dataItem); }
@@ -133,6 +136,8 @@ protected:
 
   /* The class */
   std::string mClass;
+  std::string mPrefix;
+  std::string mPrefixedClass;
   
   /* Universal unique identifier */
   std::string mUuid;
