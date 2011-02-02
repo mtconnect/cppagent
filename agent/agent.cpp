@@ -235,7 +235,7 @@ unsigned int Agent::addToBuffer(
 
   Int64 seqNum = mSequence++;
   ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
-					     time, value);
+                                             time, value);
   (*mSlidingBuffer)[seqNum] = event;
   mLatest.addComponentEvent(event);
   event->unrefer();
@@ -320,9 +320,9 @@ string Agent::handleCall(
     string result;
 
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
-      FASTEST_FREQ, false, SLOWEST_FREQ);
+				FASTEST_FREQ, false, SLOWEST_FREQ);
     Int64 at = checkAndGetParam64(result, queries, "at", NO_START, getFirstSequence(), true,
-      mSequence);
+				  mSequence);
     if (freq == PARAM_ERROR || at == PARAM_ERROR)
     {
       return result;
@@ -334,7 +334,7 @@ string Agent::handleCall(
 
 
     return handleStream(out, devicesAndPath(path, deviceName), true,
-      freq, at);
+			freq, at);
   }
   else if (call == "probe" || call.empty())
   {
@@ -346,17 +346,17 @@ string Agent::handleCall(
     string result;
 
     int count = checkAndGetParam(result, queries, "count", DEFAULT_COUNT,
-      1, true, mSlidingBufferSize);
+				 1, true, mSlidingBufferSize);
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
-      FASTEST_FREQ, false, SLOWEST_FREQ);
+				FASTEST_FREQ, false, SLOWEST_FREQ);
 
     Int64 start = checkAndGetParam64(result, queries, "start", NO_START, getFirstSequence(),
-      true, mSequence);
+				     true, mSequence);
 
     if (start == NO_START) // If there was no data in queries
     {
       start = checkAndGetParam64(result, queries, "from", 1,
-        getFirstSequence(), true, mSequence);
+				 getFirstSequence(), true, mSequence);
     }
 
     if (freq == PARAM_ERROR || count == PARAM_ERROR || start == PARAM_ERROR)
@@ -365,7 +365,7 @@ string Agent::handleCall(
     }
 
     return handleStream(out, devicesAndPath(path, deviceName), false,
-      freq, start, count);
+			freq, start, count);
   }
   else if ((mDeviceMap[call] != NULL) && device.empty())
   {

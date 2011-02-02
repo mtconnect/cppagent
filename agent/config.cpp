@@ -179,21 +179,20 @@ void AgentConfiguration::loadConfig()
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
       const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Namespace") || !ns.is_key_defined("Prefix"))
+      if (!ns.is_key_defined("Urn"))
       {
-        sLogger << LERROR << "Name space must have a Namespace and a Prefix: " << *block;
+        sLogger << LERROR << "Name space must have a Urn: " << *block;
       } else {
         string location;
         if (ns.is_key_defined("Location"))
           location = ns["Location"];
-        XmlPrinter::addDevicesNamespace(ns["Namespace"], location,
-                                        ns["Prefix"]);
+        XmlPrinter::addDevicesNamespace(ns["Urn"], location, *block);
       }
     }
   }
   
-  if (reader.is_block_defined("SchemaNamespaces")) {
-    const config_reader::kernel_1a &namespaces = reader.block("SchemaNamespaces");
+  if (reader.is_block_defined("StreamsNamespaces")) {
+    const config_reader::kernel_1a &namespaces = reader.block("StreamsNamespaces");
     vector<string> blocks;
     namespaces.get_blocks(blocks);
     
@@ -201,15 +200,14 @@ void AgentConfiguration::loadConfig()
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
       const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Namespace") || !ns.is_key_defined("Prefix"))
+      if (!ns.is_key_defined("Urn"))
       {
-        sLogger << LERROR << "Name space must have a Namespace and a Prefix: " << *block;
+        sLogger << LERROR << "Name space must have a Urn: " << *block;
       } else {
         string location;
         if (ns.is_key_defined("Location"))
           location = ns["Location"];
-          XmlPrinter::addStreamsNamespace(ns["Namespace"], location,
-                                          ns["Prefix"]);
+        XmlPrinter::addStreamsNamespace(ns["Urn"], location, *block);
       }
     }
   }
@@ -223,15 +221,14 @@ void AgentConfiguration::loadConfig()
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
       const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Namespace") || !ns.is_key_defined("Prefix"))
+      if (!ns.is_key_defined("Urn"))
       {
-        sLogger << LERROR << "Name space must have a Namespace and a Prefix: " << *block;
+        sLogger << LERROR << "Name space must have a Urn: " << *block;
       } else {
         string location;
         if (ns.is_key_defined("Location"))
           location = ns["Location"];
-        XmlPrinter::addErrorNamespace(ns["Namespace"], location,
-                                      ns["Prefix"]);
+        XmlPrinter::addErrorNamespace(ns["Urn"], location, *block);
       }
     }
   }

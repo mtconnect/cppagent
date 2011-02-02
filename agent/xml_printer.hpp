@@ -73,11 +73,11 @@ namespace XmlPrinter
   );
 
   
-  void addDevicesNamespace(const std::string &aNs, const std::string &aLocation, 
+  void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 
                            const std::string &aPrefix);
-  void addErrorNamespace(const std::string &aNs, const std::string &aLocation, 
+  void addErrorNamespace(const std::string &aUrn, const std::string &aLocation, 
                          const std::string &aPrefix);
-  void addStreamsNamespace(const std::string &aNs, const std::string &aLocation, 
+  void addStreamsNamespace(const std::string &aUrn, const std::string &aLocation, 
                            const std::string &aPrefix);
 
   // For testing
@@ -85,9 +85,9 @@ namespace XmlPrinter
   void clearErrorNamespaces();
   void clearStreamsNamespaces();
 
-  const std::string getDevicesNamespace(const std::string &aPrefix);
-  const std::string getErrorNamespace(const std::string &aPrefix);
-  const std::string getStreamsNamespace(const std::string &aPrefix);
+  const std::string getDevicesUrn(const std::string &aPrefix);
+  const std::string getErrorUrn(const std::string &aPrefix);
+  const std::string getStreamsUrn(const std::string &aPrefix);
 };
 
 #endif

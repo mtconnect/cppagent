@@ -48,7 +48,7 @@ static xmlChar *ConvertInput(const char *in, const char *encoding);
 using namespace std;
 
 struct SchemaNamespace {
-  string mNamespace;
+  string mUrn;
   string mSchemaLocation;
 };
 
@@ -93,11 +93,11 @@ namespace XmlPrinter {
 };
 
 
-void XmlPrinter::addDevicesNamespace(const std::string &aNs, const std::string &aLocation, 
+void XmlPrinter::addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 
                          const std::string &aPrefix)
 {
   pair<string, SchemaNamespace> item;
-  item.second.mNamespace = aNs;
+  item.second.mUrn = aUrn;
   item.second.mSchemaLocation = aLocation;
   item.first = aPrefix;
   
@@ -109,20 +109,20 @@ void XmlPrinter::clearDevicesNamespaces()
   sDevicesNamespaces.clear();
 }
 
-const string XmlPrinter::getDevicesNamespace(const std::string &aPrefix)
+const string XmlPrinter::getDevicesUrn(const std::string &aPrefix)
 {
   map<string, SchemaNamespace>::iterator ns = sDevicesNamespaces.find(aPrefix);
   if (ns != sDevicesNamespaces.end())
-    return ns->second.mNamespace;
+    return ns->second.mUrn;
   else
     return "";
 }
 
-void XmlPrinter::addErrorNamespace(const std::string &aNs, const std::string &aLocation, 
+void XmlPrinter::addErrorNamespace(const std::string &aUrn, const std::string &aLocation, 
                        const std::string &aPrefix)
 {
   pair<string, SchemaNamespace> item;
-  item.second.mNamespace = aNs;
+  item.second.mUrn = aUrn;
   item.second.mSchemaLocation = aLocation;
   item.first = aPrefix;
   
@@ -134,20 +134,20 @@ void XmlPrinter::clearErrorNamespaces()
   sErrorNamespaces.clear();
 }
 
-const string XmlPrinter::getErrorNamespace(const std::string &aPrefix)
+const string XmlPrinter::getErrorUrn(const std::string &aPrefix)
 {
   map<string, SchemaNamespace>::iterator ns = sErrorNamespaces.find(aPrefix);
   if (ns != sErrorNamespaces.end())
-    return ns->second.mNamespace;
+    return ns->second.mUrn;
   else
     return "";
 }
 
-void XmlPrinter::addStreamsNamespace(const std::string &aNs, const std::string &aLocation, 
+void XmlPrinter::addStreamsNamespace(const std::string &aUrn, const std::string &aLocation, 
                          const std::string &aPrefix)
 {
   pair<string, SchemaNamespace> item;
-  item.second.mNamespace = aNs;
+  item.second.mUrn = aUrn;
   item.second.mSchemaLocation = aLocation;
   item.first = aPrefix;
   
@@ -159,11 +159,11 @@ void XmlPrinter::clearStreamsNamespaces()
   sStreamsNamespaces.clear();
 }
 
-const string XmlPrinter::getStreamsNamespace(const std::string &aPrefix)
+const string XmlPrinter::getStreamsUrn(const std::string &aPrefix)
 {
   map<string, SchemaNamespace>::iterator ns = sStreamsNamespaces.find(aPrefix);
   if (ns != sStreamsNamespaces.end())
-    return ns->second.mNamespace;
+    return ns->second.mUrn;
   else
     return "";
 }
@@ -620,12 +620,12 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
     string attr = "xmlns:" + ns->first;
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                     BAD_CAST attr.c_str(),
-                                                    BAD_CAST ns->second.mNamespace.c_str()));
+                                                    BAD_CAST ns->second.mUrn.c_str()));
     
     // Always take the first location. There should only be one location!
     if (location.empty() && !ns->second.mSchemaLocation.empty())
     {
-      location = ns->second.mNamespace + " " + ns->second.mSchemaLocation;
+      location = ns->second.mUrn + " " + ns->second.mSchemaLocation;
     }
   }
   

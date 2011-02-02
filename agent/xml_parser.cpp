@@ -193,20 +193,24 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
     string path;
     THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(mDoc));
     xpathCtx->node = node;
-
+    bool mtc = false;
+      
     if (root->ns)
     {
-      bool any = false;
       for (xmlNsPtr ns = root->nsDef; ns != NULL; ns = ns->next)
       {
         if (ns->prefix != NULL)
         {
-          THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
-          any = true;
+          if (strncmp((const char *) ns->href, "urn:mtconnect.org:MTConnectDevices", 34) != 0) {
+            THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
+          } else {
+            mtc = true;
+            THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
+          }
         }
       }
       
-      if (!any)
+      if (!mtc)
         THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
       
       path = addNamespace(aPath, "m");
