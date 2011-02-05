@@ -291,4 +291,24 @@ void AgentConfiguration::loadConfig()
   {
     throw runtime_error("Adapters must be defined if more than one device is present");
   }
+  
+  // Files served by the Agent... allows schema files to be served by
+  // agent.
+  if (reader.is_block_defined("Files")) {
+    const config_reader::kernel_1a &files = reader.block("Files");
+    vector<string> blocks;
+    files.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &file = files.block(*block);
+      if (!file.is_key_defined("Uri") || !file.is_key_defined("Path"))
+      {
+        sLogger << LERROR << "Name space must have a Uri and Path: " << *block;
+      } else {
+        mAgent->registerFile(file["Uri"], file["Path"]);
+      }
+    }
+  }
 }

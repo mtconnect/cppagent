@@ -33,6 +33,8 @@
 
 #include "agent.hpp"
 #include "dlib/logger.h"
+#include <sys/stat.h>
+#include <fcntl.h>
 
 using namespace std;
 
@@ -136,6 +138,12 @@ void Agent::start()
   }
 }
 
+// Register a file
+void Agent::registerFile(const string &aUri, const string &aPath)
+{
+  mFileMap.insert(pair<string,string>(aUri, aPath));
+}
+
 // Methods for service
 const string Agent::on_request (
   const incoming_things& incoming,
@@ -154,17 +162,21 @@ const string Agent::on_request (
       return printError("UNSUPPORTED",
         "Only the HTTP GET and PUT requests are supported by MTConnect");
     }
-
+    
     // Parse the URL path looking for '/'
     string path = incoming.path;
     size_t qm = path.find_last_of('?');
     if (qm != string::npos)
       path = path.substr(0, qm);
+    
+    if (isFile(path)) {
+      return handleFile(path, outgoing);
+    }
+    
     string::size_type loc1 = path.find("/", 1);
-
     string::size_type end = (path[path.length()-1] == '/') ?
       path.length()-1 : string::npos;
-      
+
     string device, call;
 
     // If a '/' was found
@@ -488,6 +500,61 @@ string Agent::handleStream(
     else
       return fetchSampleData(filter, start, count, items);
   }
+}
+
+string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
+{
+  // Check if the file is cached
+  std::map<string,string>::iterator cached = mFileCache.find(aUri);
+  if (cached != mFileCache.end())
+    return cached->second;
+
+  std::map<string,string>::iterator file = mFileMap.find(aUri);
+  
+  // Should never happen
+  if (file == mFileMap.end()) {
+    aOutgoing.http_return = 404;
+    aOutgoing.http_return_status = "File not found";
+    return "";
+  }
+
+  const char *path = file->second.c_str();
+  
+  struct stat fs;
+  int res = stat(path, &fs);
+  if (res != 0) {
+    aOutgoing.http_return = 404;
+    aOutgoing.http_return_status = "File not found";
+    return "";
+  }
+  
+  int fd = open(path, O_RDONLY);
+  if (res < 0) {
+    aOutgoing.http_return = 404;
+    aOutgoing.http_return_status = "File not found";
+    return "";
+  }
+  
+  char *buffer = (char*) malloc(fs.st_size + 1);
+  
+  int bytes = read(fd, buffer, fs.st_size);
+  close(fd);
+  
+  if (bytes < fs.st_size) {
+    aOutgoing.http_return = 404;
+    aOutgoing.http_return_status = "File not found";
+    return "";
+  }
+  
+  buffer[fs.st_size] = '\0';
+  string result = buffer;
+  free(buffer);
+  
+  // If this is a small file, cache it.
+  if (fs.st_size < SMALL_FILE)
+    mFileCache.insert(pair<string,string>(aUri, result));
+  
+  return result;
 }
 
 void Agent::streamData(ostream& out,

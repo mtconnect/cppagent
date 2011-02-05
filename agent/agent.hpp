@@ -81,6 +81,9 @@ public:
   
   /* Code for no start value specified */
   static const int NO_START = -2;
+
+  /* Small file size */
+  static const int SMALL_FILE = 10 * 1024; // 10k is considered small
   
 public:
   /* Load agent with the xml configuration */
@@ -138,6 +141,8 @@ public:
   
   // Starting
   virtual void start();
+
+  void registerFile(const std::string &aUri, const std::string &aPath);
     
 protected:
   /* HTTP methods to handle the 3 basic calls */
@@ -198,6 +203,11 @@ protected:
     const std::string& path,
     const std::string& device
   );
+
+  /* Get a file */
+  std::string handleFile(const std::string& aUri, outgoing_things& aOutgoing);
+
+  bool isFile(const std::string& aUri) { return mFileMap.count(aUri) > 0; }
   
   /* Perform a check on parameter and return a value or a code */
   int checkAndGetParam(
@@ -253,6 +263,10 @@ protected:
   std::vector<Device *> mDevices;
   std::map<std::string, Device *> mDeviceMap;
   std::map<std::string, DataItem *> mDataItemMap;
+
+  // For file handling, small files will be cached
+  std::map<std::string, std::string> mFileMap;
+  std::map<std::string, std::string> mFileCache;
 };
 
 #endif

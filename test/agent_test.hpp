@@ -66,6 +66,8 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testCurrentAt);
   CPPUNIT_TEST(testCurrentAt64);
   CPPUNIT_TEST(testAdapterCommands);
+  CPPUNIT_TEST(testFileDownload);
+  CPPUNIT_TEST(testFailedFileDownload);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -114,6 +116,10 @@ protected:
   
   /* Test Adapter */
   void testAdapter();
+
+  // File handler tests
+  void testFileDownload();
+  void testFailedFileDownload();
   
   // Adapter commands
   void testAdapterCommands();
@@ -122,6 +128,7 @@ protected:
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                            std::string key = "",
                            std::string value = "");
+
   
 public:
   void setUp();

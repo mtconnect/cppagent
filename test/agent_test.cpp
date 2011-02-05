@@ -480,3 +480,49 @@ void AgentTest::testAdapterCommands()
   }
   
 }
+
+void AgentTest::testFileDownload()
+{
+  string uri("/schemas/MTConnectDevices_1.1.xsd");
+  
+  // Register a file with the agent.
+  a->registerFile(uri, "./MTConnectDevices_1.1.xsd");
+
+  // Reqyest the file...
+  struct Agent::incoming_things incoming;
+  struct Agent::outgoing_things outgoing;
+  incoming.request_type = "GET";
+  incoming.path = uri;
+  incoming.queries = queries;
+  incoming.cookies = cookies;
+  incoming.headers = incoming_headers;
+  
+  outgoing.out = &out;
+  
+  result = a->on_request(incoming, outgoing);
+  CPPUNIT_ASSERT_EQUAL((string) "TEST SCHEMA FILE 1234567890\n", result);
+}
+
+void AgentTest::testFailedFileDownload()
+{
+  string uri("/schemas/MTConnectDevices_1.1.xsd");
+  
+  // Register a file with the agent.
+  a->registerFile(uri, "./BadFileName.xsd");
+  
+  // Reqyest the file...
+  struct Agent::incoming_things incoming;
+  struct Agent::outgoing_things outgoing;
+  incoming.request_type = "GET";
+  incoming.path = uri;
+  incoming.queries = queries;
+  incoming.cookies = cookies;
+  incoming.headers = incoming_headers;
+  
+  outgoing.out = &out;
+  
+  result = a->on_request(incoming, outgoing);
+  
+  CPPUNIT_ASSERT_EQUAL((unsigned short) 404, outgoing.http_return);
+  CPPUNIT_ASSERT_EQUAL((string) "File not found", outgoing.http_return_status);
+}
