@@ -41,7 +41,8 @@ static inline const string &get_with_default(const config_reader::kernel_1a &rea
     return aDefault;
 }
 
-AgentConfiguration::AgentConfiguration()
+AgentConfiguration::AgentConfiguration() :
+  mAgent(NULL)
 {
 }
 
@@ -71,7 +72,8 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
 
 AgentConfiguration::~AgentConfiguration()
 {
-  delete mAgent;
+  if (mAgent != NULL)
+    delete mAgent;
 }
 
 void AgentConfiguration::start()
@@ -168,71 +170,7 @@ void AgentConfiguration::loadConfig()
   }
     
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
-  
-  // Load namespaces
-  if (reader.is_block_defined("DevicesNamespaces")) {
-    const config_reader::kernel_1a &namespaces = reader.block("DevicesNamespaces");
-    vector<string> blocks;
-    namespaces.get_blocks(blocks);
     
-    vector<string>::iterator block;
-    for (block = blocks.begin(); block != blocks.end(); ++block)
-    {
-      const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Urn"))
-      {
-        sLogger << LERROR << "Name space must have a Urn: " << *block;
-      } else {
-        string location;
-        if (ns.is_key_defined("Location"))
-          location = ns["Location"];
-        XmlPrinter::addDevicesNamespace(ns["Urn"], location, *block);
-      }
-    }
-  }
-  
-  if (reader.is_block_defined("StreamsNamespaces")) {
-    const config_reader::kernel_1a &namespaces = reader.block("StreamsNamespaces");
-    vector<string> blocks;
-    namespaces.get_blocks(blocks);
-    
-    vector<string>::iterator block;
-    for (block = blocks.begin(); block != blocks.end(); ++block)
-    {
-      const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Urn"))
-      {
-        sLogger << LERROR << "Name space must have a Urn: " << *block;
-      } else {
-        string location;
-        if (ns.is_key_defined("Location"))
-          location = ns["Location"];
-        XmlPrinter::addStreamsNamespace(ns["Urn"], location, *block);
-      }
-    }
-  }
-  
-  if (reader.is_block_defined("ErrorNamespaces")) {
-    const config_reader::kernel_1a &namespaces = reader.block("ErrorNamespaces");
-    vector<string> blocks;
-    namespaces.get_blocks(blocks);
-    
-    vector<string>::iterator block;
-    for (block = blocks.begin(); block != blocks.end(); ++block)
-    {
-      const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Urn"))
-      {
-        sLogger << LERROR << "Name space must have a Urn: " << *block;
-      } else {
-        string location;
-        if (ns.is_key_defined("Location"))
-          location = ns["Location"];
-        XmlPrinter::addErrorNamespace(ns["Urn"], location, *block);
-      }
-    }
-  }
-  
   sLogger << LINFO << "Starting agent on port " << port;
   mAgent = new Agent(probe, bufferSize, checkpointFrequency);
   mAgent->set_listening_port(port);
@@ -311,4 +249,75 @@ void AgentConfiguration::loadConfig()
       }
     }
   }
+  
+  // Load namespaces, allow for local file system serving as well.
+  if (reader.is_block_defined("DevicesNamespaces")) {
+    const config_reader::kernel_1a &namespaces = reader.block("DevicesNamespaces");
+    vector<string> blocks;
+    namespaces.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &ns = namespaces.block(*block);
+      if (!ns.is_key_defined("Urn"))
+      {
+        sLogger << LERROR << "Name space must have a Urn: " << *block;
+      } else {
+        string location;
+        if (ns.is_key_defined("Location"))
+          location = ns["Location"];
+        XmlPrinter::addDevicesNamespace(ns["Urn"], location, *block);
+        if (ns.is_key_defined("Path") && !location.empty())
+          mAgent->registerFile(location, ns["Path"]);        
+      }
+    }
+  }
+  
+  if (reader.is_block_defined("StreamsNamespaces")) {
+    const config_reader::kernel_1a &namespaces = reader.block("StreamsNamespaces");
+    vector<string> blocks;
+    namespaces.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &ns = namespaces.block(*block);
+      if (!ns.is_key_defined("Urn"))
+      {
+        sLogger << LERROR << "Name space must have a Urn: " << *block;
+      } else {
+        string location;
+        if (ns.is_key_defined("Location"))
+          location = ns["Location"];
+        XmlPrinter::addStreamsNamespace(ns["Urn"], location, *block);
+        if (ns.is_key_defined("Path") && !location.empty())
+          mAgent->registerFile(location, ns["Path"]);        
+      }
+    }
+  }
+  
+  if (reader.is_block_defined("ErrorNamespaces")) {
+    const config_reader::kernel_1a &namespaces = reader.block("ErrorNamespaces");
+    vector<string> blocks;
+    namespaces.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &ns = namespaces.block(*block);
+      if (!ns.is_key_defined("Urn"))
+      {
+        sLogger << LERROR << "Name space must have a Urn: " << *block;
+      } else {
+        string location;
+        if (ns.is_key_defined("Location"))
+          location = ns["Location"];
+        XmlPrinter::addErrorNamespace(ns["Urn"], location, *block);
+        if (ns.is_key_defined("Path") && !location.empty())
+          mAgent->registerFile(location, ns["Path"]);        
+      }
+    }
+  }
+  
 }

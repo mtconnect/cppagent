@@ -233,3 +233,8 @@ string addNamespace(const string aPath, const string aPrefix)
   return newPath;
 }
 
+bool isMTConnectUrn(const char *aUrn)
+{
+  return strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27) == 0;
+}
+

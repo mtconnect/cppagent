@@ -102,7 +102,10 @@ int getEnumeration(
 
 std::string addNamespace(const std::string aPath, const std::string aPrefix);
 
+bool isMTConnectUrn(const char *aUrn);
+
 #ifdef WIN32
+#include <io.h>
 typedef long volatile AtomicInt;
 #else
 #ifdef MACOSX

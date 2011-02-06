@@ -120,7 +120,7 @@ XmlParser::XmlParser(const string& xmlPath)
       {
         // Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the 
         // schema location again.
-        if (strncmp((const char*) ns->href, "urn:mtconnect.org:MTConnectDevices", 34) != 0 &&
+        if (!isMTConnectUrn((const char*) ns->href) &&
             strncmp((const char*) ns->href, "http://www.w3.org/", 18) != 0 &&
             locationUrn != (const char*) ns->href &&
             ns->prefix != NULL) {
