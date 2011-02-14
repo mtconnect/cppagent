@@ -334,7 +334,7 @@ string Agent::handleCall(
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
     Int64 at = checkAndGetParam64(result, queries, "at", NO_START, getFirstSequence(), true,
-				  mSequence);
+				  mSequence - 1);
     if (freq == PARAM_ERROR || at == PARAM_ERROR)
     {
       return result;

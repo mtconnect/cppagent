@@ -459,6 +459,46 @@ void AgentTest::testCurrentAt64()
   }
 }
 
+
+void AgentTest::testCurrentAtRange()
+{
+  path = "/current";
+  string key("at"), value;
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  // Get the current position
+  char line[80];
+  
+  // Add many events
+  for (int i = 1; i <= 200; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    adapter->processData(line);
+  }
+  
+  int seq = a->getSequence();
+
+  {
+    value = intToString(seq);
+    sprintf(line, "'at' must be less than or equal to %d.", seq - 1);
+    PARSE_XML_RESPONSE_QUERY(key, value);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
+  }
+  
+  seq = a->getFirstSequence() - 1;
+  
+  {
+    value = intToString(seq);
+    sprintf(line, "'at' must be greater than or equal to %d.", seq + 1);
+    PARSE_XML_RESPONSE_QUERY(key, value);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
+  }
+}
+
 void AgentTest::testAdapterCommands()
 {
   path = "/probe";
