@@ -65,7 +65,8 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAdapter);
   CPPUNIT_TEST(testCurrentAt);
   CPPUNIT_TEST(testCurrentAt64);
-  CPPUNIT_TEST(testCurrentAtRange);
+  CPPUNIT_TEST(testCurrentAtOutOfRange);
+  CPPUNIT_TEST(testSampleAtNextSeq);
   CPPUNIT_TEST(testAdapterCommands);
   CPPUNIT_TEST(testFileDownload);
   CPPUNIT_TEST(testFailedFileDownload);
@@ -114,7 +115,8 @@ protected:
   void testAddToBuffer();
   void testCurrentAt();
   void testCurrentAt64();
-  void testCurrentAtRange();
+  void testCurrentAtOutOfRange();
+  void testSampleAtNextSeq();
   
   /* Test Adapter */
   void testAdapter();
