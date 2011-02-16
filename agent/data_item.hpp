@@ -53,6 +53,13 @@ public:
     EVENT,
     CONDITION
   };
+
+  enum ERepresentation
+  {
+    VALUE,
+    TIME_SERIES
+  };
+    
   
   /* Enumeration for the simple units for simple conversions */
   enum ESimpleUnits
@@ -108,10 +115,13 @@ public:
   const std::string &getNativeUnits() const { return mNativeUnits; }
   const std::string &getUnits() const { return mUnits; }
   const std::string &getPrefix() const { return mPrefix; }
+  const std::string &getStatistic() const { return mStatistic; }
+  const std::string &getSampleRate() const { return mSampleRate; }
   
   float getNativeScale() const { return mNativeScale; }
   double getConversionFactor() const;
   ECategory getCategory() const { return mCategory; }
+  ERepresentation getRepresentation() const { return mRepresentation; }
   
   /* Returns if data item has this attribute */
   bool hasName(const std::string& name);
@@ -126,6 +136,7 @@ public:
   bool isCondition() const { return mCategory == CONDITION; }
   bool isAlarm() const { return mIsAlarm; }
   bool isMessage() const { return mIsMessage; }
+  bool isTimeSeries() const { return mRepresentation == TIME_SERIES; }
     
   /* Set/get component that data item is associated with */
   void setComponent(Component& component) { mComponent = &component; }
@@ -176,7 +187,7 @@ protected:
   std::string mCamelType;
   std::string mPrefixedCamelType;
   std::string mPrefix;
-  
+
   /* Subtype of data item */
   std::string mSubType;
   
@@ -188,6 +199,13 @@ protected:
   
   /* Units of data item */
   std::string mUnits;
+  
+  /* The statistical process used on this data item */
+  std::string mStatistic;
+
+  /* Representation of data item */
+  ERepresentation mRepresentation;
+  std::string mSampleRate;
   
   /* Native scale of data item */
   float mNativeScale;

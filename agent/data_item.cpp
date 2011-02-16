@@ -73,16 +73,21 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
 /* DataItem public methods */
 DataItem::DataItem(std::map<string, string> attributes) 
   : mHasNativeScale(false), mHasSignificantDigits(false), mHasConstraints(false),
-    mConversionDetermined(false), mConversionRequired(false), mHasFactor(false)
-
+    mConversionDetermined(false), mConversionRequired(false), mHasFactor(false),
+    mRepresentation(VALUE)
 {
   mId = attributes["id"];
   mName = attributes["name"];
   mType = attributes["type"];
   mIsAlarm = (mType == "ALARM");
   mIsMessage = (mType == "MESSAGE");
-  
+
   mCamelType = getCamelType(mType, mPrefix);
+  if (attributes["representation"] == "TIME_SERIES")
+  {
+    mRepresentation = TIME_SERIES;
+    mCamelType += "TimeSeries";
+  }
   if (!mPrefix.empty())
     mPrefixedCamelType = mPrefix + ":" + mCamelType;
   else
@@ -93,7 +98,7 @@ DataItem::DataItem(std::map<string, string> attributes)
   {
     mSubType = attributes["subType"];
   }
-  
+
   if (attributes["category"] == "SAMPLE")
     mCategory = SAMPLE;
   else if (attributes["category"] == "CONDITION")
@@ -115,6 +120,16 @@ DataItem::DataItem(std::map<string, string> attributes)
     mUnits = attributes["units"];
     if (mNativeUnits.empty())
       mNativeUnits = mUnits;
+  }
+
+  if (!attributes["statistic"].empty())
+  {
+    mStatistic = attributes["statistic"];
+  }
+
+  if (!attributes["sampleRate"].empty())
+  {
+    mSampleRate = attributes["sampleRate"];
   }
 
   if (!attributes["nativeScale"].empty())
@@ -167,6 +182,21 @@ std::map<string, string> DataItem::buildAttributes() const
     case CONDITION:
       attributes["category"] = "CONDITION";
       break;
+  }
+
+  if (mRepresentation == TIME_SERIES)
+  {
+    attributes["representation"] = "TIME_SERIES";
+  }
+
+  if (!mStatistic.empty())
+  {
+    attributes["statistic"] = mStatistic;
+  }
+
+  if (!mSampleRate.empty())
+  {
+    attributes["sampleRate"] = mSampleRate;
   }
 
   if (!mName.empty())

@@ -54,6 +54,9 @@ class DataItemTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testGetCamel);
   CPPUNIT_TEST(testConversion);
   CPPUNIT_TEST(testCondition);
+  CPPUNIT_TEST(testTimeSeries);
+  CPPUNIT_TEST(testStatistic);
+  CPPUNIT_TEST(testSampleRate);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -68,6 +71,9 @@ protected:
   void testGetCamel();
   void testConversion();
   void testCondition();
+  void testTimeSeries();
+  void testStatistic();
+  void testSampleRate();
   
 public:
   void setUp();

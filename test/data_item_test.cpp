@@ -214,3 +214,71 @@ void DataItemTest::testCondition()
 {
   CPPUNIT_ASSERT_EQUAL(DataItem::CONDITION, c->getCategory());
 }
+
+void DataItemTest::testTimeSeries()
+{
+  std::map<string, string> attributes1;
+  
+  attributes1["id"] = "1";
+  attributes1["name"] = "DataItemTest1";
+  attributes1["type"] = "POSITION";
+  attributes1["category"] = "SAMPLE";
+  attributes1["units"] = "MILLIMETER";
+  attributes1["nativeUnits"] = "MILLIMETER";
+  attributes1["representation"] = "TIME_SERIES";
+  DataItem *d = new DataItem(attributes1);
+
+  CPPUNIT_ASSERT_EQUAL(string("PositionTimeSeries"), d->getElementName());
+  delete d;
+
+  attributes1.clear();
+  attributes1["id"] = "1";
+  attributes1["name"] = "DataItemTest1";
+  attributes1["type"] = "POSITION";
+  attributes1["category"] = "SAMPLE";
+  attributes1["units"] = "MILLIMETER";
+  attributes1["nativeUnits"] = "MILLIMETER";
+  attributes1["representation"] = "VALUE";
+  d = new DataItem(attributes1);
+
+  CPPUNIT_ASSERT_EQUAL(string("Position"), d->getElementName());
+  delete d;
+}
+
+void DataItemTest::testStatistic()
+{
+  std::map<string, string> attributes1;
+  
+  attributes1["id"] = "1";
+  attributes1["name"] = "DataItemTest1";
+  attributes1["type"] = "POSITION";
+  attributes1["category"] = "SAMPLE";
+  attributes1["units"] = "MILLIMETER";
+  attributes1["nativeUnits"] = "MILLIMETER";
+  attributes1["statistic"] = "AVERAGE";
+  DataItem *d = new DataItem(attributes1);
+
+  CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), d->getStatistic());
+  delete d;
+}
+
+void DataItemTest::testSampleRate()
+{
+  std::map<string, string> attributes1;
+  
+  attributes1["id"] = "1";
+  attributes1["name"] = "DataItemTest1";
+  attributes1["type"] = "POSITION";
+  attributes1["category"] = "SAMPLE";
+  attributes1["units"] = "MILLIMETER";
+  attributes1["nativeUnits"] = "MILLIMETER";
+  attributes1["statistic"] = "AVERAGE";
+  attributes1["representation"] = "TIME_SERIES";
+  attributes1["sampleRate"] = "42000";
+  DataItem *d = new DataItem(attributes1);
+
+  CPPUNIT_ASSERT_EQUAL(string("42000"), d->getSampleRate());
+  delete d;
+}
+
+
