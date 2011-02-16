@@ -54,6 +54,7 @@ class CheckpointTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testFilter);
   CPPUNIT_TEST(testCopyAndFilter);
   CPPUNIT_TEST(testConditionChaining);
+  CPPUNIT_TEST(testLastConditionNormal);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -70,6 +71,7 @@ protected:
   void testFilter();
   void testCopyAndFilter();
   void testConditionChaining();
+  void testLastConditionNormal();
   
 public:
   void setUp();

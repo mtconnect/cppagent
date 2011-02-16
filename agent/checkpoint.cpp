@@ -115,6 +115,13 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
 	    (*ptr) = n;
 	    if (n != NULL) {
 	      n->unrefer();
+	    } else {
+	      // Need to put a normal event in with no code since this
+	      // is the last one.
+	      n = new ComponentEvent(*anEvent);
+	      n->normal();
+	      (*ptr) = n;
+	      n->unrefer();
 	    }
 	  } else {
 	    // Not sure if we should register code specific normals if
@@ -159,7 +166,7 @@ void Checkpoint::getComponentEvents(vector<ComponentEventPtr> &aList,
   for (it = mEvents.begin(); it != mEvents.end(); ++it)
   {
     ComponentEvent *e = *((*it).second);
-    if (aFilter == NULL || aFilter->count(e->getDataItem()->getId()) > 0)
+    if (aFilter == NULL || (e != NULL && aFilter->count(e->getDataItem()->getId()) > 0))
     {
       while (e != NULL)
       {

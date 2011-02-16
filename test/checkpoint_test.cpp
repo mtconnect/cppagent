@@ -453,3 +453,36 @@ void CheckpointTest::testConditionChaining()
   list.clear();
 }
 
+void CheckpointTest::testLastConditionNormal()
+{
+  ComponentEventPtr p1, p2, p3;
+
+  string time("NOW"),
+    fault1("FAULT|CODE1|HIGH|Over..."),
+    normal1("NORMAL|CODE1||");
+
+  std::set<string> filter;
+  filter.insert(mDataItem1->getId());
+  vector<ComponentEventPtr> list;
+  
+  
+  p1 = new ComponentEvent(*mDataItem1, 2, time, fault1);
+  p1->unrefer();
+  mCheckpoint->addComponentEvent(p1);
+  
+  mCheckpoint->getComponentEvents(list);
+  CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
+  list.clear();
+  
+  p2 = new ComponentEvent(*mDataItem1, 2, time, normal1);
+  p2->unrefer();
+  mCheckpoint->addComponentEvent(p2);
+
+  mCheckpoint->getComponentEvents(list, &filter);
+  CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
+
+  p3 = list[0];
+  CPPUNIT_ASSERT_EQUAL(ComponentEvent::NORMAL, p3->getLevel());
+  CPPUNIT_ASSERT_EQUAL(string(""), p3->getCode());
+}
+

@@ -125,6 +125,7 @@ public:
   ELevel getLevel();
   const std::string &getLevelString() { return SLevels[getLevel()]; }
   const std::string &getCode() { getAttributes(); return mCode; }
+  void normal();
   
   Int64 getSequence() const { return mSequence; }
   

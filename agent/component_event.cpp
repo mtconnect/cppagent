@@ -212,6 +212,15 @@ AttributeList *ComponentEvent::getAttributes()
   return &mAttributes;
 }
 
+void ComponentEvent::normal()
+{
+  mAttributes.clear();
+  mCode.clear();
+  mHasAttributes = false;
+  mAlarmData = "normal|||";
+  getAttributes();
+}
+
 /* ComponentEvent protected methods */
 void ComponentEvent::convertValue(const string& value)
 {
