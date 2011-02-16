@@ -214,11 +214,14 @@ AttributeList *ComponentEvent::getAttributes()
 
 void ComponentEvent::normal()
 {
-  mAttributes.clear();
-  mCode.clear();
-  mHasAttributes = false;
-  mAlarmData = "normal|||";
-  getAttributes();
+  if (mDataItem->isCondition())
+  {
+    mAttributes.clear();
+    mCode.clear();
+    mHasAttributes = false;
+    mAlarmData = "normal|||";
+    getAttributes();
+  }
 }
 
 /* ComponentEvent protected methods */
