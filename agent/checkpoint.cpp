@@ -113,7 +113,9 @@ void Checkpoint::addComponentEvent(ComponentEvent *anEvent)
 	    // Clear the one condition by removing it from the chain
 	    ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
 	    (*ptr) = n;
-	    n->unrefer();
+	    if (n != NULL) {
+	      n->unrefer();
+	    }
 	  } else {
 	    // Not sure if we should register code specific normals if
 	    // previous normal was not found
