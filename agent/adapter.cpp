@@ -122,7 +122,8 @@ void Adapter::processData(const string& data)
       sLogger << LWARN << "Could not find data item: " << key << "\n\tdata: " << data;
     } else {
       string rest;
-      if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage())
+      if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage() ||
+          dataItem->isTimeSeries())
       {
         getline(toParse, rest);
         value = value + "|" + rest;
