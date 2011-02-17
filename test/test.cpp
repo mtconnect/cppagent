@@ -25,7 +25,9 @@ int main (int argc, char* argv[])
   // insert test-suite at test-runner by registry
   CPPUNIT_NS :: TestRunner testrunner;
   testrunner.addTest (CPPUNIT_NS :: TestFactoryRegistry :: getRegistry ().makeTest ());
-  testrunner.run (testresult);
+  std::string path;
+  if (argc > 1) path = argv[1];
+  testrunner.run (testresult, path);
 
   // output results in compiler-format
   CPPUNIT_NS :: CompilerOutputter compileroutputter (&collectedresults, std::cerr);

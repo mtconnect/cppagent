@@ -419,6 +419,43 @@ void XmlPrinterTest::testChangeDeviceAttributes()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "99999999");
 }
 
+void XmlPrinterTest::testStatisticAndTimeSeriesProbe()
+{
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xact']@statistic", "AVERAGE");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xts']@representation", "TIME_SERIES");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xts']@sampleRate", "46000");
+}
+
+void XmlPrinterTest::testTimeSeries()
+{
+  {
+    vector<ComponentEventPtr> events;
+    events.push_back(newEvent("Xts", 10843512, "6|||1.1 2.2 3.3 4.4 5.5 6.6 "));
+    
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate",
+				      0);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleCount",
+				      "6");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries[@name='Xts']",
+				      "1.1 2.2 3.3 4.4 5.5 6.6");
+  }
+  {
+    vector<ComponentEventPtr> events;
+    events.push_back(newEvent("Xts", 10843512, "6|46200|1.1 2.2 3.3 4.4 5.5 6.6 "));
+    
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate",
+				      "46200");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleCount",
+				      "6");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries",
+				      "1.1 2.2 3.3 4.4 5.5 6.6");
+  }
+}
+
 DataItem * XmlPrinterTest::getDataItem(const char *name)
 {
   Device *device = devices.front();
@@ -454,6 +491,7 @@ ComponentEvent * XmlPrinterTest::addEventToCheckpoint(
   aCheckpoint.addComponentEvent(event);
   return event;
 }
+
 
 
 

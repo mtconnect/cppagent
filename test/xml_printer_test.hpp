@@ -64,6 +64,8 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testChangeDevicesNamespace);
   CPPUNIT_TEST(testChangeStreamsNamespace);
   CPPUNIT_TEST(testChangeErrorNamespace);
+  CPPUNIT_TEST(testStatisticAndTimeSeriesProbe);
+  CPPUNIT_TEST(testTimeSeries);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -81,6 +83,8 @@ protected:
   void testChangeDevicesNamespace();
   void testChangeErrorNamespace();
   void testChangeStreamsNamespace();
+  void testStatisticAndTimeSeriesProbe();
+  void testTimeSeries();
 
   // Test new condition handling
   void testCondition();
