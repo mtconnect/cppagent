@@ -60,6 +60,7 @@ ComponentEvent::ComponentEvent(
   )
 {
   mDataItem = &dataItem;
+  mIsTimeSeries = mDataItem->isTimeSeries();
   mSequence = sequence;
   mTime = time;
   mHasAttributes = false;  
@@ -72,11 +73,16 @@ ComponentEvent::ComponentEvent(ComponentEvent& ce)
   mDataItem = ce.getDataItem();
   mTime = ce.mTime;
   mSequence = ce.mSequence;
-  mAlarmData = ce.mAlarmData;
+  mRest = ce.mRest;
   mValue = ce.mValue;
   mHasAttributes = false;
   mRefCount = 1;
   mCode = ce.mCode;
+  mIsTimeSeries = ce.mIsTimeSeries;
+  if (mIsTimeSeries) {
+    mTimeSeries = ce.mTimeSeries;
+    mSampleCount = ce.mSampleCount;
+  }
 }
 
 ComponentEvent::~ComponentEvent()
@@ -131,11 +137,13 @@ AttributeList *ComponentEvent::getAttributes()
       mAttributes.push_back(AttributeItem("name", mDataItem->getName()));
     mSequenceStr = int64ToString(mSequence);
     mAttributes.push_back(AttributeItem("sequence",mSequenceStr));
+    if (!mDataItem->getSubType().empty())
+      mAttributes.push_back(AttributeItem("subType", mDataItem->getSubType()));
 
     if (mDataItem->isCondition())
     {
       // Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER
-      istringstream toParse(mAlarmData);
+      istringstream toParse(mRest);
       string token;
 
       getline(toParse, token, '|');
@@ -171,40 +179,42 @@ AttributeList *ComponentEvent::getAttributes()
 
       mAttributes.push_back(AttributeItem("type", mDataItem->getType()));
     }
-    else
+    else if (mDataItem->isTimeSeries())
     {
-      if (!mDataItem->getSubType().empty())
-      {
-        mAttributes.push_back(AttributeItem("subType", mDataItem->getSubType()));
-      }
+      istringstream toParse(mRest);
+      string token;
 
-      if (mDataItem->isMessage())
-      {
-        // Format to parse: NATIVECODE
-        istringstream toParse(mAlarmData);  
-        string token;
+      getline(toParse, token, '|');
+      mAttributes.push_back(AttributeItem("sampleCount", token));
+      mSampleCount = atoi(token.c_str());
 
-        getline(toParse, token, '|');
-        mAttributes.push_back(AttributeItem("nativeCode", token));
-      }
-      else if (mDataItem->isAlarm())
-      {
-        // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
-        istringstream toParse(mAlarmData);
-        string token;
-
-        getline(toParse, token, '|');
-        mAttributes.push_back(AttributeItem("code", token));
-
-        getline(toParse, token, '|');
-        mAttributes.push_back(AttributeItem("nativeCode", token));
-
-        getline(toParse, token, '|');
-        mAttributes.push_back(AttributeItem("severity", token));
-
-        getline(toParse, token, '|');
-        mAttributes.push_back(AttributeItem("state", token));
-      }
+      getline(toParse, token, '|');
+      if (!token.empty())
+	mAttributes.push_back(AttributeItem("sampleRate", token));
+    }
+    else if (mDataItem->isMessage())
+    {
+      // Format to parse: NATIVECODE
+      if (!mRest.empty())
+	mAttributes.push_back(AttributeItem("nativeCode", mRest));
+    }
+    else if (mDataItem->isAlarm())
+    {
+      // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
+      istringstream toParse(mRest);
+      string token;
+	
+      getline(toParse, token, '|');
+      mAttributes.push_back(AttributeItem("code", token));
+      
+      getline(toParse, token, '|');
+      mAttributes.push_back(AttributeItem("nativeCode", token));
+      
+      getline(toParse, token, '|');
+      mAttributes.push_back(AttributeItem("severity", token));
+      
+      getline(toParse, token, '|');
+      mAttributes.push_back(AttributeItem("state", token));
     }
 
     mHasAttributes = true;
@@ -219,7 +229,7 @@ void ComponentEvent::normal()
     mAttributes.clear();
     mCode.clear();
     mHasAttributes = false;
-    mAlarmData = "normal|||";
+    mRest = "normal|||";
     getAttributes();
   }
 }
@@ -232,13 +242,13 @@ void ComponentEvent::convertValue(const string& value)
   {
     mValue = value;
   }
-  else if (mDataItem->isCondition() || mDataItem->isAlarm() || mDataItem->isMessage())
+  else if (mIsTimeSeries || mDataItem->isCondition() || mDataItem->isAlarm() || mDataItem->isMessage())
   {
     string::size_type lastPipe = value.rfind('|');
     
     // Alarm data = CODE|NATIVECODE|SEVERITY|STATE
     // Conditon data: SEVERITY|NATIVE_CODE|[SUB_TYPE]
-    mAlarmData = value.substr(0, lastPipe);
+    mRest = value.substr(0, lastPipe);
 
     // sValue = DESCRIPTION
     mValue = value.substr(lastPipe+1);

@@ -124,7 +124,7 @@ void XmlParserTest::testGetDataItems()
   std::set<string> filter;
   
   a->getDataItems(filter, "//Linear");
-  CPPUNIT_ASSERT_EQUAL(10, (int) filter.size());
+  CPPUNIT_ASSERT_EQUAL(11, (int) filter.size());
 
   filter.clear();
   a->getDataItems(filter, "//Linear//DataItem[@category='CONDITION']");
@@ -184,6 +184,29 @@ void XmlParserTest::testExtendedSchema()
   CPPUNIT_ASSERT_EQUAL((string) "x:FLOW", item->getType());
   CPPUNIT_ASSERT_EQUAL((string) "Flow", item->getElementName());
   CPPUNIT_ASSERT_EQUAL((string) "x", item->getPrefix());
+}
+
+void XmlParserTest::testTimeSeries()
+{
+  Device *dev = a->getDevices()[0];
+  CPPUNIT_ASSERT(dev != NULL);
   
+  DataItem *item = dev->getDeviceDataItem("Xact");
+  CPPUNIT_ASSERT(item != NULL);
   
+  item->getAttributes();
+  CPPUNIT_ASSERT_EQUAL((string)"AVERAGE", item->getStatistic());
+  
+  std::map<std::string, std::string> *attrs = item->getAttributes();
+  CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), (*attrs)["statistic"]);
+
+  
+  item = dev->getDeviceDataItem("Xts");
+  CPPUNIT_ASSERT(item != NULL);
+  item->getAttributes();
+  CPPUNIT_ASSERT(item->isTimeSeries());  
+  CPPUNIT_ASSERT_EQUAL(DataItem::TIME_SERIES, item->getRepresentation());
+  
+  attrs = item->getAttributes();
+  CPPUNIT_ASSERT_EQUAL(string("TIME_SERIES"), (*attrs)["representation"]);
 }

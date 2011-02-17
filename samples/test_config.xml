@@ -27,7 +27,8 @@
             </Rotary>
             <Linear name="X" id="x">
               <DataItems>
-                <DataItem type="POSITION" significantDigits="6" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x1" subType="ACTUAL" name="Xact"/>
+                <DataItem type="POSITION" significantDigits="6" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x1" subType="ACTUAL" name="Xact" statistic="AVERAGE"/>
+                <DataItem type="POSITION" significantDigits="6" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x1ts" subType="ACTUAL" name="Xts" representation="TIME_SERIES"/>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x2" subType="COMMANDED" name="Xcom"/>
                 <DataItem type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="x3" name="Xload" >
                   <Constraints>

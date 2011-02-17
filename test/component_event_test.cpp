@@ -333,3 +333,41 @@ void ComponentEventTest::testCondition()
   CPPUNIT_ASSERT_EQUAL((string) "2", attrs2["nativeSeverity"]);
   CPPUNIT_ASSERT_EQUAL((string) "Fault", event2->getLevelString());
 }
+
+void ComponentEventTest::testTimeSeries()
+{
+  string time("NOW");
+  std::map<string, string> attributes1;
+  attributes1["id"] = "1";
+  attributes1["name"] = "test";
+  attributes1["type"] = "TEMPERATURE";
+  attributes1["category"] = "SAMPLE";
+  attributes1["representation"] = "TIME_SERIES";
+  DataItem *d = new DataItem(attributes1);
+
+  CPPUNIT_ASSERT(d->isTimeSeries());
+  
+  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "6||1 2 3 4 5 6 "), true);
+  AttributeList *attr_list = event1->getAttributes();
+  map<string, string> attrs1;
+  AttributeList::iterator attr;
+  for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs1[attr->first] = attr->second; }
+  
+  CPPUNIT_ASSERT(event1->isTimeSeries());
+  
+  CPPUNIT_ASSERT_EQUAL(6, event1->getSampleCount());
+  CPPUNIT_ASSERT_EQUAL((string) "1 2 3 4 5 6 ", event1->getValue());
+  CPPUNIT_ASSERT_EQUAL(0, (int) attrs1.count("sampleRate"));
+  
+  
+  ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "7|42000|10 20 30 40 50 60 70 "), true);
+  attr_list = event2->getAttributes();
+  map<string, string> attrs2;
+  for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs2[attr->first] = attr->second; }
+  
+  CPPUNIT_ASSERT(event2->isTimeSeries());
+  
+  CPPUNIT_ASSERT_EQUAL(7, event2->getSampleCount());
+  CPPUNIT_ASSERT_EQUAL((string) "10 20 30 40 50 60 70 ", event2->getValue());
+  CPPUNIT_ASSERT_EQUAL((string) "42000", attrs2["sampleRate"]);
+}

@@ -126,6 +126,11 @@ public:
   const std::string &getLevelString() { return SLevels[getLevel()]; }
   const std::string &getCode() { getAttributes(); return mCode; }
   void normal();
+
+  // Time series info...
+  const std::vector<double> &getTimeSeries() { return mTimeSeries; }
+  bool isTimeSeries() const { return mIsTimeSeries; }
+  int getSampleCount() const { return mSampleCount; }
   
   Int64 getSequence() const { return mSequence; }
   
@@ -173,12 +178,16 @@ protected:
   /* Hold the alarm data:  CODE|NATIVECODE|SEVERITY|STATE */
   /* or the Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER */
   /* or the message data:  NATIVE_CODE */
-  std::string mAlarmData;
+  /* or the time series data */
+  std::string mRest;
   ELevel mLevel;
   
   /* The value of the event, either as a float or a string */
   std::string mValue;
   bool mIsFloat;
+  bool mIsTimeSeries;
+  std::vector<double> mTimeSeries;
+  int mSampleCount;
   
   /* The attributes, created on demand */
   bool mHasAttributes;

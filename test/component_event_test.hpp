@@ -53,6 +53,7 @@ class ComponentEventTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testStlLists);
   CPPUNIT_TEST(testEventChaining);
   CPPUNIT_TEST(testCondition);
+  CPPUNIT_TEST(testTimeSeries);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -73,6 +74,7 @@ protected:
   void testStlLists();
   void testEventChaining();
   void testCondition();
+  void testTimeSeries();
   
   /* Helper to test values */
   void testValueHelper(
