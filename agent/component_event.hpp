@@ -128,7 +128,7 @@ public:
   void normal();
 
   // Time series info...
-  const std::vector<double> &getTimeSeries() { return mTimeSeries; }
+  const std::vector<float> &getTimeSeries() { return mTimeSeries; }
   bool isTimeSeries() const { return mIsTimeSeries; }
   int getSampleCount() const { return mSampleCount; }
   
@@ -186,7 +186,7 @@ protected:
   std::string mValue;
   bool mIsFloat;
   bool mIsTimeSeries;
-  std::vector<double> mTimeSeries;
+  std::vector<float> mTimeSeries;
   int mSampleCount;
   
   /* The attributes, created on demand */

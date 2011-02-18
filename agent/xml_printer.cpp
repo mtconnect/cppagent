@@ -528,8 +528,16 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
   }
   
   addAttributes(writer, result->getAttributes());
-  
-  if (!result->getValue().empty()) {
+
+  if (result->isTimeSeries()) {
+    ostringstream ostr;
+    ostr.precision(6);
+    const vector<float> &v = result->getTimeSeries();
+    for (size_t i = 0; i < v.size(); i++)
+      ostr << v[i] << ' ';
+    string str = ostr.str();
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
+  } else if (!result->getValue().empty()) {
     xmlChar *text = ConvertInput(result->getValue().c_str(), "UTF-8");
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
     xmlFree(text);

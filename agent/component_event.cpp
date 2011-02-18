@@ -242,7 +242,8 @@ void ComponentEvent::convertValue(const string& value)
   {
     mValue = value;
   }
-  else if (mIsTimeSeries || mDataItem->isCondition() || mDataItem->isAlarm() || mDataItem->isMessage())
+  else if (mIsTimeSeries || mDataItem->isCondition() || mDataItem->isAlarm() ||
+	   mDataItem->isMessage())
   {
     string::size_type lastPipe = value.rfind('|');
     
@@ -251,7 +252,27 @@ void ComponentEvent::convertValue(const string& value)
     mRest = value.substr(0, lastPipe);
 
     // sValue = DESCRIPTION
-    mValue = value.substr(lastPipe+1);
+    if (mIsTimeSeries)
+    {
+      const char *cp = value.c_str();
+      cp += lastPipe + 1;
+      
+      // Check if conversion is required...
+      char *np;
+      while (cp != NULL && *cp != '\0') 
+      {
+	float v = strtof(cp, &np);
+	if (cp != np)
+	  mTimeSeries.push_back(v);
+	else
+	  np = NULL;
+	cp = np;
+      }
+    }
+    else
+    {
+      mValue = value.substr(lastPipe+1);
+    }
   }
   else if (mDataItem->conversionRequired())
   {

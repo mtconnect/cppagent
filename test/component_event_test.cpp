@@ -354,9 +354,14 @@ void ComponentEventTest::testTimeSeries()
   for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs1[attr->first] = attr->second; }
   
   CPPUNIT_ASSERT(event1->isTimeSeries());
-  
+
+  int i;
   CPPUNIT_ASSERT_EQUAL(6, event1->getSampleCount());
-  CPPUNIT_ASSERT_EQUAL((string) "1 2 3 4 5 6 ", event1->getValue());
+  std::vector<float> values = event1->getTimeSeries();
+  for (i = 0; i < event1->getSampleCount(); i++)
+    CPPUNIT_ASSERT_EQUAL((float) (i + 1), values[i]);
+  
+  CPPUNIT_ASSERT_EQUAL((string) "", event1->getValue());
   CPPUNIT_ASSERT_EQUAL(0, (int) attrs1.count("sampleRate"));
   
   
@@ -368,6 +373,10 @@ void ComponentEventTest::testTimeSeries()
   CPPUNIT_ASSERT(event2->isTimeSeries());
   
   CPPUNIT_ASSERT_EQUAL(7, event2->getSampleCount());
-  CPPUNIT_ASSERT_EQUAL((string) "10 20 30 40 50 60 70 ", event2->getValue());
+  CPPUNIT_ASSERT_EQUAL((string) "", event2->getValue());
   CPPUNIT_ASSERT_EQUAL((string) "42000", attrs2["sampleRate"]);
+  values = event2->getTimeSeries();
+  for (i = 0; i < event1->getSampleCount(); i++)
+    CPPUNIT_ASSERT_EQUAL((float) ((i + 1) * 10), values[i]);
+  
 }

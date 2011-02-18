@@ -166,7 +166,7 @@ void Connector::parseBuffer(const char *aBuffer)
   {
     // If the '\n' is not at the end of the buffer, then save the overflow
     string overflow = "";
-          
+    
     if (newLine != mBuffer.length() - 1)
     {
       overflow = mBuffer.substr(newLine + 1);
