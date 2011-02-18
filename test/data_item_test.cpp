@@ -281,4 +281,9 @@ void DataItemTest::testSampleRate()
   delete d;
 }
 
-
+void DataItemTest::testDuplicates()
+{
+  CPPUNIT_ASSERT(!a->isDuplicate("FOO"));
+  CPPUNIT_ASSERT(a->isDuplicate("FOO"));
+  CPPUNIT_ASSERT(!a->isDuplicate("FOO2"));
+}

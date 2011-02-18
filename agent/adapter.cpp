@@ -45,9 +45,9 @@ Adapter::Adapter(
     const string& server,
     const unsigned int port
   )
-: Connector(server, port), mDeviceName(device), mRunning(true)
+  : Connector(server, port), mDeviceName(device), mRunning(true),
+    mDupCheck(false)
 {
-  
 }
 
 Adapter::~Adapter()
@@ -113,7 +113,7 @@ void Adapter::processData(const string& data)
   } else {
     device = mDevice;
   }
-  
+    
   if (device != NULL) {
     dataItem = device->getDeviceDataItem(key);    
   
@@ -132,7 +132,16 @@ void Adapter::processData(const string& data)
       // Add key->value pairings
       dataItem->setDataSource(this);
       trim(value);
-      mAgent->addToBuffer(dataItem, toUpperCase(value), time);
+            
+      // Check for duplication
+      if (!mDupCheck || !dataItem->isDuplicate(value)) 
+      {
+        mAgent->addToBuffer(dataItem, toUpperCase(value), time);
+      } 
+      else if (mDupCheck)
+      {
+        //sLogger << LDEBUG << "Dropping duplicate value for " << key << " of " << value;
+      }
     }
   } else {
     sLogger << LDEBUG << "Could not find device: " << dev;
@@ -160,7 +169,14 @@ void Adapter::processData(const string& data)
     {
       dataItem->setDataSource(this);
       trim(value);
-      mAgent->addToBuffer(dataItem, toUpperCase(value), time);
+      if (!mDupCheck || !dataItem->isDuplicate(value)) 
+      {
+        mAgent->addToBuffer(dataItem, toUpperCase(value), time);
+      } 
+      else if (mDupCheck)
+      {
+        //sLogger << LDEBUG << "Dropping duplicate value for " << key << " of " << value;
+      }
     }
   }
 }

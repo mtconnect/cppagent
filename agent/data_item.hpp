@@ -148,6 +148,13 @@ public:
   /* Transform a name to camel casing */
   static std::string getCamelType(const std::string& aType, 
                                   std::string &aPrefix);
+
+  /* Duplicate Checking */
+  bool isDuplicate(const std::string &aValue) {
+    if (aValue == mLastValue) return true;
+    mLastValue = aValue;
+    return false;
+  }
   
   /* Constrainsts */
   bool hasConstraints() { return mHasConstraints; }
@@ -230,6 +237,9 @@ protected:
   
   /* Component that data item is associated with */  
   Component * mComponent;
+
+  /* Duplicate checking */
+  std::string mLastValue;
   
   /* Attrubutes */
   std::map<std::string, std::string> mAttributes;

@@ -207,7 +207,7 @@ void AgentConfiguration::loadConfig()
       int port = get_with_default(adapter, "Port", 7878);
       
       sLogger << LINFO << "Adding adapter for " << device->getName() << " on " << host << ":" << port;
-      mAgent->addAdapter(device->getName(), host, port);
+      Adapter *adp = mAgent->addAdapter(device->getName(), host, port);
 
       // Add additional device information
       if (adapter.is_key_defined("UUID"))
@@ -218,6 +218,8 @@ void AgentConfiguration::loadConfig()
         device->setStation(adapter["Station"]);
       if (adapter.is_key_defined("SerialNumber"))
         device->setSerialNumber(adapter["SerialNumber"]);
+      if (adapter.is_key_defined("CheckDuplicates"))
+        adp->setDupCheck(adapter["CheckDuplicates"] == "true" || adapter["CheckDuplicates"] == "yes");
     }
   }
   else if ((device = defaultDevice()) != NULL)

@@ -63,6 +63,8 @@ public:
   
   /* Set pointer to the agent */
   void setAgent(Agent& agent);
+  bool isDupChecking() { return mDupCheck; }
+  void setDupCheck(bool aFlag) { mDupCheck = aFlag; }
   
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
@@ -81,6 +83,9 @@ protected:
   
   /* If the connector has been running */
   bool mRunning;
+
+  /* Check for dups */
+  bool mDupCheck;
     
 private:
   /* Inherited and is run as part of the threaded_object */
