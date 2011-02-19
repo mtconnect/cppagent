@@ -174,6 +174,7 @@ protected:
   
   /* Timestamp of the event's occurence */
   std::string mTime;
+  std::string mDuration;
   
   /* Hold the alarm data:  CODE|NATIVECODE|SEVERITY|STATE */
   /* or the Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER */

@@ -208,6 +208,18 @@ void DataItemTest::testConversion()
   
   CPPUNIT_ASSERT_EQUAL((string) "1.3", item3.convertValue("13"));
   
+  std::map<string, string> attributes4;
+  attributes4["id"] = "p";
+  attributes4["name"] = "position";
+  attributes4["type"] = "POSITION";
+  attributes4["category"] = "SAMPLE";
+  attributes4["units"] = "AMPERE";
+  attributes4["nativeUnits"] = "KILOAMPERE";
+  attributes4["coordinateSystem"] = "testScale";
+  DataItem item4(attributes4);
+  item4.conversionRequired();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "130", item4.convertValue("0.13"));  
 }
 
 void DataItemTest::testCondition()

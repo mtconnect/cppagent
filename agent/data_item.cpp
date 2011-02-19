@@ -338,7 +338,14 @@ void DataItem::computeConversionFactors()
     }
     mConversionFactor = simpleFactor(units);
     if (mConversionFactor == 1.0)
-      mConversionRequired = false;
+    {
+      if (mUnits == units) 
+	mConversionRequired = false;
+      else if (units.substr(0, 4) == "KILO" && units.substr(4) == mUnits)
+	mConversionFactor = 1000.0;
+      else
+	mConversionRequired = false;
+    }
   }
   else if (units == "REVOLUTION/MINUTE")
   {

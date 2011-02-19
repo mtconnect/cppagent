@@ -62,7 +62,15 @@ ComponentEvent::ComponentEvent(
   mDataItem = &dataItem;
   mIsTimeSeries = mDataItem->isTimeSeries();
   mSequence = sequence;
-  mTime = time;
+  size_t pos = time.find('@');
+  if (pos != string::npos)
+  {
+    mTime = time.substr(0, pos);
+    mDuration = time.substr(pos + 1);
+  } else {
+    mTime = time;
+  }
+
   mHasAttributes = false;  
   convertValue(value);
   mRefCount = 1;
@@ -72,6 +80,7 @@ ComponentEvent::ComponentEvent(ComponentEvent& ce)
 {  
   mDataItem = ce.getDataItem();
   mTime = ce.mTime;
+  mDuration = ce.mDuration;
   mSequence = ce.mSequence;
   mRest = ce.mRest;
   mValue = ce.mValue;
@@ -139,7 +148,11 @@ AttributeList *ComponentEvent::getAttributes()
     mAttributes.push_back(AttributeItem("sequence",mSequenceStr));
     if (!mDataItem->getSubType().empty())
       mAttributes.push_back(AttributeItem("subType", mDataItem->getSubType()));
-
+    if (!mDataItem->getStatistic().empty())
+      mAttributes.push_back(AttributeItem("statistic", mDataItem->getStatistic()));
+    if (!mDuration.empty())
+      mAttributes.push_back(AttributeItem("duration", mDuration));
+	
     if (mDataItem->isCondition())
     {
       // Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER

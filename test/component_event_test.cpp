@@ -380,3 +380,26 @@ void ComponentEventTest::testTimeSeries()
     CPPUNIT_ASSERT_EQUAL((float) ((i + 1) * 10), values[i]);
   
 }
+
+void ComponentEventTest::testDuration()
+{
+  string time("2011-02-18T15:52:41Z@200.1232");
+  std::map<string, string> attributes1;
+  attributes1["id"] = "1";
+  attributes1["name"] = "test";
+  attributes1["type"] = "TEMPERATURE";
+  attributes1["category"] = "SAMPLE";
+  attributes1["statistic"] = "AVERAGE";
+  DataItem *d = new DataItem(attributes1);
+
+  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "11.0"), true);
+  AttributeList *attr_list = event1->getAttributes();
+  map<string, string> attrs1;
+  AttributeList::iterator attr;
+  for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs1[attr->first] = attr->second; }
+
+  CPPUNIT_ASSERT_EQUAL((string) "AVERAGE", attrs1["statistic"]);
+  CPPUNIT_ASSERT_EQUAL((string) "2011-02-18T15:52:41Z", attrs1["timestamp"]);
+  CPPUNIT_ASSERT_EQUAL((string) "200.1232", attrs1["duration"]);
+  
+}
