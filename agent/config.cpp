@@ -218,8 +218,8 @@ void AgentConfiguration::loadConfig()
         device->setStation(adapter["Station"]);
       if (adapter.is_key_defined("SerialNumber"))
         device->setSerialNumber(adapter["SerialNumber"]);
-      if (adapter.is_key_defined("CheckDuplicates"))
-        adp->setDupCheck(adapter["CheckDuplicates"] == "true" || adapter["CheckDuplicates"] == "yes");
+      if (adapter.is_key_defined("FilterDuplicates"))
+        adp->setDupCheck(adapter["FilterDuplicates"] == "true" || adapter["FilterDuplicates"] == "yes");
     }
   }
   else if ((device = defaultDevice()) != NULL)
