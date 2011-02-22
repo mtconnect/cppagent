@@ -65,6 +65,7 @@ public:
   
   /* Method called when connection is lost. */
   virtual void disconnected() = 0;
+  virtual void connected() = 0;
 
   /* heartbeats */
   bool heartbeats() const { return mHeartbeats; }

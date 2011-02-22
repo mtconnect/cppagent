@@ -118,8 +118,9 @@ public:
     std::string time = ""
   );
   
-  /* Message when adapter has disconnected */
+  /* Message when adapter has connected and disconnected */
   void disconnected(Adapter *anAdapter, Device *aDevice);
+  void connected(Adapter *anAdapter, Device *aDevice);
   
   DataItem * getDataItemByName(
     const std::string& device,

@@ -46,7 +46,7 @@ Adapter::Adapter(
     const unsigned int port
   )
   : Connector(server, port), mDeviceName(device), mRunning(true),
-    mDupCheck(false)
+    mDupCheck(false), mAutoAvailable(false)
 {
 }
 
@@ -215,6 +215,11 @@ void Adapter::protocolCommand(const std::string& data)
 void Adapter::disconnected()
 {
   mAgent->disconnected(this, mDevice);
+}
+
+void Adapter::connected()
+{
+  mAgent->connected(this, mDevice);
 }
 
 /* Adapter private methods */

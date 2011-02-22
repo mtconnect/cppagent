@@ -6,6 +6,7 @@
       <Description manufacturer="NIST" serialNumber="1122">Linux CNC Device</Description>
       <DataItems>
         <DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
+        <DataItem type="AVAILABILITY" category="EVENT" id="avail" name="avail"/>
       </DataItems>
       <Components>
         <Axes name="Axes" id="axes">

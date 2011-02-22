@@ -44,6 +44,7 @@ void ConnectorTest::setUp()
   CPPUNIT_ASSERT(create_listener(mServer, 0, "127.0.0.1") == 0);
   mPort = mServer->get_listening_port();
   mConnector.reset(new TestConnector("127.0.0.1", mPort));
+  mConnector->mDisconnected = true;
 }
 
 void ConnectorTest::thread()
@@ -63,10 +64,12 @@ void ConnectorTest::tearDown()
 /* ConnectorTest protected methods */
 void ConnectorTest::testConnection()
 {
+  CPPUNIT_ASSERT(mConnector->mDisconnected);
   start();
 
   CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  CPPUNIT_ASSERT(!mConnector->mDisconnected);
 }
 
 void ConnectorTest::testDataCapture()

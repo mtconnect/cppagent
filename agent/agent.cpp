@@ -41,6 +41,8 @@ using namespace std;
 static const string sUnavailable("UNAVAILABLE");
 static const string sConditionUnavailable("UNAVAILABLE|||");
 
+static const string sAvailable("AVAILABLE");
+
 #ifdef WIN32
 #define strtoll _strtoi64
 #endif
@@ -289,7 +291,10 @@ void Agent::disconnected(Adapter *anAdapter, Device *aDevice)
     for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
     {
       DataItem *dataItem = (*dataItemAssoc).second;
-      if (dataItem != NULL && dataItem->getDataSource() == anAdapter)
+      if (dataItem != NULL && (dataItem->getDataSource() == anAdapter ||
+			       (anAdapter->isAutoAvailable() &&
+				dataItem->getDataSource() == NULL &&
+				dataItem->getType() == "AVAILABILITY")))
       {
         const string *value = NULL;
         if (dataItem->isCondition()) {
@@ -306,6 +311,26 @@ void Agent::disconnected(Adapter *anAdapter, Device *aDevice)
           addToBuffer(dataItem, *value, time);
       } else if (dataItem == NULL) {
         sLogger << LWARN << "No data Item for " << (*dataItemAssoc).first;
+      }
+    }
+  }
+}
+
+void Agent::connected(Adapter *anAdapter, Device *aDevice)
+{
+  string time = getCurrentTime(GMT_UV_SEC);
+  if (aDevice != NULL && anAdapter->isAutoAvailable())
+  {
+    sLogger << LDEBUG << "Connected to adapter, setting all AVAILILITY to AVAILABLE";
+    
+    std::map<std::string, DataItem *> dataItems = aDevice->getDeviceDataItems();
+    std::map<std::string, DataItem*>::iterator dataItemAssoc;
+    for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
+    {
+      DataItem *dataItem = (*dataItemAssoc).second;
+      if (dataItem->getType() == "AVAILABILITY")
+      {
+	addToBuffer(dataItem, sAvailable, time);
       }
     }
   }

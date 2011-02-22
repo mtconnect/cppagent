@@ -71,6 +71,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testFileDownload);
   CPPUNIT_TEST(testFailedFileDownload);
   CPPUNIT_TEST(testDuplicateCheck);
+  CPPUNIT_TEST(testAutoAvailable);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -131,6 +132,8 @@ protected:
 
   // Duplicate checks
   void testDuplicateCheck();
+
+  void testAutoAvailable();
   
   /* Helper method to test expected string, given optional query, & run tests */
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine,

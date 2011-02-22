@@ -61,6 +61,7 @@ public:
   }
 
   virtual void disconnected() { mDisconnected = true; }
+  virtual void connected() { mDisconnected = false; }
   bool heartbeats() { return mHeartbeats; }
 
   void pushData(const char *data) { parseBuffer(data); }

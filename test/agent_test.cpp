@@ -268,7 +268,7 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY("from", "28")
+    PARSE_XML_RESPONSE_QUERY("from", "29")
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
@@ -626,3 +626,47 @@ void AgentTest::testDuplicateCheck()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
   }
 }
+
+void AgentTest::testAutoAvailable()
+{
+  path = "/sample";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  adapter->setAutoAvailable(true);
+  Device *d = a->getDevices()[0];
+    
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
+  }
+
+  a->connected(adapter, d);
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
+  }
+
+  a->disconnected(adapter, d);
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
+  }
+
+  a->connected(adapter, d);
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[4]", "AVAILABLE");
+  }
+
+}
+

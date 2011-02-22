@@ -65,6 +65,9 @@ public:
   void setAgent(Agent& agent);
   bool isDupChecking() { return mDupCheck; }
   void setDupCheck(bool aFlag) { mDupCheck = aFlag; }
+
+  bool isAutoAvailable() { return mAutoAvailable; }
+  void setAutoAvailable(bool aFlag) { mAutoAvailable = aFlag; }
   
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
@@ -72,6 +75,7 @@ public:
   
   /* Method called when connection is lost. */
   virtual void disconnected();
+  virtual void connected();
   
 protected:
   /* Pointer to the agent */
@@ -86,6 +90,7 @@ protected:
 
   /* Check for dups */
   bool mDupCheck;
+  bool mAutoAvailable;
     
 private:
   /* Inherited and is run as part of the threaded_object */

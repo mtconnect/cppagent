@@ -74,6 +74,8 @@ void Connector::connect()
       close();
       return;
     }
+
+    connected();
     
     // If we have heartbeats, make sure we receive something every
     // freq milliseconds.

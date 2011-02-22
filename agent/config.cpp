@@ -220,6 +220,8 @@ void AgentConfiguration::loadConfig()
         device->setSerialNumber(adapter["SerialNumber"]);
       if (adapter.is_key_defined("FilterDuplicates"))
         adp->setDupCheck(adapter["FilterDuplicates"] == "true" || adapter["FilterDuplicates"] == "yes");
+      if (adapter.is_key_defined("AutoAvailable"))
+        adp->setAutoAvailable(adapter["AutoAvailable"] == "true" || adapter["AutoAvailable"] == "yes");
     }
   }
   else if ((device = defaultDevice()) != NULL)
