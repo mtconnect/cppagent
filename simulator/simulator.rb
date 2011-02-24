@@ -6,7 +6,7 @@ require 'time'
 
 puts "Waiting for connection..."
 
-server = TCPServer.new(7878)
+server = TCPServer.new(ARGV[0].to_i)
 loop do
   socket = server.accept
   puts "Client connected"

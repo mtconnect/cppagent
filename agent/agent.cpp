@@ -109,7 +109,14 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
       }
 
       addToBuffer(d, *value, time);
-      mDataItemMap[d->getId()] = d;
+      if (mDataItemMap.count(d->getId()) == 0)
+        mDataItemMap[d->getId()] = d;
+      else {
+        sLogger << LFATAL << "Duplicate DataItem id " << d->getId() <<
+          " for device: " << (*device)->getName() << " and data item name: " <<
+          d->getName();
+          exit(1);
+      }
     }
   }
 }
