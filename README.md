@@ -342,11 +342,11 @@ Configuration Parameters
 
         *Default*: no
 
-    * `AdditionalDevices` - Comma separated list of additional devices connected to this adapter. Allows other devices to have their availability controlled by this adapter for many to one support.
+    * `AdditionalDevices` - Comma separated list of additional devices connected to this adapter. This provides availability support when one addapter feeds multiple devices.
 
         *Default*: nothing
 
-    * `FilterDuplicates` - If value is 'yes', filters all duplicate values for data items. This is to support adapters that are not doing proper duplicate filtering.
+    * `FilterDuplicates` - If value is `yes`, filters all duplicate values for data items. This is to support adapters that are not doing proper duplicate filtering.
 
         *Default*: no
 
