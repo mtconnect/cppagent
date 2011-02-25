@@ -338,6 +338,18 @@ Configuration Parameters
 
         *Default*: Current value in device XML.
 
+    * `AutoAvailable` - For devices that do not have the ability to provide available events, if `yes`, this sets the `Availability` to AVAILABLE upon connection.
+
+        *Default*: no
+
+    * `AdditionalDevices` - Comma separated list of additional devices connected to this adapter. Allows other devices to have their availability controlled by this adapter for many to one support.
+
+        *Default*: nothing
+
+    * `FilterDuplicates` - If value is 'yes', filters all duplicate values for data items. This is to support adapters that are not doing proper duplicate filtering.
+
+        *Default*: no
+
 logger_config configuration items
 -----
 

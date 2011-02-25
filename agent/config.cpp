@@ -222,6 +222,22 @@ void AgentConfiguration::loadConfig()
         adp->setDupCheck(adapter["FilterDuplicates"] == "true" || adapter["FilterDuplicates"] == "yes");
       if (adapter.is_key_defined("AutoAvailable"))
         adp->setAutoAvailable(adapter["AutoAvailable"] == "true" || adapter["AutoAvailable"] == "yes");
+      if (adapter.is_key_defined("AdditionalDevices"))
+      {
+        istringstream devices(adapter["AdditionalDevices"]);
+        string name;
+        while (getline(devices, name, ',')) 
+        {
+          size_t index = name.find_first_not_of(" \r\t");
+          if (index != string::npos && index > 0)
+            name.erase(0, index);
+          index = name.find_last_not_of(" \r\t");
+          if (index != string::npos)
+            name.erase(index + 1);
+          
+          adp->addDevice(name);
+        }
+      }
     }
   }
   else if ((device = defaultDevice()) != NULL)

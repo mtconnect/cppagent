@@ -63,6 +63,18 @@ void Adapter::setAgent(Agent &aAgent)
   mAgent = &aAgent;
   mDevice = mAgent->getDeviceByName(mDeviceName);
   mDevice->addAdapter(this);
+
+  if (mDevice != NULL)
+    mAllDevices.push_back(mDevice);
+}
+
+void Adapter::addDevice(string &aName)
+{
+  Device *dev = mAgent->getDeviceByName(aName);
+  if (dev != NULL) {
+    mAllDevices.push_back(dev);
+    dev->addAdapter(this);
+  }
 }
 
 inline static bool splitKey(string &key, string &dev) 
@@ -214,12 +226,12 @@ void Adapter::protocolCommand(const std::string& data)
 
 void Adapter::disconnected()
 {
-  mAgent->disconnected(this, mDevice);
+  mAgent->disconnected(this, mAllDevices);
 }
 
 void Adapter::connected()
 {
-  mAgent->connected(this, mDevice);
+  mAgent->connected(this, mAllDevices);
 }
 
 /* Adapter private methods */

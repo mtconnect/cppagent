@@ -635,13 +635,15 @@ void AgentTest::testAutoAvailable()
   CPPUNIT_ASSERT(adapter);
   adapter->setAutoAvailable(true);
   Device *d = a->getDevices()[0];
+  vector<Device*> devices;
+  devices.push_back(d);
     
   {
     PARSE_XML_RESPONSE
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
   }
 
-  a->connected(adapter, d);
+  a->connected(adapter, devices);
   
   {
     PARSE_XML_RESPONSE
@@ -649,7 +651,7 @@ void AgentTest::testAutoAvailable()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
   }
 
-  a->disconnected(adapter, d);
+  a->disconnected(adapter, devices);
   
   {
     PARSE_XML_RESPONSE
@@ -658,7 +660,7 @@ void AgentTest::testAutoAvailable()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
   }
 
-  a->connected(adapter, d);
+  a->connected(adapter, devices);
   
   {
     PARSE_XML_RESPONSE

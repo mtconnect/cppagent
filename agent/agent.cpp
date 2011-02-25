@@ -286,22 +286,22 @@ unsigned int Agent::addToBuffer(
 }
 
 /* Add values for related data items UNAVAILABLE */
-void Agent::disconnected(Adapter *anAdapter, Device *aDevice)
+void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
 {
   string time = getCurrentTime(GMT_UV_SEC);
   sLogger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
-  if (aDevice != NULL)
-  {
-    std::map<std::string, DataItem *> dataItems = aDevice->getDeviceDataItems();
+  std::vector<Device*>::iterator iter;
+  for (iter = aDevices.begin(); iter != aDevices.end(); ++iter) {
+    std::map<std::string, DataItem *> dataItems = (*iter)->getDeviceDataItems();
     std::map<std::string, DataItem*>::iterator dataItemAssoc;
     for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
     {
       DataItem *dataItem = (*dataItemAssoc).second;
       if (dataItem != NULL && (dataItem->getDataSource() == anAdapter ||
-			       (anAdapter->isAutoAvailable() &&
-				dataItem->getDataSource() == NULL &&
-				dataItem->getType() == "AVAILABILITY")))
+             (anAdapter->isAutoAvailable() &&
+              dataItem->getDataSource() == NULL &&
+              dataItem->getType() == "AVAILABILITY")))
       {
         const string *value = NULL;
         if (dataItem->isCondition()) {
@@ -313,31 +313,33 @@ void Agent::disconnected(Adapter *anAdapter, Device *aDevice)
         } else {
           value = &sUnavailable;
         }
-
+        
         if (value != NULL)
           addToBuffer(dataItem, *value, time);
-      } else if (dataItem == NULL) {
-        sLogger << LWARN << "No data Item for " << (*dataItemAssoc).first;
+        } else if (dataItem == NULL) {
+          sLogger << LWARN << "No data Item for " << (*dataItemAssoc).first;
       }
     }
   }
 }
 
-void Agent::connected(Adapter *anAdapter, Device *aDevice)
+void Agent::connected(Adapter *anAdapter, vector<Device*> aDevices)
 {
-  string time = getCurrentTime(GMT_UV_SEC);
-  if (aDevice != NULL && anAdapter->isAutoAvailable())
-  {
-    sLogger << LDEBUG << "Connected to adapter, setting all AVAILILITY to AVAILABLE";
-    
-    std::map<std::string, DataItem *> dataItems = aDevice->getDeviceDataItems();
-    std::map<std::string, DataItem*>::iterator dataItemAssoc;
-    for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
-    {
-      DataItem *dataItem = (*dataItemAssoc).second;
-      if (dataItem->getType() == "AVAILABILITY")
+  if (anAdapter->isAutoAvailable()) {
+    string time = getCurrentTime(GMT_UV_SEC);
+    std::vector<Device*>::iterator iter;
+    for (iter = aDevices.begin(); iter != aDevices.end(); ++iter) {
+      sLogger << LDEBUG << "Connected to adapter, setting all AVAILILITY to AVAILABLE";
+      
+      std::map<std::string, DataItem *> dataItems = (*iter)->getDeviceDataItems();
+      std::map<std::string, DataItem*>::iterator dataItemAssoc;
+      for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
       {
-	addToBuffer(dataItem, sAvailable, time);
+        DataItem *dataItem = (*dataItemAssoc).second;
+        if (dataItem->getType() == "AVAILABILITY")
+        {
+          addToBuffer(dataItem, sAvailable, time);
+        }
       }
     }
   }

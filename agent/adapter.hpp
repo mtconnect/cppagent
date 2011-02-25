@@ -76,12 +76,16 @@ public:
   /* Method called when connection is lost. */
   virtual void disconnected();
   virtual void connected();
+
+  /* For the additional devices associated with this adapter */
+  void addDevice(std::string &aDevice);
   
 protected:
   /* Pointer to the agent */
   Agent *mAgent;
   Device *mDevice;
-  
+  std::vector<Device*> mAllDevices;
+
   /* Name of device associated with adapter */
   std::string mDeviceName;
   

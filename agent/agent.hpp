@@ -119,8 +119,8 @@ public:
   );
   
   /* Message when adapter has connected and disconnected */
-  void disconnected(Adapter *anAdapter, Device *aDevice);
-  void connected(Adapter *anAdapter, Device *aDevice);
+  void disconnected(Adapter *anAdapter, std::vector<Device*> aDevices);
+  void connected(Adapter *anAdapter, std::vector<Device*> aDevices);
   
   DataItem * getDataItemByName(
     const std::string& device,
