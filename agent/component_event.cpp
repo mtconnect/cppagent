@@ -38,6 +38,7 @@
 #ifdef WIN32
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
+#define strtof strtod
 #endif
 
 using namespace std;
