@@ -136,7 +136,7 @@ void Adapter::processData(const string& data)
   
     if (dataItem == NULL)
     {
-      sLogger << LWARN << "Could not find data item: " << key << "\n\tdata: " << data;
+      sLogger << LWARN << "(" << mDeviceName << ") Could not find data item: " << key << "\n"
     } else {
       string rest;
       if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage() ||
@@ -180,7 +180,7 @@ void Adapter::processData(const string& data)
     dataItem = device->getDeviceDataItem(key);    
     if (dataItem == NULL)
     {
-      sLogger << LWARN << "Could not find data item: " << key;
+      sLogger << LWARN << "Could not find data item: " << key << " for device " << mDeviceName;
     }
     else
     {
