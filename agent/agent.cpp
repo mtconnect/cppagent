@@ -324,7 +324,7 @@ void Agent::connected(Adapter *anAdapter, vector<Device*> aDevices)
     string time = getCurrentTime(GMT_UV_SEC);
     std::vector<Device*>::iterator iter;
     for (iter = aDevices.begin(); iter != aDevices.end(); ++iter) {
-      sLogger << LDEBUG << "Connected to adapter, setting all AVAILILITY to AVAILABLE";
+      sLogger << LDEBUG << "Connected to adapter, setting all Availability data items to AVAILABLE";
       
       std::map<std::string, DataItem *> dataItems = (*iter)->getDeviceDataItems();
       std::map<std::string, DataItem*>::iterator dataItemAssoc;
@@ -333,7 +333,8 @@ void Agent::connected(Adapter *anAdapter, vector<Device*> aDevices)
         DataItem *dataItem = (*dataItemAssoc).second;
         if (dataItem->getType() == "AVAILABILITY")
         {
-          addToBuffer(dataItem, sAvailable, time);
+	  sLogger << LDEBUG << "Adding availabilty event for " << dataItem->getId();
+	  addToBuffer(dataItem, sAvailable, time);
         }
       }
     }
