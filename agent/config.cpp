@@ -156,7 +156,7 @@ void AgentConfiguration::loadConfig()
     probe = reader["Devices"].c_str();
     if (stat(probe, &buf) != 0) {
       throw runtime_error(((string) "Please make sure the Devices XML configuration "
-                              "file " + probe + " is in the current path ").c_str());
+			   "file " + probe + " is in the current path ").c_str());
     }
   } else {
     probe = "probe.xml";
@@ -164,8 +164,10 @@ void AgentConfiguration::loadConfig()
       probe = "Devices.xml";    
     if (stat(probe, &buf) != 0) {
       throw runtime_error(((string) "Please make sure the configuration "
-                              "file probe.xml or Devices.xml is in the current directory or specify the correct file "
-                              "in the configuration file " + mConfigFile + " using Devices = <file>").c_str());
+			   "file probe.xml or Devices.xml is in the current "
+			   "directory or specify the correct file "
+			   "in the configuration file " + mConfigFile +
+			   " using Devices = <file>").c_str());
     }
   }
     
@@ -206,7 +208,8 @@ void AgentConfiguration::loadConfig()
       const string &host = get_with_default(adapter, "Host", (string)"localhost");
       int port = get_with_default(adapter, "Port", 7878);
       
-      sLogger << LINFO << "Adding adapter for " << device->getName() << " on " << host << ":" << port;
+      sLogger << LINFO << "Adding adapter for " << device->getName() << " on "
+	      << host << ":" << port;
       Adapter *adp = mAgent->addAdapter(device->getName(), host, port);
 
       // Add additional device information
@@ -218,14 +221,19 @@ void AgentConfiguration::loadConfig()
         device->setStation(adapter["Station"]);
       if (adapter.is_key_defined("SerialNumber"))
         device->setSerialNumber(adapter["SerialNumber"]);
-      if (adapter.is_key_defined("FilterDuplicates"))
-        adp->setDupCheck(adapter["FilterDuplicates"] == "true" || adapter["FilterDuplicates"] == "yes");
-      if (adapter.is_key_defined("AutoAvailable"))
-        adp->setAutoAvailable(adapter["AutoAvailable"] == "true" || adapter["AutoAvailable"] == "yes");
-      if (adapter.is_key_defined("IgnoreTimestamps"))
-        adp->setIgnoreTimestamps(adapter["IgnoreTimestamps"] == "true" || adapter["IgnoreTimestamps"] == "yes");
-      if (adapter.is_key_defined("AdditionalDevices"))
-      {
+      if (adapter.is_key_defined("FilterDuplicates")) {
+        adp->setDupCheck(adapter["FilterDuplicates"] == "true" ||
+			 adapter["FilterDuplicates"] == "yes");
+      }
+      if (adapter.is_key_defined("AutoAvailable")) {
+        adp->setAutoAvailable(adapter["AutoAvailable"] == "true" ||
+			      adapter["AutoAvailable"] == "yes");
+      }
+      if (adapter.is_key_defined("IgnoreTimestamps")) {
+        adp->setIgnoreTimestamps(adapter["IgnoreTimestamps"] == "true" ||
+				 adapter["IgnoreTimestamps"] == "yes");
+      }
+      if (adapter.is_key_defined("AdditionalDevices")) {
         istringstream devices(adapter["AdditionalDevices"]);
         string name;
         while (getline(devices, name, ',')) 
