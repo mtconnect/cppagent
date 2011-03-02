@@ -222,6 +222,8 @@ void AgentConfiguration::loadConfig()
         adp->setDupCheck(adapter["FilterDuplicates"] == "true" || adapter["FilterDuplicates"] == "yes");
       if (adapter.is_key_defined("AutoAvailable"))
         adp->setAutoAvailable(adapter["AutoAvailable"] == "true" || adapter["AutoAvailable"] == "yes");
+      if (adapter.is_key_defined("IgnoreTimestamps"))
+        adp->setIgnoreTimestamps(adapter["IgnoreTimestamps"] == "true" || adapter["IgnoreTimestamps"] == "yes");
       if (adapter.is_key_defined("AdditionalDevices"))
       {
         istringstream devices(adapter["AdditionalDevices"]);

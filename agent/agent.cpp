@@ -249,11 +249,6 @@ unsigned int Agent::addToBuffer(
 
   dlib::auto_mutex lock(*mSequenceLock);
 
-  // If this function is being used as an API, add the current time in
-  if (time.empty()) {
-    time = getCurrentTime(GMT_UV_SEC);
-  }
-
   Int64 seqNum = mSequence++;
   ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
                                              time, value);

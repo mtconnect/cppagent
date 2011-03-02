@@ -68,6 +68,9 @@ public:
 
   bool isAutoAvailable() { return mAutoAvailable; }
   void setAutoAvailable(bool aFlag) { mAutoAvailable = aFlag; }
+
+  bool isIgnoringTimestamps() { return mIgnoreTimestamps; }
+  void setIgnoreTimestamps(bool aFlag) { mIgnoreTimestamps = aFlag; }
   
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
@@ -95,6 +98,7 @@ protected:
   /* Check for dups */
   bool mDupCheck;
   bool mAutoAvailable;
+  bool mIgnoreTimestamps;
     
 private:
   /* Inherited and is run as part of the threaded_object */

@@ -46,7 +46,7 @@ Adapter::Adapter(
     const unsigned int port
   )
   : Connector(server, port), mDeviceName(device), mRunning(true),
-    mDupCheck(false), mAutoAvailable(false)
+    mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false)
 {
 }
 
@@ -115,6 +115,11 @@ void Adapter::processData(const string& data)
   
   getline(toParse, key, '|');
   string time = key;
+
+  // If this function is being used as an API, add the current time in
+  if (mIgnoreTimestamps || time.empty()) {
+    time = getCurrentTime(GMT_UV_SEC);
+  }
   
   getline(toParse, key, '|');
   getline(toParse, value, '|');

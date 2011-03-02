@@ -275,12 +275,12 @@ void ComponentEvent::convertValue(const string& value)
       char *np;
       while (cp != NULL && *cp != '\0') 
       {
-	float v = strtof(cp, &np);
-	if (cp != np)
-	  mTimeSeries.push_back(v);
-	else
-	  np = NULL;
-	cp = np;
+		float v = strtof(cp, &np);
+		if (cp != np)
+		  mTimeSeries.push_back(v);
+		else
+		  np = NULL;
+		cp = np;
       }
     }
     else

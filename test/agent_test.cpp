@@ -674,3 +674,31 @@ void AgentTest::testAutoAvailable()
 
 }
 
+void AgentTest::testIgnoreTimestamps()
+{
+  path = "/sample";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+    
+  adapter->processData("TIME|line|204");
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
+  }
+  
+  adapter->setIgnoreTimestamps(true);
+  adapter->processData("TIME|line|205");
+
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!TIME");
+  }
+  
+
+}
+

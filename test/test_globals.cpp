@@ -200,13 +200,25 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   }
   
   trim(actual);
-  
+
   string message = (string) "Incorrect value for path " + xpath;  
-  CPPUNIT_NS::Asserter::failNotEqualIf(actual != expected,
-                                       expected,
-                                       actual,
-                                       sourceLine,
-                                       message);
+  if(expected[0] != '!')
+  {
+    CPPUNIT_NS::Asserter::failNotEqualIf(actual != expected,
+					 expected,
+					 actual,
+					 sourceLine,
+					 message);
+  }
+  else 
+  {
+    expected += 1;
+    CPPUNIT_NS::Asserter::failNotEqualIf(actual == expected,
+					 expected,
+					 actual,
+					 sourceLine,
+					 message);
+  }
 }
 
 string &trim(string &str)
