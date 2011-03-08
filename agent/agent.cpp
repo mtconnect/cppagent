@@ -363,6 +363,11 @@ string Agent::handleCall(
 
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
+
+    // Check for 1.2 conversion to interval
+    if (freq == NO_FREQ)
+      freq = checkAndGetParam(result, queries, "interval", NO_FREQ,
+			      FASTEST_FREQ, false, SLOWEST_FREQ);
     Int64 at = checkAndGetParam64(result, queries, "at", NO_START, getFirstSequence(), true,
 				  mSequence - 1);
     if (freq == PARAM_ERROR || at == PARAM_ERROR)
