@@ -363,7 +363,6 @@ string Agent::handleCall(
 
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
-
     // Check for 1.2 conversion to interval
     if (freq == NO_FREQ)
       freq = checkAndGetParam(result, queries, "interval", NO_FREQ,
@@ -396,7 +395,11 @@ string Agent::handleCall(
 				 1, true, mSlidingBufferSize);
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
 				FASTEST_FREQ, false, SLOWEST_FREQ);
-
+    // Check for 1.2 conversion to interval
+    if (freq == NO_FREQ)
+      freq = checkAndGetParam(result, queries, "interval", NO_FREQ,
+                              FASTEST_FREQ, false, SLOWEST_FREQ);
+    
     Int64 start = checkAndGetParam64(result, queries, "start", NO_START, getFirstSequence(),
 				     true, mSequence);
 
