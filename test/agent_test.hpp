@@ -73,6 +73,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDuplicateCheck);
   CPPUNIT_TEST(testAutoAvailable);
   CPPUNIT_TEST(testIgnoreTimestamps);
+  CPPUNIT_TEST(testAssetStorage);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -136,12 +137,16 @@ protected:
 
   void testAutoAvailable();
   void testIgnoreTimestamps();
+
+  // Test assets
+  void testAssetStorage();
   
   /* Helper method to test expected string, given optional query, & run tests */
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                            std::string key = "",
                            std::string value = "");
 
+  xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body);
   
 public:
   void setUp();
@@ -154,6 +159,10 @@ public:
 
 #define PARSE_XML_RESPONSE_QUERY(key, value) \
   xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), key, value); \
+  CPPUNIT_ASSERT(doc);
+
+#define PARSE_XML_RESPONSE_PUT(body)			    \
+  xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body); \
   CPPUNIT_ASSERT(doc);
 
 #endif

@@ -42,7 +42,7 @@ using namespace std;
 
 void AgentTest::setUp()
 {
-  a = new Agent("../samples/test_config.xml", 8, 25);
+  a = new Agent("../samples/test_config.xml", 8, 8, 25);
   agentId = intToString(getCurrentTimeInSec());
   adapter = NULL;
 }
@@ -55,9 +55,9 @@ void AgentTest::tearDown()
 void AgentTest::testConstructor()
 {
 #ifndef WIN32
-  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17), std::exception);
+  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17, 8), std::exception);
 #endif
-  CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 17));
+  CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 17, 8));
 }
 
 void AgentTest::testBadPath()
@@ -359,6 +359,29 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
   {
     queries.erase(key);
   }
+  
+  return xmlParseMemory(result.c_str(), result.length());
+}
+
+xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
+				       string body)
+{
+  struct Agent::incoming_things incoming;
+  struct Agent::outgoing_things outgoing;
+  incoming.request_type = "PUT";
+  incoming.path = path;
+  incoming.queries = queries;
+  incoming.cookies = cookies;
+  incoming.headers = incoming_headers;
+  incoming.body = body;
+  
+  outgoing.out = &out;
+    
+  result = a->on_request(incoming, outgoing);
+
+  string message = (string) "No response to request" + path;
+
+  CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, sourceLine);
   
   return xmlParseMemory(result.c_str(), result.length());
 }
@@ -698,7 +721,19 @@ void AgentTest::testIgnoreTimestamps()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!TIME");
   }
-  
+}
 
+void AgentTest::testAssetStorage()
+{
+  path = "/asset/123";
+  string body = "<MTConnectAssets></MTConnectAssets>";
+
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 256, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
+
+  {
+    PARSE_XML_RESPONSE_PUT(body);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  }
 }
 

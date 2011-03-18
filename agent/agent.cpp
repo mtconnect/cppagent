@@ -50,7 +50,7 @@ static const string sAvailable("AVAILABLE");
 static dlib::logger sLogger("agent");
 
 /* Agent public methods */
-Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
+Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int aCheckpointFreq)
 {
   try
   {
@@ -80,6 +80,13 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
   mCheckpointFreq = aCheckpointFreq;
   mCheckpointCount = (mSlidingBufferSize / aCheckpointFreq) + 1;
 
+  // Asset sliding buffer
+  mAssets = new sliding_buffer_kernel_1<string>();
+  mAssets->set_size(aMaxAssets);
+  mMaxAssets = 1 << aMaxAssets;
+  mAssetCount = 0;
+  mAssetSequence = 1;
+  
   // Create the checkpoints at a regular frequency
   mCheckpoints = new Checkpoint[mCheckpointCount];
 
@@ -124,6 +131,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aCheckpointFreq)
 Agent::~Agent()
 {
   delete mSlidingBuffer;
+  delete mAssets;
   delete mSequenceLock;
   delete mConfig;
   delete[] mCheckpoints;
@@ -186,35 +194,47 @@ const string Agent::on_request (
     string::size_type end = (path[path.length()-1] == '/') ?
       path.length()-1 : string::npos;
 
-    string device, call;
+    string first =  path.substr(1, loc1-1);
+    string call, device;
 
-    // If a '/' was found
-    if (loc1 < end)
+    if (first == "assets" || first == "asset")
     {
-      // Look for another '/'
-      string::size_type loc2 = path.find("/", loc1+1);
-
-      if (loc2 == end)
+      string list = path.substr(loc1+1);
+      if (incoming.request_type == "GET")
+	result = handleAssets(*outgoing.out, incoming.queries, list);
+      else
+	result = storeAsset(*outgoing.out, incoming.queries, list, incoming.body);
+    }
+    else
+    {
+      // If a '/' was found
+      if (loc1 < end)
       {
-        call = path.substr(loc1+1, loc2-loc1-1);
-        device = path.substr(1, loc1-1);
+	// Look for another '/'
+	string::size_type loc2 = path.find("/", loc1+1);
+	
+	if (loc2 == end)
+	{
+	  device = first;
+	  call = path.substr(loc1+1, loc2-loc1-1);
+	}
+	else
+	{
+	  // Path is too long
+	  return printError("UNSUPPORTED", "The following path is invalid: " + path);
+	}
       }
       else
       {
-        // Path is too long
-        return printError("UNSUPPORTED", "The following path is invalid: " + path);
+	// Try to handle the call
+	call = first;
       }
+      
+      if (incoming.request_type == "GET")
+	result = handleCall(*outgoing.out, path, incoming.queries, call, device);    
+      else
+	result = handlePut(*outgoing.out, path, incoming.queries, call, device);
     }
-    else
-    {
-      // Try to handle the call
-      call = path.substr(1, loc1-1);
-    }
-    
-    if (incoming.request_type == "GET")
-      result = handleCall(*outgoing.out, path, incoming.queries, call, device);    
-    else
-      result = handlePut(*outgoing.out, path, incoming.queries, call, device);
   }
   catch (exception & e)
   {
@@ -538,6 +558,29 @@ string Agent::handleStream(
     else
       return fetchSampleData(filter, start, count, items);
   }
+}
+
+std::string Agent::handleAssets(std::ostream& aOut,
+				const key_value_map& aQueries,
+				const std::string& aList)
+{
+  return "";
+}
+
+std::string Agent::storeAsset(std::ostream& aOut,
+			      const key_value_map& aQueries,
+			      const std::string& aAsset,
+			      const std::string& aBody)
+{
+  Int64 sequence;
+
+  // Remove oldest asset...
+
+  // Handle replace, shift
+
+  mAssetCount++;
+  
+  return aBody;
 }
 
 string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)

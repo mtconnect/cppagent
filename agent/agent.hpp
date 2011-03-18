@@ -87,7 +87,7 @@ public:
   
 public:
   /* Load agent with the xml configuration */
-  Agent(const std::string& configXmlPath, int aBufferSize,
+  Agent(const std::string& configXmlPath, int aBufferSize, int aMaxAssets,
         int aCheckpointFreq = 1000);
   
   /* Virtual destructor */
@@ -129,7 +129,9 @@ public:
   
   ComponentEvent *getFromBuffer(Int64 aSeq) const { return (*mSlidingBuffer)[aSeq]; }
   Int64 getSequence() const { return mSequence; }
-  int getBufferSize() const { return mSlidingBufferSize; }
+  unsigned int getBufferSize() const { return mSlidingBufferSize; }
+  unsigned int getMaxAssets() const { return mMaxAssets; }
+  unsigned int getAssetCount() const { return mAssetCount; }
   Int64 getFirstSequence() const {
     if (mSequence > mSlidingBufferSize)
       return mSequence - mSlidingBufferSize;
@@ -176,6 +178,16 @@ protected:
     Int64 start = 0,
     unsigned int count = 0
   );
+
+  /* Asset related methods */
+  std::string handleAssets(std::ostream& aOut,
+			   const key_value_map& aQueries,
+			   const std::string& aList);
+			   
+  std::string storeAsset(std::ostream& aOut,
+			 const key_value_map& aQueries,
+			 const std::string& aAsset,
+			 const std::string& aBody);
   
   /* Stream the data to the user */
   void streamData(
@@ -252,6 +264,14 @@ protected:
   dlib::sliding_buffer_kernel_1<ComponentEventPtr> *mSlidingBuffer;
   unsigned int mSlidingBufferSize;
 
+  /* Asset storage, circ buffer stores ids */
+  dlib::sliding_buffer_kernel_1<std::string> *mAssets;
+  std::map<std::string, std::string> mAssetMap;
+  unsigned int mMaxAssets;
+  unsigned int mAssetCount;
+  Int64 mAssetSequence;
+  
+  
   /* Checkpoints */
   Checkpoint mLatest;
   Checkpoint mFirst;
