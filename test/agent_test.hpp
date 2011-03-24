@@ -140,7 +140,7 @@ protected:
 
   // Test assets
   void testAssetStorage();
-  
+    
   /* Helper method to test expected string, given optional query, & run tests */
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                            std::string key = "",

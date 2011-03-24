@@ -43,8 +43,6 @@ static dlib::logger sLogger("xml.printer");
 #define THROW_IF_XML2_NULL(expr) \
   if ((expr) == NULL) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
 
-static xmlChar *ConvertInput(const char *in, const char *encoding);
-
 using namespace std;
 
 struct SchemaNamespace {
@@ -197,7 +195,7 @@ string XmlPrinter::printError(
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Error"));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "errorCode", 
                                                     BAD_CAST errorCode.c_str()));
-    xmlChar *text = ConvertInput(errorText.c_str(), "UTF-8");
+    xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST errorText.c_str());
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
     xmlFree(text);
 
@@ -538,7 +536,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
     string str = ostr.str();
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
   } else if (!result->getValue().empty()) {
-    xmlChar *text = ConvertInput(result->getValue().c_str(), "UTF-8");
+    xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST result->getValue().c_str());
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
     xmlFree(text);
   }
@@ -685,7 +683,7 @@ void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, strin
   
   if (!body.empty())
   {
-    xmlChar *text = ConvertInput(body.c_str(), "UTF-8");
+    xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST body.c_str());
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
     xmlFree(text);
   }
@@ -693,63 +691,4 @@ void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, strin
   THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Element    
 }
 
-
-/**
- * ConvertInput:
- * @in: string in a given encoding
- * @encoding: the encoding used
- *
- * Converts @in into UTF-8 for processing with libxml2 APIs
- *
- * Returns the converted UTF-8 string, or NULL in case of error.
- */
-xmlChar *
-ConvertInput(const char *in, const char *encoding)
-{
-  xmlChar *out;
-  int ret;
-  int size;
-  int out_size;
-  int temp;
-  xmlCharEncodingHandlerPtr handler;
-  
-  if (in == 0)
-    return 0;
-  
-  handler = xmlFindCharEncodingHandler(encoding);
-  
-  if (!handler) {
-    printf("ConvertInput: no encoding handler found for '%s'\n",
-           encoding ? encoding : "");
-    return 0;
-  }
-  
-  size = (int) strlen(in) + 1;
-  out_size = size * 2 - 1;
-  out = (unsigned char *) xmlMalloc((size_t) out_size);
-  
-  if (out != 0) {
-    temp = size - 1;
-    ret = handler->input(out, &out_size, (const xmlChar *) in, &temp);
-    if ((ret < 0) || (temp - size + 1)) {
-      if (ret < 0) {
-        printf("ConvertInput: conversion wasn't successful.\n");
-      } else {
-        printf
-        ("ConvertInput: conversion wasn't successful. converted: %i octets.\n",
-         temp);
-      }
-      
-      xmlFree(out);
-      out = 0;
-    } else {
-      out = (unsigned char *) xmlRealloc(out, out_size + 1);
-      out[out_size] = 0;  /*null terminating out */
-    }
-  } else {
-    printf("ConvertInput: no mem\n");
-  }
-  
-  return out;
-}
 
