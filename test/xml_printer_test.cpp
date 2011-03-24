@@ -419,6 +419,15 @@ void XmlPrinterTest::testChangeDeviceAttributes()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "99999999");
 }
 
+void XmlPrinterTest::testNonPrintableCharacters()
+{  
+  vector<ComponentEventPtr> events;
+  events.push_back(newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? "));
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));    
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]"
+                                      , "OVER TRAVEL : +Z?");
+}
+
 DataItem * XmlPrinterTest::getDataItem(const char *name)
 {
   Device *device = devices.front();

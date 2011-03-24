@@ -64,6 +64,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testChangeDevicesNamespace);
   CPPUNIT_TEST(testChangeStreamsNamespace);
   CPPUNIT_TEST(testChangeErrorNamespace);
+  CPPUNIT_TEST(testNonPrintableCharacters);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -89,6 +90,8 @@ protected:
   void testVeryLargeSequence();
   
   void testChangeDeviceAttributes();
+  
+  void testNonPrintableCharacters();
   
   /* Retrieve a data item by name string */
   DataItem * getDataItem(const char *name);
