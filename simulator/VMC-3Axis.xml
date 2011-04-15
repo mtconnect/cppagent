@@ -83,10 +83,10 @@
     					<DataItems>
     						<DataItem category="EVENT" id="p2" name="power" type="POWER_STATE"/>
     						<DataItem category="SAMPLE" id="freq" name="frequency" nativeUnits="HERTZ" type="FREQUENCY" units="HERTZ"/>
-    						<DataItem category="SAMPLE" id="power_sum" nativeUnits="WATT" type="WATTS" units="WATT"/>
-    						<DataItem category="SAMPLE" id="power_a" nativeUnits="WATT" type="WATTS" units="WATT"/>
-    						<DataItem category="SAMPLE" id="power_b" nativeUnits="WATT" type="WATTS" units="WATT"/>
-    						<DataItem category="SAMPLE" id="power_c" nativeUnits="WATT" type="WATTS" units="WATT"/>
+    						<DataItem category="SAMPLE" id="power_sum" nativeUnits="WATT" type="WATTAGE" units="WATT"/>
+    						<DataItem category="SAMPLE" id="power_a" nativeUnits="WATT" type="WATTAGE" units="WATT"/>
+    						<DataItem category="SAMPLE" id="power_b" nativeUnits="WATT" type="WATTAGE" units="WATT"/>
+    						<DataItem category="SAMPLE" id="power_c" nativeUnits="WATT" type="WATTAGE" units="WATT"/>
     						<DataItem category="SAMPLE" id="volt_a" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
     						<DataItem category="SAMPLE" id="volt_b" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
     						<DataItem category="SAMPLE" id="volt_c" name="volt_c" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
