@@ -7,6 +7,7 @@ loop_file = false
 port = 7878
 scenario = false
 verbose = false
+fast = false
 
 OptionParser.new do |opts|
   opts.banner = 'Usage: run_scenrio.rb [-l] <file>'
@@ -30,6 +31,10 @@ OptionParser.new do |opts|
   
   opts.on('-v', '--[no-]verbose', 'Verbose output') do |v|
     verbose = v
+  end
+  
+  opts.on('-f', '--[no-]fast', 'Pump as fast as possible') do |v|
+    fast = v
   end
 
   opts.parse!
@@ -95,9 +100,11 @@ else
         time = Time.parse(f)
         
         # Recreate the delta time
-        if last
-          delta = time - last
-          sleep delta if delta > 0.0
+        unless fast
+          if last
+            delta = time - last
+            sleep delta if delta > 0.0
+          end
         end
         
         line = "#{format_time}|#{r}"
