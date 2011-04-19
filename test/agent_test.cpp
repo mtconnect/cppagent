@@ -530,6 +530,10 @@ void AgentTest::testSampleAtNextSeq()
 void AgentTest::testAdapterCommands()
 {
   path = "/probe";
+
+  Device *device = a->getDeviceByName("LinuxCNC");
+  CPPUNIT_ASSERT(device);
+  CPPUNIT_ASSERT(!device->mPreserveUuid);
   
   adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
@@ -545,6 +549,14 @@ void AgentTest::testAdapterCommands()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "Big Tool");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "XXXX-1234");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
+  }
+
+  device->mPreserveUuid = true;
+  adapter->parseBuffer("* uuid: XXXXXXX\n");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "MK-1234");
   }
   
 }

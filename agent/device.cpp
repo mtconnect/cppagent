@@ -38,7 +38,7 @@ using namespace std;
 
 /* Device public methods */
 Device::Device(std::map<std::string, std::string> attributes)
-  : Component("Device", attributes)
+  : Component("Device", attributes), mPreserveUuid(false)
 {
   if (!attributes["iso841Class"].empty())
   {

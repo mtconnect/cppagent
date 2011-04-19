@@ -177,9 +177,9 @@ void Adapter::protocolCommand(const std::string& data)
     string value = data.substr(index + 1);
     trim(value);
     
-    if (key == "uuid")
-      mDevice->setUuid(value);
-    else if (key == "manufacturer")
+    if (key == "uuid") {
+      if (!mDevice->mPreserveUuid) mDevice->setUuid(value);
+    } else if (key == "manufacturer")
       mDevice->setManufacturer(value);
     else if (key == "station")
       mDevice->setStation(value);
