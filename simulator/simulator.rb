@@ -19,9 +19,15 @@ loop do
     line = Readline::readline('> ')
     Readline::HISTORY.push(line)
 
-    ts = Time.now.utc
-    stamp = "#{ts.iso8601[0..-2]}.#{'%06d' % ts.tv_usec}"
-    puts "#{stamp}|#{line}"
-    socket.write "#{stamp}|#{line}\n"
+    if line[0] == ?*
+      puts "Writing line"
+      socket.write "#{line}\n"
+    else
+      ts = Time.now.utc
+      stamp = "#{ts.iso8601[0..-2]}.#{'%06d' % ts.tv_usec}"
+      puts "#{stamp}|#{line}"
+      socket.write "#{stamp}|#{line}\n"
+    end
+    
   end
 end

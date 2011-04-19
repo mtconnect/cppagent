@@ -152,18 +152,18 @@ void XmlPrinterTest::testChangeDevicesNamespace()
   {
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-            "urn:mtconnect.org:MTConnectDevices:1.1 http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd");
+            "urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
   }
 
   {
-    XmlPrinter::addDevicesNamespace("urn:machine.com:MachineDevices:1.1",
-                                    "http://www.machine.com/schemas/MachineDevices_1.1.xsd",
+    XmlPrinter::addDevicesNamespace("urn:machine.com:MachineDevices:1.2",
+                                    "http://www.machine.com/schemas/MachineDevices_1.2.xsd",
                                     "e");
     
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));  
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-                    "urn:machine.com:MachineDevices:1.1 http://www.machine.com/schemas/MachineDevices_1.1.xsd");
+                    "urn:machine.com:MachineDevices:1.2 http://www.machine.com/schemas/MachineDevices_1.2.xsd");
     
     XmlPrinter::clearDevicesNamespaces();
   }
@@ -200,15 +200,15 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
-                 "urn:mtconnect.org:MTConnectStreams:1.1 http://www.mtconnect.org/schemas/MTConnectStreams_1.1.xsd");
+                 "urn:mtconnect.org:MTConnectStreams:1.2 http://www.mtconnect.org/schemas/MTConnectStreams_1.2.xsd");
   }
 
   XmlPrinter::clearStreamsNamespaces();
   
   {
     
-    XmlPrinter::addStreamsNamespace("urn:machine.com:MachineStreams:1.1",
-                                    "http://www.machine.com/schemas/MachineStreams_1.1.xsd",
+    XmlPrinter::addStreamsNamespace("urn:machine.com:MachineStreams:1.2",
+                                    "http://www.machine.com/schemas/MachineStreams_1.2.xsd",
                                     "e");
 
     vector<ComponentEventPtr> list;
@@ -216,7 +216,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
         
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
-                "urn:machine.com:MachineStreams:1.1 http://www.machine.com/schemas/MachineStreams_1.1.xsd");
+                "urn:machine.com:MachineStreams:1.2 http://www.machine.com/schemas/MachineStreams_1.2.xsd");
   }
 
   XmlPrinter::clearStreamsNamespaces();
@@ -225,8 +225,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     XmlParser ext("../samples/extension.xml");
     devices = ext.getDevices();
 
-    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.1",
-                                    "ExtensionDevices_1.1.xsd",
+    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.2",
+                                    "ExtensionDevices_1.2.xsd",
                                     "x");
 
     Checkpoint checkpoint2;
@@ -252,18 +252,18 @@ void XmlPrinterTest::testChangeErrorNamespace()
   {
     PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation", 
-              "urn:mtconnect.org:MTConnectError:1.1 http://www.mtconnect.org/schemas/MTConnectError_1.1.xsd");
+              "urn:mtconnect.org:MTConnectError:1.2 http://www.mtconnect.org/schemas/MTConnectError_1.2.xsd");
   }
   
   {
-    XmlPrinter::addErrorNamespace("urn:machine.com:MachineError:1.1",
-                                  "http://www.machine.com/schemas/MachineError_1.1.xsd",
+    XmlPrinter::addErrorNamespace("urn:machine.com:MachineError:1.2",
+                                  "http://www.machine.com/schemas/MachineError_1.2.xsd",
                                   "e");
     
     PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation", 
-                                      "urn:machine.com:MachineError:1.1 http://www.machine.com/schemas/MachineError_1.1.xsd");
+                                      "urn:machine.com:MachineError:1.2 http://www.machine.com/schemas/MachineError_1.2.xsd");
   }
 }
 

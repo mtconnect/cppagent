@@ -62,6 +62,7 @@ public:
   }
 
   std::vector<Adapter*> mAdapters;
+  bool mPreserveUuid;
 
 protected:
   /* The iso841Class of the device */

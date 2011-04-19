@@ -41,6 +41,14 @@ static inline const string &get_with_default(const config_reader::kernel_1a &rea
     return aDefault;
 }
 
+static inline bool get_bool_with_default(const config_reader::kernel_1a &reader, 
+      const char *aKey, bool aDefault) {
+  if (reader.is_key_defined(aKey))
+    return reader[aKey] == "true" || reader[aKey] == "yes";
+  else
+    return aDefault;
+}
+
 AgentConfiguration::AgentConfiguration() :
   mAgent(NULL)
 {
@@ -145,7 +153,8 @@ void AgentConfiguration::loadConfig()
   // Now get our configuration
   ifstream file(mConfigFile.c_str());
   config_reader::kernel_1a reader(file);
-  
+
+  bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", false);
   int port = get_with_default(reader, "Port", 5000);
   int bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
   int maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS_EXP);
@@ -171,12 +180,16 @@ void AgentConfiguration::loadConfig()
 			   " using Devices = <file>").c_str());
     }
   }
-    
+
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
     
   sLogger << LINFO << "Starting agent on port " << port;
   mAgent = new Agent(probe, bufferSize, checkpointFrequency);
   mAgent->set_listening_port(port);
+
+  for (int i = 0; i < mAgent->getDevices().size(); i++)
+    mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
+    
   Device *device;
   if (reader.is_block_defined("Adapters")) {
     const config_reader::kernel_1a &adapters = reader.block("Adapters");
@@ -212,7 +225,8 @@ void AgentConfiguration::loadConfig()
       sLogger << LINFO << "Adding adapter for " << device->getName() << " on "
 	      << host << ":" << port;
       Adapter *adp = mAgent->addAdapter(device->getName(), host, port);
-
+      device->mPreserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
+      
       // Add additional device information
       if (adapter.is_key_defined("UUID"))
         device->setUuid(adapter["UUID"]);

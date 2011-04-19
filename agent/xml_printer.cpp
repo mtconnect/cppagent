@@ -600,7 +600,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
   
   
   string rootName = "MTConnect" + xmlType;
-  string xmlns = "urn:mtconnect.org:" + rootName + ":1.1";  
+  string xmlns = "urn:mtconnect.org:" + rootName + ":1.2";  
   string location;
   
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST rootName.c_str()));
@@ -637,7 +637,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
   
   // Write the schema location
   if (location.empty()) {
-    location = xmlns + " http://www.mtconnect.org/schemas/" + rootName + "_1.1.xsd";
+    location = xmlns + " http://www.mtconnect.org/schemas/" + rootName + "_1.2.xsd";
   }
   
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
@@ -656,7 +656,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "sender", BAD_CAST hostname.c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId", BAD_CAST intToString(instanceId).c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize", BAD_CAST intToString(bufferSize).c_str()));
-  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST "1.1"));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST "1.2"));
   
   // Add additional attribtues for streams
   if (xmlType == "Streams")
