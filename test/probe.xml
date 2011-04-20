@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns="urn:mtconnect.org:MTConnectDevices:1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.1 http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd">
+	<Header creationTime="2010-03-12T15:00:00Z" sender="localhost" version="1.1" bufferSize="1024" instanceId="1" />
+	<Devices>
+		<Device name="Simplest" uuid="XXX111" id="dev">
+			<DataItems>
+				<DataItem type="AVAILABILITY" id="avail" category="EVENT" />
+			</DataItems>
+		</Device>
+	</Devices>
+</MTConnectDevices>
