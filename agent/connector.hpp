@@ -77,6 +77,9 @@ public:
   // Send a command to the adapter
   void sendCommand(const std::string &aCommand);
 
+  unsigned int getPort() const { return mPort; }
+  const std::string &getServer() const { return mServer; }
+
 protected:
   void startHeartbeats(const std::string &buf);
   void close();

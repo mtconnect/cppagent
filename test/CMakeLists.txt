@@ -43,6 +43,7 @@ set(test_srcs test.cpp
 	       adapter_test.cpp
 	       agent_test.cpp
 	       checkpoint_test.cpp
+	       config_test.cpp
 	       component_test.cpp
 	       component_event_test.cpp
 	       connector_test.cpp

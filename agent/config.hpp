@@ -15,10 +15,14 @@ public:
   // For MTConnectService
   virtual void stop();
   virtual void start() ;
-  virtual void initialize(int aArgc, const char *aArgv[]) ;
+  virtual void initialize(int aArgc, const char *aArgv[]);
+
+  void configureLogger();
+  void loadConfig(std::istream &aFile);
+
+  Agent *getAgent() { return mAgent; }
   
 protected:
-  void loadConfig();
   Device *defaultDevice();
   
 protected:

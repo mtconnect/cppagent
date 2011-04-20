@@ -68,7 +68,9 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
 
   try
   {
-    loadConfig();
+    configureLogger();
+    ifstream file(mConfigFile.c_str());
+    loadConfig(file);
   }
   catch (std::exception & e)
   {
@@ -135,7 +137,7 @@ static void print_ts_logger_header (
   out << buffer << ": " << l.name << " [" << thread_id << "] " << logger_name << ": ";
 }
 
-void AgentConfiguration::loadConfig()
+void AgentConfiguration::configureLogger()
 {
   // Load logger configuration
   set_all_logging_levels(LINFO);
@@ -149,10 +151,12 @@ void AgentConfiguration::loadConfig()
     ostream *file = new std::ofstream("agent.log");
     set_all_logging_output_streams(*file);
   }
-  
+}
+
+void AgentConfiguration::loadConfig(std::istream &aFile)
+{
   // Now get our configuration
-  ifstream file(mConfigFile.c_str());
-  config_reader::kernel_1a reader(file);
+  config_reader::kernel_1a reader(aFile);
 
   bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", false);
   int port = get_with_default(reader, "Port", 5000);
@@ -236,18 +240,11 @@ void AgentConfiguration::loadConfig()
         device->setStation(adapter["Station"]);
       if (adapter.is_key_defined("SerialNumber"))
         device->setSerialNumber(adapter["SerialNumber"]);
-      if (adapter.is_key_defined("FilterDuplicates")) {
-        adp->setDupCheck(adapter["FilterDuplicates"] == "true" ||
-			 adapter["FilterDuplicates"] == "yes");
-      }
-      if (adapter.is_key_defined("AutoAvailable")) {
-        adp->setAutoAvailable(adapter["AutoAvailable"] == "true" ||
-			      adapter["AutoAvailable"] == "yes");
-      }
-      if (adapter.is_key_defined("IgnoreTimestamps")) {
-        adp->setIgnoreTimestamps(adapter["IgnoreTimestamps"] == "true" ||
-				 adapter["IgnoreTimestamps"] == "yes");
-      }
+
+      adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", adp->isDupChecking()));
+      adp->setAutoAvailable(get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
+      adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", adp->isIgnoringTimestamps()));
+                                
       if (adapter.is_key_defined("AdditionalDevices")) {
         istringstream devices(adapter["AdditionalDevices"]);
         string name;
