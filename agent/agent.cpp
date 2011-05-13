@@ -528,12 +528,12 @@ string Agent::handleStream(
   }
   catch (exception& e)
   {
-    return printError("INVALID_XPATH", e.what());
+    return printError("INVALID_PATH", e.what());
   }
 
   if (filter.empty())
   {
-    return printError("INVALID_XPATH",
+    return printError("INVALID_PATH",
       "The path could not be parsed. Invalid syntax: " + path);
   }
 
