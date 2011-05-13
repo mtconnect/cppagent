@@ -74,7 +74,6 @@ ComponentEvent::ComponentEvent(
 
   mHasAttributes = false;  
   convertValue(value);
-  mRefCount = 1;
 }
 
 ComponentEvent::ComponentEvent(ComponentEvent& ce)
@@ -97,44 +96,6 @@ ComponentEvent::ComponentEvent(ComponentEvent& ce)
 
 ComponentEvent::~ComponentEvent()
 {
-}
-
-void ComponentEvent::referTo()
-{
-#ifdef WIN32
-  InterlockedIncrement(&this->mRefCount);
-#else
-#ifdef MACOSX
-  __gnu_cxx::__atomic_add_dispatch(&this->mRefCount, 1);
-#else
-  dlib::auto_mutex lock(sRefMutex);
-  mRefCount++;
-#endif
-#endif
-}
-
-void ComponentEvent::unrefer()
-{
-#ifdef WIN32
-  if (InterlockedDecrement(&this->mRefCount) <= 0)
-  {
-    delete this;
-  }
-#else
-#ifdef MACOSX
-  if (__gnu_cxx::__exchange_and_add_dispatch(&this->mRefCount,
-                                             -1) <= 1)
-  {
-    delete this;
-  }
-#else
-  dlib::auto_mutex lock(sRefMutex);
-  if (--mRefCount <= 0)
-  {
-    delete this;
-  }
-#endif
-#endif
 }
 
 AttributeList *ComponentEvent::getAttributes()

@@ -45,6 +45,7 @@
 #include "globals.hpp"
 
 class DataItem;
+class Asset;
 
 namespace XmlPrinter
 {
@@ -72,6 +73,12 @@ namespace XmlPrinter
     std::vector<ComponentEventPtr>& results
   );
 
+  std::string printAsset(const unsigned int instanceId,
+                         const unsigned int bufferSize,
+                         const Int64 nextSeq,
+                         const Int64 firstSeq,
+                         std::vector<Asset> &anAssets);
+
   
   void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 
                            const std::string &aPrefix);
@@ -79,15 +86,19 @@ namespace XmlPrinter
                          const std::string &aPrefix);
   void addStreamsNamespace(const std::string &aUrn, const std::string &aLocation, 
                            const std::string &aPrefix);
+  void addAssetsNamespace(const std::string &aUrn, const std::string &aLocation, 
+                         const std::string &aPrefix);
 
   // For testing
   void clearDevicesNamespaces();
   void clearErrorNamespaces();
   void clearStreamsNamespaces();
+  void clearAssetsNamespaces();
 
   const std::string getDevicesUrn(const std::string &aPrefix);
   const std::string getErrorUrn(const std::string &aPrefix);
   const std::string getStreamsUrn(const std::string &aPrefix);
+  const std::string getAssetsUrn(const std::string &aPrefix);
 };
 
 #endif

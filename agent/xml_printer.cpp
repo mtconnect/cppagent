@@ -53,11 +53,13 @@ struct SchemaNamespace {
 static map<string, SchemaNamespace> sDevicesNamespaces;
 static map<string, SchemaNamespace> sStreamsNamespaces;
 static map<string, SchemaNamespace> sErrorNamespaces;
+static map<string, SchemaNamespace> sAssetsNamespaces;
 
 enum EDocumentType {
   eERROR,
   eSTREAMS,
-  eDEVICES
+  eDEVICES,
+  eASSETS
 };
 
 namespace XmlPrinter {
@@ -166,7 +168,30 @@ const string XmlPrinter::getStreamsUrn(const std::string &aPrefix)
     return "";
 }
 
+void XmlPrinter::addAssetssNamespace(const std::string &aUrn, const std::string &aLocation, 
+                         const std::string &aPrefix)
+{
+  pair<string, SchemaNamespace> item;
+  item.second.mUrn = aUrn;
+  item.second.mSchemaLocation = aLocation;
+  item.first = aPrefix;
+  
+  sAssetssNamespaces.insert(item);  
+}
 
+void XmlPrinter::clearAssetsNamespaces()
+{
+  sAssetsNamespaces.clear();
+}
+
+const string XmlPrinter::getAssetsUrn(const std::string &aPrefix)
+{
+  map<string, SchemaNamespace>::iterator ns = sAssetsNamespaces.find(aPrefix);
+  if (ns != sAssetsNamespaces.end())
+    return ns->second.mUrn;
+  else
+    return "";
+}
 
 /* XmlPrinter main methods */
 string XmlPrinter::printError(
@@ -466,6 +491,15 @@ string XmlPrinter::printSample(
   
   return ret;
 }
+
+string XmlPrinter::printAssets(const unsigned int instanceId,
+                               const unsigned int bufferSize,
+                               const Int64 nextSeq,
+                               const Int64 firstSeq,
+                               std::vector<Asset> &anAssets)
+{
+}
+
 
 void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, Device *device)
 {

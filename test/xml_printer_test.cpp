@@ -465,6 +465,20 @@ void XmlPrinterTest::testNonPrintableCharacters()
                                       , "OVER TRAVEL : +Z?");
 }
 
+
+void XmlPrintTest::testPrintAsset()
+{
+  // Add the xml to the agent...
+  Asset asset;
+
+  {
+    PARSE_XML(XmlPrinter::printAsset(123, 131072, 10974584, 10843512, asset));
+    
+    // CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:", "");
+  }
+}
+
+
 DataItem * XmlPrinterTest::getDataItem(const char *name)
 {
   Device *device = devices.front();
