@@ -32,6 +32,7 @@
 */
 
 #include "xml_printer_test.hpp"
+#include "asset.hpp"
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(XmlPrinterTest);
@@ -466,13 +467,16 @@ void XmlPrinterTest::testNonPrintableCharacters()
 }
 
 
-void XmlPrintTest::testPrintAsset()
+void XmlPrinterTest::testPrintAsset()
 {
   // Add the xml to the agent...
+  vector<Asset*> assets;
   Asset asset;
-
+  assets.push_back(&asset);
+  
   {
-    PARSE_XML(XmlPrinter::printAsset(123, 131072, 10974584, 10843512, asset));
+    
+    PARSE_XML(XmlPrinter::printAssets(123, 131072, 10974584, 10843512, assets));
     
     // CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:", "");
   }

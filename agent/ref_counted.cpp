@@ -36,6 +36,10 @@
 
 static dlib::rmutex sRefMutex;
 
+RefCounted::~RefCounted()
+{
+}
+
 void RefCounted::referTo()
 {
 #ifdef WIN32

@@ -51,7 +51,6 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAdapter);
   CPPUNIT_TEST(testDefaultPreserveUUID);
   CPPUNIT_TEST(testDefaultPreserveOverride);
-  CPPUNIT_TEST(testAdditionalDevices);
   CPPUNIT_TEST_SUITE_END();
   
 public:

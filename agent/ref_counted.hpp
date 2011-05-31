@@ -35,6 +35,7 @@
 #define REF_COUNTED_HPP
 
 #include <cmath>
+#include "globals.hpp"
 
 template<class T>
 class RefCountedPtr {
@@ -98,12 +99,17 @@ inline bool RefCountedPtr<T>::operator<(RefCountedPtr<T> &aOther)
   return (*mObject) < (*aOther.mObject);
 }
 
-
-
 class RefCounted 
 {
 public:
-  virtual ~RefCounted() = 0;
+  RefCounted() {
+    mRefCount = 1;
+  }
+  RefCounted(RefCounted &aRef) {
+    mRefCount = 1;
+  }
+  
+  virtual ~RefCounted();
   
   /* Reference count management */
   void referTo();
@@ -115,7 +121,6 @@ public:
 protected:
   /* Reference count */
   AtomicInt mRefCount;
-
 };
 
 

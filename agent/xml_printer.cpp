@@ -168,7 +168,7 @@ const string XmlPrinter::getStreamsUrn(const std::string &aPrefix)
     return "";
 }
 
-void XmlPrinter::addAssetssNamespace(const std::string &aUrn, const std::string &aLocation, 
+void XmlPrinter::addAssetsNamespace(const std::string &aUrn, const std::string &aLocation, 
                          const std::string &aPrefix)
 {
   pair<string, SchemaNamespace> item;
@@ -176,7 +176,7 @@ void XmlPrinter::addAssetssNamespace(const std::string &aUrn, const std::string 
   item.second.mSchemaLocation = aLocation;
   item.first = aPrefix;
   
-  sAssetssNamespaces.insert(item);  
+  sAssetsNamespaces.insert(item);  
 }
 
 void XmlPrinter::clearAssetsNamespaces()
@@ -496,8 +496,9 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
                                const unsigned int bufferSize,
                                const Int64 nextSeq,
                                const Int64 firstSeq,
-                               std::vector<Asset> &anAssets)
+                               std::vector<Asset*> &anAssets)
 {
+  return "<empty/>";
 }
 
 

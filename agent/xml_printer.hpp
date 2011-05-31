@@ -73,11 +73,11 @@ namespace XmlPrinter
     std::vector<ComponentEventPtr>& results
   );
 
-  std::string printAsset(const unsigned int instanceId,
+  std::string printAssets(const unsigned int instanceId,
                          const unsigned int bufferSize,
                          const Int64 nextSeq,
                          const Int64 firstSeq,
-                         std::vector<Asset> &anAssets);
+                         std::vector<Asset*> &anAssets);
 
   
   void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 

@@ -85,7 +85,6 @@ ComponentEvent::ComponentEvent(ComponentEvent& ce)
   mRest = ce.mRest;
   mValue = ce.mValue;
   mHasAttributes = false;
-  mRefCount = 1;
   mCode = ce.mCode;
   mIsTimeSeries = ce.mIsTimeSeries;
   if (mIsTimeSeries) {
