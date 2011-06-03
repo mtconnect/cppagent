@@ -758,3 +758,14 @@ void AgentTest::testAssetStorage()
   }
 }
 
+void AgentTest::testAssetError()
+{
+  path = "/asset/123";
+
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: 123");
+  }
+}
+
