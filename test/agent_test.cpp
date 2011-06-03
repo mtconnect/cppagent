@@ -42,7 +42,8 @@ using namespace std;
 
 void AgentTest::setUp()
 {
-  a = new Agent("../samples/test_config.xml", 8, 8, 25);
+  a = NULL;
+  a = new Agent("../samples/test_config.xml", 8, 2, 25);
   agentId = intToString(getCurrentTimeInSec());
   adapter = NULL;
 }
@@ -50,6 +51,7 @@ void AgentTest::setUp()
 void AgentTest::tearDown()
 {
   delete a;
+  a = NULL;
 }
 
 void AgentTest::testConstructor()
@@ -738,14 +740,21 @@ void AgentTest::testIgnoreTimestamps()
 void AgentTest::testAssetStorage()
 {
   path = "/asset/123";
-  string body = "<MTConnectAssets></MTConnectAssets>";
+  string body = "<CuttingTool>TEST</CuttingTool>";
 
-  CPPUNIT_ASSERT_EQUAL((unsigned int) 256, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
 
   {
     PARSE_XML_RESPONSE_PUT(body);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  }
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST");
   }
 }
 

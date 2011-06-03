@@ -1,40 +1,42 @@
 /*
-* Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above copyright
-*       notice, this list of conditions and the following disclaimer in the
-*       documentation and/or other materials provided with the distribution.
-*     * Neither the name of the AMT nor the
-*       names of its contributors may be used to endorse or promote products
-*       derived from this software without specific prior written permission.
-*
-* DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
-* BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
-* AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
-* RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
-* (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
-* WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
-* LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
-* MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
-
-* LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
-* PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
-* OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
-* CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
-* WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
-* THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
-* SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
+ * Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the AMT nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
+ * BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
+ * AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
+ * RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
+ * (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
+ * WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
+ * LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
+ * MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+ 
+ * LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
+ * PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
+ * OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
+ * CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
+ * WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
+ * THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
+ * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #include "agent.hpp"
 #include "dlib/logger.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sstream>
+#include <dlib/tokenizer.h>
 
 using namespace std;
 
@@ -64,14 +66,14 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
     cerr << e.what() << endl;
     throw e;
   }
-
+  
   // Grab data from configuration
   mDevices = mConfig->getDevices();
   string time = getCurrentTime(GMT_UV_SEC);
-
+  
   // Unique id number for agent instance
   mInstanceId = getCurrentTimeInSec();
-
+  
   // Sequence number and sliding buffer for data
   mSequence = 1;
   mSlidingBufferSize = 1 << aBufferSize;
@@ -79,9 +81,9 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   mSlidingBuffer->set_size(aBufferSize);
   mCheckpointFreq = aCheckpointFreq;
   mCheckpointCount = (mSlidingBufferSize / aCheckpointFreq) + 1;
-
+  
   // Asset sliding buffer
-  mAssets = new sliding_buffer_kernel_1<string>();
+  mAssets = new sliding_buffer_kernel_1<AssetPtr>();
   mAssets->set_size(aMaxAssets);
   mMaxAssets = 1 << aMaxAssets;
   mAssetCount = 0;
@@ -89,18 +91,18 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   
   // Create the checkpoints at a regular frequency
   mCheckpoints = new Checkpoint[mCheckpointCount];
-
+  
   // Mutex used for synchronized access to sliding buffer and sequence number
   mSequenceLock = new dlib::mutex;
-
+  
   /* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
   vector<Device *>::iterator device;
   for (device = mDevices.begin(); device != mDevices.end(); ++device) 
   {
     mDeviceMap[(*device)->getName()] = *device;
-
+    
     std::map<string, DataItem*> items = (*device)->getDeviceDataItems();
-
+    
     std::map<string, DataItem *>::iterator item;
     for (item = items.begin(); item != items.end(); ++item)
     {
@@ -114,15 +116,15 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
         if (values.size() == 1)
           value = &values[0];
       }
-
+      
       addToBuffer(d, *value, time);
       if (mDataItemMap.count(d->getId()) == 0)
         mDataItemMap[d->getId()] = d;
       else {
         sLogger << LFATAL << "Duplicate DataItem id " << d->getId() <<
-          " for device: " << (*device)->getName() << " and data item name: " <<
-          d->getName();
-          exit(1);
+        " for device: " << (*device)->getName() << " and data item name: " <<
+        d->getName();
+        exit(1);
       }
     }
   }
@@ -163,21 +165,21 @@ void Agent::registerFile(const string &aUri, const string &aPath)
 
 // Methods for service
 const string Agent::on_request (
-  const incoming_things& incoming,
-  outgoing_things& outgoing
-  )
+                                const incoming_things& incoming,
+                                outgoing_things& outgoing
+                                )
 {
   string result;
   outgoing.headers["Content-Type"] = "text/xml";
   try 
   {
     sLogger << LDEBUG << "Request: " << incoming.request_type << " " << 
-      incoming.path << " from " << incoming.foreign_ip << ":" << incoming.foreign_port;
-      
+    incoming.path << " from " << incoming.foreign_ip << ":" << incoming.foreign_port;
+    
     if (incoming.request_type != "GET" && incoming.request_type != "PUT" &&
         incoming.request_type != "POST") {
       return printError("UNSUPPORTED",
-        "Only the HTTP GET and PUT requests are supported by MTConnect");
+                        "Only the HTTP GET and PUT requests are supported by MTConnect");
     }
     
     // Parse the URL path looking for '/'
@@ -192,64 +194,63 @@ const string Agent::on_request (
     
     string::size_type loc1 = path.find("/", 1);
     string::size_type end = (path[path.length()-1] == '/') ?
-      path.length()-1 : string::npos;
-
+    path.length()-1 : string::npos;
+    
     string first =  path.substr(1, loc1-1);
     string call, device;
-
+    
     if (first == "assets" || first == "asset")
     {
       string list = path.substr(loc1+1);
       if (incoming.request_type == "GET")
-	result = handleAssets(*outgoing.out, incoming.queries, list);
+        result = handleAssets(*outgoing.out, incoming.queries, list);
       else
-	result = storeAsset(*outgoing.out, incoming.queries, list, incoming.body);
+        result = storeAsset(*outgoing.out, incoming.queries, list, incoming.body);
     }
     else
     {
       // If a '/' was found
       if (loc1 < end)
       {
-	// Look for another '/'
-	string::size_type loc2 = path.find("/", loc1+1);
-	
-	if (loc2 == end)
-	{
-	  device = first;
-	  call = path.substr(loc1+1, loc2-loc1-1);
-	}
-	else
-	{
-	  // Path is too long
-	  return printError("UNSUPPORTED", "The following path is invalid: " + path);
-	}
+        // Look for another '/'
+        string::size_type loc2 = path.find("/", loc1+1);
+        
+        if (loc2 == end)
+        {
+          device = first;
+          call = path.substr(loc1+1, loc2-loc1-1);
+        }
+        else
+        {
+          // Path is too long
+          return printError("UNSUPPORTED", "The following path is invalid: " + path);
+        }
       }
       else
       {
-	// Try to handle the call
-	call = first;
+        // Try to handle the call
+        call = first;
       }
       
       if (incoming.request_type == "GET")
-	result = handleCall(*outgoing.out, path, incoming.queries, call, device);    
+        result = handleCall(*outgoing.out, path, incoming.queries, call, device);    
       else
-	result = handlePut(*outgoing.out, path, incoming.queries, call, device);
+        result = handlePut(*outgoing.out, path, incoming.queries, call, device);
     }
   }
   catch (exception & e)
   {
     printError("SERVER_EXCEPTION",(string) e.what()); 
   }
-
+  
   return result;
 }
 
-Adapter * Agent::addAdapter(
-  const string& device,
-  const string& host,
-  const unsigned int port,
-  bool start
-  )
+Adapter * Agent::addAdapter(const string& device,
+                            const string& host,
+                            const unsigned int port,
+                            bool start
+                            )
 {
   Adapter *adapter = new Adapter(device, host, port);
   adapter->setAgent(*this);
@@ -259,36 +260,35 @@ Adapter * Agent::addAdapter(
   return adapter;
 }
 
-unsigned int Agent::addToBuffer(
-  DataItem *dataItem,
-  const string& value,
-  string time
-  )
+unsigned int Agent::addToBuffer(DataItem *dataItem,
+                                const string& value,
+                                string time
+                                )
 {
   if (dataItem == 0) return 0;
-
+  
   dlib::auto_mutex lock(*mSequenceLock);
-
+  
   Int64 seqNum = mSequence++;
   ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
                                              time, value);
   (*mSlidingBuffer)[seqNum] = event;
   mLatest.addComponentEvent(event);
   event->unrefer();
-
+  
   // Special case for the first event in the series to prime the first checkpoint.
   if (seqNum == 1) {
     mFirst.addComponentEvent(event);
   }
-
+  
   // Checkpoint management
   int index = mSlidingBuffer->get_element_id(seqNum);
   if (mCheckpointCount > 0 && index % mCheckpointFreq == 0) {
     // Copy the checkpoint from the current into the slot
     mCheckpoints[index / mCheckpointFreq].copy(mLatest);
   }
-
-
+  
+  
   // See if the next sequence has an event. If the event exists it
   // should be added to the first checkpoint.
   if ((*mSlidingBuffer)[mSequence] != NULL)
@@ -296,7 +296,7 @@ unsigned int Agent::addToBuffer(
     // Keep the last checkpoint up to date with the last.
     mFirst.addComponentEvent((*mSlidingBuffer)[mSequence]);
   }
-
+  
   return seqNum;
 }
 
@@ -305,7 +305,7 @@ void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
 {
   string time = getCurrentTime(GMT_UV_SEC);
   sLogger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
-
+  
   std::vector<Device*>::iterator iter;
   for (iter = aDevices.begin(); iter != aDevices.end(); ++iter) {
     std::map<std::string, DataItem *> dataItems = (*iter)->getDeviceDataItems();
@@ -314,9 +314,9 @@ void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
     {
       DataItem *dataItem = (*dataItemAssoc).second;
       if (dataItem != NULL && (dataItem->getDataSource() == anAdapter ||
-             (anAdapter->isAutoAvailable() &&
-              dataItem->getDataSource() == NULL &&
-              dataItem->getType() == "AVAILABILITY")))
+                               (anAdapter->isAutoAvailable() &&
+                                dataItem->getDataSource() == NULL &&
+                                dataItem->getType() == "AVAILABILITY")))
       {
         const string *value = NULL;
         if (dataItem->isCondition()) {
@@ -331,8 +331,8 @@ void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
         
         if (value != NULL)
           addToBuffer(dataItem, *value, time);
-        } else if (dataItem == NULL) {
-          sLogger << LWARN << "No data Item for " << (*dataItemAssoc).first;
+      } else if (dataItem == NULL) {
+        sLogger << LWARN << "No data Item for " << (*dataItemAssoc).first;
       }
     }
   }
@@ -353,8 +353,8 @@ void Agent::connected(Adapter *anAdapter, vector<Device*> aDevices)
         DataItem *dataItem = (*dataItemAssoc).second;
         if (dataItem->getType() == "AVAILABILITY")
         {
-	  sLogger << LDEBUG << "Adding availabilty event for " << dataItem->getId();
-	  addToBuffer(dataItem, sAvailable, time);
+          sLogger << LDEBUG << "Adding availabilty event for " << dataItem->getId();
+          addToBuffer(dataItem, sAvailable, time);
         }
       }
     }
@@ -363,44 +363,44 @@ void Agent::connected(Adapter *anAdapter, vector<Device*> aDevices)
 
 /* Agent protected methods */
 string Agent::handleCall(
-  ostream& out,
-  const string& path,
-  const key_value_map& queries,
-  const string& call,
-  const string& device
-  )
+                         ostream& out,
+                         const string& path,
+                         const key_value_map& queries,
+                         const string& call,
+                         const string& device
+                         )
 {
   string deviceName;
   if (!device.empty())
   {
     deviceName = device;
   }
-
+  
   if (call == "current")
   {
     const string path = queries[(string) "path"];
     string result;
-
+    
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
-				FASTEST_FREQ, false, SLOWEST_FREQ);
+                                FASTEST_FREQ, false, SLOWEST_FREQ);
     // Check for 1.2 conversion to interval
     if (freq == NO_FREQ)
       freq = checkAndGetParam(result, queries, "interval", NO_FREQ,
-			      FASTEST_FREQ, false, SLOWEST_FREQ);
+                              FASTEST_FREQ, false, SLOWEST_FREQ);
     Int64 at = checkAndGetParam64(result, queries, "at", NO_START, getFirstSequence(), true,
-				  mSequence - 1);
+                                  mSequence - 1);
     if (freq == PARAM_ERROR || at == PARAM_ERROR)
     {
       return result;
     }
-
+    
     if (freq != NO_FREQ && at != NO_START) {
       return printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
     }
-
-
+    
+    
     return handleStream(out, devicesAndPath(path, deviceName), true,
-			freq, at);
+                        freq, at);
   }
   else if (call == "probe" || call.empty())
   {
@@ -410,32 +410,32 @@ string Agent::handleCall(
   {
     string path = queries[(string) "path"];
     string result;
-
+    
     int count = checkAndGetParam(result, queries, "count", DEFAULT_COUNT,
-				 1, true, mSlidingBufferSize);
+                                 1, true, mSlidingBufferSize);
     int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
-				FASTEST_FREQ, false, SLOWEST_FREQ);
+                                FASTEST_FREQ, false, SLOWEST_FREQ);
     // Check for 1.2 conversion to interval
     if (freq == NO_FREQ)
       freq = checkAndGetParam(result, queries, "interval", NO_FREQ,
                               FASTEST_FREQ, false, SLOWEST_FREQ);
     
     Int64 start = checkAndGetParam64(result, queries, "start", NO_START, getFirstSequence(),
-				     true, mSequence);
-
+                                     true, mSequence);
+    
     if (start == NO_START) // If there was no data in queries
     {
       start = checkAndGetParam64(result, queries, "from", 1,
-				 getFirstSequence(), true, mSequence);
+                                 getFirstSequence(), true, mSequence);
     }
-
+    
     if (freq == PARAM_ERROR || count == PARAM_ERROR || start == PARAM_ERROR)
     {
       return result;
     }
-
+    
     return handleStream(out, devicesAndPath(path, deviceName), false,
-			freq, start, count);
+                        freq, start, count);
   }
   else if ((mDeviceMap[call] != NULL) && device.empty())
   {
@@ -444,24 +444,24 @@ string Agent::handleCall(
   else
   {
     return printError("UNSUPPORTED",
-      "The following path is invalid: " + path);
+                      "The following path is invalid: " + path);
   }
 }
 
 /* Agent protected methods */
 string Agent::handlePut(
-  ostream& out,
-  const string& path,
-  const key_value_map& queries,
-  const string& adapter,
-  const string& deviceName
-  )
+                        ostream& out,
+                        const string& path,
+                        const key_value_map& queries,
+                        const string& adapter,
+                        const string& deviceName
+                        )
 {
   string device = deviceName;
   if (device.empty() && adapter.empty())
   {
     return printError("UNSUPPORTED",
-              "Device must be specified for PUT");
+                      "Device must be specified for PUT");
   } else if (device.empty()) {
     device = adapter;
   }
@@ -489,14 +489,14 @@ string Agent::handlePut(
 string Agent::handleProbe(const string& name)
 {
   vector<Device *> mDeviceList;
-
+  
   if (!name.empty())
   {
     Device * device = getDeviceByName(name);
     if (device == NULL)
     {
       return printError("NO_DEVICE",
-        "Could not find the device '" + name + "'");
+                        "Could not find the device '" + name + "'");
     }
     else
     {
@@ -507,19 +507,19 @@ string Agent::handleProbe(const string& name)
   {
     mDeviceList = mDevices;
   }
-
+  
   return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
-    mDeviceList);
+                                mDeviceList);
 }
 
 string Agent::handleStream(
-  ostream& out,
-  const string& path,
-  bool current,
-  unsigned int frequency,
-  Int64 start,
-  unsigned int count
-  )
+                           ostream& out,
+                           const string& path,
+                           bool current,
+                           unsigned int frequency,
+                           Int64 start,
+                           unsigned int count
+                           )
 {
   std::set<string> filter;
   try
@@ -530,13 +530,13 @@ string Agent::handleStream(
   {
     return printError("INVALID_PATH", e.what());
   }
-
+  
   if (filter.empty())
   {
     return printError("INVALID_PATH",
-      "The path could not be parsed. Invalid syntax: " + path);
+                      "The path could not be parsed. Invalid syntax: " + path);
   }
-
+  
   // Check if there is a frequency to stream data or not
   if (frequency != (unsigned) NO_FREQ)
   {
@@ -561,26 +561,59 @@ string Agent::handleStream(
 }
 
 std::string Agent::handleAssets(std::ostream& aOut,
-				const key_value_map& aQueries,
-				const std::string& aList)
+                                const key_value_map& aQueries,
+                                const std::string& aList)
 {
-  return "";
+  using namespace dlib;
+  istringstream str(aList);
+  tokenizer_kernel_1 tok;
+  tok.set_stream(str);
+  tok.set_identifier_token(tok.lowercase_letters() + tok.uppercase_letters() +
+                           tok.numbers() + "_",
+                           tok.lowercase_letters() + tok.uppercase_letters() +
+                           tok.numbers() + "_");
+  
+  
+  int type;
+  string token;
+  vector<AssetPtr> assets;
+  for (tok.get_token(type, token); type != tok.END_OF_FILE; tok.get_token(type, token))
+  {
+    if (type == tok.IDENTIFIER)
+    {
+      AssetPtr ptr = mAssetMap[token];
+      if (ptr.getObject() == NULL)
+        return XmlPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND", 
+                                      (string) "Could not find asset: " + token);
+      assets.push_back(ptr);
+    }
+  }
+  
+  return XmlPrinter::printAssets(mInstanceId, mMaxAssets, mAssetCount, assets);
 }
 
+
+// Store an asset in the map by asset # and use the circular buffer as
+// an LRU. Check if we're removing an existing asset and clean up the 
+// map, and then store this asset. 
 std::string Agent::storeAsset(std::ostream& aOut,
-			      const key_value_map& aQueries,
-			      const std::string& aAsset,
-			      const std::string& aBody)
-{
-  Int64 sequence;
-
-  // Remove oldest asset...
-
-  // Handle replace, shift
-
-  mAssetCount++;
+                              const key_value_map& aQueries,
+                              const std::string& aAsset,
+                              const std::string& aBody)
+{  
+  dlib::auto_mutex lock(*mSequenceLock);
   
-  return aBody;
+  Int64 seqNum = mAssetSequence++;
+  
+  AssetPtr ptr(new Asset(aAsset, aBody), true);
+  
+  mAssetMap[aAsset] = ptr;
+  (*mAssets)[seqNum] = ptr;
+  
+  if (mAssetCount < mMaxAssets)
+    mAssetCount++;
+  
+  return "<success/>";
 }
 
 string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
@@ -589,7 +622,7 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
   std::map<string,string>::iterator cached = mFileCache.find(aUri);
   if (cached != mFileCache.end())
     return cached->second;
-
+  
   std::map<string,string>::iterator file = mFileMap.find(aUri);
   
   // Should never happen
@@ -598,7 +631,7 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
     aOutgoing.http_return_status = "File not found";
     return "";
   }
-
+  
   const char *path = file->second.c_str();
   
   struct stat fs;
@@ -639,12 +672,12 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
 }
 
 void Agent::streamData(ostream& out,
-  std::set<string> &aFilter,
-  bool current,
-  unsigned int frequency,
-  Int64 start,
-  unsigned int count
-  )
+                       std::set<string> &aFilter,
+                       bool current,
+                       unsigned int frequency,
+                       Int64 start,
+                       unsigned int count
+                       )
 {
   // Create header
   out << "HTTP/1.1 200 OK" << endl;
@@ -653,10 +686,10 @@ void Agent::streamData(ostream& out,
   out << "Status: 200 OK" << endl;
   out << "Content-Disposition: inline" << endl;
   out << "Content-Type: multipart/x-mixed-replace;";
-
+  
   string boundary = md5(intToString(time(NULL)));
   out << "boundary=" << boundary << endl << endl;
-
+  
   // Loop until the user closes the connection
   time_t t;
   int heartbeat = 0;
@@ -668,9 +701,9 @@ void Agent::streamData(ostream& out,
       content = fetchCurrentData(aFilter, NO_START);
     else
       content = fetchSampleData(aFilter, start, count, items);
-
+    
     start = (start + count < mSequence) ? (start + count) : mSequence;
-
+    
     if (items > 0 || (time(&t) - heartbeat) >= 10) 
     {
       heartbeat = t;
@@ -678,10 +711,10 @@ void Agent::streamData(ostream& out,
       out << "Content-type: text/xml" << endl;
       out << "Content-length: " << content.length() << endl;
       out << endl << content;
-
+      
       out.flush();
     }
-
+    
     dlib::sleep(frequency);
   }
 }
@@ -689,7 +722,7 @@ void Agent::streamData(ostream& out,
 string Agent::fetchCurrentData(std::set<string> &aFilter, Int64 at)
 {
   dlib::auto_mutex lock(*mSequenceLock);
-
+  
   vector<ComponentEventPtr> events;
   unsigned int firstSeq = getFirstSequence();
   if (at == NO_START)
@@ -703,9 +736,9 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, Int64 at)
     long checkIndex = pos / mCheckpointFreq;
     long closestCp = checkIndex * mCheckpointFreq;
     unsigned long index;
-
+    
     Checkpoint *ref;
-
+    
     // Compute the closest checkpoint. If the checkpoint is after the
     // first checkpoint and before the next incremental checkpoint,
     // use first.
@@ -721,42 +754,42 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, Int64 at)
       index = closestCp + 1;
       ref = &mCheckpoints[checkIndex];
     }
-
+    
     Checkpoint check(*ref, &aFilter);
-
+    
     // Roll forward from the checkpoint.
     for (; index <= (unsigned long) pos; index++) {
       check.addComponentEvent(((*mSlidingBuffer)[(unsigned long)index]).getObject());
     }
-
+    
     check.getComponentEvents(events);
   }
-
+  
   string toReturn = XmlPrinter::printSample(mInstanceId, mSlidingBufferSize,
-    mSequence, firstSeq, events);
-
+                                            mSequence, firstSeq, events);
+  
   return toReturn;
 }
 
 string Agent::fetchSampleData(std::set<string> &aFilter,
-  Int64 start,
-  unsigned int count,
-  unsigned int &items
-  )
+                              Int64 start,
+                              unsigned int count,
+                              unsigned int &items
+                              )
 {
   vector<ComponentEventPtr> results;
-
+  
   dlib::auto_mutex lock(*mSequenceLock);
-
+  
   Int64 seq = mSequence;
   Int64 firstSeq = (mSequence > mSlidingBufferSize) ?
-    mSequence - mSlidingBufferSize : 1;
-
+  mSequence - mSlidingBufferSize : 1;
+  
   // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
   start = (start <= firstSeq) ? firstSeq : start;
   Int64 end = (count + start >= mSequence) ? mSequence : count + start;
   items = 0;
-
+  
   for (Int64 i = start; i < end; i++)
   {
     // Filter out according to if it exists in the list
@@ -768,37 +801,37 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
       items++;
     }
   }
-
+  
   return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, seq, 
-    firstSeq, results);
+                                 firstSeq, results);
 }
 
 string Agent::printError(const string& errorCode, const string& text)
 {
   sLogger << LDEBUG << "Returning error " << errorCode << ": " << text;
   return XmlPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
-    errorCode, text);
+                                errorCode, text);
 }
 
 string Agent::devicesAndPath(const string& path, const string& device)
 {
   string dataPath = "";
-
+  
   if (!device.empty())
   {
     string prefix = "//Devices/Device[@name=\"" + device + "\"]";
-
+    
     if (!path.empty())
     {
       istringstream toParse(path);
       string token;
-
+      
       // Prefix path (i.e. "path1|path2" => "{prefix}path1|{prefix}path2")
       while (getline(toParse, token, '|'))
       {
         dataPath += prefix + token + "|";
       }
-
+      
       dataPath.erase(dataPath.length()-1);
     }
     else
@@ -810,109 +843,109 @@ string Agent::devicesAndPath(const string& path, const string& device)
   {
     dataPath = (!path.empty()) ? path : "//Devices/Device";
   }
-
+  
   return dataPath;
 }
 
 int Agent::checkAndGetParam(
-  string& result,
-  const key_value_map& queries,
-  const string& param,
-  const int defaultValue,
-  const int minValue,
-  bool minError,
-  const int maxValue
-  )
+                            string& result,
+                            const key_value_map& queries,
+                            const string& param,
+                            const int defaultValue,
+                            const int minValue,
+                            bool minError,
+                            const int maxValue
+                            )
 {
   if (queries.count(param) == 0)
   {
     return defaultValue;
   }
-
+  
   if (queries[param].empty())
   {
     result = printError("QUERY_ERROR", "'" + param + "' cannot be empty.");
     return PARAM_ERROR;
   }
-
+  
   if (!isNonNegativeInteger(queries[param]))
   {
     result = printError("QUERY_ERROR",
-      "'" + param + "' must be a positive integer.");
+                        "'" + param + "' must be a positive integer.");
     return PARAM_ERROR;
   }
-
+  
   long int value = strtol(queries[param].c_str(), NULL, 10);
-
+  
   if (minValue != NO_VALUE && value < minValue)
   {
     if (minError)
     {
       result = printError("QUERY_ERROR",
-        "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
+                          "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
       return PARAM_ERROR;
     }
     return minValue;
   }
-
+  
   if (maxValue != NO_VALUE && value > maxValue)
   {
     result = printError("QUERY_ERROR",
-      "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
+                        "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
     return PARAM_ERROR;
   }
-
+  
   return value;
 }
 
 Int64 Agent::checkAndGetParam64(
-  string& result,
-  const key_value_map& queries,
-  const string& param,
-  const Int64 defaultValue,
-  const Int64 minValue,
-  bool minError,
-  const Int64 maxValue
-  )
+                                string& result,
+                                const key_value_map& queries,
+                                const string& param,
+                                const Int64 defaultValue,
+                                const Int64 minValue,
+                                bool minError,
+                                const Int64 maxValue
+                                )
 {
   if (queries.count(param) == 0)
   {
     return defaultValue;
   }
-
+  
   if (queries[param].empty())
   {
     result = printError("QUERY_ERROR", "'" + param + "' cannot be empty.");
     return PARAM_ERROR;
   }
-
+  
   if (!isNonNegativeInteger(queries[param]))
   {
     result = printError("QUERY_ERROR",
-      "'" + param + "' must be a positive integer.");
+                        "'" + param + "' must be a positive integer.");
     return PARAM_ERROR;
   }
-
+  
   Int64 value = strtoll(queries[param].c_str(), NULL, 10);
-
+  
   if (minValue != NO_VALUE && value < minValue)
   {
     if (minError)
     {
       result = printError("QUERY_ERROR",
-        "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
+                          "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
       return PARAM_ERROR;
     }
     return minValue;
   }
-
+  
   if (maxValue != NO_VALUE && value > maxValue)
   {
     result = printError("QUERY_ERROR",
-      "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
+                        "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
     return PARAM_ERROR;
   }
-
+  
   return value;
 }
 

@@ -493,12 +493,45 @@ string XmlPrinter::printSample(
 }
 
 string XmlPrinter::printAssets(const unsigned int instanceId,
-                               const unsigned int bufferSize,
-                               const Int64 nextSeq,
-                               const Int64 firstSeq,
-                               std::vector<Asset*> &anAssets)
+                               const unsigned int aBufferSize,
+                               const unsigned int anAssetCount,
+                               std::vector<AssetPtr> &anAssets)
 {
-  return "<empty/>";
+  xmlTextWriterPtr writer;
+  xmlBufferPtr buf;
+  string ret;
+  
+  try {
+    THROW_IF_XML2_NULL(buf = xmlBufferCreate());
+    THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+    
+    initXmlDoc(writer, eASSETS, instanceId, aBufferSize, anAssetCount);
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Assets"));
+
+    vector<AssetPtr>::iterator iter;
+    for (iter = anAssets.begin(); iter != anAssets.end(); ++iter)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST (*iter)->getContent().c_str()));
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Assets    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectAssets
+    
+    xmlFreeTextWriter(writer);
+    ret = (string) ((char*) buf->content);
+    xmlBufferFree(buf);
+  }
+  catch (string error) {
+    sLogger << dlib::LERROR << "printProbe: " << error;
+  }
+  catch (...) {
+    sLogger << dlib::LERROR << "printProbe: unknown error";
+  }
+  
+  return ret;
 }
 
 
@@ -631,6 +664,12 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
       namespaces = &sDevicesNamespaces;
       xmlType = "Devices";
       break;
+      
+    case eASSETS:
+      namespaces = &sAssetsNamespaces;
+      xmlType = "Assets";
+      break;
+      
   }
   
   
@@ -690,12 +729,19 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
   
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "sender", BAD_CAST hostname.c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId", BAD_CAST intToString(instanceId).c_str()));
-  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize", BAD_CAST intToString(bufferSize).c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST "1.2"));
-  
-  // Add additional attribtues for streams
-  if (xmlType == "Streams")
+  if (aType == eASSETS) 
   {
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetBufferSize", BAD_CAST intToString(bufferSize).c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetCount", BAD_CAST int64ToString(nextSeq).c_str()));
+  }
+  else
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize", BAD_CAST intToString(bufferSize).c_str()));    
+  }
+  if (aType == eSTREAMS)
+  {
+    // Add additional attribtues for streams
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "nextSequence", 
                                                     BAD_CAST int64ToString(nextSeq).c_str()));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST  "firstSequence", 

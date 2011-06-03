@@ -470,15 +470,16 @@ void XmlPrinterTest::testNonPrintableCharacters()
 void XmlPrinterTest::testPrintAsset()
 {
   // Add the xml to the agent...
-  vector<Asset*> assets;
-  Asset asset;
-  assets.push_back(&asset);
+  vector<AssetPtr> assets;
+  Asset asset((string) "123", (string) "HELLO");
+  assets.push_back(asset);
   
   {
-    
-    PARSE_XML(XmlPrinter::printAssets(123, 131072, 10974584, 10843512, assets));
-    
-    // CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:", "");
+    PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@instanceId", "123");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@assetCount", "2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@assetBufferSize", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets", "HELLO");
   }
 }
 

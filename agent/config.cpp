@@ -188,7 +188,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
     
   sLogger << LINFO << "Starting agent on port " << port;
-  mAgent = new Agent(probe, bufferSize, checkpointFrequency);
+  mAgent = new Agent(probe, bufferSize, maxAssets, checkpointFrequency);
   mAgent->set_listening_port(port);
 
   for (int i = 0; i < mAgent->getDevices().size(); i++)

@@ -41,6 +41,7 @@ set(test_srcs test.cpp
 	       ../agent/config.cpp
 	       ../agent/service.cpp
 	       ../agent/ref_counted.cpp
+           ../agent/asset.cpp
 	       adapter_test.cpp
 	       agent_test.cpp
 	       checkpoint_test.cpp
@@ -53,7 +54,8 @@ set(test_srcs test.cpp
 	       globals_test.cpp
 	       xml_parser_test.cpp
 	       test_globals.cpp
-	       xml_printer_test.cpp)
+	       xml_printer_test.cpp
+           asset_test.cpp)
 
 
 include_directories(../lib ../agent)
