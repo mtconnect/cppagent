@@ -43,9 +43,9 @@
 #include "component_event.hpp"
 #include "device.hpp"
 #include "globals.hpp"
+#include "asset.hpp"
 
 class DataItem;
-class Asset;
 
 namespace XmlPrinter
 {
@@ -73,11 +73,10 @@ namespace XmlPrinter
     std::vector<ComponentEventPtr>& results
   );
 
-  std::string printAssets(const unsigned int instanceId,
-                         const unsigned int bufferSize,
-                         const Int64 nextSeq,
-                         const Int64 firstSeq,
-                         std::vector<Asset*> &anAssets);
+  std::string printAssets(const unsigned int anInstanceId,
+                          const unsigned int aBufferSize,
+                          const unsigned int anAssetCount,
+                          std::vector<AssetPtr> &anAssets);
 
   
   void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 

@@ -43,7 +43,7 @@ using namespace std;
 void AgentTest::setUp()
 {
   a = NULL;
-  a = new Agent("../samples/test_config.xml", 8, 2, 25);
+  a = new Agent("../samples/test_config.xml", 8, 4, 25);
   agentId = intToString(getCurrentTimeInSec());
   adapter = NULL;
 }
@@ -758,6 +758,145 @@ void AgentTest::testAssetStorage()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST");
   }
 }
+
+void AgentTest::testAssetBuffer()
+{
+  path = "/asset/1";
+  string body = "<CuttingTool>TEST 1</CuttingTool>";
+  Agent::key_value_map queries;
+  
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  }
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 1");
+  }
+  
+  path = "/asset/2";
+  body = "<CuttingTool>TEST 2</CuttingTool>";
+
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 2, a->getAssetCount());
+  }
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 2");
+  }
+
+  path = "/asset/3";
+  body = "<CuttingTool>TEST 3</CuttingTool>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+  }
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 3");
+  }
+
+  path = "/asset/4";
+  body = "<CuttingTool>TEST 4</CuttingTool>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
+  }
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 4");
+  }
+  
+  path = "/asset/5";
+  body = "<CuttingTool>TEST 5</CuttingTool>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
+  }
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 5");
+  }
+  
+  path = "/asset/1";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: 1");
+  }
+  
+  path = "/asset/3";
+  body = "<CuttingTool>TEST 6</CuttingTool>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
+  }
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 6");
+  }
+  
+  path = "/asset/2";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 2");
+  }
+
+  path = "/asset/2";
+  body = "<CuttingTool>TEST 7</CuttingTool>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
+  }
+
+  path = "/asset/6";
+  body = "<CuttingTool>TEST 8</CuttingTool>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
+  }
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 8");
+  }
+
+  // Now since two and three have been modified, asset 4 should be removed.
+  path = "/asset/4";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: 4");
+  }
+}
+
 
 void AgentTest::testAssetError()
 {

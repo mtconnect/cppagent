@@ -39,6 +39,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <list>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -50,6 +51,7 @@
 #include "xml_printer.hpp"
 #include "checkpoint.hpp"
 #include "service.hpp"
+#include "asset.hpp"
 
 class Adapter;
 class ComponentEvent;
@@ -131,7 +133,7 @@ public:
   Int64 getSequence() const { return mSequence; }
   unsigned int getBufferSize() const { return mSlidingBufferSize; }
   unsigned int getMaxAssets() const { return mMaxAssets; }
-  unsigned int getAssetCount() const { return mAssetCount; }
+  unsigned int getAssetCount() const { return mAssets.size(); }
   Int64 getFirstSequence() const {
     if (mSequence > mSlidingBufferSize)
       return mSequence - mSlidingBufferSize;
@@ -265,12 +267,9 @@ protected:
   unsigned int mSlidingBufferSize;
 
   /* Asset storage, circ buffer stores ids */
-  dlib::sliding_buffer_kernel_1<std::string> *mAssets;
-  std::map<std::string, std::string> mAssetMap;
-  unsigned int mMaxAssets;
-  unsigned int mAssetCount;
-  Int64 mAssetSequence;
-  
+  std::list<AssetPtr> mAssets;
+  std::map<std::string, AssetPtr> mAssetMap;
+  unsigned int mMaxAssets;  
   
   /* Checkpoints */
   Checkpoint mLatest;

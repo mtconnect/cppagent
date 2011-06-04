@@ -83,11 +83,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   mCheckpointCount = (mSlidingBufferSize / aCheckpointFreq) + 1;
   
   // Asset sliding buffer
-  mAssets = new sliding_buffer_kernel_1<AssetPtr>();
-  mAssets->set_size(aMaxAssets);
-  mMaxAssets = 1 << aMaxAssets;
-  mAssetCount = 0;
-  mAssetSequence = 1;
+  mMaxAssets = aMaxAssets;
   
   // Create the checkpoints at a regular frequency
   mCheckpoints = new Checkpoint[mCheckpointCount];
@@ -133,7 +129,6 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
 Agent::~Agent()
 {
   delete mSlidingBuffer;
-  delete mAssets;
   delete mSequenceLock;
   delete mConfig;
   delete[] mCheckpoints;
@@ -612,7 +607,7 @@ std::string Agent::handleAssets(std::ostream& aOut,
     }
   }
   
-  return XmlPrinter::printAssets(mInstanceId, mMaxAssets, mAssetCount, assets);
+  return XmlPrinter::printAssets(mInstanceId, mMaxAssets, mAssets.size(), assets);
 }
 
 
@@ -626,15 +621,24 @@ std::string Agent::storeAsset(std::ostream& aOut,
 {  
   dlib::auto_mutex lock(*mSequenceLock);
   
-  Int64 seqNum = mAssetSequence++;
-  
+  AssetPtr old = mAssetMap[aAsset];
+  if (old.getObject() != NULL)
+    mAssets.remove(old);
+
   AssetPtr ptr(new Asset(aAsset, aBody), true);
   
-  mAssetMap[aAsset] = ptr;
-  (*mAssets)[seqNum] = ptr;
+
+  // Check for overflow
+  if (mAssets.size() >= mMaxAssets)
+  {
+    old = mAssets.front();
+    mAssets.pop_front();
+    mAssetMap.erase(old->getAssetId());
+  }
   
-  if (mAssetCount < mMaxAssets)
-    mAssetCount++;
+  mAssetMap[aAsset] = ptr;
+  mAssets.push_back(ptr);
+  
   
   return "<success/>";
 }

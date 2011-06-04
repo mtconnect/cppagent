@@ -42,7 +42,7 @@ class RefCountedPtr {
 public:
   // Constructors
   RefCountedPtr() { mObject = NULL; }
-  RefCountedPtr(RefCountedPtr &aPtr, bool aTakeRef = false) {
+  RefCountedPtr(const RefCountedPtr &aPtr, bool aTakeRef = false) {
     mObject = NULL;
     setObject(aPtr.getObject(), aTakeRef);
   }
@@ -67,6 +67,10 @@ public:
   T *setObject(T *aEvent, bool aTakeRef = false);
   T *operator=(T *aEvent) { return setObject(aEvent); }  
   T *operator=(RefCountedPtr<T> &aPtr) { return setObject(aPtr.getObject()); }
+  
+  bool operator==(const RefCountedPtr<T> &aOther) {
+    return *mObject == *(aOther.mObject);
+  }
   
   inline bool operator<(RefCountedPtr<T> &aOther);
 

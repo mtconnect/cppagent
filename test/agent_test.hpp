@@ -41,6 +41,7 @@
 #include "dlib/server.h"
 #include "dlib/sliding_buffer.h"
 
+
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -74,6 +75,9 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAutoAvailable);
   CPPUNIT_TEST(testIgnoreTimestamps);
   CPPUNIT_TEST(testAssetStorage);
+  CPPUNIT_TEST(testAssetError);
+  CPPUNIT_TEST(testAssetBuffer);
+  CPPUNIT_TEST(testPut);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -140,13 +144,19 @@ protected:
 
   // Test assets
   void testAssetStorage();
+  void testAssetError();
+  void testAssetBuffer();
+  
+  // Test put for data items
+  void testPut();
     
   /* Helper method to test expected string, given optional query, & run tests */
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                            std::string key = "",
                            std::string value = "");
 
-  xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body);
+  xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
+                              Agent::key_value_map &aQueries);
   
 public:
   void setUp();
@@ -161,8 +171,8 @@ public:
   xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), key, value); \
   CPPUNIT_ASSERT(doc);
 
-#define PARSE_XML_RESPONSE_PUT(body)			    \
-  xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body); \
+#define PARSE_XML_RESPONSE_PUT(body, queries)			    \
+  xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
   CPPUNIT_ASSERT(doc);
 
 #endif
