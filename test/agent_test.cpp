@@ -909,6 +909,24 @@ void AgentTest::testAssetError()
   }
 }
 
+void AgentTest::testAdapterAddAsset()
+{
+  testAddAdapter();
+  
+  adapter->processData("TIME|@ASSET@|111|<CuttingTool>TEST 1</CuttingTool>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  
+  path = "/asset/111";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 1");
+  }
+
+}
+
 void AgentTest::testPut()
 {
   Agent::key_value_map queries;

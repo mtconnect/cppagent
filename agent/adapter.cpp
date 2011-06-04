@@ -105,6 +105,9 @@ inline static void trim(std::string &str)
  *   Time|Alarm|Code|NativeCode|Severity|State|Description
  *   Time|Item|Value
  *   Time|Item1|Value1|Item2|Value2...
+ * 
+ * Support for assets:
+ *   Time|@ASSET@|id|<...>...</...>
  */
 
 void Adapter::processData(const string& data)
@@ -123,6 +126,12 @@ void Adapter::processData(const string& data)
   
   getline(toParse, key, '|');
   getline(toParse, value, '|');
+  
+  if (key == "@ASSET@") {
+    string rest;
+    getline(toParse, rest);
+    mAgent->addAsset(value, rest);
+  }
 
   DataItem *dataItem;
   if (splitKey(key, dev)) {

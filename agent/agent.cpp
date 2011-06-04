@@ -295,6 +295,29 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
   return seqNum;
 }
 
+void Agent::addAsset(const string &aId, const string &aAsset)
+{
+  dlib::auto_mutex lock(*mSequenceLock);
+  
+  AssetPtr old = mAssetMap[aId];
+  if (old.getObject() != NULL)
+    mAssets.remove(old);
+  
+  AssetPtr ptr(new Asset(aId, aAsset), true);
+  
+  
+  // Check for overflow
+  if (mAssets.size() >= mMaxAssets)
+  {
+    old = mAssets.front();
+    mAssets.pop_front();
+    mAssetMap.erase(old->getAssetId());
+  }
+  
+  mAssetMap[aId] = ptr;
+  mAssets.push_back(ptr);  
+}
+
 /* Add values for related data items UNAVAILABLE */
 void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
 {
@@ -616,29 +639,10 @@ std::string Agent::handleAssets(std::ostream& aOut,
 // map, and then store this asset. 
 std::string Agent::storeAsset(std::ostream& aOut,
                               const key_value_map& aQueries,
-                              const std::string& aAsset,
+                              const std::string& aId,
                               const std::string& aBody)
 {  
-  dlib::auto_mutex lock(*mSequenceLock);
-  
-  AssetPtr old = mAssetMap[aAsset];
-  if (old.getObject() != NULL)
-    mAssets.remove(old);
-
-  AssetPtr ptr(new Asset(aAsset, aBody), true);
-  
-
-  // Check for overflow
-  if (mAssets.size() >= mMaxAssets)
-  {
-    old = mAssets.front();
-    mAssets.pop_front();
-    mAssetMap.erase(old->getAssetId());
-  }
-  
-  mAssetMap[aAsset] = ptr;
-  mAssets.push_back(ptr);
-  
+  addAsset(aId, aBody);
   
   return "<success/>";
 }
