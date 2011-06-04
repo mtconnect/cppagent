@@ -98,6 +98,10 @@ public:
   void setDescription(const std::string &aDescription) { mDescriptionBody = aDescription; reBuildAttributes(); }
   void setNativeName(const std::string &aNativeName) { mNativeName = aNativeName; reBuildAttributes(); }
   
+  // Cached data items
+  DataItem *getAvailability() const { return mAvailability; }
+  DataItem *getAssetChanged() const { return mAssetChanged; }
+  
   
   /* Add/get description specifications using an attribute map */
   void addDescription(std::string body, std::map<std::string, std::string> attributes);
@@ -115,8 +119,8 @@ public:
   std::list<Component *> &getChildren() { return mChildren; }
   
   /* Add to/get the component's std::list of data items */
-  void addDataItem(DataItem& dataItem) { mDataItems.push_back(&dataItem); }
-  std::list<DataItem *> getDataItems() const { return mDataItems; }
+  void addDataItem(DataItem& dataItem);
+  const std::list<DataItem *> &getDataItems() const { return mDataItems; }
   
   bool operator<(const Component &comp) const { return mId < comp.getId(); }
   bool operator==(const Component &comp) const { return mId == comp.getId(); }
@@ -155,6 +159,8 @@ protected:
   /* Pointer to the parent component */
   Component * mParent;
   Device *mDevice;
+  DataItem *mAvailability;
+  DataItem *mAssetChanged;
   
   /* Each component keeps track of it's children in a std::list */
   std::list<Component *> mChildren;

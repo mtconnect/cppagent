@@ -48,27 +48,25 @@ class XmlParser
 {
 public:
   /* Constructor to set the open the correct file */
-  XmlParser(const std::string& xmlPath);
+  XmlParser();
   
   /* Virtual destructor */
   virtual ~XmlParser();
   
-  /* Get list of devices and data items */
-  std::vector<Device *> getDevices() const { return mDevices; }
+  /* Parses a file and returns a list of devices */
+  std::vector<Device *> parseFile(const std::string &aPath);
   
+  // Just loads the document, assumed it has already been parsed before.
+  void loadDocument(const std::string &aDoc);
+
   /* Get std::list of data items in path */
   void getDataItems(std::set<std::string> &aFilterSet,
                     const std::string& path, xmlNodePtr node = NULL);
-  
-  
   
 protected:
   /* LibXML XML Doc */
   xmlDocPtr mDoc;
   
-  /* Arrays to keep track of all devices and dataItems */
-  std::vector<Device *> mDevices;
-
 protected:
   /* Main method to process the nodes and return the objects */
   Component * handleComponent(

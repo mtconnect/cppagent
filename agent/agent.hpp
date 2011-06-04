@@ -121,7 +121,8 @@ public:
   );
   
   // Add an asset to the agent
-  void addAsset(const std::string &aId, const std::string &aAsset);
+  void addAsset(Device *aDevice, const std::string &aId, const std::string &aAsset,
+                const std::string &aTime = "");
   
   /* Message when adapter has connected and disconnected */
   void disconnected(Adapter *anAdapter, std::vector<Device*> aDevices);
@@ -257,10 +258,11 @@ protected:
   unsigned int mInstanceId;
   
   /* Pointer to the configuration file for node access */
-  XmlParser *mConfig;
+  XmlParser *mXmlParser;
   
   /* For access to the sequence number and sliding buffer, use the mutex */
   dlib::mutex *mSequenceLock;
+  dlib::mutex *mAssetLock;
   
   /* Sequence number */
   Int64 mSequence;

@@ -32,6 +32,7 @@
 */
 
 #include "component.hpp"
+#include "data_item.hpp"
 #include <stdlib.h>
 
 using namespace std;
@@ -63,6 +64,8 @@ Component::Component(const string& cls, map<string, string> attributes,
   
   mParent = NULL;
   mDevice = NULL;
+  mAvailability = NULL;
+  mAssetChanged = NULL;
   mClass = cls;
   mPrefix = aPrefix;
   mPrefixedClass = aPrefix + ":" + cls;
@@ -157,5 +160,15 @@ Device * Component::getDevice()
     }
   }  
   return mDevice;
+}
+
+void Component::addDataItem(DataItem& dataItem) 
+{ 
+  if (dataItem.getType() == "AVAILABILITY")
+    mAvailability = &dataItem;
+  else if (dataItem.getType() == "ASSET_CHANGED")
+    mAssetChanged = &dataItem;
+    
+  mDataItems.push_back(&dataItem); 
 }
 

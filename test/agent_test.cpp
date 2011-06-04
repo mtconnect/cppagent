@@ -272,7 +272,7 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY("from", "29")
+    PARSE_XML_RESPONSE_QUERY("from", "30")
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
@@ -742,6 +742,8 @@ void AgentTest::testAssetStorage()
   path = "/asset/123";
   string body = "<CuttingTool>TEST</CuttingTool>";
   Agent::key_value_map queries;
+  
+  queries["device"] = "LinuxCNC";
 
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
@@ -757,6 +759,14 @@ void AgentTest::testAssetStorage()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST");
   }
+  
+  // The device should generate an asset changed event as well.
+  path = "/current";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged", "123");
+  }
 }
 
 void AgentTest::testAssetBuffer()
@@ -764,6 +774,8 @@ void AgentTest::testAssetBuffer()
   path = "/asset/1";
   string body = "<CuttingTool>TEST 1</CuttingTool>";
   Agent::key_value_map queries;
+  
+  queries["device"] = "LinuxCNC";
   
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());

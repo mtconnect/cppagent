@@ -57,7 +57,8 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   try
   {
     // Load the configuration for the Agent
-    mConfig = new XmlParser(configXmlPath);
+    mXmlParser = new XmlParser();
+    mDevices = mXmlParser->parseFile(configXmlPath);
   }
   catch (exception & e)
   {
@@ -68,7 +69,6 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   }
   
   // Grab data from configuration
-  mDevices = mConfig->getDevices();
   string time = getCurrentTime(GMT_UV_SEC);
   
   // Unique id number for agent instance
@@ -90,16 +90,57 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   
   // Mutex used for synchronized access to sliding buffer and sequence number
   mSequenceLock = new dlib::mutex;
+  mAssetLock = new dlib::mutex;
   
-  /* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
+  // Add the devices to the device map and create availability and 
+  // asset changed events if they don't exist
   vector<Device *>::iterator device;
   for (device = mDevices.begin(); device != mDevices.end(); ++device) 
   {
     mDeviceMap[(*device)->getName()] = *device;
     
-    std::map<string, DataItem*> items = (*device)->getDeviceDataItems();
+    // Make sure we have two device level data items:
+    // 1. Availability
+    // 2. AssetChanged
+    if ((*device)->getAvailability() == NULL)
+    {
+      // Create availability data item and add it to the device.
+      std::map<string,string> attrs;
+      attrs["type"] = "AVAILABILITY";
+      attrs["id"] = (*device)->getId() + "_avail";
+      attrs["category"] = "EVENT";
+      
+      DataItem *di = new DataItem(attrs);
+      di->setComponent(*(*device));
+      (*device)->addDataItem(*di);
+      (*device)->addDeviceDataItem(*di);
+      (*device)->mAvailabilityAdded = true;
+    }
     
-    std::map<string, DataItem *>::iterator item;
+    if ((*device)->getAssetChanged() == NULL)
+    {
+      // Create availability data item and add it to the device.
+      std::map<string,string> attrs;
+      attrs["type"] = "ASSET_CHANGED";
+      attrs["id"] = (*device)->getId() + "_asset_chg";
+      attrs["category"] = "EVENT";
+      
+      DataItem *di = new DataItem(attrs);
+      di->setComponent(*(*device));
+      (*device)->addDataItem(*di);
+      (*device)->addDeviceDataItem(*di);
+    }
+  }
+  
+  // Reload the document for path resolution
+  mXmlParser->loadDocument(XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence, mDevices));
+   
+  /* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
+  for (device = mDevices.begin(); device != mDevices.end(); ++device) 
+  {
+    const std::map<string, DataItem*> &items = (*device)->getDeviceDataItems();
+    std::map<string, DataItem *>::const_iterator item;
+
     for (item = items.begin(); item != items.end(); ++item)
     {
       // Check for single valued constrained data items.
@@ -130,7 +171,8 @@ Agent::~Agent()
 {
   delete mSlidingBuffer;
   delete mSequenceLock;
-  delete mConfig;
+  delete mAssetLock;
+  delete mXmlParser;
   delete[] mCheckpoints;
 }
 
@@ -241,17 +283,23 @@ const string Agent::on_request (
   return result;
 }
 
-Adapter * Agent::addAdapter(const string& device,
-                            const string& host,
-                            const unsigned int port,
-                            bool start
+Adapter * Agent::addAdapter(const string& aDeviceName,
+                            const string& aHost,
+                            const unsigned int aPort,
+                            bool aStart
                             )
 {
-  Adapter *adapter = new Adapter(device, host, port);
+  Adapter *adapter = new Adapter(aDeviceName, aHost, aPort);
   adapter->setAgent(*this);
   mAdapters.push_back(adapter);
-  if (start)
+  
+  Device *dev = mDeviceMap[aDeviceName];
+  if (dev != NULL && dev->mAvailabilityAdded)
+    adapter->setAutoAvailable(true);
+  
+  if (aStart)
     adapter->start();
+  
   return adapter;
 }
 
@@ -295,27 +343,40 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
   return seqNum;
 }
 
-void Agent::addAsset(const string &aId, const string &aAsset)
+void Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
+                     const string &aTime)
 {
-  dlib::auto_mutex lock(*mSequenceLock);
-  
-  AssetPtr old = mAssetMap[aId];
-  if (old.getObject() != NULL)
-    mAssets.remove(old);
-  
-  AssetPtr ptr(new Asset(aId, aAsset), true);
-  
-  
-  // Check for overflow
-  if (mAssets.size() >= mMaxAssets)
+  // Lock the asset addition to protect from multithreaded collisions. Releaes
+  // before we add the event so we don't cause a race condition.
   {
-    old = mAssets.front();
-    mAssets.pop_front();
-    mAssetMap.erase(old->getAssetId());
+    dlib::auto_mutex lock(*mAssetLock);
+    
+    AssetPtr old = mAssetMap[aId];
+    if (old.getObject() != NULL)
+      mAssets.remove(old);
+    
+    AssetPtr ptr(new Asset(aId, aAsset), true);
+    
+    // Check for overflow
+    if (mAssets.size() >= mMaxAssets)
+    {
+      old = mAssets.front();
+      mAssets.pop_front();
+      mAssetMap.erase(old->getAssetId());
+    }
+    
+    mAssetMap[aId] = ptr;
+    mAssets.push_back(ptr);
   }
   
-  mAssetMap[aId] = ptr;
-  mAssets.push_back(ptr);  
+  // Generate an asset chnaged event.
+  string time;
+  if (aTime.empty())
+    time = getCurrentTime(GMT_UV_SEC);
+  else
+    time = aTime;
+  addToBuffer(aDevice->getAssetChanged(), aId, time);
+  
 }
 
 /* Add values for related data items UNAVAILABLE */
@@ -364,16 +425,14 @@ void Agent::connected(Adapter *anAdapter, vector<Device*> aDevices)
     for (iter = aDevices.begin(); iter != aDevices.end(); ++iter) {
       sLogger << LDEBUG << "Connected to adapter, setting all Availability data items to AVAILABLE";
       
-      std::map<std::string, DataItem *> dataItems = (*iter)->getDeviceDataItems();
-      std::map<std::string, DataItem*>::iterator dataItemAssoc;
-      for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
+      if ((*iter)->getAvailability() != NULL) 
       {
-        DataItem *dataItem = (*dataItemAssoc).second;
-        if (dataItem->getType() == "AVAILABILITY")
-        {
-          sLogger << LDEBUG << "Adding availabilty event for " << dataItem->getId();
-          addToBuffer(dataItem, sAvailable, time);
-        }
+        sLogger << LDEBUG << "Adding availabilty event for " << (*iter)->getAvailability()->getId();
+        addToBuffer((*iter)->getAvailability(), sAvailable, time);
+      }
+      else
+      {
+        sLogger << LDEBUG << "Cannot find availability for " << (*iter)->getName();
       }
     }
   }
@@ -565,7 +624,7 @@ string Agent::handleStream(
   std::set<string> filter;
   try
   {
-    mConfig->getDataItems(filter, path);
+    mXmlParser->getDataItems(filter, path);
   }
   catch (exception& e)
   {
@@ -606,6 +665,8 @@ std::string Agent::handleAssets(std::ostream& aOut,
                                 const std::string& aList)
 {
   using namespace dlib;
+  auto_mutex lock(*mAssetLock);
+  
   istringstream str(aList);
   tokenizer_kernel_1 tok;
   tok.set_stream(str);
@@ -641,8 +702,16 @@ std::string Agent::storeAsset(std::ostream& aOut,
                               const key_value_map& aQueries,
                               const std::string& aId,
                               const std::string& aBody)
-{  
-  addAsset(aId, aBody);
+{
+  string name = aQueries["device"];
+  Device *device = NULL;
+  
+  if (!name.empty()) device = mDeviceMap[name];
+  
+  // If the device was not found or was not provided, use the default device.
+  if (device != NULL) device = mDevices[0];
+
+  addAsset(device, aId, aBody);
   
   return "<success/>";
 }

@@ -65,11 +65,19 @@ agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 }
 
 /* XmlParser public methods */
-XmlParser::XmlParser(const string& xmlPath)
+XmlParser::XmlParser()
 {
+  mDoc = NULL;
+}
+
+std::vector<Device *> XmlParser::parseFile(const std::string &aPath)
+{
+  if (mDoc != NULL)    
+    xmlFreeDoc(mDoc);
+  
   xmlXPathContextPtr xpathCtx = NULL;
   xmlXPathObjectPtr devices = NULL;
-  mDoc = NULL;
+  std::vector<Device *> deviceList;
   
   try
   {
@@ -77,7 +85,7 @@ XmlParser::XmlParser(const string& xmlPath)
     xmlXPathInit();
     xmlSetGenericErrorFunc(NULL, agentXMLErrorFunc);
     
-    THROW_IF_XML2_NULL(mDoc = xmlReadFile(xmlPath.c_str(), NULL, 
+    THROW_IF_XML2_NULL(mDoc = xmlReadFile(aPath.c_str(), NULL, 
                        XML_PARSE_NOBLANKS));
     
     std::string path = "//Devices/*";
@@ -148,7 +156,7 @@ XmlParser::XmlParser(const string& xmlPath)
     // Collect the Devices...
     for (int i = 0; i != nodeset->nodeNr; ++i)
     {
-      mDevices.push_back(static_cast<Device *>(handleComponent(nodeset->nodeTab[i])));
+      deviceList.push_back(static_cast<Device *>(handleComponent(nodeset->nodeTab[i])));
     }
     
     xmlXPathFreeObject(devices);    
@@ -171,12 +179,36 @@ XmlParser::XmlParser(const string& xmlPath)
       xmlXPathFreeContext(xpathCtx);
     throw;
   }
+
+  return deviceList;
 }
 
 XmlParser::~XmlParser()
 {
   if (mDoc != NULL)    
     xmlFreeDoc(mDoc);
+}
+
+void XmlParser::loadDocument(const std::string &aDoc)
+{
+  if (mDoc != NULL)    
+    xmlFreeDoc(mDoc);
+  
+  try
+  {
+    xmlInitParser();
+    xmlXPathInit();
+    xmlSetGenericErrorFunc(NULL, agentXMLErrorFunc);
+    
+    THROW_IF_XML2_NULL(mDoc = xmlReadMemory(aDoc.c_str(), aDoc.length(), 
+                                            "Devices.xml", NULL, XML_PARSE_NOBLANKS));
+  }
+  
+  catch (string e)
+  {
+    sLogger << dlib::LFATAL << "Cannot parse XML document: " << e;
+    throw e;
+  }
 }
 
 void XmlParser::getDataItems(set<string> &aFilterSet,

@@ -41,8 +41,8 @@ using namespace std;
 
 void XmlPrinterTest::setUp()
 {
-  config = new XmlParser("../samples/test_config.xml");
-  devices = config->getDevices();
+  config = new XmlParser();
+  devices = config->parseFile("../samples/test_config.xml");
 }
 
 void XmlPrinterTest::tearDown()
@@ -170,9 +170,8 @@ void XmlPrinterTest::testChangeDevicesNamespace()
   }
   
   {
-    XmlParser ext("../samples/extension.xml");
-    std::vector<Device *> extdevs = ext.getDevices();
-
+    XmlParser ext;
+    std::vector<Device *> extdevs = ext.parseFile("../samples/extension.xml");
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, extdevs));  
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
@@ -223,8 +222,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
   XmlPrinter::clearStreamsNamespaces();
 
   {
-    XmlParser ext("../samples/extension.xml");
-    devices = ext.getDevices();
+    XmlParser ext;
+    devices = ext.parseFile("../samples/extension.xml");
 
     XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.2",
                                     "ExtensionDevices_1.2.xsd",

@@ -37,7 +37,10 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <vector>
 #include "xml_parser.hpp"
+class Device;
+
 
 class XmlParserTest : public CppUnit::TestFixture
 {
@@ -52,6 +55,7 @@ class XmlParserTest : public CppUnit::TestFixture
   
 protected:
   XmlParser * a;
+  std::vector<Device *> mDevices;
   
 protected:
   void testConstructor();

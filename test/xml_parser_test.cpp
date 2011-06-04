@@ -44,7 +44,8 @@ void XmlParserTest::setUp()
   a = NULL;
   try
   {
-    a = new XmlParser("../samples/test_config.xml");
+    a = new XmlParser();
+    mDevices = a->parseFile("../samples/test_config.xml");
   }
   catch (exception & e)
   {
@@ -60,17 +61,18 @@ void XmlParserTest::tearDown()
 
 void XmlParserTest::testConstructor()
 {
-  CPPUNIT_ASSERT_THROW(new XmlParser("../samples/badPath.xml"), std::runtime_error);
-  CPPUNIT_ASSERT_NO_THROW(new
-   XmlParser("../samples/test_config.xml"));
+  a = new XmlParser();
+  CPPUNIT_ASSERT_THROW(a->parseFile("../samples/badPath.xml"), std::runtime_error);
+  delete a;
+  a = new XmlParser();
+  CPPUNIT_ASSERT_NO_THROW(a->parseFile("../samples/test_config.xml"));
 }
 
 void XmlParserTest::testGetDevices()
 {
-  vector<Device *> devices = a->getDevices();
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, devices.size());
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, mDevices.size());
 
-  Device *device = devices.front();
+  Device *device = mDevices.front();
   
   // Check for Description
   CPPUNIT_ASSERT_EQUAL((string) "Linux CNC Device", device->getDescriptionBody());
@@ -105,10 +107,9 @@ void XmlParserTest::testGetDevices()
 
 void XmlParserTest::testCondition()
 {
-  vector<Device *> devices = a->getDevices();
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, devices.size());
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, mDevices.size());
   
-  Device *device = devices.front();
+  Device *device = mDevices.front();
   list<DataItem*> dataItems;
   std::map<string, DataItem *> dataItemsMap = device->getDeviceDataItems();  
   
@@ -138,7 +139,8 @@ void XmlParserTest::testGetDataItems()
   delete a; a = NULL;
   try
   {
-    a = new XmlParser("../samples/extension.xml");
+    a = new XmlParser();
+    a->parseFile("../samples/extension.xml");
   }
   catch (exception & e)
   {
@@ -160,17 +162,17 @@ void XmlParserTest::testExtendedSchema()
   delete a; a = NULL;
   try
   {
-    a = new XmlParser("../samples/extension.xml");
+    a = new XmlParser();
+    mDevices = a->parseFile("../samples/extension.xml");
   }
   catch (exception & e)
   {
     CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
   }
   
-  vector<Device *> devices = a->getDevices();
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, devices.size());
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, mDevices.size());
   
-  Device *device = devices.front();
+  Device *device = mDevices.front();
   
   // Check for Description
   CPPUNIT_ASSERT_EQUAL((string) "Extended Schema.", device->getDescriptionBody());
@@ -188,7 +190,7 @@ void XmlParserTest::testExtendedSchema()
 
 void XmlParserTest::testTimeSeries()
 {
-  Device *dev = a->getDevices()[0];
+  Device *dev = mDevices[0];
   CPPUNIT_ASSERT(dev != NULL);
   
   DataItem *item = dev->getDeviceDataItem("Xact");

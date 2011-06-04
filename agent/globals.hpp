@@ -57,7 +57,7 @@ const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 
 /* Size of buffer exponent: 2^SLIDING_BUFFER_EXP */
 const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
-const unsigned int DEFAULT_MAX_ASSETS_EXP = 8;
+const unsigned int DEFAULT_MAX_ASSETS = 1024;
 
 /* Message for when enumerations do not exist in an array/enumeration */
 const int ENUM_MISS = -1;

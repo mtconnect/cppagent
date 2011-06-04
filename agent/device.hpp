@@ -57,12 +57,13 @@ public:
   void addAdapter(Adapter *anAdapter) { mAdapters.push_back(anAdapter); }
   
   /* Return the mapping of Device to data items */
-  const std::map<std::string, DataItem *> getDeviceDataItems() const {
+  const std::map<std::string, DataItem *> &getDeviceDataItems() const {
     return mDeviceDataItemsById;
   }
 
   std::vector<Adapter*> mAdapters;
   bool mPreserveUuid;
+  bool mAvailabilityAdded;
 
 protected:
   /* The iso841Class of the device */
@@ -72,8 +73,6 @@ protected:
   std::map<std::string, DataItem *> mDeviceDataItemsByName;
   std::map<std::string, DataItem *> mDeviceDataItemsById;
   std::map<std::string, DataItem *> mDeviceDataItemsBySource;
-  
-  
 };
 
 #endif

@@ -127,19 +127,20 @@ void Adapter::processData(const string& data)
   getline(toParse, key, '|');
   getline(toParse, value, '|');
   
-  if (key == "@ASSET@") {
-    string rest;
-    getline(toParse, rest);
-    mAgent->addAsset(value, rest);
-  }
-
-  DataItem *dataItem;
   if (splitKey(key, dev)) {
     device = mAgent->getDeviceByName(dev);
   } else {
     device = mDevice;
   }
+
+  if (key == "@ASSET@") {
+    string rest;
+    getline(toParse, rest);
+    mAgent->addAsset(device, value, rest, time);
+  }
+
     
+  DataItem *dataItem;
   if (device != NULL) {
     dataItem = device->getDeviceDataItem(key);    
   

@@ -161,7 +161,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", false);
   int port = get_with_default(reader, "Port", 5000);
   int bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
-  int maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS_EXP);
+  int maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
   int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
   mPidFile = get_with_default(reader, "PidFile", "agent.pid");
   const char *probe;
