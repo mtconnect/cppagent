@@ -201,10 +201,8 @@ void Agent::registerFile(const string &aUri, const string &aPath)
 }
 
 // Methods for service
-const string Agent::on_request (
-                                const incoming_things& incoming,
-                                outgoing_things& outgoing
-                                )
+const string Agent::on_request (const incoming_things& incoming,
+                                outgoing_things& outgoing)
 {
   string result;
   outgoing.headers["Content-Type"] = "text/xml";
@@ -947,15 +945,13 @@ string Agent::devicesAndPath(const string& path, const string& device)
   return dataPath;
 }
 
-int Agent::checkAndGetParam(
-                            string& result,
+int Agent::checkAndGetParam(string& result,
                             const key_value_map& queries,
                             const string& param,
                             const int defaultValue,
                             const int minValue,
                             bool minError,
-                            const int maxValue
-                            )
+                            const int maxValue)
 {
   if (queries.count(param) == 0)
   {
@@ -998,15 +994,13 @@ int Agent::checkAndGetParam(
   return value;
 }
 
-Int64 Agent::checkAndGetParam64(
-                                string& result,
+Int64 Agent::checkAndGetParam64(string& result,
                                 const key_value_map& queries,
                                 const string& param,
                                 const Int64 defaultValue,
                                 const Int64 minValue,
                                 bool minError,
-                                const Int64 maxValue
-                                )
+                                const Int64 maxValue)
 {
   if (queries.count(param) == 0)
   {

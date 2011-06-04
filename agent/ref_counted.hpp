@@ -68,11 +68,11 @@ public:
   T *operator=(T *aEvent) { return setObject(aEvent); }  
   T *operator=(RefCountedPtr<T> &aPtr) { return setObject(aPtr.getObject()); }
   
-  bool operator==(const RefCountedPtr<T> &aOther) {
+  bool operator==(const RefCountedPtr &aOther) {
     return *mObject == *(aOther.mObject);
   }
   
-  inline bool operator<(RefCountedPtr<T> &aOther);
+  inline bool operator<(const RefCountedPtr &aOther);
 
 
 protected:
@@ -98,7 +98,7 @@ inline T *RefCountedPtr<T>::setObject(T *aEvent, bool aTakeRef) {
 }
 
 template<class T>
-inline bool RefCountedPtr<T>::operator<(RefCountedPtr<T> &aOther)
+inline bool RefCountedPtr<T>::operator<(const RefCountedPtr<T> &aOther)
 {
   return (*mObject) < (*aOther.mObject);
 }
