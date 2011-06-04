@@ -366,13 +366,13 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
 }
 
 xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
-				       string body)
+                                       string body, Agent::key_value_map &aQueries)
 {
   struct Agent::incoming_things incoming;
   struct Agent::outgoing_things outgoing;
   incoming.request_type = "PUT";
   incoming.path = path;
-  incoming.queries = queries;
+  incoming.queries = aQueries;
   incoming.cookies = cookies;
   incoming.headers = incoming_headers;
   incoming.body = body;
@@ -384,7 +384,7 @@ xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
   string message = (string) "No response to request" + path;
 
   CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, sourceLine);
-  
+
   return xmlParseMemory(result.c_str(), result.length());
 }
 
@@ -741,12 +741,13 @@ void AgentTest::testAssetStorage()
 {
   path = "/asset/123";
   string body = "<CuttingTool>TEST</CuttingTool>";
+  Agent::key_value_map queries;
 
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
 
   {
-    PARSE_XML_RESPONSE_PUT(body);
+    PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
   }
   
@@ -769,3 +770,26 @@ void AgentTest::testAssetError()
   }
 }
 
+void AgentTest::testPut()
+{
+  Agent::key_value_map queries;
+  string body;
+
+  queries["time"] = "TIME";
+  queries["line"] = "205";
+  queries["power"] = "ON";
+  path = "/LinuxCNC";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+  }
+
+  path = "/LinuxCNC/current";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "TIME");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
+  }
+}

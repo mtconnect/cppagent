@@ -472,18 +472,41 @@ string Agent::handlePut(
     return printError("UNSUPPORTED", message);
   }
   
-  std::vector<Adapter*>::iterator adpt;
-  
-  for (adpt = dev->mAdapters.begin(); adpt != dev->mAdapters.end(); adpt++) {
+  // First check if this is an adapter put or a data put...
+  if (queries["_type"] == "command") 
+  {
+    std::vector<Adapter*>::iterator adpt;
+    
+    for (adpt = dev->mAdapters.begin(); adpt != dev->mAdapters.end(); adpt++) {
+      key_value_map::const_iterator kv;
+      for (kv = queries.begin(); kv != queries.end(); kv++) {
+        string command = kv->first + "=" + kv->second;
+        sLogger << LDEBUG << "Sending command '" << command << "' to " << device;
+        (*adpt)->sendCommand(command);
+      }
+    }
+  } 
+  else
+  {
+    string time = queries["time"];
+    if (time.empty())
+      time = getCurrentTime(GMT_UV_SEC);
+
     key_value_map::const_iterator kv;
     for (kv = queries.begin(); kv != queries.end(); kv++) {
-      string command = kv->first + "=" + kv->second;
-      sLogger << LDEBUG << "Sending command '" << command << "' to " << device;
-      (*adpt)->sendCommand(command);
+      if (kv->first != "time") 
+      {
+        DataItem *di = dev->getDeviceDataItem(kv->first);
+        if (di != NULL)
+          addToBuffer(di, kv->second, time);
+        else
+          sLogger << LWARN << "(" << device << ") Could not find data item: " << kv->first;
+      }
     }
+    
   }
   
-  return "";
+  return "<success/>";
 }
 
 string Agent::handleProbe(const string& name)
