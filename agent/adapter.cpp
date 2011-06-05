@@ -46,7 +46,8 @@ Adapter::Adapter(
     const unsigned int port
   )
   : Connector(server, port), mDeviceName(device), mRunning(true),
-    mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false)
+    mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false),
+    mGatheringAsset(false)
 {
 }
 
@@ -112,6 +113,21 @@ inline static void trim(std::string &str)
 
 void Adapter::processData(const string& data)
 {
+  if (mGatheringAsset)
+  {
+    if (data == mTerminator)
+    {
+      mAgent->addAsset(mAssetDevice, mAssetId, mBody.str(), mTime);
+      mGatheringAsset = false;
+    }
+    else
+    {
+      mBody << data << endl;
+    }
+    
+    return;
+  }
+  
   istringstream toParse(data);
   string key, value, dev;
   Device *device;
@@ -136,7 +152,25 @@ void Adapter::processData(const string& data)
   if (key == "@ASSET@") {
     string rest;
     getline(toParse, rest);
-    mAgent->addAsset(device, value, rest, time);
+    
+    // if the rest of the line begins with --multiline--... then 
+    // set multiline and accumulate until a completed document is found
+    if (rest.find("--multiline--") != rest.npos)
+    {
+      mAssetDevice = device;
+      mGatheringAsset = true;
+      mTerminator = rest;
+      mTime = time;
+      mAssetId = value;
+      mBody.str("");
+      mBody.clear();
+    }
+    else
+    {
+      mAgent->addAsset(device, value, rest, time);
+    }
+    
+    return;
   }
 
     

@@ -35,6 +35,7 @@
 #define ADAPTER_HPP
 
 #include <string>
+#include <sstream>
 
 #include "dlib/sockets.h"
 #include "dlib/threads.h"
@@ -99,6 +100,14 @@ protected:
   bool mDupCheck;
   bool mAutoAvailable;
   bool mIgnoreTimestamps;
+  
+  // For multiline asset parsing...
+  bool mGatheringAsset;
+  std::string mTerminator;
+  std::string mAssetId;
+  std::string mTime;
+  std::ostringstream mBody;
+  Device *mAssetDevice;
     
 private:
   /* Inherited and is run as part of the threaded_object */

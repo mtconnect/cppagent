@@ -939,6 +939,37 @@ void AgentTest::testAdapterAddAsset()
 
 }
 
+void AgentTest::testMultiLineAsset()
+{
+  testAddAdapter();
+  
+  adapter->parseBuffer("TIME|@ASSET@|111|--multiline--AAAA\n");
+  adapter->parseBuffer("<CuttingTool>\n"
+                       "  <CuttingToolLifeCycle>TEST 1</CuttingToolLifeCycle>\n");
+  adapter->parseBuffer("</CuttingTool>\n"
+                       "--multiline--AAAA\n");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  
+  path = "/asset/111";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool/m:CuttingToolLifeCycle", "TEST 1");
+  }  
+  
+  // Make sure we can still add a line and we are out of multiline mode...
+  path = "/current";  
+  adapter->processData("TIME|line|204");
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", "204");
+  }
+
+}
+
 void AgentTest::testPut()
 {
   Agent::key_value_map queries;
