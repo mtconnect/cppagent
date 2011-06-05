@@ -218,7 +218,7 @@ string addNamespace(const string aPath, const string aPrefix)
       pos++;
 
     // Make sure there are no existing prefixes
-    if (newPath[pos] != '*' && !hasNamespace(newPath, pos))
+    if (newPath[pos] != '*' && newPath[pos] != '\0' && !hasNamespace(newPath, pos))
       insertPrefix(newPath, pos, aPrefix);
   }
 

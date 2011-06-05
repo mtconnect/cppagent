@@ -669,9 +669,9 @@ std::string Agent::handleAssets(std::ostream& aOut,
   tokenizer_kernel_1 tok;
   tok.set_stream(str);
   tok.set_identifier_token(tok.lowercase_letters() + tok.uppercase_letters() +
-                           tok.numbers() + "_",
+                           tok.numbers() + "_.@$%&^:+-_=",
                            tok.lowercase_letters() + tok.uppercase_letters() +
-                           tok.numbers() + "_");
+                           tok.numbers() + "_.@$%&^:+-_=");
   
   
   int type;
@@ -707,7 +707,7 @@ std::string Agent::storeAsset(std::ostream& aOut,
   if (!name.empty()) device = mDeviceMap[name];
   
   // If the device was not found or was not provided, use the default device.
-  if (device != NULL) device = mDevices[0];
+  if (device == NULL) device = mDevices[0];
 
   addAsset(device, aId, aBody);
   

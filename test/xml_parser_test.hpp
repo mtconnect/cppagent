@@ -51,6 +51,7 @@ class XmlParserTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testGetDataItems);
   CPPUNIT_TEST(testExtendedSchema);
   CPPUNIT_TEST(testTimeSeries);
+  CPPUNIT_TEST(testGetDataItemsExt);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -64,6 +65,7 @@ protected:
   void testGetDataItems();
   void testExtendedSchema();
   void testTimeSeries();
+  void testGetDataItemsExt();
   
 public:
   void setUp();

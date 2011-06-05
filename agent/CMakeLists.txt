@@ -27,7 +27,8 @@ endif(UNIX)
 project (agent)
 
 set(agent_srcs cppagent.cpp 
-	       adapter.cpp 
+	       adapter.cpp
+	       asset.cpp
 	       agent.cpp 
 	       checkpoint.cpp
 	       component.cpp 
@@ -39,6 +40,7 @@ set(agent_srcs cppagent.cpp
 	       options.cpp
 	       service.cpp
 	       config.cpp
+           ref_counted.cpp
 	       xml_parser.cpp 
 	       xml_printer.cpp)
 

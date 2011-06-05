@@ -134,9 +134,21 @@ void XmlParserTest::testGetDataItems()
   filter.clear();
   a->getDataItems(filter, "//Controller/electric/*");
   CPPUNIT_ASSERT_EQUAL(0, (int) filter.size());
+  
+  filter.clear();
+  a->getDataItems(filter, "//Device/DataItems");
+  CPPUNIT_ASSERT_EQUAL(2, (int) filter.size());  
+  
+  filter.clear();
+  a->getDataItems(filter, "//Device/DataItems/");
+  CPPUNIT_ASSERT_EQUAL(0, (int) filter.size());  
+}
+
+void XmlParserTest::testGetDataItemsExt()
+{
+  std::set<string> filter;
 
   // For the rest we will check with the extended schema
-  delete a; a = NULL;
   try
   {
     a = new XmlParser();

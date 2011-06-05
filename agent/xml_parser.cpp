@@ -273,6 +273,10 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
             xmlFree(id);
           }
         }
+        else if (xmlStrcmp(n->name, BAD_CAST "DataItems") == 0)
+        { // Handle case where we are specifying the data items node...
+          getDataItems(aFilterSet, "DataItem", n);          
+        }
         else // Find all the data items below this node
         {
           getDataItems(aFilterSet, "*//DataItem", n);

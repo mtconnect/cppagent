@@ -187,4 +187,7 @@ void GlobalsTest::testAddNamespace()
 
   result = addNamespace("//Device//*|//x:Foo", "m");
   CPPUNIT_ASSERT_EQUAL(string("//m:Device//*|//x:Foo"), result);
+  
+  result = addNamespace("//Device/DataItems/", "m");
+  CPPUNIT_ASSERT_EQUAL(string("//m:Device/m:DataItems/"), result);
 }
