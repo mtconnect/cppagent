@@ -146,4 +146,27 @@ void ConfigTest::testDefaultPreserveOverride()
   CPPUNIT_ASSERT(!device->mPreserveUuid);
 }
 
+void ConfigTest::testDisablePut()
+{
+  istringstream str("Devices = ../samples/test_config.xml\n"
+                    "AllowPut = true\n");
+  mConfig->loadConfig(str);
+  
+  Agent *agent = mConfig->getAgent();
+  CPPUNIT_ASSERT(agent);
+
+  CPPUNIT_ASSERT(agent->isPutEnabled());
+}
+
+void ConfigTest::testLimitPut()
+{
+  istringstream str("Devices = ../samples/test_config.xml\n"
+                    "AllowPutFrom = localhost\n");
+  mConfig->loadConfig(str);
+  
+  Agent *agent = mConfig->getAgent();
+  CPPUNIT_ASSERT(agent);
+  
+  CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "127.0.0.1"));
+}
 

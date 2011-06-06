@@ -152,6 +152,12 @@ public:
   virtual void start();
 
   void registerFile(const std::string &aUri, const std::string &aPath);
+  
+  // PUT and POST handling
+  void enablePut(bool aFlag = true) { mPutEnabled = aFlag; }
+  bool isPutEnabled() { return mPutEnabled; }
+  void allowPutFrom(const std::string &aHost) { mPutAllowedHosts.insert(aHost); }
+  bool isPutAllowedFrom(const std::string &aHost) { return mPutAllowedHosts.count(aHost) > 0; }
     
 protected:
   /* HTTP methods to handle the 3 basic calls */
@@ -252,7 +258,7 @@ protected:
   
   /* Find data items by name/id */
   DataItem * getDataItemById(const std::string& id) { return mDataItemMap[id]; }
-
+  
 protected:
   /* Unique id based on the time of creation */
   unsigned int mInstanceId;
@@ -292,6 +298,10 @@ protected:
   // For file handling, small files will be cached
   std::map<std::string, std::string> mFileMap;
   std::map<std::string, std::string> mFileCache;
+  
+  // Put handling controls
+  bool mPutEnabled;
+  std::set<std::string> mPutAllowedHosts;
 };
 
 #endif

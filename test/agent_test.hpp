@@ -78,6 +78,8 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAssetError);
   CPPUNIT_TEST(testAssetBuffer);
   CPPUNIT_TEST(testPut);
+  CPPUNIT_TEST(testPutBlocking);
+  CPPUNIT_TEST(testPutBlockingFrom);
   CPPUNIT_TEST(testAdapterAddAsset);
   CPPUNIT_TEST(testMultiLineAsset);
   CPPUNIT_TEST_SUITE_END();
@@ -89,6 +91,7 @@ protected:
   Agent *a;
   Adapter *adapter;
   std::string agentId;
+  std::string incomingIp;
   
   bool response;
   std::string path;
@@ -153,6 +156,8 @@ protected:
   
   // Test put for data items
   void testPut();
+  void testPutBlocking();
+  void testPutBlockingFrom();
     
   /* Helper method to test expected string, given optional query, & run tests */
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine,

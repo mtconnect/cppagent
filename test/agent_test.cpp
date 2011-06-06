@@ -376,6 +376,7 @@ xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
   incoming.cookies = cookies;
   incoming.headers = incoming_headers;
   incoming.body = body;
+  incoming.foreign_ip = incomingIp;
   
   outgoing.out = &out;
     
@@ -739,6 +740,7 @@ void AgentTest::testIgnoreTimestamps()
 
 void AgentTest::testAssetStorage()
 {
+  a->enablePut();
   path = "/asset/123";
   string body = "<CuttingTool>TEST</CuttingTool>";
   Agent::key_value_map queries;
@@ -771,6 +773,7 @@ void AgentTest::testAssetStorage()
 
 void AgentTest::testAssetBuffer()
 {
+  a->enablePut();
   path = "/asset/1";
   string body = "<CuttingTool>TEST 1</CuttingTool>";
   Agent::key_value_map queries;
@@ -974,6 +977,7 @@ void AgentTest::testPut()
 {
   Agent::key_value_map queries;
   string body;
+  a->enablePut();
 
   queries["time"] = "TIME";
   queries["line"] = "205";
@@ -992,4 +996,63 @@ void AgentTest::testPut()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
   }
+}
+
+// Test diabling of HTTP PUT or POST
+void AgentTest::testPutBlocking()
+{
+  Agent::key_value_map queries;
+  string body;
+  
+  queries["time"] = "TIME";
+  queries["line"] = "205";
+  queries["power"] = "ON";
+  path = "/LinuxCNC";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Only the HTTP GET request is supported");
+  }
+}
+
+// Test diabling of HTTP PUT or POST
+void AgentTest::testPutBlockingFrom()
+{
+  Agent::key_value_map queries;
+  string body;
+  a->enablePut();
+  
+  incomingIp = "127.0.0.1";
+  a->allowPutFrom("192.168.0.1");
+  
+  queries["time"] = "TIME";
+  queries["line"] = "205";
+  path = "/LinuxCNC";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT is not allowed from 127.0.0.1");
+  } 
+  
+  path = "/LinuxCNC/current";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "UNAVAILABLE");
+  }
+  
+  // Retry request after adding ip address
+  path = "/LinuxCNC";
+  a->allowPutFrom("127.0.0.1");
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+  }
+  
+  path = "/LinuxCNC/current";
+  
+  {
+    PARSE_XML_RESPONSE
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
+  } 
 }

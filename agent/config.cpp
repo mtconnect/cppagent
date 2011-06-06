@@ -194,6 +194,17 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   for (int i = 0; i < mAgent->getDevices().size(); i++)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
     
+  bool putEnabled = get_bool_with_default(reader, "AllowPut", false);
+  mAgent->enablePut(putEnabled);
+  
+  string putHost = get_with_default(reader, "AllowPutFrom", "");
+  if (!putHost.empty())
+  {
+    string ip;
+    if (dlib::hostname_to_ip(putHost, ip) == 0) 
+      mAgent->allowPutFrom(ip);
+  }
+  
   Device *device;
   if (reader.is_block_defined("Adapters")) {
     const config_reader::kernel_1a &adapters = reader.block("Adapters");

@@ -51,6 +51,8 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAdapter);
   CPPUNIT_TEST(testDefaultPreserveUUID);
   CPPUNIT_TEST(testDefaultPreserveOverride);
+  CPPUNIT_TEST(testDisablePut);
+  CPPUNIT_TEST(testLimitPut);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -67,6 +69,8 @@ protected:
   void testAdapter();
   void testDefaultPreserveUUID();
   void testDefaultPreserveOverride();
+  void testDisablePut();
+  void testLimitPut();
 };
 
 #endif

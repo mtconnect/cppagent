@@ -53,6 +53,7 @@ static dlib::logger sLogger("agent");
 
 /* Agent public methods */
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int aCheckpointFreq)
+  : mPutEnabled(false)
 {
   try
   {
@@ -209,12 +210,29 @@ const string Agent::on_request (const incoming_things& incoming,
   try 
   {
     sLogger << LDEBUG << "Request: " << incoming.request_type << " " << 
-    incoming.path << " from " << incoming.foreign_ip << ":" << incoming.foreign_port;
+      incoming.path << " from " << incoming.foreign_ip << ":" << incoming.foreign_port;
     
-    if (incoming.request_type != "GET" && incoming.request_type != "PUT" &&
-        incoming.request_type != "POST") {
-      return printError("UNSUPPORTED",
-                        "Only the HTTP GET and PUT requests are supported by MTConnect");
+    if (mPutEnabled)
+    {
+      if ((incoming.request_type == "PUT" || incoming.request_type == "POST") && 
+          !mPutAllowedHosts.empty() && mPutAllowedHosts.count(incoming.foreign_ip) == 0)
+      {
+        return printError("UNSUPPORTED",
+                          "HTTP PUT is not allowed from " + incoming.foreign_ip);        
+      }
+      
+      if (incoming.request_type != "GET" && incoming.request_type != "PUT" &&
+          incoming.request_type != "POST") {
+        return printError("UNSUPPORTED",
+                          "Only the HTTP GET and PUT requests are supported");
+      }
+    }
+    else
+    {
+      if (incoming.request_type != "GET") {
+        return printError("UNSUPPORTED",
+                          "Only the HTTP GET request is supported");
+      }      
     }
     
     // Parse the URL path looking for '/'
