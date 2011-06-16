@@ -105,6 +105,7 @@ protected:
   bool mGatheringAsset;
   std::string mTerminator;
   std::string mAssetId;
+  std::string mAssetType;
   std::string mTime;
   std::ostringstream mBody;
   Device *mAssetDevice;

@@ -122,6 +122,7 @@ public:
   
   // Add an asset to the agent
   void addAsset(Device *aDevice, const std::string &aId, const std::string &aAsset,
+                const std::string &aType,
                 const std::string &aTime = "");
   
   /* Message when adapter has connected and disconnected */
@@ -197,9 +198,9 @@ protected:
 			   const std::string& aList);
 			   
   std::string storeAsset(std::ostream& aOut,
-			 const key_value_map& aQueries,
-			 const std::string& aAsset,
-			 const std::string& aBody);
+                         const key_value_map& aQueries,
+                         const std::string& aAsset,
+                         const std::string& aBody);
   
   /* Stream the data to the user */
   void streamData(

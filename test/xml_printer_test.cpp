@@ -470,7 +470,7 @@ void XmlPrinterTest::testPrintAsset()
 {
   // Add the xml to the agent...
   vector<AssetPtr> assets;
-  Asset asset((string) "123", (string) "HELLO");
+  Asset asset((string) "123", (string) "TEST", (string) "HELLO");
   assets.push_back(asset);
   
   {
@@ -480,6 +480,21 @@ void XmlPrinterTest::testPrintAsset()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@assetBufferSize", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets", "HELLO");
   }
+}
+
+void XmlPrinterTest::testPrintAssetProbe()
+{
+  // Add the xml to the agent...
+  vector<XmlPrinter::AssetCount> counts;
+  XmlPrinter::AssetCount count;
+  count.mType = "CuttingTool";
+  count.mCount = 10;
+  counts.push_back(count);
+
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices, &counts));
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount", "10");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount@assetType", "CuttingTool");
 }
 
 

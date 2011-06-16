@@ -36,10 +36,11 @@
 
 using namespace std;
 
-Asset::Asset(string aAssetId, string aContent)
+Asset::Asset(string aAssetId, string aType, string aContent)
 {
   mAssetId = aAssetId;
   mContent = aContent;
+  mType = aType;
 }
 
 Asset::~Asset()

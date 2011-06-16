@@ -70,7 +70,8 @@ namespace XmlPrinter {
                   const unsigned int instanceId,
                   const unsigned int bufferSize,
                   const Int64 nextSeq,
-                  const Int64 firstSeq = 0);  
+                  const Int64 firstSeq = 0,
+                  std::vector<AssetCount> *aCounts = NULL);  
 
   /* Helper to print individual components and details */
   void printProbeHelper(xmlTextWriterPtr writer, Component *component);
@@ -248,7 +249,8 @@ string XmlPrinter::printProbe(
     const unsigned int instanceId,
     const unsigned int bufferSize,
     const Int64 nextSeq,
-    vector<Device *>& deviceList
+    vector<Device *>& deviceList,
+    vector<AssetCount> *aCount                          
   )
 {
   xmlTextWriterPtr writer;
@@ -264,7 +266,8 @@ string XmlPrinter::printProbe(
     initXmlDoc(writer, eDEVICES,
                 instanceId,
                 bufferSize,
-                nextSeq);
+                nextSeq, 0,
+                aCount);
     
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Devices"));
     
@@ -637,11 +640,13 @@ void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
 }
 
 /* XmlPrinter helper Methods */
-void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
+void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, 
+                            EDocumentType aType,
                             const unsigned int instanceId,
                             const unsigned int bufferSize,
                             const Int64 nextSeq,
-                            const Int64 firstSeq
+                            const Int64 firstSeq,
+                            vector<AssetCount> *aCount
                             )
 {
   THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL));
@@ -697,10 +702,14 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
   map<string, SchemaNamespace>::iterator ns;
   for (ns = namespaces->begin(); ns != namespaces->end(); ns++)
   {
-    string attr = "xmlns:" + ns->first;
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST attr.c_str(),
-                                                    BAD_CAST ns->second.mUrn.c_str()));
+    // Skip the mtconnect ns (always m)
+    if (ns->first != "m")
+    {
+      string attr = "xmlns:" + ns->first;
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                      BAD_CAST attr.c_str(),
+                                                      BAD_CAST ns->second.mUrn.c_str()));
+    }
     
     // Always take the first location. There should only be one location!
     if (location.empty() && !ns->second.mSchemaLocation.empty())
@@ -748,6 +757,23 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
                                                     BAD_CAST int64ToString(firstSeq).c_str()));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "lastSequence", 
                                                     BAD_CAST int64ToString(nextSeq - 1).c_str()));
+  }
+  
+  if (aType == eDEVICES && aCount != NULL && aCount->size() > 0)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCounts"));
+
+    vector<AssetCount>::const_iterator iter;
+    for (iter = aCount->begin(); iter != aCount->end(); ++iter)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCount"));
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetType", 
+                                                      BAD_CAST iter->mType.c_str()));
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST int64ToString(iter->mCount).c_str()));
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
   }
   
   THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));

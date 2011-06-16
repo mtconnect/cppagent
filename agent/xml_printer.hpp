@@ -37,6 +37,7 @@
 #include <map>
 #include <list>
 #include <string>
+#include <vector>
 
 #include <libxml/xmlwriter.h>
 
@@ -49,6 +50,11 @@ class DataItem;
 
 namespace XmlPrinter
 {
+  struct AssetCount {
+    std::string mType;
+    int mCount;
+  };
+  
   /***** Main methods to call *****/
   std::string printError(
     const unsigned int instanceId,
@@ -62,7 +68,8 @@ namespace XmlPrinter
     const unsigned int instanceId,
     const unsigned int bufferSize,
     const Int64 nextSeq,
-    std::vector<Device *>& devices
+    std::vector<Device *>& devices,
+    std::vector<AssetCount> *aCounts = NULL
   );
   
   std::string printSample(

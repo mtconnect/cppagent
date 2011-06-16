@@ -360,6 +360,7 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
 }
 
 void Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
+                     const string &aType,
                      const string &aTime)
 {
   // Lock the asset addition to protect from multithreaded collisions. Releaes
@@ -371,7 +372,7 @@ void Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     if (old.getObject() != NULL)
       mAssets.remove(old);
     
-    AssetPtr ptr(new Asset(aId, aAsset), true);
+    AssetPtr ptr(new Asset(aId, aType, aAsset), true);
     
     // Check for overflow
     if (mAssets.size() >= mMaxAssets)
@@ -391,7 +392,7 @@ void Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     time = getCurrentTime(GMT_UV_SEC);
   else
     time = aTime;
-  addToBuffer(aDevice->getAssetChanged(), aId, time);
+  addToBuffer(aDevice->getAssetChanged(), aType + "|" + aId, time);
   
 }
 
@@ -720,6 +721,7 @@ std::string Agent::storeAsset(std::ostream& aOut,
                               const std::string& aBody)
 {
   string name = aQueries["device"];
+  string type = aQueries["type"];
   Device *device = NULL;
   
   if (!name.empty()) device = mDeviceMap[name];
@@ -727,7 +729,7 @@ std::string Agent::storeAsset(std::ostream& aOut,
   // If the device was not found or was not provided, use the default device.
   if (device == NULL) device = mDevices[0];
 
-  addAsset(device, aId, aBody);
+  addAsset(device, aId, aBody, type);
   
   return "<success/>";
 }

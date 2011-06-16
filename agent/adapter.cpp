@@ -150,7 +150,8 @@ void Adapter::processData(const string& data)
   }
 
   if (key == "@ASSET@") {
-    string rest;
+    string type, rest;
+    getline(toParse, type, '|');
     getline(toParse, rest);
     
     // if the rest of the line begins with --multiline--... then 
@@ -161,13 +162,14 @@ void Adapter::processData(const string& data)
       mGatheringAsset = true;
       mTerminator = rest;
       mTime = time;
+      mAssetType = type;
       mAssetId = value;
       mBody.str("");
       mBody.clear();
     }
     else
     {
-      mAgent->addAsset(device, value, rest, time);
+      mAgent->addAsset(device, value, rest, type, time);
     }
     
     return;

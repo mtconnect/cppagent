@@ -68,6 +68,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testTimeSeries);
   CPPUNIT_TEST(testNonPrintableCharacters);
   CPPUNIT_TEST(testPrintAsset);
+  CPPUNIT_TEST(testPrintAssetProbe);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -100,6 +101,7 @@ protected:
 
   // Asset tests
   void testPrintAsset();
+  void testPrintAssetProbe();
   
   /* Retrieve a data item by name string */
   DataItem * getDataItem(const char *name);

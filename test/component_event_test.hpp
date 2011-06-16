@@ -55,6 +55,7 @@ class ComponentEventTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testCondition);
   CPPUNIT_TEST(testTimeSeries);
   CPPUNIT_TEST(testDuration);
+  CPPUNIT_TEST(testAssetChanged);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -77,6 +78,7 @@ protected:
   void testCondition();
   void testTimeSeries();
   void testDuration();
+  void testAssetChanged();
   
   /* Helper to test values */
   void testValueHelper(

@@ -350,6 +350,29 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
     }
   }
   
+  if (reader.is_block_defined("AssetsNamespaces")) {
+    const config_reader::kernel_1a &namespaces = reader.block("AssetsNamespaces");
+    vector<string> blocks;
+    namespaces.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &ns = namespaces.block(*block);
+      if (!ns.is_key_defined("Urn"))
+      {
+        sLogger << LERROR << "Name space must have a Urn: " << *block;
+      } else {
+        string location;
+        if (ns.is_key_defined("Location"))
+          location = ns["Location"];
+        XmlPrinter::addAssetsNamespace(ns["Urn"], location, *block);
+        if (ns.is_key_defined("Path") && !location.empty())
+          mAgent->registerFile(location, ns["Path"]);        
+      }
+    }
+  }
+
   if (reader.is_block_defined("ErrorNamespaces")) {
     const config_reader::kernel_1a &namespaces = reader.block("ErrorNamespaces");
     vector<string> blocks;

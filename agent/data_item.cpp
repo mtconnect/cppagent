@@ -81,6 +81,7 @@ DataItem::DataItem(std::map<string, string> attributes)
   mType = attributes["type"];
   mIsAlarm = (mType == "ALARM");
   mIsMessage = (mType == "MESSAGE");
+  mIsAssetChanged = (mType == "ASSET_CHANGED");
 
   mCamelType = getCamelType(mType, mPrefix);
   if (attributes["representation"] == "TIME_SERIES")

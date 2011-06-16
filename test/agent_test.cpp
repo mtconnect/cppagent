@@ -745,6 +745,7 @@ void AgentTest::testAssetStorage()
   string body = "<CuttingTool>TEST</CuttingTool>";
   Agent::key_value_map queries;
   
+  queries["type"] = "CuttingTool";
   queries["device"] = "LinuxCNC";
 
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
@@ -768,6 +769,7 @@ void AgentTest::testAssetStorage()
   {
     PARSE_XML_RESPONSE
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged", "123");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@assetType", "CuttingTool");
   }
 }
 
@@ -779,7 +781,8 @@ void AgentTest::testAssetBuffer()
   Agent::key_value_map queries;
   
   queries["device"] = "LinuxCNC";
-  
+  queries["type"] = "CuttingTool";
+
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
   
@@ -928,7 +931,7 @@ void AgentTest::testAdapterAddAsset()
 {
   testAddAdapter();
   
-  adapter->processData("TIME|@ASSET@|111|<CuttingTool>TEST 1</CuttingTool>");
+  adapter->processData("TIME|@ASSET@|111|CuttingTool|<CuttingTool>TEST 1</CuttingTool>");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
   
@@ -946,7 +949,7 @@ void AgentTest::testMultiLineAsset()
 {
   testAddAdapter();
   
-  adapter->parseBuffer("TIME|@ASSET@|111|--multiline--AAAA\n");
+  adapter->parseBuffer("TIME|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
   adapter->parseBuffer("<CuttingTool>\n"
                        "  <CuttingToolLifeCycle>TEST 1</CuttingToolLifeCycle>\n");
   adapter->parseBuffer("</CuttingTool>\n"

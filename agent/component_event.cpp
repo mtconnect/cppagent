@@ -1,35 +1,35 @@
 /*
-* Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above copyright
-*       notice, this list of conditions and the following disclaimer in the
-*       documentation and/or other materials provided with the distribution.
-*     * Neither the name of the AMT nor the
-*       names of its contributors may be used to endorse or promote products
-*       derived from this software without specific prior written permission.
-*
-* DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
-* BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
-* AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
-* RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
-* (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
-* WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
-* LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
-* MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
-
-* LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
-* PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
-* OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
-* CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
-* WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
-* THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
-* SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
+ * Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the AMT nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
+ * BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
+ * AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
+ * RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
+ * (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
+ * WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
+ * LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
+ * MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+ 
+ * LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
+ * PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
+ * OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
+ * CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
+ * WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
+ * THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
+ * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
+ */
 
 #include "component_event.hpp"
 #include "data_item.hpp"
@@ -54,11 +54,11 @@ const string ComponentEvent::SLevels[NumLevels] =
 
 /* ComponentEvent public methods */
 ComponentEvent::ComponentEvent(
-    DataItem& dataItem,
-    Int64 sequence,
-    const string& time,
-    const string& value
-  )
+                               DataItem& dataItem,
+                               Int64 sequence,
+                               const string& time,
+                               const string& value
+                               )
 {
   mDataItem = &dataItem;
   mIsTimeSeries = mDataItem->isTimeSeries();
@@ -71,7 +71,7 @@ ComponentEvent::ComponentEvent(
   } else {
     mTime = time;
   }
-
+  
   mHasAttributes = false;  
   convertValue(value);
 }
@@ -119,7 +119,7 @@ AttributeList *ComponentEvent::getAttributes()
       // Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER
       istringstream toParse(mRest);
       string token;
-
+      
       getline(toParse, token, '|');
       if (strcasecmp(token.c_str(), "normal") == 0)
         mLevel = NORMAL;
@@ -129,55 +129,55 @@ AttributeList *ComponentEvent::getAttributes()
         mLevel = FAULT;
       else // Assume unavailable
         mLevel = UNAVAILABLE;
-
-
+      
+      
       if (!toParse.eof()) {
         getline(toParse, token, '|');
         if (!token.empty()) {
-	  mCode = token;
+          mCode = token;
           mAttributes.push_back(AttributeItem("nativeCode", token));
-	}
+        }
       }
-
+      
       if (!toParse.eof()) {
         getline(toParse, token, '|');
         if (!token.empty())
           mAttributes.push_back(AttributeItem("nativeSeverity", token));
       }
-
+      
       if (!toParse.eof()) {
         getline(toParse, token, '|');
         if (!token.empty())
           mAttributes.push_back(AttributeItem("qualifier", token));
       }
-
+      
       mAttributes.push_back(AttributeItem("type", mDataItem->getType()));
     }
     else if (mDataItem->isTimeSeries())
     {
       istringstream toParse(mRest);
       string token;
-
+      
       getline(toParse, token, '|');
       mAttributes.push_back(AttributeItem("sampleCount", token));
       mSampleCount = atoi(token.c_str());
-
+      
       getline(toParse, token, '|');
       if (!token.empty())
-	mAttributes.push_back(AttributeItem("sampleRate", token));
+        mAttributes.push_back(AttributeItem("sampleRate", token));
     }
     else if (mDataItem->isMessage())
     {
       // Format to parse: NATIVECODE
       if (!mRest.empty())
-	mAttributes.push_back(AttributeItem("nativeCode", mRest));
+        mAttributes.push_back(AttributeItem("nativeCode", mRest));
     }
     else if (mDataItem->isAlarm())
     {
       // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
       istringstream toParse(mRest);
       string token;
-	
+      
       getline(toParse, token, '|');
       mAttributes.push_back(AttributeItem("code", token));
       
@@ -190,7 +190,15 @@ AttributeList *ComponentEvent::getAttributes()
       getline(toParse, token, '|');
       mAttributes.push_back(AttributeItem("state", token));
     }
-
+    else if (mDataItem->isAssetChanged())
+    {
+      istringstream toParse(mRest);
+      string token;
+      
+      getline(toParse, token, '|');
+      mAttributes.push_back(AttributeItem("assetType", token));
+    }
+    
     mHasAttributes = true;
   }
   return &mAttributes;
@@ -217,14 +225,15 @@ void ComponentEvent::convertValue(const string& value)
     mValue = value;
   }
   else if (mIsTimeSeries || mDataItem->isCondition() || mDataItem->isAlarm() ||
-	   mDataItem->isMessage())
+           mDataItem->isMessage() || mDataItem->isAssetChanged())
   {
     string::size_type lastPipe = value.rfind('|');
     
     // Alarm data = CODE|NATIVECODE|SEVERITY|STATE
     // Conditon data: SEVERITY|NATIVE_CODE|[SUB_TYPE]
+    // Asset changed: type|id
     mRest = value.substr(0, lastPipe);
-
+    
     // sValue = DESCRIPTION
     if (mIsTimeSeries)
     {
@@ -281,12 +290,12 @@ ComponentEvent *ComponentEvent::find(const std::string &aCode)
   
   if (mPrev.getObject() != NULL)
     return mPrev->find(aCode);
-
+  
   return NULL;
 }
 
 bool ComponentEvent::replace(ComponentEvent *aOld,
-			     ComponentEvent *aNew)
+                             ComponentEvent *aNew)
 {
   ComponentEvent *obj = mPrev.getObject();
   if (obj == NULL)
@@ -298,7 +307,7 @@ bool ComponentEvent::replace(ComponentEvent *aOld,
     mPrev = aNew;
     return true;
   }
-
+  
   return mPrev->replace(aOld, aNew);
 }
 
@@ -321,7 +330,7 @@ ComponentEvent *ComponentEvent::deepCopyAndRemove(ComponentEvent *aOld)
     else
       return NULL;
   }
-    
+  
   ComponentEvent *n = new ComponentEvent(*this);
   if (mPrev.getObject() != NULL) {
     n->mPrev = mPrev->deepCopyAndRemove(aOld);

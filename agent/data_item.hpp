@@ -136,6 +136,7 @@ public:
   bool isCondition() const { return mCategory == CONDITION; }
   bool isAlarm() const { return mIsAlarm; }
   bool isMessage() const { return mIsMessage; }
+  bool isAssetChanged() const { return mIsAssetChanged; }
   bool isTimeSeries() const { return mRepresentation == TIME_SERIES; }
     
   /* Set/get component that data item is associated with */
@@ -218,7 +219,7 @@ protected:
   float mNativeScale;
   bool mHasNativeScale;
   bool mThreeD;
-  bool mIsMessage, mIsAlarm;
+  bool mIsMessage, mIsAlarm, mIsAssetChanged;
   
   /* Sig figs of data item */
   unsigned int mSignificantDigits;
