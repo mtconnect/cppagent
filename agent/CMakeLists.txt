@@ -44,6 +44,8 @@ set(agent_srcs cppagent.cpp
 	       xml_parser.cpp 
 	       xml_printer.cpp)
 
+file(GLOB agent_headers *.hpp)
+
 include_directories(../lib)
 
 find_package(LibXML2 REQUIRED)
@@ -56,7 +58,7 @@ endif(UNIX)
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
 include_directories(${LibXML2_INCLUDE_DIRS})
 
-add_executable(agent ${agent_srcs})
+add_executable(agent ${agent_srcs} ${agent_headers})
 target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
 
 if(WIN32)

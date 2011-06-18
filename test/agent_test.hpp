@@ -83,6 +83,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAdapterAddAsset);
   CPPUNIT_TEST(testMultiLineAsset);
   CPPUNIT_TEST(testAssetProbe);
+  CPPUNIT_TEST(testAssetStorageWithoutType);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -155,6 +156,7 @@ protected:
   void testAdapterAddAsset();
   void testMultiLineAsset();
   void testAssetProbe();
+  void testAssetStorageWithoutType();
   
   // Test put for data items
   void testPut();

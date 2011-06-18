@@ -359,10 +359,14 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
   return seqNum;
 }
 
-void Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
+bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
                      const string &aType,
                      const string &aTime)
 {
+  // Check to make sure the values are present
+  if (aType.empty() || aAsset.empty() || aId.empty()) 
+    return false;
+  
   // Lock the asset addition to protect from multithreaded collisions. Releaes
   // before we add the event so we don't cause a race condition.
   {
@@ -397,6 +401,7 @@ void Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     time = aTime;
   addToBuffer(aDevice->getAssetChanged(), aType + "|" + aId, time);
   
+  return true;
 }
 
 /* Add values for related data items UNAVAILABLE */
@@ -732,9 +737,10 @@ std::string Agent::storeAsset(std::ostream& aOut,
   // If the device was not found or was not provided, use the default device.
   if (device == NULL) device = mDevices[0];
 
-  addAsset(device, aId, aBody, type);
-  
-  return "<success/>";
+  if (addAsset(device, aId, aBody, type))
+    return "<success/>";
+  else
+    return "<failure/>";
 }
 
 string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)

@@ -1020,6 +1020,24 @@ void AgentTest::testAssetProbe()
   }
 }
 
+void AgentTest::testAssetStorageWithoutType()
+{
+  a->enablePut();
+  path = "/asset/123";
+  string body = "<CuttingTool>TEST</CuttingTool>";
+  Agent::key_value_map queries;
+  
+  queries["device"] = "LinuxCNC";
+  
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
+  }
+}
+
 void AgentTest::testPut()
 {
   Agent::key_value_map queries;

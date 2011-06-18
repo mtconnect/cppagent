@@ -121,7 +121,7 @@ public:
   );
   
   // Add an asset to the agent
-  void addAsset(Device *aDevice, const std::string &aId, const std::string &aAsset,
+  bool addAsset(Device *aDevice, const std::string &aId, const std::string &aAsset,
                 const std::string &aType,
                 const std::string &aTime = "");
   
