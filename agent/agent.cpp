@@ -364,8 +364,10 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
                      const string &aTime)
 {
   // Check to make sure the values are present
-  if (aType.empty() || aAsset.empty() || aId.empty()) 
+  if (aType.empty() || aAsset.empty() || aId.empty()) {
+    sLogger << LWARN << "Asset '" << aId << "' missing required type, id, or body. Asset is rejected.";
     return false;
+  }
   
   // Lock the asset addition to protect from multithreaded collisions. Releaes
   // before we add the event so we don't cause a race condition.
