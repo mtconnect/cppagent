@@ -485,11 +485,8 @@ void XmlPrinterTest::testPrintAsset()
 void XmlPrinterTest::testPrintAssetProbe()
 {
   // Add the xml to the agent...
-  vector<XmlPrinter::AssetCount> counts;
-  XmlPrinter::AssetCount count;
-  count.mType = "CuttingTool";
-  count.mCount = 10;
-  counts.push_back(count);
+  map<string, int> counts;
+  counts["CuttingTool"] = 10;
 
   PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices, &counts));
   

@@ -49,12 +49,7 @@
 class DataItem;
 
 namespace XmlPrinter
-{
-  struct AssetCount {
-    std::string mType;
-    int mCount;
-  };
-  
+{  
   /***** Main methods to call *****/
   std::string printError(
     const unsigned int instanceId,
@@ -64,13 +59,11 @@ namespace XmlPrinter
     const std::string& errorText
   );
   
-  std::string printProbe(
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const Int64 nextSeq,
-    std::vector<Device *>& devices,
-    std::vector<AssetCount> *aCounts = NULL
-  );
+  std::string printProbe(const unsigned int instanceId,
+                         const unsigned int bufferSize,
+                         const Int64 nextSeq,
+                         std::vector<Device *>& devices,
+                         const std::map<std::string, int> *aCounts = NULL);
   
   std::string printSample(
     const unsigned int instanceId,

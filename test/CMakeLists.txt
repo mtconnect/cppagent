@@ -57,6 +57,7 @@ set(test_srcs test.cpp
 	       xml_printer_test.cpp
            asset_test.cpp)
 
+file(GLOB test_headers *.hpp ../agent/*.hpp)
 
 include_directories(../lib ../agent)
 
@@ -66,5 +67,5 @@ find_package(LibXML2 REQUIRED)
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
 include_directories(${LibXML2_INCLUDE_DIRS} ${CPPUNIT_INCLUDE_DIR})
 
-add_executable(test ${test_srcs})
+add_executable(test ${test_srcs} ${test_headers})
 target_link_libraries(test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})

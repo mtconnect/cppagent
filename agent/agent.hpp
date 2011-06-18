@@ -139,6 +139,9 @@ public:
   unsigned int getBufferSize() const { return mSlidingBufferSize; }
   unsigned int getMaxAssets() const { return mMaxAssets; }
   unsigned int getAssetCount() const { return mAssets.size(); }
+  int getAssetCount(const std::string &aType) const { 
+    return const_cast<std::map<std::string, int>& >(mAssetCounts)[aType];
+  }
   Int64 getFirstSequence() const {
     if (mSequence > mSlidingBufferSize)
       return mSequence - mSlidingBufferSize;
@@ -295,6 +298,7 @@ protected:
   std::vector<Device *> mDevices;
   std::map<std::string, Device *> mDeviceMap;
   std::map<std::string, DataItem *> mDataItemMap;
+  std::map<std::string, int> mAssetCounts; 
 
   // For file handling, small files will be cached
   std::map<std::string, std::string> mFileMap;

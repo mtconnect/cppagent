@@ -371,6 +371,8 @@ void Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     AssetPtr old = mAssetMap[aId];
     if (old.getObject() != NULL)
       mAssets.remove(old);
+    else
+      mAssetCounts[aType] += 1;
     
     AssetPtr ptr(new Asset(aId, aType, aAsset), true);
     
@@ -378,6 +380,7 @@ void Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     if (mAssets.size() >= mMaxAssets)
     {
       old = mAssets.front();
+      mAssetCounts[old->getType()] -= 1;
       mAssets.pop_front();
       mAssetMap.erase(old->getAssetId());
     }
@@ -626,7 +629,7 @@ string Agent::handleProbe(const string& name)
   }
   
   return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
-                                mDeviceList);
+                                mDeviceList, &mAssetCounts);
 }
 
 string Agent::handleStream(

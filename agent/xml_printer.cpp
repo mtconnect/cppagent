@@ -71,7 +71,7 @@ namespace XmlPrinter {
                   const unsigned int bufferSize,
                   const Int64 nextSeq,
                   const Int64 firstSeq = 0,
-                  std::vector<AssetCount> *aCounts = NULL);  
+                  const map<string, int> *aCounts = NULL);  
 
   /* Helper to print individual components and details */
   void printProbeHelper(xmlTextWriterPtr writer, Component *component);
@@ -245,13 +245,11 @@ string XmlPrinter::printError(
   return ret;
 }
 
-string XmlPrinter::printProbe(
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const Int64 nextSeq,
-    vector<Device *>& deviceList,
-    vector<AssetCount> *aCount                          
-  )
+string XmlPrinter::printProbe(const unsigned int instanceId,
+                              const unsigned int bufferSize,
+                              const Int64 nextSeq,
+                              vector<Device *>& deviceList,
+                              const std::map<std::string, int> *aCount)
 {
   xmlTextWriterPtr writer;
   xmlBufferPtr buf;
@@ -646,7 +644,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
                             const unsigned int bufferSize,
                             const Int64 nextSeq,
                             const Int64 firstSeq,
-                            vector<AssetCount> *aCount
+                            const map<string, int> *aCount
                             )
 {
   THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL));
@@ -763,13 +761,13 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCounts"));
 
-    vector<AssetCount>::const_iterator iter;
+    map<string,int>::const_iterator iter;
     for (iter = aCount->begin(); iter != aCount->end(); ++iter)
     {
       THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCount"));
       THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetType", 
-                                                      BAD_CAST iter->mType.c_str()));
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST int64ToString(iter->mCount).c_str()));
+                                                      BAD_CAST iter->first.c_str()));
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST int64ToString(iter->second).c_str()));
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
     }
     
