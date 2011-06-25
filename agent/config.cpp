@@ -211,7 +211,6 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   string putHosts = get_with_default(reader, "AllowPutFrom", "");
   if (!putHosts.empty())
   {
-    mAgent->enablePut();
     istringstream toParse(putHosts);
     string putHost;
     do {
@@ -219,8 +218,10 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
       trim(putHost);
       if (!putHost.empty()) {
         string ip;
-        if (dlib::hostname_to_ip(putHost, ip) == 0) 
+        if (dlib::hostname_to_ip(putHost, ip) == 0) {
+          mAgent->enablePut();
           mAgent->allowPutFrom(ip);
+        }
       }
     } while (!toParse.eof());
   }

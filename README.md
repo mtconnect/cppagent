@@ -295,6 +295,17 @@ Configuration Parameters
 
     *Default*: 5000
 
+* `AllowPut`	- Allow HTTP PUT or POST of data item values or assets.
+
+    *Default*: false
+
+* `AllowPutFrom`	- Allow HTTP PUT or POST from a specific host or 
+  list of hosts. Lists are comma (,) separated and the host names will
+  be validated by translating them into ip addresses.
+
+    *Default*: none
+
+
 ###Adapter configuration items###
 
 * `Adapters` - Adapters begins a list of device blocks. If the Adapters
