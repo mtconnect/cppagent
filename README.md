@@ -195,9 +195,11 @@ as well be named `EnergySensor` if desired as illustrated below.
 ###Example 4:###
 
 In this example we change the port to 80 which is the default http port. 
+This also allows HTTP PUT from the local machine and 10.211.55.2.
 
     Devices = MyDevices.xml
     Port = 80
+    AllowPutFrom = localhost, 10.211.55.2
 
     Adapters
     {
