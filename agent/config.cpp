@@ -5,6 +5,7 @@
 #include "device.hpp"
 #include "xml_printer.hpp"
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <vector>
 #include <dlib/config_reader.h>
@@ -153,6 +154,16 @@ void AgentConfiguration::configureLogger()
   }
 }
 
+inline static void trim(std::string &str)
+{
+  size_t index = str.find_first_not_of(" \r\t");
+  if (index != string::npos && index > 0)
+    str.erase(0, index);
+  index = str.find_last_not_of(" \r\t");
+  if (index != string::npos)
+    str.erase(index + 1);
+}
+
 void AgentConfiguration::loadConfig(std::istream &aFile)
 {
   // Now get our configuration
@@ -197,12 +208,21 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   bool putEnabled = get_bool_with_default(reader, "AllowPut", false);
   mAgent->enablePut(putEnabled);
   
-  string putHost = get_with_default(reader, "AllowPutFrom", "");
-  if (!putHost.empty())
+  string putHosts = get_with_default(reader, "AllowPutFrom", "");
+  if (!putHosts.empty())
   {
-    string ip;
-    if (dlib::hostname_to_ip(putHost, ip) == 0) 
-      mAgent->allowPutFrom(ip);
+    mAgent->enablePut();
+    istringstream toParse(putHosts);
+    string putHost;
+    do {
+      getline(toParse, putHost, ',');
+      trim(putHost);
+      if (!putHost.empty()) {
+        string ip;
+        if (dlib::hostname_to_ip(putHost, ip) == 0) 
+          mAgent->allowPutFrom(ip);
+      }
+    } while (!toParse.eof());
   }
   
   Device *device;

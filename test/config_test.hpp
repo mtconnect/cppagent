@@ -53,6 +53,7 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDefaultPreserveOverride);
   CPPUNIT_TEST(testDisablePut);
   CPPUNIT_TEST(testLimitPut);
+  CPPUNIT_TEST(testLimitPutFromHosts);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -71,6 +72,7 @@ protected:
   void testDefaultPreserveOverride();
   void testDisablePut();
   void testLimitPut();
+  void testLimitPutFromHosts();
 };
 
 #endif

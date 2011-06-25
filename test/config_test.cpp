@@ -166,7 +166,20 @@ void ConfigTest::testLimitPut()
   
   Agent *agent = mConfig->getAgent();
   CPPUNIT_ASSERT(agent);
-  
+  CPPUNIT_ASSERT(agent->isPutEnabled());
   CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "127.0.0.1"));
+}
+
+void ConfigTest::testLimitPutFromHosts()
+{
+  istringstream str("Devices = ../samples/test_config.xml\n"
+                    "AllowPutFrom = localhost, 192.168.0.1\n");
+  mConfig->loadConfig(str);
+  
+  Agent *agent = mConfig->getAgent();
+  CPPUNIT_ASSERT(agent);
+  CPPUNIT_ASSERT(agent->isPutEnabled());
+  CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "127.0.0.1"));
+  CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "192.168.0.1"));
 }
 
