@@ -202,7 +202,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   mAgent = new Agent(probe, bufferSize, maxAssets, checkpointFrequency);
   mAgent->set_listening_port(port);
 
-  for (int i = 0; i < mAgent->getDevices().size(); i++)
+  for (size_t i = 0; i < mAgent->getDevices().size(); i++)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
     
   bool putEnabled = get_bool_with_default(reader, "AllowPut", false);

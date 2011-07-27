@@ -33,6 +33,8 @@
 
 #include "agent_test.hpp"
 #include <stdexcept>
+#include <iostream>
+#include <sstream>
 
 
 // Registers the fixture into the 'registry'
@@ -46,6 +48,7 @@ void AgentTest::setUp()
   a = new Agent("../samples/test_config.xml", 8, 4, 25);
   agentId = intToString(getCurrentTimeInSec());
   adapter = NULL;
+  queries.clear();
 }
 
 void AgentTest::tearDown()
@@ -68,7 +71,7 @@ void AgentTest::testBadPath()
     
   {
     path = "/bad_path";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     string message = (string) "The following path is invalid: " + path;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
@@ -76,7 +79,7 @@ void AgentTest::testBadPath()
   
   {
     path = "/bad/path/";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     string message = (string) "The following path is invalid: " + path;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
@@ -84,7 +87,7 @@ void AgentTest::testBadPath()
   
   {
     path = "/LinuxCNC/current/blah";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     string message = (string) "The following path is invalid: " + path;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
@@ -93,28 +96,28 @@ void AgentTest::testBadPath()
 
 void AgentTest::testBadXPath()
 {
-  string key("path"), value;
   path = "/current";
+  Agent::key_value_map query;
   
   {
-    value = "//////Linear";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["path"] = "//////Linear";
+    PARSE_XML_RESPONSE_QUERY(query);
     string message = (string) "The path could not be parsed. Invalid syntax: //////Linear";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_PATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
   
   {
-    value = "//Axes?//Linear";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["path"] = "//Axes?//Linear";
+    PARSE_XML_RESPONSE_QUERY(query);
     string message = (string) "The path could not be parsed. Invalid syntax: //Axes?//Linear";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_PATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
   
   {
-    value = "//Devices/Device[@name=\"I_DON'T_EXIST\"";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["path"] = "//Devices/Device[@name=\"I_DON'T_EXIST\"";
+    PARSE_XML_RESPONSE_QUERY(query);
     string message = (string) "The path could not be parsed. Invalid syntax: //Devices/Device[@name=\"I_DON'T_EXIST\"";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_PATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
@@ -124,32 +127,32 @@ void AgentTest::testBadXPath()
 void AgentTest::testBadCount()
 {
   path = "/sample";
-  string key("count"), value;
-  
+  Agent::key_value_map query;
+
   {
-    value = "NON_INTEGER";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["count"] = "NON_INTEGER";
+    PARSE_XML_RESPONSE_QUERY(query);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be a positive integer.");
   }
   
   {
-    value = "-123";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["count"] = "-123";
+    PARSE_XML_RESPONSE_QUERY(query);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be a positive integer.");
   }
   
   {
-    value = "0";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["count"] = "0";
+    PARSE_XML_RESPONSE_QUERY(query);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be greater than or equal to 1.");
   }
   
   {
-    value = "999999999999999999";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["count"] = "999999999999999999";
+    PARSE_XML_RESPONSE_QUERY(query);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     string value("'count' must be less than or equal to ");
     value += intToString(a->getBufferSize()) + ".";
@@ -161,25 +164,25 @@ void AgentTest::testBadCount()
 void AgentTest::testBadFreq()
 {
   path = "/sample";
-  string key("frequency"), value;
+  Agent::key_value_map query;
   
   {
-    value = "NON_INTEGER";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["frequency"] = "NON_INTEGER";
+    PARSE_XML_RESPONSE_QUERY(query);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
   }
   
   {
-    value = "-123";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["frequency"] = "-123";
+    PARSE_XML_RESPONSE_QUERY(query);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
   }
   
   {
-    value = "999999999999999999";
-    PARSE_XML_RESPONSE_QUERY(key, value)
+    query["frequency"] = "999999999999999999";
+    PARSE_XML_RESPONSE_QUERY(query);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be less than or equal to 2147483646.");
   }
@@ -201,19 +204,19 @@ void AgentTest::testProbe()
 {
   {
     path = "/probe";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
   }
   
   {
     path = "/";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
   }
   
   {
     path = "/LinuxCNC";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
   }
 }
@@ -222,7 +225,7 @@ void AgentTest::testEmptyStream()
 {
   {
     path = "/current";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Condition/m:Unavailable", 0);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Condition/m:Unavailable@qualifier",
@@ -235,7 +238,7 @@ void AgentTest::testEmptyStream()
     path = "/sample";
     char line[80];
     sprintf(line, "%d", (int) a->getSequence());
-    PARSE_XML_RESPONSE_QUERY("from", line);
+    PARSE_XML_RESPONSE_QUERY_KV("from", line);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
 }
@@ -244,7 +247,7 @@ void AgentTest::testBadDevices()
 {
   {
     path = "/LinuxCN/probe";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     string message = (string) "Could not find the device 'LinuxCN'";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "NO_DEVICE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
@@ -272,7 +275,7 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY("from", "30")
+    PARSE_XML_RESPONSE_QUERY_KV("from", "30");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
@@ -285,13 +288,13 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/current";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "ON");
   }
  
   {
     path = "/sample";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState[2]", "ON");
   }
@@ -305,14 +308,14 @@ void AgentTest::testAdapter()
   CPPUNIT_ASSERT(adapter);
     
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
   }
   
   adapter->processData("TIME|line|204");
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
@@ -321,72 +324,12 @@ void AgentTest::testAdapter()
   adapter->processData("TIME|alarm|code|nativeCode|severity|state|description");
 
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[2]", "DESCRIPTION");
   }
-}
-
-
-xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
-                                    string key,
-                                    string value)
-{
-  bool query = !key.empty() && !value.empty();
-  
-  if (query)
-  {
-    queries[key] = value;
-  }
-  
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
-  incoming.request_type = "GET";
-  incoming.path = path;
-  incoming.queries = queries;
-  incoming.cookies = cookies;
-  incoming.headers = incoming_headers;
-  
-  outgoing.out = &out;
-    
-  result = a->on_request(incoming, outgoing);
-
-  string message = (string) "No response to request" + path + " with: (" + key + ", " + value + ")";
-
-  CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, sourceLine);
-  
-  if (query)
-  {
-    queries.erase(key);
-  }
-  
-  return xmlParseMemory(result.c_str(), result.length());
-}
-
-xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
-                                       string body, Agent::key_value_map &aQueries)
-{
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
-  incoming.request_type = "PUT";
-  incoming.path = path;
-  incoming.queries = aQueries;
-  incoming.cookies = cookies;
-  incoming.headers = incoming_headers;
-  incoming.body = body;
-  incoming.foreign_ip = incomingIp;
-  
-  outgoing.out = &out;
-    
-  result = a->on_request(incoming, outgoing);
-
-  string message = (string) "No response to request" + path;
-
-  CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, sourceLine);
-
-  return xmlParseMemory(result.c_str(), result.length());
 }
 
 void AgentTest::testCurrentAt()
@@ -413,7 +356,7 @@ void AgentTest::testCurrentAt()
   {
     value = intToString(i + seq);
     sprintf(line, "%d", i + 1);
-    PARSE_XML_RESPONSE_QUERY(key, value);
+    PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
   }
 
@@ -430,7 +373,7 @@ void AgentTest::testCurrentAt()
   {
     value = intToString(i + seq);
     sprintf(line, "%d", i + 1);
-    PARSE_XML_RESPONSE_QUERY(key, value);
+    PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
   }
 
@@ -440,7 +383,7 @@ void AgentTest::testCurrentAt()
     int i = a->getSequence() - a->getBufferSize() - seq + j;       
     value = intToString(i + seq);
     sprintf(line, "%d", i + 1);
-    PARSE_XML_RESPONSE_QUERY(key, value);
+    PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
   }
   
@@ -449,7 +392,7 @@ void AgentTest::testCurrentAt()
     int i = a->getSequence() - a->getBufferSize() - seq - 1;       
     value = intToString(i + seq);
     sprintf(line, "'at' must be greater than or equal to %d.", i + seq + 1);
-    PARSE_XML_RESPONSE_QUERY(key, value);
+    PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
@@ -482,7 +425,7 @@ void AgentTest::testCurrentAt64()
   {
     value = int64ToString(i);
     sprintf(line, "%d", (int) (i - start) + 1);
-    PARSE_XML_RESPONSE_QUERY(key, value);
+    PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
   }
 }
@@ -511,7 +454,7 @@ void AgentTest::testCurrentAtOutOfRange()
   {
     value = intToString(seq);
     sprintf(line, "'at' must be less than or equal to %d.", seq - 1);
-    PARSE_XML_RESPONSE_QUERY(key, value);
+    PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
@@ -521,7 +464,7 @@ void AgentTest::testCurrentAtOutOfRange()
   {
     value = intToString(seq);
     sprintf(line, "'at' must be greater than or equal to %d.", seq + 1);
-    PARSE_XML_RESPONSE_QUERY(key, value);
+    PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
@@ -549,7 +492,7 @@ void AgentTest::testSampleAtNextSeq()
   
   {
     value = intToString(seq);
-    PARSE_XML_RESPONSE_QUERY(key, value);
+    PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
 }
@@ -644,14 +587,14 @@ void AgentTest::testDuplicateCheck()
   adapter->setDupCheck(true);
     
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
   }
   
   adapter->processData("TIME|line|204");
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
   }
@@ -660,7 +603,7 @@ void AgentTest::testDuplicateCheck()
   adapter->processData("TIME|line|205");
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
@@ -679,14 +622,14 @@ void AgentTest::testAutoAvailable()
   devices.push_back(d);
     
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
   }
 
   a->connected(adapter, devices);
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
   }
@@ -694,7 +637,7 @@ void AgentTest::testAutoAvailable()
   a->disconnected(adapter, devices);
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
@@ -703,7 +646,7 @@ void AgentTest::testAutoAvailable()
   a->connected(adapter, devices);
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
@@ -722,7 +665,7 @@ void AgentTest::testIgnoreTimestamps()
   adapter->processData("TIME|line|204");
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
   }
@@ -731,7 +674,7 @@ void AgentTest::testIgnoreTimestamps()
   adapter->processData("TIME|line|205");
 
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!TIME");
@@ -757,7 +700,7 @@ void AgentTest::testAssetStorage()
   }
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST");
@@ -767,7 +710,7 @@ void AgentTest::testAssetStorage()
   path = "/current";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged", "123");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@assetType", "CuttingTool");
   }
@@ -793,7 +736,7 @@ void AgentTest::testAssetBuffer()
   }
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 1");
   }
@@ -815,7 +758,7 @@ void AgentTest::testAssetBuffer()
   }
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 2");
   }
@@ -830,7 +773,7 @@ void AgentTest::testAssetBuffer()
   }
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 3");
   }
@@ -844,7 +787,7 @@ void AgentTest::testAssetBuffer()
   }
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 4");
     CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("CuttingTool"));
@@ -860,7 +803,7 @@ void AgentTest::testAssetBuffer()
   }
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 5");
   }
@@ -868,7 +811,7 @@ void AgentTest::testAssetBuffer()
   path = "/asset/1";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: 1");
   }
@@ -883,7 +826,7 @@ void AgentTest::testAssetBuffer()
   }
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 6");
   }
@@ -891,7 +834,7 @@ void AgentTest::testAssetBuffer()
   path = "/asset/2";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 2");
   }
@@ -915,7 +858,7 @@ void AgentTest::testAssetBuffer()
   }
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 8");
   }
@@ -924,7 +867,7 @@ void AgentTest::testAssetBuffer()
   path = "/asset/4";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: 4");
   }
@@ -936,7 +879,7 @@ void AgentTest::testAssetError()
   path = "/asset/123";
 
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: 123");
   }
@@ -953,7 +896,7 @@ void AgentTest::testAdapterAddAsset()
   path = "/asset/111";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 1");
   }
@@ -975,7 +918,7 @@ void AgentTest::testMultiLineAsset()
   path = "/asset/111";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool/m:CuttingToolLifeCycle", "TEST 1");
   }  
@@ -985,7 +928,7 @@ void AgentTest::testMultiLineAsset()
   adapter->processData("TIME|line|204");
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", "204");
   }
 
@@ -1014,7 +957,7 @@ void AgentTest::testAssetProbe()
   
   {
     path = "/probe";
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount@assetType", "CuttingTool");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount", "2");
   }
@@ -1056,7 +999,7 @@ void AgentTest::testPut()
   path = "/LinuxCNC/current";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "TIME");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
@@ -1102,7 +1045,7 @@ void AgentTest::testPutBlockingFrom()
   path = "/LinuxCNC/current";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "UNAVAILABLE");
   }
   
@@ -1117,7 +1060,132 @@ void AgentTest::testPutBlockingFrom()
   path = "/LinuxCNC/current";
   
   {
-    PARSE_XML_RESPONSE
+    PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
   } 
+}
+
+void AgentTest::killThread(void *aArg)
+{
+  AgentTest *test = (AgentTest*) aArg;
+  dlib::sleep(test->delay);
+  test->out.setstate(ios::eofbit);
+}
+
+
+void AgentTest::addThread(void *aArg)
+{
+  AgentTest *test = (AgentTest*) aArg;
+  dlib::sleep(test->delay);
+  test->adapter->processData("TIME|line|204");
+  test->out.setstate(ios::eofbit);
+}
+
+
+void AgentTest::testStreamData()
+{  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+
+  // Start a thread...
+  Agent::key_value_map query;
+  query["interval"] = "50";
+  query["heartbeat"] = "200";
+  query["from"] = int64ToString(a->getSequence());
+  path = "/LinuxCNC/sample";
+  
+  timestamper ts;
+  
+  // Heartbeat test. Heartbeat should be sent in 100ms. Give
+  // 25ms range.
+  {
+    uint64 start = ts.get_timestamp();
+    
+    delay = 25;
+    dlib::create_new_thread(killThread, this);
+    PARSE_XML_RESPONSE_QUERY(query);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    
+    int64 delta = ts.get_timestamp() - start;
+    CPPUNIT_ASSERT(delta < 225000 && delta > 200000);
+  }
+
+  out.clear();
+  out.str("");
+
+  // Set some data and make sure we get data within 20ms. 
+  // Again, allow for some slop.
+  {
+    uint64 start = ts.get_timestamp();
+    
+    delay = 10;
+    dlib::create_new_thread(addThread, this);
+    PARSE_XML_RESPONSE_QUERY(query);
+    
+    int64 delta = ts.get_timestamp() - start;
+    CPPUNIT_ASSERT(delta < 70000 && delta > 50000);
+  }
+  
+}
+
+xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
+                                    Agent::key_value_map &aQueries)
+{  
+  struct Agent::incoming_things incoming;
+  struct Agent::outgoing_things outgoing;
+  incoming.request_type = "GET";
+  incoming.path = path;
+  incoming.queries = aQueries;
+  incoming.cookies = cookies;
+  incoming.headers = incoming_headers;
+  
+  outgoing.out = &out;
+  
+  result = a->on_request(incoming, outgoing);
+  if (result.empty()) 
+  {
+    result = out.str();
+    size_t pos = result.rfind("\n--");
+    if (pos != string::npos)
+    {
+      pos = result.find('<', pos);
+      if (pos != string::npos)
+        result.erase(0, pos);
+    }
+    
+  }
+  
+  string message = (string) "No response to request" + path + " with: ";
+  
+  Agent::key_value_map::iterator iter;
+  for (iter = aQueries.begin(); iter != aQueries.end(); ++iter)
+    message += iter->first + "=" + iter->second + ",";
+  
+  CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, sourceLine);
+  
+  return xmlParseMemory(result.c_str(), result.length());
+}
+
+xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
+                                       string body, Agent::key_value_map &aQueries)
+{
+  struct Agent::incoming_things incoming;
+  struct Agent::outgoing_things outgoing;
+  incoming.request_type = "PUT";
+  incoming.path = path;
+  incoming.queries = aQueries;
+  incoming.cookies = cookies;
+  incoming.headers = incoming_headers;
+  incoming.body = body;
+  incoming.foreign_ip = incomingIp;
+  
+  outgoing.out = &out;
+  
+  result = a->on_request(incoming, outgoing);
+  
+  string message = (string) "No response to request" + path;
+  
+  CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, sourceLine);
+  
+  return xmlParseMemory(result.c_str(), result.length());
 }

@@ -84,6 +84,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testMultiLineAsset);
   CPPUNIT_TEST(testAssetProbe);
   CPPUNIT_TEST(testAssetStorageWithoutType);
+  CPPUNIT_TEST(testStreamData);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -108,6 +109,7 @@ protected:
   unsigned short foreign_port;
   unsigned short local_port;
   std::ostringstream out;
+  int delay;
   
 protected:
   /* Test Basic */
@@ -162,12 +164,14 @@ protected:
   void testPut();
   void testPutBlocking();
   void testPutBlockingFrom();
+  
+  // Streaming tests
+  static void killThread(void *aArg);
+  static void addThread(void *aArg);
+  void testStreamData();
     
   /* Helper method to test expected string, given optional query, & run tests */
-  xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine,
-                           std::string key = "",
-                           std::string value = "");
-
+  xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, Agent::key_value_map &aQueries);
   xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
                               Agent::key_value_map &aQueries);
   
@@ -177,16 +181,22 @@ public:
 };
 
 #define PARSE_XML_RESPONSE \
-  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE()); \
-  CPPUNIT_ASSERT(doc);
+  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), queries); \
+  CPPUNIT_ASSERT(doc)
 
-#define PARSE_XML_RESPONSE_QUERY(key, value) \
-  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), key, value); \
-  CPPUNIT_ASSERT(doc);
+#define PARSE_XML_RESPONSE_QUERY_KV(key, value) \
+  queries[key] = value; \
+  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), queries); \
+  queries.clear(); \
+  CPPUNIT_ASSERT(doc)
+
+#define PARSE_XML_RESPONSE_QUERY(aQueries) \
+  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), aQueries); \
+  CPPUNIT_ASSERT(doc)
 
 #define PARSE_XML_RESPONSE_PUT(body, queries)			    \
   xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
-  CPPUNIT_ASSERT(doc);
+  CPPUNIT_ASSERT(doc)
 
 #endif
 

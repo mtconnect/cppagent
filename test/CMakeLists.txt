@@ -31,6 +31,7 @@ set(test_srcs test.cpp
 	       ../agent/checkpoint.cpp
 	       ../agent/component.cpp 
 	       ../agent/component_event.cpp 
+	       ../agent/change_observer.cpp
 	       ../agent/connector.cpp
 	       ../agent/data_item.cpp 
 	       ../agent/device.cpp 
@@ -55,7 +56,8 @@ set(test_srcs test.cpp
 	       xml_parser_test.cpp
 	       test_globals.cpp
 	       xml_printer_test.cpp
-           asset_test.cpp)
+ 	       asset_test.cpp
+	       change_observer_test.cpp)
 
 file(GLOB test_headers *.hpp ../agent/*.hpp)
 

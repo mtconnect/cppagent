@@ -40,10 +40,11 @@
 
 #include "component.hpp"
 #include "globals.hpp"
+#include "change_observer.hpp"
 
 class Adapter;
 
-class DataItem
+class DataItem : public ChangeSignaler
 {
 public:
   /* Enumeration for data item category */
@@ -251,7 +252,7 @@ protected:
   /* Conversion factor */
   double mConversionFactor;
   double mConversionOffset;
-  bool mConversionDetermined, mConversionRequired, mHasFactor;  
+  bool mConversionDetermined, mConversionRequired, mHasFactor;
 };
 
 #endif

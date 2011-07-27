@@ -67,7 +67,7 @@ public:
   static const int SLOWEST_FREQ = 2147483646;
   
   /* Fastest frequency allowed */
-  static const int FASTEST_FREQ = 100;
+  static const int FASTEST_FREQ = 0;
   
   /* Default count for sample query */
   static const unsigned int DEFAULT_COUNT = 100;
@@ -79,8 +79,11 @@ public:
   static const int NO_VALUE = -1;
   
   /* Code to return for no frequency specified */
-  static const int NO_FREQ = 0;
+  static const int NO_FREQ = -2;
   
+  /* Code to return for no heartbeat specified */
+  static const int NO_HB = 0;
+
   /* Code for no start value specified */
   static const int NO_START = -2;
 
@@ -192,7 +195,8 @@ protected:
     bool current,  
     unsigned int frequency,
     Int64 start = 0,
-    unsigned int count = 0
+    unsigned int count = 0,
+    unsigned int aHb = 10000
   );
 
   /* Asset related methods */
@@ -212,7 +216,8 @@ protected:
     bool current,
     unsigned int frequency,
     Int64 start = 1,
-    unsigned int count = 0
+    unsigned int count = 0,
+    unsigned int aHb = 10000
   );
   
   /* Fetch the current/sample data and return the XML in a std::string */

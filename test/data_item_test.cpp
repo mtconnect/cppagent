@@ -32,6 +32,7 @@
 */
 
 #include "data_item_test.hpp"
+#include <dlib/misc_api.h>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(DataItemTest);
@@ -299,3 +300,4 @@ void DataItemTest::testDuplicates()
   CPPUNIT_ASSERT(a->isDuplicate("FOO"));
   CPPUNIT_ASSERT(!a->isDuplicate("FOO2"));
 }
+

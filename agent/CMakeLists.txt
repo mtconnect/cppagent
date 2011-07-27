@@ -33,6 +33,7 @@ set(agent_srcs cppagent.cpp
 	       checkpoint.cpp
 	       component.cpp 
 	       component_event.cpp 
+	       change_observer.cpp
 	       connector.cpp
 	       data_item.cpp 
 	       device.cpp 
@@ -40,7 +41,7 @@ set(agent_srcs cppagent.cpp
 	       options.cpp
 	       service.cpp
 	       config.cpp
-           ref_counted.cpp
+               ref_counted.cpp
 	       xml_parser.cpp 
 	       xml_printer.cpp)
 
