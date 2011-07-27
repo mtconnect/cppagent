@@ -37,6 +37,7 @@
 #include <fcntl.h>
 #include <sstream>
 #include <dlib/tokenizer.h>
+#include <dlib/misc_api.h>
 
 using namespace std;
 
@@ -356,6 +357,8 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
     mFirst.addComponentEvent((*mSlidingBuffer)[mSequence]);
   }
   
+  dataItem->signalObservers();
+  
   return seqNum;
 }
 
@@ -498,13 +501,20 @@ string Agent::handleCall(
       return result;
     }
     
+    int heartbeat = checkAndGetParam(result, queries, "heartbeat", 10000, 10, true, 600000);
+    if (heartbeat == PARAM_ERROR)
+    {
+      return result;
+    }
+
+    
     if (freq != NO_FREQ && at != NO_START) {
       return printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
     }
     
     
     return handleStream(out, devicesAndPath(path, deviceName), true,
-                        freq, at);
+                        freq, at, 0, heartbeat);
   }
   else if (call == "probe" || call.empty())
   {
@@ -538,8 +548,14 @@ string Agent::handleCall(
       return result;
     }
     
+    int heartbeat = checkAndGetParam(result, queries, "heartbeat", 10000, 10, true, 600000);
+    if (heartbeat == PARAM_ERROR)
+    {
+      return result;
+    }
+    
     return handleStream(out, devicesAndPath(path, deviceName), false,
-                        freq, start, count);
+                        freq, start, count, heartbeat);
   }
   else if ((mDeviceMap[call] != NULL) && device.empty())
   {
@@ -645,7 +661,8 @@ string Agent::handleStream(
                            bool current,
                            unsigned int frequency,
                            Int64 start,
-                           unsigned int count
+                           unsigned int count,
+                           unsigned int aHb
                            )
 {
   std::set<string> filter;
@@ -655,26 +672,19 @@ string Agent::handleStream(
   }
   catch (exception& e)
   {
-    return printError("INVALID_PATH", e.what());
+    return printError("INVALID_XPATH", e.what());
   }
   
   if (filter.empty())
   {
-    return printError("INVALID_PATH",
+    return printError("INVALID_XPATH",
                       "The path could not be parsed. Invalid syntax: " + path);
   }
   
   // Check if there is a frequency to stream data or not
   if (frequency != (unsigned) NO_FREQ)
   {
-    if (current)
-    {
-      streamData(out, filter, true, frequency);
-    }
-    else
-    {
-      streamData(out, filter, false, frequency, start, count);
-    }
+    streamData(out, filter, current, frequency, start, count, aHb);
     return "";
   }
   else
@@ -803,9 +813,10 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
 void Agent::streamData(ostream& out,
                        std::set<string> &aFilter,
                        bool current,
-                       unsigned int frequency,
+                       unsigned int aInterval,
                        Int64 start,
-                       unsigned int count
+                       unsigned int count,
+                       unsigned int aHeartbeat
                        )
 {
   // Create header
@@ -819,83 +830,115 @@ void Agent::streamData(ostream& out,
   string boundary = md5(intToString(time(NULL)));
   out << "boundary=" << boundary << endl << endl;
   
-  // Loop until the user closes the connection
-  time_t t;
-  int heartbeat = 0;
-  while (out.good())
-  {
-    unsigned int items;
-    string content;
-    if (current)
-      content = fetchCurrentData(aFilter, NO_START);
-    else
-      content = fetchSampleData(aFilter, start, count, items);
-    
-    start = (start + count < mSequence) ? (start + count) : mSequence;
-    
-    if (items > 0 || (time(&t) - heartbeat) >= 10) 
+  // This object will automatically clean up all the observer from the
+  // signalers in an exception proof manor.
+  ChangeObserver observer;
+  
+  // Add observers
+  std::set<string>::iterator iter;
+  for (iter = aFilter.begin(); iter != aFilter.end(); ++iter)
+    mDataItemMap[*iter]->addObserver(&observer);
+  
+  uint64 interMicros = aInterval * 1000;
+  
+  try {
+    // Loop until the user closes the connection
+
+    timestamper ts;
+    while (out.good())
     {
-      heartbeat = t;
+      uint64 last = ts.get_timestamp();
+      
+      // Always 
+      unsigned int items;
+      string content;
+      if (current)
+        content = fetchCurrentData(aFilter, NO_START);
+      else
+        content = fetchSampleData(aFilter, start, count, items);
+      
+      start = (start + count < mSequence) ? (start + count) : mSequence;
+      
       out << "--" + boundary << endl;
       out << "Content-type: text/xml" << endl;
       out << "Content-length: " << content.length() << endl;
       out << endl << content;
       
       out.flush();
-    }
     
-    dlib::sleep(frequency);
+      // Wait for up to frequency ms for something to arrive...
+      if (observer.wait(aHeartbeat)) 
+      {
+        // Now wait the remainder if we triggered before the timer was up, otherwise we know
+        // we timed out and just spin again.
+        uint64 delta = ts.get_timestamp() - last;
+        if (delta < interMicros) 
+        {
+          // Sleep the remainder
+          dlib::sleep((interMicros - delta) / 1000);
+        }
+      }
+    }
   }
+  catch (...)
+  {
+    sLogger << LWARN << "Error occurred during streaming data";
+  }
+  
+  // Observer is auto removed from signalers
 }
 
 string Agent::fetchCurrentData(std::set<string> &aFilter, Int64 at)
 {
-  dlib::auto_mutex lock(*mSequenceLock);
-  
   vector<ComponentEventPtr> events;
-  unsigned int firstSeq = getFirstSequence();
-  if (at == NO_START)
+  Int64 firstSeq, seq;
   {
-    mLatest.getComponentEvents(events, &aFilter);
-  }
-  else
-  {
-    long pos = (long) mSlidingBuffer->get_element_id(at);
-    long first = (long) mSlidingBuffer->get_element_id(firstSeq);
-    long checkIndex = pos / mCheckpointFreq;
-    long closestCp = checkIndex * mCheckpointFreq;
-    unsigned long index;
-    
-    Checkpoint *ref;
-    
-    // Compute the closest checkpoint. If the checkpoint is after the
-    // first checkpoint and before the next incremental checkpoint,
-    // use first.
-    if (first > closestCp && pos >= first)
+    dlib::auto_mutex lock(*mSequenceLock);
+    firstSeq = getFirstSequence();
+    seq = mSequence;
+    if (at == NO_START)
     {
-      ref = &mFirst;
-      // The checkpoint is inclusive of the "first" event. So we add one
-      // so we don't duplicate effort.
-      index = first + 1;
+      mLatest.getComponentEvents(events, &aFilter);
     }
     else
     {
-      index = closestCp + 1;
-      ref = &mCheckpoints[checkIndex];
+      long pos = (long) mSlidingBuffer->get_element_id(at);
+      long first = (long) mSlidingBuffer->get_element_id(firstSeq);
+      long checkIndex = pos / mCheckpointFreq;
+      long closestCp = checkIndex * mCheckpointFreq;
+      unsigned long index;
+      
+      Checkpoint *ref;
+      
+      // Compute the closest checkpoint. If the checkpoint is after the
+      // first checkpoint and before the next incremental checkpoint,
+      // use first.
+      if (first > closestCp && pos >= first)
+      {
+        ref = &mFirst;
+        // The checkpoint is inclusive of the "first" event. So we add one
+        // so we don't duplicate effort.
+        index = first + 1;
+      }
+      else
+      {
+        index = closestCp + 1;
+        ref = &mCheckpoints[checkIndex];
+      }
+      
+      Checkpoint check(*ref, &aFilter);
+      
+      // Roll forward from the checkpoint.
+      for (; index <= (unsigned long) pos; index++) {
+        check.addComponentEvent(((*mSlidingBuffer)[(unsigned long)index]).getObject());
+      }
+      
+      check.getComponentEvents(events);
     }
-    
-    Checkpoint check(*ref, &aFilter);
-    
-    // Roll forward from the checkpoint.
-    for (; index <= (unsigned long) pos; index++) {
-      check.addComponentEvent(((*mSlidingBuffer)[(unsigned long)index]).getObject());
-    }
-    
-    check.getComponentEvents(events);
   }
   
   string toReturn = XmlPrinter::printSample(mInstanceId, mSlidingBufferSize,
-                                            mSequence, firstSeq, events);
+                                            seq, firstSeq, events);
   
   return toReturn;
 }
@@ -907,27 +950,29 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
                               )
 {
   vector<ComponentEventPtr> results;
-  
-  dlib::auto_mutex lock(*mSequenceLock);
-  
-  Int64 seq = mSequence;
-  Int64 firstSeq = (mSequence > mSlidingBufferSize) ?
-  mSequence - mSlidingBufferSize : 1;
-  
-  // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
-  start = (start <= firstSeq) ? firstSeq : start;
-  Int64 end = (count + start >= mSequence) ? mSequence : count + start;
-  items = 0;
-  
-  for (Int64 i = start; i < end; i++)
+  Int64 seq, firstSeq;
   {
-    // Filter out according to if it exists in the list
-    const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
-    if (aFilter.count(dataId) > 0)
+    dlib::auto_mutex lock(*mSequenceLock);
+    
+    seq = mSequence;
+    firstSeq = (mSequence > mSlidingBufferSize) ?
+    mSequence - mSlidingBufferSize : 1;
+    
+    // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
+    start = (start <= firstSeq) ? firstSeq : start;
+    Int64 end = (count + start >= mSequence) ? mSequence : count + start;
+    items = 0;
+    
+    for (Int64 i = start; i < end; i++)
     {
-      ComponentEvent *event = (*mSlidingBuffer)[i];
-      results.push_back(event);
-      items++;
+      // Filter out according to if it exists in the list
+      const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
+      if (aFilter.count(dataId) > 0)
+      {
+        ComponentEvent *event = (*mSlidingBuffer)[i];
+        results.push_back(event);
+        items++;
+      }
     }
   }
   

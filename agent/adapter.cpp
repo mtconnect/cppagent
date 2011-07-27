@@ -288,10 +288,21 @@ void Adapter::connected()
 /* Adapter private methods */
 void Adapter::thread()
 {
-  // Start the connection to the socket
   while (mRunning)
   {
-    connect();
+    try
+    {
+      // Start the connection to the socket
+      connect();
+      
+      // make sure we're closed...
+      close();
+    }
+    catch (...)
+    {
+      sLogger << LERROR << "Thread for adapter " << mDeviceName << "'s thread threw an unhandled exception";
+    }
+
     // Try to reconnect every 10 seconds
     sLogger << LINFO << "Will try to reconnect in 10 seconds";
     dlib::sleep(10 * 1000);

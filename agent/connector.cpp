@@ -126,7 +126,7 @@ void Connector::connect()
         now = stamper.get_timestamp();
         if ((now - mLastHeartbeat) > (uint64) (mHeartbeatFrequency * 2000))
         {
-          sLogger << LWARN << "connect: Did not receive heartbeat for over: " << intToString(mHeartbeatFrequency * 2);
+          sLogger << LERROR << "connect: Did not receive heartbeat for over: " << intToString(mHeartbeatFrequency * 2);
           break;
         }
         else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
@@ -135,7 +135,7 @@ void Connector::connect()
           status = mConnection->write(ping, strlen(ping));
           if (status <= 0)
           {
-            sLogger << LWARN << "connect: Could not write heartbeat: " << intToString(status);
+            sLogger << LERROR << "connect: Could not write heartbeat: " << intToString(status);
             break;
           }
           mLastSent = now;
@@ -143,7 +143,7 @@ void Connector::connect()
       }
     }
     
-    sLogger << LWARN << "connect: Connection exited with status: " << intToString(status);
+    sLogger << LERROR << "connect: Connection exited with status: " << intToString(status);
     close();
   }
   catch (dlib::socket_error &e)
