@@ -103,7 +103,7 @@ void AgentTest::testBadXPath()
     query["path"] = "//////Linear";
     PARSE_XML_RESPONSE_QUERY(query);
     string message = (string) "The path could not be parsed. Invalid syntax: //////Linear";
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_PATH");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
   
@@ -111,7 +111,7 @@ void AgentTest::testBadXPath()
     query["path"] = "//Axes?//Linear";
     PARSE_XML_RESPONSE_QUERY(query);
     string message = (string) "The path could not be parsed. Invalid syntax: //Axes?//Linear";
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_PATH");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
   
@@ -119,7 +119,7 @@ void AgentTest::testBadXPath()
     query["path"] = "//Devices/Device[@name=\"I_DON'T_EXIST\"";
     PARSE_XML_RESPONSE_QUERY(query);
     string message = (string) "The path could not be parsed. Invalid syntax: //Devices/Device[@name=\"I_DON'T_EXIST\"";
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_PATH");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
 }
@@ -275,7 +275,7 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY_KV("from", "30");
+    PARSE_XML_RESPONSE_QUERY_KV("from", "31");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
@@ -495,6 +495,70 @@ void AgentTest::testSampleAtNextSeq()
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
+}
+
+void AgentTest::testSequenceNumberRollover()
+{
+  Agent::key_value_map kvm;
+
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+
+  // Set the sequence number near MAX_UINT32
+  a->setSequence(0xFFFFFFA0);
+  int64_t seq = a->getSequence();
+  CPPUNIT_ASSERT_EQUAL((int64_t) 0xFFFFFFA0, seq);
+  
+  // Get the current position
+  char line[80];
+  
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    adapter->processData(line);
+    
+    {
+      path = "/current";
+      PARSE_XML_RESPONSE;
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence", 
+                                        int64ToString(seq + i).c_str());
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
+                                        int64ToString(seq + i + 1).c_str());
+    }
+    
+    {
+      path = "/sample";
+      kvm["from"] = int64ToString(seq);
+      kvm["count"] = "128";
+      
+      PARSE_XML_RESPONSE_QUERY(kvm);
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
+                                        int64ToString(seq + i + 1).c_str());
+      
+      for (int j = 0; j <= i; j++)
+      {
+        sprintf(line, "//m:DeviceStream//m:Line[%d]@sequence", j + 1);
+        CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j).c_str());
+      }
+    }
+    
+    for (int j = 0; j <= i; j++)
+    {
+      path = "/sample";
+      kvm["from"] = int64ToString(seq + j);
+      kvm["count"] = "1";
+            
+      PARSE_XML_RESPONSE_QUERY(kvm);
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence", 
+                                        int64ToString(seq + j).c_str());
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
+                                        int64ToString(seq + j + 1).c_str());
+    }
+  }
+
+  CPPUNIT_ASSERT_EQUAL((int64_t) 0xFFFFFFA0 + 128, a->getSequence());  
+  
 }
 
 

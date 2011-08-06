@@ -691,11 +691,10 @@ string Agent::handleStream(
   }
   else
   {
-    unsigned int items;
     if (current)
       return fetchCurrentData(filter, start);
     else
-      return fetchSampleData(filter, start, count, items);
+      return fetchSampleData(filter, start, count);
   }
 }
 
@@ -870,12 +869,11 @@ void Agent::streamData(ostream& out,
       uint64 last = ts.get_timestamp();
       
       // Always 
-      unsigned int items;
       string content;
       if (current)
         content = fetchCurrentData(aFilter, NO_START);
       else
-        content = fetchSampleData(aFilter, start, count, items);
+        content = fetchSampleData(aFilter, start, count);
       
       start = (start + count < mSequence) ? (start + count) : mSequence;
       
@@ -886,8 +884,14 @@ void Agent::streamData(ostream& out,
       
       out.flush();
     
-      // Wait for up to frequency ms for something to arrive...
-      if (observer.wait(aHeartbeat)) 
+      // Wait for up to frequency ms for something to arrive... Don't wait if 
+      // we are not at the end of the buffer. Just put the next set after aInterval 
+      // has elapsed
+      if (current || start < mSequence) 
+      {
+        dlib::sleep(aInterval);
+      } 
+      else if (observer.wait(aHeartbeat)) 
       {
         // Now wait the remainder if we triggered before the timer was up, otherwise we know
         // we timed out and just spin again.
@@ -965,23 +969,20 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, Int64 at)
 
 string Agent::fetchSampleData(std::set<string> &aFilter,
                               Int64 start,
-                              unsigned int count,
-                              unsigned int &items
+                              unsigned int count
                               )
 {
   vector<ComponentEventPtr> results;
-  Int64 seq, firstSeq;
+  Int64 firstSeq, end;
   {
     dlib::auto_mutex lock(*mSequenceLock);
     
-    seq = mSequence;
     firstSeq = (mSequence > mSlidingBufferSize) ?
-    mSequence - mSlidingBufferSize : 1;
+                        mSequence - mSlidingBufferSize : 1;
     
     // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
     start = (start <= firstSeq) ? firstSeq : start;
-    Int64 end = (count + start >= mSequence) ? mSequence : count + start;
-    items = 0;
+    end = (count + start >= mSequence) ? mSequence : count + start;
     
     for (Int64 i = start; i < end; i++)
     {
@@ -991,12 +992,11 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
       {
         ComponentEvent *event = (*mSlidingBuffer)[i];
         results.push_back(event);
-        items++;
       }
     }
   }
   
-  return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, seq, 
+  return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, end, 
                                  firstSeq, results);
 }
 

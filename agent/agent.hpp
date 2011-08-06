@@ -225,8 +225,7 @@ protected:
   std::string fetchSampleData(
     std::set<std::string> &aFilterSet,
     Int64 start,
-    unsigned int count,
-    unsigned int &items
+    unsigned int count
   );
   
   /* Output an XML Error */
