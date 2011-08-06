@@ -857,6 +857,29 @@ void AgentTest::testAssetBuffer()
     CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("CuttingTool"));
   }
   
+  // Test multiple asset get
+  path = "/assets";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[3]", "TEST 3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[4]", "TEST 4");
+  }
+
+  // Test multiple asset get with filter
+  path = "/assets";
+  {
+    PARSE_XML_RESPONSE_QUERY(queries);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[3]", "TEST 3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[4]", "TEST 4");
+  }
+
+  
   path = "/asset/5";
   body = "<CuttingTool>TEST 5</CuttingTool>";
   
