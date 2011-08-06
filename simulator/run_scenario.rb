@@ -78,15 +78,16 @@ if scenario
   begin
     File.open(ARGV[0]) do |file|
       file.each do |l|
-        f, r = l.chomp.split(' ')
+        r, f = l.chomp.split('|', 2)
         r = 1 unless r
         
         line = "#{format_time}|#{f}"
         mutex.synchronize {
           socket.puts line
+          socket.flush
         }
         puts line if verbose
-        sleep(r.to_i)
+        sleep(r.to_f)
       end
     end
   end while (loop_file)
@@ -110,6 +111,7 @@ else
         line = "#{format_time}|#{r}"
         mutex.synchronize {
           socket.puts line
+          socket.flush
         }
         puts  line if verbose        
         last = time

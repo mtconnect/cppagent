@@ -1,8 +1,12 @@
-power|OFF 5
-power|ON 5
-execution|INTERRUPTED 5
-execution|ACTIVE 5
-execution|READY 5
-program|Tap|execution|READY 15
-execution|ACTIVE 5
-program|Countersink|execution|ACTIVE 15
+2|execution|INTERRUPTED
+2|tool_id|1
+2|execution|ACTIVE
+2|execution|READY
+2|program|Tap|execution|READY
+2|tool_id|2
+2|execution|ACTIVE
+2|execution|READY
+2|tool_id|3
+2|program|Countersink|execution|ACTIVE
+2|tool_id|2
+2|execution|READY
