@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 1.1.0.8
+MTConnect C++ Agent Version 1.2.0.0
 --------
 
 The C++ Agent provides the a complete implementation of the HTTP
