@@ -68,6 +68,7 @@ void ConnectorTest::testConnection()
   start();
 
   CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
+  dlib::sleep(100);
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
   CPPUNIT_ASSERT(!mConnector->mDisconnected);
 }
