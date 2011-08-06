@@ -410,18 +410,18 @@ void AgentTest::testCurrentAt64()
   char line[80];
 
   // Initialize the sliding buffer at a very large number.
-  Int64 start = (((Int64) 1) << 48) + 1317;
+  uint64_t start = (((uint64_t) 1) << 48) + 1317;
   a->setSequence(start);
 
   // Add many events
-  for (Int64 i = 1; i <= 500; i++)
+  for (uint64_t i = 1; i <= 500; i++)
   {
     sprintf(line, "TIME|line|%d", (int) i);
     adapter->processData(line);
   }
 
   // Check each current at all the positions.
-  for (Int64 i = start + 300; i < start + 500; i++)
+  for (uint64_t i = start + 300; i < start + 500; i++)
   {
     value = int64ToString(i);
     sprintf(line, "%d", (int) (i - start) + 1);
@@ -557,7 +557,7 @@ void AgentTest::testSequenceNumberRollover()
     }
   }
 
-  CPPUNIT_ASSERT_EQUAL((int64_t) 0xFFFFFFA0 + 128, a->getSequence());  
+  CPPUNIT_ASSERT_EQUAL((uint64_t) 0xFFFFFFA0 + 128, a->getSequence());  
   
 }
 

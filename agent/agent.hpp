@@ -158,15 +158,15 @@ public:
     const std::string& name
   );
   
-  ComponentEvent *getFromBuffer(Int64 aSeq) const { return (*mSlidingBuffer)[aSeq]; }
-  Int64 getSequence() const { return mSequence; }
+  ComponentEvent *getFromBuffer(uint64_t aSeq) const { return (*mSlidingBuffer)[aSeq]; }
+  uint64_t getSequence() const { return mSequence; }
   unsigned int getBufferSize() const { return mSlidingBufferSize; }
   unsigned int getMaxAssets() const { return mMaxAssets; }
   unsigned int getAssetCount() const { return mAssets.size(); }
   int getAssetCount(const std::string &aType) const { 
     return const_cast<std::map<std::string, int>& >(mAssetCounts)[aType];
   }
-  Int64 getFirstSequence() const {
+  uint64_t getFirstSequence() const {
     if (mSequence > mSlidingBufferSize)
       return mSequence - mSlidingBufferSize;
     else
@@ -174,7 +174,7 @@ public:
   }
 
   // For testing...
-  void setSequence(Int64 aSeq) { mSequence = aSeq; }
+  void setSequence(uint64_t aSeq) { mSequence = aSeq; }
   
   // Starting
   virtual void start();

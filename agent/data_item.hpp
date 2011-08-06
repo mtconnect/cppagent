@@ -44,6 +44,10 @@
 
 class Adapter;
 
+#ifdef PASCAL
+#undef PASCAL
+#endif
+
 class DataItem : public ChangeSignaler
 {
 public:

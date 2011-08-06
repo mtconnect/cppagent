@@ -331,7 +331,7 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
   
   dlib::auto_mutex lock(*mSequenceLock);
   
-  Int64 seqNum = mSequence++;
+  uint64_t seqNum = mSequence++;
   ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
                                              time, value);
   (*mSlidingBuffer)[seqNum] = event;

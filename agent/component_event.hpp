@@ -70,7 +70,7 @@ public:
   /* Initialize with the data item reference, sequence number, time and value */
   ComponentEvent(
     DataItem& dataItem,
-    Int64 sequence,
+    uint64_t sequence,
     const std::string& time,
     const std::string& value
   );
@@ -99,7 +99,7 @@ public:
   bool isTimeSeries() const { return mIsTimeSeries; }
   int getSampleCount() const { return mSampleCount; }
   
-  Int64 getSequence() const { return mSequence; }
+  uint64_t getSequence() const { return mSequence; }
   
   ComponentEvent *getFirst();
   ComponentEvent *getPrev() { return mPrev; }
@@ -127,7 +127,7 @@ protected:
   DataItem * mDataItem;
   
   /* Sequence number of the event */
-  Int64 mSequence;
+  uint64_t mSequence;
   std::string mSequenceStr;
   
   /* Timestamp of the event's occurence */

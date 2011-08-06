@@ -17,6 +17,9 @@ namespace dlib
 {
 
 // ----------------------------------------------------------------------------------------
+#ifdef EOTHER
+#undef EOTHER
+#endif
 
     enum error_type
     {

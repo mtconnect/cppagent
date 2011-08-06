@@ -211,7 +211,7 @@ string addNamespace(const string aPath, const string aPrefix)
   }
   
   
-  while ((pos = newPath.find('/', pos)) != string::npos)
+  while ((pos = newPath.find('/', pos)) != string::npos && pos < newPath.length() - 1)
   {
     pos ++;
     if (newPath[pos] == '/')

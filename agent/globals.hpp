@@ -42,9 +42,7 @@
 #include <string>
 
 #ifdef WIN32
-typedef  __int64 Int64;
-#else
-typedef long long Int64;
+typedef unsigned __int64 uint64_t;
 #endif
 
 /***** CONSTANTS *****/

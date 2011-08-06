@@ -54,7 +54,7 @@ const string ComponentEvent::SLevels[NumLevels] =
 
 /* ComponentEvent public methods */
 ComponentEvent::ComponentEvent(DataItem& dataItem,
-                               Int64 sequence,
+                               uint64_t sequence,
                                const string& time,
                                const string& value)
 {
