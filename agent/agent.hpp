@@ -106,7 +106,7 @@ public:
   static const int NO_HB = 0;
 
   /* Code for no start value specified */
-  static const uint64_t NO_START = UINT64_MAX - 1;
+  static const uint64_t NO_START = NO_VALUE64;
 
   /* Small file size */
   static const int SMALL_FILE = 10 * 1024; // 10k is considered small
