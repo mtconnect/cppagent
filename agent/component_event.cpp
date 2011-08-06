@@ -53,12 +53,10 @@ const string ComponentEvent::SLevels[NumLevels] =
 };
 
 /* ComponentEvent public methods */
-ComponentEvent::ComponentEvent(
-                               DataItem& dataItem,
+ComponentEvent::ComponentEvent(DataItem& dataItem,
                                Int64 sequence,
                                const string& time,
-                               const string& value
-                               )
+                               const string& value)
 {
   mDataItem = &dataItem;
   mIsTimeSeries = mDataItem->isTimeSeries();

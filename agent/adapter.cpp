@@ -40,11 +40,9 @@ using namespace std;
 static dlib::logger sLogger("input.adapter");
 
 /* Adapter public methods */
-Adapter::Adapter(
-    const string& device,
-    const string& server,
-    const unsigned int port
-  )
+Adapter::Adapter(const string& device,
+                 const string& server,
+                 const unsigned int port)
   : Connector(server, port), mDeviceName(device), mRunning(true),
     mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false),
     mGatheringAsset(false)
