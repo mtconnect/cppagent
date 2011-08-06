@@ -65,6 +65,17 @@ public:
   /* Enumeration for the simple units for simple conversions */
   enum ESimpleUnits
   {
+    AMPERE,
+    COUNT,
+    JOULE,
+    PASCAL,
+    PH,
+    VOLT,
+    WATT,
+    OHM,
+    SOUND_LEVEL,
+    SIEMENS,
+    DECIBEL,
     INCH,
     FOOT,
     CENTIMETER,
@@ -92,7 +103,7 @@ public:
     DEGREE_3D
   };
   
-  static const unsigned int NumSimpleUnits = 25;
+  static const unsigned int NumSimpleUnits = 36;
   static const std::string SSimpleUnits[];
   
 public:

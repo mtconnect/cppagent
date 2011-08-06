@@ -42,6 +42,17 @@ dlib::logger sLogger("data_item");
 /* ComponentEvent public static constants */
 const string DataItem::SSimpleUnits[NumSimpleUnits] =
 {
+  "AMPERE",
+  "COUNT",
+  "JOULE",
+  "PASCAL",
+  "PH",
+  "VOLT",
+  "WATT",
+  "OHM",
+  "SOUND_LEVEL",
+  "SIEMENS",
+  "DECIBEL",
   "INCH",
   "FOOT",
   "CENTIMETER",
@@ -428,6 +439,18 @@ double DataItem::simpleFactor(const string& units)
     case PERCENT:
     case NEWTON_MILLIMETER:
     case HERTZ:
+    case AMPERE:
+    case COUNT:
+    case JOULE:
+    case PASCAL:
+    case PH:
+    case VOLT:
+    case WATT:
+    case OHM:
+    case SOUND_LEVEL:
+    case SIEMENS:
+    case DECIBEL:
+
     default:
       // Already in correct units
       return 1.0;
