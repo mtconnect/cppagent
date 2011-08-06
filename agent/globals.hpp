@@ -72,7 +72,7 @@ enum TimeFormat
 };
 
 /***** METHODS *****/
-std::string int64ToString(Int64 i);
+std::string int64ToString(uint64_t i);
 
 std::string intToString(unsigned int i);
 

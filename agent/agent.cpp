@@ -479,94 +479,81 @@ string Agent::handleCall(
                          const string& device
                          )
 {
-  string deviceName;
-  if (!device.empty())
-  {
-    deviceName = device;
-  }
-  
-  if (call == "current")
-  {
-    const string path = queries[(string) "path"];
-    string result;
+  try {
+    string deviceName;
+    if (!device.empty())
+    {
+      deviceName = device;
+    }
     
-    int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
+    if (call == "current")
+    {
+      const string path = queries[(string) "path"];
+      string result;
+      
+      int freq = checkAndGetParam(queries, "frequency", NO_FREQ,
+                                  FASTEST_FREQ, false,SLOWEST_FREQ);
+      // Check for 1.2 conversion to interval
+      if (freq == NO_FREQ)
+        freq = checkAndGetParam(queries, "interval", NO_FREQ,
                                 FASTEST_FREQ, false, SLOWEST_FREQ);
-    // Check for 1.2 conversion to interval
-    if (freq == NO_FREQ)
-      freq = checkAndGetParam(result, queries, "interval", NO_FREQ,
-                              FASTEST_FREQ, false, SLOWEST_FREQ);
-    Int64 at = checkAndGetParam64(result, queries, "at", NO_START, getFirstSequence(), true,
-                                  mSequence - 1);
-    if (freq == PARAM_ERROR || at == PARAM_ERROR)
-    {
-      return result;
+      uint64_t at = checkAndGetParam64(queries, "at", NO_START, getFirstSequence(), true,
+                                    mSequence - 1);
+      int heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
+      
+      if (freq != NO_FREQ && at != NO_START) {
+        return printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
+      }
+      
+      
+      return handleStream(out, devicesAndPath(path, deviceName), true,
+                          freq, at, 0, heartbeat);
     }
-    
-    int heartbeat = checkAndGetParam(result, queries, "heartbeat", 10000, 10, true, 600000);
-    if (heartbeat == PARAM_ERROR)
+    else if (call == "probe" || call.empty())
     {
-      return result;
+      return handleProbe(deviceName);
     }
+    else if (call == "sample")
+    {
+      string path = queries[(string) "path"];
+      string result;
+      
+      int count = checkAndGetParam(queries, "count", DEFAULT_COUNT,
+                                   1, true, mSlidingBufferSize);
+      int freq = checkAndGetParam(queries, "frequency", NO_FREQ,
+                                  FASTEST_FREQ, false, SLOWEST_FREQ);
+      // Check for 1.2 conversion to interval
+      if (freq == NO_FREQ)
+        freq = checkAndGetParam(queries, "interval", NO_FREQ,
+                                FASTEST_FREQ, false, SLOWEST_FREQ);
+      
+      uint64 start = checkAndGetParam64(queries, "start", NO_START, getFirstSequence(),
+                                       true, mSequence);
+      
+      if (start == NO_START) // If there was no data in queries
+      {
+        start = checkAndGetParam64(queries, "from", 1,
+                                   getFirstSequence(), true, mSequence);
+      }
+      
+      int heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
 
-    
-    if (freq != NO_FREQ && at != NO_START) {
-      return printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
+      return handleStream(out, devicesAndPath(path, deviceName), false,
+                          freq, start, count, heartbeat);
     }
-    
-    
-    return handleStream(out, devicesAndPath(path, deviceName), true,
-                        freq, at, 0, heartbeat);
-  }
-  else if (call == "probe" || call.empty())
-  {
-    return handleProbe(deviceName);
-  }
-  else if (call == "sample")
-  {
-    string path = queries[(string) "path"];
-    string result;
-    
-    int count = checkAndGetParam(result, queries, "count", DEFAULT_COUNT,
-                                 1, true, mSlidingBufferSize);
-    int freq = checkAndGetParam(result, queries, "frequency", NO_FREQ,
-                                FASTEST_FREQ, false, SLOWEST_FREQ);
-    // Check for 1.2 conversion to interval
-    if (freq == NO_FREQ)
-      freq = checkAndGetParam(result, queries, "interval", NO_FREQ,
-                              FASTEST_FREQ, false, SLOWEST_FREQ);
-    
-    Int64 start = checkAndGetParam64(result, queries, "start", NO_START, getFirstSequence(),
-                                     true, mSequence);
-    
-    if (start == NO_START) // If there was no data in queries
+    else if ((mDeviceMap[call] != NULL) && device.empty())
     {
-      start = checkAndGetParam64(result, queries, "from", 1,
-                                 getFirstSequence(), true, mSequence);
+      return handleProbe(call);
     }
-    
-    if (freq == PARAM_ERROR || count == PARAM_ERROR || start == PARAM_ERROR)
+    else
     {
-      return result;
+      return printError("UNSUPPORTED",
+                        "The following path is invalid: " + path);
     }
-    
-    int heartbeat = checkAndGetParam(result, queries, "heartbeat", 10000, 10, true, 600000);
-    if (heartbeat == PARAM_ERROR)
-    {
-      return result;
-    }
-    
-    return handleStream(out, devicesAndPath(path, deviceName), false,
-                        freq, start, count, heartbeat);
   }
-  else if ((mDeviceMap[call] != NULL) && device.empty())
+  catch (ParameterError &aError)
   {
-    return handleProbe(call);
-  }
-  else
-  {
-    return printError("UNSUPPORTED",
-                      "The following path is invalid: " + path);
+    return printError(aError.mCode, aError.mMessage);
   }
 }
 
@@ -662,7 +649,7 @@ string Agent::handleStream(
                            const string& path,
                            bool current,
                            unsigned int frequency,
-                           Int64 start,
+                           uint64_t start,
                            unsigned int count,
                            unsigned int aHb
                            )
@@ -833,7 +820,7 @@ void Agent::streamData(ostream& out,
                        std::set<string> &aFilter,
                        bool current,
                        unsigned int aInterval,
-                       Int64 start,
+                       uint64_t start,
                        unsigned int count,
                        unsigned int aHeartbeat
                        )
@@ -858,7 +845,7 @@ void Agent::streamData(ostream& out,
   for (iter = aFilter.begin(); iter != aFilter.end(); ++iter)
     mDataItemMap[*iter]->addObserver(&observer);
   
-  uint64 interMicros = aInterval * 1000;
+  uint64_t interMicros = aInterval * 1000;
   
   try {
     // Loop until the user closes the connection
@@ -912,10 +899,10 @@ void Agent::streamData(ostream& out,
   // Observer is auto removed from signalers
 }
 
-string Agent::fetchCurrentData(std::set<string> &aFilter, Int64 at)
+string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
 {
   vector<ComponentEventPtr> events;
-  Int64 firstSeq, seq;
+  uint64_t firstSeq, seq;
   {
     dlib::auto_mutex lock(*mSequenceLock);
     firstSeq = getFirstSequence();
@@ -968,12 +955,11 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, Int64 at)
 }
 
 string Agent::fetchSampleData(std::set<string> &aFilter,
-                              Int64 start,
-                              unsigned int count
-                              )
+                              uint64_t start,
+                              unsigned int count)
 {
   vector<ComponentEventPtr> results;
-  Int64 firstSeq, end;
+  uint64_t firstSeq, end;
   {
     dlib::auto_mutex lock(*mSequenceLock);
     
@@ -984,7 +970,7 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
     start = (start <= firstSeq) ? firstSeq : start;
     end = (count + start >= mSequence) ? mSequence : count + start;
     
-    for (Int64 i = start; i < end; i++)
+    for (uint64_t i = start; i < end; i++)
     {
       // Filter out according to if it exists in the list
       const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
@@ -1041,8 +1027,7 @@ string Agent::devicesAndPath(const string& path, const string& device)
   return dataPath;
 }
 
-int Agent::checkAndGetParam(string& result,
-                            const key_value_map& queries,
+int Agent::checkAndGetParam(const key_value_map& queries,
                             const string& param,
                             const int defaultValue,
                             const int minValue,
@@ -1056,47 +1041,42 @@ int Agent::checkAndGetParam(string& result,
   
   if (queries[param].empty())
   {
-    result = printError("QUERY_ERROR", "'" + param + "' cannot be empty.");
-    return PARAM_ERROR;
+    throw ParameterError("QUERY_ERROR", "'" + param + "' cannot be empty.");
   }
   
   if (!isNonNegativeInteger(queries[param]))
   {
-    result = printError("QUERY_ERROR",
+    throw ParameterError("QUERY_ERROR",
                         "'" + param + "' must be a positive integer.");
-    return PARAM_ERROR;
   }
   
   long int value = strtol(queries[param].c_str(), NULL, 10);
   
-  if (minValue != NO_VALUE && value < minValue)
+  if (minValue != NO_VALUE32 && value < minValue)
   {
     if (minError)
     {
-      result = printError("QUERY_ERROR",
+      throw ParameterError("QUERY_ERROR",
                           "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
-      return PARAM_ERROR;
     }
     return minValue;
   }
   
-  if (maxValue != NO_VALUE && value > maxValue)
+  if (maxValue != NO_VALUE32 && value > maxValue)
   {
-    result = printError("QUERY_ERROR",
+    throw ParameterError("QUERY_ERROR",
                         "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
-    return PARAM_ERROR;
   }
   
   return value;
 }
 
-Int64 Agent::checkAndGetParam64(string& result,
-                                const key_value_map& queries,
+uint64_t Agent::checkAndGetParam64(const key_value_map& queries,
                                 const string& param,
-                                const Int64 defaultValue,
-                                const Int64 minValue,
+                                const uint64_t defaultValue,
+                                const uint64_t minValue,
                                 bool minError,
-                                const Int64 maxValue)
+                                const uint64_t maxValue)
 {
   if (queries.count(param) == 0)
   {
@@ -1105,35 +1085,31 @@ Int64 Agent::checkAndGetParam64(string& result,
   
   if (queries[param].empty())
   {
-    result = printError("QUERY_ERROR", "'" + param + "' cannot be empty.");
-    return PARAM_ERROR;
+    throw ParameterError("QUERY_ERROR", "'" + param + "' cannot be empty.");
   }
   
   if (!isNonNegativeInteger(queries[param]))
   {
-    result = printError("QUERY_ERROR",
+    throw ParameterError("QUERY_ERROR",
                         "'" + param + "' must be a positive integer.");
-    return PARAM_ERROR;
   }
   
-  Int64 value = strtoll(queries[param].c_str(), NULL, 10);
+  uint64_t value = strtoll(queries[param].c_str(), NULL, 10);
   
-  if (minValue != NO_VALUE && value < minValue)
+  if (minValue != NO_VALUE64 && value < minValue)
   {
     if (minError)
     {
-      result = printError("QUERY_ERROR",
+      throw ParameterError("QUERY_ERROR",
                           "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
-      return PARAM_ERROR;
     }
     return minValue;
   }
   
-  if (maxValue != NO_VALUE && value > maxValue)
+  if (maxValue != NO_VALUE64 && value > maxValue)
   {
-    result = printError("QUERY_ERROR",
+    throw ParameterError("QUERY_ERROR",
                         "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
-    return PARAM_ERROR;
   }
   
   return value;

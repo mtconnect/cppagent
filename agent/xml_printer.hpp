@@ -54,22 +54,22 @@ namespace XmlPrinter
   std::string printError(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const Int64 nextSeq,
+    const uint64_t nextSeq,
     const std::string& errorCode,
     const std::string& errorText
   );
   
   std::string printProbe(const unsigned int instanceId,
                          const unsigned int bufferSize,
-                         const Int64 nextSeq,
+                         const uint64_t nextSeq,
                          std::vector<Device *>& devices,
                          const std::map<std::string, int> *aCounts = NULL);
   
   std::string printSample(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const Int64 nextSeq,
-    const Int64 firstSeq,
+    const uint64_t nextSeq,
+    const uint64_t firstSeq,
     std::vector<ComponentEventPtr>& results
   );
 

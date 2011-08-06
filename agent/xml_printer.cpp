@@ -69,8 +69,8 @@ namespace XmlPrinter {
                   EDocumentType aDocType,
                   const unsigned int instanceId,
                   const unsigned int bufferSize,
-                  const Int64 nextSeq,
-                  const Int64 firstSeq = 0,
+                  const uint64_t nextSeq,
+                  const uint64_t firstSeq = 0,
                   const map<string, int> *aCounts = NULL);  
 
   /* Helper to print individual components and details */
@@ -198,7 +198,7 @@ const string XmlPrinter::getAssetsUrn(const std::string &aPrefix)
 string XmlPrinter::printError(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const Int64 nextSeq,
+    const uint64_t nextSeq,
     const string& errorCode,
     const string& errorText
   )
@@ -247,7 +247,7 @@ string XmlPrinter::printError(
 
 string XmlPrinter::printProbe(const unsigned int instanceId,
                               const unsigned int bufferSize,
-                              const Int64 nextSeq,
+                              const uint64_t nextSeq,
                               vector<Device *>& deviceList,
                               const std::map<std::string, int> *aCount)
 {
@@ -395,8 +395,8 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 string XmlPrinter::printSample(
     const unsigned int instanceId,
     const unsigned int bufferSize,
-    const Int64 nextSeq,
-    const Int64 firstSeq,
+    const uint64_t nextSeq,
+    const uint64_t firstSeq,
     vector<ComponentEventPtr>& results
   )
 {
@@ -642,8 +642,8 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
                             EDocumentType aType,
                             const unsigned int instanceId,
                             const unsigned int bufferSize,
-                            const Int64 nextSeq,
-                            const Int64 firstSeq,
+                            const uint64_t nextSeq,
+                            const uint64_t firstSeq,
                             const map<string, int> *aCount
                             )
 {

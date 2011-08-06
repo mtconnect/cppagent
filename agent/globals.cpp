@@ -38,7 +38,7 @@
 
 using namespace std;
 
-string int64ToString(Int64 i)
+string int64ToString(uint64_t i)
 {
   ostringstream stm;
   stm << i;

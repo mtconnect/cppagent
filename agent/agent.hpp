@@ -41,6 +41,8 @@
 #include <set>
 #include <list>
 
+#include <stdint.h>
+
 #include "dlib/md5.h"
 #include "dlib/server.h"
 #include "dlib/sliding_buffer.h"
@@ -62,6 +64,27 @@ using namespace dlib;
 
 class Agent : public server::http_1a
 {
+  class ParameterError
+  {
+  public:
+    ParameterError(const std::string &aCode, const std::string &aMessage) 
+    {
+      mCode = aCode;
+      mMessage = aMessage;
+    }
+    ParameterError(const ParameterError &aError) {
+      mCode = aError.mCode;
+      mMessage = aError.mMessage;
+    }
+    ParameterError &operator=(const ParameterError &aError) {
+      mCode = aError.mCode;
+      mMessage = aError.mMessage;
+      return *this;
+    }
+    std::string mCode;
+    std::string mMessage;
+  };
+  
 public:
   /* Slowest frequency allowed */
   static const int SLOWEST_FREQ = 2147483646;
@@ -72,11 +95,9 @@ public:
   /* Default count for sample query */
   static const unsigned int DEFAULT_COUNT = 100;
   
-  /* Error code to return for a parameter error */
-  static const int PARAM_ERROR = -1;
-  
   /* Code to return when a parameter has no value */
-  static const int NO_VALUE = -1;
+  static const int NO_VALUE32 = -1;
+  static const uint64_t NO_VALUE64 = UINT64_MAX;
   
   /* Code to return for no frequency specified */
   static const int NO_FREQ = -2;
@@ -85,7 +106,7 @@ public:
   static const int NO_HB = 0;
 
   /* Code for no start value specified */
-  static const int NO_START = -2;
+  static const uint64_t NO_START = UINT64_MAX - 1;
 
   /* Small file size */
   static const int SMALL_FILE = 10 * 1024; // 10k is considered small
@@ -194,7 +215,7 @@ protected:
     const std::string& path,
     bool current,  
     unsigned int frequency,
-    Int64 start = 0,
+    uint64_t start = 0,
     unsigned int count = 0,
     unsigned int aHb = 10000
   );
@@ -215,18 +236,16 @@ protected:
     std::set<std::string> &aFilterSet,
     bool current,
     unsigned int frequency,
-    Int64 start = 1,
+    uint64_t start = 1,
     unsigned int count = 0,
     unsigned int aHb = 10000
   );
   
   /* Fetch the current/sample data and return the XML in a std::string */
-  std::string fetchCurrentData(std::set<std::string> &aFilter, Int64 at);
-  std::string fetchSampleData(
-    std::set<std::string> &aFilterSet,
-    Int64 start,
-    unsigned int count
-  );
+  std::string fetchCurrentData(std::set<std::string> &aFilter, uint64_t at);
+  std::string fetchSampleData(std::set<std::string> &aFilterSet,
+                              uint64_t start,
+                              unsigned int count);
   
   /* Output an XML Error */
   std::string printError(const std::string& errorCode, const std::string& text);
@@ -244,24 +263,22 @@ protected:
   
   /* Perform a check on parameter and return a value or a code */
   int checkAndGetParam(
-    std::string& result,
     const key_value_map& queries,
     const std::string& param,
     const int defaultValue,
-    const int minValue = NO_VALUE,
+    const int minValue = NO_VALUE32,
     bool minError = false,
-    const int maxValue = NO_VALUE
+    const int maxValue = NO_VALUE32
   );
   
   /* Perform a check on parameter and return a value or a code */
-  Int64 checkAndGetParam64(
-    std::string& result,
+  uint64_t checkAndGetParam64(
     const key_value_map& queries,
     const std::string& param,
-    const Int64 defaultValue,
-    const Int64 minValue = NO_VALUE,
+    const uint64_t defaultValue,
+    const uint64_t minValue = NO_VALUE64,
     bool minError = false,
-    const Int64 maxValue = NO_VALUE
+    const uint64_t maxValue = NO_VALUE64
   );
   
   /* Find data items by name/id */
@@ -279,7 +296,7 @@ protected:
   dlib::mutex *mAssetLock;
   
   /* Sequence number */
-  Int64 mSequence;
+  uint64_t mSequence;
   
   /* The sliding/circular buffer to hold all of the events/sample data */
   dlib::sliding_buffer_kernel_1<ComponentEventPtr> *mSlidingBuffer;
