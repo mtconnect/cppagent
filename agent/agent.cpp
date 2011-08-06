@@ -248,14 +248,16 @@ const string Agent::on_request (const incoming_things& incoming,
     
     string::size_type loc1 = path.find("/", 1);
     string::size_type end = (path[path.length()-1] == '/') ?
-    path.length()-1 : string::npos;
+                              path.length() - 1 : string::npos;
     
     string first =  path.substr(1, loc1-1);
     string call, device;
     
     if (first == "assets" || first == "asset")
     {
-      string list = path.substr(loc1+1);
+      string list;
+      if (loc1 != string::npos)
+        list = path.substr(loc1 + 1);
       if (incoming.request_type == "GET")
         result = handleAssets(*outgoing.out, incoming.queries, list);
       else
@@ -701,31 +703,49 @@ std::string Agent::handleAssets(std::ostream& aOut,
                                 const key_value_map& aQueries,
                                 const std::string& aList)
 {
-  using namespace dlib;
-  auto_mutex lock(*mAssetLock);
-  
-  istringstream str(aList);
-  tokenizer_kernel_1 tok;
-  tok.set_stream(str);
-  tok.set_identifier_token(tok.lowercase_letters() + tok.uppercase_letters() +
-                           tok.numbers() + "_.@$%&^:+-_=",
-                           tok.lowercase_letters() + tok.uppercase_letters() +
-                           tok.numbers() + "_.@$%&^:+-_=");
-  
-  
-  int type;
-  string token;
+  using namespace dlib;  
   vector<AssetPtr> assets;
-  for (tok.get_token(type, token); type != tok.END_OF_FILE; tok.get_token(type, token))
+  if (!aList.empty()) 
   {
-    if (type == tok.IDENTIFIER)
+    auto_mutex lock(*mAssetLock);
+    istringstream str(aList);
+    tokenizer_kernel_1 tok;
+    tok.set_stream(str);
+    tok.set_identifier_token(tok.lowercase_letters() + tok.uppercase_letters() +
+                             tok.numbers() + "_.@$%&^:+-_=",
+                             tok.lowercase_letters() + tok.uppercase_letters() +
+                             tok.numbers() + "_.@$%&^:+-_=");
+    
+    
+    int type;
+    string token;
+    for (tok.get_token(type, token); type != tok.END_OF_FILE; tok.get_token(type, token))
     {
-      AssetPtr ptr = mAssetMap[token];
-      if (ptr.getObject() == NULL)
-        return XmlPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND", 
-                                      (string) "Could not find asset: " + token);
-      assets.push_back(ptr);
+      if (type == tok.IDENTIFIER)
+      {
+        AssetPtr ptr = mAssetMap[token];
+        if (ptr.getObject() == NULL)
+          return XmlPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND", 
+                                        (string) "Could not find asset: " + token);
+        assets.push_back(ptr);
+      }
     }
+  }
+  else
+  {
+    auto_mutex lock(*mAssetLock);
+    // Return all asssets, first check if there is a type attribute
+    
+    string type = aQueries["type"];
+    
+    list<AssetPtr>::iterator iter;
+    for (iter = mAssets.begin(); iter != mAssets.end(); ++iter)
+    {
+      if (type.empty() || type == (*iter)->getType())
+      {
+        assets.push_back(*iter);
+      }
+    }    
   }
   
   return XmlPrinter::printAssets(mInstanceId, mMaxAssets, mAssets.size(), assets);

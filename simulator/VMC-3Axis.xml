@@ -24,6 +24,7 @@
 									</Constraints>
 								</DataItem>
 								<DataItem category="CONDITION" id="Cloadc" type="LOAD"/>
+								<DataItem category="SAMPLE" id="cl3" name="Cload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
 							</DataItems>
 						</Rotary>
 						<Linear id="x1" name="X">
@@ -66,6 +67,7 @@
 								<DataItem category="EVENT" id="cn4" name="line" type="LINE"/>
 								<DataItem category="EVENT" id="cn5" name="program" type="PROGRAM"/>
 								<DataItem category="EVENT" id="cn6" name="execution" type="EXECUTION"/>
+								<DataItem category="EVENT" id="cnt1" name="tool_id" type="TOOL_ID"/>
 								<DataItem category="SAMPLE" id="Ppos" nativeUnits="MILLIMETER_3D" subType="ACTUAL" type="PATH_POSITION" units="MILLIMETER_3D"/>
 								<DataItem category="SAMPLE" id="Frt" nativeUnits="MILLIMETER/SECOND" type="PATH_FEEDRATE" units="MILLIMETER/SECOND">
 									<Source>path_feedrate</Source>
@@ -82,17 +84,6 @@
 					  <Electric id="el" name="electric">
     					<DataItems>
     						<DataItem category="EVENT" id="p2" name="power" type="POWER_STATE"/>
-    						<DataItem category="SAMPLE" id="freq" name="frequency" nativeUnits="HERTZ" type="FREQUENCY" units="HERTZ"/>
-    						<DataItem category="SAMPLE" id="power_sum" nativeUnits="WATT" type="WATTAGE" units="WATT"/>
-    						<DataItem category="SAMPLE" id="power_a" nativeUnits="WATT" type="WATTAGE" units="WATT"/>
-    						<DataItem category="SAMPLE" id="power_b" nativeUnits="WATT" type="WATTAGE" units="WATT"/>
-    						<DataItem category="SAMPLE" id="power_c" nativeUnits="WATT" type="WATTAGE" units="WATT"/>
-    						<DataItem category="SAMPLE" id="volt_a" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
-    						<DataItem category="SAMPLE" id="volt_b" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
-    						<DataItem category="SAMPLE" id="volt_c" name="volt_c" nativeUnits="VOLT" type="VOLTAGE" units="VOLT"/>
-    						<DataItem category="SAMPLE" id="amp_a" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
-    						<DataItem category="SAMPLE" id="amp_b" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
-    						<DataItem category="SAMPLE" id="amp_c" nativeUnits="AMPERE" type="AMPERAGE" units="AMPERE"/>
     					</DataItems>
 				    </Electric>
 						<Coolant id="cool" name="coolant">

@@ -23,6 +23,7 @@
                   <Source>SspeedOvr</Source>
                 </DataItem>
                 <DataItem type="LOAD" category="CONDITION" id="clc" />
+                <DataItem type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="cl3" name="Cload" />
                 <DataItem type="TEMPERATURE" category="CONDITION" id="ctmp" />
               </DataItems>
             </Rotary>

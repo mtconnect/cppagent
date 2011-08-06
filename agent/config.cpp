@@ -218,7 +218,10 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
       trim(putHost);
       if (!putHost.empty()) {
         string ip;
-        if (dlib::hostname_to_ip(putHost, ip) == 0) {
+        int n;
+        for (n = 0; dlib::hostname_to_ip(putHost, ip, n) == 0 && ip == "0.0.0.0"; n++)
+          ip = "";
+        if (!ip.empty()) {
           mAgent->enablePut();
           mAgent->allowPutFrom(ip);
         }
@@ -255,7 +258,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
         throw runtime_error(static_cast<string>("Can't locate device '") + deviceName + "' in XML configuration file.");
       }
 
-      const string &host = get_with_default(adapter, "Host", (string)"localhost");
+      const string host = get_with_default(adapter, "Host", (string)"localhost");
       int port = get_with_default(adapter, "Port", 7878);
       
       sLogger << LINFO << "Adding adapter for " << device->getName() << " on "
