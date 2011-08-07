@@ -54,6 +54,7 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDisablePut);
   CPPUNIT_TEST(testLimitPut);
   CPPUNIT_TEST(testLimitPutFromHosts);
+  CPPUNIT_TEST(testNamespaces);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -73,6 +74,7 @@ protected:
   void testDisablePut();
   void testLimitPut();
   void testLimitPutFromHosts();
+  void testNamespaces();
 };
 
 #endif

@@ -7,6 +7,9 @@
 class Agent;
 class Device;
 
+typedef void (NamespaceFunction)(const std::string &aUrn, const std::string &aLocation, 
+                                  const std::string &aPrefix);
+
 class AgentConfiguration : public MTConnectService {
 public:
   AgentConfiguration();
@@ -24,6 +27,12 @@ public:
   
 protected:
   Device *defaultDevice();
+  void loadAdapters(dlib::config_reader::kernel_1a &aReader, bool aDefaultPreserve);
+  void loadAllowPut(dlib::config_reader::kernel_1a &aReader);
+  void loadNamespace(dlib::config_reader::kernel_1a &aReader, 
+                     const char *aNamespaceType, 
+                     NamespaceFunction *aCallback);
+  void loadFiles(dlib::config_reader::kernel_1a &aReader);
   
 protected:
   Agent *mAgent;

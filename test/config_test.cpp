@@ -183,3 +183,55 @@ void ConfigTest::testLimitPutFromHosts()
   CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "192.168.0.1"));
 }
 
+void ConfigTest::testNamespaces()
+{
+  istringstream streams("StreamsNamespaces {\n"
+                    "x {\n"
+                    "Urn = urn:example.com:ExampleStreams:1.2\n"
+                    "Location = /schemas/ExampleStreams_1.2.xsd\n"
+                    "Path = ./ExampleStreams_1.2.xsd\n"
+                    "}\n"
+                    "}\n");
+  
+  mConfig->loadConfig(streams);  
+  string path = XmlPrinter::getStreamsUrn("x");
+  CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleStreams:1.2", path);
+
+  istringstream devices("DevicesNamespaces {\n"
+                        "y {\n"
+                        "Urn = urn:example.com:ExampleDevices:1.2\n"
+                        "Location = /schemas/ExampleDevices_1.2.xsd\n"
+                        "Path = ./ExampleDevices_1.2.xsd\n"
+                        "}\n"
+                        "}\n");
+  
+  mConfig->loadConfig(devices);  
+  path = XmlPrinter::getDevicesUrn("y");
+  CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleDevices:1.2", path);
+
+
+  istringstream assets("AssetsNamespaces {\n"
+                        "z {\n"
+                        "Urn = urn:example.com:ExampleAssets:1.2\n"
+                        "Location = /schemas/ExampleAssets_1.2.xsd\n"
+                        "Path = ./ExampleAssets_1.2.xsd\n"
+                        "}\n"
+                        "}\n");
+  
+  mConfig->loadConfig(assets);  
+  path = XmlPrinter::getAssetsUrn("z");
+  CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleAssets:1.2", path);
+
+  istringstream errors("ErrorNamespaces {\n"
+                       "a {\n"
+                       "Urn = urn:example.com:ExampleErrors:1.2\n"
+                       "Location = /schemas/ExampleErrors_1.2.xsd\n"
+                       "Path = ./ExampleErrorss_1.2.xsd\n"
+                       "}\n"
+                       "}\n");
+  
+  mConfig->loadConfig(errors);  
+  path = XmlPrinter::getErrorUrn("a");
+  CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleErrors:1.2", path);
+}
+

@@ -205,33 +205,26 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   for (size_t i = 0; i < mAgent->getDevices().size(); i++)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
     
-  bool putEnabled = get_bool_with_default(reader, "AllowPut", false);
-  mAgent->enablePut(putEnabled);
+  loadAllowPut(reader);
+  loadAdapters(reader, defaultPreserve);
   
-  string putHosts = get_with_default(reader, "AllowPutFrom", "");
-  if (!putHosts.empty())
-  {
-    istringstream toParse(putHosts);
-    string putHost;
-    do {
-      getline(toParse, putHost, ',');
-      trim(putHost);
-      if (!putHost.empty()) {
-        string ip;
-        int n;
-        for (n = 0; dlib::hostname_to_ip(putHost, ip, n) == 0 && ip == "0.0.0.0"; n++)
-          ip = "";
-        if (!ip.empty()) {
-          mAgent->enablePut();
-          mAgent->allowPutFrom(ip);
-        }
-      }
-    } while (!toParse.eof());
-  }
+  // Files served by the Agent... allows schema files to be served by
+  // agent.
+  loadFiles(reader);
   
+  // Load namespaces, allow for local file system serving as well.
+  loadNamespace(reader, "DevicesNamespaces", &XmlPrinter::addDevicesNamespace);
+  loadNamespace(reader, "StreamsNamespaces", &XmlPrinter::addStreamsNamespace);
+  loadNamespace(reader, "AssetsNamespaces", &XmlPrinter::addAssetsNamespace);
+  loadNamespace(reader, "ErrorNamespaces", &XmlPrinter::addErrorNamespace);
+}
+
+void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
+                                         bool aDefaultPreserve)
+{
   Device *device;
-  if (reader.is_block_defined("Adapters")) {
-    const config_reader::kernel_1a &adapters = reader.block("Adapters");
+  if (aReader.is_block_defined("Adapters")) {
+    const config_reader::kernel_1a &adapters = aReader.block("Adapters");
     vector<string> blocks;
     adapters.get_blocks(blocks);
     
@@ -249,22 +242,22 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
       } else {
         deviceName = *block;
         device = mAgent->getDeviceByName(deviceName);
-	
+        
         if (device == NULL && mAgent->getDevices().size() == 1)
           device = defaultDevice();
       }
-	
+      
       if (device == NULL) {
         throw runtime_error(static_cast<string>("Can't locate device '") + deviceName + "' in XML configuration file.");
       }
-
+      
       const string host = get_with_default(adapter, "Host", (string)"localhost");
       int port = get_with_default(adapter, "Port", 7878);
       
       sLogger << LINFO << "Adding adapter for " << device->getName() << " on "
-	      << host << ":" << port;
+              << host << ":" << port;
       Adapter *adp = mAgent->addAdapter(device->getName(), host, port);
-      device->mPreserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
+      device->mPreserveUuid = get_bool_with_default(adapter, "PreserveUUID", aDefaultPreserve);
       
       // Add additional device information
       if (adapter.is_key_defined("UUID"))
@@ -275,11 +268,11 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
         device->setStation(adapter["Station"]);
       if (adapter.is_key_defined("SerialNumber"))
         device->setSerialNumber(adapter["SerialNumber"]);
-
+      
       adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", adp->isDupChecking()));
       adp->setAutoAvailable(get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
       adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", adp->isIgnoringTimestamps()));
-                                
+      
       if (adapter.is_key_defined("AdditionalDevices")) {
         istringstream devices(adapter["AdditionalDevices"]);
         string name;
@@ -305,12 +298,69 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   else
   {
     throw runtime_error("Adapters must be defined if more than one device is present");
-  }
+  }  
+}
+
+void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &aReader)
+{
+  bool putEnabled = get_bool_with_default(aReader, "AllowPut", false);
+  mAgent->enablePut(putEnabled);
   
-  // Files served by the Agent... allows schema files to be served by
-  // agent.
-  if (reader.is_block_defined("Files")) {
-    const config_reader::kernel_1a &files = reader.block("Files");
+  string putHosts = get_with_default(aReader, "AllowPutFrom", "");
+  if (!putHosts.empty())
+  {
+    istringstream toParse(putHosts);
+    string putHost;
+    do {
+      getline(toParse, putHost, ',');
+      trim(putHost);
+      if (!putHost.empty()) {
+        string ip;
+        int n;
+        for (n = 0; dlib::hostname_to_ip(putHost, ip, n) == 0 && ip == "0.0.0.0"; n++)
+          ip = "";
+        if (!ip.empty()) {
+          mAgent->enablePut();
+          mAgent->allowPutFrom(ip);
+        }
+      }
+    } while (!toParse.eof());
+  }
+}
+
+void AgentConfiguration::loadNamespace(dlib::config_reader::kernel_1a &aReader,
+                                       const char *aNamespaceType,
+                                       NamespaceFunction *aCallback)
+{
+  // Load namespaces, allow for local file system serving as well.
+  if (aReader.is_block_defined(aNamespaceType)) {
+    const config_reader::kernel_1a &namespaces = aReader.block(aNamespaceType);
+    vector<string> blocks;
+    namespaces.get_blocks(blocks);
+    
+    vector<string>::iterator block;
+    for (block = blocks.begin(); block != blocks.end(); ++block)
+    {
+      const config_reader::kernel_1a &ns = namespaces.block(*block);
+      if (!ns.is_key_defined("Urn"))
+      {
+        sLogger << LERROR << "Name space must have a Urn: " << *block;
+      } else {
+        string location;
+        if (ns.is_key_defined("Location"))
+          location = ns["Location"];
+        (*aCallback)(ns["Urn"], location, *block);
+        if (ns.is_key_defined("Path") && !location.empty())
+          mAgent->registerFile(location, ns["Path"]);        
+      }
+    }
+  }
+}
+
+void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader)
+{
+  if (aReader.is_block_defined("Files")) {
+    const config_reader::kernel_1a &files = aReader.block("Files");
     vector<string> blocks;
     files.get_blocks(blocks);
     
@@ -326,98 +376,5 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
       }
     }
   }
-  
-  // Load namespaces, allow for local file system serving as well.
-  if (reader.is_block_defined("DevicesNamespaces")) {
-    const config_reader::kernel_1a &namespaces = reader.block("DevicesNamespaces");
-    vector<string> blocks;
-    namespaces.get_blocks(blocks);
-    
-    vector<string>::iterator block;
-    for (block = blocks.begin(); block != blocks.end(); ++block)
-    {
-      const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Urn"))
-      {
-        sLogger << LERROR << "Name space must have a Urn: " << *block;
-      } else {
-        string location;
-        if (ns.is_key_defined("Location"))
-          location = ns["Location"];
-        XmlPrinter::addDevicesNamespace(ns["Urn"], location, *block);
-        if (ns.is_key_defined("Path") && !location.empty())
-          mAgent->registerFile(location, ns["Path"]);        
-      }
-    }
-  }
-  
-  if (reader.is_block_defined("StreamsNamespaces")) {
-    const config_reader::kernel_1a &namespaces = reader.block("StreamsNamespaces");
-    vector<string> blocks;
-    namespaces.get_blocks(blocks);
-    
-    vector<string>::iterator block;
-    for (block = blocks.begin(); block != blocks.end(); ++block)
-    {
-      const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Urn"))
-      {
-        sLogger << LERROR << "Name space must have a Urn: " << *block;
-      } else {
-        string location;
-        if (ns.is_key_defined("Location"))
-          location = ns["Location"];
-        XmlPrinter::addStreamsNamespace(ns["Urn"], location, *block);
-        if (ns.is_key_defined("Path") && !location.empty())
-          mAgent->registerFile(location, ns["Path"]);        
-      }
-    }
-  }
-  
-  if (reader.is_block_defined("AssetsNamespaces")) {
-    const config_reader::kernel_1a &namespaces = reader.block("AssetsNamespaces");
-    vector<string> blocks;
-    namespaces.get_blocks(blocks);
-    
-    vector<string>::iterator block;
-    for (block = blocks.begin(); block != blocks.end(); ++block)
-    {
-      const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Urn"))
-      {
-        sLogger << LERROR << "Name space must have a Urn: " << *block;
-      } else {
-        string location;
-        if (ns.is_key_defined("Location"))
-          location = ns["Location"];
-        XmlPrinter::addAssetsNamespace(ns["Urn"], location, *block);
-        if (ns.is_key_defined("Path") && !location.empty())
-          mAgent->registerFile(location, ns["Path"]);        
-      }
-    }
-  }
-
-  if (reader.is_block_defined("ErrorNamespaces")) {
-    const config_reader::kernel_1a &namespaces = reader.block("ErrorNamespaces");
-    vector<string> blocks;
-    namespaces.get_blocks(blocks);
-    
-    vector<string>::iterator block;
-    for (block = blocks.begin(); block != blocks.end(); ++block)
-    {
-      const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Urn"))
-      {
-        sLogger << LERROR << "Name space must have a Urn: " << *block;
-      } else {
-        string location;
-        if (ns.is_key_defined("Location"))
-          location = ns["Location"];
-        XmlPrinter::addErrorNamespace(ns["Urn"], location, *block);
-        if (ns.is_key_defined("Path") && !location.empty())
-          mAgent->registerFile(location, ns["Path"]);        
-      }
-    }
-  }
-  
 }
+
