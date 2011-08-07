@@ -1,6 +1,3 @@
-# The name of our project is "HELLO". CMakeLists files in this project can 
-# refer to the root source directory of the project as ${HELLO_SOURCE_DIR} and 
-# to the root binary directory of the project as ${HELLO_BINARY_DIR}. 
 cmake_minimum_required (VERSION 2.6) 
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../agent/CMake;${CMAKE_MODULE_PATH}")
@@ -42,7 +39,7 @@ set(test_srcs test.cpp
 	       ../agent/config.cpp
 	       ../agent/service.cpp
 	       ../agent/ref_counted.cpp
-           ../agent/asset.cpp
+          ../agent/asset.cpp
 	       adapter_test.cpp
 	       agent_test.cpp
 	       checkpoint_test.cpp
@@ -61,7 +58,7 @@ set(test_srcs test.cpp
 
 file(GLOB test_headers *.hpp ../agent/*.hpp)
 
-include_directories(../lib ../agent)
+include_directories(../lib ../agent .)
 
 find_package(CppUnit REQUIRED)
 find_package(LibXML2 REQUIRED)

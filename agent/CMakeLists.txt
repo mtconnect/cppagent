@@ -1,6 +1,3 @@
-# The name of our project is "HELLO". CMakeLists files in this project can 
-# refer to the root source directory of the project as ${HELLO_SOURCE_DIR} and 
-# to the root binary directory of the project as ${HELLO_BINARY_DIR}. 
 cmake_minimum_required (VERSION 2.6) 
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake;${CMAKE_MODULE_PATH}")
@@ -8,6 +5,11 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake;${CMAKE_MODULE_PATH}")
 set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
 set(CMAKE_FIND_APPBUNDLE NEVER)
 
+# The version number.
+set (AGENT_VERSION_MAJOR 1)
+set (AGENT_VERSION_MINOR 2)
+set (AGENT_VERSION_PATCH 0)
+set (AGENT_VERSION_BUILD 1)
 
 if(WIN32)
   add_library(libxml2 STATIC IMPORTED)
@@ -41,12 +43,19 @@ set(agent_srcs cppagent.cpp
 	       options.cpp
 	       service.cpp
 	       config.cpp
-               ref_counted.cpp
+         ref_counted.cpp
 	       xml_parser.cpp 
 	       xml_printer.cpp)
 
 file(GLOB agent_headers *.hpp)
 
+# configure a header file to pass some of the CMake settings
+# to the source code
+configure_file (
+  "${PROJECT_SOURCE_DIR}/version.h.in"
+  "${PROJECT_BINARY_DIR}/version.h"
+  )
+ 
 include_directories(../lib)
 
 find_package(LibXML2 REQUIRED)
@@ -57,7 +66,7 @@ endif(UNIX)
 
 
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
-include_directories(${LibXML2_INCLUDE_DIRS})
+include_directories(${LibXML2_INCLUDE_DIRS} ${PROJECT_BINARY_DIR})
 
 add_executable(agent ${agent_srcs} ${agent_headers})
 target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
