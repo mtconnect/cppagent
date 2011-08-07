@@ -31,6 +31,7 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
+#define __STDC_LIMIT_MACROS 1
 #include "adapter.hpp"
 #include "device.hpp"
 #include "dlib/logger.h"

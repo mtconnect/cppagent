@@ -34,6 +34,11 @@
 #ifndef GLOBALS_HPP
 #define GLOBALS_HPP
 
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS 1
+#endif
+
+#include <stdint.h>
 #include <ctime>
 #include <string>
 #include <map>

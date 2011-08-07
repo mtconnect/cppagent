@@ -34,6 +34,11 @@
 #ifndef AGENT_TEST_HPP
 #define AGENT_TEST_HPP
 
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS 1
+#endif
+#include <stdint.h>
+
 #include <map>
 #include <string>
 

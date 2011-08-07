@@ -233,5 +233,10 @@ void ConfigTest::testNamespaces()
   mConfig->loadConfig(errors);  
   path = XmlPrinter::getErrorUrn("a");
   CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleErrors:1.2", path);
+
+  XmlPrinter::clearDevicesNamespaces();
+  XmlPrinter::clearErrorNamespaces();
+  XmlPrinter::clearStreamsNamespaces();
+  XmlPrinter::clearAssetsNamespaces();
 }
 
