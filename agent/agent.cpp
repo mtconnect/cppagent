@@ -846,6 +846,9 @@ void Agent::streamData(ostream& out,
     mDataItemMap[*iter]->addObserver(&observer);
   
   uint64_t interMicros = aInterval * 1000;
+  uint64_t firstSeq = getFirstSequence();
+  if (start < firstSeq)
+    start = firstSeq;
   
   try {
     // Loop until the user closes the connection
