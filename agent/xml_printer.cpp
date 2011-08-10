@@ -69,6 +69,8 @@ namespace XmlPrinter {
                   EDocumentType aDocType,
                   const unsigned int instanceId,
                   const unsigned int bufferSize,
+                  const unsigned int aAssetBufferSize,
+                  const unsigned int aAssetCount,
                   const uint64_t nextSeq,
                   const uint64_t firstSeq = 0,
                   const map<string, int> *aCounts = NULL);  
@@ -214,7 +216,7 @@ string XmlPrinter::printError(
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
   
     initXmlDoc(writer, eERROR, instanceId,
-               bufferSize, nextSeq);
+               bufferSize, 0, 0, nextSeq);
   
     
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Errors"));
@@ -248,6 +250,8 @@ string XmlPrinter::printError(
 string XmlPrinter::printProbe(const unsigned int instanceId,
                               const unsigned int bufferSize,
                               const uint64_t nextSeq,
+                              const unsigned int aAssetBufferSize,
+                              const unsigned int aAssetCount,
                               vector<Device *>& deviceList,
                               const std::map<std::string, int> *aCount)
 {
@@ -264,6 +268,8 @@ string XmlPrinter::printProbe(const unsigned int instanceId,
     initXmlDoc(writer, eDEVICES,
                 instanceId,
                 bufferSize,
+                aAssetBufferSize,
+                aAssetCount,
                 nextSeq, 0,
                 aCount);
     
@@ -413,6 +419,7 @@ string XmlPrinter::printSample(
     initXmlDoc(writer, eSTREAMS,
                instanceId,
                bufferSize,
+               0, 0,
                nextSeq,
                firstSeq);
         
@@ -508,7 +515,7 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
     
-    initXmlDoc(writer, eASSETS, instanceId, aBufferSize, anAssetCount);
+    initXmlDoc(writer, eASSETS, instanceId, 0, aBufferSize, anAssetCount, 0);
     
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Assets"));
 
@@ -642,6 +649,8 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
                             EDocumentType aType,
                             const unsigned int instanceId,
                             const unsigned int bufferSize,
+                            const unsigned int aAssetBufferSize,
+                            const unsigned int aAssetCount,
                             const uint64_t nextSeq,
                             const uint64_t firstSeq,
                             const map<string, int> *aCount
@@ -737,18 +746,22 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "sender", BAD_CAST hostname.c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId", BAD_CAST intToString(instanceId).c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST "1.2"));
-  if (aType == eASSETS) 
+
+  if (aType == eASSETS || aType == eDEVICES) 
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetBufferSize", BAD_CAST intToString(bufferSize).c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetCount", BAD_CAST int64ToString(nextSeq).c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetBufferSize", BAD_CAST intToString(aAssetBufferSize).c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetCount", BAD_CAST int64ToString(aAssetCount).c_str()));
   }
-  else
+  
+  if (aType == eDEVICES || aType == eERROR)
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize", BAD_CAST intToString(bufferSize).c_str()));    
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize", BAD_CAST intToString(bufferSize).c_str()));
   }
+    
   if (aType == eSTREAMS)
   {
     // Add additional attribtues for streams
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize", BAD_CAST intToString(bufferSize).c_str()));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "nextSequence", 
                                                     BAD_CAST int64ToString(nextSeq).c_str()));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST  "firstSequence", 

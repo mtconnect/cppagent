@@ -135,7 +135,10 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   }
   
   // Reload the document for path resolution
-  mXmlParser->loadDocument(XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence, mDevices));
+  mXmlParser->loadDocument(XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
+                                                  mMaxAssets,
+                                                  mAssets.size(),
+                                                  mSequence, mDevices));
    
   /* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
   for (device = mDevices.begin(); device != mDevices.end(); ++device) 
@@ -640,7 +643,9 @@ string Agent::handleProbe(const string& name)
     mDeviceList = mDevices;
   }
   
-  return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
+  return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
+                                mMaxAssets, mAssets.size(),
+                                mSequence,
                                 mDeviceList, &mAssetCounts);
 }
 

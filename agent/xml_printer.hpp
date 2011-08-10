@@ -62,6 +62,8 @@ namespace XmlPrinter
   std::string printProbe(const unsigned int instanceId,
                          const unsigned int bufferSize,
                          const uint64_t nextSeq,
+                         const unsigned int aAssetBufferSize,
+                         const unsigned int aAssetCount,
                          std::vector<Device *>& devices,
                          const std::map<std::string, int> *aCounts = NULL);
   

@@ -62,10 +62,13 @@ void XmlPrinterTest::testPrintError()
 
 void XmlPrinterTest::testPrintProbe()
 {  
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
     
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "1024");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "10");
+  
   
   // Check Description
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "NIST");
@@ -151,7 +154,7 @@ void XmlPrinterTest::testChangeDevicesNamespace()
   XmlPrinter::clearDevicesNamespaces();
   
   {
-    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
             "urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
   }
@@ -161,7 +164,7 @@ void XmlPrinterTest::testChangeDevicesNamespace()
                                     "http://www.machine.com/schemas/MachineDevices_1.2.xsd",
                                     "e");
     
-    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));  
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));  
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
                     "urn:machine.com:MachineDevices:1.2 http://www.machine.com/schemas/MachineDevices_1.2.xsd");
@@ -172,7 +175,7 @@ void XmlPrinterTest::testChangeDevicesNamespace()
   {
     XmlParser ext;
     std::vector<Device *> extdevs = ext.parseFile("../samples/extension.xml");
-    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, extdevs));  
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, extdevs));  
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
                           "urn:example.com:ExampleDevices:1.1 ExtensionDevices_1.1.xsd");
@@ -410,7 +413,7 @@ void XmlPrinterTest::testChangeDeviceAttributes()
   
   device = devices.front();
   
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     
   // Check Description
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "Some_Crazy_Uuid");
@@ -421,7 +424,7 @@ void XmlPrinterTest::testChangeDeviceAttributes()
 
 void XmlPrinterTest::testStatisticAndTimeSeriesProbe()
 {
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xact']@statistic", "AVERAGE");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xts']@representation", "TIME_SERIES");
@@ -488,7 +491,7 @@ void XmlPrinterTest::testPrintAssetProbe()
   map<string, int> counts;
   counts["CuttingTool"] = 10;
 
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, devices, &counts));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices, &counts));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount", "10");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount@assetType", "CuttingTool");
