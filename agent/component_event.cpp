@@ -42,7 +42,7 @@
 #endif
 
 using namespace std;
-static dlib::rmutex sRefMutex;
+static dlib::rmutex sAttributeMutex;
 
 const string ComponentEvent::SLevels[NumLevels] = 
 {
@@ -99,105 +99,108 @@ AttributeList *ComponentEvent::getAttributes()
 {
   if (!mHasAttributes) 
   {
-    mAttributes.push_back(AttributeItem("dataItemId", mDataItem->getId()));
-    mAttributes.push_back(AttributeItem("timestamp", mTime));
-    if (!mDataItem->getName().empty())
-      mAttributes.push_back(AttributeItem("name", mDataItem->getName()));
-    mSequenceStr = int64ToString(mSequence);
-    mAttributes.push_back(AttributeItem("sequence",mSequenceStr));
-    if (!mDataItem->getSubType().empty())
-      mAttributes.push_back(AttributeItem("subType", mDataItem->getSubType()));
-    if (!mDataItem->getStatistic().empty())
-      mAttributes.push_back(AttributeItem("statistic", mDataItem->getStatistic()));
-    if (!mDuration.empty())
-      mAttributes.push_back(AttributeItem("duration", mDuration));
-	
-    if (mDataItem->isCondition())
+    dlib::auto_mutex lock(sAttributeMutex);
+    if (!mHasAttributes) 
     {
-      // Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER
-      istringstream toParse(mRest);
-      string token;
+      mAttributes.push_back(AttributeItem("dataItemId", mDataItem->getId()));
+      mAttributes.push_back(AttributeItem("timestamp", mTime));
+      if (!mDataItem->getName().empty())
+        mAttributes.push_back(AttributeItem("name", mDataItem->getName()));
+      mSequenceStr = int64ToString(mSequence);
+      mAttributes.push_back(AttributeItem("sequence",mSequenceStr));
+      if (!mDataItem->getSubType().empty())
+        mAttributes.push_back(AttributeItem("subType", mDataItem->getSubType()));
+      if (!mDataItem->getStatistic().empty())
+        mAttributes.push_back(AttributeItem("statistic", mDataItem->getStatistic()));
+      if (!mDuration.empty())
+        mAttributes.push_back(AttributeItem("duration", mDuration));
       
-      getline(toParse, token, '|');
-      if (strcasecmp(token.c_str(), "normal") == 0)
-        mLevel = NORMAL;
-      else if (strcasecmp(token.c_str(), "warning") == 0)
-        mLevel = WARNING;
-      else if (strcasecmp(token.c_str(), "fault") == 0)
-        mLevel = FAULT;
-      else // Assume unavailable
-        mLevel = UNAVAILABLE;
-      
-      
-      if (!toParse.eof()) {
+      if (mDataItem->isCondition())
+      {
+        // Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER
+        istringstream toParse(mRest);
+        string token;
+        
         getline(toParse, token, '|');
-        if (!token.empty()) {
-          mCode = token;
-          mAttributes.push_back(AttributeItem("nativeCode", token));
+        if (strcasecmp(token.c_str(), "normal") == 0)
+          mLevel = NORMAL;
+        else if (strcasecmp(token.c_str(), "warning") == 0)
+          mLevel = WARNING;
+        else if (strcasecmp(token.c_str(), "fault") == 0)
+          mLevel = FAULT;
+        else // Assume unavailable
+          mLevel = UNAVAILABLE;
+        
+        
+        if (!toParse.eof()) {
+          getline(toParse, token, '|');
+          if (!token.empty()) {
+            mCode = token;
+            mAttributes.push_back(AttributeItem("nativeCode", token));
+          }
         }
+        
+        if (!toParse.eof()) {
+          getline(toParse, token, '|');
+          if (!token.empty())
+            mAttributes.push_back(AttributeItem("nativeSeverity", token));
+        }
+        
+        if (!toParse.eof()) {
+          getline(toParse, token, '|');
+          if (!token.empty())
+            mAttributes.push_back(AttributeItem("qualifier", token));
+        }
+        
+        mAttributes.push_back(AttributeItem("type", mDataItem->getType()));
       }
-      
-      if (!toParse.eof()) {
+      else if (mDataItem->isTimeSeries())
+      {
+        istringstream toParse(mRest);
+        string token;
+        
+        getline(toParse, token, '|');
+        mAttributes.push_back(AttributeItem("sampleCount", token));
+        mSampleCount = atoi(token.c_str());
+        
         getline(toParse, token, '|');
         if (!token.empty())
-          mAttributes.push_back(AttributeItem("nativeSeverity", token));
+          mAttributes.push_back(AttributeItem("sampleRate", token));
       }
-      
-      if (!toParse.eof()) {
+      else if (mDataItem->isMessage())
+      {
+        // Format to parse: NATIVECODE
+        if (!mRest.empty())
+          mAttributes.push_back(AttributeItem("nativeCode", mRest));
+      }
+      else if (mDataItem->isAlarm())
+      {
+        // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
+        istringstream toParse(mRest);
+        string token;
+        
         getline(toParse, token, '|');
-        if (!token.empty())
-          mAttributes.push_back(AttributeItem("qualifier", token));
+        mAttributes.push_back(AttributeItem("code", token));
+        
+        getline(toParse, token, '|');
+        mAttributes.push_back(AttributeItem("nativeCode", token));
+        
+        getline(toParse, token, '|');
+        mAttributes.push_back(AttributeItem("severity", token));
+        
+        getline(toParse, token, '|');
+        mAttributes.push_back(AttributeItem("state", token));
       }
-      
-      mAttributes.push_back(AttributeItem("type", mDataItem->getType()));
-    }
-    else if (mDataItem->isTimeSeries())
-    {
-      istringstream toParse(mRest);
-      string token;
-      
-      getline(toParse, token, '|');
-      mAttributes.push_back(AttributeItem("sampleCount", token));
-      mSampleCount = atoi(token.c_str());
-      
-      getline(toParse, token, '|');
-      if (!token.empty())
-        mAttributes.push_back(AttributeItem("sampleRate", token));
-    }
-    else if (mDataItem->isMessage())
-    {
-      // Format to parse: NATIVECODE
-      if (!mRest.empty())
-        mAttributes.push_back(AttributeItem("nativeCode", mRest));
-    }
-    else if (mDataItem->isAlarm())
-    {
-      // Format to parse: CODE|NATIVECODE|SEVERITY|STATE
-      istringstream toParse(mRest);
-      string token;
-      
-      getline(toParse, token, '|');
-      mAttributes.push_back(AttributeItem("code", token));
-      
-      getline(toParse, token, '|');
-      mAttributes.push_back(AttributeItem("nativeCode", token));
-      
-      getline(toParse, token, '|');
-      mAttributes.push_back(AttributeItem("severity", token));
-      
-      getline(toParse, token, '|');
-      mAttributes.push_back(AttributeItem("state", token));
-    }
-    else if (mDataItem->isAssetChanged())
-    {
-      istringstream toParse(mRest);
-      string token;
-      
-      getline(toParse, token, '|');
-      mAttributes.push_back(AttributeItem("assetType", token));
-    }
-    
-    mHasAttributes = true;
+      else if (mDataItem->isAssetChanged())
+      {
+        istringstream toParse(mRest);
+        string token;
+        
+        getline(toParse, token, '|');
+        mAttributes.push_back(AttributeItem("assetType", token));
+      }
+      mHasAttributes = true;
+    }    
   }
   return &mAttributes;
 }
