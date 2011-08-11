@@ -366,6 +366,19 @@ Component * XmlParser::handleComponent(
         }
         
       }
+      else if (xmlStrcmp(child->name, BAD_CAST "Configuration") == 0)
+      {
+        xmlNodePtr config = child->children;
+        xmlBufferPtr buf;
+        THROW_IF_XML2_NULL(buf = xmlBufferCreate());
+        int count = xmlNodeDump(buf, config->doc, config, 
+                                0, 0);
+        if (count > 0)
+        {
+          toReturn->setConfiguration((string) (const char *) buf->content);
+        }
+        xmlBufferFree(buf);
+      }
       else
       {
         handleComponent(child, toReturn, device);

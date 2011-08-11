@@ -56,12 +56,13 @@ public:
     COMPONENTS,
     DATA_ITEM,
     DATA_ITEMS,
+    CONFIGURATION,
     DESCRIPTION,
     SOURCE,
     TEXT
   };
   
-  static const unsigned int NumComponentSpecs = 7;
+  static const unsigned int NumComponentSpecs = 8;
   static const std::string SComponentSpecs[];
   
 public:
@@ -89,6 +90,7 @@ public:
   const std::string &getUuid() const { return mUuid; }
   const std::string &getDescriptionBody() const { return mDescriptionBody; }
   const std::string &getPrefix() const { return mPrefix; }
+  const std::string &getConfiguration() const { return mConfiguration; }
   
   // Setter methods
   void setUuid(const std::string &aUuid) { mUuid = aUuid; reBuildAttributes(); }
@@ -106,6 +108,8 @@ public:
   /* Add/get description specifications using an attribute map */
   void addDescription(std::string body, std::map<std::string, std::string> attributes);
   std::map<std::string, std::string> getDescription() const;
+  
+  void setConfiguration(const std::string &aConfiguration) { mConfiguration = aConfiguration; }
   
   /* Get the device that any component is associated with */
   Device * getDevice();
@@ -154,6 +158,7 @@ protected:
   std::string mSerialNumber;
   std::string mStation;
   std::string mDescriptionBody;
+  std::string mConfiguration;
   
   /* Component relationships */
   /* Pointer to the parent component */

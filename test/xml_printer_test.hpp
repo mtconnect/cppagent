@@ -69,6 +69,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testNonPrintableCharacters);
   CPPUNIT_TEST(testPrintAsset);
   CPPUNIT_TEST(testPrintAssetProbe);
+  CPPUNIT_TEST(testConfiguration);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -88,6 +89,9 @@ protected:
   void testChangeStreamsNamespace();
   void testStatisticAndTimeSeriesProbe();
   void testTimeSeries();
+  
+  // Test printing configuration...
+  void testConfiguration();
 
   // Test new condition handling
   void testCondition();

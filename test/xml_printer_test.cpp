@@ -497,6 +497,15 @@ void XmlPrinterTest::testPrintAssetProbe()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount@assetType", "CuttingTool");
 }
 
+void XmlPrinterTest::testConfiguration()
+{
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Power/m:Configuration/m:SensorConfiguration/m:CalibrationDate", "2011-08-10");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:SensorConfiguration/m:Channels/m:Channel@number", "1");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:SensorConfiguration/m:Channels/m:Channel/m:Description", "Power Channel");
+}
+
 
 DataItem * XmlPrinterTest::getDataItem(const char *name)
 {

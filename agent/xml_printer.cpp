@@ -315,6 +315,12 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer,
     addSimpleElement(writer, "Description", body, &desc);
   }
   
+  if (!component->getConfiguration().empty()) {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Configuration"));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST component->getConfiguration().c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Configuration    
+  }
+  
   list<DataItem *> datum = component->getDataItems();
   if (datum.size() > 0)
   {

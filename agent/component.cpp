@@ -45,6 +45,7 @@ const string Component::SComponentSpecs[NumComponentSpecs] = {
   "Components",
   "DataItem",
   "DataItems",
+  "Configuration",
   "Description",
   "Source",
   "text"

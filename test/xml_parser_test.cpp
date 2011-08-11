@@ -228,3 +228,20 @@ void XmlParserTest::testTimeSeries()
   attrs = item->getAttributes();
   CPPUNIT_ASSERT_EQUAL(string("TIME_SERIES"), (*attrs)["representation"]);
 }
+
+void XmlParserTest::testConfiguration()
+{
+  Device *dev = mDevices[0];
+  CPPUNIT_ASSERT(dev != NULL);
+
+  Component *power = NULL;
+  std::list<Component *> &children = dev->getChildren();
+  std::list<Component *>::iterator iter;
+  for (iter = children.begin(); power == NULL && iter != children.end(); ++iter)
+  {
+    if ((*iter)->getName() == "power")
+      power = *iter;
+  }
+  
+  CPPUNIT_ASSERT(!power->getConfiguration().empty());
+}

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.1" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.1 http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd">
-  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.1"/>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.2" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.2" assetBufferSize="1024" assetCount="0"/>
   <Devices>
-    <Device uuid="000" name="LinuxCNC" sampleRate="10.0" id="d">
+    <Device uuid="000" name="LinuxCNC" id="d">
       <Description manufacturer="NIST" serialNumber="1122">Linux CNC Device</Description>
       <DataItems>
         <DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
@@ -77,6 +77,19 @@
           </Components>
         </Controller>
         <Power name="power" id="power">
+          <Configuration>
+            <SensorConfiguration>
+				<FirmwareVersion>1.0</FirmwareVersion>
+				<CalibrationDate>2011-08-10</CalibrationDate>
+				<CalibrationInitials>WS</CalibrationInitials>
+				<Channels>
+					<Channel number="1" name="AAA" >
+						<Description>Power Channel</Description>
+						<CalibrationDate>2011-08-01</CalibrationDate>
+					</Channel>
+				</Channels>
+            </SensorConfiguration>
+          </Configuration>
           <DataItems>
             <DataItem type="POWER_STATE" category="EVENT" id="pw1" name="power"/>
           </DataItems>
