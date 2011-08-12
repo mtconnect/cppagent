@@ -871,7 +871,16 @@ void Agent::streamData(ostream& out,
       else
         content = fetchSampleData(aFilter, start, count);
       
-      start = (start + count < mSequence) ? (start + count) : mSequence;
+      start += (uint64_t) count;
+      
+      // Check if we're falling too far behind
+      if (start < getFirstSequence()) {
+        sLogger << LWARN << "Client fell too far behind, disconnecting";
+        return;
+      }
+      
+      if (start > mSequence)
+        start = mSequence;
       
       out << "--" + boundary << endl;
       out << "Content-type: text/xml" << endl;
@@ -977,7 +986,9 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
     
     // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
     start = (start <= firstSeq) ? firstSeq : start;
-    end = (count + start >= mSequence) ? mSequence : count + start;
+    end = start + count;
+    if (end > mSequence)
+      end = mSequence;
     
     for (uint64_t i = start; i < end; i++)
     {
