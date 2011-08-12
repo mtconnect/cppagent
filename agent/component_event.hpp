@@ -38,6 +38,8 @@
 #include <vector>
 #include <cmath>
 
+#include <dlib/array.h>
+
 #include "component.hpp"
 #include "globals.hpp"
 #include "data_item.hpp"
@@ -50,6 +52,8 @@ typedef std::vector<AttributeItem> AttributeList;
 
 class ComponentEvent;
 typedef RefCountedPtr<ComponentEvent> ComponentEventPtr;
+typedef dlib::array_kernel_2<ComponentEventPtr> ComponentEventPtrArrayBase;
+typedef dlib::array_expand_1<ComponentEventPtrArrayBase> ComponentEventPtrArray;
 
 /* Component Event */
 class ComponentEvent : public RefCounted
@@ -107,7 +111,7 @@ public:
   void appendTo(ComponentEvent *aEvent);
   ComponentEvent *find(const std::string &aNativeCode);
   bool replace(ComponentEvent *aOld,
-	       ComponentEvent *aNew); 
+               ComponentEvent *aNew); 
 
   bool operator<(ComponentEvent &aOther) {
     if ((*mDataItem) < (*aOther.mDataItem))

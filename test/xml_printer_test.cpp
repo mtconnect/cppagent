@@ -122,7 +122,7 @@ void XmlPrinterTest::testPrintCurrent()
   addEventToCheckpoint(checkpoint, "execution", 10254795, "READY");
   addEventToCheckpoint(checkpoint, "power", 1, "ON");
   
-  vector<ComponentEventPtr> list;
+  ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
   
@@ -197,7 +197,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
   
   // Streams
   {
-    vector<ComponentEventPtr> list;
+    ComponentEventPtrArray list;
     checkpoint.getComponentEvents(list);
     
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
@@ -214,7 +214,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
                                     "http://www.machine.com/schemas/MachineStreams_1.2.xsd",
                                     "e");
 
-    vector<ComponentEventPtr> list;
+    ComponentEventPtrArray list;
     checkpoint.getComponentEvents(list);
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
         
@@ -235,7 +235,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     Checkpoint checkpoint2;
     addEventToCheckpoint(checkpoint2, "flow", 10254804, "100");
     
-    vector<ComponentEventPtr> list;
+    ComponentEventPtrArray list;
     checkpoint2.getComponentEvents(list);
     
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
@@ -273,20 +273,21 @@ void XmlPrinterTest::testChangeErrorNamespace()
 
 void XmlPrinterTest::testPrintSample()
 {
-  vector<ComponentEventPtr> events;
+  ComponentEventPtrArray events;
   
-  events.push_back(newEvent("Xact", 10843512, "0.553472"));
-  events.push_back(newEvent("Xcom", 10843514, "0.551123"));
-  events.push_back(newEvent("Xact", 10843516, "0.556826"));
-  events.push_back(newEvent("Xcom", 10843518, "0.55582"));
-  events.push_back(newEvent("Xact", 10843520, "0.560181"));
-  events.push_back(newEvent("Yact", 10843513, "-0.900624"));
-  events.push_back(newEvent("Ycom", 10843515, "-0.89692"));
-  events.push_back(newEvent("Yact", 10843517, "-0.897574"));
-  events.push_back(newEvent("Ycom", 10843519, "-0.894742"));
-  events.push_back(newEvent("Xact", 10843521, "-0.895613"));
-  events.push_back(newEvent("line", 11351720, "229"));
-  events.push_back(newEvent("block", 11351726, "x-1.149250 y1.048981"));
+  ComponentEventPtr ptr;
+  ptr = newEvent("Xact", 10843512, "0.553472"); events.push_back(ptr);
+  ptr = newEvent("Xcom", 10843514, "0.551123"); events.push_back(ptr);
+  ptr = newEvent("Xact", 10843516, "0.556826"); events.push_back(ptr);
+  ptr = newEvent("Xcom", 10843518, "0.55582"); events.push_back(ptr);
+  ptr = newEvent("Xact", 10843520, "0.560181"); events.push_back(ptr);
+  ptr = newEvent("Yact", 10843513, "-0.900624"); events.push_back(ptr);
+  ptr = newEvent("Ycom", 10843515, "-0.89692"); events.push_back(ptr);
+  ptr = newEvent("Yact", 10843517, "-0.897574"); events.push_back(ptr);
+  ptr = newEvent("Ycom", 10843519, "-0.894742"); events.push_back(ptr);
+  ptr = newEvent("Xact", 10843521, "-0.895613"); events.push_back(ptr);
+  ptr = newEvent("line", 11351720, "229"); events.push_back(ptr);
+  ptr = newEvent("block", 11351726, "x-1.149250 y1.048981"); events.push_back(ptr);
     
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
   
@@ -338,7 +339,7 @@ void XmlPrinterTest::testCondition()
   addEventToCheckpoint(checkpoint, "cmp", 18, "NORMAL||||");
   addEventToCheckpoint(checkpoint, "lp", 18, "FAULT|LOGIC|2||PLC Error");
   
-  vector<ComponentEventPtr> list;
+  ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
 
@@ -376,7 +377,7 @@ void XmlPrinterTest::testVeryLargeSequence()
   addEventToCheckpoint(checkpoint, "Xact", (((uint64_t)1) << 48) + 1, "0");
   addEventToCheckpoint(checkpoint, "Xcom", (((uint64_t) 1) << 48) + 3, "123");
   
-  vector<ComponentEventPtr> list;
+  ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   PARSE_XML(XmlPrinter::printSample(123, 131072, (((uint64_t)1) << 48) + 3, (((uint64_t)1) << 48) + 1, list));
   
@@ -433,9 +434,10 @@ void XmlPrinterTest::testStatisticAndTimeSeriesProbe()
 
 void XmlPrinterTest::testTimeSeries()
 {
+  ComponentEventPtr ptr;
   {
-    vector<ComponentEventPtr> events;
-    events.push_back(newEvent("Xts", 10843512, "6|||1.1 2.2 3.3 4.4 5.5 6.6 "));
+    ComponentEventPtrArray events;
+    ptr = newEvent("Xts", 10843512, "6|||1.1 2.2 3.3 4.4 5.5 6.6 "); events.push_back(ptr);
     
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate",
@@ -446,8 +448,8 @@ void XmlPrinterTest::testTimeSeries()
 				      "1.1 2.2 3.3 4.4 5.5 6.6");
   }
   {
-    vector<ComponentEventPtr> events;
-    events.push_back(newEvent("Xts", 10843512, "6|46200|1.1 2.2 3.3 4.4 5.5 6.6 "));
+    ComponentEventPtrArray events;
+    ptr = newEvent("Xts", 10843512, "6|46200|1.1 2.2 3.3 4.4 5.5 6.6 "); events.push_back(ptr);
     
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate",
@@ -461,8 +463,9 @@ void XmlPrinterTest::testTimeSeries()
 
 void XmlPrinterTest::testNonPrintableCharacters()
 {  
-  vector<ComponentEventPtr> events;
-  events.push_back(newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? "));
+  ComponentEventPtrArray events;
+  ComponentEventPtr ptr = newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? ");
+  events.push_back(ptr);
   PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));    
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]"
                                       , "OVER TRAVEL : +Z?");

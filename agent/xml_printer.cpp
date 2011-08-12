@@ -35,6 +35,7 @@
 #include "dlib/sockets.h"
 #include "dlib/logger.h"
 
+
 static dlib::logger sLogger("xml.printer");
 
 #define strfy(line) #line
@@ -404,12 +405,17 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
   THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItem   
 }
 
+static bool EventCompare(ComponentEventPtr &aE1, ComponentEventPtr &aE2)
+{
+  return aE1 < aE2;
+}
+
 string XmlPrinter::printSample(
     const unsigned int instanceId,
     const unsigned int bufferSize,
     const uint64_t nextSeq,
     const uint64_t firstSeq,
-    vector<ComponentEventPtr>& results
+    ComponentEventPtrArray& results
   )
 {
   xmlTextWriterPtr writer;
@@ -432,16 +438,17 @@ string XmlPrinter::printSample(
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Streams"));
     
     // Sort the vector by category.
-    std::sort(results.begin(), results.end());
+    if (results.size() > 1)
+      dlib::qsort_array(results, 0, results.size() - 1, EventCompare);
 
     Device *lastDevice = NULL;
     Component *lastComponent = NULL;
     int lastCategory = -1;
     
-    vector<ComponentEventPtr>::iterator result;
-    for (result = results.begin(); result != results.end(); result++)
+    for (unsigned int i = 0; i < results.size(); i++)
     {
-      DataItem *dataItem = (*result)->getDataItem();
+      ComponentEventPtr result = results[i];
+      DataItem *dataItem = result->getDataItem();
       Component *component = dataItem->getComponent();
       Device *device = component->getDevice();
       
@@ -478,7 +485,7 @@ string XmlPrinter::printSample(
         addCategory(writer, dataItem->getCategory());
       }
       
-      addEvent(writer, *result);
+      addEvent(writer, result);
     }
     
     if (lastCategory != -1)

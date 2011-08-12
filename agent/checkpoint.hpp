@@ -39,6 +39,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <dlib/array.h>
 
 class Checkpoint {
 public:
@@ -52,8 +53,8 @@ public:
   void filter(std::set<std::string> &aFilter);
 
   std::map<std::string, ComponentEventPtr*> &getEvents() { return mEvents; }
-  void getComponentEvents(std::vector<ComponentEventPtr> &list,
-			  std::set<std::string> *aFilter = NULL);
+  void getComponentEvents(ComponentEventPtrArray &list,
+                          std::set<std::string> *aFilter = NULL);
   
 protected:
   std::map<std::string, ComponentEventPtr*> mEvents;

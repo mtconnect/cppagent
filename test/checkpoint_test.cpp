@@ -220,7 +220,7 @@ void CheckpointTest::testGetComponentEvents()
   mCheckpoint->addComponentEvent(p);
   p->unrefer();
 
-  vector<ComponentEventPtr> list;
+  ComponentEventPtrArray list;
   mCheckpoint->getComponentEvents(list, &filter);
 
   CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
@@ -228,7 +228,7 @@ void CheckpointTest::testGetComponentEvents()
   std::set<string> filter2;
   filter2.insert(mDataItem1->getId());
 
-  vector<ComponentEventPtr> list2;
+  ComponentEventPtrArray list2;
   mCheckpoint->getComponentEvents(list2, &filter2);
 
   CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
@@ -271,7 +271,7 @@ void CheckpointTest::testFilter()
   mCheckpoint->addComponentEvent(p4);
   p4->unrefer();
 
-  vector<ComponentEventPtr> list;
+  ComponentEventPtrArray list;
   mCheckpoint->getComponentEvents(list);
 
   CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
@@ -319,7 +319,7 @@ void CheckpointTest::testCopyAndFilter()
   mCheckpoint->addComponentEvent(p);
   p->unrefer();
 
-  vector<ComponentEventPtr> list;
+  ComponentEventPtrArray list;
   mCheckpoint->getComponentEvents(list);
 
   CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
@@ -364,7 +364,7 @@ void CheckpointTest::testConditionChaining()
 
   std::set<string> filter;
   filter.insert(mDataItem1->getId());
-  vector<ComponentEventPtr> list;
+  ComponentEventPtrArray list;
   
   p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
   p1->unrefer();
@@ -463,7 +463,7 @@ void CheckpointTest::testLastConditionNormal()
 
   std::set<string> filter;
   filter.insert(mDataItem1->getId());
-  vector<ComponentEventPtr> list;
+  ComponentEventPtrArray list;
   
   
   p1 = new ComponentEvent(*mDataItem1, 2, time, fault1);

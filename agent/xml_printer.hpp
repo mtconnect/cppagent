@@ -38,6 +38,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <dlib/array.h>
 
 #include <libxml/xmlwriter.h>
 
@@ -67,12 +68,11 @@ namespace XmlPrinter
                          std::vector<Device *>& devices,
                          const std::map<std::string, int> *aCounts = NULL);
   
-  std::string printSample(
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const uint64_t nextSeq,
-    const uint64_t firstSeq,
-    std::vector<ComponentEventPtr>& results
+  std::string printSample(const unsigned int instanceId,
+                          const unsigned int bufferSize,
+                          const uint64_t nextSeq,
+                          const uint64_t firstSeq,
+                          ComponentEventPtrArray & results
   );
 
   std::string printAssets(const unsigned int anInstanceId,

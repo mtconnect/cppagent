@@ -46,13 +46,13 @@ public:
     mObject = NULL;
     setObject(aPtr.getObject(), aTakeRef);
   }
-  RefCountedPtr(T &aEvent, bool aTakeRef = false) {
+  RefCountedPtr(T &aObject, bool aTakeRef = false) {
     mObject = NULL;
-    setObject(&aEvent, aTakeRef);
+    setObject(&aObject, aTakeRef);
   }
-  RefCountedPtr(T *aEvent, bool aTakeRef = false) {
+  RefCountedPtr(T *aObject, bool aTakeRef = false) {
     mObject = NULL;
-    setObject(aEvent, aTakeRef);
+    setObject(aObject, aTakeRef);
   }
   
   // Destructor
@@ -72,7 +72,7 @@ public:
     return *mObject == *(aOther.mObject);
   }
   
-  inline bool operator<(const RefCountedPtr &aOther);
+  bool operator<(const RefCountedPtr &aOther);
 
 
 protected:
@@ -87,6 +87,12 @@ inline RefCountedPtr<T>::~RefCountedPtr()
 }
 
 template<class T>
+inline bool RefCountedPtr<T>::operator<(const RefCountedPtr<T> &aOther)
+{
+  return (*mObject) < (*aOther.mObject);
+}
+
+template<class T>
 inline T *RefCountedPtr<T>::setObject(T *aEvent, bool aTakeRef) {
   if (mObject != NULL)
     mObject->unrefer();
@@ -95,12 +101,6 @@ inline T *RefCountedPtr<T>::setObject(T *aEvent, bool aTakeRef) {
     mObject->referTo();
   
   return aEvent;
-}
-
-template<class T>
-inline bool RefCountedPtr<T>::operator<(const RefCountedPtr<T> &aOther)
-{
-  return (*mObject) < (*aOther.mObject);
 }
 
 class RefCounted 
@@ -120,13 +120,12 @@ public:
   void unrefer();
   
   unsigned int refCount() { return mRefCount; }
-  bool operator<(RefCounted &aOther) { return this < &aOther; }
+//  bool operator<(RefCounted &aOther) { return this < &aOther; }
 
 protected:
   /* Reference count */
   AtomicInt mRefCount;
 };
-
 
 #endif
 

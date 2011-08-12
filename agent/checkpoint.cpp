@@ -159,19 +159,20 @@ void Checkpoint::copy(Checkpoint &aCheck, std::set<std::string> *aFilter)
   }
 }
 
-void Checkpoint::getComponentEvents(vector<ComponentEventPtr> &aList,
+void Checkpoint::getComponentEvents(ComponentEventPtrArray &aList,
 				    std::set<string> *aFilter)
 {
   map<string, ComponentEventPtr*>::iterator it;
   for (it = mEvents.begin(); it != mEvents.end(); ++it)
   {
-    ComponentEvent *e = *((*it).second);
-    if (aFilter == NULL || (e != NULL && aFilter->count(e->getDataItem()->getId()) > 0))
+    ComponentEventPtr e = *((*it).second);
+    if (aFilter == NULL || (e.getObject() != NULL && aFilter->count(e->getDataItem()->getId()) > 0))
     {
-      while (e != NULL)
+      while (e.getObject() != NULL)
       {
-	aList.push_back(e);
-	e = e->getPrev();
+        ComponentEventPtr p = e->getPrev();
+        aList.push_back(e);
+        e = p;
       }
     }
   }

@@ -38,6 +38,7 @@
 #include <sstream>
 #include <dlib/tokenizer.h>
 #include <dlib/misc_api.h>
+#include <dlib/array.h>
 
 using namespace std;
 
@@ -909,7 +910,7 @@ void Agent::streamData(ostream& out,
 
 string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
 {
-  vector<ComponentEventPtr> events;
+  ComponentEventPtrArray events;
   uint64_t firstSeq, seq;
   {
     dlib::auto_mutex lock(*mSequenceLock);
@@ -966,7 +967,7 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
                               uint64_t start,
                               unsigned int count)
 {
-  vector<ComponentEventPtr> results;
+  ComponentEventPtrArray results;
   uint64_t firstSeq, end;
   {
     dlib::auto_mutex lock(*mSequenceLock);
@@ -984,7 +985,7 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
       const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
       if (aFilter.count(dataId) > 0)
       {
-        ComponentEvent *event = (*mSlidingBuffer)[i];
+        ComponentEventPtr event = (*mSlidingBuffer)[i];
         results.push_back(event);
       }
     }
