@@ -881,8 +881,12 @@ void Agent::streamData(ostream& out,
         return;
       }
       
-      if (start > mSequence)
+      // This indicates we're at the end of the buffer.
+      bool endOfBuffer = false;
+      if (start >= mSequence) {
         start = mSequence;
+        endOfBuffer = true;
+      }
       
       out << "--" + boundary << "\n"
              "Content-type: text/xml\n"
@@ -895,15 +899,28 @@ void Agent::streamData(ostream& out,
       // we are not at the end of the buffer. Just put the next set after aInterval 
       // has elapsed. Check also if in the intervening time between the last fetch
       // and now. If so, we just spin through and wait the next interval.
-      if (current || start < mSequence || observer.getSequence() < UINT64_MAX) {
+      
+      // Even if we are at the end of the buffer, or within range. If we are filtering, 
+      // we will need to make sure we are not spinning when there are no valid events
+      // to be reported. we will waste cycles spinning on the end of the buffer when 
+      // we should be in a heartbeat wait as well. Fix the start < mSequence check 
+      // to validate something is waiting for us. The observer getSequence should
+      // be the correct way to validate if an event has arrived.
+      
+      // If we don't have an end-of-buffer check, we can't ensure we'll move through all
+      // the existing events...
+      if (current || !endOfBuffer || observer.getSequence() < UINT64_MAX) {
+        // Should we set start to observer.getSequence here as well? Not if we're scanning
+        // forward and not within range...
+        // start = observer.getSequence(); ??
+        
         // Measure the delta time between the point you last fetched data to now.
         uint64 delta = ts.get_timestamp() - last;
         if (delta < interMicros) {
           // Sleep the remainder
           dlib::sleep((interMicros - delta) / 1000);
         }
-      } 
-      else if (observer.wait(aHeartbeat)) {
+      } else if (observer.wait(aHeartbeat)) {
         // Get the sequence # signaled in the observer when the lastest event arrived. 
         // This will allow the next set of data to be pulled. Any later events will have
         // greater sequence numbers, so this should not cause a problem. Also, signaled

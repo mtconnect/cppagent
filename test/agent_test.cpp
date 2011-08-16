@@ -1221,7 +1221,7 @@ void AgentTest::streamThread(void *aArg)
   dlib::sleep(test->delay);
   test->a->setSequence(test->a->getSequence() + 20);
   test->adapter->processData("TIME|line|204");
-  dlib::sleep(200);
+  dlib::sleep(120);
   test->out.setstate(ios::eofbit);
 }
 
@@ -1232,7 +1232,7 @@ void AgentTest::testStreamDataObserver()
   
   // Start a thread...
   Agent::key_value_map query;
-  query["interval"] = "10";
+  query["interval"] = "100";
   query["heartbeat"] = "1000";
   query["count"] = "10";
   query["from"] = int64ToString(a->getSequence());
@@ -1241,7 +1241,7 @@ void AgentTest::testStreamDataObserver()
   // Test to make sure the signal will push the sequence number forward and capture   
   // the new data.
   {
-    delay = 5;
+    delay = 50;
     string seq = int64ToString(a->getSequence() + 20);
     dlib::create_new_thread(streamThread, this);
     PARSE_XML_RESPONSE_QUERY(query);
