@@ -47,6 +47,8 @@ class ChangeObserverTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE(ChangeObserverTest);
   CPPUNIT_TEST(testAddObserver);
   CPPUNIT_TEST(testSignalObserver);
+  CPPUNIT_TEST(testChangeSequence);
+  CPPUNIT_TEST(testChangeSequence2);
   CPPUNIT_TEST(testCleanup);
   CPPUNIT_TEST_SUITE_END();
   
@@ -57,6 +59,8 @@ public:
   void testAddObserver();
   void testSignalObserver();
   void testCleanup();
+  void testChangeSequence();
+  void testChangeSequence2();
   
   void setUp();
   void tearDown();

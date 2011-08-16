@@ -36,22 +36,29 @@
 
 #include <vector>
 #include "dlib/threads.h"
+#include "globals.hpp"
 
 class ChangeSignaler;
 
 class ChangeObserver
 {  
 public:
-  ChangeObserver() : mSignal(mMutex) { }
+  ChangeObserver() : mSignal(mMutex), mSequence(UINT64_MAX) { }
   virtual ~ChangeObserver();
 
   bool wait(unsigned long aTimeout) { return mSignal.wait_or_timeout(aTimeout); }
-  void signal() { mSignal.signal(); }
+  void signal(uint64_t aSequence) { 
+    if (mSequence > aSequence && aSequence != 0)
+      mSequence = aSequence;
+    mSignal.signal(); 
+  }
+  uint64_t getSequence() { return mSequence; }
   
 private:
   dlib::rmutex mMutex;
   dlib::rsignaler mSignal;
   std::vector<ChangeSignaler*> mSignalers;
+  uint64_t mSequence;
   
 protected:
   friend class ChangeSignaler;
@@ -66,7 +73,7 @@ public:
   void addObserver(ChangeObserver *aObserver);
   bool removeObserver(ChangeObserver *aObserver);
   bool hasObserver(ChangeObserver *aObserver);
-  void signalObservers();
+  void signalObservers(uint64_t aSequence);
   
   virtual ~ChangeSignaler();
   

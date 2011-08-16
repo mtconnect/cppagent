@@ -100,11 +100,11 @@ bool ChangeSignaler::hasObserver(ChangeObserver *aObserver)
   return false;
 }
 
-void ChangeSignaler::signalObservers()
+void ChangeSignaler::signalObservers(uint64_t aSequence)
 {
   dlib::auto_mutex lock(mObserverMutex);
   for (vector<ChangeObserver*>::iterator i = mObservers.begin(); i != mObservers.end(); i++)
-    (*i)->signal();
+    (*i)->signal(aSequence);
 }
 
 

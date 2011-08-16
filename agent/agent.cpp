@@ -363,7 +363,7 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
     mFirst.addComponentEvent((*mSlidingBuffer)[mSequence]);
   }
   
-  dataItem->signalObservers();
+  dataItem->signalObservers(seqNum);
   
   return seqNum;
 }
@@ -858,7 +858,7 @@ void Agent::streamData(ostream& out,
   
   try {
     // Loop until the user closes the connection
-
+    int fetchCount = count;
     timestamper ts;
     while (out.good())
     {
@@ -869,9 +869,11 @@ void Agent::streamData(ostream& out,
       if (current)
         content = fetchCurrentData(aFilter, NO_START);
       else
-        content = fetchSampleData(aFilter, start, count);
+        content = fetchSampleData(aFilter, start, fetchCount);
       
-      start += (uint64_t) count;
+      start += (uint64_t) fetchCount;
+      fetchCount = count;
+      
       
       // Check if we're falling too far behind
       if (start < getFirstSequence()) {
@@ -892,17 +894,24 @@ void Agent::streamData(ostream& out,
       // Wait for up to frequency ms for something to arrive... Don't wait if 
       // we are not at the end of the buffer. Just put the next set after aInterval 
       // has elapsed
-      if (current || start < mSequence) 
-      {
+      if (current || start < mSequence) {
         dlib::sleep(aInterval);
       } 
-      else if (observer.wait(aHeartbeat)) 
-      {
+      else if (observer.wait(aHeartbeat)) {
+        // Check if the next grab will encompass the last event added (or thereabouts)
+        // if not, we need to extend the range for the next grab to make sure we get 
+        // the event that triggered. 
+        
+        // Add a sequence # to the observer so it mark the sequence it was signaled at. 
+        // this will allow the delta to be more in range.
+        uint64_t sig = observer.getSequence();
+        if ((start + fetchCount) < sig)
+          start = sig;
+          
         // Now wait the remainder if we triggered before the timer was up, otherwise we know
         // we timed out and just spin again.
         uint64 delta = ts.get_timestamp() - last;
-        if (delta < interMicros) 
-        {
+        if (delta < interMicros) {
           // Sleep the remainder
           dlib::sleep((interMicros - delta) / 1000);
         }

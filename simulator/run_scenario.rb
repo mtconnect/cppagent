@@ -106,6 +106,8 @@ else
             delta = time - last
             sleep delta if delta > 0.0
           end
+        else
+          sleep 0.01
         end
         
         line = "#{format_time}|#{r}"

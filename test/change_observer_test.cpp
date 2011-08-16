@@ -62,7 +62,7 @@ static void signaler(void *aObj)
 {
   ChangeSignaler *s = (ChangeSignaler*) aObj;
   dlib::sleep(1000);
-  s->signalObservers();
+  s->signalObservers(100);
 }
 
 void ChangeObserverTest::testSignalObserver()
@@ -92,4 +92,50 @@ void ChangeObserverTest::testCleanup()
   }
   
   CPPUNIT_ASSERT(!mSignaler->hasObserver(obj));
+}
+
+static void signaler2(void *aObj)
+{
+  ChangeSignaler *s = (ChangeSignaler*) aObj;
+  s->signalObservers(100);
+  s->signalObservers(200);
+  s->signalObservers(300);
+}
+
+void ChangeObserverTest::testChangeSequence()
+{
+  ChangeObserver obj;
+  
+  mSignaler->addObserver(&obj);
+  dlib::create_new_thread(signaler2, mSignaler);
+  CPPUNIT_ASSERT(obj.wait(2000));
+  
+  CPPUNIT_ASSERT_EQUAL(100ull, obj.getSequence());
+  
+  // Wait for things to clean up...
+  dlib::sleep(1000);
+}
+
+static void signaler3(void *aObj)
+{
+  ChangeSignaler *s = (ChangeSignaler*) aObj;
+  s->signalObservers(100);
+  s->signalObservers(200);
+  s->signalObservers(300);
+  s->signalObservers(30);
+}
+
+void ChangeObserverTest::testChangeSequence2()
+{
+  ChangeObserver obj;
+  
+  mSignaler->addObserver(&obj);
+  dlib::create_new_thread(signaler3, mSignaler);
+  CPPUNIT_ASSERT(obj.wait(2000));
+  dlib::sleep(500);
+
+  CPPUNIT_ASSERT_EQUAL(30ull, obj.getSequence());
+  
+  // Wait for things to clean up...
+  dlib::sleep(1000);
 }
