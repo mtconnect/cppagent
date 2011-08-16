@@ -907,13 +907,8 @@ void Agent::streamData(ostream& out,
       // to validate something is waiting for us. The observer getSequence should
       // be the correct way to validate if an event has arrived.
       
-      // If we don't have an end-of-buffer check, we can't ensure we'll move through all
-      // the existing events...
-      if (current || !endOfBuffer || observer.getSequence() < UINT64_MAX) {
-        // Should we set start to observer.getSequence here as well? Not if we're scanning
-        // forward and not within range...
-        // start = observer.getSequence(); ??
-        
+      // We may be able to get rid of last condition and allow to fall through to wait...
+      if (current || !endOfBuffer) {
         // Measure the delta time between the point you last fetched data to now.
         uint64 delta = ts.get_timestamp() - last;
         if (delta < interMicros) {
