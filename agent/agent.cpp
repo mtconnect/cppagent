@@ -863,13 +863,14 @@ void Agent::streamData(ostream& out,
     {
       uint64 last = ts.get_timestamp();
       
-      // Always 
+      // Fetch sample data now resets the observer while holding the sequence
+      // mutex to make sure that a new event will be recorded in the observer
+      // when it returns.
       string content;
       if (current)
         content = fetchCurrentData(aFilter, NO_START);
       else
-        content = fetchSampleData(aFilter, start, count);
-      observer.reset();
+        content = fetchSampleData(aFilter, start, count, &observer);
       
       start += (uint64_t) count;
       
@@ -895,7 +896,12 @@ void Agent::streamData(ostream& out,
       // has elapsed. Check also if in the intervening time between the last fetch
       // and now. If so, we just spin through and wait the next interval.
       if (current || start < mSequence || observer.getSequence() < UINT64_MAX) {
-        dlib::sleep(aInterval);
+        // Measure the delta time between the point you last fetched data to now.
+        uint64 delta = ts.get_timestamp() - last;
+        if (delta < interMicros) {
+          // Sleep the remainder
+          dlib::sleep((interMicros - delta) / 1000);
+        }
       } 
       else if (observer.wait(aHeartbeat)) {
         // Get the sequence # signaled in the observer when the lastest event arrived. 
@@ -988,8 +994,8 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
 }
 
 string Agent::fetchSampleData(std::set<string> &aFilter,
-                              uint64_t start,
-                              unsigned int count)
+                              uint64_t start, unsigned int count,
+                              ChangeObserver *aObserver)
 {
   ComponentEventPtrArray results;
   uint64_t firstSeq, end;
@@ -1015,6 +1021,8 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
         results.push_back(event);
       }
     }
+    
+    if (aObserver != NULL) aObserver->reset();
   }
   
   return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, end, 

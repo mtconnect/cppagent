@@ -250,8 +250,8 @@ protected:
   /* Fetch the current/sample data and return the XML in a std::string */
   std::string fetchCurrentData(std::set<std::string> &aFilter, uint64_t at);
   std::string fetchSampleData(std::set<std::string> &aFilterSet,
-                              uint64_t start,
-                              unsigned int count);
+                              uint64_t start, unsigned int count,
+                              ChangeObserver *aObserver = NULL);
   
   /* Output an XML Error */
   std::string printError(const std::string& errorCode, const std::string& text);
