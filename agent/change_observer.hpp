@@ -53,6 +53,7 @@ public:
     mSignal.signal(); 
   }
   uint64_t getSequence() { return mSequence; }
+  void reset() { mSequence = UINT64_MAX; }
   
 private:
   dlib::rmutex mMutex;

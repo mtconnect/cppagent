@@ -331,7 +331,7 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
                                 string time
                                 )
 {
-  if (dataItem == 0) return 0;
+  if (dataItem == NULL) return 0;
   
   dlib::auto_mutex lock(*mSequenceLock);
   
@@ -832,15 +832,15 @@ void Agent::streamData(ostream& out,
                        )
 {
   // Create header
-  out << "HTTP/1.1 200 OK" << endl;
-  out << "Connection: close" << endl;
-  out << "Date: " << getCurrentTime(HUM_READ) << endl;
-  out << "Status: 200 OK" << endl;
-  out << "Content-Disposition: inline" << endl;
-  out << "Content-Type: multipart/x-mixed-replace;";
-  
   string boundary = md5(intToString(time(NULL)));
-  out << "boundary=" << boundary << endl << endl;
+
+  out << "HTTP/1.1 200 OK\n"
+         "Connection: close\n"
+         "Date: " << getCurrentTime(HUM_READ) << "\n"
+         "Status: 200 OK\n"
+         "Content-Disposition: inline\n"
+         "Content-Type: multipart/x-mixed-replace;\n"
+         "boundary=" << boundary << "\n\n";
   
   // This object will automatically clean up all the observer from the
   // signalers in an exception proof manor.
@@ -869,6 +869,7 @@ void Agent::streamData(ostream& out,
         content = fetchCurrentData(aFilter, NO_START);
       else
         content = fetchSampleData(aFilter, start, count);
+      observer.reset();
       
       start += (uint64_t) count;
       
@@ -882,26 +883,25 @@ void Agent::streamData(ostream& out,
       if (start > mSequence)
         start = mSequence;
       
-      out << "--" + boundary << endl;
-      out << "Content-type: text/xml" << endl;
-      out << "Content-length: " << content.length() << endl;
-      out << endl << content;
+      out << "--" + boundary << "\n"
+             "Content-type: text/xml\n"
+             "Content-length: " << content.length() << "\n\n"
+             << content;
       
       out.flush();
     
       // Wait for up to frequency ms for something to arrive... Don't wait if 
       // we are not at the end of the buffer. Just put the next set after aInterval 
-      // has elapsed
-      if (current || start < mSequence) {
+      // has elapsed. Check also if in the intervening time between the last fetch
+      // and now. If so, we just spin through and wait the next interval.
+      if (current || start < mSequence || observer.getSequence() < UINT64_MAX) {
         dlib::sleep(aInterval);
       } 
       else if (observer.wait(aHeartbeat)) {
-        // Check if the next grab will encompass the last event added (or thereabouts)
-        // if not, we need to extend the range for the next grab to make sure we get 
-        // the event that triggered. 
-        
-        // Add a sequence # to the observer so it mark the sequence it was signaled at. 
-        // this will allow the delta to be more in range.
+        // Get the sequence # signaled in the observer when the lastest event arrived. 
+        // This will allow the next set of data to be pulled. Any later events will have
+        // greater sequence numbers, so this should not cause a problem. Also, signaled
+        // sequence numbers can only decrease, never increase.
         start = observer.getSequence();
           
         // Now wait the remainder if we triggered before the timer was up, otherwise we know
@@ -911,6 +911,16 @@ void Agent::streamData(ostream& out,
           // Sleep the remainder
           dlib::sleep((interMicros - delta) / 1000);
         }
+      } else {
+        // If nothing came out during the last wait, we may have still have advanced 
+        // the sequence number. We should reset the start to something closer to the 
+        // current sequence. If we lock the sequence lock, the sequence in the observer 
+        // will be set to the latest event or UINT64_MAX. Otherwise, nothing has arrived and 
+        // we set to the next sequence number and release the lock.
+        dlib::auto_mutex lock(*mSequenceLock);
+        start = observer.getSequence();
+        if (start > mSequence)
+          start = mSequence;
       }
     }
   }
