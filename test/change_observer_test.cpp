@@ -72,6 +72,7 @@ void ChangeObserverTest::testSignalObserver()
   mSignaler->addObserver(&obj);
   dlib::create_new_thread(signaler, mSignaler);
   CPPUNIT_ASSERT(obj.wait(2000));
+  obj.reset();
   
   dlib::create_new_thread(signaler, mSignaler);
   CPPUNIT_ASSERT(!obj.wait(500)); 

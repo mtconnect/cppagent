@@ -46,14 +46,24 @@ public:
   ChangeObserver() : mSignal(mMutex), mSequence(UINT64_MAX) { }
   virtual ~ChangeObserver();
 
-  bool wait(unsigned long aTimeout) { return mSignal.wait_or_timeout(aTimeout); }
+  bool wait(unsigned long aTimeout) {
+    dlib::auto_mutex lock(mMutex);
+    if (mSequence == UINT64_MAX)
+      return mSignal.wait_or_timeout(aTimeout); 
+    else
+      return true;
+  }
   void signal(uint64_t aSequence) { 
+    dlib::auto_mutex lock(mMutex);
     if (mSequence > aSequence && aSequence != 0)
       mSequence = aSequence;
     mSignal.signal(); 
   }
   uint64_t getSequence() { return mSequence; }
-  void reset() { mSequence = UINT64_MAX; }
+  void reset() { 
+    dlib::auto_mutex lock(mMutex); 
+    mSequence = UINT64_MAX; 
+  }
   
 private:
   dlib::rmutex mMutex;

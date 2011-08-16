@@ -921,10 +921,6 @@ void Agent::streamData(ostream& out,
           dlib::sleep((interMicros - delta) / 1000);
         }
       } else if (observer.wait(aHeartbeat)) { 
-        // Last window... observer may be signaled just when wait begins. Will wait for next 
-        // event or timeout. Need to hold the sequence mutex as well as the observer. Should 
-        // change change observer to do this...
-        
         // Get the sequence # signaled in the observer when the lastest event arrived. 
         // This will allow the next set of data to be pulled. Any later events will have
         // greater sequence numbers, so this should not cause a problem. Also, signaled
