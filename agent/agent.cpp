@@ -858,7 +858,6 @@ void Agent::streamData(ostream& out,
   
   try {
     // Loop until the user closes the connection
-    int fetchCount = count;
     timestamper ts;
     while (out.good())
     {
@@ -869,10 +868,9 @@ void Agent::streamData(ostream& out,
       if (current)
         content = fetchCurrentData(aFilter, NO_START);
       else
-        content = fetchSampleData(aFilter, start, fetchCount);
+        content = fetchSampleData(aFilter, start, count);
       
-      start += (uint64_t) fetchCount;
-      fetchCount = count;
+      start += (uint64_t) count;
       
       
       // Check if we're falling too far behind
@@ -904,9 +902,7 @@ void Agent::streamData(ostream& out,
         
         // Add a sequence # to the observer so it mark the sequence it was signaled at. 
         // this will allow the delta to be more in range.
-        uint64_t sig = observer.getSequence();
-        if ((start + fetchCount) < sig)
-          start = sig;
+        start = observer.getSequence();
           
         // Now wait the remainder if we triggered before the timer was up, otherwise we know
         // we timed out and just spin again.

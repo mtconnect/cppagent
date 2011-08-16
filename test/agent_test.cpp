@@ -1215,6 +1215,40 @@ void AgentTest::testStreamData()
   
 }
 
+void AgentTest::streamThread(void *aArg)
+{
+  AgentTest *test = (AgentTest*) aArg;
+  dlib::sleep(test->delay);
+  test->a->setSequence(test->a->getSequence() + 20);
+  test->adapter->processData("TIME|line|204");
+  dlib::sleep(200);
+  test->out.setstate(ios::eofbit);
+}
+
+void AgentTest::testStreamDataObserver()
+{
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  // Start a thread...
+  Agent::key_value_map query;
+  query["interval"] = "10";
+  query["heartbeat"] = "1000";
+  query["count"] = "10";
+  query["from"] = int64ToString(a->getSequence());
+  path = "/LinuxCNC/sample";
+  
+  // Test to make sure the signal will push the sequence number forward and capture   
+  // the new data.
+  {
+    delay = 5;
+    string seq = int64ToString(a->getSequence() + 20);
+    dlib::create_new_thread(streamThread, this);
+    PARSE_XML_RESPONSE_QUERY(query);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
+  } 
+}
+
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                                     Agent::key_value_map &aQueries)
 {  
@@ -1239,7 +1273,6 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
       if (pos != string::npos)
         result.erase(0, pos);
     }
-    
   }
   
   string message = (string) "No response to request" + path + " with: ";
