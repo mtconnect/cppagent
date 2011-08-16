@@ -920,7 +920,11 @@ void Agent::streamData(ostream& out,
           // Sleep the remainder
           dlib::sleep((interMicros - delta) / 1000);
         }
-      } else if (observer.wait(aHeartbeat)) {
+      } else if (observer.wait(aHeartbeat)) { 
+        // Last window... observer may be signaled just when wait begins. Will wait for next 
+        // event or timeout. Need to hold the sequence mutex as well as the observer. Should 
+        // change change observer to do this...
+        
         // Get the sequence # signaled in the observer when the lastest event arrived. 
         // This will allow the next set of data to be pulled. Any later events will have
         // greater sequence numbers, so this should not cause a problem. Also, signaled
@@ -941,9 +945,16 @@ void Agent::streamData(ostream& out,
         // will be set to the latest event or UINT64_MAX. Otherwise, nothing has arrived and 
         // we set to the next sequence number and release the lock.
         dlib::auto_mutex lock(*mSequenceLock);
-        start = observer.getSequence();
-        if (start > mSequence)
+        
+        if (observer.getSequence() < UINT64_MAX)
+          start = observer.getSequence();
+        else 
           start = mSequence;
+        
+        // How do we ensure we never skip any events and don't fall too far behind.
+        // Still not sure this is correct. start = mSequence requires that there
+        // have been no events since last fetch. This should be ensured by the 
+        // sequence lock.
       }
     }
   }
