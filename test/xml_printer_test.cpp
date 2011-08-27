@@ -124,7 +124,7 @@ void XmlPrinterTest::testPrintCurrent()
   
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
-  PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", "0");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Samples/m:SpindleSpeed[@name='Sovr']", "100");
@@ -200,7 +200,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     ComponentEventPtrArray list;
     checkpoint.getComponentEvents(list);
     
-    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
                  "urn:mtconnect.org:MTConnectStreams:1.2 http://www.mtconnect.org/schemas/MTConnectStreams_1.2.xsd");
@@ -216,7 +216,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
 
     ComponentEventPtrArray list;
     checkpoint.getComponentEvents(list);
-    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
         
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
                 "urn:machine.com:MachineStreams:1.2 http://www.machine.com/schemas/MachineStreams_1.2.xsd");
@@ -238,7 +238,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     ComponentEventPtrArray list;
     checkpoint2.getComponentEvents(list);
     
-    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//x:Flow", "100");
   }
@@ -289,7 +289,7 @@ void XmlPrinterTest::testPrintSample()
   ptr = newEvent("line", 11351720, "229"); events.push_back(ptr);
   ptr = newEvent("block", 11351726, "x-1.149250 y1.048981"); events.push_back(ptr);
     
-  PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams/m:Streams/m:DeviceStream/m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][1]", 
                                     "0.553472");
@@ -341,7 +341,7 @@ void XmlPrinterTest::testCondition()
   
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
-  PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, list));
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
 
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning",
                                     "Spindle Overtemp");    
@@ -379,7 +379,7 @@ void XmlPrinterTest::testVeryLargeSequence()
   
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
-  PARSE_XML(XmlPrinter::printSample(123, 131072, (((uint64_t)1) << 48) + 3, (((uint64_t)1) << 48) + 1, list));
+  PARSE_XML(XmlPrinter::printSample(123, 131072, (((uint64_t)1) << 48) + 3, (((uint64_t)1) << 48) + 1, (((uint64_t)1) << 48) + 1024, list));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", 
                                     "0");
@@ -394,6 +394,7 @@ void XmlPrinterTest::testVeryLargeSequence()
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@firstSequence", "281474976710657");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", "281474976710659");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@lastSequence", "281474976711680");
 
   
 }
@@ -439,7 +440,7 @@ void XmlPrinterTest::testTimeSeries()
     ComponentEventPtrArray events;
     ptr = newEvent("Xts", 10843512, "6|||1.1 2.2 3.3 4.4 5.5 6.6 "); events.push_back(ptr);
     
-    PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate",
 				      0);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleCount",
@@ -451,7 +452,7 @@ void XmlPrinterTest::testTimeSeries()
     ComponentEventPtrArray events;
     ptr = newEvent("Xts", 10843512, "6|46200|1.1 2.2 3.3 4.4 5.5 6.6 "); events.push_back(ptr);
     
-    PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate",
 				      "46200");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleCount",
@@ -466,7 +467,7 @@ void XmlPrinterTest::testNonPrintableCharacters()
   ComponentEventPtrArray events;
   ComponentEventPtr ptr = newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? ");
   events.push_back(ptr);
-  PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, events));    
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));    
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]"
                                       , "OVER TRAVEL : +Z?");
 }

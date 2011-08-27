@@ -192,6 +192,9 @@ public:
   bool isPutEnabled() { return mPutEnabled; }
   void allowPutFrom(const std::string &aHost) { mPutAllowedHosts.insert(aHost); }
   bool isPutAllowedFrom(const std::string &aHost) { return mPutAllowedHosts.count(aHost) > 0; }
+  
+  // For debugging
+  void setLogStreamData(bool aLog) { mLogStreamData = aLog; }
     
 protected:
   /* HTTP methods to handle the 3 basic calls */
@@ -250,8 +253,8 @@ protected:
   /* Fetch the current/sample data and return the XML in a std::string */
   std::string fetchCurrentData(std::set<std::string> &aFilter, uint64_t at);
   std::string fetchSampleData(std::set<std::string> &aFilterSet,
-                              uint64_t start, unsigned int count,
-                              ChangeObserver *aObserver = NULL);
+                              uint64_t start, unsigned int count, uint64_t &end,
+                              bool &endOfBuffer, ChangeObserver *aObserver = NULL);
   
   /* Output an XML Error */
   std::string printError(const std::string& errorCode, const std::string& text);
@@ -334,6 +337,9 @@ protected:
   // Put handling controls
   bool mPutEnabled;
   std::set<std::string> mPutAllowedHosts;
+  
+  // For debugging
+  bool mLogStreamData;
 };
 
 #endif

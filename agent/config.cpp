@@ -233,6 +233,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   sLogger << LINFO << "Starting agent on port " << port;
   mAgent = new Agent(probe, bufferSize, maxAssets, checkpointFrequency);
   mAgent->set_listening_port(port);
+  mAgent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
 
   for (size_t i = 0; i < mAgent->getDevices().size(); i++)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;

@@ -55,7 +55,7 @@ static dlib::logger sLogger("agent");
 
 /* Agent public methods */
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int aCheckpointFreq)
-  : mPutEnabled(false)
+  : mPutEnabled(false), mLogStreamData(false)
 {
   try
   {
@@ -684,10 +684,12 @@ string Agent::handleStream(
   }
   else
   {
+    uint64_t end;
+    bool endOfBuffer;
     if (current)
       return fetchCurrentData(filter, start);
     else
-      return fetchSampleData(filter, start, count);
+      return fetchSampleData(filter, start, count, end, endOfBuffer);
   }
 }
 
@@ -833,6 +835,14 @@ void Agent::streamData(ostream& out,
 {
   // Create header
   string boundary = md5(intToString(time(NULL)));
+  
+  ofstream log;
+  if (mLogStreamData)
+  {
+    string filename = "Stream_" + getCurrentTime(LOCAL) + "_" +
+                      int64ToString((uint64_t) dlib::get_thread_id()) + ".log";
+    log.open(filename.c_str());
+  }
 
   out << "HTTP/1.1 200 OK\n"
          "Connection: close\n"
@@ -861,40 +871,39 @@ void Agent::streamData(ostream& out,
     timestamper ts;
     while (out.good())
     {
-      uint64 last = ts.get_timestamp();
+      uint64_t last = ts.get_timestamp();
       
       // Fetch sample data now resets the observer while holding the sequence
       // mutex to make sure that a new event will be recorded in the observer
       // when it returns.
       string content;
-      if (current)
-        content = fetchCurrentData(aFilter, NO_START);
-      else
-        content = fetchSampleData(aFilter, start, count, &observer);
-      
-      start += (uint64_t) count;
-      
-      
-      // Check if we're falling too far behind
-      if (start < getFirstSequence()) {
-        sLogger << LWARN << "Client fell too far behind, disconnecting";
-        return;
-      }
-      
-      // This indicates we're at the end of the buffer.
+      uint64_t end;
       bool endOfBuffer = false;
-      if (start >= mSequence) {
-        start = mSequence;
-        endOfBuffer = true;
+      if (current) {
+        content = fetchCurrentData(aFilter, NO_START);
+      } else {
+        content = fetchSampleData(aFilter, start, count, end, 
+                                  endOfBuffer, &observer);
+        start = end;
+        
+        // Check if we're falling too far behind
+        if (start < getFirstSequence()) {
+          sLogger << LWARN << "Client fell too far behind, disconnecting";
+          return;
+        }
+        
+        if (mLogStreamData)
+          log << content << endl;
       }
       
+            
       out << "--" + boundary << "\n"
              "Content-type: text/xml\n"
              "Content-length: " << content.length() << "\n\n"
              << content;
       
       out.flush();
-    
+          
       // Wait for up to frequency ms for something to arrive... Don't wait if 
       // we are not at the end of the buffer. Just put the next set after aInterval 
       // has elapsed. Check also if in the intervening time between the last fetch
@@ -941,11 +950,6 @@ void Agent::streamData(ostream& out,
           start = observer.getSequence();
         else 
           start = mSequence;
-        
-        // How do we ensure we never skip any events and don't fall too far behind.
-        // Still not sure this is correct. start = mSequence requires that there
-        // have been no events since last fetch. This should be ensured by the 
-        // sequence lock.
       }
     }
   }
@@ -1007,17 +1011,17 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
   }
   
   string toReturn = XmlPrinter::printSample(mInstanceId, mSlidingBufferSize,
-                                            seq, firstSeq, events);
+                                            seq, firstSeq, mSequence - 1, events);
   
   return toReturn;
 }
 
 string Agent::fetchSampleData(std::set<string> &aFilter,
-                              uint64_t start, unsigned int count,
-                              ChangeObserver *aObserver)
+                              uint64_t start, unsigned int count, uint64_t &end, 
+                              bool &endOfBuffer, ChangeObserver *aObserver)
 {
   ComponentEventPtrArray results;
-  uint64_t firstSeq, end;
+  uint64_t firstSeq;
   {
     dlib::auto_mutex lock(*mSequenceLock);
     
@@ -1027,8 +1031,12 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
     // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
     start = (start <= firstSeq) ? firstSeq : start;
     end = start + count;
-    if (end > mSequence)
+    if (end >= mSequence) {
       end = mSequence;
+      endOfBuffer = true;
+    } else {
+      endOfBuffer = false;
+    }
     
     for (uint64_t i = start; i < end; i++)
     {
@@ -1045,7 +1053,7 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
   }
   
   return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, end, 
-                                 firstSeq, results);
+                                 firstSeq, mSequence - 1, results);
 }
 
 string Agent::printError(const string& errorCode, const string& text)

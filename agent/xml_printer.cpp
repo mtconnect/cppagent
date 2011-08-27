@@ -74,6 +74,7 @@ namespace XmlPrinter {
                   const unsigned int aAssetCount,
                   const uint64_t nextSeq,
                   const uint64_t firstSeq = 0,
+                  const uint64_t lastSeq = 0,
                   const map<string, int> *aCounts = NULL);  
 
   /* Helper to print individual components and details */
@@ -198,12 +199,11 @@ const string XmlPrinter::getAssetsUrn(const std::string &aPrefix)
 }
 
 /* XmlPrinter main methods */
-string XmlPrinter::printError(
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const uint64_t nextSeq,
-    const string& errorCode,
-    const string& errorText
+string XmlPrinter::printError(const unsigned int instanceId,
+                              const unsigned int bufferSize,
+                              const uint64_t nextSeq,
+                              const string& errorCode,
+                              const string& errorText
   )
 {
   xmlTextWriterPtr writer;
@@ -217,7 +217,7 @@ string XmlPrinter::printError(
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
   
     initXmlDoc(writer, eERROR, instanceId,
-               bufferSize, 0, 0, nextSeq);
+               bufferSize, 0, 0, nextSeq, nextSeq - 1);
   
     
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Errors"));
@@ -271,7 +271,7 @@ string XmlPrinter::printProbe(const unsigned int instanceId,
                 bufferSize,
                 aAssetBufferSize,
                 aAssetCount,
-                nextSeq, 0,
+                nextSeq, 0, nextSeq - 1,
                 aCount);
     
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Devices"));
@@ -410,12 +410,12 @@ static bool EventCompare(ComponentEventPtr &aE1, ComponentEventPtr &aE2)
   return aE1 < aE2;
 }
 
-string XmlPrinter::printSample(
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const uint64_t nextSeq,
-    const uint64_t firstSeq,
-    ComponentEventPtrArray& results
+string XmlPrinter::printSample(const unsigned int instanceId,
+                               const unsigned int bufferSize,
+                               const uint64_t nextSeq,
+                               const uint64_t firstSeq,
+                               const uint64_t lastSeq,
+                               ComponentEventPtrArray& results
   )
 {
   xmlTextWriterPtr writer;
@@ -433,7 +433,8 @@ string XmlPrinter::printSample(
                bufferSize,
                0, 0,
                nextSeq,
-               firstSeq);
+               firstSeq,
+               lastSeq);
         
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Streams"));
     
@@ -666,6 +667,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
                             const unsigned int aAssetCount,
                             const uint64_t nextSeq,
                             const uint64_t firstSeq,
+                            const uint64_t lastSeq,
                             const map<string, int> *aCount
                             )
 {
@@ -780,7 +782,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST  "firstSequence", 
                                                     BAD_CAST int64ToString(firstSeq).c_str()));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "lastSequence", 
-                                                    BAD_CAST int64ToString(nextSeq - 1).c_str()));
+                                                    BAD_CAST int64ToString(lastSeq).c_str()));
   }
   
   if (aType == eDEVICES && aCount != NULL && aCount->size() > 0)
