@@ -57,7 +57,7 @@ void MTConnectService::initialize(int aArgc, const char *aArgv[])
 
 static void printVersion()
 {
-  printf("MTConnect Agent Version %d.%d.%d.%d - " __TIMESTAMP__ "\n", 
+  printf("MTConnect Agent Version %d.%d.%d.%d - built on " __TIMESTAMP__ "\n", 
          AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
          AGENT_VERSION_BUILD);
 }
