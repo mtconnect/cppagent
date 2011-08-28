@@ -1,4 +1,4 @@
-// the configured options and settings for Tutorial
+// the configured options and settings for MTConnect Agent
 #define AGENT_VERSION_MAJOR @AGENT_VERSION_MAJOR@
 #define AGENT_VERSION_MINOR @AGENT_VERSION_MINOR@
 #define AGENT_VERSION_PATCH @AGENT_VERSION_PATCH@
