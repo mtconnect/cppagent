@@ -3,3 +3,5 @@
 #define AGENT_VERSION_MINOR 0
 #define AGENT_VERSION_PATCH 0
 #define AGENT_VERSION_BUILD 0
+
+extern void PrintMTConnectAgentVersion();

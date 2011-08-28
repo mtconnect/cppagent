@@ -44,6 +44,7 @@ set(agent_srcs cppagent.cpp
 	       service.cpp
 	       config.cpp
          ref_counted.cpp
+         version.cpp
 	       xml_parser.cpp 
 	       xml_printer.cpp)
 
@@ -51,11 +52,14 @@ file(GLOB agent_headers *.hpp)
 
 # configure a header file to pass some of the CMake settings
 # to the source code
+add_custom_target(UPDATE_VERSION ALL
+                  COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${PROJECT_SOURCE_DIR}/version.cpp")
+
 configure_file (
   "${PROJECT_SOURCE_DIR}/version.h.in"
   "${PROJECT_BINARY_DIR}/version.h"
   )
- 
+  
 include_directories(../lib)
 
 find_package(LibXML2 REQUIRED)
@@ -82,3 +86,4 @@ if(WIN32)
 endif(WIN32)
 
 INSTALL(TARGETS agent RUNTIME DESTINATION bin)
+add_dependencies(agent UPDATE_VERSION)

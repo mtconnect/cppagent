@@ -55,13 +55,6 @@ void MTConnectService::initialize(int aArgc, const char *aArgv[])
 {
 }
 
-static void printVersion()
-{
-  printf("MTConnect Agent Version %d.%d.%d.%d - built on " __TIMESTAMP__ "\n", 
-         AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
-         AGENT_VERSION_BUILD);
-}
-
 #ifdef WIN32
 
 #include <windows.h>
@@ -101,7 +94,7 @@ static void agent_termination_handler()
 int MTConnectService::main(int argc, const char *argv[]) 
 {
   std::set_terminate(agent_termination_handler);
-  printVersion();
+  PrintMTConnectAgentVersion();
   try 
   {
     // If command-line parameter is "install", install the service. If debug or run
@@ -651,7 +644,7 @@ void MTConnectService::daemonize()
 
 int MTConnectService::main(int argc, const char *argv[]) 
 {
-  printVersion();
+  PrintMTConnectAgentVersion();
   if(argc > 1) {
     if (strcasecmp( argv[1], "help") == 0 || strncmp(argv[1], "-h", 2) == 0)
     {

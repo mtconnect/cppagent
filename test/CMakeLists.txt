@@ -40,6 +40,7 @@ set(test_srcs test.cpp
 	       ../agent/service.cpp
 	       ../agent/ref_counted.cpp
           ../agent/asset.cpp
+          ../agent/version.cpp
 	       adapter_test.cpp
 	       agent_test.cpp
 	       checkpoint_test.cpp
