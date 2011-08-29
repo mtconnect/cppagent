@@ -8,6 +8,7 @@ if ARGV.length < 1
   exit 9
 end
 
+$last = nil
 def dump(last, xml)
   nxt = nil
   document = REXML::Document.new(xml)
@@ -19,15 +20,19 @@ def dump(last, xml)
     events << event.attributes['sequence'].to_i
   end
   events.sort!
+  puts "First: #{events.first}"
   events.each do |n|
     if last != n
-      puts "Missed event #{last}"
+      puts "*************** Missed event #{last}"
       last = n
     end
     last += 1
   end
-  print '.'; STDOUT.flush
-  puts "Next sequece not correct: last: #{last} next: #{nxt}" if last != nxt
+  puts "Last: #{events.last}"
+  ts = Time.now
+  puts "Received #{events.size} at #{events.size / (ts - $last)} msgs/second" if $last
+  $last = ts
+  puts "*************** Next sequece not correct: last: #{last} next: #{nxt}" if last != nxt
   nxt
 end
 

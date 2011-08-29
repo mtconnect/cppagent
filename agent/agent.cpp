@@ -881,16 +881,16 @@ void Agent::streamData(ostream& out,
       if (current) {
         content = fetchCurrentData(aFilter, NO_START);
       } else {
-        content = fetchSampleData(aFilter, start, count, end, 
-                                  endOfBuffer, &observer);
-        start = end;
-        
         // Check if we're falling too far behind
         if (start < getFirstSequence()) {
           sLogger << LWARN << "Client fell too far behind, disconnecting";
           return;
         }
-        
+
+        content = fetchSampleData(aFilter, start, count, end, 
+                                  endOfBuffer, &observer);
+        start = end;
+                
         if (mLogStreamData)
           log << content << endl;
       }
@@ -929,6 +929,9 @@ void Agent::streamData(ostream& out,
         // greater sequence numbers, so this should not cause a problem. Also, signaled
         // sequence numbers can only decrease, never increase.
         start = observer.getSequence();
+        if (start != end) {
+          sLogger << LWARN << "Sequence should follow" << start << " != " << end;
+        }
           
         // Now wait the remainder if we triggered before the timer was up, otherwise we know
         // we timed out and just spin again.
