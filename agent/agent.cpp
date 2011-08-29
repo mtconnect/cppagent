@@ -849,8 +849,7 @@ void Agent::streamData(ostream& out,
          "Date: " << getCurrentTime(HUM_READ) << "\n"
          "Status: 200 OK\n"
          "Content-Disposition: inline\n"
-         "Content-Type: multipart/x-mixed-replace;\n"
-         "boundary=" << boundary << "\n\n";
+         "Content-Type: multipart/x-mixed-replace;boundary=" << boundary << "\n\n";
   
   // This object will automatically clean up all the observer from the
   // signalers in an exception proof manor.
