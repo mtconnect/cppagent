@@ -41,14 +41,6 @@
 #include <set>
 #include <list>
 
-#ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS 1
-#endif
-#include <stdint.h>
-#ifndef UINT64_MAX
-#define UINT64_MAX 0xFFFFFFFFFFFFFFFFull
-#endif
-
 #include "dlib/md5.h"
 #include "dlib/server.h"
 #include "dlib/sliding_buffer.h"
