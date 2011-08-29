@@ -2,13 +2,14 @@ require 'net/http'
 require './long_pull'
 require 'socket'
 require 'rexml/document'
+require 'time'
 
 if ARGV.length < 1
   puts "usage: seq_test <uri>"
   exit 9
 end
 
-$out = File.open("seq_test.log", 'w')
+$out = File.open("seq_test_#{Time.now.strftime('%Y%m%dT%H%M%S')}.log", 'w')
 $out.sync = true
 
 $last = Time.now
@@ -55,37 +56,25 @@ def current(client, path)
 end
 
 dest = URI.parse(ARGV[0])
-client = Net::HTTP.new(dest.host, dest.port)
-
 path = dest.path
 path += '/' unless path[-1] == ?/
 rootPath = path.dup
-
-nxt, $instance = current(client, rootPath)
-puts "Instance Id: #{$instance} Next: #{nxt}"
+client = nil
+nxt, $instance = 0, 0
 
 puts "polling..."
 begin
   begin
-    path = rootPath + "sample?interval=1000&count=1000&from=#{nxt}"
-    puller = LongPull.new(client)
-    puller.long_pull(path) do |xml|
-      nxt = dump(nxt, xml)
-    end
-  rescue
-    puts $!.class
-    puts $!
-    puts $!.backtrace.join("\n")
-  end
-  begin
-    puts "Reconnecting"
+    puts "Connecting"
     client = Net::HTTP.new(dest.host, dest.port)
     newNxt, newInstance = current(client, rootPath)
-    puts "New instance: #{newInstance}"
+    puts "Instance Id: #{newInstance} Next: #{newNxt}"
     if $instance != newInstance
       puts "New next: #{newNxt}"
       nxt = newNxt
       $instance = newInstance
+    else
+      puts "Continuing at: #{nxt}"
     end
   rescue
     puts $!.class
@@ -93,6 +82,13 @@ begin
     client = nil
     sleep 5
   end while client.nil?
+  if client
+    path = rootPath + "sample?interval=1000&count=1000&from=#{nxt}"
+    puller = LongPull.new(client)
+    puller.long_pull(path) do |xml|
+      nxt = dump(nxt, xml)
+    end
+  end
 rescue
   puts $!
   puts $!.backtrace.join("\n")
