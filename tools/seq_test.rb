@@ -8,7 +8,11 @@ if ARGV.length < 1
   exit 9
 end
 
-$last = nil
+$out = File.open("seq_test.log", 'w')
+$out.sync = true
+
+$last = Time.now
+$count = 0
 def dump(last, xml)
   nxt = nil
   document = REXML::Document.new(xml)
@@ -20,19 +24,21 @@ def dump(last, xml)
     events << event.attributes['sequence'].to_i
   end
   events.sort!
-  puts "First: #{events.first}"
   events.each do |n|
     if last != n
-      puts "*************** Missed event #{last}"
+      $out.puts "#{Time.now}: *************** Missed event #{last}"
       last = n
     end
     last += 1
   end
-  puts "Last: #{events.last}"
   ts = Time.now
-  puts "Received #{events.size} at #{events.size / (ts - $last)} msgs/second" if $last
-  $last = ts
-  puts "*************** Next sequece not correct: last: #{last} next: #{nxt}" if last != nxt
+  $count += events.size
+  if (ts - $last).to_i > 30
+    $out.puts "#{ts}: Received #{$count} at #{$count / (ts - $last)} events/second"
+    $last = ts
+    $count = 0
+  end
+  puts "#{ts}: *************** Next sequece not correct: last: #{last} next: #{nxt}" if last != nxt
   nxt
 end
 
@@ -55,25 +61,40 @@ path = dest.path
 path += '/' unless path[-1] == ?/
 rootPath = path.dup
 
-nxt, instance = current(client, rootPath)
-puts "Instance Id: #{instance} Next: #{nxt}"
+nxt, $instance = current(client, rootPath)
+puts "Instance Id: #{$instance} Next: #{nxt}"
 
 puts "polling..."
 begin
-  path = rootPath + "sample?interval=1000&count=1000&from=#{nxt}"
-  puller = LongPull.new(client)
-  puller.long_pull(path) do |xml|
-    nxt = dump(nxt, xml)
+  begin
+    path = rootPath + "sample?interval=1000&count=1000&from=#{nxt}"
+    puller = LongPull.new(client)
+    puller.long_pull(path) do |xml|
+      nxt = dump(nxt, xml)
+    end
+  rescue
+    puts $!.class
+    puts $!
+    puts $!.backtrace.join("\n")
   end
-  puts "Reconnecting"
-  client = Net::HTTP.new(dest.host, dest.port)
-  newNxt, newInstance = current(client, rootPath)
-  if instance != newInstance
-    nxt = newNxt
-    instance = newInstance
-  end
+  begin
+    puts "Reconnecting"
+    client = Net::HTTP.new(dest.host, dest.port)
+    newNxt, newInstance = current(client, rootPath)
+    puts "New instance: #{newInstance}"
+    if $instance != newInstance
+      puts "New next: #{newNxt}"
+      nxt = newNxt
+      $instance = newInstance
+    end
+  rescue
+    puts $!.class
+    puts $!
+    client = nil
+    sleep 5
+  end while client.nil?
 rescue
   puts $!
   puts $!.backtrace.join("\n")
-  exit 1
+  sleep 5
 end while true
