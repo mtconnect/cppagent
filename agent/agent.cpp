@@ -929,9 +929,6 @@ void Agent::streamData(ostream& out,
         // greater sequence numbers, so this should not cause a problem. Also, signaled
         // sequence numbers can only decrease, never increase.
         start = observer.getSequence();
-        if (start != end) {
-          sLogger << LWARN << "Sequence should follow" << start << " != " << end;
-        }
           
         // Now wait the remainder if we triggered before the timer was up, otherwise we know
         // we timed out and just spin again.
