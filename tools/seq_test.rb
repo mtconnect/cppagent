@@ -4,33 +4,79 @@ require 'socket'
 require 'rexml/document'
 require 'time'
 
-if ARGV.length < 1
-  puts "usage: seq_test <uri>"
-  exit 9
+require 'optparse'
+$fast = false
+OptionParser.new do |opts|
+  opts.banner = 'Usage: seq_test.rb [-f] <url>'
+  
+  opts.on('-f', '--[no-]fast', 'Fast mode, do not parse XML [Default: false]') do  |v|
+    $fast = v
+  end
+  
+  opts.parse!
+  if ARGV.length < 1
+    puts "Missing url <url>"
+    puts opts
+    exit 1
+  end
 end
+
 
 $out = File.open("seq_test_#{Time.now.strftime('%Y%m%dT%H%M%S')}.log", 'w')
 $out.sync = true
 
-$last = Time.now
+$last_log_time = Time.now
 $count = 0
-def dump(last, xml)
-  nxt = nil
-  if xml =~ /MTConnectError/o
+
+def parse_fast(xml)
+  if xml !~ /MTConnectStreams/o
     $out.puts xml
-    return 0
+    return [0, []]
   end
-  
   m = /nextSequence="(\d+)"/o.match(xml)
   if m
     nxt = m[1].to_i
   else
     puts "Could not find next sequence in xml"
     puts xml
-    return 0
+    return [0, []]
   end
   events = xml.scan(/sequence="(\d+)"/o).flatten.map { |n| n.to_i }
   events.sort!
+  [nxt, events]
+end
+
+def parse(xml)
+  document = REXML::Document.new(xml)
+  if document.root.name == 'MTConnectError'
+    $out.puts xml
+    return [0, []]
+  end
+  nxt = nil
+  document.each_element('//Header') { |x| 
+    nxt = x.attributes['nextSequence'].to_i 
+  }
+  unless nxt
+    puts "Could not find next sequence in xml"
+    puts xml
+    return [0, []]
+  end
+  events = []
+  document.each_element('//Events/*|//Samples/*|//Condition/*') do |event|
+    events << event.attributes['sequence'].to_i
+  end
+  events.sort!
+  return [nxt, events]
+end
+
+def dump(last, xml)
+  if $fast
+    nxt, events = parse_fast(xml)
+  else
+    nxt, events = parse(xml)
+  end
+  return nxt if nxt == 0
+  
   events.each do |n|
     if last != n
       $out.puts "#{Time.now}: *************** Missed event #{last}"
@@ -40,9 +86,9 @@ def dump(last, xml)
   end
   ts = Time.now
   $count += events.size
-  if (ts - $last).to_i > 30
-    $out.puts "#{ts}: Received #{$count} at #{$count / (ts - $last)} events/second"
-    $last = ts
+  if (ts - $last_log_time).to_i > 30
+    $out.puts "#{ts}: Received #{$count} at #{$count / (ts - $last_log_time)} events/second"
+    $last_log_time = ts
     $count = 0
   end
   puts "#{ts}: *************** Next sequece not correct: last: #{last} next: #{nxt}" if last != nxt
@@ -66,7 +112,7 @@ path = dest.path
 path += '/' unless path[-1] == ?/
 rootPath = path.dup
 client = nil
-nxt, $instance = 0, 0
+$nxt, $instance = 0, 0
 
 puts "polling..."
 begin
@@ -75,12 +121,12 @@ begin
     client = Net::HTTP.new(dest.host, dest.port)
     newNxt, newInstance = current(client, rootPath)
     puts "Instance Id: #{newInstance} Next: #{newNxt}"
-    if $instance != newInstance or nxt == 0
+    if $instance != newInstance or $nxt == 0
       puts "New next: #{newNxt}"
-      nxt = newNxt
+      $nxt = newNxt
       $instance = newInstance
     else
-      puts "Continuing at: #{nxt}"
+      puts "Continuing at: #{$nxt}"
     end
   rescue
     puts $!.class
@@ -89,10 +135,10 @@ begin
     sleep 5
   end while client.nil?
   if client
-    path = rootPath + "sample?interval=500&count=5000&from=#{nxt}"
+    path = rootPath + "sample?interval=300&count=10000&from=#{$nxt}"
     puller = LongPull.new(client)
     puller.long_pull(path) do |xml|
-      nxt = dump(nxt, xml)
+      $nxt = dump($nxt, xml)
     end
   end
 rescue
