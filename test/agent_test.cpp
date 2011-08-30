@@ -132,28 +132,28 @@ void AgentTest::testBadCount()
   {
     query["count"] = "NON_INTEGER";
     PARSE_XML_RESPONSE_QUERY(query);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be a positive integer.");
   }
   
   {
     query["count"] = "-123";
     PARSE_XML_RESPONSE_QUERY(query);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be a positive integer.");
   }
   
   {
     query["count"] = "0";
     PARSE_XML_RESPONSE_QUERY(query);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be greater than or equal to 1.");
   }
   
   {
     query["count"] = "999999999999999999";
     PARSE_XML_RESPONSE_QUERY(query);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than or equal to ");
     value += intToString(a->getBufferSize()) + ".";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
@@ -169,21 +169,21 @@ void AgentTest::testBadFreq()
   {
     query["frequency"] = "NON_INTEGER";
     PARSE_XML_RESPONSE_QUERY(query);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
   }
   
   {
     query["frequency"] = "-123";
     PARSE_XML_RESPONSE_QUERY(query);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
   }
   
   {
     query["frequency"] = "999999999999999999";
     PARSE_XML_RESPONSE_QUERY(query);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be less than or equal to 2147483646.");
   }
 }
@@ -393,7 +393,7 @@ void AgentTest::testCurrentAt()
     value = intToString(i + seq);
     sprintf(line, "'at' must be greater than or equal to %d.", i + seq + 1);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
 }
@@ -455,7 +455,7 @@ void AgentTest::testCurrentAtOutOfRange()
     value = intToString(seq);
     sprintf(line, "'at' must be less than or equal to %d.", seq - 1);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
   
@@ -465,7 +465,7 @@ void AgentTest::testCurrentAtOutOfRange()
     value = intToString(seq);
     sprintf(line, "'at' must be greater than or equal to %d.", seq + 1);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "QUERY_ERROR");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
 }

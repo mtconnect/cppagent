@@ -28,6 +28,7 @@ class LongPull
         while document.rest_size >= length
           if header
             if !document.check(/^#{boundary}/)
+              puts document.rest
               raise "Framing error"
             end
             

@@ -60,6 +60,7 @@ public:
     mSignal.signal(); 
   }
   uint64_t getSequence() { return mSequence; }
+  bool wasSignaled() { return mSequence != UINT64_MAX; }
   void reset() { 
     dlib::auto_mutex lock(mMutex); 
     mSequence = UINT64_MAX; 

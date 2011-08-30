@@ -870,6 +870,7 @@ void Agent::streamData(ostream& out,
     timestamper ts;
     while (out.good())
     {
+      // Remember when we started this grab...
       uint64_t last = ts.get_timestamp();
       
       // Fetch sample data now resets the observer while holding the sequence
@@ -881,16 +882,20 @@ void Agent::streamData(ostream& out,
       if (current) {
         content = fetchCurrentData(aFilter, NO_START);
       } else {
-        // Check if we're falling too far behind
+        // Check if we're falling too far behind. If we are, generate an 
+        // MTConnectError and return.
         if (start < getFirstSequence()) {
           sLogger << LWARN << "Client fell too far behind, disconnecting";
-          return;
+          throw ParameterError("OUT_OF_RANGE", "Client can't keep up with event stream, disconnecting");
+        } else {
+          // end and endOfBuffer are set during the fetch sample data while the 
+          // mutex is held. This removed the race to check if we are at the end of 
+          // the bufffer and setting the next start to the last sequence number 
+          // sent.
+          content = fetchSampleData(aFilter, start, count, end, 
+                                    endOfBuffer, &observer);                
         }
-
-        content = fetchSampleData(aFilter, start, count, end, 
-                                  endOfBuffer, &observer);
-        start = end;
-                
+        
         if (mLogStreamData)
           log << content << endl;
       }
@@ -902,7 +907,7 @@ void Agent::streamData(ostream& out,
              << content;
       
       out.flush();
-          
+      
       // Wait for up to frequency ms for something to arrive... Don't wait if 
       // we are not at the end of the buffer. Just put the next set after aInterval 
       // has elapsed. Check also if in the intervening time between the last fetch
@@ -911,27 +916,34 @@ void Agent::streamData(ostream& out,
       // Even if we are at the end of the buffer, or within range. If we are filtering, 
       // we will need to make sure we are not spinning when there are no valid events
       // to be reported. we will waste cycles spinning on the end of the buffer when 
-      // we should be in a heartbeat wait as well. Fix the start < mSequence check 
-      // to validate something is waiting for us. The observer getSequence should
-      // be the correct way to validate if an event has arrived.
-      
-      // We may be able to get rid of last condition and allow to fall through to wait...
+      // we should be in a heartbeat wait as well. 
       if (current || !endOfBuffer) {
+        // If this is not a current, move the start to the end. This is only significant 
+        // if we are not at the end of the buffer and we are scanning through the event
+        // buffer.
+        if (!current) start = end;
+        
         // Measure the delta time between the point you last fetched data to now.
         uint64 delta = ts.get_timestamp() - last;
         if (delta < interMicros) {
           // Sleep the remainder
           dlib::sleep((interMicros - delta) / 1000);
         }
-      } else if (observer.wait(aHeartbeat)) { 
-        // Get the sequence # signaled in the observer when the lastest event arrived. 
+      } else if (observer.wait(aHeartbeat)) {
+        // Make sure the observer was signaled!
+        if (!observer.wasSignaled())
+        {
+          sLogger << LERROR << "Agent::streamData: Observer returned true from wait, but observer was not signaled. Closing connection...";
+          throw ParameterError("INTERNAL_ERROR", "Event observer failed");
+        }
+        
+        // Get the sequence # signaled in the observer when the earliest event arrived. 
         // This will allow the next set of data to be pulled. Any later events will have
         // greater sequence numbers, so this should not cause a problem. Also, signaled
         // sequence numbers can only decrease, never increase.
         start = observer.getSequence();
           
-        // Now wait the remainder if we triggered before the timer was up, otherwise we know
-        // we timed out and just spin again.
+        // Now wait the remainder if we triggered before the timer was up.
         uint64 delta = ts.get_timestamp() - last;
         if (delta < interMicros) {
           // Sleep the remainder
@@ -940,23 +952,48 @@ void Agent::streamData(ostream& out,
       } else {
         // If nothing came out during the last wait, we may have still have advanced 
         // the sequence number. We should reset the start to something closer to the 
-        // current sequence. If we lock the sequence lock, the sequence in the observer 
-        // will be set to the latest event or UINT64_MAX. Otherwise, nothing has arrived and 
-        // we set to the next sequence number and release the lock.
+        // current sequence. If we lock the sequence lock, we can check if the observer
+        // was signaled between the time the wait timed out and the mutex was locked. 
+        // Otherwise, nothing has arrived and we set to the next sequence number to 
+        // the next sequence number to be allocated and continue.
         dlib::auto_mutex lock(*mSequenceLock);
         
-        if (observer.getSequence() < UINT64_MAX)
+        if (observer.wasSignaled())
           start = observer.getSequence();
         else 
           start = mSequence;
       }
     }
   }
+  catch (ParameterError &aError)
+  {
+    sLogger << LINFO << "Caught a parameter error.";
+    if (out.good()) {
+      string content = printError(aError.mCode, aError.mMessage); 
+      out << "--" + boundary << "\n"
+             "Content-type: text/xml\n"
+             "Content-length: " << content.length() << "\n\n"
+              << content;
+      
+      out.flush();
+    }
+  }
+  
   catch (...)
   {
     sLogger << LWARN << "Error occurred during streaming data";
+    if (out.good()) {
+      string content = printError("INTERNAL_ERROR", "Unknown error occurred during streaming"); 
+      out << "--" + boundary << "\n"
+             "Content-type: text/xml\n"
+             "Content-length: " << content.length() << "\n\n"
+             << content;
+      
+      out.flush();
+    }
   }
   
+  out.setstate(ios::badbit);
   // Observer is auto removed from signalers
 }
 
@@ -1115,7 +1152,7 @@ int Agent::checkAndGetParam(const key_value_map& queries,
   
   if (!isNonNegativeInteger(queries[param]))
   {
-    throw ParameterError("QUERY_ERROR",
+    throw ParameterError("OUT_OF_RANGE",
                         "'" + param + "' must be a positive integer.");
   }
   
@@ -1125,7 +1162,7 @@ int Agent::checkAndGetParam(const key_value_map& queries,
   {
     if (minError)
     {
-      throw ParameterError("QUERY_ERROR",
+      throw ParameterError("OUT_OF_RANGE",
                           "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
     }
     return minValue;
@@ -1133,7 +1170,7 @@ int Agent::checkAndGetParam(const key_value_map& queries,
   
   if (maxValue != NO_VALUE32 && value > maxValue)
   {
-    throw ParameterError("QUERY_ERROR",
+    throw ParameterError("OUT_OF_RANGE",
                         "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
   }
   
@@ -1159,7 +1196,7 @@ uint64_t Agent::checkAndGetParam64(const key_value_map& queries,
   
   if (!isNonNegativeInteger(queries[param]))
   {
-    throw ParameterError("QUERY_ERROR",
+    throw ParameterError("OUT_OF_RANGE",
                         "'" + param + "' must be a positive integer.");
   }
   
@@ -1169,7 +1206,7 @@ uint64_t Agent::checkAndGetParam64(const key_value_map& queries,
   {
     if (minError)
     {
-      throw ParameterError("QUERY_ERROR",
+      throw ParameterError("OUT_OF_RANGE",
                           "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
     }
     return minValue;
@@ -1177,7 +1214,7 @@ uint64_t Agent::checkAndGetParam64(const key_value_map& queries,
   
   if (maxValue != NO_VALUE64 && value > maxValue)
   {
-    throw ParameterError("QUERY_ERROR",
+    throw ParameterError("OUT_OF_RANGE",
                         "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
   }
   

@@ -108,8 +108,10 @@ void ChangeObserverTest::testChangeSequence()
   ChangeObserver obj;
   
   mSignaler->addObserver(&obj);
+  CPPUNIT_ASSERT(!obj.wasSignaled());
   dlib::create_new_thread(signaler2, mSignaler);
   CPPUNIT_ASSERT(obj.wait(2000));
+  CPPUNIT_ASSERT(obj.wasSignaled());
   
   CPPUNIT_ASSERT_EQUAL(100ull, obj.getSequence());
   

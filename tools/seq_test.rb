@@ -17,6 +17,11 @@ $count = 0
 def dump(last, xml)
   nxt = nil
   document = REXML::Document.new(xml)
+  if document.root.name == 'MTConnectError'
+    $out.puts xml
+    puts xml
+    return 0
+  end
   document.each_element('//Header') { |x| 
     nxt = x.attributes['nextSequence'].to_i 
   }
@@ -69,7 +74,7 @@ begin
     client = Net::HTTP.new(dest.host, dest.port)
     newNxt, newInstance = current(client, rootPath)
     puts "Instance Id: #{newInstance} Next: #{newNxt}"
-    if $instance != newInstance
+    if $instance != newInstance or nxt == 0
       puts "New next: #{newNxt}"
       nxt = newNxt
       $instance = newInstance
@@ -87,6 +92,7 @@ begin
     puller = LongPull.new(client)
     puller.long_pull(path) do |xml|
       nxt = dump(nxt, xml)
+      sleep 1
     end
   end
 rescue
