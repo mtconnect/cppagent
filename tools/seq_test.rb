@@ -16,18 +16,20 @@ $last = Time.now
 $count = 0
 def dump(last, xml)
   nxt = nil
-  document = REXML::Document.new(xml)
-  if document.root.name == 'MTConnectError'
+  if xml =~ /MTConnectError/o
     $out.puts xml
     return 0
   end
-  document.each_element('//Header') { |x| 
-    nxt = x.attributes['nextSequence'].to_i 
-  }
-  events = []
-  document.each_element('//Events/*|//Samples/*|//Condition/*') do |event|
-    events << event.attributes['sequence'].to_i
+  
+  m = /nextSequence="(\d+)"/o.match(xml)
+  if m
+    nxt = m[1].to_i
+  else
+    puts "Could not find next sequence in xml"
+    puts xml
+    return 0
   end
+  events = xml.scan(/sequence="(\d+)"/o).flatten.map { |n| n.to_i }
   events.sort!
   events.each do |n|
     if last != n
@@ -87,7 +89,7 @@ begin
     sleep 5
   end while client.nil?
   if client
-    path = rootPath + "sample?interval=1000&count=1000&from=#{nxt}"
+    path = rootPath + "sample?interval=500&count=5000&from=#{nxt}"
     puller = LongPull.new(client)
     puller.long_pull(path) do |xml|
       nxt = dump(nxt, xml)
