@@ -19,7 +19,6 @@ def dump(last, xml)
   document = REXML::Document.new(xml)
   if document.root.name == 'MTConnectError'
     $out.puts xml
-    puts xml
     return 0
   end
   document.each_element('//Header') { |x| 
@@ -92,7 +91,6 @@ begin
     puller = LongPull.new(client)
     puller.long_pull(path) do |xml|
       nxt = dump(nxt, xml)
-      sleep 1
     end
   end
 rescue
