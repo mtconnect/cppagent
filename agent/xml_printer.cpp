@@ -34,6 +34,7 @@
 #include "xml_printer.hpp"
 #include "dlib/sockets.h"
 #include "dlib/logger.h"
+#include "version.h"
 
 
 static dlib::logger sLogger("xml.printer");
@@ -760,7 +761,10 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
   
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "sender", BAD_CAST hostname.c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId", BAD_CAST intToString(instanceId).c_str()));
-  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST "1.2"));
+  char version[32];
+  sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
+          AGENT_VERSION_BUILD);
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST version));
 
   if (aType == eASSETS || aType == eDEVICES) 
   {
