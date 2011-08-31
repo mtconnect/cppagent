@@ -353,7 +353,7 @@ Configuration Parameters
 
     * `AutoAvailable` - For devices that do not have the ability to provide available events, if `yes`, this sets the `Availability` to AVAILABLE upon connection.
 
-        *Default*: no
+        *Default*: no (new in 1.2, if AVAILABILITY is not provided for device it will be automatically added and this will default to yes)
 
     * `AdditionalDevices` - Comma separated list of additional devices connected to this adapter. This provides availability support when one addapter feeds multiple devices.
 

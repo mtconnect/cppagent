@@ -1,20 +1,20 @@
 
 Microsoft windows:
 
-Unzip agent_0.9.zip
-
 Download CMake:
   http://www.cmake.org/cmake/resources/software.html
 
 Install CMake.
 
 Start CMake, and edit the following fields:
-  Where is the source code: <the path to the agent subdirectory directory> 
-  Where to build the binaries: <previous source path>/build
+  Where is the source code: The cppagent root directory 
+  Where to build the binaries: <cppagent root>/build
 
 Click Configure
-  Select Visual Studio 9 2008
+  Select Visual Studio 2008 or 2010
   And keep Use default native compilers
+
+Click Configure again to accept the installation location
 
 Click Generate
 
