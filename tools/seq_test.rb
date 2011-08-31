@@ -140,7 +140,7 @@ begin
     sleep 5
   end while client.nil?
   if client
-    path = rootPath + "sample?interval=300&count=10000&from=#{$nxt}"
+    path = rootPath + "sample?interval=1000&count=10000&from=#{$nxt}"
     puller = LongPull.new(client)
     puller.long_pull(path) do |xml|
       $nxt = dump($nxt, xml)
