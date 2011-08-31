@@ -113,7 +113,7 @@ void ChangeObserverTest::testChangeSequence()
   CPPUNIT_ASSERT(obj.wait(2000));
   CPPUNIT_ASSERT(obj.wasSignaled());
   
-  CPPUNIT_ASSERT_EQUAL(100ull, obj.getSequence());
+  CPPUNIT_ASSERT_EQUAL((uint64_t) 100ull, obj.getSequence());
   
   // Wait for things to clean up...
   dlib::sleep(1000);
@@ -137,7 +137,7 @@ void ChangeObserverTest::testChangeSequence2()
   CPPUNIT_ASSERT(obj.wait(2000));
   dlib::sleep(500);
 
-  CPPUNIT_ASSERT_EQUAL(30ull, obj.getSequence());
+  CPPUNIT_ASSERT_EQUAL((uint64_t) 30ull, obj.getSequence());
   
   // Wait for things to clean up...
   dlib::sleep(1000);
