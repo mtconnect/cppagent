@@ -89,7 +89,7 @@ def dump(last, xml)
     
     if (ts - $last_log_time).to_i > 30
       $out.puts "#{ts}: Received #{$count} at #{$count / (ts - $last_log_time)} events/second"
-      $out.puts "       Average event size is #{$total_bytes / $count} bytes"
+      $out.puts "       Average event size is #{$total_bytes / $count} bytes" if $count > 0
       
       $last_log_time = ts
       $count = 0
