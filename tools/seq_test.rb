@@ -42,7 +42,6 @@ def parse_fast(xml)
     return [0, []]
   end
   events = xml.scan(/sequence="(\d+)"/o).flatten.map { |n| n.to_i }
-  events.sort!
   [nxt, events]
 end
 
@@ -65,7 +64,6 @@ def parse(xml)
   document.each_element('//Events/*|//Samples/*|//Condition/*') do |event|
     events << event.attributes['sequence'].to_i
   end
-  events.sort!
   return [nxt, events]
 end
 
@@ -75,23 +73,24 @@ def dump(last, xml)
   else
     nxt, events = parse(xml)
   end
-  return nxt if nxt == 0
-  
-  events.each do |n|
-    if last != n
-      $out.puts "#{Time.now}: *************** Missed event #{last}"
-      last = n
+  if nxt != 0
+    events.sort!
+    events.each do |n|
+      if last != n
+        $out.puts "#{Time.now}: *************** Missed event #{last}"
+        last = n
+      end
+      last += 1
     end
-    last += 1
+    ts = Time.now
+    $count += events.size
+    if (ts - $last_log_time).to_i > 30
+      $out.puts "#{ts}: Received #{$count} at #{$count / (ts - $last_log_time)} events/second"
+      $last_log_time = ts
+      $count = 0
+    end
+    puts "#{ts}: *************** Next sequece not correct: last: #{last} next: #{nxt}" if last != nxt
   end
-  ts = Time.now
-  $count += events.size
-  if (ts - $last_log_time).to_i > 30
-    $out.puts "#{ts}: Received #{$count} at #{$count / (ts - $last_log_time)} events/second"
-    $last_log_time = ts
-    $count = 0
-  end
-  puts "#{ts}: *************** Next sequece not correct: last: #{last} next: #{nxt}" if last != nxt
   nxt
 end
 
