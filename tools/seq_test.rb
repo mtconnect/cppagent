@@ -27,6 +27,7 @@ $out.sync = true
 
 $last_log_time = Time.now
 $count = 0
+$total_bytes = 0
 
 def parse_fast(xml)
   if xml !~ /MTConnectStreams/o
@@ -84,10 +85,15 @@ def dump(last, xml)
     end
     ts = Time.now
     $count += events.size
+    $total_bytes += xml.length if events.size > 0
+    
     if (ts - $last_log_time).to_i > 30
       $out.puts "#{ts}: Received #{$count} at #{$count / (ts - $last_log_time)} events/second"
+      $out.puts "       Average event size is #{$total_bytes / $count} bytes"
+      
       $last_log_time = ts
       $count = 0
+      $total_bytes = 0
     end
     puts "#{ts}: *************** Next sequece not correct: last: #{last} next: #{nxt}" if last != nxt
   end
