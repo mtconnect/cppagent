@@ -37,14 +37,15 @@ set(agent_srcs cppagent.cpp
 	       component_event.cpp 
 	       change_observer.cpp
 	       connector.cpp
+           cutting_tool.cpp
 	       data_item.cpp 
 	       device.cpp 
 	       globals.cpp 
 	       options.cpp
 	       service.cpp
 	       config.cpp
-         ref_counted.cpp
-         version.cpp
+           ref_counted.cpp
+           version.cpp
 	       xml_parser.cpp 
 	       xml_printer.cpp)
 

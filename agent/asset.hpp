@@ -35,10 +35,14 @@
 #define ASSET_HPP
 
 #include <string>
+#include <map>
 #include "ref_counted.hpp"
 
 class Asset;
 typedef RefCountedPtr<Asset> AssetPtr;
+
+// An association of the index type to the value.
+typedef std::map<std::string,std::string> AssetKeys;
 
 class Asset : public RefCounted
 {
@@ -46,6 +50,7 @@ protected:
   std::string mAssetId;
   std::string mContent;
   std::string mType;
+  AssetKeys   mKeys;
   
 public:
   Asset();
@@ -54,17 +59,22 @@ public:
     mContent = aOther.mContent;
     mType = aOther.mType;
   }
-  Asset(std::string aAssetId, std::string aType, std::string aContent);
+  Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent);
   virtual ~Asset();
 
   std::string &getAssetId() { return mAssetId; }
   std::string &getContent() { return mContent; }
   std::string &getType() { return mType; }
+  AssetKeys   &getKeys() { return mKeys; }
   
   bool operator==(const Asset &aOther) {
     return mAssetId == aOther.mAssetId;
   }
+  
+  void setAssetId(const std::string &aId) { mAssetId = aId; }
 };
+
+typedef std::map<std::string, AssetPtr> AssetIndex;
 
 
 #endif

@@ -30,6 +30,7 @@ set(test_srcs test.cpp
 	       ../agent/component_event.cpp 
 	       ../agent/change_observer.cpp
 	       ../agent/connector.cpp
+           ../agent/cutting_tool.cpp
 	       ../agent/data_item.cpp 
 	       ../agent/device.cpp 
 	       ../agent/globals.cpp 

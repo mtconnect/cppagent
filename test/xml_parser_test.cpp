@@ -32,7 +32,10 @@
 */
 
 #include "xml_parser_test.hpp"
+#include "test_globals.hpp"
 #include <stdexcept>
+#include <iostream>
+#include <fstream>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(XmlParserTest);
@@ -244,4 +247,43 @@ void XmlParserTest::testConfiguration()
   }
   
   CPPUNIT_ASSERT(!power->getConfiguration().empty());
+}
+
+void XmlParserTest::testParseAsset()
+{
+  string document = getFile("asset1.xml");
+  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240", tool->mIdentity["toolId"]);
+  CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240.1", tool->getAssetId());
+  CPPUNIT_ASSERT_EQUAL((string) "1", tool->mIdentity["serialNumber"]);
+  CPPUNIT_ASSERT_EQUAL((string) "KMT,Parlec", tool->mIdentity["manufacturers"]);
+  CPPUNIT_ASSERT_EQUAL((string) "2011-05-11T13:55:22", tool->mIdentity["timestamp"]);
+  
+  // Top Level
+  CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->mValues["CuttingToolDefinition"].mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "EXPRESS", tool->mValues["CuttingToolDefinition"].mProperties["format"]);
+  CPPUNIT_ASSERT_EQUAL((string) "Cutting tool ...", tool->mValues["Description"].mValue);
+  
+  // Status
+  CPPUNIT_ASSERT_EQUAL((string) "NEW", tool->mStatus[0]);
+  
+  // Values
+  CPPUNIT_ASSERT_EQUAL((string) "10000", tool->mValues["ProgramSpindleSpeed"].mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "222", tool->mValues["ProgramFeedRate"].mValue);
+  
+  // Measurements
+  CPPUNIT_ASSERT_EQUAL((string) "73.25", tool->mMeasurements["BodyDiameterMax"].mValue);
+  
+  // Items
+  CPPUNIT_ASSERT_EQUAL((string) "24", tool->mItemCount);
+  
+  // Item
+  CPPUNIT_ASSERT_EQUAL((size_t) 6, tool->mItems.size());
+  CuttingItem &item = tool->mItems[0];
+  
+  CPPUNIT_ASSERT_EQUAL((string) "SDET43PDER8GB", item.mIdentity["itemId"]);
+  CPPUNIT_ASSERT_EQUAL((string) "FLANGE: 1-4, ROW: 1", item.mValues["Locus"].mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "12.7", item.mMeasurements["CuttingEdgeLength"].mValue);
 }

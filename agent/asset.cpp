@@ -36,7 +36,7 @@
 
 using namespace std;
 
-Asset::Asset(string aAssetId, string aType, string aContent)
+Asset::Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent)
 {
   mAssetId = aAssetId;
   mContent = aContent;

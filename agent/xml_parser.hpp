@@ -43,6 +43,7 @@
 #include "device.hpp"
 #include "data_item.hpp"
 #include "globals.hpp"
+#include "cutting_tool.hpp"
 
 class XmlParser
 {
@@ -62,6 +63,11 @@ public:
   /* Get std::list of data items in path */
   void getDataItems(std::set<std::string> &aFilterSet,
                     const std::string& path, xmlNodePtr node = NULL);
+  
+  // Get an asset object representing a parsed XML Asset document. This can be 
+  // full document or a fragment.
+  AssetPtr parseAsset(const std::string &aAssetId, const std::string &aType, 
+                      const std::string &aContent);
   
 protected:
   /* LibXML XML Doc */
@@ -99,6 +105,12 @@ protected:
     Component *parent = NULL,
     Device *device = NULL
   );
+  
+  // Cutting Tool Parser
+  CuttingToolPtr handleCuttingTool(xmlNodePtr anAsset);
+  CuttingToolValue parseCuttingToolNode(xmlNodePtr aNode);
+  void parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode);
+  CuttingItem parseCuttingItem(xmlNodePtr aNode);
 };
 
 #endif

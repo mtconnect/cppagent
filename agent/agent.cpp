@@ -389,7 +389,17 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     else
       mAssetCounts[aType] += 1;
     
-    AssetPtr ptr(new Asset(aId, aType, aAsset), true);
+    AssetPtr ptr;
+    if (aType == "CuttingTool") {
+      ptr = mXmlParser->parseAsset(aId, aType, aAsset);
+    } else {
+      ptr.setObject(new Asset(aId, aType, aAsset), true);
+    }
+    
+    if (ptr.getObject() == NULL) {
+      sLogger << LWARN << "Asset could not be created";
+      return false;
+    }
     
     // Check for overflow
     if (mAssets.size() >= mMaxAssets)
@@ -402,6 +412,15 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     
     mAssetMap[aId] = ptr;
     mAssets.push_back(ptr);
+    
+    // Add secondary keys
+    AssetKeys &keys = ptr->getKeys();
+    AssetKeys::iterator iter;
+    for (iter = keys.begin(); iter != keys.end(); iter++)
+    {
+      AssetIndex &index = mAssetIndices[iter->first];
+      index[iter->second] = ptr;
+    }
   }
   
   // Generate an asset chnaged event.

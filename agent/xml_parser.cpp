@@ -33,6 +33,8 @@
 
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
+#include "cutting_tool.hpp"
+
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
@@ -501,3 +503,214 @@ void XmlParser::handleChildren(
   }
 }
 
+// Asset or Cutting Tool parser
+
+AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &aType, 
+                               const std::string &aContent) 
+{
+  AssetPtr asset;
+
+  xmlXPathContextPtr xpathCtx = NULL;
+  xmlXPathObjectPtr assetNodes = NULL;
+  xmlDocPtr document = NULL;
+
+  try {
+    
+    
+    THROW_IF_XML2_NULL(document = xmlParseMemory(aContent.c_str(), aContent.length()));
+    
+    std::string path = "//Assets/*";
+    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(document));
+    
+    xmlNodePtr root = xmlDocGetRootElement(document);
+    if (root->ns != NULL)
+    {
+      path = addNamespace(path, "m");
+      THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
+    }
+    
+    // Spin through all the assets and create cutting tool objects for the cutting tools
+    // all others add as plain text.
+    xmlNodePtr node = NULL;
+    assetNodes = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
+    if (assetNodes == NULL)
+    {
+      // See if this is a fragment... the root node will be check when it is 
+      // parsed...
+      node = root;
+      
+    } 
+    else 
+    {
+      xmlNodeSetPtr nodeset = assetNodes->nodesetval;
+      if (nodeset == NULL || nodeset->nodeNr == 0)
+      {
+        throw (string) "Could not find Asset in XML";
+      }
+      node = nodeset->nodeTab[0];
+    }
+    
+    asset = handleCuttingTool(node);
+    
+    // Cleanup objects...
+    xmlXPathFreeObject(assetNodes);    
+    xmlXPathFreeContext(xpathCtx);
+    xmlFreeDoc(document);
+
+  }   
+  catch (string e)
+  {
+    if (assetNodes != NULL)
+      xmlXPathFreeObject(assetNodes);    
+    if (xpathCtx != NULL)
+      xmlXPathFreeContext(xpathCtx);
+    if (document != NULL)
+      xmlFreeDoc(document);
+
+    sLogger << dlib::LERROR << "Cannot parse asset XML: " << e;
+    throw e;
+  }
+  catch (...)
+  {
+    if (assetNodes != NULL)
+      xmlXPathFreeObject(assetNodes);    
+    if (xpathCtx != NULL)
+      xmlXPathFreeContext(xpathCtx);
+    if (document != NULL)
+      xmlFreeDoc(document);
+    throw;
+  }
+
+  return asset;
+}
+
+CuttingToolValue XmlParser::parseCuttingToolNode(xmlNodePtr aNode)
+{
+  CuttingToolValue value;
+  value.mKey = (char*) aNode->name;
+  
+  xmlChar *text = xmlNodeGetContent(aNode);
+  if (text != NULL) {
+    xmlFree(text);
+    value.mValue = (char*) text;
+  }
+  
+  for (xmlAttrPtr attr = aNode->properties; attr != NULL; attr = attr->next) {
+    if (attr->type == XML_ATTRIBUTE_NODE) {
+      value.mProperties[(const char*) attr->name] = (const char*) attr->children->content;
+    }
+  }
+  
+  return value;
+}
+
+CuttingItem XmlParser::parseCuttingItem(xmlNodePtr aNode)
+{
+  CuttingItem item;
+
+  for (xmlAttrPtr attr = aNode->properties; attr != NULL; attr = attr->next) {
+    if (attr->type == XML_ATTRIBUTE_NODE) {
+      item.mIdentity[(const char*) attr->name] = (const char*) attr->children->content;
+    }
+  }
+
+  for (xmlNodePtr child = aNode->children; child != NULL; child = child->next)
+  {
+    if (xmlStrcmp(child->name, BAD_CAST "Measurements") == 0) {
+      for (xmlNodePtr meas = child->children; meas != NULL; meas = meas->next) {
+        const CuttingToolValue &value = parseCuttingToolNode(meas);
+        item.mMeasurements[value.mKey] = value;
+      }      
+    } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
+      const CuttingToolValue &value = parseCuttingToolNode(child);
+      item.mValues[value.mKey] = value;
+    }
+  }
+  
+  return item;
+}
+
+void XmlParser::parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode)
+{
+  for (xmlNodePtr child = aNode->children; child != NULL; child = child->next)
+  {
+    if (xmlStrcmp(child->name, BAD_CAST "CuttingItems") == 0) {
+      for (xmlAttrPtr attr = child->properties; attr != NULL; attr = attr->next) {
+        if (attr->type == XML_ATTRIBUTE_NODE && xmlStrcmp(attr->name, BAD_CAST "count") == 0) {
+          aTool->mItemCount = (const char*) attr->children->content;
+        }
+      }
+      for (xmlNodePtr itemNode = child->children; itemNode != NULL; itemNode = itemNode->next) {
+        if (xmlStrcmp(itemNode->name, BAD_CAST "CuttingItem") == 0) {
+          CuttingItem item = parseCuttingItem(itemNode);
+          aTool->mItems.push_back(item);
+        }
+      }      
+    } else if (xmlStrcmp(child->name, BAD_CAST "Measurements") == 0) {
+      for (xmlNodePtr meas = child->children; meas != NULL; meas = meas->next) {
+        if (xmlStrcmp(meas->name, BAD_CAST "text") != 0) {
+          const CuttingToolValue &value = parseCuttingToolNode(meas);
+          aTool->mMeasurements[value.mKey] = value;
+        }
+      }      
+    } else if (xmlStrcmp(child->name, BAD_CAST "CutterStatus") == 0) {
+      for (xmlNodePtr status = child->children; status != NULL; status = status->next) {
+        if (xmlStrcmp(status->name, BAD_CAST "Status") == 0) {
+          xmlChar *text = xmlNodeGetContent(status);
+          if (text != NULL) {                     
+            aTool->mStatus.push_back((const char*) text);
+            xmlFree(text);
+          }
+        }
+      }
+    } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
+      aTool->addValue(parseCuttingToolNode(child));
+    }
+  }
+}
+
+
+CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
+{
+  CuttingToolPtr tool;
+  
+  // We only handle cuttng tools for now...
+  if (xmlStrcmp(anAsset->name, BAD_CAST "CuttingTool") == 0)
+  {
+    // Get the attributes...
+    tool.setObject(new CuttingTool("", "CuttingTool", ""), true);
+    
+    for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
+    {
+      if (attr->type == XML_ATTRIBUTE_NODE) {
+        if (xmlStrcmp(attr->name, BAD_CAST "assetId") == 0) {
+          tool->setAssetId((string) (const char*) attr->children->content);
+        } else {
+          tool->addIdentity((const char*) attr->name, (const char*) attr->children->content);
+        }
+      }
+    }
+
+    if (anAsset->children != NULL)
+    {
+      for (xmlNodePtr child = anAsset->children; child != NULL; child = child->next)
+      {
+        if (xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition") == 0) {
+          xmlChar *text = xmlNodeGetContent(child);
+          if (text != NULL) {            
+            tool->addValue(parseCuttingToolNode(child));
+          }
+        } else if (xmlStrcmp(child->name, BAD_CAST "CuttingToolLifeCycle") == 0) {
+          parseCuttingToolLife(tool, child);
+        } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
+          xmlChar *text = xmlNodeGetContent(child);
+          if (text != NULL) {            
+            tool->addValue(parseCuttingToolNode(child));
+          }
+        }
+      }
+    }
+  }
+  
+  return tool;
+}

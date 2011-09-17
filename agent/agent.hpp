@@ -305,7 +305,10 @@ protected:
 
   /* Asset storage, circ buffer stores ids */
   std::list<AssetPtr> mAssets;
-  std::map<std::string, AssetPtr> mAssetMap;
+  AssetIndex mAssetMap;
+  
+  // Natural key indices for assets
+  std::map<std::string, AssetIndex> mAssetIndices;
   unsigned int mMaxAssets;  
   
   /* Checkpoints */

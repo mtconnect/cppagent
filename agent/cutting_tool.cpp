@@ -31,53 +31,33 @@
  * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
+#include "cutting_tool.hpp"
 
-#ifndef CUTTING_TOOL_HPP
-#define CUTTING_TOOL_HPP
-
-#include "asset.hpp"
-#include <vector>
-#include <map>
-
-class CuttingTool;
-typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
-
-class CuttingToolValue {
-public:  
-  CuttingToolValue(const std::string &aKey, const std::string &aValue) 
-    : mKey(aKey), mValue(aValue) {}
-  CuttingToolValue() {}
-  CuttingToolValue(const CuttingToolValue &aOther) 
-    : mProperties(aOther.mProperties), mKey(aOther.mKey), mValue(aOther.mValue)  {}
-    
-public:
-  std::map<std::string, std::string> mProperties;
-  std::string mKey;
-  std::string mValue;
-};
-
-class CuttingItem {
-public:
-  std::map<std::string,std::string> mIdentity;
-  std::map<std::string,CuttingToolValue> mValues;
-  std::map<std::string,CuttingToolValue> mMeasurements;
-};
-
-class CuttingTool : public Asset {
-public:
-  CuttingTool(const std::string &aAssetId, const std::string &aType, const std::string &aContent) 
-    : Asset(aAssetId, aType, aContent) {}
+void CuttingTool::addValue(const CuttingToolValue &aValue)
+{
+  // Check for keys...
+  if (aValue.mKey == "Location") {
+    mKeys[aValue.mKey] = aValue.mValue;
+  }
   
-  void addIdentity(const std::string &aKey, const std::string &aValue);
-  void addValue(const CuttingToolValue &aValue);
-  void updateValue(const std::string &aKey, const std::string &aValue);
+  mValues[aValue.mKey] = aValue;
+}
 
-  std::vector<std::string> mStatus;
-  std::map<std::string,std::string> mIdentity;
-  std::map<std::string,CuttingToolValue> mValues;
-  std::map<std::string,CuttingToolValue> mMeasurements;  
-  std::string mItemCount;
-  std::vector<CuttingItem> mItems;  
-};
+void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue)
+{
+  if (aKey == "Location") {
+    mKeys[aKey] = aValue;
+  }
+  
+  CuttingToolValue &value = mValues[aKey];
+  value.mValue = aValue;
+}
 
-#endif
+void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue)
+{
+  if (aKey == "toolId") {
+    mKeys[aKey] = aValue;
+  }
+  mIdentity[aKey] = aValue;
+}
+
