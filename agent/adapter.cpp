@@ -107,7 +107,7 @@ inline static void trim(std::string &str)
  *   Time|Item1|Value1|Item2|Value2...
  * 
  * Support for assets:
- *   Time|@ASSET@|id|<...>...</...>
+ *   Time|@ASSET@|id|type|<...>...</...>
  */
 
 void Adapter::processData(const string& data)

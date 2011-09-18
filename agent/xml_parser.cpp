@@ -517,7 +517,9 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
   try {
     
     
-    THROW_IF_XML2_NULL(document = xmlParseMemory(aContent.c_str(), aContent.length()));
+    THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST aContent.c_str(), 
+                                             ((string) "file://" + aAssetId + ".xml").c_str(), 
+                                             NULL, XML_PARSE_NOBLANKS));
     
     std::string path = "//Assets/*";
     THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(document));
