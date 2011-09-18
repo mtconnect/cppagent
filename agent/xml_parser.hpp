@@ -108,9 +108,9 @@ protected:
   
   // Cutting Tool Parser
   CuttingToolPtr handleCuttingTool(xmlNodePtr anAsset);
-  CuttingToolValue parseCuttingToolNode(xmlNodePtr aNode);
+  CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr aNode);
   void parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode);
-  CuttingItem parseCuttingItem(xmlNodePtr aNode);
+  CuttingItemPtr parseCuttingItem(xmlNodePtr aNode);
 };
 
 #endif

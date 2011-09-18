@@ -33,14 +33,14 @@
 
 #include "cutting_tool.hpp"
 
-void CuttingTool::addValue(const CuttingToolValue &aValue)
+void CuttingTool::addValue(const CuttingToolValuePtr aValue)
 {
   // Check for keys...
-  if (aValue.mKey == "Location") {
-    mKeys[aValue.mKey] = aValue.mValue;
+  if (aValue->mKey == "Location") {
+    mKeys[aValue->mKey] = aValue->mValue;
   }
   
-  mValues[aValue.mKey] = aValue;
+  mValues[aValue->mKey] = aValue;
 }
 
 void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue)
@@ -49,8 +49,7 @@ void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue
     mKeys[aKey] = aValue;
   }
   
-  CuttingToolValue &value = mValues[aKey];
-  value.mValue = aValue;
+  mValues[aKey]->mValue = aValue;
 }
 
 void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue)
@@ -61,3 +60,10 @@ void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue
   mIdentity[aKey] = aValue;
 }
 
+CuttingToolValue::~CuttingToolValue()
+{
+}
+
+CuttingItem::~CuttingItem()
+{
+}

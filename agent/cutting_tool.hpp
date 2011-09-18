@@ -42,13 +42,21 @@
 class CuttingTool;
 typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
 
-class CuttingToolValue {
+class CuttingToolValue;
+typedef RefCountedPtr<CuttingToolValue> CuttingToolValuePtr;
+
+class CuttingItem;
+typedef RefCountedPtr<CuttingItem> CuttingItemPtr;
+
+
+class CuttingToolValue : public RefCounted {
 public:  
   CuttingToolValue(const std::string &aKey, const std::string &aValue) 
     : mKey(aKey), mValue(aValue) {}
   CuttingToolValue() {}
   CuttingToolValue(const CuttingToolValue &aOther) 
     : mProperties(aOther.mProperties), mKey(aOther.mKey), mValue(aOther.mValue)  {}
+  virtual ~CuttingToolValue();
     
 public:
   std::map<std::string, std::string> mProperties;
@@ -56,11 +64,14 @@ public:
   std::string mValue;
 };
 
-class CuttingItem {
+class CuttingItem : public RefCounted {
+public:
+  virtual ~CuttingItem();
+
 public:
   std::map<std::string,std::string> mIdentity;
-  std::map<std::string,CuttingToolValue> mValues;
-  std::map<std::string,CuttingToolValue> mMeasurements;
+  std::map<std::string,CuttingToolValuePtr> mValues;
+  std::map<std::string,CuttingToolValuePtr> mMeasurements;
 };
 
 class CuttingTool : public Asset {
@@ -69,15 +80,15 @@ public:
     : Asset(aAssetId, aType, aContent) {}
   
   void addIdentity(const std::string &aKey, const std::string &aValue);
-  void addValue(const CuttingToolValue &aValue);
+  void addValue(const CuttingToolValuePtr aValue);
   void updateValue(const std::string &aKey, const std::string &aValue);
 
   std::vector<std::string> mStatus;
   std::map<std::string,std::string> mIdentity;
-  std::map<std::string,CuttingToolValue> mValues;
-  std::map<std::string,CuttingToolValue> mMeasurements;  
+  std::map<std::string,CuttingToolValuePtr> mValues;
+  std::map<std::string,CuttingToolValuePtr> mMeasurements;  
   std::string mItemCount;
-  std::vector<CuttingItem> mItems;  
+  std::vector<CuttingItemPtr> mItems;  
 };
 
 #endif

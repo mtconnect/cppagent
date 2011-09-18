@@ -262,28 +262,32 @@ void XmlParserTest::testParseAsset()
   CPPUNIT_ASSERT_EQUAL((string) "2011-05-11T13:55:22", tool->mIdentity["timestamp"]);
   
   // Top Level
-  CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->mValues["CuttingToolDefinition"].mValue);
-  CPPUNIT_ASSERT_EQUAL((string) "EXPRESS", tool->mValues["CuttingToolDefinition"].mProperties["format"]);
-  CPPUNIT_ASSERT_EQUAL((string) "Cutting tool ...", tool->mValues["Description"].mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->mValues["CuttingToolDefinition"]->mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "EXPRESS", tool->mValues["CuttingToolDefinition"]->mProperties["format"]);
+  CPPUNIT_ASSERT_EQUAL((string) "Cutting tool ...", tool->mValues["Description"]->mValue);
   
   // Status
   CPPUNIT_ASSERT_EQUAL((string) "NEW", tool->mStatus[0]);
   
   // Values
-  CPPUNIT_ASSERT_EQUAL((string) "10000", tool->mValues["ProgramSpindleSpeed"].mValue);
-  CPPUNIT_ASSERT_EQUAL((string) "222", tool->mValues["ProgramFeedRate"].mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "10000", tool->mValues["ProgramSpindleSpeed"]->mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "222", tool->mValues["ProgramFeedRate"]->mValue);
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->mValues["ProgramFeedRate"]->refCount());
   
   // Measurements
-  CPPUNIT_ASSERT_EQUAL((string) "73.25", tool->mMeasurements["BodyDiameterMax"].mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "73.25", tool->mMeasurements["BodyDiameterMax"]->mValue);
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->mMeasurements["BodyDiameterMax"]->refCount());
   
   // Items
   CPPUNIT_ASSERT_EQUAL((string) "24", tool->mItemCount);
   
   // Item
   CPPUNIT_ASSERT_EQUAL((size_t) 6, tool->mItems.size());
-  CuttingItem &item = tool->mItems[0];
+  CuttingItemPtr item = tool->mItems[0];
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 2, item->refCount());
   
-  CPPUNIT_ASSERT_EQUAL((string) "SDET43PDER8GB", item.mIdentity["itemId"]);
-  CPPUNIT_ASSERT_EQUAL((string) "FLANGE: 1-4, ROW: 1", item.mValues["Locus"].mValue);
-  CPPUNIT_ASSERT_EQUAL((string) "12.7", item.mMeasurements["CuttingEdgeLength"].mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "SDET43PDER8GB", item->mIdentity["itemId"]);
+  CPPUNIT_ASSERT_EQUAL((string) "FLANGE: 1-4, ROW: 1", item->mValues["Locus"]->mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "12.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, item->mMeasurements["CuttingEdgeLength"]->refCount());
 }
