@@ -593,8 +593,8 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr aNode)
   
   xmlChar *text = xmlNodeGetContent(aNode);
   if (text != NULL) {
-    xmlFree(text);
     value->mValue = (char*) text;
+    xmlFree(text);
   }
   
   for (xmlAttrPtr attr = aNode->properties; attr != NULL; attr = attr->next) {
@@ -715,4 +715,65 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
   }
   
   return tool;
+}
+
+void XmlParser::updateAsset(AssetPtr aAsset, const std::string &aType, const std::string &aContent) 
+{
+  if (aType != "CuttingTool")
+  {
+    sLogger << dlib::LWARN << "Cannot update asset: " << aType 
+            << " is unsupported for incremental updates";
+    return;
+  }
+  
+  xmlDocPtr document = NULL;
+  CuttingToolPtr ptr = (CuttingTool*) aAsset.getObject();
+  
+  try {
+    THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST aContent.c_str(), 
+                                             ((string) "file://node.xml").c_str(), 
+                                             NULL, XML_PARSE_NOBLANKS));
+        
+    xmlNodePtr root = xmlDocGetRootElement(document);
+    if (xmlStrcmp(BAD_CAST "CuttingItem", root->name) == 0)
+    {
+      CuttingItemPtr item = parseCuttingItem(root);
+      for (size_t i = 0; i < ptr->mItems.size(); i++)
+      {
+        if (item->mIdentity["indices"] == ptr->mItems[i]->mIdentity["indices"])
+        {
+          ptr->mItems[i] = item;
+          break;
+        }
+      }
+    } 
+    else 
+    {
+      CuttingToolValuePtr value = parseCuttingToolNode(root);
+      if (ptr->mValues.count(value->mKey) > 0)
+        ptr->addValue(value);
+      else if (ptr->mMeasurements.count(value->mKey) > 0)
+        ptr->mMeasurements[value->mKey] = value;
+    }
+    
+    ptr->changed();
+    
+    // Cleanup objects...
+    xmlFreeDoc(document);
+    
+  }   
+  catch (string e)
+  {
+    if (document != NULL)
+      xmlFreeDoc(document);
+    
+    sLogger << dlib::LERROR << "Cannot parse asset XML: " << e;
+    throw e;
+  }
+  catch (...)
+  {
+    if (document != NULL)
+      xmlFreeDoc(document);
+    throw;
+  }  
 }

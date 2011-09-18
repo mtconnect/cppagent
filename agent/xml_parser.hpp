@@ -69,6 +69,9 @@ public:
   AssetPtr parseAsset(const std::string &aAssetId, const std::string &aType, 
                       const std::string &aContent);
   
+  // Modify
+  void updateAsset(AssetPtr aPtr, const std::string &aType, const std::string &aContent);
+  
 protected:
   /* LibXML XML Doc */
   xmlDocPtr mDoc;

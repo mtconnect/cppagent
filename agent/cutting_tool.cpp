@@ -52,6 +52,8 @@ void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue
   mValues[aKey]->mValue = aValue;
 }
 
+
+
 void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue)
 {
   if (aKey == "toolId") {
@@ -59,6 +61,17 @@ void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue
   }
   mIdentity[aKey] = aValue;
 }
+
+std::string &CuttingTool::getContent() 
+{ 
+  if (mContent.empty())
+  {
+    
+  }
+  
+  return mContent; 
+}
+
 
 CuttingToolValue::~CuttingToolValue()
 {

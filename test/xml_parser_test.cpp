@@ -276,6 +276,7 @@ void XmlParserTest::testParseAsset()
   
   // Measurements
   CPPUNIT_ASSERT_EQUAL((string) "73.25", tool->mMeasurements["BodyDiameterMax"]->mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "76.2", tool->mMeasurements["CuttingDiameterMax"]->mValue);
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->mMeasurements["BodyDiameterMax"]->refCount());
   
   // Items
@@ -290,4 +291,35 @@ void XmlParserTest::testParseAsset()
   CPPUNIT_ASSERT_EQUAL((string) "FLANGE: 1-4, ROW: 1", item->mValues["Locus"]->mValue);
   CPPUNIT_ASSERT_EQUAL((string) "12.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, item->mMeasurements["CuttingEdgeLength"]->refCount());
+}
+
+void XmlParserTest::testUpdateAsset()
+{
+  string document = getFile("asset1.xml");
+  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+
+  string replacement = "<CuttingDiameterMax code=\"DC\" nominal=\"76.2\" maximum=\"76.213\" minimum=\"76.187\">10.123</CuttingDiameterMax>";
+  a->updateAsset(asset, "CuttingTool", replacement);
+
+  CuttingItemPtr item = tool->mItems[0];
+  CPPUNIT_ASSERT_EQUAL((string) "10.123", tool->mMeasurements["CuttingDiameterMax"]->mValue);
+  
+  // Test cutting item replacement
+  CPPUNIT_ASSERT_EQUAL((string) "12.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
+
+  replacement = "<CuttingItem indices=\"1-4\" itemId=\"SDET43PDER8GB\" manufacturers=\"KMT\" grade=\"KC725M\">"
+                "<Locus>FLANGE: 1-4, ROW: 1</Locus>"
+                "<Measurements>"
+                "<CuttingEdgeLength code=\"L\" nominal=\"12.7\" minimum=\"12.675\" maximum=\"12.725\">14.7</CuttingEdgeLength>"
+                "<WiperEdgeLength code=\"BS\" nominal=\"2.56\">2.56</WiperEdgeLength>"
+                "<IncribedCircleDiameter code=\"IC\" nominal=\"12.7\">12.7</IncribedCircleDiameter>"
+                "<CornerRadius code=\"RE\" nominal=\"0.8\">0.8</CornerRadius>"
+                "</Measurements>"
+                "</CuttingItem>";
+  
+  a->updateAsset(asset, "CuttingTool", replacement);
+
+  item = tool->mItems[0];
+  CPPUNIT_ASSERT_EQUAL((string) "14.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
 }

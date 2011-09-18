@@ -63,7 +63,7 @@ public:
   virtual ~Asset();
 
   std::string &getAssetId() { return mAssetId; }
-  std::string &getContent() { return mContent; }
+  virtual std::string &getContent() { return mContent; }
   std::string &getType() { return mType; }
   AssetKeys   &getKeys() { return mKeys; }
   

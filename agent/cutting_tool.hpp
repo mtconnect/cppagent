@@ -82,7 +82,11 @@ public:
   void addIdentity(const std::string &aKey, const std::string &aValue);
   void addValue(const CuttingToolValuePtr aValue);
   void updateValue(const std::string &aKey, const std::string &aValue);
+  
+  virtual std::string &getContent();
+  void changed() { mContent.clear(); }
 
+public:
   std::vector<std::string> mStatus;
   std::map<std::string,std::string> mIdentity;
   std::map<std::string,CuttingToolValuePtr> mValues;
