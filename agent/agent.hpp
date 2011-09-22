@@ -190,36 +190,32 @@ public:
     
 protected:
   /* HTTP methods to handle the 3 basic calls */
-  std::string handleCall(
-    std::ostream& out,
-    const std::string& path,
-    const key_value_map& queries,
-    const std::string& call,
-    const std::string& device
-  );
+  std::string handleCall(std::ostream& out,
+                         const std::string& path,
+                         const key_value_map& queries,
+                         const std::string& call,
+                         const std::string& device,
+                         bool chunked = false);
   
   /* HTTP methods to handle the 3 basic calls */
-  std::string handlePut(
-    std::ostream& out,
-    const std::string& path,
-    const key_value_map& queries,
-    const std::string& call,
-    const std::string& device
-  );
+  std::string handlePut(std::ostream& out,
+                        const std::string& path,
+                        const key_value_map& queries,
+                        const std::string& call,
+                        const std::string& device);
 
   /* Handle probe calls */
   std::string handleProbe(const std::string& device);
   
   /* Handle stream calls, which includes both current and sample */
-  std::string handleStream(
-    std::ostream& out,
-    const std::string& path,
-    bool current,  
-    unsigned int frequency,
-    uint64_t start = 0,
-    unsigned int count = 0,
-    unsigned int aHb = 10000
-  );
+  std::string handleStream(std::ostream& out,
+                           const std::string& path,
+                           bool current,  
+                           unsigned int frequency,
+                           bool chunked = false,
+                           uint64_t start = 0,
+                           unsigned int count = 0,
+                           unsigned int aHb = 10000);
 
   /* Asset related methods */
   std::string handleAssets(std::ostream& aOut,
@@ -232,15 +228,14 @@ protected:
                          const std::string& aBody);
   
   /* Stream the data to the user */
-  void streamData(
-    std::ostream& out,
-    std::set<std::string> &aFilterSet,
-    bool current,
-    unsigned int frequency,
-    uint64_t start = 1,
-    unsigned int count = 0,
-    unsigned int aHb = 10000
-  );
+  void streamData(std::ostream& out,
+                  std::set<std::string> &aFilterSet,
+                  bool current,
+                  unsigned int frequency,
+                  bool chunked = false,
+                  uint64_t start = 1,
+                  unsigned int count = 0,
+                  unsigned int aHb = 10000);
   
   /* Fetch the current/sample data and return the XML in a std::string */
   std::string fetchCurrentData(std::set<std::string> &aFilter, uint64_t at);
