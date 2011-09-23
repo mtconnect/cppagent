@@ -46,6 +46,7 @@
 #include "device.hpp"
 #include "globals.hpp"
 #include "asset.hpp"
+#include "cutting_tool.hpp"
 
 class DataItem;
 
@@ -80,6 +81,8 @@ namespace XmlPrinter
                           const unsigned int aBufferSize,
                           const unsigned int anAssetCount,
                           std::vector<AssetPtr> &anAssets);
+  
+  std::string printCuttingTool(CuttingToolPtr aTool);
 
   
   void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 

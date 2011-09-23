@@ -70,6 +70,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testPrintAsset);
   CPPUNIT_TEST(testPrintAssetProbe);
   CPPUNIT_TEST(testConfiguration);
+  CPPUNIT_TEST(testPrintCuttingTool);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -106,6 +107,7 @@ protected:
   // Asset tests
   void testPrintAsset();
   void testPrintAssetProbe();
+  void testPrintCuttingTool();
   
   /* Retrieve a data item by name string */
   DataItem * getDataItem(const char *name);

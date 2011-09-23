@@ -32,6 +32,7 @@
  */
 
 #include "cutting_tool.hpp"
+#include "xml_printer.hpp"
 
 void CuttingTool::addValue(const CuttingToolValuePtr aValue)
 {
@@ -65,9 +66,7 @@ void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue
 std::string &CuttingTool::getContent() 
 { 
   if (mContent.empty())
-  {
-    
-  }
+    mContent = XmlPrinter::printCuttingTool(this);
   
   return mContent; 
 }

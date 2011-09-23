@@ -240,9 +240,17 @@ string XmlPrinter::printError(const unsigned int instanceId,
     xmlBufferFree(buf);
   }
   catch (string error) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
     sLogger << dlib::LERROR << "printError: " << error;
   }
   catch (...) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
     sLogger << dlib::LERROR << "printError: unknown error";
   }
   
@@ -295,9 +303,17 @@ string XmlPrinter::printProbe(const unsigned int instanceId,
     xmlBufferFree(buf);    
   }
   catch (string error) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
     sLogger << dlib::LERROR << "printProbe: " << error;
   }
   catch (...) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
     sLogger << dlib::LERROR << "printProbe: unknown error";
   }
   
@@ -506,9 +522,17 @@ string XmlPrinter::printSample(const unsigned int instanceId,
     xmlBufferFree(buf);    
   }
   catch (string error) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
     sLogger << dlib::LERROR << "printProbe: " << error;
   }
   catch (...) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
     sLogger << dlib::LERROR << "printProbe: unknown error";
   }
   
@@ -548,9 +572,17 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
     xmlBufferFree(buf);
   }
   catch (string error) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
     sLogger << dlib::LERROR << "printProbe: " << error;
   }
   catch (...) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
     sLogger << dlib::LERROR << "printProbe: unknown error";
   }
   
@@ -826,6 +858,55 @@ void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, strin
   }
   
   THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Element    
+}
+
+// Cutting tools
+
+string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
+{
+  
+  xmlTextWriterPtr writer;
+  xmlBufferPtr buf;
+  string ret;
+  
+  try {
+    THROW_IF_XML2_NULL(buf = xmlBufferCreate());
+    THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+    THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingTool"));
+    
+    map<string,string>::iterator iter;
+    for (iter = aTool->mIdentity.begin(); iter != aTool->mIdentity.end(); iter++) {
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                      BAD_CAST (*iter).first.c_str(),
+                                                      BAD_CAST (*iter).second.c_str()));
+    }
+
+    // CuttingTool
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+  
+    xmlFreeTextWriter(writer);
+    ret = (string) ((char*) buf->content);
+    xmlBufferFree(buf);    
+  }
+  catch (string error) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
+    sLogger << dlib::LERROR << "printCuttingTool: " << error;
+  }
+  catch (...) {
+    if (buf != NULL)
+      xmlBufferFree(buf);
+    if (writer != NULL)
+      xmlFreeTextWriter(writer);
+    sLogger << dlib::LERROR << "printCuttingTool: unknown error";
+  }
+  
+  return ret;
 }
 
 
