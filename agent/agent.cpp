@@ -256,14 +256,6 @@ const string Agent::on_request (const incoming_things& incoming,
     
     string first =  path.substr(1, loc1-1);
     string call, device;
-
-    // Check for explicate TE of chunked. Though not required, we will use it to signal 
-    // a chunked delivery. This will provide compatibility with WebRequest in .NET
-    bool chunked = false;
-    if (incoming.headers.count("TE") > 0)
-    {
-      chunked = incoming.headers["TE"].find("chunked") != string::npos;        
-    }
     
     if (first == "assets" || first == "asset")
     {
@@ -301,7 +293,7 @@ const string Agent::on_request (const incoming_things& incoming,
       }
       
       if (incoming.request_type == "GET")
-        result = handleCall(*outgoing.out, path, incoming.queries, call, device, chunked);    
+        result = handleCall(*outgoing.out, path, incoming.queries, call, device);
       else
         result = handlePut(*outgoing.out, path, incoming.queries, call, device);
     }
@@ -487,8 +479,7 @@ string Agent::handleCall(ostream& out,
                          const string& path,
                          const key_value_map& queries,
                          const string& call,
-                         const string& device,
-                         bool chunked)
+                         const string& device)
 {
   try {
     string deviceName;
@@ -518,7 +509,7 @@ string Agent::handleCall(ostream& out,
       
       
       return handleStream(out, devicesAndPath(path, deviceName), true,
-                          freq, chunked, at, 0, heartbeat);
+                          freq, at, 0, heartbeat);
     }
     else if (call == "probe" || call.empty())
     {
@@ -550,7 +541,7 @@ string Agent::handleCall(ostream& out,
       int heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
 
       return handleStream(out, devicesAndPath(path, deviceName), false,
-                          freq, chunked, start, count, heartbeat);
+                          freq, start, count, heartbeat);
     }
     else if ((mDeviceMap[call] != NULL) && device.empty())
     {
@@ -662,7 +653,6 @@ string Agent::handleStream(
                            const string& path,
                            bool current,
                            unsigned int frequency,
-                           bool chunked,
                            uint64_t start,
                            unsigned int count,
                            unsigned int aHb
@@ -687,7 +677,7 @@ string Agent::handleStream(
   // Check if there is a frequency to stream data or not
   if (frequency != (unsigned) NO_FREQ)
   {
-    streamData(out, filter, current, frequency, chunked, start, count, aHb);
+    streamData(out, filter, current, frequency, start, count, aHb);
     return "";
   }
   else
@@ -836,7 +826,6 @@ void Agent::streamData(ostream& out,
                        std::set<string> &aFilter,
                        bool current,
                        unsigned int aInterval,
-                       bool chunked,
                        uint64_t start,
                        unsigned int count,
                        unsigned int aHeartbeat
@@ -859,12 +848,9 @@ void Agent::streamData(ostream& out,
          "Expires: -1\r\n"
          "Connection: close\r\n"
          "Cache-Control: private, max-age=0\r\n"
-         "Content-Type: multipart/x-mixed-replace;boundary=" << boundary << "\r\n";
-  
-  if (chunked)
-    out << "Transfer-Encoding: chunked\r\n";
+         "Content-Type: multipart/x-mixed-replace;boundary=" << boundary << "\r\n"
+         "Transfer-Encoding: chunked\r\n\r\n";
    
-  out << "\r\n";
   
   // This object will automatically clean up all the observer from the
   // signalers in an exception proof manor.
@@ -925,13 +911,9 @@ void Agent::streamData(ostream& out,
              << content;
         
       string chunk = str.str();
-      if (chunked) {
-        out.setf(ios::hex, ios::basefield);
-        out << chunk.length() << "\r\n";
-        out << chunk << "\r\n";
-      } else {
-        out << chunk;
-      }
+      out.setf(ios::hex, ios::basefield);
+      out << chunk.length() << "\r\n";
+      out << chunk << "\r\n";
       out.flush();
       
       // Wait for up to frequency ms for something to arrive... Don't wait if 

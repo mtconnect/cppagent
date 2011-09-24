@@ -194,8 +194,7 @@ protected:
                          const std::string& path,
                          const key_value_map& queries,
                          const std::string& call,
-                         const std::string& device,
-                         bool chunked = false);
+                         const std::string& device);
   
   /* HTTP methods to handle the 3 basic calls */
   std::string handlePut(std::ostream& out,
@@ -212,7 +211,6 @@ protected:
                            const std::string& path,
                            bool current,  
                            unsigned int frequency,
-                           bool chunked = false,
                            uint64_t start = 0,
                            unsigned int count = 0,
                            unsigned int aHb = 10000);
@@ -232,7 +230,6 @@ protected:
                   std::set<std::string> &aFilterSet,
                   bool current,
                   unsigned int frequency,
-                  bool chunked = false,
                   uint64_t start = 1,
                   unsigned int count = 0,
                   unsigned int aHb = 10000);
