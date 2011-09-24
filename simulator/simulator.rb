@@ -7,8 +7,25 @@ require 'time'
 puts "Waiting for connection..."
 
 server = TCPServer.new(ARGV[0].to_i)
+
 loop do
   socket = server.accept
+  Thread.new do
+    while (select([socket], nil, nil))
+      begin
+        if (r = socket.read_nonblock(256)) =~ /\* PING/
+          puts "Received #{r.strip}, responding with pong" if verbose
+          mutex.synchronize {
+            socket.puts "* PONG 10000"
+          }
+        else
+          puts "Received '#{r.strip}'"
+        end
+      rescue
+      end
+    end
+  end
+  
   puts "Client connected"
   puts "Type an adapter feed string in the following format:"
   puts "> <key>|<value>"

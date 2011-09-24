@@ -188,6 +188,9 @@ public:
   // For debugging
   void setLogStreamData(bool aLog) { mLogStreamData = aLog; }
     
+  /* Handle probe calls */
+  std::string handleProbe(const std::string& device);
+  
 protected:
   /* HTTP methods to handle the 3 basic calls */
   std::string handleCall(std::ostream& out,
@@ -203,9 +206,6 @@ protected:
                         const std::string& call,
                         const std::string& device);
 
-  /* Handle probe calls */
-  std::string handleProbe(const std::string& device);
-  
   /* Handle stream calls, which includes both current and sample */
   std::string handleStream(std::ostream& out,
                            const std::string& path,
@@ -214,7 +214,7 @@ protected:
                            uint64_t start = 0,
                            unsigned int count = 0,
                            unsigned int aHb = 10000);
-
+  
   /* Asset related methods */
   std::string handleAssets(std::ostream& aOut,
 			   const key_value_map& aQueries,
