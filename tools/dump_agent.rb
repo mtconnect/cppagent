@@ -1,5 +1,5 @@
 require 'net/http'
-require 'long_pull'
+require './long_pull.rb'
 require 'socket'
 require 'rexml/document'
 
@@ -36,7 +36,7 @@ def dump(out, xml)
       
     end
     out.puts event.text.to_s
-    puts "#{event.name} - #{name} - #{event.text}"
+    # puts "#{event.name} - #{name} - #{event.text}"
   end
   print '.'; STDOUT.flush
   nxt
@@ -68,7 +68,7 @@ File.open(ARGV[1], 'w') do |out|
   
   puts "polling..."
   begin
-    path = rootPath + "sample?frequency=1000&count=1000&from=#{nxt}"
+    path = rootPath + "sample?interval=1000&count=1000&from=#{nxt}"
     puller = LongPull.new(client)
     puller.long_pull(path) do |xml|
       nxt = dump(out, xml)

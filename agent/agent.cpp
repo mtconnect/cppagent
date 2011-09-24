@@ -905,6 +905,7 @@ void Agent::streamData(ostream& out,
 
       // Make sure we're terminated with a <cr><nl>
       content.append("\r\n");
+      out.setf(ios::dec, ios::basefield);
       str << "--" + boundary << "\r\n"
              "Content-type: text/xml\r\n"
              "Content-length: " << content.length() << "\r\n\r\n"
