@@ -253,6 +253,7 @@ void Adapter::protocolCommand(const std::string& data)
     probe.append(intToString(response.length()));
     probe.append("\n");
     probe.append(response);
+    probe.append("\n");
     mConnection->write(probe.c_str(), probe.length());
   } else {
     size_t index = data.find(':', 2);
