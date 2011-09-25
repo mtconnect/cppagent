@@ -247,31 +247,40 @@ void Adapter::protocolCommand(const std::string& data)
 {
   // Handle initial push of settings for uuid, serial number and manufacturer. 
   // This will override the settings in the device from the xml
-  size_t index = data.find(':', 2);
-  if (index != string::npos)
-  {
-    // Slice from the second character to the :, without the colon
-    string key = data.substr(2, index - 2);
-    trim(key);        
-    string value = data.substr(index + 1);
-    trim(value);
+  if (data == "* PROBE") {
+    string response = mAgent->handleProbe(mDeviceName);
+    string probe = "* PROBE LENGTH=";
+    probe.append(intToString(response.length()));
+    probe.append("\n");
+    probe.append(response);
+    probe.append("\n");
+    mConnection->write(probe.c_str(), probe.length());
+  } else {
+    size_t index = data.find(':', 2);
+    if (index != string::npos)
+    {
+      // Slice from the second character to the :, without the colon
+      string key = data.substr(2, index - 2);
+      trim(key);        
+      string value = data.substr(index + 1);
+      trim(value);
     
-    if (key == "uuid") {
-      if (!mDevice->mPreserveUuid) mDevice->setUuid(value);
-    } else if (key == "manufacturer")
-      mDevice->setManufacturer(value);
-    else if (key == "station")
-      mDevice->setStation(value);
-    else if (key == "serialNumber")
-      mDevice->setSerialNumber(value);
-    else if (key == "description")
-      mDevice->setDescription(value);
-    else if (key == "nativeName")
-      mDevice->setNativeName(value);
-    else
-      sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
-  }
-  
+      if (key == "uuid") {
+        if (!mDevice->mPreserveUuid) mDevice->setUuid(value);
+      } else if (key == "manufacturer")
+        mDevice->setManufacturer(value);
+      else if (key == "station")
+        mDevice->setStation(value);
+      else if (key == "serialNumber")
+        mDevice->setSerialNumber(value);
+      else if (key == "description")
+        mDevice->setDescription(value);
+      else if (key == "nativeName")
+        mDevice->setNativeName(value);
+      else
+        sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
+    }
+  }  
 }
 
 void Adapter::disconnected()

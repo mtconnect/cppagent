@@ -21,7 +21,7 @@ class LongPull
       header = true
       length = boundary.length
       
-      res.read_body do |chunk|
+      res.read_body do |chunk|        
         next if chunk.empty?
         document << chunk
 
@@ -31,13 +31,15 @@ class LongPull
               puts document.rest
               raise "Framing error"
             end
-            
-            break unless head = document.scan_until(/\n\n/)
-            bound, *rest = head.split(/\n/)
+                        
+            break unless head = document.scan_until(/\r\n\r\n/)
+            bound, *rest = head.split(/\r\n/)
             
             fields = Hash[*rest.map { |s| s.split(/:\s*/) }.flatten]
             length = fields['Content-length'].to_i
             header = false
+            
+            puts "Length: #{length}"
           else
             rest = document.rest
             
