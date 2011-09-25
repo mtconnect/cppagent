@@ -72,6 +72,7 @@ public:
   std::map<std::string,std::string> mIdentity;
   std::map<std::string,CuttingToolValuePtr> mValues;
   std::map<std::string,CuttingToolValuePtr> mMeasurements;
+  std::vector<CuttingToolValuePtr> mLives;
 };
 
 class CuttingTool : public Asset {
@@ -92,7 +93,8 @@ public:
   std::map<std::string,CuttingToolValuePtr> mValues;
   std::map<std::string,CuttingToolValuePtr> mMeasurements;  
   std::string mItemCount;
-  std::vector<CuttingItemPtr> mItems;  
+  std::vector<CuttingItemPtr> mItems;
+  std::vector<CuttingToolValuePtr> mLives;
 };
 
 #endif

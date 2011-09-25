@@ -626,8 +626,11 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr aNode)
     } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
       CuttingToolValuePtr value = parseCuttingToolNode(child);
       item->mValues[value->mKey] = value;
+    } else if (xmlStrcmp(child->name, BAD_CAST "ItemLife") == 0) {
+      CuttingToolValuePtr value = parseCuttingToolNode(child);
+      item->mLives.push_back(value);
     }
-  }
+  } 
   
   return item;
 }
@@ -665,6 +668,9 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode)
           }
         }
       }
+    } else if (xmlStrcmp(child->name, BAD_CAST "ToolLife") == 0) {
+      CuttingToolValuePtr value = parseCuttingToolNode(child);
+      aTool->mLives.push_back(value);
     } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
       aTool->addValue(parseCuttingToolNode(child));
     }

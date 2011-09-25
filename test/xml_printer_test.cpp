@@ -553,16 +553,16 @@ void XmlPrinterTest::testPrintCuttingTool()
   vector<AssetPtr> assets;
   
   string document = getFile("asset1.xml");
-//  AssetPtr asset = a->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
-//  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  AssetPtr asset = config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
 
   
-//  assets.push_back(asset);
+  assets.push_back(asset);
   
-//  {
-//    PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
-//    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@toolId", "KSSP300R4SD43L240");
-//  }  
+  {
+    PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@toolId", "KSSP300R4SD43L240");
+  }  
 }
 
 
