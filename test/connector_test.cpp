@@ -245,13 +245,13 @@ void ConnectorTest::testSendCommand()
   
   // Receive initial heartbeat request "* PING\n"
   char buf[1024];
-  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 5000));
+  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 1000));
   buf[7] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
   
   mConnector->sendCommand("Hello There;");
 
-  CPPUNIT_ASSERT_EQUAL(15L, mServerSocket->read(buf, 1023, 5000));
+  CPPUNIT_ASSERT_EQUAL(15L, mServerSocket->read(buf, 1023, 1000));
   buf[15] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* Hello There;\n") == 0);  
 }

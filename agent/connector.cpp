@@ -40,7 +40,7 @@ static dlib::logger sLogger("input.connector");
 
 /* Connector public methods */
 Connector::Connector(const string& server, unsigned int port, int aLegacyTimeout)
-: mConnected(false), mHeartbeats(false), mLegacyTimeout(aLegacyTimeout)
+: mConnected(false), mHeartbeats(false), mLegacyTimeout(aLegacyTimeout * 1000)
 {
   mServer = server;
   mPort = port;
@@ -114,7 +114,7 @@ void Connector::connect()
         sockBuf[status] = '\0';
         parseBuffer(sockBuf);   
       }
-      else if (status == TIMEOUT && !mHeartbeats) 
+      else if (status == TIMEOUT && !mHeartbeats && ((int) (stamper.get_timestamp() - now) / 1000) >= timeout) 
       {
         // We don't stop on heartbeats, but if we have a legacy timeout, then we stop.
         sLogger << LERROR << "connect: Did not receive data for over: " << intToString(timeout / 1000) << " seconds";

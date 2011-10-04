@@ -49,7 +49,7 @@ class TestConnector : public Connector
 {
 public:
   TestConnector(const std::string& server, unsigned int port,
-                int aLegacyTimeout = 5000)
+                int aLegacyTimeout = 5)
     : Connector(server, port, aLegacyTimeout), mDisconnected(false) {}
   
   virtual void processData(const std::string& data) {
