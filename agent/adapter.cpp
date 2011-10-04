@@ -43,8 +43,9 @@ static dlib::logger sLogger("input.adapter");
 /* Adapter public methods */
 Adapter::Adapter(const string& device,
                  const string& server,
-                 const unsigned int port)
-  : Connector(server, port), mDeviceName(device), mRunning(true),
+                 const unsigned int port,
+                 int aLegacyTimeout)
+  : Connector(server, port, aLegacyTimeout), mDeviceName(device), mRunning(true),
     mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false),
     mGatheringAsset(false)
 {

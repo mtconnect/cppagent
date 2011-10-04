@@ -79,6 +79,9 @@ public:
 
   unsigned int getPort() const { return mPort; }
   const std::string &getServer() const { return mServer; }
+  
+  int getLegacyTimeout() { return mLegacyTimeout; }
+
 
 protected:
   void startHeartbeats(const std::string &buf);

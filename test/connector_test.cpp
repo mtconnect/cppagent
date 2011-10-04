@@ -98,7 +98,7 @@ void ConnectorTest::testDisconnect()
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
   CPPUNIT_ASSERT(!mConnector->mDisconnected);
   mServerSocket.reset();
-  dlib::sleep(500);
+  dlib::sleep(1000);
   CPPUNIT_ASSERT(mConnector->mDisconnected);
 }
 
@@ -154,7 +154,7 @@ void ConnectorTest::testHeartbeatPong()
     // Receive initial heartbeat request "* PING\n"
     
     char buf[1024];
-    CPPUNIT_ASSERT(mServerSocket->read(buf, 1023, 2000) > 0);
+    CPPUNIT_ASSERT(mServerSocket->read(buf, 1023, 1100) > 0);
     buf[7] = '\0';
     CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 

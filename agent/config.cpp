@@ -206,6 +206,8 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   int bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
   int maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
   int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
+  int legacyTimeout = get_with_default(reader, "LegacyTimeout", 600);
+  
   mPidFile = get_with_default(reader, "PidFile", "agent.pid");
   const char *probe;
   struct stat buf;
@@ -239,7 +241,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
     
   loadAllowPut(reader);
-  loadAdapters(reader, defaultPreserve);
+  loadAdapters(reader, defaultPreserve, legacyTimeout);
   
   // Files served by the Agent... allows schema files to be served by
   // agent.
@@ -253,7 +255,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 }
 
 void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
-                                         bool aDefaultPreserve)
+                                      bool aDefaultPreserve, int aLegacyTimeout)
 {
   Device *device;
   if (aReader.is_block_defined("Adapters")) {
@@ -286,10 +288,12 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       
       const string host = get_with_default(adapter, "Host", (string)"localhost");
       int port = get_with_default(adapter, "Port", 7878);
+      int legacyTimeout = get_with_default(adapter, "LegacyTimeout", aLegacyTimeout);
+
       
       sLogger << LINFO << "Adding adapter for " << device->getName() << " on "
               << host << ":" << port;
-      Adapter *adp = mAgent->addAdapter(device->getName(), host, port);
+      Adapter *adp = mAgent->addAdapter(device->getName(), host, port, false, legacyTimeout);
       device->mPreserveUuid = get_bool_with_default(adapter, "PreserveUUID", aDefaultPreserve);
       
       // Add additional device information
@@ -326,7 +330,7 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
   else if ((device = defaultDevice()) != NULL)
   {
     sLogger << LINFO << "Adding default adapter for " << device->getName() << " on localhost:7878";
-    mAgent->addAdapter(device->getName(), "localhost", 7878);
+    mAgent->addAdapter(device->getName(), "localhost", 7878, false, aLegacyTimeout);
   }
   else
   {

@@ -124,12 +124,11 @@ public:
     );
   
   /* Add an adapter to the agent */
-  Adapter * addAdapter(
-    const std::string& device,
-    const std::string& host,
-    const unsigned int port,
-    bool start = false
-  );
+  Adapter * addAdapter(const std::string& device,
+                       const std::string& host,
+                       const unsigned int port,
+                       bool start = false,
+                       int aLegacyTimeout = 600);
   
   /* Get device from device map */
   Device * getDeviceByName(const std::string& name) { return mDeviceMap[name]; }
