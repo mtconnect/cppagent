@@ -48,8 +48,9 @@
 class TestConnector : public Connector 
 {
 public:
-  TestConnector(const std::string& server, unsigned int port)
-    : Connector(server, port), mDisconnected(false) {}
+  TestConnector(const std::string& server, unsigned int port,
+                int aLegacyTimeout = 5000)
+    : Connector(server, port, aLegacyTimeout), mDisconnected(false) {}
   
   virtual void processData(const std::string& data) {
     mData = data;
@@ -86,6 +87,7 @@ class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
   CPPUNIT_TEST(testParseBuffer);
   CPPUNIT_TEST(testParseBufferFraming);
   CPPUNIT_TEST(testSendCommand);
+  CPPUNIT_TEST(testLegacyTimeout);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -110,6 +112,7 @@ protected:
   void testParseBuffer();
   void testParseBufferFraming();
   void testSendCommand();
+  void testLegacyTimeout();
 };
 
 #endif
