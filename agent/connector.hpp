@@ -80,7 +80,7 @@ public:
   unsigned int getPort() const { return mPort; }
   const std::string &getServer() const { return mServer; }
   
-  int getLegacyTimeout() { return mLegacyTimeout; }
+  int getLegacyTimeout() { return mLegacyTimeout / 1000; }
 
 
 protected:
