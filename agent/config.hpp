@@ -27,7 +27,8 @@ public:
   
 protected:
   Device *defaultDevice();
-  void loadAdapters(dlib::config_reader::kernel_1a &aReader, bool aDefaultPreserve);
+  void loadAdapters(dlib::config_reader::kernel_1a &aReader, bool aDefaultPreserve,
+                    int aLegacyTimeout);
   void loadAllowPut(dlib::config_reader::kernel_1a &aReader);
   void loadNamespace(dlib::config_reader::kernel_1a &aReader, 
                      const char *aNamespaceType, 

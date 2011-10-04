@@ -39,11 +39,13 @@ loop do
     if line[0] == ?*
       puts "Writing line"
       socket.write "#{line}\n"
+      socket.flush
     else
       ts = Time.now.utc
       stamp = "#{ts.iso8601[0..-2]}.#{'%06d' % ts.tv_usec}"
       puts "#{stamp}|#{line}"
       socket.write "#{stamp}|#{line}\n"
+      socket.flush
     end
     
   end

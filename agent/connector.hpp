@@ -45,7 +45,7 @@ class Connector
 {
 public:
   /* Instantiate the server by assigning it a server and port */
-  Connector(const std::string& server, unsigned int port);
+  Connector(const std::string& server, unsigned int port, int aLegacyTimout = 600);
   
   /* Virtual desctructor */
   virtual ~Connector();
@@ -79,6 +79,9 @@ public:
 
   unsigned int getPort() const { return mPort; }
   const std::string &getServer() const { return mServer; }
+  
+  int getLegacyTimeout() { return mLegacyTimeout; }
+
 
 protected:
   void startHeartbeats(const std::string &buf);
@@ -103,6 +106,7 @@ protected:
   // Heartbeats
   bool mHeartbeats;
   int mHeartbeatFrequency;
+  int mLegacyTimeout;
   dlib::uint64 mLastHeartbeat;
   dlib::uint64 mLastSent;
   

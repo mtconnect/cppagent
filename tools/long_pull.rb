@@ -38,8 +38,6 @@ class LongPull
             fields = Hash[*rest.map { |s| s.split(/:\s*/) }.flatten]
             length = fields['Content-length'].to_i
             header = false
-            
-            puts "Length: #{length}"
           else
             rest = document.rest
             

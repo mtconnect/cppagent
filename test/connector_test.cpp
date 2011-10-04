@@ -98,7 +98,7 @@ void ConnectorTest::testDisconnect()
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
   CPPUNIT_ASSERT(!mConnector->mDisconnected);
   mServerSocket.reset();
-  dlib::sleep(500);
+  dlib::sleep(1000);
   CPPUNIT_ASSERT(mConnector->mDisconnected);
 }
 
@@ -154,7 +154,7 @@ void ConnectorTest::testHeartbeatPong()
     // Receive initial heartbeat request "* PING\n"
     
     char buf[1024];
-    CPPUNIT_ASSERT(mServerSocket->read(buf, 1023, 1000) > 0);
+    CPPUNIT_ASSERT(mServerSocket->read(buf, 1023, 1100) > 0);
     buf[7] = '\0';
     CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
@@ -177,6 +177,29 @@ void ConnectorTest::testHeartbeatTimeout()
   dlib::sleep(2100);
   
   CPPUNIT_ASSERT(mConnector->mDisconnected);
+}
+
+void ConnectorTest::testLegacyTimeout()
+{
+  // Start the accept thread
+  start();
+  
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
+  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  
+  char buf[1024];
+  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 5000));
+  buf[7] = '\0';
+  CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+
+  // Write some data...
+  const char *cmd ="* Hello Connector\n";
+  CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) mServerSocket->write(cmd, strlen(cmd)));
+
+  // No pings, but timeout after 5 seconds of silence
+  dlib::sleep(6000);
+  
+  CPPUNIT_ASSERT(mConnector->mDisconnected);  
 }
 
 

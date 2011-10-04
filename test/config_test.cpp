@@ -101,6 +101,7 @@ void ConfigTest::testAdapter()
                     "AutoAvailable = true\n"
                     "IgnoreTimestamps = true\n"
                     "PreserveUUID = true\n"
+                    "LegacyTimeout = 2000\n"
                     "} }\n");
   mConfig->loadConfig(str);
   
@@ -114,6 +115,7 @@ void ConfigTest::testAdapter()
   CPPUNIT_ASSERT(adapter->isDupChecking());
   CPPUNIT_ASSERT(adapter->isAutoAvailable());
   CPPUNIT_ASSERT(adapter->isIgnoringTimestamps());
+  CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
   CPPUNIT_ASSERT(device->mPreserveUuid);
 }
 
@@ -238,5 +240,19 @@ void ConfigTest::testNamespaces()
   XmlPrinter::clearErrorNamespaces();
   XmlPrinter::clearStreamsNamespaces();
   XmlPrinter::clearAssetsNamespaces();
+}
+
+void ConfigTest::testLegacyTimeout()
+{
+  istringstream str("Devices = ../samples/test_config.xml\n"
+                    "LegacyTimeout = 2000\n");
+  mConfig->loadConfig(str);
+  
+  Agent *agent = mConfig->getAgent();
+  CPPUNIT_ASSERT(agent);
+  Device *device = agent->getDevices()[0];
+  Adapter *adapter = device->mAdapters[0];
+  
+  CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
 }
 

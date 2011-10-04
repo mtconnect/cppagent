@@ -39,8 +39,8 @@ using namespace std;
 static dlib::logger sLogger("input.connector");
 
 /* Connector public methods */
-Connector::Connector(const string& server, unsigned int port)
-: mConnected(false), mHeartbeats(false)
+Connector::Connector(const string& server, unsigned int port, int aLegacyTimeout)
+: mConnected(false), mHeartbeats(false), mLegacyTimeout(aLegacyTimeout)
 {
   mServer = server;
   mPort = port;
@@ -97,27 +97,32 @@ void Connector::connect()
     while (true)
     {
       uint64 now;
+      now = stamper.get_timestamp();
+      int timeout;
       if (mHeartbeats)
-      {
-        now = stamper.get_timestamp();
-        int timeout = (int) mHeartbeatFrequency - ((int) (now - mLastSent) / 1000);
-        if (timeout < 0)
-          timeout = 1;
-        status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
-      }
+        timeout = (int) mHeartbeatFrequency - ((int) (now - mLastSent) / 1000);
       else
-      {
-        status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE);
-      }
-
+        timeout = mLegacyTimeout;
+        
+      if (timeout < 0)
+        timeout = 1;
+      sockBuf[0] = 0;
+      status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
       if (status > 0)
       {
         // Give a null terminator for the end of buffer
         sockBuf[status] = '\0';
         parseBuffer(sockBuf);   
       }
-      else if (status != TIMEOUT) // We don't stop on heartbeats
+      else if (status == TIMEOUT && !mHeartbeats) 
       {
+        // We don't stop on heartbeats, but if we have a legacy timeout, then we stop.
+        sLogger << LERROR << "connect: Did not receive data for over: " << intToString(timeout / 1000) << " seconds";
+        break;
+      }
+      else if (status != TIMEOUT) // Something other than timeout occurred
+      {
+        sLogger << LERROR << "connect: Socket error, disconnecting";
         break;
       }
 

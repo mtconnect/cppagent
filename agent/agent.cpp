@@ -317,10 +317,11 @@ const string Agent::on_request (const incoming_things& incoming,
 Adapter * Agent::addAdapter(const string& aDeviceName,
                             const string& aHost,
                             const unsigned int aPort,
-                            bool aStart
+                            bool aStart,
+                            int aLegacyTimeout
                             )
 {
-  Adapter *adapter = new Adapter(aDeviceName, aHost, aPort);
+  Adapter *adapter = new Adapter(aDeviceName, aHost, aPort, aLegacyTimeout);
   adapter->setAgent(*this);
   mAdapters.push_back(adapter);
   

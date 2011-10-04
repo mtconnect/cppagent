@@ -53,11 +53,10 @@ class Adapter : public Connector, public threaded_object
 {
 public:
   /* Associate adapter with a device & connect to the server & port */
-  Adapter(
-    const std::string& device,
-    const std::string& server, 
-    const unsigned int port
-  );
+  Adapter(const std::string& device,
+          const std::string& server, 
+          const unsigned int port,
+          int aLegacyTimeout = 600);
   
   /* Virtual destructor */
   virtual ~Adapter();
