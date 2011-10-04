@@ -307,6 +307,11 @@ Configuration Parameters
 
     *Default*: none
 
+* `LegacyTimeout`	- The default length of time an adapter can be silent before it
+  is disconnected. This is only for legacy adapters that do not support heartbeats.
+
+    *Default*: 600
+
 
 ###Adapter configuration items###
 
@@ -363,6 +368,13 @@ Configuration Parameters
 
         *Default*: no
 
+    * `LegacyTimeout` - length of time an adapter can be silent before it
+        is disconnected. This is only for legacy adapters that do not support 
+        heartbeats. If heartbeats are present, this will be ignored.
+
+        *Default*: 600
+
+
 logger_config configuration items
 -----
 
@@ -374,7 +386,8 @@ logger_config configuration items
         *Default*: `info`
 
     * `output` - The output file or stream. If a file is specified specify
-      as:  "file <filename>". cout and cerr can be used to specify the
+      as:
+ "file <filename>". cout and cerr can be used to specify the
       standard output and standard error streams. *Default*s to the same
       directory as the executable.
 

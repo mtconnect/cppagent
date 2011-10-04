@@ -24,6 +24,7 @@
 									</Constraints>
 								</DataItem>
 								<DataItem category="CONDITION" id="Cloadc" type="LOAD"/>
+								<DataItem category="CONDITION" id="Csystem" type="SYSTEM"/>    														
 								<DataItem category="SAMPLE" id="cl3" name="Cload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
 							</DataItems>
 						</Rotary>
@@ -33,6 +34,7 @@
 								<DataItem category="SAMPLE" id="x3" name="Xcom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="n3" name="Xload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
 								<DataItem category="CONDITION" id="Xloadc" type="LOAD"/>
+								<DataItem category="CONDITION" id="Xsystem" type="SYSTEM"/>    														
 							</DataItems>
 						</Linear>
 						<Linear id="y1" name="Y">
@@ -41,6 +43,7 @@
 								<DataItem category="SAMPLE" id="y3" name="Ycom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="y4" name="Yload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
 								<DataItem category="CONDITION" id="Yloadc" type="LOAD"/>
+								<DataItem category="CONDITION" id="Ysystem" type="SYSTEM"/>    														
 							</DataItems>
 						</Linear>
 						<Linear id="z1" name="Z">
@@ -49,6 +52,7 @@
 								<DataItem category="SAMPLE" id="z3" name="Zcom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
 								<DataItem category="SAMPLE" id="z4" name="Zload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
 								<DataItem category="CONDITION" id="Zloadc" type="LOAD"/>
+								<DataItem category="CONDITION" id="Zsystem" type="SYSTEM"/>    						
 							</DataItems>
 						</Linear>
 					</Components>
@@ -58,6 +62,8 @@
     				<DataItem category="EVENT" id="msg" type="MESSAGE"/>
 						<DataItem category="EVENT" id="estop" type="EMERGENCY_STOP"/>
 						<DataItem category="CONDITION" id="clp" type="LOGIC_PROGRAM"/>
+						<DataItem category="CONDITION" id="motion" type="MOTION_PROGRAM"/>
+						<DataItem category="CONDITION" id="system" type="SYSTEM"/>
 					</DataItems>
 					<Components>
 						<Path id="pth" name="path">
@@ -89,6 +95,9 @@
 						<Coolant id="cool" name="coolant">
 							<DataItems>
 								<DataItem category="CONDITION" id="clow" type="LEVEL"/>
+								<DataItem category="CONDITION" id="coolpres" type="PRESSURE"/>
+								<DataItem category="CONDITION" id="filter" type="x:FILTER"/>
+								<DataItem category="CONDITION" id="coolantmotor" type="ACTUATOR"/>
 							</DataItems>
 						</Coolant>
 						<Hydraulic id="hsys" name="hydrolic">
