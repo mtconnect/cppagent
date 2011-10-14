@@ -117,7 +117,7 @@ void Connector::connect()
       else if (status == TIMEOUT && !mHeartbeats && ((int) (stamper.get_timestamp() - now) / 1000) >= timeout) 
       {
         // We don't stop on heartbeats, but if we have a legacy timeout, then we stop.
-        sLogger << LERROR << "connect: Did not receive data for over: " << intToString(timeout / 1000) << " seconds";
+        sLogger << LERROR << "connect: Did not receive data for over: " << (timeout / 1000) << " seconds";
         break;
       }
       else if (status != TIMEOUT) // Something other than timeout occurred
@@ -131,7 +131,7 @@ void Connector::connect()
         now = stamper.get_timestamp();
         if ((now - mLastHeartbeat) > (uint64) (mHeartbeatFrequency * 2000))
         {
-          sLogger << LERROR << "connect: Did not receive heartbeat for over: " << intToString(mHeartbeatFrequency * 2);
+          sLogger << LERROR << "connect: Did not receive heartbeat for over: " << (mHeartbeatFrequency * 2);
           break;
         }
         else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
@@ -140,7 +140,7 @@ void Connector::connect()
           status = mConnection->write(ping, strlen(ping));
           if (status <= 0)
           {
-            sLogger << LERROR << "connect: Could not write heartbeat: " << intToString(status);
+            sLogger << LERROR << "connect: Could not write heartbeat: " << status;
             break;
           }
           mLastSent = now;
@@ -148,7 +148,7 @@ void Connector::connect()
       }
     }
     
-    sLogger << LERROR << "connect: Connection exited with status: " << intToString(status);
+    sLogger << LERROR << "connect: Connection exited with status: " << status;
     close();
   }
   catch (dlib::socket_error &e)

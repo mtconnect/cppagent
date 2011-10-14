@@ -60,6 +60,8 @@ class Device;
 
 using namespace dlib;
 
+typedef std::vector<std::pair<std::string, std::string> > AssetChangeList;
+
 class Agent : public server::http_1a
 {
   class ParameterError
@@ -145,6 +147,9 @@ public:
   bool addAsset(Device *aDevice, const std::string &aId, const std::string &aAsset,
                 const std::string &aType,
                 const std::string &aTime = "");
+  
+  bool updateAsset(Device *aDevice, const std::string &aId, AssetChangeList &aList,
+                   const std::string &aTime);
   
   /* Message when adapter has connected and disconnected */
   void disconnected(Adapter *anAdapter, std::vector<Device*> aDevices);

@@ -117,7 +117,7 @@ void Adapter::processData(const string& data)
   {
     if (data == mTerminator)
     {
-      mAgent->addAsset(mAssetDevice, mAssetId, mBody.str(), mTime);
+      mAgent->addAsset(mAssetDevice, mAssetId, mBody.str(), mAssetType, mTime);
       mGatheringAsset = false;
     }
     else
@@ -154,6 +154,10 @@ void Adapter::processData(const string& data)
     getline(toParse, type, '|');
     getline(toParse, rest);
     
+    // Chck for an update and parse key value pairs. If only a type 
+    // is presented, then assume the remainder is a complete doc.
+    
+    
     // if the rest of the line begins with --multiline--... then 
     // set multiline and accumulate until a completed document is found
     if (rest.find("--multiline--") != rest.npos)
@@ -172,6 +176,33 @@ void Adapter::processData(const string& data)
       mAgent->addAsset(device, value, rest, type, time);
     }
     
+    return;
+  } 
+  else if (key == "@UPDATE_ASSET@")
+  {
+    string assetId = value;
+    AssetChangeList list;
+    getline(toParse, key, '|');
+    if (key[0] == '<')
+    {
+      do {
+        pair<string,string> kv("xml", key);
+        list.push_back(kv);        
+      } while (getline(toParse, key, '|'));
+      
+    } 
+    else
+    {
+      while (getline(toParse, value, '|'))
+      {
+        pair<string,string> kv(key, value);
+        list.push_back(kv);      
+        
+        if (!getline(toParse, key, '|'))
+          break;
+      } 
+    }
+    mAgent->updateAsset(device, assetId, list, time);
     return;
   }
 

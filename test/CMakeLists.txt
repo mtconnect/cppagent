@@ -56,7 +56,8 @@ set(test_srcs test.cpp
 	       test_globals.cpp
 	       xml_printer_test.cpp
  	       asset_test.cpp
-	       change_observer_test.cpp)
+	       change_observer_test.cpp
+           cutting_tool_test.cpp)
 
 file(GLOB test_headers *.hpp ../agent/*.hpp)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
+ * Copyright (c) 2008, AMT ‚Äì The Association For Manufacturing Technology (‚ÄúAMT‚Äù)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,71 +31,33 @@
  * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
+#ifndef ASSET_TEST_HPP
+#define ASSET_TEST_HPP
 
-#ifndef CUTTING_TOOL_HPP
-#define CUTTING_TOOL_HPP
+#include <map>
+#include <string>
+
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
 
 #include "asset.hpp"
-#include <vector>
-#include <map>
 
-class CuttingTool;
-typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
-
-class CuttingToolValue;
-typedef RefCountedPtr<CuttingToolValue> CuttingToolValuePtr;
-
-class CuttingItem;
-typedef RefCountedPtr<CuttingItem> CuttingItemPtr;
-
-
-class CuttingToolValue : public RefCounted {
-public:  
-  CuttingToolValue(const std::string &aKey, const std::string &aValue) 
-    : mKey(aKey), mValue(aValue) {}
-  CuttingToolValue() {}
-  CuttingToolValue(const CuttingToolValue &aOther) 
-    : mProperties(aOther.mProperties), mKey(aOther.mKey), mValue(aOther.mValue)  {}
-  virtual ~CuttingToolValue();
-    
-public:
-  std::map<std::string, std::string> mProperties;
-  std::string mKey;
-  std::string mValue;
-};
-
-class CuttingItem : public RefCounted {
-public:
-  virtual ~CuttingItem();
-
-public:
-  std::map<std::string,std::string> mIdentity;
-  std::map<std::string,CuttingToolValuePtr> mValues;
-  std::map<std::string,CuttingToolValuePtr> mMeasurements;
-  std::vector<CuttingToolValuePtr> mLives;
-};
-
-class CuttingTool : public Asset {
-public:
-  CuttingTool(const std::string &aAssetId, const std::string &aType, const std::string &aContent) 
-    : Asset(aAssetId, aType, aContent) {}
-  ~CuttingTool();
+class AssetTest : public CppUnit::TestFixture
+{
+  CPPUNIT_TEST_SUITE(AssetTest);
+  CPPUNIT_TEST(testAsset);
+  CPPUNIT_TEST_SUITE_END();
   
-  void addIdentity(const std::string &aKey, const std::string &aValue);
-  void addValue(const CuttingToolValuePtr aValue);
-  void updateValue(const std::string &aKey, const std::string &aValue);
-  
-  virtual std::string &getContent();
-  void changed() { mContent.clear(); }
-
 public:
-  std::vector<std::string> mStatus;
-  std::map<std::string,std::string> mIdentity;
-  std::map<std::string,CuttingToolValuePtr> mValues;
-  std::map<std::string,CuttingToolValuePtr> mMeasurements;  
-  std::string mItemCount;
-  std::vector<CuttingItemPtr> mItems;
-  std::vector<CuttingToolValuePtr> mLives;
+  void setUp();
+  void tearDown();
+  
+protected:
+  Asset *mAsset;
+  
+protected:
+  void testAsset();
 };
 
 #endif
+

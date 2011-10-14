@@ -443,6 +443,44 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
   return true;
 }
 
+bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList &aList,
+                        const string &aTime)
+{
+  AssetPtr asset;
+  {
+    dlib::auto_mutex lock(*mAssetLock);
+    
+    asset = mAssetMap[aId];
+    if (asset.getObject() == NULL)
+      return false;
+    
+    if (asset->getType() != "CuttingTool")
+      return false;
+    
+    CuttingToolPtr tool((CuttingTool*) asset.getObject());
+    
+    AssetChangeList::iterator iter;
+    for (iter = aList.begin(); iter != aList.end(); ++iter)
+    {
+      if (iter->first == "xml") {
+        mXmlParser->updateAsset(asset, asset->getType(), iter->second);        
+      } else {
+        tool->updateValue(iter->first, iter->second);
+      }        
+    }
+    tool->changed();
+  }
+  
+  string time;
+  if (aTime.empty())
+    time = getCurrentTime(GMT_UV_SEC);
+  else
+    time = aTime;
+  addToBuffer(aDevice->getAssetChanged(), asset->getType() + "|" + aId, time);
+
+  return true;
+}
+
 /* Add values for related data items UNAVAILABLE */
 void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
 {

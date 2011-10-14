@@ -34,6 +34,12 @@
 #include "cutting_tool.hpp"
 #include "xml_printer.hpp"
 
+using namespace std;
+
+CuttingTool::~CuttingTool()
+{
+}
+
 void CuttingTool::addValue(const CuttingToolValuePtr aValue)
 {
   // Check for keys...
@@ -44,16 +50,54 @@ void CuttingTool::addValue(const CuttingToolValuePtr aValue)
   mValues[aValue->mKey] = aValue;
 }
 
+inline static bool splitKey(string &key, string &sel, string &val) 
+{
+  size_t found = key.find_first_of('@');
+  if (found != string::npos) {
+    sel = key;
+    sel.erase(found);
+    key.erase(0, found + 1);
+    size_t found = sel.find_first_of('=');
+    if (found == string::npos) {
+      val = sel;
+      val.erase(found);
+      sel.erase(0, found + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
 void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue)
 {
   if (aKey == "Location") {
     mKeys[aKey] = aValue;
   }
   
-  mValues[aKey]->mValue = aValue;
+  // Split into path and parts and update the asset bits.
+  string key = aKey, sel, val;
+  if (splitKey(key, sel, val)) {
+    if (sel == "indices") {
+      for (size_t i = 0; i < mItems.size(); i++)
+      {
+        CuttingItemPtr item = mItems[i];
+        if (val == item->mIdentity["indices"])
+        {
+          if (item->mValues.count(key) > 0)
+            item->mValues[key]->mValue = aValue;
+          else if (item->mMeasurements.count(key) > 0)
+            item->mMeasurements[key]->mValue = aValue;
+          break;
+        }
+      }
+    }
+  } else {          
+    if (mValues.count(aKey) > 0)
+      mValues[aKey]->mValue = aValue;
+    else if (mMeasurements.count(aKey) > 0)
+      mMeasurements[aKey]->mValue = aValue;
+  }
 }
-
-
 
 void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue)
 {

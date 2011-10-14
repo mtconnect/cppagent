@@ -535,7 +535,7 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
     // all others add as plain text.
     xmlNodePtr node = NULL;
     assetNodes = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
-    if (assetNodes == NULL)
+    if (assetNodes == NULL || assetNodes->nodesetval == NULL || assetNodes->nodesetval->nodeNr == 0)
     {
       // See if this is a fragment... the root node will be check when it is 
       // parsed...
@@ -545,10 +545,6 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
     else 
     {
       xmlNodeSetPtr nodeset = assetNodes->nodesetval;
-      if (nodeset == NULL || nodeset->nodeNr == 0)
-      {
-        throw (string) "Could not find Asset in XML";
-      }
       node = nodeset->nodeTab[0];
     }
     
@@ -687,7 +683,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
   {
     // Get the attributes...
     tool.setObject(new CuttingTool("", "CuttingTool", ""), true);
-    
+        
     for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
     {
       if (attr->type == XML_ATTRIBUTE_NODE) {
