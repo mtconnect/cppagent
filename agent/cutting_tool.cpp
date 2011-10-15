@@ -103,8 +103,14 @@ void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue
 {
   if (aKey == "toolId") {
     mKeys[aKey] = aValue;
+    mIdentity[aKey] = aValue;
+  } else if (aKey == "deviceUuid") {
+    mDeviceUuid = aValue;
+  } else if (aKey == "timestamp") {
+    mTimestamp = aValue;
+  } else {
+    mIdentity[aKey] = aValue;
   }
-  mIdentity[aKey] = aValue;
 }
 
 std::string &CuttingTool::getContent() 

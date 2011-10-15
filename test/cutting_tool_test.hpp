@@ -31,8 +31,8 @@
  * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
-#ifndef ASSET_TEST_HPP
-#define ASSET_TEST_HPP
+#ifndef CUTTING_TOOL_TEST_HPP
+#define CUTTING_TOOL_TEST_HPP
 
 #include <map>
 #include <string>
@@ -40,12 +40,12 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "asset.hpp"
+#include "cutting_tool.hpp"
 
-class AssetTest : public CppUnit::TestFixture
+class CuttingToolTest : public CppUnit::TestFixture
 {
-  CPPUNIT_TEST_SUITE(AssetTest);
-  CPPUNIT_TEST(testAsset);
+  CPPUNIT_TEST_SUITE(CuttingToolTest);
+  CPPUNIT_TEST(testCuttingTool);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -53,10 +53,10 @@ public:
   void tearDown();
   
 protected:
-  Asset *mAsset;
+  CuttingToolPtr mTool;
   
 protected:
-  void testAsset();
+  void testCuttingTool();
 };
 
 #endif

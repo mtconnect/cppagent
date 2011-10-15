@@ -732,8 +732,7 @@ void XmlParser::updateAsset(AssetPtr aAsset, const std::string &aType, const std
   CuttingToolPtr ptr = (CuttingTool*) aAsset.getObject();
   
   try {
-    THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST aContent.c_str(), 
-                                             ((string) "file://node.xml").c_str(), 
+    THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST aContent.c_str(), "file://node.xml", 
                                              NULL, XML_PARSE_NOBLANKS));
         
     xmlNodePtr root = xmlDocGetRootElement(document);

@@ -50,6 +50,8 @@ protected:
   std::string mAssetId;
   std::string mContent;
   std::string mType;
+  std::string mDeviceUuid;
+  std::string mTimestamp;
   AssetKeys   mKeys;
   
 public:
@@ -66,12 +68,16 @@ public:
   virtual std::string &getContent() { return mContent; }
   std::string &getType() { return mType; }
   AssetKeys   &getKeys() { return mKeys; }
+  std::string &getDeviceUuid() { return mDeviceUuid; }
+  std::string &getTimestamp() { return mTimestamp; }
   
   bool operator==(const Asset &aOther) {
     return mAssetId == aOther.mAssetId;
   }
   
   void setAssetId(const std::string &aId) { mAssetId = aId; }
+  void setDeviceUuid(const std::string &aId) { mDeviceUuid = aId; }
+  void setTimestamp(const std::string &aTs) { mTimestamp = aTs; }
 };
 
 typedef std::map<std::string, AssetPtr> AssetIndex;

@@ -401,8 +401,13 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     AssetPtr ptr;
     if (aType == "CuttingTool") {
       ptr = mXmlParser->parseAsset(aId, aType, aAsset);
+      ptr->setTimestamp(aTime);
+      if (ptr->getDeviceUuid().empty())
+        ptr->setDeviceUuid(aDevice->getUuid());
     } else {
       ptr.setObject(new Asset(aId, aType, aAsset), true);
+      ptr->setTimestamp(aTime);
+      ptr->setDeviceUuid(aDevice->getUuid());
     }
     
     if (ptr.getObject() == NULL) {
@@ -447,6 +452,12 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
                         const string &aTime)
 {
   AssetPtr asset;
+  string time;
+  if (aTime.empty())
+    time = getCurrentTime(GMT_UV_SEC);
+  else
+    time = aTime;
+  
   {
     dlib::auto_mutex lock(*mAssetLock);
     
@@ -468,14 +479,11 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
         tool->updateValue(iter->first, iter->second);
       }        
     }
+    tool->setTimestamp(aTime);
+    tool->setDeviceUuid(aDevice->getUuid());
     tool->changed();
   }
   
-  string time;
-  if (aTime.empty())
-    time = getCurrentTime(GMT_UV_SEC);
-  else
-    time = aTime;
   addToBuffer(aDevice->getAssetChanged(), asset->getType() + "|" + aId, time);
 
   return true;

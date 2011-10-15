@@ -968,6 +968,18 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
                                                       BAD_CAST (*iter).second.c_str()));
     }
     
+    // Add the timestamp and device uuid fields.
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                    BAD_CAST "timestamp",
+                                                    BAD_CAST aTool->getTimestamp().c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                    BAD_CAST "deviceUuid",
+                                                    BAD_CAST aTool->getDeviceUuid().c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                    BAD_CAST "assetId",
+                                                    BAD_CAST aTool->getAssetId().c_str()));
+
+    
     // Check for cutting tool definition
     printCuttingToolValue(writer, aTool, "CuttingToolDefinition");
     
