@@ -55,13 +55,13 @@ inline static bool splitKey(string &key, string &sel, string &val)
   size_t found = key.find_first_of('@');
   if (found != string::npos) {
     sel = key;
-    sel.erase(found);
-    key.erase(0, found + 1);
+    key.erase(found);
+    sel.erase(0, found + 1);
     size_t found = sel.find_first_of('=');
-    if (found == string::npos) {
+    if (found != string::npos) {
       val = sel;
-      val.erase(found);
-      sel.erase(0, found + 1);
+      sel.erase(found);
+      val.erase(0, found + 1);
       return true;
     }
   }
@@ -77,17 +77,29 @@ void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue
   // Split into path and parts and update the asset bits.
   string key = aKey, sel, val;
   if (splitKey(key, sel, val)) {
-    for (size_t i = 0; i < mItems.size(); i++)
-    {
-      CuttingItemPtr item = mItems[i];
-      if (item->mIdentity.count(sel) > 0 && val == item->mIdentity[sel])
+    if (key == "ToolLife") {
+      for (size_t i = 0; i < mLives.size(); i++)
       {
-        if (item->mValues.count(key) > 0)
-          item->mValues[key]->mValue = aValue;
-        else if (item->mMeasurements.count(key) > 0)
-          item->mMeasurements[key]->mValue = aValue;
-        break;
+        CuttingToolValuePtr life = mLives[i];
+        if (life->mProperties.count(sel) > 0 && life->mProperties[sel] == val)
+        {
+          life->mValue = aValue;
+          break;
+        }
       }
+    } else {
+      for (size_t i = 0; i < mItems.size(); i++)
+      {
+        CuttingItemPtr item = mItems[i];
+        if (item->mIdentity.count(sel) > 0 && val == item->mIdentity[sel])
+        {
+          if (item->mValues.count(key) > 0)
+            item->mValues[key]->mValue = aValue;
+          else if (item->mMeasurements.count(key) > 0)
+            item->mMeasurements[key]->mValue = aValue;
+          break;
+        }
+      }      
     }
   } else {          
     if (mValues.count(aKey) > 0)
