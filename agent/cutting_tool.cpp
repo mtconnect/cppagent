@@ -34,6 +34,8 @@
 #include "cutting_tool.hpp"
 #include "xml_printer.hpp"
 
+#include <sstream>
+
 using namespace std;
 
 CuttingTool::~CuttingTool()
@@ -101,11 +103,20 @@ void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue
         }
       }      
     }
-  } else {          
-    if (mValues.count(aKey) > 0)
-      mValues[aKey]->mValue = aValue;
-    else if (mMeasurements.count(aKey) > 0)
-      mMeasurements[aKey]->mValue = aValue;
+  } else {
+    if (aKey == "CutterStatus") {
+      mStatus.clear();
+      istringstream stream(aValue);
+      string val;
+      while (getline(stream, val, ',')) {
+        mStatus.push_back(val);
+      }
+    } else {
+      if (mValues.count(aKey) > 0)
+        mValues[aKey]->mValue = aValue;
+      else if (mMeasurements.count(aKey) > 0)
+        mMeasurements[aKey]->mValue = aValue;
+    }
   }
 }
 
