@@ -1,0 +1,29 @@
+<CuttingTool serialNumber="1" toolId="KSSP300R4SD43L240" timestamp="2011-05-11T13:55:22" assetId="KSSP300R4SD43L240.1" manufacturers="KMT,Parlec">
+	<CuttingToolLifeCycle>
+		<CutterStatus><Status>NEW</Status></CutterStatus>
+		<ToolLife type="PART_COUNT" initial="0" countDirection="UP" limit="10">0</ToolLife>
+		<ProgramToolNumber>1</ProgramToolNumber>
+		<ProgramSpindleSpeed maximum="13300" nominal="605">10000</ProgramSpindleSpeed>
+		<ProgramFeedRate nominal="9.22">9.22</ProgramFeedRate>
+		<ConnectionCodeMachineSide>CV50</ConnectionCodeMachineSide>
+		<Measurements>
+			<BodyDiameterMax code="BDX">73.25</BodyDiameterMax>
+			<OverallToolLength nominal="323.85" minimum="323.596" maximum="324.104" code="OAL">323.86</OverallToolLength>
+			<UsableLengthMax code="LUX" nominal="82.55">82.55</UsableLengthMax>
+			<CuttingDiameterMax code="DC" nominal="76.2" maximum="76.213" minimum="76.187">76.262</CuttingDiameterMax>
+			<BodyLengthMax code="LF" nominal="222.25" maximum="222.504" minimum="222.004">222.259</BodyLengthMax>
+			<DepthOfCutMax code="APMX" nominal="60.96">62.383</DepthOfCutMax>
+			<FlangeDiameterMax code="DF" nominal="98.425">98.425</FlangeDiameterMax>
+		</Measurements>
+		<CuttingItems count="24">
+			<CuttingItem indices="1-24" itemId="SDET43PDER8GB" manufacturers="KMT" grade="KC725M">
+				<Measurements>
+					<CuttingEdgeLength code="L" nominal="12.7" minimum="12.675" maximum="12.725">12.7</CuttingEdgeLength>
+					<WiperEdgeLength code="BS" nominal="2.56">2.56</WiperEdgeLength>
+					<IncribedCircleDiameter code="IC" nominal="12.7">12.7</IncribedCircleDiameter>
+					<CornerRadius code="RE" nominal="0.8">0.8</CornerRadius>
+				</Measurements>
+			</CuttingItem>
+		</CuttingItems>
+	</CuttingToolLifeCycle>
+</CuttingTool>

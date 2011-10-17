@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.1" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.1 http://www.mtconnect.org/schemas/MTConnectDevices_1.1.xsd">
+	<Header creationTime="2010-03-04T18:44:40+00:00" sender="localhost" instanceId="1267728234" bufferSize="131072" version="1.1"/>
+	<Devices>
+		<Device id="presetter" iso841Class="6" name="presetter" sampleRate="10" uuid="presetter">
+			<Description manufacturer="SystemInsights"/>
+			<DataItems>
+				<DataItem category="EVENT" id="avail1" name="avail" type="AVAILABILITY"/>
+			</DataItems>
+		</Device>
+      <Device id="cnc" iso841Class="6" name="cnc" sampleRate="10" uuid="cnc">
+        <Description manufacturer="SystemInsights"/>
+        <DataItems>
+          <DataItem category="EVENT" id="avail2" name="avail" type="AVAILABILITY"/>
+        </DataItems>
+      </Device>
+	</Devices>
+</MTConnectDevices>

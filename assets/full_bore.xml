@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectAssets xmlns:m="urn:mtconnect.org:MTConnectAssets:1.2" xmlns="urn:mtconnect.org:MTConnectAssets:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectAssets:1.2 http://www.mtconnect.org/schemas/MTConnectAssets_1.2.xsd">
+  <Header creationTime="2011-07-25T19:42:58Z" sender="flori-2.local" instanceId="1311622912" version="1.2" assetBufferSize="1024" assetCount="1"/>
+  <Assets><Part timestamp="2011-07-25T13:55:22" assetId="BORE_1232">
+  <Inspection>
+    <MeasurementResults>
+      <Parts>
+        <PartDefinitions>
+          <PartDefinition id="1">
+            <FeatureConstructs>
+              <FeatureDefinitions>
+                <PointFeatureDefinition id="1">
+                </PointFeatureDefinition>
+                <CircleFeatureDefinition id="2">
+                  <!-- nominal diameter = actual diameter - diameter error -->
+                  <Diameter>#138-#143</Diameter>
+                </CircleFeatureDefinition>
+              </FeatureDefinitions>
+              <FeatureNominals>
+                <PointFeatureNominal id="1" featureDefinitionId="1">
+                  <Point>
+                    <!-- nominal coordinate = actual coordinate if error register is invalid -->
+                    <!-- nominal coordinate = actual coordinate - coordinate error if error register is valid -->
+                    <X>#140==#0?#135:#135-#140</X>
+                    <Y>#141==#0?#136:#136-#141</Y>
+                    <Z>#142==#0?#137:#137-#142</Z>
+                  </Point>
+                  <Normal>
+                    <!-- nominal vector component = 0.0 if error register is invalid -->
+                    <!-- nominal vector component = direction sign if error register is valid -->
+                    <I>#140==#0?0.0:#147</I>
+                    <J>#141==#0?0.0:#147</J>
+                    <K>#142==#0?0.0:#147</K>
+                  </Normal>
+                </PointFeatureNominal>
+                <CircleFeatureNominal id="2" featureDefinitionId="2">
+                  <CenterPoint>
+                    <!-- nominal coordinate = actual coordinate if error register is invalid -->
+                    <!-- nominal coordinate = actual coordinate - coordinate error if error register is valid -->
+                    <X>#140==#0?#135:#135-#140</X>
+                    <Y>#141==#0?#136:#136-#141</Y>
+                    <!-- no Z info for BORE/BOSS -->
+                    <Z>0.0</Z>
+                  </CenterPoint>
+                  <Normal>
+                    <!-- nominal vector is always 0,0,1 for BORE/BOSS -->
+                    <I>0.0</I>
+                    <J>0.0</J>
+                    <K>1.0</K>
+                  </Normal>
+                </CircleFeatureNominal>
+              </FeatureNominals>
+            </FeatureConstructs>
+          </PartDefinition>
+        </PartDefinitions>
+        <PartInstances>
+          <PartInstance id="4">
+            <PartDefinitionId>1</PartDefinitionId>
+            <FeatureInstances>
+              <PointFeatureInstance id="1">
+                <FeatureName>POINT1</FeatureName>
+                <FeatureActualId>1</FeatureActualId>
+                <FeatureNominalId>1</FeatureNominalId>
+              </PointFeatureInstance>
+              <!-- circle is a BOSS (OUTER) if size error and metal condition have the same sign, otherwise a BORE (INNER)-->
+              <CircleFeatureInstance id="2" FeatureOfSize="true" Geometry="TwoDimensional" MaterialDirection="#143*#146>0.0?OUTER:INNER">
+                <FeatureName>BORE1</FeatureName>
+                <FeatureActualId>2</FeatureActualId>
+                <FeatureNominalId>2</FeatureNominalId>
+              </CircleFeatureInstance>
+            </FeatureInstances>
+            <FeatureActuals>
+              <PointFeatureActual id="1" featureNominalId="1">
+                <Point>
+                  <!-- actual coordinate directly from registers -->
+                  <X>#135</X>
+                  <Y>#136</Y>
+                  <Z>#137</Z>
+                </Point>
+                <Normal>
+                  <!-- actual same as nominal vector component = 0.0 if error register is invalid -->
+                  <!-- actual same as nominal vector component = direction sign if error register is valid -->
+                  <I>#140==#0?0.0:#147</I>
+                  <J>#141==#0?0.0:#147</J>
+                  <K>#142==#0?0.0:#147</K>
+                </Normal>
+              </PointFeatureActual>
+              <CircleFeatureActual id="2" featureNominalId="2">
+                <CenterPoint>
+                  <!-- actual coordinate directly from registers but no Z information -->
+                  <X>#135</X>
+                  <Y>#136</Y>
+                  <Z>0.0</Z>
+                </CenterPoint>
+                <Normal>
+                  <!-- actual vector is always 0,0,1 for BORE/BOSS -->
+                  <I>0.0</I>
+                  <J>0.0</J>
+                  <K>1.0</K>
+                </Normal>
+                <!-- actual diameter directly from register -->
+                <Diameter>#138</Diameter>
+              </CircleFeatureActual>
+            </FeatureActuals>
+          </PartInstance>
+        </PartInstances>
+      </Parts>
+    </MeasurementResults>
+  </Inspection>
+</Part></Assets>
+</MTConnectAssets>
