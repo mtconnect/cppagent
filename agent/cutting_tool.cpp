@@ -77,18 +77,16 @@ void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue
   // Split into path and parts and update the asset bits.
   string key = aKey, sel, val;
   if (splitKey(key, sel, val)) {
-    if (sel == "indices") {
-      for (size_t i = 0; i < mItems.size(); i++)
+    for (size_t i = 0; i < mItems.size(); i++)
+    {
+      CuttingItemPtr item = mItems[i];
+      if (item->mIdentity.count(sel) > 0 && val == item->mIdentity[sel])
       {
-        CuttingItemPtr item = mItems[i];
-        if (val == item->mIdentity["indices"])
-        {
-          if (item->mValues.count(key) > 0)
-            item->mValues[key]->mValue = aValue;
-          else if (item->mMeasurements.count(key) > 0)
-            item->mMeasurements[key]->mValue = aValue;
-          break;
-        }
+        if (item->mValues.count(key) > 0)
+          item->mValues[key]->mValue = aValue;
+        else if (item->mMeasurements.count(key) > 0)
+          item->mMeasurements[key]->mValue = aValue;
+        break;
       }
     }
   } else {          
