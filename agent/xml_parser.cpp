@@ -689,6 +689,8 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
       if (attr->type == XML_ATTRIBUTE_NODE) {
         if (xmlStrcmp(attr->name, BAD_CAST "assetId") == 0) {
           tool->setAssetId((string) (const char*) attr->children->content);
+        } else if (xmlStrcmp(attr->name, BAD_CAST "timestamp") == 0) {
+          tool->setTimestamp((const char*) attr->children->content);
         } else {
           tool->addIdentity((const char*) attr->name, (const char*) attr->children->content);
         }

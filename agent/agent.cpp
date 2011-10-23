@@ -387,6 +387,13 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     return false;
   }
   
+  string time;
+  if (aTime.empty())
+    time = getCurrentTime(GMT_UV_SEC);
+  else
+    time = aTime;
+
+  
   // Lock the asset addition to protect from multithreaded collisions. Releaes
   // before we add the event so we don't cause a race condition.
   {
@@ -401,12 +408,13 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     AssetPtr ptr;
     if (aType == "CuttingTool") {
       ptr = mXmlParser->parseAsset(aId, aType, aAsset);
-      ptr->setTimestamp(aTime);
+      if (ptr->getTimestamp().empty())
+        ptr->setTimestamp(time);
       if (ptr->getDeviceUuid().empty())
         ptr->setDeviceUuid(aDevice->getUuid());
     } else {
       ptr.setObject(new Asset(aId, aType, aAsset), true);
-      ptr->setTimestamp(aTime);
+      ptr->setTimestamp(time);
       ptr->setDeviceUuid(aDevice->getUuid());
     }
     
@@ -438,11 +446,6 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
   }
   
   // Generate an asset chnaged event.
-  string time;
-  if (aTime.empty())
-    time = getCurrentTime(GMT_UV_SEC);
-  else
-    time = aTime;
   addToBuffer(aDevice->getAssetChanged(), aType + "|" + aId, time);
   
   return true;
