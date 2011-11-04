@@ -431,6 +431,8 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
   THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItem   
 }
 
+typedef bool (*EventComparer)(ComponentEventPtr &aE1, ComponentEventPtr &aE2);
+
 static bool EventCompare(ComponentEventPtr &aE1, ComponentEventPtr &aE2)
 {
   return aE1 < aE2;
@@ -466,7 +468,7 @@ string XmlPrinter::printSample(const unsigned int instanceId,
     
     // Sort the vector by category.
     if (results.size() > 1)
-      dlib::qsort_array(results, 0, results.size() - 1, EventCompare);
+      dlib::qsort_array<ComponentEventPtrArray,EventComparer>(results, 0, results.size() - 1, EventCompare);
 
     Device *lastDevice = NULL;
     Component *lastComponent = NULL;

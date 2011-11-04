@@ -180,7 +180,7 @@ void MTConnectService::install()
 
   if (NULL == manager) 
   {
-    sLogger << dlib::LERROR << "OpenSCManager failed (" << GetLastError << ")";
+    sLogger << dlib::LERROR << "OpenSCManager failed (" << GetLastError() << ")";
     return;
   }
 
@@ -199,7 +199,7 @@ void MTConnectService::install()
       NULL,                  // password: no change 
       NULL) )                // display name: no change
     {
-      sLogger << dlib::LERROR << "ChangeServiceConfig failed (" << GetLastError << ")";
+      sLogger << dlib::LERROR << "ChangeServiceConfig failed (" << GetLastError() << ")";
       CloseServiceHandle(manager);
       return;
     } 
@@ -222,7 +222,7 @@ void MTConnectService::install()
 
     if (service == NULL) 
     {
-      sLogger << dlib::LERROR << "CreateService failed (" << GetLastError << ")";
+      sLogger << dlib::LERROR << "CreateService failed (" << GetLastError() << ")";
       CloseServiceHandle(manager);
       return;
     }
@@ -332,7 +332,7 @@ VOID WINAPI SvcMain( DWORD dwArgc, LPTSTR *lpszArgv )
   char path[MAX_PATH];
   if( !GetModuleFileName(NULL, path, MAX_PATH ) )
   {
-    sLogger << dlib::LERROR << "Cannot get path of executable (" << GetLastError << ")";
+    sLogger << dlib::LERROR << "Cannot get path of executable (" << GetLastError() << ")";
     return;
   }
 

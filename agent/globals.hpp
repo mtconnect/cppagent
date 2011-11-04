@@ -37,7 +37,10 @@
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS 1
 #endif
+#if _MSC_VER > 1400
 #include <stdint.h>
+#else
+#endif
 #ifndef UINT64_MAX
 #define UINT64_MAX 0xFFFFFFFFFFFFFFFFull
 #endif

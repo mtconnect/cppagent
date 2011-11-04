@@ -36,6 +36,9 @@
 #include <iostream>
 #include <sstream>
 
+#if _MSC_VER < 1500
+typedef __int64 int64_t;
+#endif
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(AgentTest);
