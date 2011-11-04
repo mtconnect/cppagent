@@ -312,6 +312,12 @@ Configuration Parameters
 
     *Default*: 600
 
+* `ReconnectInterval` - The amount of time between adapter reconnection attempts. 
+  This is useful for implementation of high performance adapters where availability
+  needs to be tracked in near-real-time. Time is specified in milliseconds (ms).
+      
+      *Default*: 10000
+
 
 ###Adapter configuration items###
 
@@ -373,6 +379,13 @@ Configuration Parameters
         heartbeats. If heartbeats are present, this will be ignored.
 
         *Default*: 600
+
+    * `ReconnectInterval` - The amount of time between adapter reconnection attempts. 
+       This is useful for implementation of high performance adapters where availability
+       needs to be tracked in near-real-time. Time is specified in milliseconds (ms).
+       Defaults to the top level ReconnetInterval.
+      
+        *Default*: 10000
 
 
 logger_config configuration items

@@ -72,6 +72,9 @@ public:
   bool isIgnoringTimestamps() { return mIgnoreTimestamps; }
   void setIgnoreTimestamps(bool aFlag) { mIgnoreTimestamps = aFlag; }
   
+  void setReconnectInterval(int aInterval) { mReconnectInterval = aInterval; }
+  int getReconnectInterval() const { return mReconnectInterval; }
+  
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
   virtual void protocolCommand(const std::string& data);
@@ -108,7 +111,10 @@ protected:
   std::string mTime;
   std::ostringstream mBody;
   Device *mAssetDevice;
-    
+  
+  // Timeout for reconnection attempts, given in milliseconds
+  int mReconnectInterval;
+  
 private:
   /* Inherited and is run as part of the threaded_object */
   void thread();

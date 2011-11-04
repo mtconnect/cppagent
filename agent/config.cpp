@@ -207,6 +207,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   int maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
   int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
   int legacyTimeout = get_with_default(reader, "LegacyTimeout", 600);
+  int reconnectInterval = get_with_default(reader, "ReconnectInterval", 10 * 1000);
   
   mPidFile = get_with_default(reader, "PidFile", "agent.pid");
   const char *probe;
@@ -241,7 +242,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
     
   loadAllowPut(reader);
-  loadAdapters(reader, defaultPreserve, legacyTimeout);
+  loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval);
   
   // Files served by the Agent... allows schema files to be served by
   // agent.
@@ -255,7 +256,8 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 }
 
 void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
-                                      bool aDefaultPreserve, int aLegacyTimeout)
+                                      bool aDefaultPreserve, int aLegacyTimeout,
+                                      int aReconnectInterval)
 {
   Device *device;
   if (aReader.is_block_defined("Adapters")) {
@@ -289,6 +291,7 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       const string host = get_with_default(adapter, "Host", (string)"localhost");
       int port = get_with_default(adapter, "Port", 7878);
       int legacyTimeout = get_with_default(adapter, "LegacyTimeout", aLegacyTimeout);
+      int reconnectInterval = get_with_default(adapter, "ReconnectInterval", aReconnectInterval);
 
       
       sLogger << LINFO << "Adding adapter for " << device->getName() << " on "
@@ -309,6 +312,7 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", adp->isDupChecking()));
       adp->setAutoAvailable(get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
       adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", adp->isIgnoringTimestamps()));
+      adp->setReconnectInterval(reconnectInterval);
       
       if (adapter.is_key_defined("AdditionalDevices")) {
         istringstream devices(adapter["AdditionalDevices"]);

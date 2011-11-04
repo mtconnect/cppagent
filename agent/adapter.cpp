@@ -47,7 +47,7 @@ Adapter::Adapter(const string& device,
                  int aLegacyTimeout)
   : Connector(server, port, aLegacyTimeout), mDeviceName(device), mRunning(true),
     mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false),
-    mGatheringAsset(false)
+    mGatheringAsset(false), mReconnectInterval(10 * 1000)
 {
 }
 
@@ -344,8 +344,8 @@ void Adapter::thread()
     }
 
     // Try to reconnect every 10 seconds
-    sLogger << LINFO << "Will try to reconnect in 10 seconds";
-    dlib::sleep(10 * 1000);
+    sLogger << LINFO << "Will try to reconnect in " << mReconnectInterval << " seconds";
+    dlib::sleep(mReconnectInterval);
   }
 }
 
