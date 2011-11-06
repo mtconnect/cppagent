@@ -36,7 +36,8 @@
 #include <iostream>
 #include <sstream>
 
-#if _MSC_VER < 1500
+
+#if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;
 #endif
 

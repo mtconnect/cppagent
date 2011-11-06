@@ -344,7 +344,7 @@ void Adapter::thread()
     }
 
     // Try to reconnect every 10 seconds
-    sLogger << LINFO << "Will try to reconnect in " << mReconnectInterval << " seconds";
+    sLogger << LINFO << "Will try to reconnect in " << mReconnectInterval << " milliseconds";
     dlib::sleep(mReconnectInterval);
   }
 }
