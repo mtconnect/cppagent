@@ -753,10 +753,10 @@ void AgentTest::testAssetStorage()
 {
   a->enablePut();
   path = "/asset/123";
-  string body = "<CuttingTool>TEST</CuttingTool>";
+  string body = "<Part>TEST</Part>";
   Agent::key_value_map queries;
   
-  queries["type"] = "CuttingTool";
+  queries["type"] = "Part";
   queries["device"] = "LinuxCNC";
 
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
@@ -771,7 +771,7 @@ void AgentTest::testAssetStorage()
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST");
   }
   
   // The device should generate an asset changed event as well.
@@ -780,7 +780,7 @@ void AgentTest::testAssetStorage()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged", "123");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@assetType", "CuttingTool");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@assetType", "Part");
   }
 }
 
@@ -788,11 +788,11 @@ void AgentTest::testAssetBuffer()
 {
   a->enablePut();
   path = "/asset/1";
-  string body = "<CuttingTool>TEST 1</CuttingTool>";
+  string body = "<Part>TEST 1</Part>";
   Agent::key_value_map queries;
   
   queries["device"] = "LinuxCNC";
-  queries["type"] = "CuttingTool";
+  queries["type"] = "Part";
 
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
@@ -800,54 +800,54 @@ void AgentTest::testAssetBuffer()
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
-    CPPUNIT_ASSERT_EQUAL(1, a->getAssetCount("CuttingTool"));
+    CPPUNIT_ASSERT_EQUAL(1, a->getAssetCount("Part"));
   }
   
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
   }
   
   // Make sure replace works properly
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
-    CPPUNIT_ASSERT_EQUAL(1, a->getAssetCount("CuttingTool"));
+    CPPUNIT_ASSERT_EQUAL(1, a->getAssetCount("Part"));
   }
 
   path = "/asset/2";
-  body = "<CuttingTool>TEST 2</CuttingTool>";
+  body = "<Part>TEST 2</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 2, a->getAssetCount());
-    CPPUNIT_ASSERT_EQUAL(2, a->getAssetCount("CuttingTool"));
+    CPPUNIT_ASSERT_EQUAL(2, a->getAssetCount("Part"));
   }
   
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
   }
 
   path = "/asset/3";
-  body = "<CuttingTool>TEST 3</CuttingTool>";
+  body = "<Part>TEST 3</Part>";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
-    CPPUNIT_ASSERT_EQUAL(3, a->getAssetCount("CuttingTool"));
+    CPPUNIT_ASSERT_EQUAL(3, a->getAssetCount("Part"));
   }
   
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 3");
   }
 
   path = "/asset/4";
-  body = "<CuttingTool>TEST 4</CuttingTool>";
+  body = "<Part>TEST 4</Part>";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
@@ -857,8 +857,8 @@ void AgentTest::testAssetBuffer()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 4");
-    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("CuttingTool"));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 4");
+    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("Part"));
   }
   
   // Test multiple asset get
@@ -866,10 +866,10 @@ void AgentTest::testAssetBuffer()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[1]", "TEST 1");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[2]", "TEST 2");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[3]", "TEST 3");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[4]", "TEST 4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 4");
   }
 
   // Test multiple asset get with filter
@@ -877,26 +877,26 @@ void AgentTest::testAssetBuffer()
   {
     PARSE_XML_RESPONSE_QUERY(queries);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[1]", "TEST 1");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[2]", "TEST 2");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[3]", "TEST 3");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool[4]", "TEST 4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 4");
   }
 
   
   path = "/asset/5";
-  body = "<CuttingTool>TEST 5</CuttingTool>";
+  body = "<Part>TEST 5</Part>";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
-    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("CuttingTool"));
+    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("Part"));
   }
   
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 5");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 5");
   }
   
   path = "/asset/1";
@@ -908,18 +908,18 @@ void AgentTest::testAssetBuffer()
   }
   
   path = "/asset/3";
-  body = "<CuttingTool>TEST 6</CuttingTool>";
+  body = "<Part>TEST 6</Part>";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
-    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("CuttingTool"));
+    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("Part"));
   }
   
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 6");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 6");
   }
   
   path = "/asset/2";
@@ -927,31 +927,31 @@ void AgentTest::testAssetBuffer()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
   }
 
   path = "/asset/2";
-  body = "<CuttingTool>TEST 7</CuttingTool>";
+  body = "<Part>TEST 7</Part>";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
-    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("CuttingTool"));
+    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("Part"));
   }
 
   path = "/asset/6";
-  body = "<CuttingTool>TEST 8</CuttingTool>";
+  body = "<Part>TEST 8</Part>";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getAssetCount());
-    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("CuttingTool"));
+    CPPUNIT_ASSERT_EQUAL(4, a->getAssetCount("Part"));
   }
   
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 8");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 8");
   }
 
   // Now since two and three have been modified, asset 4 should be removed.
@@ -980,7 +980,7 @@ void AgentTest::testAdapterAddAsset()
 {
   testAddAdapter();
   
-  adapter->processData("TIME|@ASSET@|111|CuttingTool|<CuttingTool>TEST 1</CuttingTool>");
+  adapter->processData("TIME|@ASSET@|111|Part|<Part>TEST 1</Part>");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
   
@@ -989,7 +989,7 @@ void AgentTest::testAdapterAddAsset()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
   }
 
 }
@@ -998,10 +998,10 @@ void AgentTest::testMultiLineAsset()
 {
   testAddAdapter();
   
-  adapter->parseBuffer("TIME|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
-  adapter->parseBuffer("<CuttingTool>\n"
-                       "  <CuttingToolLifeCycle>TEST 1</CuttingToolLifeCycle>\n");
-  adapter->parseBuffer("</CuttingTool>\n"
+  adapter->parseBuffer("TIME|@ASSET@|111|Part|--multiline--AAAA\n");
+  adapter->parseBuffer("<Part>\n"
+                       "  <PartXXX>TEST 1</PartXXX>\n");
+  adapter->parseBuffer("</Part>\n"
                        "--multiline--AAAA\n");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
@@ -1011,7 +1011,7 @@ void AgentTest::testMultiLineAsset()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingTool/m:CuttingToolLifeCycle", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:PartXXX", "TEST 1");
   }  
   
   // Make sure we can still add a line and we are out of multiline mode...
@@ -1029,11 +1029,11 @@ void AgentTest::testAssetProbe()
 {
   a->enablePut();
   path = "/asset/1";
-  string body = "<CuttingTool>TEST 1</CuttingTool>";
+  string body = "<Part>TEST 1</Part>";
   Agent::key_value_map queries;
   
   queries["device"] = "LinuxCNC";
-  queries["type"] = "CuttingTool";
+  queries["type"] = "Part";
 
   path = "/asset/1";
   {
@@ -1049,7 +1049,7 @@ void AgentTest::testAssetProbe()
   {
     path = "/probe";
     PARSE_XML_RESPONSE;
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount@assetType", "CuttingTool");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount@assetType", "Part");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount", "2");
   }
 }
@@ -1058,7 +1058,7 @@ void AgentTest::testAssetStorageWithoutType()
 {
   a->enablePut();
   path = "/asset/123";
-  string body = "<CuttingTool>TEST</CuttingTool>";
+  string body = "<Part>TEST</Part>";
   Agent::key_value_map queries;
   
   queries["device"] = "LinuxCNC";

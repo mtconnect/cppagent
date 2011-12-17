@@ -259,7 +259,7 @@ void XmlParserTest::testParseAsset()
   CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240.1", tool->getAssetId());
   CPPUNIT_ASSERT_EQUAL((string) "1", tool->mIdentity["serialNumber"]);
   CPPUNIT_ASSERT_EQUAL((string) "KMT,Parlec", tool->mIdentity["manufacturers"]);
-  CPPUNIT_ASSERT_EQUAL((string) "2011-05-11T13:55:22", tool->mIdentity["timestamp"]);
+  CPPUNIT_ASSERT_EQUAL((string) "2011-05-11T13:55:22", tool->getTimestamp());
   
   // Top Level
   CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->mValues["CuttingToolDefinition"]->mValue);
