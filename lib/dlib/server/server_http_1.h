@@ -71,6 +71,7 @@ namespace dlib
             std::string path;
             std::string request_type;
             std::string content_type;
+            std::string protocol;
             std::string body;
 
             key_value_map queries;
@@ -218,6 +219,11 @@ namespace dlib
             buffer[0] = '\0';
             return false;
           } else {
+            // Read the remaining delimiters
+            if (delim == ' ') {
+              while (in.peek() == ' ')
+                in.get();
+            }
             return true;
           }
         }
@@ -251,15 +257,16 @@ namespace dlib
                 incoming.local_ip     = local_ip;
                 incoming.local_port   = local_port;
 
-                read_with_limit(in, 4, buffer, ' ');
+                read_with_limit(in, 16, buffer, ' ');
                 incoming.request_type = buffer;
 
                 // get the path
                 read_with_limit(in, max_line_length, buffer, ' ');
                 incoming.path = buffer;
               
-                // Get the HTTP/1.1
-                read_with_limit(in, max_line_length, buffer);
+                // Get the HTTP/1.1 - Ignore for now...
+                read_with_limit(in, 16, buffer);
+                incoming.protocol = buffer;
 
                 key_value_map& incoming_headers = incoming.headers;
                 key_value_map& cookies          = incoming.cookies;
