@@ -719,9 +719,8 @@ string Agent::handleProbe(const string& name)
     mDeviceList = mDevices;
   }
   
-  return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
+  return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
                                 mMaxAssets, mAssets.size(),
-                                mSequence,
                                 mDeviceList, &mAssetCounts);
 }
 
