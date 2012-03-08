@@ -208,6 +208,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
   int legacyTimeout = get_with_default(reader, "LegacyTimeout", 600);
   int reconnectInterval = get_with_default(reader, "ReconnectInterval", 10 * 1000);
+  bool ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
   
   mPidFile = get_with_default(reader, "PidFile", "agent.pid");
   const char *probe;
@@ -242,7 +243,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
     
   loadAllowPut(reader);
-  loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval);
+  loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps);
   
   // Files served by the Agent... allows schema files to be served by
   // agent.
@@ -257,7 +258,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 
 void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
                                       bool aDefaultPreserve, int aLegacyTimeout,
-                                      int aReconnectInterval)
+                                      int aReconnectInterval, bool aIgnoreTimestamps)
 {
   Device *device;
   if (aReader.is_block_defined("Adapters")) {
@@ -311,7 +312,8 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       
       adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", adp->isDupChecking()));
       adp->setAutoAvailable(get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
-      adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", adp->isIgnoringTimestamps()));
+      adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", aIgnoreTimestamps ||
+                                                                                  adp->isIgnoringTimestamps()));
       adp->setReconnectInterval(reconnectInterval);
       
       if (adapter.is_key_defined("AdditionalDevices")) {
@@ -334,7 +336,10 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
   else if ((device = defaultDevice()) != NULL)
   {
     sLogger << LINFO << "Adding default adapter for " << device->getName() << " on localhost:7878";
-    mAgent->addAdapter(device->getName(), "localhost", 7878, false, aLegacyTimeout);
+    Adapter *adp = mAgent->addAdapter(device->getName(), "localhost", 7878, false, aLegacyTimeout);
+    adp->setIgnoreTimestamps(aIgnoreTimestamps || adp->isIgnoringTimestamps());
+    adp->setReconnectInterval(aReconnectInterval);
+    device->mPreserveUuid = aDefaultPreserve;
   }
   else
   {

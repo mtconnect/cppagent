@@ -56,6 +56,8 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testLimitPutFromHosts);
   CPPUNIT_TEST(testNamespaces);
   CPPUNIT_TEST(testLegacyTimeout);
+  CPPUNIT_TEST(testIgnoreTimestamps);
+  CPPUNIT_TEST(testIgnoreTimestampsOverride);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -77,6 +79,8 @@ protected:
   void testLimitPutFromHosts();
   void testNamespaces();
   void testLegacyTimeout();
+  void testIgnoreTimestamps();
+  void testIgnoreTimestampsOverride();
 };
 
 #endif

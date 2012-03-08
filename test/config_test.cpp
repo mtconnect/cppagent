@@ -256,3 +256,35 @@ void ConfigTest::testLegacyTimeout()
   CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
 }
 
+void ConfigTest::testIgnoreTimestamps()
+{
+  istringstream str("Devices = ../samples/test_config.xml\n"
+                    "IgnoreTimestamps = true\n");
+  mConfig->loadConfig(str);
+  
+  Agent *agent = mConfig->getAgent();
+  CPPUNIT_ASSERT(agent);
+  Device *device = agent->getDevices()[0];
+  Adapter *adapter = device->mAdapters[0];
+  
+  CPPUNIT_ASSERT(adapter->isIgnoringTimestamps());
+
+}
+
+void ConfigTest::testIgnoreTimestampsOverride()
+{
+  istringstream str("Devices = ../samples/test_config.xml\n"
+                    "IgnoreTimestamps = true\n"
+                    "Adapters { LinuxCNC { \n"
+                    "IgnoreTimestamps = false\n"
+                    "} }\n");
+  mConfig->loadConfig(str);
+  
+  Agent *agent = mConfig->getAgent();
+  CPPUNIT_ASSERT(agent);
+  Device *device = agent->getDevices()[0];
+  Adapter *adapter = device->mAdapters[0];
+  
+  CPPUNIT_ASSERT(!adapter->isIgnoringTimestamps());
+  
+}

@@ -316,7 +316,13 @@ Configuration Parameters
   This is useful for implementation of high performance adapters where availability
   needs to be tracked in near-real-time. Time is specified in milliseconds (ms).
       
-      *Default*: 10000
+    *Default*: 10000
+      
+* `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
+  clock drift but will not give as accurate relative time since it will not take into
+  consideration network latencies. This can be overriden on a per adapter basis.
+  
+    *Default*: false
 
 
 ###Adapter configuration items###
@@ -386,6 +392,13 @@ Configuration Parameters
        Defaults to the top level ReconnetInterval.
       
         *Default*: 10000
+        
+    * `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
+      clock drift but will not give as accurate relative time since it will not take into
+      consideration network latencies. This can be overriden on a per adapter basis.
+
+        *Default*: false
+        
 
 
 logger_config configuration items
