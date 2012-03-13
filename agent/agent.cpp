@@ -36,6 +36,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sstream>
+#include <stdexcept>
 #include <dlib/tokenizer.h>
 #include <dlib/misc_api.h>
 #include <dlib/array.h>
@@ -61,7 +62,16 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   {
     // Load the configuration for the Agent
     mXmlParser = new XmlParser();
-    mDevices = mXmlParser->parseFile(configXmlPath);
+    mDevices = mXmlParser->parseFile(configXmlPath);  
+    vector<Device *>::iterator device;
+    std::set<std::string> uuids;
+    for (device = mDevices.begin(); device != mDevices.end(); ++device) 
+    {
+      if (uuids.count((*device)->getUuid()) > 0)
+          throw runtime_error("Duplicate UUID: " + (*device)->getUuid());
+      
+      uuids.insert((*device)->getUuid());
+    }
   }
   catch (exception & e)
   {

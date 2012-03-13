@@ -1219,6 +1219,11 @@ void AgentTest::testStreamData()
   
 }
 
+void AgentTest::testFailWithDuplicateDeviceUUID()
+{
+  CPPUNIT_ASSERT_THROW(new Agent("../samples/dup_uuid.xml", 8, 4, 25), std::exception);
+}
+
 void AgentTest::streamThread(void *aArg)
 {
   AgentTest *test = (AgentTest*) aArg;
