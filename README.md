@@ -286,12 +286,17 @@ Configuration Parameters
   supplied as the result of a probe request. If the key is not found
   the defaults are tried.
 
-    *Default*s: probe.xml or Devices.xml 
+    *Defaults*: probe.xml or Devices.xml 
 
 * `PidFile` - UNIX only. The full path of the file that contains the
   process id of the daemon. This is not supported in Windows.
 
     *Default*: agent.pid
+
+* `ServiceName` - Changes the service name when installing or removing 
+  the service. This allows multiple agents to run as services on the same machine.
+
+    *Default*: MTConnect Agent
 
 * `Port`	- The port number the agent binds to for requests.
 
@@ -363,7 +368,7 @@ Configuration Parameters
     * `SerialNumber` - Replaces the SerialNumber attribute in the device XML.
 
         *Default*: Current value in device XML.
-
+        
     * `UUID` - Replaces the UUID attribute in the device XML.
 
         *Default*: Current value in device XML.
