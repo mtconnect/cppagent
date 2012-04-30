@@ -195,7 +195,7 @@ as well be named `EnergySensor` if desired as illustrated below.
 ###Example 4:###
 
 In this example we change the port to 80 which is the default http port. 
-This also allows HTTP PUT from the local machine and 10.211.55.2.
+This also allows HTTP PUT from the local machine and 10.211.55.2. 
 
     Devices = MyDevices.xml
     Port = 80
@@ -231,7 +231,36 @@ This will map associate the adapters for these two machines to the VMC
 and HMC devices in `MyDevices.xml` file. The ports are defaulted to
 7878, so we are not required to specify them.
 
-###Example 6:###
+###EXample 6:###
+
+In this example we  demonstrate how to change the service name of the agent. This 
+allows a single machine to run multiple agents and/or customize the name of the service. 
+Multiple configuration files can be created for each service, each with a different 
+ServiceName. The configuration file must be referenced as follows:
+
+    C:> agent install myagent.cfg
+
+If myagent.cfg contains the following statements:
+
+    Devices = MyDevices.xml
+    ServiceName = MTC Agent 1
+
+    Adapters
+    {
+        ...
+
+
+The service will now be displayed as "MTC Agent 1" as opposed to "MTConnect Agent"
+and it will automatically load the contents of myagent.cfg with it starts. You can now 
+use the following command to start this from a command prompt:
+
+    C:> net start "MTC Agent 1"
+
+To remove the service, do the following:
+
+    C:> agent remove myagent.cfg
+
+###Example 7:###
 
 Logging configuration is specified using the `logger_config` block. You
 can change the `logging_level` to specify the verbosity of the logging
