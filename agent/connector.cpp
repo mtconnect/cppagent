@@ -94,7 +94,7 @@ void Connector::connect()
 
     
     // Read from the socket, read is a blocking call
-    while (true)
+    while (mConnected)
     {
       uint64 now;
       now = stamper.get_timestamp();
@@ -107,6 +107,7 @@ void Connector::connect()
       if (timeout < 0)
         timeout = 1;
       sockBuf[0] = 0;
+      
       status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
       if (status > 0)
       {
@@ -254,6 +255,8 @@ void Connector::startHeartbeats(const string &aArg)
 
 void Connector::close()
 {
+  dlib::auto_mutex lock(*mCommandLock);
+
   if (mConnected && mConnection.get() != NULL)
   {
     // Close the connection gracefully

@@ -358,6 +358,10 @@ Configuration Parameters
   
     *Default*: false
 
+* `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
+  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
+
+    *Default*: false
 
 ###Adapter configuration items###
 
@@ -433,6 +437,11 @@ Configuration Parameters
 
         *Default*: false
         
+		* `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
+		  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
+
+		    *Default*: false
+
 
 
 logger_config configuration items
