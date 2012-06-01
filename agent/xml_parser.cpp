@@ -566,7 +566,7 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       xmlFreeDoc(document);
 
     sLogger << dlib::LERROR << "Cannot parse asset XML: " << e;
-    throw e;
+    asset = NULL;
   }
   catch (...)
   {
@@ -576,7 +576,7 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       xmlXPathFreeContext(xpathCtx);
     if (document != NULL)
       xmlFreeDoc(document);
-    throw;
+    asset = NULL;
   }
 
   return asset;
@@ -771,12 +771,10 @@ void XmlParser::updateAsset(AssetPtr aAsset, const std::string &aType, const std
       xmlFreeDoc(document);
     
     sLogger << dlib::LERROR << "Cannot parse asset XML: " << e;
-    throw e;
   }
   catch (...)
   {
     if (document != NULL)
       xmlFreeDoc(document);
-    throw;
   }  
 }

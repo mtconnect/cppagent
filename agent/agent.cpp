@@ -418,10 +418,6 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     AssetPtr ptr;
     if (aType == "CuttingTool") {
       ptr = mXmlParser->parseAsset(aId, aType, aAsset);
-      if (ptr->getTimestamp().empty())
-        ptr->setTimestamp(time);
-      if (ptr->getDeviceUuid().empty())
-        ptr->setDeviceUuid(aDevice->getUuid());
     } else {
       ptr.setObject(new Asset(aId, aType, aAsset), true);
       ptr->setTimestamp(time);
@@ -431,6 +427,11 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     if (ptr.getObject() == NULL) {
       sLogger << LWARN << "Asset could not be created";
       return false;
+    } else {
+      if (ptr->getTimestamp().empty())
+        ptr->setTimestamp(time);
+      if (ptr->getDeviceUuid().empty())
+        ptr->setDeviceUuid(aDevice->getUuid());
     }
     
     // Check for overflow
