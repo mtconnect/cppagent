@@ -83,6 +83,9 @@ public:
   virtual void disconnected();
   virtual void connected();
 
+  // Stop 
+  void stop();
+
   /* For the additional devices associated with this adapter */
   void addDevice(std::string &aDevice);
   

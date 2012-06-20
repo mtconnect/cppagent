@@ -53,9 +53,14 @@ Adapter::Adapter(const string& device,
 
 Adapter::~Adapter()
 {
+  if (mRunning) stop();
+}
+
+void Adapter::stop()
+{
   // Will stop threaded object gracefully Adapter::thread()
   mRunning = false;
-  stop();
+  close();
   wait();
 }
 
@@ -344,9 +349,12 @@ void Adapter::thread()
       sLogger << LERROR << "Thread for adapter " << mDeviceName << "'s thread threw an unhandled exception";
     }
 
+    if (!mRunning) break;
+
     // Try to reconnect every 10 seconds
     sLogger << LINFO << "Will try to reconnect in " << mReconnectInterval << " milliseconds";
     dlib::sleep(mReconnectInterval);
   }
+  sLogger << LINFO << "Adapter thread stopped";
 }
 

@@ -308,12 +308,13 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       if (adapter.is_key_defined("Station"))
         device->setStation(adapter["Station"]);
       if (adapter.is_key_defined("SerialNumber"))
-        device->setSerialNumber(adapter["SerialNumber"]);
+        device->setSerialNumber(adapter["SerialNumber"]);       
       
       adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", adp->isDupChecking()));
       adp->setAutoAvailable(get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
       adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", aIgnoreTimestamps ||
                                                                                   adp->isIgnoringTimestamps()));
+      adp->setRealTime(get_bool_with_default(adapter, "RealTime", false));
       adp->setReconnectInterval(reconnectInterval);
       
       if (adapter.is_key_defined("AdditionalDevices")) {

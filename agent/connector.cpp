@@ -40,7 +40,8 @@ static dlib::logger sLogger("input.connector");
 
 /* Connector public methods */
 Connector::Connector(const string& server, unsigned int port, int aLegacyTimeout)
-: mConnected(false), mHeartbeats(false), mLegacyTimeout(aLegacyTimeout * 1000)
+: mConnected(false), mRealTime(false), mHeartbeats(false), 
+  mLegacyTimeout(aLegacyTimeout * 1000)
 {
   mServer = server;
   mPort = port;
@@ -92,7 +93,21 @@ void Connector::connect()
     // Assuming it always enters the while loop, it should never be 1
     mConnected = true;
 
-    
+    // Boost priority if this is a real-time adapter
+    if (mRealTime)
+    {
+#ifdef WIN32
+      HANDLE hand = OpenThread(THREAD_ALL_ACCESS,FALSE,GetCurrentThreadId());
+      SetThreadPriority(hand, THREAD_PRIORITY_TIME_CRITICAL);
+      CloseHandle(hand);
+#else
+      struct sched_param param;
+      param.sched_priority = 30;
+      if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param) != 0)
+        sLogger << LDEBUG << "Cannot set high thread priority";
+#endif
+    }
+
     // Read from the socket, read is a blocking call
     while (mConnected)
     {

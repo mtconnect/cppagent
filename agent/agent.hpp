@@ -180,6 +180,9 @@ public:
   
   // Starting
   virtual void start();
+  
+  // Shutdown
+  void clear();
 
   void registerFile(const std::string &aUri, const std::string &aPath);
   

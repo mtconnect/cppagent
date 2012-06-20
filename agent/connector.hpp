@@ -82,6 +82,8 @@ public:
   
   int getLegacyTimeout() { return mLegacyTimeout / 1000; }
 
+  void setRealTime(bool aV = true) { mRealTime = aV; }
+
 
 protected:
   void startHeartbeats(const std::string &buf);
@@ -102,6 +104,9 @@ protected:
   
   /* The connected state of this connector */
   bool mConnected;
+
+  /* Priority boost */
+  bool mRealTime;
   
   // Heartbeats
   bool mHeartbeats;

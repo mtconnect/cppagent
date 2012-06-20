@@ -210,6 +210,29 @@ void Agent::start()
   }
 }
 
+void Agent::clear()
+{
+  // Stop all adapter threads...
+  vector<Adapter *>::iterator iter;
+  
+  sLogger << LINFO << "Shutting down adapters";
+  // Deletes adapter and waits for it to exit.
+  for (iter = mAdapters.begin(); iter != mAdapters.end(); iter++) {
+    (*iter)->stop();
+  }
+    
+  sLogger << LINFO << "Shutting down server";
+  server::http_1a::clear();
+  sLogger << LINFO << "Shutting completed";
+
+  for (iter = mAdapters.begin(); iter != mAdapters.end(); iter++) {
+    delete (*iter);
+  }
+  
+  mAdapters.clear();
+
+}
+
 // Register a file
 void Agent::registerFile(const string &aUri, const string &aPath)
 {
