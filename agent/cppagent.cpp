@@ -67,6 +67,9 @@ int main(int aArgc, const char *aArgv[])
   AgentConfiguration config;
   dlib::thread_function cmd(commandLine, &config);
 
-  return config.main(aArgc, aArgv);
+  int ret = config.main(aArgc, aArgv);
+  fclose(stdin);
+
+  return ret;
 }
 
