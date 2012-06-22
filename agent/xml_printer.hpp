@@ -93,6 +93,8 @@ namespace XmlPrinter
                            const std::string &aPrefix);
   void addAssetsNamespace(const std::string &aUrn, const std::string &aLocation, 
                          const std::string &aPrefix);
+  void setSchemaVersion(const std::string &aVersion);
+  const std::string &getSchemaVersion();
 
   // For testing
   void clearDevicesNamespaces();
@@ -104,6 +106,11 @@ namespace XmlPrinter
   const std::string getErrorUrn(const std::string &aPrefix);
   const std::string getStreamsUrn(const std::string &aPrefix);
   const std::string getAssetsUrn(const std::string &aPrefix);
+  
+  const std::string getDevicesLocation(const std::string &aPrefix);
+  const std::string getErrorLocation(const std::string &aPrefix);
+  const std::string getStreamsLocation(const std::string &aPrefix);
+  const std::string getAssetsLocation(const std::string &aPrefix);
 };
 
 #endif

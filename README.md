@@ -294,6 +294,114 @@ This will log debug level messages to the current console window. When
 the agent is run with debug, it is sets the logging configuration to
 debug and outputs to the standard output as specified above.
 
+###Example: 8###
+
+The MTConnect C++ Agent supports extensions by allowing you to specify your
+own XSD schema files. These files must include the mtconnect schema and the top
+level node is required to be MTConnect. The "x" in this case is the namespace. You
+MUST NOT use the namespace "m" since it is reserved for MTConnect. See example 9
+for an example of changing the MTConnect schema file location.
+
+There are four namespaces in MTConnect, Devices, Streams, Assets, and Error. In 
+this example we will replace the Streams and devices namespace with our own namespace
+so we can have validatable XML documents. 
+
+	StreamsNamespaces {
+	  x {
+	    Urn = urn:example.com:ExampleStreams:1.2
+	    Location = /schemas/ExampleStreams_1.2.xsd
+	    Path = ./ExampleStreams_1.2.xsd
+	  }
+	}
+
+	DevicesNamespaces {
+	  x {
+	    Urn = urn:example.com:ExampleDevices:1.2
+	    Location = /schemas/ExampleDevices_1.2.xsd
+	    Path = ./ExampleDevices_1.2.xsd
+	  }
+	}
+	
+For each schema file we have three options we need to specify. The Urn
+is the urn in the schema file that will be used in the header. The Location
+is the path specified in the URL when to request the schema file from the 
+HTTP client and the Path is the path on the local file system.
+
+###Example: 9###
+
+If you only want to change the schema location of the MTConnect schema files and 
+serve them from your local agent and not from the default internet location, you
+can use the namespace "m" and give the new schema file location. This MUST be the 
+MTConnect schema files and the urn will always be the MTConnect urn for the "m" 
+namespace -- you cannot change it.
+
+	StreamsNamespaces {
+	  m {
+	    Location = /schemas/MTConnectStreams_1.2.xsd
+	    Path = ./MTConnectStreams_1.2.xsd
+	  }
+	}
+
+	DevicesNamespaces {
+	  m {
+	    Location = /schemas/MTConnectDevices_1.2.xsd
+	    Path = ./MTConnectDevices_1.2.xsd
+	  }
+	}
+    
+The MTConnect agent will now serve the standard MTConnect schema files
+from the local directory using the schema path /schemas/MTConnectDevices_1.2.xsd.
+
+
+###Example: 10###
+
+We can also serve files from the MTConnect Agent as well. In this example
+we can assume we don't have access to the public internet and we would still 
+like to provide the MTConnect streams and devices files but have the MTConnect
+Agent serve them up locally. 
+
+	DevicesNamespaces {
+	  x {
+	    Urn = urn:example.com:ExampleDevices:1.2
+	    Location = /schemas/ExampleDevices_1.2.xsd
+	    Path = ./ExampleDevices_1.2.xsd
+	  }
+
+	Files {
+	  stream { 
+	    Location = /schemas/MTConnectStreams_1.2.xsd
+	    Path = ./MTConnectStreams_1.2.xsd
+	  }
+	  device { 
+	    Location = /schemas/MTConnectDevices_1.2.xsd
+	    Path = ./MTConnectDevices_1.2.xsd
+	  }
+	}
+    
+If you have specified in your xs:include schemaLocation inside the 
+ExampleDevices_1.2.xsd file the location "/schemas/MTConnectStreams_1.2.xsd",
+this will allow it to be served properly. This will can also be done using the 
+devices namespace:
+
+	DevicesNamespaces {
+	  m {
+	    Location = /schemas/MTConnectDevices_1.2.xsd
+	    Path = ./MTConnectDevices_1.2.xsd
+	  }
+	}
+
+The MTConnect agent will allow you to serve any other files you wish as well. You 
+can specify a new static file you would like to deliver:
+
+	Files {
+	  myfile { 
+	    Location = /files/xxx.txt
+	    Path = ./files/xxx.txt
+	  }
+
+The agent will not serve all files from a directory and will not provide an index 
+function as this is insecure and not the intended function of the agent.
+
 Configuration Parameters
 ---------
 
@@ -362,6 +470,10 @@ Configuration Parameters
   the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
 
     *Default*: false
+    
+* `SchemaVersion` - Change the schema version to a different version number.
+
+    *Default*: 1.2
 
 ###Adapter configuration items###
 

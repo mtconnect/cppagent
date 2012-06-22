@@ -73,12 +73,19 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       uuids.insert((*device)->getUuid());
     }
   }
-  catch (exception & e)
+  catch (runtime_error & e)
   {
     sLogger << LFATAL << "Error loading xml configuration: " + configXmlPath;
     sLogger << LFATAL << "Error detail: " << e.what();
     cerr << e.what() << endl;
     throw e;
+  }
+  catch (exception &f)
+  {
+    sLogger << LFATAL << "Error loading xml configuration: " + configXmlPath;
+    sLogger << LFATAL << "Error detail: " << f.what();
+    cerr << f.what() << endl;
+    throw f;    
   }
   
   // Grab data from configuration

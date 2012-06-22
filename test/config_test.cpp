@@ -288,3 +288,31 @@ void ConfigTest::testIgnoreTimestampsOverride()
   CPPUNIT_ASSERT(!adapter->isIgnoringTimestamps());
   
 }
+
+void ConfigTest::testSpecifyMTCNamespace()
+{
+  istringstream streams("StreamsNamespaces {\n"
+                        "m {\n"
+                        "Location = /schemas/MTConnectStreams_1.2.xsd\n"
+                        "Path = ./MTConnectStreams_1.2.xsd\n"
+                        "}\n"
+                        "}\n");
+  
+  mConfig->loadConfig(streams);  
+  string path = XmlPrinter::getStreamsUrn("m");
+  CPPUNIT_ASSERT_EQUAL((string) "", path);
+  string location = XmlPrinter::getStreamsLocation("m");
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectStreams_1.2.xsd", location);
+}
+
+void ConfigTest::testSetSchemaVersion()
+{
+  istringstream streams("SchemaVersion = 1.3\n");
+  
+  mConfig->loadConfig(streams);  
+  string version = XmlPrinter::getSchemaVersion();
+  CPPUNIT_ASSERT_EQUAL((string) "1.3", version);
+  
+  XmlPrinter::setSchemaVersion("1.2");
+}
+

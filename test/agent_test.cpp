@@ -63,9 +63,7 @@ void AgentTest::tearDown()
 
 void AgentTest::testConstructor()
 {
-#ifndef WIN32
-  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17, 8), std::exception);
-#endif
+  CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17, 8), std::runtime_error);
   CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 17, 8));
 }
 

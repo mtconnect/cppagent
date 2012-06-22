@@ -510,6 +510,50 @@ void XmlPrinterTest::testConfiguration()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:SensorConfiguration/m:Channels/m:Channel/m:Description", "Power Channel");
 }
 
+// Schema tests
+void XmlPrinterTest::testChangeVersion()
+{
+  // Devices
+  XmlPrinter::clearDevicesNamespaces();
+  
+  {
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
+                                      "urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
+  }
+
+  XmlPrinter::setSchemaVersion("1.3");
+  
+  {
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
+                                      "urn:mtconnect.org:MTConnectDevices:1.3 http://www.mtconnect.org/schemas/MTConnectDevices_1.3.xsd");
+  }
+
+  XmlPrinter::setSchemaVersion("1.2");
+}
+
+void XmlPrinterTest::testChangeMTCLocation()
+{
+  XmlPrinter::clearDevicesNamespaces();
+  
+  XmlPrinter::setSchemaVersion("1.3");
+  
+  XmlPrinter::addDevicesNamespace("urn:mtconnect.org:MTConnectDevices:1.3",
+                                  "/schemas/MTConnectDevices_1.3.xsd",
+                                  "m");
+
+  
+  {
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
+                                      "urn:mtconnect.org:MTConnectDevices:1.3 /schemas/MTConnectDevices_1.3.xsd");
+  }  
+  
+  XmlPrinter::clearDevicesNamespaces();
+  XmlPrinter::setSchemaVersion("1.2");
+}
+
 
 DataItem * XmlPrinterTest::getDataItem(const char *name)
 {

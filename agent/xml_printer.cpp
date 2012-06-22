@@ -56,6 +56,7 @@ static map<string, SchemaNamespace> sDevicesNamespaces;
 static map<string, SchemaNamespace> sStreamsNamespaces;
 static map<string, SchemaNamespace> sErrorNamespaces;
 static map<string, SchemaNamespace> sAssetsNamespaces;
+static string sSchemaVersion("1.2");
 
 enum EDocumentType {
   eERROR,
@@ -133,6 +134,16 @@ const string XmlPrinter::getDevicesUrn(const std::string &aPrefix)
     return "";
 }
 
+const string XmlPrinter::getDevicesLocation(const std::string &aPrefix)
+{
+  map<string, SchemaNamespace>::iterator ns = sDevicesNamespaces.find(aPrefix);
+  if (ns != sDevicesNamespaces.end())
+    return ns->second.mSchemaLocation;
+  else
+    return "";
+}
+
+
 void XmlPrinter::addErrorNamespace(const std::string &aUrn, const std::string &aLocation, 
                        const std::string &aPrefix)
 {
@@ -158,6 +169,15 @@ const string XmlPrinter::getErrorUrn(const std::string &aPrefix)
     return "";
 }
 
+const string XmlPrinter::getErrorLocation(const std::string &aPrefix)
+{
+  map<string, SchemaNamespace>::iterator ns = sErrorNamespaces.find(aPrefix);
+  if (ns != sErrorNamespaces.end())
+    return ns->second.mSchemaLocation;
+  else
+    return "";
+}
+
 void XmlPrinter::addStreamsNamespace(const std::string &aUrn, const std::string &aLocation, 
                          const std::string &aPrefix)
 {
@@ -174,11 +194,30 @@ void XmlPrinter::clearStreamsNamespaces()
   sStreamsNamespaces.clear();
 }
 
+void XmlPrinter::setSchemaVersion(const std::string &aVersion)
+{
+  sSchemaVersion = aVersion;
+}
+
+const std::string &XmlPrinter::getSchemaVersion()
+{
+  return sSchemaVersion;
+}
+
 const string XmlPrinter::getStreamsUrn(const std::string &aPrefix)
 {
   map<string, SchemaNamespace>::iterator ns = sStreamsNamespaces.find(aPrefix);
   if (ns != sStreamsNamespaces.end())
     return ns->second.mUrn;
+  else
+    return "";
+}
+
+const string XmlPrinter::getStreamsLocation(const std::string &aPrefix)
+{
+  map<string, SchemaNamespace>::iterator ns = sStreamsNamespaces.find(aPrefix);
+  if (ns != sStreamsNamespaces.end())
+    return ns->second.mSchemaLocation;
   else
     return "";
 }
@@ -204,6 +243,15 @@ const string XmlPrinter::getAssetsUrn(const std::string &aPrefix)
   map<string, SchemaNamespace>::iterator ns = sAssetsNamespaces.find(aPrefix);
   if (ns != sAssetsNamespaces.end())
     return ns->second.mUrn;
+  else
+    return "";
+}
+
+const string XmlPrinter::getAssetsLocation(const std::string &aPrefix)
+{
+  map<string, SchemaNamespace>::iterator ns = sAssetsNamespaces.find(aPrefix);
+  if (ns != sAssetsNamespaces.end())
+    return ns->second.mSchemaLocation;
   else
     return "";
 }
@@ -721,7 +769,8 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
                             )
 {
   THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL));
-  
+ 
+  // TODO: Cache the locations and header attributes.
   // Write the root element  
   string xmlType;
   map<string, SchemaNamespace> *namespaces;
@@ -750,7 +799,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
   
   
   string rootName = "MTConnect" + xmlType;
-  string xmlns = "urn:mtconnect.org:" + rootName + ":1.2";  
+  string xmlns = "urn:mtconnect.org:" + rootName + ":" + sSchemaVersion;  
   string location;
   
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST rootName.c_str()));
@@ -769,6 +818,8 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
                                                   BAD_CAST "xmlns:xsi",
                                                   BAD_CAST "http://www.w3.org/2001/XMLSchema-instance"));
   
+  string mtcLocation;
+  
   // Add in the other namespaces if they exist
   map<string, SchemaNamespace>::iterator ns;
   for (ns = namespaces->begin(); ns != namespaces->end(); ns++)
@@ -780,6 +831,9 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
       THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                       BAD_CAST attr.c_str(),
                                                       BAD_CAST ns->second.mUrn.c_str()));
+    } else if (!ns->second.mSchemaLocation.empty()) {
+      // This is the mtconnect namespace
+      mtcLocation = xmlns + " " + ns->second.mSchemaLocation;
     }
     
     // Always take the first location. There should only be one location!
@@ -790,8 +844,10 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
   }
   
   // Write the schema location
-  if (location.empty()) {
-    location = xmlns + " http://www.mtconnect.org/schemas/" + rootName + "_1.2.xsd";
+  if (location.empty() && !mtcLocation.empty()) {
+    location = mtcLocation;
+  } else if (location.empty()) {
+    location = xmlns + " http://www.mtconnect.org/schemas/" + rootName + "_" + sSchemaVersion + ".xsd";
   }
   
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,

@@ -58,6 +58,8 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testLegacyTimeout);
   CPPUNIT_TEST(testIgnoreTimestamps);
   CPPUNIT_TEST(testIgnoreTimestampsOverride);
+  CPPUNIT_TEST(testSpecifyMTCNamespace);
+  CPPUNIT_TEST(testSetSchemaVersion);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -81,6 +83,8 @@ protected:
   void testLegacyTimeout();
   void testIgnoreTimestamps();
   void testIgnoreTimestampsOverride();
+  void testSpecifyMTCNamespace();
+  void testSetSchemaVersion();
 };
 
 #endif

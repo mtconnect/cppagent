@@ -245,6 +245,10 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   loadAllowPut(reader);
   loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps);
   
+  // Check for schema version
+  string schemaVersion = get_with_default(reader, "SchemaVersion", "1.2");
+  XmlPrinter::setSchemaVersion(schemaVersion);
+  
   // Files served by the Agent... allows schema files to be served by
   // agent.
   loadFiles(reader);
@@ -389,14 +393,16 @@ void AgentConfiguration::loadNamespace(dlib::config_reader::kernel_1a &aReader,
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
       const config_reader::kernel_1a &ns = namespaces.block(*block);
-      if (!ns.is_key_defined("Urn"))
+      if (*block != "m" && !ns.is_key_defined("Urn"))
       {
         sLogger << LERROR << "Name space must have a Urn: " << *block;
       } else {
-        string location;
+        string location, urn;
         if (ns.is_key_defined("Location"))
           location = ns["Location"];
-        (*aCallback)(ns["Urn"], location, *block);
+        if (ns.is_key_defined("Urn"))
+          urn = ns["Urn"];        
+        (*aCallback)(urn, location, *block);
         if (ns.is_key_defined("Path") && !location.empty())
           mAgent->registerFile(location, ns["Path"]);        
       }
@@ -415,11 +421,11 @@ void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader)
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
       const config_reader::kernel_1a &file = files.block(*block);
-      if (!file.is_key_defined("Uri") || !file.is_key_defined("Path"))
+      if (!file.is_key_defined("Location") || !file.is_key_defined("Path"))
       {
         sLogger << LERROR << "Name space must have a Uri and Path: " << *block;
       } else {
-        mAgent->registerFile(file["Uri"], file["Path"]);
+        mAgent->registerFile(file["Location"], file["Path"]);
       }
     }
   }
