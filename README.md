@@ -41,15 +41,22 @@ registry in the following location:
 Directories
 -----
 
-* `agent/`        - This contains the main application entry point and the Makefile
+* `agent/`        - This contains the application source files and CMake file.
+
+* `assets/`       - Some example Cutting Tool asset files.
 
 * `lib/`          - Third party library source. Contains source for cppunit, dlib, and libxml++.
 
-* `samples/`	- Sample XML configuration files.
+* `samples/`      - Sample XML configuration files mainly used for tests.
 
-* `src/`		- The main source for the app.
+* `simulator/`    - Ruby scripts to execute an adapter simulator, both command-line and log-replay.
 
 * `test/`         - Various unit tests.
+
+* `tools/`        - Ruby scripts to dump the agent and and the adapter in SHDR format. Includes a sequence 
+                    test script.
+
+* `unix/`         - Unix init.d script
 
 * `win32/`        - Libraries required only for the win32 build and the win32 solution.
 
