@@ -33,8 +33,13 @@
 */
 
 #include "device.hpp"
+#include "dlib/logger.h"
+#include <dlib/misc_api.h>
 
 using namespace std;
+
+static dlib::logger sLogger("device");
+
 
 /* Device public methods */
 Device::Device(std::map<std::string, std::string> attributes)
@@ -58,7 +63,13 @@ void Device::addDeviceDataItem(DataItem& dataItem) {
     mDeviceDataItemsBySource[dataItem.getSource()] = &dataItem;
   if (!dataItem.getName().empty())
     mDeviceDataItemsByName[dataItem.getName()] = &dataItem;
-  mDeviceDataItemsById[dataItem.getId()] = &dataItem;
+  
+  if (mDeviceDataItemsById[dataItem.getId()] != NULL) {
+    sLogger << dlib::LERROR << "Duplicate data item id: " << dataItem.getId() << " for device " 
+            << mName << ", skipping";
+  } else {
+    mDeviceDataItemsById[dataItem.getId()] = &dataItem;
+  }
 }
 
 DataItem * Device::getDeviceDataItem(const std::string& aName) {

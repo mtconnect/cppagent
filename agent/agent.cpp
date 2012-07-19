@@ -447,7 +447,13 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     
     AssetPtr ptr;
     if (aType == "CuttingTool") {
-      ptr = mXmlParser->parseAsset(aId, aType, aAsset);
+      try {
+        ptr = mXmlParser->parseAsset(aId, aType, aAsset);
+      }
+      catch (runtime_error &e) {
+        sLogger << LERROR << "addAsset: Error parsing asset: " << aAsset << "\n" << e.what();
+        return false;
+      }
     } else {
       ptr.setObject(new Asset(aId, aType, aAsset), true);
       ptr->setTimestamp(time);
@@ -514,15 +520,22 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
     
     CuttingToolPtr tool((CuttingTool*) asset.getObject());
     
-    AssetChangeList::iterator iter;
-    for (iter = aList.begin(); iter != aList.end(); ++iter)
-    {
-      if (iter->first == "xml") {
-        mXmlParser->updateAsset(asset, asset->getType(), iter->second);        
-      } else {
-        tool->updateValue(iter->first, iter->second);
-      }        
+    try {
+      AssetChangeList::iterator iter;
+      for (iter = aList.begin(); iter != aList.end(); ++iter)
+      {
+        if (iter->first == "xml") {
+          mXmlParser->updateAsset(asset, asset->getType(), iter->second);        
+        } else {
+          tool->updateValue(iter->first, iter->second);
+        }        
+      }
     }
+    catch (runtime_error &e) {
+      sLogger << LERROR << "updateAsset: Error parsing asset: " << asset << "\n" << e.what();
+      return false;
+    }
+    
     tool->setTimestamp(aTime);
     tool->setDeviceUuid(aDevice->getUuid());
     tool->changed();

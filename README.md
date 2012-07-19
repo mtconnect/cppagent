@@ -582,3 +582,7 @@ logger_config configuration items
       directory as the executable.
 
         *Default*: file `adapter.log`
+
+Adapter Agent Protocol Version 1.2
+-----
+
