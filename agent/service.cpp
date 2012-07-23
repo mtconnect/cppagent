@@ -116,33 +116,34 @@ int MTConnectService::main(int argc, const char *argv[])
     if(argc > 1) {
       if (stricmp( argv[1], "help") == 0 || strncmp(argv[1], "-h", 2) == 0)
       {
-	printf("Usage: agent [help|install|debug|run] [configuration_file]\n"
-	       "       help           Prints this message\n"
-	       "       install        Installs the service\n"
-	       "                      install with -h will display additional options\n"
-	       "       remove         Remove the service\n"
-	       "       debug          Runs the agent on the command line with verbose logging\n"
-	       "       run            Runs the agent on the command line\n"
-	       "       config_file    The configuration file to load\n"
-	       "                      Default: agent.cfg in current directory\n\n"
-	       "When the agent is started without any arguments it is assumed it will be running\n"
-	       "as a service and will begin the service initialization sequence\n");
-	exit(0);
+        printf("Usage: agent [help|install|debug|run] [configuration_file]\n"
+               "       help           Prints this message\n"
+               "       install        Installs the service\n"
+               "                      install with -h will display additional options\n"
+               "       remove         Remove the service\n"
+               "       debug          Runs the agent on the command line with verbose logging\n"
+               "       run            Runs the agent on the command line\n"
+               "       config_file    The configuration file to load\n"
+               "                      Default: agent.cfg in current directory\n\n"
+               "When the agent is started without any arguments it is assumed it will be running\n"
+               "as a service and will begin the service initialization sequence\n");
+        exit(0);
       } else if (stricmp( argv[1], "install") == 0 ) {
-	initialize(argc - 2, argv + 2);
-	install();
-	return 0;
+        initialize(argc - 2, argv + 2);
+        install();
+        return 0;
       } else if (stricmp( argv[1], "remove") == 0 ) {
-	initialize(argc - 2, argv + 2);
-	remove();
-	return 0;
+        initialize(argc - 2, argv + 2);
+        remove();
+        return 0;
       } else if (stricmp( argv[1], "debug") == 0 || stricmp( argv[1], "run") == 0) {
-	if (stricmp( argv[1], "debug") == 0)
-	  mIsDebug = true;
-	initialize(argc - 2, argv + 2);
-	start();
-    dlib::thread_function cmd(commandLine);
-	return 0;
+        if (stricmp( argv[1], "debug") == 0)
+          mIsDebug = true;
+          
+        initialize(argc - 2, argv + 2);
+        start();
+        dlib::thread_function cmd(commandLine);
+        return 0;
       }
     }
   
@@ -150,8 +151,8 @@ int MTConnectService::main(int argc, const char *argv[])
     mIsService = true;
     SERVICE_TABLE_ENTRY DispatchTable[] = 
       { 
-	{  "", (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
-	{ NULL, NULL } 
+        {  "", (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
+        { NULL, NULL } 
       }; 
 
     if (!StartServiceCtrlDispatcher( DispatchTable )) 
@@ -292,7 +293,7 @@ void MTConnectService::install()
   }
 
   RegSetValueEx(agent, "ConfigurationFile", 0, REG_SZ, (const BYTE*) mConfigFile.c_str(), 
-		mConfigFile.size() + 1);
+                mConfigFile.size() + 1);
   RegCloseKey(agent);
 
   sLogger << dlib::LINFO << "Service installed successfully.";
@@ -300,28 +301,28 @@ void MTConnectService::install()
 
 void MTConnectService::remove()
 {
-	SC_HANDLE manager;
-	SC_HANDLE service;
-	manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+        SC_HANDLE manager;
+        SC_HANDLE service;
+        manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
   
-	if (manager == NULL) {
+        if (manager == NULL) {
     sLogger << dlib::LERROR << "Could not open Service Control Manager";
-		return;
+                return;
   }
-	service = ::OpenService(manager, mName.c_str(), SERVICE_ALL_ACCESS);
+        service = ::OpenService(manager, mName.c_str(), SERVICE_ALL_ACCESS);
   CloseServiceHandle(manager);
-	if (service == NULL) {
+        if (service == NULL) {
     sLogger << dlib::LERROR << "Could not open Service " << mName;
-		return;
+                return;
   }
   
-	if(::DeleteService(service) == 0) {
+        if(::DeleteService(service) == 0) {
     sLogger << dlib::LERROR << "Could delete service " << mName;
   } else {
     sLogger << dlib::LINFO << "Successfully removed service " << mName;
   }
   
-	::CloseServiceHandle(service);
+        ::CloseServiceHandle(service);
 }
 
 
