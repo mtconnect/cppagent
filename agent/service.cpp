@@ -42,6 +42,7 @@ static dlib::logger sLogger("init.service");
 #ifdef WIN32
 #define stricmp _stricmp
 #define snprintf _snprintf
+#define strncasecmp _strnicmp
 #else
 #define strncpy_s strncpy
 #endif
@@ -65,6 +66,7 @@ void MTConnectService::initialize(int aArgc, const char *aArgv[])
 #include <stdlib.h>
 #include <string.h>
 #include <strsafe.h>
+#include <dlib/threads.h>
 
 #pragma comment(lib, "advapi32.lib")
 
@@ -83,13 +85,24 @@ VOID ReportSvcStatus( DWORD, DWORD, DWORD );
 VOID SvcInit( DWORD, LPTSTR * ); 
 VOID SvcReportEvent( LPTSTR );
 
-MTConnectService *gService = NULL;
+static MTConnectService *gService = NULL;
 
 static void agent_termination_handler()
 {
-  
+    
 }
 
+void commandLine()
+{
+  puts("> ");
+  char line[1024];
+  while(gets(line) != NULL) {
+    if (strncasecmp(line, "QUIT", 4) == 0) {
+      gService->stop();
+      return;
+    }
+  }
+}
 
 int MTConnectService::main(int argc, const char *argv[]) 
 {
@@ -128,6 +141,7 @@ int MTConnectService::main(int argc, const char *argv[])
 	  mIsDebug = true;
 	initialize(argc - 2, argv + 2);
 	start();
+    dlib::thread_function cmd(commandLine);
 	return 0;
       }
     }

@@ -50,22 +50,9 @@ static logger sLogger("main");
 #define strncasecmp strnicmp
 #endif
 
-void commandLine(AgentConfiguration *aConfig)
-{
-  puts("> ");
-  char line[1024];
-  while(gets(line) != NULL) {
-    if (strncasecmp(line, "QUIT", 4) == 0) {
-      aConfig->stop();
-      return;
-    }
-  }
-}
-
 int main(int aArgc, const char *aArgv[])
 {
   AgentConfiguration config;
-  dlib::thread_function cmd(commandLine, &config);
 
   int ret = config.main(aArgc, aArgv);
   fclose(stdin);
