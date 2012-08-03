@@ -14,6 +14,20 @@
 #include <algorithm>
 #include "../enable_if.h"
 
+namespace __gnu_cxx {
+  template <
+  typename charT,
+  typename traits,
+  typename alloc
+  >
+  inline const typename boost::enable_if<dlib::is_same_type<charT,char>,std::string>::type narrow (
+    const std::basic_string<charT,traits,alloc>& str
+    )
+  {
+    return str;
+  }
+}
+
 namespace dlib
 {
 

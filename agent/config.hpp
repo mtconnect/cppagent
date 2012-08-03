@@ -13,7 +13,7 @@ typedef void (NamespaceFunction)(const std::string &aUrn, const std::string &aLo
 class AgentConfiguration : public MTConnectService {
 public:
   AgentConfiguration();
-  ~AgentConfiguration();
+  virtual ~AgentConfiguration();
   
   // For MTConnectService
   virtual void stop();

@@ -66,7 +66,7 @@ namespace dlib
     )
     {
         // make sure requires clause is not broken
-        DLIB_CASSERT( !is_member(item),
+        DLIB_CASSERT( !this->is_member(item),
                  "\tvoid set::add"
                  << "\n\titem being added must not already be in the set"
                  << "\n\tthis: " << this
@@ -113,7 +113,7 @@ namespace dlib
     )
     {
         // make sure requires clause is not broken
-        DLIB_CASSERT( is_member(item), 
+        DLIB_CASSERT( this->is_member(item), 
                  "\tvoid set::destroy"
                  << "\n\titem should be in the set if it's going to be removed"
                  << "\n\tthis:            " << this
