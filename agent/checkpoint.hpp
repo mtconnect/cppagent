@@ -55,6 +55,7 @@ public:
   std::map<std::string, ComponentEventPtr*> &getEvents() { return mEvents; }
   void getComponentEvents(ComponentEventPtrArray &list,
                           std::set<std::string> *aFilter = NULL);
+  ComponentEventPtr *getEventPtr(std::string anId) { return mEvents[anId]; }
   
 protected:
   std::map<std::string, ComponentEventPtr*> mEvents;

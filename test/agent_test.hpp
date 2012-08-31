@@ -92,6 +92,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testSequenceNumberRollover);
   CPPUNIT_TEST(testStreamDataObserver);
   CPPUNIT_TEST(testFailWithDuplicateDeviceUUID);
+  CPPUNIT_TEST(testMultipleDisconnect);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -157,6 +158,8 @@ protected:
 
   void testAutoAvailable();
   void testIgnoreTimestamps();
+  
+  void testMultipleDisconnect();
 
   // Test assets
   void testAssetStorage();

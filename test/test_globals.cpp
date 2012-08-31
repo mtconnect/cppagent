@@ -221,6 +221,51 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   }
 }
 
+void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
+               CPPUNIT_NS::SourceLine sourceLine)
+
+{
+  xmlNodePtr root = xmlDocGetRootElement(doc);
+
+  xmlXPathContextPtr xpathCtx = xmlXPathNewContext(doc);
+  
+  bool any = false;
+  for (xmlNsPtr ns = root->nsDef; ns != NULL; ns = ns->next)
+  {
+    if (ns->prefix != NULL)
+    {
+      xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href);
+      any = true;
+    }
+  }
+  
+  if (!any)
+    xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href);
+  
+  
+  xmlXPathObjectPtr obj = xmlXPathEvalExpression(BAD_CAST xpath, xpathCtx);
+  
+  if (obj == NULL || obj->nodesetval == NULL)
+  {
+    CPPUNIT_NS::OStringStream message;
+    message << "Xpath " << xpath << " did not match any nodes in XML document";
+    CPPUNIT_NS::Asserter::fail(message.str(), sourceLine);
+    if (obj != NULL)
+      xmlXPathFreeObject(obj);
+    xmlXPathFreeContext(xpathCtx);
+    return;
+  }
+  
+  string message = (string) "Incorrect count of elements for path " + xpath;
+
+  int actual = obj->nodesetval->nodeNr;
+  CPPUNIT_NS::Asserter::failNotEqualIf(actual != expected,
+                                       intToString(expected),
+                                       intToString(actual),
+                                       sourceLine,
+                                       message);
+}
+
 string &trim(string &str)
 {
   char const* delims = " \t\r\n";

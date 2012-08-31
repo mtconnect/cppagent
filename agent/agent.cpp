@@ -564,19 +564,24 @@ void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
                                 dataItem->getDataSource() == NULL &&
                                 dataItem->getType() == "AVAILABILITY")))
       {
-        const string *value = NULL;
-        if (dataItem->isCondition()) {
-          value = &sConditionUnavailable;
-        } else if (dataItem->hasConstraints()) { 
-          std::vector<std::string> &values = dataItem->getConstrainedValues();
-          if (values.size() > 1)
-            value = &sUnavailable;
-        } else {
-          value = &sUnavailable;
-        }
+        ComponentEventPtr *ptr = mLatest.getEventPtr(dataItem->getId());
         
-        if (value != NULL)
-          addToBuffer(dataItem, *value, time);
+        if (ptr != NULL) {
+          const string *value = NULL;
+          if (dataItem->isCondition()) {
+            if ((*ptr)->getLevel() != ComponentEvent::UNAVAILABLE)
+              value = &sConditionUnavailable;
+          } else if (dataItem->hasConstraints()) { 
+            std::vector<std::string> &values = dataItem->getConstrainedValues();
+            if (values.size() > 1 && (*ptr)->getValue() != sUnavailable)
+              value = &sUnavailable;
+          } else if ((*ptr)->getValue() != sUnavailable) {
+            value = &sUnavailable;
+          }
+          
+          if (value != NULL)
+            addToBuffer(dataItem, *value, time);
+        }
       } else if (dataItem == NULL) {
         sLogger << LWARN << "No data Item for " << (*dataItemAssoc).first;
       }
