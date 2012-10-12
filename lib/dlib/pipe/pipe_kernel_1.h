@@ -13,7 +13,7 @@ namespace dlib
     template <
         typename T
         >
-    class pipe_kernel_1 
+    class pipe 
     {
         /*!
             INITIAL VALUE
@@ -60,14 +60,16 @@ namespace dlib
         !*/
 
     public:
+        // this is here for backwards compatibility with older versions of dlib.
+        typedef pipe kernel_1a;
 
         typedef T type;
 
-        explicit pipe_kernel_1 (  
+        explicit pipe (  
             unsigned long maximum_size
         );
 
-        virtual ~pipe_kernel_1 (
+        virtual ~pipe (
         );
 
         void empty (
@@ -93,6 +95,15 @@ namespace dlib
         );
 
         void enable_enqueue (
+        );
+
+        bool is_dequeue_enabled (
+        ) const;
+
+        void disable_dequeue (
+        );
+
+        void enable_dequeue (
         );
 
         bool is_enabled (
@@ -142,10 +153,11 @@ namespace dlib
         mutable unsigned long enqueue_waiters;
         mutable unsigned long unblock_sig_waiters;
         bool enqueue_enabled;
+        bool dequeue_enabled;
 
         // restricted functions
-        pipe_kernel_1(const pipe_kernel_1&);        // copy constructor
-        pipe_kernel_1& operator=(const pipe_kernel_1&);    // assignment operator
+        pipe(const pipe&);        // copy constructor
+        pipe& operator=(const pipe&);    // assignment operator
 
     };    
 
@@ -158,8 +170,8 @@ namespace dlib
     template <
         typename T
         >
-    pipe_kernel_1<T>::
-    pipe_kernel_1 (  
+    pipe<T>::
+    pipe (  
         unsigned long maximum_size
     ) : 
         pipe_size(0),
@@ -174,7 +186,8 @@ namespace dlib
         dequeue_waiters(0),
         enqueue_waiters(0),
         unblock_sig_waiters(0),
-        enqueue_enabled(true)
+        enqueue_enabled(true),
+        dequeue_enabled(true)
     {
     }
 
@@ -183,8 +196,8 @@ namespace dlib
     template <
         typename T
         >
-    pipe_kernel_1<T>::
-    ~pipe_kernel_1 (
+    pipe<T>::
+    ~pipe (
     )
     {
         auto_mutex M(m);
@@ -209,7 +222,7 @@ namespace dlib
     template <
         typename T
         >
-    void pipe_kernel_1<T>::
+    void pipe<T>::
     empty (
     )
     {
@@ -226,7 +239,7 @@ namespace dlib
     template <
         typename T
         >
-    void pipe_kernel_1<T>::
+    void pipe<T>::
     wait_until_empty (
     ) const
     {
@@ -234,7 +247,7 @@ namespace dlib
         // this function is sort of like a call to enqueue so treat it like that
         ++enqueue_waiters;
 
-        while (pipe_size > 0 && enabled )
+        while (pipe_size > 0 && enabled && dequeue_enabled )
             enqueue_sig.wait();
 
         // let the destructor know we are ending if it is blocked waiting
@@ -249,7 +262,7 @@ namespace dlib
     template <
         typename T
         >
-    void pipe_kernel_1<T>::
+    void pipe<T>::
     enable (
     )
     {
@@ -262,7 +275,7 @@ namespace dlib
     template <
         typename T
         >
-    void pipe_kernel_1<T>::
+    void pipe<T>::
     disable (
     )
     {
@@ -278,7 +291,7 @@ namespace dlib
     template <
         typename T
         >
-    bool pipe_kernel_1<T>::
+    bool pipe<T>::
     is_enabled (
     ) const
     {
@@ -291,7 +304,7 @@ namespace dlib
     template <
         typename T
         >
-    unsigned long pipe_kernel_1<T>::
+    unsigned long pipe<T>::
     max_size (
     ) const
     {
@@ -304,7 +317,7 @@ namespace dlib
     template <
         typename T
         >
-    unsigned long pipe_kernel_1<T>::
+    unsigned long pipe<T>::
     size (
     ) const
     {
@@ -317,7 +330,7 @@ namespace dlib
     template <
         typename T
         >
-    bool pipe_kernel_1<T>::
+    bool pipe<T>::
     enqueue (
         T& item
     )
@@ -402,7 +415,7 @@ namespace dlib
     template <
         typename T
         >
-    bool pipe_kernel_1<T>::
+    bool pipe<T>::
     dequeue (
         T& item
     )
@@ -422,11 +435,11 @@ namespace dlib
         }
 
         // wait until there is something in the pipe or we are disabled 
-        while (pipe_size == 0 && enabled &&
+        while (pipe_size == 0 && enabled && dequeue_enabled &&
                !(pipe_max_size == 0 && first == 0 && last == 0) )
             dequeue_sig.wait();
 
-        if (enabled == false)
+        if (enabled == false || dequeue_enabled == false)
         {
             --dequeue_waiters;
             // let the destructor know we are unblocking
@@ -463,7 +476,7 @@ namespace dlib
     template <
         typename T
         >
-    bool pipe_kernel_1<T>::
+    bool pipe<T>::
     enqueue_or_timeout (
         T& item,
         unsigned long timeout
@@ -557,7 +570,7 @@ namespace dlib
     template <
         typename T
         >
-    bool pipe_kernel_1<T>::
+    bool pipe<T>::
     dequeue_or_timeout (
         T& item,
         unsigned long timeout
@@ -579,7 +592,7 @@ namespace dlib
 
         bool timed_out = false;
         // wait until there is something in the pipe or we are disabled or we timeout.
-        while (pipe_size == 0 && enabled && 
+        while (pipe_size == 0 && enabled && dequeue_enabled &&
                !(pipe_max_size == 0 && first == 0 && last == 0) )
         {
             if (timeout == 0 || dequeue_sig.wait_or_timeout(timeout) == false)
@@ -589,7 +602,7 @@ namespace dlib
             }
         }
 
-        if (enabled == false || timed_out)
+        if (enabled == false || timed_out || dequeue_enabled == false)
         {
             --dequeue_waiters;
             // let the destructor know we are unblocking
@@ -626,7 +639,7 @@ namespace dlib
     template <
         typename T
         >
-    void pipe_kernel_1<T>::
+    void pipe<T>::
     wait_for_num_blocked_dequeues (
         unsigned long num
     )const
@@ -634,7 +647,7 @@ namespace dlib
         auto_mutex M(m);
         ++unblock_sig_waiters;
 
-        while ( (dequeue_waiters < num || pipe_size != 0) && enabled)
+        while ( (dequeue_waiters < num || pipe_size != 0) && enabled && dequeue_enabled)
             unblock_sig.wait();
 
         // let the destructor know we are ending if it is blocked waiting
@@ -649,7 +662,7 @@ namespace dlib
     template <
         typename T
         >
-    bool pipe_kernel_1<T>::
+    bool pipe<T>::
     is_enqueue_enabled (
     ) const
     {
@@ -662,7 +675,7 @@ namespace dlib
     template <
         typename T
         >
-    void pipe_kernel_1<T>::
+    void pipe<T>::
     disable_enqueue (
     )
     {
@@ -677,12 +690,53 @@ namespace dlib
     template <
         typename T
         >
-    void pipe_kernel_1<T>::
+    void pipe<T>::
     enable_enqueue (
     )
     {
         auto_mutex M(m);
         enqueue_enabled = true;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    bool pipe<T>::
+    is_dequeue_enabled (
+    ) const
+    {
+        auto_mutex M(m);
+        return dequeue_enabled;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    void pipe<T>::
+    disable_dequeue (
+    )
+    {
+        auto_mutex M(m);
+        dequeue_enabled = false;
+        dequeue_sig.broadcast();
+    }
+
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    void pipe<T>::
+    enable_dequeue (
+    )
+    {
+        auto_mutex M(m);
+        dequeue_enabled = true;
     }
 
 // ----------------------------------------------------------------------------------------

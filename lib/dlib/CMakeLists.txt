@@ -11,9 +11,6 @@ cmake_minimum_required(VERSION 2.4)
 # Suppress cmake warnings about changes in new versions.
 if(COMMAND cmake_policy) 
    cmake_policy(SET CMP0003 NEW) 
-   if(POLICY CMP0015)
-      cmake_policy(SET CMP0015 NEW)
-   endif()
 endif()
 
 
@@ -54,15 +51,24 @@ set (DLIB_ENABLE_ASSERTS_STR
 "Enable this if you want to turn on the DLIB_ASSERT macro" )
 set (DLIB_USE_BLAS_STR
 "Disable this if you don't want to use a BLAS library" )
+set (DLIB_USE_LAPACK_STR
+"Disable this if you don't want to use a LAPACK library" )
 set (DLIB_LINK_WITH_LIBPNG_STR
 "Disable this if you don't want to link against libpng" )
+set (DLIB_LINK_WITH_LIBJPEG_STR
+"Disable this if you don't want to link against libjpeg" )
+set (DLIB_LINK_WITH_SQLITE3_STR
+"Disable this if you don't want to link against sqlite3" )
 
 option(DLIB_ISO_CPP_ONLY ${DLIB_ISO_CPP_ONLY_STR} OFF)
 option(DLIB_NO_GUI_SUPPORT ${DLIB_NO_GUI_SUPPORT_STR} OFF)
 option(DLIB_ENABLE_STACK_TRACE ${DLIB_ENABLE_STACK_TRACE_STR} OFF)
 option(DLIB_ENABLE_ASSERTS ${DLIB_ENABLE_ASSERTS_STR} OFF)
 option(DLIB_USE_BLAS ${DLIB_USE_BLAS_STR} ON)
+option(DLIB_USE_LAPACK ${DLIB_USE_LAPACK_STR} ON)
 option(DLIB_LINK_WITH_LIBPNG ${DLIB_LINK_WITH_LIBPNG_STR} ON)
+option(DLIB_LINK_WITH_LIBJPEG ${DLIB_LINK_WITH_LIBJPEG_STR} ON)
+option(DLIB_LINK_WITH_SQLITE3 ${DLIB_LINK_WITH_SQLITE3_STR} ON)
 
 
 add_library(dlib STATIC all/source.cpp )
@@ -143,24 +149,61 @@ if (NOT DLIB_ISO_CPP_ONLY)
       set(PNG_FIND_QUIETLY ON)
       include(FindPNG)
       if (PNG_FOUND)
-         include_directories(${PNG_PNG_INCLUDE_DIR})
+         include_directories(${PNG_INCLUDE_DIR})
          set (dlib_needed_libraries ${dlib_needed_libraries} ${PNG_LIBRARY})
       else()
          set(DLIB_LINK_WITH_LIBPNG OFF CACHE STRING ${DLIB_LINK_WITH_LIBPNG_STR} FORCE )
       endif()
    endif()
 
-
-   if (DLIB_USE_BLAS)
-      # Try to find a BLAS library
-      include(cmake_find_blas.txt)
-      if (blas_found)
-         set (dlib_needed_libraries ${dlib_needed_libraries} ${blas_libraries})
+   if (DLIB_LINK_WITH_LIBJPEG)
+      # try to find libjpeg 
+      include(FindJPEG)
+      if (JPEG_FOUND)
+         include_directories(${JPEG_INCLUDE_DIR})
+         set (dlib_needed_libraries ${dlib_needed_libraries} ${JPEG_LIBRARY})
       else()
-         set(DLIB_USE_BLAS OFF CACHE STRING ${DLIB_USE_BLAS_STR} FORCE )
+         set(DLIB_LINK_WITH_LIBJPEG OFF CACHE STRING ${DLIB_LINK_WITH_LIBJPEG_STR} FORCE )
       endif()
    endif()
 
+
+   if (DLIB_USE_BLAS OR DLIB_USE_LAPACK)
+      # Try to find BLAS and LAPACK 
+      include(cmake_find_blas.txt)
+
+      if (DLIB_USE_BLAS)
+         if (blas_found)
+            set (dlib_needed_libraries ${dlib_needed_libraries} ${blas_libraries})
+         else()
+            set(DLIB_USE_BLAS OFF CACHE STRING ${DLIB_USE_BLAS_STR} FORCE )
+         endif()
+      endif()
+
+      if (DLIB_USE_LAPACK)
+         if (lapack_found)
+            set (dlib_needed_libraries ${dlib_needed_libraries} ${lapack_libraries})
+         else()
+            set(DLIB_USE_LAPACK OFF CACHE STRING ${DLIB_USE_LAPACK_STR} FORCE )
+         endif()
+      endif()
+   endif()
+
+
+
+   if (DLIB_LINK_WITH_SQLITE3)
+      find_library(sqlite sqlite3)
+      # make sure sqlite3.h is in the include path
+      find_path(sqlite_path sqlite3.h)
+      if (sqlite AND sqlite_path)
+         get_filename_component(sqlite_path2 ${sqlite_path} PATH CACHE)
+         include_directories(${sqlite_path2})
+         set(dlib_needed_libraries ${dlib_needed_libraries} ${sqlite} )
+      else()
+         set(DLIB_LINK_WITH_SQLITE3 OFF CACHE STRING ${DLIB_LINK_WITH_SQLITE3_STR} FORCE )
+      endif()
+      mark_as_advanced(sqlite sqlite_path sqlite_path2)
+   endif()
 
 
    target_link_libraries(dlib ${dlib_needed_libraries} )
@@ -173,10 +216,16 @@ include(TestForSTDNamespace)
 include(TestForANSIStreamHeaders)
 
 
-if (DLIB_LINK_WITH_LIBPNG)
+if (DLIB_LINK_WITH_LIBPNG AND NOT DLIB_ISO_CPP_ONLY)
    add_global_define(DLIB_PNG_SUPPORT)
 else()
    remove_global_define(DLIB_PNG_SUPPORT)
+endif()
+
+if (DLIB_LINK_WITH_LIBJPEG AND NOT DLIB_ISO_CPP_ONLY)
+   add_global_define(DLIB_JPEG_SUPPORT)
+else()
+   remove_global_define(DLIB_JPEG_SUPPORT)
 endif()
 
 
@@ -184,6 +233,12 @@ if (DLIB_USE_BLAS AND blas_found)
    add_global_define(DLIB_USE_BLAS)
 else()
    remove_global_define(DLIB_USE_BLAS)
+endif()
+
+if (DLIB_USE_LAPACK AND lapack_found)
+   add_global_define(DLIB_USE_LAPACK)
+else()
+   remove_global_define(DLIB_USE_LAPACK)
 endif()
 
 

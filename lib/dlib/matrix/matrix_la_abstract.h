@@ -62,6 +62,8 @@ namespace dlib
             - #w.nc() == m.nc()
             - #v.nr() == m.nc()
             - #v.nc() == m.nc()
+            - if DLIB_USE_LAPACK is #defined then the xGESVD routine
+              from LAPACK is used to compute the SVD.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -98,6 +100,11 @@ namespace dlib
                   output state is undefined.
             - returns an error code of 0, if no errors and 'k' if we fail to
               converge at the 'kth' singular value.
+            - if (DLIB_USE_LAPACK is #defined) then 
+                - if (withu == withv) then
+                    - the xGESDD routine from LAPACK is used to compute the SVD.
+                - else
+                    - the xGESVD routine from LAPACK is used to compute the SVD.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -122,6 +129,8 @@ namespace dlib
             - #w.nc() == 1 
             - #v.nr() == m.nc()
             - #v.nc() == m.nc()
+            - if DLIB_USE_LAPACK is #defined then the xGESVD routine
+              from LAPACK is used to compute the SVD.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -181,6 +190,13 @@ namespace dlib
             - else
                 - returns a matrix with the same dimensions as A but it 
                   will have a bogus value.  I.e. it won't be a decomposition.
+                  In this case the algorithm returns a partial decomposition.
+                - You can tell when chol fails by looking at the lower right
+                  element of the returned matrix.  If it is 0 then it means
+                  A does not have a cholesky decomposition.  
+
+            - If DLIB_USE_LAPACK is defined then the LAPACK routine xPOTRF 
+              is used to compute the cholesky decomposition.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -243,6 +259,9 @@ namespace dlib
                 LU decomposition is in the solution of square systems of simultaneous
                 linear equations.  This will fail if is_singular() returns true (or
                 if A is very nearly singular).
+
+                If DLIB_USE_LAPACK is defined then the LAPACK routine xGETRF 
+                is used to compute the LU decomposition.
         !*/
 
     public:
@@ -387,6 +406,9 @@ namespace dlib
                 If the matrix is not symmetric or positive definite, the function
                 computes only a partial decomposition.  This can be tested with
                 the is_spd() flag.
+            
+                If DLIB_USE_LAPACK is defined then the LAPACK routine xPOTRF 
+                is used to compute the cholesky decomposition.
         !*/
 
     public:
@@ -486,6 +508,9 @@ namespace dlib
                 The Q and R factors can be retrieved via the get_q() and get_r()
                 methods. Furthermore, a solve() method is provided to find the
                 least squares solution of Ax=b using the QR factors.  
+
+                If DLIB_USE_LAPACK is #defined then the xGEQRF routine
+                from LAPACK is used to compute the QR decomposition.
         !*/
 
     public:
@@ -497,7 +522,6 @@ namespace dlib
         typedef typename matrix_exp_type::layout_type layout_type;
 
         typedef matrix<type,0,0,mem_manager_type,layout_type> matrix_type;
-        typedef matrix<type,0,1,mem_manager_type,layout_type> column_vector_type;
 
         template <typename EXP>
         qr_decomposition(
@@ -536,17 +560,6 @@ namespace dlib
         /*!
             ensures
                 - returns the number of columns in the input matrix
-        !*/
-
-        const matrix_type get_householder (
-        )  const;
-        /*!
-            ensures
-                - returns a matrix H such that:
-                    - H is the lower trapezoidal matrix whose columns define the 
-                      Householder reflection vectors from QR factorization 
-                    - H.nr() == nr()
-                    - H.nc() == nc()
         !*/
 
         const matrix_type get_r (
@@ -632,6 +645,8 @@ namespace dlib
                     - V*trans(V) should be equal to the identity matrix.  That is, all the
                       eigenvectors in V should be orthonormal. 
                         - So A == V*D*trans(V)
+                    - If DLIB_USE_LAPACK is #defined then this object uses the xSYEVR LAPACK
+                      routine.
 
                 On the other hand, if A is not symmetric then:
                     - Some of the eigenvalues and eigenvectors might be complex numbers.  
@@ -642,6 +657,8 @@ namespace dlib
                     - V*trans(V) won't be equal to the identity matrix but it is usually
                       invertible.  So A == V*D*inv(V) is usually a valid statement but
                       A == V*D*trans(V) won't be.
+                    - If DLIB_USE_LAPACK is #defined then this object uses the xGEEV LAPACK
+                      routine.
         !*/
 
     public:
@@ -673,6 +690,35 @@ namespace dlib
                 - computes the eigenvalue decomposition of A.  
                 - #get_eigenvalues() == the eigenvalues of A
                 - #get_v() == all the eigenvectors of A
+        !*/
+
+        template <typename EXP>
+        eigenvalue_decomposition(
+            const matrix_op<op_make_symmetric<EXP> >& A
+        ); 
+        /*!
+            requires
+                - A.nr() == A.nc() 
+                - A.size() > 0
+                - EXP::type == eigenvalue_decomposition::type 
+            ensures
+                - #dim() == A.nr()
+                - computes the eigenvalue decomposition of the symmetric matrix A.  Does so
+                  using a method optimized for symmetric matrices.
+                - #get_eigenvalues() == the eigenvalues of A
+                - #get_v() == all the eigenvectors of A
+                - moreover, since A is symmetric there won't be any imaginary eigenvalues. So 
+                  we will have:
+                    - #get_imag_eigenvalues() == 0
+                    - #get_real_eigenvalues() == the eigenvalues of A
+                    - #get_pseudo_v() == all the eigenvectors of A
+                    - diagm(#get_real_eigenvalues()) == #get_pseudo_d()
+
+                Note that the symmetric matrix operator is created by the
+                dlib::make_symmetric() function.  This function simply reflects
+                the lower triangular part of a square matrix into the upper triangular
+                part to create a symmetric matrix.  It can also be used to denote that a 
+                matrix is already symmetric using the C++ type system.
         !*/
 
         long dim (

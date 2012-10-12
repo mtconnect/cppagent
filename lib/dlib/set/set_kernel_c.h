@@ -88,14 +88,14 @@ namespace dlib
     )
     {
         // make sure requires clause is not broken
-        DLIB_CASSERT( is_member(item) &&
-                 (reinterpret_cast<const void*>(&item) != reinterpret_cast<void*>(&item_copy)),
+        DLIB_CASSERT( this->is_member(item) &&
+                 (static_cast<const void*>(&item) != static_cast<void*>(&item_copy)),
                  "\tvoid set::remove"
                  << "\n\titem should be in the set if it's going to be removed"
                  << "\n\tthis:            " << this
                  << "\n\t&item:           " << &item 
                  << "\n\t&item_copy:      " << &item_copy
-                 << "\n\tis_member(item): " << (is_member(item)?"true":"false")
+                 << "\n\tis_member(item): " << (this->is_member(item)?"true":"false")
         );
 
         // call the real function

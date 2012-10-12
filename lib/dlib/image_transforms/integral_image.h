@@ -18,14 +18,13 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    class integral_image;
-
-// ----------------------------------------------------------------------------------------
-
-    class integral_image : noncopyable
+    template <
+        typename T
+        >
+    class integral_image_generic : noncopyable
     {
     public:
-        typedef long value_type;
+        typedef T value_type;
 
         long nr() const { return int_img.nr(); }
         long nc() const { return int_img.nc(); }
@@ -35,11 +34,11 @@ namespace dlib
             const image_type& img
         )
         {
-            unsigned long pixel;
+            T pixel;
             int_img.set_size(img.nr(), img.nc());
 
             // compute the first row of the integral image
-            unsigned long temp = 0;
+            T temp = 0;
             for (long c = 0; c < img.nc(); ++c)
             {
                 assign_pixel(pixel, img[0][c]);
@@ -61,19 +60,20 @@ namespace dlib
 
         }
 
-        long get_sum_of_area (
+        value_type get_sum_of_area (
             const rectangle& rect
         ) const
         {
-            DLIB_ASSERT(get_rect(*this).contains(rect) == true,
-                "\tlong get_sum_of_area(rect)"
+            DLIB_ASSERT(get_rect(*this).contains(rect) == true && rect.is_empty() == false,
+                "\tvalue_type get_sum_of_area(rect)"
                 << "\n\tYou have given a rectangle that goes outside the image"
                 << "\n\tthis:            " << this
+                << "\n\trect.is_empty(): " << rect.is_empty()
                 << "\n\trect:            " << rect 
                 << "\n\tget_rect(*this): " << get_rect(*this) 
             );
 
-            unsigned long top_left = 0, top_right = 0, bottom_left = 0, bottom_right = 0;
+            T top_left = 0, top_right = 0, bottom_left = 0, bottom_right = 0;
 
             bottom_right = int_img[rect.bottom()][rect.right()];
             if (rect.left()-1 >= 0 && rect.top()-1 >= 0)
@@ -96,10 +96,14 @@ namespace dlib
 
     private:
 
-        array2d<unsigned long>::kernel_1a int_img;
+        array2d<T> int_img;
 
 
     };
+
+// ----------------------------------------------------------------------------------------
+
+    typedef integral_image_generic<long> integral_image;
 
 // ----------------------------------------------------------------------------------------
 

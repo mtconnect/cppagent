@@ -12,20 +12,29 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename T
+        >
     inline char edge_orientation (
-        long x,
-        long y
+        const T& x_,
+        const T& y_
     )
     {
+
         // if this is a perfectly horizontal gradient then return right away
-        if (x == 0)
+        if (x_ == 0)
         {
             return '|';
         }
-        else if (y == 0) // if this is a perfectly vertical gradient then return right away
+        else if (y_ == 0) // if this is a perfectly vertical gradient then return right away
         {
             return '-';
         }
+
+        // Promote x so that when we multiply by 128 later we know overflow won't happen.
+        typedef typename promote<T>::type type;
+        type x = x_;
+        type y = y_;
 
         if (x < 0)
         {
@@ -33,8 +42,8 @@ namespace dlib
             if (y < 0)
             {
                 y = -y;
-                x <<= 7;
-                const long temp = x/y;
+                x *= 128;
+                const type temp = x/y;
                 if (temp > 309)
                     return '-';
                 else if (temp > 53)
@@ -44,8 +53,8 @@ namespace dlib
             }
             else
             {
-                x <<= 7;
-                const long temp = x/y;
+                x *= 128;
+                const type temp = x/y;
                 if (temp > 309)
                     return '-';
                 else if (temp > 53)
@@ -59,9 +68,9 @@ namespace dlib
             if (y < 0)
             {
                 y = -y;
-                x <<= 7;
+                x *= 128;
 
-                const long temp = x/y;
+                const type temp = x/y;
                 if (temp > 309)
                     return '-';
                 else if (temp > 53)
@@ -71,9 +80,9 @@ namespace dlib
             }
             else
             {
-                x <<= 7;
+                x *= 128;
 
-                const long temp = x/y;
+                const type temp = x/y;
                 if (temp > 309)
                     return '-';
                 else if (temp > 53)
@@ -97,20 +106,21 @@ namespace dlib
         out_image_type& vert
     )
     {
-        COMPILE_TIME_ASSERT(is_signed_type<typename out_image_type::type>::value);
-        DLIB_ASSERT( (((void*)&in_img != (void*)&horz) && ((void*)&in_img != (void*)&vert) && ((void*)&vert != (void*)&horz)),
+        COMPILE_TIME_ASSERT(pixel_traits<typename out_image_type::type>::is_unsigned == false);
+        DLIB_ASSERT( !is_same_object(in_img,horz) && !is_same_object(in_img,vert) &&
+                     !is_same_object(horz,vert),
             "\tvoid sobel_edge_detector(in_img, horz, vert)"
-            << "\n\tYou can't give the same image as more than one argument"
-            << "\n\t&in_img: " << &in_img 
-            << "\n\t&horz:   " << &horz 
-            << "\n\t&vert:   " << &vert 
+            << "\n\t You can't give the same image as more than one argument"
+            << "\n\t is_same_object(in_img,horz): " << is_same_object(in_img,horz)
+            << "\n\t is_same_object(in_img,vert): " << is_same_object(in_img,vert)
+            << "\n\t is_same_object(horz,vert):    " << is_same_object(horz,vert)
             );
 
 
-        const long vert_filter[3][3] = {{-1,-2,-1}, 
+        const int vert_filter[3][3] = {{-1,-2,-1}, 
         {0,0,0}, 
         {1,2,1}};
-        const long horz_filter[3][3] = { {-1,0,1}, 
+        const int horz_filter[3][3] = { {-1,0,1}, 
         {-2,0,2}, 
         {-1,0,1}};
 
@@ -135,9 +145,11 @@ namespace dlib
         {
             for (long c = first_col; c < last_col; ++c)
             {
-                unsigned long p;
-                long horz_temp = 0;
-                long vert_temp = 0;
+                typedef typename pixel_traits<typename in_image_type::type>::basic_pixel_type bp_type;
+
+                typename promote<bp_type>::type p, horz_temp, vert_temp;
+                horz_temp = 0;
+                vert_temp = 0;
                 for (long m = 0; m < M; ++m)
                 {
                     for (long n = 0; n < N; ++n)
@@ -145,19 +157,29 @@ namespace dlib
                         // pull out the current pixel and put it into p
                         p = get_pixel_intensity(in_img[r-M/2+m][c-N/2+n]);
 
-                        horz_temp += static_cast<long>(p)*horz_filter[m][n];
-                        vert_temp += static_cast<long>(p)*vert_filter[m][n];
+                        horz_temp += p*horz_filter[m][n];
+                        vert_temp += p*vert_filter[m][n];
                     }
                 }
 
-                horz[r][c] = horz_temp;
-                vert[r][c] = vert_temp;
+                assign_pixel(horz[r][c] , horz_temp);
+                assign_pixel(vert[r][c] , vert_temp);
 
             }
         }
     }
 
 // ----------------------------------------------------------------------------------------
+
+    namespace impl
+    {
+        template <typename T>
+        typename promote<T>::type square (const T& a)
+        { 
+            typedef typename promote<T>::type type;
+            return static_cast<T>(a)*static_cast<T>(a); 
+        }
+    }
 
     template <
         typename in_image_type,
@@ -178,18 +200,16 @@ namespace dlib
             << "\n\tvert.nr():   " << vert.nr() 
             << "\n\tvert.nc():   " << vert.nc() 
             );
-        DLIB_ASSERT( ((void*)&out_img != (void*)&horz) && ((void*)&out_img != (void*)&vert),
+        DLIB_ASSERT( !is_same_object(out_img,horz) && !is_same_object(out_img,vert),
             "\tvoid suppress_non_maximum_edges(horz, vert, out_img)"
-            << "\n\tYou can't give the same image as more than one argument"
-            << "\n\t&horz:    " << &horz 
-            << "\n\t&vert:    " << &vert 
-            << "\n\t&out_img: " << &out_img 
+            << "\n\t out_img can't be the same as one of the input images."
+            << "\n\t is_same_object(out_img,horz):    " << is_same_object(out_img,horz)
+            << "\n\t is_same_object(out_img,vert):    " << is_same_object(out_img,vert)
             );
 
         using std::min;
         using std::abs;
 
-        typedef typename out_image_type::type pixel_type;
 
         // if there isn't any input image then don't do anything
         if (horz.size() == 0)
@@ -218,41 +238,44 @@ namespace dlib
         {
             for (long c = first_col; c < last_col; ++c)
             {
-                const long y = horz[r][c];
-                const long x = vert[r][c];
+                typedef typename promote<typename in_image_type::type>::type T;
+                const T y = horz[r][c];
+                const T x = vert[r][c];
 
-                const long val = abs(horz[r][c]) + abs(vert[r][c]); 
+                using impl::square;
+
+                const T val = square(horz[r][c]) + square(vert[r][c]); 
 
                 const char ori = edge_orientation(x,y);
                 const unsigned char zero = 0;
                 switch (ori)
                 {
                     case '-':
-                        if (abs(horz[r-1][c])+abs(vert[r-1][c]) > val || abs(horz[r+1][c]) + abs(vert[r+1][c]) > val)
+                        if (square(horz[r-1][c])+square(vert[r-1][c]) > val || square(horz[r+1][c]) + square(vert[r+1][c]) > val)
                             assign_pixel(out_img[r][c] , zero);
                         else
-                            assign_pixel(out_img[r][c] , static_cast<unsigned long>(val));
+                            assign_pixel(out_img[r][c] , std::sqrt((double)val));
                         break;
 
                     case '|':
-                        if (abs(horz[r][c-1]) + abs(vert[r][c-1]) > val || abs(horz[r][c+1]) + abs(vert[r][c+1]) > val)
+                        if (square(horz[r][c-1]) + square(vert[r][c-1]) > val || square(horz[r][c+1]) + square(vert[r][c+1]) > val)
                             assign_pixel(out_img[r][c] , zero);
                         else
-                            assign_pixel(out_img[r][c] , static_cast<unsigned long>(val));
+                            assign_pixel(out_img[r][c] , std::sqrt((double)val));
                         break;
 
                     case '/':
-                        if (abs(horz[r-1][c-1]) + abs(vert[r-1][c-1]) > val || abs(horz[r+1][c+1]) + abs(vert[r+1][c+1]) > val)
+                        if (square(horz[r-1][c-1]) + square(vert[r-1][c-1]) > val || square(horz[r+1][c+1]) + square(vert[r+1][c+1]) > val)
                             assign_pixel(out_img[r][c] , zero);
                         else
-                            assign_pixel(out_img[r][c] , static_cast<unsigned long>(val));
+                            assign_pixel(out_img[r][c] , std::sqrt((double)val));
                         break;
 
                     case '\\':
-                        if (abs(horz[r+1][c-1]) + abs(vert[r+1][c-1]) > val || abs(horz[r-1][c+1]) + abs(vert[r-1][c+1]) > val)
+                        if (square(horz[r+1][c-1]) + square(vert[r+1][c-1]) > val || square(horz[r-1][c+1]) + square(vert[r-1][c+1]) > val)
                             assign_pixel(out_img[r][c] , zero);
                         else
-                            assign_pixel(out_img[r][c] , static_cast<unsigned long>(val));
+                            assign_pixel(out_img[r][c] , std::sqrt((double)val));
                         break;
 
                 }

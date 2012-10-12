@@ -8,34 +8,41 @@
 #include "../noncopyable.h"
 #include "../serialize.h"
 #include <new>
+#include <iostream>
 
 namespace dlib
 {
 
 // ----------------------------------------------------------------------------------------
 
+    struct _void{};
+    inline void serialize( const _void&, std::ostream&){}
+    inline void deserialize(  _void&, std::istream&){}
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename T1,
-        typename T2 = T1,
-        typename T3 = T1,
-        typename T4 = T1,
-        typename T5 = T1, 
-        typename T6 = T1,
-        typename T7 = T1,
-        typename T8 = T1,
-        typename T9 = T1,
-        typename T10 = T1,
+        typename T2 = _void,
+        typename T3 = _void,
+        typename T4 = _void,
+        typename T5 = _void, 
+        typename T6 = _void,
+        typename T7 = _void,
+        typename T8 = _void,
+        typename T9 = _void,
+        typename T10 = _void,
 
-        typename T11 = T1,
-        typename T12 = T1,
-        typename T13 = T1,
-        typename T14 = T1,
-        typename T15 = T1,
-        typename T16 = T1,
-        typename T17 = T1,
-        typename T18 = T1,
-        typename T19 = T1,
-        typename T20 = T1
+        typename T11 = _void,
+        typename T12 = _void,
+        typename T13 = _void,
+        typename T14 = _void,
+        typename T15 = _void,
+        typename T16 = _void,
+        typename T17 = _void,
+        typename T18 = _void,
+        typename T19 = _void,
+        typename T20 = _void
         >
     class type_safe_union : noncopyable
     {
@@ -48,6 +55,24 @@ namespace dlib
         !*/
 
     private:
+
+        template <typename T, typename U>
+        void invoke_on (
+            T& obj,
+            U& item
+        ) const
+        {
+            obj(item);
+        }
+
+        template <typename T>
+        void invoke_on (
+            T& ,
+            _void 
+        ) const
+        {
+        }
+
 
         const static size_t max_size = tmax<tmax<tmax<tmax<tmax<tmax<tmax<tmax<tmax<tmax<
                                        tmax<tmax<tmax<tmax<tmax<tmax<tmax<tmax<tmax<sizeof(T1),
@@ -78,6 +103,38 @@ namespace dlib
         int type_identity;
 
         // --------------------------------------------
+
+        template <typename T>
+        void validate_type()
+        {
+            // ERROR: You are trying to get a type of object that isn't
+            // representable by this type_safe_union.  I.e. The given
+            // type T isn't one of the ones given to this object's template
+            // arguments.
+            COMPILE_TIME_ASSERT(( is_same_type<T,T1>::value ||
+                                 is_same_type<T,T2>::value ||
+                                 is_same_type<T,T3>::value ||
+                                 is_same_type<T,T4>::value ||
+                                 is_same_type<T,T5>::value ||
+                                 is_same_type<T,T6>::value ||
+                                 is_same_type<T,T7>::value ||
+                                 is_same_type<T,T8>::value ||
+                                 is_same_type<T,T9>::value ||
+                                 is_same_type<T,T10>::value ||
+
+                                 is_same_type<T,T11>::value ||
+                                 is_same_type<T,T12>::value ||
+                                 is_same_type<T,T13>::value ||
+                                 is_same_type<T,T14>::value ||
+                                 is_same_type<T,T15>::value ||
+                                 is_same_type<T,T16>::value ||
+                                 is_same_type<T,T17>::value ||
+                                 is_same_type<T,T18>::value ||
+                                 is_same_type<T,T19>::value ||
+                                 is_same_type<T,T20>::value 
+                                    ));
+
+        }
 
 
         struct destruct_helper
@@ -116,6 +173,45 @@ namespace dlib
         }
 
         template <typename T>
+        void construct (
+            const T& item
+        )  
+        { 
+            if (type_identity != get_type_id<T>())
+            {
+                destruct(); 
+                new(mem.get()) T(item); 
+                type_identity = get_type_id<T>();
+            }
+        }
+
+        template <typename T> 
+        T& unchecked_get(
+        ) 
+        /*!
+            requires
+                - contains<T>() == true
+            ensures
+                - returns a non-const reference to the T object
+        !*/
+        { 
+            return *static_cast<T*>(mem.get()); 
+        }
+
+        template <typename T> 
+        const T& unchecked_get(
+        ) const
+        /*!
+            requires
+                - contains<T>() == true
+            ensures
+                - returns a const reference to the T object
+        !*/
+        { 
+            return *static_cast<const T*>(mem.get()); 
+        }
+
+        template <typename T>
         void operator() (T& item) 
         /*
             This function is used by the swap function of this class.  See that
@@ -127,8 +223,39 @@ namespace dlib
 
     public:
 
+        typedef T1 type1;
+        typedef T2 type2;
+        typedef T3 type3;
+        typedef T4 type4;
+        typedef T5 type5;
+        typedef T6 type6;
+        typedef T7 type7;
+        typedef T8 type8;
+        typedef T9 type9;
+        typedef T10 type10;
+        typedef T11 type11;
+        typedef T12 type12;
+        typedef T13 type13;
+        typedef T14 type14;
+        typedef T15 type15;
+        typedef T16 type16;
+        typedef T17 type17;
+        typedef T18 type18;
+        typedef T19 type19;
+        typedef T20 type20;
+
+
         type_safe_union() : type_identity(0) 
         { 
+        }
+
+        template <typename T>
+        type_safe_union (
+            const T& item
+        ) : type_identity(0)
+        {
+            validate_type<T>();
+            construct(item);
         }
 
         ~type_safe_union()
@@ -182,86 +309,20 @@ namespace dlib
             return type_identity == 0;
         }
 
-    private:
-        struct serialize_helper
-        {
-            /*
-                This is a function object to help us serialize type_safe_unions
-            */
-
-            std::ostream& out;
-            serialize_helper(std::ostream& out_): out(out_) {}
-            template <typename T>
-            void operator() (const T& item) const { serialize(item, out); } 
-        };
 
     public:
 
+        template <
+            typename t1, typename t2, typename t3, typename t4, typename t5,
+            typename t6, typename t7, typename t8, typename t9, typename t10,
+            typename t11, typename t12, typename t13, typename t14, typename t15,
+            typename t16, typename t17, typename t18, typename t19, typename t20
+            >
         friend void serialize (
-            const type_safe_union& item,
+            const type_safe_union<t1,t2,t3,t4,t5,t6,t7,t8,t9,t10, t11,t12,t13,t14,t15,t16,t17,t18,t19,t20>& item,
             std::ostream& out
-        )
-        {
-            try
-            {
-                // save the type_identity
-                serialize(item.type_identity, out);
-                // Now save whatever it is item contains.  Note that the const cast is ok
-                // here since serialize_helper doesn't modify anything in item.  
-                const_cast<type_safe_union&>(item).apply_to_contents(serialize_helper(out));
-            }
-            catch (serialization_error& e)
-            {
-                throw serialization_error(e.info + "\n   while serializing an object of type type_safe_union");
-            }
-        }
+        );
 
-        friend void deserialize (
-            type_safe_union& item,
-            std::istream& in
-        )
-        {
-            try
-            {
-                int type_identity;
-                deserialize(type_identity, in);
-                switch (type_identity)
-                {
-                    // swap an empty type_safe_union into item since it should be in the empty state
-                    case 0: type_safe_union().swap(item); break;
-
-                    case 1: deserialize(item.get<T1>(), in);  break;
-                    case 2: deserialize(item.get<T2>(), in);  break;
-                    case 3: deserialize(item.get<T3>(), in);  break;
-                    case 4: deserialize(item.get<T4>(), in);  break;
-                    case 5: deserialize(item.get<T5>(), in);  break;
-
-                    case 6: deserialize(item.get<T6>(), in);  break;
-                    case 7: deserialize(item.get<T7>(), in);  break;
-                    case 8: deserialize(item.get<T8>(), in);  break;
-                    case 9: deserialize(item.get<T9>(), in);  break;
-                    case 10: deserialize(item.get<T10>(), in);  break;
-
-                    case 11: deserialize(item.get<T11>(), in);  break;
-                    case 12: deserialize(item.get<T12>(), in);  break;
-                    case 13: deserialize(item.get<T13>(), in);  break;
-                    case 14: deserialize(item.get<T14>(), in);  break;
-                    case 15: deserialize(item.get<T15>(), in);  break;
-
-                    case 16: deserialize(item.get<T16>(), in);  break;
-                    case 17: deserialize(item.get<T17>(), in);  break;
-                    case 18: deserialize(item.get<T18>(), in);  break;
-                    case 19: deserialize(item.get<T19>(), in);  break;
-                    case 20: deserialize(item.get<T20>(), in);  break;
-
-                    default: throw serialization_error("Corrupt data detected while deserializing type_safe_union");
-                }
-            }
-            catch (serialization_error& e)
-            {
-                throw serialization_error(e.info + "\n   while deserializing an object of type type_safe_union");
-            }
-        }
 
         template <
             typename T
@@ -275,29 +336,29 @@ namespace dlib
                 // do nothing because we are empty
                 case 0: break;
 
-                case 1: obj(get<T1>());  break;
-                case 2: obj(get<T2>());  break;
-                case 3: obj(get<T3>());  break;
-                case 4: obj(get<T4>());  break;
-                case 5: obj(get<T5>());  break;
+                case 1: invoke_on(obj,unchecked_get<T1>());  break;
+                case 2: invoke_on(obj,unchecked_get<T2>());  break;
+                case 3: invoke_on(obj,unchecked_get<T3>());  break;
+                case 4: invoke_on(obj,unchecked_get<T4>());  break;
+                case 5: invoke_on(obj,unchecked_get<T5>());  break;
 
-                case 6: obj(get<T6>());  break;
-                case 7: obj(get<T7>());  break;
-                case 8: obj(get<T8>());  break;
-                case 9: obj(get<T9>());  break;
-                case 10: obj(get<T10>());  break;
+                case 6: invoke_on(obj,unchecked_get<T6>());  break;
+                case 7: invoke_on(obj,unchecked_get<T7>());  break;
+                case 8: invoke_on(obj,unchecked_get<T8>());  break;
+                case 9: invoke_on(obj,unchecked_get<T9>());  break;
+                case 10: invoke_on(obj,unchecked_get<T10>());  break;
 
-                case 11: obj(get<T11>());  break;
-                case 12: obj(get<T12>());  break;
-                case 13: obj(get<T13>());  break;
-                case 14: obj(get<T14>());  break;
-                case 15: obj(get<T15>());  break;
+                case 11: invoke_on(obj,unchecked_get<T11>());  break;
+                case 12: invoke_on(obj,unchecked_get<T12>());  break;
+                case 13: invoke_on(obj,unchecked_get<T13>());  break;
+                case 14: invoke_on(obj,unchecked_get<T14>());  break;
+                case 15: invoke_on(obj,unchecked_get<T15>());  break;
 
-                case 16: obj(get<T16>());  break;
-                case 17: obj(get<T17>());  break;
-                case 18: obj(get<T18>());  break;
-                case 19: obj(get<T19>());  break;
-                case 20: obj(get<T20>());  break;
+                case 16: invoke_on(obj,unchecked_get<T16>());  break;
+                case 17: invoke_on(obj,unchecked_get<T17>());  break;
+                case 18: invoke_on(obj,unchecked_get<T18>());  break;
+                case 19: invoke_on(obj,unchecked_get<T19>());  break;
+                case 20: invoke_on(obj,unchecked_get<T20>());  break;
             }
         }
 
@@ -313,29 +374,105 @@ namespace dlib
                 // do nothing because we are empty
                 case 0: break;
 
-                case 1: obj(get<T1>());  break;
-                case 2: obj(get<T2>());  break;
-                case 3: obj(get<T3>());  break;
-                case 4: obj(get<T4>());  break;
-                case 5: obj(get<T5>());  break;
+                case 1: invoke_on(obj,unchecked_get<T1>());  break;
+                case 2: invoke_on(obj,unchecked_get<T2>());  break;
+                case 3: invoke_on(obj,unchecked_get<T3>());  break;
+                case 4: invoke_on(obj,unchecked_get<T4>());  break;
+                case 5: invoke_on(obj,unchecked_get<T5>());  break;
 
-                case 6: obj(get<T6>());  break;
-                case 7: obj(get<T7>());  break;
-                case 8: obj(get<T8>());  break;
-                case 9: obj(get<T9>());  break;
-                case 10: obj(get<T10>());  break;
+                case 6: invoke_on(obj,unchecked_get<T6>());  break;
+                case 7: invoke_on(obj,unchecked_get<T7>());  break;
+                case 8: invoke_on(obj,unchecked_get<T8>());  break;
+                case 9: invoke_on(obj,unchecked_get<T9>());  break;
+                case 10: invoke_on(obj,unchecked_get<T10>());  break;
 
-                case 11: obj(get<T11>());  break;
-                case 12: obj(get<T12>());  break;
-                case 13: obj(get<T13>());  break;
-                case 14: obj(get<T14>());  break;
-                case 15: obj(get<T15>());  break;
+                case 11: invoke_on(obj,unchecked_get<T11>());  break;
+                case 12: invoke_on(obj,unchecked_get<T12>());  break;
+                case 13: invoke_on(obj,unchecked_get<T13>());  break;
+                case 14: invoke_on(obj,unchecked_get<T14>());  break;
+                case 15: invoke_on(obj,unchecked_get<T15>());  break;
 
-                case 16: obj(get<T16>());  break;
-                case 17: obj(get<T17>());  break;
-                case 18: obj(get<T18>());  break;
-                case 19: obj(get<T19>());  break;
-                case 20: obj(get<T20>());  break;
+                case 16: invoke_on(obj,unchecked_get<T16>());  break;
+                case 17: invoke_on(obj,unchecked_get<T17>());  break;
+                case 18: invoke_on(obj,unchecked_get<T18>());  break;
+                case 19: invoke_on(obj,unchecked_get<T19>());  break;
+                case 20: invoke_on(obj,unchecked_get<T20>());  break;
+            }
+        }
+
+        template <
+            typename T
+            >
+        void apply_to_contents (
+            T& obj
+        ) const
+        {
+            switch (type_identity)
+            {
+                // do nothing because we are empty
+                case 0: break;
+
+                case 1: invoke_on(obj,unchecked_get<T1>());  break;
+                case 2: invoke_on(obj,unchecked_get<T2>());  break;
+                case 3: invoke_on(obj,unchecked_get<T3>());  break;
+                case 4: invoke_on(obj,unchecked_get<T4>());  break;
+                case 5: invoke_on(obj,unchecked_get<T5>());  break;
+
+                case 6: invoke_on(obj,unchecked_get<T6>());  break;
+                case 7: invoke_on(obj,unchecked_get<T7>());  break;
+                case 8: invoke_on(obj,unchecked_get<T8>());  break;
+                case 9: invoke_on(obj,unchecked_get<T9>());  break;
+                case 10: invoke_on(obj,unchecked_get<T10>());  break;
+
+                case 11: invoke_on(obj,unchecked_get<T11>());  break;
+                case 12: invoke_on(obj,unchecked_get<T12>());  break;
+                case 13: invoke_on(obj,unchecked_get<T13>());  break;
+                case 14: invoke_on(obj,unchecked_get<T14>());  break;
+                case 15: invoke_on(obj,unchecked_get<T15>());  break;
+
+                case 16: invoke_on(obj,unchecked_get<T16>());  break;
+                case 17: invoke_on(obj,unchecked_get<T17>());  break;
+                case 18: invoke_on(obj,unchecked_get<T18>());  break;
+                case 19: invoke_on(obj,unchecked_get<T19>());  break;
+                case 20: invoke_on(obj,unchecked_get<T20>());  break;
+            }
+        }
+
+        template <
+            typename T
+            >
+        void apply_to_contents (
+            const T& obj
+        ) const
+        {
+            switch (type_identity)
+            {
+                // do nothing because we are empty
+                case 0: break;
+
+                case 1: invoke_on(obj,unchecked_get<T1>());  break;
+                case 2: invoke_on(obj,unchecked_get<T2>());  break;
+                case 3: invoke_on(obj,unchecked_get<T3>());  break;
+                case 4: invoke_on(obj,unchecked_get<T4>());  break;
+                case 5: invoke_on(obj,unchecked_get<T5>());  break;
+
+                case 6: invoke_on(obj,unchecked_get<T6>());  break;
+                case 7: invoke_on(obj,unchecked_get<T7>());  break;
+                case 8: invoke_on(obj,unchecked_get<T8>());  break;
+                case 9: invoke_on(obj,unchecked_get<T9>());  break;
+                case 10: invoke_on(obj,unchecked_get<T10>());  break;
+
+                case 11: invoke_on(obj,unchecked_get<T11>());  break;
+                case 12: invoke_on(obj,unchecked_get<T12>());  break;
+                case 13: invoke_on(obj,unchecked_get<T13>());  break;
+                case 14: invoke_on(obj,unchecked_get<T14>());  break;
+                case 15: invoke_on(obj,unchecked_get<T15>());  break;
+
+                case 16: invoke_on(obj,unchecked_get<T16>());  break;
+                case 17: invoke_on(obj,unchecked_get<T17>());  break;
+                case 18: invoke_on(obj,unchecked_get<T18>());  break;
+                case 19: invoke_on(obj,unchecked_get<T19>());  break;
+                case 20: invoke_on(obj,unchecked_get<T20>());  break;
             }
         }
 
@@ -379,36 +516,13 @@ namespace dlib
         T& get(
         ) 
         { 
-            // ERROR: You are trying to get a type of object that isn't
-            // representable by this type_safe_union.  I.e. The given
-            // type T isn't one of the ones given to this object's template
-            // arguments.
-            COMPILE_TIME_ASSERT(( is_same_type<T,T1>::value ||
-                                 is_same_type<T,T2>::value ||
-                                 is_same_type<T,T3>::value ||
-                                 is_same_type<T,T4>::value ||
-                                 is_same_type<T,T5>::value ||
-                                 is_same_type<T,T6>::value ||
-                                 is_same_type<T,T7>::value ||
-                                 is_same_type<T,T8>::value ||
-                                 is_same_type<T,T9>::value ||
-                                 is_same_type<T,T10>::value ||
-
-                                 is_same_type<T,T11>::value ||
-                                 is_same_type<T,T12>::value ||
-                                 is_same_type<T,T13>::value ||
-                                 is_same_type<T,T14>::value ||
-                                 is_same_type<T,T15>::value ||
-                                 is_same_type<T,T16>::value ||
-                                 is_same_type<T,T17>::value ||
-                                 is_same_type<T,T18>::value ||
-                                 is_same_type<T,T19>::value ||
-                                 is_same_type<T,T20>::value 
-                                    ));
-
+            validate_type<T>();
             construct<T>();  
-            return *reinterpret_cast<T*>(mem.get()); 
+            return *static_cast<T*>(mem.get()); 
         }
+
+        template <typename T>
+        type_safe_union& operator= ( const T& item) { get<T>() = item; return *this; }
 
     };
 
@@ -424,6 +538,137 @@ namespace dlib
         type_safe_union<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10, T11,T12,T13,T14,T15,T16,T17,T18,T19,T20>& a, 
         type_safe_union<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10, T11,T12,T13,T14,T15,T16,T17,T18,T19,T20>& b 
     ) { a.swap(b); }   
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename from, 
+        typename T1, typename T2, typename T3, typename T4, typename T5,
+        typename T6, typename T7, typename T8, typename T9, typename T10,
+        typename T11, typename T12, typename T13, typename T14, typename T15,
+        typename T16, typename T17, typename T18, typename T19, typename T20
+        >
+    struct is_convertible<from,
+        type_safe_union<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10, T11,T12,T13,T14,T15,T16,T17,T18,T19,T20> >
+    {
+        const static bool value = is_convertible<from,T1>::value ||
+                                  is_convertible<from,T2>::value ||
+                                  is_convertible<from,T3>::value ||
+                                  is_convertible<from,T4>::value ||
+                                  is_convertible<from,T5>::value ||
+                                  is_convertible<from,T6>::value ||
+                                  is_convertible<from,T7>::value ||
+                                  is_convertible<from,T8>::value ||
+                                  is_convertible<from,T9>::value ||
+                                  is_convertible<from,T10>::value ||
+                                  is_convertible<from,T11>::value ||
+                                  is_convertible<from,T12>::value ||
+                                  is_convertible<from,T13>::value ||
+                                  is_convertible<from,T14>::value ||
+                                  is_convertible<from,T15>::value ||
+                                  is_convertible<from,T16>::value ||
+                                  is_convertible<from,T17>::value ||
+                                  is_convertible<from,T18>::value ||
+                                  is_convertible<from,T19>::value ||
+                                  is_convertible<from,T20>::value;
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    namespace impl_tsu
+    {
+        struct serialize_helper
+        {
+            /*
+                This is a function object to help us serialize type_safe_unions
+            */
+
+            std::ostream& out;
+            serialize_helper(std::ostream& out_): out(out_) {}
+            template <typename T>
+            void operator() (const T& item) const { serialize(item, out); } 
+        };
+    }
+
+    template <
+        typename T1, typename T2, typename T3, typename T4, typename T5,
+        typename T6, typename T7, typename T8, typename T9, typename T10,
+        typename T11, typename T12, typename T13, typename T14, typename T15,
+        typename T16, typename T17, typename T18, typename T19, typename T20
+        >
+    void serialize (
+        const type_safe_union<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10, T11,T12,T13,T14,T15,T16,T17,T18,T19,T20>& item,
+        std::ostream& out
+    )
+    {
+        try
+        {
+            // save the type_identity
+            serialize(item.type_identity, out);
+            item.apply_to_contents(dlib::impl_tsu::serialize_helper(out));
+        }
+        catch (serialization_error& e)
+        {
+            throw serialization_error(e.info + "\n   while serializing an object of type type_safe_union");
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T1, typename T2, typename T3, typename T4, typename T5,
+        typename T6, typename T7, typename T8, typename T9, typename T10,
+        typename T11, typename T12, typename T13, typename T14, typename T15,
+        typename T16, typename T17, typename T18, typename T19, typename T20
+        >
+    void deserialize (
+        type_safe_union<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10, T11,T12,T13,T14,T15,T16,T17,T18,T19,T20>&  item,
+        std::istream& in
+    )
+    {
+        try
+        {
+            typedef type_safe_union<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10, T11,T12,T13,T14,T15,T16,T17,T18,T19,T20> tsu_type;
+
+            int type_identity;
+            deserialize(type_identity, in);
+            switch (type_identity)
+            {
+                // swap an empty type_safe_union into item since it should be in the empty state
+                case 0: tsu_type().swap(item); break;
+
+                case 1: deserialize(item.template get<T1>(), in);  break;
+                case 2: deserialize(item.template get<T2>(), in);  break;
+                case 3: deserialize(item.template get<T3>(), in);  break;
+                case 4: deserialize(item.template get<T4>(), in);  break;
+                case 5: deserialize(item.template get<T5>(), in);  break;
+
+                case 6: deserialize(item.template get<T6>(), in);  break;
+                case 7: deserialize(item.template get<T7>(), in);  break;
+                case 8: deserialize(item.template get<T8>(), in);  break;
+                case 9: deserialize(item.template get<T9>(), in);  break;
+                case 10: deserialize(item.template get<T10>(), in);  break;
+
+                case 11: deserialize(item.template get<T11>(), in);  break;
+                case 12: deserialize(item.template get<T12>(), in);  break;
+                case 13: deserialize(item.template get<T13>(), in);  break;
+                case 14: deserialize(item.template get<T14>(), in);  break;
+                case 15: deserialize(item.template get<T15>(), in);  break;
+
+                case 16: deserialize(item.template get<T16>(), in);  break;
+                case 17: deserialize(item.template get<T17>(), in);  break;
+                case 18: deserialize(item.template get<T18>(), in);  break;
+                case 19: deserialize(item.template get<T19>(), in);  break;
+                case 20: deserialize(item.template get<T20>(), in);  break;
+
+                default: throw serialization_error("Corrupt data detected while deserializing type_safe_union");
+            }
+        }
+        catch (serialization_error& e)
+        {
+            throw serialization_error(e.info + "\n   while deserializing an object of type type_safe_union");
+        }
+    }
 
 // ----------------------------------------------------------------------------------------
 

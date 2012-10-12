@@ -24,12 +24,7 @@ namespace
 
     logger dlog("test.matrix_eig");
 
-    dlib::rand::float_1a rnd;
-
-// ----------------------------------------------------------------------------------------
-
-    template <typename mat_type>
-    const matrix<typename mat_type::type> symm(const mat_type& m) { return m*trans(m); }
+    dlib::rand rnd;
 
 // ----------------------------------------------------------------------------------------
 
@@ -65,16 +60,14 @@ namespace
 
 // ----------------------------------------------------------------------------------------
 
-    template <typename matrix_type>
-    void test_eigenvalue ( const matrix_type& m)
+    template <typename matrix_type, typename U>
+    void test_eigenvalue_impl ( const matrix_type& m,  const eigenvalue_decomposition<U>& test )
     {
         typedef typename matrix_type::type type;
         const type eps = 10*max(abs(m))*sqrt(std::numeric_limits<type>::epsilon());
         dlog << LDEBUG << "test_eigenvalue():  " << m.nr() << " x " << m.nc() << "  eps: " << eps;
         print_spinner();
 
-
-        eigenvalue_decomposition<matrix_type> test(m);
 
         DLIB_TEST(test.dim() == m.nr());
 
@@ -117,6 +110,17 @@ namespace
             DLIB_TEST(max(abs(test.get_imag_eigenvalues())) < eps); 
             DLIB_TEST(diagm(diag(D)) == D);
 
+            // only check the determinant against the eigenvalues for small matrices
+            // because for huge ones the determinant might be so big it overflows a floating point number.
+            if (m.nr() < 50) 
+            {
+                const type mdet = det(m);
+                DLIB_TEST_MSG(std::abs(prod(test.get_real_eigenvalues()) - mdet) < std::abs(mdet)*sqrt(std::numeric_limits<type>::epsilon()),
+                              std::abs(prod(test.get_real_eigenvalues()) - mdet) <<"    eps: " << std::abs(mdet)*sqrt(std::numeric_limits<type>::epsilon())
+                              << "  mdet: "<< mdet << "   prod(eig): " << prod(test.get_real_eigenvalues())
+                );
+            }
+
             // V is orthogonal
             DLIB_TEST(equal(V*trans(V), identity_matrix<type>(test.dim()), eps));
             DLIB_TEST(equal(m , V*D*trans(V), eps));
@@ -125,6 +129,33 @@ namespace
         {
             dlog << LTRACE << "m is NOT symmetric";
             DLIB_TEST_MSG(equal(m , V*D*inv(V), eps), max(abs(m - V*D*inv(V))));
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename matrix_type>
+    void test_eigenvalue ( const matrix_type& m )
+    {
+        typedef typename matrix_type::type type;
+        typedef typename matrix_type::mem_manager_type MM;
+        matrix<type,matrix_type::NR, matrix_type::NC, MM, row_major_layout> mr(m); 
+        matrix<type,matrix_type::NR, matrix_type::NC, MM, column_major_layout> mc(m); 
+
+        {
+        eigenvalue_decomposition<matrix_type> test(mr);
+        test_eigenvalue_impl(mr, test);
+
+        eigenvalue_decomposition<matrix_type> test_symm(make_symmetric(mr));
+        test_eigenvalue_impl(make_symmetric(mr), test_symm);
+        }
+
+        {
+        eigenvalue_decomposition<matrix_type> test(mc);
+        test_eigenvalue_impl(mc, test);
+
+        eigenvalue_decomposition<matrix_type> test_symm(make_symmetric(mc));
+        test_eigenvalue_impl(make_symmetric(mc), test_symm);
         }
     }
 
@@ -143,14 +174,6 @@ namespace
         test_eigenvalue(10*randm<double,1,1>());
         test_eigenvalue(10*randm<double,2,2>());
         test_eigenvalue(10*randm<double,3,3>());
-
-        test_eigenvalue(10*symm(randm<double>(1,1)));
-        test_eigenvalue(10*symm(randm<double>(2,2)));
-        test_eigenvalue(10*symm(randm<double>(3,3)));
-        test_eigenvalue(10*symm(randm<double>(4,4)));
-        test_eigenvalue(10*symm(randm<double>(15,15)));
-        test_eigenvalue(10*symm(randm<double>(150,150)));
-
     }
 
 // ----------------------------------------------------------------------------------------
@@ -168,13 +191,6 @@ namespace
         test_eigenvalue(10*randm<float,1,1>());
         test_eigenvalue(10*randm<float,2,2>());
         test_eigenvalue(10*randm<float,3,3>());
-
-        test_eigenvalue(10*symm(randm<float>(1,1)));
-        test_eigenvalue(10*symm(randm<float>(2,2)));
-        test_eigenvalue(10*symm(randm<float>(3,3)));
-        test_eigenvalue(10*symm(randm<float>(4,4)));
-        test_eigenvalue(10*symm(randm<float>(15,15)));
-        test_eigenvalue(10*symm(randm<float>(50,50)));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -187,7 +203,7 @@ namespace
             tester ("test_matrix_eig",
                     "Runs tests on the matrix eigen decomp component.")
         {
-            rnd.set_seed(cast_to_string(time(0)));
+            //rnd.set_seed(cast_to_string(time(0)));
         }
 
         void perform_test (

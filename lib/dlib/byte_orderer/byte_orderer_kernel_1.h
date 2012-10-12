@@ -10,7 +10,7 @@
 namespace dlib
 {
 
-    class byte_orderer_kernel_1 
+    class byte_orderer 
     {
         /*!
             INITIAL VALUE
@@ -34,7 +34,10 @@ namespace dlib
 
     public:
 
-        byte_orderer_kernel_1 (        
+        // this is here for backwards compatibility with older versions of dlib.
+        typedef byte_orderer kernel_1a;
+
+        byte_orderer (        
         )
         {
             // This will probably never be false but if it is then it means chars are not 8bits
@@ -49,7 +52,7 @@ namespace dlib
                 little_endian = false;
         }
 
-        virtual ~byte_orderer_kernel_1 (
+        virtual ~byte_orderer (
         ){}
 
         bool host_is_big_endian (
@@ -133,14 +136,9 @@ namespace dlib
                 - reverses the byte ordering in item
         !*/
         {
-            // this is just here to provide a compile time check that T is a POD.
-            // this checks *most* of the requrements for being a POD type.
-            // You should not be calling this function on non POD types!
-            union
-            { 
-                int a;
-                T value;
-            } temp;
+            DLIB_ASSERT_HAS_STANDARD_LAYOUT(T);
+
+            T value;
 
             // If you are getting this as an error then you are probably using
             // this object wrong.  If you think you aren't then send me (Davis) an
@@ -158,25 +156,20 @@ namespace dlib
 
             const size_t size = sizeof(T);
             unsigned char* const ptr = reinterpret_cast<unsigned char*>(&item);
-            unsigned char* const ptr_temp = reinterpret_cast<unsigned char*>(&temp.value);
+            unsigned char* const ptr_temp = reinterpret_cast<unsigned char*>(&value);
             for (size_t i = 0; i < size; ++i)
                 ptr_temp[size-i-1] = ptr[i];
 
-            item = temp.value;
+            item = value;
         }
 
         bool little_endian;
-
-        // restricted functions
-        byte_orderer_kernel_1(const byte_orderer_kernel_1&);        // copy constructor
-        byte_orderer_kernel_1& operator=(const byte_orderer_kernel_1&);    // assignment operator
-
     };    
 
     // make flip not do anything at all for chars
-    template <> inline void byte_orderer_kernel_1::flip<char> ( char& ) const {} 
-    template <> inline void byte_orderer_kernel_1::flip<unsigned char> ( unsigned char& ) const {} 
-    template <> inline void byte_orderer_kernel_1::flip<signed char> ( signed char& ) const {} 
+    template <> inline void byte_orderer::flip<char> ( char& ) const {} 
+    template <> inline void byte_orderer::flip<unsigned char> ( unsigned char& ) const {} 
+    template <> inline void byte_orderer::flip<signed char> ( signed char& ) const {} 
 }
 
 #endif // DLIB_BYTE_ORDEREr_KERNEL_1_ 

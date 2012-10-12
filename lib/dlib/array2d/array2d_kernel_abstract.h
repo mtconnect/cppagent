@@ -5,7 +5,7 @@
 
 #include "../interfaces/enumerable.h"
 #include "../serialize.h"
-#include "../memory_manager/memory_manager_kernel_abstract.h"
+#include "../algs.h"
 #include "../geometry/rectangle_abstract.h"
 
 namespace dlib
@@ -13,7 +13,7 @@ namespace dlib
 
     template <
         typename T,
-        typename mem_manager = memory_manager<char>::kernel_1a
+        typename mem_manager = default_memory_manager 
         >
     class array2d : public enumerable<T>
     {
@@ -50,6 +50,11 @@ namespace dlib
 
                 Also note that unless specified otherwise, no member functions
                 of this object throw exceptions.
+
+
+                Finally, note that this object stores its data contiguously and in 
+                row major order.  Moreover, there is no padding at the end of each row.
+                This means that its width_step() value is always equal to sizeof(type)*nc().  
         !*/
 
 
@@ -114,6 +119,23 @@ namespace dlib
         /*!
             ensures 
                 - #*this is properly initialized
+            throws
+                - std::bad_alloc 
+        !*/
+
+        array2d (
+            long rows,
+            long cols 
+        );
+        /*!
+            requires
+                - cols > 0 && rows > 0 or
+                  cols == 0 && rows == 0
+            ensures
+                - #nc() == cols
+                - #nr() == rows
+                - #at_start() == true
+                - all elements in this array have initial values for their type
             throws
                 - std::bad_alloc 
         !*/
@@ -199,6 +221,21 @@ namespace dlib
                 - swaps *this and item
         !*/ 
 
+        long width_step (
+        ) const;
+        /*!
+            ensures
+                - returns the size of one row of the image, in bytes.  
+                  More precisely, return a number N such that:
+                  (char*)&item[0][0] + N == (char*)&item[1][0].
+                - for dlib::array2d objects, the returned value
+                  is always equal to sizeof(type)*nc().  However,
+                  other objects which implement dlib::array2d style
+                  interfaces might have padding at the ends of their
+                  rows and therefore might return larger numbers.
+                  An example of such an object is the dlib::cv_image.
+        !*/
+
     private:
 
         // restricted functions
@@ -208,21 +245,23 @@ namespace dlib
     };
 
     template <
-        typename T
+        typename T,
+        typename mem_manager
         >
     inline void swap (
-        array2d<T>& a, 
-        array2d<T>& b 
+        array2d<T,mem_manager>& a, 
+        array2d<T,mem_manager>& b 
     ) { a.swap(b); }   
     /*!
         provides a global swap function
     !*/
 
     template <
-        typename T
+        typename T,
+        typename mem_manager
         >
     void serialize (
-        const array2d<T>& item, 
+        const array2d<T,mem_manager>& item, 
         std::ostream& out 
     );   
     /*!
@@ -230,10 +269,11 @@ namespace dlib
     !*/
 
     template <
-        typename T 
+        typename T,
+        typename mem_manager
         >
     void deserialize (
-        array2d<T>& item, 
+        array2d<T,mem_manager>& item, 
         std::istream& in
     );   
     /*!

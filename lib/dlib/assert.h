@@ -59,7 +59,14 @@ namespace dlib
 // -----------------------------
 
 #ifdef __GNUC__
-#define DLIB_FUNCTION_NAME __PRETTY_FUNCTION__
+// There is a bug in version 4.4.5 of GCC on Ubuntu which causes GCC to segfault
+// when __PRETTY_FUNCTION__ is used within certain templated functions.  So just
+// don't use it with this version of GCC.
+#  if !(__GNUC__ == 4 && __GNUC_MINOR__ == 4 && __GNUC_PATCHLEVEL__ == 5)
+#    define DLIB_FUNCTION_NAME __PRETTY_FUNCTION__
+#  else
+#    define DLIB_FUNCTION_NAME "unknown function" 
+#  endif
 #elif _MSC_VER
 #define DLIB_FUNCTION_NAME __FUNCSIG__
 #else
@@ -71,9 +78,9 @@ namespace dlib
     {                                                                       \
         dlib_assert_breakpoint();                                           \
         std::ostringstream dlib__out;                                       \
-        dlib__out << "\n\nError occurred at line " << __LINE__ << ".\n";    \
-        dlib__out << "Error occurred in file " << __FILE__ << ".\n";      \
-        dlib__out << "Error occurred in function " << DLIB_FUNCTION_NAME << ".\n\n";      \
+        dlib__out << "\n\nError detected at line " << __LINE__ << ".\n";    \
+        dlib__out << "Error detected in file " << __FILE__ << ".\n";      \
+        dlib__out << "Error detected in function " << DLIB_FUNCTION_NAME << ".\n\n";      \
         dlib__out << "Failing expression was " << #_exp << ".\n";           \
         dlib__out << std::boolalpha << _message << "\n";                    \
         throw dlib::fatal_error(dlib::EBROKEN_ASSERT,dlib__out.str());      \
@@ -82,9 +89,30 @@ namespace dlib
 
 #ifdef ENABLE_ASSERTS 
     #define DLIB_ASSERT(_exp,_message) DLIB_CASSERT(_exp,_message)
+    #define DLIB_IF_ASSERT(exp) exp
 #else
     #define DLIB_ASSERT(_exp,_message)
+    #define DLIB_IF_ASSERT(exp) 
 #endif
+
+// ----------------------------------------------------------------------------------------
+
+    /*!A DLIB_ASSERT_HAS_STANDARD_LAYOUT 
+    
+        This macro is meant to cause a compiler error if a type doesn't have a simple
+        memory layout (like a C struct). In particular, types with simple layouts are
+        ones which can be copied via memcpy().
+        
+        
+        This was called a POD type in C++03 and in C++0x we are looking to check if 
+        it is a "standard layout type".  Once we can use C++0x we can change this macro 
+        to something that uses the std::is_standard_layout type_traits class.  
+        See: http://www2.research.att.com/~bs/C++0xFAQ.html#PODs
+    !*/
+    // Use the fact that in C++03 you can't put non-PODs into a union.
+#define DLIB_ASSERT_HAS_STANDARD_LAYOUT(type)   \
+    union  BOOST_JOIN(DAHSL_,__LINE__) { type TYPE_NOT_STANDARD_LAYOUT; };  \
+    typedef char BOOST_JOIN(DAHSL2_,__LINE__)[sizeof(BOOST_JOIN(DAHSL_,__LINE__))]; 
 
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------

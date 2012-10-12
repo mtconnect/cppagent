@@ -33,11 +33,12 @@ namespace
                 0                     // the number of command line arguments for this test
             )
         {
-            thetime = time(0);
+            // always use the same time so that tests are repeatable
+            thetime = 0;//time(0);
         }
 
         time_t thetime;
-        dlib::rand::float_1a rnd;
+        dlib::rand rnd;
 
         void test_projection_error()
         {
@@ -60,6 +61,7 @@ namespace
 
 
                 ekm.load(kern, samples);
+                DLIB_TEST(ekm.basis_size() == samples.size());
 
                 double err;
 
@@ -78,15 +80,81 @@ namespace
                     const sample_type samp1 = samples[rnd.get_random_32bit_number()%samples.size()];
                     const sample_type samp2 = samples[rnd.get_random_32bit_number()%samples.size()];
 
-                    matrix<double,0,1> proj1 = ekm.project(samp1);
-                    matrix<double,0,1> proj2 = ekm.project(samp2);
+                    const matrix<double,0,1> proj1 = ekm.project(samp1);
+                    const matrix<double,0,1> proj2 = ekm.project(samp2);
 
                     distance_function<kernel_type> df1 = ekm.convert_to_distance_function(proj1);
                     distance_function<kernel_type> df2 = ekm.convert_to_distance_function(proj2);
 
+                    DLIB_TEST(df1.get_kernel() == kern);
+                    DLIB_TEST(df2.get_kernel() == kern);
+
+                    // make sure the norms are correct
+                    DLIB_TEST(std::abs(df1.get_squared_norm()  - 
+                                       trans(df1.get_alpha())*kernel_matrix(df1.get_kernel(),df1.get_basis_vectors())*df1.get_alpha()) < 1e-10);
+                    DLIB_TEST(std::abs(df2.get_squared_norm()  - 
+                                       trans(df2.get_alpha())*kernel_matrix(df2.get_kernel(),df2.get_basis_vectors())*df2.get_alpha()) < 1e-10);
+
+
                     const double true_dist = std::sqrt(kern(samp1,samp1) + kern(samp2,samp2) - 2*kern(samp1,samp2));
                     DLIB_TEST_MSG(abs(df1(df2) - true_dist) < 1e-7, abs(df1(df2) - true_dist));
                     DLIB_TEST_MSG(abs(length(proj1-proj2) - true_dist) < 1e-7, abs(length(proj1-proj2) - true_dist));
+                    
+
+                    // test distance function operators
+                    const decision_function<kernel_type> dec1 = ekm.convert_to_decision_function(proj1);
+                    const decision_function<kernel_type> dec2 = ekm.convert_to_decision_function(proj2);
+                    DLIB_TEST(dec1.kernel_function == kern);
+                    DLIB_TEST(dec2.kernel_function == kern);
+
+                    distance_function<kernel_type> temp;
+                    temp = dec1;
+                    DLIB_TEST(std::abs(temp.get_squared_norm() - df1.get_squared_norm()) < 1e-10);
+                    temp = dec2;
+                    DLIB_TEST(std::abs(temp.get_squared_norm() - df2.get_squared_norm()) < 1e-10);
+                    temp = distance_function<kernel_type>(dec1.alpha, dec1.kernel_function, dec1.basis_vectors);
+                    DLIB_TEST(std::abs(temp.get_squared_norm() - df1.get_squared_norm()) < 1e-10);
+
+                    df1 = dec1;
+
+                    temp = df1 + df2;
+                    decision_function<kernel_type> dec3(temp.get_alpha(), 0, temp.get_kernel(), temp.get_basis_vectors()); 
+                    DLIB_TEST(std::abs(temp.get_squared_norm()  - 
+                                       trans(temp.get_alpha())*kernel_matrix(temp.get_kernel(),temp.get_basis_vectors())*temp.get_alpha()) < 1e-10);
+                    for (unsigned long j = 0; j < samples.size(); ++j)
+                    {
+                        DLIB_TEST(std::abs(dec3(samples[j]) - (dec1(samples[j]) + dec2(samples[j]))) < 1e-10);
+                    }
+
+
+                    temp = df1 - df2;
+                    dec3 = decision_function<kernel_type>(temp.get_alpha(), 0, temp.get_kernel(), temp.get_basis_vectors()); 
+                    DLIB_TEST(std::abs(temp.get_squared_norm()  - 
+                                       trans(temp.get_alpha())*kernel_matrix(temp.get_kernel(),temp.get_basis_vectors())*temp.get_alpha()) < 1e-10);
+                    for (unsigned long j = 0; j < samples.size(); ++j)
+                    {
+                        DLIB_TEST(std::abs(dec3(samples[j]) - (dec1(samples[j]) - dec2(samples[j]))) < 1e-10);
+                    }
+
+                    temp = 3*(df1 - df2)*2;
+                    dec3 = decision_function<kernel_type>(temp.get_alpha(), 0, temp.get_kernel(), temp.get_basis_vectors()); 
+                    DLIB_TEST(std::abs(temp.get_squared_norm()  - 
+                                       trans(temp.get_alpha())*kernel_matrix(temp.get_kernel(),temp.get_basis_vectors())*temp.get_alpha()) < 1e-10);
+                    for (unsigned long j = 0; j < samples.size(); ++j)
+                    {
+                        DLIB_TEST(std::abs(dec3(samples[j]) - 6*(dec1(samples[j]) - dec2(samples[j]))) < 1e-10);
+                    }
+
+                    distance_function<kernel_type> df_empty(kern);
+
+                    temp = df_empty + (df1 + df2)/2 + df_empty - df_empty + (df_empty + df_empty) - (df_empty - df_empty);
+                    dec3 = decision_function<kernel_type>(temp.get_alpha(), 0, temp.get_kernel(), temp.get_basis_vectors()); 
+                    DLIB_TEST(std::abs(temp.get_squared_norm()  - 
+                                       trans(temp.get_alpha())*kernel_matrix(temp.get_kernel(),temp.get_basis_vectors())*temp.get_alpha()) < 1e-10);
+                    for (unsigned long j = 0; j < samples.size(); ++j)
+                    {
+                        DLIB_TEST(std::abs(dec3(samples[j]) - 0.5*(dec1(samples[j]) + dec2(samples[j]))) < 1e-10);
+                    }
                 }
                 // Do some sanity tests on the conversion to distance functions while we are at it.  This
                 // time multiply one of the projections by 30 and see that it still all works out right.
@@ -121,7 +189,7 @@ namespace
                     // projected onto
                     DLIB_TEST_MSG(abs(df(test_point) - err) < 1e-10, abs(df(test_point) - err));
                     // while we are at it make sure the squared norm in the distance function is right
-                    double df_error = abs(df.b - trans(df.alpha)*kernel_matrix(kern, samples)*df.alpha);
+                    double df_error = abs(df.get_squared_norm() - trans(df.get_alpha())*kernel_matrix(kern, samples)*df.get_alpha());
                     DLIB_TEST_MSG( df_error < 1e-10, df_error);
                 }
 
@@ -154,6 +222,10 @@ namespace
                 samples.front()(0) += 0.001;
 
                 ekm2.load(kern, samples);
+                DLIB_TEST(ekm2.basis_size() == samples.size());
+                for (unsigned long i = 0; i < samples.size(); ++i)
+                    DLIB_TEST(dlib::equal(ekm2[i] , samples[i]));
+
                 // test serialization
                 ostringstream sout;
                 serialize(ekm2, sout);
@@ -279,7 +351,11 @@ namespace
                 samples2.front()(0) += 0.001;
 
                 ekm.load(kern, samples1);
+                for (unsigned long i = 0; i < samples1.size(); ++i)
+                    DLIB_TEST(dlib::equal(ekm[i] , samples1[i]));
+                DLIB_TEST(ekm.basis_size() == samples1.size());
                 ekm2.load(kern, samples2);
+                DLIB_TEST(ekm2.basis_size() == samples2.size());
                  
                 dlog << LTRACE << "ekm.out_vector_size(): " << ekm.out_vector_size();
                 dlog << LTRACE << "ekm2.out_vector_size(): " << ekm2.out_vector_size();

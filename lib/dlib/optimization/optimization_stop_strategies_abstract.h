@@ -26,7 +26,7 @@ namespace dlib
         !*/
 
     public:
-        objective_delta_stop_strategy (
+        explicit objective_delta_stop_strategy (
             double min_delta = 1e-7
         ); 
         /*!
@@ -51,6 +51,15 @@ namespace dlib
                   if a change in an objective function from one iteration to the next
                   is less than min_delta or more than max_iter iterations has been
                   executed.
+        !*/
+
+        objective_delta_stop_strategy& be_verbose( 
+        );
+        /*!
+            ensures
+                - causes this object to print status messages to standard out 
+                  every time should_continue_search() is called.
+                - returns *this
         !*/
 
         template <typename T>
@@ -86,7 +95,7 @@ namespace dlib
         !*/
 
     public:
-        gradient_norm_stop_strategy (
+        explicit gradient_norm_stop_strategy (
             double min_norm = 1e-7
         ); 
         /*!
@@ -109,6 +118,15 @@ namespace dlib
                 - This stop strategy object will only consider a search to be complete
                   if the current gradient norm is less than min_norm or more than 
                   max_iter iterations has been executed.
+        !*/
+
+        gradient_norm_stop_strategy& be_verbose( 
+        );
+        /*!
+            ensures
+                - causes this object to print status messages to standard out 
+                  every time should_continue_search() is called.
+                - returns *this
         !*/
 
         template <typename T>

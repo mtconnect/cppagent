@@ -35,19 +35,27 @@ namespace
 
         dlog << LTRACE << 1;
 
+        double dval;
+        int ival;
+        bool bval;
+
         DLIB_TEST_MSG(string_cast<int>("5") == 5,string_cast<int>("5"));
         DLIB_TEST_MSG(string_cast<int>("0x5") == 5,string_cast<int>("0x5"));
         DLIB_TEST_MSG(string_cast<int>("0xA") == 10,string_cast<int>("0xA"));
         DLIB_TEST(string_cast<float>("0.5") == 0.5);
+        DLIB_TEST((dval = sa ="0.5") == 0.5);
         DLIB_TEST(string_cast<std::string>("0.5 !") == "0.5 !");
         DLIB_TEST(string_cast<bool>("true") == true);
+        DLIB_TEST((bval = sa = "true") == true);
         DLIB_TEST(string_cast<bool>("false") == false);
         DLIB_TEST(string_cast<bool>("TRUE") == true);
         DLIB_TEST(string_cast<bool>("FALSE") == false);
+        DLIB_TEST((bval = sa = "FALSE") == false);
 
         dlog << LTRACE << 2;
 
         DLIB_TEST_MSG(string_cast<int>(L"5") == 5,string_cast<int>("5"));
+        DLIB_TEST_MSG((ival = sa = L"5") == 5,string_cast<int>("5"));
         dlog << LTRACE << 2.1;
         DLIB_TEST_MSG(string_cast<int>(L"0x5") == 5,string_cast<int>("0x5"));
         DLIB_TEST_MSG(string_cast<int>(L"0xA") == 10,string_cast<int>("0xA"));
@@ -56,6 +64,7 @@ namespace
         DLIB_TEST(string_cast<bool>(L"true") == true);
         DLIB_TEST(string_cast<bool>(L"false") == false);
         DLIB_TEST(string_cast<bool>(L"TRUE") == true);
+        DLIB_TEST((bval = sa = L"TRUE") == true);
         DLIB_TEST(string_cast<bool>(L"FALSE") == false);
 
         dlog << LTRACE << 3;
@@ -178,6 +187,63 @@ namespace
     }
 
 
+    void test_split()
+    {
+        std::vector<string> v;
+
+        string str;
+        string delim = " , ";
+
+        v = split(string("one, two,three four")," ,");
+        DLIB_TEST(v.size() == 4);
+        DLIB_TEST(v[0] == "one");
+        DLIB_TEST(v[1] == "two");
+        DLIB_TEST(v[2] == "three");
+        DLIB_TEST(v[3] == "four");
+
+        v = split(string("one, two,three four"),delim);
+        DLIB_TEST(v.size() == 4);
+        DLIB_TEST(v[0] == "one");
+        DLIB_TEST(v[1] == "two");
+        DLIB_TEST(v[2] == "three");
+        DLIB_TEST(v[3] == "four");
+
+        v = split(string(""));
+        DLIB_TEST(v.size() == 0);
+
+        v = split(string("   "));
+        DLIB_TEST(v.size() == 0);
+
+        v = split(string(" one two  "));
+        DLIB_TEST(v.size() == 2);
+        DLIB_TEST(v[0] == "one");
+        DLIB_TEST(v[1] == "two");
+
+        v = split(string(" one   "));
+        DLIB_TEST(v.size() == 1);
+        DLIB_TEST(v[0] == "one");
+
+        v = split(string("one"));
+        DLIB_TEST(v.size() == 1);
+        DLIB_TEST(v[0] == "one");
+
+        v = split(string("o"));
+        DLIB_TEST(v.size() == 1);
+        DLIB_TEST(v[0] == "o");
+
+
+        std::vector<wstring> wv;
+        wstring wstr = L"test string";
+        wv = split(wstr);
+        DLIB_TEST(wv.size() == 2);
+        DLIB_TEST(wv[0] == L"test");
+        DLIB_TEST(wv[1] == L"string");
+        wv = split(wstr,L" ");
+        DLIB_TEST(wv.size() == 2);
+        DLIB_TEST(wv[0] == L"test");
+        DLIB_TEST(wv[1] == L"string");
+    }
+
 
 
     class string_tester : public tester
@@ -193,6 +259,7 @@ namespace
         )
         {
             string_test();
+            test_split();
         }
     } a;
 

@@ -95,7 +95,6 @@ namespace dlib
             std::string path;
             std::string request_type;
             std::string content_type;
-            std::string protocol;
             std::string body;
 
             key_value_map queries;
@@ -114,7 +113,6 @@ namespace dlib
             key_value_map  headers;
             unsigned short http_return;
             std::string    http_return_status;
-            std::ostream  *out;
         };
 
     private:

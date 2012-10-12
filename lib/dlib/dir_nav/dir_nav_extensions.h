@@ -8,9 +8,16 @@
 #include <algorithm>
 #include "dir_nav_extensions_abstract.h"
 #include "../dir_nav.h"
+#include "../string.h"
 
 namespace dlib
 {
+
+// ----------------------------------------------------------------------------------------
+
+    bool file_exists (
+        const std::string& filename
+    );
 
 // ----------------------------------------------------------------------------------------
 
@@ -85,6 +92,40 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    class match_endings
+    {
+
+    public:
+        match_endings ( 
+            const std::string& endings_
+        ) 
+        {
+            const std::vector<std::string>& s = split(endings_);
+            for (unsigned long i = 0; i < s.size(); ++i)
+            {
+                endings.push_back(match_ending(s[i]));
+            }
+        }
+
+        bool operator() (
+            const file& f
+        ) const
+        {
+            for (unsigned long i = 0; i < endings.size(); ++i)
+            {
+                if (endings[i](f))
+                    return true;
+            }
+
+            return false;
+        }
+
+    private:
+        std::vector<match_ending> endings;
+    };
+
+// ----------------------------------------------------------------------------------------
+
     class match_all
     {
     public:
@@ -92,6 +133,18 @@ namespace dlib
             const file& 
         ) const { return true; }
     };
+
+// ----------------------------------------------------------------------------------------
+
+    directory get_parent_directory (
+        const directory& dir
+    );
+
+// ----------------------------------------------------------------------------------------
+
+    directory get_parent_directory (
+        const file& f
+    );
 
 // ----------------------------------------------------------------------------------------
 

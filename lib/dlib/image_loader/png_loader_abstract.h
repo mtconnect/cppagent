@@ -101,6 +101,14 @@ namespace dlib
                     - returns false
         !*/
 
+        unsigned int bit_depth (
+        ) const;
+        /*!
+            ensures
+                - returns the number of bits per channel in the image contained by this
+                  object.  The possible values are 8 or 16.
+        !*/
+
         template<
             typename image_type 
             >
@@ -116,6 +124,26 @@ namespace dlib
         !*/
 
     };
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_type
+        >
+    void load_png (
+        image_type& image,
+        const std::string& file_name
+    );
+    /*!
+        requires
+            - image_type == is an implementation of array2d/array2d_kernel_abstract.h
+            - pixel_traits<typename image_type::type> is defined  
+        ensures
+            - performs: png_loader(file_name).get_image(image);
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
 }
 
 #endif // DLIB_PNG_IMPORT_ABSTRACT

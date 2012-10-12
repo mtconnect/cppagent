@@ -3,7 +3,7 @@
 #ifndef DLIB_MATRIx_
 #define DLIB_MATRIx_
 
-#include "matrix_fwd.h"
+#include "matrix_exp.h"
 #include "matrix_abstract.h"
 #include "../algs.h"
 #include "../serialize.h"
@@ -14,6 +14,7 @@
 #include "../is_kind.h"
 #include "matrix_data_layout.h"
 #include "matrix_assign_fwd.h"
+#include "matrix_op.h"
 
 #ifdef _MSC_VER
 // Disable the following warnings for Visual Studio
@@ -28,178 +29,6 @@
 
 namespace dlib
 {
-
-// ----------------------------------------------------------------------------------------
-// ----------------------------------------------------------------------------------------
-// ----------------------------------------------------------------------------------------
-
-    // We want to return the compile time constant if our NR and NC dimensions
-    // aren't zero but if they are then we want to call ref_.nx() and return
-    // the correct values. 
-    template < typename exp_type, long NR >
-    struct get_nr_helper
-    {
-        static inline long get(const exp_type&) { return NR; }
-    };
-
-    template < typename exp_type >
-    struct get_nr_helper<exp_type,0>
-    {
-        static inline long get(const exp_type& m) { return m.nr(); }
-    };
-
-    template < typename exp_type, long NC >
-    struct get_nc_helper
-    {
-        static inline long get(const exp_type&) { return NC; }
-    };
-
-    template < typename exp_type >
-    struct get_nc_helper<exp_type,0>
-    {
-        static inline long get(const exp_type& m) { return m.nc(); }
-    };
-
-    template <typename EXP>
-    struct matrix_traits
-    {
-        typedef typename EXP::type type;
-        typedef typename EXP::const_ret_type const_ret_type;
-        typedef typename EXP::mem_manager_type mem_manager_type;
-        typedef typename EXP::layout_type layout_type;
-        const static long NR = EXP::NR;
-        const static long NC = EXP::NC;
-        const static long cost = EXP::cost;
-    };
-
-    template <
-        typename EXP
-        >
-    class matrix_exp 
-    {
-        /*!
-            REQUIREMENTS ON EXP
-                EXP should be something convertible to a matrix_exp.  That is,
-                it should inherit from matrix_exp
-        !*/
-
-    public:
-        typedef typename matrix_traits<EXP>::type type;
-        typedef typename matrix_traits<EXP>::const_ret_type const_ret_type;
-        typedef typename matrix_traits<EXP>::mem_manager_type mem_manager_type;
-        typedef typename matrix_traits<EXP>::layout_type layout_type;
-        const static long NR = matrix_traits<EXP>::NR;
-        const static long NC = matrix_traits<EXP>::NC;
-        const static long cost = matrix_traits<EXP>::cost;
-
-        typedef matrix<type,NR,NC,mem_manager_type,layout_type> matrix_type;
-        typedef EXP exp_type;
-
-        inline const_ret_type operator() (
-            long r,
-            long c
-        ) const 
-        { 
-            DLIB_ASSERT(r < nr() && c < nc() && r >= 0 && c >= 0, 
-                "\tconst type matrix_exp::operator(r,c)"
-                << "\n\tYou must give a valid row and column"
-                << "\n\tr:    " << r 
-                << "\n\tc:    " << c
-                << "\n\tnr(): " << nr()
-                << "\n\tnc(): " << nc() 
-                << "\n\tthis: " << this
-                );
-            return ref()(r,c); 
-        }
-
-        const_ret_type operator() (
-            long i
-        ) const 
-        {
-            COMPILE_TIME_ASSERT(NC == 1 || NC == 0 || NR == 1 || NR == 0);
-            DLIB_ASSERT(nc() == 1 || nr() == 1, 
-                "\tconst type matrix_exp::operator(i)"
-                << "\n\tYou can only use this operator on column or row vectors"
-                << "\n\ti:    " << i
-                << "\n\tnr(): " << nr()
-                << "\n\tnc(): " << nc()
-                << "\n\tthis: " << this
-                );
-            DLIB_ASSERT( ((nc() == 1 && i < nr()) || (nr() == 1 && i < nc())) && i >= 0, 
-                "\tconst type matrix_exp::operator(i)"
-                << "\n\tYou must give a valid row/column number"
-                << "\n\ti:    " << i
-                << "\n\tnr(): " << nr()
-                << "\n\tnc(): " << nc()
-                << "\n\tthis: " << this
-                );
-            if (nc() == 1)
-                return ref()(i,0);
-            else
-                return ref()(0,i);
-        }
-
-        long size (
-        ) const { return nr()*nc(); }
-
-        long nr (
-        ) const { return get_nr_helper<exp_type,NR>::get(ref()); }
-
-        long nc (
-        ) const { return get_nc_helper<exp_type,NC>::get(ref()); }
-
-        template <typename U>
-        bool aliases (
-            const matrix_exp<U>& item
-        ) const { return ref().aliases(item); }
-
-        template <typename U>
-        bool destructively_aliases (
-            const matrix_exp<U>& item
-        ) const { return ref().destructively_aliases(item); }
-
-        inline const exp_type& ref (
-        ) const { return *static_cast<const exp_type*>(this); }
-
-        inline operator const type (
-        ) const 
-        {
-            COMPILE_TIME_ASSERT(NC == 1 || NC == 0);
-            COMPILE_TIME_ASSERT(NR == 1 || NR == 0);
-            DLIB_ASSERT(nr() == 1 && nc() == 1, 
-                "\tmatrix_exp::operator const type() const"
-                << "\n\tYou can only use this operator on a 1x1 matrix"
-                << "\n\tnr(): " << nr()
-                << "\n\tnc(): " << nc()
-                << "\n\tthis: " << this
-                );
-
-            // Put the expression contained in this matrix_exp into
-            // a temporary 1x1 matrix so that the expression will encounter
-            // all the overloads of matrix_assign() and have the chance to
-            // go through any applicable optimizations.
-            matrix<type,1,1,mem_manager_type,layout_type> temp(ref());
-            return temp(0);
-        }
-
-    protected:
-        matrix_exp() {}
-        matrix_exp(const matrix_exp& ) {}
-
-    private:
-
-        matrix_exp& operator= (const matrix_exp&);
-    };
-
-// ----------------------------------------------------------------------------------------
-
-// something is a matrix if it is convertible to a matrix_exp object
-    template <typename T>
-    struct is_matrix<T, typename enable_if<is_convertible<T, const matrix_exp<typename T::exp_type>& > >::type > 
-    { static const bool value = true; }; 
-    /*
-        is_matrix<T>::value == 1 if T is a matrix type else 0
-    */
 
 // ----------------------------------------------------------------------------------------
 
@@ -272,8 +101,8 @@ namespace dlib
 #ifdef DLIB_USE_BLAS
         // if there are BLAS functions to be called then we want to make sure we
         // always evaluate any complex expressions so that the BLAS bindings can happen.
-        const static bool lhs_is_costly = (LHS::cost > 1)&&(RHS::NC != 1 || LHS::cost >= 10000);
-        const static bool rhs_is_costly = (RHS::cost > 1)&&(LHS::NR != 1 || RHS::cost >= 10000);
+        const static bool lhs_is_costly = (LHS::cost > 2)&&(RHS::NC != 1 || LHS::cost >= 10000);
+        const static bool rhs_is_costly = (RHS::cost > 2)&&(LHS::NR != 1 || RHS::cost >= 10000);
 #else
         const static bool lhs_is_costly = (LHS::cost > 4)&&(RHS::NC != 1);
         const static bool rhs_is_costly = (RHS::cost > 4)&&(LHS::NR != 1);
@@ -408,7 +237,7 @@ namespace dlib
     // 
     // Also, the reason we want to apply this transformation in the first place is because it (1) makes
     // the expressions going into matrix multiply expressions simpler and (2) it makes it a lot more
-    // straight forward to bind BLAS calls to matrix expressions involving scalar multiplies.
+    // straightforward to bind BLAS calls to matrix expressions involving scalar multiplies.
     template < typename EXP1, typename EXP2 >
     inline const typename disable_if_c< matrix_multiply_exp<matrix_mul_scal_exp<EXP1>, matrix_mul_scal_exp<EXP2> >::both_are_costly ,      
                                         matrix_mul_scal_exp<matrix_multiply_exp<EXP1, EXP2>,false> >::type operator* (
@@ -459,7 +288,7 @@ namespace dlib
         typedef typename LHS::layout_type layout_type;
         const static long NR = (RHS::NR > LHS::NR) ? RHS::NR : LHS::NR;
         const static long NC = (RHS::NC > LHS::NC) ? RHS::NC : LHS::NC;
-        const static long cost = LHS::cost+RHS::cost;
+        const static long cost = LHS::cost+RHS::cost+1;
     };
 
     template <
@@ -566,7 +395,7 @@ namespace dlib
         typedef typename LHS::layout_type layout_type;
         const static long NR = (RHS::NR > LHS::NR) ? RHS::NR : LHS::NR;
         const static long NC = (RHS::NC > LHS::NC) ? RHS::NC : LHS::NC;
-        const static long cost = LHS::cost+RHS::cost;
+        const static long cost = LHS::cost+RHS::cost+1;
     };
 
     template <
@@ -607,7 +436,7 @@ namespace dlib
             DLIB_ASSERT(lhs.nc() == rhs.nc() &&
                    lhs.nr() == rhs.nr(), 
                 "\tconst matrix_exp operator-(const matrix_exp& lhs, const matrix_exp& rhs)"
-                << "\n\tYou are trying to add two incompatible matrices together"
+                << "\n\tYou are trying to subtract two incompatible matrices"
                 << "\n\tlhs.nr(): " << lhs.nr()
                 << "\n\tlhs.nc(): " << lhs.nc()
                 << "\n\trhs.nr(): " << rhs.nr()
@@ -915,6 +744,42 @@ namespace dlib
         return matrix_mul_scal_exp<EXP>(m.m,m.s/static_cast<type>(s));
     }
 
+// ----------------------------------------------------------------------------------------
+
+    template <typename M>
+    struct op_s_div_m : basic_op_m<M> 
+    {
+        typedef typename M::type type;
+
+        op_s_div_m( const M& m_, const type& s_) : basic_op_m<M>(m_), s(s_){}
+
+        const type s;
+
+        const static long cost = M::cost+1;
+        typedef const typename M::type const_ret_type;
+        const_ret_type apply (long r, long c) const
+        { 
+            return s/this->m(r,c);
+        }
+    };
+
+    template <
+        typename EXP,
+        typename S
+        >
+    const typename disable_if<is_matrix<S>, matrix_op<op_s_div_m<EXP> > >::type operator/ (
+        const S& val,
+        const matrix_exp<EXP>& m
+    )
+    {
+        typedef typename EXP::type type;
+
+        typedef op_s_div_m<EXP> op;
+        return matrix_op<op>(op(m.ref(), static_cast<type>(val)));
+    }
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename EXP
         >
@@ -934,6 +799,123 @@ namespace dlib
     )
     {
         return matrix_mul_scal_exp<EXP>(m.m,-1*m.s);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename M>
+    struct op_add_scalar : basic_op_m<M> 
+    {
+        typedef typename M::type type;
+
+        op_add_scalar( const M& m_, const type& s_) : basic_op_m<M>(m_), s(s_){}
+
+        const type s;
+
+        const static long cost = M::cost+1;
+        typedef const typename M::type const_ret_type;
+        const_ret_type apply (long r, long c) const
+        { 
+            return this->m(r,c) + s;
+        }
+    };
+
+    template <
+        typename EXP,
+        typename T
+        >
+    const typename disable_if<is_matrix<T>, matrix_op<op_add_scalar<EXP> > >::type operator+ (
+        const matrix_exp<EXP>& m,
+        const T& val
+    )
+    {
+        typedef typename EXP::type type;
+
+        typedef op_add_scalar<EXP> op;
+        return matrix_op<op>(op(m.ref(), static_cast<type>(val)));
+    }
+
+    template <
+        typename EXP,
+        typename T
+        >
+    const typename disable_if<is_matrix<T>, matrix_op<op_add_scalar<EXP> > >::type operator+ (
+        const T& val,
+        const matrix_exp<EXP>& m
+    )
+    {
+        typedef typename EXP::type type;
+
+        typedef op_add_scalar<EXP> op;
+        return matrix_op<op>(op(m.ref(), static_cast<type>(val)));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename M>
+    struct op_subl_scalar : basic_op_m<M> 
+    {
+        typedef typename M::type type;
+
+        op_subl_scalar( const M& m_, const type& s_) : basic_op_m<M>(m_), s(s_){}
+
+        const type s;
+
+        const static long cost = M::cost+1;
+        typedef const typename M::type const_ret_type;
+        const_ret_type apply (long r, long c) const
+        { 
+            return s - this->m(r,c) ;
+        }
+    };
+
+    template <
+        typename EXP,
+        typename T
+        >
+    const typename disable_if<is_matrix<T>, matrix_op<op_subl_scalar<EXP> > >::type operator- (
+        const T& val,
+        const matrix_exp<EXP>& m
+    )
+    {
+        typedef typename EXP::type type;
+
+        typedef op_subl_scalar<EXP> op;
+        return matrix_op<op>(op(m.ref(), static_cast<type>(val)));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename M>
+    struct op_subr_scalar : basic_op_m<M> 
+    {
+        typedef typename M::type type;
+
+        op_subr_scalar( const M& m_, const type& s_) : basic_op_m<M>(m_), s(s_){}
+
+        const type s;
+
+        const static long cost = M::cost+1;
+        typedef const typename M::type const_ret_type;
+        const_ret_type apply (long r, long c) const
+        { 
+            return this->m(r,c) - s;
+        }
+    };
+
+    template <
+        typename EXP,
+        typename T
+        >
+    const typename disable_if<is_matrix<T>, matrix_op<op_subr_scalar<EXP> > >::type operator- (
+        const matrix_exp<EXP>& m,
+        const T& val
+    )
+    {
+        typedef typename EXP::type type;
+
+        typedef op_subr_scalar<EXP> op;
+        return matrix_op<op>(op(m.ref(), static_cast<type>(val)));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -1387,28 +1369,26 @@ namespace dlib
             // m's dimensions don't match that of *this. 
             COMPILE_TIME_ASSERT(EXP::NR == NR || NR == 0 || EXP::NR == 0);
             COMPILE_TIME_ASSERT(EXP::NC == NC || NC == 0 || EXP::NC == 0);
-            DLIB_ASSERT(this->nr() == m.nr() && this->nc() == m.nc(), 
-                "\tmatrix& matrix::operator+=(const matrix_exp& m)"
-                << "\n\tYou are trying to add a dynamically sized matrix to a statically sized matrix with the wrong size"
-                << "\n\tthis->nr(): " << nr()
-                << "\n\tthis->nc(): " << nc()
-                << "\n\tm.nr():     " << m.nr()
-                << "\n\tm.nc():     " << m.nc()
-                << "\n\tthis:       " << this
-                );
             COMPILE_TIME_ASSERT((is_same_type<typename EXP::type,type>::value == true));
-            if (m.destructively_aliases(*this) == false)
+            if (nr() == m.nr() && nc() == m.nc())
             {
-                matrix_assign(*this, *this + m);
+                if (m.destructively_aliases(*this) == false)
+                {
+                    matrix_assign(*this, *this + m);
+                }
+                else
+                {
+                    // we have to use a temporary matrix object here because
+                    // this->data is aliased inside the matrix_exp m somewhere.
+                    matrix temp;
+                    temp.set_size(m.nr(),m.nc());
+                    matrix_assign(temp, *this + m);
+                    temp.swap(*this);
+                }
             }
             else
             {
-                // we have to use a temporary matrix object here because
-                // this->data is aliased inside the matrix_exp m somewhere.
-                matrix temp;
-                temp.set_size(m.nr(),m.nc());
-                matrix_assign(temp, *this + m);
-                temp.swap(*this);
+                *this = m;
             }
             return *this;
         }
@@ -1423,29 +1403,36 @@ namespace dlib
             // m's dimensions don't match that of *this. 
             COMPILE_TIME_ASSERT(EXP::NR == NR || NR == 0 || EXP::NR == 0);
             COMPILE_TIME_ASSERT(EXP::NC == NC || NC == 0 || EXP::NC == 0);
-            DLIB_ASSERT(this->nr() == m.nr() && this->nc() == m.nc(), 
-                "\tmatrix& matrix::operator-=(const matrix_exp& m)"
-                << "\n\tYou are trying to subtract a dynamically sized matrix from a statically sized matrix with the wrong size"
-                << "\n\tthis->nr(): " << nr()
-                << "\n\tthis->nc(): " << nc()
-                << "\n\tm.nr():     " << m.nr()
-                << "\n\tm.nc():     " << m.nc()
-                << "\n\tthis:       " << this
-                );
             COMPILE_TIME_ASSERT((is_same_type<typename EXP::type,type>::value == true));
-            if (m.destructively_aliases(*this) == false)
+            if (nr() == m.nr() && nc() == m.nc())
             {
-                matrix_assign(*this, *this - m);
+                if (m.destructively_aliases(*this) == false)
+                {
+                    matrix_assign(*this, *this - m);
+                }
+                else
+                {
+                    // we have to use a temporary matrix object here because
+                    // this->data is aliased inside the matrix_exp m somewhere.
+                    matrix temp;
+                    temp.set_size(m.nr(),m.nc());
+                    matrix_assign(temp, *this - m);
+                    temp.swap(*this);
+                }
             }
             else
             {
-                // we have to use a temporary matrix object here because
-                // this->data is aliased inside the matrix_exp m somewhere.
-                matrix temp;
-                temp.set_size(m.nr(),m.nc());
-                matrix_assign(temp, *this - m);
-                temp.swap(*this);
+                *this = -m;
             }
+            return *this;
+        }
+
+        template <typename EXP>
+        matrix& operator *= (
+            const matrix_exp<EXP>& m
+        )
+        {
+            *this = *this * m;
             return *this;
         }
 
@@ -1454,8 +1441,17 @@ namespace dlib
         )
         {
             const long size = m.nr()*m.nc();
-            for (long i = 0; i < size; ++i)
-                data(i) += m.data(i);
+            if (nr() == m.nr() && nc() == m.nc())
+            {
+                for (long i = 0; i < size; ++i)
+                    data(i) += m.data(i);
+            }
+            else
+            {
+                set_size(m.nr(), m.nc());
+                for (long i = 0; i < size; ++i)
+                    data(i) = m.data(i);
+            }
             return *this;
         }
 
@@ -1464,13 +1460,44 @@ namespace dlib
         )
         {
             const long size = m.nr()*m.nc();
+            if (nr() == m.nr() && nc() == m.nc())
+            {
+                for (long i = 0; i < size; ++i)
+                    data(i) -= m.data(i);
+            }
+            else
+            {
+                set_size(m.nr(), m.nc());
+                for (long i = 0; i < size; ++i)
+                    data(i) = -m.data(i);
+            }
+            return *this;
+        }
+
+        matrix& operator += (
+            const T val
+        )
+        {
+            const long size = nr()*nc();
             for (long i = 0; i < size; ++i)
-                data(i) -= m.data(i);
+                data(i) += val;
+
+            return *this;
+        }
+
+        matrix& operator -= (
+            const T val
+        )
+        {
+            const long size = nr()*nc();
+            for (long i = 0; i < size; ++i)
+                data(i) -= val;
+
             return *this;
         }
 
         matrix& operator *= (
-            const T& a
+            const T a
         )
         {
             const long size = data.nr()*data.nc();
@@ -1480,7 +1507,7 @@ namespace dlib
         }
 
         matrix& operator /= (
-            const T& a
+            const T a
         )
         {
             const long size = data.nr()*data.nc();
@@ -1549,7 +1576,11 @@ namespace dlib
                 DLIB_CASSERT(r < m->nr() && c < m->nc(),
                              "You have used the matrix comma based assignment incorrectly by attempting to\n" <<
                              "supply more values than there are elements in the matrix object being assigned to.\n\n" <<
-                             "Did you forget to call set_size()?\n");
+                             "Did you forget to call set_size()?" 
+                             << "\n\t r: " << r 
+                             << "\n\t c: " << c 
+                             << "\n\t m->nr(): " << m->nr()
+                             << "\n\t m->nc(): " << m->nc());
                 (*m)(r,c) = val;
                 next();
                 has_been_used = true;

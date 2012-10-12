@@ -7,6 +7,7 @@
 #include "../matrix.h"
 #include "kernel_abstract.h"
 #include "function_abstract.h"
+#include "linearly_independent_subset_finder_abstract.h"
 #include <vector>
 
 namespace dlib
@@ -54,6 +55,7 @@ namespace dlib
 
             INITIAL VALUE
                 - out_vector_size() == 0
+                - basis_size() == 0
 
             WHAT THIS OBJECT REPRESENTS
                 This object represents a map from objects of sample_type (the kind of object 
@@ -75,8 +77,8 @@ namespace dlib
                 Regarding methods to select a set of basis samples, if you are working with only a 
                 few thousand samples then you can just use all of them as basis samples.  
                 Alternatively, the linearly_independent_subset_finder often works well for 
-                selecting a basis set.  Some people also find that picking a random subset 
-                works fine.
+                selecting a basis set.  I also find that picking a random subset typically works 
+                well.
 
 
                 The empirical kernel map is something that has been around in the kernel methods
@@ -122,7 +124,7 @@ namespace dlib
         );
         /*!
             requires
-                - T must be a dlib::matrix type or something convertable to a matrix via vector_to_matrix()
+                - T must be a dlib::matrix type or something convertible to a matrix via vector_to_matrix()
                   (e.g. a std::vector)
                 - is_vector(basis_samples) == true
                 - basis_samples.size() > 0
@@ -130,15 +132,43 @@ namespace dlib
                   expressions such as kernel(basis_samples(0), basis_samples(0)) should make sense.
             ensures
                 - 0 < #out_vector_size() <= basis_samples.size()
+                - #basis_size() == basis_samples.size()
                 - #get_kernel() == kernel
                 - This function constructs a map between normal sample_type objects and the 
                   subspace of the kernel feature space defined by the given kernel and the
                   given set of basis samples.  So after this function has been called you
                   will be able to project sample_type objects into kernel feature space
                   and obtain the resulting vector as a regular column matrix.
+                - The basis samples are loaded into this object in the order in which they
+                  are stored in basis_samples.  That is:
+                    - for all valid i: (*this)[i] == basis_samples(i)
             throws
                 - empirical_kernel_map_error
                     This exception is thrown if we are unable to create a kernel map.
+                    If this happens then this object will revert back to its initial value.
+        !*/
+
+        void load(
+            const linearly_independent_subset_finder<kernel_type>& lisf
+        );
+        /*!
+            ensures
+                - #out_vector_size() == lisf.dictionary_size() 
+                - #basis_size() == lisf.dictionary_size()
+                - #get_kernel() == lisf.get_kernel()
+                - Uses the dictionary vectors from lisf as a basis set.  Thus, this function 
+                  constructs a map between normal sample_type objects and the subspace of 
+                  the kernel feature space defined by the given kernel and the given set 
+                  of basis samples.  So after this function has been called you will be 
+                  able to project sample_type objects into kernel feature space and obtain 
+                  the resulting vector as a regular column matrix.
+                - The basis samples are loaded into this object in the order in which they
+                  are stored in lisf.  That is:
+                    - for all valid i: (*this)[i] == lisf[i]
+            throws
+                - empirical_kernel_map_error
+                    This exception is thrown if we are unable to create a kernel map.  
+                    E.g.  if the lisf.size() == 0.  
                     If this happens then this object will revert back to its initial value.
         !*/
 
@@ -159,6 +189,26 @@ namespace dlib
                     - returns the dimensionality of the vectors output by the project() function.
                 - else
                     - returns 0
+        !*/
+
+        unsigned long basis_size (
+        ) const;
+        /*!
+            ensures
+                - returns the number of basis vectors in projection_functions created
+                  by this object.  This is also equal to the number of basis vectors
+                  given to the load() function.
+        !*/
+
+        const sample_type& operator[] (
+            unsigned long idx
+        ) const;
+        /*!
+            requires
+                - idx < basis_size()
+            ensures
+                - returns a const reference to the idx'th basis vector contained inside 
+                  this object.
         !*/
 
         const matrix<scalar_type,0,1,mem_manager_type>& project (
@@ -220,6 +270,7 @@ namespace dlib
                     - DF.b == 0
                     - DF.basis_vectors == these will be the basis samples given to the previous call to load().  Note
                       that it is possible for there to be fewer basis_vectors than basis samples given to load().  
+                    - DF.basis_vectors.size() == basis_size()
         !*/
 
         template <typename EXP>
@@ -251,6 +302,7 @@ namespace dlib
                     - DF.b == dot(vect,vect) 
                     - DF.basis_vectors == these will be the basis samples given to the previous call to load().  Note
                       that it is possible for there to be fewer basis_vectors than basis samples given to load().  
+                    - DF.basis_vectors.size() == basis_size()
         !*/
 
         const projection_function<kernel_type> get_projection_function (
@@ -262,6 +314,7 @@ namespace dlib
                 - returns a projection_function, PF, that computes the same projection as project().
                   That is, calling PF() on any sample will produce the same output vector as calling
                   this->project() on that sample.
+                - PF.basis_vectors.size() == basis_size()
         !*/
 
         const matrix<scalar_type,0,0,mem_manager_type> get_transformation_to (
@@ -276,7 +329,7 @@ namespace dlib
                 - A point in the kernel feature space defined by the kernel get_kernel() typically
                   has different representations with respect to different empirical_kernel_maps.
                   This function lets you obtain a transformation matrix that will allow you
-                  to map between these different representations. That is, this function returns 
+                  to project between these different representations. That is, this function returns 
                   a matrix M with the following properties:    
                     - M maps vectors represented according to *this into the representation used by target. 
                     - M.nr() == target.out_vector_size()
@@ -293,6 +346,35 @@ namespace dlib
                       equality is approximate.  However, if it is in their span then the equality will
                       be exact.  For example, if target's basis samples are a superset of the basis samples
                       used by *this then the equality will always be exact (within rounding error).
+        !*/
+
+        void get_transformation_to (
+            const empirical_kernel_map& target,
+            matrix<scalar_type, 0, 0, mem_manager_type>& tmat,
+            projection_function<kernel_type>& partial_projection
+        ) const;
+        /*!
+            requires
+                - get_kernel() == target.get_kernel()
+                - out_vector_size() != 0
+                - target.out_vector_size() != 0
+                - basis_size() < target.basis_size()
+                - for all i < basis_size(): (*this)[i] == target[i]
+                  i.e. target must contain a superset of the basis vectors contained in *this.  Moreover,
+                  it must contain them in the same order.
+            ensures
+                - The single argument version of get_transformation_to() allows you to project 
+                  vectors from one empirical_kernel_map representation to another.  This version
+                  provides a somewhat different capability.  Assuming target's basis vectors form a
+                  superset of *this's basis vectors then this form of get_transformation_to() allows
+                  you to reuse a vector from *this ekm to speed up the projection performed by target.
+                  The defining relation is given below.
+                - for any sample S: 
+                    - target.project(S) == #tmat * this->project(S) + #partial_projection(S)
+                      (this is always true to within rounding error for any S)
+                - #partial_projection.basis_vectors.size() == target.basis_vectors.size() - this->basis_vectors.size()
+                - #tmat.nr() == target.out_vector_size()
+                - #tmat.nc() == this->out_vector_size()
         !*/
 
         void swap (

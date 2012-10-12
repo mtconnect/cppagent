@@ -13,6 +13,7 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #include <X11/Xlocale.h>
+#include <X11/XKBlib.h>
 #include <poll.h>
 #include <iostream>
 #include "../assert.h"
@@ -182,8 +183,10 @@ namespace dlib
                 try
                 {
 
-/*
-                    // causes dead-lock when using with XIM
+                    // You are supposed to call this if using XLib in a threaded program.  Note
+                    // however that at one point I noticed that calling this causes a dead-lock 
+                    // when using XIM.  But I can't reproduce that anymore and not calling it 
+                    // sometimes causes XCloseDisplay() to hang.
                     if (XInitThreads() == 0)
                     {
                         dlog << LFATAL << "Unable to initialize threading support.";
@@ -194,7 +197,6 @@ namespace dlib
                         window_table.get_mutex().unlock();
                         return;
                     }
-*/
 
                     window_table.get_mutex().lock();
                     disp = XOpenDisplay(NULL);
@@ -224,9 +226,11 @@ namespace dlib
 
                     xim = NULL;
                     window_table.get_mutex().lock();
-                    if (setlocale( LC_CTYPE, "" ) && XSupportsLocale() && XSetLocaleModifiers("")){
+                    std::string saved_locale(setlocale (LC_CTYPE, NULL));
+                    if (setlocale( LC_CTYPE, "" ) && XSupportsLocale() && XSetLocaleModifiers(""))
                         xim = XOpenIM(disp, NULL, NULL, NULL);
-                    }
+                    else
+                        setlocale( LC_CTYPE, saved_locale.c_str() );
                     window_table.get_mutex().unlock();
 
                     if (xim)
@@ -1090,9 +1094,9 @@ namespace dlib
                             if (depth != 24)
                             {
                                 // convert this image into an 8 bit image
-                                unsigned int red_bits;
-                                unsigned int green_bits;
-                                unsigned int blue_bits;
+                                unsigned int red_bits = 0;
+                                unsigned int green_bits = 0;
+                                unsigned int blue_bits = 0;
                                 if (depth != 16)
                                 {
                                     unsigned int bits = depth/3;
@@ -1260,7 +1264,7 @@ namespace dlib
             {
                 if ( codes[n] == 0 )
                     continue;
-                switch(XKeycodeToKeysym( disp, codes[n], 0 ))
+                switch(XkbKeycodeToKeysym( disp, codes[n], 0, 0 ))
                 {
                     case XK_Alt_L:
                         alt_mask = index_to_modmask(n / map->max_keypermod);
@@ -1675,6 +1679,14 @@ namespace dlib
     {
         using namespace gui_core_kernel_2_globals;
         close_window();
+
+        if (x11_stuff.globals->xim != NULL)
+        {
+            XDestroyIC(x11_stuff.xic);
+            x11_stuff.xic = 0;
+            XFreeFontSet(x11_stuff.globals->disp,x11_stuff.fs);
+        }
+
         delete &x11_stuff;
     }
 
@@ -1691,12 +1703,6 @@ namespace dlib
             has_been_destroyed = true;
 
             x11_stuff.globals->window_table.destroy(x11_stuff.hwnd);           
-            if (x11_stuff.globals->xim != NULL)
-            {
-                XDestroyIC(x11_stuff.xic);
-                x11_stuff.xic = 0;
-                XFreeFontSet(x11_stuff.globals->disp,x11_stuff.fs);
-            }
 
             XDestroyWindow(x11_stuff.globals->disp,x11_stuff.hwnd);
             x11_stuff.hwnd = 0;

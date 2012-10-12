@@ -109,6 +109,48 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
+        typename K,
+        typename stop_strategy_type,
+        typename T
+        >
+    distance_function<K> approximate_distance_function (
+        stop_strategy_type stop_strategy,
+        const distance_function<K>& target,
+        const T& starting_basis
+    );
+    /*!
+        requires
+            - stop_strategy == an object that defines a stop strategy such as one of 
+              the objects from dlib/optimization/optimization_stop_strategies_abstract.h
+            - requirements on starting_basis
+                - T must be a dlib::matrix type or something convertible to a matrix via vector_to_matrix()
+                  (e.g. a std::vector).  Additionally, starting_basis must contain K::sample_type
+                  objects which can be supplied to the kernel function used by target.
+                - is_vector(starting_basis) == true
+                - starting_basis.size() > 0
+            - target.get_basis_vectors().size() > 0 
+            - kernel_derivative<K> is defined
+              (i.e. The analytic derivative for the given kernel must be defined)
+            - K::sample_type must be a dlib::matrix object and the basis_vectors inside target
+              and starting_basis must be column vectors.
+        ensures
+            - This routine attempts to find a distance_function object which is close
+              to the given target.  That is, it searches for an X such that target(X) is
+              minimized.  The optimization begins with an X in the span of the elements
+              of starting_basis and searches for an X which locally minimizes target(X).  
+              Since this problem can have many local minima, the quality of the starting 
+              basis can significantly influence the results.   
+            - The optimization is over all variables in a distance_function, however,
+              the size of the basis set is constrained to no more than starting_basis.size().
+              That is, in the returned distance_function DF, we will have: 
+                - DF.get_basis_vectors().size() <= starting_basis.size()
+            - The optimization is carried out until the stop_strategy indicates it 
+              should stop.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
         typename trainer_type 
         >
     class reduced_decision_function_trainer2
@@ -179,6 +221,9 @@ namespace dlib
             const in_scalar_vector_type& y
         ) const;
         /*!
+            requires
+                - x must be a list of objects which are each some kind of dlib::matrix 
+                  which represents column or row vectors.
             ensures
                 - trains a decision_function using the trainer that was supplied to
                   this object's constructor and then finds a reduced representation

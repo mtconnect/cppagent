@@ -5,13 +5,14 @@
 
 #include <vector>
 #include "../rand/rand_kernel_abstract.h"
-#include "../memory_manager.h"
+#include "../algs.h"
+#include "../string.h"
 
 namespace dlib
 {
     template <
         typename T,
-        typename Rand_type = dlib::rand::kernel_1a
+        typename Rand_type = dlib::rand
         >
     class random_subset_selector
     {
@@ -41,7 +42,7 @@ namespace dlib
 
               
                 At the end of the for loop you will have your random subset of 1000 samples.  And by
-                random I mean that each of the 1000000 data samples has an equal change of ending
+                random I mean that each of the 1000000 data samples has an equal chance of ending
                 up in the rand_subset object.
 
 
@@ -61,11 +62,17 @@ namespace dlib
                 In the above example we only actually fetch the data sample into memory if we
                 know that the rand_subset would include it into the random subset.  Otherwise,
                 we can just call the empty add().
+                
 
+                Finally, note that the random_subset_selector uses a deterministic pseudo-random
+                number generator under the hood.  Moreover, the default constructor always seeds
+                the random number generator in the same way.  So unless you call set_seed() 
+                each instance of the random_subset_selector will function identically.
         !*/
     public:
         typedef T type;
-        typedef memory_manager<char>::kernel_1a mem_manager_type;
+        typedef T value_type;
+        typedef default_memory_manager mem_manager_type;
         typedef Rand_type rand_type;
 
         typedef typename std::vector<T>::iterator iterator;
@@ -231,6 +238,120 @@ namespace dlib
     /*!
         provides global swap support
     !*/
+
+    template <
+        typename T,
+        typename rand_type 
+        >
+    void serialize (
+        const random_subset_selector<T,rand_type>& item,
+        std::ostream& out 
+    );   
+    /*!
+        provides serialization support 
+    !*/
+
+    template <
+        typename T,
+        typename rand_type 
+        >
+    void deserialize (
+        random_subset_selector<T,rand_type>& item,
+        std::istream& in
+    );   
+    /*!
+        provides deserialization support 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename alloc
+        >
+    random_subset_selector<T> randomly_subsample (
+        const std::vector<T,alloc>& samples,
+        unsigned long num
+    );
+    /*!
+        ensures
+            - returns a random subset R such that:
+                - R contains a random subset of the given samples
+                - R.size() == min(num, samples.size())
+                - R.max_size() == num
+            - The random number generator used by this function will always be
+              initialized in the same way.  I.e. this function will always pick
+              the same random subsample if called multiple times.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename alloc,
+        typename U
+        >
+    random_subset_selector<T> randomly_subsample (
+        const std::vector<T,alloc>& samples,
+        unsigned long num,
+        const U& random_seed
+    );
+    /*!
+        requires
+            - random_seed must be convertible to a string by dlib::cast_to_string()
+        ensures
+            - returns a random subset R such that:
+                - R contains a random subset of the given samples
+                - R.size() == min(num, samples.size())
+                - R.max_size() == num
+            - The given random_seed will be used to initialize the random number
+              generator used by this function.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    random_subset_selector<T> randomly_subsample (
+        const random_subset_selector<T>& samples,
+        unsigned long num
+    );
+    /*!
+        ensures
+            - returns a random subset R such that:
+                - R contains a random subset of the given samples
+                - R.size() == min(num, samples.size())
+                - R.max_size() == num
+            - The random number generator used by this function will always be
+              initialized in the same way.  I.e. this function will always pick
+              the same random subsample if called multiple times.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename U
+        >
+    random_subset_selector<T> randomly_subsample (
+        const random_subset_selector<T>& samples,
+        unsigned long num,
+        const U& random_seed
+    );
+    /*!
+        requires
+            - random_seed must be convertible to a string by dlib::cast_to_string()
+        ensures
+            - returns a random subset R such that:
+                - R contains a random subset of the given samples
+                - R.size() == min(num, samples.size())
+                - R.max_size() == num
+            - The given random_seed will be used to initialize the random number
+              generator used by this function.
+    !*/
+
+// ----------------------------------------------------------------------------------------
 
 }
 

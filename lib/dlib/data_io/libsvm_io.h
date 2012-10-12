@@ -11,6 +11,7 @@
 #include "../algs.h"
 #include "../matrix.h"
 #include "../string.h"
+#include "../svm/sparse_vector.h"
 #include <vector>
 
 namespace dlib
@@ -22,13 +23,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    namespace impl
-    {
-        template <typename T> struct strip_const { typedef T type; };
-        template <typename T> struct strip_const<const T> { typedef T type; };
-        template <typename T> struct strip_const<const T&> { typedef T type; };
-    }
-
     template <typename sample_type, typename label_type, typename alloc1, typename alloc2>
     void load_libsvm_formatted_data (
         const std::string& file_name,
@@ -38,13 +32,14 @@ namespace dlib
     {
         using namespace std;
         typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
+        typedef typename basic_type<typename pair_type::first_type>::type key_type;
         typedef typename pair_type::second_type value_type;
 
         // You must use unsigned integral key types in your sparse vectors
         COMPILE_TIME_ASSERT(is_unsigned_type<key_type>::value);
 
         samples.clear();
+        labels.clear();
 
         ifstream fin(file_name.c_str());
 
@@ -105,6 +100,82 @@ namespace dlib
     }
 
 // ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+    template <typename sample_type, typename alloc>
+    typename enable_if<is_const_type<typename sample_type::value_type::first_type> >::type 
+    fix_nonzero_indexing (
+        std::vector<sample_type,alloc>& samples
+    )
+    {
+        typedef typename sample_type::value_type pair_type;
+        typedef typename basic_type<typename pair_type::first_type>::type key_type;
+
+        if (samples.size() == 0)
+            return;
+
+        // figure out the min index value
+        key_type min_idx = samples[0].begin()->first;
+        for (unsigned long i = 0; i < samples.size(); ++i)
+            min_idx = std::min(min_idx, samples[i].begin()->first);
+
+        // Now adjust all the samples so that their min index value is zero.
+        if (min_idx != 0)
+        {
+            sample_type temp;
+            for (unsigned long i = 0; i < samples.size(); ++i)
+            {
+                // copy samples[i] into temp but make sure it has a min index of zero.
+                temp.clear();
+                typename sample_type::iterator j;
+                for (j = samples[i].begin(); j != samples[i].end(); ++j)
+                {
+                    temp.insert(temp.end(), std::make_pair(j->first-min_idx, j->second));
+                }
+
+                // replace the current sample with temp.
+                samples[i].swap(temp);
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+// If the "first" values in the std::pair objects are not const then we can modify them 
+// directly and that is what this version of fix_nonzero_indexing() does.
+    template <typename sample_type, typename alloc>
+    typename disable_if<is_const_type<typename sample_type::value_type::first_type> >::type 
+    fix_nonzero_indexing (
+        std::vector<sample_type,alloc>& samples
+    )
+    {
+        typedef typename sample_type::value_type pair_type;
+        typedef typename basic_type<typename pair_type::first_type>::type key_type;
+
+        if (samples.size() == 0)
+            return;
+
+        // figure out the min index value
+        key_type min_idx = samples[0].begin()->first;
+        for (unsigned long i = 0; i < samples.size(); ++i)
+            min_idx = std::min(min_idx, samples[i].begin()->first);
+
+        // Now adjust all the samples so that their min index value is zero.
+        if (min_idx != 0)
+        {
+            for (unsigned long i = 0; i < samples.size(); ++i)
+            {
+                typename sample_type::iterator j;
+                for (j = samples[i].begin(); j != samples[i].end(); ++j)
+                {
+                    j->first -= min_idx;
+                }
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
 
 // This is an overload for sparse vectors
     template <typename sample_type, typename label_type, typename alloc1, typename alloc2>
@@ -115,7 +186,7 @@ namespace dlib
     )
     {
         typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
+        typedef typename basic_type<typename pair_type::first_type>::type key_type;
 
         // You must use unsigned integral key types in your sparse vectors
         COMPILE_TIME_ASSERT(is_unsigned_type<key_type>::value);
@@ -193,55 +264,6 @@ namespace dlib
                 throw sample_data_io_error("Error while writing to file " + file_name);
         }
 
-    }
-
-// ----------------------------------------------------------------------------------------
-
-    template <typename sample_type, typename alloc>
-    std::vector<matrix<typename sample_type::value_type::second_type,0,1> > sparse_to_dense (
-        const std::vector<sample_type, alloc>& samples
-    )
-    {
-        typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
-
-        // You must use unsigned integral key types in your sparse vectors
-        COMPILE_TIME_ASSERT(is_unsigned_type<key_type>::value);
-
-        typedef typename sample_type::value_type pair_type;
-        typedef typename impl::strip_const<typename pair_type::first_type>::type key_type;
-        typedef typename pair_type::second_type value_type;
-
-        std::vector< matrix<value_type,0,1> > result;
-
-        // do nothing if there aren't any samples
-        if (samples.size() == 0)
-            return result;
-
-
-        // figure out how many elements we need in our dense vectors.  
-        unsigned long max_dim = 0;
-        for (unsigned long i = 0; i < samples.size(); ++i)
-        {
-            if (samples[i].size() > 0)
-                max_dim = std::max<unsigned long>(max_dim, (--samples[i].end())->first + 1);
-        }
-
-
-        // now turn all the samples into dense samples
-        result.resize(samples.size());
-
-        for (unsigned long i = 0; i < samples.size(); ++i)
-        {
-            result[i].set_size(max_dim);
-            result[i] = 0;
-            for (typename sample_type::const_iterator j = samples[i].begin(); j != samples[i].end(); ++j)
-            {
-                result[i](j->first) = j->second;
-            }
-        }
-
-        return result;
     }
 
 // ----------------------------------------------------------------------------------------

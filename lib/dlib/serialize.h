@@ -50,6 +50,7 @@
         - std::wstring
         - std::vector
         - std::map
+        - std::pair
         - std::complex
         - dlib::uint64
         - dlib::int64
@@ -63,6 +64,7 @@
         - std::wstring
         - std::vector
         - std::map
+        - std::pair
         - std::complex
         - dlib::uint64
         - dlib::int64
@@ -604,6 +606,38 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename first_type, typename second_type>
+    void serialize (
+        const std::pair<first_type, second_type>& item,
+        std::ostream& out
+    )
+    {
+        try
+        { 
+            serialize(item.first,out); 
+            serialize(item.second,out); 
+        }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while serializing object of type std::pair"); }
+    }
+
+    template <typename first_type, typename second_type>
+    void deserialize (
+        std::pair<first_type, second_type>& item,
+        std::istream& in 
+    )
+    {
+        try
+        { 
+            deserialize(item.first,in); 
+            deserialize(item.second,in); 
+        }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while deserializing object of type std::pair"); }
+    }
+
+// ----------------------------------------------------------------------------------------
+
     template <typename domain, typename range, typename compare, typename alloc>
     void serialize (
         const std::map<domain,range, compare, alloc>& item,
@@ -692,6 +726,76 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename alloc>
+    void serialize (
+        const std::vector<char,alloc>& item,
+        std::ostream& out
+    )
+    {
+        try
+        { 
+            const unsigned long size = static_cast<unsigned long>(item.size());
+            serialize(size,out); 
+            out.write(&item[0], item.size());
+        }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while serializing object of type std::vector"); }
+    }
+
+    template <typename alloc>
+    void deserialize (
+        std::vector<char, alloc>& item,
+        std::istream& in
+    )
+    {
+        try 
+        { 
+            unsigned long size;
+            deserialize(size,in); 
+            item.resize(size);
+            in.read(&item[0], item.size());
+        }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while deserializing object of type std::vector"); }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename alloc>
+    void serialize (
+        const std::vector<unsigned char,alloc>& item,
+        std::ostream& out
+    )
+    {
+        try
+        { 
+            const unsigned long size = static_cast<unsigned long>(item.size());
+            serialize(size,out); 
+            out.write((char*)&item[0], item.size());
+        }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while serializing object of type std::vector"); }
+    }
+
+    template <typename alloc>
+    void deserialize (
+        std::vector<unsigned char, alloc>& item,
+        std::istream& in
+    )
+    {
+        try 
+        { 
+            unsigned long size;
+            deserialize(size,in); 
+            item.resize(size);
+            in.read((char*)&item[0], item.size());
+        }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while deserializing object of type std::vector"); }
+    }
+
+// ----------------------------------------------------------------------------------------
+
     inline void serialize (
         const std::string& item,
         std::ostream& out
@@ -711,27 +815,16 @@ namespace dlib
         std::istream& in
     )
     {
-        char* buf = 0;
-        try
-        {
-            unsigned long size;
-            try { deserialize(size,in); }
-            catch (serialization_error& e)
-            { throw serialization_error(e.info + "\n   while deserializing object of type std::string"); }
+        unsigned long size;
+        try { deserialize(size,in); }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while deserializing object of type std::string"); }
 
-            buf = new char[size+1];
-            buf[size] = 0;            
-            in.read(buf,size);
-            item.assign(buf);
-            if (!in) throw serialization_error("Error deserializing object of type std::string");
-            delete [] buf;
-        }
-        catch (...)
+        item.resize(size);
+        if (size != 0)
         {
-            if (buf)
-                delete [] buf;
-            item.erase();
-            throw;
+            in.read(&item[0],size);
+            if (!in) throw serialization_error("Error deserializing object of type std::string");
         }
     }
 

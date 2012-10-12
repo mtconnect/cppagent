@@ -140,6 +140,36 @@ namespace dlib
                   R(i) == m(row,i)
     !*/
 
+    template <typename EXP>
+    struct rowm_exp
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This struct allows you to determine the type of matrix expression 
+                object returned from the rowm(m,row) function.  An example makes its
+                use clear:
+
+                template <typename EXP>
+                void do_something( const matrix_exp<EXP>& mat)
+                {
+                    // r is a matrix expression that aliases mat.
+                    typename rowm_exp<EXP>::type r = rowm(mat,0);
+
+                    // Print the first row of mat.  So we see that by using
+                    // rowm_exp we can save the object returned by rowm() in
+                    // a local variable.    
+                    cout << r << endl;
+
+                    // Note that you can only save the return value of rowm() to
+                    // a local variable if the argument to rowm() has a lifetime
+                    // beyond the rowm() expression.  The example shown above is
+                    // OK but the following would result in undefined behavior:
+                    typename rowm_exp<EXP>::type bad = rowm(mat + mat,0);
+                }
+        !*/
+        typedef type_of_expression_returned_by_rowm type;
+    };
+
 // ----------------------------------------------------------------------------------------
 
     const matrix_exp rowm (
@@ -196,6 +226,36 @@ namespace dlib
                 - for all valid i:
                   R(i) == m(i,col)
     !*/
+
+    template <typename EXP>
+    struct colm_exp
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This struct allows you to determine the type of matrix expression 
+                object returned from the colm(m,col) function.  An example makes its
+                use clear:
+
+                template <typename EXP>
+                void do_something( const matrix_exp<EXP>& mat)
+                {
+                    // c is a matrix expression that aliases mat.
+                    typename colm_exp<EXP>::type c = colm(mat,0);
+
+                    // Print the first column of mat.  So we see that by using
+                    // colm_exp we can save the object returned by colm() in
+                    // a local variable.    
+                    cout << c << endl;
+
+                    // Note that you can only save the return value of colm() to
+                    // a local variable if the argument to colm() has a lifetime
+                    // beyond the colm() expression.  The example shown above is
+                    // OK but the following would result in undefined behavior:
+                    typename colm_exp<EXP>::type bad = colm(mat + mat,0);
+                }
+        !*/
+        typedef type_of_expression_returned_by_colm type;
+    };
 
 // ----------------------------------------------------------------------------------------
 
@@ -264,6 +324,10 @@ namespace dlib
                 - set_subm(m,row,col,nr,nc) = scalar_value;
               result in it being the case that:
                 - subm(m,row,col,nr,nc) == uniform_matrix<matrix::type>(nr,nc,scalar_value).
+
+            - In addition to the normal assignment statements using the = symbol, you may
+              also use the usual += and -= versions of the assignment operator.  In these
+              cases, they have their usual effect.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -286,6 +350,10 @@ namespace dlib
                 - set_subm(m,rect) = scalar_value;
               result in it being the case that:
                 - subm(m,rect) == uniform_matrix<matrix::type>(nr,nc,scalar_value).
+
+            - In addition to the normal assignment statements using the = symbol, you may
+              also use the usual += and -= versions of the assignment operator.  In these
+              cases, they have their usual effect.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -313,6 +381,10 @@ namespace dlib
                 - set_subm(m,rows,cols) = scalar_value;
               result in it being the case that:
                 - subm(m,rows,cols) == uniform_matrix<matrix::type>(nr,nc,scalar_value).
+
+            - In addition to the normal assignment statements using the = symbol, you may
+              also use the usual += and -= versions of the assignment operator.  In these
+              cases, they have their usual effect.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -334,6 +406,10 @@ namespace dlib
                 - set_rowm(m,row) = scalar_value;
               result in it being the case that:
                 - rowm(m,row) == uniform_matrix<matrix::type>(1,nc,scalar_value).
+
+            - In addition to the normal assignment statements using the = symbol, you may
+              also use the usual += and -= versions of the assignment operator.  In these
+              cases, they have their usual effect.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -358,6 +434,10 @@ namespace dlib
                 - set_rowm(m,rows) = scalar_value;
               result in it being the case that:
                 - rowm(m,rows) == uniform_matrix<matrix::type>(nr,nc,scalar_value).
+
+            - In addition to the normal assignment statements using the = symbol, you may
+              also use the usual += and -= versions of the assignment operator.  In these
+              cases, they have their usual effect.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -379,6 +459,10 @@ namespace dlib
                 - set_colm(m,col) = scalar_value;
               result in it being the case that:
                 - colm(m,col) == uniform_matrix<matrix::type>(nr,1,scalar_value).
+
+            - In addition to the normal assignment statements using the = symbol, you may
+              also use the usual += and -= versions of the assignment operator.  In these
+              cases, they have their usual effect.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -403,6 +487,10 @@ namespace dlib
                 - set_colm(m,cols) = scalar_value;
               result in it being the case that:
                 - colm(m,cols) == uniform_matrix<matrix::type>(nr,nc,scalar_value).
+
+            - In addition to the normal assignment statements using the = symbol, you may
+              also use the usual += and -= versions of the assignment operator.  In these
+              cases, they have their usual effect.
     !*/
 
 // ----------------------------------------------------------------------------------------

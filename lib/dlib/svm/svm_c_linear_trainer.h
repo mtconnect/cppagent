@@ -18,45 +18,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    template <typename T>
-    typename enable_if<is_matrix<typename T::type>,unsigned long>::type num_dimensions_in_samples (
-        const T& samples
-    ) 
-    {
-        if (samples.size() > 0)
-            return samples(0).size();
-        else
-            return 0;
-    }
-
-    template <typename T>
-    typename disable_if<is_matrix<typename T::type>,unsigned long>::type num_dimensions_in_samples (
-        const T& samples
-    ) 
-    /*!
-        T must be a sparse vector with an integral key type
-    !*/
-    {
-        typedef typename T::type sample_type;
-        // You are getting this error because you are attempting to use sparse sample vectors with
-        // the svm_c_linear_trainer object but you aren't using an unsigned integer as your key type
-        // in the sparse vectors.
-        COMPILE_TIME_ASSERT(sparse_vector::has_unsigned_keys<sample_type>::value);
-
-
-        // these should be sparse samples so look over all them to find the max dimension.
-        unsigned long max_dim = 0;
-        for (long i = 0; i < samples.size(); ++i)
-        {
-            if (samples(i).size() > 0)
-                max_dim = std::max<unsigned long>(max_dim, (--samples(i).end())->first + 1);
-        }
-
-        return max_dim;
-    }
-    
-// ----------------------------------------------------------------------------------------
-
     template <
         typename matrix_type, 
         typename in_sample_vector_type,
@@ -82,14 +43,16 @@ namespace dlib
             const in_sample_vector_type& samples_,
             const in_scalar_vector_type& labels_,
             const bool be_verbose_,
-            const scalar_type eps_
+            const scalar_type eps_,
+            const unsigned long max_iter
         ) :
             samples(samples_),
             labels(labels_),
             Cpos(C_pos),
             Cneg(C_neg),
             be_verbose(be_verbose_),
-            eps(eps_)
+            eps(eps_),
+            max_iterations(max_iter)
         {
             dot_prods.resize(samples.size());
             is_first_call = true;
@@ -105,12 +68,14 @@ namespace dlib
         ) const 
         {
             // plus 1 for the bias term
-            return num_dimensions_in_samples(samples) + 1;
+            return max_index_plus_one(samples) + 1;
         }
 
         virtual bool optimization_status (
             scalar_type current_objective_value,
             scalar_type current_error_gap,
+            scalar_type ,
+            scalar_type ,
             unsigned long num_cutting_planes,
             unsigned long num_iterations
         ) const 
@@ -124,6 +89,12 @@ namespace dlib
                 cout << "iter: " << num_iterations << endl;
                 cout << endl;
             }
+
+            if (num_iterations >= max_iterations)
+                return true;
+
+            if (current_objective_value == 0)
+                return true;
 
             if (current_error_gap/current_objective_value < eps)
                 return true;
@@ -191,76 +162,6 @@ namespace dlib
     // -----------------------------------------------------
     // -----------------------------------------------------
 
-        // The next few functions are overloads to handle both dense and sparse vectors
-        template <typename EXP>
-        inline void add_to (
-            matrix_type& subgradient,
-            const matrix_exp<EXP>& sample,
-            const scalar_type& C
-        ) const
-        {
-            for (long r = 0; r < sample.size(); ++r)
-                subgradient(r) += C*sample(r);
-        }
-
-        template <typename T>
-        inline typename disable_if<is_matrix<T> >::type add_to (
-            matrix_type& subgradient,
-            const T& sample,
-            const scalar_type& C
-        ) const
-        {
-            for (typename T::const_iterator i = sample.begin(); i != sample.end(); ++i)
-                subgradient(i->first) += C*i->second;
-        }
-
-        template <typename EXP>
-        inline void subtract_from (
-            matrix_type& subgradient,
-            const matrix_exp<EXP>& sample,
-            const scalar_type& C
-        ) const
-        {
-            for (long r = 0; r < sample.size(); ++r)
-                subgradient(r) -= C*sample(r);
-        }
-
-        template <typename T>
-        inline typename disable_if<is_matrix<T> >::type subtract_from (
-            matrix_type& subgradient,
-            const T& sample,
-            const scalar_type& C
-        ) const
-        {
-            for (typename T::const_iterator i = sample.begin(); i != sample.end(); ++i)
-                subgradient(i->first) -= C*i->second;
-        }
-
-        template <typename EXP>
-        scalar_type dot_helper (
-            const matrix_type& w,
-            const matrix_exp<EXP>& sample
-        ) const
-        {
-            return dot(colm(w,0,sample.size()), sample);
-        }
-
-        template <typename T>
-        typename disable_if<is_matrix<T>,scalar_type >::type dot_helper (
-            const matrix_type& w,
-            const T& sample
-        ) const
-        {
-            // compute a dot product between a dense column vector and a sparse vector
-            scalar_type temp = 0;
-            for (typename T::const_iterator i = sample.begin(); i != sample.end(); ++i)
-                temp += w(i->first) * i->second;
-            return temp;
-        }
-
-    // -----------------------------------------------------
-    // -----------------------------------------------------
-
         void line_search (
             matrix_type& w
         ) const
@@ -270,9 +171,11 @@ namespace dlib
                 - for all i: #dot_prods[i] == dot(colm(#w,0,w.size()-1), samples(i)) - #w(w.size()-1)
         !*/
         {
-
+            // The reason for using w_size_m1 and not just w.size()-1 is because
+            // doing it this way avoids an inane warning from gcc that can occur in some cases.
+            const long w_size_m1 = w.size()-1;
             for (long i = 0; i < samples.size(); ++i)
-                dot_prods[i] = dot_helper(w,samples(i)) - w(w.size()-1);
+                dot_prods[i] = dot(colm(w,0,w_size_m1), samples(i)) - w(w_size_m1);
 
             if (is_first_call)
             {
@@ -395,6 +298,7 @@ namespace dlib
 
         const bool be_verbose;
         const scalar_type eps;
+        const unsigned long max_iterations;
     };
 
 // ----------------------------------------------------------------------------------------
@@ -411,10 +315,12 @@ namespace dlib
         const in_sample_vector_type& samples,
         const in_scalar_vector_type& labels,
         const bool be_verbose,
-        const scalar_type eps
+        const scalar_type eps,
+        const unsigned long max_iterations
     )
     {
-        return oca_problem_c_svm<matrix_type, in_sample_vector_type, in_scalar_vector_type>(C_pos, C_neg, samples, labels, be_verbose, eps);
+        return oca_problem_c_svm<matrix_type, in_sample_vector_type, in_scalar_vector_type>(
+            C_pos, C_neg, samples, labels, be_verbose, eps, max_iterations);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -432,6 +338,12 @@ namespace dlib
         typedef typename kernel_type::mem_manager_type mem_manager_type;
         typedef decision_function<kernel_type> trained_function_type;
 
+        // You are getting a compiler error on this line because you supplied a non-linear kernel
+        // to the svm_c_linear_trainer object.  You have to use one of the linear kernels with this
+        // trainer.
+        COMPILE_TIME_ASSERT((is_same_type<K, linear_kernel<sample_type> >::value ||
+                             is_same_type<K, sparse_linear_kernel<sample_type> >::value ));
+
         svm_c_linear_trainer (
         )
         {
@@ -439,6 +351,8 @@ namespace dlib
             Cneg = 1;
             verbose = false;
             eps = 0.001;
+            max_iterations = 10000;
+            learn_nonnegative_weights = false;
         }
 
         explicit svm_c_linear_trainer (
@@ -455,6 +369,10 @@ namespace dlib
 
             Cpos = C;
             Cneg = C;
+            verbose = false;
+            eps = 0.001;
+            max_iterations = 10000;
+            learn_nonnegative_weights = false;
         }
 
         void set_epsilon (
@@ -474,6 +392,16 @@ namespace dlib
 
         const scalar_type get_epsilon (
         ) const { return eps; }
+
+        unsigned long get_max_iterations (
+        ) const { return max_iterations; }
+
+        void set_max_iterations (
+            unsigned long max_iter
+        ) 
+        {
+            max_iterations = max_iter;
+        }
 
         void be_verbose (
         )
@@ -504,6 +432,16 @@ namespace dlib
         ) const
         {
             return kernel_type();
+        }
+
+        bool learns_nonnegative_weights (
+        ) const { return learn_nonnegative_weights; }
+       
+        void set_learns_nonnegative_weights (
+            bool value
+        )
+        {
+            learn_nonnegative_weights = value;
         }
 
         void set_c (
@@ -618,9 +556,16 @@ namespace dlib
             typedef matrix<scalar_type,0,1> w_type;
             w_type w;
 
+            unsigned long num_nonnegative = 0;
+            if (learn_nonnegative_weights)
+            {
+                num_nonnegative = max_index_plus_one(x);
+            }
+
             svm_objective = solver(
-                make_oca_problem_c_svm<w_type>(Cpos, Cneg, x, y, verbose, eps), 
-                w);
+                make_oca_problem_c_svm<w_type>(Cpos, Cneg, x, y, verbose, eps, max_iterations), 
+                w,
+                num_nonnegative);
 
             // put the solution into a decision function and then return it
             decision_function<kernel_type> df;
@@ -628,10 +573,10 @@ namespace dlib
             df.basis_vectors.set_size(1);
             // Copy the plane normal into the output basis vector.  The output vector might be a
             // sparse vector container so we need to use this special kind of copy to handle that case.
-            // As an aside, the reason for using num_dimensions_in_samples() and not just w.size()-1 is because
+            // As an aside, the reason for using max_index_plus_one() and not just w.size()-1 is because
             // doing it this way avoids an inane warning from gcc that can occur in some cases.
-            const long out_size = num_dimensions_in_samples(x);
-            sparse_vector::assign_dense_to_sparse(df.basis_vectors(0), matrix_cast<scalar_type>(colm(w, 0, out_size)));
+            const long out_size = max_index_plus_one(x);
+            assign(df.basis_vectors(0), matrix_cast<scalar_type>(colm(w, 0, out_size)));
             df.alpha.set_size(1);
             df.alpha(0) = 1;
 
@@ -643,6 +588,8 @@ namespace dlib
         oca solver;
         scalar_type eps;
         bool verbose;
+        unsigned long max_iterations;
+        bool learn_nonnegative_weights;
     }; 
 
 // ----------------------------------------------------------------------------------------

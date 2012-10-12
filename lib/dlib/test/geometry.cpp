@@ -10,6 +10,8 @@
 #include <dlib/string.h>
 #include <dlib/matrix.h>
 #include <dlib/rand.h>
+#include <dlib/array2d.h>
+#include <dlib/image_transforms.h>
 
 #include "tester.h"
 
@@ -329,7 +331,7 @@ namespace
             std::vector< dlib::vector<double> > a;
 
             dlib::vector<double> v;
-            dlib::rand::float_1a rnd;
+            dlib::rand rnd;
 
             for (int i = 0; i < 10; ++i)
             {
@@ -346,12 +348,275 @@ namespace
 
         }
 
+
+        DLIB_TEST(rectangle() + point(5,4) + point(10,10) == rectangle(5,4,10,10));
+
+        // make sure the center of a centered rectangle is always right
+        for (long x = -10; x <= 10; ++x)
+        {
+            for (long y = -10; y <= 10; ++y)
+            {
+                for (long w = 0; w < 10; ++w)
+                {
+                    for (long h = 0; h < 10; ++h)
+                    {
+                        DLIB_TEST(center(centered_rect(x,y,w,h)) == point(x,y));
+                    }
+                }
+            }
+        }
+
     }
 
+// ----------------------------------------------------------------------------------------
+
+    void test_border_enumerator()
+    {
+
+
+
+        border_enumerator be;
+        DLIB_TEST(be.at_start() == true);
+        DLIB_TEST(be.size() == 0);
+        DLIB_TEST(be.current_element_valid() == false);
+        DLIB_TEST(be.move_next() == false);
+        DLIB_TEST(be.at_start() == false);
+        DLIB_TEST(be.current_element_valid() == false);
+        DLIB_TEST(be.move_next() == false);
+        DLIB_TEST(be.at_start() == false);
+        DLIB_TEST(be.current_element_valid() == false);
+        DLIB_TEST(be.size() == 0);
+
+        be = border_enumerator(rectangle(4,4,4,4),1);
+        DLIB_TEST(be.at_start() == true);
+        DLIB_TEST(be.size() == 1);
+        be = border_enumerator(rectangle(4,4,4,4),3);
+        DLIB_TEST(be.at_start() == true);
+        DLIB_TEST(be.size() == 1);
+        be = border_enumerator(rectangle(4,4,4,4),0);
+        DLIB_TEST(be.at_start() == true);
+        DLIB_TEST(be.size() == 0);
+        be = border_enumerator(rectangle(4,4,5,5),0);
+        DLIB_TEST(be.at_start() == true);
+        DLIB_TEST(be.size() == 0);
+        be = border_enumerator(rectangle(4,4,5,5),1);
+        DLIB_TEST(be.at_start() == true);
+        DLIB_TEST(be.size() == 4);
+        be = border_enumerator(rectangle(4,4,5,5),2);
+        DLIB_TEST(be.size() == 4);
+        be = border_enumerator(rectangle(4,4,6,6),1);
+        DLIB_TEST(be.size() == 8);
+        be = border_enumerator(rectangle(4,4,6,6),2);
+        DLIB_TEST(be.size() == 9);
+        be = border_enumerator(rectangle(4,4,6,6),3);
+        DLIB_TEST(be.size() == 9);
+        DLIB_TEST(be.at_start() == true);
+
+        array2d<unsigned char> img, img2;
+        for (int size = 1; size < 10; ++size)
+        {
+            for (int bs = 0; bs < 4; ++bs)
+            {
+                img.set_size(size,size);
+                img2.set_size(size,size);
+
+                assign_all_pixels(img, 1);
+                assign_all_pixels(img2, 1);
+
+                zero_border_pixels(img2, bs,bs);
+
+                be = border_enumerator(get_rect(img),bs);
+                DLIB_TEST(be.at_start() == true);
+                DLIB_TEST(be.current_element_valid() == false);
+                while (be.move_next())
+                {
+                    DLIB_TEST(be.at_start() == false);
+                    DLIB_TEST(be.current_element_valid() == true);
+                    DLIB_TEST_MSG(get_rect(img).contains(be.element()) == true,
+                                 get_rect(img) << "   " << be.element()
+                    );
+                    const point p = be.element();
+                    img[p.y()][p.x()] = 0;
+                }
+                DLIB_TEST(be.at_start() == false);
+                DLIB_TEST(be.current_element_valid() == false);
+                DLIB_TEST(be.move_next() == false);
+                DLIB_TEST(be.current_element_valid() == false);
+                DLIB_TEST(be.move_next() == false);
+                DLIB_TEST(be.current_element_valid() == false);
+                DLIB_TEST(be.at_start() == false);
+
+                DLIB_TEST(array_to_matrix(img) == array_to_matrix(img2));
+
+            }
+        }
+
+        for (int size = 1; size < 10; ++size)
+        {
+            for (int bs = 0; bs < 4; ++bs)
+            {
+                img.set_size(size,size+5);
+                img2.set_size(size,size+5);
+
+                assign_all_pixels(img, 1);
+                assign_all_pixels(img2, 1);
+
+                zero_border_pixels(img2, bs,bs);
+
+                const point shift(4,5);
+
+                be = border_enumerator(translate_rect(get_rect(img),shift),bs);
+                DLIB_TEST(be.at_start() == true);
+                DLIB_TEST(be.current_element_valid() == false);
+                while (be.move_next())
+                {
+                    DLIB_TEST(be.current_element_valid() == true);
+                    DLIB_TEST(be.at_start() == false);
+                    DLIB_TEST_MSG(get_rect(img).contains(be.element()-shift) == true,
+                                 get_rect(img) << "   " << be.element()
+                    );
+                    const point p = be.element()-shift;
+                    img[p.y()][p.x()] = 0;
+                }
+                DLIB_TEST(be.current_element_valid() == false);
+                DLIB_TEST(be.move_next() == false);
+                DLIB_TEST(be.current_element_valid() == false);
+                DLIB_TEST(be.move_next() == false);
+                DLIB_TEST(be.current_element_valid() == false);
+                DLIB_TEST(be.at_start() == false);
+
+                DLIB_TEST(array_to_matrix(img) == array_to_matrix(img2));
+
+            }
+        }
+
+        for (int size = 1; size < 10; ++size)
+        {
+            for (int bs = 0; bs < 4; ++bs)
+            {
+                img.set_size(size+2,size);
+                img2.set_size(size+2,size);
+
+                assign_all_pixels(img, 1);
+                assign_all_pixels(img2, 1);
+
+                zero_border_pixels(img2, bs,bs);
+
+                const point shift(-4,5);
+
+                be = border_enumerator(translate_rect(get_rect(img),shift),bs);
+                DLIB_TEST(be.current_element_valid() == false);
+                while (be.move_next())
+                {
+                    DLIB_TEST(be.current_element_valid() == true);
+                    DLIB_TEST_MSG(get_rect(img).contains(be.element()-shift) == true,
+                                 get_rect(img) << "   " << be.element()
+                    );
+                    const point p = be.element()-shift;
+                    img[p.y()][p.x()] = 0;
+                }
+                DLIB_TEST(be.current_element_valid() == false);
+                DLIB_TEST(be.move_next() == false);
+                DLIB_TEST(be.current_element_valid() == false);
+                DLIB_TEST(be.move_next() == false);
+                DLIB_TEST(be.current_element_valid() == false);
+
+                DLIB_TEST(array_to_matrix(img) == array_to_matrix(img2));
+
+            }
+        }
+
+        {
+            matrix<bool,4,5> hits, truth;
+            const rectangle rect = rectangle(1,1,4,3); 
+
+            border_enumerator be(rect, rectangle(2,2, 3, 3));
+            DLIB_TEST(be.size() == 8);
+            hits = false;
+            while (be.move_next())
+            {
+                DLIB_TEST(rect.contains(be.element()));
+                hits(be.element().y(), be.element().x()) = true;
+            }
+            DLIB_TEST(be.current_element_valid() == false);
+            DLIB_TEST(be.size() == 8);
+            truth = false;
+            truth(1,1) = truth(1,2) = truth(1,3) = truth(1,4) = truth(2,1) =
+                truth(3,1) = truth(2,4) = truth(3,4) = true;
+            DLIB_TEST_MSG(truth == hits, truth << endl << hits);
+
+
+            
+
+            be = border_enumerator(rect, rectangle(0,0, 9, 9));
+            DLIB_TEST(be.size() == 0);
+            hits = false;
+            while (be.move_next())
+            {
+                DLIB_TEST(rect.contains(be.element()));
+                hits(be.element().y(), be.element().x()) = true;
+            }
+            DLIB_TEST(be.current_element_valid() == false);
+            DLIB_TEST(be.size() == 0);
+            truth = false;
+            DLIB_TEST(truth == hits);
+
+
+
+            be = border_enumerator(rect, rectangle(0,0, 3, 9));
+            DLIB_TEST(be.size() == 3);
+            hits = false;
+            while (be.move_next())
+            {
+                DLIB_TEST(rect.contains(be.element()));
+                hits(be.element().y(), be.element().x()) = true;
+            }
+            DLIB_TEST(be.current_element_valid() == false);
+            DLIB_TEST(be.size() == 3);
+            truth = false;
+            truth(1,4) = truth(2,4) = truth(3,4) = true;
+            DLIB_TEST(truth == hits);
 
 
 
 
+            be = border_enumerator(rect, rectangle(2,1, 4, 3));
+            DLIB_TEST(be.size() == 3);
+            hits = false;
+            while (be.move_next())
+            {
+                DLIB_TEST(rect.contains(be.element()));
+                hits(be.element().y(), be.element().x()) = true;
+            }
+            DLIB_TEST(be.current_element_valid() == false);
+            DLIB_TEST(be.size() == 3);
+            truth = false;
+            truth(1,1) = truth(2,1) = truth(3,1) = true;
+            DLIB_TEST(truth == hits);
+
+
+
+            be = border_enumerator(rect, rectangle(1,1, 5, 2));
+            DLIB_TEST(be.size() == 4);
+            hits = false;
+            while (be.move_next())
+            {
+                DLIB_TEST(rect.contains(be.element()));
+                hits(be.element().y(), be.element().x()) = true;
+            }
+            DLIB_TEST(be.current_element_valid() == false);
+            DLIB_TEST(be.size() == 4);
+            truth = false;
+            truth(3,1) = truth(3,2) = truth(3,3) = truth(3,4) = true;
+            DLIB_TEST(truth == hits);
+
+
+
+        }
+
+    }
+
+// ----------------------------------------------------------------------------------------
 
     class geometry_tester : public tester
     {
@@ -366,6 +631,7 @@ namespace
         )
         {
             geometry_test();
+            test_border_enumerator();
         }
     } a;
 

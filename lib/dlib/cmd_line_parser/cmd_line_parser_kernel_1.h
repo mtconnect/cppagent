@@ -137,7 +137,7 @@ namespace dlib
                     name_                == name()
                     description_         == description()
                     number_of_arguments_ == number_of_arguments()
-                    options[index]       == operator[](index)
+                    options[N][arg]      == argument(arg,N)
                     num_present          == count()                    
             !*/
 
@@ -284,10 +284,10 @@ namespace dlib
         ) const { return options.current_element_valid(); }
 
         const cmd_line_parser_option<charT>& element (
-        ) const { return *reinterpret_cast<cmd_line_parser_option<charT>*>(options.element().value()); }
+        ) const { return *static_cast<cmd_line_parser_option<charT>*>(options.element().value()); }
 
         cmd_line_parser_option<charT>& element (
-        ) { return *reinterpret_cast<cmd_line_parser_option<charT>*>(options.element().value()); }
+        ) { return *static_cast<cmd_line_parser_option<charT>*>(options.element().value()); }
 
         bool move_next (
         ) const { return options.move_next(); }
@@ -356,7 +356,7 @@ namespace dlib
         options.reset();
         while (options.move_next())
         {
-            delete reinterpret_cast<option_t*>(options.element().value());
+            delete static_cast<option_t*>(options.element().value());
         }
     }
 
@@ -380,7 +380,7 @@ namespace dlib
         options.reset();
         while (options.move_next())
         {
-            delete reinterpret_cast<option_t*>(options.element().value());
+            delete static_cast<option_t*>(options.element().value());
         }
         options.clear();
         reset();
@@ -413,7 +413,7 @@ namespace dlib
             options.reset();
             while (options.move_next())
             {
-                reinterpret_cast<option_t*>(options.element().value())->clear();                
+                static_cast<option_t*>(options.element().value())->clear();                
             }
             options.reset();
         }
@@ -469,7 +469,7 @@ namespace dlib
                         }
                         
 
-                        option_t* o = reinterpret_cast<option_t*>(options[temp]);
+                        option_t* o = static_cast<option_t*>(options[temp]);
 
                         // check the number of arguments after this option and make sure
                         // it is correct
@@ -547,7 +547,10 @@ namespace dlib
                         for (unsigned long k = 0; k < num; ++k)
                         {
                             string_type name;
-                            name = temp[k];
+                            // Doing this instead of name = temp[k] seems to avoid a bug in g++ (Ubuntu/Linaro 4.5.2-8ubuntu4) 4.5.2
+                            // which results in name[0] having the wrong value.
+                            name.resize(1);
+                            name[0] = temp[k];
 
 
                             // make sure this name is defined
@@ -557,7 +560,7 @@ namespace dlib
                                 throw cmd_line_parse_error(EINVALID_OPTION,name);
                             }
 
-                            option_t* o = reinterpret_cast<option_t*>(options[name]);
+                            option_t* o = static_cast<option_t*>(options[name]);
 
                             // if there are chars immediately following this option
                             int delta = 0;
@@ -626,7 +629,7 @@ namespace dlib
             options.reset();
             while (options.move_next())
             {
-                reinterpret_cast<option_t*>(options.element().value())->clear();                
+                static_cast<option_t*>(options.element().value())->clear();                
             }
             options.reset();
 
@@ -705,7 +708,7 @@ namespace dlib
         const string_type& name
     ) const
     {
-        return *reinterpret_cast<cmd_line_parser_option<charT>*>(options[name]);
+        return *static_cast<cmd_line_parser_option<charT>*>(options[name]);
     }
 
 // ----------------------------------------------------------------------------------------

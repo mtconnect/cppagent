@@ -13,6 +13,100 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
+        typename T, 
+        typename alloc
+        >
+    double mean_sign_agreement (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    );
+    /*!
+        requires
+            - a.size() == b.size()
+        ensures
+            - returns the number of times a[i] has the same sign as b[i] divided by
+              a.size().  So we return the probability that elements of a and b have
+              the same sign.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double correlation (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    );
+    /*!
+        requires
+            - a.size() == b.size()
+            - a.size() > 1
+        ensures
+            - returns the correlation coefficient between all the elements of a and b.
+              (i.e. how correlated is a(i) with b(i))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double covariance (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    );
+    /*!
+        requires
+            - a.size() == b.size()
+            - a.size() > 1
+        ensures
+            - returns the covariance between all the elements of a and b.
+              (i.e. how does a(i) vary with b(i))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double r_squared (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    );
+    /*!
+        requires
+            - a.size() == b.size()
+            - a.size() > 1
+        ensures
+            - returns the R^2 coefficient of determination between all the elements of a and b.
+              This value is just the square of correlation(a,b).
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double mean_squared_error (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    );
+    /*!
+        requires
+            - a.size() == b.size()
+        ensures
+            - returns the mean squared error between all the elements of a and b.
+              (i.e. mean(squared(vector_to_matrix(a)-vector_to_matrix(b))))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
         typename T
         >
     class running_stats
@@ -153,7 +247,158 @@ namespace dlib
             requires
                 - current_n() > 1
             ensures
-                - return (val-mean())/std::sqrt(variance());
+                - return (val-mean())/stddev();
+        !*/
+    };
+
+    template <typename T>
+    void serialize (
+        const running_stats<T>& item, 
+        std::ostream& out 
+    );
+    /*!
+        provides serialization support 
+    !*/
+
+    template <typename T>
+    void deserialize (
+        running_stats<T>& item, 
+        std::istream& in
+    );
+    /*!
+        provides serialization support 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    class running_scalar_covariance
+    {
+        /*!
+            REQUIREMENTS ON T
+                - T must be a float, double, or long double type
+
+            INITIAL VALUE
+                - mean_x() == 0
+                - mean_y() == 0
+                - current_n() == 0
+
+            WHAT THIS OBJECT REPRESENTS
+                This object represents something that can compute the running covariance 
+                of a stream of real number pairs.
+        !*/
+
+    public:
+
+        running_scalar_covariance(
+        );
+        /*!
+            ensures
+                - this object is properly initialized
+        !*/
+
+        void clear(
+        );
+        /*!
+            ensures
+                - this object has its initial value
+                - clears all memory of any previous data points
+        !*/
+
+        void add (
+            const T& x,
+            const T& y
+        );
+        /*!
+            ensures
+                - updates the statistics stored in this object so that
+                  the new pair (x,y) is factored into them.
+                - #current_n() == current_n() + 1
+        !*/
+
+        T current_n (
+        ) const;
+        /*!
+            ensures
+                - returns the number of points given to this object so far. 
+        !*/
+
+        T mean_x (
+        ) const;
+        /*!
+            ensures
+                - returns the mean value of all x samples presented to this object
+                  via add().
+        !*/
+
+        T mean_y (
+        ) const;
+        /*!
+            ensures
+                - returns the mean value of all y samples presented to this object
+                  via add().
+        !*/
+
+        T covariance (
+        ) const;
+        /*!
+            requires
+                - current_n() > 1
+            ensures
+                - returns the covariance between all the x and y samples presented
+                  to this object via add()
+        !*/
+
+        T correlation (
+        ) const;
+        /*!
+            requires
+                - current_n() > 1
+            ensures
+                - returns the correlation coefficient between all the x and y samples 
+                  presented to this object via add()
+        !*/
+
+        T variance_x (
+        ) const;
+        /*!
+            requires
+                - current_n() > 1
+            ensures
+                - returns the unbiased sample variance value of all x samples presented 
+                  to this object via add().
+        !*/
+
+        T variance_y (
+        ) const;
+        /*!
+            requires
+                - current_n() > 1
+            ensures
+                - returns the unbiased sample variance value of all y samples presented 
+                  to this object via add().
+        !*/
+
+        T stddev_x (
+        ) const;
+        /*!
+            requires
+                - current_n() > 1
+            ensures
+                - returns the unbiased sample standard deviation of all x samples
+                  presented to this object via add().
+        !*/
+
+        T stddev_y (
+        ) const;
+        /*!
+            requires
+                - current_n() > 1
+            ensures
+                - returns the unbiased sample standard deviation of all y samples
+                  presented to this object via add().
         !*/
     };
 
@@ -304,6 +549,7 @@ namespace dlib
     public:
         typedef typename matrix_type::mem_manager_type mem_manager_type;
         typedef typename matrix_type::type scalar_type;
+        typedef matrix_type result_type;
 
         template <typename vector_type>
         void train (
@@ -362,7 +608,7 @@ namespace dlib
                       input feature shown to train() 
         !*/
  
-        const matrix_type& operator() (
+        const result_type& operator() (
             const matrix_type& x
         ) const;
         /*!
@@ -374,8 +620,8 @@ namespace dlib
                   following properties: 
                     - Z.nr() == out_vector_size()
                     - Z.nc() == 1
-                    - the expected value of each element of Z is 0 
-                    - the expected variance of each element of Z is 1
+                    - the mean of each element of Z is 0 
+                    - the variance of each element of Z is 1
                     - Z == pointwise_multiply(x-means(), std_devs());
         !*/
 
@@ -459,6 +705,7 @@ namespace dlib
     public:
         typedef typename matrix_type::mem_manager_type mem_manager_type;
         typedef typename matrix_type::type scalar_type;
+        typedef matrix<scalar_type,0,1,mem_manager_type> result_type;
 
         template <typename vector_type>
         void train (
@@ -537,7 +784,7 @@ namespace dlib
                       matrix 
         !*/
 
-        const matrix<scalar_type,0,1,mem_manager_type>& operator() (
+        const result_type& operator() (
             const matrix_type& x
         ) const;
         /*!
@@ -549,8 +796,8 @@ namespace dlib
                   following properties: 
                     - Z.nr() == out_vector_size()
                     - Z.nc() == 1
-                    - the expected value of each element of Z is 0 
-                    - the expected variance of each element of Z is 1
+                    - the mean of each element of Z is 0 
+                    - the variance of each element of Z is 1
                     - Z == pca_matrix()*pointwise_multiply(x-means(), std_devs());
         !*/
 

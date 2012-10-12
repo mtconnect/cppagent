@@ -25,10 +25,26 @@ namespace dlib
             - out_image_type == is an implementation of array2d/array2d_kernel_abstract.h
             - pixel_traits<typename in_image_type::type>::has_alpha == false
             - pixel_traits<typename out_image_type::type>::has_alpha == false 
+            - pixel_traits<typename in_image_type::type>::is_unsigned == true 
+            - pixel_traits<typename out_image_type::type>::is_unsigned == true 
+            - pixel_traits<typename in_image_type::type>::max() < std::numeric_limits<long>::max() 
         ensures
             - #out_img == the histogram equalized version of in_img
             - #out_img.nc() == in_img.nc()
             - #out_img.nr() == in_img.nr()
+    !*/
+
+    template <
+        typename image_type 
+        >
+    void equalize_histogram (
+        image_type& img
+    );
+    /*!
+        requires
+            - it is valid to call equalize_histogram(img,img)
+        ensures
+            - calls equalize_histogram(img,img);
     !*/
 
 // ---------------------------------------------------------------------------------------
@@ -46,6 +62,8 @@ namespace dlib
     /*!
         requires
             - in_image_type == is an implementation of array2d/array2d_kernel_abstract.h
+            - pixel_traits<typename in_image_type::type>::is_unsigned == true 
+            - pixel_traits<typename in_image_type::type>::max() < std::numeric_limits<long>::max() 
             - hist must be capable of representing a column vector of length 
               pixel_traits<typename in_image_type>::max(). I.e. if R and C are nonzero
               then they must be values that don't conflict with the previous sentence.

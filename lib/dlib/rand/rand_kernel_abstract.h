@@ -19,10 +19,7 @@ namespace dlib
 
 
             WHAT THIS OBJECT REPRESENTS
-                this object represents a pseudorandom number generator.
-
-                note that different implementations do not necessairly return the 
-                same sequence of random numbers given the same seed.
+                This object represents a pseudorandom number generator.
         !*/
         
         public:
@@ -75,8 +72,6 @@ namespace dlib
             /*!
                 ensures
                     - returns a pseudorandom number in the range 0 to 255
-                throws
-                    - std::bad_alloc
             !*/
 
             uint16 get_random_16bit_number (
@@ -84,8 +79,6 @@ namespace dlib
             /*!
                 ensures
                     - returns a pseudorandom number in the range 0 to 2^16-1 
-                throws
-                    - std::bad_alloc
             !*/
 
             uint32 get_random_32bit_number (
@@ -93,8 +86,28 @@ namespace dlib
             /*!
                 ensures
                     - returns a pseudorandom number in the range 0 to 2^32-1 
-                throws
-                    - std::bad_alloc
+            !*/
+
+            float get_random_float (
+            );
+            /*!
+                ensures
+                    - returns a random float number N where:  0.0 <= N < 1.0.
+            !*/
+
+            double get_random_double (
+            );
+            /*!
+                ensures
+                    - returns a random double number N where:  0.0 <= N < 1.0.
+            !*/
+
+            double get_random_gaussian (
+            );
+            /*!
+                ensures
+                    - returns a random number sampled from a Gaussian distribution 
+                      with mean 0 and standard deviation 1. 
             !*/
 
             void swap (
@@ -115,6 +128,21 @@ namespace dlib
         provides a global swap function
     !*/
 
+    void serialize (
+        const rand& item, 
+        std::ostream& out 
+    );   
+    /*!
+        provides serialization support 
+    !*/
+
+    void deserialize (
+        rand& item, 
+        std::istream& in
+    );   
+    /*!
+        provides deserialization support 
+    !*/
 }
 
 #endif // DLIB_RAND_KERNEl_ABSTRACT_

@@ -58,7 +58,7 @@ namespace
         )
         {
             add_running_thread();
-            pipe& p = *reinterpret_cast<pipe*>(param);
+            pipe& p = *static_cast<pipe*>(param);
             try
             {
 
@@ -95,7 +95,7 @@ namespace
         )
         {
             add_running_thread();
-            pipe& p = *reinterpret_cast<pipe*>(param);
+            pipe& p = *static_cast<pipe*>(param);
             try
             {
 
@@ -131,7 +131,7 @@ namespace
         )
         {
             add_running_thread();
-            pipe& p = *reinterpret_cast<pipe*>(param);
+            pipe& p = *static_cast<pipe*>(param);
             try
             {
 
@@ -190,6 +190,10 @@ namespace
         DLIB_TEST(test2_0.size() == 0);
         DLIB_TEST(test_1.size() == 0);
         DLIB_TEST(test2_1.size() == 0);
+
+        DLIB_TEST(test.is_enqueue_enabled() == true);
+        DLIB_TEST(test.is_dequeue_enabled() == true);
+        DLIB_TEST(test.is_enabled() == true);
 
         test.empty();
         test2.empty();
@@ -515,6 +519,67 @@ namespace
         DLIB_TEST(test_1.size() == 0);
 
         DLIB_TEST(found_error == false);
+
+
+
+
+        {
+            test.enable();
+            test.enable_enqueue();
+            test.empty();
+            DLIB_TEST(test.size() == 0);
+            DLIB_TEST(test.is_enabled() == true);
+            DLIB_TEST(test.is_enqueue_enabled() == true);
+            DLIB_TEST(test.is_dequeue_enabled() == true);
+            test.disable_dequeue();
+            dlog << LINFO << "Make sure disable_dequeue() works right...";
+            DLIB_TEST(test.is_dequeue_enabled() == false);
+            DLIB_TEST(test.dequeue(a) == false);
+            test.wait_until_empty();
+            a = 4;
+            test.enqueue(a);
+            test.wait_until_empty();
+            test.wait_for_num_blocked_dequeues(4);
+            DLIB_TEST(test.size() == 1);
+            DLIB_TEST(test.dequeue(a) == false);
+            DLIB_TEST(test.dequeue_or_timeout(a,10000) == false);
+            DLIB_TEST(test.size() == 1);
+            a = 0;
+            test.enable_dequeue();
+            DLIB_TEST(test.is_dequeue_enabled() == true);
+            DLIB_TEST(test.dequeue(a) == true);
+            DLIB_TEST(a == 4);
+            test_1.wait_until_empty();
+        }
+        {
+            test_1.enable();
+            test_1.enable_enqueue();
+            test_1.empty();
+            DLIB_TEST(test_1.size() == 0);
+            DLIB_TEST(test_1.is_enabled() == true);
+            DLIB_TEST(test_1.is_enqueue_enabled() == true);
+            DLIB_TEST(test_1.is_dequeue_enabled() == true);
+            test_1.disable_dequeue();
+            dlog << LINFO << "Make sure disable_dequeue() works right...";
+            DLIB_TEST(test_1.is_dequeue_enabled() == false);
+            DLIB_TEST(test_1.dequeue(a) == false);
+            a = 4;
+            test_1.wait_for_num_blocked_dequeues(4);
+            test_1.wait_for_num_blocked_dequeues(0);
+            test_1.enqueue(a);
+            test_1.wait_until_empty();
+            DLIB_TEST(test_1.size() == 1);
+            DLIB_TEST(test_1.dequeue(a) == false);
+            DLIB_TEST(test_1.dequeue_or_timeout(a,10000) == false);
+            DLIB_TEST(test_1.size() == 1);
+            a = 0;
+            test_1.enable_dequeue();
+            DLIB_TEST(test_1.is_dequeue_enabled() == true);
+            DLIB_TEST(test_1.dequeue(a) == true);
+            DLIB_TEST(a == 4);
+            test_1.wait_until_empty();
+        }
+
     }
 
 
@@ -532,7 +597,7 @@ namespace
         void perform_test (
         )
         {
-            pipe_kernel_test<dlib::pipe<int>::kernel_1a>();
+            pipe_kernel_test<dlib::pipe<int> >();
         }
     } a;
 

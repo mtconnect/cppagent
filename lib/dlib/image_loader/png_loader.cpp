@@ -11,6 +11,7 @@
 #include "../dir_nav.h"
 #include "png_loader.h"
 #include <png.h>
+#include "../string.h"
 
 namespace dlib
 {
@@ -87,6 +88,16 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    // Don't do anything when libpng calls us to tell us about an error.  Just return to 
+    // our own code and throw an exception (at the long jump target).
+    void png_loader_user_error_fn_silent(png_structp  png_struct, png_const_charp ) 
+    {
+        longjmp(png_jmpbuf(png_struct),1);
+    }
+    void png_loader_user_warning_fn_silent(png_structp , png_const_charp ) 
+    {
+    }
+
     void png_loader::read_image( const char* filename )
     {
         ld_.reset(new LibpngData);
@@ -110,7 +121,7 @@ namespace dlib
             fclose( fp );
             throw image_load_error(std::string("png_loader: format error in file ") + filename);
         }
-        ld_->png_ptr_ = png_create_read_struct( PNG_LIBPNG_VER_STRING, NULL, NULL, NULL );
+        ld_->png_ptr_ = png_create_read_struct( PNG_LIBPNG_VER_STRING, NULL, &png_loader_user_error_fn_silent, &png_loader_user_warning_fn_silent );
         if ( ld_->png_ptr_ == NULL )
         {
             fclose( fp );
@@ -130,14 +141,26 @@ namespace dlib
             png_destroy_read_struct( &( ld_->png_ptr_ ), &( ld_->info_ptr_ ), ( png_infopp )NULL );
             throw image_load_error(std::string("png_loader: parse error in file ") + filename);
         }
+
+        if (setjmp(png_jmpbuf(ld_->png_ptr_)))
+        {
+            // If we get here, we had a problem writing the file 
+            fclose(fp);
+            png_destroy_read_struct( &( ld_->png_ptr_ ), &( ld_->info_ptr_ ), &( ld_->end_info_ ) );
+            throw image_load_error(std::string("png_loader: parse error in file ") + filename);
+        }
+
+        png_set_palette_to_rgb(ld_->png_ptr_);
+
         png_init_io( ld_->png_ptr_, fp );
         png_set_sig_bytes( ld_->png_ptr_, 8 );
         // flags force one byte per channel output
-        png_read_png( ld_->png_ptr_, ld_->info_ptr_, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING, NULL );
+        png_read_png( ld_->png_ptr_, ld_->info_ptr_, PNG_TRANSFORM_PACKING, NULL );
         height_ = png_get_image_height( ld_->png_ptr_, ld_->info_ptr_ );
         width_ = png_get_image_width( ld_->png_ptr_, ld_->info_ptr_ );
         bit_depth_ = png_get_bit_depth( ld_->png_ptr_, ld_->info_ptr_ );
         color_type_ = png_get_color_type( ld_->png_ptr_, ld_-> info_ptr_ );
+
 
         if (color_type_ != PNG_COLOR_TYPE_GRAY && 
             color_type_ != PNG_COLOR_TYPE_RGB && 
@@ -148,12 +171,19 @@ namespace dlib
             throw image_load_error(std::string("png_loader: unsupported color type in file ") + filename);
         }
 
+        if (bit_depth_ != 8 && bit_depth_ != 16)
+        {
+            fclose( fp );
+            png_destroy_read_struct( &( ld_->png_ptr_ ), &( ld_->info_ptr_ ), &( ld_->end_info_ ) );
+            throw image_load_error("png_loader: unsupported bit depth of " + cast_to_string(bit_depth_) + " in file " + std::string(filename));
+        }
+
         ld_->row_pointers_ = png_get_rows( ld_->png_ptr_, ld_->info_ptr_ );
-        // FIXME: the following call makes libpng crash. Why?
-        //png_read_end( ld_->png_ptr_, ld_->end_info_ );
+
         fclose( fp );
         if ( ld_->row_pointers_ == NULL )
         {
+            png_destroy_read_struct( &( ld_->png_ptr_ ), &( ld_->info_ptr_ ), &( ld_->end_info_ ) );
             throw image_load_error(std::string("png_loader: parse error in file ") + filename);
         }
     }

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 #include "../error.h"
 
 namespace dlib
@@ -37,6 +38,38 @@ namespace dlib
                 This exception is thrown if string_cast() is unable to convert
                 str into a T.  Also, string_cast_error::info == str
     !*/
+
+// ----------------------------------------------------------------------------------------
+
+    class string_assign
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This is a simple tool which provides an alternative syntax for using
+                the string_cast() function.  It can be understood by considering
+                the following example:
+
+                    string_assign sa;
+                    int val;
+                    double dval;
+
+                    val  = sa = "1234";   // executes: val = string_cast<int>("1234");
+                    dval = sa = "3.141";  // executes: val = string_cast<double>("3.141");
+
+                After executing, val will be equal to 1234 and dval will be 3.141.
+                Note that you can use string_assign to assign to any type which you could
+                use with string_cast(), except for std::basic_string, assigning to this
+                type is ambiguous for boring technical reasons.  But there isn't much
+                point in using this tool to assign from one string to another so it doesn't 
+                matter.   
+
+                Additionally, note that there is a global instance of this object, dlib::sa. 
+                So you never have to create a string_assign object yourself.  Finally, this 
+                object is totally stateless and threadsafe.   
+        !*/
+    };
+
+    const string_assign sa = string_assign();
 
 // ----------------------------------------------------------------------------------------
 
@@ -78,6 +111,19 @@ namespace dlib
             - cast_to_string_error
                 This exception is thrown if cast_to_string() is unable to convert
                 item into a std::string.  
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    std::string pad_int_with_zeros (
+        int i,
+        unsigned long width = 6
+    );
+    /*!
+        ensures
+            - converts i into a string of at least width characters in length.  If
+              necessary, the string will be padded with leading zeros to get
+              to width characters.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -215,6 +261,8 @@ namespace dlib
         const charT* trim_chars = _dT(charT," \t\r\n")
     );
     /*!
+        requires
+            - trim_chars == a valid null-terminated C string
         ensures
             - returns ltrim(str, std::basic_string<charT,traits,alloc>(trim_chars))
     !*/
@@ -246,6 +294,8 @@ namespace dlib
         const charT* trim_chars = _dT(charT," \t\r\n")
     );
     /*!
+        requires
+            - trim_chars == a valid null-terminated C string
         ensures
             - returns rtrim(str, std::basic_string<charT,traits,alloc>(trim_chars))
     !*/
@@ -277,6 +327,8 @@ namespace dlib
         const charT* trim_chars = _dT(charT," \t\r\n")
     );
     /*!
+        requires
+            - trim_chars == a valid null-terminated C string
         ensures
             - returns trim(str, std::basic_string<charT,traits,alloc>(trim_chars))
     !*/
@@ -317,6 +369,8 @@ namespace dlib
         const charT* pad_string = _dT(charT," ")
     );
     /*!
+        requires
+            - pad_string == a valid null-terminated C string
         ensures
             - returns rpad(str, pad_length, std::basic_string<charT,traits,alloc>(pad_string))
     !*/
@@ -357,6 +411,8 @@ namespace dlib
         const charT* pad_string = _dT(charT," ")
     );
     /*!
+        requires
+            - pad_string == a valid null-terminated C string
         ensures
             - returns lpad(str, pad_length, std::basic_string<charT,traits,alloc>(pad_string))
     !*/
@@ -392,6 +448,8 @@ namespace dlib
         const charT* pad_string = _dT(charT," ")
     );
     /*!
+        requires
+            - pad_string == a valid null-terminated C string
         ensures
             - returns pad(str, pad_length, std::basic_string<charT,traits,alloc>(pad_string))
     !*/
@@ -423,6 +481,8 @@ namespace dlib
         const charT* delim = _dT(charT," \n\r\t")
     );
     /*!
+        requires
+            - delim == a valid null-terminated C string
         ensures
             - returns left_substr(str, std::basic_string<charT,traits,alloc>(delim))
     !*/
@@ -457,8 +517,51 @@ namespace dlib
         const charT* delim = _dT(charT," \n\r\t")
     );
     /*!
+        requires
+            - delim == a valid null-terminated C string
         ensures
             - returns right_substr(str, std::basic_string<charT,traits,alloc>(delim))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename charT,
+        typename traits,
+        typename alloc
+        >
+    const std::vector<std::basic_string<charT,traits,alloc> > split (
+        const std::basic_string<charT,traits,alloc>& str,
+        const std::basic_string<charT,traits,alloc>& delim 
+    );
+    /*!
+        ensures
+            - Breaks the given string str into a sequence of substrings delimited
+              by characters in delim and returns the results.  
+            - returns a vector V such that:
+                - V.size() == the number of substrings found in str.
+                - for all i: V[i] == The ith substring.  Note that it will not contain
+                  any delimiter characters (i.e. characters in delim).  It will also
+                  never be an empty string.
+                - V contains the substrings in the order in which they appear in str.
+                  That is, V[0] contains the first substring, V[1] the second, and
+                  so on.
+    !*/
+
+    template <
+        typename charT,
+        typename traits,
+        typename alloc
+        >
+    const std::vector<std::basic_string<charT,traits,alloc> > split (
+        const std::basic_string<charT,traits,alloc>& str,
+        const charT* delim = _dT(charT," \n\r\t")
+    );
+    /*!
+        requires
+            - trim_chars == a valid null-terminated C string
+        ensures
+            - returns split(str, std::basic_string<charT,traits,alloc>(delim))
     !*/
 
 // ----------------------------------------------------------------------------------------

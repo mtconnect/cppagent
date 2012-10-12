@@ -13,25 +13,25 @@ namespace dlib
 
     template <
         typename T1,
-        typename T2 = T1,
-        typename T3 = T1,
-        typename T4 = T1,
-        typename T5 = T1, 
-        typename T6 = T1,
-        typename T7 = T1,
-        typename T8 = T1,
-        typename T9 = T1,
-        typename T10 = T1,
-        typename T11 = T1,
-        typename T12 = T1,
-        typename T13 = T1,
-        typename T14 = T1,
-        typename T15 = T1,
-        typename T16 = T1,
-        typename T17 = T1,
-        typename T18 = T1,
-        typename T19 = T1,
-        typename T20 = T1
+        typename T2 = _void,  // _void indicates parameter not used.
+        typename T3 = _void,
+        typename T4 = _void,
+        typename T5 = _void, 
+        typename T6 = _void,
+        typename T7 = _void,
+        typename T8 = _void,
+        typename T9 = _void,
+        typename T10 = _void,
+        typename T11 = _void,
+        typename T12 = _void,
+        typename T13 = _void,
+        typename T14 = _void,
+        typename T15 = _void,
+        typename T16 = _void,
+        typename T17 = _void,
+        typename T18 = _void,
+        typename T19 = _void,
+        typename T20 = _void
         >
     class type_safe_union : noncopyable
     {
@@ -61,11 +61,45 @@ namespace dlib
 
     public:
 
+        typedef T1 type1;
+        typedef T2 type2;
+        typedef T3 type3;
+        typedef T4 type4;
+        typedef T5 type5;
+        typedef T6 type6;
+        typedef T7 type7;
+        typedef T8 type8;
+        typedef T9 type9;
+        typedef T10 type10;
+        typedef T11 type11;
+        typedef T12 type12;
+        typedef T13 type13;
+        typedef T14 type14;
+        typedef T15 type15;
+        typedef T16 type16;
+        typedef T17 type17;
+        typedef T18 type18;
+        typedef T19 type19;
+        typedef T20 type20;
+
         type_safe_union(
         );
         /*!
             ensures
                 - this object is properly initialized
+        !*/
+
+        template <typename T>
+        type_safe_union (
+            const T& item
+        );
+        /*!
+            requires
+                - T must be one of the types given to this object's template arguments
+            ensures
+                - this object is properly initialized
+                - #get<T>() == item
+                  (i.e. this object will contain a copy of item)
         !*/
 
         ~type_safe_union(
@@ -121,6 +155,7 @@ namespace dlib
                 - if (is_empty() == false) then
                     - Let U denote the type of object currently contained in this type_safe_union
                     - calls obj(this->get<U>())
+                    - The object returned by this->get<U>() will be non-const
         !*/
 
         template <typename T>
@@ -136,6 +171,39 @@ namespace dlib
                 - if (is_empty() == false) then
                     - Let U denote the type of object currently contained in this type_safe_union
                     - calls obj(this->get<U>())
+                    - The object returned by this->get<U>() will be non-const
+        !*/
+
+        template <typename T>
+        void apply_to_contents (
+            T& obj
+        ) const;
+        /*!
+            requires
+                - obj is a function object capable of operating on all the types contained
+                  in this type_safe_union.  I.e.  obj(this->get<U>()) must be a valid
+                  expression for all the possible U types.
+            ensures
+                - if (is_empty() == false) then
+                    - Let U denote the type of object currently contained in this type_safe_union
+                    - calls obj(this->get<U>())
+                    - The object returned by this->get<U>() will be const
+        !*/
+
+        template <typename T>
+        void apply_to_contents (
+            const T& obj
+        ) const;
+        /*!
+            requires
+                - obj is a function object capable of operating on all the types contained
+                  in this type_safe_union.  I.e.  obj(this->get<U>()) must be a valid
+                  expression for all the possible U types.
+            ensures
+                - if (is_empty() == false) then
+                    - Let U denote the type of object currently contained in this type_safe_union
+                    - calls obj(this->get<U>())
+                    - The object returned by this->get<U>() will be const
         !*/
 
         template <typename T> 
@@ -154,7 +222,19 @@ namespace dlib
                     - Any previous object stored in this type_safe_union is destructed and its
                       state is lost.
                     - returns a non-const reference to the newly created T object.
+        !*/
 
+        template <typename T>
+        type_safe_union& operator= (
+            const T& item
+        );
+        /*!
+            requires
+                - T must be one of the types given to this object's template arguments
+            ensures
+                - #get<T>() == item
+                  (i.e. this object will contain a copy of item)
+                - returns *this
         !*/
 
         void swap (

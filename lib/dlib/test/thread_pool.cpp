@@ -8,6 +8,7 @@
 #include <ctime>
 #include <dlib/misc_api.h>
 #include <dlib/threads.h>
+#include <dlib/any.h>
 
 #include "tester.h"
 
@@ -29,6 +30,9 @@ namespace
 
     struct add_functor
     {
+        add_functor() { var = 1;}
+        add_functor(int v):var(v) {}
+
         template <typename T, typename U, typename V>
         void operator()(T a, U b, V& res)
         {
@@ -39,10 +43,23 @@ namespace
         void set_global_var() { global_var = 9; }
         void set_global_var_const() const { global_var = 9; }
 
+        void set_global_var_arg1(int val) { global_var = val; }
+        void set_global_var_const_arg1(int val) const { global_var = val; }
+        void set_global_var_arg2(int val, int val2) { global_var = val+val2; }
+        void set_global_var_const_arg2(int val, int val2) const { global_var = val+val2; }
+
         void operator()()
         {
             global_var = 9;
         }
+
+        // use an any just so that if this object goes out of scope
+        // then var will get all messed up.
+        any var;
+        void operator()(int& a) { dlib::sleep(100); a = var.get<int>(); }
+        void operator()(int& a, int& b) { dlib::sleep(100); a = var.get<int>(); b = 2; }
+        void operator()(int& a, int& b, int& c) { dlib::sleep(100); a = var.get<int>(); b = 2; c = 3; }
+        void operator()(int& a, int& b, int& c, int& d) { dlib::sleep(100); a = var.get<int>(); b = 2; c = 3; d = 4; }
     };
 
 
@@ -70,7 +87,7 @@ namespace
             add_functor f;
             for (int num_threads= 0; num_threads < 4; ++num_threads)
             {
-                future<int> a, b, c, res;
+                future<int> a, b, c, res, d;
                 thread_pool tp(num_threads);
                 print_spinner();
 
@@ -230,10 +247,90 @@ namespace
                     tp.wait_for_task(id);
                     DLIB_TEST(global_var == 9);
 
+                    global_var = 0;
+                    a = 4;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task(f, &add_functor::set_global_var_arg1, a);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 4);
+
+                    global_var = 0;
+                    a = 4;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task_by_value(f, &add_functor::set_global_var_arg1, a);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 4);
+
+
+
+                    global_var = 0;
+                    a = 4;
+                    b = 3;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task(f, &add_functor::set_global_var_arg2, a, b);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 7);
+
+                    global_var = 0;
+                    a = 4;
+                    b = 3;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task_by_value(f, &add_functor::set_global_var_arg2, a, b);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 7);
+
+                    global_var = 0;
+                    a = 4;
+                    b = 3;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task(f, &add_functor::set_global_var_const_arg2, a, b);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 7);
+
+                    global_var = 0;
+                    a = 4;
+                    b = 3;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task_by_value(f, &add_functor::set_global_var_const_arg2, a, b);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 7);
+
+
+
+
+
+
+                    global_var = 0;
+                    a = 4;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task(f, &add_functor::set_global_var_const_arg1, a);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 4);
+
+                    global_var = 0;
+                    a = 4;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task_by_value(f, &add_functor::set_global_var_const_arg1, a);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 4);
+
+                    global_var = 0;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task_by_value(f, &add_functor::set_global_var);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 9);
+
 
                     global_var = 0;
                     DLIB_TEST(global_var == 0);
                     id = tp.add_task(f, &add_functor::set_global_var_const);
+                    tp.wait_for_task(id);
+                    DLIB_TEST(global_var == 9);
+
+
+                    global_var = 0;
+                    DLIB_TEST(global_var == 0);
+                    id = tp.add_task_by_value(f, &add_functor::set_global_var_const);
                     tp.wait_for_task(id);
                     DLIB_TEST(global_var == 9);
 
@@ -243,6 +340,35 @@ namespace
 
                 // add this task just to to perterb the thread pool before it goes out of scope
                 tp.add_task(f, a, b, res);
+
+                for (int k = 0; k < 3; ++k)
+                {
+                    print_spinner();
+                    global_var = 0;
+                    tp.add_task_by_value(add_functor());
+                    tp.wait_for_all_tasks();
+                    DLIB_TEST(global_var == 9);
+
+                    a = 0; b = 0; c = 0; d = 0;
+                    tp.add_task_by_value(add_functor(), a);
+                    DLIB_TEST(a == 1);
+                    a = 0; b = 0; c = 0; d = 0;
+                    tp.add_task_by_value(add_functor(8), a, b);
+                    DLIB_TEST(a == 8);
+                    DLIB_TEST(b == 2);
+                    a = 0; b = 0; c = 0; d = 0;
+                    tp.add_task_by_value(add_functor(), a, b, c);
+                    DLIB_TEST(a == 1);
+                    DLIB_TEST(b == 2);
+                    DLIB_TEST(c == 3);
+                    a = 0; b = 0; c = 0; d = 0;
+                    tp.add_task_by_value(add_functor(5), a, b, c, d);
+                    DLIB_TEST(a == 5);
+                    DLIB_TEST(b == 2);
+                    DLIB_TEST(c == 3);
+                    DLIB_TEST(d == 4);
+                }
+
             }
         }
 

@@ -13,6 +13,12 @@
 #include "matrix_cholesky.h"
 #include "matrix_eigenvalue.h"
 
+#ifdef DLIB_USE_LAPACK
+#include "lapack/potrf.h"
+#include "lapack/gesdd.h"
+#include "lapack/gesvd.h"
+#endif
+
 namespace dlib
 {
 
@@ -387,166 +393,6 @@ namespace dlib
             return true;
         }
 
-
-        template <
-            typename T,
-            long N,
-            long NX,
-            typename MM1,
-            typename MM2,
-            typename MM3,
-            typename L1,
-            typename L2,
-            typename L3
-            >
-        bool ludcmp (
-            matrix<T,N,N,MM1,L1>& a,
-            matrix<long,N,NX,MM2,L2>& indx,
-            T& d,
-            matrix<T,N,NX,MM3,L3>& vv
-        )
-        /*!
-            ( this function is derived from the one in numerical recipes in C chapter 2.3)
-            ensures
-                - #a == both the L and U matrices
-                - #indx == the permutation vector (see numerical recipes in C)
-                - #d == some other thing (see numerical recipes in C)
-                - #vv == some undefined value.  this is just used for scratch space
-                - if (the matrix is singular and we can't do anything) then
-                    - returns false
-                - else
-                    - returns true
-        !*/
-        {
-            DLIB_ASSERT(indx.nc() == 1,"in dlib::nric::ludcmp() the indx matrix must be a column vector");
-            DLIB_ASSERT(vv.nc() == 1,"in dlib::nric::ludcmp() the vv matrix must be a column vector");
-            const long n = a.nr();
-            long imax = 0;
-            T big, dum, sum, temp;
-
-            d = 1.0;
-            for (long i = 0; i < n; ++i)
-            {
-                big = 0;
-                for (long j = 0; j < n; ++j)
-                {
-                    if ((temp=std::abs(a(i,j))) > big)
-                        big = temp;
-                }
-                if (big == 0.0)
-                {
-                    return false;
-                }
-                vv(i) = 1/big;
-            }
-
-            for (long j = 0; j < n; ++j)
-            {
-                for (long i = 0; i < j; ++i)
-                {
-                    sum = a(i,j);
-                    for (long k = 0; k < i; ++k)
-                        sum -= a(i,k)*a(k,j);
-                    a(i,j) = sum;
-                }
-                big = 0;
-                for (long i = j; i < n; ++i)
-                {
-                    sum = a(i,j);
-                    for (long k = 0; k < j; ++k)
-                        sum -= a(i,k)*a(k,j);
-                    a(i,j) = sum;
-                    if ( (dum=vv(i)*std::abs(sum)) >= big)
-                    {
-                        big = dum;
-                        imax = i;
-                    }
-                }
-                if (j != imax)
-                {
-                    for (long k = 0; k < n; ++k)
-                    {
-                        dum = a(imax,k);
-                        a(imax,k) = a(j,k);
-                        a(j,k) = dum;
-                    }
-                    d = -d;
-                    vv(imax) = vv(j);
-                }
-                indx(j) = imax;
-
-                if (j < n-1)
-                {
-                    if (a(j,j) == 0)
-                        return false;
-                    dum = 1/a(j,j);
-                    for (long i = j+1; i < n; ++i)
-                        a(i,j) *= dum;
-                }
-            }
-            return true;
-        }
-
-// ----------------------------------------------------------------------------------------
-
-        template <
-            typename T,
-            long N,
-            long NX,
-            typename MM1,
-            typename MM2,
-            typename MM3,
-            typename L1,
-            typename L2,
-            typename L3
-            >
-        void lubksb (
-            const matrix<T,N,N,MM1,L1>& a,
-            const matrix<long,N,NX,MM2,L2>& indx,
-            matrix<T,N,NX,MM3,L3>& b
-        )
-        /*!
-            ( this function is derived from the one in numerical recipes in C chapter 2.3)
-            requires
-                - a == the LU decomposition you get from ludcmp()
-                - indx == the indx term you get out of ludcmp()
-                - b == the right hand side vector from the expression a*x = b
-            ensures
-                - #b == the solution vector x from the expression a*x = b
-                  (basically, this function solves for x given b and a)
-        !*/
-        {
-            DLIB_ASSERT(indx.nc() == 1,"in dlib::nric::lubksb() the indx matrix must be a column vector");
-            DLIB_ASSERT(b.nc() == 1,"in dlib::nric::lubksb() the b matrix must be a column vector");
-            const long n = a.nr();
-            long i, ii = -1, ip, j;
-            T sum;
-
-            for (i = 0; i < n; ++i)
-            {
-                ip = indx(i);
-                sum=b(ip);
-                b(ip) = b(i);
-                if (ii != -1)
-                {
-                    for (j = ii; j < i; ++j)
-                        sum -= a(i,j)*b(j);
-                }
-                else if (sum)
-                {
-                    ii = i;
-                }
-                b(i) = sum;
-            }
-            for (i = n-1; i >= 0; --i)
-            {
-                sum = b(i);
-                for (j = i+1; j < n; ++j)
-                    sum -= a(i,j)*b(j);
-                b(i) = sum/a(i,i);
-            }
-        }
-
     // ------------------------------------------------------------------------------------
 
     }
@@ -563,17 +409,15 @@ namespace dlib
         typename MM1,
         typename MM2,
         typename MM3,
-        typename L1,
-        typename L2,
-        typename L3
+        typename L1
         >
     long svd2 (
         bool withu, 
         bool withv, 
         const matrix_exp<EXP>& a,
         matrix<typename EXP::type,uM,uM,MM1,L1>& u, 
-        matrix<typename EXP::type,qN,qX,MM2,L2>& q, 
-        matrix<typename EXP::type,vN,vN,MM3,L3>& v
+        matrix<typename EXP::type,qN,qX,MM2,L1>& q, 
+        matrix<typename EXP::type,vN,vN,MM3,L1>& v
     )
     {
         /*  
@@ -620,6 +464,34 @@ namespace dlib
 
         typedef typename EXP::type T;
 
+#ifdef DLIB_USE_LAPACK
+        matrix<typename EXP::type,0,0,MM1,L1> temp(a);
+
+        char jobu = 'A';
+        char jobvt = 'A';
+        if (withu == false)
+            jobu = 'N';
+        if (withv == false)
+            jobvt = 'N';
+
+        int info;
+        if (withu == withv)
+        {
+            info = lapack::gesdd(jobu, temp, q, u, v);
+        }
+        else
+        {
+            info = lapack::gesvd(jobu, jobvt, temp, q, u, v);
+        }
+
+        // pad q with zeros if it isn't the length we want
+        if (q.nr() < a.nc())
+            q = join_cols(q, zeros_matrix<T>(a.nc()-q.nr(),1));
+
+        v = trans(v);
+
+        return info;
+#else
         using std::abs;
         using std::sqrt;
 
@@ -940,6 +812,7 @@ convergence:
         } /* end k */
 
         return retval;
+#endif
     }
 
 // ----------------------------------------------------------------------------------------
@@ -968,31 +841,8 @@ convergence:
                 );
             typedef typename matrix_exp<EXP>::type type;
 
-            matrix<type, N, N,MM> a(m), y(m.nr(),m.nr());
-            matrix<long,N,1,MM> indx(m.nr(),1);
-            matrix<type,N,1,MM> col(m.nr(),1);
-            matrix<type,N,1,MM> vv(m.nr(),1);
-            type d;
-            long i, j;
-            if (ludcmp(a,indx,d,vv))
-            {
-                for (j = 0; j < m.nr(); ++j)
-                {
-                    for (i = 0; i < m.nr(); ++i)
-                        col(i) = 0;
-                    col(j) = 1;
-                    lubksb(a,indx,col);
-                    for (i = 0; i < m.nr(); ++i)
-                        y(i,j) = col(i);
-                }
-            }
-            else
-            {
-                // m is singular so lets just set y equal to m just so that 
-                // it has some value
-                y = m;
-            }
-            return y;
+            lu_decomposition<EXP> lu(m);
+            return lu.solve(identity_matrix<type>(m.nr()));
         }
     };
 
@@ -1123,6 +973,64 @@ convergence:
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename M>
+    struct op_diag_inv
+    {
+        template <typename EXP>
+        op_diag_inv( const matrix_exp<EXP>& m_) : m(m_){}
+
+
+        const static long cost = 1;
+        const static long NR = ((M::NC!=0)&&(M::NR!=0))? (tmax<M::NR,M::NC>::value) : (0);
+        const static long NC = NR;
+        typedef typename M::type type;
+        typedef const type const_ret_type;
+        typedef typename M::mem_manager_type mem_manager_type;
+        typedef typename M::layout_type layout_type;
+
+
+        // hold the matrix by value
+        const matrix<type,NR,1,mem_manager_type,layout_type> m;
+
+        const_ret_type apply ( long r, long c) const 
+        { 
+            if (r==c)
+                return m(r);
+            else
+                return 0;
+        }
+
+        long nr () const { return m.size(); }
+        long nc () const { return m.size(); }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const { return m.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const { return m.aliases(item); }
+    };
+
+    template <
+        typename EXP
+        >
+    const matrix_diag_op<op_diag_inv<EXP> > inv (
+        const matrix_diag_exp<EXP>& m
+    ) 
+    { 
+        typedef op_diag_inv<EXP> op;
+        return matrix_diag_op<op>(op(reciprocal(diag(m))));
+    }
+
+    template <
+        typename EXP
+        >
+    const matrix_diag_op<op_diag_inv<EXP> > pinv (
+        const matrix_diag_exp<EXP>& m
+    ) 
+    { 
+        typedef op_diag_inv<EXP> op;
+        return matrix_diag_op<op>(op(reciprocal(diag(m))));
+    }
+
+// ----------------------------------------------------------------------------------------
+
     template <typename EXP>
     const typename matrix_exp<EXP>::matrix_type  inv_lower_triangular (
         const matrix_exp<EXP>& A 
@@ -1223,14 +1131,28 @@ convergence:
             << "\n\tA.nr(): " << A.nr()
             << "\n\tA.nc(): " << A.nc() 
             );
-
         typename matrix_exp<EXP>::matrix_type L(A.nr(),A.nc());
+
+#ifdef DLIB_USE_LAPACK
+        // Only call LAPACK if the matrix is big enough.  Otherwise,
+        // our own code is faster, especially for statically dimensioned 
+        // matrices.
+        if (A.nr() > 4)
+        {
+            L = A;
+            lapack::potrf('L', L);
+            // mask out upper triangular area
+            return lowerm(L);
+        }
+#endif
         typedef typename EXP::type T;
         set_all_elements(L,0);
 
         // do nothing if the matrix is empty
         if (A.size() == 0)
             return L;
+
+        const T eps = std::numeric_limits<T>::epsilon();
 
         // compute the upper left corner
         if (A(0,0) > 0)
@@ -1239,10 +1161,11 @@ convergence:
         // compute the first column
         for (long r = 1; r < A.nr(); ++r)
         {
-            if (L(0,0) > 0)
+            // if (L(0,0) > 0)
+            if (L(0,0) > eps*std::abs(A(r,0)))
                 L(r,0) = A(r,0)/L(0,0);
             else
-                L(r,0) = A(r,0);
+                return L;
         }
 
         // now compute all the other columns
@@ -1265,14 +1188,70 @@ convergence:
                 {
                     temp -= L(r,i)*L(c,i);
                 }
-                if (L(c,c) > 0)
+
+                // if (L(c,c) > 0)
+                if (L(c,c) > eps*std::abs(temp))
                     L(r,c) = temp/L(c,c);
                 else
-                    L(r,c) = temp;
+                    return L;
             }
         }
 
         return L;
+
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP,
+        long uNR, 
+        long uNC,
+        long wN, 
+        long vN,
+        long wX,
+        typename MM1,
+        typename MM2,
+        typename MM3,
+        typename L1
+        >
+    inline void svd3 (
+        const matrix_exp<EXP>& m,
+        matrix<typename matrix_exp<EXP>::type, uNR, uNC,MM1,L1>& u,
+        matrix<typename matrix_exp<EXP>::type, wN, wX,MM2,L1>& w,
+        matrix<typename matrix_exp<EXP>::type, vN, vN,MM3,L1>& v
+    )
+    {
+        typedef typename matrix_exp<EXP>::type T;
+        const long NR = matrix_exp<EXP>::NR;
+        const long NC = matrix_exp<EXP>::NC;
+
+        // make sure the output matrices have valid dimensions if they are statically dimensioned
+        COMPILE_TIME_ASSERT(NR == 0 || uNR == 0 || NR == uNR);
+        COMPILE_TIME_ASSERT(NC == 0 || uNC == 0 || NC == uNC);
+        COMPILE_TIME_ASSERT(NC == 0 || wN == 0 || NC == wN);
+        COMPILE_TIME_ASSERT(NC == 0 || vN == 0 || NC == vN);
+        COMPILE_TIME_ASSERT(wX == 0 || wX == 1);
+
+#ifdef DLIB_USE_LAPACK
+        matrix<typename matrix_exp<EXP>::type, uNR, uNC,MM1,L1> temp(m);
+        lapack::gesvd('S','A', temp, w, u, v);
+        v = trans(v);
+        // if u isn't the size we want then pad it (and v) with zeros
+        if (u.nc() < m.nc())
+        {
+            w = join_cols(w, zeros_matrix<T>(m.nc()-u.nc(),1));
+            u = join_rows(u, zeros_matrix<T>(u.nr(), m.nc()-u.nc()));
+        }
+#else
+        v.set_size(m.nc(),m.nc());
+
+        u = m;
+
+        w.set_size(m.nc(),1);
+        matrix<T,matrix_exp<EXP>::NC,1,MM1> rv1(m.nc(),1);
+        nric::svdcmp(u,w,v,rv1);
+#endif
     }
 
 // ----------------------------------------------------------------------------------------
@@ -1292,19 +1271,14 @@ convergence:
     { 
         typename matrix_exp<EXP>::matrix_type u;
         typedef typename EXP::mem_manager_type MM1;
-        matrix<typename EXP::type, EXP::NC, EXP::NC,MM1 > v;
+        typedef typename EXP::layout_type layout_type;
+        matrix<typename EXP::type, EXP::NC, EXP::NC,MM1, layout_type > v;
 
         typedef typename matrix_exp<EXP>::type T;
 
-        v.set_size(m.nc(),m.nc());
+        matrix<T,matrix_exp<EXP>::NC,1,MM1, layout_type> w;
 
-        typedef typename matrix_exp<EXP>::type T;
-        u = m;
-
-        matrix<T,matrix_exp<EXP>::NC,1,MM1> w(m.nc(),1);
-        matrix<T,matrix_exp<EXP>::NC,1,MM1> rv1(m.nc(),1);
-
-        nric::svdcmp(u,w,v,rv1);
+        svd3(m, u,w,v);
 
         const double machine_eps = std::numeric_limits<typename EXP::type>::epsilon();
         // compute a reasonable epsilon below which we round to zero before doing the
@@ -1338,62 +1312,16 @@ convergence:
         long uNC,
         long wN, 
         long vN,
-        long wX,
         typename MM1,
         typename MM2,
         typename MM3,
-        typename L1,
-        typename L2,
-        typename L3
-        >
-    inline void svd3 (
-        const matrix_exp<EXP>& m,
-        matrix<typename matrix_exp<EXP>::type, uNR, uNC,MM1,L1>& u,
-        matrix<typename matrix_exp<EXP>::type, wN, wX,MM2,L2>& w,
-        matrix<typename matrix_exp<EXP>::type, vN, vN,MM3,L3>& v
-    )
-    {
-        typedef typename matrix_exp<EXP>::type T;
-        const long NR = matrix_exp<EXP>::NR;
-        const long NC = matrix_exp<EXP>::NC;
-
-        // make sure the output matrices have valid dimensions if they are statically dimensioned
-        COMPILE_TIME_ASSERT(NR == 0 || uNR == 0 || NR == uNR);
-        COMPILE_TIME_ASSERT(NC == 0 || uNC == 0 || NC == uNC);
-        COMPILE_TIME_ASSERT(NC == 0 || wN == 0 || NC == wN);
-        COMPILE_TIME_ASSERT(NC == 0 || vN == 0 || NC == vN);
-        COMPILE_TIME_ASSERT(wX == 0 || wX == 1);
-
-        v.set_size(m.nc(),m.nc());
-
-        typedef typename matrix_exp<EXP>::type T;
-        u = m;
-
-        w.set_size(m.nc(),1);
-        matrix<T,matrix_exp<EXP>::NC,1,MM1> rv1(m.nc(),1);
-        nric::svdcmp(u,w,v,rv1);
-    }
-
-// ----------------------------------------------------------------------------------------
-
-    template <
-        typename EXP,
-        long uNR, 
-        long uNC,
-        long wN, 
-        long vN,
-        typename MM1,
-        typename MM2,
-        typename MM3,
-        typename L1,
-        typename L2,
-        typename L3
+        typename L1
         >
     inline void svd (
         const matrix_exp<EXP>& m,
         matrix<typename matrix_exp<EXP>::type, uNR, uNC,MM1,L1>& u,
-        matrix<typename matrix_exp<EXP>::type, wN, wN,MM2,L2>& w,
-        matrix<typename matrix_exp<EXP>::type, vN, vN,MM3,L3>& v
+        matrix<typename matrix_exp<EXP>::type, wN, wN,MM2,L1>& w,
+        matrix<typename matrix_exp<EXP>::type, vN, vN,MM3,L1>& v
     )
     {
         typedef typename matrix_exp<EXP>::type T;
@@ -1406,7 +1334,7 @@ convergence:
         COMPILE_TIME_ASSERT(NC == 0 || wN == 0 || NC == wN);
         COMPILE_TIME_ASSERT(NC == 0 || vN == 0 || NC == vN);
 
-        matrix<T,matrix_exp<EXP>::NC,1,MM1> W;
+        matrix<T,matrix_exp<EXP>::NC,1,MM1, L1> W;
         svd3(m,u,W,v);
         w = diagm(W);
     }
@@ -1459,17 +1387,7 @@ convergence:
             typedef typename matrix_exp<EXP>::type type;
             typedef typename matrix_exp<EXP>::mem_manager_type MM;
 
-            matrix<type, N, N,MM> lu(m);
-            matrix<long,N,1,MM> indx(m.nr(),1);
-            matrix<type,N,1,MM> vv(m.nr(),1);
-            type d;
-            if (ludcmp(lu,indx,d,vv) == false)
-            {
-                // the matrix is singular so its det is 0
-                return 0;
-            }
-
-            return prod(diag(lu))*d;
+            return lu_decomposition<EXP>(m).det();
         }
     };
 
@@ -1596,7 +1514,9 @@ convergence:
         }
         else
         {
-            return eigenvalue_decomposition<EXP>(m).get_real_eigenvalues();
+            // Call .ref() so that the symmetric matrix overload can take effect if m 
+            // has the appropriate type.
+            return eigenvalue_decomposition<EXP>(m.ref()).get_real_eigenvalues();
         }
     }
 

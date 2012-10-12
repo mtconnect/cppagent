@@ -22,7 +22,7 @@ namespace dlib
     void threshold_image (
         const in_image_type& in_img,
         out_image_type& out_img,
-        unsigned long thresh
+        typename pixel_traits<typename in_image_type::type>::basic_pixel_type thresh
     );
     /*!
         requires
@@ -37,6 +37,20 @@ namespace dlib
               have an output value of on_pixel and all others have a value of off_pixel.
             - #out_img.nc() == in_img.nc()
             - #out_img.nr() == in_img.nr()
+    !*/
+
+    template <
+        typename image_type
+        >
+    void threshold_image (
+        image_type& img,
+        typename pixel_traits<typename image_type::type>::basic_pixel_type thresh
+    );
+    /*!
+        requires
+            - it is valid to call threshold_image(img,img,thresh);
+        ensures
+            - calls threshold_image(img,img,thresh);
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -56,6 +70,8 @@ namespace dlib
             - pixel_traits<typename out_image_type::type>::grayscale == true  
             - pixel_traits<typename in_image_type::type>::has_alpha == false
             - pixel_traits<typename out_image_type::type>::has_alpha == false 
+            - pixel_traits<typename in_image_type::type>::is_unsigned == true 
+            - pixel_traits<typename out_image_type::type>::is_unsigned == true 
         ensures
             - #out_img == the thresholded version of in_img (in_img is converted to a grayscale
               intensity image if it is color).  Pixels in in_img with grayscale values >= thresh 
@@ -67,6 +83,19 @@ namespace dlib
             - #out_img.nr() == in_img.nr()
     !*/
 
+    template <
+        typename image_type
+        >
+    void auto_threshold_image (
+        image_type& img
+    );
+    /*!
+        requires
+            - it is valid to call auto_threshold_image(img,img);
+        ensures
+            - calls auto_threshold_image(img,img);
+    !*/
+
 // ----------------------------------------------------------------------------------------
 
     template <
@@ -75,9 +104,9 @@ namespace dlib
         >
     void hysteresis_threshold (
         const in_image_type& in_img,
-        const out_image_type& out_img,
-        unsigned long lower_thresh,
-        unsigned long upper_thresh
+        out_image_type& out_img,
+        typename pixel_traits<typename in_image_type::type>::basic_pixel_type lower_thresh,
+        typename pixel_traits<typename in_image_type::type>::basic_pixel_type upper_thresh
     );
     /*!
         requires
@@ -87,6 +116,7 @@ namespace dlib
             - pixel_traits<typename in_image_type::type>::has_alpha == false
             - pixel_traits<typename out_image_type::type>::has_alpha == false 
             - lower_thresh <= upper_thresh
+            - is_same_object(in_img, out_img) == false
         ensures
             - #out_img == the hysteresis thresholded version of in_img (in_img is converted to a 
               grayscale intensity image if it is color). Pixels in in_img with grayscale 

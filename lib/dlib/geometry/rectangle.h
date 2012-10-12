@@ -78,6 +78,15 @@ namespace dlib
             *this = rectangle(p1) + rectangle(p2);
         }
 
+        template <typename T>
+        rectangle (
+            const vector<T,2>& p1,
+            const vector<T,2>& p2
+        )
+        {
+            *this = rectangle(p1) + rectangle(p2);
+        }
+
         rectangle (
         ) :
             l(0),
@@ -354,6 +363,60 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    inline point center (
+        const dlib::rectangle& rect
+    )
+    {
+        point temp(rect.left() + rect.right() + 1,
+                   rect.top() + rect.bottom() + 1);
+
+        if (temp.x() < 0)
+            temp.x() -= 1;
+
+        if (temp.y() < 0)
+            temp.y() -= 1;
+
+        return temp/2;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline dlib::vector<double,2> dcenter (
+        const dlib::rectangle& rect
+    )
+    {
+        dlib::vector<double,2> temp(rect.left() + rect.right(),
+                                    rect.top() + rect.bottom());
+
+        return temp/2.0;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline long distance_to_rect_edge (
+        const rectangle& rect,
+        const point& p
+    )
+    {
+        using std::max;
+        using std::min;
+        using std::abs;
+
+        const long dist_x = min(abs(p.x()-rect.left()), abs(p.x()-rect.right()));
+        const long dist_y = min(abs(p.y()-rect.top()),  abs(p.y()-rect.bottom()));
+
+        if (rect.contains(p))
+            return min(dist_x,dist_y);
+        else if (rect.left() <= p.x() && p.x() <= rect.right())
+            return dist_y;
+        else if (rect.top() <= p.y() && p.y() <= rect.bottom())
+            return dist_x;
+        else
+            return dist_x + dist_y;
+    }
+
+// ----------------------------------------------------------------------------------------
+
     inline const point nearest_point (
         const rectangle& rect,
         const point& p
@@ -413,6 +476,28 @@ namespace dlib
     )
     {
         return shrink_rect(rect, -num);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline const rectangle shrink_rect (
+        const rectangle& rect,
+        long width,
+        long height
+    )
+    {
+        return rectangle(rect.left()+width, rect.top()+height, rect.right()-width, rect.bottom()-height);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline const rectangle grow_rect (
+        const rectangle& rect,
+        long width,
+        long height
+    )
+    {
+        return shrink_rect(rect, -width, -height);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -514,6 +599,26 @@ namespace dlib
     )
     {
         return rectangle(0, 0, m.nc()-1, m.nr()-1);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline rectangle operator+ (
+        const rectangle& r,
+        const point& p
+    )
+    {
+        return r + rectangle(p);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline rectangle operator+ (
+        const point& p,
+        const rectangle& r
+    )
+    {
+        return r + rectangle(p);
     }
 
 // ----------------------------------------------------------------------------------------

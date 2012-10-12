@@ -65,6 +65,8 @@ namespace
             DLIB_TEST(mi.nc() == m.nr());
             DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix<double,5>())));
             DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix<double,5>())));
+            DLIB_TEST((equal(round_zeros(mi*m,0.000001) , identity_matrix(m))));
+            DLIB_TEST((equal(round_zeros(m*mi,0.000001) , identity_matrix(m))));
         }
         {
             matrix<double,5,0,MM> m(5,5);
@@ -406,7 +408,7 @@ namespace
         }
 
         {
-            array2d<double>::kernel_1a_c a;
+            array2d<double> a;
             a.set_size(6,7);
 
 
@@ -447,7 +449,7 @@ namespace
         }
 
         {
-            array2d<double>::kernel_1a_c m;
+            array2d<double> m;
             m.set_size(5,5);
 
             for (long r = 0; r < m.nr(); ++r)
@@ -734,7 +736,7 @@ namespace
             a.set_size(1000,10);
             b.set_size(1000,10);
             i.set_size(1000,10);
-            dlib::rand::float_1a rnd;
+            dlib::rand rnd;
             for (long r = 0; r < a.nr(); ++r)
             {
                 for (long c = 0; c < a.nc(); ++c)
@@ -1041,8 +1043,11 @@ namespace
         }
 
         {
+            matrix<double> mat(4,5);
             DLIB_TEST((uniform_matrix<double>(4,5,1) == ones_matrix<double>(4,5)));
+            DLIB_TEST((uniform_matrix<double>(4,5,1) == ones_matrix(mat)));
             DLIB_TEST((uniform_matrix<double>(4,5,0) == zeros_matrix<double>(4,5)));
+            DLIB_TEST((uniform_matrix<double>(4,5,0) == zeros_matrix(mat)));
             DLIB_TEST((uniform_matrix<float>(4,5,1) == ones_matrix<float>(4,5)));
             DLIB_TEST((uniform_matrix<float>(4,5,0) == zeros_matrix<float>(4,5)));
             DLIB_TEST((uniform_matrix<complex<double> >(4,5,1) == ones_matrix<complex<double> >(4,5)));
@@ -1195,6 +1200,59 @@ namespace
             DLIB_TEST(dot(m1, trans(m2))        == 1*4 + 2*5 + 3*6);
             DLIB_TEST(dot(trans(m1), m2)        == 1*4 + 2*5 + 3*6);
             DLIB_TEST(dot(trans(m1), trans(m2)) == 1*4 + 2*5 + 3*6);
+        }
+
+        {
+            matrix<double> m1(3,3), m2(3,3);
+
+            m1 = 1;
+            m2 = 1;
+            m1 = m1*subm(m2,0,0,3,3);
+        }
+        {
+            matrix<double,3,1> m1;
+            matrix<double> m2(3,3);
+
+            m1 = 1;
+            m2 = 1;
+            m1 = subm(m2,0,0,3,3)*m1;
+        }
+
+        {
+            matrix<int> m(2,1);
+
+            m = 3,3;
+            m /= m(0);
+
+            DLIB_TEST(m(0) == 1);
+            DLIB_TEST(m(1) == 1);
+        }
+        {
+            matrix<int> m(2,1);
+
+            m = 3,3;
+            m *= m(0);
+
+            DLIB_TEST(m(0) == 9);
+            DLIB_TEST(m(1) == 9);
+        }
+        {
+            matrix<int> m(2,1);
+
+            m = 3,3;
+            m -= m(0);
+
+            DLIB_TEST(m(0) == 0);
+            DLIB_TEST(m(1) == 0);
+        }
+        {
+            matrix<int> m(2,1);
+
+            m = 3,3;
+            m += m(0);
+
+            DLIB_TEST(m(0) == 6);
+            DLIB_TEST(m(1) == 6);
         }
     }
 

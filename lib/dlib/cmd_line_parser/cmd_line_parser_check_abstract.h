@@ -56,7 +56,7 @@ namespace dlib
                 - option_is_defined(option_name) == true
                 - T is not a pointer type
             ensures
-                - all the arguments for the given option are convertable
+                - all the arguments for the given option are convertible
                   by string_cast<T>() to an object of type T.
             throws
                 - std::bad_alloc
@@ -83,8 +83,8 @@ namespace dlib
                 - first <= last
                 - T is not a pointer type
             ensures
-                - all the arguments for the given option are convertable
-                  by string_cast<T>() to an object of type T and the resuting value is
+                - all the arguments for the given option are convertible
+                  by string_cast<T>() to an object of type T and the resulting value is
                   in the range first to last inclusive.
             throws
                 - std::bad_alloc
@@ -111,7 +111,7 @@ namespace dlib
                 - T is not a pointer type
             ensures
                 - for each argument to the given option:
-                    - this argument is convertable by string_cast<T>() to an object of
+                    - this argument is convertible by string_cast<T>() to an object of
                       type T and the resulting value is equal to some element in the
                       arg_set array.
             throws
@@ -215,6 +215,28 @@ namespace dlib
                         - type == EINCOMPATIBLE_OPTIONS 
                         - opt == One of the incompatible options found.
                         - opt2 == The next incompatible option found.
+        !*/
+
+        void check_sub_option (
+            const string_type& parent_option,
+            const string_type& sub_option
+        ) const;
+        /*!
+            requires
+                - parsed_line() == true
+                - option_is_defined(parent_option) == true
+                - option_is_defined(sub_option) == true
+            ensures
+                - if (option(parent_option).count() == 0) then
+                    - option(sub_option).count() == 0
+            throws
+                - std::bad_alloc
+                - cmd_line_check_error
+                    This exception is thrown if the ensures clause could not be satisfied.
+                    The exception's members will be set as follows:
+                        - type == EMISSING_REQUIRED_OPTION 
+                        - opt == sub_option. 
+                        - required_opts == a vector that contains only parent_option. 
         !*/
 
         template <

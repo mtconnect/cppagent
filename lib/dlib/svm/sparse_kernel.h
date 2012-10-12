@@ -23,7 +23,7 @@ namespace dlib
     {
         typedef typename T::value_type::second_type scalar_type;
         typedef T sample_type;
-        typedef dlib::memory_manager<char>::kernel_1a mem_manager_type;
+        typedef default_memory_manager mem_manager_type;
 
         sparse_radial_basis_kernel(const scalar_type g) : gamma(g) {}
         sparse_radial_basis_kernel() : gamma(0.1) {}
@@ -39,7 +39,7 @@ namespace dlib
             const sample_type& b
         ) const
         { 
-            const scalar_type d = sparse_vector::distance_squared(a,b);
+            const scalar_type d = distance_squared(a,b);
             return std::exp(-gamma*d);
         }
 
@@ -85,7 +85,7 @@ namespace dlib
         std::istream& in 
     )
     {
-        typedef typename T::type scalar_type;
+        typedef typename T::value_type::second_type scalar_type;
         try
         {
             deserialize(const_cast<scalar_type&>(item.gamma), in);
@@ -105,7 +105,7 @@ namespace dlib
     {
         typedef typename T::value_type::second_type scalar_type;
         typedef T sample_type;
-        typedef dlib::memory_manager<char>::kernel_1a mem_manager_type;
+        typedef default_memory_manager mem_manager_type;
 
         sparse_polynomial_kernel(const scalar_type g, const scalar_type c, const scalar_type d) : gamma(g), coef(c), degree(d) {}
         sparse_polynomial_kernel() : gamma(1), coef(0), degree(1) {}
@@ -123,7 +123,7 @@ namespace dlib
             const sample_type& b
         ) const
         { 
-            return std::pow(gamma*(sparse_vector::dot(a,b)) + coef, degree);
+            return std::pow(gamma*(dot(a,b)) + coef, degree);
         }
 
         sparse_polynomial_kernel& operator= (
@@ -172,7 +172,7 @@ namespace dlib
         std::istream& in 
     )
     {
-        typedef typename T::type scalar_type;
+        typedef typename T::value_type::second_type scalar_type;
         try
         {
             deserialize(const_cast<scalar_type&>(item.gamma), in);
@@ -194,7 +194,7 @@ namespace dlib
     {
         typedef typename T::value_type::second_type scalar_type;
         typedef T sample_type;
-        typedef dlib::memory_manager<char>::kernel_1a mem_manager_type;
+        typedef default_memory_manager mem_manager_type;
 
         sparse_sigmoid_kernel(const scalar_type g, const scalar_type c) : gamma(g), coef(c) {}
         sparse_sigmoid_kernel() : gamma(0.1), coef(-1.0) {}
@@ -211,7 +211,7 @@ namespace dlib
             const sample_type& b
         ) const
         { 
-            return std::tanh(gamma*(sparse_vector::dot(a,b)) + coef);
+            return std::tanh(gamma*(dot(a,b)) + coef);
         }
 
         sparse_sigmoid_kernel& operator= (
@@ -258,7 +258,7 @@ namespace dlib
         std::istream& in 
     )
     {
-        typedef typename T::type scalar_type;
+        typedef typename T::value_type::second_type scalar_type;
         try
         {
             deserialize(const_cast<scalar_type&>(item.gamma), in);
@@ -277,14 +277,14 @@ namespace dlib
     {
         typedef typename T::value_type::second_type scalar_type;
         typedef T sample_type;
-        typedef dlib::memory_manager<char>::kernel_1a mem_manager_type;
+        typedef default_memory_manager mem_manager_type;
 
         scalar_type operator() (
             const sample_type& a,
             const sample_type& b
         ) const
         { 
-            return sparse_vector::dot(a,b);
+            return dot(a,b);
         }
 
         bool operator== (
@@ -299,16 +299,79 @@ namespace dlib
         typename T
         >
     void serialize (
-        const sparse_linear_kernel<T>& item,
-        std::ostream& out
+        const sparse_linear_kernel<T>& ,
+        std::ostream& 
     ){}
 
     template <
         typename T
         >
     void deserialize (
-        sparse_linear_kernel<T>& item,
-        std::istream& in 
+        sparse_linear_kernel<T>& ,
+        std::istream&  
+    ){}
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T>
+    struct sparse_histogram_intersection_kernel
+    {
+        typedef typename T::value_type::second_type scalar_type;
+        typedef T sample_type;
+        typedef default_memory_manager mem_manager_type;
+
+        scalar_type operator() (
+            const sample_type& a,
+            const sample_type& b
+        ) const
+        { 
+            typename sample_type::const_iterator ai = a.begin();
+            typename sample_type::const_iterator bi = b.begin();
+
+            scalar_type sum = 0;
+            while (ai != a.end() && bi != b.end())
+            {
+                if (ai->first == bi->first)
+                {
+                    sum += std::min(ai->second , bi->second);
+                    ++ai;
+                    ++bi;
+                }
+                else if (ai->first < bi->first)
+                {
+                    ++ai;
+                }
+                else 
+                {
+                    ++bi;
+                }
+            }
+
+            return sum;
+        }
+
+        bool operator== (
+            const sparse_histogram_intersection_kernel& 
+        ) const
+        {
+            return true;
+        }
+    };
+
+    template <
+        typename T
+        >
+    void serialize (
+        const sparse_histogram_intersection_kernel<T>& ,
+        std::ostream& 
+    ){}
+
+    template <
+        typename T
+        >
+    void deserialize (
+        sparse_histogram_intersection_kernel<T>& ,
+        std::istream&  
     ){}
 
 // ----------------------------------------------------------------------------------------

@@ -16,19 +16,19 @@ namespace dlib
 // ------------------------------------------------------------------------------
 
     template <
-        typename K 
+        typename Kern 
         >
     class rbf_network_trainer 
     {
         /*!
-            This is an implemenation of an RBF network trainer that follows
+            This is an implementation of an RBF network trainer that follows
             the directions right off Wikipedia basically.  So nothing 
             particularly fancy.  Although the way the centers are selected
             is somewhat unique.
         !*/
 
     public:
-        typedef K kernel_type;
+        typedef Kern kernel_type;
         typedef typename kernel_type::scalar_type scalar_type;
         typedef typename kernel_type::sample_type sample_type;
         typedef typename kernel_type::mem_manager_type mem_manager_type;
@@ -103,7 +103,7 @@ namespace dlib
             typedef typename decision_function<kernel_type>::sample_vector_type sample_vector_type;
 
             // make sure requires clause is not broken
-            DLIB_ASSERT(x.nr() > 1 && x.nr() == y.nr() && x.nc() == 1 && y.nc() == 1,
+            DLIB_ASSERT(is_learning_problem(x,y),
                 "\tdecision_function rbf_network_trainer::train(x,y)"
                 << "\n\t invalid inputs were given to this function"
                 << "\n\t x.nr(): " << x.nr() 
@@ -115,12 +115,9 @@ namespace dlib
             // use the linearly_independent_subset_finder object to select the centers.  So here
             // we show it all the data samples so it can find the best centers.
             linearly_independent_subset_finder<kernel_type> lisf(kernel, num_centers);
-            for (long i = 0; i < x.size(); ++i)
-            {
-                lisf.add(x(i));
-            }
+            fill_lisf(lisf, x);
 
-            const long num_centers = lisf.dictionary_size();
+            const long num_centers = lisf.size();
 
             // fill the K matrix with the output of the kernel for all the center and sample point pairs
             matrix<scalar_type,0,0,mem_manager_type> K(x.nr(), num_centers+1);

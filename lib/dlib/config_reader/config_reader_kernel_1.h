@@ -7,8 +7,13 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include "../algs.h"
 #include "../stl_checked/std_vector_c.h"
+
+#ifndef DLIB_ISO_CPP_ONLY
+#include "config_reader_thread_safe_1.h"
+#endif
 
 namespace dlib
 {
@@ -41,6 +46,16 @@ namespace dlib
         
     public:
 
+        // These two typedefs are defined for backwards compatibility with older versions of dlib.
+        typedef config_reader_kernel_1 kernel_1a;
+#ifndef DLIB_ISO_CPP_ONLY
+        typedef config_reader_thread_safe_1<
+            config_reader_kernel_1,
+            map_string_void 
+            > thread_safe_1a;
+#endif // DLIB_ISO_CPP_ONLY
+
+
         config_reader_kernel_1();
 
         class config_reader_error : public dlib::error 
@@ -63,6 +78,22 @@ namespace dlib
         public:
             const unsigned long line_number;
             const bool redefinition;
+        };
+
+        class file_not_found : public dlib::error 
+        {
+            friend class config_reader_kernel_1;
+            file_not_found(
+                const std::string& file_name_
+            ) : 
+                dlib::error(ECONFIG_READER, "Error in config_reader, unable to open file " + file_name_),
+                file_name(file_name_)
+            {}
+
+            ~file_not_found() throw() {}
+
+        public:
+            const std::string file_name;
         };
 
         class config_reader_access_error : public dlib::error
@@ -92,6 +123,10 @@ namespace dlib
         };
 
         config_reader_kernel_1(
+            const std::string& config_file 
+        );
+
+        config_reader_kernel_1(
             std::istream& in
         );
 
@@ -103,6 +138,10 @@ namespace dlib
 
         void load_from (
             std::istream& in
+        );
+
+        void load_from (
+            const std::string& config_file
         );
 
         bool is_key_defined (
@@ -224,7 +263,7 @@ namespace dlib
         block_table.reset();
         while (block_table.move_next())
         {
-            delete reinterpret_cast<config_reader_kernel_1*>(block_table.element().value());
+            delete static_cast<config_reader_kernel_1*>(block_table.element().value());
         }
         block_table.clear();
         key_table.clear();
@@ -270,12 +309,47 @@ namespace dlib
         typename map_string_void,
         typename tokenizer
         >
+    void config_reader_kernel_1<map_string_string,map_string_void,tokenizer>::
+    load_from(
+        const std::string& config_file
+    )
+    {
+        clear();
+        std::ifstream fin(config_file.c_str());
+        if (!fin)
+            throw file_not_found(config_file);
+
+        load_from(fin);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename map_string_string,
+        typename map_string_void,
+        typename tokenizer
+        >
     config_reader_kernel_1<map_string_string,map_string_void,tokenizer>::
     config_reader_kernel_1(
         std::istream& in
     )
     {
         load_from(in);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename map_string_string,
+        typename map_string_void,
+        typename tokenizer
+        >
+    config_reader_kernel_1<map_string_string,map_string_void,tokenizer>::
+    config_reader_kernel_1(
+        const std::string& config_file
+    )
+    {
+        load_from(config_file);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -491,7 +565,7 @@ namespace dlib
             throw config_reader_access_error(name,"");
         }
 
-        return *reinterpret_cast<config_reader_kernel_1*>(block_table[name]);
+        return *static_cast<config_reader_kernel_1*>(block_table[name]);
     }
 
 // ----------------------------------------------------------------------------------------

@@ -358,8 +358,7 @@ namespace dlib
         else if (status == OTHER_ERROR)
         {
             throw dlib::socket_error(
-                EOTHER,
-                "error occurred in server_kernel_1::start()\nunable to crate listener"
+                "error occurred in server_kernel_1::start()\nunable to create listener"
                 );            
         }
 
@@ -563,7 +562,6 @@ namespace dlib
 
             // throw the exception
             throw dlib::socket_error(
-                EOTHER,
              "error occurred in server_kernel_1::start()\nlistening socket returned error"
                 );            
         }
@@ -663,7 +661,7 @@ namespace dlib
         void* item
     )
     {
-        param& p = *reinterpret_cast<param*>(item);
+        param& p = *static_cast<param*>(item);
 
 
         p.server.on_connect(p.new_connection);

@@ -153,8 +153,99 @@ namespace
         sout.str("");
 
 
+        // make sure the things can serialize right
+        {
+            r.clear();
+            r2.clear();
+
+
+            for (int i =0; i < 1000; ++i)
+            {
+                r.get_random_32bit_number();
+                r.get_random_gaussian();
+            }
+
+            ostringstream sout;
+            serialize(r, sout);
+
+            istringstream sin(sout.str());
+            deserialize(r2, sin);
+
+
+            for (int i =0; i < 1000; ++i)
+            {
+                DLIB_TEST(r.get_random_32bit_number() == r2.get_random_32bit_number());
+                DLIB_TEST(std::abs(r.get_random_gaussian() - r2.get_random_gaussian()) < 1e-14);
+            }
+        }
+
+
+        // make sure calling clear() and set_seed("") do the same thing
+        {
+            r.clear();
+            r2.set_seed("");
+            rand r3;
+
+
+            DLIB_TEST(r.get_seed() == r2.get_seed());
+            DLIB_TEST(r.get_seed() == r3.get_seed());
+
+
+            for (int i =0; i < 1000; ++i)
+            {
+                const uint32 num1 = r.get_random_32bit_number();
+                const uint32 num2 = r2.get_random_32bit_number();
+                const uint32 num3 = r3.get_random_32bit_number();
+                DLIB_TEST( num1 == num2);
+                DLIB_TEST( num1 == num3);
+            }
+        }
+
     }
 
+
+    template <typename rand_type>
+    void test_normal_numbers(
+        rand_type& rnd
+    )
+    {
+        dlog << LINFO << "test normality";
+        double cnt1 = 0; // num <= -1.2
+        double cnt2 = 0; // num <= -0.5 
+        double cnt3 = 0; // num <= 0
+        double cnt4 = 0; // num <= 0.5
+        double cnt5 = 0; // num <= 1.2
+
+        const unsigned long total = 1000000;
+        for (unsigned long i = 0; i < total; ++i)
+        {
+            const double r = rnd.get_random_gaussian();
+            if (r <= -1.2) cnt1 += 1;
+            if (r <= -0.5) cnt2 += 1;
+            if (r <=  0)   cnt3 += 1;
+            if (r <=  0.5) cnt4 += 1;
+            if (r <=  1.2) cnt5 += 1;
+        }
+
+        cnt1 /= total;
+        cnt2 /= total;
+        cnt3 /= total;
+        cnt4 /= total;
+        cnt5 /= total;
+
+        dlog << LINFO << "cnt1: "<< cnt1;
+        dlog << LINFO << "cnt2: "<< cnt2;
+        dlog << LINFO << "cnt3: "<< cnt3;
+        dlog << LINFO << "cnt4: "<< cnt4;
+        dlog << LINFO << "cnt5: "<< cnt5;
+
+        DLIB_TEST(std::abs(cnt1 - 0.11507) < 0.001);
+        DLIB_TEST(std::abs(cnt2 - 0.30854) < 0.001);
+        DLIB_TEST(std::abs(cnt3 - 0.5)     < 0.001);
+        DLIB_TEST(std::abs(cnt4 - 0.69146) < 0.001);
+        DLIB_TEST(std::abs(cnt5 - 0.88493) < 0.001);
+
+    }
 
 
 
@@ -173,7 +264,11 @@ namespace
         )
         {
             dlog << LINFO << "testing kernel_1a";
-            rand_test<dlib::rand::kernel_1a>();
+            rand_test<dlib::rand>();
+            rand_test<dlib::rand>();
+
+            dlib::rand rnd;
+            test_normal_numbers(rnd);
         }
     } a;
 

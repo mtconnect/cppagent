@@ -12,6 +12,19 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    bool file_exists (
+        const std::string& filename
+    );
+    /*!
+        ensures
+            - if (a file with the given filename exists) then
+                - returns true
+            - else
+                - returns false
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     template <typename T>
     const std::vector<file> get_files_in_directory_tree (
         const directory& top_of_tree,
@@ -70,6 +83,43 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    class match_endings
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This is a simple function object that can be used with the
+                above get_files_in_directory_tree() function.  This object
+                allows you to look for files with a number of different 
+                endings.
+        !*/
+
+    public:
+        match_endings ( 
+            const std::string& ending_list
+        );
+        /*!
+            ensures
+                - ending_list is interpreted as a whitespace separated list
+                  of file endings. 
+                - this object will be a function that checks if a file has a 
+                  name that ends with one of the strings in ending_list.
+        !*/
+
+        bool operator() (
+            const file& f
+        ) const;
+        /*!
+            ensures
+                - if (the file f has a name that ends with one of the ending strings 
+                  given to this object's constructor) then
+                    - returns true
+                - else
+                    - returns false
+        !*/
+    };
+
+// ----------------------------------------------------------------------------------------
+
     class match_all
     {
         /*!
@@ -90,6 +140,30 @@ namespace dlib
                   matches all files no matter what)
         !*/
     };
+
+// ----------------------------------------------------------------------------------------
+
+    directory get_parent_directory (
+        const directory& dir
+    );
+    /*!
+        ensures
+            - returns the parent directory of dir.  In particular, this
+              function returns the value of dir.get_parent()
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    directory get_parent_directory (
+        const file& f
+    );
+    /*!
+        ensures
+            - if (f.full_name() != "") then
+                - returns the directory which contains the given file
+            - else
+                - returns a default initialized directory (i.e. directory())
+    !*/
 
 // ----------------------------------------------------------------------------------------
 

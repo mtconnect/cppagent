@@ -17,6 +17,7 @@
 #include <vector>
 #include "../smart_pointers.h"
 #include "../pipe.h"
+#include <iostream>
 
 namespace dlib
 {
@@ -46,19 +47,28 @@ namespace dlib
                 typename matrix_type
                 >
             void operator()(
-                const job<trainer_type>& j,
+                job<trainer_type>& j,
                 matrix_type& result
             )
             {
                 try
                 {
                     result = test_binary_decision_function(j.trainer.train(j.x_train, j.y_train), j.x_test, j.y_test);
+
+                    // Do this just to make j release it's memory since people might run threaded cross validation
+                    // on very large datasets.  Every bit of freed memory helps out.
+                    j = job<trainer_type>();
                 }
-                catch (invalid_svm_nu_error&)
+                catch (invalid_nu_error&)
                 {
                     // If this is a svm_nu_trainer then we might get this exception if the nu is
                     // invalid.  In this case just return a cross validation score of 0.
                     result = 0;
+                }
+                catch (std::bad_alloc&)
+                {
+                    std::cerr << "\nstd::bad_alloc thrown while running cross_validate_trainer_threaded().  Not enough memory.\n" << std::endl;
+                    throw;
                 }
             }
         };

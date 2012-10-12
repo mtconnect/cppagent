@@ -4,6 +4,7 @@
 #define DLIB_MATRIx_SUBEXP_
 
 #include "matrix_subexp_abstract.h"
+#include "matrix_op.h"
 #include "matrix.h"
 #include "../geometry/rectangle.h"
 #include "matrix_expressions.h"
@@ -59,10 +60,44 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename M>
+    struct op_subm 
+    {
+        op_subm (
+            const M& m_,
+            const long& r__,
+            const long& c__,
+            const long& nr__,
+            const long& nc__
+        ) : m(m_), r_(r__), c_(c__), nr_(nr__), nc_(nc__) { }
+
+        const M& m;
+        const long r_;
+        const long c_;
+        const long nr_;
+        const long nc_;
+
+        const static long cost = M::cost+1;
+        typedef typename M::type type;
+        typedef typename M::const_ret_type const_ret_type;
+        typedef typename M::mem_manager_type mem_manager_type;
+        typedef typename M::layout_type layout_type;
+        const static long NR = 0;
+        const static long NC = 0;
+
+        const_ret_type apply ( long r, long c) const { return m(r+r_,c+c_); }
+
+        long nr () const { return nr_; }
+        long nc () const { return nc_; }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const { return m.aliases(item); } 
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const { return m.aliases(item); }
+    };
+
     template <
         typename EXP
         >
-    const matrix_sub_exp<EXP> subm (
+    const matrix_op<op_subm<EXP> > subm (
         const matrix_exp<EXP>& m,
         long r, 
         long c,
@@ -81,8 +116,8 @@ namespace dlib
             << "\n\tnc:     " << nc 
             );
 
-        typedef matrix_sub_exp<EXP> exp;
-        return exp(m.ref(),r,c,nr,nc);
+        typedef op_subm<EXP> op;
+        return matrix_op<op>(op(m.ref(),r,c,nr,nc));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -90,7 +125,7 @@ namespace dlib
     template <
         typename EXP
         >
-    const matrix_sub_exp<EXP> subm (
+    const matrix_op<op_subm<EXP> > subm (
         const matrix_exp<EXP>& m,
         const rectangle& rect
     )
@@ -106,18 +141,46 @@ namespace dlib
             << "\n\trect.bottom(): " << rect.bottom()
             );
 
-        typedef matrix_sub_exp<EXP> exp;
-        return exp(m.ref(),rect.top(),rect.left(),rect.height(),rect.width());
+        typedef op_subm<EXP> op;
+        return matrix_op<op>(op(m.ref(),rect.top(),rect.left(),rect.height(),rect.width()));
     }
 
 // ----------------------------------------------------------------------------------------
+
+    template <typename M1, typename M2, typename M3>
+    struct op_subm_range 
+    {
+        op_subm_range( const M1& m1_, const M2& rows_, const M3& cols_) : 
+            m1(m1_), rows(rows_), cols(cols_) {}
+        const M1& m1;
+        const M2& rows;
+        const M3& cols;
+
+        const static long cost = M1::cost+M2::cost+M3::cost;
+        typedef typename M1::type type;
+        typedef typename M1::const_ret_type const_ret_type;
+        typedef typename M1::mem_manager_type mem_manager_type;
+        typedef typename M1::layout_type layout_type;
+        const static long NR = M2::NC*M2::NR;
+        const static long NC = M3::NC*M3::NR;
+
+        const_ret_type apply ( long r, long c) const { return m1(rows(r),cols(c)); }
+
+        long nr () const { return rows.size(); }
+        long nc () const { return cols.size(); }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const 
+        { return m1.aliases(item) || rows.aliases(item) || cols.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const 
+        { return m1.aliases(item) || rows.aliases(item) || cols.aliases(item); }
+    };
 
     template <
         typename EXP,
         typename EXPr,
         typename EXPc
         >
-    const matrix_sub_range_exp<EXP,EXPr,EXPc> subm (
+    const matrix_op<op_subm_range<EXP,EXPr,EXPc> > subm (
         const matrix_exp<EXP>& m,
         const matrix_exp<EXPr>& rows,
         const matrix_exp<EXPc>& cols
@@ -143,38 +206,39 @@ namespace dlib
             << "\n\tcols.nc():  " << cols.nc()
             );
 
-        typedef matrix_sub_range_exp<EXP,EXPr,EXPc> exp;
-        return exp(m.ref(),rows.ref(),cols.ref());
+        typedef op_subm_range<EXP,EXPr,EXPc> op;
+        return matrix_op<op>(op(m.ref(),rows.ref(),cols.ref()));
     }
 
 // ----------------------------------------------------------------------------------------
 
-    struct op_rowm
+    template <typename M>
+    struct op_rowm 
     {
-        template <typename EXP>
-        struct op : has_destructive_aliasing
-        {
-            const static long cost = EXP::cost;
-            const static long NR = 1;
-            const static long NC = EXP::NC;
-            typedef typename EXP::type type;
-            typedef typename EXP::const_ret_type const_ret_type;
-            typedef typename EXP::mem_manager_type mem_manager_type;
-            template <typename M>
-            static const_ret_type apply ( const M& m, long row, long, long c)
-            { return m(row,c); }
+        op_rowm(const M& m_, const long& row_) : m(m_), row(row_) {}
+        const M& m;
+        const long row;
 
-            template <typename M>
-            static long nr (const M& ) { return 1; }
-            template <typename M>
-            static long nc (const M& m) { return m.nc(); }
-        };
+        const static long cost = M::cost;
+        const static long NR = 1;
+        const static long NC = M::NC;
+        typedef typename M::type type;
+        typedef typename M::const_ret_type const_ret_type;
+        typedef typename M::mem_manager_type mem_manager_type;
+        typedef typename M::layout_type layout_type;
+        const_ret_type apply ( long, long c) const { return m(row,c); }
+
+        long nr () const { return 1; }
+        long nc () const { return m.nc(); }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const { return m.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const { return m.aliases(item); }
     };
 
     template <
         typename EXP
         >
-    const matrix_scalar_binary_exp<EXP,long,op_rowm> rowm (
+    const matrix_op<op_rowm<EXP> > rowm (
         const matrix_exp<EXP>& m,
         long row
     )
@@ -187,38 +251,46 @@ namespace dlib
             << "\n\trow:    " << row 
             );
 
-        typedef matrix_scalar_binary_exp<EXP,long,op_rowm> exp;
-        return exp(m.ref(),row);
+        typedef op_rowm<EXP> op;
+        return matrix_op<op>(op(m.ref(),row));
     }
+
+    template <typename EXP>
+    struct rowm_exp
+    {
+        typedef matrix_op<op_rowm<EXP> > type;
+    };
 
 // ----------------------------------------------------------------------------------------
 
-    struct op_rowm2
+    template <typename M>
+    struct op_rowm2 
     {
-        template <typename EXP>
-        struct op : has_destructive_aliasing
-        {
-            const static long cost = EXP::cost;
-            const static long NR = 1;
-            const static long NC = 0;
-            typedef typename EXP::type type;
-            typedef typename EXP::const_ret_type const_ret_type;
-            typedef typename EXP::mem_manager_type mem_manager_type;
-            template <typename M>
-            static const_ret_type apply ( const M& m, long row, long , long , long c)
-            { return m(row,c); }
+        op_rowm2(const M& m_, const long& row_, const long& len) : m(m_), row(row_), length(len) {}
+        const M& m;
+        const long row;
+        const long length;
 
-            template <typename M>
-            static long nr (const M& , long, long) { return 1; }
-            template <typename M>
-            static long nc (const M& , long, long length) { return length; }
-        };
+        const static long cost = M::cost;
+        const static long NR = 1;
+        const static long NC = 0;
+        typedef typename M::type type;
+        typedef typename M::const_ret_type const_ret_type;
+        typedef typename M::mem_manager_type mem_manager_type;
+        typedef typename M::layout_type layout_type;
+        const_ret_type apply ( long , long c) const { return m(row,c); }
+
+        long nr () const { return 1; }
+        long nc () const { return length; }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const { return m.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const { return m.aliases(item); }
     };
 
     template <
         typename EXP
         >
-    const matrix_scalar_ternary_exp<EXP,long,op_rowm2> rowm (
+    const matrix_op<op_rowm2<EXP> > rowm (
         const matrix_exp<EXP>& m,
         long row,
         long length
@@ -234,40 +306,43 @@ namespace dlib
             << "\n\tlength: " << length 
             );
 
-        typedef matrix_scalar_ternary_exp<EXP,long,op_rowm2> exp;
-        return exp(m.ref(),row, length);
+        typedef op_rowm2<EXP> op;
+        return matrix_op<op>(op(m.ref(), row, length));
     }
 
 // ----------------------------------------------------------------------------------------
 
-    struct op_rowm_range
+    template <typename M1, typename M2>
+    struct op_rowm_range 
     {
-        template <typename EXP1, typename EXP2>
-        struct op : has_destructive_aliasing
-        {
-            const static long cost = EXP1::cost+EXP2::cost;
-            typedef typename EXP1::type type;
-            typedef typename EXP1::const_ret_type const_ret_type;
-            typedef typename EXP1::mem_manager_type mem_manager_type;
-            const static long NR = EXP2::NC*EXP2::NR;
-            const static long NC = EXP1::NC;
+        op_rowm_range( const M1& m1_, const M2& rows_) : m1(m1_), rows(rows_) {}
+        const M1& m1;
+        const M2& rows;
 
-            template <typename M1, typename M2>
-            static const_ret_type apply ( const M1& m1, const M2& rows , long r, long c)
-            { return m1(rows(r),c); }
+        const static long cost = M1::cost+M2::cost;
+        typedef typename M1::type type;
+        typedef typename M1::const_ret_type const_ret_type;
+        typedef typename M1::mem_manager_type mem_manager_type;
+        typedef typename M1::layout_type layout_type;
+        const static long NR = M2::NC*M2::NR;
+        const static long NC = M1::NC;
 
-            template <typename M1, typename M2>
-            static long nr (const M1& , const M2& rows ) { return rows.size(); }
-            template <typename M1, typename M2>
-            static long nc (const M1& m1, const M2& ) { return m1.nc(); }
-        };
+        const_ret_type apply ( long r, long c) const { return m1(rows(r),c); }
+
+        long nr () const { return rows.size(); }
+        long nc () const { return m1.nc(); }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const 
+        { return m1.aliases(item) || rows.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const 
+        { return m1.aliases(item) || rows.aliases(item); }
     };
 
     template <
         typename EXP1,
         typename EXP2
         >
-    const matrix_binary_exp<EXP1,EXP2,op_rowm_range> rowm (
+    const matrix_op<op_rowm_range<EXP1,EXP2> > rowm (
         const matrix_exp<EXP1>& m,
         const matrix_exp<EXP2>& rows
     )
@@ -286,38 +361,39 @@ namespace dlib
             << "\n\trows.nc():  " << rows.nc()
             );
 
-        typedef matrix_binary_exp<EXP1,EXP2,op_rowm_range> exp;
-        return exp(m.ref(),rows.ref());
+        typedef op_rowm_range<EXP1,EXP2> op;
+        return matrix_op<op>(op(m.ref(),rows.ref()));
     }
 
 // ----------------------------------------------------------------------------------------
 
-    struct op_colm
+    template <typename M>
+    struct op_colm 
     {
-        template <typename EXP>
-        struct op : has_destructive_aliasing
-        {
-            const static long cost = EXP::cost;
-            const static long NR = EXP::NR;
-            const static long NC = 1;
-            typedef typename EXP::type type;
-            typedef typename EXP::const_ret_type const_ret_type;
-            typedef typename EXP::mem_manager_type mem_manager_type;
-            template <typename M>
-            static const_ret_type apply ( const M& m, long col, long r, long)
-            { return m(r,col); }
+        op_colm(const M& m_, const long& col_) : m(m_), col(col_) {}
+        const M& m;
+        const long col;
 
-            template <typename M>
-            static long nr (const M& m) { return m.nr(); }
-            template <typename M>
-            static long nc (const M& ) { return 1; }
-        };
+        const static long cost = M::cost;
+        const static long NR = M::NR;
+        const static long NC = 1;
+        typedef typename M::type type;
+        typedef typename M::const_ret_type const_ret_type;
+        typedef typename M::mem_manager_type mem_manager_type;
+        typedef typename M::layout_type layout_type;
+        const_ret_type apply ( long r, long) const { return m(r,col); }
+
+        long nr () const { return m.nr(); }
+        long nc () const { return 1; }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const { return m.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const { return m.aliases(item); }
     };
 
     template <
         typename EXP
         >
-    const matrix_scalar_binary_exp<EXP,long,op_colm> colm (
+    const matrix_op<op_colm<EXP> > colm (
         const matrix_exp<EXP>& m,
         long col 
     )
@@ -330,38 +406,46 @@ namespace dlib
             << "\n\tcol:    " << col 
             );
 
-        typedef matrix_scalar_binary_exp<EXP,long,op_colm> exp;
-        return exp(m.ref(),col);
+        typedef op_colm<EXP> op;
+        return matrix_op<op>(op(m.ref(),col));
     }
+
+    template <typename EXP>
+    struct colm_exp
+    {
+        typedef matrix_op<op_colm<EXP> > type;
+    };
 
 // ----------------------------------------------------------------------------------------
 
-    struct op_colm2
+    template <typename M>
+    struct op_colm2 
     {
-        template <typename EXP>
-        struct op : has_destructive_aliasing
-        {
-            const static long cost = EXP::cost;
-            const static long NR = 0;
-            const static long NC = 1;
-            typedef typename EXP::type type;
-            typedef typename EXP::const_ret_type const_ret_type;
-            typedef typename EXP::mem_manager_type mem_manager_type;
-            template <typename M>
-            static const_ret_type apply ( const M& m, long col, long , long r, long )
-            { return m(r,col); }
+        op_colm2(const M& m_, const long& col_, const long& len) : m(m_), col(col_), length(len) {}
+        const M& m;
+        const long col;
+        const long length;
 
-            template <typename M>
-            static long nr (const M&, long, long length) { return length; }
-            template <typename M>
-            static long nc (const M&, long, long) { return 1; }
-        };
+        const static long cost = M::cost;
+        const static long NR = 0;
+        const static long NC = 1;
+        typedef typename M::type type;
+        typedef typename M::const_ret_type const_ret_type;
+        typedef typename M::mem_manager_type mem_manager_type;
+        typedef typename M::layout_type layout_type;
+        const_ret_type apply ( long r, long ) const { return m(r,col); }
+
+        long nr () const { return length; }
+        long nc () const { return 1; }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const { return m.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const { return m.aliases(item); }
     };
 
     template <
         typename EXP
         >
-    const matrix_scalar_ternary_exp<EXP,long,op_colm2> colm (
+    const matrix_op<op_colm2<EXP> > colm (
         const matrix_exp<EXP>& m,
         long col,
         long length
@@ -377,40 +461,43 @@ namespace dlib
             << "\n\tlength: " << length 
             );
 
-        typedef matrix_scalar_ternary_exp<EXP,long,op_colm2> exp;
-        return exp(m.ref(),col, length);
+        typedef op_colm2<EXP> op;
+        return matrix_op<op>(op(m.ref(),col, length));
     }
 
 // ----------------------------------------------------------------------------------------
 
-    struct op_colm_range
+    template <typename M1, typename M2>
+    struct op_colm_range 
     {
-        template <typename EXP1, typename EXP2>
-        struct op : has_destructive_aliasing
-        {
-            typedef typename EXP1::type type;
-            typedef typename EXP1::const_ret_type const_ret_type;
-            typedef typename EXP1::mem_manager_type mem_manager_type;
-            const static long NR = EXP1::NR;
-            const static long NC = EXP2::NC*EXP2::NR;
-            const static long cost = EXP1::cost+EXP2::cost;
+        op_colm_range( const M1& m1_, const M2& cols_) : m1(m1_), cols(cols_) {}
+        const M1& m1;
+        const M2& cols;
 
-            template <typename M1, typename M2>
-            static const_ret_type apply ( const M1& m1, const M2& cols , long r, long c)
-            { return m1(r,cols(c)); }
+        typedef typename M1::type type;
+        typedef typename M1::const_ret_type const_ret_type;
+        typedef typename M1::mem_manager_type mem_manager_type;
+        typedef typename M1::layout_type layout_type;
+        const static long NR = M1::NR;
+        const static long NC = M2::NC*M2::NR;
+        const static long cost = M1::cost+M2::cost;
 
-            template <typename M1, typename M2>
-            static long nr (const M1& m1, const M2&  ) { return m1.nr(); }
-            template <typename M1, typename M2>
-            static long nc (const M1& , const M2& cols ) { return cols.size(); }
-        };
+        const_ret_type apply (long r, long c) const { return m1(r,cols(c)); }
+
+        long nr () const { return m1.nr(); }
+        long nc () const { return cols.size(); }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const 
+        { return m1.aliases(item) || cols.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const 
+        { return m1.aliases(item) || cols.aliases(item); }
     };
 
     template <
         typename EXP1,
         typename EXP2
         >
-    const matrix_binary_exp<EXP1,EXP2,op_colm_range> colm (
+    const matrix_op<op_colm_range<EXP1,EXP2> > colm (
         const matrix_exp<EXP1>& m,
         const matrix_exp<EXP2>& cols
     )
@@ -429,8 +516,8 @@ namespace dlib
             << "\n\tcols.nc():  " << cols.nc()
             );
 
-        typedef matrix_binary_exp<EXP1,EXP2,op_colm_range> exp;
-        return exp(m.ref(),cols.ref());
+        typedef op_colm_range<EXP1,EXP2> op;
+        return matrix_op<op>(op(m.ref(),cols.ref()));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -496,6 +583,62 @@ namespace dlib
             return *this;
         }
 
+        template <typename EXP>
+        assignable_sub_matrix& operator+= (
+            const matrix_exp<EXP>& exp
+        ) 
+        {
+            DLIB_ASSERT( exp.nr() == (long)rect.height() && exp.nc() == (long)rect.width(),
+                "\tassignable_matrix_expression set_subm()"
+                << "\n\tYou have tried to assign to this object using a matrix that isn't the right size"
+                << "\n\texp.nr() (source matrix): " << exp.nr()
+                << "\n\texp.nc() (source matrix): " << exp.nc() 
+                << "\n\trect.width() (target matrix):   " << rect.width()
+                << "\n\trect.height() (target matrix):  " << rect.height()
+                );
+
+            if (exp.destructively_aliases(m) == false)
+            {
+                matrix_assign(*this, subm(m,rect)+exp); 
+            }
+            else
+            {
+                // make a temporary copy of the matrix we are going to assign to m to 
+                // avoid aliasing issues during the copy
+                this->operator+=(tmp(exp));
+            }
+
+            return *this;
+        }
+
+        template <typename EXP>
+        assignable_sub_matrix& operator-= (
+            const matrix_exp<EXP>& exp
+        ) 
+        {
+            DLIB_ASSERT( exp.nr() == (long)rect.height() && exp.nc() == (long)rect.width(),
+                "\tassignable_matrix_expression set_subm()"
+                << "\n\tYou have tried to assign to this object using a matrix that isn't the right size"
+                << "\n\texp.nr() (source matrix): " << exp.nr()
+                << "\n\texp.nc() (source matrix): " << exp.nc() 
+                << "\n\trect.width() (target matrix):   " << rect.width()
+                << "\n\trect.height() (target matrix):  " << rect.height()
+                );
+
+            if (exp.destructively_aliases(m) == false)
+            {
+                matrix_assign(*this, subm(m,rect)-exp); 
+            }
+            else
+            {
+                // make a temporary copy of the matrix we are going to assign to m to 
+                // avoid aliasing issues during the copy
+                this->operator-=(tmp(exp));
+            }
+
+            return *this;
+        }
+
         assignable_sub_matrix& operator= (
             const T& value
         )
@@ -505,6 +648,36 @@ namespace dlib
                 for (long c = rect.left(); c <= rect.right(); ++c)
                 {
                     m(r,c) = value;
+                }
+            }
+
+            return *this;
+        }
+
+        assignable_sub_matrix& operator+= (
+            const T& value
+        )
+        {
+            for (long r = rect.top(); r <= rect.bottom(); ++r)
+            {
+                for (long c = rect.left(); c <= rect.right(); ++c)
+                {
+                    m(r,c) += value;
+                }
+            }
+
+            return *this;
+        }
+
+        assignable_sub_matrix& operator-= (
+            const T& value
+        )
+        {
+            for (long r = rect.top(); r <= rect.bottom(); ++r)
+            {
+                for (long c = rect.left(); c <= rect.right(); ++c)
+                {
+                    m(r,c) -= value;
                 }
             }
 
@@ -618,6 +791,62 @@ namespace dlib
             return *this;
         }
 
+        template <typename EXP>
+        assignable_sub_range_matrix& operator+= (
+            const matrix_exp<EXP>& exp
+        ) 
+        {
+            DLIB_ASSERT( exp.nr() == rows.size() && exp.nc() == cols.size(),
+                "\tassignable_matrix_expression set_subm(matrix& m, const matrix_exp rows, const matrix_exp cols)"
+                << "\n\tYou have tried to assign to this object using a matrix that isn't the right size"
+                << "\n\texp.nr() (source matrix): " << exp.nr()
+                << "\n\texp.nc() (source matrix): " << exp.nc() 
+                << "\n\trows.size() (target matrix):  " << rows.size()
+                << "\n\tcols.size() (target matrix):  " << cols.size()
+                );
+
+            if (exp.destructively_aliases(m) == false)
+            {
+                matrix_assign(*this, subm(m,rows,cols)+exp);
+            }
+            else
+            {
+                // make a temporary copy of the matrix we are going to assign to m to 
+                // avoid aliasing issues during the copy
+                this->operator+=(tmp(exp));
+            }
+
+            return *this;
+        }
+
+        template <typename EXP>
+        assignable_sub_range_matrix& operator-= (
+            const matrix_exp<EXP>& exp
+        ) 
+        {
+            DLIB_ASSERT( exp.nr() == rows.size() && exp.nc() == cols.size(),
+                "\tassignable_matrix_expression set_subm(matrix& m, const matrix_exp rows, const matrix_exp cols)"
+                << "\n\tYou have tried to assign to this object using a matrix that isn't the right size"
+                << "\n\texp.nr() (source matrix): " << exp.nr()
+                << "\n\texp.nc() (source matrix): " << exp.nc() 
+                << "\n\trows.size() (target matrix):  " << rows.size()
+                << "\n\tcols.size() (target matrix):  " << cols.size()
+                );
+
+            if (exp.destructively_aliases(m) == false)
+            {
+                matrix_assign(*this, subm(m,rows,cols)-exp);
+            }
+            else
+            {
+                // make a temporary copy of the matrix we are going to assign to m to 
+                // avoid aliasing issues during the copy
+                this->operator-=(tmp(exp));
+            }
+
+            return *this;
+        }
+
         assignable_sub_range_matrix& operator= (
             const T& value
         )
@@ -627,6 +856,36 @@ namespace dlib
                 for (long c = 0; c < cols.size(); ++c)
                 {
                     m(rows(r),cols(c)) = value;
+                }
+            }
+
+            return *this;
+        }
+
+        assignable_sub_range_matrix& operator+= (
+            const T& value
+        )
+        {
+            for (long r = 0; r < rows.size(); ++r)
+            {
+                for (long c = 0; c < cols.size(); ++c)
+                {
+                    m(rows(r),cols(c)) += value;
+                }
+            }
+
+            return *this;
+        }
+
+        assignable_sub_range_matrix& operator-= (
+            const T& value
+        )
+        {
+            for (long r = 0; r < rows.size(); ++r)
+            {
+                for (long c = 0; c < cols.size(); ++c)
+                {
+                    m(rows(r),cols(c)) -= value;
                 }
             }
 
@@ -771,6 +1030,60 @@ namespace dlib
             return *this;
         }
 
+        template <typename EXP>
+        assignable_col_matrix& operator+= (
+            const matrix_exp<EXP>& exp
+        ) 
+        {
+            DLIB_ASSERT( exp.nc() == 1 && exp.nr() == m.nr(),
+                "\tassignable_matrix_expression set_colm()"
+                << "\n\tYou have tried to assign to this object using a matrix that isn't the right size"
+                << "\n\texp.nr() (source matrix): " << exp.nr()
+                << "\n\texp.nc() (source matrix): " << exp.nc() 
+                << "\n\tm.nr() (target matrix):   " << m.nr()
+                );
+
+            if (exp.destructively_aliases(m) == false)
+            {
+                matrix_assign(*this, colm(m,col)+exp); 
+            }
+            else
+            {
+                // make a temporary copy of the matrix we are going to assign to m to 
+                // avoid aliasing issues during the copy
+                this->operator+=(tmp(exp));
+            }
+
+            return *this;
+        }
+
+        template <typename EXP>
+        assignable_col_matrix& operator-= (
+            const matrix_exp<EXP>& exp
+        ) 
+        {
+            DLIB_ASSERT( exp.nc() == 1 && exp.nr() == m.nr(),
+                "\tassignable_matrix_expression set_colm()"
+                << "\n\tYou have tried to assign to this object using a matrix that isn't the right size"
+                << "\n\texp.nr() (source matrix): " << exp.nr()
+                << "\n\texp.nc() (source matrix): " << exp.nc() 
+                << "\n\tm.nr() (target matrix):   " << m.nr()
+                );
+
+            if (exp.destructively_aliases(m) == false)
+            {
+                matrix_assign(*this, colm(m,col)-exp); 
+            }
+            else
+            {
+                // make a temporary copy of the matrix we are going to assign to m to 
+                // avoid aliasing issues during the copy
+                this->operator-=(tmp(exp));
+            }
+
+            return *this;
+        }
+
         assignable_col_matrix& operator= (
             const T& value
         )
@@ -778,6 +1091,30 @@ namespace dlib
             for (long i = 0; i < m.nr(); ++i)
             {
                 m(i,col) = value;
+            }
+
+            return *this;
+        }
+
+        assignable_col_matrix& operator+= (
+            const T& value
+        )
+        {
+            for (long i = 0; i < m.nr(); ++i)
+            {
+                m(i,col) += value;
+            }
+
+            return *this;
+        }
+
+        assignable_col_matrix& operator-= (
+            const T& value
+        )
+        {
+            for (long i = 0; i < m.nr(); ++i)
+            {
+                m(i,col) -= value;
             }
 
             return *this;
@@ -871,6 +1208,60 @@ namespace dlib
             return *this;
         }
 
+        template <typename EXP>
+        assignable_row_matrix& operator+= (
+            const matrix_exp<EXP>& exp
+        ) 
+        {
+            DLIB_ASSERT( exp.nr() == 1 && exp.nc() == m.nc(),
+                "\tassignable_matrix_expression set_rowm()"
+                << "\n\tYou have tried to assign to this object using a matrix that isn't the right size"
+                << "\n\texp.nr() (source matrix): " << exp.nr()
+                << "\n\texp.nc() (source matrix): " << exp.nc() 
+                << "\n\tm.nc() (target matrix):   " << m.nc()
+                );
+
+            if (exp.destructively_aliases(m) == false)
+            {
+                matrix_assign(*this, rowm(m,row)+exp); 
+            }
+            else
+            {
+                // make a temporary copy of the matrix we are going to assign to m to 
+                // avoid aliasing issues during the copy
+                this->operator+=(tmp(exp));
+            }
+
+            return *this;
+        }
+
+        template <typename EXP>
+        assignable_row_matrix& operator-= (
+            const matrix_exp<EXP>& exp
+        ) 
+        {
+            DLIB_ASSERT( exp.nr() == 1 && exp.nc() == m.nc(),
+                "\tassignable_matrix_expression set_rowm()"
+                << "\n\tYou have tried to assign to this object using a matrix that isn't the right size"
+                << "\n\texp.nr() (source matrix): " << exp.nr()
+                << "\n\texp.nc() (source matrix): " << exp.nc() 
+                << "\n\tm.nc() (target matrix):   " << m.nc()
+                );
+
+            if (exp.destructively_aliases(m) == false)
+            {
+                matrix_assign(*this, rowm(m,row)-exp); 
+            }
+            else
+            {
+                // make a temporary copy of the matrix we are going to assign to m to 
+                // avoid aliasing issues during the copy
+                this->operator-=(tmp(exp));
+            }
+
+            return *this;
+        }
+
         assignable_row_matrix& operator= (
             const T& value
         )
@@ -878,6 +1269,30 @@ namespace dlib
             for (long i = 0; i < m.nc(); ++i)
             {
                 m(row,i) = value;
+            }
+
+            return *this;
+        }
+
+        assignable_row_matrix& operator+= (
+            const T& value
+        )
+        {
+            for (long i = 0; i < m.nc(); ++i)
+            {
+                m(row,i) += value;
+            }
+
+            return *this;
+        }
+
+        assignable_row_matrix& operator-= (
+            const T& value
+        )
+        {
+            for (long i = 0; i < m.nc(); ++i)
+            {
+                m(row,i) -= value;
             }
 
             return *this;

@@ -19,64 +19,128 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <typename T>
-    typename T::edge_type& edge(
+    typename enable_if<is_graph<T>,typename T::edge_type>::type& edge(
         T& g, 
-        unsigned long idx, 
-        unsigned long n
+        unsigned long idx_i, 
+        unsigned long idx_j
     )
     {
         // make sure requires clause is not broken
-        DLIB_ASSERT(g.has_edge(idx,n) == true,
-            "\tT::edge_type& edge(g, i, j)"
-            << "\n\tyou have requested an invalid edge"
-            << "\n\ti: " << idx
-            << "\n\tj: " << n 
+        DLIB_ASSERT(g.has_edge(idx_i,idx_j) == true,
+            "\tT::edge_type& edge(g, idx_i, idx_j)"
+            << "\n\t you have requested an invalid edge"
+            << "\n\t idx_i: " << idx_i
+            << "\n\t idx_j: " << idx_j 
             );
 
-        for (unsigned long i = 0; i < g.node(idx).number_of_neighbors(); ++i)
+        for (unsigned long i = 0; i < g.node(idx_i).number_of_neighbors(); ++i)
         {
-            if (g.node(idx).neighbor(i).index() == n)
-                return g.node(idx).edge(i);
+            if (g.node(idx_i).neighbor(i).index() == idx_j)
+                return g.node(idx_i).edge(i);
         }
 
         // put this here just so compilers don't complain about a lack of
         // a return here
         DLIB_CASSERT(false,
-            "\tT::edge_type& edge(g, i, j)"
-            << "\n\tyou have requested an invalid edge"
-            << "\n\ti: " << idx
-            << "\n\tj: " << n 
+            "\tT::edge_type& edge(g, idx_i, idx_j)"
+            << "\n\t you have requested an invalid edge"
+            << "\n\t idx_i: " << idx_i
+            << "\n\t idx_j: " << idx_j 
             );
     }
 
     template <typename T>
-    const typename T::edge_type& edge(
+    const typename enable_if<is_graph<T>,typename T::edge_type>::type& edge(
         const T& g,  
-        unsigned long idx,
-        unsigned long n
+        unsigned long idx_i,
+        unsigned long idx_j
     )
     {
         // make sure requires clause is not broken
-        DLIB_ASSERT(g.has_edge(idx,n) == true,
-            "\tT::edge_type& edge(g, i, j)"
-            << "\n\tyou have requested an invalid edge"
-            << "\n\ti: " << idx
-            << "\n\tj: " << n 
+        DLIB_ASSERT(g.has_edge(idx_i,idx_j) == true,
+            "\tT::edge_type& edge(g, idx_i, idx_j)"
+            << "\n\t you have requested an invalid edge"
+            << "\n\t idx_i: " << idx_i
+            << "\n\t idx_j: " << idx_j 
             );
 
-        for (unsigned long i = 0; i < g.node(idx).number_of_neighbors(); ++i)
+        for (unsigned long i = 0; i < g.node(idx_i).number_of_neighbors(); ++i)
         {
-            if (g.node(idx).neighbor(i).index() == n)
-                return g.node(idx).edge(i);
+            if (g.node(idx_i).neighbor(i).index() == idx_j)
+                return g.node(idx_i).edge(i);
         }
 
         // put this here just so compilers don't complain about a lack of
         // a return here
         DLIB_CASSERT(false,
-            "\tT::edge_type& edge(g, i, j)"
-            << "\n\tyou have requested an invalid edge"
-            << "\n\ti: " << idx
-            << "\n\tj: " << n 
+            "\tT::edge_type& edge(g, idx_i, idx_j)"
+            << "\n\t you have requested an invalid edge"
+            << "\n\t idx_i: " << idx_i
+            << "\n\t idx_j: " << idx_j 
+            );
+    }
+
+// ----------------------------------------------------------------------------------------
+    
+    template <typename T>
+    typename enable_if<is_directed_graph<T>,typename T::edge_type>::type& edge(
+        T& g, 
+        unsigned long parent_idx, 
+        unsigned long child_idx 
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(g.has_edge(parent_idx,child_idx) == true,
+            "\t T::edge_type& edge(g, parent_idx, child_idx)"
+            << "\n\t you have requested an invalid edge"
+            << "\n\t parent_idx: " << parent_idx
+            << "\n\t child_idx: " << child_idx 
+            );
+
+        for (unsigned long i = 0; i < g.node(parent_idx).number_of_children(); ++i)
+        {
+            if (g.node(parent_idx).child(i).index() == child_idx)
+                return g.node(parent_idx).child_edge(i);
+        }
+
+        // put this here just so compilers don't complain about a lack of
+        // a return here
+        DLIB_CASSERT(false,
+            "\t T::edge_type& edge(g, parent_idx, child_idx)"
+            << "\n\t you have requested an invalid edge"
+            << "\n\t parent_idx: " << parent_idx
+            << "\n\t child_idx: " << child_idx 
+            );
+    }
+
+    template <typename T>
+    const typename enable_if<is_directed_graph<T>,typename T::edge_type>::type& edge(
+        const T& g,  
+        unsigned long parent_idx, 
+        unsigned long child_idx 
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(g.has_edge(parent_idx,child_idx) == true,
+            "\t T::edge_type& edge(g, parent_idx, child_idx)"
+            << "\n\t you have requested an invalid edge"
+            << "\n\t parent_idx: " << parent_idx
+            << "\n\t child_idx: " << child_idx 
+            );
+
+        for (unsigned long i = 0; i < g.node(parent_idx).number_of_children(); ++i)
+        {
+            if (g.node(parent_idx).child(i).index() == child_idx)
+                return g.node(parent_idx).child_edge(i);
+        }
+
+        // put this here just so compilers don't complain about a lack of
+        // a return here
+        DLIB_ASSERT(false,
+            "\t T::edge_type& edge(g, parent_idx, child_idx)"
+            << "\n\t you have requested an invalid edge"
+            << "\n\t parent_idx: " << parent_idx
+            << "\n\t child_idx: " << child_idx 
             );
     }
 
@@ -290,6 +354,67 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
+        typename graph_type1,
+        typename graph_type2
+        >
+    typename enable_if<is_graph<graph_type1> >::type copy_graph (
+        const graph_type1& src,
+        graph_type2& dest
+    )
+    {
+        COMPILE_TIME_ASSERT(is_graph<graph_type1>::value);
+        COMPILE_TIME_ASSERT(is_graph<graph_type2>::value);
+        if (graph_helpers::is_same_object(src,dest))
+            return;
+
+        copy_graph_structure(src,dest);
+
+        // copy all the node and edge content 
+        for (unsigned long i = 0; i < src.number_of_nodes(); ++i)
+        {
+            dest.node(i).data = src.node(i).data;
+
+            for (unsigned long j = 0; j < src.node(i).number_of_neighbors(); ++j)
+            {
+                const unsigned long nidx = src.node(i).neighbor(j).index();
+                if (nidx >= i)
+                {
+                    dest.node(i).edge(j) = src.node(i).edge(j);
+                }
+            }
+        }
+    }
+
+    template <
+        typename graph_type1,
+        typename graph_type2
+        >
+    typename enable_if<is_directed_graph<graph_type1> >::type copy_graph (
+        const graph_type1& src,
+        graph_type2& dest
+    )
+    {
+        COMPILE_TIME_ASSERT(is_directed_graph<graph_type1>::value);
+        COMPILE_TIME_ASSERT(is_directed_graph<graph_type2>::value);
+        if (graph_helpers::is_same_object(src,dest))
+            return;
+
+        copy_graph_structure(src,dest);
+
+        // copy all the node and edge content 
+        for (unsigned long i = 0; i < src.number_of_nodes(); ++i)
+        {
+            dest.node(i).data = src.node(i).data;
+            for (unsigned long j = 0; j < src.node(i).number_of_children(); ++j)
+            {
+                dest.node(i).child_edge(j) = src.node(i).child_edge(j);
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
         typename T,
         typename S
         >
@@ -344,6 +469,37 @@ namespace dlib
         set<unsigned long>::kernel_1b_c visited;
         find_connected_nodes(g.node(0), visited);
         return (visited.size() == g.number_of_nodes());
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    bool graph_has_symmetric_edges (
+        const T& graph
+    )
+    {
+        for (unsigned long i = 0; i < graph.number_of_nodes(); ++i)
+        {
+            for (unsigned long j = 0; j < graph.node(i).number_of_children(); ++j)
+            {
+                const unsigned long jj = graph.node(i).child(j).index();
+                // make sure every edge from a parent to a child has an edge linking back
+                if (graph.has_edge(jj,i) == false)
+                    return false;
+            }
+
+            for (unsigned long j = 0; j < graph.node(i).number_of_parents(); ++j)
+            {
+                const unsigned long jj = graph.node(i).parent(j).index();
+                // make sure every edge from a child to a parent has an edge linking back
+                if (graph.has_edge(i,jj) == false)
+                    return false;
+            }
+        }
+
+        return true;
     }
 
 // ----------------------------------------------------------------------------------------

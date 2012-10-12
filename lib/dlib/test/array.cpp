@@ -33,8 +33,9 @@ namespace
             - runs tests on array for compliance with the specs
     !*/
     {        
-        dlib::rand::kernel_1a rnd;
+        dlib::rand rnd;
 
+        DLIB_TEST(dlib::is_array<array>::value == true);
 
         array a1, a2;
 
@@ -590,7 +591,24 @@ namespace
             DLIB_TEST(a1.size() == 0);
         }
 
+    }
 
+    struct stuff
+    {
+        int whatever;
+    };
+    void another_array_test()
+    {
+        array<stuff> a;
+        a.resize(5);
+        a[0].whatever = 0;
+        stuff temp;
+        temp.whatever = 99;
+        a.push_back(temp);
+        DLIB_TEST(a.size() == 6);
+        DLIB_TEST(a[5].whatever == 99);
+
+        DLIB_TEST(dlib::is_array<array<stuff> >::value == true);
     }
 
 
@@ -606,41 +624,14 @@ namespace
         void perform_test (
         )
         {
+            print_spinner();
+            another_array_test();
+
             // test a checking version first for good measure
-            dlog << LINFO << "testing expand_1a_c";
             print_spinner();
-            array_expand_test<array<unsigned long>::expand_1a_c>();
+            array_expand_test<array<unsigned long> >();
 
-            dlog << LINFO << "testing expand_1a";
-            print_spinner();
-            array_expand_test<array<unsigned long>::expand_1a>();
-
-
-            dlog << LINFO << "testing expand_1b";
-            print_spinner();
-            array_expand_test<array<unsigned long>::expand_1b>();
-
-            dlog << LINFO << "testing expand_1b_c";
-            print_spinner();
-            array_expand_test<array<unsigned long>::expand_1b_c>();
-
-            dlog << LINFO << "testing expand_1c";
-            print_spinner();
-            array_expand_test<array<unsigned long>::expand_1c>();
-
-            dlog << LINFO << "testing expand_1c_c";
-            print_spinner();
-            array_expand_test<array<unsigned long>::expand_1c_c>();
-
-            dlog << LINFO << "testing expand_1d";
-            print_spinner();
-            array_expand_test<array<unsigned long>::expand_1d>();
-
-            dlog << LINFO << "testing expand_1d_c";
-            print_spinner();
-            array_expand_test<array<unsigned long>::expand_1d_c>();
-
-            print_spinner();
+            DLIB_TEST(dlib::is_array<int>::value == false);
         }
     } a;
 

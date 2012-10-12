@@ -25,6 +25,8 @@ namespace
 
     logger dlog("test.matrix2");
 
+    dlib::rand rnd;
+
     void matrix_test (
     )
     /*!
@@ -164,7 +166,7 @@ namespace
 
         std::vector<double> stdv(4);
         std_vector_c<double> stdv_c(4);
-        dlib::array<double>::expand_1a_c arr;
+        dlib::array<double> arr;
         arr.resize(4);
         for (long i = 0; i < 4; ++i)
             stdv[i] = stdv_c[i] = arr[i] = i+1;
@@ -370,25 +372,20 @@ namespace
 
         matrix<double, 7, 7,MM,column_major_layout> m7;
         matrix<double> dm7(7,7);
-        for (long r= 0; r< dm7.nr(); ++r)
-        {
-            for (long c = 0; c < dm7.nc(); ++c)
-            {
-                dm7(r,c) = r*c/3.3;
-            }
-        }
+        dm7 = randm(7,7, rnd);
         m7 = dm7;
 
-        DLIB_TEST(inv(dm7) == inv(m7));
-        DLIB_TEST(det(dm7) == det(m7));
-        DLIB_TEST(min(dm7) == min(m7));
-        DLIB_TEST(max(dm7) == max(m7));
+        DLIB_TEST_MSG(max(abs(dm7*inv(dm7) - identity_matrix<double>(7))) < 1e-12, max(abs(dm7*inv(dm7) - identity_matrix<double>(7))));
+        DLIB_TEST(equal(inv(dm7),  inv(m7)));
+        DLIB_TEST(abs(det(dm7) - det(m7)) < 1e-14);
+        DLIB_TEST(abs(min(dm7) - min(m7)) < 1e-14);
+        DLIB_TEST(abs(max(dm7) - max(m7)) < 1e-14);
         DLIB_TEST_MSG(abs(sum(dm7) - sum(m7)) < 1e-14,sum(dm7) - sum(m7));
-        DLIB_TEST(prod(dm7) == prod(m7));
-        DLIB_TEST(diag(dm7) == diag(m7));
-        DLIB_TEST(trans(dm7) == trans(m7));
-        DLIB_TEST(abs(dm7) == abs(m7));
-        DLIB_TEST(round(dm7) == round(m7));
+        DLIB_TEST(abs(prod(dm7) -prod(m7)) < 1e-14);
+        DLIB_TEST(equal(diag(dm7) , diag(m7)));
+        DLIB_TEST(equal(trans(dm7) , trans(m7)));
+        DLIB_TEST(equal(abs(dm7) , abs(m7)));
+        DLIB_TEST(equal(round(dm7) , round(m7)));
         DLIB_TEST(matrix_cast<int>(dm7) == matrix_cast<int>(m7));
         DLIB_TEST((rotate<2,3>(dm7) == rotate<2,3>(m7)));
         DLIB_TEST((sum(pointwise_multiply(dm7,dm7) - pointwise_multiply(m7,m7))) < 1e-10);
@@ -579,19 +576,20 @@ namespace
 
             svd2(true,true,a2+a2,u,q,v);
 
-            double err = sum(round(1e10*(a - subm(u,get_rect(a2+a2))*diagm(q)*trans(v))));
-            DLIB_TEST_MSG(  err == 0,"err: " << err);
-            DLIB_TEST((round(1e10*trans(u)*u)  == 1e10*identity_matrix<double,M>()));
-            DLIB_TEST((round(1e10*trans(v)*v)  == 1e10*identity_matrix<double,N>()));
+            double err = max(abs(a - subm(u,get_rect(a2+a2))*diagm(q)*trans(v)));
+            DLIB_TEST_MSG( err < 1e-11,"err: " << err);
+            using dlib::equal;
+            DLIB_TEST((equal(trans(u)*u , identity_matrix<double,M>(), 1e-10)));
+            DLIB_TEST((equal(trans(v)*v , identity_matrix<double,N>(), 1e-10)));
 
-            svd2(false,true,a2+a2,u2,q2,v2);
-            DLIB_TEST(equal(q2,q));
-            DLIB_TEST(equal(v2,v));
-            svd2(true,false,a2+a2,u2,q2,v2);
-            DLIB_TEST(equal(q2,q));
-            DLIB_TEST(equal(u2,u));
-            svd2(false,false,a2+a2,u2,q2,v2);
-            DLIB_TEST(equal(q2,q));
+            svd2(false,true,a2+a2,u,q,v2);
+            svd2(true,false,a2+a2,u2,q,v);
+            svd2(false,false,a2+a2,u,q2,v);
+
+            err = max(abs(a - subm(u2,get_rect(a2+a2))*diagm(q2)*trans(v2)));
+            DLIB_TEST_MSG( err < 1e-11,"err: " << err);
+            DLIB_TEST((equal(trans(u2)*u2 , identity_matrix<double,M>(), 1e-10)));
+            DLIB_TEST((equal(trans(v2)*v2 , identity_matrix<double,N>(), 1e-10)));
 
         }
 
@@ -620,21 +618,66 @@ namespace
 
             svd2(true,true,a2+a2,u,q,v);
 
-            double err = sum(round(1e10*(a - subm(u,get_rect(a2+a2))*diagm(q)*trans(v))));
-            DLIB_TEST_MSG(  err == 0,"err: " << err);
-            DLIB_TEST((round(1e10*trans(u)*u)  == 1e10*identity_matrix<double,M>()));
-            DLIB_TEST((round(1e10*trans(v)*v)  == 1e10*identity_matrix<double,N>()));
+            double err = max(abs(a - subm(u,get_rect(a2+a2))*diagm(q)*trans(v)));
+            DLIB_TEST_MSG( err < 1e-11,"err: " << err);
+            using dlib::equal;
+            DLIB_TEST((equal(trans(u)*u , identity_matrix<double,M>(), 1e-10)));
+            DLIB_TEST((equal(trans(v)*v , identity_matrix<double,N>(), 1e-10)));
 
-            svd2(false,true,a2+a2,u2,q2,v2);
-            DLIB_TEST(equal(q2,q));
-            DLIB_TEST(equal(v2,v));
-            svd2(true,false,a2+a2,u2,q2,v2);
-            DLIB_TEST(equal(q2,q));
-            DLIB_TEST(equal(u2,u));
-            svd2(false,false,a2+a2,u2,q2,v2);
-            DLIB_TEST(equal(q2,q));
+            svd2(false,true,a2+a2,u,q,v2);
+            svd2(true,false,a2+a2,u2,q,v);
+            svd2(false,false,a2+a2,u,q2,v);
+
+            err = max(abs(a - subm(u2,get_rect(a2+a2))*diagm(q2)*trans(v2)));
+            DLIB_TEST_MSG( err < 1e-11,"err: " << err);
+            DLIB_TEST((equal(trans(u2)*u2 , identity_matrix<double,M>(), 1e-10)));
+            DLIB_TEST((equal(trans(v2)*v2 , identity_matrix<double,N>(), 1e-10)));
 
         }
+
+        {
+            srand(423452);
+            const long M = 3;
+            const long N = 3;
+
+            typedef matrix<double,0,0> mat;
+
+            matrix<double,0,0,default_memory_manager, column_major_layout> a(M,N);  
+            for (long r = 0; r < a.nr(); ++r)
+            {
+                for (long c = 0; c < a.nc(); ++c)
+                {
+                    a(r,c) = 10*((double)::rand())/RAND_MAX;
+                }
+            }
+
+            matrix<double,M,M,default_memory_manager, column_major_layout> u, u2;  
+            matrix<double,0,0,default_memory_manager, column_major_layout> q, q2;
+            matrix<double,N,N,default_memory_manager, column_major_layout> v, v2;
+
+            matrix<double,M,N,MM, column_major_layout> a2;  
+            a2 = tmp(a/2);
+
+
+            svd2(true,true,a2+a2,u,q,v);
+
+            double err = max(abs(a - subm(u,get_rect(a2+a2))*diagm(q)*trans(v)));
+            DLIB_TEST_MSG( err < 1e-11,"err: " << err);
+            using dlib::equal;
+            DLIB_TEST((equal(trans(u)*u , identity_matrix<double,M>(), 1e-10)));
+            DLIB_TEST((equal(trans(v)*v , identity_matrix<double,N>(), 1e-10)));
+
+            svd2(false,true,a2+a2,u,q,v2);
+            svd2(true,false,a2+a2,u2,q,v);
+            svd2(false,false,a2+a2,u,q2,v);
+
+            err = max(abs(a - subm(u2,get_rect(a2+a2))*diagm(q2)*trans(v2)));
+            DLIB_TEST_MSG( err < 1e-11,"err: " << err);
+            DLIB_TEST((equal(trans(u2)*u2 , identity_matrix<double,M>(), 1e-10)));
+            DLIB_TEST((equal(trans(v2)*v2 , identity_matrix<double,N>(), 1e-10)));
+
+        }
+
 
 
         {
@@ -716,6 +759,7 @@ namespace
             matrix<double,N,N> v;
 
             matrix<double,M,N> a2;  
+            a2 = 0;
             a2 = tmp(a/2);
 
 
@@ -821,6 +865,30 @@ namespace
             matrix<double> u;  
             matrix<double> w;
             matrix<double> v;
+
+            svd(a,u,w,v);
+
+            DLIB_TEST(  sum(round(1e10*(a - u*w*trans(v)))) == 0);
+        }
+
+        {
+            srand(53234);
+            const long M = 9;
+            const long N = 40;
+
+            typedef matrix<double,0,0,default_memory_manager, column_major_layout> mat;
+            mat a(M,N);  
+            for (long r = 0; r < a.nr(); ++r)
+            {
+                for (long c = 0; c < a.nc(); ++c)
+                {
+                    a(r,c) = 10*((double)::rand())/RAND_MAX;
+                }
+            }
+
+            mat u;  
+            mat w;
+            mat v;
 
             svd(a,u,w,v);
 

@@ -10,9 +10,12 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename T
+        >
     inline char edge_orientation (
-        long x,
-        long y
+        const T& x,
+        const T& y
     );
     /*!
         ensures
@@ -45,9 +48,10 @@ namespace dlib
             - in_image_type == is an implementation of array2d/array2d_kernel_abstract.h
             - out_image_type == is an implementation of array2d/array2d_kernel_abstract.h
             - pixel_traits<typename in_image_type::type> must be defined
-              out_image_type::type == a signed integral type
-            - (&in_img != &horz) && (&in_img != &vert) && (&vert != &horz)
-              (i.e. all three images are different image objects)
+            - pixel_traits<typename out_image_type::type>::is_unsigned == false
+            - is_same_object(in_img,horz) == false
+            - is_same_object(in_img,vert) == false
+            - is_same_object(horz,vert) == false
         ensures
             - Applies the sobel edge detector to the given input image and stores the resulting
               edge detections in the horz and vert images
@@ -80,12 +84,14 @@ namespace dlib
             - pixel_traits<typename out_image_type::type> must be defined
             - horz.nr() == vert.nr()
             - horz.nc() == vert.nc()
-            - (&out_img != &horz) && (&out_img != &vert) 
-            - in_image_type::type == a signed integral type
+            - is_same_object(out_img, horz) == false
+            - is_same_object(out_img, vert) == false
+            - in_image_type::type == A signed scalar type (e.g. int, double, etc.) 
         ensures
             - #out_img.nr() = horz.nr()
             - #out_img.nc() = horz.nc()
-            - let edge_strength(r,c) == abs(horz[r][c]) + abs(vert[r][c])
+            - let edge_strength(r,c) == sqrt(pow(horz[r][c],2) + pow(vert[r][c],2))
+              (i.e. The Euclidean norm of the gradient)
             - for all valid r and c:
                 - if (edge_strength(r,c) is at a maximum with respect to its 2 neighboring
                   pixels along the line given by edge_orientation(vert[r][c],horz[r][c])) then

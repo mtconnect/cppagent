@@ -90,7 +90,7 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 1,
+            DLIB_ASSERT(current_n() > 0,
                 "\tT running_stats::max"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
@@ -103,7 +103,7 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 1,
+            DLIB_ASSERT(current_n() > 0,
                 "\tT running_stats::min"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
@@ -158,6 +158,18 @@ namespace dlib
             return (val-mean())/std::sqrt(variance());
         }
 
+        template <typename U>
+        friend void serialize (
+            const running_stats<U>& item, 
+            std::ostream& out 
+        );
+
+        template <typename U>
+        friend void deserialize (
+            running_stats<U>& item, 
+            std::istream& in
+        ); 
+
     private:
         T sum;
         T sum_sqr;
@@ -166,6 +178,341 @@ namespace dlib
         T min_value;
         T max_value;
     };
+
+    template <typename T>
+    void serialize (
+        const running_stats<T>& item, 
+        std::ostream& out 
+    )
+    {
+        serialize(item.sum, out);
+        serialize(item.sum_sqr, out);
+        serialize(item.n, out);
+        serialize(item.maximum_n, out);
+        serialize(item.min_value, out);
+        serialize(item.max_value, out);
+    }
+
+    template <typename T>
+    void deserialize (
+        running_stats<T>& item, 
+        std::istream& in
+    ) 
+    {
+        deserialize(item.sum, in);
+        deserialize(item.sum_sqr, in);
+        deserialize(item.n, in);
+        deserialize(item.maximum_n, in);
+        deserialize(item.min_value, in);
+        deserialize(item.max_value, in);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    class running_scalar_covariance
+    {
+    public:
+
+        running_scalar_covariance()
+        {
+            clear();
+
+            COMPILE_TIME_ASSERT ((
+                    is_same_type<float,T>::value ||
+                    is_same_type<double,T>::value ||
+                    is_same_type<long double,T>::value 
+            ));
+        }
+
+        void clear()
+        {
+            sum_xy = 0;
+            sum_x = 0;
+            sum_y = 0;
+            sum_xx = 0;
+            sum_yy = 0;
+            n = 0;
+        }
+
+        void add (
+            const T& x,
+            const T& y
+        )
+        {
+            sum_xy += x*y;
+
+            sum_xx += x*x;
+            sum_yy += y*y;
+
+            sum_x  += x;
+            sum_y  += y;
+
+            n += 1;
+        }
+
+        T current_n (
+        ) const
+        {
+            return n;
+        }
+
+        T mean_x (
+        ) const
+        {
+            if (n != 0)
+                return sum_x/n;
+            else
+                return 0;
+        }
+
+        T mean_y (
+        ) const
+        {
+            if (n != 0)
+                return sum_y/n;
+            else
+                return 0;
+        }
+
+        T covariance (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(current_n() > 1,
+                "\tT running_scalar_covariance::covariance()"
+                << "\n\tyou have to add some numbers to this object first"
+                << "\n\tthis: " << this
+                );
+
+            T temp = 1/(n-1) * (sum_xy - sum_y*sum_x/n);
+            // make sure the variance is never negative.  This might
+            // happen due to numerical errors.
+            if (temp >= 0)
+                return temp;
+            else
+                return 0;
+        }
+
+        T correlation (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(current_n() > 1,
+                "\tT running_scalar_covariance::correlation()"
+                << "\n\tyou have to add some numbers to this object first"
+                << "\n\tthis: " << this
+                );
+
+            return covariance() / std::sqrt(variance_x()*variance_y());
+        }
+
+        T variance_x (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(current_n() > 1,
+                "\tT running_scalar_covariance::variance_x()"
+                << "\n\tyou have to add some numbers to this object first"
+                << "\n\tthis: " << this
+                );
+
+            T temp = 1/(n-1) * (sum_xx - sum_x*sum_x/n);
+            // make sure the variance is never negative.  This might
+            // happen due to numerical errors.
+            if (temp >= 0)
+                return temp;
+            else
+                return 0;
+        }
+
+        T variance_y (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(current_n() > 1,
+                "\tT running_scalar_covariance::variance_y()"
+                << "\n\tyou have to add some numbers to this object first"
+                << "\n\tthis: " << this
+                );
+
+            T temp = 1/(n-1) * (sum_yy - sum_y*sum_y/n);
+            // make sure the variance is never negative.  This might
+            // happen due to numerical errors.
+            if (temp >= 0)
+                return temp;
+            else
+                return 0;
+        }
+
+        T stddev_x (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(current_n() > 1,
+                "\tT running_scalar_covariance::stddev_x()"
+                << "\n\tyou have to add some numbers to this object first"
+                << "\n\tthis: " << this
+                );
+
+            return std::sqrt(variance_x());
+        }
+
+        T stddev_y (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(current_n() > 1,
+                "\tT running_scalar_covariance::stddev_y()"
+                << "\n\tyou have to add some numbers to this object first"
+                << "\n\tthis: " << this
+                );
+
+            return std::sqrt(variance_y());
+        }
+
+    private:
+
+        T sum_xy;
+        T sum_x;
+        T sum_y;
+        T sum_xx;
+        T sum_yy;
+        T n;
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double mean_sign_agreement (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(a.size() == b.size(),
+                    "\t double mean_sign_agreement(a,b)"
+                    << "\n\t a and b must be the same length."
+                    << "\n\t a.size(): " << a.size()
+                    << "\n\t b.size(): " << b.size()
+        );
+
+        
+        double temp = 0;
+        for (unsigned long i = 0; i < a.size(); ++i)
+        {
+            if ((a[i] >= 0 && b[i] >= 0) ||
+                (a[i] < 0  && b[i] <  0))
+            {
+                temp += 1;
+            }
+        }
+
+        return temp/a.size();
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double correlation (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(a.size() == b.size() && a.size() > 1,
+                    "\t double correlation(a,b)"
+                    << "\n\t a and b must be the same length and have more than one element."
+                    << "\n\t a.size(): " << a.size()
+                    << "\n\t b.size(): " << b.size()
+        );
+
+        running_scalar_covariance<double> rs;
+        for (unsigned long i = 0; i < a.size(); ++i)
+        {
+            rs.add(a[i], b[i]);
+        }
+        return rs.correlation();
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double covariance (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(a.size() == b.size() && a.size() > 1,
+                    "\t double covariance(a,b)"
+                    << "\n\t a and b must be the same length and have more than one element."
+                    << "\n\t a.size(): " << a.size()
+                    << "\n\t b.size(): " << b.size()
+        );
+
+        running_scalar_covariance<double> rs;
+        for (unsigned long i = 0; i < a.size(); ++i)
+        {
+            rs.add(a[i], b[i]);
+        }
+        return rs.covariance();
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double r_squared (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(a.size() == b.size() && a.size() > 1,
+                    "\t double r_squared(a,b)"
+                    << "\n\t a and b must be the same length and have more than one element."
+                    << "\n\t a.size(): " << a.size()
+                    << "\n\t b.size(): " << b.size()
+        );
+
+        return std::pow(correlation(a,b),2.0);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename alloc
+        >
+    double mean_squared_error (
+        const std::vector<T,alloc>& a,
+        const std::vector<T,alloc>& b
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(a.size() == b.size(),
+                    "\t double mean_squared_error(a,b)"
+                    << "\n\t a and b must be the same length."
+                    << "\n\t a.size(): " << a.size()
+                    << "\n\t b.size(): " << b.size()
+        );
+
+        return mean(squared(matrix_cast<double>(vector_to_matrix(a))-matrix_cast<double>(vector_to_matrix(b))));
+    }
 
 // ----------------------------------------------------------------------------------------
 
@@ -338,6 +685,7 @@ namespace dlib
     public:
         typedef typename matrix_type::mem_manager_type mem_manager_type;
         typedef typename matrix_type::type scalar_type;
+        typedef matrix_type result_type;
 
         template <typename vector_type>
         void train (
@@ -379,7 +727,7 @@ namespace dlib
             return sd;
         }
 
-        const matrix_type& operator() (
+        const result_type& operator() (
             const matrix_type& x
         ) const
         {
@@ -490,6 +838,7 @@ namespace dlib
     public:
         typedef typename matrix_type::mem_manager_type mem_manager_type;
         typedef typename matrix_type::type scalar_type;
+        typedef matrix<scalar_type,0,1,mem_manager_type> result_type;
 
         template <typename vector_type>
         void train (
@@ -546,7 +895,7 @@ namespace dlib
             return pca;
         }
 
-        const matrix<scalar_type,0,1,mem_manager_type>& operator() (
+        const result_type& operator() (
             const matrix_type& x
         ) const
         {
@@ -585,6 +934,10 @@ namespace dlib
             deserialize(item.m, in);
             deserialize(item.sd, in);
             deserialize(item.pca, in);
+            if (item.pca.nc() != item.m.nr())
+                throw serialization_error("Error deserializing object of type vector_normalizer_pca\n"   
+                                          "It looks like a serialized vector_normalizer was accidentally deserialized into \n"
+                                          "a vector_normalizer_pca object.");
         }
 
         friend void serialize (
@@ -658,7 +1011,7 @@ namespace dlib
 
         // This is just a temporary variable that doesn't contribute to the
         // state of this object.
-        mutable matrix<scalar_type,0,1,mem_manager_type> temp_out;
+        mutable result_type temp_out;
     };
 
     template <

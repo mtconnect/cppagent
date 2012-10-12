@@ -24,7 +24,7 @@ namespace dlib
     void threshold_image (
         const in_image_type& in_img,
         out_image_type& out_img,
-        unsigned long thresh
+        typename pixel_traits<typename in_image_type::type>::basic_pixel_type thresh
     )
     {
         COMPILE_TIME_ASSERT( pixel_traits<typename in_image_type::type>::has_alpha == false );
@@ -45,15 +45,25 @@ namespace dlib
         {
             for (long c = 0; c < in_img.nc(); ++c)
             {
-                typename out_image_type::type p;
-                assign_pixel(p,in_img[r][c]);
-                if (p >= thresh)
-                    p = on_pixel;
+                if (get_pixel_intensity(in_img[r][c]) >= thresh)
+                    assign_pixel(out_img[r][c], on_pixel);
                 else
-                    p = off_pixel;
-                out_img[r][c] = p;
+                    assign_pixel(out_img[r][c], off_pixel);
             }
         }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_type
+        >
+    void threshold_image (
+        image_type& img,
+        typename pixel_traits<typename image_type::type>::basic_pixel_type thresh
+    )
+    {
+        threshold_image(img,img,thresh);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -69,6 +79,8 @@ namespace dlib
     {
         COMPILE_TIME_ASSERT( pixel_traits<typename in_image_type::type>::has_alpha == false );
         COMPILE_TIME_ASSERT( pixel_traits<typename out_image_type::type>::has_alpha == false );
+        COMPILE_TIME_ASSERT( pixel_traits<typename in_image_type::type>::is_unsigned == true );
+        COMPILE_TIME_ASSERT( pixel_traits<typename out_image_type::type>::is_unsigned == true );
 
         COMPILE_TIME_ASSERT(pixel_traits<typename out_image_type::type>::grayscale);
 
@@ -162,6 +174,16 @@ namespace dlib
         threshold_image(in_img,out_img,thresh);
     }
 
+    template <
+        typename image_type
+        >
+    void auto_threshold_image (
+        image_type& img
+    )
+    {
+        auto_threshold_image(img,img);
+    }
+
 // ----------------------------------------------------------------------------------------
 
     template <
@@ -171,8 +193,8 @@ namespace dlib
     void hysteresis_threshold (
         const in_image_type& in_img,
         out_image_type& out_img,
-        unsigned long lower_thresh,
-        unsigned long upper_thresh
+        typename pixel_traits<typename in_image_type::type>::basic_pixel_type lower_thresh,
+        typename pixel_traits<typename in_image_type::type>::basic_pixel_type upper_thresh
     )
     {
         COMPILE_TIME_ASSERT( pixel_traits<typename in_image_type::type>::has_alpha == false );
@@ -180,11 +202,12 @@ namespace dlib
 
         COMPILE_TIME_ASSERT(pixel_traits<typename out_image_type::type>::grayscale);
 
-        DLIB_ASSERT( lower_thresh <= upper_thresh,
+        DLIB_ASSERT( lower_thresh <= upper_thresh && is_same_object(in_img, out_img) == false,
             "\tvoid hysteresis_threshold(in_img, out_img, lower_thresh, upper_thresh)"
             << "\n\tYou can't use an upper_thresh that is less than your lower_thresh"
             << "\n\tlower_thresh: " << lower_thresh 
             << "\n\tupper_thresh: " << upper_thresh 
+            << "\n\tis_same_object(in_img,out_img): " << is_same_object(in_img,out_img) 
             );
 
         // if there isn't any input image then don't do anything
@@ -195,9 +218,8 @@ namespace dlib
         }
 
         out_img.set_size(in_img.nr(),in_img.nc());
-        assign_all_pixels(out_img,0);
 
-        const long size = 50;
+        const long size = 100;
         long rstack[size];
         long cstack[size];
 
@@ -206,7 +228,7 @@ namespace dlib
         {
             for (long c = 0; c < in_img.nc(); ++c)
             {
-                unsigned long p;
+                typename pixel_traits<typename in_image_type::type>::basic_pixel_type p;
                 assign_pixel(p,in_img[r][c]);
                 if (p >= upper_thresh)
                 {

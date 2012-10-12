@@ -16,7 +16,7 @@ Documentation:
   There should be HTML documentation accompanying this library.  But
   if there isn't you can download it from http://dlib.net
 
-Installation :
+Installation:
   To use this library all you have to do is extract the library 
   somewhere, make sure the folder *containing* the dlib folder is in 
   your include path, and finally add dlib/all/source.cpp to your 
@@ -36,6 +36,6 @@ The license for this library can be found in LICENSE.txt.  But the
 long and short of the license is that you can use this code however
 you like, even in closed source commercial software.
 
-Version: 17.26
-Date:    Sun Mar  7 14:18:50 EST 2010
-Subversion Revision Number: 3550
+Version: 17.47
+Date:    Fri Jun 15 19:14:53 EDT 2012
+Mercurial Revision ID: f58ff52144bd

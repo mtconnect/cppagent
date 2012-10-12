@@ -20,6 +20,7 @@
 #include <algorithm>     // std::copy
 #include <stdexcept>
 #include "../uintn.h"
+#include "../serialize.h"
 
 namespace dlib 
 {
@@ -95,6 +96,24 @@ namespace dlib
             }
 
             result_type operator()();
+
+            friend void serialize(
+                const mersenne_twister& item, 
+                std::ostream& out
+            )
+            {
+                dlib::serialize(item.x, out);
+                dlib::serialize(item.i, out);
+            }
+
+            friend void deserialize(
+                mersenne_twister& item, 
+                std::istream& in 
+            )
+            {
+                dlib::deserialize(item.x, in);
+                dlib::deserialize(item.i, in);
+            }
 
         private:
 

@@ -5,14 +5,14 @@
 
 #include "../interfaces/enumerable.h"
 #include "../serialize.h"
-#include "../memory_manager/memory_manager_kernel_abstract.h"
+#include "../algs.h"
 
 namespace dlib
 {
 
     template <
         typename T,
-        typename mem_manager = memory_manager<char>::kernel_1a
+        typename mem_manager = default_memory_manager 
         >
     class array : public enumerable<T>
     {
@@ -28,8 +28,8 @@ namespace dlib
                 mem_manager::type can be set to anything.
 
             POINTERS AND REFERENCES TO INTERNAL DATA
-                swap(), max_size(), set_size(), and operator[] functions do 
-                not invalidate pointers or references to internal data.
+                front(), back(), swap(), max_size(), set_size(), and operator[] 
+                functions do not invalidate pointers or references to internal data.
                 All other functions have no such guarantee.
 
             INITIAL VALUE
@@ -41,12 +41,10 @@ namespace dlib
                 order (*this)[0], (*this)[1], (*this)[2], ...
 
             WHAT THIS OBJECT REPRESENTS
-                array contains items of type T
-
-                This object represents an ordered array of items, each item is 
-                associated with an integer value.   
-                The items are numbered from 0 though size() - 1 and
-                the operator[] functions run in constant time    
+                This object represents an ordered 1-dimensional array of items, 
+                each item is associated with an integer value.  The items are 
+                numbered from 0 though size() - 1 and the operator[] functions 
+                run in constant time.  
 
                 Also note that unless specified otherwise, no member functions
                 of this object throw exceptions.
@@ -66,7 +64,7 @@ namespace dlib
                     - std::bad_alloc or any exception thrown by T's constructor
             !*/
 
-            virtual ~array (
+            ~array (
             ); 
             /*!
                 ensures
@@ -153,6 +151,96 @@ namespace dlib
                     - swaps *this and item
             !*/ 
             
+            void sort (
+            );
+            /*!
+                requires
+                    - T must be a type with that is comparable via operator<
+                ensures
+                    - for all elements in #*this the ith element is <= the i+1 element
+                    - #at_start() == true
+                throws
+                    - std::bad_alloc or any exception thrown by T's constructor
+                        data may be lost if sort() throws
+            !*/
+
+            void resize (
+                unsigned long new_size
+            );
+            /*!
+                ensures
+                    - #size() == new_size
+                    - #max_size() == max(new_size,max_size())
+                    - for all i < size() && i < new_size:
+                        - #(*this)[i] == (*this)[i]
+                          (i.e. All the original elements of *this which were at index
+                          values less than new_size are unmodified.)
+                    - for all valid i >= size():
+                        - #(*this)[i] has an undefined value
+                          (i.e. any new elements of the array have an undefined value)
+                throws
+                    - std::bad_alloc or any exception thrown by T's constructor.
+                       If an exception is thrown then it has no effect on *this.
+            !*/
+
+            
+            const T& back (
+            ) const;
+            /*!
+                requires
+                    - size() != 0
+                ensures
+                    - returns a const reference to (*this)[size()-1]
+            !*/
+
+            T& back (
+            );
+            /*!
+                requires
+                    - size() != 0
+                ensures
+                    - returns a non-const reference to (*this)[size()-1]
+            !*/
+
+            void pop_back (
+                T& item
+            );
+            /*!
+                requires
+                    - size() != 0
+                ensures
+                    - #size() == size() - 1
+                    - swaps (*this)[size()-1] into item
+                    - All elements with an index less than size()-1 are 
+                      unmodified by this operation.
+            !*/
+
+            void pop_back (
+            );
+            /*!
+                requires
+                    - size() != 0
+                ensures
+                    - #size() == size() - 1
+                    - All elements with an index less than size()-1 are 
+                      unmodified by this operation.
+            !*/
+
+            void push_back (
+                T& item
+            );
+            /*!
+                ensures
+                    - #size() == size()+1
+                    - swaps item into (*this)[#size()-1] 
+                    - #back() == item
+                    - #item has some undefined value (whatever happens to 
+                      get swapped out of the array)
+                throws
+                    - std::bad_alloc or any exception thrown by T's constructor.
+                       If an exception is thrown then it has no effect on *this.
+            !*/
+
         private:
 
             // restricted functions

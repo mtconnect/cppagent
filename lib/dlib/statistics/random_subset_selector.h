@@ -7,13 +7,15 @@
 #include "../rand.h"
 #include <vector>
 #include "../algs.h"
-#include "../memory_manager.h"
+#include "../string.h"
+#include "../serialize.h"
+#include <iostream>
 
 namespace dlib
 {
     template <
         typename T,
-        typename Rand_type = dlib::rand::kernel_1a
+        typename Rand_type = dlib::rand
         >
     class random_subset_selector
     {
@@ -33,7 +35,8 @@ namespace dlib
         !*/
     public:
         typedef T type;
-        typedef memory_manager<char>::kernel_1a mem_manager_type;
+        typedef T value_type;
+        typedef default_memory_manager mem_manager_type;
         typedef Rand_type rand_type;
 
         typedef typename std::vector<T>::iterator iterator;
@@ -170,6 +173,18 @@ namespace dlib
             std::swap(_next_add_accepts, a._next_add_accepts);
         }
 
+        template <typename T1, typename T2>
+        friend void serialize (
+            const random_subset_selector<T1,T2>& item,
+            std::ostream& out
+        );
+
+        template <typename T1, typename T2>
+        friend void deserialize (
+            random_subset_selector<T1,T2>& item,
+            std::istream& in 
+        );
+
     private:
 
         void update_next_add_accepts (
@@ -226,6 +241,112 @@ namespace dlib
         random_subset_selector<T,rand_type>& a,
         random_subset_selector<T,rand_type>& b
     ) { a.swap(b); }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T1, typename T2>
+    void serialize (
+        const random_subset_selector<T1,T2>& item,
+        std::ostream& out
+    )
+    {
+        serialize(item.items, out);
+        serialize(item._max_size, out);
+        serialize(item.count, out);
+        serialize(item.rnd, out);
+        serialize(item._next_add_accepts, out);
+    }
+
+    template <typename T1, typename T2>
+    void deserialize (
+        random_subset_selector<T1,T2>& item,
+        std::istream& in 
+    )
+    {
+        deserialize(item.items, in);
+        deserialize(item._max_size, in);
+        deserialize(item.count, in);
+        deserialize(item.rnd, in);
+        deserialize(item._next_add_accepts, in);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename alloc
+        >
+    random_subset_selector<T> randomly_subsample (
+        const std::vector<T,alloc>& samples,
+        unsigned long num
+    )
+    {
+        random_subset_selector<T> subset;
+        subset.set_max_size(num);
+        for (unsigned long i = 0; i < samples.size(); ++i)
+            subset.add(samples[i]);
+        return subset;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename alloc,
+        typename U
+        >
+    random_subset_selector<T> randomly_subsample (
+        const std::vector<T,alloc>& samples,
+        unsigned long num,
+        const U& random_seed
+    )
+    {
+        random_subset_selector<T> subset;
+        subset.set_seed(cast_to_string(random_seed));
+        subset.set_max_size(num);
+        for (unsigned long i = 0; i < samples.size(); ++i)
+            subset.add(samples[i]);
+        return subset;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    random_subset_selector<T> randomly_subsample (
+        const random_subset_selector<T>& samples,
+        unsigned long num
+    )
+    {
+        random_subset_selector<T> subset;
+        subset.set_max_size(num);
+        for (unsigned long i = 0; i < samples.size(); ++i)
+            subset.add(samples[i]);
+        return subset;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename U
+        >
+    random_subset_selector<T> randomly_subsample (
+        const random_subset_selector<T>& samples,
+        unsigned long num,
+        const U& random_seed
+    )
+    {
+        random_subset_selector<T> subset;
+        subset.set_seed(cast_to_string(random_seed));
+        subset.set_max_size(num);
+        for (unsigned long i = 0; i < samples.size(); ++i)
+            subset.add(samples[i]);
+        return subset;
+    }
+
+// ----------------------------------------------------------------------------------------
 
 }
 

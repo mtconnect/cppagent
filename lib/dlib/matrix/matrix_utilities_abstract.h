@@ -27,6 +27,36 @@ namespace dlib
               of m in the order R(0)==m(0,0), R(1)==m(1,1), R(2)==m(2,2) and so on.
     !*/
 
+    template <typename EXP>
+    struct diag_exp
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This struct allows you to determine the type of matrix expression 
+                object returned from the diag() function.  An example makes its
+                use clear:
+
+                template <typename EXP>
+                void do_something( const matrix_exp<EXP>& mat)
+                {
+                    // d is a matrix expression that aliases mat.
+                    typename diag_exp<EXP>::type d = diag(mat);
+
+                    // Print the diagonal of mat.  So we see that by using
+                    // diag_exp we can save the object returned by diag() in
+                    // a local variable.    
+                    cout << d << endl;
+
+                    // Note that you can only save the return value of diag() to
+                    // a local variable if the argument to diag() has a lifetime
+                    // beyond the diag() expression.  The example shown above is
+                    // OK but the following would result in undefined behavior:
+                    typename diag_exp<EXP>::type bad = diag(mat + mat);
+                }
+        !*/
+        typedef type_of_expression_returned_by_diag type;
+    };
+
 // ----------------------------------------------------------------------------------------
 
     const matrix_exp diagm (
@@ -63,6 +93,7 @@ namespace dlib
             - is_vector(m1) == true
             - is_vector(m2) == true
             - m1.size() == m2.size()
+            - m1.size() > 0
         ensures
             - returns the dot product between m1 and m2. That is, this function 
               computes and returns the sum, for all i, of m1(i)*m2(i).
@@ -146,6 +177,26 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp make_symmetric (
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - m.nr() == m.nc()
+              (i.e. m must be a square matrix)
+        ensures
+            - returns a matrix M such that:
+                - M::type == the same type that was in m
+                - M has the same dimensions as m
+                - M is a symmetric matrix, that is, M == trans(M) and
+                  it is constructed from the lower triangular part of m.  Specifically,
+                  we have:
+                    - lowerm(M) == lowerm(m)
+                    - upperm(M) == trans(lowerm(m))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename T, 
         long NR, 
@@ -197,6 +248,19 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp ones_matrix (
+        const matrix_exp& mat
+    );
+    /*!
+        requires
+            - mat.nr() > 0 && mat.nc() > 0
+        ensures
+            - Let T denote the type of element in mat. Then this function
+              returns uniform_matrix<T>(mat.nr(), mat.nc(), 1)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename T
         >
@@ -213,6 +277,19 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp zeros_matrix (
+        const matrix_exp& mat
+    );
+    /*!
+        requires
+            - mat.nr() > 0 && mat.nc() > 0
+        ensures
+            - Let T denote the type of element in mat. Then this function
+              returns uniform_matrix<T>(mat.nr(), mat.nc(), 0)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename T
         >
@@ -225,6 +302,19 @@ namespace dlib
             - nr > 0 && nc > 0
         ensures
             - returns uniform_matrix<T>(nr, nc, 0)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp identity_matrix (
+        const matrix_exp& mat
+    );
+    /*!
+        requires
+            - mat.nr() == mat.nc()
+        ensures
+            - returns an identity matrix with the same dimensions as mat and
+              containing the same type of elements as mat.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -320,6 +410,54 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp fliplr (
+        const matrix_exp& m
+    );
+    /*!
+        ensures
+            - flips the matrix m from left to right and returns the result.  
+              I.e. reverses the order of the columns.
+            - returns a matrix M such that:
+                - M::type == the same type that was in m
+                - M has the same dimensions as m
+                - for all valid r and c:
+                  M(r,c) == m(r, m.nc()-c-1)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp flipud (
+        const matrix_exp& m
+    );
+    /*!
+        ensures
+            - flips the matrix m from up to down and returns the result.  
+              I.e. reverses the order of the rows.
+            - returns a matrix M such that:
+                - M::type == the same type that was in m
+                - M has the same dimensions as m
+                - for all valid r and c:
+                  M(r,c) == m(m.nr()-r-1, c)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp flip (
+        const matrix_exp& m
+    );
+    /*!
+        ensures
+            - flips the matrix m from up to down and left to right and returns the 
+              result.  I.e. returns flipud(fliplr(m)).
+            - returns a matrix M such that:
+                - M::type == the same type that was in m
+                - M has the same dimensions as m
+                - for all valid r and c:
+                  M(r,c) == m(m.nr()-r-1, m.nc()-c-1)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename vector_type
         >
@@ -369,6 +507,33 @@ namespace dlib
     template <
         typename T
         >
+    const matrix_exp pointer_to_matrix (
+        const T* ptr,
+        long nr,
+        long nc
+    );
+    /*!
+        requires
+            - nr > 0
+            - nc > 0
+            - ptr == a pointer to at least nr*nc T objects
+        ensures
+            - returns a matrix M such that:
+                - M.nr() == nr
+                - m.nc() == nc 
+                - for all valid r and c:
+                  M(r,c) == ptr[r*nc + c]
+                  (i.e. the pointer is interpreted as a matrix laid out in memory
+                  in row major order)
+            - Note that the returned matrix doesn't take "ownership" of
+              the pointer and thus will not delete or free it.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
     const matrix_exp pointer_to_column_vector (
         const T* ptr,
         long nr
@@ -389,6 +554,32 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp reshape (
+        const matrix_exp& m,
+        long rows,
+        long cols
+    );
+    /*!
+        requires
+            - m.size() == rows*cols
+            - rows > 0
+            - cols > 0
+        ensures
+            - returns a matrix M such that: 
+                - M.nr() == rows
+                - M.nc() == cols
+                - M.size() == m.size()
+                - for all valid r and c:
+                    - let IDX = r*cols + c
+                    - M(r,c) == m(IDX/m.nc(), IDX%m.nc())
+
+            - i.e. The matrix m is reshaped into a new matrix of rows by cols
+              dimension.  Additionally, the elements of m are laid into M in row major 
+              order.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     const matrix_exp reshape_to_column_vector (
         const matrix_exp& m
     );
@@ -400,7 +591,7 @@ namespace dlib
                 - for all valid r and c:
                     - m(r,c) == M(r*m.nc() + c)
 
-            - i.e. the matrix m is reshaped into a column vector.  Note that
+            - i.e. The matrix m is reshaped into a column vector.  Note that
               the elements are pulled out in row major order.
     !*/
 
@@ -532,10 +723,11 @@ namespace dlib
         long NR,
         long NC,
         typename MM,
-        typename U
+        typename U,
+        typename L
         >
     void set_all_elements (
-        matrix<T,NR,NC,MM>& m,
+        matrix<T,NR,NC,MM,L>& m,
         U value
     );
     /*!
@@ -553,6 +745,36 @@ namespace dlib
         ensures
             - returns a temporary matrix object that is a copy of m. 
               (This allows you to easily force a matrix_exp to fully evaluate)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        long NR, 
+        long NC, 
+        typename MM, 
+        typename L
+        >
+    uint32 hash (
+        const matrix<T,NR,NC,MM,L>& item,
+        uint32 seed = 0
+    );
+    /*!
+        requires
+            - T is a standard layout type (e.g. a POD type like int, float, 
+              or a simple struct).
+        ensures
+            - returns a 32bit hash of the data stored in item.  
+            - Each value of seed results in a different hash function being used.  
+              (e.g. hash(item,0) should generally not be equal to hash(item,1))
+            - uses the murmur_hash3() routine to compute the actual hash.
+            - Note that if the memory layout of the elements in item change between
+              hardware platforms then hash() will give different outputs.  If you want
+              hash() to always give the same output for the same input then you must 
+              ensure that elements of item always have the same layout in memory.
+              Typically this means using fixed width types and performing byte swapping
+              to account for endianness before passing item to hash().
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -634,6 +856,52 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp join_rows (
+        const matrix_exp& a,
+        const matrix_exp& b 
+    );
+    /*!
+        requires
+            - a.nr() == b.nr()
+            - a and b both contain the same type of element
+        ensures
+            - This function joins two matrices together by concatenating their rows.
+            - returns a matrix R such that:
+                - R::type == the same type that was in a and b.
+                - R.nr() == a.nr() == b.nr()
+                - R.nc() == a.nc() + b.nc()
+                - for all valid r and c:
+                    - if (c < a.nc()) then
+                        - R(r,c) == a(r,c) 
+                    - else
+                        - R(r,c) == b(r, c-a.nc()) 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp join_cols (
+        const matrix_exp& a,
+        const matrix_exp& b 
+    );
+    /*!
+        requires
+            - a.nc() == b.nc()
+            - a and b both contain the same type of element
+        ensures
+            - This function joins two matrices together by concatenating their columns.
+            - returns a matrix R such that:
+                - R::type == the same type that was in a and b.
+                - R.nr() == a.nr() + b.nr()
+                - R.nc() == a.nc() == b.nc()
+                - for all valid r and c:
+                    - if (r < a.nr()) then
+                        - R(r,c) == a(r,c) 
+                    - else
+                        - R(r,c) == b(r-a.nr(), c) 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     const matrix_exp tensor_product (
         const matrix_exp& a,
         const matrix_exp& b 
@@ -687,7 +955,7 @@ namespace dlib
     );
     /*!
         requires
-            - is_col_vector(v) == true
+            - is_vector(v) == true
             - v.size() == m.nc()
             - m and v both contain the same type of element
         ensures
@@ -698,6 +966,35 @@ namespace dlib
                   R(r,c) == m(r,c) * v(c)
                 - i.e. R is the result of multiplying each of m's columns by
                   the corresponding scalar in v.
+
+            - Note that this function is identical to the expression m*diagm(v).  
+              That is, the * operator is overloaded for this case and will invoke
+              scale_columns() automatically as appropriate.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp scale_rows (
+        const matrix_exp& m,
+        const matrix_exp& v
+    );
+    /*!
+        requires
+            - is_vector(v) == true
+            - v.size() == m.nr()
+            - m and v both contain the same type of element
+        ensures
+            - returns a matrix R such that:
+                - R::type == the same type that was in m and v.
+                - R has the same dimensions as m. 
+                - for all valid r and c:
+                  R(r,c) == m(r,c) * v(r)
+                - i.e. R is the result of multiplying each of m's rows by
+                  the corresponding scalar in v.
+
+            - Note that this function is identical to the expression diagm(v)*m.  
+              That is, the * operator is overloaded for this case and will invoke
+              scale_rows() automatically as appropriate.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1098,7 +1395,9 @@ namespace dlib
         requires
             - m.size() > 0
         ensures
-            - returns the value of the smallest element of m
+            - returns the value of the smallest element of m.  If m contains complex
+              elements then the element returned is the one with the smallest norm
+              according to std::norm().
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1110,7 +1409,9 @@ namespace dlib
         requires
             - m.size() > 0
         ensures
-            - returns the value of the biggest element of m
+            - returns the value of the biggest element of m.  If m contains complex
+              elements then the element returned is the one with the largest norm
+              according to std::norm().
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1166,6 +1467,42 @@ namespace dlib
     /*!
         ensures
             - returns the sum of all elements in m
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp sum_rows (
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - m.size() > 0
+        ensures
+            - returns a row matrix that contains the sum of all the rows in m. 
+            - returns a matrix M such that
+                - M::type == the same type that was in m
+                - M.nr() == 1
+                - M.nc() == m.nc()
+                - for all valid i:
+                    - M(i) == sum(colm(m,i)) 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp sum_cols (
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - m.size() > 0
+        ensures
+            - returns a column matrix that contains the sum of all the columns in m. 
+            - returns a matrix M such that
+                - M::type == the same type that was in m
+                - M.nr() == m.nr() 
+                - M.nc() == 1
+                - for all valid i:
+                    - M(i) == sum(rowm(m,i)) 
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1369,6 +1706,42 @@ namespace dlib
                         - R(r,c) == lower
                     - else
                         - R(r,c) == m(r,c)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp lowerbound (
+        const matrix_exp& m,
+        const matrix_exp::type& thresh 
+    );
+    /*!
+        ensures
+            - returns a matrix R such that:
+                - R::type == the same type that was in m
+                - R has the same dimensions as m
+                - for all valid r and c:
+                    - if (m(r,c) >= thresh) then
+                        - R(r,c) == m(r,c)
+                    - else
+                        - R(r,c) == thresh
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp upperbound (
+        const matrix_exp& m,
+        const matrix_exp::type& thresh 
+    );
+    /*!
+        ensures
+            - returns a matrix R such that:
+                - R::type == the same type that was in m
+                - R has the same dimensions as m
+                - for all valid r and c:
+                    - if (m(r,c) <= thresh) then
+                        - R(r,c) == m(r,c)
+                    - else
+                        - R(r,c) == thresh
     !*/
 
 // ----------------------------------------------------------------------------------------

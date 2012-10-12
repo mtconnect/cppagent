@@ -49,6 +49,26 @@ namespace dlib
             ensures
                 - This object is properly initialized and ready to be used
                   to train a relevance vector machine.
+                - #get_epsilon() == 0.001
+        !*/
+
+        void set_epsilon (
+            scalar_type eps
+        );
+        /*!
+            requires
+                - eps > 0
+            ensures
+                - #get_epsilon() == eps 
+        !*/
+
+        const scalar_type get_epsilon (
+        ) const;
+        /*!
+            ensures
+                - returns the error epsilon that determines when training should stop.
+                  Generally a good value for this is 0.001.  Smaller values may result
+                  in a more accurate solution but take longer to execute.
         !*/
 
         void set_kernel (
@@ -152,6 +172,26 @@ namespace dlib
             ensures
                 - This object is properly initialized and ready to be used
                   to train a relevance vector machine.
+                - #get_epsilon() == 0.001
+        !*/
+
+        void set_epsilon (
+            scalar_type eps
+        );
+        /*!
+            requires
+                - eps > 0
+            ensures
+                - #get_epsilon() == eps 
+        !*/
+
+        const scalar_type get_epsilon (
+        ) const;
+        /*!
+            ensures
+                - returns the error epsilon that determines when training should stop.
+                  Generally a good value for this is 0.001.  Smaller values may result
+                  in a more accurate solution but take longer to execute.
         !*/
 
         void set_kernel (
@@ -183,9 +223,8 @@ namespace dlib
                   Also, x should contain sample_type objects.
                 - y == a matrix or something convertible to a matrix via vector_to_matrix().
                   Also, y should contain scalar_type objects.
-                - x.nr() > 1
-                - x.nr() == y.nr() && x.nc() == 1 && y.nc() == 1 
-                  (i.e. x and y are both column vectors of the same length)
+                - is_learning_problem(x,y) == true
+                - x.size() > 0
             ensures
                 - trains a RVM given the training samples in x and 
                   labels in y and returns the resulting decision_function.  

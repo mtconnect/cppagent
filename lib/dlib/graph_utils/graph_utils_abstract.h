@@ -50,6 +50,62 @@ namespace dlib
     template <
         typename T
         >
+    typename T::edge_type& edge(
+        T& g,  
+        unsigned long parent_idx, 
+        unsigned long child_idx 
+    );
+    /*!
+        requires
+            - T is an implementation of directed_graph/directed_graph_kernel_abstract.h 
+            - g.has_edge(parent_idx,child_idx)
+        ensures
+            - returns a reference to the edge data for the directed edge connecting parent
+              node g.node(parent_idx) to child node g.node(child_idx).
+    !*/
+
+    template <
+        typename T
+        >
+    typename const T::edge_type& edge(
+        const T& g,  
+        unsigned long parent_idx, 
+        unsigned long child_idx 
+    );
+    /*!
+        requires
+            - T is an implementation of directed_graph/directed_graph_kernel_abstract.h 
+            - g.has_edge(parent_idx,child_idx)
+        ensures
+            - returns a const reference to the edge data for the directed edge connecting 
+              parent node g.node(parent_idx) to child node g.node(child_idx).
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    bool graph_has_symmetric_edges (
+        const T& graph
+    );
+    /*!
+        requires
+            - T is an implementation of directed_graph/directed_graph_kernel_abstract.h 
+        ensures
+            - if (All nodes have either 0 edges between them or 2 edges between them.  
+              That is, if there is an edge pointing from node A to node B then there is
+              also an edge from B to A) then
+                - returns true
+            - else
+                - returns false
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
     bool graph_contains_directed_cycle (
         const T& graph
     );
@@ -125,6 +181,29 @@ namespace dlib
             - for all valid i and j:
                 - if (src.has_edge(i,j) == true) then
                     - #dest.has_edge(i,j) == true
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename src_type,
+        typename dest_type 
+        >
+    void copy_graph (
+        const src_type& src,
+        dest_type& dest
+    );
+    /*!
+        requires
+            - src_type is an implementation of directed_graph/directed_graph_kernel_abstract.h or
+              src_type is an implementation of graph/graph_kernel_abstract.h
+            - dest_type is an implementation of directed_graph/directed_graph_kernel_abstract.h or
+              dest_type is an implementation of graph/graph_kernel_abstract.h
+            - src_type and dest_type are both the same kind of graph.  That is, they
+              are either both directed or both undirected.
+            - the node and edge data in the graphs are copyable via operator=().
+        ensures
+            - #dest is a complete duplicate of src.
     !*/
 
 // ----------------------------------------------------------------------------------------

@@ -20,6 +20,7 @@
 #include "../smart_pointers.h"
 #include "../unicode.h"
 #include <cctype>
+#include "../any.h"
 
 
 namespace dlib
@@ -406,7 +407,7 @@ namespace dlib
         )
         {
             auto_mutex M(m);
-            assign_image(img,new_img);
+            assign_image_scaled(img,new_img);
             rectangle old(rect);
             rect.set_right(rect.left()+img.nc()-1); 
             rect.set_bottom(rect.top()+img.nr()-1);
@@ -426,7 +427,7 @@ namespace dlib
             draw_image(c, point(rect.left(),rect.top()), img);
         }
 
-        array2d<rgb_alpha_pixel>::kernel_1a img;
+        array2d<rgb_alpha_pixel> img;
 
         // restricted functions
         image_widget(image_widget&);        // copy constructor
@@ -813,7 +814,16 @@ namespace dlib
         )
         {
             auto_mutex M(m);
-            event_handler.set(object,event_handler_);
+            event_handler = make_mfp(object,event_handler_);
+            event_handler_self.clear();
+        }
+
+        void set_click_handler (
+            const any_function<void()>& event_handler_
+        )
+        {
+            auto_mutex M(m);
+            event_handler = event_handler_;
             event_handler_self.clear();
         }
 
@@ -826,7 +836,16 @@ namespace dlib
         )
         {
             auto_mutex M(m);
-            event_handler_self.set(object,event_handler_);
+            event_handler_self = make_mfp(object,event_handler_);
+            event_handler.clear();
+        }
+
+        void set_sourced_click_handler (
+            const any_function<void(button&)>& event_handler_
+        )
+        {
+            auto_mutex M(m);
+            event_handler_self = event_handler_;
             event_handler.clear();
         }
 
@@ -846,7 +865,15 @@ namespace dlib
         )
         {
             auto_mutex M(m);
-            button_down_handler.set(object,event_handler);
+            button_down_handler = make_mfp(object,event_handler);
+        }
+
+        void set_button_down_handler (
+            const any_function<void()>& event_handler
+        )
+        {
+            auto_mutex M(m);
+            button_down_handler = event_handler;
         }
 
         template <
@@ -858,7 +885,15 @@ namespace dlib
         )
         {
             auto_mutex M(m);
-            button_up_handler.set(object,event_handler);
+            button_up_handler = make_mfp(object,event_handler);
+        }
+
+        void set_button_up_handler (
+            const any_function<void(bool)>& event_handler
+        )
+        {
+            auto_mutex M(m);
+            button_up_handler = event_handler;
         }
 
         template <
@@ -870,7 +905,15 @@ namespace dlib
         )
         {
             auto_mutex M(m);
-            button_down_handler_self.set(object,event_handler);
+            button_down_handler_self = make_mfp(object,event_handler);
+        }
+
+        void set_sourced_button_down_handler (
+            const any_function<void(button&)>& event_handler
+        )
+        {
+            auto_mutex M(m);
+            button_down_handler_self = event_handler;
         }
 
         template <
@@ -882,7 +925,15 @@ namespace dlib
         )
         {
             auto_mutex M(m);
-            button_up_handler_self.set(object,event_handler);
+            button_up_handler_self = make_mfp(object,event_handler);
+        }
+
+        void set_sourced_button_up_handler (
+            const any_function<void(bool,button&)>& event_handler
+        )
+        {
+            auto_mutex M(m);
+            button_up_handler_self = event_handler;
         }
 
     private:
@@ -894,12 +945,12 @@ namespace dlib
         dlib::ustring name_;
         tooltip btn_tooltip;
 
-        member_function_pointer<>::kernel_1a event_handler;
-        member_function_pointer<button&>::kernel_1a event_handler_self;
-        member_function_pointer<>::kernel_1a button_down_handler;
-        member_function_pointer<bool>::kernel_1a button_up_handler;
-        member_function_pointer<button&>::kernel_1a button_down_handler_self;
-        member_function_pointer<bool,button&>::kernel_1a button_up_handler_self;
+        any_function<void()> event_handler;
+        any_function<void(button&)> event_handler_self;
+        any_function<void()> button_down_handler;
+        any_function<void(bool)> button_up_handler;
+        any_function<void(button&)> button_down_handler_self;
+        any_function<void(bool,button&)> button_up_handler_self;
 
         scoped_ptr<button_style> style;
 
@@ -991,7 +1042,11 @@ namespace dlib
         void set_scroll_handler (
             T& object,
             void (T::*eh)()
-        ) { auto_mutex M(m); scroll_handler.set(object,eh); }
+        ) { auto_mutex M(m); scroll_handler = make_mfp(object,eh); }
+
+        void set_scroll_handler (
+            const any_function<void()>& eh
+        ) { auto_mutex M(m); scroll_handler = eh; }
 
         void set_pos (
             long x,
@@ -1183,8 +1238,8 @@ namespace dlib
                 button_action(w),
                 my_scroll_bar(object)
             {
-                bup.set(object,up);
-                bdown.set(object,down);
+                bup = make_mfp(object,up);
+                bdown = make_mfp(object,down);
 
                 enable_events();
             }
@@ -1226,8 +1281,8 @@ namespace dlib
             ) { bup(mouse_over); } 
 
             scroll_bar& my_scroll_bar;
-            member_function_pointer<>::kernel_1a bdown;
-            member_function_pointer<bool>::kernel_1a bup;
+            any_function<void()> bdown;
+            any_function<void(bool)> bup;
         };
 
         friend class slider_class;
@@ -1244,7 +1299,7 @@ namespace dlib
                 mouse_in_widget(false),
                 my_scroll_bar(object)
             {
-                mfp.set(object,handler);
+                callback = make_mfp(object,handler);
                 enable_events();
             }
 
@@ -1311,7 +1366,7 @@ namespace dlib
             void on_drag (
             )
             {
-                mfp();
+                callback();
             }
 
             void draw (
@@ -1323,7 +1378,7 @@ namespace dlib
 
             bool mouse_in_widget;
             scroll_bar& my_scroll_bar;
-            member_function_pointer<>::kernel_1a mfp;
+            any_function<void()> callback;
         };
 
 
@@ -1349,7 +1404,7 @@ namespace dlib
         slider_class slider;
         bar_orientation ori; 
         filler top_filler, bottom_filler;
-        member_function_pointer<>::kernel_1a scroll_handler;
+        any_function<void()> scroll_handler;
 
         long pos;
         long max_pos; 
@@ -1569,7 +1624,7 @@ namespace dlib
     private:
         dlib::ustring text;
         const shared_ptr_thread_safe<font> f;
-        member_function_pointer<>::kernel_1a action;
+        any_function<void()> action;
         unichar hotkey;
         point underline_p1;
         point underline_p2;
@@ -1579,15 +1634,13 @@ namespace dlib
 
     class menu_item_text : public menu_item
     {
-        template <typename T>
         void initialize (
-            T &object,
-            void (T::*event_handler_)(),
+            const any_function<void()>& event_handler_,
             unichar hk
         )
         {
             dlib::ustring &str = text;
-            action.set(object,event_handler_);
+            action = event_handler_;
 
             if (hk != 0)
             {
@@ -1618,7 +1671,19 @@ namespace dlib
             f(default_font::get_font()),
             hotkey(hk)
         {
-            initialize(object, event_handler_, hk);
+            initialize(make_mfp(object, event_handler_), hk);
+        }
+
+        menu_item_text (
+            const std::string& str,
+            const any_function<void()>& event_handler_,
+            unichar hk = 0
+        ) : 
+            text(convert_wstring_to_utf32(convert_mbstring_to_wstring(str))),
+            f(default_font::get_font()),
+            hotkey(hk)
+        {
+            initialize(event_handler_, hk);
         }
 
         template <typename T>
@@ -1632,7 +1697,19 @@ namespace dlib
             f(default_font::get_font()),
             hotkey(hk)
         {
-            initialize(object, event_handler_, hk);
+            initialize(make_mfp(object, event_handler_), hk);
+        }
+
+        menu_item_text (
+            const std::wstring& str,
+            const any_function<void()>& event_handler_,
+            unichar hk = 0
+        ) : 
+            text(convert_wstring_to_utf32(str)),
+            f(default_font::get_font()),
+            hotkey(hk)
+        {
+            initialize(event_handler_, hk);
         }
 
         template <typename T>
@@ -1646,7 +1723,19 @@ namespace dlib
             f(default_font::get_font()),
             hotkey(hk)
         {
-            initialize(object, event_handler_, hk);
+            initialize(make_mfp(object, event_handler_), hk);
+        }
+
+        menu_item_text (
+            const dlib::ustring& str,
+            const any_function<void()>& event_handler_,
+            unichar hk = 0
+        ) : 
+            text(str),
+            f(default_font::get_font()),
+            hotkey(hk)
+        {
+            initialize(event_handler_, hk);
         }
 
         virtual unichar get_hot_key (
@@ -1713,7 +1802,7 @@ namespace dlib
     private:
         dlib::ustring text;
         const shared_ptr_thread_safe<font> f;
-        member_function_pointer<>::kernel_1a action;
+        any_function<void()> action;
         unichar hotkey;
         point underline_p1;
         point underline_p2;
@@ -2046,16 +2135,16 @@ namespace dlib
         rectangle win_rect; 
         unsigned long left_width;    
         unsigned long middle_width;    
-        array<scoped_ptr<menu_item> >::expand_1d_c items;
-        array<bool>::expand_1d_c item_enabled;
-        array<rectangle>::expand_1d_c left_rects;
-        array<rectangle>::expand_1d_c middle_rects;
-        array<rectangle>::expand_1d_c right_rects;
-        array<rectangle>::expand_1d_c line_rects;
-        array<popup_menu*>::expand_1d_c submenus;
+        array<scoped_ptr<menu_item> > items;
+        array<bool> item_enabled;
+        array<rectangle> left_rects;
+        array<rectangle> middle_rects;
+        array<rectangle> right_rects;
+        array<rectangle> line_rects;
+        array<popup_menu*> submenus;
         unsigned long selected_item;
         bool submenu_open;
-        array<member_function_pointer<>::kernel_1a>::expand_1d_c hide_handlers;
+        array<member_function_pointer<>::kernel_1a> hide_handlers;
 
         // restricted functions
         popup_menu(popup_menu&);        // copy constructor

@@ -51,6 +51,8 @@ namespace dlib
                 - #get_c_class2() == 1
                 - #get_epsilon() == 0.001
                 - this object will not be verbose unless be_verbose() is called
+                - #get_max_iterations() == 10000
+                - #learns_nonnegative_weights() == false
         !*/
 
         explicit svm_c_linear_trainer (
@@ -67,6 +69,8 @@ namespace dlib
                 - #get_c_class2() == C
                 - #get_epsilon() == 0.001
                 - this object will not be verbose unless be_verbose() is called
+                - #get_max_iterations() == 10000
+                - #learns_nonnegative_weights() == false
         !*/
 
         void set_epsilon (
@@ -86,6 +90,22 @@ namespace dlib
                 - returns the error epsilon that determines when training should stop.
                   Smaller values may result in a more accurate solution but take longer 
                   to execute.
+        !*/
+
+        void set_max_iterations (
+            unsigned long max_iter
+        );
+        /*!
+            ensures
+                - #get_max_iterations() == max_iter
+        !*/
+
+        unsigned long get_max_iterations (
+        ); 
+        /*!
+            ensures
+                - returns the maximum number of iterations the SVM optimizer is allowed to
+                  run before it is required to stop and return a result.
         !*/
 
         void be_verbose (
@@ -127,6 +147,27 @@ namespace dlib
                   returns kernel_type()
         !*/
 
+        bool learns_nonnegative_weights (
+        ) const;
+        /*!
+            ensures
+                - The output of training is a weight vector and a bias value.  These
+                  two things define the resulting decision function.  That is, the
+                  decision function simply takes the dot product between the learned
+                  weight vector and a test sample, then subtracts the bias value.  
+                  Therefore, if learns_nonnegative_weights() == true then the resulting
+                  learned weight vector will always have non-negative entries.  The
+                  bias value may still be negative though.
+        !*/
+       
+        void set_learns_nonnegative_weights (
+            bool value
+        );
+        /*!
+            ensures
+                - #learns_nonnegative_weights() == value
+        !*/
+
         void set_c (
             scalar_type C 
         );
@@ -145,9 +186,9 @@ namespace dlib
                 - returns the SVM regularization parameter for the +1 class.  
                   It is the parameter that determines the trade off between
                   trying to fit the +1 training data exactly or allowing more errors 
-                  but hopefully improving the generalization ability of the 
-                  resulting classifier.  Larger values encourage exact fitting 
-                  while smaller values of C may encourage better generalization. 
+                  but hopefully improving the generalization of the resulting 
+                  classifier.  Larger values encourage exact fitting while 
+                  smaller values of C may encourage better generalization. 
         !*/
 
         const scalar_type get_c_class2 (
@@ -157,9 +198,9 @@ namespace dlib
                 - returns the SVM regularization parameter for the -1 class.  
                   It is the parameter that determines the trade off between
                   trying to fit the -1 training data exactly or allowing more errors 
-                  but hopefully improving the generalization ability of the 
-                  resulting classifier.  Larger values encourage exact fitting 
-                  while smaller values of C may encourage better generalization. 
+                  but hopefully improving the generalization of the resulting 
+                  classifier.  Larger values encourage exact fitting while 
+                  smaller values of C may encourage better generalization. 
         !*/
 
         void set_c_class1 (

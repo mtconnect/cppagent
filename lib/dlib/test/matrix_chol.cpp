@@ -24,7 +24,7 @@ namespace
 
     logger dlog("test.matrix_chol");
 
-    dlib::rand::float_1a rnd;
+    dlib::rand rnd;
 
 // ----------------------------------------------------------------------------------------
 
@@ -82,6 +82,11 @@ namespace
         type temp;
         DLIB_TEST_MSG( (temp= max(abs(test.get_l()*trans(test.get_l()) - m))) < eps,temp);
 
+        {
+            matrix<type> mat = chol(m);
+            DLIB_TEST_MSG( (temp= max(abs(mat*trans(mat) - m))) < eps,temp);
+        }
+
 
         matrix<type> m2;
         matrix<type,0,1> col;
@@ -96,7 +101,7 @@ namespace
         DLIB_TEST_MSG(equal(m*test.solve(col), col,eps),max(abs(m*test.solve(m2)- m2)));
 
         // now make us a non-spd matrix
-        if (m.nr() > 1)
+        if (m.nr() > 2)
         {
             matrix<type> sm(lowerm(m));
             sm(1,1) = 0;
@@ -129,6 +134,8 @@ namespace
         test_cholesky(uniform_matrix<double>(15,15,1) + 10*symm(randmat<double>(15,15)));
         test_cholesky(uniform_matrix<double>(101,101,1) + 10*symm(randmat<double>(101,101)));
 
+        typedef matrix<double,0,0,default_memory_manager, column_major_layout> mat;
+        test_cholesky(mat(uniform_matrix<double>(101,101,1) + 10*symm(randmat<double>(101,101))));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -140,6 +147,8 @@ namespace
         test_cholesky(uniform_matrix<float>(2,2,1) + 2*symm(randmat<float>(2,2)));
         test_cholesky(uniform_matrix<float>(3,3,1) + 2*symm(randmat<float>(3,3)));
 
+        typedef matrix<float,0,0,default_memory_manager, column_major_layout> mat;
+        test_cholesky(mat(uniform_matrix<float>(3,3,1) + 2*symm(randmat<float>(3,3))));
     }
 
 // ----------------------------------------------------------------------------------------

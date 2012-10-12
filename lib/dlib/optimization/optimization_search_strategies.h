@@ -26,6 +26,9 @@ namespace dlib
         double get_wolfe_sigma (
         ) const { return 0.01; }
 
+        unsigned long get_max_line_search_iterations (
+        ) const { return 100; }
+
         template <typename T>
         const matrix<double,0,1>& get_next_direction (
             const T& ,
@@ -77,6 +80,9 @@ namespace dlib
 
         double get_wolfe_sigma (
         ) const { return 0.9; }
+
+        unsigned long get_max_line_search_iterations (
+        ) const { return 100; }
 
         template <typename T>
         const matrix<double,0,1>& get_next_direction (
@@ -148,7 +154,7 @@ namespace dlib
     class lbfgs_search_strategy
     {
     public:
-        lbfgs_search_strategy(unsigned long max_size_) : max_size(max_size_), been_used(false) 
+        explicit lbfgs_search_strategy(unsigned long max_size_) : max_size(max_size_), been_used(false) 
         {
             DLIB_ASSERT (
                 max_size > 0,
@@ -174,6 +180,9 @@ namespace dlib
         double get_wolfe_sigma (
         ) const { return 0.9; }
 
+        unsigned long get_max_line_search_iterations (
+        ) const { return 100; }
+
         template <typename T>
         const matrix<double,0,1>& get_next_direction (
             const T& x,
@@ -192,7 +201,7 @@ namespace dlib
                 // add an element into the stored data sequence
                 dh_temp.s = x - prev_x;
                 dh_temp.y = funct_derivative - prev_derivative;
-                double temp = dlib::dot(dh_temp.s, dh_temp.y);
+                double temp = dot(dh_temp.s, dh_temp.y);
                 // only accept this bit of data if temp isn't zero
                 if (std::abs(temp) > std::numeric_limits<double>::epsilon())
                 {
@@ -268,6 +277,44 @@ namespace dlib
 
         data_helper dh_temp;
     };
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename hessian_funct>
+    class newton_search_strategy_obj
+    {
+    public:
+        explicit newton_search_strategy_obj(
+            const hessian_funct& hess
+        ) : hessian(hess) {}
+
+        double get_wolfe_rho (
+        ) const { return 0.01; }
+
+        double get_wolfe_sigma (
+        ) const { return 0.9; }
+
+        unsigned long get_max_line_search_iterations (
+        ) const { return 100; }
+
+        template <typename T>
+        const matrix<double,0,1> get_next_direction (
+            const T& x,
+            const double ,
+            const T& funct_derivative
+        )
+        {
+            return -inv(hessian(x))*funct_derivative;
+        }
+
+    private:
+        hessian_funct hessian;
+    };
+
+    template <typename hessian_funct>
+    newton_search_strategy_obj<hessian_funct> newton_search_strategy (
+        const hessian_funct& hessian
+    ) { return newton_search_strategy_obj<hessian_funct>(hessian); }
 
 // ----------------------------------------------------------------------------------------
 

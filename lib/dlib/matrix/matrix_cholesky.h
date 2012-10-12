@@ -10,6 +10,12 @@
 #include "matrix_subexp.h"
 #include <cmath>
 
+#ifdef DLIB_USE_LAPACK
+#include "lapack/potrf.h"
+#endif
+
+#include "matrix_trsm.h"
+
 namespace dlib 
 {
 
@@ -105,6 +111,32 @@ namespace dlib
             << "\n\tthis:      " << this
             );
 
+#ifdef DLIB_USE_LAPACK
+        L_ = A_;
+        const type eps = max(abs(diag(L_)))*std::sqrt(std::numeric_limits<type>::epsilon())/100;
+
+        // check if the matrix is actually symmetric
+        bool is_symmetric = true;
+        for (long r = 0; r < L_.nr() && is_symmetric; ++r)
+        {
+            for (long c = r+1; c < L_.nc() && is_symmetric; ++c)
+            {
+                // this is approximately doing: is_symmetric = is_symmetric && ( L_(k,j) == L_(j,k))
+                is_symmetric = is_symmetric && (std::abs(L_(r,c) - L_(c,r)) < eps ); 
+            }
+        }
+
+        // now compute the actual cholesky decomposition
+        int info = lapack::potrf('L', L_);
+
+        // check if it's really SPD
+        if (info == 0 && is_symmetric && min(abs(diag(L_))) > eps*100)
+            isspd = true;
+        else
+            isspd = false;
+
+        L_ = lowerm(L_);
+#else
         const_temp_matrix<EXP> A(A_);
 
 
@@ -153,6 +185,7 @@ namespace dlib
                 L_(j,k) = 0.0;
             }
         }
+#endif
     }
 
 // ----------------------------------------------------------------------------------------
@@ -177,32 +210,11 @@ namespace dlib
 
         matrix<type, NR, EXP::NC, mem_manager_type, layout_type>  X(B); 
 
-        const long nx = B.nc();
-
-        const long n = L_.nr();
-
+        using namespace blas_bindings;
         // Solve L*y = b;
-        for (long j=0; j< nx; j++)
-        {
-            for (long k = 0; k < n; k++) 
-            {
-                for (long i = 0; i < k; i++) 
-                    X(k,j) -= X(i,j)*L_(k,i);
-                X(k,j) /= L_(k,k);
-            }
-        }
-
+        triangular_solver(CblasLeft, CblasLower, CblasNoTrans, CblasNonUnit, L_, X);
         // Solve L'*X = Y;
-        for (long j=0; j<nx; j++)
-        {
-            for (long k = n-1; k >= 0; k--) 
-            {
-                for (long i = k+1; i < n; i++) 
-                    X(k,j) -= X(i,j)*L_(i,k);
-                X(k,j) /= L_(k,k);
-            }
-        }
-
+        triangular_solver(CblasLeft, CblasLower, CblasTrans, CblasNonUnit, L_, X);
         return X;
     }
 

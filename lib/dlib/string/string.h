@@ -4,32 +4,57 @@
 #define DLIB_STRINg_ 
 
 #include "string_abstract.h"
+#include <sstream>
 #include "../algs.h"
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include "../error.h"
 #include "../assert.h"
 #include "../uintn.h"
 #include <cctype>
 #include <algorithm>
+#include <vector>
 #include "../enable_if.h"
-
-namespace __gnu_cxx {
-  template <
-  typename charT,
-  typename traits,
-  typename alloc
-  >
-  inline const typename boost::enable_if<dlib::is_same_type<charT,char>,std::string>::type narrow (
-    const std::basic_string<charT,traits,alloc>& str
-    )
-  {
-    return str;
-  }
-}
 
 namespace dlib
 {
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename charT,
+        typename traits,
+        typename alloc
+        >
+    inline const typename disable_if<is_same_type<charT,char>,std::string>::type narrow (
+        const std::basic_string<charT,traits,alloc>& str
+    )
+    {
+        std::string temp;
+        temp.reserve(str.size());
+        std::string::size_type i;
+        for (i = 0; i < str.size(); ++i)
+        {
+            if (zero_extend_cast<unsigned long>(str[i]) > 255)
+                temp += ' ';
+            else
+                temp += zero_extend_cast<char>(str[i]);
+        }
+        return temp;
+    }
+
+    template <
+        typename charT,
+        typename traits,
+        typename alloc
+        >
+    inline const typename enable_if<is_same_type<charT,char>,std::string>::type narrow (
+        const std::basic_string<charT,traits,alloc>& str
+    )
+    { 
+        return str;
+    }
 
 // ----------------------------------------------------------------------------------------
 
@@ -236,6 +261,18 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    inline std::string pad_int_with_zeros (
+        int i,
+        unsigned long width = 6
+    )
+    {
+        std::ostringstream sout;
+        sout << std::setw(width) << std::setfill('0') << i;
+        return sout.str();
+    }
+
+// ----------------------------------------------------------------------------------------
+
     class string_cast_error : public error
     {
     public:
@@ -352,39 +389,103 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-    template <
-        typename charT,
-        typename traits,
-        typename alloc
-        >
-    inline const typename disable_if<is_same_type<charT,char>,std::string>::type narrow (
-        const std::basic_string<charT,traits,alloc>& str
-    )
+    class string_assign
     {
-        std::string temp;
-        temp.reserve(str.size());
-        std::string::size_type i;
-        for (i = 0; i < str.size(); ++i)
+        template <
+            typename charT,
+            typename traits,
+            typename alloc
+            >
+        class string_assign_helper
         {
-            if (zero_extend_cast<unsigned long>(str[i]) > 255)
-                temp += ' ';
-            else
-                temp += zero_extend_cast<char>(str[i]);
-        }
-        return temp;
-    }
+        public:
+            string_assign_helper (
+                const std::basic_string<charT,traits,alloc>& str_
+            ) : str(str_) {}
 
-    template <
-        typename charT,
-        typename traits,
-        typename alloc
-        >
-    inline const typename enable_if<is_same_type<charT,char>,std::string>::type narrow (
-        const std::basic_string<charT,traits,alloc>& str
-    )
-    { 
-        return str;
-    }
+            template <typename T>
+            operator T () const
+            {
+                return string_cast<T>(str);
+            }
+
+        private:
+
+            const std::basic_string<charT,traits,alloc>& str;
+        };
+
+    // -------------
+
+        class char_assign_helper
+        {
+        public:
+            char_assign_helper (
+                const char* str_
+            ) : str(str_) {}
+
+            template <typename T>
+            operator T () const
+            {
+                return string_cast<T>(str);
+            }
+
+        private:
+
+            const char* str;
+        };
+
+    // -------------
+
+        class wchar_t_assign_helper
+        {
+        public:
+            wchar_t_assign_helper (
+                const wchar_t* str_
+            ) : str(str_) {}
+
+            template <typename T>
+            operator T () const
+            {
+                return string_cast<T>(str);
+            }
+
+        private:
+
+            const wchar_t* str;
+        };
+
+    // -------------
+
+    public:
+
+        template <
+            typename charT,
+            typename traits,
+            typename alloc
+            >
+        string_assign_helper<charT,traits,alloc> operator=(
+            const std::basic_string<charT,traits,alloc>& str
+        ) const
+        {
+            return string_assign_helper<charT,traits,alloc>(str);
+        }
+
+        char_assign_helper operator= (
+            const char* str
+        ) const 
+        {
+            return char_assign_helper(str);
+        }
+
+        wchar_t_assign_helper operator= (
+            const wchar_t* str
+        ) const 
+        {
+            return wchar_t_assign_helper(str);
+        }
+    };
+
+    const string_assign sa = string_assign();
 
 // ----------------------------------------------------------------------------------------
 
@@ -753,6 +854,70 @@ namespace dlib
             return str.substr(delim_pos+1);
         else
             return _dT(charT,"");
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename charT,
+        typename traits,
+        typename alloc
+        >
+    const std::vector<std::basic_string<charT,traits,alloc> > split (
+        const std::basic_string<charT,traits,alloc>& str,
+        const charT* delim = _dT(charT," \n\r\t")
+    )
+    {
+        std::basic_string<charT,traits,alloc> temp;
+
+        std::vector<std::basic_string<charT,traits,alloc> > res;
+
+        for (unsigned long i = 0; i < str.size(); ++i)
+        {
+            // check if delim contains the character str[i]
+            bool hit = false;
+            const charT* d = delim;
+            while (*d != '\0')
+            {
+                if (str[i] == *d)
+                {
+                    hit = true;
+                    break;
+                }
+                ++d;
+            }
+
+            if (hit)
+            {
+                if (temp.size() != 0)
+                {
+                    res.push_back(temp);
+                    temp.clear();
+                }
+            }
+            else
+            {
+                temp.push_back(str[i]);
+            }
+        }
+
+        if (temp.size() != 0)
+            res.push_back(temp);
+
+        return res;
+    }
+
+    template <
+        typename charT,
+        typename traits,
+        typename alloc
+        >
+    const std::vector<std::basic_string<charT,traits,alloc> > split (
+        const std::basic_string<charT,traits,alloc>& str,
+        const std::basic_string<charT,traits,alloc>& delim 
+    )
+    {
+        return split(str,delim.c_str());
     }
 
 // ----------------------------------------------------------------------------------------

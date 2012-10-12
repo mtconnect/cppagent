@@ -11,6 +11,9 @@
 #include "../std_allocator.h"
 #include "../algs.h"
 #include "../serialize.h"
+#include "../is_kind.h"
+#include "../string.h"
+#include "../rand.h"
 
 namespace dlib
 {
@@ -32,7 +35,7 @@ namespace dlib
                 - max_dictionary_size() == my_max_dictionary_size
                 - get_kernel() == kernel
                 - minimum_tolerance() == min_tolerance
-                - dictionary_size() == dictionary.size()
+                - size() == dictionary.size()
                 - get_dictionary() == vector_to_matrix(dictionary)
                 - K.nr() == dictionary.size()
                 - K.nc() == dictionary.size()
@@ -52,6 +55,7 @@ namespace dlib
     public:
         typedef typename kernel_type::scalar_type scalar_type;
         typedef typename kernel_type::sample_type sample_type;
+        typedef typename kernel_type::sample_type type;
         typedef typename kernel_type::mem_manager_type mem_manager_type;
 
         linearly_independent_subset_finder (
@@ -72,10 +76,11 @@ namespace dlib
             min_tolerance(min_tolerance_)
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(min_tolerance_ > 0,
+            DLIB_ASSERT(min_tolerance_ > 0 && max_dictionary_size_ > 1,
                 "\tlinearly_independent_subset_finder()"
                 << "\n\tinvalid argument to constructor"
                 << "\n\tmin_tolerance_: " << min_tolerance_
+                << "\n\tmax_dictionary_size_: " << max_dictionary_size_
                 << "\n\tthis:           " << this
                 );
             clear_dictionary();
@@ -98,6 +103,20 @@ namespace dlib
             return min_tolerance;
         }
 
+        void set_minimum_tolerance (
+            scalar_type min_tol
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(min_tol > 0,
+                "\tlinearly_independent_subset_finder::set_minimum_tolerance()"
+                << "\n\tinvalid argument to this function"
+                << "\n\tmin_tol: " << min_tol
+                << "\n\tthis:    " << this
+                );
+            min_tolerance = min_tol;
+        }
+
         void clear_dictionary ()
         {
             dictionary.clear();
@@ -108,7 +127,32 @@ namespace dlib
             K.set_size(0,0);
         }
 
-        void add (
+        scalar_type projection_error (
+            const sample_type& x
+        ) const
+        {
+            const scalar_type kx = kernel(x,x);
+            if (dictionary.size() == 0)
+            {
+                return kx;
+            }
+            else
+            {
+                // fill in k
+                k.set_size(dictionary.size());
+                for (long r = 0; r < k.nr(); ++r)
+                    k(r) = kernel(x,dictionary[r]);
+
+                // compute the error we would have if we approximated the new x sample
+                // with the dictionary.  That is, do the ALD test from the KRLS paper.
+                a = K_inv*k;
+                scalar_type delta = kx - trans(k)*a;
+
+                return delta;
+            }
+        }
+
+        bool add (
             const sample_type& x
         )
         {
@@ -126,7 +170,9 @@ namespace dlib
                     K(0,0) = kx;
 
                     dictionary.push_back(x);
+                    return true;
                 }
+                return false;
             }
             else
             {
@@ -141,7 +187,7 @@ namespace dlib
                 scalar_type delta = kx - trans(k)*a;
 
                 // if this new vector is approximately linearly independent of the vectors
-                // in our dictionary.  Or if our dictionary just isn't full yet.
+                // in our dictionary.  
                 if (delta > min_strength && delta > min_tolerance)
                 {
                     if (dictionary.size() == my_max_dictionary_size)
@@ -220,6 +266,11 @@ namespace dlib
                         dictionary.push_back(x);
 
                     }
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
         }
@@ -245,7 +296,7 @@ namespace dlib
             temp.swap(item.temp);
         }
 
-        unsigned long dictionary_size (
+        unsigned long size (
         ) const { return dictionary.size(); }
 
         const matrix<sample_type,0,1,mem_manager_type> get_dictionary (
@@ -283,6 +334,18 @@ namespace dlib
         ) const
         {
             return dictionary[index];
+        }
+
+        const matrix<scalar_type,0,0,mem_manager_type>& get_kernel_matrix (
+        ) const
+        {
+            return K;
+        }
+
+        const matrix<scalar_type,0,0,mem_manager_type>& get_inv_kernel_marix (
+        ) const
+        {
+            return K_inv;
         }
 
     private:
@@ -333,9 +396,9 @@ namespace dlib
 
         // temp variables here just so we don't have to reconstruct them over and over.  Thus, 
         // they aren't really part of the state of this object.
-        matrix<scalar_type,0,1,mem_manager_type> a, a2;
-        matrix<scalar_type,0,1,mem_manager_type> k, k2;
-        matrix<scalar_type,0,0,mem_manager_type> temp;
+        mutable matrix<scalar_type,0,1,mem_manager_type> a, a2;
+        mutable matrix<scalar_type,0,1,mem_manager_type> k, k2;
+        mutable matrix<scalar_type,0,0,mem_manager_type> temp;
 
     };
 
@@ -344,6 +407,118 @@ namespace dlib
     template <typename kernel_type>
     void swap(linearly_independent_subset_finder<kernel_type>& a, linearly_independent_subset_finder<kernel_type>& b)
     { a.swap(b); }
+
+// ----------------------------------------------------------------------------------------
+
+    namespace impl
+    {
+        template <
+            typename kernel_type,
+            typename vector_type,
+            typename rand_type
+            >
+        void fill_lisf (
+            linearly_independent_subset_finder<kernel_type>& lisf,
+            const vector_type& samples,
+            rand_type& rnd,
+            int sampling_size 
+        )
+        {   
+            // make sure requires clause is not broken
+            DLIB_ASSERT(is_vector(samples) && sampling_size > 0,
+                "\t void fill_lisf()"
+                << "\n\t invalid arguments to this function"
+                << "\n\t is_vector(samples): " << is_vector(samples) 
+                << "\n\t sampling_size: " << sampling_size
+                );
+
+            // no need to do anything if there aren't any samples
+            if (samples.size() == 0)
+                return;
+
+            typedef typename kernel_type::scalar_type scalar_type;
+
+            // Start out by guessing what a reasonable projection error tolerance is. We will use
+            // the biggest projection error we see in a small sample.
+            scalar_type tol = 0;
+            for (int i = 0; i < sampling_size; ++i)
+            {
+                const unsigned long idx = rnd.get_random_32bit_number()%samples.size();
+                const scalar_type temp = lisf.projection_error(samples(idx)); 
+                if (temp > tol)
+                    tol = temp;
+            }
+
+            const scalar_type min_tol = lisf.minimum_tolerance();
+
+            // run many rounds of random sampling.  In each round we drop the tolerance lower.
+            while (tol >= min_tol && lisf.size() < lisf.max_dictionary_size())
+            {
+                tol *= 0.5;
+                lisf.set_minimum_tolerance(std::max(tol, min_tol));
+                int add_failures = 0;
+
+                // Keep picking random samples and adding them into the lisf.  Stop when we either
+                // fill it up or can't find any more samples with projection error larger than the
+                // current tolerance.
+                while (lisf.size() < lisf.max_dictionary_size() && add_failures < sampling_size) 
+                {
+                    if (lisf.add(samples(rnd.get_random_32bit_number()%samples.size())) == false)
+                    {
+                        ++add_failures;
+                    }
+                }
+            }
+
+            // set this back to its original value
+            lisf.set_minimum_tolerance(min_tol);
+        }
+    }
+
+    template <
+        typename kernel_type,
+        typename vector_type
+        >
+    void fill_lisf (
+        linearly_independent_subset_finder<kernel_type>& lisf,
+        const vector_type& samples
+    )
+    {   
+        dlib::rand rnd;
+        impl::fill_lisf(lisf, vector_to_matrix(samples),rnd, 2000);
+    }
+
+    template <
+        typename kernel_type,
+        typename vector_type,
+        typename rand_type
+        >
+    typename enable_if<is_rand<rand_type> >::type fill_lisf (
+        linearly_independent_subset_finder<kernel_type>& lisf,
+        const vector_type& samples,
+        rand_type& rnd,
+        const int sampling_size = 2000
+    )
+    {   
+        impl::fill_lisf(lisf, vector_to_matrix(samples),rnd, sampling_size);
+    }
+
+    template <
+        typename kernel_type,
+        typename vector_type,
+        typename rand_type
+        >
+    typename disable_if<is_rand<rand_type> >::type fill_lisf (
+        linearly_independent_subset_finder<kernel_type>& lisf,
+        const vector_type& samples,
+        rand_type random_seed,
+        const int sampling_size = 2000
+    )
+    {   
+        dlib::rand rnd;
+        rnd.set_seed(cast_to_string(random_seed));
+        impl::fill_lisf(lisf, vector_to_matrix(samples), rnd, sampling_size);
+    }
 
 // ----------------------------------------------------------------------------------------
 

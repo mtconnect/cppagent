@@ -46,6 +46,7 @@ namespace
             std::vector<sample_type> vect2;
 
             const sample_type samp = randm(4,1);
+            sample_type samp2, samp3;
 
             vect1.push_back(randm(4,1));
             vect1.push_back(randm(4,1));
@@ -81,6 +82,7 @@ namespace
                 }
             }
             DLIB_TEST(equal(K, kernel_matrix(kern, vect2, vect1)));
+            DLIB_TEST(equal(K, tmp(kernel_matrix(kern, vect2, vect1))));
             DLIB_TEST(equal(K, kernel_matrix(kern, vector_to_matrix(vect2), vector_to_matrix(vect1))));
 
 
@@ -93,9 +95,13 @@ namespace
                 }
             }
             DLIB_TEST(equal(K, kernel_matrix(kern, vect1, vect1)));
+            DLIB_TEST(equal(K, tmp(kernel_matrix(kern, vect1, vect1))));
             DLIB_TEST(equal(K, kernel_matrix(kern, vect1)));
+            DLIB_TEST(equal(K, tmp(kernel_matrix(kern, vect1))));
             DLIB_TEST(equal(K, kernel_matrix(kern, vector_to_matrix(vect1), vector_to_matrix(vect1))));
+            DLIB_TEST(equal(K, tmp(kernel_matrix(kern, vector_to_matrix(vect1), vector_to_matrix(vect1)))));
             DLIB_TEST(equal(K, kernel_matrix(kern, vector_to_matrix(vect1))));
+            DLIB_TEST(equal(K, tmp(kernel_matrix(kern, vector_to_matrix(vect1)))));
 
 
             K.set_size(vect1.size(),1);
@@ -120,8 +126,27 @@ namespace
             }
             DLIB_TEST(equal(K, kernel_matrix(kern, samp, vect1)));
             DLIB_TEST(equal(K, kernel_matrix(kern, samp, vector_to_matrix(vect1))));
+            DLIB_TEST(equal(K, tmp(kernel_matrix(kern, samp, vect1))));
+            DLIB_TEST(equal(K, tmp(kernel_matrix(kern, samp, vector_to_matrix(vect1)))));
 
 
+
+            samp2 = samp;
+            samp3 = samp;
+
+            // test the alias detection
+            samp2 = kernel_matrix(kern, vect1, samp2);
+            DLIB_TEST(equal(samp2, kernel_matrix(kern, vect1, samp)));
+
+            samp3 = trans(kernel_matrix(kern, samp3, vect2));
+            DLIB_TEST(equal(samp3, trans(kernel_matrix(kern, samp, vect2))));
+
+
+            samp2 += kernel_matrix(kern, vect1, samp);
+            DLIB_TEST(equal(samp2, 2*kernel_matrix(kern, vect1, samp)));
+
+            samp3 += trans(kernel_matrix(kern, samp, vect2));
+            DLIB_TEST(equal(samp3, 2*trans(kernel_matrix(kern, samp, vect2))));
         }
     };
 

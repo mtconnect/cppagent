@@ -24,7 +24,7 @@ namespace
 
     logger dlog("test.matrix_lu");
 
-    dlib::rand::float_1a rnd;
+    dlib::rand rnd;
 
 // ----------------------------------------------------------------------------------------
 
@@ -156,6 +156,10 @@ namespace
         test_lu(10*randmat<double,137,200>());
         test_lu(10*randmat<double,200,101>());
 
+        typedef matrix<double,0,0,default_memory_manager, column_major_layout> mat;
+        test_lu(mat(3*randmat<double>(4,4)));
+        test_lu(mat(3*randmat<double>(9,4)));
+        test_lu(mat(3*randmat<double>(3,8)));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -182,6 +186,10 @@ namespace
         test_lu(3*randmat<float,137,200>());
         test_lu(3*randmat<float,200,101>());
 
+        typedef matrix<float,0,0,default_memory_manager, column_major_layout> mat;
+        test_lu(mat(3*randmat<float>(4,4)));
+        test_lu(mat(3*randmat<float>(9,4)));
+        test_lu(mat(3*randmat<float>(3,8)));
     }
 
 // ----------------------------------------------------------------------------------------

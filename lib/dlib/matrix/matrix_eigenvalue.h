@@ -12,6 +12,14 @@
 #include <complex>
 #include <cmath>
 
+#ifdef DLIB_USE_LAPACK
+#include "lapack/geev.h"
+#include "lapack/syev.h"
+#include "lapack/syevr.h"
+#endif
+
+#define DLIB_LAPACK_EIGENVALUE_DECOMP_SIZE_THRESH 4
+
 namespace dlib 
 {
 
@@ -45,6 +53,11 @@ namespace dlib
         template <typename EXP>
         eigenvalue_decomposition(
             const matrix_exp<EXP>& A
+        ); 
+
+        template <typename EXP>
+        eigenvalue_decomposition(
+            const matrix_op<op_make_symmetric<EXP> >& A
         ); 
 
         long dim (
@@ -166,6 +179,22 @@ namespace dlib
         {
             V = A;
 
+#ifdef DLIB_USE_LAPACK
+            if (A.nr() > DLIB_LAPACK_EIGENVALUE_DECOMP_SIZE_THRESH)
+            {
+                e = 0;
+
+                // We could compute the result using syev()
+                //lapack::syev('V', 'L', V,  d);
+
+                // Instead, we use syevr because its faster and maybe more stable.
+                matrix_type tempA(A);
+                matrix<lapack::integer,0,0,mem_manager_type,layout_type> isupz;
+
+                lapack::integer temp;
+                lapack::syevr('V','A','L',tempA,0,0,0,0,-1,temp,d,V,isupz);
+            }
+#endif
             // Tridiagonalize.
             tred2();
 
@@ -175,7 +204,19 @@ namespace dlib
         } 
         else 
         {
+
+#ifdef DLIB_USE_LAPACK
+            if (A.nr() > DLIB_LAPACK_EIGENVALUE_DECOMP_SIZE_THRESH)
+            {
+                matrix<type,0,0,mem_manager_type, column_major_layout> temp, vl, vr;
+                temp = A;
+                lapack::geev('N', 'V', temp, d, e, vl, vr);
+                V = vr;
+                return;
+            }
+#endif
             H = A;
+
             ort.set_size(n);
 
             // Reduce to Hessenberg form.
@@ -184,6 +225,62 @@ namespace dlib
             // Reduce Hessenberg to real Schur form.
             hqr2();
         }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename matrix_exp_type>
+    template <typename EXP>
+    eigenvalue_decomposition<matrix_exp_type>::
+    eigenvalue_decomposition(
+        const matrix_op<op_make_symmetric<EXP> >& A
+    ) 
+    {
+        COMPILE_TIME_ASSERT((is_same_type<type, typename EXP::type>::value));
+
+
+        // make sure requires clause is not broken
+        DLIB_ASSERT(A.nr() == A.nc() && A.size() > 0,
+            "\teigenvalue_decomposition::eigenvalue_decomposition(A)"
+            << "\n\tYou can only use this on square matrices"
+            << "\n\tA.nr():   " << A.nr()
+            << "\n\tA.nc():   " << A.nc()
+            << "\n\tA.size(): " << A.size()
+            << "\n\tthis:     " << this
+            );
+
+
+        n = A.nc();
+        V.set_size(n,n);
+        d.set_size(n);
+        e.set_size(n);
+
+
+        V = A;
+
+#ifdef DLIB_USE_LAPACK
+        if (A.nr() > DLIB_LAPACK_EIGENVALUE_DECOMP_SIZE_THRESH)
+        {
+            e = 0;
+
+            // We could compute the result using syev()
+            //lapack::syev('V', 'L', V,  d);
+
+            // Instead, we use syevr because its faster and maybe more stable.
+            matrix_type tempA(A);
+            matrix<lapack::integer,0,0,mem_manager_type,layout_type> isupz;
+
+            lapack::integer temp;
+            lapack::syevr('V','A','L',tempA,0,0,0,0,-1,temp,d,V,isupz);
+            return;
+        }
+#endif
+        // Tridiagonalize.
+        tred2();
+
+        // Diagonalize.
+        tql2();
+
     }
 
 // ----------------------------------------------------------------------------------------

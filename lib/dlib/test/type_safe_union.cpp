@@ -18,6 +18,12 @@ namespace
 
     logger dlog("test.type_safe_union");
 
+    struct can_not_copy: noncopyable {};
+    void serialize(const can_not_copy&, std::ostream&) {}
+    void deserialize(can_not_copy&, std::istream&) {}
+
+    void swap(can_not_copy&, can_not_copy&) {}
+
     class test
     {
 
@@ -47,6 +53,12 @@ namespace
         }
 
         void operator()(std::string& val)
+        {
+            DLIB_TEST(val == s_val);
+            last_kind = STRING;
+        }
+
+        void operator()(const std::string& val)
         {
             DLIB_TEST(val == s_val);
             last_kind = STRING;
@@ -95,7 +107,7 @@ namespace
 
 
             last_kind = NONE;
-            a.apply_to_contents(*this);
+            const_cast<const tsu&>(a).apply_to_contents(*this);
             DLIB_TEST(last_kind == FLOAT);
 
         // -----------
@@ -111,7 +123,7 @@ namespace
             c_val = 'a';
             a.get<char>() = c_val;
             last_kind = NONE;
-            a.apply_to_contents(*this);
+            const_cast<const tsu&>(a).apply_to_contents(*this);
             DLIB_TEST(last_kind == CHAR);
 
         // -----------
@@ -286,6 +298,115 @@ namespace
                 deserialize(b, sin);
 
                 DLIB_TEST(b.is_empty() == true);
+
+            }
+
+            {
+                type_safe_union<char, float, std::string> a, b, empty_union;
+
+                ostringstream sout;
+                istringstream sin;
+
+                a = 'd';
+
+                serialize(a, sout);
+
+                sin.str(sout.str());
+                deserialize(b, sin);
+
+                DLIB_TEST(b.contains<int>() == false);
+                DLIB_TEST(b.contains<float>() == false);
+                DLIB_TEST(b.contains<char>() == true);
+                DLIB_TEST(b.get<char>() == 'd');
+
+                DLIB_TEST(a.contains<int>() == false);
+                DLIB_TEST(a.contains<float>() == false);
+                DLIB_TEST(a.contains<char>() == true);
+                DLIB_TEST(a.get<char>() == 'd');
+
+                sin.clear();
+                sout.clear();
+                sout.str("");
+
+                a = std::string("davis");
+
+                serialize(a, sout);
+                sin.str(sout.str());
+                deserialize(b, sin);
+
+
+                DLIB_TEST(b.contains<int>() == false);
+                DLIB_TEST(b.contains<float>() == false);
+                DLIB_TEST(b.contains<std::string>() == true);
+                DLIB_TEST(b.get<std::string>() == "davis");
+
+                sin.clear();
+                sout.clear();
+                sout.str("");
+
+                serialize(empty_union, sout);
+                sin.str(sout.str());
+                deserialize(b, sin);
+
+                DLIB_TEST(b.is_empty() == true);
+
+            }
+
+            {
+                typedef type_safe_union<char, float, std::string, can_not_copy> tsu_type;
+                tsu_type a('d'), aa(std::string("davis")), b, empty_union;
+
+                ostringstream sout;
+                istringstream sin;
+
+
+                serialize(a, sout);
+
+                sin.str(sout.str());
+                deserialize(b, sin);
+
+                DLIB_TEST(b.contains<int>() == false);
+                DLIB_TEST(b.contains<float>() == false);
+                DLIB_TEST(b.contains<char>() == true);
+                DLIB_TEST(b.get<char>() == 'd');
+
+                DLIB_TEST(a.contains<int>() == false);
+                DLIB_TEST(a.contains<float>() == false);
+                DLIB_TEST(a.contains<char>() == true);
+                DLIB_TEST(a.get<char>() == 'd');
+
+                DLIB_TEST(aa.contains<int>() == false);
+                DLIB_TEST(aa.contains<float>() == false);
+                DLIB_TEST(aa.contains<char>() == false);
+                DLIB_TEST(aa.contains<std::string>() == true);
+
+                sin.clear();
+                sout.clear();
+                sout.str("");
+
+
+                serialize(aa, sout);
+                sin.str(sout.str());
+                deserialize(b, sin);
+
+
+                DLIB_TEST(b.contains<int>() == false);
+                DLIB_TEST(b.contains<float>() == false);
+                DLIB_TEST(b.contains<std::string>() == true);
+                DLIB_TEST(b.get<std::string>() == "davis");
+
+                sin.clear();
+                sout.clear();
+                sout.str("");
+
+                serialize(empty_union, sout);
+                sin.str(sout.str());
+                deserialize(b, sin);
+
+                DLIB_TEST(b.is_empty() == true);
+
+                a.get<can_not_copy>();
+                DLIB_TEST(a.contains<can_not_copy>() == true);
 
             }
         }

@@ -101,7 +101,7 @@ namespace dlib
         );
         /*!
             ensures
-                - this function is idential to file(const std::string& name)
+                - this function is identical to file(const std::string& name)
         !*/
 
         file (
@@ -160,6 +160,17 @@ namespace dlib
                     - returns true
                 - else
                     - returns false
+        !*/
+
+        bool operator != (
+            const file& rhs
+        ) const;
+        /*!
+            ensures
+                - if (*this and rhs represent the same file) then
+                    - returns false 
+                - else
+                    - returns true 
         !*/
 
         bool operator < (
@@ -243,7 +254,7 @@ namespace dlib
         );
         /*!
             ensures
-                - this function is idential to directory(const std::string& name)
+                - this function is identical to directory(const std::string& name)
         !*/
 
         directory (
@@ -390,6 +401,17 @@ namespace dlib
                     - returns true
                 - else
                     - returns false
+        !*/
+
+        bool operator != (
+            const directory& rhs
+        ) const;
+        /*!
+            ensures
+                - if (*this and rhs represent the same directory) then
+                    - returns false 
+                - else
+                    - returns true 
         !*/
 
         bool operator < (

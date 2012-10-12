@@ -87,7 +87,7 @@ namespace
     }
 
     template <typename type>
-    type rnd_num (dlib::rand::float_1a& rnd)
+    type rnd_num (dlib::rand& rnd)
     {
         return static_cast<type>(10*rnd.get_random_double());
     }
@@ -99,11 +99,11 @@ namespace
         // It does this by performing an assignment that is subject to BLAS bindings and comparing the
         // results directly to an unevaluated matrix_exp that should be equal.
 
-        dlib::rand::float_1a rnd;
+        dlib::rand rnd;
 
         matrix<type> a(rows,cols), temp, temp2, temp3;
 
-        for (int i = 0; i < 6; ++i)
+        for (int k = 0; k < 6; ++k)
         {
             for (long r= 0; r < a.nr(); ++r)
             {
@@ -597,7 +597,7 @@ namespace
             c_check_equal( tmp(c_temp + trans(conj(c_cv4))*trans(c_rv4)), c_temp + trans(conj(c_cv4))*trans(c_rv4));
 
             DLIB_TEST(abs((static_cast<complex<type> >(c_rv4*c_cv4) + i) - ((c_rv4*c_cv4)(0) + i)) < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul );
-            DLIB_TEST(abs((rv4*cv4 + 1.0) - ((rv4*cv4)(0) + 1.0)) < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul);
+            DLIB_TEST(max(abs((rv4*cv4 + 1.0) - ((rv4*cv4)(0) + 1.0))) < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul);
 
         }
 
@@ -776,6 +776,228 @@ namespace
             DLIB_TEST((1>=a) == b);
         }
 
+        {
+            matrix<double> a, b, c;
+            a = randm(4,2);
+
+            b += a;
+            c -= a;
+
+            DLIB_TEST(equal(a, b));
+            DLIB_TEST(equal(-a, c));
+
+            b += a;
+            c -= a;
+
+            DLIB_TEST(equal(2*a, b));
+            DLIB_TEST(equal(-2*a, c));
+
+            b += a + a;
+            c -= a + a;
+
+            DLIB_TEST(equal(4*a, b));
+            DLIB_TEST(equal(-4*a, c));
+
+            b.set_size(0,0);
+            c.set_size(0,0);
+
+
+            b += a + a;
+            c -= a + a;
+
+            DLIB_TEST(equal(2*a, b));
+            DLIB_TEST(equal(-2*a, c));
+        }
+
+        {
+            matrix<int> a, b, c;
+
+            a.set_size(2, 3);
+            b.set_size(2, 6);
+            c.set_size(4, 3);
+
+            a = 1, 2, 3,
+                4, 5, 6;
+
+            b = 1, 2, 3, 1, 2, 3,
+                4, 5, 6, 4, 5, 6;
+
+            c = 1, 2, 3,
+                4, 5, 6,
+                1, 2, 3,
+                4, 5, 6;
+
+            DLIB_TEST(join_rows(a,a) == b);
+            DLIB_TEST(join_rows(a,abs(a)) == b);
+            DLIB_TEST(join_cols(trans(a), trans(a)) == trans(b));
+            DLIB_TEST(join_cols(a,a) == c)
+            DLIB_TEST(join_cols(a,abs(a)) == c)
+            DLIB_TEST(join_rows(trans(a),trans(a)) == trans(c))
+        }
+
+        {
+            matrix<int, 2, 3> a;
+            matrix<int, 2, 6> b;
+            matrix<int, 4, 3> c;
+
+            a = 1, 2, 3,
+                4, 5, 6;
+
+            b = 1, 2, 3, 1, 2, 3,
+                4, 5, 6, 4, 5, 6;
+
+            c = 1, 2, 3,
+                4, 5, 6,
+                1, 2, 3,
+                4, 5, 6;
+
+            DLIB_TEST(join_rows(a,a) == b);
+            DLIB_TEST(join_rows(a,abs(a)) == b);
+            DLIB_TEST(join_cols(trans(a), trans(a)) == trans(b));
+            DLIB_TEST(join_cols(a,a) == c)
+            DLIB_TEST(join_cols(a,abs(a)) == c)
+            DLIB_TEST(join_rows(trans(a),trans(a)) == trans(c))
+        }
+
+        {
+            matrix<int, 2, 3> a;
+            matrix<int> a2;
+            matrix<int, 2, 6> b;
+            matrix<int, 4, 3> c;
+
+            a = 1, 2, 3,
+                4, 5, 6;
+
+            a2 = a;
+
+            b = 1, 2, 3, 1, 2, 3,
+                4, 5, 6, 4, 5, 6;
+
+            c = 1, 2, 3,
+                4, 5, 6,
+                1, 2, 3,
+                4, 5, 6;
+
+            DLIB_TEST(join_rows(a,a2) == b);
+            DLIB_TEST(join_rows(a2,a) == b);
+            DLIB_TEST(join_cols(trans(a2), trans(a)) == trans(b));
+            DLIB_TEST(join_cols(a2,a) == c)
+            DLIB_TEST(join_cols(a,a2) == c)
+            DLIB_TEST(join_rows(trans(a2),trans(a)) == trans(c))
+        }
+
+        {
+            matrix<int> a, b;
+
+            a.set_size(2,3);
+
+            a = 1, 2, 3,
+                4, 5, 6;
+
+            b.set_size(3,2);
+            b = 1, 2,
+                3, 4,
+                5, 6;
+
+            DLIB_TEST(reshape(a, 3, 2) == b);
+
+            b.set_size(2,3);
+            b = 1, 4, 2,
+                5, 3, 6;
+
+            DLIB_TEST(reshape(trans(a), 2, 3) == b);
+
+        }
+
+        {
+            matrix<int,2,3> a;
+            matrix<int> b;
+
+            a = 1, 2, 3,
+                4, 5, 6;
+
+            b.set_size(3,2);
+            b = 1, 2,
+                3, 4,
+                5, 6;
+
+            DLIB_TEST(reshape(a, 3, 2) == b);
+
+            b.set_size(2,3);
+            b = 1, 4, 2,
+                5, 3, 6;
+
+            DLIB_TEST(reshape(trans(a), 2, 3) == b);
+
+        }
+
+        {
+            std::vector<int> v(6);
+            for (unsigned long i = 0; i < v.size(); ++i)
+                v[i] = i;
+
+            matrix<int,2,3> a;
+            a = 0, 1, 2, 
+                3, 4, 5;
+
+            DLIB_TEST(pointer_to_matrix(&v[0], 2, 3) == a);
+        }
+
+        {
+            matrix<int> a(3,4);
+            matrix<int> b(3,1), c(1,4);
+
+            a = 1, 2, 3, 6,
+                4, 5, 6, 9,
+                1, 1, 1, 3;
+
+            b(0) = sum(rowm(a,0));
+            b(1) = sum(rowm(a,1));
+            b(2) = sum(rowm(a,2));
+
+            c(0) = sum(colm(a,0));
+            c(1) = sum(colm(a,1));
+            c(2) = sum(colm(a,2));
+            c(3) = sum(colm(a,3));
+
+            DLIB_TEST(sum_cols(a) == b);
+            DLIB_TEST(sum_rows(a) == c);
+
+        }
+
+        {
+            matrix<int> m(3,3);
+
+            m = 1, 2, 3,
+                4, 5, 6,
+                7, 8, 9;
+
+            DLIB_TEST(make_symmetric(m) == trans(make_symmetric(m)));
+            DLIB_TEST(lowerm(make_symmetric(m)) == lowerm(m));
+            DLIB_TEST(upperm(make_symmetric(m)) == trans(lowerm(m)));
+        }
+
+        {
+            matrix<int,3,4> a;
+            matrix<int> b(3,1), c(1,4);
+
+            a = 1, 2, 3, 6,
+                4, 5, 6, 9,
+                1, 1, 1, 3;
+
+            b(0) = sum(rowm(a,0));
+            b(1) = sum(rowm(a,1));
+            b(2) = sum(rowm(a,2));
+
+            c(0) = sum(colm(a,0));
+            c(1) = sum(colm(a,1));
+            c(2) = sum(colm(a,2));
+            c(3) = sum(colm(a,3));
+
+            DLIB_TEST(sum_cols(a) == b);
+            DLIB_TEST(sum_rows(a) == c);
+
+        }
     }
 
 

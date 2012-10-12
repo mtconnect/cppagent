@@ -58,19 +58,6 @@ namespace dlib
     void set_all_logging_levels (
         const log_level& new_level
     );
-  
-  typedef void (*print_header_type)(
-      std::ostream& out, 
-      const std::string& logger_name, 
-      const log_level& l,
-      const uint64 thread_id
-      );
-  
-   void set_all_logging_headers (
-       print_header_type ph
-   );
-
-  
 
 // ----------------------------------------------------------------------------------------
 
@@ -79,6 +66,17 @@ namespace dlib
         const std::string& logger_name,
         const log_level& l,
         const uint64 thread_id
+    );
+
+    template <
+        typename T
+        >
+    void set_all_logging_output_hooks (
+        T& object,
+        void (T::*hook_)(const std::string& logger_name, 
+                         const log_level& l,
+                         const uint64 thread_id,
+                         const char* message_to_log)
     );
 
 // ----------------------------------------------------------------------------------------
@@ -586,10 +584,6 @@ namespace dlib
         friend void set_all_logging_output_streams (
             std::ostream& out
         );
-        
-        friend void set_all_logging_headers (
-            print_header_type ph
-        );
 
         template <
             typename T
@@ -603,7 +597,17 @@ namespace dlib
         )
         {
             logger::hook_mfp hook;
+
+            // There is a bug in one of the versions (but not all apparently) of 
+            // Visual studio 2005 that causes it to error out if <T> isn't in the
+            // following line of code.  However, there is also a bug in gcc-3.3 
+            // that causes it to error out if <T> is present.  So this works around
+            // this problem.
+#if _MSC_VER == 1400
+            hook.set<T>(object, hook_);
+#else
             hook.set(object, hook_);
+#endif
 
             logger::global_data& gd = logger::get_global_data();
             auto_mutex M(gd.m);
@@ -639,6 +643,8 @@ namespace dlib
     };    
 
 // ----------------------------------------------------------------------------------------
+
+
 
 
 }

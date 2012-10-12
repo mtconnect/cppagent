@@ -2238,6 +2238,7 @@ namespace dlib
         last_selected(0)
     {
         set_vertical_scroll_increment(mfont->height());
+        set_horizontal_scroll_increment(mfont->height());
 
         style.reset(new list_box_style_default());
         enable_events();
@@ -2304,6 +2305,7 @@ namespace dlib
                 << "\n\tindex:  " << index 
                 << "\n\tsize(): " << size() );
 
+        last_selected = index;
         items[index].is_selected = true;
         parent.invalidate_rectangle(rect);
     }
@@ -2690,12 +2692,12 @@ namespace dlib
             void* param
         )
         {
-            // The point of this extra member function pointer stuff is to allow the user
+            // The point of this extra event_handler stuff is to allow the user
             // to end the program from within the callback.  So we want to destroy the 
             // window *before* we call their callback.
-            box_win& w = *reinterpret_cast<box_win*>(param);
+            box_win& w = *static_cast<box_win*>(param);
             w.close_window();
-            member_function_pointer<>::kernel_1a event_handler(w.event_handler);
+            any_function<void()> event_handler(w.event_handler);
             delete &w;
             if (event_handler.is_set())
                 event_handler(); 
@@ -2717,10 +2719,10 @@ namespace dlib
         on_window_close (
         )
         {
-            // The point of this extra member function pointer stuff is to allow the user
+            // The point of this extra event_handler stuff is to allow the user
             // to end the program within the callback.  So we want to destroy the 
             // window *before* we call their callback. 
-            member_function_pointer<>::kernel_1a event_handler_copy(event_handler);
+            any_function<void()> event_handler_copy(event_handler);
             delete this;
             if (event_handler_copy.is_set())
                 event_handler_copy();
@@ -5659,7 +5661,14 @@ namespace dlib
     image_display::
     image_display(  
         drawable_window& w
-    ): scrollable_region(w)  
+    ): 
+        scrollable_region(w,KEYBOARD_EVENTS),
+        zoom_in_scale(1),
+        zoom_out_scale(1),
+        drawing_rect(true),
+        rect_is_selected(false),
+        selected_rect(0),
+        default_rect_color(255,0,0,255)
     { 
         enable_mouse_drag();
 
@@ -5679,6 +5688,26 @@ namespace dlib
     {
         disable_events();
         parent.invalidate_rectangle(rect); 
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    rectangle image_display::
+    get_image_display_rect (
+    ) const
+    {
+        if (zoom_in_scale != 1)
+        {
+            return rectangle(0,0, img.nc()*zoom_in_scale-1, img.nr()*zoom_in_scale-1);
+        }
+        else if (zoom_out_scale != 1)
+        {
+            return rectangle(0,0, img.nc()/zoom_out_scale-1, img.nr()/zoom_out_scale-1);
+        }
+        else
+        {
+            return dlib::get_rect(img);
+        }
     }
 
 // ----------------------------------------------------------------------------------------
@@ -5772,18 +5801,46 @@ namespace dlib
             return;
 
         const point origin(total_rect().tl_corner());
-
-        draw_image(c, origin, img, area);
+        
+        // draw the image on the screen
+        const rectangle img_area = total_rect().intersect(area);
+        for (long row = img_area.top(); row <= img_area.bottom(); ++row)
+        {
+            for (long col = img_area.left(); col <= img_area.right(); ++col)
+            {
+                assign_pixel(c[row-c.top()][col-c.left()], 
+                             img[(row-origin.y())*zoom_out_scale/zoom_in_scale][(col-origin.x())*zoom_out_scale/zoom_in_scale]);
+            }
+        }
 
         // now draw all the overlay rectangles
         for (unsigned long i = 0; i < overlay_rects.size(); ++i)
         {
-            draw_rectangle(c, translate_rect(overlay_rects[i].rect, origin), overlay_rects[i].color, area);
+            rectangle orect = overlay_rects[i].rect;
+            orect.left()   = orect.left()*zoom_in_scale/zoom_out_scale;
+            orect.top()    = orect.top()*zoom_in_scale/zoom_out_scale;
+            if (zoom_in_scale != 1)
+            {
+                // make it so the box surrounds the pixels when we zoom in.
+                orect.right()  = (orect.right()+1)*zoom_in_scale/zoom_out_scale;
+                orect.bottom() = (orect.bottom()+1)*zoom_in_scale/zoom_out_scale;
+            }
+            else
+            {
+                orect.right()  = orect.right()*zoom_in_scale/zoom_out_scale;
+                orect.bottom() = orect.bottom()*zoom_in_scale/zoom_out_scale;
+            }
+
+            if (rect_is_selected && selected_rect == i)
+                draw_rectangle(c, translate_rect(orect, origin), invert_pixel(overlay_rects[i].color), area);
+            else
+                draw_rectangle(c, translate_rect(orect, origin), overlay_rects[i].color, area);
+
             if (overlay_rects[i].label.size() != 0)
             {
                 // make a rectangle that is at the spot we want to draw our string
-                rectangle r(overlay_rects[i].rect.br_corner(),  
-                            overlay_rects[i].rect.br_corner() + point(10000,10000));
+                rectangle r(orect.br_corner(),  
+                            orect.br_corner() + point(10000,10000));
                 r = translate_rect(r, origin);
                 mfont->draw_string(c, r, overlay_rects[i].label, overlay_rects[i].color, 0, 
                                    std::string::npos, area);
@@ -5793,7 +5850,372 @@ namespace dlib
         // now draw all the overlay lines 
         for (unsigned long i = 0; i < overlay_lines.size(); ++i)
         {
-            draw_line(c, overlay_lines[i].p1+origin, overlay_lines[i].p2+origin, overlay_lines[i].color, area);
+            draw_line(c, 
+                      zoom_in_scale*overlay_lines[i].p1/zoom_out_scale + origin, 
+                      zoom_in_scale*overlay_lines[i].p2/zoom_out_scale + origin, 
+                      overlay_lines[i].color, area);
+        }
+
+        if (drawing_rect)
+            draw_rectangle(c, rect_to_draw, invert_pixel(default_rect_color), area);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void image_display::
+    on_keydown (
+        unsigned long key,
+        bool is_printable,
+        unsigned long state
+    )
+    {
+        scrollable_region::on_keydown(key,is_printable, state);
+
+        if (!is_printable && !hidden && enabled && rect_is_selected && 
+            (key == base_window::KEY_BACKSPACE || key == base_window::KEY_DELETE))
+        {
+            rect_is_selected = false;
+            overlay_rects.erase(overlay_rects.begin() + selected_rect);
+            parent.invalidate_rectangle(rect);
+
+            if (event_handler.is_set())
+                event_handler();
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void image_display::
+    on_mouse_down (
+        unsigned long btn,
+        unsigned long state,
+        long x,
+        long y,
+        bool is_double_click
+    )
+    {
+        scrollable_region::on_mouse_down(btn, state, x, y, is_double_click);
+
+        if (rect.contains(x,y) == false || hidden || !enabled)
+            return;
+
+        if (!is_double_click && btn == base_window::LEFT && (state&base_window::SHIFT))
+        {
+            drawing_rect = true;
+            rect_anchor = point(x,y);
+
+            if (rect_is_selected)
+            {
+                rect_is_selected = false;
+                parent.invalidate_rectangle(rect);
+            }
+        }
+        else if (drawing_rect)
+        {
+            if (rect_is_selected)
+                rect_is_selected = false;
+
+            drawing_rect = false;
+            parent.invalidate_rectangle(rect);
+        }
+        else if (is_double_click)
+        {
+            const point origin(total_rect().tl_corner());
+            const bool rect_was_selected = rect_is_selected;
+            rect_is_selected = false;
+
+            long best_dist = std::numeric_limits<long>::max();
+            long best_idx = 0;
+
+            // check if this click landed on any of the overlay rectangles
+            for (unsigned long i = 0; i < overlay_rects.size(); ++i)
+            {
+                rectangle orect = overlay_rects[i].rect;
+                orect.left()   = orect.left()*zoom_in_scale/zoom_out_scale;
+                orect.top()    = orect.top()*zoom_in_scale/zoom_out_scale;
+                if (zoom_in_scale != 1)
+                {
+                    // make it so the box surrounds the pixels when we zoom in.
+                    orect.right()  = (orect.right()+1)*zoom_in_scale/zoom_out_scale;
+                    orect.bottom() = (orect.bottom()+1)*zoom_in_scale/zoom_out_scale;
+                }
+                else
+                {
+                    orect.right()  = orect.right()*zoom_in_scale/zoom_out_scale;
+                    orect.bottom() = orect.bottom()*zoom_in_scale/zoom_out_scale;
+                }
+
+                orect = translate_rect(orect, origin);
+
+                const long dist = distance_to_rect_edge(orect, point(x,y));
+
+                if (dist < best_dist)
+                {
+                    best_dist = dist;
+                    best_idx = i;
+                }
+            }
+
+
+            if (best_dist < 13)
+            {
+                rect_is_selected = true;
+                selected_rect = best_idx;
+                if (orect_selected_event_handler.is_set())
+                    orect_selected_event_handler(overlay_rects[best_idx]);
+            }
+
+            if (rect_is_selected || rect_was_selected)
+                parent.invalidate_rectangle(rect);
+        }
+        else if (rect_is_selected)
+        {
+            rect_is_selected = false;
+            parent.invalidate_rectangle(rect);
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    std::vector<image_display::overlay_rect> image_display::
+    get_overlay_rects (
+    ) const
+    {
+        auto_mutex lock(m);
+        return overlay_rects;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void image_display::
+    set_default_overlay_rect_label (
+        const std::string& label
+    )
+    {
+        auto_mutex lock(m);
+        default_rect_label = label;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    std::string image_display::
+    get_default_overlay_rect_label (
+    ) const
+    {
+        auto_mutex lock(m);
+        return default_rect_label;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void image_display::
+    set_default_overlay_rect_color (
+        const rgb_alpha_pixel& color
+    )
+    {
+        auto_mutex lock(m);
+        default_rect_color = color;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    rgb_alpha_pixel image_display::
+    get_default_overlay_rect_color (
+    ) const
+    {
+        auto_mutex lock(m);
+        return default_rect_color;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void image_display::
+    on_mouse_up (
+        unsigned long btn,
+        unsigned long state,
+        long x,
+        long y
+    )
+    {
+        scrollable_region::on_mouse_up(btn,state,x,y);
+
+        if (drawing_rect && btn == base_window::LEFT && (state&base_window::SHIFT) &&
+            !hidden && enabled)
+        {
+            const point origin(total_rect().tl_corner());
+            point c1 = point(x,y) - origin;
+            point c2 = rect_anchor - origin;
+
+            if (zoom_in_scale != 1)
+            {
+                c1 = c1/(double)zoom_in_scale;
+                c2 = c2/(double)zoom_in_scale;
+            }
+            else if (zoom_out_scale != 1)
+            {
+                c1 = c1*(double)zoom_out_scale;
+                c2 = c2*(double)zoom_out_scale;
+            }
+
+            rectangle new_rect(c1,c2);
+            if (zoom_in_scale != 1)
+            {
+                // When we are zoomed in we adjust the rectangles a little so they
+                // are drown surrounding the pixels inside the rect.  This adjustment
+                // is necessary to make this code consistent with this goal.
+                new_rect.right() -= 1;
+                new_rect.bottom() -= 1;
+            }
+
+
+            if (new_rect.width() > 0 && new_rect.height() > 0)
+            {
+                add_overlay(overlay_rect(new_rect, default_rect_color, default_rect_label));
+
+                if (event_handler.is_set())
+                    event_handler();
+            }
+        }
+
+        if (drawing_rect)
+        {
+            drawing_rect = false;
+            parent.invalidate_rectangle(rect);
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void image_display::
+    on_mouse_move (
+        unsigned long state,
+        long x,
+        long y
+    )
+    {
+        scrollable_region::on_mouse_move(state,x,y);
+
+        if (drawing_rect)
+        {
+            if ((state&base_window::LEFT) && (state&base_window::SHIFT) && !hidden && enabled)
+            {
+                rectangle new_rect(point(x,y), rect_anchor);
+                parent.invalidate_rectangle(new_rect + rect_to_draw);
+                rect_to_draw = new_rect;
+            }
+            else
+            {
+                drawing_rect = false;
+                parent.invalidate_rectangle(rect);
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void image_display::
+    on_wheel_up (
+        unsigned long state
+    )
+    {
+        // disable mouse wheel if the user is drawing a rectangle
+        if (drawing_rect)
+            return;
+
+        // if CONTROL is not being held down
+        if ((state & base_window::CONTROL) == 0)
+        {
+            scrollable_region::on_wheel_up(state);
+            return;
+        }
+
+        if (rect.contains(lastx,lasty) == false || hidden || !enabled)
+            return;
+
+
+        if (zoom_in_scale < 100 && zoom_out_scale == 1)
+        {
+            const point mouse_loc(lastx, lasty);
+            // the pixel in img that the mouse is over
+            const point pix_loc = (mouse_loc - total_rect().tl_corner())/zoom_in_scale;
+
+            zoom_in_scale = zoom_in_scale*10/9 + 1;
+
+            set_total_rect_size(img.nc()*zoom_in_scale, img.nr()*zoom_in_scale);
+
+            // make is to the pixel under the mouse doesn't move while we zoom
+            const point delta = total_rect().tl_corner() - (mouse_loc - pix_loc*zoom_in_scale);
+            scroll_to_rect(translate_rect(display_rect(), delta)); 
+        }
+        else if (zoom_out_scale != 1)
+        {
+            const point mouse_loc(lastx, lasty);
+            // the pixel in img that the mouse is over
+            const point pix_loc = (mouse_loc - total_rect().tl_corner())*zoom_out_scale;
+
+            zoom_out_scale = zoom_out_scale*9/10;
+            if (zoom_out_scale == 0)
+                zoom_out_scale = 1;
+
+            set_total_rect_size(img.nc()/zoom_out_scale, img.nr()/zoom_out_scale);
+
+            // make is to the pixel under the mouse doesn't move while we zoom
+            const point delta = total_rect().tl_corner() - (mouse_loc - pix_loc/zoom_out_scale);
+            scroll_to_rect(translate_rect(display_rect(), delta)); 
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void image_display::
+    on_wheel_down (
+        unsigned long state
+    )
+    {
+        // disable mouse wheel if the user is drawing a rectangle
+        if (drawing_rect)
+            return;
+
+        // if CONTROL is not being held down
+        if ((state & base_window::CONTROL) == 0)
+        {
+            scrollable_region::on_wheel_down(state);
+            return;
+        }
+
+        if (rect.contains(lastx,lasty) == false || hidden || !enabled)
+            return;
+
+
+        if (zoom_in_scale != 1)
+        {
+            const point mouse_loc(lastx, lasty);
+            // the pixel in img that the mouse is over
+            const point pix_loc = (mouse_loc - total_rect().tl_corner())/zoom_in_scale;
+
+            zoom_in_scale = zoom_in_scale*9/10;
+            if (zoom_in_scale == 0)
+                zoom_in_scale = 1;
+
+            set_total_rect_size(img.nc()*zoom_in_scale, img.nr()*zoom_in_scale);
+
+            // make is to the pixel under the mouse doesn't move while we zoom
+            const point delta = total_rect().tl_corner() - (mouse_loc - pix_loc*zoom_in_scale);
+            scroll_to_rect(translate_rect(display_rect(), delta)); 
+        }
+        else if (std::max(img.nr(), img.nc())/zoom_out_scale > 10)
+        {
+            const point mouse_loc(lastx, lasty);
+            // the pixel in img that the mouse is over
+            const point pix_loc = (mouse_loc - total_rect().tl_corner())*zoom_out_scale;
+
+            zoom_out_scale = zoom_out_scale*10/9 + 1;
+
+            set_total_rect_size(img.nc()/zoom_out_scale, img.nr()/zoom_out_scale);
+
+            // make is to the pixel under the mouse doesn't move while we zoom
+            const point delta = total_rect().tl_corner() - (mouse_loc - pix_loc/zoom_out_scale);
+            scroll_to_rect(translate_rect(display_rect(), delta)); 
         }
     }
 
@@ -5806,9 +6228,7 @@ namespace dlib
     image_window::
     image_window(
     ) :
-        gui_img(*this),
-        nr(0),
-        nc(0)
+        gui_img(*this)
     {
         // show this window on the screen
         show();
