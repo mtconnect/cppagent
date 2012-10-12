@@ -52,8 +52,7 @@ typedef std::vector<AttributeItem> AttributeList;
 
 class ComponentEvent;
 typedef RefCountedPtr<ComponentEvent> ComponentEventPtr;
-typedef dlib::array_kernel_2<ComponentEventPtr> ComponentEventPtrArrayBase;
-typedef dlib::array_expand_1<ComponentEventPtrArrayBase> ComponentEventPtrArray;
+typedef dlib::array<ComponentEventPtr> ComponentEventPtrArray;
 
 /* Component Event */
 class ComponentEvent : public RefCounted
