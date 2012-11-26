@@ -75,6 +75,12 @@ public:
   void setReconnectInterval(int aInterval) { mReconnectInterval = aInterval; }
   int getReconnectInterval() const { return mReconnectInterval; }
   
+  void setRelativeTime(bool aFlag) { mRelativeTime = aFlag; }
+  bool getrelativeTime() { return mRelativeTime; }
+  
+  uint64_t getBaseTime() { return mBaseTime; }
+  uint64_t getBaseOffset() { return mBaseOffset; }
+  
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
   virtual void protocolCommand(const std::string& data);
@@ -105,6 +111,11 @@ protected:
   bool mDupCheck;
   bool mAutoAvailable;
   bool mIgnoreTimestamps;
+  bool mRelativeTime;
+  
+  // For relative times
+  uint64_t mBaseTime;
+  uint64_t mBaseOffset;
   
   // For multiline asset parsing...
   bool mGatheringAsset;

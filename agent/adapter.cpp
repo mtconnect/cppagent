@@ -46,8 +46,8 @@ Adapter::Adapter(const string& device,
                  const unsigned int port,
                  int aLegacyTimeout)
   : Connector(server, port, aLegacyTimeout), mDeviceName(device), mRunning(true),
-    mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false),
-    mGatheringAsset(false), mReconnectInterval(10 * 1000)
+    mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false), mRelativeTime(false),
+    mBaseTime(0), mBaseOffset(0), mGatheringAsset(false),  mReconnectInterval(10 * 1000)
 {
 }
 
@@ -140,8 +140,16 @@ void Adapter::processData(const string& data)
   getline(toParse, key, '|');
   string time = key;
 
-  // If this function is being used as an API, add the current time in
-  if (mIgnoreTimestamps || time.empty()) {
+  // Check how to handle time. If the time is relative, then we need to compute the first
+  // offsets, otherwise, if this function is being used as an API, add the current time.
+  if (mRelativeTime) {
+    uint64_t offset = strtoull(time.c_str(), 0, 10);
+    if (mBaseOffset == 0) {
+      mBaseTime = getCurrentTimeInMs();
+      mBaseOffset = offset;
+    }    
+    time = getRelativeTimeString(mBaseTime + (offset - mBaseOffset));
+  } else if (mIgnoreTimestamps || time.empty()) {
     time = getCurrentTime(GMT_UV_SEC);
   }
   

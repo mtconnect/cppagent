@@ -319,6 +319,7 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", aIgnoreTimestamps ||
                                                                                   adp->isIgnoringTimestamps()));
       adp->setRealTime(get_bool_with_default(adapter, "RealTime", false));
+      adp->setRelativeTime(get_bool_with_default(adapter, "RelativeTime", false));
       adp->setReconnectInterval(reconnectInterval);
       
       if (adapter.is_key_defined("AdditionalDevices")) {

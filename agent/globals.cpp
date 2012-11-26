@@ -95,7 +95,7 @@ string getCurrentTime(TimeFormat format)
   
   if (format == GMT_UV_SEC)
   {
-    sprintf(timestamp + strlen(timestamp), ".%04dZ", st.wMilliseconds);
+    sprintf(timestamp + strlen(timestamp), ".%03dZ", st.wMilliseconds);
   }
   else
   {
@@ -139,6 +139,42 @@ string getCurrentTime(TimeFormat format)
   return string(timeBuffer);
 #endif
 }
+
+uint64_t getCurrentTimeInMs()
+{
+  uint64_t now;
+#ifdef WIN32
+  SYSTEMTIME st;
+  GetSystemTime(&st);
+  now = st.wSeconds * 1000;
+  now += st.wMilliseconds;
+#else
+  struct timeval tv;
+  struct timezone tz;
+  
+  gettimeofday(&tv, &tz);
+  now = tv.tv_sec * 1000;
+  now += tv.tv_usec / 1000;
+#endif  
+  return now;
+}
+
+string getRelativeTimeString(uint64_t aTime)
+{
+  char timeBuffer[50];
+  struct tm * timeinfo;
+  struct timeval tv;
+  
+  tv.tv_sec = aTime / 1000;
+  tv.tv_usec = (aTime % 1000) * 1000;
+  
+  timeinfo = gmtime(&tv.tv_sec);
+  strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S", timeinfo);
+  sprintf(timeBuffer + strlen(timeBuffer), ".%03dZ", tv.tv_usec);
+  
+  return string(timeBuffer);
+}
+
 
 unsigned int getCurrentTimeInSec()
 {

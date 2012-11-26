@@ -54,6 +54,7 @@
 
 #ifdef WIN32
 typedef unsigned __int64 uint64_t;
+#define strtoll _strtoui64
 #else
 #include <stdint.h>
 #endif
@@ -98,6 +99,12 @@ bool isNonNegativeInteger(const std::string& s);
 
 /* Get the current time formatted */
 std::string getCurrentTime(TimeFormat format);
+
+/* time_t to the ms */
+uint64_t getCurrentTimeInMs();
+
+/* Get the relative time from using an uint64 offset in ms to time_t as a web time */
+std::string getRelativeTimeString(uint64_t aTime);
 
 /* Get the current time in number of seconds as an integer */
 unsigned int getCurrentTimeInSec();
