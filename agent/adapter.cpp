@@ -47,7 +47,7 @@ Adapter::Adapter(const string& device,
                  int aLegacyTimeout)
   : Connector(server, port, aLegacyTimeout), mDeviceName(device), mRunning(true),
     mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false), mRelativeTime(false),
-    mBaseTime(0), mBaseOffset(0), mGatheringAsset(false),  mReconnectInterval(10 * 1000)
+    mBaseTime(0), mBaseOffset(0), mParseTime(false), mGatheringAsset(false),  mReconnectInterval(10 * 1000)
 {
 }
 
@@ -143,12 +143,23 @@ void Adapter::processData(const string& data)
   // Check how to handle time. If the time is relative, then we need to compute the first
   // offsets, otherwise, if this function is being used as an API, add the current time.
   if (mRelativeTime) {
-    uint64_t offset = strtoull(time.c_str(), 0, 10);
-    if (mBaseOffset == 0) {
-      mBaseTime = getCurrentTimeInMs();
-      mBaseOffset = offset;
-    }    
-    time = getRelativeTimeString(mBaseTime + (offset - mBaseOffset));
+    uint64_t offset;
+    if (mBaseTime == 0) {
+      mBaseTime = getCurrentTimeInMicros();
+
+      if (time.find('T') != string::npos) {
+        mParseTime = true;
+        mBaseOffset = parseTimeMicro(time);
+      } else {
+        mBaseOffset = strtoull(time.c_str(), 0, 10);
+      }
+      offset = 0;
+    } else if (mParseTime) {
+      offset = parseTimeMicro(time) - mBaseOffset;
+    } else {
+      offset = (strtoull(time.c_str(), 0, 10) - mBaseOffset) * 1000;
+    }
+    time = getRelativeTimeString(mBaseTime + offset);
   } else if (mIgnoreTimestamps || time.empty()) {
     time = getCurrentTime(GMT_UV_SEC);
   }
@@ -331,6 +342,7 @@ void Adapter::protocolCommand(const std::string& data)
 
 void Adapter::disconnected()
 {
+  mBaseTime = 0;
   mAgent->disconnected(this, mAllDevices);
 }
 

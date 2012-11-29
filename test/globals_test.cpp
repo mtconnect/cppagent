@@ -191,3 +191,15 @@ void GlobalsTest::testAddNamespace()
   result = addNamespace("//Device/DataItems/", "m");
   CPPUNIT_ASSERT_EQUAL(string("//m:Device/m:DataItems/"), result);
 }
+
+void GlobalsTest::testParseTimeMilli()
+{
+  string v = "2012-11-20T12:33:22.123456";
+  
+  uint64_t time = parseTimeMicro(v);
+  CPPUNIT_ASSERT(1353414802123456LL == time);
+
+  v = "2012-11-20T12:33:22.123";
+  time = parseTimeMicro(v);
+  CPPUNIT_ASSERT(1353414802123000LL == time);
+}

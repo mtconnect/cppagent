@@ -1325,6 +1325,69 @@ void AgentTest::testStreamDataObserver()
   } 
 }
 
+void AgentTest::testRelativeTime()
+{
+  {
+    path = "/sample";
+    
+    adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+    CPPUNIT_ASSERT(adapter);
+    
+    adapter->setRelativeTime(true);
+    adapter->setBaseOffset(1);
+    adapter->setBaseTime(1353414802123456); /* 2012-11-20 12:33:22.123456 UTC */
+    
+    /* Add a 10.654321 seconds */
+    adapter->processData("10654|line|204");
+    
+    {
+      PARSE_XML_RESPONSE;
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2012-11-20T12:33:32.776456Z");
+    }
+  }
+}
+
+void AgentTest::testRelativeParsedTime()
+{
+  {
+    path = "/sample";
+    
+    adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+    CPPUNIT_ASSERT(adapter);
+    
+    adapter->setRelativeTime(true);
+    adapter->setParseTime(true);
+    adapter->setBaseOffset(1354165286555666); /* 2012-11-29 05:01:26.555666 UTC */
+    adapter->setBaseTime(1353414802123456); /* 2012-11-20 12:33:22.123456 UTC */
+
+    /* Add a 10.111000 seconds */
+    adapter->processData("2012-11-29T05:01:36.666666|line|100");
+    
+    {
+      PARSE_XML_RESPONSE;
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2012-11-20T12:33:32.234456Z");
+    }
+  }  
+}
+
+void AgentTest::testRelativeParsedTimeDetection()
+{
+  path = "/sample";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  adapter->setRelativeTime(true);
+  
+  /* Add a 10.111000 seconds */
+  adapter->processData("2012-11-29T05:01:26.555666|line|100");
+  
+  CPPUNIT_ASSERT(adapter->isParsingTime());
+  CPPUNIT_ASSERT(adapter->getBaseOffset() == 1354165286555666LL);
+}
+
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                                     Agent::key_value_map &aQueries)
 {  

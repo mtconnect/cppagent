@@ -93,6 +93,9 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testStreamDataObserver);
   CPPUNIT_TEST(testFailWithDuplicateDeviceUUID);
   CPPUNIT_TEST(testMultipleDisconnect);
+  CPPUNIT_TEST(testRelativeTime);
+  CPPUNIT_TEST(testRelativeParsedTime);
+  CPPUNIT_TEST(testRelativeParsedTimeDetection);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -188,6 +191,11 @@ protected:
   
   // Test failure when adding a duplicate device uuid.
   void testFailWithDuplicateDeviceUUID();
+  
+  // Relative time test
+  void testRelativeTime();
+  void testRelativeParsedTime();
+  void testRelativeParsedTimeDetection();
     
   /* Helper method to test expected string, given optional query, & run tests */
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, Agent::key_value_map &aQueries);

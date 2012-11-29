@@ -246,9 +246,9 @@ void ComponentEvent::convertValue(const string& value)
       while (cp != NULL && *cp != '\0') 
       {
 		float v = strtof(cp, &np);
-		if (cp != np)
-		  mTimeSeries.push_back(v);
-		else
+		if (cp != np) {
+		  mTimeSeries.push_back(mDataItem->convertValue(v));
+		} else
 		  np = NULL;
 		cp = np;
       }

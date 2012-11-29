@@ -185,6 +185,7 @@ public:
 
   bool conversionRequired();
   std::string convertValue(const std::string& value);
+  float convertValue(float aValue);
   
   Adapter *getDataSource() const { return mDataSource;  }
   void setDataSource(Adapter *aSource) { if (mDataSource != aSource) mDataSource = aSource; }

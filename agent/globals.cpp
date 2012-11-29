@@ -35,6 +35,8 @@
 #include "../lib/dlib/all/source.cpp"
 
 #include "globals.hpp"
+#include <time.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -104,8 +106,6 @@ string getCurrentTime(TimeFormat format)
   
   return timestamp;
 #else
-  
-  
   char timeBuffer[50];
   struct tm * timeinfo;
   struct timeval tv;
@@ -140,22 +140,21 @@ string getCurrentTime(TimeFormat format)
 #endif
 }
 
-uint64_t getCurrentTimeInMs()
+uint64_t getCurrentTimeInMicros()
 {
   uint64_t now;
 #ifdef WIN32
   SYSTEMTIME st;
   GetSystemTime(&st);
-  now = st.wSeconds * 1000;
+  now = st.wSeconds * 1000000;
   now += st.wMilliseconds;
 #else
   struct timeval tv;
   struct timezone tz;
   
   gettimeofday(&tv, &tz);
-  now = tv.tv_sec * 1000;
-  now += tv.tv_usec / 1000;
-#endif  
+  now = tv.tv_sec * 1000000 + tv.tv_usec;
+#endif
   return now;
 }
 
@@ -165,12 +164,12 @@ string getRelativeTimeString(uint64_t aTime)
   struct tm * timeinfo;
   struct timeval tv;
   
-  tv.tv_sec = aTime / 1000;
-  tv.tv_usec = (aTime % 1000) * 1000;
+  tv.tv_sec = aTime / 1000000;
+  tv.tv_usec = aTime % 1000000;
   
   timeinfo = gmtime(&tv.tv_sec);
   strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S", timeinfo);
-  sprintf(timeBuffer + strlen(timeBuffer), ".%03dZ", tv.tv_usec);
+  sprintf(timeBuffer + strlen(timeBuffer), ".%06dZ", tv.tv_usec);
   
   return string(timeBuffer);
 }
@@ -206,6 +205,37 @@ int getEnumeration(const string& name, const string *array, unsigned int size)
   
   return ENUM_MISS;
 }
+
+uint64_t parseTimeMicro(std::string &aTime)
+{
+  struct tm timeinfo;
+  memset(&timeinfo, 0, sizeof(timeinfo));
+  char ms[16];
+  timeinfo.tm_zone = (char*) "UTC";
+  
+  int c = sscanf(aTime.c_str(), "%d-%d-%dT%d:%d:%d%15s", &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday,
+                 &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec, (char*) &ms);
+  ms[15] = '\0';
+  
+  timeinfo.tm_mon -= 1;
+  timeinfo.tm_year -= 1900;
+  
+  if (c < 7)
+    return 0;
+
+  uint64_t time = (mktime(&timeinfo) - timezone) * 1000000;
+  
+  int ms_v = 0;
+  int len = strlen(ms);
+  if (len > 0) {
+    ms_v = strtol(ms + 1, 0, 10);
+    for (int pf = 7 - len; pf > 0; pf--)
+      ms_v *= 10;
+  }
+  
+  return time + ms_v;
+}
+
 
 static string::size_type insertPrefix(string &aPath, string::size_type &aPos,
 				      const string aPrefix)

@@ -81,6 +81,13 @@ public:
   uint64_t getBaseTime() { return mBaseTime; }
   uint64_t getBaseOffset() { return mBaseOffset; }
   
+  bool isParsingTime() { return mParseTime; }
+  void setParseTime(bool aFlag) { mParseTime = aFlag; }
+  
+  /* For testing... */
+  void setBaseOffset(uint64_t aOffset) { mBaseOffset = aOffset; }
+  void setBaseTime(uint64_t aOffset) { mBaseTime = aOffset; }
+  
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
   virtual void protocolCommand(const std::string& data);
@@ -116,6 +123,8 @@ protected:
   // For relative times
   uint64_t mBaseTime;
   uint64_t mBaseOffset;
+  
+  bool mParseTime;
   
   // For multiline asset parsing...
   bool mGatheringAsset;

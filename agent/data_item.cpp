@@ -291,6 +291,21 @@ bool DataItem::conversionRequired()
   return mConversionRequired;
 }
 
+float DataItem::convertValue(float aValue)
+{
+  if (!mConversionDetermined)
+    conversionRequired();
+  
+  if (!mConversionRequired) {
+    return aValue;
+  } else if (mHasFactor) {
+    return (aValue + mConversionOffset) * mConversionFactor;
+  } else {
+    computeConversionFactors();
+    return convertValue(aValue);
+  }
+}
+
 /* ComponentEvent protected methods */
 string DataItem::convertValue(const string& value)
 {

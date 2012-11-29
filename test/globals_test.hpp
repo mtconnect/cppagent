@@ -54,6 +54,7 @@ class GlobalsTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testGetEnumerations);
   CPPUNIT_TEST(testGetCurrentTime);
   CPPUNIT_TEST(testAddNamespace);
+  CPPUNIT_TEST(testParseTimeMilli);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -66,6 +67,7 @@ protected:
   void testGetEnumerations();
   void testGetCurrentTime();
   void testAddNamespace();
+  void testParseTimeMilli();
   
 public:
   void setUp();
