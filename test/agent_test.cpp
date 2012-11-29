@@ -501,6 +501,7 @@ void AgentTest::testSampleAtNextSeq()
 
 void AgentTest::testSequenceNumberRollover()
 {
+#ifndef WIN32
   Agent::key_value_map kvm;
 
   adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
@@ -560,7 +561,7 @@ void AgentTest::testSequenceNumberRollover()
   }
 
   CPPUNIT_ASSERT_EQUAL((uint64_t) 0xFFFFFFA0 + 128, a->getSequence());  
-  
+#endif
 }
 
 
