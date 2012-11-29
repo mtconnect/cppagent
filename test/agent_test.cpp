@@ -1389,6 +1389,23 @@ void AgentTest::testRelativeParsedTimeDetection()
   CPPUNIT_ASSERT(adapter->getBaseOffset() == 1354165286555666LL);
 }
 
+void AgentTest::testRelativeOffsetDetection()
+{
+  path = "/sample";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  adapter->setRelativeTime(true);
+  
+  /* Add a 10.111000 seconds */
+  adapter->processData("1234556|line|100");
+  
+  CPPUNIT_ASSERT(!adapter->isParsingTime());
+  CPPUNIT_ASSERT(adapter->getBaseOffset() == 1234556LL);
+}
+
+
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                                     Agent::key_value_map &aQueries)
 {  
