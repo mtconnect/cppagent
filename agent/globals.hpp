@@ -54,7 +54,7 @@
 
 #ifdef WIN32
 typedef unsigned __int64 uint64_t;
-#define strtoll _strtoui64
+#define strtoull _strtoui64
 #else
 #include <stdint.h>
 #endif

@@ -47,11 +47,6 @@ static const string sUnavailable("UNAVAILABLE");
 static const string sConditionUnavailable("UNAVAILABLE|||");
 
 static const string sAvailable("AVAILABLE");
-
-#ifdef WIN32
-#define strtoll _strtoi64
-#endif
-
 static dlib::logger sLogger("agent");
 
 /* Agent public methods */
@@ -1343,7 +1338,7 @@ uint64_t Agent::checkAndGetParam64(const key_value_map& queries,
                         "'" + param + "' must be a positive integer.");
   }
   
-  uint64_t value = strtoll(queries[param].c_str(), NULL, 10);
+  uint64_t value = strtoull(queries[param].c_str(), NULL, 10);
   
   if (minValue != NO_VALUE64 && value < minValue)
   {

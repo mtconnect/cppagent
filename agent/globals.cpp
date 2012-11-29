@@ -146,7 +146,7 @@ uint64_t getCurrentTimeInMicros()
 #ifdef WIN32
   SYSTEMTIME st;
   GetSystemTime(&st);
-  now = st.wSeconds * 1000000;
+  now = st.wSecond * 1000000;
   now += st.wMilliseconds;
 #else
   struct timeval tv;
@@ -161,15 +161,16 @@ uint64_t getCurrentTimeInMicros()
 string getRelativeTimeString(uint64_t aTime)
 {
   char timeBuffer[50];
+  time_t seconds;
+  int micros;
   struct tm * timeinfo;
-  struct timeval tv;
   
-  tv.tv_sec = aTime / 1000000;
-  tv.tv_usec = aTime % 1000000;
+  seconds = aTime / 1000000;
+  micros = aTime % 1000000;
   
-  timeinfo = gmtime(&tv.tv_sec);
+  timeinfo = gmtime(&seconds);
   strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S", timeinfo);
-  sprintf(timeBuffer + strlen(timeBuffer), ".%06dZ", tv.tv_usec);
+  sprintf(timeBuffer + strlen(timeBuffer), ".%06dZ", micros);
   
   return string(timeBuffer);
 }
@@ -211,7 +212,6 @@ uint64_t parseTimeMicro(std::string &aTime)
   struct tm timeinfo;
   memset(&timeinfo, 0, sizeof(timeinfo));
   char ms[16];
-  timeinfo.tm_zone = (char*) "UTC";
   
   int c = sscanf(aTime.c_str(), "%d-%d-%dT%d:%d:%d%15s", &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday,
                  &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec, (char*) &ms);

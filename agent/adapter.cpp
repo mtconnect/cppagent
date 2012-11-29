@@ -34,6 +34,7 @@
 #define __STDC_LIMIT_MACROS 1
 #include "adapter.hpp"
 #include "device.hpp"
+#include "globals.hpp"
 #include "dlib/logger.h"
 
 using namespace std;
