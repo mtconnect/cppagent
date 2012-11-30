@@ -1397,7 +1397,7 @@ void AgentTest::testRelativeOffsetDetection()
   CPPUNIT_ASSERT(adapter);
   
   adapter->setRelativeTime(true);
-  
+
   /* Add a 10.111000 seconds */
   adapter->processData("1234556|line|100");
   
@@ -1405,6 +1405,27 @@ void AgentTest::testRelativeOffsetDetection()
   CPPUNIT_ASSERT(adapter->getBaseOffset() == 1234556LL);
 }
 
+void AgentTest::testDynamicCalibration()
+{
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+
+  /* Add a 10.111000 seconds */
+  adapter->protocolCommand("* calibration:Yact|.001|200.0|Zact|0.002|300");
+  DataItem *di = a->getDataItemByName("LinuxCNC", "Yact");
+  CPPUNIT_ASSERT(di);
+  
+  CPPUNIT_ASSERT(di->hasFactor());
+  CPPUNIT_ASSERT_EQUAL(0.001, di->getConversionFactor());
+  CPPUNIT_ASSERT_EQUAL(200.0, di->getConversionOffset());
+
+   di = a->getDataItemByName("LinuxCNC", "Zact");
+  CPPUNIT_ASSERT(di);
+
+  CPPUNIT_ASSERT(di->hasFactor());
+  CPPUNIT_ASSERT_EQUAL(0.002, di->getConversionFactor());
+  CPPUNIT_ASSERT_EQUAL(300.0, di->getConversionOffset());
+}
 
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                                     Agent::key_value_map &aQueries)

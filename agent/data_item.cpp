@@ -413,6 +413,17 @@ void DataItem::computeConversionFactors()
   mHasFactor = true;
 }
 
+void DataItem::setConversionFactor(double aFactor, double aOffset)
+{
+  mHasFactor = true;
+  if (aFactor == 1.0 && mConversionOffset == 0.0)
+    mConversionRequired = false;
+  else {
+    mConversionFactor = aFactor;
+    mConversionOffset = aOffset;
+    mConversionRequired = true;
+  }
+}
 
 double DataItem::simpleFactor(const string& units)
 {

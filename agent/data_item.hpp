@@ -135,9 +135,13 @@ public:
   const std::string &getSampleRate() const { return mSampleRate; }
   
   float getNativeScale() const { return mNativeScale; }
-  double getConversionFactor() const;
+  double getConversionFactor() const { return mConversionFactor; }
+  double getConversionOffset() const { return mConversionOffset; }
+  bool hasFactor() const { return mHasFactor; }
   ECategory getCategory() const { return mCategory; }
   ERepresentation getRepresentation() const { return mRepresentation; }
+  
+  void setConversionFactor(double aFactor, double aOffset);
   
   /* Returns if data item has this attribute */
   bool hasName(const std::string& name);

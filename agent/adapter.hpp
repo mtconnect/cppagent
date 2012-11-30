@@ -103,6 +103,9 @@ public:
   void addDevice(std::string &aDevice);
   
 protected:
+  void parseCalibration(const std::string &aString);
+  
+protected:
   /* Pointer to the agent */
   Agent *mAgent;
   Device *mDevice;

@@ -335,10 +335,33 @@ void Adapter::protocolCommand(const std::string& data)
         mDevice->setDescription(value);
       else if (key == "nativeName")
         mDevice->setNativeName(value);
+      else if (key == "calibration")
+        parseCalibration(value);
       else
         sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
     }
   }  
+}
+
+void Adapter::parseCalibration(const std::string &aLine)
+{
+  istringstream toParse(aLine);
+
+  // Look for name|factor|offset triples
+  string name, factor, offset;
+  while (getline(toParse, name, '|') &&
+         getline(toParse, factor, '|') &&
+         getline(toParse, offset, '|')) {
+    // Convert to a floating point number
+    DataItem *di = mDevice->getDeviceDataItem(name);
+    if (di == NULL) {
+      sLogger << LWARN << "Cannot find data item to calibrate for " << name;
+    } else {
+      double fact_value = strtod(factor.c_str(), NULL);
+      double off_value = strtod(offset.c_str(), NULL);
+      di->setConversionFactor(fact_value, off_value);
+    }
+  }
 }
 
 void Adapter::disconnected()
