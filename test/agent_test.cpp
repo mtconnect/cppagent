@@ -1439,6 +1439,20 @@ void AgentTest::testDynamicCalibration()
   }
 }
 
+void AgentTest::testInitialTimeSeriesValues()
+{
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+
+  path = "/current";
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']", "UNAVAILABLE");
+  }
+}
+
+
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                                     Agent::key_value_map &aQueries)
 {  

@@ -714,7 +714,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
   
   addAttributes(writer, result->getAttributes());
 
-  if (result->isTimeSeries()) {
+  if (result->isTimeSeries() && result->getValue() != "UNAVAILABLE") {
     ostringstream ostr;
     ostr.precision(6);
     const vector<float> &v = result->getTimeSeries();
