@@ -1411,20 +1411,32 @@ void AgentTest::testDynamicCalibration()
   CPPUNIT_ASSERT(adapter);
 
   /* Add a 10.111000 seconds */
-  adapter->protocolCommand("* calibration:Yact|.001|200.0|Zact|0.002|300");
+  adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
   DataItem *di = a->getDataItemByName("LinuxCNC", "Yact");
   CPPUNIT_ASSERT(di);
   
   CPPUNIT_ASSERT(di->hasFactor());
-  CPPUNIT_ASSERT_EQUAL(0.001, di->getConversionFactor());
+  CPPUNIT_ASSERT_EQUAL(0.01, di->getConversionFactor());
   CPPUNIT_ASSERT_EQUAL(200.0, di->getConversionOffset());
 
    di = a->getDataItemByName("LinuxCNC", "Zact");
   CPPUNIT_ASSERT(di);
 
   CPPUNIT_ASSERT(di->hasFactor());
-  CPPUNIT_ASSERT_EQUAL(0.002, di->getConversionFactor());
+  CPPUNIT_ASSERT_EQUAL(0.02, di->getConversionFactor());
   CPPUNIT_ASSERT_EQUAL(300.0, di->getConversionOffset());
+  
+  adapter->processData("TIME|Yact|200|Zact|600");
+  adapter->processData("TIME|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 5118 5117 5117 5119 5119 5118 5118 5118 5118 5118");
+  
+  path = "/current";
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='y1']", "4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='z1']", "18");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']", "56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.19 56.19 56.18 56.18 56.17 56.17 56.19 56.19 56.18 56.18 56.18 56.18 56.18");
+  }
 }
 
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
