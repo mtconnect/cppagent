@@ -1044,12 +1044,10 @@ void Agent::streamData(ostream& out,
         // buffer.
         if (!current) start = end;
         
-        // Measure the delta time between the point you last fetched data to now.
-        uint64 delta = ts.get_timestamp() - last;
-        if (delta < interMicros) {
-          // Sleep the remainder
-          dlib::sleep((interMicros - delta) / 1000);
-        }
+        
+        // For replaying of events, we will stream as fast as we can with a 1ms sleep
+        // to allow other threads to run.
+        dlib::sleep(1);
       } else if (observer.wait(aHeartbeat)) {
         // Make sure the observer was signaled!
         if (!observer.wasSignaled())
