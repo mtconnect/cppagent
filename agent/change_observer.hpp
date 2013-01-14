@@ -36,14 +36,18 @@ public:
     else
       return true;
   }
-  void signal(uint64_t aSequence) { 
+  void signal(uint64_t aSequence) {
     dlib::auto_mutex lock(mMutex);
     if (mSequence > aSequence && aSequence != 0)
       mSequence = aSequence;
     mSignal.signal(); 
   }
-  uint64_t getSequence() { return mSequence; }
-  bool wasSignaled() { return mSequence != UINT64_MAX; }
+  uint64_t getSequence() const {
+    return mSequence;
+  }
+  bool wasSignaled() const {
+    return mSequence != UINT64_MAX;
+  }
   void reset() { 
     dlib::auto_mutex lock(mMutex); 
     mSequence = UINT64_MAX; 
@@ -53,7 +57,7 @@ private:
   dlib::rmutex mMutex;
   dlib::rsignaler mSignal;
   std::vector<ChangeSignaler*> mSignalers;
-  uint64_t mSequence;
+  volatile uint64_t mSequence;
   
 protected:
   friend class ChangeSignaler;
