@@ -1069,25 +1069,27 @@ void Agent::streamData(ostream& out,
           delta = (ts.get_timestamp() - last) / 1000;
         }
         
-        dlib::auto_mutex lock(*mSequenceLock);
+        {
+          dlib::auto_mutex lock(*mSequenceLock);
         
-        // Make sure the observer was signaled!
-        if (!observer.wasSignaled()) {
-          // If nothing came out during the last wait, we may have still have advanced
-          // the sequence number. We should reset the start to something closer to the
-          // current sequence. If we lock the sequence lock, we can check if the observer
-          // was signaled between the time the wait timed out and the mutex was locked.
-          // Otherwise, nothing has arrived and we set to the next sequence number to
-          // the next sequence number to be allocated and continue.
-          start = mSequence;
-        } else {
-          // Get the sequence # signaled in the observer when the earliest event arrived.
-          // This will allow the next set of data to be pulled. Any later events will have
-          // greater sequence numbers, so this should not cause a problem. Also, signaled
-          // sequence numbers can only decrease, never increase.
-          start = observer.getSequence();
+          // Make sure the observer was signaled!
+          if (!observer.wasSignaled()) {
+            // If nothing came out during the last wait, we may have still have advanced
+            // the sequence number. We should reset the start to something closer to the
+            // current sequence. If we lock the sequence lock, we can check if the observer
+            // was signaled between the time the wait timed out and the mutex was locked.
+            // Otherwise, nothing has arrived and we set to the next sequence number to
+            // the next sequence number to be allocated and continue.
+            start = mSequence;
+          } else {
+            // Get the sequence # signaled in the observer when the earliest event arrived.
+            // This will allow the next set of data to be pulled. Any later events will have
+            // greater sequence numbers, so this should not cause a problem. Also, signaled
+            // sequence numbers can only decrease, never increase.
+            start = observer.getSequence();
+          }
         }
-        
+
         // Now wait the remainder if we triggered before the timer was up.
         delta = ts.get_timestamp() - last;
         if (delta < interMicros) {
