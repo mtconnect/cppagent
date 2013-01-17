@@ -20,7 +20,7 @@
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS 1
 #endif
-#if _MSC_VER > 1400
+#if _MSC_VER > 1500
 #include <stdint.h>
 #else
 #endif
