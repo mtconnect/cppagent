@@ -194,7 +194,12 @@ void Connector::parseBuffer(const char *aBuffer)
       {
         if (line.compare(0, 6, "* PONG") == 0)
         {
-          sLogger << LDEBUG << "Received a PONG for " << mServer << " on port " << mPort;
+          if (sLogger.level().priority <= LDEBUG.priority) {
+            sLogger << LDEBUG << "Received a PONG for " << mServer << " on port " << mPort;
+            dlib::timestamper stamper;
+            int delta = (int) ((stamper.get_timestamp() - mLastHeartbeat) / 1000ull);
+            sLogger << LDEBUG << "    Time since last heartbeat: " << delta << "ms";
+          }
           if (!mHeartbeats)
             startHeartbeats(line);
           else
