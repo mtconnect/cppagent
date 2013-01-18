@@ -921,6 +921,7 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
   if (bytes < fs.st_size) {
     aOutgoing.http_return = 404;
     aOutgoing.http_return_status = "File not found";
+    free(buffer);
     return "";
   }
   
@@ -991,7 +992,7 @@ void Agent::streamData(ostream& out,
       // when it returns.
       string content;
       uint64_t end;
-      bool endOfBuffer = false;
+      bool endOfBuffer = true;
       if (current) {
         content = fetchCurrentData(aFilter, NO_START);
       } else {
@@ -1034,62 +1035,56 @@ void Agent::streamData(ostream& out,
       // has elapsed. Check also if in the intervening time between the last fetch
       // and now. If so, we just spin through and wait the next interval.
       
-      // Even if we are at the end of the buffer, or within range. If we are filtering, 
+      // Even if we are at the end of the buffer, or within range. If we are filtering,
       // we will need to make sure we are not spinning when there are no valid events
       // to be reported. we will waste cycles spinning on the end of the buffer when 
       // we should be in a heartbeat wait as well. 
-      if (current || !endOfBuffer) {
-        // If this is not a current, move the start to the end. This is only significant 
-        // if we are not at the end of the buffer and we are scanning through the event
-        // buffer.
-        if (!current) start = end;
-        
+      if (!endOfBuffer) {
+        // If we're not at the end of the buffer, move to the end of the previous set and
+        // begin filtering from where we left off.
+        start = end;
         
         // For replaying of events, we will stream as fast as we can with a 1ms sleep
-        // to allow other threads to run.
-        if (current) {
-          uint64 delta = ts.get_timestamp() - last;
-          if (delta < interMicros) {
-            // Sleep the remainder
-            dlib::sleep((interMicros - delta) / 1000);
-          }
-        }
-        else
-          dlib::sleep(1);
+        // to allow other threads to run.          
+        dlib::sleep(1);
       } else {
-        // Busy wait to make sure the signal was actually signaled. We have observed that
-        // a signal can occur in rare conditions where there are multiple threads listening
-        // on separate condition variables and this pops out too soon. This will make sure
-        // observer was actually signaled and instread of throwing an error will wait again
-        // for the remaining hartbeat interval.
-        uint64 delta = (ts.get_timestamp() - last) / 1000;
-        while (delta < aHeartbeat &&
-               observer.wait(aHeartbeat - delta) &&
-               !observer.wasSignaled()) {
+        uint64 delta;
+        
+        if (!current) {
+          // Busy wait to make sure the signal was actually signaled. We have observed that
+          // a signal can occur in rare conditions where there are multiple threads listening
+          // on separate condition variables and this pops out too soon. This will make sure
+          // observer was actually signaled and instead of throwing an error will wait again
+          // for the remaining hartbeat interval.
           delta = (ts.get_timestamp() - last) / 1000;
-        }
-        
-        {
-          dlib::auto_mutex lock(*mSequenceLock);
-        
-          // Make sure the observer was signaled!
-          if (!observer.wasSignaled()) {
-            // If nothing came out during the last wait, we may have still have advanced
-            // the sequence number. We should reset the start to something closer to the
-            // current sequence. If we lock the sequence lock, we can check if the observer
-            // was signaled between the time the wait timed out and the mutex was locked.
-            // Otherwise, nothing has arrived and we set to the next sequence number to
-            // the next sequence number to be allocated and continue.
-            start = mSequence;
-          } else {
-            // Get the sequence # signaled in the observer when the earliest event arrived.
-            // This will allow the next set of data to be pulled. Any later events will have
-            // greater sequence numbers, so this should not cause a problem. Also, signaled
-            // sequence numbers can only decrease, never increase.
-            start = observer.getSequence();
+          while (delta < aHeartbeat &&
+                 observer.wait(aHeartbeat - delta) &&
+                 !observer.wasSignaled()) {
+            delta = (ts.get_timestamp() - last) / 1000;
+          }
+          
+          {
+            dlib::auto_mutex lock(*mSequenceLock);
+          
+            // Make sure the observer was signaled!
+            if (!observer.wasSignaled()) {
+              // If nothing came out during the last wait, we may have still have advanced
+              // the sequence number. We should reset the start to something closer to the
+              // current sequence. If we lock the sequence lock, we can check if the observer
+              // was signaled between the time the wait timed out and the mutex was locked.
+              // Otherwise, nothing has arrived and we set to the next sequence number to
+              // the next sequence number to be allocated and continue.
+              start = mSequence;
+            } else {
+              // Get the sequence # signaled in the observer when the earliest event arrived.
+              // This will allow the next set of data to be pulled. Any later events will have
+              // greater sequence numbers, so this should not cause a problem. Also, signaled
+              // sequence numbers can only decrease, never increase.
+              start = observer.getSequence();
+            }
           }
         }
-
+        
         // Now wait the remainder if we triggered before the timer was up.
         delta = ts.get_timestamp() - last;
         if (delta < interMicros) {

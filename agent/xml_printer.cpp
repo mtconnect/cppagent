@@ -247,8 +247,8 @@ string XmlPrinter::printError(const unsigned int instanceId,
                               const string& errorText
   )
 {
-  xmlTextWriterPtr writer;
-  xmlBufferPtr buf;
+  xmlTextWriterPtr writer = NULL;
+  xmlBufferPtr buf = NULL;
   string ret;
   
   try {
@@ -305,8 +305,8 @@ string XmlPrinter::printProbe(const unsigned int instanceId,
                               vector<Device *>& deviceList,
                               const std::map<std::string, int> *aCount)
 {
-  xmlTextWriterPtr writer;
-  xmlBufferPtr buf;
+  xmlTextWriterPtr writer = NULL;
+  xmlBufferPtr buf = NULL;
   string ret;
   
   try {
@@ -586,8 +586,8 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
                                const unsigned int anAssetCount,
                                std::vector<AssetPtr> &anAssets)
 {
-  xmlTextWriterPtr writer;
-  xmlBufferPtr buf;
+  xmlTextWriterPtr writer = NULL;
+  xmlBufferPtr buf = NULL;
   string ret;
   
   try {
@@ -990,8 +990,8 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aI
 string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
 {
   
-  xmlTextWriterPtr writer;
-  xmlBufferPtr buf;
+  xmlTextWriterPtr writer = NULL;
+  xmlBufferPtr buf = NULL;
   string ret;
   
   try {

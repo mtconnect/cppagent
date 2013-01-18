@@ -136,6 +136,7 @@ void Connector::connect()
         else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
         {
           dlib::auto_mutex lock(*mCommandLock);
+          sLogger << LDEBUG << "Sending a PING for " << mServer << " on port " << mPort;
           status = mConnection->write(ping, strlen(ping));
           if (status <= 0)
           {
@@ -193,6 +194,7 @@ void Connector::parseBuffer(const char *aBuffer)
       {
         if (line.compare(0, 6, "* PONG") == 0)
         {
+          sLogger << LDEBUG << "Received a PONG for " << mServer << " on port " << mPort;
           if (!mHeartbeats)
             startHeartbeats(line);
           else
