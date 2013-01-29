@@ -196,6 +196,12 @@ void XmlParser::loadDocument(const std::string &aDoc)
   }
 }
 
+void XmlParser::updateDevice(Device *aDevice)
+{
+  // Update the dom for this device...
+}
+
+
 void XmlParser::getDataItems(set<string> &aFilterSet,
                              const string& aPath, xmlNodePtr node)
 {

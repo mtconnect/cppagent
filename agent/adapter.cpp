@@ -306,6 +306,7 @@ void Adapter::protocolCommand(const std::string& data)
       string value = data.substr(index + 1);
       trim(value);
     
+      bool updateDom = true;
       if (key == "uuid") {
         if (!mDevice->mPreserveUuid) mDevice->setUuid(value);
       } else if (key == "manufacturer")
@@ -320,8 +321,14 @@ void Adapter::protocolCommand(const std::string& data)
         mDevice->setNativeName(value);
       else if (key == "calibration")
         parseCalibration(value);
-      else
+      else {
         sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
+        updateDom = false;
+      }
+      
+      if (updateDom) {
+        mAgent->updateDom(mDevice);
+      }
     }
   }  
 }

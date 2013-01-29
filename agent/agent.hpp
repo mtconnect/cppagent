@@ -181,6 +181,9 @@ public:
   /* Handle probe calls */
   std::string handleProbe(const std::string& device);
   
+  // Update DOM when key changes
+  void updateDom(Device *aDevice);
+  
 protected:
   /* HTTP methods to handle the 3 basic calls */
   std::string handleCall(std::ostream& out,

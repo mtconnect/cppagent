@@ -184,7 +184,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   // Now get our configuration
   config_reader::kernel_1a reader(aFile);
 
-  bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", false);
+  bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
   int port = get_with_default(reader, "Port", 5000);
   int bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
   int maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);

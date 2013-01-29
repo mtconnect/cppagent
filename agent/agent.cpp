@@ -1367,3 +1367,8 @@ DataItem * Agent::getDataItemByName(const string& device, const string& name)
   return (dev) ? dev->getDeviceDataItem(name) : NULL;
 }
 
+void Agent::updateDom(Device *aDevice)
+{
+  mXmlParser->updateDevice(aDevice);
+}
+

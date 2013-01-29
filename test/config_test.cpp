@@ -88,7 +88,7 @@ void ConfigTest::testDevice()
   CPPUNIT_ASSERT(!adapter->isDupChecking());
   CPPUNIT_ASSERT(!adapter->isAutoAvailable());
   CPPUNIT_ASSERT(!adapter->isIgnoringTimestamps());
-  CPPUNIT_ASSERT(!device->mPreserveUuid);
+  CPPUNIT_ASSERT(device->mPreserveUuid);
 }
 
 void ConfigTest::testAdapter()

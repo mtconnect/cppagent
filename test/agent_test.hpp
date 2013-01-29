@@ -99,6 +99,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testRelativeOffsetDetection);
   CPPUNIT_TEST(testDynamicCalibration);
   CPPUNIT_TEST(testInitialTimeSeriesValues);
+  CPPUNIT_TEST(testUUIDChange);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -151,6 +152,7 @@ protected:
   
   /* Test Adapter */
   void testAdapter();
+  void testUUIDChange();
 
   // File handler tests
   void testFileDownload();

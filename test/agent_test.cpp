@@ -599,6 +599,39 @@ void AgentTest::testAdapterCommands()
   
 }
 
+void AgentTest::testUUIDChange()
+{
+  path = "/probe";
+  
+  Device *device = a->getDeviceByName("LinuxCNC");
+  CPPUNIT_ASSERT(device);
+  CPPUNIT_ASSERT(!device->mPreserveUuid);
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  adapter->parseBuffer("* uuid: MK-1234\n");
+  adapter->parseBuffer("* manufacturer: Big Tool\n");
+  adapter->parseBuffer("* serialNumber: XXXX-1234\n");
+  adapter->parseBuffer("* station: YYYY\n");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "MK-1234");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "Big Tool");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "XXXX-1234");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
+  }
+  
+  path = "/current?path=//Device[@uuid=\"MK-1234\"]";
+  {
+    // TODO: Fix and make sure dom is updated so this xpath will parse correctly.
+    //PARSE_XML_RESPONSE_QUERY_KV("path", "//Device[@uuid=\"MK-1234\"]");
+    // CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream@uuid", "MK-1234");
+  }  
+}
+
+
 void AgentTest::testFileDownload()
 {
   string uri("/schemas/MTConnectDevices_1.1.xsd");
