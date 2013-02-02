@@ -27,7 +27,7 @@
 
 using namespace std;
 
-#ifdef WIN32
+#ifdef _WINDOWS
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 #endif

@@ -35,11 +35,12 @@
 #include <fstream>
 #include <string>
 
-#ifdef WIN32
+#ifdef _WINDOWS
 typedef unsigned __int64 uint64_t;
 #define strtoull _strtoui64
 #else
 #include <stdint.h>
+#include <sys/resource.h>
 #endif
 
 /***** CONSTANTS *****/
@@ -108,7 +109,10 @@ std::string addNamespace(const std::string aPath, const std::string aPrefix);
 
 bool isMTConnectUrn(const char *aUrn);
 
-#ifdef WIN32
+// Get memory size of process in k
+long getMemorySize();
+
+#ifdef _WINDOWS
 #include <io.h>
 typedef long volatile AtomicInt;
 #else

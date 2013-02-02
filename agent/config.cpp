@@ -123,7 +123,7 @@ Device *AgentConfiguration::defaultDevice()
 
 static const char *timestamp(char *aBuffer)
 {
-#ifdef WIN32
+#ifdef _WINDOWS
   SYSTEMTIME st;
   GetSystemTime(&st);
   sprintf(aBuffer, "%4d-%02d-%02dT%02d:%02d:%02d.%04dZ", st.wYear, st.wMonth, st.wDay, st.wHour, 

@@ -29,7 +29,7 @@ using namespace dlib;
 
 static logger sLogger("main");
 
-#ifdef WIN32
+#ifdef _WINDOWS
 #define strncasecmp strnicmp
 #endif
 

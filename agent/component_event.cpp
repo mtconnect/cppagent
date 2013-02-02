@@ -18,7 +18,7 @@
 #include "data_item.hpp"
 #include "dlib/threads.h"
 
-#ifdef WIN32
+#ifdef _WINDOWS
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
 #define strtof strtod

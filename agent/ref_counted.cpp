@@ -25,7 +25,7 @@ RefCounted::~RefCounted()
 
 void RefCounted::referTo()
 {
-#ifdef WIN32
+#ifdef _WINDOWS
   InterlockedIncrement(&this->mRefCount);
 #else
 #ifdef MACOSX
@@ -39,7 +39,7 @@ void RefCounted::referTo()
 
 void RefCounted::unrefer()
 {
-#ifdef WIN32
+#ifdef _WINDOWS
   if (InterlockedDecrement(&this->mRefCount) <= 0)
   {
     delete this;

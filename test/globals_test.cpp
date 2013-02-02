@@ -34,7 +34,7 @@
 
 #include "globals_test.hpp"
 
-#ifdef WIN32
+#ifdef _WINDOWS
 #include <windows.h>
 #define sleep(s) ::Sleep(s * 1000)
 #endif

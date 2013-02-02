@@ -79,7 +79,7 @@ void Connector::connect()
     // Boost priority if this is a real-time adapter
     if (mRealTime)
     {
-#ifdef WIN32
+#ifdef _WINDOWS
       HANDLE hand = OpenThread(THREAD_ALL_ACCESS,FALSE,GetCurrentThreadId());
       SetThreadPriority(hand, THREAD_PRIORITY_TIME_CRITICAL);
       CloseHandle(hand);

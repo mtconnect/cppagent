@@ -169,7 +169,7 @@ void Checkpoint::filter(std::set<std::string> &aFilter)
     while (it != mEvents.end())
     {
       if (mFilter.count(it->first) == 0) {
-#ifdef WIN32
+#ifdef _WINDOWS
         it = mEvents.erase(it);
 #else
         map<string, ComponentEventPtr*>::iterator pos = it++;

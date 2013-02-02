@@ -27,7 +27,7 @@ protected:
   void install();
   void remove();
   
-#ifndef WIN32
+#ifndef _WINDOWS
   void daemonize();  
 #endif
 

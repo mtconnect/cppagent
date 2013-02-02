@@ -22,7 +22,7 @@
 
 static dlib::logger sLogger("init.service");
 
-#ifdef WIN32
+#ifdef _WINDOWS
 #define stricmp _stricmp
 #define snprintf _snprintf
 #define strncasecmp _strnicmp
@@ -39,7 +39,7 @@ void MTConnectService::initialize(int aArgc, const char *aArgv[])
 {
 }
 
-#ifdef WIN32
+#ifdef _WINDOWS
 
 #include <windows.h>
 #include <sys/stat.h>

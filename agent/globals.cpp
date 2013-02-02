@@ -20,6 +20,11 @@
 #include "globals.hpp"
 #include <time.h>
 #include <stdio.h>
+#if 0
+#ifdef _WINDOWS
+#include <psapi.h>
+#endif
+#endif
 
 using namespace std;
 
@@ -71,7 +76,7 @@ bool isNonNegativeInteger(const string& s)
 
 string getCurrentTime(TimeFormat format)
 {
-#ifdef WIN32
+#ifdef _WINDOWS
   SYSTEMTIME st;
   char timestamp[64];
   GetSystemTime(&st);
@@ -126,7 +131,7 @@ string getCurrentTime(TimeFormat format)
 uint64_t getCurrentTimeInMicros()
 {
   uint64_t now;
-#ifdef WIN32
+#ifdef _WINDOWS
   SYSTEMTIME st;
   GetSystemTime(&st);
   now = st.wSecond * 1000000;
@@ -287,3 +292,24 @@ bool isMTConnectUrn(const char *aUrn)
   return strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27) == 0;
 }
 
+#if 0
+long getMemorySize()
+{
+  long size = 0;
+  
+#ifdef _WINDOWS
+  HANDLE myself = GetCurrentProcess();
+  PROCESS_MEMORY_COUNTERS memory;
+  if (GetProcessMemoryInfo(myself, &memory, sizeof(memory))) {
+    size = (long) (memory.PeakWorkingSetSize / 1024);
+  }
+#else
+  struct rusage memory;
+  if (getrusage(RUSAGE_SELF, &memory) == 0) {
+    size = memory.ru_maxrss;
+  }
+#endif
+  
+  return size;
+}
+#endif
