@@ -221,7 +221,7 @@ void Adapter::processData(const string& data)
   
     if (dataItem == NULL)
     {
-      sLogger << LWARN << "(" << mDeviceName << ") Could not find data item: " << key <<
+      sLogger << LWARN << "(" << device->getName() << ") Could not find data item: " << key <<
         " from line '" << data << "'";
     } else {
       string rest;
