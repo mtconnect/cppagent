@@ -23,6 +23,7 @@ public:
   void configureLogger();
   void loadConfig(std::istream &aFile);
 
+  void setAgent(Agent *aAgent) { mAgent = aAgent; }
   Agent *getAgent() { return mAgent; }
   
 protected:
