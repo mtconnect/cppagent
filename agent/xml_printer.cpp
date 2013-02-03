@@ -738,6 +738,8 @@ void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
   }
 }
 
+static std::string sHostname;
+
 /* XmlPrinter helper Methods */
 void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, 
                             EDocumentType aType,
@@ -841,12 +843,13 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
   // Create the header
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Header"));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "creationTime", BAD_CAST getCurrentTime(GMT).c_str()));
+
+  if (sHostname.empty()) {
+    if (dlib::get_local_hostname(sHostname) != 0)
+      sHostname = "localhost";
+  }
   
-  string hostname;
-  if (dlib::get_local_hostname(hostname) != 0)
-    hostname = "localhost";
-  
-  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "sender", BAD_CAST hostname.c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "sender", BAD_CAST sHostname.c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId", BAD_CAST intToString(instanceId).c_str()));
   char version[32];
   sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
