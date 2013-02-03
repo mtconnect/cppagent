@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 1.2.0.14
+MTConnect C++ Agent Version 1.2.0.18
 --------
 
 The C++ Agent provides the a complete implementation of the HTTP
@@ -478,7 +478,7 @@ Configuration Parameters
 * `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
   the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
 
-    *Default*: false
+    *Default*: true
     
 * `SchemaVersion` - Change the schema version to a different version number.
 
