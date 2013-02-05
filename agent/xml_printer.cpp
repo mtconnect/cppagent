@@ -738,8 +738,6 @@ void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
   }
 }
 
-static std::string sHostname;
-
 /* XmlPrinter helper Methods */
 void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, 
                             EDocumentType aType,
@@ -752,7 +750,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
                             const uint64_t lastSeq,
                             const map<string, int> *aCount
                             )
-{
+{  
   THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL));
  
   // TODO: Cache the locations and header attributes.
@@ -843,7 +841,8 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
   // Create the header
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Header"));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "creationTime", BAD_CAST getCurrentTime(GMT).c_str()));
-
+  
+  static std::string sHostname;
   if (sHostname.empty()) {
     if (dlib::get_local_hostname(sHostname) != 0)
       sHostname = "localhost";
