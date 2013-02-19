@@ -399,7 +399,8 @@ void DataItem::computeConversionFactors()
 void DataItem::setConversionFactor(double aFactor, double aOffset)
 {
   mHasFactor = true;
-  if (aFactor == 1.0 && mConversionOffset == 0.0)
+  mConversionDetermined = true;
+  if (aFactor == 1.0 && aOffset == 0.0)
     mConversionRequired = false;
   else {
     mConversionFactor = aFactor;
