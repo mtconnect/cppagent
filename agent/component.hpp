@@ -134,7 +134,7 @@ protected:
   std::string mUuid;
   
   /* If receiving data, a sample rate is needed */
-  float mSampleRate;
+  float mSampleInterval;
   
   /* Description of itself */
   std::string mManufacturer;

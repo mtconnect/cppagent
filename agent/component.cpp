@@ -43,9 +43,13 @@ Component::Component(const string& cls, map<string, string> attributes,
   mNativeName = attributes["nativeName"];
   
   mUuid = attributes["uuid"];
-  mSampleRate = (float) (attributes["sampleRate"].empty()) ?
-    0.0f : atof(attributes["sampleRate"].c_str());
-  
+  if (attributes["sampleInterval"].empty()) {
+    mSampleInterval = (float) (attributes["sampleRate"].empty()) ?
+      0.0f : atof(attributes["sampleRate"].c_str());
+  } else {
+    mSampleInterval = atof(attributes["sampleInterval"].c_str());
+  }
+    
   mParent = NULL;
   mDevice = NULL;
   mAvailability = NULL;
@@ -67,9 +71,9 @@ std::map<string, string> Component::buildAttributes() const
   attributes["id"] = mId;
   attributes["name"] = mName;
   
-  if (mSampleRate != 0.0f)
+  if (mSampleInterval != 0.0f)
   {
-    attributes["sampleRate"] = floatToString(mSampleRate);
+    attributes["sampleInterval"] = floatToString(mSampleInterval);
   }
   
   if (!mUuid.empty())

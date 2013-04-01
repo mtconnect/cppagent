@@ -92,7 +92,7 @@ void ComponentTest::testGetAttributes()
   CPPUNIT_ASSERT_EQUAL((string) "3", (*attributes2)["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "ComponentTest2", (*attributes2)["name"]);
   CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", (*attributes2)["uuid"]);
-  CPPUNIT_ASSERT_EQUAL((string) "123.4", (*attributes2)["sampleRate"]);
+  CPPUNIT_ASSERT_EQUAL((string) "123.4", (*attributes2)["sampleInterval"]);
 }
 
 void ComponentTest::testDescription()
