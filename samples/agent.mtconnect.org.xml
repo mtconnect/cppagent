@@ -2,7 +2,7 @@
 <MTConnectDevices xmlns:m="urn:mtconnect.com:MTConnectDevices:1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.com:MTConnectDevices:1.0" xsi:schemaLocation="urn:mtconnect.com:MTConnectDevices:1.0 ./MTConnectDevices.xsd">
   <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.0"/>
   <Devices>
-    <Device iso841Class="6" uuid="000" name="LinuxCNC" sampleRate="10.0" id="4">
+    <Device iso841Class="6" uuid="000" name="LinuxCNC" sampleInterval="10.0" id="4">
       <Description manufacturer="NIST" serialNumber=""/>
       <DataItems>
         <DataItem type="ALARM" category="EVENT"  id="3" name="alarm"/>
