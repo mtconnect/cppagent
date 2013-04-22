@@ -41,6 +41,7 @@ typedef unsigned __int64 uint64_t;
 #else
 #include <stdint.h>
 #include <sys/resource.h>
+#include <unistd.h>
 #endif
 
 /***** CONSTANTS *****/

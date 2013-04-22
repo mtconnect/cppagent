@@ -28,6 +28,7 @@ static dlib::logger sLogger("init.service");
 #define strncasecmp _strnicmp
 #else
 #define strncpy_s strncpy
+#include <unistd.h>
 #endif
 
 MTConnectService::MTConnectService() :
