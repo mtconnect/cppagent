@@ -135,13 +135,13 @@ void Adapter::processData(const string& data)
         mParseTime = true;
         mBaseOffset = parseTimeMicro(time);
       } else {
-        mBaseOffset = strtoull(time.c_str(), 0, 10);
+        mBaseOffset = (uint64_t) (atof(time.c_str()) * 1000.0);
       }
       offset = 0;
     } else if (mParseTime) {
       offset = parseTimeMicro(time) - mBaseOffset;
     } else {
-      offset = (strtoull(time.c_str(), 0, 10) - mBaseOffset) * 1000;
+      offset = ((uint64_t) (atof(time.c_str()) * 1000.0)) - mBaseOffset;
     }
     time = getRelativeTimeString(mBaseTime + offset);
   } else if (mIgnoreTimestamps || time.empty()) {

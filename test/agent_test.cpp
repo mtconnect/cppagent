@@ -35,6 +35,8 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
+#include <cppunit/portability/Stream.h>
+
 
 
 #if defined(WIN32) && _MSC_VER < 1500
@@ -1368,8 +1370,8 @@ void AgentTest::testRelativeTime()
     CPPUNIT_ASSERT(adapter);
     
     adapter->setRelativeTime(true);
-    adapter->setBaseOffset(1);
-    adapter->setBaseTime(1353414802123456); /* 2012-11-20 12:33:22.123456 UTC */
+    adapter->setBaseOffset(1000);
+    adapter->setBaseTime(1353414802123456LL); /* 2012-11-20 12:33:22.123456 UTC */
     
     /* Add a 10.654321 seconds */
     adapter->processData("10654|line|204");
@@ -1406,6 +1408,22 @@ void AgentTest::testRelativeParsedTime()
   }  
 }
 
+template<>
+struct CppUnit::assertion_traits<uint64_t> {
+  static bool equal(const uint64_t& x, const uint64_t& y )
+  {
+    return x == y;
+  }
+  
+  static std::string toString(const uint64_t& x )
+  {
+    CppUnit::OStringStream ost;
+    ost << x;
+    return ost.str();
+  }
+  
+};
+
 void AgentTest::testRelativeParsedTimeDetection()
 {
   path = "/sample";
@@ -1419,7 +1437,7 @@ void AgentTest::testRelativeParsedTimeDetection()
   adapter->processData("2012-11-29T05:01:26.555666|line|100");
   
   CPPUNIT_ASSERT(adapter->isParsingTime());
-  CPPUNIT_ASSERT(adapter->getBaseOffset() == 1354165286555666LL);
+  CPPUNIT_ASSERT_EQUAL((uint64_t)1354165286555666LL, adapter->getBaseOffset());
 }
 
 void AgentTest::testRelativeOffsetDetection()
@@ -1435,7 +1453,7 @@ void AgentTest::testRelativeOffsetDetection()
   adapter->processData("1234556|line|100");
   
   CPPUNIT_ASSERT(!adapter->isParsingTime());
-  CPPUNIT_ASSERT(adapter->getBaseOffset() == 1234556LL);
+  CPPUNIT_ASSERT_EQUAL((uint64_t)1234556000LL, adapter->getBaseOffset());
 }
 
 void AgentTest::testDynamicCalibration()
