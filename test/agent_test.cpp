@@ -1310,7 +1310,7 @@ void AgentTest::testStreamData()
     
     int64 delta = ts.get_timestamp() - start;
     CPPUNIT_ASSERT(delta < 70000);
-    CPPUNIT_ASSERT(delta > 50000);
+    CPPUNIT_ASSERT(delta > 40000);
   }
   
 }

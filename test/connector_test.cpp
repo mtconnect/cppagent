@@ -198,7 +198,7 @@ void ConnectorTest::testLegacyTimeout()
   CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) mServerSocket->write(cmd, strlen(cmd)));
 
   // No pings, but timeout after 5 seconds of silence
-  dlib::sleep(6000);
+  dlib::sleep(11000);
   
   CPPUNIT_ASSERT(mConnector->mDisconnected);  
 }
