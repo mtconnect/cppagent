@@ -1292,7 +1292,8 @@ void AgentTest::testStreamData()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
     
     int64 delta = ts.get_timestamp() - start;
-    CPPUNIT_ASSERT(delta < 225000 && delta > 200000);
+    CPPUNIT_ASSERT(delta < 225000);
+    CPPUNIT_ASSERT(delta > 200000);
   }
 
   out.clear();
@@ -1308,7 +1309,8 @@ void AgentTest::testStreamData()
     PARSE_XML_RESPONSE_QUERY(query);
     
     int64 delta = ts.get_timestamp() - start;
-    CPPUNIT_ASSERT(delta < 70000 && delta > 50000);
+    CPPUNIT_ASSERT(delta < 70000);
+    CPPUNIT_ASSERT(delta > 50000);
   }
   
 }
