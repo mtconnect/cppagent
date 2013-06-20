@@ -323,3 +323,9 @@ void XmlParserTest::testUpdateAsset()
   item = tool->mItems[0];
   CPPUNIT_ASSERT_EQUAL((string) "14.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
 }
+
+void XmlParserTest::testNoNamespace()
+{
+  a = new XmlParser();
+  CPPUNIT_ASSERT_NO_THROW(a->parseFile("../samples/NoNamespace.xml"));
+}

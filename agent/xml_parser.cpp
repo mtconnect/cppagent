@@ -394,7 +394,7 @@ Component * XmlParser::loadComponent(
       return new Device(attributes);
     default:
       string prefix;
-      if (node->ns->prefix != 0 && 
+      if (node->ns != NULL && node->ns->prefix != 0 &&
           strncmp((const char*) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 
                   34) != 0) {
         prefix = (const char*) node->ns->prefix;

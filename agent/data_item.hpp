@@ -155,7 +155,12 @@ public:
 
   /* Duplicate Checking */
   bool isDuplicate(const std::string &aValue) {
-    if (aValue == mLastValue) return true;
+    // Do not dupe check for time series.
+    if (mRepresentation != VALUE)
+      return false;
+    else if (aValue == mLastValue)
+      return true;
+    
     mLastValue = aValue;
     return false;
   }
