@@ -408,7 +408,7 @@ void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader)
       const config_reader::kernel_1a &file = files.block(*block);
       if (!file.is_key_defined("Location") || !file.is_key_defined("Path"))
       {
-        sLogger << LERROR << "Name space must have a Uri and Path: " << *block;
+        sLogger << LERROR << "Name space must have a Location (uri) or Directory and Path: " << *block;
       } else {
         mAgent->registerFile(file["Location"], file["Path"]);
       }

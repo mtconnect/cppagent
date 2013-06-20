@@ -60,6 +60,7 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testIgnoreTimestampsOverride);
   CPPUNIT_TEST(testSpecifyMTCNamespace);
   CPPUNIT_TEST(testSetSchemaVersion);
+  CPPUNIT_TEST(testSchemaDirectory);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -85,6 +86,7 @@ protected:
   void testIgnoreTimestampsOverride();
   void testSpecifyMTCNamespace();
   void testSetSchemaVersion();
+  void testSchemaDirectory();
 };
 
 #endif

@@ -23,6 +23,10 @@
 #include <dlib/tokenizer.h>
 #include <dlib/misc_api.h>
 #include <dlib/array.h>
+#include <dlib/dir_nav.h>
+#include <dlib/config_reader.h>
+#include <dlib/queue.h>
+
 
 using namespace std;
 
@@ -221,7 +225,48 @@ void Agent::clear()
 // Register a file
 void Agent::registerFile(const string &aUri, const string &aPath)
 {
-  mFileMap.insert(pair<string,string>(aUri, aPath));
+  try {
+    directory dir(aPath);
+    queue<file>::kernel_1a files;
+    dir.get_files(files);
+    files.reset();
+    string baseUri = aUri;
+    if (*baseUri.rbegin() != '/') baseUri.append(1, '/');
+    while (files.move_next()) {
+      file &file = files.element();
+      string name = file.name();
+      string uri = baseUri + name;
+      mFileMap.insert(pair<string,string>(uri, file.full_name()));
+      
+      // Check if the file name maps to a standard MTConnect schema file.
+      if (name.find("MTConnect") == 0 && name.substr(name.length() - 4, 4) == ".xsd") {
+        if (name.substr(9, 5) == "Error") {
+          string urn = "urn:mtconnect.org:MTConnectError:" + XmlPrinter::getSchemaVersion();
+          XmlPrinter::addErrorNamespace(urn, uri, "m");
+        } else if (name.substr(9, 7) == "Devices") {
+          string urn = "urn:mtconnect.org:MTConnectDevices:" + XmlPrinter::getSchemaVersion();
+          XmlPrinter::addDevicesNamespace(urn, uri, "m");
+        } else if (name.substr(9, 6) == "Assets") {
+          string urn = "urn:mtconnect.org:MTConnectAssets:" + XmlPrinter::getSchemaVersion();
+          XmlPrinter::addAssetsNamespace(urn, uri, "m");
+        } else if (name.substr(9, 7) == "Streams") {
+          string urn = "urn:mtconnect.org:MTConnectStreams:" + XmlPrinter::getSchemaVersion();
+          XmlPrinter::addStreamsNamespace(urn, uri, "m");
+        }      
+      }
+    }
+  }
+  catch (directory::dir_not_found e) {
+    sLogger << LDEBUG << "registerFile: Path " << aPath << "is not a directory: "
+            << e.what() << ", trying as a file";
+    try {
+      file file(aPath);
+      mFileMap.insert(pair<string,string>(aUri, aPath));
+    } catch (file::file_not_found e) {
+      sLogger << LERROR << "Cannot register file: " << aPath << ": " << e.what();
+    }
+    
+  }
 }
 
 // Methods for service

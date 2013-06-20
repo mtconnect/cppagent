@@ -658,26 +658,17 @@ void AgentTest::testFileDownload()
 
 void AgentTest::testFailedFileDownload()
 {
-  string uri("/schemas/MTConnectDevices_1.1.xsd");
+  path = "/schemas/MTConnectDevices_1.1.xsd";
+  string error = "The following path is invalid: " + path;
   
   // Register a file with the agent.
-  a->registerFile(uri, "./BadFileName.xsd");
+  a->registerFile(path, "./BadFileName.xsd");
   
-  // Reqyest the file...
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
-  incoming.request_type = "GET";
-  incoming.path = uri;
-  incoming.queries = queries;
-  incoming.cookies = cookies;
-  incoming.headers = incoming_headers;
-  
-  outgoing.out = &out;
-  
-  result = a->on_request(incoming, outgoing);
-  
-  CPPUNIT_ASSERT_EQUAL((unsigned short) 404, outgoing.http_return);
-  CPPUNIT_ASSERT_EQUAL((string) "File not found", outgoing.http_return_status);
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "UNSUPPORTED");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", error.c_str());
+  }
 }
 
 void AgentTest::testDuplicateCheck()
