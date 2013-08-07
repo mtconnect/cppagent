@@ -758,7 +758,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:simpleType name='SampleValueType'>
     <xs:annotation>
       <xs:documentation>
-        A floating point value or an array of floating point values.
+        A floating point value or array of floating point values
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'/>
