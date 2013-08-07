@@ -297,6 +297,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='TORQUE'/>
       <xs:enumeration value='TOOL_ASSET_ID'/>
       <xs:enumeration value='TOOL_ID'/>
+      <xs:enumeration value='TOOL_NUMBER'/>
       <xs:enumeration value='VELOCITY'/>
       <xs:enumeration value='VIBRATION'/>
       <xs:enumeration value='VOLTAGE'/>
@@ -757,7 +758,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:simpleType name='SampleValueType'>
     <xs:annotation>
       <xs:documentation>
-        An floating point value or array of floating point values
+        A floating point value or an array of floating point values.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'/>
@@ -2976,6 +2977,42 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The unique tool Identifier as referenced in part 4 - assets
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ToolIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        DEPRECATED in Rel. 1.2 See Tool_ASSET_ID. The identifier of the tool
+        currently in use for a given Path
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ToolId' type='ToolIdType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        DEPRECATED in Rel. 1.2 See Tool_ASSET_ID. The identifier of the tool
+        currently in use for a given Path
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ToolNumberType'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of a tool provided by the device controller.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ToolNumber' type='ToolNumberType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of a tool provided by the device controller.
       </xs:documentation>
     </xs:annotation>
   </xs:element>

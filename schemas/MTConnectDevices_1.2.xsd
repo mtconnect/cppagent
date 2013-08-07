@@ -297,6 +297,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='TORQUE'/>
       <xs:enumeration value='TOOL_ASSET_ID'/>
       <xs:enumeration value='TOOL_ID'/>
+      <xs:enumeration value='TOOL_NUMBER'/>
       <xs:enumeration value='VELOCITY'/>
       <xs:enumeration value='VIBRATION'/>
       <xs:enumeration value='VOLTAGE'/>
@@ -723,7 +724,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:attribute name='name' type='NameType' use='required'/>
     <xs:attribute name='nativeName' type='NameType' use='optional'/>
     <xs:attribute name='sampleInterval' type='SampleIntervalType' use='optional'/>
-    <xs:attribute name='sampleRate' type='SampleRateType' use='optional'/>
   </xs:complexType>
   <xs:element abstract='true' name='Component' type='ComponentType'>
     <xs:annotation>
