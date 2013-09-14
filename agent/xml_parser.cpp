@@ -467,10 +467,24 @@ void XmlParser::loadDataItem(
           {
             d->setMaximum((const char *) text);
           }
+          else if (xmlStrcmp(constraint->name, BAD_CAST "Filter") == 0)
+          {
+            d->setFilterValue(strtod((const char*) text, NULL));
+            d->setFilterType(DataItem::FILTER_ACTUAL);
+            xmlChar *type = xmlGetProp(constraint, BAD_CAST "type");
+            if (type != NULL)
+            {
+              if (xmlStrcmp(type, BAD_CAST "PERCENT") == 0) {
+                d->setFilterType(DataItem::FILTER_PERCENT);
+                d->setFilterValue(d->getFilterValue() / 100.0);
+              }
+              xmlFree(type);
+            }
+          }
           xmlFree(text);
         }
       }
-    }   
+    }
   }
   
   parent->addDataItem(*d);

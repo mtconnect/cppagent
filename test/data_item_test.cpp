@@ -301,3 +301,36 @@ void DataItemTest::testDuplicates()
   CPPUNIT_ASSERT(!a->isDuplicate("FOO2"));
 }
 
+void DataItemTest::testFilter()
+{
+  a->setFilterType(DataItem::FILTER_ACTUAL);
+  
+  a->setFilterValue(5.0);
+  
+  CPPUNIT_ASSERT(!a->isFiltered(5.0));
+  CPPUNIT_ASSERT(a->isFiltered(6.0));
+  CPPUNIT_ASSERT(!a->isFiltered(10.1));
+  CPPUNIT_ASSERT(a->isFiltered(6.0));
+  CPPUNIT_ASSERT(!a->isFiltered(5.0));
+
+  std::map<string, string> attributes1;
+  
+  attributes1["id"] = "1";
+  attributes1["name"] = "DataItemTest1";
+  attributes1["type"] = "POSITION";
+  attributes1["category"] = "SAMPLE";
+  attributes1["units"] = "MILLIMETER";
+  attributes1["nativeUnits"] = "MILLIMETER";
+  attributes1["statistic"] = "AVERAGE";
+  attributes1["representation"] = "TIME_SERIES";
+  attributes1["sampleRate"] = "42000";
+  DataItem *d = new DataItem(attributes1);
+
+
+  d->setFilterType(DataItem::FILTER_PERCENT);
+  d->setFilterValue(0.10);
+  
+  CPPUNIT_ASSERT(!d->isFiltered(10.0));
+  CPPUNIT_ASSERT(d->isFiltered(10.5));
+  CPPUNIT_ASSERT(!d->isFiltered(11.1));
+}

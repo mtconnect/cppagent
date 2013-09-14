@@ -309,13 +309,13 @@ void ConfigTest::testSpecifyMTCNamespace()
 
 void ConfigTest::testSetSchemaVersion()
 {
-  istringstream streams("SchemaVersion = 1.3\n");
+  istringstream streams("SchemaVersion = 1.4\n");
   
   mConfig->loadConfig(streams);  
   string version = XmlPrinter::getSchemaVersion();
-  CPPUNIT_ASSERT_EQUAL((string) "1.3", version);
+  CPPUNIT_ASSERT_EQUAL((string) "1.4", version);
   
-  XmlPrinter::setSchemaVersion("1.2");
+  XmlPrinter::setSchemaVersion("1.3");
 }
 
 void ConfigTest::testSchemaDirectory()
@@ -329,22 +329,22 @@ void ConfigTest::testSchemaDirectory()
   
   mConfig->loadConfig(schemas);
   string path = XmlPrinter::getStreamsUrn("m");
-  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectStreams:1.2", path);
+  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectStreams:1.3", path);
   string location = XmlPrinter::getStreamsLocation("m");
   CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectStreams_1.2.xsd", location);
 
   path = XmlPrinter::getDevicesUrn("m");
-  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectDevices:1.2", path);
+  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectDevices:1.3", path);
   location = XmlPrinter::getDevicesLocation("m");
   CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectDevices_1.2.xsd", location);
 
   path = XmlPrinter::getAssetsUrn("m");
-  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectAssets:1.2", path);
+  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectAssets:1.3", path);
   location = XmlPrinter::getAssetsLocation("m");
   CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectAssets_1.2.xsd", location);
 
   path = XmlPrinter::getErrorUrn("m");
-  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectError:1.2", path);
+  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectError:1.3", path);
   location = XmlPrinter::getErrorLocation("m");
   CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectError_1.2.xsd", location);
   

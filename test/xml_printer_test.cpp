@@ -156,18 +156,18 @@ void XmlPrinterTest::testChangeDevicesNamespace()
   {
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-            "urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
+            "urn:mtconnect.org:MTConnectDevices:1.3 http://www.mtconnect.org/schemas/MTConnectDevices_1.3.xsd");
   }
 
   {
-    XmlPrinter::addDevicesNamespace("urn:machine.com:MachineDevices:1.2",
-                                    "http://www.machine.com/schemas/MachineDevices_1.2.xsd",
+    XmlPrinter::addDevicesNamespace("urn:machine.com:MachineDevices:1.3",
+                                    "http://www.machine.com/schemas/MachineDevices_1.3.xsd",
                                     "e");
     
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));  
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-                    "urn:machine.com:MachineDevices:1.2 http://www.machine.com/schemas/MachineDevices_1.2.xsd");
+                    "urn:machine.com:MachineDevices:1.3 http://www.machine.com/schemas/MachineDevices_1.3.xsd");
     
     XmlPrinter::clearDevicesNamespaces();
   }
@@ -203,15 +203,15 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
-                 "urn:mtconnect.org:MTConnectStreams:1.2 http://www.mtconnect.org/schemas/MTConnectStreams_1.2.xsd");
+                 "urn:mtconnect.org:MTConnectStreams:1.3 http://www.mtconnect.org/schemas/MTConnectStreams_1.3.xsd");
   }
 
   XmlPrinter::clearStreamsNamespaces();
   
   {
     
-    XmlPrinter::addStreamsNamespace("urn:machine.com:MachineStreams:1.2",
-                                    "http://www.machine.com/schemas/MachineStreams_1.2.xsd",
+    XmlPrinter::addStreamsNamespace("urn:machine.com:MachineStreams:1.3",
+                                    "http://www.machine.com/schemas/MachineStreams_1.3.xsd",
                                     "e");
 
     ComponentEventPtrArray list;
@@ -219,7 +219,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
         
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
-                "urn:machine.com:MachineStreams:1.2 http://www.machine.com/schemas/MachineStreams_1.2.xsd");
+                "urn:machine.com:MachineStreams:1.3 http://www.machine.com/schemas/MachineStreams_1.3.xsd");
   }
 
   XmlPrinter::clearStreamsNamespaces();
@@ -228,8 +228,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     XmlParser ext;
     devices = ext.parseFile("../samples/extension.xml");
 
-    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.2",
-                                    "ExtensionDevices_1.2.xsd",
+    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
+                                    "ExtensionDevices_1.3.xsd",
                                     "x");
 
     Checkpoint checkpoint2;
@@ -255,18 +255,18 @@ void XmlPrinterTest::testChangeErrorNamespace()
   {
     PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation", 
-              "urn:mtconnect.org:MTConnectError:1.2 http://www.mtconnect.org/schemas/MTConnectError_1.2.xsd");
+              "urn:mtconnect.org:MTConnectError:1.3 http://www.mtconnect.org/schemas/MTConnectError_1.3.xsd");
   }
   
   {
-    XmlPrinter::addErrorNamespace("urn:machine.com:MachineError:1.2",
-                                  "http://www.machine.com/schemas/MachineError_1.2.xsd",
+    XmlPrinter::addErrorNamespace("urn:machine.com:MachineError:1.3",
+                                  "http://www.machine.com/schemas/MachineError_1.3.xsd",
                                   "e");
     
     PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation", 
-                                      "urn:machine.com:MachineError:1.2 http://www.machine.com/schemas/MachineError_1.2.xsd");
+                                      "urn:machine.com:MachineError:1.3 http://www.machine.com/schemas/MachineError_1.3.xsd");
   }
 }
 
@@ -519,18 +519,18 @@ void XmlPrinterTest::testChangeVersion()
   {
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-                                      "urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
+                                      "urn:mtconnect.org:MTConnectDevices:1.3 http://www.mtconnect.org/schemas/MTConnectDevices_1.3.xsd");
   }
 
-  XmlPrinter::setSchemaVersion("1.3");
+  XmlPrinter::setSchemaVersion("1.4");
   
   {
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-                                      "urn:mtconnect.org:MTConnectDevices:1.3 http://www.mtconnect.org/schemas/MTConnectDevices_1.3.xsd");
+                                      "urn:mtconnect.org:MTConnectDevices:1.4 http://www.mtconnect.org/schemas/MTConnectDevices_1.4.xsd");
   }
 
-  XmlPrinter::setSchemaVersion("1.2");
+  XmlPrinter::setSchemaVersion("1.3");
 }
 
 void XmlPrinterTest::testChangeMTCLocation()
@@ -551,8 +551,25 @@ void XmlPrinterTest::testChangeMTCLocation()
   }  
   
   XmlPrinter::clearDevicesNamespaces();
-  XmlPrinter::setSchemaVersion("1.2");
+  XmlPrinter::setSchemaVersion("1.3");
 }
+
+void XmlPrinterTest::testProbeWithFilter()
+{
+  delete config;
+  
+  config = new XmlParser();
+  devices = config->parseFile("../samples/filter_example.xml");
+  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter", "5");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter@type", 0);
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='pos']/m:Constraints/m:Filter", "10");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='pos']/m:Constraints/m:Filter@type", "PERCENT");
+}
+
+// Helper methods
 
 
 DataItem * XmlPrinterTest::getDataItem(const char *name)

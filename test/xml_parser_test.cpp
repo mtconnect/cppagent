@@ -329,3 +329,28 @@ void XmlParserTest::testNoNamespace()
   a = new XmlParser();
   CPPUNIT_ASSERT_NO_THROW(a->parseFile("../samples/NoNamespace.xml"));
 }
+
+void XmlParserTest::testFilteredDataItem()
+{
+  delete a; a = NULL;
+  try
+  {
+    a = new XmlParser();
+    mDevices = a->parseFile("../samples/filter_example.xml");
+  }
+  catch (exception & e)
+  {
+    CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example.xml");
+  }
+  
+  Device *dev = mDevices[0];
+  DataItem *di = dev->getDeviceDataItem("c1");
+  
+  CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
+  CPPUNIT_ASSERT_EQUAL(di->getFilterType(), DataItem::FILTER_ACTUAL);
+
+  di = dev->getDeviceDataItem("c2");
+  
+  CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 0.1);
+  CPPUNIT_ASSERT_EQUAL(di->getFilterType(), DataItem::FILTER_PERCENT);
+}

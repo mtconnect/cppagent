@@ -58,6 +58,7 @@ class DataItemTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testStatistic);
   CPPUNIT_TEST(testSampleRate);
   CPPUNIT_TEST(testDuplicates);
+  CPPUNIT_TEST(testFilter);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -76,6 +77,7 @@ protected:
   void testStatistic();
   void testSampleRate();
   void testDuplicates();
+  void testFilter();
   
 public:
   void setUp();

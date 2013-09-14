@@ -456,6 +456,19 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
       addSimpleElement(writer, "Value", *value);
     }
     
+    if (dataItem->getFilterType() == DataItem::FILTER_ACTUAL)
+    {
+      string value = floatToString(dataItem->getFilterValue());
+      addSimpleElement(writer, "Filter", value);
+    }
+    else if (dataItem->getFilterType() == DataItem::FILTER_PERCENT)
+    {
+      map<string, string> attributes;
+      string value = floatToString(dataItem->getFilterValue() * 100.0);
+      attributes["type"] = "PERCENT";
+      addSimpleElement(writer, "Filter", value, &attributes);      
+    }
+    
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints   
   }
   

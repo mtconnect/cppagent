@@ -47,6 +47,13 @@ public:
     VALUE,
     TIME_SERIES
   };
+  
+  enum EFilterType
+  {
+    FILTER_ACTUAL,
+    FILTER_PERCENT,
+    FILTER_NONE
+  };
     
   
   /* Enumeration for the simple units for simple conversions */
@@ -165,15 +172,44 @@ public:
     return false;
   }
   
+  /* Filter checking */
+  bool isFiltered(const double aValue) {
+    if (mCategory != SAMPLE || mFilterType == FILTER_NONE)
+      return false;
+    
+    if (!std::isnan(mLastSampleValue))
+    {
+      double limit;
+      if (mFilterType == DataItem::FILTER_PERCENT)
+        limit = mLastSampleValue * mFilterValue;
+      else
+        limit = mFilterValue;
+      
+      if (aValue > (mLastSampleValue - limit) && aValue < (mLastSampleValue + limit)) {
+        // Filter value
+        return true;      
+      }
+    }
+    
+    mLastSampleValue = aValue;
+    return false;
+  }
+  
   /* Constrainsts */
   bool hasConstraints() { return mHasConstraints; }
   std::string getMaximum() const { return mMaximum; }
   std::string getMinimum() const { return mMinimum; }
   std::vector<std::string> &getConstrainedValues() { return mValues; }
   
+  EFilterType getFilterType() const { return mFilterType; }
+  double getFilterValue() const { return mFilterValue; }
+  
   void setMaximum(std::string aMax) { mMaximum = aMax; mHasConstraints = true; }
   void setMinimum(std::string aMin) { mMinimum = aMin; mHasConstraints = true; }
   void addConstrainedValue(std::string aValue) { mValues.push_back(aValue); mHasConstraints = true; }
+  
+  void setFilterType(EFilterType aType) { mFilterType = aType; mHasConstraints = true; }
+  void setFilterValue(double aValue) { mFilterValue = aValue; }
 
   bool conversionRequired();
   std::string convertValue(const std::string& value);
@@ -245,11 +281,15 @@ protected:
   std::vector<std::string> mValues;
   bool mHasConstraints;
   
+  double mFilterValue;
+  EFilterType mFilterType;
+  
   /* Component that data item is associated with */  
   Component * mComponent;
 
-  /* Duplicate checking */
+  /* Duplicate and filter checking */
   std::string mLastValue;
+  double mLastSampleValue;
   
   /* Attrubutes */
   std::map<std::string, std::string> mAttributes;

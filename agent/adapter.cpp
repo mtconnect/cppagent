@@ -235,9 +235,9 @@ void Adapter::processData(const string& data)
       // Add key->value pairings
       dataItem->setDataSource(this);
       trim(value);
-            
+      
       // Check for duplication
-      if (!mDupCheck || !dataItem->isDuplicate(value)) 
+      if (!isDuplicate(dataItem, value))
       {
         mAgent->addToBuffer(dataItem, toUpperCase(value), time);
       } 
@@ -272,7 +272,7 @@ void Adapter::processData(const string& data)
     {
       dataItem->setDataSource(this);
       trim(value);
-      if (!mDupCheck || !dataItem->isDuplicate(value)) 
+      if (!isDuplicate(dataItem, value))
       {
         mAgent->addToBuffer(dataItem, toUpperCase(value), time);
       } 

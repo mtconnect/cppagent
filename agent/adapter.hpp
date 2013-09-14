@@ -26,6 +26,7 @@
 #include "agent.hpp"
 #include "connector.hpp"
 #include "globals.hpp"
+#include "data_item.hpp"
 
 class Agent;
 class Device;
@@ -78,6 +79,13 @@ public:
   /* Method called when connection is lost. */
   virtual void disconnected();
   virtual void connected();
+  
+  bool isDuplicate(DataItem *aDataItem, const std::string &aValue) {
+    if (aDataItem->getFilterType() != DataItem::FILTER_NONE)
+      return aDataItem->isFiltered(aDataItem->convertValue(atof(aValue.c_str())));
+    else
+      return  mDupCheck && aDataItem->isDuplicate(aValue);
+  }
 
   // Stop 
   void stop();
