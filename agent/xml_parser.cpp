@@ -467,7 +467,7 @@ void XmlParser::loadDataItem(
           {
             d->setMaximum((const char *) text);
           }
-          else if (xmlStrcmp(constraint->name, BAD_CAST "Filter") == 0)
+          else if (xmlStrcmp(constraint->name, BAD_CAST "MinimumChange") == 0)
           {
             d->setFilterValue(strtod((const char*) text, NULL));
             d->setFilterType(DataItem::FILTER_ACTUAL);

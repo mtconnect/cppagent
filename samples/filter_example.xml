@@ -14,12 +14,12 @@
               <DataItems>
                 <DataItem type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="c1" name="load">
                   <Constraints>
-                    <Filter>5.0</Filter>
+                    <MinimumChange>5.0</MinimumChange>
                   </Constraints>
                 </DataItem>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="c2" name="pos">
                   <Constraints>
-                    <Filter type="PERCENT">10.0</Filter>
+                    <MinimumChange type="PERCENT">10.0</MinimumChange>
                   </Constraints>
                 </DataItem>
                 <DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c3">

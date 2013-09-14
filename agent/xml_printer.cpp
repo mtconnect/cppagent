@@ -39,7 +39,7 @@ static map<string, SchemaNamespace> sDevicesNamespaces;
 static map<string, SchemaNamespace> sStreamsNamespaces;
 static map<string, SchemaNamespace> sErrorNamespaces;
 static map<string, SchemaNamespace> sAssetsNamespaces;
-static string sSchemaVersion("1.2");
+static string sSchemaVersion("1.3");
 
 enum EDocumentType {
   eERROR,
@@ -459,14 +459,14 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
     if (dataItem->getFilterType() == DataItem::FILTER_ACTUAL)
     {
       string value = floatToString(dataItem->getFilterValue());
-      addSimpleElement(writer, "Filter", value);
+      addSimpleElement(writer, "MinimumChange", value);
     }
     else if (dataItem->getFilterType() == DataItem::FILTER_PERCENT)
     {
       map<string, string> attributes;
       string value = floatToString(dataItem->getFilterValue() * 100.0);
       attributes["type"] = "PERCENT";
-      addSimpleElement(writer, "Filter", value, &attributes);      
+      addSimpleElement(writer, "MinimumChange", value, &attributes);      
     }
     
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints   
