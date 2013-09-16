@@ -699,10 +699,11 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
   CuttingToolPtr tool;
   
   // We only handle cuttng tools for now...
-  if (xmlStrcmp(anAsset->name, BAD_CAST "CuttingTool") == 0)
+  if (xmlStrcmp(anAsset->name, BAD_CAST "CuttingTool") == 0 ||
+      xmlStrcmp(anAsset->name, BAD_CAST "CuttingToolArchitype") == 0)
   {
     // Get the attributes...
-    tool.setObject(new CuttingTool("", "CuttingTool", ""), true);
+    tool.setObject(new CuttingTool("", (const char*) anAsset->name, ""), true);
         
     for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
     {
@@ -743,7 +744,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
 
 void XmlParser::updateAsset(AssetPtr aAsset, const std::string &aType, const std::string &aContent) 
 {
-  if (aType != "CuttingTool")
+  if (aType != "CuttingTool" && aType != "CuttingToolArchitype")
   {
     sLogger << dlib::LWARN << "Cannot update asset: " << aType 
             << " is unsupported for incremental updates";

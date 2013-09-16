@@ -631,7 +631,7 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
     vector<AssetPtr>::iterator iter;
     for (iter = anAssets.begin(); iter != anAssets.end(); ++iter)
     {
-      if ((*iter)->getType() == "CuttingTool") {
+      if ((*iter)->getType() == "CuttingTool" || (*iter)->getType() == "CuttingToolArchitype") {
         CuttingToolPtr ptr((CuttingTool*) iter->getObject());
         THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST printCuttingTool(ptr).c_str()));
       } else {
@@ -1030,7 +1030,8 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
     
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingTool"));
+    // TODO: Check if cutting tool or architype - should be in type
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST aTool->getType().c_str()));
     
     map<string,string>::iterator iter;
     for (iter = aTool->mIdentity.begin(); iter != aTool->mIdentity.end(); iter++) {
