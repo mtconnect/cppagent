@@ -178,7 +178,7 @@ public:
     if (mCategory != SAMPLE || mFilterType == FILTER_NONE)
       return false;
     
-    if (!std::isnan(mLastSampleValue))
+    if (!ISNAN(mLastSampleValue))
     {
       if (aValue > (mLastSampleValue - mFilterValue) && aValue < (mLastSampleValue + mFilterValue)) {
         // Filter value

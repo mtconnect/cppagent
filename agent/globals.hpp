@@ -36,9 +36,11 @@
 #include <string>
 
 #ifdef _WINDOWS
+#define ISNAN(x) _isnan(x)
 typedef unsigned __int64 uint64_t;
 #define strtoull _strtoui64
 #else
+#define ISNAN(x) std::isnan(x)
 #include <stdint.h>
 #include <sys/resource.h>
 #include <unistd.h>
