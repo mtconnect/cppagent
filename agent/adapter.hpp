@@ -81,10 +81,14 @@ public:
   virtual void connected();
   
   bool isDuplicate(DataItem *aDataItem, const std::string &aValue) {
-    if (aDataItem->getFilterType() != DataItem::FILTER_NONE)
-      return aDataItem->isFiltered(aDataItem->convertValue(atof(aValue.c_str())));
-    else
-      return  mDupCheck && aDataItem->isDuplicate(aValue);
+    if (!aDataItem->isDiscrete()) {
+      if (aDataItem->getFilterType() != DataItem::FILTER_NONE)
+        return aDataItem->isFiltered(aDataItem->convertValue(atof(aValue.c_str())));
+      else
+        return  mDupCheck && aDataItem->isDuplicate(aValue);
+    } else {
+      return false;
+    }      
   }
 
   // Stop 

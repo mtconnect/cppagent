@@ -81,6 +81,10 @@ DataItem::DataItem(std::map<string, string> attributes)
   {
     mRepresentation = TIME_SERIES;
     mCamelType += "TimeSeries";
+  } else if (attributes["representation"] == "DISCRETE")
+  {
+    mRepresentation = DISCRETE;
+    mCamelType += "Discrete";    
   }
   if (!mPrefix.empty())
     mPrefixedCamelType = mPrefix + ":" + mCamelType;

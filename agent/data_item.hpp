@@ -45,7 +45,8 @@ public:
   enum ERepresentation
   {
     VALUE,
-    TIME_SERIES
+    TIME_SERIES,
+    DISCRETE
   };
   
   enum EFilterType
@@ -147,6 +148,7 @@ public:
   bool isMessage() const { return mIsMessage; }
   bool isAssetChanged() const { return mIsAssetChanged; }
   bool isTimeSeries() const { return mRepresentation == TIME_SERIES; }
+  bool isDiscrete() const { return mRepresentation == DISCRETE; }
     
   /* Set/get component that data item is associated with */
   void setComponent(Component& component) { mComponent = &component; }
