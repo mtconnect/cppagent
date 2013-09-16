@@ -204,6 +204,21 @@ void AgentTest::testGoodPath()
   }
 }
 
+void AgentTest::testXPath()
+{
+  path = "/current";
+  Agent::key_value_map query;
+  
+  {
+    query["path"] = "//Rotary[@name='C']//DataItem[@category='SAMPLE' or @category='CONDITION']";
+    PARSE_XML_RESPONSE_QUERY(query);
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:SpindleSpeed", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Load", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Unavailable", "");
+  }
+}
+
 void AgentTest::testProbe()
 {
   {
@@ -1579,6 +1594,54 @@ void AgentTest::testReferences()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Door']//m:DoorState", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:ChuckState", "UNAVAILABLE");
   }
+}
+
+void AgentTest::testDiscrete()
+{
+  delete a;
+  a = new Agent("../samples/discrete_example.xml", 8, 4, 25);
+  path = "/sample";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  adapter->setDupCheck(true);
+  CPPUNIT_ASSERT(adapter);
+  
+  DataItem *msg = a->getDataItemByName("LinuxCNC", "message");
+  CPPUNIT_ASSERT(msg != NULL);
+  CPPUNIT_ASSERT_EQUAL(true, msg->isDiscrete());
+
+  // Validate we are dup checking.
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
+  
+  adapter->processData("TIME|line|204");
+  adapter->processData("TIME|line|204");
+  adapter->processData("TIME|line|205");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
+  }
+  
+
+  adapter->processData("TIME|message|Hi|Hello");
+  adapter->processData("TIME|message|Hi|Hello");
+  adapter->processData("TIME|message|Hi|Hello");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[2]", "HELLO");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[3]", "HELLO");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[4]", "HELLO");
+  }
+
 }
 
 

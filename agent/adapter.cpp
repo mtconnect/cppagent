@@ -237,9 +237,10 @@ void Adapter::processData(const string& data)
       trim(value);
       
       // Check for duplication
-      if (!isDuplicate(dataItem, value))
+      const string &uppered = toUpperCase(value);
+      if (!isDuplicate(dataItem, uppered))
       {
-        mAgent->addToBuffer(dataItem, toUpperCase(value), time);
+        mAgent->addToBuffer(dataItem, uppered, time);
       } 
       else if (mDupCheck)
       {
@@ -272,9 +273,10 @@ void Adapter::processData(const string& data)
     {
       dataItem->setDataSource(this);
       trim(value);
-      if (!isDuplicate(dataItem, value))
+      const string &uppered = toUpperCase(value);
+      if (!isDuplicate(dataItem, uppered))
       {
-        mAgent->addToBuffer(dataItem, toUpperCase(value), time);
+        mAgent->addToBuffer(dataItem, uppered, time);
       } 
       else if (mDupCheck)
       {

@@ -149,6 +149,10 @@ void XmlParserTest::testGetDataItems()
   filter.clear();
   a->getDataItems(filter, "//Rotary[@name=\"C\"]//DataItem[@type=\"LOAD\"]");
   CPPUNIT_ASSERT_EQUAL(2, (int) filter.size());    
+
+  filter.clear();
+  a->getDataItems(filter, "//Rotary[@name=\"C\"]//DataItem[@category=\"CONDITION\" or @category=\"SAMPLE\"]");
+  CPPUNIT_ASSERT_EQUAL(5, (int) filter.size());
 }
 
 void XmlParserTest::testGetDataItemsExt()
