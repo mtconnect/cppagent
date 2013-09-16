@@ -1414,9 +1414,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         The type of filter
       </xs:documentation>
     </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ABSOLUTE'/>
-      <xs:enumeration value='PERCENT'/>
+    <xs:restriction base='xs:NMTOKEN'>
+      <xs:enumeration value='MINIMUM_DELTA'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name='DataItemsType'>
@@ -1577,59 +1576,19 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:IDREF'/>
   </xs:simpleType>
-  <xs:complexType name='ReferenceType' abstract='true'>
-    <xs:annotation>
-      <xs:documentation>
-        An abstract reference to a data item or component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:attribute name='name' type='NameType' use='optional'/>
-  </xs:complexType>
-  <xs:element abstract='true' name='Reference' type='ReferenceType'>
-    <xs:annotation>
-      <xs:documentation>
-        An abstract reference to a data item or component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='DataItemReferenceType'>
+  <xs:complexType name='ReferenceType'>
     <xs:annotation>
       <xs:documentation>
         A reference to a data item
       </xs:documentation>
     </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='ReferenceType'>
+    <xs:simpleContent>
+      <xs:extension base='xs:string'>
         <xs:attribute name='dataItemId' type='IdrefType' use='required'/>
+        <xs:attribute name='name' type='NameType' use='optional'/>
       </xs:extension>
-    </xs:complexContent>
+    </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='DataItemReference' type='DataItemReferenceType' substitutionGroup='Reference'>
-    <xs:annotation>
-      <xs:documentation>
-        A reference to a data item
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ComponentReferenceType'>
-    <xs:annotation>
-      <xs:documentation>
-        A reference to a Component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='ReferenceType'>
-        <xs:attribute name='componentId' type='IdrefType' use='required'/>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='ComponentReference' type='ComponentReferenceType' substitutionGroup='Reference'>
-    <xs:annotation>
-      <xs:documentation>
-        A reference to a Component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
   <xs:complexType name='ReferencesType'>
     <xs:annotation>
       <xs:documentation>
@@ -1637,7 +1596,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element ref='Reference' minOccurs='1' maxOccurs='unbounded'/>
+      <xs:element name='Reference' type='ReferenceType' minOccurs='1' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            A reference to a data item or component
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name='InterfaceType' abstract='true'>
