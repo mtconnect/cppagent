@@ -34,9 +34,11 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <limits>
 
 #ifdef _WINDOWS
 #define ISNAN(x) _isnan(x)
+#define NAN numeric_limits<long double>::quiet_NaN()
 typedef unsigned __int64 uint64_t;
 #define strtoull _strtoui64
 #else

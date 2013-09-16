@@ -19,8 +19,8 @@
  
 void PrintMTConnectAgentVersion()
  {
-   printf("MTConnect Agent Version %d.%d.%d.%d - built on " __TIMESTAMP__ "\n", 
+   printf("MTConnect Agent Version %d.%d.%d.%d%s - built on " __TIMESTAMP__ "\n", 
           AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
-          AGENT_VERSION_BUILD);
+          AGENT_VERSION_BUILD, AGENT_VERSION_RC);
  }
  
