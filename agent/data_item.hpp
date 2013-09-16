@@ -50,8 +50,7 @@ public:
   
   enum EFilterType
   {
-    FILTER_ACTUAL,
-    FILTER_PERCENT,
+    FILTER_MINIMUM_DELTA,
     FILTER_NONE
   };
     
@@ -179,13 +178,7 @@ public:
     
     if (!std::isnan(mLastSampleValue))
     {
-      double limit;
-      if (mFilterType == DataItem::FILTER_PERCENT)
-        limit = mLastSampleValue * mFilterValue;
-      else
-        limit = mFilterValue;
-      
-      if (aValue > (mLastSampleValue - limit) && aValue < (mLastSampleValue + limit)) {
+      if (aValue > (mLastSampleValue - mFilterValue) && aValue < (mLastSampleValue + mFilterValue)) {
         // Filter value
         return true;      
       }
@@ -222,7 +215,7 @@ public:
   bool operator==(DataItem &aOther) {
     return mId == aOther.mId;
   }
-  
+    
 protected:
   double simpleFactor(const std::string& units);
   std::map<std::string, std::string> buildAttributes() const;
@@ -300,7 +293,7 @@ protected:
   /* Conversion factor */
   double mConversionFactor;
   double mConversionOffset;
-  bool mConversionDetermined, mConversionRequired, mHasFactor;
+  bool mConversionDetermined, mConversionRequired, mHasFactor;  
 };
 
 #endif

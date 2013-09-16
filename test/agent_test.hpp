@@ -101,6 +101,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testInitialTimeSeriesValues);
   CPPUNIT_TEST(testUUIDChange);
   CPPUNIT_TEST(testFilterValues);
+  CPPUNIT_TEST(testReferences);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -210,6 +211,9 @@ protected:
   
   // Filtering
   void testFilterValues();
+  
+  // Reference tests
+  void testReferences();
     
   /* Helper method to test expected string, given optional query, & run tests */
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, Agent::key_value_map &aQueries);

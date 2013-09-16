@@ -78,6 +78,7 @@ protected:
   void testSampleRate();
   void testDuplicates();
   void testFilter();
+  void testReferences();
   
 public:
   void setUp();

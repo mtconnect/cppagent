@@ -393,6 +393,26 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer,
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItems    
   }
   
+  if (component->getReferences().size() > 0)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "References"));
+
+    list<Component::Reference>::const_iterator ref;
+    for (ref = component->getReferences().begin(); ref != component->getReferences().end(); ref++)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId",
+                                                      BAD_CAST ref->mId.c_str()));
+      if (ref->mName.length() > 0) {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
+                                                        BAD_CAST ref->mName.c_str()));
+      }
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
+  }
+  
   list<Component *> children = component->getChildren();
   
   if (children.size() > 0)
@@ -456,17 +476,12 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
       addSimpleElement(writer, "Value", *value);
     }
     
-    if (dataItem->getFilterType() == DataItem::FILTER_ACTUAL)
-    {
-      string value = floatToString(dataItem->getFilterValue());
-      addSimpleElement(writer, "MinimumChange", value);
-    }
-    else if (dataItem->getFilterType() == DataItem::FILTER_PERCENT)
+    if (dataItem->getFilterType() == DataItem::FILTER_MINIMUM_DELTA)
     {
       map<string, string> attributes;
-      string value = floatToString(dataItem->getFilterValue() * 100.0);
-      attributes["type"] = "PERCENT";
-      addSimpleElement(writer, "MinimumChange", value, &attributes);      
+      string value = floatToString(dataItem->getFilterValue());
+      attributes["type"] = "MINIMUM_DELTA";
+      addSimpleElement(writer, "Filter", value, &attributes);      
     }
     
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints   

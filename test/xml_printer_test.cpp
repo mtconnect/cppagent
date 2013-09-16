@@ -563,11 +563,24 @@ void XmlPrinterTest::testProbeWithFilter()
   
   PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
   
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:MinimumChange", "5");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:MinimumChange@type", 0);
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='pos']/m:Constraints/m:MinimumChange", "10");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='pos']/m:Constraints/m:MinimumChange@type", "PERCENT");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter", "5");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter@type", "MINIMUM_DELTA");
 }
+
+
+void XmlPrinterTest::testReferences()
+{
+  delete config;
+  
+  config = new XmlParser();
+  devices = config->parseFile("../samples/reference_example.xml");
+  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@dataItemId", "c4");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@name", "chuck");
+}
+
 
 // Helper methods
 

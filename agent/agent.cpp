@@ -53,6 +53,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
           throw runtime_error("Duplicate UUID: " + (*device)->getUuid());
       
       uuids.insert((*device)->getUuid());
+      (*device)->resolveReferences();
     }
   }
   catch (runtime_error & e)

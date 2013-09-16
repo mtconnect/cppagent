@@ -1540,6 +1540,47 @@ void AgentTest::testFilterValues()
   }
 }
 
+void AgentTest::testReferences()
+{
+  delete a;
+  a = new Agent("../samples/reference_example.xml", 8, 4, 25);
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  string id = "mf";
+  DataItem *item = a->getDataItemByName((string) "LinuxCNC", id);
+  Component *comp = item->getComponent();
+  
+  const list<Component::Reference> refs = comp->getReferences();
+  const Component::Reference &ref = refs.front();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "c4", ref.mId);
+  CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.mName);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.mDataItem != NULL);
+  
+  const Component::Reference &ref2 = refs.back();
+  CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.mId);
+  CPPUNIT_ASSERT_EQUAL((string) "door", ref2.mName);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.mDataItem != NULL);
+  
+  path = "/current";
+  Agent::key_value_map query;
+  query["path"] = "//BarFeederInterface";
+  
+
+  // Additional data items should be included
+  {
+    PARSE_XML_RESPONSE_QUERY(query);
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='BarFeederInterface']//m:MaterialFeed", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Door']//m:DoorState", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:ChuckState", "UNAVAILABLE");
+  }
+}
+
 
 // Helper methods
 

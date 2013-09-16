@@ -347,10 +347,50 @@ void XmlParserTest::testFilteredDataItem()
   DataItem *di = dev->getDeviceDataItem("c1");
   
   CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
-  CPPUNIT_ASSERT_EQUAL(di->getFilterType(), DataItem::FILTER_ACTUAL);
-
-  di = dev->getDeviceDataItem("c2");
-  
-  CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 0.1);
-  CPPUNIT_ASSERT_EQUAL(di->getFilterType(), DataItem::FILTER_PERCENT);
+  CPPUNIT_ASSERT_EQUAL(di->getFilterType(), DataItem::FILTER_MINIMUM_DELTA);
 }
+
+
+void XmlParserTest::testReferences()
+{
+  delete a; a = NULL;
+  try
+  {
+    a = new XmlParser();
+    mDevices = a->parseFile("../samples/reference_example.xml");
+  }
+  catch (exception & e)
+  {
+    CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
+  }
+  
+  string id = "mf";
+  Device *dev = mDevices[0];
+  DataItem *item = dev->getDeviceDataItem(id);
+  Component *comp = item->getComponent();
+
+  comp->resolveReferences();
+
+  const list<Component::Reference> refs = comp->getReferences();
+  const Component::Reference &ref = refs.front();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "c4", ref.mId);
+  CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.mName);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.mDataItem != NULL);
+  
+  const Component::Reference &ref2 = refs.back();
+  CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.mId);
+  CPPUNIT_ASSERT_EQUAL((string) "door", ref2.mName);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.mDataItem != NULL);
+  
+  std::set<string> filter;
+  a->getDataItems(filter, "//BarFeederInterface");
+  
+  CPPUNIT_ASSERT_EQUAL((size_t) 3, filter.size());
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("mf"));
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("c4"));
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("d2"));
+}
+

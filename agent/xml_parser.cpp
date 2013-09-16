@@ -268,9 +268,19 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
         { // Handle case where we are specifying the data items node...
           getDataItems(aFilterSet, "DataItem", n);          
         }
-        else // Find all the data items below this node
+        else if (xmlStrcmp(n->name, BAD_CAST "Reference") == 0)
+        {
+          xmlChar *id = xmlGetProp(n, BAD_CAST "dataItemId");
+          if (id != NULL)
+          {
+            aFilterSet.insert((const char *) id);
+            xmlFree(id);
+          }
+        }
+        else // Find all the data items and references below this node
         {
           getDataItems(aFilterSet, "*//DataItem", n);
+          getDataItems(aFilterSet, "*//Reference", n);
         }
       }
     }
@@ -314,6 +324,7 @@ Component * XmlParser::handleComponent(
     
   case Component::COMPONENTS:
   case Component::DATA_ITEMS:
+  case Component::REFERENCES:
     handleChildren(component, parent, device);
     break;
     
@@ -322,6 +333,10 @@ Component * XmlParser::handleComponent(
     break;
     
   case Component::TEXT:
+    break;
+      
+  case Component::REFERENCE:
+    handleRefenence(component, parent, device);
     break;
     
   default:
@@ -467,19 +482,10 @@ void XmlParser::loadDataItem(
           {
             d->setMaximum((const char *) text);
           }
-          else if (xmlStrcmp(constraint->name, BAD_CAST "MinimumChange") == 0)
+          else if (xmlStrcmp(constraint->name, BAD_CAST "Filter") == 0)
           {
             d->setFilterValue(strtod((const char*) text, NULL));
-            d->setFilterType(DataItem::FILTER_ACTUAL);
-            xmlChar *type = xmlGetProp(constraint, BAD_CAST "type");
-            if (type != NULL)
-            {
-              if (xmlStrcmp(type, BAD_CAST "PERCENT") == 0) {
-                d->setFilterType(DataItem::FILTER_PERCENT);
-                d->setFilterValue(d->getFilterValue() / 100.0);
-              }
-              xmlFree(type);
-            }
+            d->setFilterType(DataItem::FILTER_MINIMUM_DELTA);
           }
           xmlFree(text);
         }
@@ -504,6 +510,17 @@ void XmlParser::handleChildren(
 
     handleComponent(child, parent, device);
   }
+}
+
+void XmlParser::handleRefenence(xmlNodePtr reference,
+                                        Component *parent,
+                                        Device *device)
+{
+  map<string,string> attrs = getAttributes(reference);
+  string name;
+  if (attrs.count("name") > 0) name = attrs["name"];
+  Component::Reference ref(attrs["dataItemId"], name);
+  parent->addReference(ref);
 }
 
 // Asset or Cutting Tool parser

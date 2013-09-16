@@ -16,7 +16,9 @@
 
 #include "component.hpp"
 #include "data_item.hpp"
+#include "device.hpp"
 #include <stdlib.h>
+#include <stdexcept>
 
 using namespace std;
 
@@ -31,7 +33,9 @@ const string Component::SComponentSpecs[NumComponentSpecs] = {
   "Configuration",
   "Description",
   "Source",
-  "text"
+  "text",
+  "References",
+  "Reference"
 };
 
 /* Component public methods */
@@ -159,4 +163,26 @@ void Component::addDataItem(DataItem& dataItem)
     
   mDataItems.push_back(&dataItem); 
 }
+
+void Component::resolveReferences()
+{
+  Device *device = getDevice();
+  
+  std::list<Reference>::iterator iter;
+  for (iter = mReferences.begin(); iter != mReferences.end(); iter++)
+  {
+    DataItem *di = device->getDeviceDataItem(iter->mId);
+    if (di == NULL) {
+      throw runtime_error("Cannot resolve Reference for component " + mName + " to data item " + iter->mId);
+    }
+    iter->mDataItem = di;
+  }
+  
+  std::list<Component*>::iterator comp;
+  for (comp = mChildren.begin(); comp != mChildren.end(); comp++)
+  {
+    (*comp)->resolveReferences();
+  }
+}
+
 

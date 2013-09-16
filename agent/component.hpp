@@ -30,6 +30,16 @@ class Device;
 class Component
 {
 public:
+  struct Reference
+  {
+    Reference(std::string &aId, std::string aName) :
+      mId(aId), mName(aName), mDataItem(NULL) {}
+    
+    std::string mId;
+    std::string mName;
+    DataItem *mDataItem;
+  };
+  
   /* std::string enumeration for component parts and details */
   enum EComponentSpecs
   {
@@ -42,10 +52,12 @@ public:
     CONFIGURATION,
     DESCRIPTION,
     SOURCE,
-    TEXT
+    TEXT,
+    REFERENCES,
+    REFERENCE
   };
   
-  static const unsigned int NumComponentSpecs = 8;
+  static const unsigned int NumComponentSpecs = 10;
   static const std::string SComponentSpecs[];
   
 public:
@@ -111,7 +123,13 @@ public:
   
   bool operator<(const Component &comp) const { return mId < comp.getId(); }
   bool operator==(const Component &comp) const { return mId == comp.getId(); }
-
+  
+  /* References */
+  void addReference(Reference &aReference) { mReferences.push_back(aReference); }
+  const std::list<Reference> &getReferences() const { return mReferences; }
+  
+  void resolveReferences();
+  
 protected:
   /* Return a map of attributes of all the component specs */
   std::map<std::string, std::string> buildAttributes() const;
@@ -158,6 +176,9 @@ protected:
   
   /* The set of attribtues */
   std::map<std::string, std::string> mAttributes;
+  
+  /* References */
+  std::list<Reference> mReferences;
 };
 
 struct ComponentComp {

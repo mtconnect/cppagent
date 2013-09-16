@@ -168,3 +168,15 @@ void ComponentTest::testDataItems()
   CPPUNIT_ASSERT_EQUAL(&data2, a->getDataItems().back());
 }
 
+void ComponentTest::testReferences()
+{
+  string id("a"), name("xxx");
+  Component::Reference ref(id, name);
+  
+  a->addReference(ref);
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, a->getReferences().size());
+  
+  CPPUNIT_ASSERT_EQUAL((string) "xxx", a->getReferences().front().mName);
+  CPPUNIT_ASSERT_EQUAL((string) "a", a->getReferences().front().mId);
+}
+

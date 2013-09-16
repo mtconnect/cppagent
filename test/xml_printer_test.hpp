@@ -74,6 +74,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testChangeVersion);
   CPPUNIT_TEST(testChangeMTCLocation);
   CPPUNIT_TEST(testProbeWithFilter);
+  CPPUNIT_TEST(testReferences);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -118,6 +119,9 @@ protected:
   
   // Filter Tests
   void testProbeWithFilter();
+  
+  // Reference tests
+  void testReferences();
   
   /* Retrieve a data item by name string */
   DataItem * getDataItem(const char *name);
