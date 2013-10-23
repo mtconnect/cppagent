@@ -127,6 +127,7 @@ namespace dlib
         key_value_map_ci  headers;
         unsigned short http_return;
         std::string    http_return_status;
+        std::ostream  *out;
     };
 
 // ----------------------------------------------------------------------------------------
@@ -210,6 +211,7 @@ namespace dlib
 
                 parse_http_request(in, incoming, get_max_content_length());
                 read_body(in, incoming);
+                outgoing.out = &out;                
                 const std::string& result = on_request(incoming, outgoing);
                 write_http_response(out, outgoing, result);
             }

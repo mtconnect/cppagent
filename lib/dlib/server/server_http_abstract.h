@@ -128,6 +128,7 @@ namespace dlib
         key_value_map_ci headers;
         unsigned short   http_return;
         std::string      http_return_status;
+        std::ostream  *out;
     };
 
 // -----------------------------------------------------------------------------------------
