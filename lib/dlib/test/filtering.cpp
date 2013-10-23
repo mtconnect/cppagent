@@ -46,8 +46,10 @@ namespace
             if (rnd.get_random_double() < 0.7 || count < 4)
             {
                 // make a random bump
-                dlib::vector<double,2> pp(rnd.get_random_gaussian()/3,
-                                          rnd.get_random_gaussian()/3);
+                dlib::vector<double,2> pp;
+                pp.x() = rnd.get_random_gaussian()/3;
+                pp.y() = rnd.get_random_gaussian()/3;
+
                 ++count;
                 kf.update(p+pp);
             }
@@ -134,7 +136,7 @@ namespace
         DLIB_TEST(rls.get_forget_factor() == 0.99);
         DLIB_TEST(rls.get_c() == 0.1);
 
-        double rls_error = test_filter(rls, 300);
+        double rls_error = test_filter(rls, 1000);
 
         dlog << LINFO << "rls error: "<< rls_error;
         DLIB_TEST_MSG(rls_error < 0.75, rls_error);

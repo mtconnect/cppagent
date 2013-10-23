@@ -69,7 +69,7 @@ namespace
             psi.push_back(std::make_pair(dims-1,static_cast<scalar_type>(-1)));
 
             // Find which distinct label goes with this psi.
-            const long label_idx = index_of_max(vector_to_matrix(distinct_labels) == labels[idx]);
+            const long label_idx = index_of_max(mat(distinct_labels) == labels[idx]);
 
             offset_feature_vector(psi, dims*label_idx);
         }
@@ -212,7 +212,7 @@ namespace
             if (verbose)
                 controller.be_verbose();
             controller.add_processing_node("127.0.0.1", 12345);
-            controller.add_processing_node("127.0.0.1", 12346);
+            controller.add_processing_node("localhost:12346");
             svm_objective = controller(solver, weights);
 
 

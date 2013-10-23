@@ -9,8 +9,7 @@
 #include "../algs.h"
 #include <vector>
 #include <map>
-// This is included just so we can do some disable_if stuff on it in the max_index_plus_one routine().
-#include "../manifold_regularization/sample_pair.h"
+#include "../graph_utils/edge_list_graphs.h"
 #include "../matrix.h"
 
 
@@ -545,12 +544,13 @@ namespace dlib
 
     template <typename T>
     typename disable_if_c<is_pair<typename T::value_type>::value ||
-                          is_same_type<typename T::value_type,sample_pair>::value,unsigned long>::type 
+                          is_same_type<typename T::value_type,sample_pair>::value ||
+                          is_same_type<typename T::value_type,ordered_sample_pair>::value , unsigned long>::type 
     max_index_plus_one (
         const T& samples
     ) 
     {
-        return impl::max_index_plus_one(vector_to_matrix(samples));
+        return impl::max_index_plus_one(mat(samples));
     }
 
 // ------------------------------------------------------------------------------------
@@ -910,10 +910,210 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename T
+        >
+    void make_sparse_vector_inplace(
+        T& vect
+    )
+    {
+        vect = make_sparse_vector(vect);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename U,
+        typename alloc
+        >
+    void make_sparse_vector_inplace (
+        std::vector<std::pair<T,U>,alloc>& vect
+    )
+    {
+        if (vect.size() > 0)
+        {
+            std::sort(vect.begin(), vect.end());
+
+            // merge duplicates
+            for (unsigned long i = 1; i < vect.size(); ++i)
+            {
+                // if we found a duplicate
+                if (vect[i-1].first == vect[i].first)
+                {
+                    // now start collapsing and merging the vector
+                    unsigned long j = i-1;
+                    for (unsigned long k = i; k < vect.size(); ++k)
+                    {
+                        if (vect[j].first == vect[k].first)
+                        {
+                            vect[j].second += vect[k].second;
+                        }
+                        else
+                        {
+                            ++j;
+                            vect[j] = vect[k];
+                        }
+                    }
+
+
+                    // we removed elements when we merged so we need to adjust the size.
+                    vect.resize(j+1);
+                    return;
+                }
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename EXP, typename T, long NR, long NC, typename MM, typename L>
+    void sparse_matrix_vector_multiply (
+        const std::vector<sample_pair>& edges,
+        const matrix_exp<EXP>& v,
+        matrix<T,NR,NC,MM,L>& result
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(max_index_plus_one(edges) <= (unsigned long)v.size() &&
+                    is_col_vector(v),
+                    "\t void sparse_matrix_vector_multiply()"
+                    << "\n\t Invalid inputs were given to this function"
+                    << "\n\t max_index_plus_one(edges): " << max_index_plus_one(edges)
+                    << "\n\t v.size():                  " << v.size() 
+                    << "\n\t is_col_vector(v):          " << is_col_vector(v) 
+        );
+
+        result.set_size(v.nr(),v.nc());
+        result = 0;
+
+        for (unsigned long k = 0; k < edges.size(); ++k)
+        {
+            const long i = edges[k].index1();
+            const long j = edges[k].index2();
+            const double d = edges[k].distance();
+
+            result(i) += v(j)*d;
+            if (i != j)
+                result(j) += v(i)*d;
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename EXP>
+    matrix<typename EXP::type,0,1> sparse_matrix_vector_multiply (
+        const std::vector<sample_pair>& edges,
+        const matrix_exp<EXP>& v
+    )
+    {
+        matrix<typename EXP::type,0,1> result;
+        sparse_matrix_vector_multiply(edges,v,result);
+        return result;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename EXP, typename T, long NR, long NC, typename MM, typename L>
+    void sparse_matrix_vector_multiply (
+        const std::vector<ordered_sample_pair>& edges,
+        const matrix_exp<EXP>& v,
+        matrix<T,NR,NC,MM,L>& result
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(max_index_plus_one(edges) <= (unsigned long)v.size() &&
+                    is_col_vector(v),
+                    "\t void sparse_matrix_vector_multiply()"
+                    << "\n\t Invalid inputs were given to this function"
+                    << "\n\t max_index_plus_one(edges): " << max_index_plus_one(edges)
+                    << "\n\t v.size():                  " << v.size() 
+                    << "\n\t is_col_vector(v):          " << is_col_vector(v) 
+        );
+
+
+        result.set_size(v.nr(),v.nc());
+        result = 0;
+
+        for (unsigned long k = 0; k < edges.size(); ++k)
+        {
+            const long i = edges[k].index1();
+            const long j = edges[k].index2();
+            const double d = edges[k].distance();
+
+            result(i) += v(j)*d;
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename EXP>
+    matrix<typename EXP::type,0,1> sparse_matrix_vector_multiply (
+        const std::vector<ordered_sample_pair>& edges,
+        const matrix_exp<EXP>& v
+    )
+    {
+        matrix<typename EXP::type,0,1> result;
+        sparse_matrix_vector_multiply(edges,v,result);
+        return result;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP, 
+        typename sparse_vector_type,
+        typename T,
+        long NR,
+        long NC,
+        typename MM,
+        typename L
+        >
+    void sparse_matrix_vector_multiply (
+        const matrix_exp<EXP>& m,
+        const sparse_vector_type& v,
+        matrix<T,NR,NC,MM,L>& result
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(max_index_plus_one(v) <= (unsigned long)m.nc(),
+                    "\t void sparse_matrix_vector_multiply()"
+                    << "\n\t Invalid inputs were given to this function"
+                    << "\n\t max_index_plus_one(v): " << max_index_plus_one(v)
+                    << "\n\t m.size():              " << m.size() 
+        );
+
+        result.set_size(m.nr(),1);
+        result = 0;
+
+        for (typename sparse_vector_type::const_iterator i = v.begin(); i != v.end(); ++i)
+        {
+            for (long r = 0; r < result.nr(); ++r)
+            {
+                result(r) += m(r, i->first)*i->second;
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP, 
+        typename sparse_vector_type
+        >
+    matrix<typename EXP::type,0,1> sparse_matrix_vector_multiply (
+        const matrix_exp<EXP>& m,
+        const sparse_vector_type& v
+    )
+    {
+        matrix<typename EXP::type,0,1> result;
+        sparse_matrix_vector_multiply(m,v,result);
+        return result;
+    }
+
+// ----------------------------------------------------------------------------------------
+
 }
 
 #endif // DLIB_SVm_SPARSE_VECTOR
-
-
-
 

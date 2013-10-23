@@ -3,7 +3,6 @@
 #undef DLIB_SERVER_KERNEL_ABSTRACT_
 #ifdef DLIB_SERVER_KERNEL_ABSTRACT_
 
-// non-templatable dependencies
 #include "../threads/threads_kernel_abstract.h"
 #include "../sockets/sockets_kernel_abstract.h"
 #include <string>
@@ -11,17 +10,16 @@
 
 namespace dlib
 {
-
-
     class server
     {
 
         /*!
             INITIAL VALUE
-                get_listening_ip()      == ""
-                get_listening_port()    == 0
-                is_running()            == false
-                get_max_connections()   == 0
+                get_listening_ip()           == ""
+                get_listening_port()         == 0
+                is_running()                 == false
+                get_max_connections()        == 1000
+                get_graceful_close_timeout() == 500 
 
 
             CALLBACK FUNCTIONS
@@ -53,9 +51,10 @@ namespace dlib
                 Also note that when clear() is called all open connection objects 
                 will be shutdown().
 
-                A note about get_max_connections().  When the maximum number of 
-                connections has been reached accept() will simply not be called 
-                until the number of open connections drops below get_max_connections()
+                A note about get_max_connections(): when the maximum number of connections
+                has been reached accept() will simply not be called until the number of
+                open connections drops below get_max_connections().  This means connections
+                will just wait to be serviced, rather than being outright refused.
 
             THREAD SAFETY
                 All member functions are thread-safe.
@@ -136,6 +135,33 @@ namespace dlib
                         will be unusable until clear() is called and succeeds
             !*/
 
+            void start_async (
+            );
+            /*!
+                ensures
+                    - starts listening on the port and ip specified by get_listening_ip()
+                      and #get_listening_port() for new connections.  
+                    - if (get_listening_port() == 0) then
+                        - a port to listen on will be automatically selected 
+                        - #get_listening_port() == the selected port being used
+                    - if (get_listening_ip() == "" ) then
+                        - all local IPs will be listened on
+                    - does NOT block.  That is, this function will return right away and
+                      the server will run on a background thread until clear() or this
+                      object's destructor is called (or until some kind of fatal error
+                      occurs).  
+                    - if an error occurs in the background thread while the server is
+                      running then it will shut itself down, set is_running() to false, and
+                      log the error to a dlib::logger object. 
+                    - calling start_async() on a running server has no effect.
+                throws
+                    - dlib::socket_error
+                        start_async() will throw this exception if there is some problem binding
+                        ports and/or starting the server. 
+                        If this happens then
+                            - The server will be cleared and returned to its initial value. 
+            !*/
+
             bool is_running ( 
             ) const;
             /*!
@@ -152,7 +178,7 @@ namespace dlib
             /*!
                 ensures
                     - returns the maximum number of connections the server will accept 
-                      at a time 
+                      at a time.
                     - returns 0 if the server will accept any number of connections
                 throws
                     - std::bad_alloc
@@ -197,7 +223,7 @@ namespace dlib
             );
             /*!
                 requires
-                    - ip is of the form #.#.#.# (dotted quad notation) or ip == "" 
+                    - is_ip_address(ip) == true or ip == ""
                     - is_running() == false
                 ensures
                     - #get_listening_ip() == ip                     
@@ -216,9 +242,29 @@ namespace dlib
                 throws
                     - std::bad_alloc
             !*/
-       
-
     
+            void set_graceful_close_timeout (
+                unsigned long timeout
+            );
+            /*!
+                ensures
+                    - #get_graceful_close_timeout() == timeout
+            !*/
+
+            unsigned long get_graceful_close_timeout (
+            ) const;
+            /*!
+                ensures
+                    - When on_connect() terminates, it will close the connection using
+                      close_gracefully().  This is done so that any data still in the
+                      operating system's output buffers gets a chance to be properly
+                      transmitted to the remote host.  Part of this involves waiting for
+                      the remote host to close their end of the connection.  Therefore,
+                      get_graceful_close_timeout() returns the timeout, in milliseconds,
+                      that we wait for the remote host to close their end of the
+                      connection.  This is the timeout value given to close_gracefully().
+            !*/
+
         private:
 
             virtual void on_connect (
@@ -254,8 +300,8 @@ namespace dlib
 
 
             // restricted functions
-            server(server<T>&);        // copy constructor
-            server<T>& operator=(server<T>&);    // assignment operator
+            server(server&);        // copy constructor
+            server& operator=(server&);    // assignment operator
     };
 
 }

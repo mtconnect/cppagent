@@ -39,6 +39,10 @@
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4305)
 
+// Disable "warning C4180: qualifier applied to function type has no meaning; ignored".
+// This warning happens often in generic code that works with functions and isn't useful.
+#pragma warning(disable : 4180)
+
 #endif
 
 #ifdef __BORLANDC__
@@ -67,11 +71,13 @@ namespace std
 #include <algorithm>    // for std::swap
 #include <new>          // for std::bad_alloc
 #include <cstdlib>
+#include <limits> // for std::numeric_limits for is_finite()
 #include "assert.h"
 #include "error.h"
 #include "noncopyable.h"
 #include "enable_if.h"
 #include "uintn.h"
+#include "numeric_constants.h"
 #include "memory_manager_stateless/memory_manager_stateless_kernel_1.h" // for the default memory manager
 
 
@@ -325,7 +331,7 @@ namespace dlib
         the member functions called swap) makes them compile right.
 
         So this is a workaround but not too ugly of one.  But hopefully I get get
-        rid of this in a few years.  So this function is alredy deprecated. 
+        rid of this in a few years.  So this function is already deprecated. 
 
         This also means you should NOT use this function in your own code unless
         you have to support an old buggy compiler that benefits from this hack.
@@ -630,6 +636,28 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
     
+    template <
+        typename T
+        >
+    typename enable_if<is_built_in_scalar_type<T>,bool>::type is_finite (
+        const T& value
+    )
+    /*!
+        requires
+            - value must be some kind of scalar type such as int or double
+        ensures
+            - returns true if value is a finite value (e.g. not infinity or NaN) and false
+              otherwise.
+    !*/
+    {
+        if (is_float_type<T>::value)
+            return -std::numeric_limits<T>::infinity() < value && value < std::numeric_limits<T>::infinity();
+        else
+            return true;
+    }
+
+// ----------------------------------------------------------------------------------------
+
     /*!A promote 
         
         This is a template that takes one of the built in scalar types and gives you another
@@ -765,6 +793,51 @@ namespace dlib
         struct tmin { const static long value = x; };
         template <long x, long y>
         struct tmin<x,y,typename enable_if_c<(y < x)>::type> { const static long value = y; };
+
+    // ----------------------------------------------------------------------------------------
+
+#define DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(testname, returnT, funct_name, args)                        \
+    struct _two_bytes_##testname { char a[2]; };                                                       \
+    template < typename T, returnT (T::*funct)args >                                                   \
+    struct _helper_##testname { typedef char type; };                                                  \
+    template <typename T>                                                                              \
+    static char _has_##testname##_helper( typename _helper_##testname<T,&T::funct_name >::type ) { return 0;} \
+    template <typename T>                                                                              \
+    static _two_bytes_##testname _has_##testname##_helper(int) { return _two_bytes_##testname();}             \
+    template <typename T> struct _##testname##workaroundbug {                                          \
+                const static unsigned long U = sizeof(_has_##testname##_helper<T>('a')); };            \
+    template <typename T, unsigned long U = _##testname##workaroundbug<T>::U >                         \
+    struct testname      { static const bool value = false; };                                         \
+    template <typename T>                                                                              \
+    struct testname<T,1> { static const bool value = true; };
+    /*!A DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST
+
+        The DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST() macro is used to define traits templates
+        that tell you if a class has a certain member function.  For example, to make a
+        test to see if a class has a public method with the signature void print(int) you
+        would say:
+            DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(has_print, void, print, (int))
+
+        Then you can check if a class, T, has this method by looking at the boolean value:
+            has_print<T>::value 
+        which will be true if the member function is in the T class.
+
+        Note that you can test for member functions taking no arguments by simply passing
+        in empty () like so:
+            DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(has_print, void, print, ())
+        This would test for a member of the form:
+            void print().
+
+        To test for const member functions you would use a statement such as this:
+            DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(has_print, void, print, ()const)
+        This would test for a member of the form: 
+            void print() const.
+
+        To test for const templated member functions you would use a statement such as this:
+            DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(has_print, void, template print<int>, ())
+        This would test for a member of the form: 
+            template <typename T> void print().
+    !*/
 
 // ----------------------------------------------------------------------------------------
 

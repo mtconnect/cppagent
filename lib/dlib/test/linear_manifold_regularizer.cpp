@@ -6,6 +6,7 @@
 #include <dlib/svm.h>
 #include <dlib/rand.h>
 #include <dlib/string.h>
+#include <dlib/graph_utils_threaded.h>
 #include <vector>
 #include <sstream>
 #include <ctime>
@@ -16,6 +17,66 @@ namespace
     using namespace dlib;
     using namespace std;
     dlib::logger dlog("test.linear_manifold_regularizer");
+
+    template <typename hash_type, typename samples_type>
+    void test_find_k_nearest_neighbors_lsh(
+        const samples_type& samples
+    )
+    {
+        std::vector<sample_pair> edges1, edges2;
+
+        find_k_nearest_neighbors(samples, cosine_distance(), 2, edges1);
+        find_k_nearest_neighbors_lsh(samples, cosine_distance(), hash_type(), 2, 6, edges2, 2);
+
+        std::sort(edges1.begin(), edges1.end(), order_by_index<sample_pair>);
+        std::sort(edges2.begin(), edges2.end(), order_by_index<sample_pair>);
+
+        DLIB_TEST_MSG(edges1.size() == edges2.size(), edges1.size() << "    " << edges2.size());
+        for (unsigned long i = 0; i < edges1.size(); ++i)
+        {
+            DLIB_TEST(edges1[i] == edges2[i]);
+            DLIB_TEST_MSG(std::abs(edges1[i].distance() - edges2[i].distance()) < 1e-7,
+                edges1[i].distance() - edges2[i].distance());
+        }
+    }
+
+    template <typename scalar_type>
+    void test_knn_lsh_sparse()
+    {
+        dlib::rand rnd;
+        std::vector<std::map<unsigned long,scalar_type> > samples;
+        samples.resize(20);
+        for (unsigned int i = 0; i < samples.size(); ++i)
+        {
+            samples[i][0] = rnd.get_random_gaussian();
+            samples[i][2] = rnd.get_random_gaussian();
+        }
+
+        test_find_k_nearest_neighbors_lsh<hash_similar_angles_64>(samples);
+        test_find_k_nearest_neighbors_lsh<hash_similar_angles_128>(samples);
+        test_find_k_nearest_neighbors_lsh<hash_similar_angles_256>(samples);
+        test_find_k_nearest_neighbors_lsh<hash_similar_angles_512>(samples);
+    }
+
+    template <typename scalar_type>
+    void test_knn_lsh_dense()
+    {
+        dlib::rand rnd;
+        std::vector<matrix<scalar_type,0,1> > samples;
+        samples.resize(20);
+        for (unsigned int i = 0; i < samples.size(); ++i)
+        {
+            samples[i].set_size(2);
+            samples[i](0) = rnd.get_random_gaussian();
+            samples[i](1) = rnd.get_random_gaussian();
+        }
+
+        test_find_k_nearest_neighbors_lsh<hash_similar_angles_64>(samples);
+        test_find_k_nearest_neighbors_lsh<hash_similar_angles_128>(samples);
+        test_find_k_nearest_neighbors_lsh<hash_similar_angles_256>(samples);
+        test_find_k_nearest_neighbors_lsh<hash_similar_angles_512>(samples);
+    }
+
 
 
     class linear_manifold_regularizer_tester : public tester
@@ -195,7 +256,7 @@ namespace
             find_k_nearest_neighbors(samples, squared_euclidean_distance(), 1, edges);
             DLIB_TEST(edges.size() == 4);
 
-            std::sort(edges.begin(), edges.end(), &order_by_index);
+            std::sort(edges.begin(), edges.end(), &order_by_index<sample_pair>);
 
             DLIB_TEST(edges[0] == sample_pair(0,1,0));
             DLIB_TEST(edges[1] == sample_pair(0,2,0));
@@ -208,7 +269,7 @@ namespace
             find_k_nearest_neighbors(samples, squared_euclidean_distance(3.9, 4.1), 3, edges);
             DLIB_TEST(edges.size() == 4);
 
-            std::sort(edges.begin(), edges.end(), &order_by_index);
+            std::sort(edges.begin(), edges.end(), &order_by_index<sample_pair>);
 
             DLIB_TEST(edges[0] == sample_pair(1,2,0));
             DLIB_TEST(edges[1] == sample_pair(1,3,0));
@@ -235,7 +296,7 @@ namespace
             find_approximate_k_nearest_neighbors(samples, squared_euclidean_distance(), 1, 10000, seed, edges);
             DLIB_TEST(edges.size() == 4);
 
-            std::sort(edges.begin(), edges.end(), &order_by_index);
+            std::sort(edges.begin(), edges.end(), &order_by_index<sample_pair>);
 
             DLIB_TEST(edges[0] == sample_pair(0,1,0));
             DLIB_TEST(edges[1] == sample_pair(0,2,0));
@@ -248,7 +309,7 @@ namespace
             find_approximate_k_nearest_neighbors(samples, squared_euclidean_distance(3.9, 4.1), 3, 10000, seed, edges);
             DLIB_TEST(edges.size() == 4);
 
-            std::sort(edges.begin(), edges.end(), &order_by_index);
+            std::sort(edges.begin(), edges.end(), &order_by_index<sample_pair>);
 
             DLIB_TEST(edges[0] == sample_pair(1,2,0));
             DLIB_TEST(edges[1] == sample_pair(1,3,0));
@@ -274,7 +335,7 @@ namespace
             find_k_nearest_neighbors(samples, squared_euclidean_distance(), 2, edges);
             DLIB_TEST(edges.size() == 4);
 
-            std::sort(edges.begin(), edges.end(), &order_by_index);
+            std::sort(edges.begin(), edges.end(), &order_by_index<sample_pair>);
 
             DLIB_TEST(edges[0] == sample_pair(0,1,0));
             DLIB_TEST(edges[1] == sample_pair(0,2,0));
@@ -302,7 +363,7 @@ namespace
             find_approximate_k_nearest_neighbors(samples, squared_euclidean_distance(), 2, 10000, seed,  edges);
             DLIB_TEST(edges.size() == 4);
 
-            std::sort(edges.begin(), edges.end(), &order_by_index);
+            std::sort(edges.begin(), edges.end(), &order_by_index<sample_pair>);
 
             DLIB_TEST(edges[0] == sample_pair(0,1,0));
             DLIB_TEST(edges[1] == sample_pair(0,2,0));
@@ -327,6 +388,10 @@ namespace
             }
             test_knn1();
             test_knn2();
+            test_knn_lsh_sparse<double>();
+            test_knn_lsh_sparse<float>();
+            test_knn_lsh_dense<double>();
+            test_knn_lsh_dense<float>();
 
         }
     };

@@ -7,6 +7,10 @@
 #include "statistics/dpca.h"
 #include "statistics/random_subset_selector.h"
 #include "statistics/image_feature_sampling.h"
+#include "statistics/sammon.h"
+#include "statistics/cca.h"
+#include "statistics/average_precision.h"
+#include "statistics/vector_normalizer_frobmetric.h"
 
 #endif // DLIB_STATISTICs_H_ 
 

@@ -48,8 +48,9 @@ namespace dlib
         ) :
             samples(samples_),
             labels(labels_),
-            Cpos(C_pos),
-            Cneg(C_neg),
+            C(std::min(C_pos,C_neg)),
+            Cpos(C_pos/C),
+            Cneg(C_neg/C),
             be_verbose(be_verbose_),
             eps(eps_),
             max_iterations(max_iter)
@@ -61,7 +62,7 @@ namespace dlib
         virtual scalar_type get_c (
         ) const 
         {
-            return 1;
+            return C;
         }
 
         virtual long get_num_dimensions (
@@ -74,8 +75,8 @@ namespace dlib
         virtual bool optimization_status (
             scalar_type current_objective_value,
             scalar_type current_error_gap,
-            scalar_type ,
-            scalar_type ,
+            scalar_type current_risk_value,
+            scalar_type current_risk_gap,
             unsigned long num_cutting_planes,
             unsigned long num_iterations
         ) const 
@@ -83,20 +84,19 @@ namespace dlib
             if (be_verbose)
             {
                 using namespace std;
-                cout << "svm objective: " << current_objective_value << endl;
-                cout << "gap: " << current_error_gap << endl;
-                cout << "num planes: " << num_cutting_planes << endl;
-                cout << "iter: " << num_iterations << endl;
+                cout << "objective:     " << current_objective_value << endl;
+                cout << "objective gap: " << current_error_gap << endl;
+                cout << "risk:          " << current_risk_value << endl;
+                cout << "risk gap:      " << current_risk_gap << endl;
+                cout << "num planes:    " << num_cutting_planes << endl;
+                cout << "iter:          " << num_iterations << endl;
                 cout << endl;
             }
 
             if (num_iterations >= max_iterations)
                 return true;
 
-            if (current_objective_value == 0)
-                return true;
-
-            if (current_error_gap/current_objective_value < eps)
+            if (current_risk_gap < eps)
                 return true;
 
             return false;
@@ -293,6 +293,7 @@ namespace dlib
 
         const in_sample_vector_type& samples;
         const in_scalar_vector_type& labels;
+        const scalar_type C;
         const scalar_type Cpos;
         const scalar_type Cneg;
 
@@ -353,6 +354,7 @@ namespace dlib
             eps = 0.001;
             max_iterations = 10000;
             learn_nonnegative_weights = false;
+            last_weight_1 = false;
         }
 
         explicit svm_c_linear_trainer (
@@ -373,6 +375,7 @@ namespace dlib
             eps = 0.001;
             max_iterations = 10000;
             learn_nonnegative_weights = false;
+            last_weight_1 = false;
         }
 
         void set_epsilon (
@@ -444,6 +447,19 @@ namespace dlib
             learn_nonnegative_weights = value;
         }
 
+        bool forces_last_weight_to_1 (
+        ) const
+        {
+            return last_weight_1;
+        }
+
+        void force_last_weight_to_1 (
+            bool should_last_weight_be_1
+        )
+        {
+            last_weight_1 = should_last_weight_be_1;
+        }
+
         void set_c (
             scalar_type C 
         )
@@ -512,7 +528,7 @@ namespace dlib
         ) const
         {
             scalar_type obj;
-            return do_train(vector_to_matrix(x),vector_to_matrix(y),obj);
+            return do_train(mat(x),mat(y),obj);
         }
 
 
@@ -526,7 +542,7 @@ namespace dlib
             scalar_type& svm_objective
         ) const
         {
-            return do_train(vector_to_matrix(x),vector_to_matrix(y),svm_objective);
+            return do_train(mat(x),mat(y),svm_objective);
         }
 
     private:
@@ -542,30 +558,50 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(is_binary_classification_problem(x,y) == true,
+            DLIB_ASSERT(is_learning_problem(x,y) == true,
                 "\t decision_function svm_c_linear_trainer::train(x,y)"
                 << "\n\t invalid inputs were given to this function"
                 << "\n\t x.nr(): " << x.nr() 
                 << "\n\t y.nr(): " << y.nr() 
                 << "\n\t x.nc(): " << x.nc() 
                 << "\n\t y.nc(): " << y.nc() 
-                << "\n\t is_binary_classification_problem(x,y): " << is_binary_classification_problem(x,y)
+                << "\n\t is_learning_problem(x,y): " << is_learning_problem(x,y)
                 );
+#ifdef ENABLE_ASSERTS
+            for (long i = 0; i < x.size(); ++i)
+            {
+                DLIB_ASSERT(y(i) == +1 || y(i) == -1,
+                    "\t decision_function svm_c_linear_trainer::train(x,y)"
+                    << "\n\t invalid inputs were given to this function"
+                    << "\n\t y("<<i<<"): " << y(i)
+                );
+            }
+#endif
 
 
             typedef matrix<scalar_type,0,1> w_type;
             w_type w;
 
+            const unsigned long num_dims = max_index_plus_one(x);
+
             unsigned long num_nonnegative = 0;
             if (learn_nonnegative_weights)
             {
-                num_nonnegative = max_index_plus_one(x);
+                num_nonnegative = num_dims;
             }
+
+            unsigned long force_weight_1_idx = std::numeric_limits<unsigned long>::max(); 
+            if (last_weight_1)
+            {
+                force_weight_1_idx = num_dims-1; 
+            }
+
 
             svm_objective = solver(
                 make_oca_problem_c_svm<w_type>(Cpos, Cneg, x, y, verbose, eps, max_iterations), 
                 w,
-                num_nonnegative);
+                num_nonnegative,
+                force_weight_1_idx);
 
             // put the solution into a decision function and then return it
             decision_function<kernel_type> df;
@@ -590,6 +626,7 @@ namespace dlib
         bool verbose;
         unsigned long max_iterations;
         bool learn_nonnegative_weights;
+        bool last_weight_1;
     }; 
 
 // ----------------------------------------------------------------------------------------

@@ -83,7 +83,7 @@ namespace dlib
         )
         {
             COMPILE_TIME_ASSERT( pixel_traits<typename image_type::type>::has_alpha == false );
-            load_impl(array_to_matrix(img));
+            load_impl(mat(img));
         }
 
         inline void unload(
@@ -282,7 +282,6 @@ namespace dlib
                 }
             }
 
-            const double pi = 3.1415926535898;
 
             // loop over all the histogram cells and fill them out
             for (long rh = 1; rh < hist_cells.nr()-1; ++rh)

@@ -36,6 +36,6 @@ The license for this library can be found in LICENSE.txt.  But the
 long and short of the license is that you can use this code however
 you like, even in closed source commercial software.
 
-Version: 17.47
-Date:    Fri Jun 15 19:14:53 EDT 2012
-Mercurial Revision ID: f58ff52144bd
+Version: 18.5
+Date:    Tue Oct 22 18:47:34 EDT 2013
+Mercurial Revision ID: 3026cfaf82c5

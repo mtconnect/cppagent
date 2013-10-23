@@ -874,7 +874,7 @@ L360:
                 //goto L720;
             }
             ++nf;
-            f = calfun(pointer_to_column_vector(&x[1], n));
+            f = calfun(mat(&x[1], n));
             if (ntrits == -1) {
                 fsave = f;
                 goto L720;
@@ -1946,7 +1946,7 @@ L50:
                 }
                 /* L60: */
             }
-            f = calfun(pointer_to_column_vector(&x[1],n));
+            f = calfun(mat(&x[1],n));
             fval[nf] = f;
             if (nf == 1) {
                 fbeg = f;
@@ -2572,7 +2572,7 @@ L260:
                     /* L290: */
                 }
                 ++(nf);
-                f = calfun(pointer_to_column_vector(&w[1],n));
+                f = calfun(mat(&w[1],n));
                 fval[kpt] = f;
                 if (f < fval[kopt]) {
                     kopt = kpt;
@@ -3353,13 +3353,8 @@ L210:
         const long max_f_evals
     ) 
     {
-        // You get an error on this line when you pass in a global function to this function.
-        // You have to either use a function object or pass a pointer to your global function
-        // by taking its address using the & operator.  (This check is here because gcc 4.0
-        // has a bug that causes it to silently corrupt return values from functions that
-        // invoked through a reference)
-        COMPILE_TIME_ASSERT(is_function<funct>::value == false);
-
+        // The starting point (i.e. x) must be a column vector.  
+        COMPILE_TIME_ASSERT(T::NC <= 1);
 
         // check the requirements.  Also split the assert up so that the error message isn't huge.
         DLIB_CASSERT(is_col_vector(x) && is_col_vector(x_lower) && is_col_vector(x_upper) &&
@@ -3413,6 +3408,9 @@ L210:
         const long max_f_evals
     ) 
     {
+        // The starting point (i.e. x) must be a column vector.  
+        COMPILE_TIME_ASSERT(T::NC <= 1);
+
         return -find_min_bobyqa(negate_function(f), x, npt, x_lower, x_upper, rho_begin, rho_end, max_f_evals);
     }
 

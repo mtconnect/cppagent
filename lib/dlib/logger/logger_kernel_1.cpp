@@ -46,22 +46,6 @@ namespace dlib
 
         gd.set_level("",new_level);
     }
-    
-    void set_all_logging_headers (
-        logger::print_header_type ph
-    )
-    {
-      logger::global_data& gd = logger::get_global_data();
-      auto_mutex M(gd.m);
-      gd.loggers.reset();
-      while (gd.loggers.move_next())
-      {
-          gd.loggers.element()->print_header = ph;
-      }
-
-      gd.set_logger_header("", ph);
-    }
-    
 
 // ----------------------------------------------------------------------------------------
 

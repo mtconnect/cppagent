@@ -49,8 +49,8 @@ namespace dlib
         return (x << r) | (x >> (64 - r));
     }
 
-#define	DLIB_ROTL32(x,y)	murmur_rotl32(x,y)
-#define DLIB_ROTL64(x,y)	murmur_rotl64(x,y)
+#define	DLIB_ROTL32(x,y)	dlib::murmur_rotl32(x,y)
+#define DLIB_ROTL64(x,y)	dlib::murmur_rotl64(x,y)
 
 #define DLIB_BIG_CONSTANT(x) (x##LLU)
 
@@ -220,6 +220,90 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    inline uint32 murmur_hash3_2 ( 
+        const uint32 v1,
+        const uint32 v2 
+    )
+    {
+        uint32 h1 = v2;
+
+        uint32 c1 = 0xcc9e2d51;
+        uint32 c2 = 0x1b873593;
+
+        //----------
+        // body
+
+
+        uint32 k1 = v1;
+
+        k1 *= c1;
+        k1 = DLIB_ROTL32(k1,15);
+        k1 *= c2;
+
+        h1 ^= k1;
+        h1 = DLIB_ROTL32(h1,13); 
+        h1 = h1*5+0xe6546b64;
+
+
+        //----------
+        // finalization
+
+        h1 ^= 4; // =^ by length in bytes
+
+        h1 = murmur_fmix(h1);
+
+        return h1;
+    } 
+
+// ----------------------------------------------------------------------------------------
+
+    inline uint32 murmur_hash3_3 ( 
+        const uint32 v1,
+        const uint32 v2, 
+        const uint32 v3 
+    )
+    {
+
+        uint32 h1 = v3;
+
+        uint32 c1 = 0xcc9e2d51;
+        uint32 c2 = 0x1b873593;
+
+        //----------
+        // body
+
+
+        uint32 k1 = v1;
+
+        k1 *= c1;
+        k1 = DLIB_ROTL32(k1,15);
+        k1 *= c2;
+
+        h1 ^= k1;
+        h1 = DLIB_ROTL32(h1,13); 
+        h1 = h1*5+0xe6546b64;
+
+        k1 = v2;
+        k1 *= c1;
+        k1 = DLIB_ROTL32(k1,15);
+        k1 *= c2;
+
+        h1 ^= k1;
+        h1 = DLIB_ROTL32(h1,13); 
+        h1 = h1*5+0xe6546b64;
+
+        //----------
+        // finalization
+
+        h1 ^= 8; // =^ by length in bytes
+
+        h1 = murmur_fmix(h1);
+
+        return h1;
+    } 
+
+// ----------------------------------------------------------------------------------------
+
     inline std::pair<uint64,uint64> murmur_hash3_128bit ( 
         const void* key, 
         const int len,
@@ -326,6 +410,95 @@ namespace dlib
         return std::make_pair(h1,h2);
     }
 
+// ----------------------------------------------------------------------------------------
+
+    inline std::pair<uint64,uint64> murmur_hash3_128bit ( 
+        const uint32& v1, 
+        const uint32& v2, 
+        const uint32& v3, 
+        const uint32& v4 
+    )
+    {
+        uint64 h1 = 0;
+        uint64 h2 = 0;
+
+        const uint64 c1 = DLIB_BIG_CONSTANT(0x87c37b91114253d5);
+        const uint64 c2 = DLIB_BIG_CONSTANT(0x4cf5ad432745937f);
+
+        //----------
+        // body
+
+        uint64 k1 = (static_cast<uint64>(v2)<<32)|v1; 
+        uint64 k2 = (static_cast<uint64>(v4)<<32)|v3; 
+
+        k1 *= c1; k1  = DLIB_ROTL64(k1,31); k1 *= c2;
+
+        h1 = DLIB_ROTL64(k1,27); h1 = h1*5+0x52dce729;
+
+        k2 *= c2; k2  = DLIB_ROTL64(k2,33); k2 *= c1; 
+
+        h2 = DLIB_ROTL64(k2,31); h2 += h1; h2 = h2*5+0x38495ab5;
+
+        //----------
+        // finalization
+
+        h1 ^= 16; h2 ^= 16;
+
+        h1 += h2;
+        h2 += h1;
+
+        h1 = murmur_fmix(h1);
+        h2 = murmur_fmix(h2);
+
+        h1 += h2;
+        h2 += h1;
+
+        return std::make_pair(h1,h2);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline std::pair<uint64,uint64> murmur_hash3_128bit_3 ( 
+        uint64 k1, 
+        uint64 k2,
+        uint64 k3 
+    )
+    {
+        uint64 h1 = k3;
+        uint64 h2 = k3;
+
+        const uint64 c1 = DLIB_BIG_CONSTANT(0x87c37b91114253d5);
+        const uint64 c2 = DLIB_BIG_CONSTANT(0x4cf5ad432745937f);
+
+        //----------
+        // body
+
+        k1 *= c1; k1  = DLIB_ROTL64(k1,31); k1 *= c2; h1 ^= k1;
+
+        h1 = DLIB_ROTL64(h1,27); h1 += h2; h1 = h1*5+0x52dce729;
+
+        k2 *= c2; k2  = DLIB_ROTL64(k2,33); k2 *= c1; h2 ^= k2;
+
+        h2 = DLIB_ROTL64(h2,31); h2 += h1; h2 = h2*5+0x38495ab5;
+
+        //----------
+        // finalization
+
+        h1 ^= 16; h2 ^= 16;
+
+        h1 += h2;
+        h2 += h1;
+
+        h1 = murmur_fmix(h1);
+        h2 = murmur_fmix(h2);
+
+        h1 += h2;
+        h2 += h1;
+
+        return std::make_pair(h1,h2);
+    }
+
+// ----------------------------------------------------------------------------------------
 
 }
 

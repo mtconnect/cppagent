@@ -29,19 +29,20 @@ namespace dlib
 
             INITIAL VALUE
                 - get_epsilon() == 0.001
-                - get_max_cache_size() == 10
+                - get_max_cache_size() == 5
                 - get_c() == 1
                 - This object will not be verbose
 
             WHAT THIS OBJECT REPRESENTS
-                This object is a tool for solving the optimization problem associated 
-                with a structural support vector machine.  A structural SVM is a supervised 
+                This object is a tool for solving the optimization problem associated with
+                a structural support vector machine.  A structural SVM is a supervised
                 machine learning method for learning to predict complex outputs.  This is
-                contrasted with a binary classifier which makes only simple yes/no predictions.  
-                A structural SVM, on the other hand, can learn to predict outputs as complex
-                as entire parse trees.  To do this, it learns a function F(x,y) which measures 
-                how well a particular data sample x matches a label y.  When used for prediction,
-                the best label for a new x is given by the y which maximizes F(x,y).   
+                contrasted with a binary classifier which makes only simple yes/no
+                predictions.  A structural SVM, on the other hand, can learn to predict
+                complex outputs such as entire parse trees or DNA sequence alignments.  To
+                do this, it learns a function F(x,y) which measures how well a particular
+                data sample x matches a label y.  When used for prediction, the best label
+                for a new x is given by the y which maximizes F(x,y).   
 
                 To use this object you inherit from it, provide implementations of its four 
                 pure virtual functions, and then pass your object to the oca optimizer.
@@ -69,7 +70,7 @@ namespace dlib
                 For an introduction to structured support vector machines you should consult 
                 the following paper: 
                     Predicting Structured Objects with Support Vector Machines by 
-                    By Thorsten Joachims, Thomas Hofmann, Yisong Yue, and Chun-nam Yu
+                    Thorsten Joachims, Thomas Hofmann, Yisong Yue, and Chun-nam Yu
 
                 For a more detailed discussion of the particular algorithm implemented by this
                 object see the following paper:  

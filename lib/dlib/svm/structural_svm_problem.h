@@ -24,7 +24,7 @@ namespace dlib
     public:
 
         cache_element_structural_svm (
-        ) : prob(0), sample_idx(0) {}
+        ) : prob(0), sample_idx(0), last_true_risk_computed(std::numeric_limits<double>::infinity()) {}
 
         typedef typename structural_svm_problem::scalar_type scalar_type;
         typedef typename structural_svm_problem::matrix_type matrix_type;
@@ -48,7 +48,10 @@ namespace dlib
             lru_count.clear();
 
             if (prob->get_max_cache_size() != 0)
+            {
                 prob->get_truth_joint_feature_vector(idx, true_psi);
+                compact_sparse_vector(true_psi);
+            }
         }
 
         void get_truth_joint_feature_vector_cached (
@@ -63,22 +66,23 @@ namespace dlib
 
         void separation_oracle_cached (
             const bool skip_cache,
-            const scalar_type& cur_risk_lower_bound,
+            const scalar_type& saved_current_risk_gap,
             const matrix_type& current_solution,
             scalar_type& out_loss,
             feature_vector_type& out_psi
         ) const
         {
-            if (!skip_cache && prob->get_max_cache_size() != 0)
+            const bool cache_enabled = prob->get_max_cache_size() != 0;
+
+            // Don't waste time computing this if the cache isn't going to be used.
+            const scalar_type dot_true_psi = cache_enabled ? dot(true_psi, current_solution) : 0;
+
+            scalar_type best_risk = -std::numeric_limits<scalar_type>::infinity();
+            unsigned long best_idx = 0;
+            long max_lru_count = 0;
+            if (cache_enabled)
             {
-                scalar_type best_risk = -std::numeric_limits<scalar_type>::infinity();
-                unsigned long best_idx = 0;
-
-
-                const scalar_type dot_true_psi = dot(true_psi, current_solution);
-
                 // figure out which element in the cache is the best (i.e. has the biggest risk)
-                long max_lru_count = 0;
                 for (unsigned long i = 0; i < loss.size(); ++i)
                 {
                     const scalar_type risk = loss[i] + dot(psi[i], current_solution) - dot_true_psi;
@@ -92,43 +96,97 @@ namespace dlib
                         max_lru_count = lru_count[i];
                 }
 
-                if (best_risk - cur_risk_lower_bound > prob->get_epsilon())
+                if (!skip_cache)
                 {
-                    out_psi = psi[best_idx];
-                    lru_count[best_idx] = max_lru_count + 1;
-                    return;
+                    // Check if the best psi vector in the cache is still good enough to use as
+                    // a proxy for the true separation oracle.  If the risk value has dropped
+                    // by enough to get into the stopping condition then the best psi isn't
+                    // good enough. 
+                    if (best_risk + saved_current_risk_gap > last_true_risk_computed &&
+                        best_risk >= 0)
+                    {
+                        out_psi = psi[best_idx];
+                        lru_count[best_idx] = max_lru_count + 1;
+                        return;
+                    }
                 }
             }
 
 
             prob->separation_oracle(sample_idx, current_solution, out_loss, out_psi);
 
-            if (prob->get_max_cache_size() == 0)
+            if (!cache_enabled)
                 return;
 
+            compact_sparse_vector(out_psi);
+
+            last_true_risk_computed = out_loss + dot(out_psi, current_solution) - dot_true_psi;
+
+            // If the separation oracle is only solved approximately then the result might
+            // not be as good as just selecting true_psi as the output.  So here we check
+            // if that is the case. 
+            if (last_true_risk_computed < 0 && best_risk < 0)
+            {
+                out_psi = true_psi;
+                out_loss = 0;
+            }
+            // Alternatively, an approximate separation oracle might not do as well as just
+            // selecting from the cache.  So if that is the case when just take the best
+            // element from the cache.
+            else if (last_true_risk_computed < best_risk) 
+            {
+                out_psi = psi[best_idx];
+                out_loss = loss[best_idx];
+                lru_count[best_idx] = max_lru_count + 1;
+            }
             // if the cache is full
-            if (loss.size() >= prob->get_max_cache_size())
+            else if (loss.size() >= prob->get_max_cache_size())
             {
                 // find least recently used cache entry for idx-th sample
-                const long i       = index_of_min(vector_to_matrix(lru_count));
+                const long i       = index_of_min(mat(lru_count));
 
                 // save our new data in the cache
                 loss[i] = out_loss;
                 psi[i]  = out_psi;
 
-                const long max_use = max(vector_to_matrix(lru_count));
+                const long max_use = max(mat(lru_count));
                 // Make sure this new cache entry has the best lru count since we have used
                 // it most recently.
                 lru_count[i] = max_use + 1;
             }
             else
             {
+                // In this case we just append the new psi into the cache.
+
                 loss.push_back(out_loss);
                 psi.push_back(out_psi);
                 long max_use = 1;
                 if (lru_count.size() != 0)
-                    max_use = max(vector_to_matrix(lru_count)) + 1;
+                    max_use = max(mat(lru_count)) + 1;
                 lru_count.push_back(max_use);
+            }
+        }
+
+    private:
+        // Do nothing if T isn't actually a sparse vector
+        template <typename T> void compact_sparse_vector( T& ) const { }
+
+        template <
+            typename T,
+            typename U,
+            typename alloc
+            >
+        void compact_sparse_vector (
+            std::vector<std::pair<T,U>,alloc>& vect
+        ) const
+        {
+            // If the sparse vector has more entires than dimensions then it must have some 
+            // duplicate elements.  So compact them using make_sparse_vector_inplace().
+            if (vect.size() > (unsigned long)prob->get_num_dimensions())
+            {
+                make_sparse_vector_inplace(vect);
+                // make sure the vector doesn't use more RAM than is necessary
+                std::vector<std::pair<T,U>,alloc>(vect).swap(vect);
             }
         }
 
@@ -140,6 +198,7 @@ namespace dlib
         mutable std::vector<scalar_type> loss;
         mutable std::vector<feature_vector_type> psi;
         mutable std::vector<long> lru_count;
+        mutable double last_true_risk_computed;
     };
 
 // ----------------------------------------------------------------------------------------
@@ -173,11 +232,12 @@ namespace dlib
 
         structural_svm_problem (
         ) :
-            cur_risk_lower_bound(0),
+            saved_current_risk_gap(0),
             eps(0.001),
             verbose(false),
             skip_cache(true),
-            max_cache_size(10),
+            count_below_eps(0),
+            max_cache_size(5),
             C(1)
         {}
 
@@ -288,28 +348,35 @@ namespace dlib
                 cout << endl;
             }
 
-            cur_risk_lower_bound = std::max<scalar_type>(current_risk_value - current_risk_gap, 0);
-
-            bool should_stop = false;
+            saved_current_risk_gap = current_risk_gap;
 
             if (current_risk_gap < eps)
-                should_stop = true;
-
-            if (should_stop && !skip_cache)
             {
-                // Instead of stopping we shouldn't use the cache on the next iteration.  This way
-                // we can be sure to have the best solution rather than assuming the cache is up-to-date
-                // enough.
-                should_stop = false;
-                skip_cache = true;
+                // Only stop when we see that the risk gap is small enough on a non-cached
+                // iteration.
+                if (skip_cache || max_cache_size == 0)
+                    return true;
+
+                ++count_below_eps;
+
+                // Only disable the cache if we have seen a few consecutive iterations that
+                // look to have converged.
+                if (count_below_eps > 1)
+                {
+                    // Instead of stopping we shouldn't use the cache on the next iteration.  This way
+                    // we can be sure to have the best solution rather than assuming the cache is up-to-date
+                    // enough.
+                    skip_cache = true;
+                    count_below_eps = 0;
+                }
             }
             else
             {
+                count_below_eps = 0;
                 skip_cache = false;
             }
 
-
-            return should_stop;
+            return false;
         }
 
         virtual void get_risk (
@@ -349,7 +416,7 @@ namespace dlib
         }
 
         virtual void call_separation_oracle_on_all_samples (
-            matrix_type& w,
+            const matrix_type& w,
             matrix_type& subgradient,
             scalar_type& total_loss
         ) const
@@ -374,7 +441,7 @@ namespace dlib
         ) const 
         {
             cache[idx].separation_oracle_cached(skip_cache, 
-                                                cur_risk_lower_bound,
+                                                saved_current_risk_gap,
                                                 current_solution,
                                                 loss,
                                                 psi);
@@ -382,7 +449,7 @@ namespace dlib
     private:
 
 
-        mutable scalar_type cur_risk_lower_bound;
+        mutable scalar_type saved_current_risk_gap;
         mutable matrix_type psi_true;
         scalar_type eps;
         mutable bool verbose;
@@ -390,6 +457,7 @@ namespace dlib
 
         mutable std::vector<cache_element_structural_svm<structural_svm_problem> > cache;
         mutable bool skip_cache;
+        mutable int count_below_eps;
         unsigned long max_cache_size;
 
         scalar_type C;

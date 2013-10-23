@@ -6,7 +6,7 @@
 #include "matrix_abstract.h"
 #include <complex>
 #include "../pixel.h"
-#include "../geometry.h"
+#include "../geometry/rectangle.h"
 #inclue <vector>
 
 namespace dlib
@@ -392,6 +392,37 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp linpiece (
+        const double val,
+        const matrix_exp& joints
+    );
+    /*!
+        requires
+            - is_vector(joints) == true
+            - joints.size() >= 2
+            - for all valid i < j:
+                - joints(i) < joints(j)
+        ensures
+            - linpiece() is useful for creating piecewise linear functions of val.  For
+              example, if w is a parameter vector then you can represent a piecewise linear
+              function of val as: f(val) = dot(w, linpiece(val, linspace(0,100,5))).  In
+              this case, f(val) is piecewise linear on the intervals [0,25], [25,50],
+              [50,75], [75,100].  Moreover, w(i) defines the derivative of f(val) in the
+              i-th interval.  Finally, outside the interval [0,100] f(val) has a derivative
+              of zero and f(0) == 0.
+            - To be precise, this function returns a column vector L such that:
+                - L.size() == joints.size()-1
+                - is_col_vector(L) == true
+                - L contains the same type of elements as joints.
+                - for all valid i:
+                - if (joints(i) < val)
+                    - L(i) == min(val,joints(i+1)) - joints(i)
+                - else
+                    - L(i) == 0
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     template <
         long R,
         long C
@@ -454,102 +485,6 @@ namespace dlib
                 - M has the same dimensions as m
                 - for all valid r and c:
                   M(r,c) == m(m.nr()-r-1, m.nc()-c-1)
-    !*/
-
-// ----------------------------------------------------------------------------------------
-
-    template <
-        typename vector_type
-        >
-    const matrix_exp vector_to_matrix (
-        const vector_type& vector
-    );
-    /*!
-        requires
-            - vector_type is an implementation of array/array_kernel_abstract.h or
-              std::vector or dlib::std_vector_c or dlib::matrix
-        ensures
-            - if (vector_type is a dlib::matrix) then
-                - returns a reference to vector
-            - else
-                - returns a matrix R such that:
-                    - is_col_vector(R) == true 
-                    - R.size() == vector.size()
-                    - for all valid r:
-                      R(r) == vector[r]
-    !*/
-
-// ----------------------------------------------------------------------------------------
-
-    template <
-        typename array_type
-        >
-    const matrix_exp array_to_matrix (
-        const array_type& array
-    );
-    /*!
-        requires
-            - array_type is an implementation of array2d/array2d_kernel_abstract.h
-              or dlib::matrix
-        ensures
-            - if (array_type is a dlib::matrix) then
-                - returns a reference to array 
-            - else
-                - returns a matrix R such that:
-                    - R.nr() == array.nr() 
-                    - R.nc() == array.nc()
-                    - for all valid r and c:
-                      R(r, c) == array[r][c]
-    !*/
-
-// ----------------------------------------------------------------------------------------
-
-    template <
-        typename T
-        >
-    const matrix_exp pointer_to_matrix (
-        const T* ptr,
-        long nr,
-        long nc
-    );
-    /*!
-        requires
-            - nr > 0
-            - nc > 0
-            - ptr == a pointer to at least nr*nc T objects
-        ensures
-            - returns a matrix M such that:
-                - M.nr() == nr
-                - m.nc() == nc 
-                - for all valid r and c:
-                  M(r,c) == ptr[r*nc + c]
-                  (i.e. the pointer is interpreted as a matrix laid out in memory
-                  in row major order)
-            - Note that the returned matrix doesn't take "ownership" of
-              the pointer and thus will not delete or free it.
-    !*/
-
-// ----------------------------------------------------------------------------------------
-
-    template <
-        typename T
-        >
-    const matrix_exp pointer_to_column_vector (
-        const T* ptr,
-        long nr
-    );
-    /*!
-        requires
-            - nr > 0
-            - ptr == a pointer to at least nr T objects
-        ensures
-            - returns a matrix M such that:
-                - M.nr() == nr
-                - m.nc() == 1
-                - for all valid i:
-                  M(i) == ptr[i]
-            - Note that the returned matrix doesn't take "ownership" of
-              the pointer and thus will not delete or free it.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1065,6 +1000,10 @@ namespace dlib
         ensures
             - returns sqrt(sum(squared(m)))
               (i.e. returns the length of the vector m)
+            - if (m contains integer valued elements) then  
+                - The return type is a double that represents the length.  Therefore, the
+                  return value of length() is always represented using a floating point
+                  type. 
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1100,6 +1039,17 @@ namespace dlib
                 - return true
             - else
                 - returns false
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    bool is_finite (
+        const matrix_exp& m
+    );
+    /*!
+        ensures
+            - returns true if all the values in m are finite values and also not any kind
+              of NaN value.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1539,6 +1489,16 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp::type stddev (
+        const matrix_exp& m
+    );
+    /*!
+        ensures
+            - returns sqrt(variance(m))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     const matrix covariance (
         const matrix_exp& m
     );
@@ -1602,6 +1562,33 @@ namespace dlib
                 - M.nc() == nc
                 - for all valid i, j:
                     - M(i,j) == a random number such that 0 <= M(i,j) < 1
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    inline const matrix_exp gaussian_randm (
+        long nr,
+        long nc,
+        unsigned long seed = 0
+    );
+    /*!
+        requires
+            - nr >= 0
+            - nc >= 0
+        ensures
+            - returns a matrix with its values filled with 0 mean unit variance Gaussian
+              random numbers.  
+            - Each setting of the seed results in a different random matrix.
+            - The returned matrix is lazily evaluated using the expression templates
+              technique.  This means that the returned matrix doesn't take up any memory
+              and is only an expression template.  The values themselves are computed on
+              demand using the gaussian_random_hash() routine.  
+            - returns a matrix M such that
+                - M::type == double
+                - M.nr() == nr
+                - M.nc() == nc
+                - for all valid i, j:
+                    - M(i,j) == gaussian_random_hash(i,j,seed) 
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1704,6 +1691,33 @@ namespace dlib
                         - R(r,c) == upper
                     - else if (m(r,c) < lower) then
                         - R(r,c) == lower
+                    - else
+                        - R(r,c) == m(r,c)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp clamp (
+        const matrix_exp& m,
+        const matrix_exp& lower,
+        const matrix_exp& upper
+    );
+    /*!
+        requires
+            - m.nr() == lower.nr()
+            - m.nc() == lower.nc()
+            - m.nr() == upper.nr()
+            - m.nc() == upper.nc()
+            - m, lower, and upper all contain the same type of elements. 
+        ensures
+            - returns a matrix R such that:
+                - R::type == the same type that was in m
+                - R has the same dimensions as m
+                - for all valid r and c:
+                    - if (m(r,c) > upper(r,c)) then
+                        - R(r,c) == upper(r,c)
+                    - else if (m(r,c) < lower(r,c)) then
+                        - R(r,c) == lower(r,c)
                     - else
                         - R(r,c) == m(r,c)
     !*/

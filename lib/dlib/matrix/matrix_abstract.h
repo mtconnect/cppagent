@@ -253,6 +253,8 @@ namespace dlib
         const static long NR = num_rows;
         const static long NC = num_cols;
         const static long cost = 1;
+        typedef T*          iterator;       
+        typedef const T*    const_iterator; 
 
         matrix (
         );
@@ -601,6 +603,44 @@ namespace dlib
             ensures
                 - swaps *this and item
         !*/
+
+        iterator begin(
+        );
+        /*!
+            ensures
+                - returns a random access iterator pointing to the first element in this
+                  matrix.
+                - The iterator will iterate over the elements of the matrix in row major
+                  order if layout is row_major_layout or in column major order if layout is
+                  column_major_layout.
+        !*/
+
+        iterator end(
+        );
+        /*!
+            ensures
+                - returns a random access iterator pointing to one past the end of the last
+                  element in this matrix.
+        !*/
+
+        const_iterator begin(
+        ) const;
+        /*!
+            ensures
+                - returns a random access iterator pointing to the first element in this
+                  matrix.  
+                - The iterator will iterate over the elements of the matrix in row major
+                  order if layout is row_major_layout or in column major order if layout is
+                  column_major_layout.
+        !*/
+
+        const_iterator end(
+        ) const;
+        /*!
+            ensures
+                - returns a random access iterator pointing to one past the end of the last
+                  element in this matrix.
+        !*/
     };
 
 // ----------------------------------------------------------------------------------------
@@ -632,7 +672,9 @@ namespace dlib
         std::ostream& out
     );   
     /*!
-        Provides serialization support 
+        Provides serialization support.  Note that the serialization formats used by the
+        dlib::matrix and dlib::array2d objects are compatible.  That means you can load the
+        serialized data from one into another and it will work properly.
     !*/
 
     template <
@@ -661,6 +703,34 @@ namespace dlib
         ensures
             - writes m to the given out stream in a form suitable for human consumption.
             - returns out
+    !*/
+
+    template <
+        typename T, 
+        long NR, 
+        long NC,
+        typename MM,
+        typename L
+        >
+    std::istream& operator>> (
+        std::istream& in,
+        matrix<T,NR,NC,MM,L>& m
+    );
+    /*!
+        ensures
+            - Tries to read a matrix from the given input stream and store it into #m.
+            - The format expected is the text format output by the above operator<<().
+              That is, the format should be a grid of text such as:
+                2 3 4
+                5 2 6 
+            - The separation between numbers can be any number of whitespace characters or
+              commas.      
+            - The matrix data is assumed to end upon the first blank line or end-of-file,
+              whichever comes first.  This means you can create an input stream with
+              multiple matrices in it by separating them with empty lines.
+            - returns in. 
+            - If there was a formatting error or something which prevents the input data
+              from being parsed into a matrix then #in.fail() == true.
     !*/
 
 // ----------------------------------------------------------------------------------------

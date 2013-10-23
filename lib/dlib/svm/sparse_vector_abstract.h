@@ -9,6 +9,8 @@
 #include "../matrix.h"
 #include <map>
 #include <vector>
+#include "../graph_utils/sample_pair_abstract.h"
+#include "../graph_utils/ordered_sample_pair_abstract.h"
 
 namespace dlib
 {
@@ -201,7 +203,12 @@ namespace dlib
             - a is an unsorted sparse vector
             - is_vector(b) == true
         ensures
-            - returns the dot product between the vectors a and b
+            - returns the dot product between the vectors a and b.  
+            - if (max_index_plus_one(a) >= b.size()) then
+                - a's dimensionality is greater than b's dimensionality.  In this case we
+                  pretend b is padded by as many zeros as is needed to make the dot product
+                  work.  So this means that any elements in a that go beyond the length of
+                  b are simply ignored.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -217,6 +224,11 @@ namespace dlib
             - is_vector(a) == true
         ensures
             - returns the dot product between the vectors a and b
+            - if (max_index_plus_one(b) >= a.size()) then
+                - b's dimensionality is greater than a's dimensionality.  In this case we
+                  pretend a is padded by as many zeros as is needed to make the dot product
+                  work.  So this means that any elements in b that go beyond the length of
+                  a are simply ignored.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -302,7 +314,7 @@ namespace dlib
         requires
             - samples == a single vector (either sparse or dense), or a container
               of vectors which is either a dlib::matrix of vectors or something 
-              convertible to a dlib::matrix via vector_to_matrix() (e.g. a std::vector)
+              convertible to a dlib::matrix via mat() (e.g. a std::vector)
               Valid types of samples include (but are not limited to):
                 - dlib::matrix<double,0,1>                      // A single dense vector 
                 - std::map<unsigned int, double>                // A single sparse vector
@@ -496,8 +508,174 @@ namespace dlib
             - v is an unsorted sparse vector
         ensures
             - returns a copy of v which is a sparse vector. 
-              (i.e. it will be properly sorted and not have any duplicate
-              key values).
+              (i.e. it will be properly sorted and not have any duplicate key values but
+              will still logically represent the same vector).
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    void make_sparse_vector_inplace(
+        T& vect
+    );
+    /*!
+        requires
+            - v is an unsorted sparse vector
+        ensures
+            - vect == make_sparse_vector(vect)
+            - This function is just an optimized version of make_sparse_vector(), in
+              particular, when T is a std::vector<std::pair<>> type it is much more
+              efficient.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP, 
+        typename T, 
+        long NR, 
+        long NC, 
+        typename MM, 
+        typename L
+        >
+    void sparse_matrix_vector_multiply (
+        const std::vector<sample_pair>& edges,
+        const matrix_exp<EXP>& v,
+        matrix<T,NR,NC,MM,L>& result
+    );
+    /*!
+        requires
+            - is_col_vector(v) == true
+            - max_index_plus_one(edges) <= v.size()
+        ensures
+            - Interprets edges as representing a symmetric sparse matrix M.  The elements
+              of M are defined such that, for all valid i,j:
+                - M(i,j) == sum of edges[k].distance() for all k where edges[k]==sample_pair(i,j) 
+                - This means that any element of M that doesn't have any edges associated
+                  with it will have a value of 0.
+            - #result == M*v
+              (i.e. this function multiplies the vector v with the sparse matrix
+              represented by edges and stores the output into result)
+            - get_rect(#result) == get_rect(v)
+              (i.e. result will have the same dimensions as v)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP, 
+        typename T, 
+        long NR, 
+        long NC, 
+        typename MM, 
+        typename L
+        >
+    void sparse_matrix_vector_multiply (
+        const std::vector<ordered_sample_pair>& edges,
+        const matrix_exp<EXP>& v,
+        matrix<T,NR,NC,MM,L>& result
+    );
+    /*!
+        requires
+            - is_col_vector(v) == true
+            - max_index_plus_one(edges) <= v.size()
+        ensures
+            - Interprets edges as representing a square sparse matrix M.  The elements of M
+              are defined such that, for all valid i,j:
+                - M(i,j) == sum of edges[k].distance() for all k where edges[k]==ordered_sample_pair(i,j) 
+                - This means that any element of M that doesn't have any edges associated
+                  with it will have a value of 0.
+            - #result == M*v
+              (i.e. this function multiplies the vector v with the sparse matrix
+              represented by edges and stores the output into result)
+            - get_rect(#result) == get_rect(v)
+              (i.e. result will have the same dimensions as v)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP
+        >
+    matrix<typename EXP::type,0,1> sparse_matrix_vector_multiply (
+        const std::vector<sample_pair>& edges,
+        const matrix_exp<EXP>& v
+    );
+    /*!
+        requires
+            - is_col_vector(v) == true
+            - max_index_plus_one(edges) <= v.size()
+        ensures
+            - This is just a convenience routine for invoking the above
+              sparse_matrix_vector_multiply() routine.  In particular, it just calls
+              sparse_matrix_vector_multiply() with a temporary result matrix and then
+              returns the result.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP
+        >
+    matrix<typename EXP::type,0,1> sparse_matrix_vector_multiply (
+        const std::vector<ordered_sample_pair>& edges,
+        const matrix_exp<EXP>& v
+    );
+    /*!
+        requires
+            - is_col_vector(v) == true
+            - max_index_plus_one(edges) <= v.size()
+        ensures
+            - This is just a convenience routine for invoking the above
+              sparse_matrix_vector_multiply() routine.  In particular, it just calls
+              sparse_matrix_vector_multiply() with a temporary result matrix and then
+              returns the result.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP, 
+        typename sparse_vector_type,
+        typename T,
+        long NR,
+        long NC,
+        typename MM,
+        typename L
+        >
+    void sparse_matrix_vector_multiply (
+        const matrix_exp<EXP>& m,
+        const sparse_vector_type& v,
+        matrix<T,NR,NC,MM,L>& result
+    );
+    /*!
+        requires
+            - max_index_plus_one(v) <= m.nc()
+            - v == an unsorted sparse vector
+        ensures
+            - #result == m*v
+              (i.e. multiply m by the vector v and store the output in result)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP, 
+        typename sparse_vector_type
+        >
+    matrix<typename EXP::type,0,1> sparse_matrix_vector_multiply (
+        const matrix_exp<EXP>& m,
+        const sparse_vector_type& v
+    );
+    /*!
+        requires
+            - max_index_plus_one(v) <= m.nc()
+            - v == an unsorted sparse vector
+        ensures
+            - returns m*v
+              (i.e. multiply m by the vector v and return the resulting vector)
     !*/
 
 // ----------------------------------------------------------------------------------------

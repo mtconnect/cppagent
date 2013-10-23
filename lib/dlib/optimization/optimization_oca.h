@@ -8,6 +8,7 @@
 #include "../matrix.h"
 #include "optimization_solve_qp_using_smo.h"
 #include <vector>
+#include "../sequence.h"
 
 // ----------------------------------------------------------------------------------------
 
@@ -111,21 +112,25 @@ namespace dlib
         typename matrix_type::type operator() (
             const oca_problem<matrix_type>& problem,
             matrix_type& w,
-            unsigned long num_nonnegative = 0 
+            unsigned long num_nonnegative = 0,
+            unsigned long force_weight_to_1 = std::numeric_limits<unsigned long>::max()
         ) const
         {
+            const unsigned long num_dims = problem.get_num_dimensions();
+
             // make sure requires clause is not broken
             DLIB_ASSERT(problem.get_c() > 0 &&
                         problem.get_num_dimensions() > 0,
                 "\t void oca::operator()"
                 << "\n\t The oca_problem is invalid"
                 << "\n\t problem.get_c():              " << problem.get_c() 
-                << "\n\t problem.get_num_dimensions(): " << problem.get_num_dimensions() 
+                << "\n\t problem.get_num_dimensions(): " << num_dims 
                 << "\n\t this: " << this
                 );
 
-            if (num_nonnegative > static_cast<unsigned long>(problem.get_num_dimensions()))
-                num_nonnegative = problem.get_num_dimensions();
+
+            if (num_nonnegative > num_dims)
+                num_nonnegative = num_dims;
 
             typedef typename matrix_type::type scalar_type;
             typedef typename matrix_type::layout_type layout_type;
@@ -134,12 +139,12 @@ namespace dlib
 
             const scalar_type C = problem.get_c();
 
-            matrix<scalar_type,0,0,mem_manager_type, layout_type> planes;
+            typename sequence<vect_type>::kernel_2a planes;
             std::vector<scalar_type> bs, miss_count;
 
             vect_type new_plane, alpha;
 
-            w.set_size(problem.get_num_dimensions(), 1);
+            w.set_size(num_dims, 1);
             w = 0;
 
             // The current objective value.  Note also that w always contains 
@@ -158,7 +163,8 @@ namespace dlib
                 // The flat lower bounding plane is always good to have if we know
                 // what it is.
                 bs.push_back(R_lower_bound);
-                planes = zeros_matrix(w);
+                new_plane = zeros_matrix(w);
+                planes.add(0, new_plane);
                 alpha = uniform_matrix<scalar_type>(1,1, C);
                 miss_count.push_back(0);
 
@@ -173,12 +179,25 @@ namespace dlib
 
                 // add the next cutting plane
                 scalar_type cur_risk;
+                if (force_weight_to_1 < (unsigned long)w.size())
+                    w(force_weight_to_1) = 1;
+
                 problem.get_risk(w, cur_risk, new_plane);
-                if (planes.size() != 0)
-                    planes = join_rows(planes, new_plane);
-                else 
-                    planes = new_plane;
+
+                if (force_weight_to_1 < (unsigned long)w.size())
+                {
+                    // We basically arrange for the w(force_weight_to_1) element and all
+                    // subsequent elements of w to not be involved in the optimization at
+                    // all.  An easy way to do this is to just make sure the elements of w
+                    // corresponding elements in the subgradient are always set to zero
+                    // while we run the cutting plane algorithm.  The only time
+                    // w(force_weight_to_1) is 1 is when we pass it to the oca_problem.
+                    set_rowm(w, range(force_weight_to_1, w.size()-1)) = 0;
+                    set_rowm(new_plane, range(force_weight_to_1, new_plane.size()-1)) = 0;
+                }
+
                 bs.push_back(cur_risk - dot(w,new_plane));
+                planes.add(planes.size(), new_plane);
                 miss_count.push_back(0);
 
                 // If alpha is empty then initialize it (we must always have sum(alpha) == C).  
@@ -194,21 +213,21 @@ namespace dlib
                 // report current status
                 const scalar_type risk_gap = cur_risk - (cp_obj-wnorm)/C;
                 if (counter > 0 && problem.optimization_status(cur_obj, cur_obj - cp_obj, 
-                                                               cur_risk, risk_gap, planes.nc(), counter))
+                                                               cur_risk, risk_gap, planes.size(), counter))
                 {
                     break;
                 }
 
                 // compute kernel matrix for all the planes
                 K.swap(Ktmp);
-                K.set_size(planes.nc(), planes.nc());
+                K.set_size(planes.size(), planes.size());
                 // copy over the old K matrix
                 set_subm(K, 0,0, Ktmp.nr(), Ktmp.nc()) = Ktmp;
 
                 // now add the new row and column to K
-                for (long c = 0; c < planes.nc(); ++c)
+                for (unsigned long c = 0; c < planes.size(); ++c)
                 {
-                    K(c, Ktmp.nc()) = dot(colm(planes,c), new_plane);
+                    K(c, Ktmp.nc()) = dot(planes[c], planes[planes.size()-1]);
                     K(Ktmp.nc(), c) = K(c,Ktmp.nc());
                 }
 
@@ -222,12 +241,23 @@ namespace dlib
                 // Note that we warm start this optimization by using the alpha from the last
                 // iteration as the starting point.
                 if (num_nonnegative != 0)
-                    solve_qp4_using_smo(rowm(planes,range(0,num_nonnegative-1)), K, vector_to_matrix(bs), alpha, eps, sub_max_iter); 
+                {
+                    // copy planes into a matrix so we can call solve_qp4_using_smo()
+                    matrix<scalar_type,0,0,mem_manager_type, layout_type> planes_mat(num_nonnegative,planes.size());
+                    for (unsigned long i = 0; i < planes.size(); ++i)
+                        set_colm(planes_mat,i) = colm(planes[i],0,num_nonnegative);
+
+                    solve_qp4_using_smo(planes_mat, K, mat(bs), alpha, eps, sub_max_iter); 
+                }
                 else
-                    solve_qp_using_smo(K, vector_to_matrix(bs), alpha, eps, sub_max_iter); 
+                {
+                    solve_qp_using_smo(K, mat(bs), alpha, eps, sub_max_iter); 
+                }
 
                 // construct the w that minimized the subproblem.
-                w = -(planes*alpha);
+                w = -alpha(0)*planes[0];
+                for (unsigned long i = 1; i < planes.size(); ++i)
+                    w -= alpha(i)*planes[i];
                 // threshold the first num_nonnegative w elements if necessary.
                 if (num_nonnegative != 0)
                     set_rowm(w,range(0,num_nonnegative-1)) = lowerbound(rowm(w,range(0,num_nonnegative-1)),0);
@@ -242,23 +272,26 @@ namespace dlib
 
                 // Compute the lower bound on the true objective given to us by the cutting 
                 // plane subproblem.
-                cp_obj = -0.5*trans(w)*w + trans(alpha)*vector_to_matrix(bs);
+                cp_obj = -0.5*trans(w)*w + trans(alpha)*mat(bs);
 
 
                 // If it has been a while since a cutting plane was an active constraint then
                 // we should throw it away.
-                while (max(vector_to_matrix(miss_count)) >= inactive_thresh)
+                while (max(mat(miss_count)) >= inactive_thresh)
                 {
-                    const long idx = index_of_max(vector_to_matrix(miss_count));
+                    const long idx = index_of_max(mat(miss_count));
                     bs.erase(bs.begin()+idx);
                     miss_count.erase(miss_count.begin()+idx);
                     K = removerc(K, idx, idx);
                     alpha = remove_row(alpha,idx);
-                    planes = remove_col(planes,idx);
+                    planes.remove(idx, new_plane);
                 }
 
                 ++counter;
             }
+
+            if (force_weight_to_1 < (unsigned long)w.size())
+                w(force_weight_to_1) = 1;
 
             return cur_obj;
         }

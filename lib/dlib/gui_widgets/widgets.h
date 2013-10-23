@@ -26,6 +26,8 @@
 #include <cctype>
 #include <vector>
 #include "../any.h"
+#include <set>
+#include "../image_processing/full_object_detection.h"
 
 #ifdef _MSC_VER
 // This #pragma directive is also located in the algs.h file but for whatever
@@ -651,7 +653,7 @@ namespace dlib
 
         scoped_ptr<text_field_style> style;
 
-        timer<text_field>::kernel_2a t;
+        timer<text_field> t;
 
         popup_menu_region right_click_menu;
 
@@ -1047,7 +1049,7 @@ namespace dlib
 
         scoped_ptr<text_box_style> style;
 
-        timer<text_box>::kernel_2a t;
+        timer<text_box> t;
 
         popup_menu_region right_click_menu;
 
@@ -3186,7 +3188,7 @@ namespace dlib
         long cursor_pos;
         bool show_cursor;
         bool recent_cursor_move;
-        timer<text_grid>::kernel_2a cursor_timer;
+        timer<text_grid> cursor_timer;
         rgb_pixel border_color_;
         any_function<void(unsigned long, unsigned long)> text_modified_handler;
     };
@@ -3218,6 +3220,17 @@ namespace dlib
                 - if (rect_is_selected) then
                     - selected_rect == the index in overlay_rects of the user selected
                       rectangle.
+                    - last_right_click_pos == the last place we saw the user right click
+                      the mouse.
+                    - parts_menu.is_enabled() == true
+                    - if (it is actually a part of this rect that is selected) then
+                        - selected_part_name == the name of the part in overlay_rects[selected_rect].parts
+                          that is selected.
+                    - else
+                        - selected_part_name.size() == 0
+                - else
+                    - parts_menu.is_enabled() == false
+                    - selected_part_name.size() == 0
         !*/
 
     public:
@@ -3253,7 +3266,28 @@ namespace dlib
             }
 
             rect_is_selected = false;
+            parts_menu.disable();
             assign_image_scaled(img,new_img);
+        }
+
+        virtual void set_pos (
+            long x,
+            long y
+        )
+        {
+            auto_mutex lock(m);
+            scrollable_region::set_pos(x,y);
+            parts_menu.set_rect(rect);
+        }
+
+        virtual void set_size (
+            unsigned long width,
+            unsigned long height 
+        )
+        {
+            auto_mutex lock(m);
+            scrollable_region::set_size(width,height);
+            parts_menu.set_rect(rect);
         }
 
         struct overlay_rect
@@ -3268,9 +3302,14 @@ namespace dlib
             overlay_rect(const rectangle& r, pixel_type p, const std::string& l) 
                 : rect(r),label(l) { assign_pixel(color, p); }
 
+            template <typename pixel_type>
+            overlay_rect(const rectangle& r, pixel_type p, const std::string& l, const std::map<std::string,point>& parts_) 
+                : rect(r),label(l),parts(parts_) { assign_pixel(color, p); }
+
             rectangle rect;
             rgb_alpha_pixel color;
             std::string label;
+            std::map<std::string,point> parts;
         };
 
         struct overlay_line
@@ -3286,6 +3325,24 @@ namespace dlib
             rgb_alpha_pixel color;
         };
 
+        struct overlay_circle
+        {
+            overlay_circle():radius(0) { assign_pixel(color, 0);}
+
+            template <typename pixel_type>
+            overlay_circle(const point& center_, const int radius_, pixel_type p) 
+                : center(center_), radius(radius_) { assign_pixel(color, p); }
+
+            template <typename pixel_type>
+            overlay_circle(const point& center_, const int radius_, pixel_type p, const std::string& l) 
+                : center(center_), radius(radius_), label(l) { assign_pixel(color, p); }
+
+            point center;
+            int radius;
+            rgb_alpha_pixel color;
+            std::string label;
+        };
+
         void add_overlay (
             const overlay_rect& overlay
         );
@@ -3295,11 +3352,19 @@ namespace dlib
         );
 
         void add_overlay (
+            const overlay_circle& overlay
+        );
+
+        void add_overlay (
             const std::vector<overlay_rect>& overlay
         );
 
         void add_overlay (
             const std::vector<overlay_line>& overlay
+        );
+
+        void add_overlay (
+            const std::vector<overlay_circle>& overlay
         );
 
         void clear_overlay (
@@ -3357,7 +3422,7 @@ namespace dlib
             orect_selected_event_handler = make_mfp(object,event_handler_);
         }
 
-        void set_overlay_rects_changed_handler (
+        void set_overlay_rect_selected_handler (
             const any_function<void(const overlay_rect& orect)>& event_handler_
         )
         {
@@ -3365,6 +3430,48 @@ namespace dlib
             orect_selected_event_handler = event_handler_;
         }
 
+        template <
+            typename T
+            >
+        void set_image_clicked_handler (
+            T& object,
+            void (T::*event_handler_)(const point& p, bool is_double_click, unsigned long btn)
+        )
+        {
+            auto_mutex M(m);
+            image_clicked_handler = make_mfp(object,event_handler_);
+        }
+
+        void set_image_clicked_handler (
+            const any_function<void(const point& p, bool is_double_click, unsigned long btn)>& event_handler_
+        )
+        {
+            auto_mutex M(m);
+            image_clicked_handler = event_handler_;
+        }
+
+        void add_labelable_part_name (
+            const std::string& name
+        );
+
+        void clear_labelable_part_names (
+        );
+
+        void enable_overlay_editing (
+        ) { auto_mutex M(m); overlay_editing_enabled = true; }
+
+        void disable_overlay_editing (
+        ) 
+        { 
+            auto_mutex M(m); 
+            overlay_editing_enabled = false;  
+            rect_is_selected = false;
+            drawing_rect = false;
+            parent.invalidate_rectangle(rect);
+        }
+        
+        bool overlay_editing_is_enabled (
+        ) const { auto_mutex M(m); return overlay_editing_enabled; }
 
     private:
 
@@ -3407,6 +3514,18 @@ namespace dlib
             unsigned long state
         );
 
+        void on_part_add (
+            const std::string& part_name
+        );
+
+        rectangle get_rect_on_screen (
+            unsigned long idx
+        ) const;
+
+        rectangle get_rect_on_screen (
+            rectangle orect 
+        ) const;
+
         rgb_alpha_pixel invert_pixel (const rgb_alpha_pixel& p) const
         { return rgb_alpha_pixel(255-p.red, 255-p.green, 255-p.blue, p.alpha); }
 
@@ -3415,6 +3534,7 @@ namespace dlib
 
         std::vector<overlay_rect> overlay_rects;
         std::vector<overlay_line> overlay_lines;
+        std::vector<overlay_circle> overlay_circles;
 
         long zoom_in_scale;
         long zoom_out_scale;
@@ -3422,11 +3542,18 @@ namespace dlib
         point rect_anchor;
         rectangle rect_to_draw;
         bool rect_is_selected;
+        std::string selected_part_name;
         unsigned long selected_rect;
         rgb_alpha_pixel default_rect_color;
         std::string default_rect_label;
         any_function<void()> event_handler;
         any_function<void(const overlay_rect& orect)> orect_selected_event_handler;
+        any_function<void(const point& p, bool is_double_click, unsigned long btn)> image_clicked_handler;
+        popup_menu_region parts_menu;
+        point last_right_click_pos;
+        const int part_width;
+        std::set<std::string> part_names;
+        bool overlay_editing_enabled;
 
         // restricted functions
         image_display(image_display&);        // copy constructor
@@ -3441,6 +3568,7 @@ namespace dlib
 
         typedef image_display::overlay_rect overlay_rect;
         typedef image_display::overlay_line overlay_line;
+        typedef image_display::overlay_circle overlay_circle;
 
         image_window(
         ); 
@@ -3448,7 +3576,41 @@ namespace dlib
         template < typename image_type >
         image_window(
             const image_type& img
-        ) : gui_img(*this) { set_image(img); show(); }
+        ) : 
+            gui_img(*this), 
+            window_has_closed(false),
+            have_last_click(false),
+            mouse_btn(0),
+            clicked_signaler(this->wm),
+            have_last_keypress(false),
+            tie_input_events(false)
+        {  
+            gui_img.set_image_clicked_handler(*this, &image_window::on_image_clicked);
+            gui_img.disable_overlay_editing();
+            set_image(img); 
+            show(); 
+        }
+        
+        template < typename image_type >
+        image_window(
+            const image_type& img,
+            const std::string& title
+        ) : 
+            gui_img(*this), 
+            window_has_closed(false),
+            have_last_click(false),
+            mouse_btn(0),
+            clicked_signaler(this->wm),
+            have_last_keypress(false),
+            tie_input_events(false)
+        {  
+            gui_img.set_image_clicked_handler(*this, &image_window::on_image_clicked);
+            gui_img.disable_overlay_editing();
+            set_image(img); 
+            set_title(title);
+            show(); 
+        }
+        
 
         ~image_window(
         );
@@ -3462,16 +3624,24 @@ namespace dlib
             auto_mutex M(wm);
             gui_img.set_image(img); 
 
-            const rectangle r = gui_img.get_image_display_rect();
-            if (image_rect != r)
+            // Only ever mess with the size of the window if the user is giving us an image
+            // that is a different size.  Otherwise we assume that they will have already
+            // sized the window to whatever they feel is reasonable for an image of the
+            // current size.  
+            if (previous_image_size != get_rect(img))
             {
-                // set the size of this window to match the size of the input image
-                set_size(r.width()+padding*2,r.height()+padding*2);
+                const rectangle r = gui_img.get_image_display_rect();
+                if (image_rect != r)
+                {
+                    // set the size of this window to match the size of the input image
+                    set_size(r.width()+padding*2,r.height()+padding*2);
 
-                // call this to make sure everything else is setup properly
-                on_window_resized();
+                    // call this to make sure everything else is setup properly
+                    on_window_resized();
 
-                image_rect = r;
+                    image_rect = r;
+                }
+                previous_image_size = get_rect(img);
             }
         }
 
@@ -3498,8 +3668,85 @@ namespace dlib
             add_overlay(temp);
         }
 
+        void add_overlay(
+            const full_object_detection& object,
+            const std::vector<std::string>& part_names
+        ) 
+        { 
+
+            add_overlay(overlay_rect(object.get_rect(), rgb_pixel(255,0,0)));
+
+            std::vector<overlay_circle> temp;
+            temp.reserve(object.num_parts());
+            for (unsigned long i = 0; i < object.num_parts(); ++i)
+            {
+                if (object.part(i) != OBJECT_PART_NOT_PRESENT)
+                {
+                    if (i < part_names.size())
+                        temp.push_back(overlay_circle(object.part(i), 7, rgb_pixel(0,255,0), part_names[i]));
+                    else
+                        temp.push_back(overlay_circle(object.part(i), 7, rgb_pixel(0,255,0)));
+                }
+            }
+
+            add_overlay(temp);
+        }
+
+        void add_overlay(
+            const full_object_detection& object
+        ) 
+        { 
+            std::vector<std::string> part_names;
+            add_overlay(object, part_names);
+        }
+
+        void add_overlay(
+            const std::vector<full_object_detection>& objects,
+            const std::vector<std::string>& part_names
+        ) 
+        { 
+            std::vector<overlay_rect> rtemp;
+            rtemp.reserve(objects.size());
+            for (unsigned long i = 0; i < objects.size(); ++i)
+            {
+                rtemp.push_back(overlay_rect(objects[i].get_rect(), rgb_pixel(255,0,0)));
+            }
+
+            add_overlay(rtemp);
+
+            std::vector<overlay_circle> temp;
+
+            for (unsigned long i = 0; i < objects.size(); ++i)
+            {
+                for (unsigned long j = 0; j < objects[i].num_parts(); ++j)
+                {
+                    if (objects[i].part(j) != OBJECT_PART_NOT_PRESENT)
+                    {
+                        if (j < part_names.size())
+                            temp.push_back(overlay_circle(objects[i].part(j), 7, rgb_pixel(0,255,0),part_names[j]));
+                        else
+                            temp.push_back(overlay_circle(objects[i].part(j), 7, rgb_pixel(0,255,0)));
+                    }
+                }
+            }
+
+            add_overlay(temp);
+        }
+
+        void add_overlay(
+            const std::vector<full_object_detection>& objects
+        ) 
+        { 
+            std::vector<std::string> part_names;
+            add_overlay(objects, part_names);
+        }
+
         void add_overlay (
             const overlay_line& overlay
+        );
+
+        void add_overlay (
+            const overlay_circle& overlay
         );
 
         template <typename pixel_type>
@@ -3514,12 +3761,68 @@ namespace dlib
             const std::vector<overlay_line>& overlay
         );
 
+        void add_overlay (
+            const std::vector<overlay_circle>& overlay
+        );
+
         void clear_overlay (
         );
 
+        bool get_next_double_click (
+            point& p,
+            unsigned long& mouse_button
+        ); 
+
+        void tie_events (
+        );
+
+        void untie_events (
+        );
+
+        bool events_tied (
+        ) const;
+
+        bool get_next_double_click (
+            point& p
+        ) 
+        {
+            unsigned long mouse_button;
+            return get_next_double_click(p, mouse_button);
+        }
+
+        bool get_next_keypress (
+            unsigned long& key,
+            bool& is_printable,
+            unsigned long& state
+        );
+
+        bool get_next_keypress (
+            unsigned long& key,
+            bool& is_printable
+        )
+        {
+            unsigned long state;
+            return get_next_keypress(key,is_printable,state);
+        }
+
     private:
 
+        virtual base_window::on_close_return_code on_window_close(
+        );
+
         void on_window_resized(
+        );
+        
+        void on_image_clicked (
+            const point& p,
+            bool is_double_click,
+            unsigned long btn
+        );
+
+        virtual void on_keydown (
+            unsigned long key,
+            bool is_printable,
+            unsigned long state
         );
 
         // restricted functions
@@ -3528,6 +3831,18 @@ namespace dlib
 
         image_display gui_img;
         rectangle image_rect;
+        rectangle previous_image_size;
+        bool window_has_closed;
+        bool have_last_click;
+        point last_clicked_point;
+        unsigned long mouse_btn;
+        rsignaler clicked_signaler;
+
+        bool have_last_keypress;
+        unsigned long next_key;
+        bool next_is_printable;
+        unsigned long next_state;
+        bool tie_input_events;
     };
 
 // ----------------------------------------------------------------------------------------

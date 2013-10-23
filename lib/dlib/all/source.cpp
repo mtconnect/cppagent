@@ -23,6 +23,7 @@
 // include this first so that it can disable the older version
 // of the winsock API when compiled in windows.
 #include "../sockets/sockets_kernel_1.cpp"
+#include "../bsp/bsp.cpp"
 
 #include "../dir_nav/dir_nav_kernel_1.cpp"
 #include "../dir_nav/dir_nav_kernel_2.cpp"
@@ -35,15 +36,18 @@
 #include "../misc_api/misc_api_kernel_2.cpp"
 #include "../sockets/sockets_extensions.cpp"
 #include "../sockets/sockets_kernel_2.cpp"
-#include "../sockstreambuf/sockstreambuf_kernel_1.cpp"
-#include "../sockstreambuf/sockstreambuf_kernel_2.cpp"
+#include "../sockstreambuf/sockstreambuf.cpp"
+#include "../sockstreambuf/sockstreambuf_unbuffered.cpp"
+#include "../server/server_kernel.cpp"
+#include "../server/server_iostream.cpp"
+#include "../server/server_http.cpp"
 #include "../threads/multithreaded_object_extension.cpp"
 #include "../threads/threaded_object_extension.cpp"
 #include "../threads/threads_kernel_1.cpp"
 #include "../threads/threads_kernel_2.cpp"
 #include "../threads/threads_kernel_shared.cpp"
 #include "../threads/thread_pool_extension.cpp"
-#include "../timer/timer_kernel_2.cpp"
+#include "../timer/timer.cpp"
 #include "../stack_trace.cpp"
 
 #ifdef DLIB_PNG_SUPPORT
@@ -56,7 +60,6 @@
 #endif
 
 #ifndef DLIB_NO_GUI_SUPPORT
-
 #include "../gui_widgets/fonts.cpp"
 #include "../gui_widgets/widgets.cpp"
 #include "../gui_widgets/drawable.cpp"
@@ -65,7 +68,6 @@
 #include "../gui_widgets/base_widgets.cpp"
 #include "../gui_core/gui_core_kernel_1.cpp"
 #include "../gui_core/gui_core_kernel_2.cpp"
-
 #endif // DLIB_NO_GUI_SUPPORT
 
 #endif // DLIB_ISO_CPP_ONLY

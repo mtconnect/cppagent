@@ -56,10 +56,6 @@ namespace dlib
                 object is constructed.  Thus if a file changes sizes after its
                 file object has been created its file object's size() method
                 will not reflect the new file size.    
-
-            THREAD SAFETY
-                This object is reference counted so use with caution in a threaded
-                environment.
         !*/
 
     public:
@@ -208,10 +204,6 @@ namespace dlib
                 the ability to traverse a directory tree.  
 
                 Note that the directories . and .. are not returned by get_dirs() 
-
-            THREAD SAFETY
-                This object is reference counted so use with caution in a threaded
-                environment.
         !*/
 
     public:
@@ -310,6 +302,13 @@ namespace dlib
                     no effect on *this and #files.size()==0.         
         !*/
 
+        std::vector<file> get_files (
+        ) const;
+        /*!
+            ensures
+                - This function simply calls get_files(temp_vector) and then returns temp_vector.
+        !*/
+
         template <
             typename queue_of_dirs
             >
@@ -336,6 +335,13 @@ namespace dlib
                     getting the contents of this directory.
                     If this exception is thrown then the call to get_dirs() has
                     no effect on *this and #dirs.size()==0.
+        !*/
+
+        std::vector<directory> get_dirs (
+        ) const;
+        /*!
+            ensures
+                - This function simply calls get_dirs(temp_vector) and then returns temp_vector.
         !*/
 
         bool is_root (

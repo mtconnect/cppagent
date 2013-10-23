@@ -934,6 +934,135 @@ namespace
         }
     }
 
+    template <typename T>
+    std::vector<int> tovect1(const T& m)
+    {
+        std::vector<int> temp;
+        for (typename T::const_iterator i = m.begin(); i != m.end(); ++i)
+        {
+            temp.push_back(*i);
+        }
+        return temp;
+    }
+
+    template <typename T>
+    std::vector<int> tovect2(const T& m)
+    {
+        std::vector<int> temp;
+        for (typename T::const_iterator i = m.begin(); i != m.end(); i++)
+        {
+            temp.push_back(*i);
+        }
+        return temp;
+    }
+
+    template <typename T>
+    std::vector<int> tovect3(const T& m_)
+    {
+        matrix<int> m(m_);
+        std::vector<int> temp;
+        for (matrix<int>::iterator i = m.begin(); i != m.end(); ++i)
+        {
+            temp.push_back(*i);
+        }
+        return temp;
+    }
+
+    template <typename T>
+    std::vector<int> tovect4(const T& m_)
+    {
+        matrix<int> m(m_);
+        std::vector<int> temp;
+        for (matrix<int>::iterator i = m.begin(); i != m.end(); i++)
+        {
+            temp.push_back(*i);
+        }
+        return temp;
+    }
+
+    void test_iterators()
+    {
+        matrix<int> m(3,2);
+        m = 1,2,3,
+        4,5,6;
+
+        std::vector<int> v1 = tovect1(m);
+        std::vector<int> v2 = tovect2(m);
+        std::vector<int> v3 = tovect3(m);
+        std::vector<int> v4 = tovect4(m);
+
+        std::vector<int> v5 = tovect1(m+m);
+        std::vector<int> v6 = tovect2(m+m);
+        std::vector<int> v7 = tovect3(m+m);
+        std::vector<int> v8 = tovect4(m+m);
+
+
+        std::vector<int> a1, a2;
+        for (int i = 1; i <= 6; ++i)
+        {
+            a1.push_back(i);
+            a2.push_back(i*2);
+        }
+
+        DLIB_TEST(max(abs(mat(v1) - mat(a1))) == 0);
+        DLIB_TEST(max(abs(mat(v2) - mat(a1))) == 0);
+        DLIB_TEST(max(abs(mat(v3) - mat(a1))) == 0);
+        DLIB_TEST(max(abs(mat(v4) - mat(a1))) == 0);
+
+        DLIB_TEST(max(abs(mat(v5) - mat(a2))) == 0);
+        DLIB_TEST(max(abs(mat(v6) - mat(a2))) == 0);
+        DLIB_TEST(max(abs(mat(v7) - mat(a2))) == 0);
+        DLIB_TEST(max(abs(mat(v8) - mat(a2))) == 0);
+    }
+
+    void test_linpiece()
+    {
+        matrix<double,0,1> temp = linpiece(5, linspace(-1, 9, 2));
+        DLIB_CASSERT(temp.size() == 1,"");
+        DLIB_CASSERT(std::abs(temp(0) - 6) < 1e-13,"");
+
+        temp = linpiece(5, linspace(-1, 9, 6));
+        DLIB_CASSERT(temp.size() == 5,"");
+        DLIB_CASSERT(std::abs(temp(0) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(1) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(2) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(3) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(4) - 0) < 1e-13,"");
+
+        temp = linpiece(4, linspace(-1, 9, 6));
+        DLIB_CASSERT(temp.size() == 5,"");
+        DLIB_CASSERT(std::abs(temp(0) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(1) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(2) - 1) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(3) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(4) - 0) < 1e-13,"");
+
+        temp = linpiece(40, linspace(-1, 9, 6));
+        DLIB_CASSERT(temp.size() == 5,"");
+        DLIB_CASSERT(std::abs(temp(0) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(1) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(2) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(3) - 2) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(4) - 2) < 1e-13,"");
+
+        temp = linpiece(-40, linspace(-1, 9, 6));
+        DLIB_CASSERT(temp.size() == 5,"");
+        DLIB_CASSERT(std::abs(temp(0) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(1) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(2) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(3) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(4) - 0) < 1e-13,"");
+
+        temp = linpiece(0, linspace(-1, 9, 6));
+        DLIB_CASSERT(temp.size() == 5,"");
+        DLIB_CASSERT(std::abs(temp(0) - 1) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(1) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(2) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(3) - 0) < 1e-13,"");
+        DLIB_CASSERT(std::abs(temp(4) - 0) < 1e-13,"");
+
+    }
+
     class matrix_tester : public tester
     {
     public:
@@ -946,6 +1075,7 @@ namespace
         void perform_test (
         )
         {
+            test_iterators();
             test_setsubs();
 
             test_conv<0,0,0,0>();
@@ -956,6 +1086,7 @@ namespace
                 matrix_test();
 
             test_complex();
+            test_linpiece();
         }
     } a;
 

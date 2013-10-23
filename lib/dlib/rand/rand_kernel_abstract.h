@@ -34,6 +34,19 @@ namespace dlib
                     - std::bad_alloc
             !*/
 
+            rand (
+                const std::string& seed_value
+            );
+            /*!
+                ensures 
+                    - #*this is properly initialized
+                    - #get_seed() == seed_value
+                    - This version of the constructor is equivalent to using
+                      the default constructor and then calling set_seed(seed_value)
+                throws
+                    - std::bad_alloc
+            !*/
+
             virtual ~rand(
             ); 
             /*!
@@ -86,6 +99,13 @@ namespace dlib
             /*!
                 ensures
                     - returns a pseudorandom number in the range 0 to 2^32-1 
+            !*/
+
+            uint64 get_random_64bit_number (
+            );
+            /*!
+                ensures
+                    - returns a pseudorandom number in the range 0 to 2^64-1 
             !*/
 
             float get_random_float (

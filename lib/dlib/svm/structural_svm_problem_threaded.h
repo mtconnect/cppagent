@@ -11,6 +11,8 @@
 #include "sparse_vector.h"
 #include <iostream>
 #include "../threads.h"
+#include "../misc_api.h"
+#include "../statistics.h"
 
 namespace dlib
 {
@@ -32,7 +34,8 @@ namespace dlib
         explicit structural_svm_problem_threaded (
             unsigned long num_threads
         ) :
-            tp(num_threads)
+            tp(num_threads),
+            num_iterations_executed(0)
         {}
 
         unsigned long get_num_threads (
@@ -44,27 +47,37 @@ namespace dlib
         {
             binder (
                 const structural_svm_problem_threaded& self_,
-                matrix_type& w_,
+                const matrix_type& w_,
                 matrix_type& subgradient_,
-                scalar_type& total_loss_
-            ) : self(self_), w(w_), subgradient(subgradient_), total_loss(total_loss_) {}
+                scalar_type& total_loss_,
+                bool buffer_subgradients_locally_
+            ) : self(self_), w(w_), subgradient(subgradient_), total_loss(total_loss_),
+                buffer_subgradients_locally(buffer_subgradients_locally_){}
 
             void call_oracle (
                 long begin,
                 long end
             ) 
             {
-                // If we are only going to call the separation oracle once then
-                // don't run the slightly more complex for loop version of this code.
-                if (end-begin <= 1)
+                // If we are only going to call the separation oracle once then don't run
+                // the slightly more complex for loop version of this code.  Or if we just
+                // don't want to run the complex buffering one.  The code later on decides
+                // if we should do the buffering based on how long it takes to execute.  We
+                // do this because, when the subgradient is really high dimensional it can
+                // take a lot of time to add them together.  So we might want to avoid
+                // doing that.
+                if (end-begin <= 1 || !buffer_subgradients_locally)
                 {
                     scalar_type loss;
                     feature_vector_type ftemp;
-                    self.separation_oracle_cached(begin, w, loss, ftemp);
+                    for (long i = begin; i < end; ++i)
+                    {
+                        self.separation_oracle_cached(i, w, loss, ftemp);
 
-                    auto_mutex lock(self.accum_mutex);
-                    total_loss += loss;
-                    add_to(subgradient, ftemp);
+                        auto_mutex lock(self.accum_mutex);
+                        total_loss += loss;
+                        add_to(subgradient, ftemp);
+                    }
                 }
                 else
                 {
@@ -89,33 +102,50 @@ namespace dlib
             }
 
             const structural_svm_problem_threaded& self;
-            matrix_type& w;
+            const matrix_type& w;
             matrix_type& subgradient;
             scalar_type& total_loss;
+            bool buffer_subgradients_locally;
         };
 
 
         virtual void call_separation_oracle_on_all_samples (
-            matrix_type& w,
+            const matrix_type& w,
             matrix_type& subgradient,
             scalar_type& total_loss
         ) const
         {
-            const long num = this->get_num_samples();
+            ++num_iterations_executed;
 
-            // how many samples to process in a single task (aim for 100 jobs per thread)
-            const long block_size = std::max<long>(1, num / (1+tp.num_threads_in_pool()*100));
+            const uint64 start_time = ts.get_timestamp();
 
-            binder b(*this, w, subgradient, total_loss);
-            for (long i = 0; i < num; i+=block_size)
+            bool buffer_subgradients_locally = with_buffer_time.mean() < without_buffer_time.mean();
+
+            // every 50 iterations we should try to flip the buffering scheme to see if
+            // doing it the other way might be better.  
+            if ((num_iterations_executed%50) == 0)
             {
-                tp.add_task(b, &binder::call_oracle, i, std::min(i+block_size, num));
+                buffer_subgradients_locally = !buffer_subgradients_locally;
             }
-            tp.wait_for_all_tasks();
+
+            binder b(*this, w, subgradient, total_loss, buffer_subgradients_locally);
+            parallel_for_blocked(tp, 0, this->get_num_samples(), b, &binder::call_oracle);
+
+            const uint64 stop_time = ts.get_timestamp();
+
+            if (buffer_subgradients_locally)
+                with_buffer_time.add(stop_time-start_time);
+            else
+                without_buffer_time.add(stop_time-start_time);
+
         }
 
         mutable thread_pool tp;
         mutable mutex accum_mutex;
+        mutable timestamper ts;
+        mutable running_stats<double> with_buffer_time;
+        mutable running_stats<double> without_buffer_time;
+        mutable unsigned long num_iterations_executed;
     };
 
 // ----------------------------------------------------------------------------------------

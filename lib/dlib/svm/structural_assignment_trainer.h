@@ -7,6 +7,7 @@
 #include "../algs.h"
 #include "../optimization.h"
 #include "structural_svm_assignment_problem.h"
+#include "num_nonnegative_weights.h"
 
 
 namespace dlib
@@ -183,7 +184,7 @@ namespace dlib
 
             matrix<double,0,1> weights; 
 
-            solver(prob, weights);
+            solver(prob, weights, num_nonnegative_weights(fe));
 
             return assignment_function<feature_extractor>(weights,fe,force_assignment);
 
@@ -207,7 +208,7 @@ namespace dlib
             verbose = false;
             eps = 0.1;
             num_threads = 2;
-            max_cache_size = 40;
+            max_cache_size = 5;
         }
 
         feature_extractor fe;

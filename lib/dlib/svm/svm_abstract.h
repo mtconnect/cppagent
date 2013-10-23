@@ -30,8 +30,8 @@ namespace dlib
     );
     /*!
         requires
-            - T == a matrix or something convertible to a matrix via vector_to_matrix()
-            - U == a matrix or something convertible to a matrix via vector_to_matrix()
+            - T == a matrix or something convertible to a matrix via mat()
+            - U == a matrix or something convertible to a matrix via mat()
         ensures
             - returns true if all of the following are true and false otherwise:
                 - is_col_vector(x) == true
@@ -39,6 +39,8 @@ namespace dlib
                 - x.size() == x_labels.size() 
                 - x.size() > 0
     !*/
+
+// ----------------------------------------------------------------------------------------
 
     template <
         typename T,
@@ -50,8 +52,8 @@ namespace dlib
     );
     /*!
         requires
-            - T == a matrix or something convertible to a matrix via vector_to_matrix()
-            - U == a matrix or something convertible to a matrix via vector_to_matrix()
+            - T == a matrix or something convertible to a matrix via mat()
+            - U == a matrix or something convertible to a matrix via mat()
         ensures
             - returns true if all of the following are true and false otherwise:
                 - is_learning_problem(x, x_labels) == true
@@ -61,6 +63,8 @@ namespace dlib
                 - for all valid i:
                     - x_labels(i) == -1 or +1
     !*/
+
+// ----------------------------------------------------------------------------------------
 
     template <
         typename sequence_type 
@@ -78,6 +82,34 @@ namespace dlib
                       (i.e. The size of a label sequence need to match the size of 
                       its corresponding sample sequence)
     !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename sequence_type 
+        >
+    bool is_sequence_segmentation_problem (
+        const std::vector<sequence_type>& samples,
+        const std::vector<std::vector<std::pair<unsigned long,unsigned long> > >& segments
+    );
+    /*!
+        ensures
+            - Note that a sequence segmentation problem is a task where you are given a
+              sequence of objects (e.g. words in a sentence) and your task is to find
+              certain types of sub-sequences (e.g. proper names).
+            - returns true if all of the following are true and false otherwise:
+                - is_learning_problem(samples, segments) == true
+                - for all valid i and j:
+                    - We interpret segments[i][j] as defining a half open range starting
+                      with segments[i][j].first and ending just before segments[i][j].second.
+                    - segments[i][j].first < segments[i][j].second
+                    - segments[i][j].second <= samples[i].size()
+                      (i.e. Each segment must be contained within its associated sequence)
+                    - segments[i][j] does not overlap with any of the other ranges in
+                      segments[i].
+    !*/
+
+// ----------------------------------------------------------------------------------------
 
     template <
         typename lhs_type, 
@@ -106,6 +138,8 @@ namespace dlib
                       in samples[i].second.
     !*/
 
+// ----------------------------------------------------------------------------------------
+
     template <
         typename lhs_type, 
         typename rhs_type
@@ -132,6 +166,45 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
+    double platt_scale (
+        const std::pair<double,double>& params,
+        const double score
+    );
+    /*!
+        ensures
+            - returns 1/(1 + std::exp(params.first*score + params.second))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T, typename alloc>
+    std::pair<double,double> learn_platt_scaling (
+        const std::vector<T,alloc>& scores,
+        const std::vector<T,alloc>& labels
+    );
+    /*!
+        requires
+            - T should be either float, double, or long double 
+            - is_binary_classification_problem(scores,labels) == true
+        ensures
+            - This function learns to map scalar values into well calibrated probabilities
+              using Platt scaling.  In particular, it returns a params object such that, 
+              for all valid i:
+                - platt_scale(params,scores[i]) == the scaled version of the scalar value
+                  scores[i].  That is, the output is a number between 0 and 1.  In
+                  particular, platt_scale(params,scores[i]) is meant to represent the
+                  probability that labels[i] == +1.
+            - This function is an implementation of the algorithm described in the following
+              papers: 
+                Probabilistic Outputs for Support Vector Machines and Comparisons to
+                Regularized Likelihood Methods by John C. Platt.  March 26, 1999
+
+                A Note on Platt's Probabilistic Outputs for Support Vector Machines
+                by Hsuan-Tien Lin, Chih-Jen Lin, and Ruby C. Weng
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename trainer_type,
         typename sample_vector_type,
@@ -156,6 +229,7 @@ namespace dlib
             - The parameters of the probability model are estimated by performing k-fold 
               cross validation. 
             - The number of folds used is given by the folds argument.
+            - This function is implemented using learn_platt_scaling()
         throws
             - any exceptions thrown by trainer.train()
             - std::bad_alloc
@@ -317,7 +391,8 @@ namespace dlib
         requires
             - T == a matrix object or an object compatible with std::vector that contains 
               a swappable type.
-            - if samples is a matrix then is_vector(samples) == true 
+            - if (samples is a matrix) then 
+                - is_vector(samples) == true 
         ensures
             - randomizes the order of the elements inside samples 
             - A default initialized random number generator is used to perform the randomizing.
@@ -339,10 +414,87 @@ namespace dlib
         requires
             - T == a matrix object or an object compatible with std::vector that contains 
               a swappable type.
-            - if samples is a matrix then is_vector(samples) == true 
+            - rand_type == a type that implements the dlib/rand/rand_kernel_abstract.h interface
+            - if (samples is a matrix) then 
+                - is_vector(samples) == true 
         ensures
             - randomizes the order of the elements inside samples 
             - the given rnd random number generator object is used to do the randomizing
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename U,
+        typename V
+        >
+    void randomize_samples (
+        T& samples,
+        U& labels,
+        V& auxiliary
+    );
+    /*!
+        requires
+            - T == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - U == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - V == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - if (samples, labels, or auxiliary are matrix objects) then 
+                - is_vector(samples) == true 
+                - is_vector(labels) == true
+                - is_vector(auxiliary) == true
+            - samples.size() == labels.size() == auxiliary.size()
+        ensures
+            - randomizes the order of the samples, labels, and auxiliary but preserves the
+              pairing between each sample, its label, and its auxiliary value.
+            - A default initialized random number generator is used to perform the
+              randomizing.  Note that this means that each call this this function does the
+              same thing.  That is, the random number generator always uses the same seed.
+            - for all valid i:
+                - let r == the random index samples(i) was moved to.  then:
+                    - #labels(r) == labels(i)
+                    - #auxiliary(r) == auxiliary(i)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        typename U,
+        typename V,
+        typename rand_type
+        >
+    void randomize_samples (
+        T& samples,
+        U& labels,
+        V& auxiliary,
+        rand_type& rnd
+    );
+    /*!
+        requires
+            - T == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - U == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - V == a matrix object or an object compatible with std::vector that contains 
+              a swappable type.
+            - if (samples, labels, or auxiliary are matrix objects) then 
+                - is_vector(samples) == true 
+                - is_vector(labels) == true
+                - is_vector(auxiliary) == true
+            - samples.size() == labels.size() == auxiliary.size()
+            - rand_type == a type that implements the dlib/rand/rand_kernel_abstract.h interface
+        ensures
+            - randomizes the order of the samples, labels, and auxiliary but preserves the
+              pairing between each sample, its label, and its auxiliary value.
+            - the given rnd random number generator object is used to do the randomizing
+            - for all valid i:
+                - let r == the random index samples(i) was moved to.  then:
+                    - #labels(r) == labels(i)
+                    - #auxiliary(r) == auxiliary(i)
     !*/
 
 // ----------------------------------------------------------------------------------------

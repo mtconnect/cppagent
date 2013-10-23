@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 2.6)
 # into the regression test suite.
 set (tests
    example.cpp
-   example_args.cpp
+   active_learning.cpp
    any.cpp
    any_function.cpp
    array2d.cpp
@@ -23,7 +23,10 @@ set (tests
    binary_search_tree_mm1.cpp
    binary_search_tree_mm2.cpp
    bridge.cpp
+   bsp.cpp
    byte_orderer.cpp
+   cca.cpp
+   clustering.cpp
    cmd_line_parser.cpp
    cmd_line_parser_wchar_t.cpp
    compress_stream.cpp
@@ -40,6 +43,9 @@ set (tests
    empirical_kernel_map.cpp
    entropy_coder.cpp
    entropy_encoder_model.cpp
+   example_args.cpp
+   fft.cpp
+   fhog.cpp
    filtering.cpp
    find_max_factor_graph_nmplp.cpp
    find_max_factor_graph_viterbi.cpp
@@ -53,6 +59,7 @@ set (tests
    hash_table.cpp
    hog_image.cpp
    image.cpp
+   iosockstream.cpp
    is_same_object.cpp
    kcentroid.cpp
    kernel_matrix.cpp
@@ -75,6 +82,7 @@ set (tests
    member_function_pointer.cpp
    metaprogramming.cpp
    multithreaded_object.cpp
+   numerical_integration.cpp
    object_detector.cpp
    oca.cpp
    one_vs_all_trainer.cpp
@@ -82,18 +90,23 @@ set (tests
    optimization.cpp
    optimization_test_functions.cpp
    opt_qp_solver.cpp
+   parallel_for.cpp
+   parse.cpp
    pipe.cpp
    pixel.cpp
    probabilistic.cpp
    pyramid_down.cpp
    queue.cpp
    rand.cpp
+   ranking.cpp
    read_write_mutex.cpp
    reference_counter.cpp
    rls.cpp
+   sammon.cpp
    scan_image.cpp
    sequence.cpp
    sequence_labeler.cpp
+   sequence_segmenter.cpp
    serialize.cpp
    set.cpp
    sldf.cpp
@@ -110,9 +123,11 @@ set (tests
    std_vector_c.cpp
    string.cpp
    svm_c_linear.cpp
+   svm_c_linear_dcd.cpp
    svm.cpp
    svm_multiclass_linear.cpp
    svm_struct.cpp
+   svr_linear_trainer.cpp
    symmetric_matrix_cache.cpp
    thread_pool.cpp
    threads.cpp
@@ -121,6 +136,7 @@ set (tests
    trust_region.cpp
    tuple.cpp
    type_safe_union.cpp
+   vectorstream.cpp
    )
 
 # create a variable called target_name and set it to the string "test"
@@ -132,21 +148,20 @@ PROJECT(${target_name})
 # cmake that they are part of our target (which is the executable named test)
 ADD_EXECUTABLE(${target_name} main.cpp tester.cpp ${tests})
 
-# add the folder containing the dlib folder to the include path
-INCLUDE_DIRECTORIES(../..)
+# Turn on all warnings when using gcc.
+if (CMAKE_COMPILER_IS_GNUCXX)
+   add_definitions("-W -Wall")
+endif()
 
-# There is a CMakeLists.txt file in the dlib source folder that tells cmake
-# how to build the dlib library.  Tell cmake about that file.
-add_subdirectory(.. dlib_build)
+
+# Tell cmake to link our target executable to dlib.
+include(../cmake)
+TARGET_LINK_LIBRARIES(${target_name} dlib )
+
 
 if (NOT DLIB_NO_GUI_SUPPORT)
    add_subdirectory(gui)
+   add_subdirectory(../../examples examples_build)
 endif()
 
-# Tell cmake to link our target executable to the non-gui version of the dlib
-# library.  
-TARGET_LINK_LIBRARIES(${target_name} dlib )
-
-# make the default build be in "Release" mode
-include(../release_build_by_default)
 
