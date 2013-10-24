@@ -35,9 +35,12 @@
 #include "agent.hpp"
 #include "adapter.hpp"
 #include <sstream>
+#include <dlib/dir_nav.h>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(ConfigTest);
+
+static dlib::logger sLogger("config_test");
 
 using namespace std;
 
@@ -352,5 +355,52 @@ void ConfigTest::testSchemaDirectory()
   XmlPrinter::clearErrorNamespaces();
   XmlPrinter::clearStreamsNamespaces();
   XmlPrinter::clearAssetsNamespaces();
+}
+
+void ConfigTest::testLogFileRollover()
+{
+  istringstream logger("logger_config {"
+                        "logging_level = ALL\n"
+                        "max_size = 150\n"
+                        "max_index = 5\n"
+                        "output = file agent.log"
+                        "}\n");
+  char buffer[64];
+  ::remove("agent.log");
+  for (int i = 1; i <= 5; i++) {
+    sprintf(buffer, "agent.log.%d", i);
+    ::remove(buffer);
+  }
+  
+  mConfig->loadConfig(logger);
+  
+  CPPUNIT_ASSERT(file_exists("agent.log"));
+  CPPUNIT_ASSERT(file_exists("agent.log.1"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.2"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.3"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.4"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.5"));
+
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.2"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.3"));
+  
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.2"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.3"));
+
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.3"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.4"));
+
+  sLogger << LERROR << "12345678901234567890";
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.4"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.5"));
+
+  sLogger << LERROR << "12345678901234567890";
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.5"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.6"));
 }
 

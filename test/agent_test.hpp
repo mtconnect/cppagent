@@ -118,11 +118,11 @@ protected:
   bool response;
   std::string path;
   std::string at;
-  Agent::key_value_map queries;
+  key_value_map queries;
   std::string result;
-  Agent::key_value_map cookies;
+  key_value_map cookies;
   queue_type new_cookies;
-  Agent::key_value_map incoming_headers;
+  key_value_map_ci incoming_headers;
   std::string foreign_ip;
   std::string local_ip;
   unsigned short foreign_port;
@@ -222,9 +222,9 @@ protected:
   void testDiscrete();
     
   /* Helper method to test expected string, given optional query, & run tests */
-  xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, Agent::key_value_map &aQueries);
+  xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
   xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
-                              Agent::key_value_map &aQueries);
+                              key_value_map &aQueries);
   
 public:
   void setUp();

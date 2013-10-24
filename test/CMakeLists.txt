@@ -42,6 +42,7 @@ set(test_srcs test.cpp
 	       ../agent/ref_counted.cpp
           ../agent/asset.cpp
           ../agent/version.cpp
+          ../agent/rolling_file_logger.cpp
 	       adapter_test.cpp
 	       agent_test.cpp
 	       checkpoint_test.cpp
@@ -57,7 +58,8 @@ set(test_srcs test.cpp
 	       xml_printer_test.cpp
  	       asset_test.cpp
 	       change_observer_test.cpp
-           cutting_tool_test.cpp)
+           cutting_tool_test.cpp
+           )
 
 file(GLOB test_headers *.hpp ../agent/*.hpp)
 

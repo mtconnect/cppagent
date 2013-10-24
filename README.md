@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 1.2.0.18
+MTConnect C++ Agent Version 1.3.0.0
 --------
 
 The C++ Agent provides the a complete implementation of the HTTP
@@ -7,6 +7,8 @@ server required by the MTConnect standard. The agent provides the
 protocol and data collection framework that will work as a standalone
 server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
+
+Version 1.3.0.0 added the filter constraints, references, and cutting tool archetypes.
 
 Version 1.2.0.0 added the capability to support assets.
 

@@ -45,7 +45,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
     // Load the configuration for the Agent
     mXmlParser = new XmlParser();
     mDevices = mXmlParser->parseFile(configXmlPath);  
-    vector<Device *>::iterator device;
+    std::vector<Device *>::iterator device;
     std::set<std::string> uuids;
     for (device = mDevices.begin(); device != mDevices.end(); ++device) 
     {
@@ -97,7 +97,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   
   // Add the devices to the device map and create availability and 
   // asset changed events if they don't exist
-  vector<Device *>::iterator device;
+  std::vector<Device *>::iterator device;
   for (device = mDevices.begin(); device != mDevices.end(); ++device) 
   {
     mDeviceMap[(*device)->getName()] = *device;
@@ -120,7 +120,11 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       (*device)->mAvailabilityAdded = true;
     }
     
-    if ((*device)->getAssetChanged() == NULL)
+    int major, minor;
+    char c;
+    stringstream ss(XmlPrinter::getSchemaVersion());
+    ss >> major >> c >> minor;
+    if ((*device)->getAssetChanged() == NULL && (major >= 1 || (major == 1 && minor >= 2)))
     {
       // Create availability data item and add it to the device.
       std::map<string,string> attrs;
@@ -186,7 +190,7 @@ void Agent::start()
 {
   try {
     // Start all the adapters
-    vector<Adapter*>::iterator iter;
+    std::vector<Adapter*>::iterator iter;
     for (iter = mAdapters.begin(); iter != mAdapters.end(); iter++) {
       (*iter)->start();
     }
@@ -203,7 +207,7 @@ void Agent::start()
 void Agent::clear()
 {
   // Stop all adapter threads...
-  vector<Adapter *>::iterator iter;
+  std::vector<Adapter *>::iterator iter;
   
   sLogger << LINFO << "Shutting down adapters";
   // Deletes adapter and waits for it to exit.
@@ -571,7 +575,7 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
 }
 
 /* Add values for related data items UNAVAILABLE */
-void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
+void Agent::disconnected(Adapter *anAdapter, std::vector<Device*> aDevices)
 {
   string time = getCurrentTime(GMT_UV_SEC);
   sLogger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
@@ -613,7 +617,7 @@ void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
   }
 }
 
-void Agent::connected(Adapter *anAdapter, vector<Device*> aDevices)
+void Agent::connected(Adapter *anAdapter, std::vector<Device*> aDevices)
 {
   if (anAdapter->isAutoAvailable()) {
     string time = getCurrentTime(GMT_UV_SEC);
@@ -782,7 +786,7 @@ string Agent::handlePut(
 
 string Agent::handleProbe(const string& name)
 {
-  vector<Device *> mDeviceList;
+  std::vector<Device *> mDeviceList;
   
   if (!name.empty())
   {
@@ -855,7 +859,7 @@ std::string Agent::handleAssets(std::ostream& aOut,
                                 const std::string& aList)
 {
   using namespace dlib;  
-  vector<AssetPtr> assets;
+  std::vector<AssetPtr> assets;
   if (!aList.empty()) 
   {
     auto_mutex lock(*mAssetLock);

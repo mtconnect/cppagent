@@ -61,6 +61,7 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testSpecifyMTCNamespace);
   CPPUNIT_TEST(testSetSchemaVersion);
   CPPUNIT_TEST(testSchemaDirectory);
+  CPPUNIT_TEST(testLogFileRollover);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -87,6 +88,7 @@ protected:
   void testSpecifyMTCNamespace();
   void testSetSchemaVersion();
   void testSchemaDirectory();
+  void testLogFileRollover();
 };
 
 #endif

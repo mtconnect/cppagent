@@ -61,7 +61,8 @@ set(agent_srcs cppagent.cpp
            ref_counted.cpp
            version.cpp
 	       xml_parser.cpp 
-	       xml_printer.cpp)
+	       xml_printer.cpp
+           rolling_file_logger.cpp)
 
 file(GLOB agent_headers *.hpp)
 

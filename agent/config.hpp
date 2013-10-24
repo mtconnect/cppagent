@@ -6,6 +6,8 @@
 
 class Agent;
 class Device;
+class log_level;
+class RollingFileLogger;
 
 typedef void (NamespaceFunction)(const std::string &aUrn, const std::string &aLocation, 
                                   const std::string &aPrefix);
@@ -20,7 +22,7 @@ public:
   virtual void start() ;
   virtual void initialize(int aArgc, const char *aArgv[]);
 
-  void configureLogger();
+  void configureLogger(dlib::config_reader::kernel_1a &aReader);
   void loadConfig(std::istream &aFile);
 
   void setAgent(Agent *aAgent) { mAgent = aAgent; }
@@ -36,8 +38,14 @@ protected:
                      NamespaceFunction *aCallback);
   void loadFiles(dlib::config_reader::kernel_1a &aReader);
   
+  void LoggerHook(const std::string& aLoggerName,
+                  const dlib::log_level& l,
+                  const uint64_t aThreadId,
+                  const char* aMessage);
+
 protected:
   Agent *mAgent;
+  RollingFileLogger *mLoggerFile;
 };
 
 #endif

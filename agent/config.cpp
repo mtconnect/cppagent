@@ -27,6 +27,7 @@
 #include <dlib/logger.h>
 #include <stdexcept>
 #include <sys/stat.h>
+#include "rolling_file_logger.hpp"
 
 using namespace std;
 using namespace dlib;
@@ -66,7 +67,7 @@ static inline bool get_bool_with_default(const config_reader::kernel_1a &reader,
 }
 
 AgentConfiguration::AgentConfiguration() :
-  mAgent(NULL)
+  mAgent(NULL), mLoggerFile(NULL)
 {
 }
 
@@ -84,7 +85,6 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
 
   try
   {
-    configureLogger();
     ifstream file(mConfigFile.c_str());
     loadConfig(file);
   }
@@ -100,6 +100,9 @@ AgentConfiguration::~AgentConfiguration()
 {
   if (mAgent != NULL)
     delete mAgent;
+  if (mLoggerFile != NULL)
+    delete mLoggerFile;
+  set_all_logging_output_streams(cout);
 }
 
 void AgentConfiguration::start()
@@ -114,7 +117,7 @@ void AgentConfiguration::stop()
 
 Device *AgentConfiguration::defaultDevice()
 {
-  const vector<Device*> &devices = mAgent->getDevices();
+  const std::vector<Device*> &devices = mAgent->getDevices();
   if (devices.size() == 1)
     return devices[0];
   else
@@ -141,31 +144,107 @@ static const char *timestamp(char *aBuffer)
   return aBuffer;
 }
 
-static void print_ts_logger_header (
-    std::ostream& out,
-    const std::string& logger_name,
-    const dlib::log_level& l,
-    const uint64 thread_id
-)
+void AgentConfiguration::LoggerHook(const std::string& aLoggerName,
+                                    const dlib::log_level& l,
+                                    const uint64_t aThreadId,
+                                    const char* aMessage)
 {
+  stringstream out;
   char buffer[64];
   timestamp(buffer);
-  out << buffer << ": " << l.name << " [" << thread_id << "] " << logger_name << ": ";
+  out << buffer << ": " << l.name << " [" << aThreadId << "] " << aLoggerName << ": " << aMessage;
+#ifdef WIN32
+  out << "\r\n";
+#else
+  out << "\n";
+#endif
+  if (mLoggerFile != NULL)
+    mLoggerFile->write(out.str().c_str());
+  else
+    cout << out.str();
 }
 
-void AgentConfiguration::configureLogger()
+static dlib::log_level string_to_log_level (
+                               const std::string& level
+                               )
 {
-  // Load logger configuration
-  set_all_logging_levels(LINFO);
-  set_all_logging_headers((dlib::logger::print_header_type) print_ts_logger_header);
-  configure_loggers_from_file(mConfigFile.c_str());
-  
+  using namespace std;
+  if (level == "LALL" || level == "ALL" || level == "all")
+    return LALL;
+  else if (level == "LNONE" || level == "NONE" || level == "none")
+    return LNONE;
+  else if (level == "LTRACE" || level == "TRACE" || level == "trace")
+    return LTRACE;
+  else if (level == "LDEBUG" || level == "DEBUG" || level == "debug")
+    return LDEBUG;
+  else if (level == "LINFO" || level == "INFO" || level == "info")
+    return LINFO;
+  else if (level == "LWARN" || level == "WARN" || level == "warn")
+    return LWARN;
+  else if (level == "LERROR" || level == "ERROR" || level == "error")
+    return LERROR;
+  else if (level == "LFATAL" || level == "FATAL" || level == "fatal")
+    return LFATAL;
+  else
+  {
+    return LINFO;
+  }
+}
+
+void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &aReader)
+{
   if (mIsDebug) {
     set_all_logging_output_streams(cout);
     set_all_logging_levels(LDEBUG);
-  } else if (mIsService && sLogger.output_streambuf() == cout.rdbuf()) {
-    ostream *file = new std::ofstream("agent.log");
-    set_all_logging_output_streams(*file);
+  }
+  else
+  {
+    string name("agent.log");
+    int maxSize = 10 * 1024 * 1024;
+    RollingFileLogger::RollingSchedule sched = RollingFileLogger::NEVER;
+    int maxIndex = 9;
+    
+    if (aReader.is_block_defined("logger_config"))
+    {
+      const config_reader::kernel_1a& cr = aReader.block("logger_config");
+      
+      if (cr.is_key_defined("logging_level"))
+        set_all_logging_levels(string_to_log_level(cr["logging_level"]));
+      else
+        set_all_logging_levels(LINFO);
+      
+      if (cr.is_key_defined("output"))
+      {
+        string output = cr["output"];
+        if (output == "cout")
+          set_all_logging_output_streams(cout);
+        else if (output == "cerr")
+          set_all_logging_output_streams(cerr);
+        else
+        {
+          istringstream sin(output);
+          string one, two, three;
+          sin >> one;
+          sin >> two;
+          sin >> three;
+          if (one == "file" && three.size() == 0)
+            name = two;
+          else
+            name = one;
+        }
+      }
+      
+      maxSize = get_with_default(cr, "max_size", maxSize);
+      maxIndex = get_with_default(cr, "max_index", maxIndex);
+      string schedCfg = get_with_default(cr, "schedule", "NEVER");
+      if (schedCfg == "DAILY")
+        sched = RollingFileLogger::DAILY;
+      else if (schedCfg == "WEEKLY")
+        sched = RollingFileLogger::WEEKLY;
+    }
+    
+    mLoggerFile = new RollingFileLogger(name, maxIndex, maxSize, sched);
+    set_all_logging_output_hooks<AgentConfiguration>(*this, &AgentConfiguration::LoggerHook);
   }
 }
 
@@ -183,6 +262,8 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 {
   // Now get our configuration
   config_reader::kernel_1a reader(aFile);
+  
+  configureLogger(reader);
 
   bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
   int port = get_with_default(reader, "Port", 5000);
@@ -251,10 +332,10 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
   Device *device;
   if (aReader.is_block_defined("Adapters")) {
     const config_reader::kernel_1a &adapters = aReader.block("Adapters");
-    vector<string> blocks;
+    std::vector<string> blocks;
     adapters.get_blocks(blocks);
     
-    vector<string>::iterator block;
+    std::vector<string>::iterator block;
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {      
       const config_reader::kernel_1a &adapter = adapters.block(*block);
@@ -371,10 +452,10 @@ void AgentConfiguration::loadNamespace(dlib::config_reader::kernel_1a &aReader,
   // Load namespaces, allow for local file system serving as well.
   if (aReader.is_block_defined(aNamespaceType)) {
     const config_reader::kernel_1a &namespaces = aReader.block(aNamespaceType);
-    vector<string> blocks;
+    std::vector<string> blocks;
     namespaces.get_blocks(blocks);
     
-    vector<string>::iterator block;
+    std::vector<string>::iterator block;
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
       const config_reader::kernel_1a &ns = namespaces.block(*block);
@@ -399,10 +480,10 @@ void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader)
 {
   if (aReader.is_block_defined("Files")) {
     const config_reader::kernel_1a &files = aReader.block("Files");
-    vector<string> blocks;
+    std::vector<string> blocks;
     files.get_blocks(blocks);
     
-    vector<string>::iterator block;
+    std::vector<string>::iterator block;
     for (block = blocks.begin(); block != blocks.end(); ++block)
     {
       const config_reader::kernel_1a &file = files.block(*block);

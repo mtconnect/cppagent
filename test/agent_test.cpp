@@ -36,7 +36,7 @@
 #include <iostream>
 #include <sstream>
 #include <cppunit/portability/Stream.h>
-
+#include <dlib/server.h>
 
 
 #if defined(WIN32) && _MSC_VER < 1500
@@ -101,7 +101,7 @@ void AgentTest::testBadPath()
 void AgentTest::testBadXPath()
 {
   path = "/current";
-  Agent::key_value_map query;
+  key_value_map query;
   
   {
     query["path"] = "//////Linear";
@@ -131,7 +131,7 @@ void AgentTest::testBadXPath()
 void AgentTest::testBadCount()
 {
   path = "/sample";
-  Agent::key_value_map query;
+  key_value_map query;
 
   {
     query["count"] = "NON_INTEGER";
@@ -168,7 +168,7 @@ void AgentTest::testBadCount()
 void AgentTest::testBadFreq()
 {
   path = "/sample";
-  Agent::key_value_map query;
+  key_value_map query;
   
   {
     query["frequency"] = "NON_INTEGER";
@@ -207,7 +207,7 @@ void AgentTest::testGoodPath()
 void AgentTest::testXPath()
 {
   path = "/current";
-  Agent::key_value_map query;
+  key_value_map query;
   
   {
     query["path"] = "//Rotary[@name='C']//DataItem[@category='SAMPLE' or @category='CONDITION']";
@@ -519,7 +519,7 @@ void AgentTest::testSampleAtNextSeq()
 void AgentTest::testSequenceNumberRollover()
 {
 #ifndef WIN32
-  Agent::key_value_map kvm;
+  key_value_map kvm;
 
   adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
@@ -657,8 +657,8 @@ void AgentTest::testFileDownload()
   a->registerFile(uri, "./MTConnectDevices_1.1.xsd");
 
   // Reqyest the file...
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
+  dlib::incoming_things incoming("", "", 0, 0);
+  dlib::outgoing_things outgoing;
   incoming.request_type = "GET";
   incoming.path = uri;
   incoming.queries = queries;
@@ -726,7 +726,7 @@ void AgentTest::testAutoAvailable()
   CPPUNIT_ASSERT(adapter);
   adapter->setAutoAvailable(true);
   Device *d = a->getDevices()[0];
-  vector<Device*> devices;
+  std::vector<Device*> devices;
   devices.push_back(d);
     
   {
@@ -770,7 +770,7 @@ void AgentTest::testMultipleDisconnect()
   adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
   Device *d = a->getDevices()[0];
-  vector<Device*> devices;
+  std::vector<Device*> devices;
   devices.push_back(d);
   
   {
@@ -863,7 +863,7 @@ void AgentTest::testAssetStorage()
   a->enablePut();
   path = "/asset/123";
   string body = "<Part>TEST</Part>";
-  Agent::key_value_map queries;
+  key_value_map queries;
   
   queries["type"] = "Part";
   queries["device"] = "LinuxCNC";
@@ -898,7 +898,7 @@ void AgentTest::testAssetBuffer()
   a->enablePut();
   path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
-  Agent::key_value_map queries;
+  key_value_map queries;
   
   queries["device"] = "LinuxCNC";
   queries["type"] = "Part";
@@ -1139,7 +1139,7 @@ void AgentTest::testAssetProbe()
   a->enablePut();
   path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
-  Agent::key_value_map queries;
+  key_value_map queries;
   
   queries["device"] = "LinuxCNC";
   queries["type"] = "Part";
@@ -1168,7 +1168,7 @@ void AgentTest::testAssetStorageWithoutType()
   a->enablePut();
   path = "/asset/123";
   string body = "<Part>TEST</Part>";
-  Agent::key_value_map queries;
+  key_value_map queries;
   
   queries["device"] = "LinuxCNC";
   
@@ -1183,7 +1183,7 @@ void AgentTest::testAssetStorageWithoutType()
 
 void AgentTest::testPut()
 {
-  Agent::key_value_map queries;
+  key_value_map queries;
   string body;
   a->enablePut();
 
@@ -1209,7 +1209,7 @@ void AgentTest::testPut()
 // Test diabling of HTTP PUT or POST
 void AgentTest::testPutBlocking()
 {
-  Agent::key_value_map queries;
+  key_value_map queries;
   string body;
   
   queries["time"] = "TIME";
@@ -1226,7 +1226,7 @@ void AgentTest::testPutBlocking()
 // Test diabling of HTTP PUT or POST
 void AgentTest::testPutBlockingFrom()
 {
-  Agent::key_value_map queries;
+  key_value_map queries;
   string body;
   a->enablePut();
   
@@ -1288,7 +1288,7 @@ void AgentTest::testStreamData()
   CPPUNIT_ASSERT(adapter);
 
   // Start a thread...
-  Agent::key_value_map query;
+  key_value_map query;
   query["interval"] = "50";
   query["heartbeat"] = "200";
   query["from"] = int64ToString(a->getSequence());
@@ -1351,7 +1351,7 @@ void AgentTest::testStreamDataObserver()
   CPPUNIT_ASSERT(adapter);
   
   // Start a thread...
-  Agent::key_value_map query;
+  key_value_map query;
   query["interval"] = "100";
   query["heartbeat"] = "1000";
   query["count"] = "10";
@@ -1582,7 +1582,7 @@ void AgentTest::testReferences()
   CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.mDataItem != NULL);
   
   path = "/current";
-  Agent::key_value_map query;
+  key_value_map query;
   query["path"] = "//BarFeederInterface";
   
 
@@ -1648,10 +1648,10 @@ void AgentTest::testDiscrete()
 // Helper methods
 
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
-                                    Agent::key_value_map &aQueries)
+                                    key_value_map &aQueries)
 {  
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
+  incoming_things incoming("","",0,0);
+  outgoing_things outgoing;
   incoming.request_type = "GET";
   incoming.path = path;
   incoming.queries = aQueries;
@@ -1675,7 +1675,7 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
   
   string message = (string) "No response to request" + path + " with: ";
   
-  Agent::key_value_map::iterator iter;
+  key_value_map::iterator iter;
   for (iter = aQueries.begin(); iter != aQueries.end(); ++iter)
     message += iter->first + "=" + iter->second + ",";
   
@@ -1685,10 +1685,10 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
 }
 
 xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
-                                       string body, Agent::key_value_map &aQueries)
+                                       string body, key_value_map &aQueries)
 {
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
+  incoming_things incoming("","",0,0);
+  outgoing_things outgoing;
   incoming.request_type = "PUT";
   incoming.path = path;
   incoming.queries = aQueries;
