@@ -259,7 +259,6 @@ void ConnectorTest::testSendCommand()
 
 void ConnectorTest::testIPV6Connection()
 {
-  close(mPort);
   mConnector.reset();
   
   CPPUNIT_ASSERT(create_listener(mServer, 0, "::1") == 0);
