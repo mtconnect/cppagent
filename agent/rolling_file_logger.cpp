@@ -59,7 +59,11 @@ int RollingFileLogger::getFileAge()
   if (res < 0)
     return 0;
   else
+#ifndef WIN32
     return time(NULL) - buffer.st_ctimespec.tv_sec;
+#else
+    return time(NULL) - buffer.st_ctime;
+#endif
 }
 
 
