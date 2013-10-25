@@ -256,3 +256,22 @@ void ConnectorTest::testSendCommand()
   buf[15] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* Hello There;\n") == 0);  
 }
+
+void ConnectorTest::testIPV6Connection()
+{
+  close(mPort);
+  mConnector.reset();
+  
+  CPPUNIT_ASSERT(create_listener(mServer, 0, "::1") == 0);
+  mPort = mServer->get_listening_port();
+  mConnector.reset(new TestConnector("::1", mPort));
+  mConnector->mDisconnected = true;
+  
+  CPPUNIT_ASSERT(mConnector->mDisconnected);
+  start();
+  
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
+  dlib::sleep(100);
+  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  CPPUNIT_ASSERT(!mConnector->mDisconnected);
+}

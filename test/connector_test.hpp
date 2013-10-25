@@ -88,6 +88,7 @@ class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
   CPPUNIT_TEST(testParseBufferFraming);
   CPPUNIT_TEST(testSendCommand);
   CPPUNIT_TEST(testLegacyTimeout);
+  CPPUNIT_TEST(testIPV6Connection);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -113,6 +114,7 @@ protected:
   void testParseBufferFraming();
   void testSendCommand();
   void testLegacyTimeout();
+  void testIPV6Connection();
 };
 
 #endif

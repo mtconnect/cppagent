@@ -795,113 +795,138 @@ namespace dlib
     {
         new_listener.reset();
         listener* temp;
-        int status = create_listener(temp,port,ip);
+        int status;
+        status = create_listener(temp,port,ip);
 
         if (status == 0)
             new_listener.reset(temp);
 
         return status;
     }
-
+  
+#define SA_IN(sa) reinterpret_cast<sockaddr_in*>(&sa)
+#define SA_IN6(sa) reinterpret_cast<sockaddr_in6*>(&sa)
+  
     int create_listener (
-        listener*& new_listener,
-        unsigned short port,
-        const std::string& ip
-    )
+                         listener*& new_listener,
+                         unsigned short port,
+                         const std::string& ip
+                         )
     {
-        sockets_startup();
+      sockets_startup();
+      
+      sockaddr_storage sas;
+      memset(&sas, 0, sizeof(sockaddr_storage)); // Initialize sas
 
-
-        sockaddr_in sa;  // local socket structure
-        memset(&sa,'\0',sizeof(sockaddr_in)); // initialize sa
-        
-
-        int sock = socket (AF_INET, SOCK_STREAM, 0);  // get a new socket
-
-        // if socket() returned an error then return OTHER_ERROR
-        if (sock == -1)
-        {
-            return OTHER_ERROR;
-        }
-
-        // set the local socket structure 
-        sa.sin_family = AF_INET;
-        sa.sin_port = htons(port);
-        if (ip.empty())
-        {            
-            // if the listener should listen on any IP
-            sa.sin_addr.s_addr = htons(INADDR_ANY);
-        }
+      sa_family_t family;
+      if (ip.empty() || ip.find(':') == std::string::npos)
+        family = AF_INET;
+      else
+        family = AF_INET6;
+      sas.ss_family = family;
+      
+      int sock = socket (family, SOCK_STREAM, 0);  // get a new socket
+      
+      // if socket() returned an error then return OTHER_ERROR
+      if (sock == -1)
+      {
+        return OTHER_ERROR;
+      }
+      
+      if (family == AF_INET6)
+      {
+        SA_IN6(sas)->sin6_port = htons(port);
+        sas.ss_len = sizeof(sockaddr_in6);
+      }
+      else
+      {
+        SA_IN(sas)->sin_port = htons(port);
+        sas.ss_len = sizeof(sockaddr_in);
+      }
+      
+      // set the local socket structure
+      if (ip.empty())
+      {
+        // if the listener should listen on any IP
+        SA_IN(sas)->sin_addr.s_addr = htons(INADDR_ANY);
+      }
+      else
+      {
+        // if there is a specific ip to listen on
+        // if inet_addr couldn't convert the ip then return an error
+        void *addr;
+        if (family == AF_INET6)
+          addr = &(SA_IN6(sas)->sin6_addr);
         else
+          addr = &(SA_IN(sas)->sin_addr);
+        
+        if (inet_pton(family, ip.c_str(), addr) != 1)
         {
-            // if there is a specific ip to listen on
-            sa.sin_addr.s_addr = inet_addr(ip.c_str());
-
-            // if inet_addr couldn't convert the ip then return an error
-            if ( sa.sin_addr.s_addr == ( in_addr_t)(-1))
-            {
-                close_socket(sock);
-                return OTHER_ERROR;
-            }
+          close_socket(sock);
+          return OTHER_ERROR;
         }
-
-        // set the SO_REUSEADDR option
-        int flag_value = 1;
-        if (setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,reinterpret_cast<const void*>(&flag_value),sizeof(int)))
+      }
+      
+      // set the SO_REUSEADDR option
+      int flag_value = 1;
+      if (setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,reinterpret_cast<const void*>(&flag_value),sizeof(int)))
+      {
+        close_socket(sock);
+        return OTHER_ERROR;
+      }
+      
+      
+      // bind the new socket to the requested port and ip
+      if (bind(sock,reinterpret_cast<sockaddr*>(&sas), sas.ss_len) == -1)
+      {   // if there was an error
+        close_socket(sock);
+        
+        // if the port is already bound then return PORTINUSE
+        if (errno == EADDRINUSE)
+          return PORTINUSE;
+        else
+          return OTHER_ERROR;
+      }
+      
+      
+      // tell the new socket to listen
+      if ( listen(sock,SOMAXCONN) == -1)
+      {
+        // if there was an error return OTHER_ERROR
+        close_socket(sock);
+        
+        // if the port is already bound then return PORTINUSE
+        if (errno == EADDRINUSE)
+          return PORTINUSE;
+        else
+          return OTHER_ERROR;
+      }
+      
+      // determine the used local port if necessary
+      if (port == 0)
+      {
+        sockaddr_storage local_info;
+        dsocklen_t length = sas.ss_len;
+        if ( getsockname(
+                         sock,
+                         reinterpret_cast<sockaddr*>(&local_info),
+                         &length
+                         ) == -1)
         {
-            close_socket(sock);
-            return OTHER_ERROR;
+          close_socket(sock);
+          return OTHER_ERROR;
         }
-
-
-        // bind the new socket to the requested port and ip
-        if (bind(sock,reinterpret_cast<sockaddr*>(&sa),sizeof(sockaddr_in)) == -1)
-        {   // if there was an error 
-            close_socket(sock); 
-
-            // if the port is already bound then return PORTINUSE
-            if (errno == EADDRINUSE)
-                return PORTINUSE;
-            else
-                return OTHER_ERROR;            
-        }
-
-
-        // tell the new socket to listen
-        if ( listen(sock,SOMAXCONN) == -1)
-        {
-            // if there was an error return OTHER_ERROR
-            close_socket(sock); 
-
-            // if the port is already bound then return PORTINUSE
-            if (errno == EADDRINUSE)
-                return PORTINUSE;
-            else
-                return OTHER_ERROR;   
-        }
-
-        // determine the used local port if necessary
-        if (port == 0)
-        {
-            sockaddr_in local_info;
-            dsocklen_t length = sizeof(sockaddr_in);
-            if ( getsockname(
-                sock,
-                reinterpret_cast<sockaddr*>(&local_info),
-                &length
-                ) == -1)
-            {
-                close_socket(sock);
-                return OTHER_ERROR;
-            }
-            port = ntohs(local_info.sin_port);            
-        }
-
-        // initialize a listener object on the heap with the new socket
-        try { new_listener = new listener(sock,port,ip); }
-        catch(...) { close_socket(sock); return OTHER_ERROR; }
-
-        return 0;
+        if (family == AF_INET6)
+          port = ntohs(SA_IN6(local_info)->sin6_port);
+        else
+          port = ntohs(SA_IN(local_info)->sin_port);
+      }
+      
+      // initialize a listener object on the heap with the new socket
+      try { new_listener = new listener(sock,port,ip); }
+      catch(...) { close_socket(sock); return OTHER_ERROR; }
+      
+      return 0;
     }
 
 // ----------------------------------------------------------------------------------------
@@ -934,15 +959,21 @@ namespace dlib
     )
     {
         sockets_startup();
+      
+        sa_family_t family;
+        if (foreign_ip.find(':') == std::string::npos)
+          family = AF_INET;
+        else
+          family = AF_INET6;
         
-        sockaddr_in local_sa;  // local socket structure
-        sockaddr_in foreign_sa;  // foreign socket structure
-        memset(&local_sa,'\0',sizeof(sockaddr_in)); // initialize local_sa
-        memset(&foreign_sa,'\0',sizeof(sockaddr_in)); // initialize foreign_sa
+        sockaddr_storage local_sa;  // local socket structure
+        sockaddr_storage foreign_sa;  // foreign socket structure
+        memset(&local_sa,'\0',sizeof(sockaddr_storage)); // initialize local_sa
+        memset(&foreign_sa,'\0',sizeof(sockaddr_storage)); // initialize foreign_sa
 
         dsocklen_t length;
 
-        int sock = socket (AF_INET, SOCK_STREAM, 0);  // get a new socket
+        int sock = socket (family, SOCK_STREAM, 0);  // get a new socket
 
         // if socket() returned an error then return OTHER_ERROR
         if (sock == -1 )
@@ -950,50 +981,64 @@ namespace dlib
             return OTHER_ERROR;
         }
 
-        // set the foreign socket structure 
-        foreign_sa.sin_family = AF_INET;
-        foreign_sa.sin_port = htons(foreign_port);
-        foreign_sa.sin_addr.s_addr = inet_addr(foreign_ip.c_str());
-
-        // if inet_addr couldn't convert the ip then return an error
-        if ( foreign_sa.sin_addr.s_addr == ( in_addr_t)(-1))
+        // set up the local socket structure
+        local_sa.ss_family = family;
+      
+        // set the foreign socket structure
+        foreign_sa.ss_family = family;
+        void *addr;
+        if (family == AF_INET6)
         {
-            close_socket(sock);
-            return OTHER_ERROR;
+          SA_IN6(foreign_sa)->sin6_port = htons(foreign_port);
+          addr = &(SA_IN6(foreign_sa)->sin6_addr);
+          SA_IN6(local_sa)->sin6_port = htons(local_port);
+          foreign_sa.ss_len = local_sa.ss_len = sizeof(sockaddr_in6);
+        }
+        else
+        {
+          SA_IN(foreign_sa)->sin_port = htons(foreign_port);
+          addr = &(SA_IN(foreign_sa)->sin_addr);
+          SA_IN(local_sa)->sin_port = htons(local_port);
+          foreign_sa.ss_len = local_sa.ss_len = sizeof(sockaddr_in);
+        }
+      
+        // if inet_addr couldn't convert the ip then return an error
+        if (inet_pton(family, foreign_ip.c_str(), addr) != 1)
+        {
+          close_socket(sock);
+          return OTHER_ERROR;
         }
 
-
-        // set up the local socket structure
-        local_sa.sin_family = AF_INET;
-
-        // set the local port
-        local_sa.sin_port = htons(local_port);
 
         // set the local ip
         if (local_ip.empty())
         {            
             // if the listener should listen on any IP
-            local_sa.sin_addr.s_addr = htons(INADDR_ANY);
+            if (family == AF_INET6)
+              memcpy(&SA_IN6(local_sa)->sin6_addr, &in6addr_any, sizeof(in6addr_any));
+            else
+              SA_IN(local_sa)->sin_addr.s_addr = htons(INADDR_ANY);
+          
         }
         else
         {
             // if there is a specific ip to listen on
-            local_sa.sin_addr.s_addr = inet_addr(local_ip.c_str());  
-
             // if inet_addr couldn't convert the ip then return an error
-            if ( local_sa.sin_addr.s_addr == ( in_addr_t)(-1))
+            if (family == AF_INET6)
+              addr = &(SA_IN6(local_sa)->sin6_addr);
+            else
+              addr = &(SA_IN(local_sa)->sin_addr);
+
+            if (inet_pton(family, local_ip.c_str(), addr) != 1)
             {
-                close_socket(sock);
-                return OTHER_ERROR;
+              close_socket(sock);
+              return OTHER_ERROR;
             }
         }
 
 
-
-        
-
         // bind the new socket to the requested local port and local ip
-        if ( bind(sock,reinterpret_cast<sockaddr*>(&local_sa),sizeof(sockaddr_in)) == -1)
+        if ( bind(sock,reinterpret_cast<sockaddr*>(&local_sa), local_sa.ss_len) == -1)
         {   // if there was an error 
             close_socket(sock); 
 
@@ -1008,7 +1053,7 @@ namespace dlib
         if ( connect (
                 sock,
                 reinterpret_cast<sockaddr*>(&foreign_sa),
-                sizeof(sockaddr_in)
+                foreign_sa.ss_len
             ) == -1
         )
         {
@@ -1024,9 +1069,9 @@ namespace dlib
         // determine the local port and IP and store them in used_local_ip 
         // and used_local_port
         int used_local_port;
-        char temp_used_local_ip[16];
+        char temp_used_local_ip[INET6_ADDRSTRLEN];
         std::string used_local_ip;
-        sockaddr_in local_info;
+        sockaddr_storage local_info;
 
         // determine the port
         if (local_port == 0)
@@ -1041,7 +1086,10 @@ namespace dlib
                 close_socket(sock);
                 return OTHER_ERROR;
             }
-            used_local_port = ntohs(local_info.sin_port);            
+            if (family == AF_INET6)
+              used_local_port = ntohs(SA_IN6(local_info)->sin6_port);
+            else
+              used_local_port = ntohs(SA_IN(local_info)->sin_port);
         }
         else
         {
@@ -1066,7 +1114,13 @@ namespace dlib
                     return OTHER_ERROR;
                 }
             }
-            used_local_ip = inet_ntop(AF_INET,&local_info.sin_addr,temp_used_local_ip,16);
+          
+            if (family == AF_INET6)
+              addr = &(SA_IN6(local_sa)->sin6_addr);
+            else
+              addr = &(SA_IN(local_sa)->sin_addr);
+          
+            used_local_ip = inet_ntop(family, addr, temp_used_local_ip, INET6_ADDRSTRLEN);
         }
         else
         {
