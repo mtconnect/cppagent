@@ -94,7 +94,7 @@ class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
 public:
   void setUp();
   void tearDown();
-  void thread();
+  virtual void thread();
   
 protected:
   dlib::scoped_ptr<dlib::listener> mServer;
