@@ -267,6 +267,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 
   bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
   int port = get_with_default(reader, "Port", 5000);
+  string serverIp = get_with_default(reader, "ServerIp", "");
   int bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
   int maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
   int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
@@ -302,6 +303,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   if (mAgent == NULL)
     mAgent = new Agent(probe, bufferSize, maxAssets, checkpointFrequency);
   mAgent->set_listening_port(port);
+  mAgent->set_listening_ip(serverIp);
   mAgent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
 
   for (size_t i = 0; i < mAgent->getDevices().size(); i++)
