@@ -324,15 +324,15 @@ namespace dlib
       return ntohs(sin.sin_port);
     }
   
-    static inline void set_sockaddr_port(sockaddr_storage &sin, int port, int &len)
+    static inline void set_sockaddr_port(sockaddr_storage &sin, int port)
     {
         sin.sin_port = htons(port);
-        len = sizeof(sockaddr_in);
     }
   
-    static inline ADDRESS_FAMILY sockaddr_family(const std::string &ip)
+    static inline ADDRESS_FAMILY sockaddr_family(const std::string &ip, int &len)
     {
        return AF_INET;
+       len = sizeof(sockaddr_in);
     }
   
     static inline bool set_sockaddr_address(sockaddr_storage &sin, const std::string &ip)
