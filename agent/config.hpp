@@ -40,7 +40,7 @@ protected:
   
   void LoggerHook(const std::string& aLoggerName,
                   const dlib::log_level& l,
-                  const uint64_t aThreadId,
+                  const dlib::uint64 aThreadId,
                   const char* aMessage);
 
 protected:

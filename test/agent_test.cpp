@@ -1416,21 +1416,23 @@ void AgentTest::testRelativeParsedTime()
   }  
 }
 
-template<>
-struct CppUnit::assertion_traits<uint64_t> {
-  static bool equal(const uint64_t& x, const uint64_t& y )
-  {
-    return x == y;
-  }
-  
-  static std::string toString(const uint64_t& x )
-  {
-    CppUnit::OStringStream ost;
-    ost << x;
-    return ost.str();
-  }
-  
-};
+namespace CppUnit {
+  template<>
+  struct assertion_traits<dlib::uint64> {
+    static bool equal(const dlib::uint64& x, const dlib::uint64& y )
+    {
+      return x == y;
+    }
+    
+    static std::string toString(const dlib::uint64& x )
+    {
+      CppUnit::OStringStream ost;
+      ost << x;
+      return ost.str();
+    }
+    
+  };
+}
 
 void AgentTest::testRelativeParsedTimeDetection()
 {

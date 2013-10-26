@@ -138,7 +138,7 @@ static const char *timestamp(char *aBuffer)
   gettimeofday(&tv, &tz);
 
   strftime(aBuffer, 64, "%Y-%m-%dT%H:%M:%S", gmtime(&tv.tv_sec));
-  sprintf(aBuffer + strlen(aBuffer), ".%06dZ", tv.tv_usec);
+  sprintf(aBuffer + strlen(aBuffer), ".%06dZ", (int) tv.tv_usec);
 #endif
   
   return aBuffer;
@@ -146,7 +146,7 @@ static const char *timestamp(char *aBuffer)
 
 void AgentConfiguration::LoggerHook(const std::string& aLoggerName,
                                     const dlib::log_level& l,
-                                    const uint64_t aThreadId,
+                                    const dlib::uint64 aThreadId,
                                     const char* aMessage)
 {
   stringstream out;

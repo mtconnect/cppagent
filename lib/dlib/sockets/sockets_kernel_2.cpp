@@ -475,23 +475,23 @@ namespace dlib
     static inline void set_sockaddr_port(sockaddr_storage &sin, int port)
     {
       if (sin.ss_family == AF_INET6)
-      {
           SA_IN6(sin)->sin6_port = htons(port);
-          sin.ss_len = sizeof(sockaddr_in6);
-      }
       else
-      {
           SA_IN(sin)->sin_port = htons(port);
-          sin.ss_len = sizeof(sockaddr_in);
-      }
     }
   
-    static inline sa_family_t sockaddr_family(const std::string &ip)
+    static inline sa_family_t sockaddr_family(const std::string &ip, dsocklen_t &len)
     {
       if (ip.empty() || ip.find(':') == std::string::npos)
+      {
+        len = sizeof(sockaddr_in);
         return AF_INET;
+      }
       else
+      {
+        len = sizeof(sockaddr_in6);
         return AF_INET6;
+      }
     }
   
     static inline bool set_sockaddr_address(sockaddr_storage &sin, const std::string &ip)
@@ -881,7 +881,11 @@ namespace dlib
       sockaddr_storage sas;
       memset(&sas, 0, sizeof(sockaddr_storage)); // Initialize sas
 
-      sas.ss_family = sockaddr_family(ip);
+      dsocklen_t length;
+      sas.ss_family = sockaddr_family(ip, length);
+#ifdef __APPLE__
+      sas.ss_len = length;
+#endif
       int sock = socket (sas.ss_family, SOCK_STREAM, 0);  // get a new socket
       
       // if socket() returned an error then return OTHER_ERROR
@@ -919,7 +923,7 @@ namespace dlib
       
       
       // bind the new socket to the requested port and ip
-      if (bind(sock,reinterpret_cast<sockaddr*>(&sas), sas.ss_len) == -1)
+      if (bind(sock,reinterpret_cast<sockaddr*>(&sas), length) == -1)
       {   // if there was an error
         close_socket(sock);
         
@@ -948,7 +952,6 @@ namespace dlib
       if (port == 0)
       {
         sockaddr_storage local_info;
-        dsocklen_t length = sas.ss_len;
         if ( getsockname(
                          sock,
                          reinterpret_cast<sockaddr*>(&local_info),
@@ -1000,14 +1003,17 @@ namespace dlib
     {
         sockets_startup();
       
-        sa_family_t family = sockaddr_family(foreign_ip);
+        dsocklen_t length;
+        sa_family_t family = sockaddr_family(foreign_ip, length);
       
         sockaddr_storage local_sa;  // local socket structure
         sockaddr_storage foreign_sa;  // foreign socket structure
         memset(&local_sa,'\0',sizeof(sockaddr_storage)); // initialize local_sa
         memset(&foreign_sa,'\0',sizeof(sockaddr_storage)); // initialize foreign_sa
-
-        dsocklen_t length;
+      
+#ifdef __APPLE__
+        local_sa.ss_len = foreign_sa.ss_len = length;
+#endif
 
         int sock = socket (family, SOCK_STREAM, 0);  // get a new socket
 
@@ -1047,7 +1053,7 @@ namespace dlib
         }
       
         // bind the new socket to the requested local port and local ip
-        if ( bind(sock,reinterpret_cast<sockaddr*>(&local_sa), local_sa.ss_len) == -1)
+        if ( bind(sock,reinterpret_cast<sockaddr*>(&local_sa), length) == -1)
         {   // if there was an error 
             close_socket(sock); 
 
@@ -1062,7 +1068,7 @@ namespace dlib
         if ( connect (
                 sock,
                 reinterpret_cast<sockaddr*>(&foreign_sa),
-                foreign_sa.ss_len
+                length
             ) == -1
         )
         {
