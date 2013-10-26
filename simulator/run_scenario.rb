@@ -8,6 +8,7 @@ port = 7878
 scenario = false
 verbose = false
 fast = false
+server = '0.0.0.0'
 
 OptionParser.new do |opts|
   opts.banner = 'Usage: run_scenrio.rb [-l] <file>'
@@ -36,6 +37,10 @@ OptionParser.new do |opts|
   opts.on('-f', '--[no-]fast', 'Pump as fast as possible') do |v|
     fast = v
   end
+  
+  opts.on('-s', '--server [server]', OptionParser::String, 'Server IP port to bind to (default: 0.0.0.0)') do |v|
+    server = v
+  end
 
   opts.parse!
   if ARGV.length < 1
@@ -45,8 +50,8 @@ OptionParser.new do |opts|
   end
 end
 
-puts "Waiting on 0.0.0.0 #{port}"
-server = TCPServer.new(port)
+puts "Waiting on #{server} #{port}"
+server = TCPServer.new(server, port)
 socket = server.accept
 puts "Client connected"
 
