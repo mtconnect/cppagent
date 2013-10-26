@@ -40,6 +40,8 @@ public:
   
   void write(const char *aLine);
 
+  int getMaxSize() const { return mMaxSize; }
+
 protected:
   void rollover(size_t aSize);
   int getFileAge();

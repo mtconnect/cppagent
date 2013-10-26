@@ -34,6 +34,7 @@
 #include "config_test.hpp"
 #include "agent.hpp"
 #include "adapter.hpp"
+#include "rolling_file_logger.hpp"
 #include <sstream>
 #include <dlib/dir_nav.h>
 
@@ -405,3 +406,41 @@ void ConfigTest::testLogFileRollover()
   CPPUNIT_ASSERT(!file_exists("agent.log.6"));
 }
 
+void ConfigTest::testMaxSize()
+{
+  istringstream logger("logger_config {"
+                        "max_size = 150\n"
+                        "}\n");
+  mConfig->loadConfig(logger);
+  
+  RollingFileLogger *fl = mConfig->getLogger();
+  CPPUNIT_ASSERT_EQUAL(150, fl->getMaxSize());
+
+
+  istringstream logger2("logger_config {"
+                       "max_size = 15K\n"
+                       "}\n");
+  mConfig->loadConfig(logger2);
+  
+  fl = mConfig->getLogger();
+  CPPUNIT_ASSERT_EQUAL(15 * 1024, fl->getMaxSize());
+
+
+  istringstream logger3("logger_config {"
+                        "max_size = 15M\n"
+                        "}\n");
+  mConfig->loadConfig(logger3);
+  
+  fl = mConfig->getLogger();
+  CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024, fl->getMaxSize());
+
+
+  istringstream logger4("logger_config {"
+                        "max_size = 15G\n"
+                        "}\n");
+  mConfig->loadConfig(logger4);
+  
+  fl = mConfig->getLogger();
+  CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024 * 1024, fl->getMaxSize());
+
+}

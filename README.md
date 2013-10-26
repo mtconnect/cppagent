@@ -449,6 +449,10 @@ Configuration Parameters
 * `Port`	- The port number the agent binds to for requests.
 
     *Default*: 5000
+    
+* `ServerIp` - The server IP Address to bind to. Can be used to select the interface in IPV4 or IPV6.
+
+    *Default*: 0.0.0.0
 
 * `AllowPut`	- Allow HTTP PUT or POST of data item values or assets.
 
@@ -584,7 +588,20 @@ logger_config configuration items
       directory as the executable.
 
         *Default*: file `adapter.log`
+        
+    * `max_size` - The maximum log file size. Suffix can be K for kilobytes, M for megabytes, or
+      G for gigabytes. No suffix will default to bytes (B). Case is ignored.
+    
+        *Default*: 10M
+        
+    * `max_index` - The maximum number of log files to keep.
 
+        *Default*: 9
+        
+    * `schedule` - The scheduled time to start a new file. Can be DAILY, WEEKLY, or NEVER.
+            
+        *Default*: NEVER
+    
 Adapter Agent Protocol Version 1.2
 -----
 

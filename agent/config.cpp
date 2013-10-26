@@ -193,6 +193,9 @@ static dlib::log_level string_to_log_level (
 
 void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &aReader)
 {
+  if (mLoggerFile != NULL)
+    delete mLoggerFile;
+
   if (mIsDebug) {
     set_all_logging_output_streams(cout);
     set_all_logging_levels(LDEBUG);
@@ -200,8 +203,8 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &aReader
   else
   {
     string name("agent.log");
-    int maxSize = 10 * 1024 * 1024;
     RollingFileLogger::RollingSchedule sched = RollingFileLogger::NEVER;
+    int maxSize = 10 * 1024 * 1024;
     int maxIndex = 9;
     
     if (aReader.is_block_defined("logger_config"))
@@ -234,7 +237,19 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &aReader
         }
       }
       
-      maxSize = get_with_default(cr, "max_size", maxSize);
+      string maxSizeStr = get_with_default(cr, "max_size", "10M");
+      stringstream ss(maxSizeStr);
+      char mag = '\0';
+      ss >> maxSize >> mag;
+
+      switch(mag) {
+      case 'G': case 'g': maxSize *= 1024;
+      case 'M': case 'm': maxSize *= 1024;
+      case 'K': case 'k': maxSize *= 1024;
+      case 'B': case 'b': case '\0':
+        break;
+      }
+        
       maxIndex = get_with_default(cr, "max_index", maxIndex);
       string schedCfg = get_with_default(cr, "schedule", "NEVER");
       if (schedCfg == "DAILY")

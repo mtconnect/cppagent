@@ -27,6 +27,8 @@ public:
 
   void setAgent(Agent *aAgent) { mAgent = aAgent; }
   Agent *getAgent() { return mAgent; }
+
+  RollingFileLogger *getLogger() { return mLoggerFile; }
   
 protected:
   Device *defaultDevice();
