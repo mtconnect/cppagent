@@ -369,7 +369,7 @@ void ConfigTest::testLogFileRollover()
                         "}\n");
   char buffer[64];
   ::remove("agent.log");
-  for (int i = 1; i <= 5; i++) {
+  for (int i = 1; i <= 10; i++) {
     sprintf(buffer, "agent.log.%d", i);
     ::remove(buffer);
   }
