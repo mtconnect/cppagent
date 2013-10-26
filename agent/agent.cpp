@@ -169,8 +169,8 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
         mDataItemMap[d->getId()] = d;
       else {
         sLogger << LFATAL << "Duplicate DataItem id " << d->getId() <<
-        " for device: " << (*device)->getName() << " and data item name: " <<
-        d->getName();
+                  " for device: " << (*device)->getName() << " and data item name: " <<
+                  d->getName();
         exit(1);
       }
     }
