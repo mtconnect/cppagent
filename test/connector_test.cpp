@@ -259,6 +259,7 @@ void ConnectorTest::testSendCommand()
 
 void ConnectorTest::testIPV6Connection()
 {
+#if !defined(WIN32) || (NTDDI_VERSION >= NTDDI_VISTA)
   mConnector.reset();
   
   CPPUNIT_ASSERT(create_listener(mServer, 0, "::1") == 0);
@@ -273,4 +274,5 @@ void ConnectorTest::testIPV6Connection()
   dlib::sleep(100);
   CPPUNIT_ASSERT(mServerSocket.get() != NULL);
   CPPUNIT_ASSERT(!mConnector->mDisconnected);
+#endif
 }

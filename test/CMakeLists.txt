@@ -71,5 +71,12 @@ find_package(LibXML2 REQUIRED)
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
 include_directories(${LibXML2_INCLUDE_DIRS} ${CPPUNIT_INCLUDE_DIR})
 
+if(WIN32)
+  set(WINVER "0x0501" CACHE STRING "Win32 API Target version (see http://msdn.microsoft.com/en-us/library/aa383745%28v=VS.85%29.aspx)")
+  add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
+endif(WIN32)
+
 add_executable(test ${test_srcs} ${test_headers})
 target_link_libraries(test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})
+
+
