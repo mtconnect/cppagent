@@ -156,7 +156,7 @@ void XmlPrinterTest::testChangeDevicesNamespace()
   {
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-            "urn:mtconnect.org:MTConnectDevices:1.3 http://www.mtconnect.org/schemas/MTConnectDevices_1.3.xsd");
+            "urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
   }
 
   {
@@ -203,7 +203,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
-                 "urn:mtconnect.org:MTConnectStreams:1.3 http://www.mtconnect.org/schemas/MTConnectStreams_1.3.xsd");
+                 "urn:mtconnect.org:MTConnectStreams:1.2 http://www.mtconnect.org/schemas/MTConnectStreams_1.2.xsd");
   }
 
   XmlPrinter::clearStreamsNamespaces();
@@ -255,7 +255,7 @@ void XmlPrinterTest::testChangeErrorNamespace()
   {
     PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation", 
-              "urn:mtconnect.org:MTConnectError:1.3 http://www.mtconnect.org/schemas/MTConnectError_1.3.xsd");
+              "urn:mtconnect.org:MTConnectError:1.2 http://www.mtconnect.org/schemas/MTConnectError_1.2.xsd");
   }
   
   {
@@ -519,7 +519,7 @@ void XmlPrinterTest::testChangeVersion()
   {
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-                                      "urn:mtconnect.org:MTConnectDevices:1.3 http://www.mtconnect.org/schemas/MTConnectDevices_1.3.xsd");
+                                      "urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
   }
 
   XmlPrinter::setSchemaVersion("1.4");

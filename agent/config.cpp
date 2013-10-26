@@ -313,8 +313,11 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps);
   
   // Check for schema version
-  string schemaVersion = get_with_default(reader, "SchemaVersion", "1.3");
-  XmlPrinter::setSchemaVersion(schemaVersion);
+  string schemaVersion = get_with_default(reader, "SchemaVersion", "");
+  if (!schemaVersion.empty())
+    XmlPrinter::setSchemaVersion(schemaVersion);
+  else if (XmlPrinter::getSchemaVersion().empty())
+    XmlPrinter::setSchemaVersion("1.3");
   
   // Files served by the Agent... allows schema files to be served by
   // agent.

@@ -323,7 +323,8 @@ void ConfigTest::testSetSchemaVersion()
 
 void ConfigTest::testSchemaDirectory()
 {
-  istringstream schemas("Files {\n"
+  istringstream schemas("SchemaVersion = 1.3\n"
+                        "Files {\n"
                         "schemas {\n"
                         "Location = /schemas\n"
                         "Path = ../schemas\n"

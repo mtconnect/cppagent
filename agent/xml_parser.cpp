@@ -81,6 +81,18 @@ std::vector<Device *> XmlParser::parseFile(const std::string &aPath)
     {
       path = addNamespace(path, "m");
       THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
+      
+      // Get schema version from Devices.xml
+      string ns((const char*)root->ns->href);
+      if (ns.find_first_of("urn:mtconnect.org:MTConnectDevices") == 0)
+      {
+        int last = ns.find_last_of(':');
+        if (last != string::npos)
+        {
+          string version = ns.substr(last + 1);
+          XmlPrinter::setSchemaVersion(version);
+        }
+      }
     }
 
     // Add additional namespaces to the printer if they are referenced
