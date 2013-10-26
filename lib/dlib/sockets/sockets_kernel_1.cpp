@@ -262,28 +262,28 @@ namespace dlib
         return ntohs(SA_IN(sin)->sin_port);
     }
   
-    static inline void set_sockaddr_port(sockaddr_storage &sin, int port, int &len)
+    static inline void set_sockaddr_port(sockaddr_storage &sin, int port)
     {
       if (sin.ss_family == AF_INET6)
-      {
           SA_IN6(sin)->sin6_port = htons(port);
-          len = sizeof(sockaddr_in6);
-      }
       else
-      {
           SA_IN(sin)->sin_port = htons(port);
-          len = sizeof(sockaddr_in);
-      }
     }
   
-    static inline ADDRESS_FAMILY sockaddr_family(const std::string &ip)
+    static inline ADDRESS_FAMILY sockaddr_family(const std::string &ip, int &len)
     {
       if (ip.empty() || ip.find(':') == std::string::npos)
+      {
+        len = sizeof(sockaddr_in);
         return AF_INET;
+      }
       else
+      {
+        len = sizeof(sockaddr_in6);
         return AF_INET6;
+      }
     }
-  
+    
     static inline bool set_sockaddr_address(sockaddr_storage &sin, const std::string &ip)
     {
       void *addr;
@@ -803,7 +803,7 @@ namespace dlib
         int len;
         ZeroMemory(&sas,sizeof(sockaddr_storage)); // initialize sa
         
-        sas.ss_family = sockaddr_family(ip);
+        sas.ss_family = sockaddr_family(ip, len);
         SOCKET sock = socket (sas.ss_family, SOCK_STREAM, 0);  // get a new socket
 
         // if socket() returned an error then return OTHER_ERROR
@@ -813,7 +813,7 @@ namespace dlib
         }
 
         // set the local socket structure
-        set_sockaddr_port(sas, port, len);
+        set_sockaddr_port(sas, port);
 
         if (ip.empty())
         {            
@@ -901,8 +901,8 @@ namespace dlib
         // will eventually be called when program ends
         sockets_startup();
 
-        ADDRESS_FAMILY family = sockaddr_family(foreign_ip);
-        int length, dummy;
+        int length;
+        ADDRESS_FAMILY family = sockaddr_family(foreign_ip, length);
 
         sockaddr_storage local_sa;  // local socket structure
         sockaddr_storage foreign_sa;  // foreign socket structure
@@ -920,8 +920,8 @@ namespace dlib
         // set up the local socket structure
         local_sa.ss_family = family;
         foreign_sa.ss_family = family;
-        set_sockaddr_port(foreign_sa, foreign_port, length);
-        set_sockaddr_port(local_sa, local_port, dummy);
+        set_sockaddr_port(foreign_sa, foreign_port);
+        set_sockaddr_port(local_sa, local_port);
       
         if (!set_sockaddr_address(foreign_sa, foreign_ip))
         {
