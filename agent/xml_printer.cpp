@@ -842,16 +842,16 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
       THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                       BAD_CAST attr.c_str(),
                                                       BAD_CAST ns->second.mUrn.c_str()));
+      
+      if (location.empty() && !ns->second.mSchemaLocation.empty())
+      {
+        // Always take the first location. There should only be one location!
+        location = ns->second.mUrn + " " + ns->second.mSchemaLocation;
+      }
     } else if (!ns->second.mSchemaLocation.empty()) {
       // This is the mtconnect namespace
       mtcLocation = xmlns + " " + ns->second.mSchemaLocation;
-    }
-    
-    // Always take the first location. There should only be one location!
-    if (location.empty() && !ns->second.mSchemaLocation.empty())
-    {
-      location = ns->second.mUrn + " " + ns->second.mSchemaLocation;
-    }
+    }    
   }
   
   // Write the schema location
