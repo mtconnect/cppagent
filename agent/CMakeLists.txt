@@ -90,7 +90,7 @@ add_executable(agent ${agent_srcs} ${agent_headers})
 target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
 
 if(WIN32)
-  set(WINVER "0x0501" CACHE STRING "Win32 API Target version (see http://msdn.microsoft.com/en-us/library/aa383745%28v=VS.85%29.aspx)")
+  set(WINVER "0x0501" CACHE STRING "Windows Target Version: 0x0400 - 95 & NT 4.0, 0x0500 - 2000, 0x0501 - XP, 0x0600 - Vista, 0x0601 - 7, 0x0602 - 8")
   add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
 
   foreach(flag_var
