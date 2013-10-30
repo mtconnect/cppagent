@@ -4,9 +4,10 @@ require 'net/http'
 require 'readline'
 require 'time'
 
-puts "Waiting for connection..."
 
-server = TCPServer.new(ARGV[0].to_i)
+server = TCPServer.new('127.0.0.1', ARGV[0].to_i)
+
+puts "Waiting for connection on #{ARGV[0].to_i}..."
 
 loop do
   socket = server.accept

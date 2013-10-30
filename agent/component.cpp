@@ -43,10 +43,11 @@ Component::Component(const string& cls, map<string, string> attributes,
                      const string &aPrefix)
 {
   mId = attributes["id"];
+  
   mName = attributes["name"];
   mNativeName = attributes["nativeName"];
-  
   mUuid = attributes["uuid"];
+  
   if (attributes["sampleInterval"].empty()) {
     mSampleInterval = (float) (attributes["sampleRate"].empty()) ?
       0.0f : atof(attributes["sampleRate"].c_str());
@@ -73,7 +74,11 @@ std::map<string, string> Component::buildAttributes() const
   std::map<string, string> attributes;
   
   attributes["id"] = mId;
-  attributes["name"] = mName;
+  
+  if (!mName.empty())
+  {
+    attributes["name"] = mName;
+  }
   
   if (mSampleInterval != 0.0f)
   {

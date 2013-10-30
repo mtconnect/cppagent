@@ -45,7 +45,7 @@ using namespace dlib;
 
 typedef std::vector<std::pair<std::string, std::string> > AssetChangeList;
 
-class Agent : public server::http_1a
+class Agent : public server_http
 {
   class ParameterError
   {

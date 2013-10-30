@@ -388,6 +388,15 @@ Agent serve them up locally.
 	    Path = ./MTConnectDevices_1.2.xsd
 	  }
 	}
+	
+Or use the short form for all files:
+
+  Files {
+    schemas { 
+      Location = /schemas/MTConnectStreams_1.2.xsd
+      Path = ./MTConnectStreams_1.2.xsd
+    }
+  }
     
 If you have specified in your xs:include schemaLocation inside the 
 ExampleDevices_1.2.xsd file the location "/schemas/MTConnectStreams_1.2.xsd",

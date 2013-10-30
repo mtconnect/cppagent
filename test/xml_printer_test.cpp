@@ -244,6 +244,28 @@ void XmlPrinterTest::testChangeStreamsNamespace()
   }
   
   XmlPrinter::clearStreamsNamespaces();
+  
+  {
+    XmlParser ext;
+    devices = ext.parseFile("../samples/extension.xml");
+    
+    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
+                                    "ExtensionDevices_1.3.xsd",
+                                    "x");
+    
+    Checkpoint checkpoint2;
+    addEventToCheckpoint(checkpoint2, "flow", 10254804, "100");
+    
+    ComponentEventPtrArray list;
+    checkpoint2.getComponentEvents(list);
+    
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//x:Flow", "100");
+  }
+
+  
+  XmlPrinter::clearStreamsNamespaces();
   XmlPrinter::clearDevicesNamespaces();
   
 }
