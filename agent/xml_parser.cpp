@@ -617,7 +617,14 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
 CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr aNode)
 {
   CuttingToolValuePtr value(new CuttingToolValue(), true);
-  value->mKey = (char*) aNode->name;
+  string name;
+  if (aNode->ns->prefix != NULL) {
+    name = (const char *) aNode->ns->prefix;
+    name += ':';
+  }
+  
+  name += (const char*) aNode->name;
+  value->mKey = name;
   
   xmlChar *text = xmlNodeGetContent(aNode);
   if (text != NULL) {

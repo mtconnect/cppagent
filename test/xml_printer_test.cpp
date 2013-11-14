@@ -661,5 +661,29 @@ void XmlPrinterTest::testPrintCuttingTool()
   }  
 }
 
+// CuttingTool tests
+void XmlPrinterTest::testPrintExtendedCuttingTool()
+{
+  vector<AssetPtr> assets;
+  
+  
+  XmlPrinter::addAssetsNamespace("urn:Example.com:Assets:1.3",
+                                  "/schemas/MTConnectAssets_1.3.xsd",
+                                  "x");
+
+  string document = getFile("ext_asset.xml");
+  AssetPtr asset = config->parseAsset("B732A08500HP.1", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+  assets.push_back(asset);
+  
+  {
+    PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//x:Color", "BLUE");
+  }
+  
+  XmlPrinter::clearAssetsNamespaces();
+}
+
 
 

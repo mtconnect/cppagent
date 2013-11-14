@@ -18,6 +18,7 @@
 #include "dlib/sockets.h"
 #include "dlib/logger.h"
 #include "version.h"
+#include <set>
 
 
 static dlib::logger sLogger("xml.printer");
@@ -83,9 +84,9 @@ namespace XmlPrinter {
   
   // Asset printing
   void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr aTool,
-                             const char *aValue);
+                             const char *aValue, std::set<string> *aRemaining = NULL);
   void printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr aItem,
-                             const char *aValue);
+                             const char *aValue, std::set<string> *aRemaining = NULL);
   void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr aValue);
   void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aItem);
 
@@ -962,20 +963,22 @@ void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValue
 }
 
 void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr aTool,
-                                       const char *aValue)
+                                       const char *aValue, std::set<string> *aRemaining)
 {
   if (aTool->mValues.count(aValue) > 0)
   {
+    if (aRemaining != NULL) aRemaining->erase(aValue);
     CuttingToolValuePtr ptr = aTool->mValues[aValue];
     printCuttingToolValue(writer, ptr);
   }
 }
 
 void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr aItem,
-                                       const char *aValue)
+                                       const char *aValue, std::set<string> *aRemaining)
 {
   if (aItem->mValues.count(aValue) > 0)
   {
+    if (aRemaining != NULL) aRemaining->erase(aValue);
     CuttingToolValuePtr ptr = aItem->mValues[aValue];
     printCuttingToolValue(writer, ptr);
   }
@@ -1050,10 +1053,15 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                     BAD_CAST "assetId",
                                                     BAD_CAST aTool->getAssetId().c_str()));
-
+    
+    set<string> remaining;
+    std::map<std::string,CuttingToolValuePtr>::const_iterator viter;
+    for (viter = aTool->mValues.begin(); viter != aTool->mValues.end(); viter++)
+      if (viter->first != "Description")
+        remaining.insert(viter->first);
     
     // Check for cutting tool definition
-    printCuttingToolValue(writer, aTool, "CuttingToolDefinition");
+    printCuttingToolValue(writer, aTool, "CuttingToolDefinition", &remaining);
     
     // Print the cutting tool life cycle.
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingToolLifeCycle"));
@@ -1067,9 +1075,9 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
     }
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
-
+    
     // Other values
-    printCuttingToolValue(writer, aTool, "ReconditionCount");
+    printCuttingToolValue(writer, aTool, "ReconditionCount", &remaining);
     
     // Tool life
     vector<CuttingToolValuePtr>::iterator life;
@@ -1078,12 +1086,17 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     }
         
     // Remaining items
-    printCuttingToolValue(writer, aTool, "ProgramToolGroup");
-    printCuttingToolValue(writer, aTool, "ProgramToolNumber");
-    printCuttingToolValue(writer, aTool, "Location");
-    printCuttingToolValue(writer, aTool, "ProcessSpindleSpeed");
-    printCuttingToolValue(writer, aTool, "ProcessFeedRate");
-    printCuttingToolValue(writer, aTool, "ConnectionCodeMachineSide");
+    printCuttingToolValue(writer, aTool, "ProgramToolGroup", &remaining);
+    printCuttingToolValue(writer, aTool, "ProgramToolNumber", &remaining);
+    printCuttingToolValue(writer, aTool, "Location", &remaining);
+    printCuttingToolValue(writer, aTool, "ProcessSpindleSpeed", &remaining);
+    printCuttingToolValue(writer, aTool, "ProcessFeedRate", &remaining);
+    printCuttingToolValue(writer, aTool, "ConnectionCodeMachineSide", &remaining);
+    
+    // Print extended items...
+    set<string>::iterator prop;
+    for(prop = remaining.begin(); prop != remaining.end(); prop++)
+      printCuttingToolValue(writer, aTool, prop->c_str());
     
     // Print Measurements
     if (aTool->mMeasurements.size() > 0) {
