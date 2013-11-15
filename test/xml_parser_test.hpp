@@ -58,6 +58,7 @@ class XmlParserTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testNoNamespace);
   CPPUNIT_TEST(testFilteredDataItem);
   CPPUNIT_TEST(testReferences);
+  CPPUNIT_TEST(testExtendedAsset);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -78,6 +79,7 @@ protected:
   void testNoNamespace();
   void testFilteredDataItem();
   void testReferences();
+  void testExtendedAsset();
   
 public:
   void setUp();

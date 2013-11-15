@@ -398,3 +398,12 @@ void XmlParserTest::testReferences()
   CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("d2"));
 }
 
+void XmlParserTest::testExtendedAsset()
+{
+  string document = getFile("ext_asset.xml");
+  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+
+  CPPUNIT_ASSERT_EQUAL(((size_t) 1), tool->mValues.count("x:Color"));
+}

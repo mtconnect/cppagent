@@ -618,7 +618,7 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr aNode)
 {
   CuttingToolValuePtr value(new CuttingToolValue(), true);
   string name;
-  if (aNode->ns->prefix != NULL) {
+  if (aNode->ns != NULL && aNode->ns->prefix != NULL) {
     name = (const char *) aNode->ns->prefix;
     name += ':';
   }
