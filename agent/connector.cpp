@@ -244,7 +244,9 @@ void Connector::startHeartbeats(const string &aArg)
   if (pos != string::npos)
   {
     int freq = atoi(aArg.substr(pos + 1).c_str());
-    if (freq > 0 && freq < 120000)
+    
+    // Make the maximum timeout 30 minutes.
+    if (freq > 0 && freq < 30 * 60 * 1000)
     {
       sLogger << LDEBUG << "Received PONG, starting heartbeats every " << freq << "ms";
       mHeartbeats = true;
