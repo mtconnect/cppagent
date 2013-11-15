@@ -547,7 +547,11 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
   xmlDocPtr document = NULL;
 
   try {
-    
+    // TODO: Check for asset fragment - check if top node is MTConnectAssets
+    // If we don't have complete doc, parse as a fragment and create a top level node
+    // adding namespaces from the printer namespaces and then using xmlParseInNodeContext.
+    // This will solve fragment xml namespace issues (unless the fragment has namespace)
+    // definition.
     
     THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST aContent.c_str(), 
                                              ((string) "file://" + aAssetId + ".xml").c_str(), 

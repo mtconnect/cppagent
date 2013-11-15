@@ -1,0 +1,38 @@
+<CuttingTool serialNumber="1 " toolId="B732A08500HP" timestamp="2011-05-11T13:55:22" assetId="B732A08500HP.1" manufacturers="KMT" xmlns:x="urn:example.com:ExampleAssets:1.3">
+	<Description>
+		Step Drill KMT, B732A08500HP Grade KC7315
+		Adapter KMT CV50BHPVTT12M375
+	</Description>
+	<CuttingToolLifeCycle>
+		<CutterStatus><Status>NEW</Status></CutterStatus>
+		<ProcessSpindleSpeed nominal="5893">5893</ProcessSpindleSpeed>
+		<ProcessFeedRate nominal="2.5">2.5</ProcessFeedRate>
+		<ConnectionCodeMachineSide>CV50 Taper</ConnectionCodeMachineSide>
+		<x:Color>BLUE</x:Color>
+		<Measurements>
+			<BodyDiameterMax code="BDX">31.8</BodyDiameterMax>
+			<BodyLengthMax code="LBX" nominal="120.825" maximum="126.325" minimum="115.325">120.825</BodyLengthMax>
+			<ProtrudingLength code="LPR" nominal="155.75" maximum="161.25" minimum="150.26">158.965</ProtrudingLength>
+			<FlangeDiameterMax code="DF" nominal="98.425">98.425</FlangeDiameterMax>
+			<OverallToolLength nominal="257.35" minimum="251.85" maximum="262.85" code="OAL">257.35</OverallToolLength>
+		</Measurements>
+		<CuttingItems count="2">
+			<CuttingItem indices="1" manufacturers="KMT" grade="KC7315">
+				<Measurements>
+					<CuttingDiameter code="DC1" nominal="8.5" maximum="8.521" minimum="8.506">8.513</CuttingDiameter>
+					<StepIncludedAngle code="STA1" nominal="90" maximum="91" minimum="89">89.8551</StepIncludedAngle>
+					<FunctionalLength code="LF1" nominal="154.286" minimum="148.786" maximum="159.786">157.259</FunctionalLength>
+					<StepDiameterLength code="SDL1" nominal="9">9</StepDiameterLength>
+					<PointAngle code="SIG" nominal="135" minimum="133" maximum="137">135.1540</PointAngle>
+				</Measurements>
+			</CuttingItem>
+			<CuttingItem indices="2" manufacturers="KMT" grade="KC7315">
+				<Measurements>
+					<CuttingDiameter code="DC2" nominal="12" maximum="12.011" minimum="12">11.999</CuttingDiameter>
+					<FunctionalLength code="LF2" nominal="122.493" maximum="127.993" minimum="116.993">125.500</FunctionalLength>
+					<StepDiameterLength code="SDL2" nominal="9">9</StepDiameterLength>
+				</Measurements>
+			</CuttingItem>
+		</CuttingItems>
+	</CuttingToolLifeCycle>
+</CuttingTool>
