@@ -122,7 +122,8 @@ long getMemorySize();
 typedef long volatile AtomicInt;
 #else
 #ifdef MACOSX
-typedef _Atomic_word AtomicInt;
+#include <libkern/OSAtomic.h>
+typedef volatile long AtomicInt;
 #else
 typedef int AtomicInt;
 #endif

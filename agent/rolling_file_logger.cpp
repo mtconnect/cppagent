@@ -31,7 +31,7 @@ RollingFileLogger::RollingFileLogger(std::string aName,
   : mName(aName), mMaxBackupIndex(aMaxBackupIndex), mMaxSize(aMaxSize),
     mSchedule(aSchedule), mFd(0)
 {
-  mFileLock = new mutex();
+  mFileLock = new dlib::mutex();
   
   mFd = ::open(aName.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
   if (mFd < 0)
