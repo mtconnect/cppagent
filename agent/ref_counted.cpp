@@ -31,7 +31,7 @@ void RefCounted::referTo()
   InterlockedIncrement(&this->mRefCount);
 #else
 #ifdef MACOSX
-  OSAtomicIncrement32Barrier(&this->mRefCount);
+  OSAtomicIncrement32Barrier(&(this->mRefCount));
 #else
   dlib::auto_mutex lock(sRefMutex);
   mRefCount++;
@@ -48,7 +48,7 @@ void RefCounted::unrefer()
   }
 #else
 #ifdef MACOSX
-  if (OSAtomicDecrement32Barrier(&this->mRefCount) <= 0)
+  if (OSAtomicDecrement32Barrier(&(this->mRefCount)) <= 0)
   {
     delete this;
   }
