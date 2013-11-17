@@ -331,8 +331,8 @@ namespace dlib
   
     static inline ADDRESS_FAMILY sockaddr_family(const std::string &ip, int &len)
     {
-       return AF_INET;
        len = sizeof(sockaddr_in);
+       return AF_INET;
     }
   
     static inline bool set_sockaddr_address(sockaddr_storage &sin, const std::string &ip)

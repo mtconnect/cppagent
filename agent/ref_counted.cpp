@@ -16,8 +16,6 @@
 
 #include "ref_counted.hpp"
 #include "dlib/threads.h"
-#include <libkern/OSAtomic.h>
-
 
 static dlib::rmutex sRefMutex;
 
