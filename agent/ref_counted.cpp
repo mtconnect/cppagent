@@ -28,7 +28,7 @@ RefCounted::~RefCounted()
 void RefCounted::referTo()
 {
 #ifdef _WINDOWS
-  InterlockedIncrement(&this->mRefCount);
+  InterlockedIncrement(&(this->mRefCount));
 #else
 #ifdef MACOSX
   OSAtomicIncrement32Barrier(&(this->mRefCount));
@@ -42,7 +42,7 @@ void RefCounted::referTo()
 void RefCounted::unrefer()
 {
 #ifdef _WINDOWS
-  if (InterlockedDecrement(&this->mRefCount) <= 0)
+  if (InterlockedDecrement(&(this->mRefCount)) <= 0)
   {
     delete this;
   }
