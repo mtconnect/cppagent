@@ -16,6 +16,9 @@
 
 #include "ref_counted.hpp"
 #include "dlib/threads.h"
+#ifdef __APPLE__
+#include <libkern/OSAtomic.h>
+#endif
 
 static dlib::rmutex sRefMutex;
 

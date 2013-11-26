@@ -145,7 +145,7 @@ string getCurrentTime(TimeFormat format)
   
   if (format == GMT_UV_SEC)
   {
-    sprintf(timestamp + strlen(timestamp), ".%06dZ", usec);
+    sprintf(timestamp + strlen(timestamp), ".%06dZ", (int) usec);
   }
   else
   {
