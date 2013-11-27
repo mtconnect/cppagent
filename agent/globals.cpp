@@ -96,20 +96,9 @@ string getCurrentTime(TimeFormat format)
   if (format == GMT_UV_SEC)
   {
 #ifdef _WINDOWS
-    FILETIME ft;
-    unsigned __int64 tmpres = 0;
-    static int tzflag;
-
-    GetSystemTimeAsFileTime(&ft);
-    
-    tmpres |= ft.dwHighDateTime;
-    tmpres <<= 32;
-    tmpres |= ft.dwLowDateTime;
-    
-    tmpres /= 10;  /*convert into microseconds*/
-    tmpres -= DELTA_EPOCH_IN_MICROSECS;
-    sec = (long)(tmpres / 1000000UL);
-    usec = (long)(tmpres % 1000000UL);  
+    uint64_t now = getCurrentTimeInMicros();
+    sec = (long)(now / 1000000UL);
+    usec = (long)(now % 1000000UL);
 #else
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -160,12 +149,11 @@ uint64_t getCurrentTimeInMicros()
   uint64_t now;
 #ifdef _WINDOWS
   FILETIME ft;
-  unsigned __int64 tmpres = 0;
   static int tzflag;
   
   GetSystemTimeAsFileTime(&ft);
   
-  now |= ft.dwHighDateTime;
+  now = ft.dwHighDateTime;
   now <<= 32;
   now |= ft.dwLowDateTime;
   
@@ -238,13 +226,14 @@ uint64_t parseTimeMicro(std::string &aTime)
   
   int c = sscanf(aTime.c_str(), "%d-%d-%dT%d:%d:%d%15s", &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday,
                  &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec, (char*) &ms);
+  if (c < 7)
+    return 0;
+  
   ms[15] = '\0';
   
   timeinfo.tm_mon -= 1;
   timeinfo.tm_year -= 1900;
   
-  if (c < 7)
-    return 0;
 
   uint64_t time = (mktime(&timeinfo) - timezone) * 1000000;
   

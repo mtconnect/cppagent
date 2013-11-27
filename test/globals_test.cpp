@@ -161,13 +161,29 @@ void GlobalsTest::testGetEnumerations()
 void GlobalsTest::testGetCurrentTime()
 {
   string gmt = getCurrentTime(GMT);
+  uint64_t time = parseTimeMicro(gmt);
+  CPPUNIT_ASSERT(time != 0);
+
   string gmtUsec = getCurrentTime(GMT_UV_SEC);
+  time = parseTimeMicro(gmtUsec);
+  CPPUNIT_ASSERT(time != 0);
+
   string local = getCurrentTime(LOCAL);
+  time = parseTimeMicro(local);
+  CPPUNIT_ASSERT(time != 0);
   
-  cout << gmt << endl;
-  cout << gmtUsec << endl;
-  cout << local << endl;
   
+  string human = getCurrentTime(HUM_READ);
+  int year, day, hour, min, sec;
+  char wday[5];
+  char mon[4];
+  char tzs[32];
+
+  int n = sscanf (human.c_str(), "%3s, %2d %3s %4d %2d:%2d:%2d %5s",
+                  wday, &day, mon, &year,
+                  &hour, &min, &sec, (char*) &tzs);
+
+  CPPUNIT_ASSERT_EQUAL(8, n);
 }
 
 void GlobalsTest::testAddNamespace()
