@@ -241,7 +241,7 @@ void Connector::sendCommand(const string &aCommand)
 void Connector::startHeartbeats(const string &aArg)
 {
   size_t pos = aArg.find_last_of(' ');
-  if (pos != string::npos)
+  if (pos != string::npos && aArg.length() > (pos + 1))
   {
     int freq = atoi(aArg.substr(pos + 1).c_str());
     
@@ -254,8 +254,7 @@ void Connector::startHeartbeats(const string &aArg)
     }
     else
     {
-      sLogger << LERROR << "startHeartbeats: Bad heartbeat command " << aArg;
-      close();
+      sLogger << LERROR << "startHeartbeats: Bad heartbeat command " << aArg << ", ignoring";
     }
   }
 }

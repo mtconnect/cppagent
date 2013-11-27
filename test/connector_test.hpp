@@ -66,6 +66,9 @@ public:
   bool heartbeats() { return mHeartbeats; }
 
   void pushData(const char *data) { parseBuffer(data); }
+  
+  void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
+  void resetHeartbeats() { mHeartbeats = false; }
 
 public:
   std::vector<std::string> mList;
@@ -89,6 +92,7 @@ class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
   CPPUNIT_TEST(testSendCommand);
   CPPUNIT_TEST(testLegacyTimeout);
   CPPUNIT_TEST(testIPV6Connection);
+  CPPUNIT_TEST(testStartHeartbeats);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -115,6 +119,7 @@ protected:
   void testSendCommand();
   void testLegacyTimeout();
   void testIPV6Connection();
+  void testStartHeartbeats();
 };
 
 #endif

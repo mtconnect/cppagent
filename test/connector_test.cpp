@@ -276,3 +276,39 @@ void ConnectorTest::testIPV6Connection()
   CPPUNIT_ASSERT(!mConnector->mDisconnected);
 #endif
 }
+
+void ConnectorTest::testStartHeartbeats()
+{
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  
+  string line = "* PONG ";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  
+  line = "* PONK ";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+
+  line = "* PONG      ";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  
+  line = "* PONG FLAB";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+
+  line = "* PONG       123";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(mConnector->heartbeats());
+  mConnector->resetHeartbeats();
+
+  line = "* PONG 123";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(mConnector->heartbeats());
+}
