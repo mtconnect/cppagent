@@ -159,10 +159,18 @@ uint64_t getCurrentTimeInMicros()
 {
   uint64_t now;
 #ifdef _WINDOWS
-  SYSTEMTIME st;
-  GetSystemTime(&st);
-  now = st.wSecond * 1000000;
-  now += st.wMilliseconds;
+  FILETIME ft;
+  unsigned __int64 tmpres = 0;
+  static int tzflag;
+  
+  GetSystemTimeAsFileTime(&ft);
+  
+  now |= ft.dwHighDateTime;
+  now <<= 32;
+  now |= ft.dwLowDateTime;
+  
+  now /= 10;  /*convert into microseconds*/
+  now -= DELTA_EPOCH_IN_MICROSECS;
 #else
   struct timeval tv;
   struct timezone tz;
