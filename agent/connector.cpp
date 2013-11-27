@@ -241,7 +241,7 @@ void Connector::sendCommand(const string &aCommand)
 void Connector::startHeartbeats(const string &aArg)
 {
   size_t pos;
-  if (aArg.length() > 7 && aArg[6] == ' ' && (pos = aArg.find_first_not_of(' ', 6)) != string::npos && aArg.length() > pos)  {
+  if (aArg.length() > 7 && aArg[6] == ' ' && (pos = aArg.find_first_of("0123456789", 7)) != string::npos)  {
     int freq = atoi(aArg.substr(pos).c_str());
     
     // Make the maximum timeout 30 minutes.
