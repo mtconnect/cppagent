@@ -305,10 +305,19 @@ void ConnectorTest::testStartHeartbeats()
   mConnector->startHeartbeats(line);
   
   CPPUNIT_ASSERT(mConnector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(123, mConnector->heartbeatFrequency());
+
   mConnector->resetHeartbeats();
 
-  line = "* PONG 123";
+  line = "* PONG       456 ";
   mConnector->startHeartbeats(line);
   
   CPPUNIT_ASSERT(mConnector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(456, mConnector->heartbeatFrequency());
+
+  line = "* PONG 323";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(mConnector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(323, mConnector->heartbeatFrequency());
 }
