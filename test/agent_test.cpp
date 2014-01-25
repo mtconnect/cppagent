@@ -1646,6 +1646,92 @@ void AgentTest::testDiscrete()
 
 }
 
+void AgentTest::testConditionSequence()
+{
+  path = "/current";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  adapter->setDupCheck(true);
+  CPPUNIT_ASSERT(adapter);
+  
+  DataItem *logic = a->getDataItemByName("LinuxCNC", "lp");
+  CPPUNIT_ASSERT(logic != NULL);
+  
+  // Validate we are dup checking.
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Unavailable[@dataItemId='lp']", 1);
+  }
+  
+  adapter->processData("TIME|lp|NORMAL||||XXX");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal", "XXX");
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+  }
+
+  adapter->processData("TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault", "2218-1 ALARM_B UNUSABLE G-CODE  A SIDE FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeCode", "2218");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeSeverity", "ALARM_B");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@qualifier", "HIGH");
+  }
+  
+  adapter->processData("TIME|lp|NORMAL||||");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal", 1);
+  }
+
+  adapter->processData("TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault", "4200 ALARM_D POWER ON EFFECTIVE PARAMETER SET");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeCode", "4200");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeSeverity", "ALARM_D");
+  }
+  
+  adapter->processData("TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "4200 ALARM_D POWER ON EFFECTIVE PARAMETER SET");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]", "2218-1 ALARM_B UNUSABLE G-CODE  A SIDE FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@nativeCode", "2218");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@nativeSeverity", "ALARM_B");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@qualifier", "HIGH");
+  }
+
+  adapter->processData("TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "2218-1 ALARM_B UNUSABLE G-CODE  A SIDE FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@nativeCode", "2218");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@nativeSeverity", "ALARM_B");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@qualifier", "HIGH");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]", "4200 ALARM_D POWER ON EFFECTIVE PARAMETER SET");
+  }
+  
+  adapter->processData("TIME|lp|NORMAL||||");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal", 1);
+  }
+}
 
 // Helper methods
 
