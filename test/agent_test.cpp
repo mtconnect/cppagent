@@ -37,8 +37,6 @@
 #include <sstream>
 #include <cppunit/portability/Stream.h>
 
-
-
 #if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;
 #endif
@@ -1401,6 +1399,7 @@ void AgentTest::testRelativeParsedTime()
   }  
 }
 
+#ifdef WIN32
 template<>
 struct CppUnit::assertion_traits<uint64_t> {
   static bool equal(const uint64_t& x, const uint64_t& y )
@@ -1416,6 +1415,7 @@ struct CppUnit::assertion_traits<uint64_t> {
   }
   
 };
+#endif
 
 void AgentTest::testRelativeParsedTimeDetection()
 {
