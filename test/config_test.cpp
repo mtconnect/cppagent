@@ -341,17 +341,17 @@ void ConfigTest::testSchemaDirectory()
   path = XmlPrinter::getDevicesUrn("m");
   CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectDevices:1.3", path);
   location = XmlPrinter::getDevicesLocation("m");
-  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectDevices_1.2.xsd", location);
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectDevices_1.3.xsd", location);
 
   path = XmlPrinter::getAssetsUrn("m");
   CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectAssets:1.3", path);
   location = XmlPrinter::getAssetsLocation("m");
-  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectAssets_1.2.xsd", location);
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectAssets_1.3.xsd", location);
 
   path = XmlPrinter::getErrorUrn("m");
   CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectError:1.3", path);
   location = XmlPrinter::getErrorLocation("m");
-  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectError_1.2.xsd", location);
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectError_1.3.xsd", location);
 
   XmlPrinter::clearDevicesNamespaces();
   XmlPrinter::clearErrorNamespaces();
