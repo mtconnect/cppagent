@@ -346,7 +346,7 @@ void ConfigTest::testSchemaDirectory()
   path = XmlPrinter::getAssetsUrn("m");
   CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectAssets:1.3", path);
   location = XmlPrinter::getAssetsLocation("m");
-  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectAssets_1.3.xsd", location);
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectAssets_1.2.xsd", location);
 
   path = XmlPrinter::getErrorUrn("m");
   CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectError:1.3", path);
