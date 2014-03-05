@@ -136,10 +136,6 @@ string getCurrentTime(TimeFormat format)
   {
     sprintf(timestamp + strlen(timestamp), ".%06dZ", (int) usec);
   }
-  else
-  {
-    strcat(timestamp, "Z");
-  }
   
   return string(timestamp);
 }
