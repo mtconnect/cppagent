@@ -1,0 +1,12 @@
+
+body {
+	font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+}
+
+td, th {
+	padding: 4px;
+}
+
+th {
+	background: #E0E0E0;
+}

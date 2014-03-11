@@ -4,6 +4,7 @@
 	<xsl:template match="/">
 			<head>
 				<title>MTConnect Device Streams</title>
+				<link type="text/css" href="/styles/Streams.css" media="screen" rel="stylesheet"/>
 			</head>
 			<body>
 				<p>
