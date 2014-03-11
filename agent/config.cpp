@@ -343,6 +343,11 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   loadNamespace(reader, "StreamsNamespaces", &XmlPrinter::addStreamsNamespace);
   loadNamespace(reader, "AssetsNamespaces", &XmlPrinter::addAssetsNamespace);
   loadNamespace(reader, "ErrorNamespaces", &XmlPrinter::addErrorNamespace);
+  
+  loadStyle(reader, "DevicessStyle", &XmlPrinter::setStreamStyle);
+  loadStyle(reader, "StreamsStyle", &XmlPrinter::setStreamStyle);
+  loadStyle(reader, "AssetsStyle", &XmlPrinter::setStreamStyle);
+  loadStyle(reader, "ErrorStyle", &XmlPrinter::setStreamStyle);
 }
 
 void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
@@ -517,3 +522,14 @@ void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader)
   }
 }
 
+void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc, StyleFunction *aFunction)
+{
+  if (aReader.is_block_defined(aDoc)) {
+    const config_reader::kernel_1a &doc = aReader.block(aDoc);
+    if (!doc.is_key_defined("Location")) {
+      sLogger << LERROR << "A style must have a Location: " << aDoc;
+    } else {
+      aFunction(doc["Location"]);
+    }
+  }
+}

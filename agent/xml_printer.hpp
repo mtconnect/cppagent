@@ -78,6 +78,11 @@ namespace XmlPrinter
                          const std::string &aPrefix);
   void setSchemaVersion(const std::string &aVersion);
   const std::string &getSchemaVersion();
+  
+  void setDevicesStyle(const std::string &aStyle);
+  void setStreamStyle(const std::string &aStyle);
+  void setAssetsStyle(const std::string &aStyle);
+  void setErrorStyle(const std::string &aStyle);
 
   // For testing
   void clearDevicesNamespaces();

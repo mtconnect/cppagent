@@ -11,6 +11,7 @@ class RollingFileLogger;
 
 typedef void (NamespaceFunction)(const std::string &aUrn, const std::string &aLocation, 
                                   const std::string &aPrefix);
+typedef void (StyleFunction)(const std::string &aLocation);
 
 class AgentConfiguration : public MTConnectService {
 public:
@@ -39,6 +40,7 @@ protected:
                      const char *aNamespaceType, 
                      NamespaceFunction *aCallback);
   void loadFiles(dlib::config_reader::kernel_1a &aReader);
+  void loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc, StyleFunction *aFunction);
   
   void LoggerHook(const std::string& aLoggerName,
                   const dlib::log_level& l,

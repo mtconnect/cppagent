@@ -603,6 +603,70 @@ void XmlPrinterTest::testReferences()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@name", "chuck");
 }
 
+void XmlPrinterTest::testStreamsStyle()
+{
+  XmlPrinter::setStreamStyle("/styles/Streams.xsl");
+  Checkpoint checkpoint;
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
+  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100");
+
+  ComponentEventPtrArray list;
+  checkpoint.getComponentEvents(list);
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+
+  xmlNodePtr pi = doc->children;
+  CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
+  CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Streams.xsl\""), string((const char*) pi->content));
+  
+  XmlPrinter::setStreamStyle("");
+}
+
+void XmlPrinterTest::testDevicesStyle()
+{
+  XmlPrinter::setDevicesStyle("/styles/Devices.xsl");
+  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
+  
+  xmlNodePtr pi = doc->children;
+  CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
+  CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Devices.xsl\""), string((const char*) pi->content));
+  
+  XmlPrinter::setDevicesStyle("");
+}
+
+void XmlPrinterTest::testErrorStyle()
+{
+  XmlPrinter::setErrorStyle("/styles/Error.xsl");
+
+  PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+  
+  xmlNodePtr pi = doc->children;
+  CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
+  CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Error.xsl\""), string((const char*) pi->content));
+  
+  XmlPrinter::setErrorStyle("");
+}
+
+void XmlPrinterTest::testAssetsStyle()
+{
+  XmlPrinter::setAssetsStyle("/styles/Assets.xsl");
+
+  vector<AssetPtr> assets;
+  Asset asset((string) "123", (string) "TEST", (string) "HELLO");
+  assets.push_back(asset);
+  
+  PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+  
+  xmlNodePtr pi = doc->children;
+  CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
+  CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Assets.xsl\""), string((const char*) pi->content));
+  
+  XmlPrinter::setAssetsStyle("");
+}
+
+
 
 // Helper methods
 

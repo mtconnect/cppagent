@@ -244,7 +244,9 @@ void Agent::registerFile(const string &aUri, const string &aPath)
       mFileMap.insert(pair<string,string>(uri, file.full_name()));
       
       // Check if the file name maps to a standard MTConnect schema file.
-      if (name.find("MTConnect") == 0 && name.substr(name.length() - 4, 4) == ".xsd") {
+      if (name.find("MTConnect") == 0 && name.substr(name.length() - 4, 4) == ".xsd" &&
+          XmlPrinter::getSchemaVersion() == name.substr(name.length() - 7, 3)) {
+        string version = name.substr(name.length() - 7, 3);
         if (name.substr(9, 5) == "Error") {
           string urn = "urn:mtconnect.org:MTConnectError:" + XmlPrinter::getSchemaVersion();
           XmlPrinter::addErrorNamespace(urn, uri, "m");

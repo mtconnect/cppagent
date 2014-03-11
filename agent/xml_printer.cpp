@@ -41,6 +41,10 @@ static map<string, SchemaNamespace> sStreamsNamespaces;
 static map<string, SchemaNamespace> sErrorNamespaces;
 static map<string, SchemaNamespace> sAssetsNamespaces;
 static string sSchemaVersion("1.3");
+static string mStreamsStyle;
+static string mDevicesStyle;
+static string mErrorStyle;
+static string mAssetsStyle;
 
 enum EDocumentType {
   eERROR,
@@ -238,6 +242,26 @@ const string XmlPrinter::getAssetsLocation(const std::string &aPrefix)
     return ns->second.mSchemaLocation;
   else
     return "";
+}
+
+void XmlPrinter::setStreamStyle(const std::string &aStyle)
+{
+  mStreamsStyle = aStyle;
+}
+
+void XmlPrinter::setDevicesStyle(const std::string &aStyle)
+{
+  mDevicesStyle = aStyle;
+}
+
+void XmlPrinter::setErrorStyle(const std::string &aStyle)
+{
+  mErrorStyle = aStyle;
+}
+
+void XmlPrinter::setAssetsStyle(const std::string &aStyle)
+{
+  mAssetsStyle = aStyle;
 }
 
 /* XmlPrinter main methods */
@@ -784,38 +808,46 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
  
   // TODO: Cache the locations and header attributes.
   // Write the root element  
-  string xmlType;
+  string xmlType, style;
   map<string, SchemaNamespace> *namespaces;
   switch (aType) {
   case eERROR:
       namespaces = &sErrorNamespaces;
+      style = mErrorStyle;
       xmlType = "Error";
       break;
       
   case eSTREAMS:
       namespaces = &sStreamsNamespaces;
+      style = mStreamsStyle;
       xmlType = "Streams";
       break;
       
   case eDEVICES:
       namespaces = &sDevicesNamespaces;
+      style = mDevicesStyle;
       xmlType = "Devices";
       break;
       
     case eASSETS:
       namespaces = &sAssetsNamespaces;
+      style = mAssetsStyle;
       xmlType = "Assets";
       break;
-      
   }
   
+  if (!style.empty())
+  {
+    string pi = "xml-stylesheet type=\"text/xsl\" href=\"" + style + '"';
+    THROW_IF_XML2_ERROR(xmlTextWriterStartPI(writer, BAD_CAST pi.c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterEndPI(writer));
+  }
   
   string rootName = "MTConnect" + xmlType;
   string xmlns = "urn:mtconnect.org:" + rootName + ":" + sSchemaVersion;  
   string location;
   
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST rootName.c_str()));
-
   
   // Always make the default namespace and the m: namespace MTConnect default.
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
