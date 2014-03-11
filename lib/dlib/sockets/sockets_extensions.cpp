@@ -114,7 +114,7 @@ namespace dlib
                 throw socket_error(ERESOLVE,"unable to resolve '" + host_or_ip + "' in connect()");
         }
 
-        if(create_connection(con,port,ip))
+        if(create_connection(con,port,ip, 0, ""))
         {
             std::ostringstream sout;
             sout << "unable to connect to '" << host_or_ip << ":" << port << "'";
