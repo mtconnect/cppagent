@@ -344,10 +344,10 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   loadNamespace(reader, "AssetsNamespaces", &XmlPrinter::addAssetsNamespace);
   loadNamespace(reader, "ErrorNamespaces", &XmlPrinter::addErrorNamespace);
   
-  loadStyle(reader, "DevicessStyle", &XmlPrinter::setStreamStyle);
+  loadStyle(reader, "DevicesStyle", &XmlPrinter::setDevicesStyle);
   loadStyle(reader, "StreamsStyle", &XmlPrinter::setStreamStyle);
-  loadStyle(reader, "AssetsStyle", &XmlPrinter::setStreamStyle);
-  loadStyle(reader, "ErrorStyle", &XmlPrinter::setStreamStyle);
+  loadStyle(reader, "AssetsStyle", &XmlPrinter::setAssetsStyle);
+  loadStyle(reader, "ErrorStyle", &XmlPrinter::setErrorStyle);
 }
 
 void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
