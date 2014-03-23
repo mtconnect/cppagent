@@ -3,6 +3,10 @@ body {
 	font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
 }
 
+table {
+  border-collapse: collapse;
+}
+
 td, th {
 	padding: 4px;
 }

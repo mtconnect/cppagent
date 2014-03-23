@@ -47,7 +47,7 @@
 	
 	<xsl:template match="*">
 		<p><xsl:value-of select="name()"/></p>
-		<table border="1px"  style="border-collapse:collapse">
+		<table border="1px">
 			<thead>
 				<th>Timestamp</th><th>Type</th><th>Sub Type</th><th>Name</th><th>Id</th>
 				<th>Sequence</th><th>Value</th>
