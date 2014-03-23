@@ -89,10 +89,10 @@ public:
   
   // Setter methods
   void setUuid(const std::string &aUuid) { mUuid = aUuid; reBuildAttributes(); }
-  void setManufacturer(const std::string &aManufacturer) { mManufacturer = aManufacturer; reBuildAttributes(); }
-  void setSerialNumber(const std::string &aSerialNumber) { mSerialNumber = aSerialNumber; reBuildAttributes(); }
-  void setStation(const std::string &aStation) { mStation = aStation; reBuildAttributes(); }
-  void setDescription(const std::string &aDescription) { mDescriptionBody = aDescription; reBuildAttributes(); }
+  void setManufacturer(const std::string &aManufacturer) { mDescription["manufacturer"] = aManufacturer; }
+  void setSerialNumber(const std::string &aSerialNumber) { mDescription["serialNumber"] = aSerialNumber; }
+  void setStation(const std::string &aStation) { mDescription["station"] = aStation; }
+  void setDescription(const std::string &aDescription) { mDescriptionBody = aDescription; }
   void setNativeName(const std::string &aNativeName) { mNativeName = aNativeName; reBuildAttributes(); }
   
   // Cached data items
@@ -102,7 +102,7 @@ public:
   
   /* Add/get description specifications using an attribute map */
   void addDescription(std::string body, std::map<std::string, std::string> attributes);
-  std::map<std::string, std::string> getDescription() const;
+  const std::map<std::string, std::string> &getDescription() const { return mDescription; }
   
   void setConfiguration(const std::string &aConfiguration) { mConfiguration = aConfiguration; }
   
@@ -155,9 +155,7 @@ protected:
   float mSampleInterval;
   
   /* Description of itself */
-  std::string mManufacturer;
-  std::string mSerialNumber;
-  std::string mStation;
+  std::map<std::string, std::string> mDescription;
   std::string mDescriptionBody;
   std::string mConfiguration;
   

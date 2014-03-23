@@ -100,47 +100,11 @@ std::map<string, string> Component::buildAttributes() const
 
 void Component::addDescription(string body, map<string, string> attributes)
 {
-  if (!attributes["manufacturer"].empty())
-  {
-    mManufacturer = attributes["manufacturer"];
-  }
-  
-  if (!attributes["serialNumber"].empty())
-  {
-    mSerialNumber = attributes["serialNumber"];
-  }
-  
-  if (!attributes["station"].empty())
-  {
-    mStation = attributes["station"];
-  }
-  
+  mDescription = attributes;
   if (!body.empty())
   {
     mDescriptionBody = body;
   }
-}
-
-std::map<string, string> Component::getDescription() const
-{
-  std::map<string, string> description;
-  
-  if (!mManufacturer.empty())
-  {
-    description["manufacturer"] = mManufacturer;
-  }
-  
-  if (!mSerialNumber.empty())
-  {
-    description["serialNumber"] = mSerialNumber;
-  }
-  
-  if (!mStation.empty())
-  {
-    description["station"] = mStation;
-  }
-  
-  return description;
 }
 
 Device * Component::getDevice()
