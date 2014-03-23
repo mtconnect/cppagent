@@ -577,7 +577,16 @@ Configuration Parameters
 		  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
 
 		    *Default*: false
+		
+		* `RealTime` - Boost the thread priority of this adapter so that events are handled faster.
 
+        *Default*: false
+    
+    * `RelativeTime` - The timestamps will be given as relative offests represented as a floating 
+      point number of milliseconds. The offset will be added to the arrival time of the first 
+      recorded event.
+
+        *Default*: false
 
 
 logger_config configuration items
