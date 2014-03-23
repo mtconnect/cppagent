@@ -143,6 +143,9 @@ AttributeList *ComponentEvent::getAttributes()
         string token;
         
         getline(toParse, token, '|');
+        if (token.empty())
+          token = "0";
+        
         mAttributes.push_back(AttributeItem("sampleCount", token));
         mSampleCount = atoi(token.c_str());
         
