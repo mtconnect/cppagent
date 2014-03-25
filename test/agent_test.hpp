@@ -91,6 +91,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAssetStorageWithoutType);
   CPPUNIT_TEST(testStreamData);
   CPPUNIT_TEST(testSequenceNumberRollover);
+  CPPUNIT_TEST(testSampleCount);
   CPPUNIT_TEST(testStreamDataObserver);
   CPPUNIT_TEST(testFailWithDuplicateDeviceUUID);
   CPPUNIT_TEST(testMultipleDisconnect);
@@ -199,6 +200,7 @@ protected:
   
   // Sequence number tests
   void testSequenceNumberRollover();
+  void testSampleCount();
   
   // Test failure when adding a duplicate device uuid.
   void testFailWithDuplicateDeviceUUID();

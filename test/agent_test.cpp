@@ -581,6 +581,46 @@ void AgentTest::testSequenceNumberRollover()
 #endif
 }
 
+void AgentTest::testSampleCount()
+{
+  key_value_map kvm;
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  int64_t seq = a->getSequence();
+  
+  // Get the current position
+  char line[80];
+  
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
+    adapter->processData(line);
+  }
+  
+  {
+    path = "/sample";
+    kvm["path"] = "//DataItem[@name='Xact']";
+    kvm["from"] = int64ToString(seq);
+    kvm["count"] = "10";
+    
+    PARSE_XML_RESPONSE_QUERY(kvm);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
+                                      int64ToString(seq + 20).c_str());
+    
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
+
+    // Make sure we got 10 lines
+    for (int j = 0; j < 10; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j * 2 + 1).c_str());
+    }
+  }
+  
+}
 
 void AgentTest::testAdapterCommands()
 {

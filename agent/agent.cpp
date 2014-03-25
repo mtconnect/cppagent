@@ -1257,15 +1257,9 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
     
     // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
     start = (start <= firstSeq) ? firstSeq : start;
-    end = start + count;
-    if (end >= mSequence) {
-      end = mSequence;
-      endOfBuffer = true;
-    } else {
-      endOfBuffer = false;
-    }
     
-    for (uint64_t i = start; i < end; i++)
+    uint64_t i;
+    for (i = start; results.size() < count && i < mSequence; i++)
     {
       // Filter out according to if it exists in the list
       const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
@@ -1275,6 +1269,12 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
         results.push_back(event);
       }
     }
+    
+    end = i;
+    if (i >= mSequence)
+      endOfBuffer = true;
+    else
+      endOfBuffer = false;
     
     if (aObserver != NULL) aObserver->reset();
   }
