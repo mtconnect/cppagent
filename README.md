@@ -116,7 +116,7 @@ configuration declaration as follows:
     }
 
 Each set of files must be declared using a named file description, like schema or
-styles and the local @Path@ and the @Location@ the files will be mapped to in the
+styles and the local `Path` and the `Location` the files will be mapped to in the
 HTTP server namespace. For example:
 
     http://example.com:5000/schemas/MTConnectStreams_1.3.xsd will map to ../schemas/MTConnectStreams_1.3.xsd
@@ -134,9 +134,9 @@ To specify the new schema for the documents, use the following declaration:
       }
     }
 
-This will use the ExampleStreams_1.3.xsd schema in the document. The @e@ is the alias that will be
-used the reference the extended schema. The @Location@ is the location of the xsd file relative in 
-the agent namespace. The @Location@ must be mapped in the @Files@ section.
+This will use the ExampleStreams_1.3.xsd schema in the document. The `e` is the alias that will be
+used the reference the extended schema. The `Location` is the location of the xsd file relative in 
+the agent namespace. The `Location` must be mapped in the `Files` section.
 
 You can do this for any one of the other documents: 
 
