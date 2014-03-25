@@ -138,6 +138,11 @@ This will use the ExampleStreams_1.3.xsd schema in the document. The `e` is the 
 used the reference the extended schema. The `Location` is the location of the xsd file relative in 
 the agent namespace. The `Location` must be mapped in the `Files` section.
 
+An optional `Path` can be added to the `...Namespaces` declaration instead of declaring the 
+`Files` section. The `Files` makes it easier to include multiple files from a directory and will
+automatically include all the default MTConnect schema files for the correct version. 
+(See `SchameVersion` option below)
+
 You can do this for any one of the other documents: 
 
     StreamsNamespaces
@@ -152,6 +157,10 @@ The same can be done with style sheets, but only the Location is required.
     StreamsStyle {
       Location = /styles/Streams.xsl
     }
+    
+An optional `Path` can also be used to reference the xsl file directly. This will not 
+include other files in the path like css or included xsl transforms. It is advised to
+use the `Files` declaration.
     
 The following can also be declared:
 

@@ -529,7 +529,10 @@ void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &aReader, cons
     if (!doc.is_key_defined("Location")) {
       sLogger << LERROR << "A style must have a Location: " << aDoc;
     } else {
-      aFunction(doc["Location"]);
+      string location = doc["Location"];
+      aFunction(location);
+      if (doc.is_key_defined("Path"))
+        mAgent->registerFile(location, doc["Path"]);
     }
   }
 }
