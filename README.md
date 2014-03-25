@@ -98,6 +98,68 @@ the order of the keys, so the file can be specified in free form. We
 will go over some configurations from a minimal configuration to more
 complex multi-adapter configurations.
 
+###Serving Static Content###
+
+Using a Files Configuration section, indvidual files or directories can be 
+into the request file space from the agent. To do this, we use the Files top level 
+configuration declaration as follows:
+
+    Files {
+        schemas {
+            Path = ../schemas
+            Location = /schemas/
+        }
+        styles {
+            Path = ../styles
+            Location = /styles/
+        }
+    }
+
+Each set of files must be declared using a named file description, like schema or
+styles and the local @Path@ and the @Location@ the files will be mapped to in the
+HTTP server namespace. For example:
+
+    http://example.com:5000/schemas/MTConnectStreams_1.3.xsd will map to ../schemas/MTConnectStreams_1.3.xsd
+
+All files will be mapped and the directory names do not need to be the same. These files can be either served directly or can be used to extend the schema or add XSLT stylesheets for formatting the XML in browsers.
+
+###Specifying the Extended Schemas###
+
+To specify the new schema for the documents, use the following declaration:
+
+    StreamsNamespaces {
+      e {
+        Urn = urn:example.com:ExampleStreams:1.3
+        Location = /schemas/ExampleStreams_1.3.xsd
+      }
+    }
+
+This will use the ExampleStreams_1.3.xsd schema in the document. The @e@ is the alias that will be
+used the reference the extended schema. The @Location@ is the location of the xsd file relative in 
+the agent namespace. The @Location@ must be mapped in the @Files@ section.
+
+You can do this for any one of the other documents: 
+
+    StreamsNamespaces
+    DevicesNamespaces
+    AssetsNamespaces
+    ErrorNamespaces
+
+###Specifying the XML Document Style###
+
+The same can be done with style sheets, but only the Location is required.
+
+    StreamsStyle {
+      Location = /styles/Streams.xsl
+    }
+    
+The following can also be declared:
+
+    DevicesStyle
+    StreamsStyle
+    AssetsStyle
+    ErrorStyle
+
 ###Example 1:###
 
 Here’s an example configuration file. The `#` character can be used to
@@ -497,7 +559,7 @@ Configuration Parameters
     
 * `SchemaVersion` - Change the schema version to a different version number.
 
-    *Default*: 1.2
+    *Default*: 1.3
 
 ###Adapter configuration items###
 
