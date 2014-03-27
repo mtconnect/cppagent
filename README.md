@@ -8,7 +8,7 @@ protocol and data collection framework that will work as a standalone
 server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
-Version 1.3.0.0 added the filter constraints, references, and cutting tool archetypes.
+Version 1.3.0.0 added the filter constraints, references, cutting tool archetypes, and formatting styles.
 
 Version 1.2.0.0 added the capability to support assets.
 
@@ -259,9 +259,9 @@ as well be named `EnergySensor` if desired as illustrated below.
 
     Adapters
     {
-	Controller
+	    Controller
     	{
-	    Device = VMC-3Axis
+            Device = VMC-3Axis
             Host = 192.168.10.22
             Port = 7878 # *Default* value...
         }
