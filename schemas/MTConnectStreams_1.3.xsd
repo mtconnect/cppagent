@@ -31,7 +31,7 @@ WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
 THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
 SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 -->
-<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectStreams:1.3' xmlns:mt='urn:mtconnect.org:MTConnectStreams:1.3' targetNamespace='urn:mtconnect.org:MTConnectStreams:1.3' elementFormDefault='qualified' attributeFormDefault='unqualified'>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:vc='http://www.w3.org/2007/XMLSchema-versioning' xmlns='urn:mtconnect.org:MTConnectStreams:1.3' xmlns:mt='urn:mtconnect.org:MTConnectStreams:1.3' targetNamespace='urn:mtconnect.org:MTConnectStreams:1.3' elementFormDefault='qualified' attributeFormDefault='unqualified' vc:minVersion='1.1'>
   <xs:element name='MTConnectStreams' type='MTConnectStreamsType'>
     <xs:annotation>
       <xs:documentation>
@@ -339,7 +339,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='CHUCK_STATE'/>
       <xs:enumeration value='END_OF_BAR'/>
       <xs:enumeration value='AUXILIARY_END_OF_BAR'/>
-      <xs:enumeration value='SPINDLE_INTERLOCK'/>
+      <xs:enumeration value='AXIS_INTERLOCK'/>
       <xs:enumeration value='MANUAL_CHUCK_UNCLAMP_INTERLOCK'/>
       <xs:enumeration value='LENGTH'/>
       <xs:enumeration value='AXIS_STATE'/>
@@ -405,8 +405,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='REMAINING'/>
       <xs:enumeration value='JOG'/>
       <xs:enumeration value='RAPID'/>
-      <xs:enumeration value='ACTUAL'/>
-      <xs:enumeration value='REMAINING'/>
       <xs:enumeration value='PRIMARY'/>
       <xs:enumeration value='AUXILIARY'/>
       <xs:enumeration value='MANUAL_UNCLAMP'/>
@@ -733,7 +731,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:element>
     </xs:sequence>
     <xs:attribute name='componentId' type='ComponentIdType' use='required'/>
-    <xs:attribute name='name' type='NameType' use='required'/>
+    <xs:attribute name='name' type='NameType' use='optional'/>
     <xs:attribute name='nativeName' type='NameType' use='optional'/>
     <xs:attribute name='component' type='NameType' use='required'/>
     <xs:attribute name='uuid' type='UuidType' use='optional'/>
@@ -2641,7 +2639,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[+-]?\d+|UNAVAILABLE'/>
+      <xs:pattern value='[A-Za-z0-9]+|UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='ToolIdValueType'>
@@ -2734,6 +2732,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='ACTIVE'/>
       <xs:enumeration value='STOPPED'/>
       <xs:enumeration value='FEED_HOLD'/>
+      <xs:enumeration value='PROGRAM_COMPLETED'/>
+      <xs:enumeration value='PROGRAM_STOPPED'/>
+      <xs:enumeration value='PROGRAM_OPTIONAL_STOP'/>
       <xs:enumeration value='UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
@@ -2748,6 +2749,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='MANUAL'/>
       <xs:enumeration value='MANUAL_DATA_INPUT'/>
       <xs:enumeration value='SEMI_AUTOMATIC'/>
+      <xs:enumeration value='EDIT'/>
       <xs:enumeration value='UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
@@ -2872,6 +2874,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:restriction base='xs:string'>
       <xs:enumeration value='HOME'/>
       <xs:enumeration value='TRAVEL'/>
+      <xs:enumeration value='STOPPED'/>
       <xs:enumeration value='UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
@@ -2934,7 +2937,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:simpleContent>
       <xs:restriction base='EventType'>
-        <xs:pattern value='[+-]?\d+|UNAVAILABLE'/>
+        <xs:pattern value='[A-Za-z0-9]+|UNAVAILABLE'/>
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
@@ -3059,6 +3062,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:enumeration value='ACTIVE'/>
         <xs:enumeration value='STOPPED'/>
         <xs:enumeration value='FEED_HOLD'/>
+        <xs:enumeration value='PROGRAM_COMPLETED'/>
+        <xs:enumeration value='PROGRAM_STOPPED'/>
+        <xs:enumeration value='PROGRAM_OPTIONAL_STOP'/>
         <xs:enumeration value='UNAVAILABLE'/>
       </xs:restriction>
     </xs:simpleContent>
@@ -3082,6 +3088,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:enumeration value='MANUAL'/>
         <xs:enumeration value='MANUAL_DATA_INPUT'/>
         <xs:enumeration value='SEMI_AUTOMATIC'/>
+        <xs:enumeration value='EDIT'/>
         <xs:enumeration value='UNAVAILABLE'/>
       </xs:restriction>
     </xs:simpleContent>
@@ -3489,7 +3496,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='SpindleInterlockType'>
+  <xs:complexType name='AxisInterlockType'>
     <xs:annotation>
       <xs:documentation>
         Spindle lock status
@@ -3503,13 +3510,25 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='SpindleInterlock' type='SpindleInterlockType' substitutionGroup='Event'>
+  <xs:element name='AxisInterlock' type='AxisInterlockType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
         Spindle lock status
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:simpleType name='ChuckInterlockValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The values for the chuck interlock state
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTIVE'/>
+      <xs:enumeration value='INACTIVE'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name='ChuckInterlockType'>
     <xs:annotation>
       <xs:documentation>
@@ -3518,8 +3537,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:simpleContent>
       <xs:restriction base='EventType'>
-        <xs:enumeration value='YES'/>
-        <xs:enumeration value='NO'/>
+        <xs:enumeration value='ACTIVE'/>
+        <xs:enumeration value='INACTIVE'/>
         <xs:enumeration value='UNAVAILABLE'/>
       </xs:restriction>
     </xs:simpleContent>
@@ -3541,6 +3560,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:restriction base='EventType'>
         <xs:enumeration value='HOME'/>
         <xs:enumeration value='TRAVEL'/>
+        <xs:enumeration value='STOPPED'/>
         <xs:enumeration value='UNAVAILABLE'/>
       </xs:restriction>
     </xs:simpleContent>
@@ -3696,6 +3716,31 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:simpleType name='ProgramHeaderValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A header
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:complexType name='ProgramHeaderType'>
+    <xs:annotation>
+      <xs:documentation>
+        A header in the control program
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProgramHeader' type='ProgramHeaderType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        A header in the control program
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:simpleType name='OperatorIdValueType'>
     <xs:annotation>
       <xs:documentation>
@@ -3721,6 +3766,39 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:simpleType name='ProgramEditValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The values for the program edit values
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTIVE'/>
+      <xs:enumeration value='READY'/>
+      <xs:enumeration value='NOT_READY'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='ProgramEditType'>
+    <xs:annotation>
+      <xs:documentation>
+        The program edit state
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ProgramEditValueType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='ProgramEditNameType'>
+    <xs:annotation>
+      <xs:documentation>
+        The name of the program being edited
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ProgramValueType'/>
+    </xs:simpleContent>
+  </xs:complexType>
   <xs:complexType name='PartCountDiscreteType'>
     <xs:annotation>
       <xs:documentation>
@@ -3822,6 +3900,23 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Discrete of A generic message
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='BlockDiscreteType'>
+    <xs:annotation>
+      <xs:documentation>
+        Discrete of The program code
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='BlockType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='BlockDiscrete' type='BlockDiscreteType' substitutionGroup='Block'>
+    <xs:annotation>
+      <xs:documentation>
+        Discrete of The program code
       </xs:documentation>
     </xs:annotation>
   </xs:element>
