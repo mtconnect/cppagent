@@ -42,6 +42,7 @@
 typedef unsigned __int64 uint64_t;
 #define strtoull _strtoui64
 #else
+#define O_BINARY 0
 #define ISNAN(x) std::isnan(x)
 #include <stdint.h>
 #include <sys/resource.h>

@@ -27,7 +27,6 @@
 #include <dlib/config_reader.h>
 #include <dlib/queue.h>
 
-
 using namespace std;
 
 static const string sUnavailable("UNAVAILABLE");
@@ -958,7 +957,7 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
     return "";
   }
   
-  int fd = open(path, O_RDONLY);
+  int fd = open(path, O_RDONLY | O_BINARY);
   if (res < 0) {
     aOutgoing.http_return = 404;
     aOutgoing.http_return_status = "File not found";
@@ -977,12 +976,12 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
     return "";
   }
   
-  buffer[fs.st_size] = '\0';
+  buffer[bytes] = '\0';
   string result = buffer;
   free(buffer);
   
   // If this is a small file, cache it.
-  if (fs.st_size < SMALL_FILE)
+  if (bytes < SMALL_FILE)
     mFileCache.insert(pair<string,string>(aUri, result));
   
   return result;
