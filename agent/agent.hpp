@@ -168,6 +168,7 @@ public:
   void clear();
 
   void registerFile(const std::string &aUri, const std::string &aPath);
+  void addMimeType(const std::string &aExt, const std::string &aType) { mMimeTypes[aExt] = aType; }
   
   // PUT and POST handling
   void enablePut(bool aFlag = true) { mPutEnabled = aFlag; }
@@ -313,6 +314,7 @@ protected:
   // For file handling, small files will be cached
   std::map<std::string, std::string> mFileMap;
   std::map<std::string, std::string> mFileCache;
+  std::map<std::string, std::string> mMimeTypes;
   
   // Put handling controls
   bool mPutEnabled;

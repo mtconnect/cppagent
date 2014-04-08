@@ -39,6 +39,14 @@ static dlib::logger sLogger("agent");
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int aCheckpointFreq)
   : mPutEnabled(false), mLogStreamData(false)
 {
+  mMimeTypes["xsl"] = "application/xslt+xml";
+  mMimeTypes["xml"] = "text/xml";
+  mMimeTypes["css"] = "text/css";
+  mMimeTypes["xsd"] = "text/xml";
+  mMimeTypes["jpg"] = "image/jpeg";
+  mMimeTypes["jpeg"] = "image/jpeg";
+  mMimeTypes["png"] = "image/png";
+  
   try
   {
     // Load the configuration for the Agent
@@ -933,6 +941,21 @@ std::string Agent::storeAsset(std::ostream& aOut,
 
 string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
 {
+  // Get the mime type for the file.
+  bool unknown = true;
+  size_t last = aUri.find_last_of("./");
+  if (last != string::npos && aUri[last] == '.')
+  {
+    string ext = aUri.substr(last + 1);
+    if (mMimeTypes.count(ext) > 0)
+    {
+      aOutgoing.headers["Content-Type"] = mMimeTypes[ext];
+      unknown = false;
+    }
+  }
+  if (unknown)
+    aOutgoing.headers["Content-Type"] = "application/octet-stream";
+  
   // Check if the file is cached
   std::map<string,string>::iterator cached = mFileCache.find(aUri);
   if (cached != mFileCache.end())

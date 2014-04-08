@@ -41,6 +41,7 @@ protected:
                      NamespaceFunction *aCallback);
   void loadFiles(dlib::config_reader::kernel_1a &aReader);
   void loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc, StyleFunction *aFunction);
+  void loadTypes(dlib::config_reader::kernel_1a &aReader);
   
   void LoggerHook(const std::string& aLoggerName,
                   const dlib::log_level& l,

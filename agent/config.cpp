@@ -348,6 +348,8 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   loadStyle(reader, "StreamsStyle", &XmlPrinter::setStreamStyle);
   loadStyle(reader, "AssetsStyle", &XmlPrinter::setAssetsStyle);
   loadStyle(reader, "ErrorStyle", &XmlPrinter::setErrorStyle);
+  
+  loadTypes(reader);
 }
 
 void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
@@ -533,6 +535,20 @@ void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &aReader, cons
       aFunction(location);
       if (doc.is_key_defined("Path"))
         mAgent->registerFile(location, doc["Path"]);
+    }
+  }
+}
+
+void AgentConfiguration::loadTypes(dlib::config_reader::kernel_1a &aReader)
+{
+  if (aReader.is_block_defined("MimeTypes")) {
+    const config_reader::kernel_1a &types = aReader.block("MimeTypes");
+    std::vector<string> keys;
+    types.get_keys(keys);
+    
+    std::vector<string>::iterator key;
+    for (key = keys.begin(); key != keys.end(); ++key) {
+      mAgent->addMimeType(*key, types[*key]);
     }
   }
 }
