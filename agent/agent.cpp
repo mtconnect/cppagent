@@ -39,7 +39,7 @@ static dlib::logger sLogger("agent");
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int aCheckpointFreq)
   : mPutEnabled(false), mLogStreamData(false)
 {
-  mMimeTypes["xsl"] = "application/xslt+xml";
+  mMimeTypes["xsl"] = "text/xsl";
   mMimeTypes["xml"] = "text/xml";
   mMimeTypes["css"] = "text/css";
   mMimeTypes["xsd"] = "text/xml";
