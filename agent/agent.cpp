@@ -498,14 +498,14 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
       return false;
     }
 
-    AssetPtr &old = mAssetMap[aId];
+    AssetPtr *old = &mAssetMap[aId];
     if (!ptr->isRemoved())
     {
-      if (old.getObject() != NULL)
-        mAssets.remove(&old);
+      if (old->getObject() != NULL)
+        mAssets.remove(old);
       else
         mAssetCounts[aType] += 1;
-    } else if (old.getObject() == NULL) {
+    } else if (old->getObject() == NULL) {
       sLogger << LWARN << "Cannot remove non-existent asset";
       return false;
     }
@@ -522,13 +522,13 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     // Check for overflow
     if (mAssets.size() >= mMaxAssets)
     {
-      old = *mAssets.front();
-      mAssetCounts[old->getType()] -= 1;
+      old = mAssets.front();
+      mAssetCounts[(*old)->getType()] -= 1;
       mAssets.pop_front();
-      mAssetMap.erase(old->getAssetId());
+      mAssetMap.erase((*old)->getAssetId());
       
       // Add secondary keys
-      AssetKeys &keys = old->getKeys();
+      AssetKeys &keys = (*old)->getKeys();
       AssetKeys::iterator iter;
       for (iter = keys.begin(); iter != keys.end(); iter++)
       {
