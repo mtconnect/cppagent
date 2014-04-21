@@ -68,13 +68,16 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
 DataItem::DataItem(std::map<string, string> attributes) 
   : mRepresentation(VALUE), mHasNativeScale(false), mHasSignificantDigits(false),  
     mHasConstraints(false), mFilterValue(0.0), mFilterType(FILTER_NONE), mLastSampleValue(NAN), mDataSource(NULL),
-    mConversionDetermined(false), mConversionRequired(false), mHasFactor(false) {
+    mConversionDetermined(false), mConversionRequired(false), mHasFactor(false)
+{
   mId = attributes["id"];
   mName = attributes["name"];
   mType = attributes["type"];
   mIsAlarm = (mType == "ALARM");
   mIsMessage = (mType == "MESSAGE");
   mIsAssetChanged = (mType == "ASSET_CHANGED");
+  mIsAssetRemoved = (mType == "ASSET_REMOVED");
+      
 
   mCamelType = getCamelType(mType, mPrefix);
   if (attributes["representation"] == "TIME_SERIES")

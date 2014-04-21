@@ -35,6 +35,7 @@ protected:
   std::string mType;
   std::string mDeviceUuid;
   std::string mTimestamp;
+  bool        mRemoved;
   AssetKeys   mKeys;
   
 public:
@@ -43,16 +44,19 @@ public:
     mAssetId = aOther.mAssetId;
     mContent = aOther.mContent;
     mType = aOther.mType;
+    mRemoved = aOther.mRemoved;
   }
-  Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent);
+  Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
+        const bool aRemoved = false);
   virtual ~Asset();
 
-  std::string &getAssetId() { return mAssetId; }
+  const std::string &getAssetId() const { return mAssetId; }
   virtual std::string &getContent() { return mContent; }
-  std::string &getType() { return mType; }
+  const std::string &getType() const { return mType; }
   AssetKeys   &getKeys() { return mKeys; }
-  std::string &getDeviceUuid() { return mDeviceUuid; }
-  std::string &getTimestamp() { return mTimestamp; }
+  const std::string &getDeviceUuid() const { return mDeviceUuid; }
+  const std::string &getTimestamp() const { return mTimestamp; }
+  bool isRemoved() const { return mRemoved; }
   
   bool operator==(const Asset &aOther) {
     return mAssetId == aOther.mAssetId;
@@ -61,6 +65,7 @@ public:
   void setAssetId(const std::string &aId) { mAssetId = aId; }
   void setDeviceUuid(const std::string &aId) { mDeviceUuid = aId; }
   void setTimestamp(const std::string &aTs) { mTimestamp = aTs; }
+  void setRemoved(bool aRemoved) { mRemoved = aRemoved; }
 };
 
 typedef std::map<std::string, AssetPtr> AssetIndex;

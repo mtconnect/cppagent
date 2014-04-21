@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectAssets xmlns:m="urn:mtconnect.org:MTConnectAssets:1.2" xmlns="urn:mtconnect.org:MTConnectAssets:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectAssets:1.2 ../MTConnectAssets_1.2.xsd">
+	<Header creationTime="2011-05-11T13:55:22" assetBufferSize="1024" sender="localhost" assetCount="2" version="1.2" instanceId="1234"/>
+	<Assets>
+		<CuttingTool serialNumber="1" toolId="KSSP300R4SD43L240" timestamp="2011-05-11T13:55:22" assetId="KSSP300R4SD43L240.1" manufacturers="KMT,Parlec" removed="true">
+			<Description>Cutting tool ...</Description>
+			<CuttingToolDefinition format="EXPRESS">ISO 13399...</CuttingToolDefinition>
+			<CuttingToolLifeCycle>
+				<CutterStatus><Status>NEW</Status></CutterStatus>
+				<ToolLife type="PART_COUNT" countDirection="DOWN" maximum="300">200</ToolLife>
+				<ProgramSpindleSpeed maximum="13300" nominal="605">10000</ProgramSpindleSpeed>
+				<ProgramFeedRate>222</ProgramFeedRate>
+				<ConnectionCodeMachineSide>CV50</ConnectionCodeMachineSide>
+				<Measurements>
+					<BodyDiameterMax code="BDX">73.25</BodyDiameterMax>
+					<OverallToolLength nominal="222.25" minimum="221.996" maximum="222.504" code="OAL">222.25</OverallToolLength>
+					<UsableLengthMax code="LUX" nominal="82.55">82.55</UsableLengthMax>
+					<CuttingDiameterMax code="DC" nominal="76.2" maximum="76.213" minimum="76.187">76.2</CuttingDiameterMax>
+					<BodyLengthMax code="LF" nominal="120.65" maximum="120.904" minimum="120.404">120.65</BodyLengthMax>
+					<DepthOfCutMax code="APMX" nominal="60.96">60.95</DepthOfCutMax>
+					<FlangeDiameterMax code="DF" nominal="98.425">98.425</FlangeDiameterMax>
+				</Measurements>
+				<CuttingItems count="24">
+					<CuttingItem indices="1-4" itemId="SDET43PDER8GB" manufacturers="KMT" grade="KC725M">
+						<Locus>FLANGE: 1-4, ROW: 1</Locus>
+						<Measurements>
+							<CuttingEdgeLength code="L" nominal="12.7" minimum="12.675" maximum="12.725">12.7</CuttingEdgeLength>
+							<WiperEdgeLength code="BS" nominal="2.56">2.56</WiperEdgeLength>
+							<IncribedCircleDiameter code="IC" nominal="12.7">12.7</IncribedCircleDiameter>
+							<CornerRadius code="RE" nominal="0.8">0.8</CornerRadius>
+						</Measurements>
+					</CuttingItem>
+					<CuttingItem indices="5-8" itemId="SDET43PDER8GB" manufacturers="KMT" grade="KC725M">
+						<Locus>FLANGE: 1-4, ROW: 2</Locus>
+						<Measurements>
+							<CuttingEdgeLength code="L" nominal="12.7" minimum="12.675" maximum="12.725">12.7</CuttingEdgeLength>
+							<WiperEdgeLength code="BS" nominal="2.56">2.56</WiperEdgeLength>
+							<IncribedCircleDiameter code="IC" nominal="12.7">12.7</IncribedCircleDiameter>
+							<CornerRadius code="RE" nominal="0.8">0.8</CornerRadius>
+						</Measurements>
+					</CuttingItem>
+					<CuttingItem indices="9-12" itemId="SDET43PDER8GB" manufacturers="KMT" grade="KC725M">
+						<Locus>FLANGE: 1-4, ROW: 3</Locus>
+						<Measurements>
+							<CuttingEdgeLength code="L" nominal="12.7" minimum="12.675" maximum="12.725">12.7</CuttingEdgeLength>
+							<WiperEdgeLength code="BS" nominal="2.56">2.56</WiperEdgeLength>
+							<IncribedCircleDiameter code="IC" nominal="12.7">12.7</IncribedCircleDiameter>
+							<CornerRadius code="RE" nominal="0.8">0.8</CornerRadius>
+						</Measurements>
+					</CuttingItem>
+					<CuttingItem indices="13-16" itemId="SDET43PDER8GB" manufacturers="KMT" grade="KC725M">
+						<Locus>FLANGE: 1-4, ROW: 4</Locus>
+						<Measurements>
+							<CuttingEdgeLength code="L" nominal="12.7" minimum="12.675" maximum="12.725">12.7</CuttingEdgeLength>
+							<WiperEdgeLength code="BS" nominal="2.56">2.56</WiperEdgeLength>
+							<IncribedCircleDiameter code="IC" nominal="12.7">12.7</IncribedCircleDiameter>
+							<CornerRadius code="RE" nominal="0.8">0.8</CornerRadius>
+						</Measurements>
+					</CuttingItem>
+					<CuttingItem indices="17-20" itemId="SDET43PDER8GB" manufacturers="KMT" grade="KC725M">
+						<Locus>FLANGE: 1-4, ROW: 5</Locus>
+						<Measurements>
+							<CuttingEdgeLength code="L" nominal="12.7" minimum="12.675" maximum="12.725">12.7</CuttingEdgeLength>
+							<WiperEdgeLength code="BS" nominal="2.56">2.56</WiperEdgeLength>
+							<IncribedCircleDiameter code="IC" nominal="12.7">12.7</IncribedCircleDiameter>
+							<CornerRadius code="RE" nominal="0.8">0.8</CornerRadius>
+						</Measurements>
+					</CuttingItem>
+					<CuttingItem indices="21-24" itemId="SDET43PDER8GB" manufacturers="KMT" grade="KC725M">
+						<Locus>FLANGE: 1-4, ROW: 6</Locus>
+						<Measurements>
+							<CuttingEdgeLength code="L" nominal="12.7" minimum="12.675" maximum="12.725">12.7</CuttingEdgeLength>
+							<WiperEdgeLength code="BS" nominal="2.56">2.56</WiperEdgeLength>
+							<IncribedCircleDiameter code="IC" nominal="12.7">12.7</IncribedCircleDiameter>
+							<CornerRadius code="RE" nominal="0.8">0.8</CornerRadius>
+						</Measurements>
+					</CuttingItem>
+				</CuttingItems>
+			</CuttingToolLifeCycle>
+		</CuttingTool>
+	</Assets>
+</MTConnectAssets>

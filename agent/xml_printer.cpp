@@ -1085,6 +1085,12 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                     BAD_CAST "assetId",
                                                     BAD_CAST aTool->getAssetId().c_str()));
+    if (aTool->isRemoved())
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                      BAD_CAST "removed",
+                                                      BAD_CAST "true"));
+    }
     
     set<string> remaining;
     std::map<std::string,CuttingToolValuePtr>::const_iterator viter;

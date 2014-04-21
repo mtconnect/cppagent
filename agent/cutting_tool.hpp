@@ -60,8 +60,9 @@ public:
 
 class CuttingTool : public Asset {
 public:
-  CuttingTool(const std::string &aAssetId, const std::string &aType, const std::string &aContent) 
-    : Asset(aAssetId, aType, aContent) {}
+  CuttingTool(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
+              bool aRemoved = false)
+    : Asset(aAssetId, aType, aContent, aRemoved) {}
   ~CuttingTool();
   
   void addIdentity(const std::string &aKey, const std::string &aValue);

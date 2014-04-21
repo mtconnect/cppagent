@@ -100,6 +100,9 @@ protected:
                                Component *parent = NULL,
                                Device *device = NULL);
 
+  // Asset Parser
+  AssetPtr handleAsset(xmlNodePtr anAsset, const std::string &aAssetId,
+                       const std::string &aType, const std::string &aContent);
   
   // Cutting Tool Parser
   CuttingToolPtr handleCuttingTool(xmlNodePtr anAsset);

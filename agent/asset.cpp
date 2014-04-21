@@ -19,11 +19,10 @@
 
 using namespace std;
 
-Asset::Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent)
+Asset::Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
+             const bool aRemoved)
+  : mAssetId(aAssetId), mContent(aContent),  mType(aType), mRemoved(aRemoved)
 {
-  mAssetId = aAssetId;
-  mContent = aContent;
-  mType = aType;
 }
 
 Asset::~Asset()

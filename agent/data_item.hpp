@@ -147,6 +147,7 @@ public:
   bool isAlarm() const { return mIsAlarm; }
   bool isMessage() const { return mIsMessage; }
   bool isAssetChanged() const { return mIsAssetChanged; }
+  bool isAssetRemoved() const { return mIsAssetRemoved; }
   bool isTimeSeries() const { return mRepresentation == TIME_SERIES; }
   bool isDiscrete() const { return mRepresentation == DISCRETE; }
     
@@ -259,7 +260,7 @@ protected:
   float mNativeScale;
   bool mHasNativeScale;
   bool mThreeD;
-  bool mIsMessage, mIsAlarm, mIsAssetChanged;
+  bool mIsMessage, mIsAlarm, mIsAssetChanged, mIsAssetRemoved;
   
   /* Sig figs of data item */
   unsigned int mSignificantDigits;

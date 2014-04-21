@@ -80,6 +80,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDevicesStyle);
   CPPUNIT_TEST(testErrorStyle);
   CPPUNIT_TEST(testAssetsStyle);
+  CPPUNIT_TEST(testPrintRemovedCuttingTool);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -118,6 +119,7 @@ protected:
   void testPrintAssetProbe();
   void testPrintCuttingTool();
   void testPrintExtendedCuttingTool();
+  void testPrintRemovedCuttingTool();
   
   // Schema tests
   void testChangeVersion();

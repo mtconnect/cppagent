@@ -106,6 +106,8 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testReferences);
   CPPUNIT_TEST(testDiscrete);
   CPPUNIT_TEST(testConditionSequence);
+  CPPUNIT_TEST(testAssetRemoval);
+  CPPUNIT_TEST(testAssetRemovalByAdapter);
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -184,7 +186,9 @@ protected:
   void testMultiLineAsset();
   void testAssetProbe();
   void testAssetStorageWithoutType();
-  void testStreamDataObserver();
+  
+  void testAssetRemoval();
+  void testAssetRemovalByAdapter();
   
   // Test put for data items
   void testPut();
@@ -192,6 +196,8 @@ protected:
   void testPutBlockingFrom();
   
   // Streaming tests
+  void testStreamDataObserver();
+
   static void killThread(void *aArg);
   static void addThread(void *aArg);
   static void streamThread(void *aArg);

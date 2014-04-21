@@ -129,7 +129,9 @@ void Component::addDataItem(DataItem& dataItem)
     mAvailability = &dataItem;
   else if (dataItem.getType() == "ASSET_CHANGED")
     mAssetChanged = &dataItem;
-    
+  else if (dataItem.getType() == "ASSET_REMOVED")
+    mAssetRemoved = &dataItem;
+  
   mDataItems.push_back(&dataItem); 
 }
 

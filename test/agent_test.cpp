@@ -294,7 +294,7 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY_KV("from", "31");
+    PARSE_XML_RESPONSE_QUERY_KV("from", "32");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
@@ -1200,6 +1200,162 @@ void AgentTest::testAssetProbe()
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount@assetType", "Part");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount", "2");
+  }
+}
+
+void AgentTest::testAssetRemoval()
+{
+  a->enablePut();
+  path = "/asset/1";
+  string body = "<Part>TEST 1</Part>";
+  key_value_map queries;
+  
+  queries["device"] = "LinuxCNC";
+  queries["type"] = "Part";
+  
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(1, a->getAssetCount("Part"));
+  }
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
+  }
+  
+  // Make sure replace works properly
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(1, a->getAssetCount("Part"));
+  }
+  
+  path = "/asset/2";
+  body = "<Part>TEST 2</Part>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 2, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(2, a->getAssetCount("Part"));
+  }
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
+  }
+  
+  path = "/asset/3";
+  body = "<Part>TEST 3</Part>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(3, a->getAssetCount("Part"));
+  }
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 3");
+  }
+
+
+  path = "/asset/2";
+  body = "<Part removed='true'>TEST 2</Part>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(3, a->getAssetCount("Part"));
+  }
+  
+  path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+  
+  path = "/assets";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 3");
+  }
+  
+  queries["removed"] = "true";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]@removed", "true");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 3");
+  }
+}
+
+void AgentTest::testAssetRemovalByAdapter()
+{
+  
+  testAddAdapter();
+
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+
+  adapter->processData("TIME|@ASSET@|111|Part|<Part>TEST 1</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  
+
+  adapter->processData("TIME|@ASSET@|112|Part|<Part>TEST 2</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 2, a->getAssetCount());
+
+  adapter->processData("TIME|@ASSET@|113|Part|<Part>TEST 3</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+
+  path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "113");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+  
+  adapter->processData("TIME|@REMOVE_ASSET@|112");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+
+  path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "112");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+  
+  path = "/assets";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 3");
+  }
+  
+  // TODO: When asset is removed and the content is literal, it will
+  // not regenerate the attributes for the asset.
+  queries["removed"] = "true";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 3");
   }
 }
 

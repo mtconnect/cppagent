@@ -571,7 +571,8 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
     // all others add as plain text.
     xmlNodePtr node = NULL;
     assetNodes = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
-    if (assetNodes == NULL || assetNodes->nodesetval == NULL || assetNodes->nodesetval->nodeNr == 0)
+    if (assetNodes == NULL || assetNodes->nodesetval == NULL ||
+        assetNodes->nodesetval->nodeNr == 0)
     {
       // See if this is a fragment... the root node will be check when it is 
       // parsed...
@@ -584,7 +585,7 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       node = nodeset->nodeTab[0];
     }
     
-    asset = handleCuttingTool(node);
+    asset = handleAsset(node, aAssetId, aType, aContent);
     
     // Cleanup objects...
     xmlXPathFreeObject(assetNodes);    
@@ -716,6 +717,38 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode)
   }
 }
 
+AssetPtr XmlParser::handleAsset(xmlNodePtr anAsset, const std::string &aAssetId,
+                                const std::string &aType, const std::string &aContent)
+{
+  AssetPtr asset;
+  
+  // We only handle cuttng tools for now...
+  if (xmlStrcmp(anAsset->name, BAD_CAST "CuttingTool") == 0 ||
+      xmlStrcmp(anAsset->name, BAD_CAST "CuttingToolArchetype") == 0)
+  {
+    asset = handleCuttingTool(anAsset);
+  } else {
+    asset.setObject(new Asset(aAssetId, (const char*) anAsset->name, aContent), true);
+    
+    for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
+    {
+      if (attr->type == XML_ATTRIBUTE_NODE) {
+        if (xmlStrcmp(attr->name, BAD_CAST "assetId") == 0) {
+          asset->setAssetId((string) (const char*) attr->children->content);
+        } else if (xmlStrcmp(attr->name, BAD_CAST "timestamp") == 0) {
+          asset->setTimestamp((const char*) attr->children->content);
+        } else if (xmlStrcmp(attr->name, BAD_CAST "removed") == 0) {
+          asset->setRemoved(xmlStrncmp(attr->children->content, BAD_CAST "true", 4) == 0);
+        } else if (xmlStrcmp(attr->name, BAD_CAST "deviceUuid") == 0) {
+          asset->setDeviceUuid((const char*) attr->children->content);
+        }
+      }
+    }
+  }
+  
+  return asset;
+}
+
 
 CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
 {
@@ -735,6 +768,8 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
           tool->setAssetId((string) (const char*) attr->children->content);
         } else if (xmlStrcmp(attr->name, BAD_CAST "timestamp") == 0) {
           tool->setTimestamp((const char*) attr->children->content);
+        } else if (xmlStrcmp(attr->name, BAD_CAST "removed") == 0) {
+          tool->setRemoved(xmlStrncmp(attr->children->content, BAD_CAST "true", 4) == 0);
         } else {
           tool->addIdentity((const char*) attr->name, (const char*) attr->children->content);
         }

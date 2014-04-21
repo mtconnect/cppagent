@@ -213,7 +213,12 @@ void Adapter::processData(const string& data)
     mAgent->updateAsset(device, assetId, list, time);
     return;
   }
-
+  else if (key == "@REMOVE_ASSET@")
+  {
+    string assetId = value;
+    mAgent->removeAsset(device, assetId, time);
+    return;
+  }
     
   DataItem *dataItem;
   if (device != NULL) {

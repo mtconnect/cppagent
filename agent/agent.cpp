@@ -133,7 +133,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
     ss >> major >> c >> minor;
     if ((*device)->getAssetChanged() == NULL && (major >= 1 || (major == 1 && minor >= 2)))
     {
-      // Create availability data item and add it to the device.
+      // Create asset change data item and add it to the device.
       std::map<string,string> attrs;
       attrs["type"] = "ASSET_CHANGED";
       attrs["id"] = (*device)->getId() + "_asset_chg";
@@ -144,7 +144,21 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       (*device)->addDataItem(*di);
       (*device)->addDeviceDataItem(*di);
     }
-  }
+  
+    if ((*device)->getAssetRemoved() == NULL && (major >= 1 || (major == 1 && minor >= 3)))
+    {
+      // Create asset removed data item and add it to the device.
+      std::map<string,string> attrs;
+      attrs["type"] = "ASSET_REMOVED";
+      attrs["id"] = (*device)->getId() + "_asset_rem";
+      attrs["category"] = "EVENT";
+      
+      DataItem *di = new DataItem(attrs);
+      di->setComponent(*(*device));
+      (*device)->addDataItem(*di);
+      (*device)->addDeviceDataItem(*di);
+    }
+}
   
   // Reload the document for path resolution
   mXmlParser->loadDocument(XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
@@ -455,8 +469,7 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
 }
 
 bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
-                     const string &aType,
-                     const string &aTime)
+                     const string &aType, const string &aTime)
 {
   // Check to make sure the values are present
   if (aType.empty() || aAsset.empty() || aId.empty()) {
@@ -470,54 +483,66 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
   else
     time = aTime;
 
+  AssetPtr ptr;
   
   // Lock the asset addition to protect from multithreaded collisions. Releaes
   // before we add the event so we don't cause a race condition.
   {
     dlib::auto_mutex lock(*mAssetLock);
     
-    AssetPtr old = mAssetMap[aId];
-    if (old.getObject() != NULL)
-      mAssets.remove(old);
-    else
-      mAssetCounts[aType] += 1;
-    
-    AssetPtr ptr;
-    if (aType == "CuttingTool") {
-      try {
-        ptr = mXmlParser->parseAsset(aId, aType, aAsset);
-      }
-      catch (runtime_error &e) {
-        sLogger << LERROR << "addAsset: Error parsing asset: " << aAsset << "\n" << e.what();
-        return false;
-      }
-    } else {
-      ptr.setObject(new Asset(aId, aType, aAsset), true);
-      ptr->setTimestamp(time);
-      ptr->setDeviceUuid(aDevice->getUuid());
+    try {
+      ptr = mXmlParser->parseAsset(aId, aType, aAsset);
+    }
+    catch (runtime_error &e) {
+      sLogger << LERROR << "addAsset: Error parsing asset: " << aAsset << "\n" << e.what();
+      return false;
+    }
+
+    AssetPtr &old = mAssetMap[aId];
+    if (!ptr->isRemoved())
+    {
+      if (old.getObject() != NULL)
+        mAssets.remove(&old);
+      else
+        mAssetCounts[aType] += 1;
+    } else if (old.getObject() == NULL) {
+      sLogger << LWARN << "Cannot remove non-existent asset";
+      return false;
     }
     
     if (ptr.getObject() == NULL) {
       sLogger << LWARN << "Asset could not be created";
       return false;
     } else {
-      if (ptr->getTimestamp().empty())
-        ptr->setTimestamp(time);
-      if (ptr->getDeviceUuid().empty())
-        ptr->setDeviceUuid(aDevice->getUuid());
+      ptr->setAssetId(aId);
+      ptr->setTimestamp(time);
+      ptr->setDeviceUuid(aDevice->getUuid());
     }
     
     // Check for overflow
     if (mAssets.size() >= mMaxAssets)
     {
-      old = mAssets.front();
+      old = *mAssets.front();
       mAssetCounts[old->getType()] -= 1;
       mAssets.pop_front();
       mAssetMap.erase(old->getAssetId());
+      
+      // Add secondary keys
+      AssetKeys &keys = old->getKeys();
+      AssetKeys::iterator iter;
+      for (iter = keys.begin(); iter != keys.end(); iter++)
+      {
+        AssetIndex &index = mAssetIndices[iter->first];
+        index.erase(iter->second);
+      }
     }
     
     mAssetMap[aId] = ptr;
-    mAssets.push_back(ptr);
+    if (!ptr->isRemoved())
+    {
+      AssetPtr &newPtr = mAssetMap[aId];
+      mAssets.push_back(&newPtr);
+    }
     
     // Add secondary keys
     AssetKeys &keys = ptr->getKeys();
@@ -530,7 +555,10 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
   }
   
   // Generate an asset chnaged event.
-  addToBuffer(aDevice->getAssetChanged(), aType + "|" + aId, time);
+  if (ptr->isRemoved())
+    addToBuffer(aDevice->getAssetRemoved(), aType + "|" + aId, time);
+  else
+    addToBuffer(aDevice->getAssetChanged(), aType + "|" + aId, time);
   
   return true;
 }
@@ -552,7 +580,7 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
     if (asset.getObject() == NULL)
       return false;
     
-    if (asset->getType() != "CuttingTool")
+    if (asset->getType() != "CuttingTool" && asset->getType() != "CuttingToolArchitype")
       return false;
     
     CuttingToolPtr tool((CuttingTool*) asset.getObject());
@@ -573,6 +601,10 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
       return false;
     }
     
+    // Move it to the front of the queue
+    mAssets.remove(&asset);
+    mAssets.push_back(&asset);
+    
     tool->setTimestamp(aTime);
     tool->setDeviceUuid(aDevice->getUuid());
     tool->changed();
@@ -582,6 +614,33 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
 
   return true;
 }
+
+bool Agent::removeAsset(Device *aDevice, const std::string &aId, const string &aTime)
+{
+  AssetPtr asset;
+
+  string time;
+  if (aTime.empty())
+    time = getCurrentTime(GMT_UV_SEC);
+  else
+    time = aTime;
+  
+  {
+    dlib::auto_mutex lock(*mAssetLock);
+    
+    asset = mAssetMap[aId];
+    if (asset.getObject() == NULL)
+      return false;
+    
+    asset->setRemoved(true);
+    asset->setTimestamp(aTime);
+  }
+  
+  addToBuffer(aDevice->getAssetRemoved(), asset->getType() + "|" + aId, time);
+  
+  return true;
+}
+
 
 /* Add values for related data items UNAVAILABLE */
 void Agent::disconnected(Adapter *anAdapter, std::vector<Device*> aDevices)
@@ -901,13 +960,13 @@ std::string Agent::handleAssets(std::ostream& aOut,
     // Return all asssets, first check if there is a type attribute
     
     string type = aQueries["type"];
+    bool removed = (aQueries.count("removed") > 0 && aQueries["removed"] == "true");
     
-    list<AssetPtr>::iterator iter;
+    list<AssetPtr*>::iterator iter;
     for (iter = mAssets.begin(); iter != mAssets.end(); ++iter)
     {
-      if (type.empty() || type == (*iter)->getType())
-      {
-        assets.push_back(*iter);
+      if ((type.empty() || type == (**iter)->getType()) && (removed || !(**iter)->isRemoved())) {
+        assets.push_back(**iter);
       }
     }    
   }

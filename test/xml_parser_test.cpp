@@ -264,6 +264,7 @@ void XmlParserTest::testParseAsset()
   CPPUNIT_ASSERT_EQUAL((string) "1", tool->mIdentity["serialNumber"]);
   CPPUNIT_ASSERT_EQUAL((string) "KMT,Parlec", tool->mIdentity["manufacturers"]);
   CPPUNIT_ASSERT_EQUAL((string) "2011-05-11T13:55:22", tool->getTimestamp());
+  CPPUNIT_ASSERT_EQUAL(false, tool->isRemoved());
   
   // Top Level
   CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->mValues["CuttingToolDefinition"]->mValue);
@@ -295,6 +296,36 @@ void XmlParserTest::testParseAsset()
   CPPUNIT_ASSERT_EQUAL((string) "FLANGE: 1-4, ROW: 1", item->mValues["Locus"]->mValue);
   CPPUNIT_ASSERT_EQUAL((string) "12.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, item->mMeasurements["CuttingEdgeLength"]->refCount());
+}
+
+void XmlParserTest::testParseOtherAsset()
+{
+  string document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
+                    "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
+  AssetPtr asset = a->parseAsset("XXX", "Workpiece", document);
+
+  CPPUNIT_ASSERT(asset.getObject() != NULL);
+  CPPUNIT_ASSERT_EQUAL((string) "XXX123", asset->getAssetId());
+  CPPUNIT_ASSERT_EQUAL((string) "2014-04-14T01:22:33.123", asset->getTimestamp());
+  CPPUNIT_ASSERT_EQUAL((string) "XXX", asset->getDeviceUuid());
+  CPPUNIT_ASSERT_EQUAL((string) document, asset->getContent());
+  CPPUNIT_ASSERT_EQUAL(false, asset->isRemoved());
+
+  document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
+             "serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
+  asset = a->parseAsset("XXX", "Workpiece", document);
+  
+  CPPUNIT_ASSERT(asset.getObject() != NULL);
+  CPPUNIT_ASSERT_EQUAL(true, asset->isRemoved());
+}
+
+void XmlParserTest::testParseRemovedAsset()
+{
+  string document = getFile("asset3.xml");
+  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+  CPPUNIT_ASSERT_EQUAL(true, tool->isRemoved());
 }
 
 void XmlParserTest::testUpdateAsset()

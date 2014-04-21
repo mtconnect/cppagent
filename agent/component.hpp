@@ -98,6 +98,7 @@ public:
   // Cached data items
   DataItem *getAvailability() const { return mAvailability; }
   DataItem *getAssetChanged() const { return mAssetChanged; }
+  DataItem *getAssetRemoved() const { return mAssetRemoved; }
   
   
   /* Add/get description specifications using an attribute map */
@@ -165,6 +166,7 @@ protected:
   Device *mDevice;
   DataItem *mAvailability;
   DataItem *mAssetChanged;
+  DataItem *mAssetRemoved;
   
   /* Each component keeps track of it's children in a std::list */
   std::list<Component *> mChildren;
