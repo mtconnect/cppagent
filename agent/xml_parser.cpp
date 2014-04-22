@@ -545,6 +545,7 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
   xmlXPathContextPtr xpathCtx = NULL;
   xmlXPathObjectPtr assetNodes = NULL;
   xmlDocPtr document = NULL;
+  xmlBufferPtr buffer = NULL;
 
   try {
     // TODO: Check for asset fragment - check if top node is MTConnectAssets
@@ -577,7 +578,6 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       // See if this is a fragment... the root node will be check when it is 
       // parsed...
       node = root;
-      
     } 
     else 
     {
@@ -585,7 +585,7 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       node = nodeset->nodeTab[0];
     }
 
-    xmlBufferPtr buffer = xmlBufferCreate();
+    THROW_IF_XML2_NULL(buffer = xmlBufferCreate());
     for (xmlNodePtr child = node->children; child != NULL; child = child->next)
     {
       xmlNodeDump(buffer, document, child, 0, 0);
@@ -594,10 +594,9 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
     asset = handleAsset(node, aAssetId, aType,
                         (const char *) buffer->content);
     
-    xmlBufferFree(buffer);
-    
     // Cleanup objects...
-    xmlXPathFreeObject(assetNodes);    
+    xmlBufferFree(buffer);
+    xmlXPathFreeObject(assetNodes);
     xmlXPathFreeContext(xpathCtx);
     xmlFreeDoc(document);
 
@@ -610,6 +609,8 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       xmlXPathFreeContext(xpathCtx);
     if (document != NULL)
       xmlFreeDoc(document);
+    if (buffer != NULL)
+      xmlBufferFree(buffer);
 
     sLogger << dlib::LERROR << "Cannot parse asset XML: " << e;
     asset = NULL;
@@ -622,6 +623,10 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       xmlXPathFreeContext(xpathCtx);
     if (document != NULL)
       xmlFreeDoc(document);
+    if (buffer != NULL)
+      xmlBufferFree(buffer);
+    
+    sLogger << dlib::LERROR << "Cannot parse asset XML, Unknown execption occurred";
     asset = NULL;
   }
 

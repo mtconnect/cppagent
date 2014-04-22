@@ -1031,7 +1031,16 @@ void AgentTest::testAssetBuffer()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 4");
   }
-
+  
+  queries["count"] = "2";
+  {
+    PARSE_XML_RESPONSE_QUERY(queries);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
+  }
+  
+  queries.erase("count");
   
   path = "/asset/5";
   body = "<Part>TEST 5</Part>";

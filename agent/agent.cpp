@@ -952,10 +952,12 @@ std::string Agent::handleAssets(std::ostream& aOut,
     // Return all asssets, first check if there is a type attribute
     
     string type = aQueries["type"];
-    bool removed = (aQueries.count("removed") > 0 && aQueries["removed"] == "true");
+    bool removed = (aQueries.count("removed") > 0 && aQueries["removed"] == "true");    
+    int count = checkAndGetParam(aQueries, "count", mAssets.size(),
+                                1, false, NO_VALUE32);
     
     list<AssetPtr*>::iterator iter;
-    for (iter = mAssets.begin(); iter != mAssets.end(); ++iter)
+    for (iter = mAssets.begin(); iter != mAssets.end() && count > 0; ++iter, --count)
     {
       if ((type.empty() || type == (**iter)->getType()) && (removed || !(**iter)->isRemoved())) {
         assets.push_back(**iter);
