@@ -1149,7 +1149,9 @@ void AgentTest::testMultiLineAsset()
   
   adapter->parseBuffer("TIME|@ASSET@|111|Part|--multiline--AAAA\n");
   adapter->parseBuffer("<Part>\n"
-                       "  <PartXXX>TEST 1</PartXXX>\n");
+                       "  <PartXXX>TEST 1</PartXXX>\n"
+                       "  Some Text\n"
+                       "  <Extra>XXX</Extra>\n");
   adapter->parseBuffer("</Part>\n"
                        "--multiline--AAAA\n");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
@@ -1161,7 +1163,11 @@ void AgentTest::testMultiLineAsset()
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:PartXXX", "TEST 1");
-  }  
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:Extra", "XXX");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "111");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part@deviceUuid", "000");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "TIME");
+  }
   
   // Make sure we can still add a line and we are out of multiline mode...
   path = "/current";  

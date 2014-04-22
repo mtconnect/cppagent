@@ -347,14 +347,6 @@ const string Agent::on_request (const incoming_things& incoming,
     
     string first =  path.substr(1, loc1-1);
     string call, device;
-
-    // Check for explicate TE of chunked. Though not required, we will use it to signal 
-    // a chunked delivery. This will provide compatibility with WebRequest in .NET
-    bool chunked = false;
-    if (incoming.headers.count("TE") > 0)
-    {
-      chunked = incoming.headers["TE"].find("chunked") != string::npos;        
-    }
     
     if (first == "assets" || first == "asset")
     {

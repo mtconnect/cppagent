@@ -65,16 +65,15 @@ public:
     : Asset(aAssetId, aType, aContent, aRemoved) {}
   ~CuttingTool();
   
-  void addIdentity(const std::string &aKey, const std::string &aValue);
+  virtual void addIdentity(const std::string &aKey, const std::string &aValue);
   void addValue(const CuttingToolValuePtr aValue);
   void updateValue(const std::string &aKey, const std::string &aValue);
   
   virtual std::string &getContent();
-  void changed() { mContent.clear(); }
+  virtual void changed() { mContent.clear(); }
 
 public:
   std::vector<std::string> mStatus;
-  std::map<std::string,std::string> mIdentity;
   std::map<std::string,CuttingToolValuePtr> mValues;
   std::map<std::string,CuttingToolValuePtr> mMeasurements;  
   std::string mItemCount;

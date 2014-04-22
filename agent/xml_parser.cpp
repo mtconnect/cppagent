@@ -584,8 +584,17 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       xmlNodeSetPtr nodeset = assetNodes->nodesetval;
       node = nodeset->nodeTab[0];
     }
+
+    xmlBufferPtr buffer = xmlBufferCreate();
+    for (xmlNodePtr child = node->children; child != NULL; child = child->next)
+    {
+      xmlNodeDump(buffer, document, child, 0, 0);
+    }
+
+    asset = handleAsset(node, aAssetId, aType,
+                        (const char *) buffer->content);
     
-    asset = handleAsset(node, aAssetId, aType, aContent);
+    xmlBufferFree(buffer);
     
     // Cleanup objects...
     xmlXPathFreeObject(assetNodes);    
@@ -733,15 +742,7 @@ AssetPtr XmlParser::handleAsset(xmlNodePtr anAsset, const std::string &aAssetId,
     for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
     {
       if (attr->type == XML_ATTRIBUTE_NODE) {
-        if (xmlStrcmp(attr->name, BAD_CAST "assetId") == 0) {
-          asset->setAssetId((string) (const char*) attr->children->content);
-        } else if (xmlStrcmp(attr->name, BAD_CAST "timestamp") == 0) {
-          asset->setTimestamp((const char*) attr->children->content);
-        } else if (xmlStrcmp(attr->name, BAD_CAST "removed") == 0) {
-          asset->setRemoved(xmlStrncmp(attr->children->content, BAD_CAST "true", 4) == 0);
-        } else if (xmlStrcmp(attr->name, BAD_CAST "deviceUuid") == 0) {
-          asset->setDeviceUuid((const char*) attr->children->content);
-        }
+        asset->addIdentity(((const char*) attr->name), ((const char*) attr->children->content));
       }
     }
   }
@@ -764,15 +765,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
     for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
     {
       if (attr->type == XML_ATTRIBUTE_NODE) {
-        if (xmlStrcmp(attr->name, BAD_CAST "assetId") == 0) {
-          tool->setAssetId((string) (const char*) attr->children->content);
-        } else if (xmlStrcmp(attr->name, BAD_CAST "timestamp") == 0) {
-          tool->setTimestamp((const char*) attr->children->content);
-        } else if (xmlStrcmp(attr->name, BAD_CAST "removed") == 0) {
-          tool->setRemoved(xmlStrncmp(attr->children->content, BAD_CAST "true", 4) == 0);
-        } else {
-          tool->addIdentity((const char*) attr->name, (const char*) attr->children->content);
-        }
+        tool->addIdentity((const char*) attr->name, (const char*) attr->children->content);
       }
     }
 

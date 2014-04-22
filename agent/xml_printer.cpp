@@ -93,6 +93,7 @@ namespace XmlPrinter {
                              const char *aValue, std::set<string> *aRemaining = NULL);
   void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr aValue);
   void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aItem);
+  void printAssetNode(xmlTextWriterPtr writer, Asset *anAsset);
 
 };
 
@@ -660,7 +661,9 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
         CuttingToolPtr ptr((CuttingTool*) iter->getObject());
         THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST printCuttingTool(ptr).c_str()));
       } else {
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST (*iter)->getContent().c_str()));
+        printAssetNode(writer, (*iter));
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST (*iter)->getContent().c_str()));        
+        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
       }
     }
     
@@ -688,6 +691,32 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
   
   return ret;
 }
+
+void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *anAsset)
+{
+  // TODO: Check if cutting tool or archetype - should be in type
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST anAsset->getType().c_str()));
+  
+  addAttributes(writer, &anAsset->getIdentity());
+  
+  // Add the timestamp and device uuid fields.
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "timestamp",
+                                                  BAD_CAST anAsset->getTimestamp().c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "deviceUuid",
+                                                  BAD_CAST anAsset->getDeviceUuid().c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "assetId",
+                                                  BAD_CAST anAsset->getAssetId().c_str()));
+  if (anAsset->isRemoved())
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                    BAD_CAST "removed",
+                                                    BAD_CAST "true"));
+  }
+}
+
 
 
 void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, Device *device)
@@ -1065,32 +1094,7 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
     
-    // TODO: Check if cutting tool or archetype - should be in type
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST aTool->getType().c_str()));
-    
-    map<string,string>::iterator iter;
-    for (iter = aTool->mIdentity.begin(); iter != aTool->mIdentity.end(); iter++) {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                      BAD_CAST (*iter).first.c_str(),
-                                                      BAD_CAST (*iter).second.c_str()));
-    }
-    
-    // Add the timestamp and device uuid fields.
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "timestamp",
-                                                    BAD_CAST aTool->getTimestamp().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "deviceUuid",
-                                                    BAD_CAST aTool->getDeviceUuid().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "assetId",
-                                                    BAD_CAST aTool->getAssetId().c_str()));
-    if (aTool->isRemoved())
-    {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                      BAD_CAST "removed",
-                                                      BAD_CAST "true"));
-    }
+    printAssetNode(writer, aTool);
     
     set<string> remaining;
     std::map<std::string,CuttingToolValuePtr>::const_iterator viter;

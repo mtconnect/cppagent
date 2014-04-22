@@ -37,6 +37,7 @@ protected:
   std::string mTimestamp;
   bool        mRemoved;
   AssetKeys   mKeys;
+  AssetKeys   mIdentity;
   
 public:
   Asset();
@@ -58,6 +59,8 @@ public:
   const std::string &getTimestamp() const { return mTimestamp; }
   bool isRemoved() const { return mRemoved; }
   
+  AssetKeys &getIdentity() { return mIdentity; }
+  
   bool operator==(const Asset &aOther) {
     return mAssetId == aOther.mAssetId;
   }
@@ -66,6 +69,9 @@ public:
   void setDeviceUuid(const std::string &aId) { mDeviceUuid = aId; }
   void setTimestamp(const std::string &aTs) { mTimestamp = aTs; }
   void setRemoved(bool aRemoved) { mRemoved = aRemoved; }
+  
+  virtual void changed() { }
+  virtual void addIdentity(const std::string &aKey, const std::string &aValue);  
 };
 
 typedef std::map<std::string, AssetPtr> AssetIndex;

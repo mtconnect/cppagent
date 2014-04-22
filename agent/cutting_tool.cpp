@@ -105,15 +105,10 @@ void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue
 
 void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue)
 {
+  Asset::addIdentity(aKey, aValue);
+  
   if (aKey == "toolId") {
     mKeys[aKey] = aValue;
-    mIdentity[aKey] = aValue;
-  } else if (aKey == "deviceUuid") {
-    mDeviceUuid = aValue;
-  } else if (aKey == "timestamp") {
-    mTimestamp = aValue;
-  } else {
-    mIdentity[aKey] = aValue;
   }
 }
 
