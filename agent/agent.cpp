@@ -956,8 +956,8 @@ std::string Agent::handleAssets(std::ostream& aOut,
     int count = checkAndGetParam(aQueries, "count", mAssets.size(),
                                 1, false, NO_VALUE32);
     
-    list<AssetPtr*>::iterator iter;
-    for (iter = mAssets.begin(); iter != mAssets.end() && count > 0; ++iter, --count)
+    list<AssetPtr*>::reverse_iterator iter;
+    for (iter = mAssets.rbegin(); iter != mAssets.rend() && count > 0; ++iter, --count)
     {
       if ((type.empty() || type == (**iter)->getType()) && (removed || !(**iter)->isRemoved())) {
         assets.push_back(**iter);
