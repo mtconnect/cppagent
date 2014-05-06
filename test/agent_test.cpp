@@ -50,6 +50,7 @@ using namespace std;
 
 void AgentTest::setUp()
 {
+  XmlPrinter::setSchemaVersion("1.3");
   a = NULL;
   a = new Agent("../samples/test_config.xml", 8, 4, 25);
   agentId = intToString(getCurrentTimeInSec());
@@ -1391,6 +1392,43 @@ void AgentTest::testAssetStorageWithoutType()
     CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
   }
 }
+
+void AgentTest::testAssetAdditionOfAssetChanged12()
+{
+  string version = XmlPrinter::getSchemaVersion();
+  XmlPrinter::setSchemaVersion("1.2");
+
+  delete a;
+  a = new Agent("../samples/min_config.xml", 8, 4, 25);
+  
+  {
+    path = "/probe";
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
+  }
+
+  XmlPrinter::setSchemaVersion(version);
+}
+
+void AgentTest::testAssetAdditionOfAssetRemoved13()
+{
+  string version = XmlPrinter::getSchemaVersion();
+  XmlPrinter::setSchemaVersion("1.3");
+
+  delete a;
+  a = new Agent("../samples/min_config.xml", 8, 4, 25);
+
+  {
+    path = "/probe";
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
+  }
+
+  XmlPrinter::setSchemaVersion(version);
+}
+
 
 void AgentTest::testPut()
 {

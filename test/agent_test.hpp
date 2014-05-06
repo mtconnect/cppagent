@@ -108,6 +108,9 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testConditionSequence);
   CPPUNIT_TEST(testAssetRemoval);
   CPPUNIT_TEST(testAssetRemovalByAdapter);
+  CPPUNIT_TEST(testAssetAdditionOfAssetChanged12);
+  CPPUNIT_TEST(testAssetAdditionOfAssetRemoved13);
+
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -189,6 +192,9 @@ protected:
   
   void testAssetRemoval();
   void testAssetRemovalByAdapter();
+  
+  void testAssetAdditionOfAssetChanged12();
+  void testAssetAdditionOfAssetRemoved13();
   
   // Test put for data items
   void testPut();

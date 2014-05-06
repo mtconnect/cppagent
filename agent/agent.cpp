@@ -131,7 +131,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
     char c;
     stringstream ss(XmlPrinter::getSchemaVersion());
     ss >> major >> c >> minor;
-    if ((*device)->getAssetChanged() == NULL && (major >= 1 || (major == 1 && minor >= 2)))
+    if ((*device)->getAssetChanged() == NULL && (major > 1 || (major == 1 && minor >= 2)))
     {
       // Create asset change data item and add it to the device.
       std::map<string,string> attrs;
@@ -145,7 +145,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       (*device)->addDeviceDataItem(*di);
     }
   
-    if ((*device)->getAssetRemoved() == NULL && (major >= 1 || (major == 1 && minor >= 3)))
+    if ((*device)->getAssetRemoved() == NULL && (major > 1 || (major == 1 && minor >= 3)))
     {
       // Create asset removed data item and add it to the device.
       std::map<string,string> attrs;
@@ -158,7 +158,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       (*device)->addDataItem(*di);
       (*device)->addDeviceDataItem(*di);
     }
-}
+  }
   
   // Reload the document for path resolution
   mXmlParser->loadDocument(XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, 

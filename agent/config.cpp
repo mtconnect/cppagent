@@ -313,7 +313,12 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   }
 
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
-    
+  
+  // Check for schema version
+  string schemaVersion = get_with_default(reader, "SchemaVersion", "");
+  if (!schemaVersion.empty())
+    XmlPrinter::setSchemaVersion(schemaVersion);
+  
   sLogger << LINFO << "Starting agent on port " << port;
   if (mAgent == NULL)
     mAgent = new Agent(probe, bufferSize, maxAssets, checkpointFrequency);
@@ -323,16 +328,12 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 
   for (size_t i = 0; i < mAgent->getDevices().size(); i++)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
-    
+  
+  if (XmlPrinter::getSchemaVersion().empty())
+    XmlPrinter::setSchemaVersion("1.3");
+  
   loadAllowPut(reader);
   loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps);
-  
-  // Check for schema version
-  string schemaVersion = get_with_default(reader, "SchemaVersion", "");
-  if (!schemaVersion.empty())
-    XmlPrinter::setSchemaVersion(schemaVersion);
-  else if (XmlPrinter::getSchemaVersion().empty())
-    XmlPrinter::setSchemaVersion("1.3");
   
   // Files served by the Agent... allows schema files to be served by
   // agent.

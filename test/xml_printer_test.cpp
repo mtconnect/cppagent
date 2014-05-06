@@ -42,6 +42,7 @@ using namespace std;
 void XmlPrinterTest::setUp()
 {
   config = new XmlParser();
+  XmlPrinter::setSchemaVersion("");
   devices = config->parseFile("../samples/test_config.xml");
 }
 
