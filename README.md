@@ -650,12 +650,12 @@ Configuration Parameters
 
         *Default*: false
         
-		* `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
+    * `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
 		  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
 
 		    *Default*: false
 		
-		* `RealTime` - Boost the thread priority of this adapter so that events are handled faster.
+    * `RealTime` - Boost the thread priority of this adapter so that events are handled faster.
 
         *Default*: false
     
