@@ -17,6 +17,7 @@
 #include "data_item.hpp"
 #include "device.hpp"
 #include "dlib/logger.h"
+#include "adapter.hpp"
 
 using namespace std;
 
@@ -156,6 +157,17 @@ DataItem::DataItem(std::map<string, string> attributes)
 
 DataItem::~DataItem()
 {
+}
+
+void DataItem::setDataSource(Adapter *aSource)
+{
+    if (mDataSource != aSource)
+      mDataSource = aSource;
+    if (!mDataSource->needsConversion())
+    {
+      mConversionRequired = false;
+      mConversionDetermined = true;
+    }
 }
 
 std::map<string, string> DataItem::buildAttributes() const

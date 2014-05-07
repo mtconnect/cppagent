@@ -570,6 +570,12 @@ Configuration Parameters
 
     *Default*: 1.3
 
+* `ConversionRequired` - Global default for data item units conversion in the agent. 
+  Assumes the adapter has already done unit conversion.
+
+    *Default*: true
+
+
 ###Adapter configuration items###
 
 * `Adapters` - Adapters begins a list of device blocks. If the Adapters
@@ -658,6 +664,11 @@ Configuration Parameters
       recorded event.
 
         *Default*: false
+
+    * `ConversionRequired` - Adapter setting for data item units conversion in the agent. 
+      Assumes the adapter has already done unit conversion. Defaults to global.
+
+        *Default*: true
 
 
 logger_config configuration items

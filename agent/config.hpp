@@ -34,7 +34,8 @@ public:
 protected:
   Device *defaultDevice();
   void loadAdapters(dlib::config_reader::kernel_1a &aReader, bool aDefaultPreserve,
-                    int aLegacyTimeout, int aReconnectInterval, bool aIgnoreTimestamps);
+                    int aLegacyTimeout, int aReconnectInterval, bool aIgnoreTimestamps,
+                    bool aConversionRequired);
   void loadAllowPut(dlib::config_reader::kernel_1a &aReader);
   void loadNamespace(dlib::config_reader::kernel_1a &aReader, 
                      const char *aNamespaceType, 

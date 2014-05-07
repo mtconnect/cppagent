@@ -25,11 +25,11 @@
 #include "globals.hpp"
 #include "change_observer.hpp"
 
-class Adapter;
-
 #ifdef PASCAL
 #undef PASCAL
 #endif
+
+class Adapter;
 
 class DataItem : public ChangeSignaler
 {
@@ -212,7 +212,7 @@ public:
   float convertValue(float aValue);
   
   Adapter *getDataSource() const { return mDataSource;  }
-  void setDataSource(Adapter *aSource) { if (mDataSource != aSource) mDataSource = aSource; }
+  void setDataSource(Adapter *aSource);
   bool operator<(DataItem &aOther);
 
   bool operator==(DataItem &aOther) {

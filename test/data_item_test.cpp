@@ -33,6 +33,7 @@
 
 #include "data_item_test.hpp"
 #include <dlib/misc_api.h>
+#include "adapter.hpp"
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(DataItemTest);
@@ -220,7 +221,18 @@ void DataItemTest::testConversion()
   DataItem item4(attributes4);
   item4.conversionRequired();
   
-  CPPUNIT_ASSERT_EQUAL((string) "130", item4.convertValue("0.13"));  
+  CPPUNIT_ASSERT_EQUAL((string) "130", item4.convertValue("0.13"));
+  
+  DataItem item5(attributes4);
+  
+  Adapter a("", "", 0);
+  a.setNeedsConversion(false);
+  
+  item5.setDataSource(&a);
+  CPPUNIT_ASSERT(!item5.conversionRequired());
+  
+  CPPUNIT_ASSERT_EQUAL((string) "0.13", item5.convertValue("0.13"));
+
 }
 
 void DataItemTest::testCondition()
