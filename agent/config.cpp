@@ -414,7 +414,7 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       adp->setAutoAvailable(get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
       adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", aIgnoreTimestamps ||
                                                                                   adp->isIgnoringTimestamps()));
-      adp->setNeedsConversion(get_bool_with_default(adapter, "ConversionRequired", aConversionRequired));
+      adp->setConversionRequired(get_bool_with_default(adapter, "ConversionRequired", aConversionRequired));
       adp->setRealTime(get_bool_with_default(adapter, "RealTime", false));
       adp->setRelativeTime(get_bool_with_default(adapter, "RelativeTime", false));
       adp->setReconnectInterval(reconnectInterval);

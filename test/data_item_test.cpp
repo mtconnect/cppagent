@@ -226,7 +226,7 @@ void DataItemTest::testConversion()
   DataItem item5(attributes4);
   
   Adapter a("", "", 0);
-  a.setNeedsConversion(false);
+  a.setConversionRequired(false);
   
   item5.setDataSource(&a);
   CPPUNIT_ASSERT(!item5.conversionRequired());

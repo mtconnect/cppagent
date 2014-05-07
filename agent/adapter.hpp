@@ -62,8 +62,8 @@ public:
   void setRelativeTime(bool aFlag) { mRelativeTime = aFlag; }
   bool getrelativeTime() { return mRelativeTime; }
   
-  void setNeedsConversion(bool aFlag) { mNeedsConversion = aFlag; }
-  bool needsConversion() const { return mNeedsConversion; }
+  void setConversionRequired(bool aFlag) { mConversionRequired = aFlag; }
+  bool conversionRequired() const { return mConversionRequired; }
   
   uint64_t getBaseTime() { return mBaseTime; }
   uint64_t getBaseOffset() { return mBaseOffset; }
@@ -120,7 +120,7 @@ protected:
   bool mAutoAvailable;
   bool mIgnoreTimestamps;
   bool mRelativeTime;
-  bool mNeedsConversion;
+  bool mConversionRequired;
   
   // For relative times
   uint64_t mBaseTime;

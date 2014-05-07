@@ -163,7 +163,7 @@ void DataItem::setDataSource(Adapter *aSource)
 {
     if (mDataSource != aSource)
       mDataSource = aSource;
-    if (!mDataSource->needsConversion())
+    if (!mDataSource->conversionRequired())
     {
       mConversionRequired = false;
       mConversionDetermined = true;

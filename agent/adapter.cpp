@@ -30,7 +30,7 @@ Adapter::Adapter(const string& device,
                  const unsigned int port,
                  int aLegacyTimeout)
   : Connector(server, port, aLegacyTimeout), mDeviceName(device), mRunning(true),
-    mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false), mRelativeTime(false), mNeedsConversion(true),
+    mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false), mRelativeTime(false), mConversionRequired(true),
     mBaseTime(0), mBaseOffset(0), mParseTime(false), mGatheringAsset(false),  mReconnectInterval(10 * 1000)
 {
 }
