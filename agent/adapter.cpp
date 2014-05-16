@@ -291,6 +291,11 @@ void Adapter::processData(const string& data)
   }
 }
 
+static inline bool is_true(const string &aValue)
+{
+  return(aValue == "yes" || aValue == "true" || aValue == "1");
+}
+
 void Adapter::protocolCommand(const std::string& data)
 {
   // Handle initial push of settings for uuid, serial number and manufacturer. 
@@ -328,7 +333,14 @@ void Adapter::protocolCommand(const std::string& data)
         mDevice->setNativeName(value);
       else if (key == "calibration")
         parseCalibration(value);
-      else {
+      else if (key == "conversionRequired")
+        mConversionRequired = is_true(value);
+      else if (key == "relativeTime")
+        mRelativeTime = is_true(value);
+      else if (key == "realTime")
+        mRealTime = is_true(value);
+      else
+      {
         sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
         updateDom = false;
       }
