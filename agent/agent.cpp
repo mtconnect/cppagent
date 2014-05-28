@@ -46,6 +46,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   mMimeTypes["jpg"] = "image/jpeg";
   mMimeTypes["jpeg"] = "image/jpeg";
   mMimeTypes["png"] = "image/png";
+  mMimeTypes["ico"] = "image/x-icon";
   
   try
   {
@@ -285,7 +286,7 @@ void Agent::registerFile(const string &aUri, const string &aPath)
     }
   }
   catch (directory::dir_not_found e) {
-    sLogger << LDEBUG << "registerFile: Path " << aPath << "is not a directory: "
+    sLogger << LDEBUG << "registerFile: Path " << aPath << " is not a directory: "
             << e.what() << ", trying as a file";
     try {
       file file(aPath);
@@ -997,70 +998,82 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
   // Get the mime type for the file.
   bool unknown = true;
   size_t last = aUri.find_last_of("./");
+  string contentType;
   if (last != string::npos && aUri[last] == '.')
   {
     string ext = aUri.substr(last + 1);
     if (mMimeTypes.count(ext) > 0)
     {
-      aOutgoing.headers["Content-Type"] = mMimeTypes[ext];
+      contentType = mMimeTypes[ext];
       unknown = false;
     }
   }
   if (unknown)
-    aOutgoing.headers["Content-Type"] = "application/octet-stream";
+    contentType = "application/octet-stream";
   
   // Check if the file is cached
-  std::map<string,string>::iterator cached = mFileCache.find(aUri);
+  RefCountedPtr<CachedFile> cachedFile;
+  std::map<string, RefCountedPtr<CachedFile> >::iterator cached = mFileCache.find(aUri);
   if (cached != mFileCache.end())
-    return cached->second;
-  
-  std::map<string,string>::iterator file = mFileMap.find(aUri);
-  
-  // Should never happen
-  if (file == mFileMap.end()) {
-    aOutgoing.http_return = 404;
-    aOutgoing.http_return_status = "File not found";
-    return "";
+    cachedFile = cached->second;
+  else
+  {
+    
+    std::map<string,string>::iterator file = mFileMap.find(aUri);
+    
+    // Should never happen
+    if (file == mFileMap.end()) {
+      aOutgoing.http_return = 404;
+      aOutgoing.http_return_status = "File not found";
+      return "";
+    }
+    
+    const char *path = file->second.c_str();
+    
+    struct stat fs;
+    int res = stat(path, &fs);
+    if (res != 0) {
+      aOutgoing.http_return = 404;
+      aOutgoing.http_return_status = "File not found";
+      return "";
+    }
+    
+    int fd = open(path, O_RDONLY | O_BINARY);
+    if (res < 0) {
+      aOutgoing.http_return = 404;
+      aOutgoing.http_return_status = "File not found";
+      return "";
+    }
+    
+    cachedFile.setObject(new CachedFile(fs.st_size), true);
+    int bytes = read(fd, cachedFile->mBuffer, fs.st_size);
+    close(fd);
+    
+    if (bytes < fs.st_size) {
+      aOutgoing.http_return = 404;
+      aOutgoing.http_return_status = "File not found";
+      return "";
+    }
+    
+    // If this is a small file, cache it.
+    if (bytes <= SMALL_FILE) {
+      mFileCache.insert(pair<string, RefCountedPtr<CachedFile> >(aUri, cachedFile));
+    }
   }
   
-  const char *path = file->second.c_str();
+  (*aOutgoing.out) << "HTTP/1.1 200 OK\r\n"
+    "Date: " << getCurrentTime(HUM_READ) << "\r\n"
+    "Server: MTConnectAgent\r\n"
+    "Connection: close\r\n"
+    "Content-Length: " << cachedFile->mSize << "\r\n"
+    "Expires: " << getCurrentTime(time(NULL) + 60 * 60 * 24, 0, HUM_READ) << "\r\n"
+    "Content-Type: " << contentType << "\r\n\r\n";
+
+  aOutgoing.out->write(cachedFile->mBuffer, cachedFile->mSize);
   
-  struct stat fs;
-  int res = stat(path, &fs);
-  if (res != 0) {
-    aOutgoing.http_return = 404;
-    aOutgoing.http_return_status = "File not found";
-    return "";
-  }
-  
-  int fd = open(path, O_RDONLY | O_BINARY);
-  if (res < 0) {
-    aOutgoing.http_return = 404;
-    aOutgoing.http_return_status = "File not found";
-    return "";
-  }
-  
-  char *buffer = (char*) malloc(fs.st_size + 1);
-  
-  int bytes = read(fd, buffer, fs.st_size);
-  close(fd);
-  
-  if (bytes < fs.st_size) {
-    aOutgoing.http_return = 404;
-    aOutgoing.http_return_status = "File not found";
-    free(buffer);
-    return "";
-  }
-  
-  buffer[bytes] = '\0';
-  string result = buffer;
-  free(buffer);
-  
-  // If this is a small file, cache it.
-  if (bytes < SMALL_FILE)
-    mFileCache.insert(pair<string,string>(aUri, result));
-  
-  return result;
+  aOutgoing.out->setstate(ios::badbit);
+
+  return "";
 }
 
 void Agent::streamData(ostream& out,

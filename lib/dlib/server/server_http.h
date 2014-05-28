@@ -213,7 +213,8 @@ namespace dlib
                 read_body(in, incoming);
                 outgoing.out = &out;                
                 const std::string& result = on_request(incoming, outgoing);
-                write_http_response(out, outgoing, result);
+                if (out.good())
+                  write_http_response(out, outgoing, result);
             }
             catch (http_parse_error& e)
             {

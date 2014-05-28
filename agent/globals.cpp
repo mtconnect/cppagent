@@ -88,8 +88,6 @@ bool isNonNegativeInteger(const string& s)
 
 string getCurrentTime(TimeFormat format)
 {
-  char timestamp[64];
-  struct tm timeinfo;
   time_t sec;
   long usec;
 
@@ -109,12 +107,21 @@ string getCurrentTime(TimeFormat format)
   else
   {
     sec = time(NULL);
+    usec = 0;
   }
+  
+  return getCurrentTime(sec, usec, format);
+}
 
+string getCurrentTime(time_t aSec, int aUsec, TimeFormat format)
+{
+  struct tm timeinfo;
+  char timestamp[64];
+  
   if (format == LOCAL)
-    localtime_r(&sec, &timeinfo);
+    localtime_r(&aSec, &timeinfo);
   else
-    gmtime_r(&sec, &timeinfo);
+    gmtime_r(&aSec, &timeinfo);
 
   switch (format)
   {
@@ -134,7 +141,7 @@ string getCurrentTime(TimeFormat format)
   
   if (format == GMT_UV_SEC)
   {
-    sprintf(timestamp + strlen(timestamp), ".%06dZ", (int) usec);
+    sprintf(timestamp + strlen(timestamp), ".%06dZ", (int) aUsec);
   }
   
   return string(timestamp);

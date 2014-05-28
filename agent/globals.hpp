@@ -87,6 +87,10 @@ std::string toUpperCase(std::string& text);
 /* Check if each char in a string is a positive integer */
 bool isNonNegativeInteger(const std::string& s);
 
+
+/* Get the current time formatted */
+std::string getCurrentTime(time_t aTime, int aUsec, TimeFormat format);
+
 /* Get the current time formatted */
 std::string getCurrentTime(TimeFormat format);
 
