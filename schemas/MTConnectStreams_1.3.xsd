@@ -348,6 +348,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='WORKHOLDING_ID'/>
       <xs:enumeration value='PALLET_ID'/>
       <xs:enumeration value='OPERATOR_ID'/>
+      <xs:enumeration value='ASSET_REMOVED'/>
+      <xs:enumeration value='PROGRAM_HEADER'/>
       <xs:enumeration value='MATERIAL_FEED'/>
       <xs:enumeration value='MATERIAL_CHANGE'/>
       <xs:enumeration value='MATERIAL_RETRACT'/>
@@ -3422,6 +3424,25 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:simpleContent>
   </xs:complexType>
   <xs:element name='AssetChanged' type='AssetChangedType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset was just modified
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AssetRemovedType'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset was just modified
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='EventType'>
+        <xs:attribute name='assetType' type='AssetAttrType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AssetRemoved' type='AssetRemovedType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
         An asset was just modified

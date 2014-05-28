@@ -31,7 +31,7 @@ WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
 THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
 SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 -->
-<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectError:1.3' xmlns:mt='urn:mtconnect.org:MTConnectError:1.3' targetNamespace='urn:mtconnect.org:MTConnectError:1.3' elementFormDefault='qualified' attributeFormDefault='unqualified'>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:vc='http://www.w3.org/2007/XMLSchema-versioning' xmlns='urn:mtconnect.org:MTConnectError:1.3' xmlns:mt='urn:mtconnect.org:MTConnectError:1.3' targetNamespace='urn:mtconnect.org:MTConnectError:1.3' elementFormDefault='qualified' attributeFormDefault='unqualified' vc:minVersion='1.1'>
   <xs:element name='MTConnectError' type='MTConnectErrorType'>
     <xs:annotation>
       <xs:documentation>
@@ -289,6 +289,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='PRESSURE'/>
       <xs:enumeration value='RESET'/>
       <xs:enumeration value='PROGRAM'/>
+      <xs:enumeration value='PROGRAM_COMMENT'/>
       <xs:enumeration value='ROTARY_MODE'/>
       <xs:enumeration value='COUPLED_AXES'/>
       <xs:enumeration value='AXIS_COUPLING'/>
@@ -301,7 +302,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='VIBRATION'/>
       <xs:enumeration value='VOLTAGE'/>
       <xs:enumeration value='WATTAGE'/>
-      <xs:enumeration value='WORKHOLDING_ID'/>
       <xs:enumeration value='ACCUMULATED_TIME'/>
       <xs:enumeration value='ACTUATOR_STATE'/>
       <xs:enumeration value='ASSET_CHANGED'/>
@@ -331,9 +331,33 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='SYSTEM'/>
       <xs:enumeration value='LEVEL'/>
       <xs:enumeration value='ACTUATOR'/>
-      <xs:enumeration value='CLAMP_STATUS'/>
-      <xs:enumeration value='FEED_STOCK'/>
-      <xs:enumeration value='CHANGE_STOCK'/>
+      <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
+      <xs:enumeration value='FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='PART_ASSET_ID'/>
+      <xs:enumeration value='PROGRAM_EDIT'/>
+      <xs:enumeration value='PROGRAM_EDIT_NAME'/>
+      <xs:enumeration value='CHUCK_STATE'/>
+      <xs:enumeration value='END_OF_BAR'/>
+      <xs:enumeration value='AUXILIARY_END_OF_BAR'/>
+      <xs:enumeration value='AXIS_INTERLOCK'/>
+      <xs:enumeration value='MANUAL_CHUCK_UNCLAMP_INTERLOCK'/>
+      <xs:enumeration value='LENGTH'/>
+      <xs:enumeration value='AXIS_STATE'/>
+      <xs:enumeration value='INTERFACE_STATE'/>
+      <xs:enumeration value='FUNCTIONAL_MODE'/>
+      <xs:enumeration value='WORKHOLDING_ID'/>
+      <xs:enumeration value='PALLET_ID'/>
+      <xs:enumeration value='OPERATOR_ID'/>
+      <xs:enumeration value='MATERIAL_FEED'/>
+      <xs:enumeration value='MATERIAL_CHANGE'/>
+      <xs:enumeration value='MATERIAL_RETRACT'/>
+      <xs:enumeration value='PART_CHANGE'/>
+      <xs:enumeration value='OPEN_DOOR'/>
+      <xs:enumeration value='CLOSE_DOOR'/>
+      <xs:enumeration value='OPEN_CHUCK'/>
+      <xs:enumeration value='CLOSE_CHUCK'/>
+      <xs:enumeration value='MATERIAL_LOAD'/>
+      <xs:enumeration value='MATERIAL_UNLOAD'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemEnumType'>
@@ -378,6 +402,12 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='D_SCALE'/>
       <xs:enumeration value='REQUEST'/>
       <xs:enumeration value='RESPONSE'/>
+      <xs:enumeration value='REMAINING'/>
+      <xs:enumeration value='JOG'/>
+      <xs:enumeration value='RAPID'/>
+      <xs:enumeration value='PRIMARY'/>
+      <xs:enumeration value='AUXILIARY'/>
+      <xs:enumeration value='MANUAL_UNCLAMP'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
