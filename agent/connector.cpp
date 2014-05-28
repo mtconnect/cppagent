@@ -187,6 +187,8 @@ void Connector::parseBuffer(const char *aBuffer)
     while (!stream.eof())
     {
       getline(stream, line);
+      sLogger << LTRACE << "Received line: '" << line << '\'';
+      
       if (line.empty()) continue;
 
       // Check for heartbeats
