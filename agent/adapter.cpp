@@ -214,7 +214,7 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
       {
         if (mUpcaseValue)
         {
-          value.append(aValue.length(), '\0');
+          value.resize(aValue.length());
           transform(aValue.begin(), aValue.end(), value.begin(), ::toupper);
         }
         else
