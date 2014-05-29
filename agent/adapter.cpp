@@ -19,6 +19,7 @@
 #include "device.hpp"
 #include "globals.hpp"
 #include "dlib/logger.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -90,7 +91,7 @@ inline static void trim(std::string &str)
     str.erase(index + 1);
 }
 
-string Adapter::extractTime(const string &time)
+inline string Adapter::extractTime(const string &time)
 {
   // Check how to handle time. If the time is relative, then we need to compute the first
   // offsets, otherwise, if this function is being used as an API, add the current time.
@@ -213,9 +214,8 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
       {
         if (mUpcaseValue)
         {
-          value = aValue;
-          for (unsigned int i = 0; i < value.length(); i++)
-            value[i] = toupper(value[i]);
+          value.append(aValue.length(), '\0');
+          transform(aValue.begin(), aValue.end(), value.begin(), ::toupper);
         }
         else
           value = aValue;
