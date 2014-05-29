@@ -348,7 +348,7 @@ void AgentTest::testAdapter()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[2]", "DESCRIPTION");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[2]", "description");
   }
 }
 
@@ -709,7 +709,9 @@ void AgentTest::testFileDownload()
   outgoing.out = &out;
   
   result = a->on_request(incoming, outgoing);
-  CPPUNIT_ASSERT_EQUAL((string) "TEST SCHEMA FILE 1234567890\n", result);
+  CPPUNIT_ASSERT(result.empty());
+  CPPUNIT_ASSERT(out.bad());
+  CPPUNIT_ASSERT(out.str().find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
 }
 
 void AgentTest::testFailedFileDownload()
@@ -1888,11 +1890,37 @@ void AgentTest::testDiscrete()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[2]", "HELLO");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[3]", "HELLO");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[4]", "HELLO");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[2]", "Hello");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[3]", "Hello");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[4]", "Hello");
   }
 
+}
+
+void AgentTest::testUpcaseValues()
+{
+  path = "/current";
+  delete a;
+  a = new Agent("../samples/discrete_example.xml", 8, 4, 25);
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  adapter->setDupCheck(true);
+  CPPUNIT_ASSERT(adapter);
+  CPPUNIT_ASSERT(adapter->upcaseValue());
+  
+  adapter->processData("TIME|mode|Hello");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "HELLO");
+  }
+
+  adapter->setUpcaseValue(false);
+  adapter->processData("TIME|mode|Hello");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "Hello");
+  }
 }
 
 void AgentTest::testConditionSequence()
@@ -1925,7 +1953,7 @@ void AgentTest::testConditionSequence()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault", "2218-1 ALARM_B UNUSABLE G-CODE  A SIDE FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault", "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeCode", "2218");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeSeverity", "ALARM_B");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@qualifier", "HIGH");
@@ -1944,7 +1972,7 @@ void AgentTest::testConditionSequence()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault", "4200 ALARM_D POWER ON EFFECTIVE PARAMETER SET");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault", "4200 ALARM_D Power on effective parameter set");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeCode", "4200");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeSeverity", "ALARM_D");
   }
@@ -1954,8 +1982,8 @@ void AgentTest::testConditionSequence()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "4200 ALARM_D POWER ON EFFECTIVE PARAMETER SET");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]", "2218-1 ALARM_B UNUSABLE G-CODE  A SIDE FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "4200 ALARM_D Power on effective parameter set");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]", "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@nativeCode", "2218");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@nativeSeverity", "ALARM_B");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@qualifier", "HIGH");
@@ -1966,11 +1994,11 @@ void AgentTest::testConditionSequence()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "2218-1 ALARM_B UNUSABLE G-CODE  A SIDE FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@nativeCode", "2218");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@nativeSeverity", "ALARM_B");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@qualifier", "HIGH");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]", "4200 ALARM_D POWER ON EFFECTIVE PARAMETER SET");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]", "4200 ALARM_D Power on effective parameter set");
   }
   
   adapter->processData("TIME|lp|NORMAL|2218|||");
@@ -1979,7 +2007,7 @@ void AgentTest::testConditionSequence()
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@nativeCode", "4200");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "4200 ALARM_D POWER ON EFFECTIVE PARAMETER SET");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "4200 ALARM_D Power on effective parameter set");
   }
   
   adapter->processData("TIME|lp|NORMAL||||");

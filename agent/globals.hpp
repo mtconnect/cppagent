@@ -103,7 +103,7 @@ std::string getRelativeTimeString(uint64_t aTime);
 /* Get the current time in number of seconds as an integer */
 unsigned int getCurrentTimeInSec();
 
-uint64_t parseTimeMicro(std::string &aTime);
+uint64_t parseTimeMicro(const std::string &aTime);
 
 /* Replace illegal XML characters with the correct corresponding characters */
 void replaceIllegalCharacters(std::string& data);

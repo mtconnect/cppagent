@@ -290,6 +290,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   int reconnectInterval = get_with_default(reader, "ReconnectInterval", 10 * 1000);
   bool ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
   bool conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
+  bool upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
   
   mPidFile = get_with_default(reader, "PidFile", "agent.pid");
   const char *probe;
@@ -335,7 +336,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   
   loadAllowPut(reader);
   loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,
-               conversionRequired);
+               conversionRequired, upcaseValue);
   
   // Files served by the Agent... allows schema files to be served by
   // agent.
@@ -358,7 +359,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
                                       bool aDefaultPreserve, int aLegacyTimeout,
                                       int aReconnectInterval, bool aIgnoreTimestamps,
-                                      bool aConversionRequired)
+                                      bool aConversionRequired, bool aUpcaseValue)
 {
   Device *device;
   if (aReader.is_block_defined("Adapters")) {
@@ -418,6 +419,7 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       adp->setRealTime(get_bool_with_default(adapter, "RealTime", false));
       adp->setRelativeTime(get_bool_with_default(adapter, "RelativeTime", false));
       adp->setReconnectInterval(reconnectInterval);
+      adp->setUpcaseValue(get_bool_with_default(adapter, "UpcaseDataItemValue", aUpcaseValue));
       
       if (adapter.is_key_defined("AdditionalDevices")) {
         istringstream devices(adapter["AdditionalDevices"]);

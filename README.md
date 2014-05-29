@@ -574,7 +574,10 @@ Configuration Parameters
   Assumes the adapter has already done unit conversion.
 
     *Default*: true
+    
+* `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
 
+    *Default*: true
 
 ###Adapter configuration items###
 
@@ -648,7 +651,7 @@ Configuration Parameters
       clock drift but will not give as accurate relative time since it will not take into
       consideration network latencies. This can be overriden on a per adapter basis.
 
-        *Default*: false
+        *Default*: Top Level Setting
         
     * `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
 		  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
@@ -668,7 +671,11 @@ Configuration Parameters
     * `ConversionRequired` - Adapter setting for data item units conversion in the agent. 
       Assumes the adapter has already done unit conversion. Defaults to global.
 
-        *Default*: true
+        *Default*: Top Level Setting
+        
+    * `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
+
+        *Default*: Top Level Setting
 
 
 logger_config configuration items

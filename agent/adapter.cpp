@@ -31,7 +31,7 @@ Adapter::Adapter(const string& device,
                  int aLegacyTimeout)
   : Connector(server, port, aLegacyTimeout), mDeviceName(device), mRunning(true),
     mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false), mRelativeTime(false), mConversionRequired(true),
-    mBaseTime(0), mBaseOffset(0), mParseTime(false), mGatheringAsset(false),  mReconnectInterval(10 * 1000)
+    mUpcaseValue(true), mBaseTime(0), mBaseOffset(0), mParseTime(false), mGatheringAsset(false), mReconnectInterval(10 * 1000)
 {
 }
 
@@ -90,6 +90,40 @@ inline static void trim(std::string &str)
     str.erase(index + 1);
 }
 
+string Adapter::extractTime(const string &time)
+{
+  // Check how to handle time. If the time is relative, then we need to compute the first
+  // offsets, otherwise, if this function is being used as an API, add the current time.
+  string result;
+  if (mRelativeTime) {
+    uint64_t offset;
+    if (mBaseTime == 0) {
+      mBaseTime = getCurrentTimeInMicros();
+      
+      if (time.find('T') != string::npos) {
+        mParseTime = true;
+        mBaseOffset = parseTimeMicro(time);
+      } else {
+        mBaseOffset = (uint64_t) (atof(time.c_str()) * 1000.0);
+      }
+      offset = 0;
+    } else if (mParseTime) {
+      offset = parseTimeMicro(time) - mBaseOffset;
+    } else {
+      offset = ((uint64_t) (atof(time.c_str()) * 1000.0)) - mBaseOffset;
+    }
+    result = getRelativeTimeString(mBaseTime + offset);
+  } else if (mIgnoreTimestamps || time.empty()) {
+    result = getCurrentTime(GMT_UV_SEC);
+  }
+  else
+  {
+    result = time;
+  }
+  
+  return result;
+}
+
 /**
  * Expected data to parse in SDHR format:
  *   Time|Alarm|Code|NativeCode|Severity|State|Description
@@ -118,39 +152,101 @@ void Adapter::processData(const string& data)
   }
   
   istringstream toParse(data);
-  string key, value, dev;
-  Device *device;
+  string key, value;
   
   getline(toParse, key, '|');
-  string time = key;
+  string time = extractTime(key);
 
-  // Check how to handle time. If the time is relative, then we need to compute the first
-  // offsets, otherwise, if this function is being used as an API, add the current time.
-  if (mRelativeTime) {
-    uint64_t offset;
-    if (mBaseTime == 0) {
-      mBaseTime = getCurrentTimeInMicros();
-
-      if (time.find('T') != string::npos) {
-        mParseTime = true;
-        mBaseOffset = parseTimeMicro(time);
-      } else {
-        mBaseOffset = (uint64_t) (atof(time.c_str()) * 1000.0);
-      }
-      offset = 0;
-    } else if (mParseTime) {
-      offset = parseTimeMicro(time) - mBaseOffset;
-    } else {
-      offset = ((uint64_t) (atof(time.c_str()) * 1000.0)) - mBaseOffset;
-    }
-    time = getRelativeTimeString(mBaseTime + offset);
-  } else if (mIgnoreTimestamps || time.empty()) {
-    time = getCurrentTime(GMT_UV_SEC);
-  }
   
   getline(toParse, key, '|');
   getline(toParse, value, '|');
   
+  // Data item name has a @, it is an asset special prefix.
+  if (key.find('@') != string::npos)
+  {
+    processAsset(toParse, key, value, time);
+  }
+  else
+  {
+    if (processDataItem(toParse, data, key, value, time, true))
+    {
+      // Look for more key->value pairings in the rest of the data
+      while (getline(toParse, key, '|') && getline(toParse, value, '|'))
+      {
+        processDataItem(toParse, data, key, value, time);
+      }
+    }
+  }
+}
+
+bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const string &aKey, const string &aValue,
+                              const string &aTime, bool aFirst)
+{
+  string dev, key = aKey;
+  Device *device;
+  DataItem *dataItem;
+  bool more = true;
+  if (splitKey(key, dev)) {
+    device = mAgent->getDeviceByName(dev);
+  } else {
+    device = mDevice;
+  }
+  
+  if (device != NULL) {
+    dataItem = device->getDeviceDataItem(key);
+    if (dataItem == NULL)
+    {
+      sLogger << LWARN << "(" << device->getName() << ") Could not find data item: " << key <<
+      " from line '" << aLine << "'";
+    }
+    else
+    {
+      string rest, value;
+      if (aFirst && (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage() ||
+                     dataItem->isTimeSeries()))
+      {
+        getline(toParse, rest);
+        value = aValue + "|" + rest;
+        more = false;
+      }
+      else
+      {
+        if (mUpcaseValue)
+        {
+          value = aValue;
+          for (unsigned int i = 0; i < value.length(); i++)
+            value[i] = toupper(value[i]);
+        }
+        else
+          value = aValue;
+      }
+      
+      dataItem->setDataSource(this);
+      trim(value);
+      if (!isDuplicate(dataItem, value))
+      {
+        mAgent->addToBuffer(dataItem, value, aTime);
+      }
+      else if (mDupCheck)
+      {
+        sLogger << LTRACE << "Dropping duplicate value for " << key << " of " << value;
+      }
+    }
+  }
+  else
+  {
+    sLogger << LDEBUG << "Could not find device: " << dev;
+    more = false;
+  }
+  
+  return more;
+}
+
+void Adapter::processAsset(istringstream &toParse, const string &aKey, const string &value,
+                           const string &time)
+{
+  Device *device;
+  string key = aKey, dev;
   if (splitKey(key, dev)) {
     device = mAgent->getDeviceByName(dev);
   } else {
@@ -162,11 +258,11 @@ void Adapter::processData(const string& data)
     getline(toParse, type, '|');
     getline(toParse, rest);
     
-    // Chck for an update and parse key value pairs. If only a type 
+    // Chck for an update and parse key value pairs. If only a type
     // is presented, then assume the remainder is a complete doc.
     
     
-    // if the rest of the line begins with --multiline--... then 
+    // if the rest of the line begins with --multiline--... then
     // set multiline and accumulate until a completed document is found
     if (rest.find("--multiline--") != rest.npos)
     {
@@ -183,111 +279,37 @@ void Adapter::processData(const string& data)
     {
       mAgent->addAsset(device, value, rest, type, time);
     }
-    
-    return;
-  } 
+  }
   else if (key == "@UPDATE_ASSET@")
   {
+    string assetKey, assetValue;
     string assetId = value;
     AssetChangeList list;
-    getline(toParse, key, '|');
-    if (key[0] == '<')
+    getline(toParse, assetKey, '|');
+    if (assetKey[0] == '<')
     {
       do {
-        pair<string,string> kv("xml", key);
-        list.push_back(kv);        
-      } while (getline(toParse, key, '|'));
-      
-    } 
+        pair<string,string> kv("xml", assetKey);
+        list.push_back(kv);
+      } while (getline(toParse, assetKey, '|'));
+    }
     else
     {
-      while (getline(toParse, value, '|'))
+      while (getline(toParse, assetValue, '|'))
       {
-        pair<string,string> kv(key, value);
-        list.push_back(kv);      
+        pair<string,string> kv(assetKey, assetValue);
+        list.push_back(kv);
         
-        if (!getline(toParse, key, '|'))
+        if (!getline(toParse, assetKey, '|'))
           break;
-      } 
+      }
     }
     mAgent->updateAsset(device, assetId, list, time);
-    return;
   }
   else if (key == "@REMOVE_ASSET@")
   {
     string assetId = value;
     mAgent->removeAsset(device, assetId, time);
-    return;
-  }
-    
-  DataItem *dataItem;
-  if (device != NULL) {
-    dataItem = device->getDeviceDataItem(key);    
-  
-    if (dataItem == NULL)
-    {
-      sLogger << LWARN << "(" << device->getName() << ") Could not find data item: " << key <<
-        " from line '" << data << "'";
-    } else {
-      string rest;
-      if (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage() ||
-          dataItem->isTimeSeries())
-      {
-        getline(toParse, rest);
-        value = value + "|" + rest;
-      }
-
-      // Add key->value pairings
-      dataItem->setDataSource(this);
-      trim(value);
-      
-      // Check for duplication
-      const string &uppered = toUpperCase(value);
-      if (!isDuplicate(dataItem, uppered))
-      {
-        mAgent->addToBuffer(dataItem, uppered, time);
-      } 
-      else if (mDupCheck)
-      {
-        //sLogger << LDEBUG << "Dropping duplicate value for " << key << " of " << value;
-      }
-    }
-  } else {
-    sLogger << LDEBUG << "Could not find device: " << dev;
-  }
-  
-  // Look for more key->value pairings in the rest of the data
-  while (getline(toParse, key, '|') && getline(toParse, value, '|'))
-  {
-    if (splitKey(key, dev)) {
-      device = mAgent->getDeviceByName(dev);
-    } else {
-      device = mDevice;
-    }
-    if (device == NULL) {
-      sLogger << LDEBUG << "Could not find device: " << dev;
-      continue;
-    }
-    
-    dataItem = device->getDeviceDataItem(key);    
-    if (dataItem == NULL)
-    {
-      sLogger << LWARN << "Could not find data item: " << key << " for device " << mDeviceName;
-    }
-    else
-    {
-      dataItem->setDataSource(this);
-      trim(value);
-      const string &uppered = toUpperCase(value);
-      if (!isDuplicate(dataItem, uppered))
-      {
-        mAgent->addToBuffer(dataItem, uppered, time);
-      } 
-      else if (mDupCheck)
-      {
-        //sLogger << LDEBUG << "Dropping duplicate value for " << key << " of " << value;
-      }
-    }
   }
 }
 

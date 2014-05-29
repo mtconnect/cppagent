@@ -221,7 +221,7 @@ int getEnumeration(const string& name, const string *array, unsigned int size)
   return ENUM_MISS;
 }
 
-uint64_t parseTimeMicro(std::string &aTime)
+uint64_t parseTimeMicro(const std::string &aTime)
 {
   struct tm timeinfo;
   memset(&timeinfo, 0, sizeof(timeinfo));

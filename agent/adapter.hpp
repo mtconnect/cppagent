@@ -65,6 +65,9 @@ public:
   void setConversionRequired(bool aFlag) { mConversionRequired = aFlag; }
   bool conversionRequired() const { return mConversionRequired; }
   
+  void setUpcaseValue(bool aFlag) { mUpcaseValue = aFlag; }
+  bool upcaseValue() const { return mUpcaseValue; }
+  
   uint64_t getBaseTime() { return mBaseTime; }
   uint64_t getBaseOffset() { return mBaseOffset; }
   
@@ -102,6 +105,11 @@ public:
   
 protected:
   void parseCalibration(const std::string &aString);
+  void processAsset(std::istringstream &toParse, const std::string &key, const std::string &value,
+                    const std::string &time);
+  bool processDataItem(std::istringstream &toParse, const std::string &aLine, const std::string &aKey, const std::string &aValue,
+                           const std::string &aTime, bool aFirst = false);
+  std::string extractTime(const std::string &time);
   
 protected:
   /* Pointer to the agent */
@@ -121,6 +129,7 @@ protected:
   bool mIgnoreTimestamps;
   bool mRelativeTime;
   bool mConversionRequired;
+  bool mUpcaseValue;
   
   // For relative times
   uint64_t mBaseTime;

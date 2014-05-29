@@ -105,6 +105,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testFilterValues);
   CPPUNIT_TEST(testReferences);
   CPPUNIT_TEST(testDiscrete);
+  CPPUNIT_TEST(testUpcaseValues);
   CPPUNIT_TEST(testConditionSequence);
   CPPUNIT_TEST(testAssetRemoval);
   CPPUNIT_TEST(testAssetRemovalByAdapter);
@@ -235,6 +236,7 @@ protected:
   
   // Discrete
   void testDiscrete();
+  void testUpcaseValues();
   
   // Conditions
   void testConditionSequence();
