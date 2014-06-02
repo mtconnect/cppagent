@@ -81,6 +81,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testErrorStyle);
   CPPUNIT_TEST(testAssetsStyle);
   CPPUNIT_TEST(testPrintRemovedCuttingTool);
+  CPPUNIT_TEST(testEscapedXMLCharacters);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -100,6 +101,9 @@ protected:
   void testChangeStreamsNamespace();
   void testStatisticAndTimeSeriesProbe();
   void testTimeSeries();
+  
+  // Character generation
+  void testEscapedXMLCharacters();
   
   // Test printing configuration...
   void testConfiguration();

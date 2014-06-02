@@ -292,7 +292,7 @@ string XmlPrinter::printError(const unsigned int instanceId,
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "errorCode", 
                                                     BAD_CAST errorCode.c_str()));
     xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST errorText.c_str());
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
     xmlFree(text);
 
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Error
@@ -789,7 +789,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
   } else if (!result->getValue().empty()) {
     xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST result->getValue().c_str());
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
     xmlFree(text);
   }
   
@@ -1000,7 +1000,7 @@ void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, strin
   if (!body.empty())
   {
     xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST body.c_str());
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
     xmlFree(text);
   }
   

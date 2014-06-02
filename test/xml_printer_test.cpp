@@ -495,6 +495,17 @@ void XmlPrinterTest::testNonPrintableCharacters()
                                       , "OVER TRAVEL : +Z?");
 }
 
+void XmlPrinterTest::testEscapedXMLCharacters()
+{
+  ComponentEventPtrArray events;
+  ComponentEventPtr ptr = newEvent("zlc", 10843512, "fault|500|||A duck > a foul & < cat '");
+  events.push_back(ptr);
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]"
+                                    , "A duck > a foul & < cat '");
+  
+}
+
 
 void XmlPrinterTest::testPrintAsset()
 {
