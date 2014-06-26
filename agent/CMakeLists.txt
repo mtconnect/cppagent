@@ -10,7 +10,7 @@ set (AGENT_VERSION_MAJOR 1)
 set (AGENT_VERSION_MINOR 3)
 set (AGENT_VERSION_PATCH 0)
 set (AGENT_VERSION_BUILD 0)
-set (AGENT_VERSION_RC "_RC14")
+set (AGENT_VERSION_RC "_RC15")
 
 if(WIN32)
   if(CMAKE_CL_64)
@@ -93,6 +93,10 @@ target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
 
 if(WIN32)
   set(WINVER "0x0501" CACHE STRING "Windows Target Version: 0x0400 - 95 & NT 4.0, 0x0500 - 2000, 0x0501 - XP, 0x0600 - Vista, 0x0601 - 7, 0x0602 - 8")
+  if (WINVER EQUAL "0x0501")
+    set(CMAKE_GENERATOR_TOOLSET "v110_xp" CACHE STRING "Use XP targeting")
+  endif(WINVER)
+  
   add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
 
   foreach(flag_var

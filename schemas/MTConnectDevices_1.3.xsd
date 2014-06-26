@@ -298,6 +298,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='TORQUE'/>
       <xs:enumeration value='TOOL_ASSET_ID'/>
       <xs:enumeration value='TOOL_ID'/>
+      <xs:enumeration value='TOOL_NUMBER'/>
       <xs:enumeration value='VELOCITY'/>
       <xs:enumeration value='VIBRATION'/>
       <xs:enumeration value='VOLTAGE'/>
