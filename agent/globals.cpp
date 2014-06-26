@@ -126,7 +126,7 @@ string getCurrentTime(time_t aSec, int aUsec, TimeFormat format)
   switch (format)
   {
     case HUM_READ:
-      strftime(timestamp, 50, "%a, %d %b %Y %H:%M:%S %Z", &timeinfo);
+      std::strftime(timestamp, 50, "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
       break;
     case GMT:
       strftime(timestamp, 50, "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
