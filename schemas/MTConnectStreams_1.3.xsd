@@ -333,7 +333,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='LEVEL'/>
       <xs:enumeration value='ACTUATOR'/>
       <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
-      <xs:enumeration value='FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'/>
       <xs:enumeration value='PART_ASSET_ID'/>
       <xs:enumeration value='PROGRAM_EDIT'/>
       <xs:enumeration value='PROGRAM_EDIT_NAME'/>
@@ -3592,7 +3592,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='FeedrateOverrideType'>
+  <xs:complexType name='PathFeedrateOverrideType'>
     <xs:annotation>
       <xs:documentation>
         The override of the feedrate
@@ -3604,14 +3604,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='FeedrateOverride' type='FeedrateOverrideType' substitutionGroup='Event'>
+  <xs:element name='PathFeedrateOverride' type='PathFeedrateOverrideType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
         The override of the feedrate
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='SpindleSpeedOverrideType'>
+  <xs:complexType name='RotaryVelocityOverrideType'>
     <xs:annotation>
       <xs:documentation>
         The override of the spindle speed (rotary velocity)
@@ -3623,7 +3623,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='SpindleSpeedOverride' type='SpindleSpeedOverrideType' substitutionGroup='Event'>
+  <xs:element name='RotaryVelocityOverride' type='RotaryVelocityOverrideType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
         The override of the spindle speed (rotary velocity)

@@ -333,7 +333,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='LEVEL'/>
       <xs:enumeration value='ACTUATOR'/>
       <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
-      <xs:enumeration value='FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'/>
       <xs:enumeration value='PART_ASSET_ID'/>
       <xs:enumeration value='PROGRAM_EDIT'/>
       <xs:enumeration value='PROGRAM_EDIT_NAME'/>
