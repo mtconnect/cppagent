@@ -406,8 +406,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='REQUEST'/>
       <xs:enumeration value='RESPONSE'/>
       <xs:enumeration value='REMAINING'/>
-      <xs:enumeration value='JOG'/>
-      <xs:enumeration value='RAPID'/>
       <xs:enumeration value='PRIMARY'/>
       <xs:enumeration value='AUXILIARY'/>
       <xs:enumeration value='MANUAL_UNCLAMP'/>
@@ -2062,31 +2060,4 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:attribute name='grade' type='GradeType' use='optional'/>
     <xs:attribute name='manufacturers' type='ManufacturersType' use='optional'/>
   </xs:complexType>
-  <xs:complexType name='InspectionResultsType'>
-    <xs:annotation>
-      <xs:documentation>
-        An inspection result
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AssetType'>
-        <xs:sequence>
-          <xs:any processContents='lax' minOccurs='1'>
-            <xs:annotation>
-              <xs:documentation>
-                Any elements
-              </xs:documentation>
-            </xs:annotation>
-          </xs:any>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='InspectionResults' type='InspectionResultsType' substitutionGroup='Asset'>
-    <xs:annotation>
-      <xs:documentation>
-        An inspection result
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
 </xs:schema>

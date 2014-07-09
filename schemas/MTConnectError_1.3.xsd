@@ -406,8 +406,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='REQUEST'/>
       <xs:enumeration value='RESPONSE'/>
       <xs:enumeration value='REMAINING'/>
-      <xs:enumeration value='JOG'/>
-      <xs:enumeration value='RAPID'/>
       <xs:enumeration value='PRIMARY'/>
       <xs:enumeration value='AUXILIARY'/>
       <xs:enumeration value='MANUAL_UNCLAMP'/>
