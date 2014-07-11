@@ -93,9 +93,13 @@ target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
 
 if(WIN32)
   set(WINVER "0x0501" CACHE STRING "Windows Target Version: 0x0400 - 95 & NT 4.0, 0x0500 - 2000, 0x0501 - XP, 0x0600 - Vista, 0x0601 - 7, 0x0602 - 8")
-  if (WINVER EQUAL "0x0501")
-    set(CMAKE_GENERATOR_TOOLSET "v110_xp" CACHE STRING "Use XP targeting")
-  endif(WINVER)
+  if ("${WINVER}" STREQUAL "0x0501")
+    MESSAGE(INFO ": Setting to xp tools ${WINVER}")
+    set(CMAKE_GENERATOR_TOOLSET "v110_xp" CACHE INTERNAL "Use XP Toolkit")
+  else ("${WINVER}" STREQUAL "0x0501")
+    MESSAGE(INFO ": Setting to default tools")
+    set(CMAKE_GENERATOR_TOOLSET "v110" CACHE INTERNAL "Use default Toolit")
+  endif ("${WINVER}" STREQUAL "0x0501")
   
   add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
 
