@@ -32,7 +32,8 @@ Adapter::Adapter(const string& device,
                  int aLegacyTimeout)
   : Connector(server, port, aLegacyTimeout), mDeviceName(device), mRunning(true),
     mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false), mRelativeTime(false), mConversionRequired(true),
-    mUpcaseValue(true), mBaseTime(0), mBaseOffset(0), mParseTime(false), mGatheringAsset(false), mReconnectInterval(10 * 1000)
+    mUpcaseValue(true), mBaseTime(0), mBaseOffset(0), mParseTime(false), mGatheringAsset(false),
+    mAssetDevice(NULL), mReconnectInterval(10 * 1000)
 {
 }
 
@@ -253,6 +254,12 @@ void Adapter::processAsset(istringstream &toParse, const string &aKey, const str
     device = mDevice;
   }
 
+  string assetId;
+  if (value[0] == '@')
+    assetId = device->getUuid() + value.substr(1);
+  else
+    assetId = value;
+
   if (key == "@ASSET@") {
     string type, rest;
     getline(toParse, type, '|');
@@ -260,7 +267,6 @@ void Adapter::processAsset(istringstream &toParse, const string &aKey, const str
     
     // Chck for an update and parse key value pairs. If only a type
     // is presented, then assume the remainder is a complete doc.
-    
     
     // if the rest of the line begins with --multiline--... then
     // set multiline and accumulate until a completed document is found
@@ -271,19 +277,18 @@ void Adapter::processAsset(istringstream &toParse, const string &aKey, const str
       mTerminator = rest;
       mTime = time;
       mAssetType = type;
-      mAssetId = value;
+      mAssetId = assetId;
       mBody.str("");
       mBody.clear();
     }
     else
     {
-      mAgent->addAsset(device, value, rest, type, time);
+      mAgent->addAsset(device, assetId, rest, type, time);
     }
   }
   else if (key == "@UPDATE_ASSET@")
   {
     string assetKey, assetValue;
-    string assetId = value;
     AssetChangeList list;
     getline(toParse, assetKey, '|');
     if (assetKey[0] == '<')
@@ -304,11 +309,11 @@ void Adapter::processAsset(istringstream &toParse, const string &aKey, const str
           break;
       }
     }
+    
     mAgent->updateAsset(device, assetId, list, time);
   }
   else if (key == "@REMOVE_ASSET@")
   {
-    string assetId = value;
     mAgent->removeAsset(device, assetId, time);
   }
 }

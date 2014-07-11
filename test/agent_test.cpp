@@ -1431,6 +1431,23 @@ void AgentTest::testAssetAdditionOfAssetRemoved13()
   XmlPrinter::setSchemaVersion(version);
 }
 
+void AgentTest::testAssetPrependId()
+{
+  testAddAdapter();
+    
+  adapter->processData("TIME|@ASSET@|@1|Part|<Part>TEST 1</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  
+  path = "/asset/0001";
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "0001");
+  }
+}
 
 void AgentTest::testPut()
 {
