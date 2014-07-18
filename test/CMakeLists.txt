@@ -76,7 +76,7 @@ if(WIN32)
   add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
 endif(WIN32)
 
-add_executable(test ${test_srcs} ${test_headers})
-target_link_libraries(test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})
+add_executable(agent_test ${test_srcs} ${test_headers})
+target_link_libraries(agent_test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})
 
 
