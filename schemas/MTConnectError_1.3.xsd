@@ -334,6 +334,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='ACTUATOR'/>
       <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
       <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='AXIS_FEEDRATE_OVERRIDE'/>
       <xs:enumeration value='PART_ASSET_ID'/>
       <xs:enumeration value='PROGRAM_EDIT'/>
       <xs:enumeration value='PROGRAM_EDIT_NAME'/>
@@ -406,6 +407,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='REQUEST'/>
       <xs:enumeration value='RESPONSE'/>
       <xs:enumeration value='REMAINING'/>
+      <xs:enumeration value='JOG'/>
+      <xs:enumeration value='RAPID'/>
+      <xs:enumeration value='PROGRAMMED'/>
       <xs:enumeration value='PRIMARY'/>
       <xs:enumeration value='AUXILIARY'/>
       <xs:enumeration value='MANUAL_UNCLAMP'/>
