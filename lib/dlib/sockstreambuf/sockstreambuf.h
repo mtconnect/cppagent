@@ -41,7 +41,8 @@ namespace dlib
             con(*con_),
             out_buffer(0),
             in_buffer(0),
-            autoflush(false)
+            autoflush(false),
+            timeout(0)
         {
             init();
         }
@@ -81,6 +82,11 @@ namespace dlib
         void do_not_flush_output_on_read()
         {
             autoflush = false;
+        }
+        
+        void set_read_timeout(unsigned long to)
+        {
+          timeout = to;
         }
 
     protected:
@@ -157,7 +163,7 @@ namespace dlib
         char* out_buffer;
         char* in_buffer;
         bool autoflush;
-    
+        unsigned long timeout;
     };
 
 // ---------------------------------------------------------------------------------------- 

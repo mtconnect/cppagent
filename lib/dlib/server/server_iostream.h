@@ -81,6 +81,9 @@ namespace dlib
                 std::istream in(&buf);
                 std::ostream out(&buf);
                 in.tie(&out);
+                
+                // Set the timeout for server connections
+                buf.set_read_timeout(10000);
 
                 // add this connection to the con_map
                 {
