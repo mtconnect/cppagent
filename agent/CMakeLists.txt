@@ -10,7 +10,7 @@ set (AGENT_VERSION_MAJOR 1)
 set (AGENT_VERSION_MINOR 3)
 set (AGENT_VERSION_PATCH 0)
 set (AGENT_VERSION_BUILD 0)
-set (AGENT_VERSION_RC "_RC16")
+set (AGENT_VERSION_RC "_RC17")
 
 if(WIN32)
   # For windows XP use: cmake -G "Visual Studio 11" -T v110_xp -D WINVER=0x0501
