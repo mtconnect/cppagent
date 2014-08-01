@@ -163,8 +163,6 @@ void MTConnectService::install()
   SC_HANDLE manager;
   SC_HANDLE service;
   char path[MAX_PATH];
-  char *commandLine;
-
   
   if( !GetModuleFileName(NULL, path, MAX_PATH ) )
   {
