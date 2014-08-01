@@ -515,13 +515,13 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     // Check for overflow
     if (mAssets.size() >= mMaxAssets)
     {
-      old = mAssets.front();
-      mAssetCounts[(*old)->getType()] -= 1;
+      AssetPtr oldref(*mAssets.front());
+      mAssetCounts[oldref->getType()] -= 1;
       mAssets.pop_front();
-      mAssetMap.erase((*old)->getAssetId());
+      mAssetMap.erase(oldref->getAssetId());
       
       // Add secondary keys
-      AssetKeys &keys = (*old)->getKeys();
+      AssetKeys &keys = oldref->getKeys();
       AssetKeys::iterator iter;
       for (iter = keys.begin(); iter != keys.end(); iter++)
       {

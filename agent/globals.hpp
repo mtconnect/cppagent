@@ -38,7 +38,9 @@
 
 #ifdef _WINDOWS
 #define ISNAN(x) _isnan(x)
+#if _MSC_VER < 1800
 #define NAN numeric_limits<double>::quiet_NaN()
+#endif
 typedef unsigned __int64 uint64_t;
 #define strtoull _strtoui64
 #else

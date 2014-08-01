@@ -41,6 +41,7 @@ const string Component::SComponentSpecs[NumComponentSpecs] = {
 /* Component public methods */
 Component::Component(const string& cls, map<string, string> attributes,
                      const string &aPrefix)
+ : mAssetChanged(NULL), mAssetRemoved(NULL)
 {
   mId = attributes["id"];
   
