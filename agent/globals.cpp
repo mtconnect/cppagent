@@ -26,6 +26,18 @@
 #endif
 #endif
 
+#ifdef _WINDOWS
+#define localtime_r(t, tm) localtime_s(tm, t)
+#define gmtime_r(t, tm) gmtime_s(tm, t)
+
+#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+#define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+#else
+#define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+#endif
+
+#endif
+
 using namespace std;
 
 string int64ToString(uint64_t i)
@@ -76,66 +88,80 @@ bool isNonNegativeInteger(const string& s)
 
 string getCurrentTime(TimeFormat format)
 {
-#ifdef _WINDOWS
-  SYSTEMTIME st;
-  char timestamp[64];
-  GetSystemTime(&st);
-  sprintf(timestamp, "%4d-%02d-%02dT%02d:%02d:%02d", st.wYear, st.wMonth,
-    st.wDay, st.wHour, st.wMinute, st.wSecond);
-  
+  time_t sec;
+  long usec;
+
   if (format == GMT_UV_SEC)
   {
-    sprintf(timestamp + strlen(timestamp), ".%03dZ", st.wMilliseconds);
+#ifdef _WINDOWS
+    uint64_t now = getCurrentTimeInMicros();
+    sec = (long)(now / 1000000UL);
+    usec = (long)(now % 1000000UL);
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    sec = tv.tv_sec;
+    usec = tv.tv_usec;
+#endif
   }
   else
   {
-    strcat(timestamp, "Z");
+    sec = time(NULL);
+    usec = 0;
   }
   
-  return timestamp;
-#else
-  char timeBuffer[50];
-  struct tm * timeinfo;
-  struct timeval tv;
-  struct timezone tz;
+  return getCurrentTime(sec, usec, format);
+}
 
-  gettimeofday(&tv, &tz);
-  timeinfo = (format == LOCAL) ? localtime(&tv.tv_sec) : gmtime(&tv.tv_sec);
+string getCurrentTime(time_t aSec, int aUsec, TimeFormat format)
+{
+  struct tm timeinfo;
+  char timestamp[64];
   
+  if (format == LOCAL)
+    localtime_r(&aSec, &timeinfo);
+  else
+    gmtime_r(&aSec, &timeinfo);
+
   switch (format)
   {
     case HUM_READ:
-      strftime(timeBuffer, 50, "%a, %d %b %Y %H:%M:%S %Z", timeinfo);
+      std::strftime(timestamp, 50, "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
       break;
     case GMT:
-      strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%SZ", timeinfo);
+      strftime(timestamp, 50, "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
       break;
     case GMT_UV_SEC:
-      strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S", timeinfo);
+      strftime(timestamp, 50, "%Y-%m-%dT%H:%M:%S", &timeinfo);
       break;
     case LOCAL:
-      strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S%z", timeinfo);
+      strftime(timestamp, 50, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
       break;
   }
-  
   
   if (format == GMT_UV_SEC)
   {
-    sprintf(timeBuffer + strlen(timeBuffer), ".%06dZ", tv.tv_usec);
+    sprintf(timestamp + strlen(timestamp), ".%06dZ", (int) aUsec);
   }
   
-  return string(timeBuffer);
-#endif
+  return string(timestamp);
 }
 
 uint64_t getCurrentTimeInMicros()
 {
   uint64_t now;
 #ifdef _WINDOWS
-  SYSTEMTIME st;
-  GetSystemTime(&st);
-  now = st.wSecond * 1000000;
-  now += st.wMilliseconds;
+  FILETIME ft;
+  static int tzflag;
+  
+  GetSystemTimeAsFileTime(&ft);
+  
+  now = ft.dwHighDateTime;
+  now <<= 32;
+  now |= ft.dwLowDateTime;
+  
+  now /= 10;  /*convert into microseconds*/
+  now -= DELTA_EPOCH_IN_MICROSECS;
 #else
   struct timeval tv;
   struct timezone tz;
@@ -195,7 +221,7 @@ int getEnumeration(const string& name, const string *array, unsigned int size)
   return ENUM_MISS;
 }
 
-uint64_t parseTimeMicro(std::string &aTime)
+uint64_t parseTimeMicro(const std::string &aTime)
 {
   struct tm timeinfo;
   memset(&timeinfo, 0, sizeof(timeinfo));
@@ -203,13 +229,14 @@ uint64_t parseTimeMicro(std::string &aTime)
   
   int c = sscanf(aTime.c_str(), "%d-%d-%dT%d:%d:%d%15s", &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday,
                  &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec, (char*) &ms);
+  if (c < 7)
+    return 0;
+  
   ms[15] = '\0';
   
   timeinfo.tm_mon -= 1;
   timeinfo.tm_year -= 1900;
   
-  if (c < 7)
-    return 0;
 
   uint64_t time = (mktime(&timeinfo) - timezone) * 1000000;
   

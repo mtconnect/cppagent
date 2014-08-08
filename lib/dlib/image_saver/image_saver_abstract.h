@@ -29,7 +29,8 @@ namespace dlib
     );
     /*!
         requires
-            - image_type == is an implementation of array2d/array2d_kernel_abstract.h
+            - image_type == is an implementation of array2d/array2d_kernel_abstract.h or
+              a dlib::matrix
             - pixel_traits<typename image_type::type> is defined  
         ensures
             - writes the image to the out stream in the Microsoft Windows BMP format.
@@ -57,7 +58,8 @@ namespace dlib
     );
     /*!
         requires
-            - image_type == is an implementation of array2d/array2d_kernel_abstract.h
+            - image_type == is an implementation of array2d/array2d_kernel_abstract.h or
+              a dlib::matrix
             - pixel_traits<typename image_type::type> is defined  
         ensures
             - opens the file indicated by file_name with an output file stream named fout
@@ -83,18 +85,19 @@ namespace dlib
     );
     /*!
         requires
-            - image_type == is an implementation of array2d/array2d_kernel_abstract.h
+            - image_type == is an implementation of array2d/array2d_kernel_abstract.h or
+              a dlib::matrix
             - pixel_traits<typename image_type::type> is defined  
         ensures
             - writes the image to the out stream in the dlib dng format.
             - image[0][0] will be in the upper left corner of the image.
             - image[image.nr()-1][image.nc()-1] will be in the lower right
               corner of the image.
-            - This routine can save images containing any type of pixel.  However, the 
-              DNG format can natively store only the following pixel types: rgb_pixel, 
-              hsi_pixel, rgb_alpha_pixel, uint8, and uint16.  All other pixel types 
-              will be converted into one of these types as appropriate before being
-              saved to disk.
+            - This routine can save images containing any type of pixel.  However, the DNG
+              format can natively store only the following pixel types: rgb_pixel,
+              hsi_pixel, rgb_alpha_pixel, uint8, uint16, float, and double.
+              All other pixel types will be converted into one of these types as
+              appropriate before being saved to disk.
         throws
             - image_save_error
                 This exception is thrown if there is an error that prevents us
@@ -111,7 +114,8 @@ namespace dlib
     );
     /*!
         requires
-            - image_type == is an implementation of array2d/array2d_kernel_abstract.h
+            - image_type == is an implementation of array2d/array2d_kernel_abstract.h or
+              a dlib::matrix
             - pixel_traits<typename image_type::type> is defined  
         ensures
             - opens the file indicated by file_name with an output file stream named fout 

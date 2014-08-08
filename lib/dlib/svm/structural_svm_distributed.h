@@ -8,6 +8,8 @@
 #include "structural_svm_problem.h"
 #include "../bridge.h"
 #include "../smart_pointers.h"
+#include "../misc_api.h"
+#include "../statistics.h"
 
 
 #include "../threads.h"
@@ -166,6 +168,11 @@ namespace dlib
                 tsu_in msg; 
                 tsu_out temp;
 
+                timestamper ts;
+                running_stats<double> with_buffer_time;
+                running_stats<double> without_buffer_time;
+                unsigned long num_iterations_executed = 0;
+
                 while (in.dequeue(msg))
                 {
                     // initialize the cache and compute psi_true.
@@ -198,6 +205,8 @@ namespace dlib
                     }
                     else if (msg.template contains<oracle_request<matrix_type> >())
                     {
+                        ++num_iterations_executed;
+
                         const oracle_request<matrix_type>& req = msg.template get<oracle_request<matrix_type> >();
 
                         oracle_response<matrix_type>& data = temp.template get<oracle_response<matrix_type> >();
@@ -207,15 +216,26 @@ namespace dlib
 
                         data.num = problem.get_num_samples();
 
-                        // how many samples to process in a single task (aim for 100 jobs per thread)
-                        const long block_size = std::max<long>(1, data.num / (1+tp.num_threads_in_pool()*100));
+                        const uint64 start_time = ts.get_timestamp();
 
-                        binder b(*this, req, data);
-                        for (long i = 0; i < data.num; i+=block_size)
+                        // pick fastest buffering strategy
+                        bool buffer_subgradients_locally = with_buffer_time.mean() < without_buffer_time.mean();
+
+                        // every 50 iterations we should try to flip the buffering scheme to see if
+                        // doing it the other way might be better.  
+                        if ((num_iterations_executed%50) == 0)
                         {
-                            tp.add_task(b, &binder::call_oracle, i, std::min(i + block_size, data.num));
+                            buffer_subgradients_locally = !buffer_subgradients_locally;
                         }
-                        tp.wait_for_all_tasks();
+
+                        binder b(*this, req, data, buffer_subgradients_locally);
+                        parallel_for_blocked(tp, 0, data.num, b, &binder::call_oracle);
+
+                        const uint64 stop_time = ts.get_timestamp();
+                        if (buffer_subgradients_locally)
+                            with_buffer_time.add(stop_time-start_time);
+                        else
+                            without_buffer_time.add(stop_time-start_time);
 
                         out.enqueue(temp);
                     }
@@ -227,29 +247,39 @@ namespace dlib
                 binder (
                     const node_type& self_,
                     const impl::oracle_request<matrix_type>& req_,
-                    impl::oracle_response<matrix_type>& data_
-                ) : self(self_), req(req_), data(data_) {}
+                    impl::oracle_response<matrix_type>& data_,
+                    bool buffer_subgradients_locally_
+                ) : self(self_), req(req_), data(data_),
+                    buffer_subgradients_locally(buffer_subgradients_locally_) {}
 
                 void call_oracle (
                     long begin,
                     long end
                 ) 
                 {
-                    // If we are only going to call the separation oracle once then
-                    // don't run the slightly more complex for loop version of this code.
-                    if (end-begin <= 1)
+                    // If we are only going to call the separation oracle once then don't
+                    // run the slightly more complex for loop version of this code.  Or if
+                    // we just don't want to run the complex buffering one.  The code later
+                    // on decides if we should do the buffering based on how long it takes
+                    // to execute.  We do this because, when the subgradient is really high
+                    // dimensional it can take a lot of time to add them together.  So we
+                    // might want to avoid doing that.
+                    if (end-begin <= 1 || !buffer_subgradients_locally)
                     {
                         scalar_type loss;
                         feature_vector_type ftemp;
-                        self.cache[begin].separation_oracle_cached(req.skip_cache, 
+                        for (long i = begin; i < end; ++i)
+                        {
+                            self.cache[i].separation_oracle_cached(req.skip_cache, 
                                                                    req.cur_risk_lower_bound,
                                                                    req.current_solution,
                                                                    loss,
                                                                    ftemp);
 
-                        auto_mutex lock(self.accum_mutex);
-                        data.loss += loss;
-                        add_to(data.subgradient, ftemp);
+                            auto_mutex lock(self.accum_mutex);
+                            data.loss += loss;
+                            add_to(data.subgradient, ftemp);
+                        }
                     }
                     else
                     {
@@ -280,6 +310,7 @@ namespace dlib
                 const node_type& self;
                 const impl::oracle_request<matrix_type>& req;
                 impl::oracle_response<matrix_type>& data;
+                bool buffer_subgradients_locally;
             };
 
 
@@ -365,29 +396,36 @@ namespace dlib
         }
 
         void add_processing_node (
-            const std::string& ip,
-            unsigned short port
+            const network_address& addr
         )
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(is_ip_address(ip) && port != 0,
+            DLIB_ASSERT(addr.port != 0,
                 "\t void structural_svm_problem::add_processing_node()"
                 << "\n\t Invalid inputs were given to this function"
-                << "\n\t ip:   " << ip 
-                << "\n\t port: " << port
+                << "\n\t addr.host_address:   " << addr.host_address 
+                << "\n\t addr.port: " << addr.port
                 << "\n\t this: " << this
                 );
 
-            // check if this pair is already registered
+            // check if this address is already registered
             for (unsigned long i = 0; i < nodes.size(); ++i)
             {
-                if (nodes[i] == make_pair(ip,port))
+                if (nodes[i] == addr)
                 {
                     return;
                 }
             }
+            
+            nodes.push_back(addr);
+        }
 
-            nodes.push_back(make_pair(ip,port));
+        void add_processing_node (
+            const std::string& ip_or_hostname,
+            unsigned short port
+        )
+        {
+            add_processing_node(network_address(ip_or_hostname,port));
         }
 
         unsigned long get_num_processing_nodes (
@@ -439,7 +477,7 @@ namespace dlib
             typedef matrix_type_ matrix_type;
 
             problem_type (
-                const std::vector<std::pair<std::string,unsigned short> >& nodes_,
+                const std::vector<network_address>& nodes_,
                 double eps_,
                 bool verbose_,
                 double C_
@@ -465,7 +503,7 @@ namespace dlib
                 bridges.resize(nodes.size());
                 for (unsigned long i = 0; i< bridges.size(); ++i)
                 {
-                    bridges[i].reset(new bridge(connect_to_ip_and_port(nodes[i].first,nodes[i].second), 
+                    bridges[i].reset(new bridge(connect_to(nodes[i]), 
                                                 receive(in), transmit(*out_pipes[i])));
                 }
 
@@ -605,7 +643,7 @@ namespace dlib
                 risk = total_loss + dot(subgradient,w);
             }
 
-            std::vector<std::pair<std::string,unsigned short> > nodes;
+            std::vector<network_address> nodes;
             double eps;
             mutable bool verbose;
             double C;
@@ -622,7 +660,7 @@ namespace dlib
             long num_dims;
         };
 
-        std::vector<std::pair<std::string,unsigned short> > nodes;
+        std::vector<network_address> nodes;
         double eps;
         mutable bool verbose;
         double C;

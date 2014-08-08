@@ -5,6 +5,7 @@
 
 #include "matrix_la_abstract.h"
 #include "matrix_utilities.h"
+#include "../sparse_vector.h"
 
 // The 4 decomposition objects described in the matrix_la_abstract.h file are
 // actually implemented in the following 4 files.  
@@ -815,6 +816,267 @@ convergence:
 #endif
     }
 
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        long NR,
+        long NC,
+        typename MM,
+        typename L
+        >
+    void orthogonalize (
+        matrix<T,NR,NC,MM,L>& m
+    )
+    {
+        qr_decomposition<matrix<T,NR,NC,MM,L> >(m).get_q(m);
+    }
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        long Anr, long Anc,
+        typename MM,
+        typename L
+        >
+    void find_matrix_range (
+        const matrix<T,Anr,Anc,MM,L>& A,
+        unsigned long l,
+        matrix<T,Anr,0,MM,L>& Q,
+        unsigned long q 
+    )
+    /*!
+        requires
+            - A.nr() >= l
+        ensures
+            - #Q.nr() == A.nr() 
+            - #Q.nc() == l
+            - #Q == an orthonormal matrix whose range approximates the range of the
+              matrix A.  
+            - This function implements the randomized subspace iteration defined 
+              in the algorithm 4.4 box of the paper: 
+                Finding Structure with Randomness: Probabilistic Algorithms for
+                Constructing Approximate Matrix Decompositions by Halko et al.
+            - q defines the number of extra subspace iterations this algorithm will
+              perform.  Often q == 0 is fine, but performing more iterations can lead to a
+              more accurate approximation of the range of A if A has slowly decaying
+              singular values.  In these cases, using a q of 1 or 2 is good.
+    !*/
+    {
+        DLIB_ASSERT(A.nr() >= (long)l, "Invalid inputs were given to this function.");
+        Q = A*matrix_cast<T>(gaussian_randm(A.nc(), l));
+
+        orthogonalize(Q);
+
+        // Do some extra iterations of the power method to make sure we get Q into the 
+        // span of the most important singular vectors of A.
+        if (q != 0)
+        {
+            for (unsigned long itr = 0; itr < q; ++itr)
+            {
+                Q = trans(A)*Q;
+                orthogonalize(Q);
+
+                Q = A*Q;
+                orthogonalize(Q);
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        long Anr, long Anc,
+        long Unr, long Unc,
+        long Wnr, long Wnc,
+        long Vnr, long Vnc,
+        typename MM,
+        typename L
+        >
+    void svd_fast (
+        const matrix<T,Anr,Anc,MM,L>& A,
+        matrix<T,Unr,Unc,MM,L>& u,
+        matrix<T,Wnr,Wnc,MM,L>& w,
+        matrix<T,Vnr,Vnc,MM,L>& v,
+        unsigned long l,
+        unsigned long q = 1
+    )
+    {
+        const unsigned long k = std::min(l, std::min<unsigned long>(A.nr(),A.nc()));
+
+        DLIB_ASSERT(l > 0 && A.size() > 0, 
+            "\t void svd_fast()"
+            << "\n\t Invalid inputs were given to this function."
+            << "\n\t l: " << l 
+            << "\n\t A.size(): " << A.size() 
+            );
+
+        matrix<T,Anr,0,MM,L> Q;
+        find_matrix_range(A, k, Q, q);
+
+        // Compute trans(B) = trans(Q)*A.   The reason we store B transposed
+        // is so that when we take its SVD later using svd3() it doesn't consume
+        // a whole lot of RAM.  That is, we make sure the square matrix coming out
+        // of svd3() has size lxl rather than the potentially much larger nxn.
+        matrix<T,0,0,MM,L> B = trans(A)*Q;
+        svd3(B, v,w,u);
+        u = Q*u;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename sparse_vector_type, 
+        typename T,
+        typename MM,
+        typename L
+        >
+    void find_matrix_range (
+        const std::vector<sparse_vector_type>& A,
+        unsigned long l,
+        matrix<T,0,0,MM,L>& Q,
+        unsigned long q 
+    )
+    /*!
+        requires
+            - A.size() >= l
+        ensures
+            - #Q.nr() == A.size()
+            - #Q.nc() == l
+            - #Q == an orthonormal matrix whose range approximates the range of the
+              matrix A.  In this case, we interpret A as a matrix of A.size() rows,
+              where each row is defined by a sparse vector.
+            - This function implements the randomized subspace iteration defined 
+              in the algorithm 4.4 box of the paper: 
+                Finding Structure with Randomness: Probabilistic Algorithms for
+                Constructing Approximate Matrix Decompositions by Halko et al.
+            - q defines the number of extra subspace iterations this algorithm will
+              perform.  Often q == 0 is fine, but performing more iterations can lead to a
+              more accurate approximation of the range of A if A has slowly decaying
+              singular values.  In these cases, using a q of 1 or 2 is good.
+    !*/
+    {
+        DLIB_ASSERT(A.size() >= l, "Invalid inputs were given to this function.");
+        Q.set_size(A.size(), l);
+
+        // Compute Q = A*gaussian_randm()
+        for (long r = 0; r < Q.nr(); ++r)
+        {
+            for (long c = 0; c < Q.nc(); ++c)
+            {
+                Q(r,c) = dot(A[r], gaussian_randm(std::numeric_limits<long>::max(), 1, c));
+            }
+        }
+
+        orthogonalize(Q);
+
+        // Do some extra iterations of the power method to make sure we get Q into the 
+        // span of the most important singular vectors of A.
+        if (q != 0)
+        {
+            const unsigned long n = max_index_plus_one(A);
+            for (unsigned long itr = 0; itr < q; ++itr)
+            {
+                matrix<T,0,0,MM,L> Z(n, l);
+                // Compute Z = trans(A)*Q
+                Z = 0;
+                for (unsigned long m = 0; m < A.size(); ++m)
+                {
+                    for (unsigned long r = 0; r < l; ++r)
+                    {
+                        typename sparse_vector_type::const_iterator i;
+                        for (i = A[m].begin(); i != A[m].end(); ++i)
+                        {
+                            const unsigned long c = i->first;
+                            const T val = i->second;
+
+                            Z(c,r) += Q(m,r)*val;
+                        }
+                    }
+                }
+
+                Q.set_size(0,0); // free RAM
+                orthogonalize(Z);
+
+                // Compute Q = A*Z
+                Q.set_size(A.size(), l);
+                for (long r = 0; r < Q.nr(); ++r)
+                {
+                    for (long c = 0; c < Q.nc(); ++c)
+                    {
+                        Q(r,c) = dot(A[r], colm(Z,c));
+                    }
+                }
+
+                Z.set_size(0,0); // free RAM
+                orthogonalize(Q);
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename sparse_vector_type, 
+        typename T,
+        long Unr, long Unc,
+        long Wnr, long Wnc,
+        long Vnr, long Vnc,
+        typename MM,
+        typename L
+        >
+    void svd_fast (
+        const std::vector<sparse_vector_type>& A,
+        matrix<T,Unr,Unc,MM,L>& u,
+        matrix<T,Wnr,Wnc,MM,L>& w,
+        matrix<T,Vnr,Vnc,MM,L>& v,
+        unsigned long l,
+        unsigned long q = 1
+    )
+    {
+        const long n = max_index_plus_one(A);
+        const unsigned long k = std::min(l, std::min<unsigned long>(A.size(),n));
+
+        DLIB_ASSERT(l > 0 && A.size() > 0 && n > 0, 
+            "\t void svd_fast()"
+            << "\n\t Invalid inputs were given to this function."
+            << "\n\t l: " << l 
+            << "\n\t n (i.e. max_index_plus_one(A)): " << n 
+            << "\n\t A.size(): " << A.size() 
+            );
+
+        matrix<T,0,0,MM,L> Q;
+        find_matrix_range(A, k, Q, q);
+
+        // Compute trans(B) = trans(Q)*A.   The reason we store B transposed
+        // is so that when we take its SVD later using svd3() it doesn't consume
+        // a whole lot of RAM.  That is, we make sure the square matrix coming out
+        // of svd3() has size lxl rather than the potentially much larger nxn.
+        matrix<T,0,0,MM,L> B(n,k);
+        B = 0;
+        for (unsigned long m = 0; m < A.size(); ++m)
+        {
+            for (unsigned long r = 0; r < k; ++r)
+            {
+                typename sparse_vector_type::const_iterator i;
+                for (i = A[m].begin(); i != A[m].end(); ++i)
+                {
+                    const unsigned long c = i->first;
+                    const T val = i->second;
+
+                    B(c,r) += Q(m,r)*val;
+                }
+            }
+        }
+
+        svd3(B, v,w,u);
+        u = Q*u;
+    }
+
+// ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
     template <

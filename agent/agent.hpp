@@ -45,7 +45,7 @@ using namespace dlib;
 
 typedef std::vector<std::pair<std::string, std::string> > AssetChangeList;
 
-class Agent : public server::http_1a
+class Agent : public server_http
 {
   class ParameterError
   {
@@ -126,13 +126,15 @@ public:
     std::string time = ""
   );
   
-  // Add an asset to the agent
+  // Asset management
   bool addAsset(Device *aDevice, const std::string &aId, const std::string &aAsset,
                 const std::string &aType,
                 const std::string &aTime = "");
   
   bool updateAsset(Device *aDevice, const std::string &aId, AssetChangeList &aList,
                    const std::string &aTime);
+  
+  bool removeAsset(Device *aDevice, const std::string &aId, const std::string &aTime);
   
   /* Message when adapter has connected and disconnected */
   void disconnected(Adapter *anAdapter, std::vector<Device*> aDevices);
@@ -168,6 +170,7 @@ public:
   void clear();
 
   void registerFile(const std::string &aUri, const std::string &aPath);
+  void addMimeType(const std::string &aExt, const std::string &aType) { mMimeTypes[aExt] = aType; }
   
   // PUT and POST handling
   void enablePut(bool aFlag = true) { mPutEnabled = aFlag; }
@@ -289,7 +292,7 @@ protected:
   unsigned int mSlidingBufferSize;
 
   /* Asset storage, circ buffer stores ids */
-  std::list<AssetPtr> mAssets;
+  std::list<AssetPtr*> mAssets;
   AssetIndex mAssetMap;
   
   // Natural key indices for assets
@@ -308,11 +311,59 @@ protected:
   std::vector<Device *> mDevices;
   std::map<std::string, Device *> mDeviceMap;
   std::map<std::string, DataItem *> mDataItemMap;
-  std::map<std::string, int> mAssetCounts; 
+  std::map<std::string, int> mAssetCounts;
+  
+  struct CachedFile : public RefCounted {
+    char    *mBuffer;
+    size_t   mSize;
+    
+    CachedFile() : mBuffer(NULL), mSize(0) { }
+    
+    CachedFile(const CachedFile &aFile)
+      : mSize(aFile.mSize)
+    {
+      mBuffer = (char*)malloc(aFile.mSize);
+      memcpy(mBuffer, aFile.mBuffer, aFile.mSize);
+    }
+
+    
+    CachedFile(char *aBuffer, size_t aSize)
+      : mSize(aSize)
+    {
+      mBuffer = (char*)malloc(aSize);
+      memcpy(mBuffer, aBuffer, aSize);
+    }
+    
+    CachedFile(size_t aSize)
+      : mSize(aSize)
+    {
+      mBuffer = (char*)malloc(aSize);
+    }
+
+    
+    ~CachedFile() {
+      free(mBuffer);
+    }
+    
+    CachedFile &operator=(const CachedFile &aFile) {
+      if (mBuffer != NULL) free(mBuffer);
+      mBuffer = (char*)malloc(aFile.mSize);
+      memcpy(mBuffer, aFile.mBuffer, aFile.mSize);
+      mSize = aFile.mSize;
+      return *this;
+    }
+    
+    void allocate(size_t aSize)
+    {
+      mBuffer = (char*)malloc(aSize);
+      mSize = aSize;
+    }
+  };
 
   // For file handling, small files will be cached
   std::map<std::string, std::string> mFileMap;
-  std::map<std::string, std::string> mFileCache;
+  std::map<std::string, RefCountedPtr<CachedFile> > mFileCache;
+  std::map<std::string, std::string> mMimeTypes;
   
   // Put handling controls
   bool mPutEnabled;

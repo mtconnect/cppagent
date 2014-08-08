@@ -2,7 +2,9 @@
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 
+#include "optimization_test_functions.h"
 #include <dlib/optimization.h>
+#include <dlib/statistics.h>
 #include <sstream>
 #include <string>
 #include <cstdlib>
@@ -308,7 +310,7 @@ namespace
         x = p;
         val=find_min(bfgs_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &powell, derivative(&powell,1e-8), x, minf);
+                 powell, derivative(powell,1e-8), x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-2),opt-x);
         DLIB_TEST(approx_equal(val , powell(x)));
         dlog << LINFO << "find_min() bfgs: got powell/noder in " << total_count;
@@ -318,7 +320,7 @@ namespace
         x = p;
         val=find_min(cg_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &powell, derivative(&powell,1e-9), x, minf);
+                 powell, derivative(powell,1e-9), x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-2),opt-x);
         DLIB_TEST(approx_equal(val , powell(x)));
         dlog << LINFO << "find_min() cg: got powell/noder in " << total_count;
@@ -328,7 +330,7 @@ namespace
         x = p;
         val=find_min_using_approximate_derivatives(bfgs_search_strategy(),
                                                objective_delta_stop_strategy(eps),
-                                               &powell, x, minf, 1e-10);
+                                               powell, x, minf, 1e-10);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-1),opt-x);
         DLIB_TEST(approx_equal(val , powell(x)));
         dlog << LINFO << "find_min() bfgs: got powell/noder2 in " << total_count;
@@ -338,7 +340,7 @@ namespace
         x = p;
         val=find_min_using_approximate_derivatives(lbfgs_search_strategy(4),
                                                objective_delta_stop_strategy(eps),
-                                               &powell, x, minf, 1e-10);
+                                               powell, x, minf, 1e-10);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-1),opt-x);
         DLIB_TEST(approx_equal(val , powell(x)));
         dlog << LINFO << "find_min() lbfgs-4: got powell/noder2 in " << total_count;
@@ -348,7 +350,7 @@ namespace
         x = p;
         val=find_min_using_approximate_derivatives(lbfgs_search_strategy(4),
                                                gradient_norm_stop_strategy(),
-                                               &powell, x, minf, 1e-10);
+                                               powell, x, minf, 1e-10);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-1),opt-x);
         DLIB_TEST(approx_equal(val , powell(x)));
         dlog << LINFO << "find_min() lbfgs-4(gn): got powell/noder2 in " << total_count;
@@ -358,7 +360,7 @@ namespace
         x = p;
         val=find_min_using_approximate_derivatives(cg_search_strategy(),
                                                objective_delta_stop_strategy(eps),
-                                               &powell, x, minf, 1e-10);
+                                               powell, x, minf, 1e-10);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-1),opt-x);
         DLIB_TEST(approx_equal(val , powell(x)));
         dlog << LINFO << "find_min() cg: got powell/noder2 in " << total_count;
@@ -366,7 +368,7 @@ namespace
 
         total_count = 0;
         x = p;
-        val=find_min_bobyqa(&powell, x, 2*x.size()+1,
+        val=find_min_bobyqa(powell, x, 2*x.size()+1,
                         uniform_matrix<double>(x.size(),1,-1e100),
                         uniform_matrix<double>(x.size(),1,1e100),
                         (max(abs(x))+1)/10,
@@ -397,7 +399,7 @@ namespace
         x = p;
         val=find_min(bfgs_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &simple, &der_simple, x, minf);
+                 simple, der_simple, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() bfgs: got simple in " << total_count;
@@ -407,7 +409,7 @@ namespace
         x = p;
         val=find_min(bfgs_search_strategy(),
                  gradient_norm_stop_strategy(),
-                 &simple, &der_simple, x, minf);
+                 simple, der_simple, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() bfgs(gn): got simple in " << total_count;
@@ -417,7 +419,7 @@ namespace
         x = p;
         val=find_min(lbfgs_search_strategy(3),
                  objective_delta_stop_strategy(eps),
-                 &simple, &der_simple, x, minf);
+                 simple, der_simple, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() lbfgs-3: got simple in " << total_count;
@@ -427,7 +429,7 @@ namespace
         x = p;
         val=find_min(cg_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &simple, &der_simple, x, minf);
+                 simple, der_simple, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() cg: got simple in " << total_count;
@@ -438,7 +440,7 @@ namespace
         x = p;
         val=find_min(bfgs_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &simple, derivative(&simple), x, minf);
+                 simple, derivative(simple), x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() bfgs: got simple/noder in " << total_count;
@@ -448,7 +450,7 @@ namespace
         x = p;
         val=find_min(lbfgs_search_strategy(8),
                  objective_delta_stop_strategy(eps),
-                 &simple, derivative(&simple), x, minf);
+                 simple, derivative(simple), x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() lbfgs-8: got simple/noder in " << total_count;
@@ -458,7 +460,7 @@ namespace
         x = p;
         val=find_min(cg_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &simple, derivative(&simple), x, minf);
+                 simple, derivative(simple), x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() cg: got simple/noder in " << total_count;
@@ -469,7 +471,7 @@ namespace
         x = p;
         val=find_min_using_approximate_derivatives(bfgs_search_strategy(),
                                                objective_delta_stop_strategy(eps),
-                                               &simple, x, minf);
+                                               simple, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() bfgs: got simple/noder2 in " << total_count;
@@ -479,7 +481,7 @@ namespace
         x = p;
         val=find_min_using_approximate_derivatives(lbfgs_search_strategy(6),
                                                objective_delta_stop_strategy(eps),
-                                               &simple, x, minf);
+                                               simple, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() lbfgs-6: got simple/noder2 in " << total_count;
@@ -489,7 +491,7 @@ namespace
         x = p;
         val=find_min_using_approximate_derivatives(cg_search_strategy(),
                                                objective_delta_stop_strategy(eps),
-                                               &simple, x, minf);
+                                               simple, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-5),opt-x);
         DLIB_TEST(approx_equal(val , simple(x)));
         dlog << LINFO << "find_min() cg: got simple/noder2 in " << total_count;
@@ -497,7 +499,7 @@ namespace
 
         total_count = 0;
         x = p;
-        val=find_min_bobyqa(&simple, x, 2*x.size()+1,
+        val=find_min_bobyqa(simple, x, 2*x.size()+1,
                         uniform_matrix<double>(x.size(),1,-1e100),
                         uniform_matrix<double>(x.size(),1,1e100),
                         (max(abs(x))+1)/10,
@@ -528,7 +530,7 @@ namespace
         x = p;
         val=find_min(bfgs_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &rosen, &der_rosen, x, minf);
+                 rosen, der_rosen, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-7),opt-x);
         DLIB_TEST(approx_equal(val , rosen(x)));
         dlog << LINFO << "find_min() bfgs: got rosen in " << total_count;
@@ -538,7 +540,7 @@ namespace
         x = p;
         val=find_min(bfgs_search_strategy(),
                  gradient_norm_stop_strategy(),
-                 &rosen, &der_rosen, x, minf);
+                 rosen, der_rosen, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-7),opt-x);
         DLIB_TEST(approx_equal(val , rosen(x)));
         dlog << LINFO << "find_min() bfgs(gn): got rosen in " << total_count;
@@ -548,7 +550,7 @@ namespace
         x = p;
         val=find_min(lbfgs_search_strategy(20),
                  objective_delta_stop_strategy(eps),
-                 &rosen, &der_rosen, x, minf);
+                 rosen, der_rosen, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-7),opt-x);
         DLIB_TEST(approx_equal(val , rosen(x)));
         dlog << LINFO << "find_min() lbfgs-20: got rosen in " << total_count;
@@ -558,7 +560,7 @@ namespace
         x = p;
         val=find_min(cg_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &rosen, &der_rosen, x, minf);
+                 rosen, der_rosen, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-7),opt-x);
         DLIB_TEST(approx_equal(val , rosen(x)));
         dlog << LINFO << "find_min() cg: got rosen in " << total_count;
@@ -569,7 +571,7 @@ namespace
         x = p;
         val=find_min(bfgs_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &rosen, derivative(&rosen,1e-5), x, minf);
+                 rosen, derivative(rosen,1e-5), x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-4),opt-x);
         DLIB_TEST(approx_equal(val , rosen(x)));
         dlog << LINFO << "find_min() bfgs: got rosen/noder in " << total_count;
@@ -579,7 +581,7 @@ namespace
         x = p;
         val=find_min(lbfgs_search_strategy(5),
                  objective_delta_stop_strategy(eps),
-                 &rosen, derivative(&rosen,1e-5), x, minf);
+                 rosen, derivative(rosen,1e-5), x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-4),opt-x);
         DLIB_TEST(approx_equal(val , rosen(x)));
         dlog << LINFO << "find_min() lbfgs-5: got rosen/noder in " << total_count;
@@ -589,7 +591,7 @@ namespace
         x = p;
         val=find_min(cg_search_strategy(),
                  objective_delta_stop_strategy(eps),
-                 &rosen, derivative(&rosen,1e-5), x, minf);
+                 rosen, derivative(rosen,1e-5), x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-4),opt-x);
         DLIB_TEST(approx_equal(val , rosen(x)));
         dlog << LINFO << "find_min() cg: got rosen/noder in " << total_count;
@@ -599,7 +601,7 @@ namespace
         x = p;
         val=find_min_using_approximate_derivatives(cg_search_strategy(),
                                                objective_delta_stop_strategy(eps),
-                                               &rosen, x, minf);
+                                               rosen, x, minf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-4),opt-x);
         DLIB_TEST(approx_equal(val , rosen(x)));
         dlog << LINFO << "find_min() cg: got rosen/noder2 in " << total_count;
@@ -609,7 +611,7 @@ namespace
         {
             total_count = 0;
             x = p;
-            val=find_min_bobyqa(&rosen, x, 2*x.size()+1,
+            val=find_min_bobyqa(rosen, x, 2*x.size()+1,
                             uniform_matrix<double>(x.size(),1,-1e100),
                             uniform_matrix<double>(x.size(),1,1e100),
                             (max(abs(x))+1)/10,
@@ -640,7 +642,7 @@ namespace
         x = p;
         val=find_max(
             bfgs_search_strategy(), 
-            objective_delta_stop_strategy(eps), &neg_rosen, &der_neg_rosen, x, maxf);
+            objective_delta_stop_strategy(eps), neg_rosen, der_neg_rosen, x, maxf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-7),opt-x);
         DLIB_TEST(approx_equal(val , neg_rosen(x)));
         dlog << LINFO << "find_max() bfgs: got neg_rosen in " << total_count;
@@ -649,7 +651,7 @@ namespace
         x = p;
         val=find_max(
             lbfgs_search_strategy(5), 
-            objective_delta_stop_strategy(eps), &neg_rosen, &der_neg_rosen, x, maxf);
+            objective_delta_stop_strategy(eps), neg_rosen, der_neg_rosen, x, maxf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-7),opt-x);
         DLIB_TEST(approx_equal(val , neg_rosen(x)));
         dlog << LINFO << "find_max() lbfgs-5: got neg_rosen in " << total_count;
@@ -658,7 +660,7 @@ namespace
         x = p;
         val=find_max(
             lbfgs_search_strategy(5), 
-            objective_delta_stop_strategy(eps), &neg_rosen, derivative(&neg_rosen), x, maxf);
+            objective_delta_stop_strategy(eps), neg_rosen, derivative(neg_rosen), x, maxf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-7),opt-x);
         DLIB_TEST(approx_equal(val , neg_rosen(x)));
         dlog << LINFO << "find_max() lbfgs-5: got neg_rosen/noder in " << total_count;
@@ -668,7 +670,7 @@ namespace
         x = p;
         val=find_max_using_approximate_derivatives(
             cg_search_strategy(), 
-            objective_delta_stop_strategy(eps), &neg_rosen, x, maxf);
+            objective_delta_stop_strategy(eps), neg_rosen, x, maxf);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-7),opt-x);
         DLIB_TEST(approx_equal(val , neg_rosen(x)));
         dlog << LINFO << "find_max() cg: got neg_rosen/noder2 in " << total_count;
@@ -676,7 +678,7 @@ namespace
 
         total_count = 0;
         x = p;
-        val=find_max_bobyqa(&neg_rosen, x, 2*x.size()+1,
+        val=find_max_bobyqa(neg_rosen, x, 2*x.size()+1,
                         uniform_matrix<double>(x.size(),1,-1e100),
                         uniform_matrix<double>(x.size(),1,1e100),
                         (max(abs(x))+1)/10,
@@ -701,7 +703,7 @@ namespace
 
         total_count = 0;
         x = p;
-        out = find_min_single_variable(&single_variable_function, x, -1e100, 1e100, eps, 1000);
+        out = find_min_single_variable(single_variable_function, x, -1e100, 1e100, eps, 1000);
         DLIB_TEST_MSG(std::abs(out-5) < 1e-6, out-5);
         DLIB_TEST_MSG(std::abs(x) < 1e-6, x);
         dlog << LINFO << "find_min_single_variable(): got single_variable_function in " << total_count;
@@ -709,7 +711,7 @@ namespace
 
         total_count = 0;
         x = p;
-        out = -find_max_single_variable(negate_function(&single_variable_function), x, -1e100, 1e100, eps, 1000);
+        out = -find_max_single_variable(negate_function(single_variable_function), x, -1e100, 1e100, eps, 1000);
         DLIB_TEST_MSG(std::abs(out-5) < 1e-6, out-5);
         DLIB_TEST_MSG(std::abs(x) < 1e-6, x);
         dlog << LINFO << "find_max_single_variable(): got single_variable_function in " << total_count;
@@ -719,7 +721,7 @@ namespace
         {
             total_count = 0;
             x = p;
-            out = find_min_single_variable(&single_variable_function, x, -1e-4, 1e100, eps, 1000);
+            out = find_min_single_variable(single_variable_function, x, -1e-4, 1e100, eps, 1000);
             DLIB_TEST_MSG(std::abs(out-5) < 1e-6, out-5);
             DLIB_TEST_MSG(std::abs(x) < 1e-6, x);
             dlog << LINFO << "find_min_single_variable(): got single_variable_function in " << total_count;
@@ -729,7 +731,7 @@ namespace
             {
                 total_count = 0;
                 x = p;
-                out = -find_max_single_variable(negate_function(&single_variable_function), x, 3, 1e100, eps, 1000);
+                out = -find_max_single_variable(negate_function(single_variable_function), x, 3, 1e100, eps, 1000);
                 DLIB_TEST_MSG(std::abs(out - (3*3*3+5)) < 1e-6, out-(3*3*3+5));
                 DLIB_TEST_MSG(std::abs(x-3) < 1e-6, x);
                 dlog << LINFO << "find_max_single_variable(): got single_variable_function in " << total_count;
@@ -740,7 +742,7 @@ namespace
         {
             total_count = 0;
             x = p;
-            out = find_min_single_variable(&single_variable_function, x, -1e100, 1e-4, eps, 1000);
+            out = find_min_single_variable(single_variable_function, x, -1e100, 1e-4, eps, 1000);
             DLIB_TEST_MSG(std::abs(out-5) < 1e-6, out-5);
             DLIB_TEST_MSG(std::abs(x) < 1e-6, x);
             dlog << LINFO << "find_min_single_variable(): got single_variable_function in " << total_count;
@@ -749,7 +751,7 @@ namespace
             {
                 total_count = 0;
                 x = p;
-                out = find_min_single_variable(&single_variable_function, x, -1e100, -3, eps, 1000);
+                out = find_min_single_variable(single_variable_function, x, -1e100, -3, eps, 1000);
                 DLIB_TEST_MSG(std::abs(out - (3*3*3+5)) < 1e-6, out-(3*3*3+5));
                 DLIB_TEST_MSG(std::abs(x+3) < 1e-6, x);
                 dlog << LINFO << "find_min_single_variable(): got single_variable_function in " << total_count;
@@ -879,44 +881,306 @@ namespace
             matrix<double,2,1> m;
             m(0) = -0.43;
             m(1) = 0.919;
-            DLIB_TEST(dlib::equal(der_rosen(m) , derivative(&rosen)(m),1e-5));
+            DLIB_TEST(dlib::equal(der_rosen(m) , derivative(rosen)(m),1e-5));
 
-            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(&rosen,m,m))(0) - 
-                                  make_line_search_function(derivative(&rosen),m,m)(0)) < 1e-5,"");
-            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(&rosen,m,m))(1) - 
-                                  make_line_search_function(derivative(&rosen),m,m)(1)) < 1e-5,"");
+            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(rosen,m,m))(0) - 
+                                  make_line_search_function(derivative(rosen),m,m)(0)) < 1e-5,"");
+            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(rosen,m,m))(1) - 
+                                  make_line_search_function(derivative(rosen),m,m)(1)) < 1e-5,"");
 
-            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(&rosen,m,m))(0) - 
-                                  make_line_search_function(&der_rosen,m,m)(0)) < 1e-5,"");
-            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(&rosen,m,m))(1) - 
-                                  make_line_search_function(&der_rosen,m,m)(1)) < 1e-5,"");
+            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(rosen,m,m))(0) - 
+                                  make_line_search_function(der_rosen,m,m)(0)) < 1e-5,"");
+            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(rosen,m,m))(1) - 
+                                  make_line_search_function(der_rosen,m,m)(1)) < 1e-5,"");
         }
         {
             matrix<double,2,1> m;
             m(0) = 1;
             m(1) = 2;
-            DLIB_TEST(dlib::equal(der_rosen(m) , derivative(&rosen)(m),1e-5));
+            DLIB_TEST(dlib::equal(der_rosen(m) , derivative(rosen)(m),1e-5));
 
-            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(&rosen,m,m))(0) - 
-                                  make_line_search_function(derivative(&rosen),m,m)(0)) < 1e-5,"");
-            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(&rosen,m,m))(1) - 
-                                  make_line_search_function(derivative(&rosen),m,m)(1)) < 1e-5,"");
+            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(rosen,m,m))(0) - 
+                                  make_line_search_function(derivative(rosen),m,m)(0)) < 1e-5,"");
+            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(rosen,m,m))(1) - 
+                                  make_line_search_function(derivative(rosen),m,m)(1)) < 1e-5,"");
 
-            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(&rosen,m,m))(0) - 
-                                  make_line_search_function(&der_rosen,m,m)(0)) < 1e-5,"");
-            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(&rosen,m,m))(1) - 
-                                  make_line_search_function(&der_rosen,m,m)(1)) < 1e-5,"");
+            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(rosen,m,m))(0) - 
+                                  make_line_search_function(der_rosen,m,m)(0)) < 1e-5,"");
+            DLIB_TEST_MSG(std::abs(derivative(make_line_search_function(rosen,m,m))(1) - 
+                                  make_line_search_function(der_rosen,m,m)(1)) < 1e-5,"");
         }
 
         {
             matrix<double,2,1> m;
             m = 1,2;
-            DLIB_TEST(std::abs(neg_rosen(m) - negate_function(&rosen)(m) ) < 1e-16);
+            DLIB_TEST(std::abs(neg_rosen(m) - negate_function(rosen)(m) ) < 1e-16);
         }
 
     }
 
+    template <typename der_funct, typename T>
+    double unconstrained_gradient_magnitude (
+        const der_funct& grad,
+        const T& x,
+        const T& lower,
+        const T& upper
+    )
+    {
+        T g = grad(x);
 
+        double unorm = 0;
+
+        for (long i = 0; i < g.size(); ++i)
+        {
+            if (lower(i) < x(i) && x(i) < upper(i))
+                unorm += g(i)*g(i);
+            else if (x(i) == lower(i) && g(i) < 0)
+                unorm += g(i)*g(i);
+            else if (x(i) == upper(i) && g(i) > 0)
+                unorm += g(i)*g(i);
+        }
+
+        return unorm;
+    }
+
+    template <typename der_funct, typename T>
+    double unconstrained_gradient_magnitude_neg_funct (
+        const der_funct& grad,
+        const T& x,
+        const T& lower,
+        const T& upper
+    )
+    {
+        T g = grad(x);
+
+        double unorm = 0;
+
+        for (long i = 0; i < g.size(); ++i)
+        {
+            if (lower(i) < x(i) && x(i) < upper(i))
+                unorm += g(i)*g(i);
+            else if (x(i) == lower(i) && g(i) > 0)
+                unorm += g(i)*g(i);
+            else if (x(i) == upper(i) && g(i) < 0)
+                unorm += g(i)*g(i);
+        }
+
+        return unorm;
+    }
+
+    template <typename search_strategy_type>
+    double test_bound_solver_neg_rosen (dlib::rand& rnd, search_strategy_type search_strategy)
+    {
+        using namespace dlib::test_functions;
+        print_spinner();
+        matrix<double,2,1> starting_point, lower, upper, x;
+
+
+        // pick random bounds
+        lower = rnd.get_random_gaussian()+1, rnd.get_random_gaussian()+1;
+        upper = rnd.get_random_gaussian()+1, rnd.get_random_gaussian()+1;
+        while (upper(0) < lower(0)) upper(0) = rnd.get_random_gaussian()+1;
+        while (upper(1) < lower(1)) upper(1) = rnd.get_random_gaussian()+1;
+
+        starting_point = rnd.get_random_double()*(upper(0)-lower(0))+lower(0), 
+                       rnd.get_random_double()*(upper(1)-lower(1))+lower(1);
+
+        dlog << LINFO << "lower: "<< trans(lower);
+        dlog << LINFO << "upper: "<< trans(upper);
+        dlog << LINFO << "starting: "<< trans(starting_point);
+
+        x = starting_point;
+        double val = find_max_box_constrained( 
+            search_strategy,
+            objective_delta_stop_strategy(1e-16, 500), 
+            neg_rosen, der_neg_rosen, x,
+            lower,  
+            upper   
+        );
+
+        DLIB_TEST(std::abs(val - neg_rosen(x)) < 1e-14);
+        dlog << LINFO << "neg_rosen solution:\n" << x;
+
+        dlog << LINFO << "neg_rosen gradient: "<< trans(der_neg_rosen(x));
+        const double gradient_residual = unconstrained_gradient_magnitude_neg_funct(der_neg_rosen, x, lower, upper);
+        dlog << LINFO << "gradient_residual: "<< gradient_residual;
+
+        return gradient_residual;
+    }
+
+    template <typename search_strategy_type>
+    double test_bound_solver_rosen (dlib::rand& rnd, search_strategy_type search_strategy)
+    {
+        using namespace dlib::test_functions;
+        print_spinner();
+        matrix<double,2,1> starting_point, lower, upper, x;
+
+
+        // pick random bounds and sometimes put the upper bound at zero so we can have
+        // a test where the optimal value has a bound active at 0 so make sure this case
+        // works properly.
+        if (rnd.get_random_double() > 0.2)
+        {
+            lower = rnd.get_random_gaussian()+1, rnd.get_random_gaussian()+1;
+            upper = rnd.get_random_gaussian()+1, rnd.get_random_gaussian()+1;
+            while (upper(0) < lower(0)) upper(0) = rnd.get_random_gaussian()+1;
+            while (upper(1) < lower(1)) upper(1) = rnd.get_random_gaussian()+1;
+        }
+        else
+        {
+            upper = 0,0;
+            if (rnd.get_random_double() > 0.5)
+                upper(0) = -rnd.get_random_double();
+            if (rnd.get_random_double() > 0.5)
+                upper(1) = -rnd.get_random_double();
+
+            lower = rnd.get_random_double()+1, rnd.get_random_double()+1;
+            lower = upper - lower;
+        }
+        const bool pick_uniform_bounds = rnd.get_random_double() > 0.9;
+        if (pick_uniform_bounds)
+        {
+            double x = rnd.get_random_gaussian()*2;
+            double y = rnd.get_random_gaussian()*2;
+            lower = min(x,y);
+            upper = max(x,y);
+        }
+
+        starting_point = rnd.get_random_double()*(upper(0)-lower(0))+lower(0), 
+                       rnd.get_random_double()*(upper(1)-lower(1))+lower(1);
+
+        dlog << LINFO << "lower: "<< trans(lower);
+        dlog << LINFO << "upper: "<< trans(upper);
+        dlog << LINFO << "starting: "<< trans(starting_point);
+
+        x = starting_point;
+        double val;
+        if (!pick_uniform_bounds)
+        {
+            val = find_min_box_constrained( 
+                search_strategy,
+                objective_delta_stop_strategy(1e-16, 500), 
+                rosen, der_rosen, x,
+                lower,  
+                upper   
+            );
+        }
+        else
+        {
+            val = find_min_box_constrained( 
+                search_strategy,
+                objective_delta_stop_strategy(1e-16, 500), 
+                rosen, der_rosen, x,
+                lower(0),  
+                upper(0)   
+            );
+        }
+
+
+        DLIB_TEST(std::abs(val - rosen(x)) < 1e-14);
+        dlog << LINFO << "rosen solution:\n" << x;
+
+        dlog << LINFO << "rosen gradient: "<< trans(der_rosen(x));
+        const double gradient_residual = unconstrained_gradient_magnitude(der_rosen, x, lower, upper);
+        dlog << LINFO << "gradient_residual: "<< gradient_residual;
+
+        return gradient_residual;
+    }
+
+    template <typename search_strategy_type>
+    double test_bound_solver_brown (dlib::rand& rnd, search_strategy_type search_strategy)
+    {
+        using namespace dlib::test_functions;
+        print_spinner();
+        matrix<double,4,1> starting_point(4), lower(4), upper(4), x;
+
+        const matrix<double,0,1> solution = brown_solution();
+
+        // pick random bounds
+        lower = rnd.get_random_gaussian(), rnd.get_random_gaussian(), rnd.get_random_gaussian(), rnd.get_random_gaussian();
+        lower = lower*10 + solution;
+        upper = rnd.get_random_gaussian(), rnd.get_random_gaussian(), rnd.get_random_gaussian(), rnd.get_random_gaussian();
+        upper = upper*10 + solution;
+        for (int i = 0; i < lower.size(); ++i)
+        {
+            if (upper(i) < lower(i)) 
+                swap(upper(i),lower(i));
+        }
+
+        starting_point = rnd.get_random_double()*(upper(0)-lower(0))+lower(0), 
+                       rnd.get_random_double()*(upper(1)-lower(1))+lower(1),
+                       rnd.get_random_double()*(upper(2)-lower(2))+lower(2),
+                       rnd.get_random_double()*(upper(3)-lower(3))+lower(3);
+
+        dlog << LINFO << "lower: "<< trans(lower);
+        dlog << LINFO << "upper: "<< trans(upper);
+        dlog << LINFO << "starting: "<< trans(starting_point);
+
+        x = starting_point;
+        double val = find_min_box_constrained( 
+            search_strategy,
+            objective_delta_stop_strategy(1e-16, 500), 
+            brown, brown_derivative, x,
+            lower,  
+            upper   
+        );
+
+        DLIB_TEST(std::abs(val - brown(x)) < 1e-14);
+        dlog << LINFO << "brown solution:\n" << x;
+        return unconstrained_gradient_magnitude(brown_derivative, x, lower, upper);
+    }
+
+    template <typename search_strategy_type>
+    void test_box_constrained_optimizers(search_strategy_type search_strategy)
+    {
+        dlib::rand rnd;
+        running_stats<double> rs;
+
+        dlog << LINFO << "test find_min_box_constrained() on rosen";
+        for (int i = 0; i < 10000; ++i)
+            rs.add(test_bound_solver_rosen(rnd, search_strategy));
+        dlog << LINFO << "mean rosen gradient: " << rs.mean();
+        dlog << LINFO << "max rosen gradient:  " << rs.max();
+        DLIB_TEST(rs.mean() < 1e-12);
+        DLIB_TEST(rs.max() < 1e-9);
+
+        dlog << LINFO << "test find_min_box_constrained() on brown";
+        rs.clear();
+        for (int i = 0; i < 1000; ++i)
+            rs.add(test_bound_solver_brown(rnd, search_strategy));
+        dlog << LINFO << "mean brown gradient: " << rs.mean();
+        dlog << LINFO << "max brown gradient:  " << rs.max();
+        dlog << LINFO << "min brown gradient:  " << rs.min();
+        DLIB_TEST(rs.mean() < 1e-5);
+        DLIB_TEST(rs.max() < 1e-2);
+        DLIB_TEST(rs.min() < 1e-10);
+
+        dlog << LINFO << "test find_max_box_constrained() on neg_rosen";
+        rs.clear();
+        for (int i = 0; i < 1000; ++i)
+            rs.add(test_bound_solver_neg_rosen(rnd, search_strategy));
+        dlog << LINFO << "mean neg_rosen gradient: " << rs.mean();
+        dlog << LINFO << "max neg_rosen gradient:  " << rs.max();
+        DLIB_TEST(rs.mean() < 1e-12);
+        DLIB_TEST(rs.max() < 1e-9);
+
+    }
+
+    void test_poly_min_extract_2nd()
+    {
+        double off;
+
+        off = 0.0; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 0.1; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 0.2; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 0.3; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 0.4; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 0.5; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 0.6; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 0.8; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 0.9; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+        off = 1.0; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
+    }
 
     class optimization_tester : public tester
     {
@@ -930,6 +1194,11 @@ namespace
         void perform_test (
         )
         {
+            dlog << LINFO << "test_box_constrained_optimizers(bfgs_search_strategy())";
+            test_box_constrained_optimizers(bfgs_search_strategy());
+            dlog << LINFO << "test_box_constrained_optimizers(lbfgs_search_strategy(5))";
+            test_box_constrained_optimizers(lbfgs_search_strategy(5));
+            test_poly_min_extract_2nd();
             optimization_test();
         }
     } a;

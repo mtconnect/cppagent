@@ -131,10 +131,10 @@ namespace dlib
             moved_a = false;
             moved_b = false;
 
-            long a_hits = 0;
-            long b_hits = 0;
-            long a_mass = 0;
-            long b_mass = 0;
+            int64 a_hits = 0;
+            int64 b_hits = 0;
+            int64 a_mass = 0;
+            int64 b_mass = 0;
 
             for (long i = 0; i < hist.size(); ++i)
             {
@@ -218,8 +218,9 @@ namespace dlib
         }
 
         out_img.set_size(in_img.nr(),in_img.nc());
+        assign_all_pixels(out_img, off_pixel);
 
-        const long size = 100;
+        const long size = 1000;
         long rstack[size];
         long cstack[size];
 

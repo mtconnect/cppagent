@@ -33,7 +33,7 @@ namespace dlib
                 using whatever dlib memory manager you supply.   
 
                 Thus, using this allocator object you can use any of the dlib memory manager objects with
-                the contains in the STL or with any other object that requires a C++ allocator object.
+                the containers in the STL or with any other object that requires a C++ allocator object.
 
                 It is important to note that many STL implementations make the assumption that the memory
                 allocated by one allocator can be freed by another.  This effectively means that you should
@@ -91,6 +91,11 @@ namespace dlib
             return (pointer) pool.allocate_array(num*sizeof(T));
         }
 
+        // This function is not required by the C++ standard but some versions of the STL
+        // distributed with gcc erroneously require it.  See the bug report for further
+        // details: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=51626
+        void construct(pointer p) { return construct(p, value_type()); }
+
         //initialize elements of allocated storage p with value value
         void construct (pointer p, const T& value) 
         {
@@ -118,6 +123,8 @@ namespace dlib
         {
             pool.swap(item.pool);
         }
+
+        std_allocator& operator= (const std_allocator&) { return *this;}
 
     private:
         typename M::template rebind<char>::other pool; 

@@ -31,14 +31,17 @@ namespace dlib
     {
         try
         {
-            serialize(item.nc(),out);
-            serialize(item.nr(),out);
+            // The reason the serialization is a little funny is because we are trying to
+            // maintain backwards compatibility with an older serialization format used by
+            // dlib while also encoding things in a way that lets the array2d and matrix
+            // objects have compatible serialization formats.
+            serialize(-item.nr(),out);
+            serialize(-item.nc(),out);
 
             COMPILE_TIME_ASSERT(sizeof(rgb_pixel) == 3);
-
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                out.write((char*)&item[r][0], sizeof(rgb_pixel)*item.nc());
+            
+            if (item.size() != 0)
+                out.write((char*)&item[0][0], sizeof(rgb_pixel)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -58,15 +61,25 @@ namespace dlib
         {
             COMPILE_TIME_ASSERT(sizeof(rgb_pixel) == 3);
 
-            long nc, nr;
-            deserialize(nc,in);
+            long nr, nc;
             deserialize(nr,in);
+            deserialize(nc,in);
+
+            // this is the newer serialization format
+            if (nr < 0 || nc < 0)
+            {
+                nr *= -1;
+                nc *= -1;
+            }
+            else
+            {
+                std::swap(nr,nc);
+            }
 
             item.set_size(nr,nc);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                in.read((char*)&item[r][0], sizeof(rgb_pixel)*item.nc());
+            if (item.size() != 0)
+                in.read((char*)&item[0][0], sizeof(rgb_pixel)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -87,14 +100,17 @@ namespace dlib
     {
         try
         {
-            serialize(item.nc(),out);
-            serialize(item.nr(),out);
+            // The reason the serialization is a little funny is because we are trying to
+            // maintain backwards compatibility with an older serialization format used by
+            // dlib while also encoding things in a way that lets the array2d and matrix
+            // objects have compatible serialization formats.
+            serialize(-item.nr(),out);
+            serialize(-item.nc(),out);
 
             COMPILE_TIME_ASSERT(sizeof(bgr_pixel) == 3);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                out.write((char*)&item[r][0], sizeof(bgr_pixel)*item.nc());
+            if (item.size() != 0)
+                out.write((char*)&item[0][0], sizeof(bgr_pixel)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -114,15 +130,26 @@ namespace dlib
         {
             COMPILE_TIME_ASSERT(sizeof(bgr_pixel) == 3);
 
-            long nc, nr;
-            deserialize(nc,in);
+            long nr, nc;
             deserialize(nr,in);
+            deserialize(nc,in);
+
+            // this is the newer serialization format
+            if (nr < 0 || nc < 0)
+            {
+                nr *= -1;
+                nc *= -1;
+            }
+            else
+            {
+                std::swap(nr,nc);
+            }
+
 
             item.set_size(nr,nc);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                in.read((char*)&item[r][0], sizeof(bgr_pixel)*item.nc());
+            if (item.size() != 0)
+                in.read((char*)&item[0][0], sizeof(bgr_pixel)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -143,14 +170,17 @@ namespace dlib
     {
         try
         {
-            serialize(item.nc(),out);
-            serialize(item.nr(),out);
+            // The reason the serialization is a little funny is because we are trying to
+            // maintain backwards compatibility with an older serialization format used by
+            // dlib while also encoding things in a way that lets the array2d and matrix
+            // objects have compatible serialization formats.
+            serialize(-item.nr(),out);
+            serialize(-item.nc(),out);
 
             COMPILE_TIME_ASSERT(sizeof(hsi_pixel) == 3);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                out.write((char*)&item[r][0], sizeof(hsi_pixel)*item.nc());
+            if (item.size() != 0)
+                out.write((char*)&item[0][0], sizeof(hsi_pixel)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -170,15 +200,26 @@ namespace dlib
         {
             COMPILE_TIME_ASSERT(sizeof(hsi_pixel) == 3);
 
-            long nc, nr;
-            deserialize(nc,in);
+            long nr, nc;
             deserialize(nr,in);
+            deserialize(nc,in);
+
+            // this is the newer serialization format
+            if (nr < 0 || nc < 0)
+            {
+                nr *= -1;
+                nc *= -1;
+            }
+            else
+            {
+                std::swap(nr,nc);
+            }
+
 
             item.set_size(nr,nc);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                in.read((char*)&item[r][0], sizeof(hsi_pixel)*item.nc());
+            if (item.size() != 0)
+                in.read((char*)&item[0][0], sizeof(hsi_pixel)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -199,14 +240,17 @@ namespace dlib
     {
         try
         {
-            serialize(item.nc(),out);
-            serialize(item.nr(),out);
+            // The reason the serialization is a little funny is because we are trying to
+            // maintain backwards compatibility with an older serialization format used by
+            // dlib while also encoding things in a way that lets the array2d and matrix
+            // objects have compatible serialization formats.
+            serialize(-item.nr(),out);
+            serialize(-item.nc(),out);
 
             COMPILE_TIME_ASSERT(sizeof(rgb_alpha_pixel) == 4);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                out.write((char*)&item[r][0], sizeof(rgb_alpha_pixel)*item.nc());
+            if (item.size() != 0)
+                out.write((char*)&item[0][0], sizeof(rgb_alpha_pixel)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -226,15 +270,26 @@ namespace dlib
         {
             COMPILE_TIME_ASSERT(sizeof(rgb_alpha_pixel) == 4);
 
-            long nc, nr;
-            deserialize(nc,in);
+            long nr, nc;
             deserialize(nr,in);
+            deserialize(nc,in);
+
+            // this is the newer serialization format
+            if (nr < 0 || nc < 0)
+            {
+                nr *= -1;
+                nc *= -1;
+            }
+            else
+            {
+                std::swap(nr,nc);
+            }
+
 
             item.set_size(nr,nc);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                in.read((char*)&item[r][0], sizeof(rgb_alpha_pixel)*item.nc());
+            if (item.size() != 0)
+                in.read((char*)&item[0][0], sizeof(rgb_alpha_pixel)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -255,12 +310,15 @@ namespace dlib
     {
         try
         {
-            serialize(item.nc(),out);
-            serialize(item.nr(),out);
+            // The reason the serialization is a little funny is because we are trying to
+            // maintain backwards compatibility with an older serialization format used by
+            // dlib while also encoding things in a way that lets the array2d and matrix
+            // objects have compatible serialization formats.
+            serialize(-item.nr(),out);
+            serialize(-item.nc(),out);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                out.write((char*)&item[r][0], sizeof(unsigned char)*item.nc());
+            if (item.size() != 0)
+                out.write((char*)&item[0][0], sizeof(unsigned char)*item.size());
         }
         catch (serialization_error e)
         { 
@@ -278,15 +336,25 @@ namespace dlib
     {
         try
         {
-            long nc, nr;
-            deserialize(nc,in);
+            long nr, nc;
             deserialize(nr,in);
+            deserialize(nc,in);
+            // this is the newer serialization format
+            if (nr < 0 || nc < 0)
+            {
+                nr *= -1;
+                nc *= -1;
+            }
+            else
+            {
+                std::swap(nr,nc);
+            }
+
 
             item.set_size(nr,nc);
 
-            // write each row 
-            for (long r = 0; r < item.nr(); ++r)
-                in.read((char*)&item[r][0], sizeof(unsigned char)*item.nc());
+            if (item.size() != 0)
+                in.read((char*)&item[0][0], sizeof(unsigned char)*item.size());
         }
         catch (serialization_error e)
         { 

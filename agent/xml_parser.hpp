@@ -49,7 +49,7 @@ public:
   /* Get std::list of data items in path */
   void getDataItems(std::set<std::string> &aFilterSet,
                     const std::string& path, xmlNodePtr node = NULL);
-  
+    
   // Get an asset object representing a parsed XML Asset document. This can be 
   // full document or a fragment.
   AssetPtr parseAsset(const std::string &aAssetId, const std::string &aType, 
@@ -94,6 +94,15 @@ protected:
     Component *parent = NULL,
     Device *device = NULL
   );
+
+  /* Perform loading of references and set up relationships */
+  void handleRefenence(xmlNodePtr components,
+                               Component *parent = NULL,
+                               Device *device = NULL);
+
+  // Asset Parser
+  AssetPtr handleAsset(xmlNodePtr anAsset, const std::string &aAssetId,
+                       const std::string &aType, const std::string &aContent);
   
   // Cutting Tool Parser
   CuttingToolPtr handleCuttingTool(xmlNodePtr anAsset);

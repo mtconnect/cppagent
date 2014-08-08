@@ -26,6 +26,7 @@
 #include "agent.hpp"
 #include "connector.hpp"
 #include "globals.hpp"
+#include "data_item.hpp"
 
 class Agent;
 class Device;
@@ -61,6 +62,12 @@ public:
   void setRelativeTime(bool aFlag) { mRelativeTime = aFlag; }
   bool getrelativeTime() { return mRelativeTime; }
   
+  void setConversionRequired(bool aFlag) { mConversionRequired = aFlag; }
+  bool conversionRequired() const { return mConversionRequired; }
+  
+  void setUpcaseValue(bool aFlag) { mUpcaseValue = aFlag; }
+  bool upcaseValue() const { return mUpcaseValue; }
+  
   uint64_t getBaseTime() { return mBaseTime; }
   uint64_t getBaseOffset() { return mBaseOffset; }
   
@@ -78,6 +85,17 @@ public:
   /* Method called when connection is lost. */
   virtual void disconnected();
   virtual void connected();
+  
+  bool isDuplicate(DataItem *aDataItem, const std::string &aValue) {
+    if (!aDataItem->isDiscrete()) {
+      if (aDataItem->getFilterType() != DataItem::FILTER_NONE)
+        return aDataItem->isFiltered(aDataItem->convertValue(atof(aValue.c_str())));
+      else
+        return  mDupCheck && aDataItem->isDuplicate(aValue);
+    } else {
+      return false;
+    }      
+  }
 
   // Stop 
   void stop();
@@ -87,6 +105,11 @@ public:
   
 protected:
   void parseCalibration(const std::string &aString);
+  void processAsset(std::istringstream &toParse, const std::string &key, const std::string &value,
+                    const std::string &time);
+  bool processDataItem(std::istringstream &toParse, const std::string &aLine, const std::string &aKey, const std::string &aValue,
+                           const std::string &aTime, bool aFirst = false);
+  std::string extractTime(const std::string &time);
   
 protected:
   /* Pointer to the agent */
@@ -105,6 +128,8 @@ protected:
   bool mAutoAvailable;
   bool mIgnoreTimestamps;
   bool mRelativeTime;
+  bool mConversionRequired;
+  bool mUpcaseValue;
   
   // For relative times
   uint64_t mBaseTime;

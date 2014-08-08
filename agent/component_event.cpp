@@ -143,6 +143,9 @@ AttributeList *ComponentEvent::getAttributes()
         string token;
         
         getline(toParse, token, '|');
+        if (token.empty())
+          token = "0";
+        
         mAttributes.push_back(AttributeItem("sampleCount", token));
         mSampleCount = atoi(token.c_str());
         
@@ -174,13 +177,9 @@ AttributeList *ComponentEvent::getAttributes()
         getline(toParse, token, '|');
         mAttributes.push_back(AttributeItem("state", token));
       }
-      else if (mDataItem->isAssetChanged())
+      else if (mDataItem->isAssetChanged() || mDataItem->isAssetRemoved())
       {
-        istringstream toParse(mRest);
-        string token;
-        
-        getline(toParse, token, '|');
-        mAttributes.push_back(AttributeItem("assetType", token));
+        mAttributes.push_back(AttributeItem("assetType", mRest));
       }
       mHasAttributes = true;
     }    
@@ -209,7 +208,7 @@ void ComponentEvent::convertValue(const string& value)
     mValue = value;
   }
   else if (mIsTimeSeries || mDataItem->isCondition() || mDataItem->isAlarm() ||
-           mDataItem->isMessage() || mDataItem->isAssetChanged())
+           mDataItem->isMessage() || mDataItem->isAssetChanged() || mDataItem->isAssetRemoved())
   {
     string::size_type lastPipe = value.rfind('|');
     

@@ -3,6 +3,7 @@
 #ifndef DLIB_SVm_HEADER
 #define DLIB_SVM_HEADER
 
+#include "svm/svm_rank_trainer.h"
 #include "svm/svm.h"
 #include "svm/krls.h"
 #include "svm/rls.h"
@@ -21,6 +22,7 @@
 #include "svm/kernel_matrix.h"
 #include "svm/empirical_kernel_map.h"
 #include "svm/svm_c_linear_trainer.h"
+#include "svm/svm_c_linear_dcd_trainer.h"
 #include "svm/svm_c_ekm_trainer.h"
 #include "svm/simplify_linear_decision_function.h"
 #include "svm/krr_trainer.h"
@@ -36,6 +38,7 @@
 #include "svm/cross_validate_regression_trainer.h"
 #include "svm/cross_validate_object_detection_trainer.h"
 #include "svm/cross_validate_sequence_labeler.h"
+#include "svm/cross_validate_sequence_segmenter.h"
 #include "svm/cross_validate_assignment_trainer.h"
 
 #include "svm/one_vs_all_decision_function.h"
@@ -45,6 +48,10 @@
 #include "svm/svm_multiclass_linear_trainer.h"
 #include "svm/sequence_labeler.h"
 #include "svm/assignment_function.h"
+#include "svm/active_learning.h"
+#include "svm/svr_linear_trainer.h"
+#include "svm/sequence_segmenter.h"
+#include "svm/structural_sequence_segmentation_trainer.h"
 
 #endif // DLIB_SVm_HEADER
 

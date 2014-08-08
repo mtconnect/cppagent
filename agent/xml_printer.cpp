@@ -18,6 +18,7 @@
 #include "dlib/sockets.h"
 #include "dlib/logger.h"
 #include "version.h"
+#include <set>
 
 
 static dlib::logger sLogger("xml.printer");
@@ -39,7 +40,11 @@ static map<string, SchemaNamespace> sDevicesNamespaces;
 static map<string, SchemaNamespace> sStreamsNamespaces;
 static map<string, SchemaNamespace> sErrorNamespaces;
 static map<string, SchemaNamespace> sAssetsNamespaces;
-static string sSchemaVersion("1.2");
+static string sSchemaVersion("1.3");
+static string mStreamsStyle;
+static string mDevicesStyle;
+static string mErrorStyle;
+static string mAssetsStyle;
 
 enum EDocumentType {
   eERROR,
@@ -83,11 +88,12 @@ namespace XmlPrinter {
   
   // Asset printing
   void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr aTool,
-                             const char *aValue);
+                             const char *aValue, std::set<string> *aRemaining = NULL);
   void printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr aItem,
-                             const char *aValue);
+                             const char *aValue, std::set<string> *aRemaining = NULL);
   void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr aValue);
   void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aItem);
+  void printAssetNode(xmlTextWriterPtr writer, Asset *anAsset);
 
 };
 
@@ -239,6 +245,26 @@ const string XmlPrinter::getAssetsLocation(const std::string &aPrefix)
     return "";
 }
 
+void XmlPrinter::setStreamStyle(const std::string &aStyle)
+{
+  mStreamsStyle = aStyle;
+}
+
+void XmlPrinter::setDevicesStyle(const std::string &aStyle)
+{
+  mDevicesStyle = aStyle;
+}
+
+void XmlPrinter::setErrorStyle(const std::string &aStyle)
+{
+  mErrorStyle = aStyle;
+}
+
+void XmlPrinter::setAssetsStyle(const std::string &aStyle)
+{
+  mAssetsStyle = aStyle;
+}
+
 /* XmlPrinter main methods */
 string XmlPrinter::printError(const unsigned int instanceId,
                               const unsigned int bufferSize,
@@ -266,7 +292,7 @@ string XmlPrinter::printError(const unsigned int instanceId,
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "errorCode", 
                                                     BAD_CAST errorCode.c_str()));
     xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST errorText.c_str());
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
     xmlFree(text);
 
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Error
@@ -393,6 +419,26 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer,
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItems    
   }
   
+  if (component->getReferences().size() > 0)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "References"));
+
+    list<Component::Reference>::const_iterator ref;
+    for (ref = component->getReferences().begin(); ref != component->getReferences().end(); ref++)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId",
+                                                      BAD_CAST ref->mId.c_str()));
+      if (ref->mName.length() > 0) {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
+                                                        BAD_CAST ref->mName.c_str()));
+      }
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
+  }
+  
   list<Component *> children = component->getChildren();
   
   if (children.size() > 0)
@@ -454,6 +500,14 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
     for (value = values.begin(); value != values.end(); value++)
     {
       addSimpleElement(writer, "Value", *value);
+    }
+    
+    if (dataItem->getFilterType() == DataItem::FILTER_MINIMUM_DELTA)
+    {
+      map<string, string> attributes;
+      string value = floatToString(dataItem->getFilterValue());
+      attributes["type"] = "MINIMUM_DELTA";
+      addSimpleElement(writer, "Filter", value, &attributes);      
     }
     
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints   
@@ -603,11 +657,13 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
     vector<AssetPtr>::iterator iter;
     for (iter = anAssets.begin(); iter != anAssets.end(); ++iter)
     {
-      if ((*iter)->getType() == "CuttingTool") {
+      if ((*iter)->getType() == "CuttingTool" || (*iter)->getType() == "CuttingToolArchetype") {
         CuttingToolPtr ptr((CuttingTool*) iter->getObject());
         THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST printCuttingTool(ptr).c_str()));
       } else {
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST (*iter)->getContent().c_str()));
+        printAssetNode(writer, (*iter));
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST (*iter)->getContent().c_str()));        
+        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
       }
     }
     
@@ -635,6 +691,32 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
   
   return ret;
 }
+
+void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *anAsset)
+{
+  // TODO: Check if cutting tool or archetype - should be in type
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST anAsset->getType().c_str()));
+  
+  addAttributes(writer, &anAsset->getIdentity());
+  
+  // Add the timestamp and device uuid fields.
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "timestamp",
+                                                  BAD_CAST anAsset->getTimestamp().c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "deviceUuid",
+                                                  BAD_CAST anAsset->getDeviceUuid().c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                  BAD_CAST "assetId",
+                                                  BAD_CAST anAsset->getAssetId().c_str()));
+  if (anAsset->isRemoved())
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                    BAD_CAST "removed",
+                                                    BAD_CAST "true"));
+  }
+}
+
 
 
 void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, Device *device)
@@ -707,7 +789,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
   } else if (!result->getValue().empty()) {
     xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST result->getValue().c_str());
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
     xmlFree(text);
   }
   
@@ -755,38 +837,46 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
  
   // TODO: Cache the locations and header attributes.
   // Write the root element  
-  string xmlType;
+  string xmlType, style;
   map<string, SchemaNamespace> *namespaces;
   switch (aType) {
   case eERROR:
       namespaces = &sErrorNamespaces;
+      style = mErrorStyle;
       xmlType = "Error";
       break;
       
   case eSTREAMS:
       namespaces = &sStreamsNamespaces;
+      style = mStreamsStyle;
       xmlType = "Streams";
       break;
       
   case eDEVICES:
       namespaces = &sDevicesNamespaces;
+      style = mDevicesStyle;
       xmlType = "Devices";
       break;
       
     case eASSETS:
       namespaces = &sAssetsNamespaces;
+      style = mAssetsStyle;
       xmlType = "Assets";
       break;
-      
   }
   
+  if (!style.empty())
+  {
+    string pi = "xml-stylesheet type=\"text/xsl\" href=\"" + style + '"';
+    THROW_IF_XML2_ERROR(xmlTextWriterStartPI(writer, BAD_CAST pi.c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterEndPI(writer));
+  }
   
   string rootName = "MTConnect" + xmlType;
   string xmlns = "urn:mtconnect.org:" + rootName + ":" + sSchemaVersion;  
   string location;
   
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST rootName.c_str()));
-
   
   // Always make the default namespace and the m: namespace MTConnect default.
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
@@ -910,7 +1000,7 @@ void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, strin
   if (!body.empty())
   {
     xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST body.c_str());
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, text));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
     xmlFree(text);
   }
   
@@ -934,20 +1024,22 @@ void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValue
 }
 
 void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr aTool,
-                                       const char *aValue)
+                                       const char *aValue, std::set<string> *aRemaining)
 {
   if (aTool->mValues.count(aValue) > 0)
   {
+    if (aRemaining != NULL) aRemaining->erase(aValue);
     CuttingToolValuePtr ptr = aTool->mValues[aValue];
     printCuttingToolValue(writer, ptr);
   }
 }
 
 void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr aItem,
-                                       const char *aValue)
+                                       const char *aValue, std::set<string> *aRemaining)
 {
   if (aItem->mValues.count(aValue) > 0)
   {
+    if (aRemaining != NULL) aRemaining->erase(aValue);
     CuttingToolValuePtr ptr = aItem->mValues[aValue];
     printCuttingToolValue(writer, ptr);
   }
@@ -1002,29 +1094,16 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
     THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
     
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingTool"));
+    printAssetNode(writer, aTool);
     
-    map<string,string>::iterator iter;
-    for (iter = aTool->mIdentity.begin(); iter != aTool->mIdentity.end(); iter++) {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                      BAD_CAST (*iter).first.c_str(),
-                                                      BAD_CAST (*iter).second.c_str()));
-    }
-    
-    // Add the timestamp and device uuid fields.
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "timestamp",
-                                                    BAD_CAST aTool->getTimestamp().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "deviceUuid",
-                                                    BAD_CAST aTool->getDeviceUuid().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "assetId",
-                                                    BAD_CAST aTool->getAssetId().c_str()));
-
+    set<string> remaining;
+    std::map<std::string,CuttingToolValuePtr>::const_iterator viter;
+    for (viter = aTool->mValues.begin(); viter != aTool->mValues.end(); viter++)
+      if (viter->first != "Description")
+        remaining.insert(viter->first);
     
     // Check for cutting tool definition
-    printCuttingToolValue(writer, aTool, "CuttingToolDefinition");
+    printCuttingToolValue(writer, aTool, "CuttingToolDefinition", &remaining);
     
     // Print the cutting tool life cycle.
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingToolLifeCycle"));
@@ -1038,9 +1117,9 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
     }
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
-
+    
     // Other values
-    printCuttingToolValue(writer, aTool, "ReconditionCount");
+    printCuttingToolValue(writer, aTool, "ReconditionCount", &remaining);
     
     // Tool life
     vector<CuttingToolValuePtr>::iterator life;
@@ -1049,12 +1128,17 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     }
         
     // Remaining items
-    printCuttingToolValue(writer, aTool, "ProgramToolGroup");
-    printCuttingToolValue(writer, aTool, "ProgramToolNumber");
-    printCuttingToolValue(writer, aTool, "Location");
-    printCuttingToolValue(writer, aTool, "ProcessSpindleSpeed");
-    printCuttingToolValue(writer, aTool, "ProcessFeedRate");
-    printCuttingToolValue(writer, aTool, "ConnectionCodeMachineSide");
+    printCuttingToolValue(writer, aTool, "ProgramToolGroup", &remaining);
+    printCuttingToolValue(writer, aTool, "ProgramToolNumber", &remaining);
+    printCuttingToolValue(writer, aTool, "Location", &remaining);
+    printCuttingToolValue(writer, aTool, "ProcessSpindleSpeed", &remaining);
+    printCuttingToolValue(writer, aTool, "ProcessFeedRate", &remaining);
+    printCuttingToolValue(writer, aTool, "ConnectionCodeMachineSide", &remaining);
+    
+    // Print extended items...
+    set<string>::iterator prop;
+    for(prop = remaining.begin(); prop != remaining.end(); prop++)
+      printCuttingToolValue(writer, aTool, prop->c_str());
     
     // Print Measurements
     if (aTool->mMeasurements.size() > 0) {

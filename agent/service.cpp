@@ -163,11 +163,44 @@ void MTConnectService::install()
   SC_HANDLE manager;
   SC_HANDLE service;
   char path[MAX_PATH];
-
+  
   if( !GetModuleFileName(NULL, path, MAX_PATH ) )
   {
     sLogger << dlib::LERROR << "Cannot install service (" << GetLastError() << ")";
+    std::cerr << "Cannot install service GetModuleFileName failed (" << GetLastError() << ")" << std::endl;
     return;
+  }
+
+  OSVERSIONINFO osver = { sizeof(osver) }; 
+  if (GetVersionEx(&osver) && osver.dwMajorVersion >= 6) 
+  {
+    DWORD size = 0;
+    HANDLE token = NULL;
+    BOOL isElevated = FALSE;
+ 
+    TOKEN_ELEVATION tokenInformation;
+     
+    if(!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    {
+      std::cerr << "OpenProcessToken failed (" << GetLastError() << ")" << std::endl;
+      sLogger << dlib::LERROR << "OpenProcessToken (" << GetLastError() << ")";
+    }
+ 
+    if(GetTokenInformation(token, TokenElevation, &tokenInformation, sizeof(TOKEN_ELEVATION), &size))
+    {
+        isElevated = (BOOL)tokenInformation.TokenIsElevated;
+    }
+ 
+    CloseHandle(token);
+
+    if (!isElevated)
+    {
+      sLogger << dlib::LERROR << "Process must have elevated permissions to run";
+      std::cerr << "Process must have elevated permissions to run" << std::endl;
+      return;
+    }
+
+
   }
 
 // Get a handle to the SCM database. 
@@ -180,6 +213,7 @@ void MTConnectService::install()
   if (NULL == manager) 
   {
     sLogger << dlib::LERROR << "OpenSCManager failed (" << GetLastError() << ")";
+    std::cerr << "OpenSCManager failed (" << GetLastError() << ")" << std::endl;
     return;
   }
 
@@ -198,7 +232,8 @@ void MTConnectService::install()
       NULL,                  // password: no change 
       NULL) )                // display name: no change
     {
-      sLogger << dlib::LERROR << "ChangeServiceConfig failed (" << GetLastError() << ")";
+      sLogger << dlib::LERROR << "OpenService failed (" << GetLastError() << ")";
+      std::cerr << "OpenService failed (" << GetLastError() << ")" << std::endl;
       CloseServiceHandle(manager);
       return;
     } 
@@ -215,13 +250,14 @@ void MTConnectService::install()
       path,                    // path to service's binary 
       NULL,                      // no load ordering group 
       NULL,                      // no tag identifier 
-      NULL,                      // no dependencies 
+      "Tcpip\0Eventlog\0Netman\0", //  dependencies 
       NULL,                      // LocalSystem account 
       NULL);                     // no password 
 
     if (service == NULL) 
     {
       sLogger << dlib::LERROR << "CreateService failed (" << GetLastError() << ")";
+      std::cerr << "CreateService failed (" << GetLastError() << ")" << std::endl;
       CloseServiceHandle(manager);
       return;
     }
@@ -235,6 +271,7 @@ void MTConnectService::install()
   if (res != ERROR_SUCCESS)
   {
     sLogger << dlib::LERROR << "Could not open software key (" << res << ")";
+    std::cerr <<  "Could not open software key (" << res << ")" << std::endl;
     return;
   }
 
@@ -247,6 +284,7 @@ void MTConnectService::install()
     if (res != ERROR_SUCCESS)
     {
       sLogger << dlib::LERROR << "Could not create MTConnect (" << res << ")";
+      std::cerr <<  "Could not create MTConnect key (" << res << ")" << std::endl;
       return;
     }
   }
@@ -262,6 +300,7 @@ void MTConnectService::install()
     {
       RegCloseKey(mtc);
       sLogger << dlib::LERROR << "Could not create " << mName << " (" << res << ")";
+      std::cerr <<  "Could not create " << mName << " (" << res << ")" << std::endl;
       return;
     }
   }

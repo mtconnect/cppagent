@@ -52,6 +52,7 @@ class ComponentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDescription);
   CPPUNIT_TEST(testRelationships);
   CPPUNIT_TEST(testDataItems);
+  CPPUNIT_TEST(testReferences);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -63,6 +64,7 @@ protected:
   void testDescription();
   void testRelationships();
   void testDataItems();
+  void testReferences();
   
 public:
   void setUp();

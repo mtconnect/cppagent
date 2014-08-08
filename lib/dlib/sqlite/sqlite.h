@@ -10,6 +10,7 @@
 #include "../algs.h"
 #include <sqlite3.h>
 #include "../smart_pointers.h"
+#include "../serialize.h"
 
 // --------------------------------------------------------------------------------------------
 
@@ -91,6 +92,12 @@ namespace dlib
         inline void exec (
             const std::string& sql_statement
         );
+
+        int64 last_insert_rowid (
+        ) const
+        {
+            return sqlite3_last_insert_rowid(db.get());
+        }
 
     private:
 
@@ -337,7 +344,7 @@ namespace dlib
         unsigned long get_max_parameter_id (
         ) const
         {
-            return  SQLITE_LIMIT_VARIABLE_NUMBER;
+            return sqlite3_limit(db.get(), SQLITE_LIMIT_VARIABLE_NUMBER, -1);
         }
 
         unsigned long get_parameter_id (

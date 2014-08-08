@@ -111,9 +111,9 @@ namespace
             }
 
             set_feature(num_label_states*num_label_states +
-                        y(0)*num_sample_states + x.item[position],0.4);
+                        y(0)*num_sample_states + x.item[position],0.25);
             set_feature(num_label_states*num_label_states +
-                        y(0)*num_sample_states + x.item[position],0.6);
+                        y(0)*num_sample_states + x.item[position],0.75);
         }
     };
 
@@ -307,8 +307,8 @@ namespace
         // print out some of the randomly sampled sequences
         for (int i = 0; i < 10; ++i)
         {
-            dlog << LINFO << "hidden states:   " << trans(vector_to_matrix(labels[i]));
-            dlog << LINFO << "observed states: " << trans(vector_to_matrix(samples[i].item));
+            dlog << LINFO << "hidden states:   " << trans(mat(labels[i]));
+            dlog << LINFO << "observed states: " << trans(mat(samples[i].item));
             dlog << LINFO << "******************************";
         }
 
@@ -325,10 +325,10 @@ namespace
         sequence_labeler<fe_type> labeler = trainer.train(samples, labels);
 
         std::vector<unsigned long> predicted_labels = labeler(samples[0]);
-        dlog << LINFO << "true hidden states:      "<< trans(vector_to_matrix(labels[0]));
-        dlog << LINFO << "predicted hidden states: "<< trans(vector_to_matrix(predicted_labels));
+        dlog << LINFO << "true hidden states:      "<< trans(mat(labels[0]));
+        dlog << LINFO << "predicted hidden states: "<< trans(mat(predicted_labels));
 
-        DLIB_TEST(vector_to_matrix(labels[0]) == vector_to_matrix(predicted_labels));
+        DLIB_TEST(mat(labels[0]) == mat(predicted_labels));
 
 
         print_spinner();
@@ -416,6 +416,8 @@ namespace
         trainer_part.set_c(4);
         trainer.set_num_threads(4);
         trainer_part.set_num_threads(4);
+        trainer.set_epsilon(1e-8);
+        trainer_part.set_epsilon(1e-8);
 
 
 
@@ -423,8 +425,11 @@ namespace
         sequence_labeler<feature_extractor> labeler = trainer.train(samples, labels);
         sequence_labeler<feature_extractor_partial> labeler_part = trainer_part.train(samples, labels);
 
+        dlog << LINFO << "weight disagreement:  "<< max(abs(labeler.get_weights() - labeler_part.get_weights()));
+        dlog << LINFO << "max weight magnitude: "<< max(abs(labeler.get_weights()));
+
         // Both feature extractors should be equivalent.
-        DLIB_TEST(length(labeler.get_weights() - labeler_part.get_weights()) < 1e-10);
+        DLIB_TEST(max(abs(labeler.get_weights() - labeler_part.get_weights())) < 1e-6);
 
     }
 

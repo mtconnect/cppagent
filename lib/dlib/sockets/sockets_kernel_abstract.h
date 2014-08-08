@@ -108,7 +108,7 @@ namespace dlib
                 - if (ip == "") then 
                     - the new listener will be listening on all interfaces 
                 - if (port == 0) then 
-                    - the kernel will assign a free port to listen on 
+                    - the operating system will assign a free port to listen on 
 
 
             - returns 0 if create_listener was successful 
@@ -359,6 +359,19 @@ namespace dlib
                 - any calls to write() will return immediately with the code SHUTDOWN.
 
                 - returns 0 upon success 
+                - returns OTHER_ERROR if there was an error 
+        !*/
+
+        int disable_nagle(
+        );
+        /*!
+            ensures
+                - Sets the TCP_NODELAY socket option to disable Nagle's algorithm.
+                  This can sometimes reduce transmission latency, however, in almost
+                  all normal cases you don't want to mess with this as the default
+                  setting is usually appropriate.  
+
+                - returns 0 upon success
                 - returns OTHER_ERROR if there was an error 
         !*/
 

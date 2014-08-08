@@ -24,6 +24,8 @@ namespace
     using namespace dlib;
     using namespace std;
 
+    using dlib::array;
+
     // Declare the logger we will use in this test.  The name of the tester 
     // should start with "test."
     logger dlog("test.scan_image");
@@ -139,7 +141,7 @@ namespace
                 strip = strip.intersect(get_rect(img));
                 if (!strip.is_empty())
                 {
-                    column_sums[i][j] = sum(matrix_cast<ptype>(subm(array_to_matrix(img),strip)));
+                    column_sums[i][j] = sum(matrix_cast<ptype>(subm(mat(img),strip)));
                 }
 
                 ++left;
@@ -434,9 +436,248 @@ namespace
                 sum_filter(img, test1_i, rect);
                 sum_filter(img, test2_i, rect);
 
-                DLIB_TEST(array_to_matrix(test1) == array_to_matrix(test1_i));
-                DLIB_TEST(array_to_matrix(test2) == array_to_matrix(test2_i));
+                DLIB_TEST(mat(test1) == mat(test1_i));
+                DLIB_TEST(mat(test2) == mat(test2_i));
             }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_type1, 
+        typename image_type2
+        >
+    void naive_max_filter (
+        const image_type1& img,
+        image_type2& out,
+        const long width,
+        const long height,
+        typename image_type1::type thresh
+        )
+    {
+        typedef typename image_type1::type pixel_type;
+
+        const rectangle area = get_rect(img);
+        for (long r = 0; r < img.nr(); ++r)
+        {
+            for (long c = 0; c < img.nc(); ++c)
+            {
+                const rectangle win = centered_rect(point(c,r),width,height).intersect(area);
+                out[r][c] += std::max(dlib::max(subm(mat(img),win)), thresh);
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_max_filter(long rows, long cols, long width, long height, dlib::rand& rnd)
+    {
+        array2d<int> img(rows, cols);
+        rectangle rect = centered_rect(0,0, width, height);
+
+        array2d<int> out(img.nr(),img.nc());
+        assign_all_pixels(out, 0);
+        array2d<int> out2(img.nr(),img.nc());
+        assign_all_pixels(out2, 0);
+
+        for (long r = 0; r < img.nr(); ++r)
+        {
+            for (long c = 0; c < img.nc(); ++c)
+            {
+                img[r][c] = rnd.get_random_32bit_number();
+            }
+        }
+
+        const int thresh = rnd.get_random_32bit_number();
+
+        naive_max_filter(img, out2, rect.width(), rect.height(), thresh);
+        max_filter(img, out, rect.width(), rect.height(), thresh);
+
+        DLIB_TEST_MSG(mat(out) == mat(out2),
+                                "rows: "<< rows 
+                                << "\ncols: "<< rows 
+                                << "\nwidth: "<< width 
+                                << "\nheight: "<< height );
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_max_filter()
+    {
+        dlib::rand rnd;
+        for (int iter = 0; iter < 300; ++iter)
+        {
+            print_spinner();
+            test_max_filter(0,0,1,1,rnd);
+            test_max_filter(0,0,3,1,rnd);
+            test_max_filter(0,0,3,3,rnd);
+            test_max_filter(0,0,1,3,rnd);
+            test_max_filter(1,1,1,1,rnd);
+            test_max_filter(2,2,1,1,rnd);
+            test_max_filter(3,3,1,1,rnd);
+            test_max_filter(3,3,3,3,rnd);
+            test_max_filter(3,3,2,2,rnd);
+            test_max_filter(3,3,3,5,rnd);
+            test_max_filter(3,3,6,8,rnd);
+            test_max_filter(20,20,901,901,rnd);
+            test_max_filter(5,5,1,5,rnd);
+            test_max_filter(50,50,9,9,rnd);
+            test_max_filter(50,50,9,9,rnd);
+            test_max_filter(50,50,10,10,rnd);
+            test_max_filter(50,50,11,10,rnd);
+            test_max_filter(50,50,10,11,rnd);
+            test_max_filter(50,50,10,21,rnd);
+            test_max_filter(50,50,20,10,rnd);
+            test_max_filter(50,50,20,10,rnd);
+            test_max_filter(50,50,9,9,rnd);
+            test_max_filter(20,20,1,901,rnd);
+            test_max_filter(20,20,3,901,rnd);
+            test_max_filter(20,20,901,1,rnd);
+        }
+
+        for (int iter = 0; iter < 200; ++iter)
+        {
+            print_spinner();
+            test_max_filter((int)rnd.get_random_8bit_number()%100+1,
+                            (int)rnd.get_random_8bit_number()%100+1,
+                            (int)rnd.get_random_8bit_number()%150+1,
+                            (int)rnd.get_random_8bit_number()%150+1,
+                            rnd);
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void make_images (
+        dlib::rand& rnd,
+        array<array2d<unsigned char> >& images,
+        long num,
+        long nr,
+        long nc
+    )
+    {
+        images.resize(num);
+        for (unsigned long i = 0; i < images.size(); ++i)
+        {
+            images[i].set_size(nr,nc);
+        }
+
+        for (unsigned long i = 0; i < images.size(); ++i)
+        {
+            for (long r = 0; r < nr; ++r)
+            {
+                for (long c = 0; c < nc; ++c)
+                {
+                    images[i][r][c] = rnd.get_random_8bit_number();
+                }
+            }
+        }
+    }
+
+
+    template <
+        typename image_array_type
+        >
+    void brute_force_scan_image_movable_parts (
+        std::vector<std::pair<double, point> >& dets,
+        const image_array_type& images,
+        const rectangle& window,
+        const std::vector<std::pair<unsigned int, rectangle> >& fixed_rects,
+        const std::vector<std::pair<unsigned int, rectangle> >& movable_rects,
+        const double thresh,
+        const unsigned long 
+    )
+    {
+        dets.clear();
+        if (movable_rects.size() == 0 && fixed_rects.size() == 0)
+            return;
+
+        for (long r = 0; r < images[0].nr(); ++r)
+        {
+            for (long c = 0; c < images[0].nc(); ++c)
+            {
+                const point p(c,r);
+                double score = sum_of_rects_in_images_movable_parts(images,
+                                                                    window,
+                                                                    fixed_rects,
+                                                                    movable_rects,
+                                                                    p); 
+
+                if (score >= thresh)
+                {
+                    dets.push_back(make_pair(score,p));
+                }
+            }
+        }
+    }
+
+    void test_scan_images_movable_parts()
+    {
+        array<array2d<unsigned char> > images;
+        dlib::rand rnd;
+        for (int iter = 0; iter < 40; ++iter)
+        {
+            print_spinner();
+            const int num_images = rnd.get_random_32bit_number()%4+1;
+
+            make_images(rnd,images, num_images, 
+                        rnd.get_random_32bit_number()%50+1,
+                        rnd.get_random_32bit_number()%50+1
+                        );
+
+            std::vector<std::pair<double,point> > dets1, dets2;
+            std::vector<std::pair<unsigned int, rectangle> > fixed_rects, movable_rects;
+
+            double total_area = 0;
+            for (unsigned long i = 0; i < images.size(); ++i)
+            {
+                fixed_rects.push_back(make_pair(i, centered_rect(
+                            rnd.get_random_32bit_number()%10-5,
+                            rnd.get_random_32bit_number()%10-5,
+                            rnd.get_random_32bit_number()%10,
+                            rnd.get_random_32bit_number()%10
+                            )));
+
+                total_area += fixed_rects.back().second.area();
+
+                movable_rects.push_back(make_pair(i, centered_rect(
+                            0,
+                            0,
+                            rnd.get_random_32bit_number()%10+1,
+                            rnd.get_random_32bit_number()%10+1
+                            )));
+                total_area += movable_rects.back().second.area();
+            }
+
+            const rectangle window = centered_rect(0,0, 
+                                                rnd.get_random_32bit_number()%15+1,
+                                                rnd.get_random_32bit_number()%15+1);
+            dlog << LINFO << "window size: "<< window.width() << ", " << window.height();
+            const double thresh = total_area*130;
+            const unsigned long max_dets = get_rect(images[0]).area();
+
+            scan_image_movable_parts(dets1,images,window,fixed_rects,movable_rects,thresh, max_dets);
+            brute_force_scan_image_movable_parts(dets2,images,window,fixed_rects,movable_rects,thresh, max_dets);
+
+            dlog << LINFO << "max_possible dets: " << max_dets;
+            dlog << LINFO << "regular dets: " << dets1.size();
+            dlog << LINFO << "brute force:  " << dets2.size();
+            DLIB_TEST(dets1.size() == dets2.size());
+
+            array2d<double> check(images[0].nr(), images[0].nc());
+            assign_all_pixels(check, 1e-300);
+            for (unsigned long i = 0; i < dets1.size(); ++i)
+            {
+                const point p = dets1[i].second;
+                check[p.y()][p.x()] = dets1[i].first;
+            }
+            for (unsigned long i = 0; i < dets2.size(); ++i)
+            {
+                const point p = dets2[i].second;
+                DLIB_TEST(std::abs(check[p.y()][p.x()] - dets2[i].first) < 1e-10);
+            }
+            dlog << LINFO << "=======================\n";
         }
     }
 
@@ -454,6 +695,9 @@ namespace
         void perform_test (
         )
         {
+            test_scan_images_movable_parts();
+            test_max_filter();
+
             run_test1();
             run_test2();
             run_test3<unsigned char>(1);

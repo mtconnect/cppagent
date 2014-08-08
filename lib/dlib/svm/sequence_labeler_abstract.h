@@ -36,8 +36,8 @@ namespace dlib
                 method of this class.
 
             THREAD SAFETY
-                Instances of this object should be thread safe, that is, it should 
-                be safe for multiple threads to make concurrent calls to the member 
+                Instances of this object are required to be threadsafe, that is, it should
+                be safe for multiple threads to make concurrent calls to the member
                 functions of this object.
         !*/
 
@@ -146,6 +146,23 @@ namespace dlib
                 - This function only calls set_feature() with feature_index values < num_features()
         !*/
 
+        unsigned long num_nonnegative_weights (
+        ) const;
+        /*!
+            ensures
+                - returns the number of elements of the w parameter vector which should be
+                  non-negative.  That is, this feature extractor is intended to be used
+                  with w vectors where the first num_nonnegative_weights() elements of w
+                  are >= 0.  That is, it should be the case that w(i) >= 0 for all i <
+                  num_nonnegative_weights().
+                - Note that num_nonnegative_weights() is just an optional method to allow
+                  you to tell a tool like the structural_sequence_labeling_trainer that the
+                  learned w should have a certain number of non-negative elements.
+                  Therefore, if you do not provide a num_nonnegative_weights() method in
+                  your feature extractor then it will default to a value of 0, indicating
+                  that all elements of the w parameter vector may be any value.
+        !*/
+
     };
 
 // ----------------------------------------------------------------------------------------
@@ -225,10 +242,10 @@ namespace dlib
                 the example_feature_extractor discussed above.
 
             WHAT THIS OBJECT REPRESENTS
-                This object is a tool for doing sequence labeling.  In particular,
-                it is capable of representing sequence labeling models such as
-                those produced by Hidden Markov SVMs or Conditional Random fields.
-                See the following papers for an introduction to these techniques:
+                This object is a tool for doing sequence labeling.  In particular, it is
+                capable of representing sequence labeling models such as those produced by
+                Hidden Markov SVMs or Chain Structured Conditional Random fields.  See the
+                following papers for an introduction to these techniques:
                     - Hidden Markov Support Vector Machines by 
                       Y. Altun, I. Tsochantaridis, T. Hofmann
                     - Shallow Parsing with Conditional Random Fields by 
@@ -241,6 +258,15 @@ namespace dlib
                     y == argmax_Y dot(get_weights(), PSI(x,Y))
                     Where PSI() is defined by the feature_extractor template
                     argument.  
+
+            THREAD SAFETY
+                It is always safe to use distinct instances of this object in different
+                threads.  However, when a single instance is shared between threads then
+                the following rules apply:
+                    It is safe to call the const members of this object from multiple
+                    threads so long as the feature_extractor is also threadsafe.  This is
+                    because the const members are purely read-only operations.  However,
+                    any operation that modifies a sequence_labeler is not threadsafe.
         !*/
 
     public:

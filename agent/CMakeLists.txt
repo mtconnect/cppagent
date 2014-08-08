@@ -7,28 +7,36 @@ set(CMAKE_FIND_APPBUNDLE NEVER)
 
 # The version number.
 set (AGENT_VERSION_MAJOR 1)
-set (AGENT_VERSION_MINOR 2)
+set (AGENT_VERSION_MINOR 3)
 set (AGENT_VERSION_PATCH 0)
-set (AGENT_VERSION_BUILD 22)
+set (AGENT_VERSION_BUILD 0)
+set (AGENT_VERSION_RC "_RC18")
 
 if(WIN32)
+  # For windows XP use: cmake -G "Visual Studio 12" -T v120_xp -D WINVER=0x0501
+  # for XP targeting
+  # For windows Vista+ use: cmake -G "Visual Studio 12" -T v120 -D WINVER=0x0601
+  # for XP targeting
+
   if(CMAKE_CL_64)
+    set(bits 64)
     foreach(flag_var
           CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
           CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
       if(${flag_var} MATCHES "WIN32")
         string(REGEX REPLACE "32" "64" ${flag_var} "${${flag_var}}")
       endif(${flag_var} MATCHES "WIN32")
-    endforeach(flag_var)
-          
-    file(GLOB LibXML2_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2_64.lib)
-    file(GLOB LibXML2_DEBUG_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2_64d.lib)
+    endforeach(flag_var)          
   else(CMAKE_CL_64)
-    file(GLOB LibXML2_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2.lib)
-    file(GLOB LibXML2_DEBUG_LIBRARIES ../win32/libxml2-2.7.7/lib/libxml2d.lib)
-  endif(CMAKE_CL_64)
+    set(bits 32)
+  endif(CMAKE_CL_64)  
+  
+  file(GLOB LibXML2_LIBRARIES "../win32/libxml2-2.9/lib/libxml2_a_v120_${bits}.lib")
+  file(GLOB LibXML2_DEBUG_LIBRARIES ../win32/libxml2-2.9/lib/libxml2d_a_v120_${bits}.lib)
+    
   add_library(libxml2 STATIC IMPORTED)
-  set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.7.7/include )
+  set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.9/include )
+  
   set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION_RELEASE ${LibXML2_LIBRARIES})
   set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION_DEBUG ${LibXML2_DEBUG_LIBRARIES})
 endif(WIN32)
@@ -60,7 +68,8 @@ set(agent_srcs cppagent.cpp
            ref_counted.cpp
            version.cpp
 	       xml_parser.cpp 
-	       xml_printer.cpp)
+	       xml_printer.cpp
+           rolling_file_logger.cpp)
 
 file(GLOB agent_headers *.hpp)
 
@@ -91,6 +100,7 @@ target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
 
 if(WIN32)
   set(WINVER "0x0501" CACHE STRING "Windows Target Version: 0x0400 - 95 & NT 4.0, 0x0500 - 2000, 0x0501 - XP, 0x0600 - Vista, 0x0601 - 7, 0x0602 - 8")
+  
   add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
 
   foreach(flag_var

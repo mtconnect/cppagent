@@ -34,11 +34,18 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <limits>
 
 #ifdef _WINDOWS
+#define ISNAN(x) _isnan(x)
+#if _MSC_VER < 1800
+#define NAN numeric_limits<double>::quiet_NaN()
+#endif
 typedef unsigned __int64 uint64_t;
 #define strtoull _strtoui64
 #else
+#define O_BINARY 0
+#define ISNAN(x) std::isnan(x)
 #include <stdint.h>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -82,6 +89,10 @@ std::string toUpperCase(std::string& text);
 /* Check if each char in a string is a positive integer */
 bool isNonNegativeInteger(const std::string& s);
 
+
+/* Get the current time formatted */
+std::string getCurrentTime(time_t aTime, int aUsec, TimeFormat format);
+
 /* Get the current time formatted */
 std::string getCurrentTime(TimeFormat format);
 
@@ -94,7 +105,7 @@ std::string getRelativeTimeString(uint64_t aTime);
 /* Get the current time in number of seconds as an integer */
 unsigned int getCurrentTimeInSec();
 
-uint64_t parseTimeMicro(std::string &aTime);
+uint64_t parseTimeMicro(const std::string &aTime);
 
 /* Replace illegal XML characters with the correct corresponding characters */
 void replaceIllegalCharacters(std::string& data);
@@ -118,7 +129,8 @@ long getMemorySize();
 typedef long volatile AtomicInt;
 #else
 #ifdef MACOSX
-typedef _Atomic_word AtomicInt;
+#include <libkern/OSAtomic.h>
+typedef volatile long AtomicInt;
 #else
 typedef int AtomicInt;
 #endif

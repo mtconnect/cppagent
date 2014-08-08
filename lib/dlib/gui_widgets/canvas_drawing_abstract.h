@@ -115,6 +115,31 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename pixel_type
+        >
+    void draw_solid_convex_polygon (
+        const canvas& c,
+        const std::vector<point>& polygon,
+        const pixel_type& pixel = rgb_pixel(0,0,0),
+        const rectangle& area = rectangle(-infinity,-infinity,infinity,infinity)
+    );
+    /*!
+        requires
+            - pixel_traits<pixel_type> is defined
+        ensures
+            - Interprets the given std::vector polygon object as defining a convex polygon
+              shape.  In particular, the polygon is given by taking the points and drawing
+              lines between them.  That is, imagine drawing a line connecting polygon[i]
+              and polygon[(i+1)%polygon.size()], for all valid i, and then filling in the
+              interior of the polygon.  That is what this function does.
+            - When drawing the polygon, only the part of the polygon which overlaps both
+              the given canvas and area rectangle is drawn.
+            - Uses the given pixel color to draw the polygon.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     void draw_button_down (
         const canvas& c,
         const rectangle& btn,
@@ -213,6 +238,33 @@ namespace dlib
               upper left corner of the image is assumed to be the pixel image[0][0] and the
               lower right corner of the image is assumed to be image[image.nr()-1][image.nc()-1])
             - only draws the part of the image that overlaps with the area rectangle
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_type 
+        >
+    void draw_image (
+        const canvas& c,
+        const rectangle& rect,
+        const image_type& img,
+        const rectangle& area = rectangle(-infinity,-infinity,infinity,infinity)
+    );
+    /*!
+        requires
+            - image_type == an implementation of array2d/array2d_kernel_abstract.h
+            - pixel_traits<typename image_type::type> is defined
+        ensures
+            - draws the given image object onto the canvas such that the upper left corner
+              of the image will appear at the point rect.tl_corner() in the canvas's window
+              and the lower right corner of the image will appear at rect.br_corner() in
+              the canvas's window.  (note that the upper left corner of the image is
+              assumed to be the pixel image[0][0] and the lower right corner of the image
+              is assumed to be image[image.nr()-1][image.nc()-1])
+            - only draws the part of the image that overlaps with the area rectangle
+            - Uses nearest neighbor interpolation when the given rect isn't the same size
+              as the input image.
     !*/
 
 // ----------------------------------------------------------------------------------------

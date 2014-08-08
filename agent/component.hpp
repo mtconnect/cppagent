@@ -30,6 +30,16 @@ class Device;
 class Component
 {
 public:
+  struct Reference
+  {
+    Reference(std::string &aId, std::string aName) :
+      mId(aId), mName(aName), mDataItem(NULL) {}
+    
+    std::string mId;
+    std::string mName;
+    DataItem *mDataItem;
+  };
+  
   /* std::string enumeration for component parts and details */
   enum EComponentSpecs
   {
@@ -42,10 +52,12 @@ public:
     CONFIGURATION,
     DESCRIPTION,
     SOURCE,
-    TEXT
+    TEXT,
+    REFERENCES,
+    REFERENCE
   };
   
-  static const unsigned int NumComponentSpecs = 8;
+  static const unsigned int NumComponentSpecs = 10;
   static const std::string SComponentSpecs[];
   
 public:
@@ -77,20 +89,21 @@ public:
   
   // Setter methods
   void setUuid(const std::string &aUuid) { mUuid = aUuid; reBuildAttributes(); }
-  void setManufacturer(const std::string &aManufacturer) { mManufacturer = aManufacturer; reBuildAttributes(); }
-  void setSerialNumber(const std::string &aSerialNumber) { mSerialNumber = aSerialNumber; reBuildAttributes(); }
-  void setStation(const std::string &aStation) { mStation = aStation; reBuildAttributes(); }
-  void setDescription(const std::string &aDescription) { mDescriptionBody = aDescription; reBuildAttributes(); }
+  void setManufacturer(const std::string &aManufacturer) { mDescription["manufacturer"] = aManufacturer; }
+  void setSerialNumber(const std::string &aSerialNumber) { mDescription["serialNumber"] = aSerialNumber; }
+  void setStation(const std::string &aStation) { mDescription["station"] = aStation; }
+  void setDescription(const std::string &aDescription) { mDescriptionBody = aDescription; }
   void setNativeName(const std::string &aNativeName) { mNativeName = aNativeName; reBuildAttributes(); }
   
   // Cached data items
   DataItem *getAvailability() const { return mAvailability; }
   DataItem *getAssetChanged() const { return mAssetChanged; }
+  DataItem *getAssetRemoved() const { return mAssetRemoved; }
   
   
   /* Add/get description specifications using an attribute map */
   void addDescription(std::string body, std::map<std::string, std::string> attributes);
-  std::map<std::string, std::string> getDescription() const;
+  const std::map<std::string, std::string> &getDescription() const { return mDescription; }
   
   void setConfiguration(const std::string &aConfiguration) { mConfiguration = aConfiguration; }
   
@@ -111,7 +124,13 @@ public:
   
   bool operator<(const Component &comp) const { return mId < comp.getId(); }
   bool operator==(const Component &comp) const { return mId == comp.getId(); }
-
+  
+  /* References */
+  void addReference(Reference &aReference) { mReferences.push_back(aReference); }
+  const std::list<Reference> &getReferences() const { return mReferences; }
+  
+  void resolveReferences();
+  
 protected:
   /* Return a map of attributes of all the component specs */
   std::map<std::string, std::string> buildAttributes() const;
@@ -137,9 +156,7 @@ protected:
   float mSampleInterval;
   
   /* Description of itself */
-  std::string mManufacturer;
-  std::string mSerialNumber;
-  std::string mStation;
+  std::map<std::string, std::string> mDescription;
   std::string mDescriptionBody;
   std::string mConfiguration;
   
@@ -149,6 +166,7 @@ protected:
   Device *mDevice;
   DataItem *mAvailability;
   DataItem *mAssetChanged;
+  DataItem *mAssetRemoved;
   
   /* Each component keeps track of it's children in a std::list */
   std::list<Component *> mChildren;
@@ -158,6 +176,9 @@ protected:
   
   /* The set of attribtues */
   std::map<std::string, std::string> mAttributes;
+  
+  /* References */
+  std::list<Reference> mReferences;
 };
 
 struct ComponentComp {

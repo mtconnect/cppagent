@@ -149,6 +149,10 @@ void XmlParserTest::testGetDataItems()
   filter.clear();
   a->getDataItems(filter, "//Rotary[@name=\"C\"]//DataItem[@type=\"LOAD\"]");
   CPPUNIT_ASSERT_EQUAL(2, (int) filter.size());    
+
+  filter.clear();
+  a->getDataItems(filter, "//Rotary[@name=\"C\"]//DataItem[@category=\"CONDITION\" or @category=\"SAMPLE\"]");
+  CPPUNIT_ASSERT_EQUAL(5, (int) filter.size());
 }
 
 void XmlParserTest::testGetDataItemsExt()
@@ -255,11 +259,12 @@ void XmlParserTest::testParseAsset()
   AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool*) asset.getObject();
   
-  CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240", tool->mIdentity["toolId"]);
+  CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240", tool->getIdentity()["toolId"]);
   CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240.1", tool->getAssetId());
-  CPPUNIT_ASSERT_EQUAL((string) "1", tool->mIdentity["serialNumber"]);
-  CPPUNIT_ASSERT_EQUAL((string) "KMT,Parlec", tool->mIdentity["manufacturers"]);
+  CPPUNIT_ASSERT_EQUAL((string) "1", tool->getIdentity()["serialNumber"]);
+  CPPUNIT_ASSERT_EQUAL((string) "KMT,Parlec", tool->getIdentity()["manufacturers"]);
   CPPUNIT_ASSERT_EQUAL((string) "2011-05-11T13:55:22", tool->getTimestamp());
+  CPPUNIT_ASSERT_EQUAL(false, tool->isRemoved());
   
   // Top Level
   CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->mValues["CuttingToolDefinition"]->mValue);
@@ -293,6 +298,36 @@ void XmlParserTest::testParseAsset()
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, item->mMeasurements["CuttingEdgeLength"]->refCount());
 }
 
+void XmlParserTest::testParseOtherAsset()
+{
+  string document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
+                    "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
+  AssetPtr asset = a->parseAsset("XXX", "Workpiece", document);
+
+  CPPUNIT_ASSERT(asset.getObject() != NULL);
+  CPPUNIT_ASSERT_EQUAL((string) "XXX123", asset->getAssetId());
+  CPPUNIT_ASSERT_EQUAL((string) "2014-04-14T01:22:33.123", asset->getTimestamp());
+  CPPUNIT_ASSERT_EQUAL((string) "XXX", asset->getDeviceUuid());
+  CPPUNIT_ASSERT_EQUAL((string) "Data", asset->getContent());
+  CPPUNIT_ASSERT_EQUAL(false, asset->isRemoved());
+
+  document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
+             "serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
+  asset = a->parseAsset("XXX", "Workpiece", document);
+  
+  CPPUNIT_ASSERT(asset.getObject() != NULL);
+  CPPUNIT_ASSERT_EQUAL(true, asset->isRemoved());
+}
+
+void XmlParserTest::testParseRemovedAsset()
+{
+  string document = getFile("asset3.xml");
+  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+  CPPUNIT_ASSERT_EQUAL(true, tool->isRemoved());
+}
+
 void XmlParserTest::testUpdateAsset()
 {
   string document = getFile("asset1.xml");
@@ -324,8 +359,100 @@ void XmlParserTest::testUpdateAsset()
   CPPUNIT_ASSERT_EQUAL((string) "14.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
 }
 
+void XmlParserTest::testBadAsset()
+{
+  string xml = getFile("asset4.xml");
+  
+  Asset* asset = a->parseAsset("XXX", "CuttingTool", xml);
+  CPPUNIT_ASSERT(asset == NULL);
+}
+
 void XmlParserTest::testNoNamespace()
 {
   a = new XmlParser();
   CPPUNIT_ASSERT_NO_THROW(a->parseFile("../samples/NoNamespace.xml"));
+}
+
+void XmlParserTest::testFilteredDataItem()
+{
+  delete a; a = NULL;
+  try
+  {
+    a = new XmlParser();
+    mDevices = a->parseFile("../samples/filter_example.xml");
+  }
+  catch (exception & e)
+  {
+    CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example.xml");
+  }
+  
+  Device *dev = mDevices[0];
+  DataItem *di = dev->getDeviceDataItem("c1");
+  
+  CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
+  CPPUNIT_ASSERT_EQUAL(di->getFilterType(), DataItem::FILTER_MINIMUM_DELTA);
+}
+
+
+void XmlParserTest::testReferences()
+{
+  delete a; a = NULL;
+  try
+  {
+    a = new XmlParser();
+    mDevices = a->parseFile("../samples/reference_example.xml");
+  }
+  catch (exception & e)
+  {
+    CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
+  }
+  
+  string id = "mf";
+  Device *dev = mDevices[0];
+  DataItem *item = dev->getDeviceDataItem(id);
+  Component *comp = item->getComponent();
+
+  comp->resolveReferences();
+
+  const list<Component::Reference> refs = comp->getReferences();
+  const Component::Reference &ref = refs.front();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "c4", ref.mId);
+  CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.mName);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.mDataItem != NULL);
+  
+  const Component::Reference &ref2 = refs.back();
+  CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.mId);
+  CPPUNIT_ASSERT_EQUAL((string) "door", ref2.mName);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.mDataItem != NULL);
+  
+  std::set<string> filter;
+  a->getDataItems(filter, "//BarFeederInterface");
+  
+  CPPUNIT_ASSERT_EQUAL((size_t) 3, filter.size());
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("mf"));
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("c4"));
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("d2"));
+}
+
+void XmlParserTest::testExtendedAsset()
+{
+  string document = getFile("ext_asset.xml");
+  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+
+  CPPUNIT_ASSERT_EQUAL(((size_t) 1), tool->mValues.count("x:Color"));
+}
+
+void XmlParserTest::testExtendedAssetFragment()
+{
+  string document = getFile("ext_asset_2.xml");
+  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+  
+  CPPUNIT_ASSERT_EQUAL(((size_t) 1), tool->mValues.count("x:Color"));
 }

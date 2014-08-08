@@ -36,7 +36,7 @@
 #include <iostream>
 #include <sstream>
 #include <cppunit/portability/Stream.h>
-
+#include <dlib/server.h>
 
 
 #if defined(WIN32) && _MSC_VER < 1500
@@ -50,6 +50,7 @@ using namespace std;
 
 void AgentTest::setUp()
 {
+  XmlPrinter::setSchemaVersion("1.3");
   a = NULL;
   a = new Agent("../samples/test_config.xml", 8, 4, 25);
   agentId = intToString(getCurrentTimeInSec());
@@ -101,7 +102,7 @@ void AgentTest::testBadPath()
 void AgentTest::testBadXPath()
 {
   path = "/current";
-  Agent::key_value_map query;
+  key_value_map query;
   
   {
     query["path"] = "//////Linear";
@@ -131,7 +132,7 @@ void AgentTest::testBadXPath()
 void AgentTest::testBadCount()
 {
   path = "/sample";
-  Agent::key_value_map query;
+  key_value_map query;
 
   {
     query["count"] = "NON_INTEGER";
@@ -168,7 +169,7 @@ void AgentTest::testBadCount()
 void AgentTest::testBadFreq()
 {
   path = "/sample";
-  Agent::key_value_map query;
+  key_value_map query;
   
   {
     query["frequency"] = "NON_INTEGER";
@@ -201,6 +202,21 @@ void AgentTest::testGoodPath()
 				      "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Path']//m:Condition",
 				      "");
+  }
+}
+
+void AgentTest::testXPath()
+{
+  path = "/current";
+  key_value_map query;
+  
+  {
+    query["path"] = "//Rotary[@name='C']//DataItem[@category='SAMPLE' or @category='CONDITION']";
+    PARSE_XML_RESPONSE_QUERY(query);
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:SpindleSpeed", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Load", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Unavailable", "");
   }
 }
 
@@ -279,7 +295,7 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY_KV("from", "31");
+    PARSE_XML_RESPONSE_QUERY_KV("from", "32");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
@@ -332,7 +348,7 @@ void AgentTest::testAdapter()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[2]", "DESCRIPTION");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[2]", "description");
   }
 }
 
@@ -504,7 +520,7 @@ void AgentTest::testSampleAtNextSeq()
 void AgentTest::testSequenceNumberRollover()
 {
 #ifndef WIN32
-  Agent::key_value_map kvm;
+  key_value_map kvm;
 
   adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
@@ -566,6 +582,46 @@ void AgentTest::testSequenceNumberRollover()
 #endif
 }
 
+void AgentTest::testSampleCount()
+{
+  key_value_map kvm;
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  int64_t seq = a->getSequence();
+  
+  // Get the current position
+  char line[80];
+  
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
+    adapter->processData(line);
+  }
+  
+  {
+    path = "/sample";
+    kvm["path"] = "//DataItem[@name='Xact']";
+    kvm["from"] = int64ToString(seq);
+    kvm["count"] = "10";
+    
+    PARSE_XML_RESPONSE_QUERY(kvm);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
+                                      int64ToString(seq + 20).c_str());
+    
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
+
+    // Make sure we got 10 lines
+    for (int j = 0; j < 10; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j * 2 + 1).c_str());
+    }
+  }
+  
+}
 
 void AgentTest::testAdapterCommands()
 {
@@ -642,8 +698,8 @@ void AgentTest::testFileDownload()
   a->registerFile(uri, "./MTConnectDevices_1.1.xsd");
 
   // Reqyest the file...
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
+  dlib::incoming_things incoming("", "", 0, 0);
+  dlib::outgoing_things outgoing;
   incoming.request_type = "GET";
   incoming.path = uri;
   incoming.queries = queries;
@@ -653,7 +709,9 @@ void AgentTest::testFileDownload()
   outgoing.out = &out;
   
   result = a->on_request(incoming, outgoing);
-  CPPUNIT_ASSERT_EQUAL((string) "TEST SCHEMA FILE 1234567890\n", result);
+  CPPUNIT_ASSERT(result.empty());
+  CPPUNIT_ASSERT(out.bad());
+  CPPUNIT_ASSERT(out.str().find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
 }
 
 void AgentTest::testFailedFileDownload()
@@ -711,7 +769,7 @@ void AgentTest::testAutoAvailable()
   CPPUNIT_ASSERT(adapter);
   adapter->setAutoAvailable(true);
   Device *d = a->getDevices()[0];
-  vector<Device*> devices;
+  std::vector<Device*> devices;
   devices.push_back(d);
     
   {
@@ -755,7 +813,7 @@ void AgentTest::testMultipleDisconnect()
   adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
   Device *d = a->getDevices()[0];
-  vector<Device*> devices;
+  std::vector<Device*> devices;
   devices.push_back(d);
   
   {
@@ -848,7 +906,7 @@ void AgentTest::testAssetStorage()
   a->enablePut();
   path = "/asset/123";
   string body = "<Part>TEST</Part>";
-  Agent::key_value_map queries;
+  key_value_map queries;
   
   queries["type"] = "Part";
   queries["device"] = "LinuxCNC";
@@ -883,7 +941,7 @@ void AgentTest::testAssetBuffer()
   a->enablePut();
   path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
-  Agent::key_value_map queries;
+  key_value_map queries;
   
   queries["device"] = "LinuxCNC";
   queries["type"] = "Part";
@@ -960,10 +1018,10 @@ void AgentTest::testAssetBuffer()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 3");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 4");
   }
 
   // Test multiple asset get with filter
@@ -971,12 +1029,21 @@ void AgentTest::testAssetBuffer()
   {
     PARSE_XML_RESPONSE_QUERY(queries);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 3");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 4");
   }
-
+  
+  queries["count"] = "2";
+  {
+    PARSE_XML_RESPONSE_QUERY(queries);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 3");
+  }
+  
+  queries.erase("count");
   
   path = "/asset/5";
   body = "<Part>TEST 5</Part>";
@@ -1094,7 +1161,9 @@ void AgentTest::testMultiLineAsset()
   
   adapter->parseBuffer("TIME|@ASSET@|111|Part|--multiline--AAAA\n");
   adapter->parseBuffer("<Part>\n"
-                       "  <PartXXX>TEST 1</PartXXX>\n");
+                       "  <PartXXX>TEST 1</PartXXX>\n"
+                       "  Some Text\n"
+                       "  <Extra>XXX</Extra>\n");
   adapter->parseBuffer("</Part>\n"
                        "--multiline--AAAA\n");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
@@ -1106,7 +1175,11 @@ void AgentTest::testMultiLineAsset()
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:PartXXX", "TEST 1");
-  }  
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:Extra", "XXX");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "111");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part@deviceUuid", "000");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "TIME");
+  }
   
   // Make sure we can still add a line and we are out of multiline mode...
   path = "/current";  
@@ -1119,12 +1192,23 @@ void AgentTest::testMultiLineAsset()
 
 }
 
+
+void AgentTest::testBadAsset()
+{
+  testAddAdapter();
+  
+  adapter->parseBuffer("TIME|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
+  adapter->parseBuffer((getFile("asset4.xml") + "\n").c_str());
+  adapter->parseBuffer("--multiline--AAAA\n");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
+}
+
 void AgentTest::testAssetProbe()
 {
   a->enablePut();
   path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
-  Agent::key_value_map queries;
+  key_value_map queries;
   
   queries["device"] = "LinuxCNC";
   queries["type"] = "Part";
@@ -1148,12 +1232,168 @@ void AgentTest::testAssetProbe()
   }
 }
 
+void AgentTest::testAssetRemoval()
+{
+  a->enablePut();
+  path = "/asset/1";
+  string body = "<Part>TEST 1</Part>";
+  key_value_map queries;
+  
+  queries["device"] = "LinuxCNC";
+  queries["type"] = "Part";
+  
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(1, a->getAssetCount("Part"));
+  }
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
+  }
+  
+  // Make sure replace works properly
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(1, a->getAssetCount("Part"));
+  }
+  
+  path = "/asset/2";
+  body = "<Part>TEST 2</Part>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 2, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(2, a->getAssetCount("Part"));
+  }
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
+  }
+  
+  path = "/asset/3";
+  body = "<Part>TEST 3</Part>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(3, a->getAssetCount("Part"));
+  }
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 3");
+  }
+
+
+  path = "/asset/2";
+  body = "<Part removed='true'>TEST 2</Part>";
+  
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+    CPPUNIT_ASSERT_EQUAL(3, a->getAssetCount("Part"));
+  }
+  
+  path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+  
+  path = "/assets";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
+  }
+  
+  queries["removed"] = "true";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]@removed", "true");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
+  }
+}
+
+void AgentTest::testAssetRemovalByAdapter()
+{
+  
+  testAddAdapter();
+
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+
+  adapter->processData("TIME|@ASSET@|111|Part|<Part>TEST 1</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  
+
+  adapter->processData("TIME|@ASSET@|112|Part|<Part>TEST 2</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 2, a->getAssetCount());
+
+  adapter->processData("TIME|@ASSET@|113|Part|<Part>TEST 3</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+
+  path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "113");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+  
+  adapter->processData("TIME|@REMOVE_ASSET@|112");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+
+  path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "112");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+  
+  path = "/assets";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
+  }
+  
+  // TODO: When asset is removed and the content is literal, it will
+  // not regenerate the attributes for the asset.
+  queries["removed"] = "true";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
+  }
+}
+
 void AgentTest::testAssetStorageWithoutType()
 {
   a->enablePut();
   path = "/asset/123";
   string body = "<Part>TEST</Part>";
-  Agent::key_value_map queries;
+  key_value_map queries;
   
   queries["device"] = "LinuxCNC";
   
@@ -1166,9 +1406,63 @@ void AgentTest::testAssetStorageWithoutType()
   }
 }
 
+void AgentTest::testAssetAdditionOfAssetChanged12()
+{
+  string version = XmlPrinter::getSchemaVersion();
+  XmlPrinter::setSchemaVersion("1.2");
+
+  delete a;
+  a = new Agent("../samples/min_config.xml", 8, 4, 25);
+  
+  {
+    path = "/probe";
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
+  }
+
+  XmlPrinter::setSchemaVersion(version);
+}
+
+void AgentTest::testAssetAdditionOfAssetRemoved13()
+{
+  string version = XmlPrinter::getSchemaVersion();
+  XmlPrinter::setSchemaVersion("1.3");
+
+  delete a;
+  a = new Agent("../samples/min_config.xml", 8, 4, 25);
+
+  {
+    path = "/probe";
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
+  }
+
+  XmlPrinter::setSchemaVersion(version);
+}
+
+void AgentTest::testAssetPrependId()
+{
+  testAddAdapter();
+    
+  adapter->processData("TIME|@ASSET@|@1|Part|<Part>TEST 1</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  
+  path = "/asset/0001";
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "0001");
+  }
+}
+
 void AgentTest::testPut()
 {
-  Agent::key_value_map queries;
+  key_value_map queries;
   string body;
   a->enablePut();
 
@@ -1194,7 +1488,7 @@ void AgentTest::testPut()
 // Test diabling of HTTP PUT or POST
 void AgentTest::testPutBlocking()
 {
-  Agent::key_value_map queries;
+  key_value_map queries;
   string body;
   
   queries["time"] = "TIME";
@@ -1211,7 +1505,7 @@ void AgentTest::testPutBlocking()
 // Test diabling of HTTP PUT or POST
 void AgentTest::testPutBlockingFrom()
 {
-  Agent::key_value_map queries;
+  key_value_map queries;
   string body;
   a->enablePut();
   
@@ -1273,7 +1567,7 @@ void AgentTest::testStreamData()
   CPPUNIT_ASSERT(adapter);
 
   // Start a thread...
-  Agent::key_value_map query;
+  key_value_map query;
   query["interval"] = "50";
   query["heartbeat"] = "200";
   query["from"] = int64ToString(a->getSequence());
@@ -1336,7 +1630,7 @@ void AgentTest::testStreamDataObserver()
   CPPUNIT_ASSERT(adapter);
   
   // Start a thread...
-  Agent::key_value_map query;
+  key_value_map query;
   query["interval"] = "100";
   query["heartbeat"] = "1000";
   query["count"] = "10";
@@ -1401,21 +1695,23 @@ void AgentTest::testRelativeParsedTime()
   }  
 }
 
-template<>
-struct CppUnit::assertion_traits<uint64_t> {
-  static bool equal(const uint64_t& x, const uint64_t& y )
-  {
-    return x == y;
-  }
-  
-  static std::string toString(const uint64_t& x )
-  {
-    CppUnit::OStringStream ost;
-    ost << x;
-    return ost.str();
-  }
-  
-};
+namespace CppUnit {
+  template<>
+  struct assertion_traits<dlib::uint64> {
+    static bool equal(const dlib::uint64& x, const dlib::uint64& y )
+    {
+      return x == y;
+    }
+    
+    static std::string toString(const dlib::uint64& x )
+    {
+      CppUnit::OStringStream ost;
+      ost << x;
+      return ost.str();
+    }
+    
+  };
+}
 
 void AgentTest::testRelativeParsedTimeDetection()
 {
@@ -1496,12 +1792,268 @@ void AgentTest::testInitialTimeSeriesValues()
   }
 }
 
+void AgentTest::testFilterValues()
+{
+  delete a;
+  a = new Agent("../samples/filter_example.xml", 8, 4, 25);
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+
+  path = "/sample";
+    
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
+  
+  adapter->processData("TIME|load|100");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+  }
+  
+  adapter->processData("TIME|load|103");
+  adapter->processData("TIME|load|106");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+  }
+
+  adapter->processData("TIME|load|106|load|108|load|112");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
+  }
+}
+
+void AgentTest::testReferences()
+{
+  delete a;
+  a = new Agent("../samples/reference_example.xml", 8, 4, 25);
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  string id = "mf";
+  DataItem *item = a->getDataItemByName((string) "LinuxCNC", id);
+  Component *comp = item->getComponent();
+  
+  const list<Component::Reference> refs = comp->getReferences();
+  const Component::Reference &ref = refs.front();
+  
+  CPPUNIT_ASSERT_EQUAL((string) "c4", ref.mId);
+  CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.mName);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.mDataItem != NULL);
+  
+  const Component::Reference &ref2 = refs.back();
+  CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.mId);
+  CPPUNIT_ASSERT_EQUAL((string) "door", ref2.mName);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.mDataItem != NULL);
+  
+  path = "/current";
+  key_value_map query;
+  query["path"] = "//BarFeederInterface";
+  
+
+  // Additional data items should be included
+  {
+    PARSE_XML_RESPONSE_QUERY(query);
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='BarFeederInterface']//m:MaterialFeed", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Door']//m:DoorState", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:ChuckState", "UNAVAILABLE");
+  }
+}
+
+void AgentTest::testDiscrete()
+{
+  delete a;
+  a = new Agent("../samples/discrete_example.xml", 8, 4, 25);
+  path = "/sample";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  adapter->setDupCheck(true);
+  CPPUNIT_ASSERT(adapter);
+  
+  DataItem *msg = a->getDataItemByName("LinuxCNC", "message");
+  CPPUNIT_ASSERT(msg != NULL);
+  CPPUNIT_ASSERT_EQUAL(true, msg->isDiscrete());
+
+  // Validate we are dup checking.
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
+  
+  adapter->processData("TIME|line|204");
+  adapter->processData("TIME|line|204");
+  adapter->processData("TIME|line|205");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
+  }
+  
+
+  adapter->processData("TIME|message|Hi|Hello");
+  adapter->processData("TIME|message|Hi|Hello");
+  adapter->processData("TIME|message|Hi|Hello");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[2]", "Hello");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[3]", "Hello");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[4]", "Hello");
+  }
+
+}
+
+void AgentTest::testUpcaseValues()
+{
+  path = "/current";
+  delete a;
+  a = new Agent("../samples/discrete_example.xml", 8, 4, 25);
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  adapter->setDupCheck(true);
+  CPPUNIT_ASSERT(adapter);
+  CPPUNIT_ASSERT(adapter->upcaseValue());
+  
+  adapter->processData("TIME|mode|Hello");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "HELLO");
+  }
+
+  adapter->setUpcaseValue(false);
+  adapter->processData("TIME|mode|Hello");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "Hello");
+  }
+}
+
+void AgentTest::testConditionSequence()
+{
+  path = "/current";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  adapter->setDupCheck(true);
+  CPPUNIT_ASSERT(adapter);
+  
+  DataItem *logic = a->getDataItemByName("LinuxCNC", "lp");
+  CPPUNIT_ASSERT(logic != NULL);
+  
+  // Validate we are dup checking.
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Unavailable[@dataItemId='lp']", 1);
+  }
+  
+  adapter->processData("TIME|lp|NORMAL||||XXX");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal", "XXX");
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+  }
+
+  adapter->processData("TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault", "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeCode", "2218");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeSeverity", "ALARM_B");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@qualifier", "HIGH");
+  }
+  
+  adapter->processData("TIME|lp|NORMAL||||");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal", 1);
+  }
+
+  adapter->processData("TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault", "4200 ALARM_D Power on effective parameter set");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeCode", "4200");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault@nativeSeverity", "ALARM_D");
+  }
+  
+  adapter->processData("TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "4200 ALARM_D Power on effective parameter set");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]", "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@nativeCode", "2218");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@nativeSeverity", "ALARM_B");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]@qualifier", "HIGH");
+  }
+
+  adapter->processData("TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@nativeCode", "2218");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@nativeSeverity", "ALARM_B");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@qualifier", "HIGH");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]", "4200 ALARM_D Power on effective parameter set");
+  }
+  
+  adapter->processData("TIME|lp|NORMAL|2218|||");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]@nativeCode", "4200");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]", "4200 ALARM_D Power on effective parameter set");
+  }
+  
+  adapter->processData("TIME|lp|NORMAL||||");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal", 1);
+  }
+}
+
+// Helper methods
 
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
-                                    Agent::key_value_map &aQueries)
+                                    key_value_map &aQueries)
 {  
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
+  incoming_things incoming("","",0,0);
+  outgoing_things outgoing;
   incoming.request_type = "GET";
   incoming.path = path;
   incoming.queries = aQueries;
@@ -1525,7 +2077,7 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
   
   string message = (string) "No response to request" + path + " with: ";
   
-  Agent::key_value_map::iterator iter;
+  key_value_map::iterator iter;
   for (iter = aQueries.begin(); iter != aQueries.end(); ++iter)
     message += iter->first + "=" + iter->second + ",";
   
@@ -1535,10 +2087,10 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
 }
 
 xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
-                                       string body, Agent::key_value_map &aQueries)
+                                       string body, key_value_map &aQueries)
 {
-  struct Agent::incoming_things incoming;
-  struct Agent::outgoing_things outgoing;
+  incoming_things incoming("","",0,0);
+  outgoing_things outgoing;
   incoming.request_type = "PUT";
   incoming.path = path;
   incoming.queries = aQueries;

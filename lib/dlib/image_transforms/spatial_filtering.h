@@ -9,6 +9,7 @@
 #include "../assert.h"
 #include "../array2d.h"
 #include "../matrix.h"
+#include "../geometry/border_enumerator.h"
 #include <limits>
 
 namespace dlib
@@ -409,6 +410,7 @@ namespace dlib
         long NR,
         long NC,
         typename T,
+        typename U,
         typename in_image_type
         >
     inline void separable_3x3_filter_block_grayscale (
@@ -416,9 +418,9 @@ namespace dlib
         const in_image_type& img,
         const long& r,
         const long& c,
-        const T& fe1, // separable filter end
-        const T& fm,  // separable filter middle 
-        const T& fe2 // separable filter end 2
+        const U& fe1, // separable filter end
+        const U& fm,  // separable filter middle 
+        const U& fe2 // separable filter end 2
     ) 
     {
         // make sure requires clause is not broken
@@ -477,7 +479,7 @@ namespace dlib
         // make sure requires clause is not broken
         DLIB_ASSERT(shrink_rect(get_rect(img),1).contains(c,r) &&
                     shrink_rect(get_rect(img),1).contains(c+NC-1,r+NR-1),
-            "\t void separable_3x3_filter_block_grayscale()"
+            "\t void separable_3x3_filter_block_rgb()"
             << "\n\t The sub-window doesn't fit inside the given image."
             << "\n\t get_rect(img):       " << get_rect(img) 
             << "\n\t (c,r):               " << point(c,r) 
@@ -621,7 +623,10 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    namespace impl
+    {
     template <
+        bool add_to,
         typename image_type1, 
         typename image_type2
         >
@@ -660,7 +665,7 @@ namespace dlib
             strip = strip.intersect(get_rect(img));
             if (!strip.is_empty())
             {
-                column_sum[j] = sum(matrix_cast<ptype>(subm(array_to_matrix(img),strip)));
+                column_sum[j] = sum(matrix_cast<ptype>(subm(mat(img),strip)));
             }
 
             ++left;
@@ -669,14 +674,14 @@ namespace dlib
 
         const rectangle area = get_rect(img);
 
-        // save width to avoid computing them over and over
+        // Save width to avoid computing it over and over.
         const long width = rect.width();
 
 
         // Now do the bulk of the filtering work.
         for (long r = 0; r < img.nr(); ++r)
         {
-            // set to sum at point(-1,r). i.e. should be equal to sum(array_to_matrix(img), translate_rect(rect, point(-1,r)))
+            // set to sum at point(-1,r). i.e. should be equal to sum(mat(img), translate_rect(rect, point(-1,r)))
             // We compute it's value in the next loop.
             ptype cur_sum = 0; 
 
@@ -710,7 +715,218 @@ namespace dlib
                 // add in the new right side of the rect and subtract the old right side.
                 cur_sum = cur_sum + column_sum[c+width] - column_sum[c];
 
-                out[r][c] += static_cast<typename image_type2::type>(cur_sum);
+                if (add_to)
+                    out[r][c] += static_cast<typename image_type2::type>(cur_sum);
+                else
+                    out[r][c] = static_cast<typename image_type2::type>(cur_sum);
+            }
+        }
+    }
+    }
+
+    template <
+        typename image_type1, 
+        typename image_type2
+        >
+    void sum_filter (
+        const image_type1& img,
+        image_type2& out,
+        const rectangle& rect
+    )
+    {
+        impl::sum_filter<true>(img,out,rect);
+    }
+
+    template <
+        typename image_type1, 
+        typename image_type2
+        >
+    void sum_filter_assign (
+        const image_type1& img,
+        image_type2& out,
+        const rectangle& rect
+    )
+    {
+        impl::sum_filter<false>(img,out,rect);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    namespace impl
+    {
+        template <typename T>
+        class fast_deque
+        {
+        /*
+            This is a fast and minimal implementation of std::deque for 
+            use with the max_filter.  
+
+            This object assumes that no more than max_size elements
+            will ever be pushed into it at a time.
+        */
+        public:
+
+            explicit fast_deque(unsigned long max_size)
+            {
+                // find a power of two that upper bounds max_size
+                mask = 2;
+                while (mask < max_size)
+                    mask *= 2;
+
+                clear();
+
+                data.resize(mask);
+                --mask;  // make into bit mask
+            }
+
+            void clear()
+            {
+                first = 1;
+                last = 0;
+                size = 0;
+            }
+
+            bool empty() const
+            {
+                return size == 0;
+            }
+
+            void pop_back()
+            {
+                last = (last-1)&mask;
+                --size;
+            }
+
+            void push_back(const T& item)
+            {
+                last = (last+1)&mask;
+                ++size;
+                data[last] = item;
+            }
+
+            void pop_front()
+            {
+                first = (first+1)&mask;
+                --size;
+            }
+
+            const T& front() const
+            {
+                return data[first];
+            }
+
+            const T& back() const
+            {
+                return data[last];
+            }
+
+        private:
+
+            std::vector<T> data;
+            unsigned long mask;
+            unsigned long first;
+            unsigned long last;
+            unsigned long size;
+        };
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_type1, 
+        typename image_type2
+        >
+    void max_filter (
+        image_type1& img,
+        image_type2& out,
+        const long width,
+        const long height,
+        const typename image_type1::type& thresh
+    )
+    {
+        DLIB_ASSERT( width > 0 &&
+                     height > 0 &&
+                     out.nr() == img.nr() &&
+                     out.nc() == img.nc() &&
+                     is_same_object(img,out) == false,
+                "\t void max_filter()"
+                << "\n\t Invalid arguments given to this function."
+                << "\n\t img.nr(): " << img.nr() 
+                << "\n\t img.nc(): " << img.nc() 
+                << "\n\t out.nr(): " << out.nr() 
+                << "\n\t out.nc(): " << out.nc() 
+                << "\n\t width:    " << width 
+                << "\n\t height:   " << height 
+                << "\n\t is_same_object(img,out): " << is_same_object(img,out) 
+                     );
+
+        typedef typename image_type1::type pixel_type;
+
+
+        dlib::impl::fast_deque<std::pair<long,pixel_type> > Q(std::max(width,height));
+
+        const long last_col = std::max(img.nc(), ((width-1)/2));
+        const long last_row = std::max(img.nr(), ((height-1)/2));
+
+        // run max filter along rows of img
+        for (long r = 0; r < img.nr(); ++r)
+        {
+            Q.clear();
+            for (long c = 0; c < (width-1)/2 && c < img.nc(); ++c)
+            {
+                while (!Q.empty() && img[r][c] >= Q.back().second)
+                    Q.pop_back();
+                Q.push_back(std::make_pair(c,img[r][c]));
+            }
+
+            for (long c = (width-1)/2; c < img.nc(); ++c)
+            {
+                while (!Q.empty() && img[r][c] >= Q.back().second)
+                    Q.pop_back();
+                while (!Q.empty() && Q.front().first <= c-width)
+                    Q.pop_front();
+                Q.push_back(std::make_pair(c,img[r][c]));
+
+                img[r][c-((width-1)/2)] = Q.front().second;
+            }
+
+            for (long c = last_col; c < img.nc() + ((width-1)/2); ++c)
+            {
+                while (!Q.empty() && Q.front().first <= c-width)
+                    Q.pop_front();
+
+                img[r][c-((width-1)/2)] = Q.front().second;
+            }
+        }
+
+        // run max filter along columns of img.  Store result in out.
+        for (long cc = 0; cc < img.nc(); ++cc)
+        {
+            Q.clear();
+            for (long rr = 0; rr < (height-1)/2 && rr < img.nr(); ++rr)
+            {
+                while (!Q.empty() && img[rr][cc] >= Q.back().second)
+                    Q.pop_back();
+                Q.push_back(std::make_pair(rr,img[rr][cc]));
+            }
+
+            for (long rr = (height-1)/2; rr < img.nr(); ++rr)
+            {
+                while (!Q.empty() && img[rr][cc] >= Q.back().second)
+                    Q.pop_back();
+                while (!Q.empty() && Q.front().first <= rr-height)
+                    Q.pop_front();
+                Q.push_back(std::make_pair(rr,img[rr][cc]));
+
+                out[rr-((height-1)/2)][cc] += std::max(Q.front().second, thresh);
+            }
+
+            for (long rr = last_row; rr < img.nr() + ((height-1)/2); ++rr)
+            {
+                while (!Q.empty() && Q.front().first <= rr-height)
+                    Q.pop_front();
+
+                out[rr-((height-1)/2)][cc] += std::max(Q.front().second, thresh);
             }
         }
     }

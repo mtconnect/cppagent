@@ -73,6 +73,15 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testPrintCuttingTool);
   CPPUNIT_TEST(testChangeVersion);
   CPPUNIT_TEST(testChangeMTCLocation);
+  CPPUNIT_TEST(testProbeWithFilter);
+  CPPUNIT_TEST(testReferences);
+  CPPUNIT_TEST(testPrintExtendedCuttingTool);
+  CPPUNIT_TEST(testStreamsStyle);
+  CPPUNIT_TEST(testDevicesStyle);
+  CPPUNIT_TEST(testErrorStyle);
+  CPPUNIT_TEST(testAssetsStyle);
+  CPPUNIT_TEST(testPrintRemovedCuttingTool);
+  CPPUNIT_TEST(testEscapedXMLCharacters);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -93,6 +102,9 @@ protected:
   void testStatisticAndTimeSeriesProbe();
   void testTimeSeries();
   
+  // Character generation
+  void testEscapedXMLCharacters();
+  
   // Test printing configuration...
   void testConfiguration();
 
@@ -110,10 +122,25 @@ protected:
   void testPrintAsset();
   void testPrintAssetProbe();
   void testPrintCuttingTool();
+  void testPrintExtendedCuttingTool();
+  void testPrintRemovedCuttingTool();
   
   // Schema tests
   void testChangeVersion();
   void testChangeMTCLocation();
+  
+  // Filter Tests
+  void testProbeWithFilter();
+  
+  // Reference tests
+  void testReferences();
+  
+  // Styles
+  void testStreamsStyle();
+  void testDevicesStyle();
+  void testErrorStyle();
+  void testAssetsStyle();
+
   
   /* Retrieve a data item by name string */
   DataItem * getDataItem(const char *name);

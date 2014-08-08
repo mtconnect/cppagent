@@ -816,6 +816,143 @@ namespace dlib
 
 // ---------------------------------------------------------------------------------------- 
 
+    namespace impl
+    {
+        template <
+            typename pixel_type1,
+            typename pixel_type2,
+            typename model_type
+            >
+        struct potts_grid_image_pair_model
+        {
+            const pixel_type1* data1;
+            const pixel_type2* data2;
+            const model_type& model;
+            const long nr_;
+            const long nc_;
+            template <typename image_type1, typename image_type2>
+            potts_grid_image_pair_model(
+                const model_type& model_,
+                const image_type1& img1,
+                const image_type2& img2
+            ) :
+                model(model_),
+                nr_(img1.nr()),
+                nc_(img1.nc())
+            {
+                data1 = &img1[0][0];
+                data2 = &img2[0][0];
+            }
+
+            typedef typename model_type::value_type value_type;
+
+            long nr() const { return nr_; }
+            long nc() const { return nc_; }
+
+            value_type factor_value (
+                unsigned long idx
+            ) const 
+            {
+                return model.factor_value(*(data1 + idx), *(data2 + idx));
+            }
+
+            value_type factor_value_disagreement (
+                unsigned long idx1,
+                unsigned long idx2
+            ) const 
+            {
+                return model.factor_value_disagreement(*(data1 + idx1), *(data1 + idx2));
+            }
+        };
+
+    // ---------------------------------------------------------------------------------------- 
+
+        template <
+            typename image_type,
+            typename model_type
+            >
+        struct potts_grid_image_single_model
+        {
+            const typename image_type::type* data1;
+            const model_type& model;
+            const long nr_;
+            const long nc_;
+            potts_grid_image_single_model(
+                const model_type& model_,
+                const image_type& img1
+            ) :
+                model(model_),
+                nr_(img1.nr()),
+                nc_(img1.nc())
+            {
+                data1 = &img1[0][0];
+            }
+
+            typedef typename model_type::value_type value_type;
+
+            long nr() const { return nr_; }
+            long nc() const { return nc_; }
+
+            value_type factor_value (
+                unsigned long idx
+            ) const 
+            {
+                return model.factor_value(*(data1 + idx));
+            }
+
+            value_type factor_value_disagreement (
+                unsigned long idx1,
+                unsigned long idx2
+            ) const 
+            {
+                return model.factor_value_disagreement(*(data1 + idx1), *(data1 + idx2));
+            }
+        };
+
+    }
+
+// ---------------------------------------------------------------------------------------- 
+
+    template <
+        typename pair_image_model,
+        typename pixel_type1,
+        typename pixel_type2,
+        typename mem_manager
+        >
+    impl::potts_grid_image_pair_model<pixel_type1, pixel_type2, pair_image_model> make_potts_grid_problem (
+        const pair_image_model& model,
+        const array2d<pixel_type1,mem_manager>& img1,
+        const array2d<pixel_type2,mem_manager>& img2
+    )
+    {
+        DLIB_ASSERT(get_rect(img1) == get_rect(img2),
+            "\t potts_grid_problem make_potts_grid_problem()"
+            << "\n\t Invalid inputs were given to this function." 
+            << "\n\t get_rect(img1): " << get_rect(img1)
+            << "\n\t get_rect(img2): " << get_rect(img2)
+            );
+        typedef impl::potts_grid_image_pair_model<pixel_type1, pixel_type2, pair_image_model> potts_type;
+        return potts_type(model,img1,img2);
+    }
+
+// ---------------------------------------------------------------------------------------- 
+
+    template <
+        typename single_image_model,
+        typename pixel_type,
+        typename mem_manager
+        >
+    impl::potts_grid_image_single_model<array2d<pixel_type,mem_manager>, single_image_model> make_potts_grid_problem (
+        const single_image_model& model,
+        const array2d<pixel_type,mem_manager>& img
+    )
+    {
+        typedef impl::potts_grid_image_single_model<array2d<pixel_type,mem_manager>, single_image_model> potts_type;
+        return potts_type(model,img);
+    }
+
+// ---------------------------------------------------------------------------------------- 
+
 }
 
 #endif // DLIB_FIND_MAX_FACTOR_GRAPH_PoTTS_H__

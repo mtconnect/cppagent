@@ -12,10 +12,89 @@
 #include "../algs.h"
 #include "../timeout.h"
 #include "../misc_api.h"
+#include "../serialize.h"
 
 namespace dlib
 {
 
+// ----------------------------------------------------------------------------------------
+
+    network_address::
+    network_address(
+        const std::string& full_address
+    )
+    {
+        std::istringstream sin(full_address);
+        sin >> *this;
+        if (!sin || sin.peek() != EOF)
+            throw invalid_network_address("invalid network address: " + full_address);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void serialize(
+        const network_address& item,
+        std::ostream& out
+    )
+    {
+        serialize(item.host_address, out);
+        serialize(item.port, out);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void deserialize(
+        network_address& item,
+        std::istream& in 
+    )
+    {
+        deserialize(item.host_address, in);
+        deserialize(item.port, in);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    std::ostream& operator<< (
+        std::ostream& out,
+        const network_address& item
+    )
+    {
+        out << item.host_address << ":" << item.port;
+        return out;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    std::istream& operator>> (
+        std::istream& in,
+        network_address& item
+    )
+    {
+        std::string temp;
+        in >> temp;
+
+        std::string::size_type pos = temp.find_last_of(":");
+        if (pos == std::string::npos)
+        {
+            in.setstate(std::ios::badbit);
+            return in;
+        }
+
+        item.host_address = temp.substr(0, pos);
+        try
+        {
+            item.port = sa = temp.substr(pos+1);
+        } catch (std::exception& )
+        {
+            in.setstate(std::ios::badbit);
+            return in;
+        }
+
+
+        return in;
+    }
+
+// ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
     connection* connect (
@@ -35,10 +114,23 @@ namespace dlib
                 throw socket_error(ERESOLVE,"unable to resolve '" + host_or_ip + "' in connect()");
         }
 
-        if(create_connection(con,port,ip))
-            throw socket_error("unable to connect to '" + host_or_ip + "'"); 
+        if(create_connection(con,port,ip, 0, ""))
+        {
+            std::ostringstream sout;
+            sout << "unable to connect to '" << host_or_ip << ":" << port << "'";
+            throw socket_error(sout.str()); 
+        }
 
         return con;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    connection* connect (
+        const network_address& addr
+    )
+    {
+        return connect(addr.host_address, addr.port);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -169,6 +261,10 @@ namespace dlib
         std::string ip
     )
     {
+        // Check for an IPV6 address. We won't do too much checking at this point.
+        if (ip.find(':') != std::string::npos)
+          return true;
+      
         for (std::string::size_type i = 0; i < ip.size(); ++i)
         {
             if (ip[i] == '.')
@@ -212,6 +308,9 @@ namespace dlib
         unsigned long timeout 
     )
     {
+        if (!con)
+            return;
+
         if(con->shutdown_outgoing())
         {
             // there was an error so just close it now and return
@@ -221,7 +320,7 @@ namespace dlib
 
         try
         {
-            timeout::kernel_1a t(*con,&connection::shutdown,timeout);
+            dlib::timeout t(*con,&connection::shutdown,timeout);
 
             char junk[100];
             // wait for the other end to close their side

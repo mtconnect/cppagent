@@ -19,13 +19,6 @@ namespace dlib
     class line_search_funct 
     {
     public:
-        // You get an error on this line when you pass in a global function to this function.
-        // You have to either use a function object or pass a pointer to your global function
-        // by taking its address using the & operator.  (This check is here because gcc 4.0
-        // has a bug that causes it to silently corrupt return values from functions that
-        // invoked through a reference)
-        COMPILE_TIME_ASSERT(is_function<funct>::value == false);
-
         line_search_funct(const funct& f_, const T& start_, const T& direction_) 
             : f(f_),start(start_), direction(direction_), matrix_r(0), scalar_r(0)
         {}
@@ -77,13 +70,6 @@ namespace dlib
     template <typename funct, typename T>
     const line_search_funct<funct,T> make_line_search_function(const funct& f, const T& start, const T& direction) 
     { 
-        // You get an error on this line when you pass in a global function to this function.
-        // You have to either use a function object or pass a pointer to your global function
-        // by taking its address using the & operator.  (This check is here because gcc 4.0
-        // has a bug that causes it to silently corrupt return values from functions that
-        // invoked through a reference)
-        COMPILE_TIME_ASSERT(is_function<funct>::value == false);
-
         COMPILE_TIME_ASSERT(is_matrix<T>::value);
         DLIB_ASSERT (
             is_col_vector(start) && is_col_vector(direction) && start.size() == direction.size(),
@@ -102,13 +88,6 @@ namespace dlib
     template <typename funct, typename T>
     const line_search_funct<funct,T> make_line_search_function(const funct& f, const T& start, const T& direction, double& f_out) 
     { 
-        // You get an error on this line when you pass in a global function to this function.
-        // You have to either use a function object or pass a pointer to your global function
-        // by taking its address using the & operator.  (This check is here because gcc 4.0
-        // has a bug that causes it to silently corrupt return values from functions that
-        // invoked through a reference)
-        COMPILE_TIME_ASSERT(is_function<funct>::value == false);
-
         COMPILE_TIME_ASSERT(is_matrix<T>::value);
         DLIB_ASSERT (
             is_col_vector(start) && is_col_vector(direction) && start.size() == direction.size(),
@@ -127,13 +106,6 @@ namespace dlib
     template <typename funct, typename T>
     const line_search_funct<funct,T> make_line_search_function(const funct& f, const T& start, const T& direction, T& grad_out) 
     { 
-        // You get an error on this line when you pass in a global function to this function.
-        // You have to either use a function object or pass a pointer to your global function
-        // by taking its address using the & operator.  (This check is here because gcc 4.0
-        // has a bug that causes it to silently corrupt return values from functions that
-        // invoked through a reference)
-        COMPILE_TIME_ASSERT(is_function<funct>::value == false);
-
         COMPILE_TIME_ASSERT(is_matrix<T>::value);
         DLIB_ASSERT (
             is_col_vector(start) && is_col_vector(direction) && start.size() == direction.size(),
@@ -195,6 +167,75 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    inline double poly_min_extrap (
+        double f0,
+        double d0,
+        double f1
+    )
+    {
+        const double temp = 2*(f1 - f0 - d0);
+        if (std::abs(temp) <= d0*std::numeric_limits<double>::epsilon())
+            return 0.5;
+
+        const double alpha = -d0/temp;
+
+        // now make sure the minimum is within the allowed range of (0,1) 
+        return put_in_range(0,1,alpha);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline double poly_min_extrap (
+        double f0,
+        double d0,
+        double x1,
+        double f_x1,
+        double x2,
+        double f_x2
+    )
+    {
+        DLIB_ASSERT(0 < x1 && x1 < x2,"Invalid inputs were given to this function");
+        // The contents of this function follow the equations described on page 58 of the
+        // book Numerical Optimization by Nocedal and Wright, second edition.
+        matrix<double,2,2> m;
+        matrix<double,2,1> v;
+
+        const double aa2 = x2*x2;
+        const double aa1 = x1*x1;
+        m =  aa2,       -aa1,
+            -aa2*x2, aa1*x1;   
+        v = f_x1 - f0 - d0*x1,
+            f_x2 - f0 - d0*x2;
+
+
+        double temp = aa2*aa1*(x1-x2);
+
+        // just take a guess if this happens
+        if (temp == 0)
+        {
+            return x1/2.0;
+        }
+
+        matrix<double,2,1> temp2;
+        temp2 = m*v/temp;
+        const double a = temp2(0);
+        const double b = temp2(1);
+
+        temp = b*b - 3*a*d0;
+        if (temp < 0 || a == 0)
+        {
+            // This is probably a line so just pick the lowest point
+            if (f0 < f_x2)
+                return 0;
+            else
+                return x2;
+        }
+        temp = (-b + std::sqrt(temp))/(3*a);
+        return put_in_range(0, x2, temp);
+    }
+
+// ----------------------------------------------------------------------------------------
+
     inline double lagrange_poly_min_extrap (
         double p1, 
         double p2,
@@ -251,14 +292,6 @@ namespace dlib
         unsigned long max_iter 
     )
     {
-        // You get an error on this line when you pass in a global function to this function.
-        // You have to either use a function object or pass a pointer to your global function
-        // by taking its address using the & operator.  (This check is here because gcc 4.0
-        // has a bug that causes it to silently corrupt return values from functions that
-        // invoked through a reference)
-        COMPILE_TIME_ASSERT(is_function<funct>::value == false);
-        COMPILE_TIME_ASSERT(is_function<funct_der>::value == false);
-
         DLIB_ASSERT (
             0 < rho && rho < sigma && sigma < 1 && max_iter > 0,
             "\tdouble line_search()"
@@ -445,6 +478,77 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename funct
+        >
+    double backtracking_line_search (
+        const funct& f, 
+        double f0,
+        double d0,
+        double alpha,
+        double rho, 
+        unsigned long max_iter 
+    )
+    {
+        DLIB_ASSERT (
+            0 < rho && rho < 1 && max_iter > 0,
+            "\tdouble backtracking_line_search()"
+            << "\n\tYou have given invalid arguments to this function"
+            << "\n\t rho:      " << rho 
+            << "\n\t max_iter: " << max_iter 
+        );
+
+        // make sure alpha is going in the right direction.  That is, it should be opposite
+        // the direction of the gradient.
+        if ((d0 > 0 && alpha > 0) ||
+            (d0 < 0 && alpha < 0))
+        {
+            alpha *= -1;
+        }
+
+        bool have_prev_alpha = false;
+        double prev_alpha = 0;
+        double prev_val = 0;
+        unsigned long iter = 0;
+        while (true)
+        {
+            ++max_iter;
+            const double val = f(alpha);
+            if (val <= f0 + alpha*rho*d0 || iter >= max_iter)
+            {
+                return alpha;
+            }
+            else
+            {
+                // Interpolate a new alpha.  We also make sure the step by which we
+                // reduce alpha is not super small.
+                double step;
+                if (!have_prev_alpha)
+                {
+                    if (d0 < 0)
+                        step = alpha*put_in_range(0.1,0.9, poly_min_extrap(f0, d0, val));
+                    else
+                        step = alpha*put_in_range(0.1,0.9, poly_min_extrap(f0, -d0, val));
+                    have_prev_alpha = true;
+                }
+                else
+                {
+                    if (d0 < 0)
+                        step = put_in_range(0.1*alpha,0.9*alpha, poly_min_extrap(f0, d0, alpha, val, prev_alpha, prev_val));
+                    else
+                        step = put_in_range(0.1*alpha,0.9*alpha, -poly_min_extrap(f0, -d0, -alpha, val, -prev_alpha, prev_val));
+                }
+
+                prev_alpha = alpha;
+                prev_val = val;
+
+                alpha = step;
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
     class optimize_single_variable_failure : public error {
     public: optimize_single_variable_failure(const std::string& s):error(s){}
     };
@@ -461,13 +565,6 @@ namespace dlib
         const long max_iter = 100
     )
     {
-        // You get an error on this line when you pass in a global function to this function.
-        // You have to either use a function object or pass a pointer to your global function
-        // by taking its address using the & operator.  (This check is here because gcc 4.0
-        // has a bug that causes it to silently corrupt return values from functions that
-        // invoked through a reference)
-        COMPILE_TIME_ASSERT(is_function<funct>::value == false);
-
         DLIB_CASSERT( eps > 0 &&
                       max_iter > 1 &&
                       begin <= starting_point && starting_point <= end,
@@ -722,13 +819,6 @@ namespace dlib
         const long max_iter = 100
     )
     {
-        // You get an error on this line when you pass in a global function to this function.
-        // You have to either use a function object or pass a pointer to your global function
-        // by taking its address using the & operator.  (This check is here because gcc 4.0
-        // has a bug that causes it to silently corrupt return values from functions that
-        // invoked through a reference)
-        COMPILE_TIME_ASSERT(is_function<funct>::value == false);
-
         return -find_min_single_variable(negate_function(f), starting_point, begin, end, eps, max_iter);
     }
 

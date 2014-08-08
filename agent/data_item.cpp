@@ -17,6 +17,7 @@
 #include "data_item.hpp"
 #include "device.hpp"
 #include "dlib/logger.h"
+#include "adapter.hpp"
 
 using namespace std;
 
@@ -67,8 +68,8 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
 /* DataItem public methods */
 DataItem::DataItem(std::map<string, string> attributes) 
   : mRepresentation(VALUE), mHasNativeScale(false), mHasSignificantDigits(false),  
-    mHasConstraints(false), mDataSource(NULL), mConversionDetermined(false),  
-    mConversionRequired(false), mHasFactor(false)
+    mHasConstraints(false), mFilterValue(0.0), mFilterType(FILTER_NONE), mLastSampleValue(NAN), mDataSource(NULL),
+    mConversionDetermined(false), mConversionRequired(false), mHasFactor(false)
 {
   mId = attributes["id"];
   mName = attributes["name"];
@@ -76,12 +77,18 @@ DataItem::DataItem(std::map<string, string> attributes)
   mIsAlarm = (mType == "ALARM");
   mIsMessage = (mType == "MESSAGE");
   mIsAssetChanged = (mType == "ASSET_CHANGED");
+  mIsAssetRemoved = (mType == "ASSET_REMOVED");
+      
 
   mCamelType = getCamelType(mType, mPrefix);
   if (attributes["representation"] == "TIME_SERIES")
   {
     mRepresentation = TIME_SERIES;
     mCamelType += "TimeSeries";
+  } else if (attributes["representation"] == "DISCRETE")
+  {
+    mRepresentation = DISCRETE;
+    mCamelType += "Discrete";    
   }
   if (!mPrefix.empty())
     mPrefixedCamelType = mPrefix + ":" + mCamelType;
@@ -150,6 +157,17 @@ DataItem::DataItem(std::map<string, string> attributes)
 
 DataItem::~DataItem()
 {
+}
+
+void DataItem::setDataSource(Adapter *aSource)
+{
+    if (mDataSource != aSource)
+      mDataSource = aSource;
+    if (!mDataSource->conversionRequired())
+    {
+      mConversionRequired = false;
+      mConversionDetermined = true;
+    }
 }
 
 std::map<string, string> DataItem::buildAttributes() const

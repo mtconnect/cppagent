@@ -36,7 +36,7 @@ def dump(out, xml)
       
     end
     out.puts event.text.to_s
-    # puts "#{event.name} - #{name} - #{event.text}"
+    puts "#{event.name} - #{name} - #{event.text}"
   end
   print '.'; STDOUT.flush
   nxt

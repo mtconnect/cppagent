@@ -42,6 +42,7 @@ using namespace std;
 void XmlPrinterTest::setUp()
 {
   config = new XmlParser();
+  XmlPrinter::setSchemaVersion("");
   devices = config->parseFile("../samples/test_config.xml");
 }
 
@@ -160,14 +161,14 @@ void XmlPrinterTest::testChangeDevicesNamespace()
   }
 
   {
-    XmlPrinter::addDevicesNamespace("urn:machine.com:MachineDevices:1.2",
-                                    "http://www.machine.com/schemas/MachineDevices_1.2.xsd",
+    XmlPrinter::addDevicesNamespace("urn:machine.com:MachineDevices:1.3",
+                                    "http://www.machine.com/schemas/MachineDevices_1.3.xsd",
                                     "e");
     
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));  
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-                    "urn:machine.com:MachineDevices:1.2 http://www.machine.com/schemas/MachineDevices_1.2.xsd");
+                    "urn:machine.com:MachineDevices:1.3 http://www.machine.com/schemas/MachineDevices_1.3.xsd");
     
     XmlPrinter::clearDevicesNamespaces();
   }
@@ -210,8 +211,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
   
   {
     
-    XmlPrinter::addStreamsNamespace("urn:machine.com:MachineStreams:1.2",
-                                    "http://www.machine.com/schemas/MachineStreams_1.2.xsd",
+    XmlPrinter::addStreamsNamespace("urn:machine.com:MachineStreams:1.3",
+                                    "http://www.machine.com/schemas/MachineStreams_1.3.xsd",
                                     "e");
 
     ComponentEventPtrArray list;
@@ -219,7 +220,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
         
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectStreams@schemaLocation", 
-                "urn:machine.com:MachineStreams:1.2 http://www.machine.com/schemas/MachineStreams_1.2.xsd");
+                "urn:machine.com:MachineStreams:1.3 http://www.machine.com/schemas/MachineStreams_1.3.xsd");
   }
 
   XmlPrinter::clearStreamsNamespaces();
@@ -228,8 +229,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     XmlParser ext;
     devices = ext.parseFile("../samples/extension.xml");
 
-    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.2",
-                                    "ExtensionDevices_1.2.xsd",
+    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
+                                    "ExtensionDevices_1.3.xsd",
                                     "x");
 
     Checkpoint checkpoint2;
@@ -242,6 +243,28 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//x:Flow", "100");
   }
+  
+  XmlPrinter::clearStreamsNamespaces();
+  
+  {
+    XmlParser ext;
+    devices = ext.parseFile("../samples/extension.xml");
+    
+    XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
+                                    "ExtensionDevices_1.3.xsd",
+                                    "x");
+    
+    Checkpoint checkpoint2;
+    addEventToCheckpoint(checkpoint2, "flow", 10254804, "100");
+    
+    ComponentEventPtrArray list;
+    checkpoint2.getComponentEvents(list);
+    
+    PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//x:Flow", "100");
+  }
+
   
   XmlPrinter::clearStreamsNamespaces();
   XmlPrinter::clearDevicesNamespaces();
@@ -259,14 +282,14 @@ void XmlPrinterTest::testChangeErrorNamespace()
   }
   
   {
-    XmlPrinter::addErrorNamespace("urn:machine.com:MachineError:1.2",
-                                  "http://www.machine.com/schemas/MachineError_1.2.xsd",
+    XmlPrinter::addErrorNamespace("urn:machine.com:MachineError:1.3",
+                                  "http://www.machine.com/schemas/MachineError_1.3.xsd",
                                   "e");
     
     PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation", 
-                                      "urn:machine.com:MachineError:1.2 http://www.machine.com/schemas/MachineError_1.2.xsd");
+                                      "urn:machine.com:MachineError:1.3 http://www.machine.com/schemas/MachineError_1.3.xsd");
   }
 }
 
@@ -472,6 +495,17 @@ void XmlPrinterTest::testNonPrintableCharacters()
                                       , "OVER TRAVEL : +Z?");
 }
 
+void XmlPrinterTest::testEscapedXMLCharacters()
+{
+  ComponentEventPtrArray events;
+  ComponentEventPtr ptr = newEvent("zlc", 10843512, "fault|500|||A duck > a foul & < cat '");
+  events.push_back(ptr);
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]"
+                                    , "A duck > a foul & < cat '");
+  
+}
+
 
 void XmlPrinterTest::testPrintAsset()
 {
@@ -522,15 +556,15 @@ void XmlPrinterTest::testChangeVersion()
                                       "urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
   }
 
-  XmlPrinter::setSchemaVersion("1.3");
+  XmlPrinter::setSchemaVersion("1.4");
   
   {
     PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
-                                      "urn:mtconnect.org:MTConnectDevices:1.3 http://www.mtconnect.org/schemas/MTConnectDevices_1.3.xsd");
+                                      "urn:mtconnect.org:MTConnectDevices:1.4 http://www.mtconnect.org/schemas/MTConnectDevices_1.4.xsd");
   }
 
-  XmlPrinter::setSchemaVersion("1.2");
+  XmlPrinter::setSchemaVersion("1.3");
 }
 
 void XmlPrinterTest::testChangeMTCLocation()
@@ -551,8 +585,101 @@ void XmlPrinterTest::testChangeMTCLocation()
   }  
   
   XmlPrinter::clearDevicesNamespaces();
-  XmlPrinter::setSchemaVersion("1.2");
+  XmlPrinter::setSchemaVersion("1.3");
 }
+
+void XmlPrinterTest::testProbeWithFilter()
+{
+  delete config;
+  
+  config = new XmlParser();
+  devices = config->parseFile("../samples/filter_example.xml");
+  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter", "5");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter@type", "MINIMUM_DELTA");
+}
+
+
+void XmlPrinterTest::testReferences()
+{
+  delete config;
+  
+  config = new XmlParser();
+  devices = config->parseFile("../samples/reference_example.xml");
+  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@dataItemId", "c4");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@name", "chuck");
+}
+
+void XmlPrinterTest::testStreamsStyle()
+{
+  XmlPrinter::setStreamStyle("/styles/Streams.xsl");
+  Checkpoint checkpoint;
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
+  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100");
+
+  ComponentEventPtrArray list;
+  checkpoint.getComponentEvents(list);
+  PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+
+  xmlNodePtr pi = doc->children;
+  CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
+  CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Streams.xsl\""), string((const char*) pi->content));
+  
+  XmlPrinter::setStreamStyle("");
+}
+
+void XmlPrinterTest::testDevicesStyle()
+{
+  XmlPrinter::setDevicesStyle("/styles/Devices.xsl");
+  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
+  
+  xmlNodePtr pi = doc->children;
+  CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
+  CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Devices.xsl\""), string((const char*) pi->content));
+  
+  XmlPrinter::setDevicesStyle("");
+}
+
+void XmlPrinterTest::testErrorStyle()
+{
+  XmlPrinter::setErrorStyle("/styles/Error.xsl");
+
+  PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+  
+  xmlNodePtr pi = doc->children;
+  CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
+  CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Error.xsl\""), string((const char*) pi->content));
+  
+  XmlPrinter::setErrorStyle("");
+}
+
+void XmlPrinterTest::testAssetsStyle()
+{
+  XmlPrinter::setAssetsStyle("/styles/Assets.xsl");
+
+  vector<AssetPtr> assets;
+  Asset asset((string) "123", (string) "TEST", (string) "HELLO");
+  assets.push_back(asset);
+  
+  PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+  
+  xmlNodePtr pi = doc->children;
+  CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
+  CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Assets.xsl\""), string((const char*) pi->content));
+  
+  XmlPrinter::setAssetsStyle("");
+}
+
+
+// Helper methods
 
 
 DataItem * XmlPrinterTest::getDataItem(const char *name)
@@ -606,7 +733,51 @@ void XmlPrinterTest::testPrintCuttingTool()
   {
     PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@toolId", "KSSP300R4SD43L240");
-  }  
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@removed", NULL);
+  }
+}
+
+void XmlPrinterTest::testPrintRemovedCuttingTool()
+{
+  vector<AssetPtr> assets;
+  
+  string document = getFile("asset1.xml");
+  AssetPtr asset = config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
+  asset->setRemoved(true);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+  
+  assets.push_back(asset);
+  
+  {
+    PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@removed", "true");
+  }
+}
+
+
+// CuttingTool tests
+void XmlPrinterTest::testPrintExtendedCuttingTool()
+{
+  vector<AssetPtr> assets;
+  
+  
+  XmlPrinter::addAssetsNamespace("urn:Example.com:Assets:1.3",
+                                  "/schemas/MTConnectAssets_1.3.xsd",
+                                  "x");
+
+  string document = getFile("ext_asset.xml");
+  AssetPtr asset = config->parseAsset("B732A08500HP.1", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  
+  assets.push_back(asset);
+  
+  {
+    PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//x:Color", "BLUE");
+  }
+  
+  XmlPrinter::clearAssetsNamespaces();
 }
 
 

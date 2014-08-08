@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 1.2.0.18
+MTConnect C++ Agent Version 1.3.0.0
 --------
 
 The C++ Agent provides the a complete implementation of the HTTP
@@ -7,6 +7,8 @@ server required by the MTConnect standard. The agent provides the
 protocol and data collection framework that will work as a standalone
 server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
+
+Version 1.3.0.0 added the filter constraints, references, cutting tool archetypes, and formatting styles.
 
 Version 1.2.0.0 added the capability to support assets.
 
@@ -95,6 +97,77 @@ sequence of characters followed by a `<CR>`. There no significance to
 the order of the keys, so the file can be specified in free form. We
 will go over some configurations from a minimal configuration to more
 complex multi-adapter configurations.
+
+###Serving Static Content###
+
+Using a Files Configuration section, indvidual files or directories can be 
+into the request file space from the agent. To do this, we use the Files top level 
+configuration declaration as follows:
+
+    Files {
+        schemas {
+            Path = ../schemas
+            Location = /schemas/
+        }
+        styles {
+            Path = ../styles
+            Location = /styles/
+        }
+    }
+
+Each set of files must be declared using a named file description, like schema or
+styles and the local `Path` and the `Location` the files will be mapped to in the
+HTTP server namespace. For example:
+
+    http://example.com:5000/schemas/MTConnectStreams_1.3.xsd will map to ../schemas/MTConnectStreams_1.3.xsd
+
+All files will be mapped and the directory names do not need to be the same. These files can be either served directly or can be used to extend the schema or add XSLT stylesheets for formatting the XML in browsers.
+
+###Specifying the Extended Schemas###
+
+To specify the new schema for the documents, use the following declaration:
+
+    StreamsNamespaces {
+      e {
+        Urn = urn:example.com:ExampleStreams:1.3
+        Location = /schemas/ExampleStreams_1.3.xsd
+      }
+    }
+
+This will use the ExampleStreams_1.3.xsd schema in the document. The `e` is the alias that will be
+used the reference the extended schema. The `Location` is the location of the xsd file relative in 
+the agent namespace. The `Location` must be mapped in the `Files` section.
+
+An optional `Path` can be added to the `...Namespaces` declaration instead of declaring the 
+`Files` section. The `Files` makes it easier to include multiple files from a directory and will
+automatically include all the default MTConnect schema files for the correct version. 
+(See `SchameVersion` option below)
+
+You can do this for any one of the other documents: 
+
+    StreamsNamespaces
+    DevicesNamespaces
+    AssetsNamespaces
+    ErrorNamespaces
+
+###Specifying the XML Document Style###
+
+The same can be done with style sheets, but only the Location is required.
+
+    StreamsStyle {
+      Location = /styles/Streams.xsl
+    }
+    
+An optional `Path` can also be used to reference the xsl file directly. This will not 
+include other files in the path like css or included xsl transforms. It is advised to
+use the `Files` declaration.
+    
+The following can also be declared:
+
+    DevicesStyle
+    StreamsStyle
+    AssetsStyle
+    ErrorStyle
 
 ###Example 1:###
 
@@ -186,9 +259,9 @@ as well be named `EnergySensor` if desired as illustrated below.
 
     Adapters
     {
-	Controller
+	    Controller
     	{
-	    Device = VMC-3Axis
+            Device = VMC-3Axis
             Host = 192.168.10.22
             Port = 7878 # *Default* value...
         }
@@ -386,6 +459,15 @@ Agent serve them up locally.
 	    Path = ./MTConnectDevices_1.2.xsd
 	  }
 	}
+	
+Or use the short form for all files:
+
+  Files {
+    schemas { 
+      Location = /schemas/MTConnectStreams_1.2.xsd
+      Path = ./MTConnectStreams_1.2.xsd
+    }
+  }
     
 If you have specified in your xs:include schemaLocation inside the 
 ExampleDevices_1.2.xsd file the location "/schemas/MTConnectStreams_1.2.xsd",
@@ -447,6 +529,10 @@ Configuration Parameters
 * `Port`	- The port number the agent binds to for requests.
 
     *Default*: 5000
+    
+* `ServerIp` - The server IP Address to bind to. Can be used to select the interface in IPV4 or IPV6.
+
+    *Default*: 0.0.0.0
 
 * `AllowPut`	- Allow HTTP PUT or POST of data item values or assets.
 
@@ -482,7 +568,16 @@ Configuration Parameters
     
 * `SchemaVersion` - Change the schema version to a different version number.
 
-    *Default*: 1.2
+    *Default*: 1.3
+
+* `ConversionRequired` - Global default for data item units conversion in the agent. 
+  Assumes the adapter has already done unit conversion.
+
+    *Default*: true
+    
+* `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
+
+    *Default*: true
 
 ###Adapter configuration items###
 
@@ -556,13 +651,31 @@ Configuration Parameters
       clock drift but will not give as accurate relative time since it will not take into
       consideration network latencies. This can be overriden on a per adapter basis.
 
-        *Default*: false
+        *Default*: Top Level Setting
         
-		* `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
+    * `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
 		  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
 
 		    *Default*: false
+		
+    * `RealTime` - Boost the thread priority of this adapter so that events are handled faster.
 
+        *Default*: false
+    
+    * `RelativeTime` - The timestamps will be given as relative offests represented as a floating 
+      point number of milliseconds. The offset will be added to the arrival time of the first 
+      recorded event.
+
+        *Default*: false
+
+    * `ConversionRequired` - Adapter setting for data item units conversion in the agent. 
+      Assumes the adapter has already done unit conversion. Defaults to global.
+
+        *Default*: Top Level Setting
+        
+    * `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
+
+        *Default*: Top Level Setting
 
 
 logger_config configuration items
@@ -582,7 +695,20 @@ logger_config configuration items
       directory as the executable.
 
         *Default*: file `adapter.log`
+        
+    * `max_size` - The maximum log file size. Suffix can be K for kilobytes, M for megabytes, or
+      G for gigabytes. No suffix will default to bytes (B). Case is ignored.
+    
+        *Default*: 10M
+        
+    * `max_index` - The maximum number of log files to keep.
 
+        *Default*: 9
+        
+    * `schedule` - The scheduled time to start a new file. Can be DAILY, WEEKLY, or NEVER.
+            
+        *Default*: NEVER
+    
 Adapter Agent Protocol Version 1.2
 -----
 

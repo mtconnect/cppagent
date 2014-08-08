@@ -593,6 +593,12 @@ namespace dlib
             function(f.function)
         {}
 
+        const std::vector<result_type> get_labels(
+        ) const { return function.get_labels(); }
+
+        unsigned long number_of_classes (
+        ) const { return function.number_of_classes(); }
+
         normalized_function (
             const vector_normalizer<sample_type>& normalizer_,
             const function_type& funct 
@@ -772,17 +778,28 @@ namespace dlib
         unsigned long number_of_classes (
         ) const { return labels.size(); }
 
-        result_type operator() (
+        std::pair<result_type, scalar_type> predict (
             const sample_type& x
         ) const
         {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(weights.size() > 0 && 
+                        weights.nr() == (long)number_of_classes() &&
+                        weights.nr() == b.size(),
+                "\t pair<result_type,scalar_type> multiclass_linear_decision_function::predict(x)"
+                << "\n\t This object must be properly initialized before you can use it."
+                << "\n\t weights.size():      " << weights.size()
+                << "\n\t weights.nr():        " << weights.nr()
+                << "\n\t number_of_classes(): " << number_of_classes()
+                );
+
             // Rather than doing something like, best_idx = index_of_max(weights*x-b)
             // we do the following somewhat more complex thing because this supports
             // both sparse and dense samples.
             scalar_type best_val = dot(rowm(weights,0),x) - b(0);
             unsigned long best_idx = 0;
 
-            for (unsigned long i = 0; i < labels.size(); ++i)
+            for (unsigned long i = 1; i < labels.size(); ++i)
             {
                 scalar_type temp = dot(rowm(weights,i),x) - b(i);
                 if (temp > best_val)
@@ -792,7 +809,25 @@ namespace dlib
                 }
             }
 
-            return labels[best_idx];
+            return std::make_pair(labels[best_idx], best_val);
+        }
+
+        result_type operator() (
+            const sample_type& x
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(weights.size() > 0 && 
+                        weights.nr() == (long)number_of_classes() &&
+                        weights.nr() == b.size(),
+                "\t result_type multiclass_linear_decision_function::operator()(x)"
+                << "\n\t This object must be properly initialized before you can use it."
+                << "\n\t weights.size():      " << weights.size()
+                << "\n\t weights.nr():        " << weights.nr()
+                << "\n\t number_of_classes(): " << number_of_classes()
+                );
+
+            return predict(x).first;
         }
     };
 

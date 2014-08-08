@@ -34,10 +34,14 @@
 #include "config_test.hpp"
 #include "agent.hpp"
 #include "adapter.hpp"
+#include "rolling_file_logger.hpp"
 #include <sstream>
+#include <dlib/dir_nav.h>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(ConfigTest);
+
+static dlib::logger sLogger("config_test");
 
 using namespace std;
 
@@ -309,48 +313,134 @@ void ConfigTest::testSpecifyMTCNamespace()
 
 void ConfigTest::testSetSchemaVersion()
 {
-  istringstream streams("SchemaVersion = 1.3\n");
+  istringstream streams("SchemaVersion = 1.4\n");
   
   mConfig->loadConfig(streams);  
   string version = XmlPrinter::getSchemaVersion();
-  CPPUNIT_ASSERT_EQUAL((string) "1.3", version);
+  CPPUNIT_ASSERT_EQUAL((string) "1.4", version);
   
-  XmlPrinter::setSchemaVersion("1.2");
+  XmlPrinter::setSchemaVersion("1.3");
 }
 
 void ConfigTest::testSchemaDirectory()
 {
-  istringstream schemas("Files {\n"
+  istringstream schemas("SchemaVersion = 1.3\n"
+                        "Files {\n"
                         "schemas {\n"
                         "Location = /schemas\n"
                         "Path = ../schemas\n"
                         "}\n"
                         "}\n");
-  
+
   mConfig->loadConfig(schemas);
   string path = XmlPrinter::getStreamsUrn("m");
-  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectStreams:1.2", path);
+  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectStreams:1.3", path);
   string location = XmlPrinter::getStreamsLocation("m");
-  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectStreams_1.2.xsd", location);
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectStreams_1.3.xsd", location);
 
   path = XmlPrinter::getDevicesUrn("m");
-  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectDevices:1.2", path);
+  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectDevices:1.3", path);
   location = XmlPrinter::getDevicesLocation("m");
-  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectDevices_1.2.xsd", location);
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectDevices_1.3.xsd", location);
 
   path = XmlPrinter::getAssetsUrn("m");
-  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectAssets:1.2", path);
+  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectAssets:1.3", path);
   location = XmlPrinter::getAssetsLocation("m");
-  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectAssets_1.2.xsd", location);
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectAssets_1.3.xsd", location);
 
   path = XmlPrinter::getErrorUrn("m");
-  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectError:1.2", path);
+  CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectError:1.3", path);
   location = XmlPrinter::getErrorLocation("m");
-  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectError_1.2.xsd", location);
-  
+  CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectError_1.3.xsd", location);
+
   XmlPrinter::clearDevicesNamespaces();
   XmlPrinter::clearErrorNamespaces();
   XmlPrinter::clearStreamsNamespaces();
   XmlPrinter::clearAssetsNamespaces();
 }
 
+void ConfigTest::testLogFileRollover()
+{
+  istringstream logger("logger_config {"
+                        "logging_level = ALL\n"
+                        "max_size = 150\n"
+                        "max_index = 5\n"
+                        "output = file agent.log"
+                        "}\n");
+  char buffer[64];
+  ::remove("agent.log");
+  for (int i = 1; i <= 10; i++) {
+    sprintf(buffer, "agent.log.%d", i);
+    ::remove(buffer);
+  }
+  
+  mConfig->loadConfig(logger);
+  
+  CPPUNIT_ASSERT(file_exists("agent.log"));
+  CPPUNIT_ASSERT(file_exists("agent.log.1"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.2"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.3"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.4"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.5"));
+
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.2"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.3"));
+  
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.2"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.3"));
+
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.3"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.4"));
+
+  sLogger << LERROR << "12345678901234567890";
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.4"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.5"));
+
+  sLogger << LERROR << "12345678901234567890";
+  sLogger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.5"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.6"));
+}
+
+void ConfigTest::testMaxSize()
+{
+  istringstream logger("logger_config {"
+                        "max_size = 150\n"
+                        "}\n");
+  mConfig->loadConfig(logger);
+  
+  RollingFileLogger *fl = mConfig->getLogger();
+  CPPUNIT_ASSERT_EQUAL(150, fl->getMaxSize());
+
+
+  istringstream logger2("logger_config {"
+                       "max_size = 15K\n"
+                       "}\n");
+  mConfig->loadConfig(logger2);
+  
+  fl = mConfig->getLogger();
+  CPPUNIT_ASSERT_EQUAL(15 * 1024, fl->getMaxSize());
+
+
+  istringstream logger3("logger_config {"
+                        "max_size = 15M\n"
+                        "}\n");
+  mConfig->loadConfig(logger3);
+  
+  fl = mConfig->getLogger();
+  CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024, fl->getMaxSize());
+
+
+  istringstream logger4("logger_config {"
+                        "max_size = 15G\n"
+                        "}\n");
+  mConfig->loadConfig(logger4);
+  
+  fl = mConfig->getLogger();
+  CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024 * 1024, fl->getMaxSize());
+
+}

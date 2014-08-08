@@ -88,10 +88,11 @@ namespace dlib
             << "\n\t scale:         " << scale 
         );
 
-        const double pi = 3.1415926535898;
 
         std::vector<double> ang;
         std::vector<dlib::vector<double,2> > samples;
+
+        const long sc = static_cast<long>(scale+0.5);
 
         // accumulate a bunch of angle and vector samples
         dlib::vector<double,2> vect;
@@ -103,8 +104,8 @@ namespace dlib
                 {
                     // compute a Gaussian weighted gradient and the gradient's angle.
                     const double gauss = gaussian(c,r, 2.5);
-                    vect.x() = gauss*haar_x(img, scale*point(c,r)+center, static_cast<long>(4*scale+0.5));
-                    vect.y() = gauss*haar_y(img, scale*point(c,r)+center, static_cast<long>(4*scale+0.5));
+                    vect.x() = gauss*haar_x(img, sc*point(c,r)+center, 4*sc);
+                    vect.y() = gauss*haar_y(img, sc*point(c,r)+center, 4*sc);
                     samples.push_back(vect);
                     ang.push_back(atan2(vect.y(), vect.x()));
                 }
@@ -163,7 +164,7 @@ namespace dlib
         matrix<double,64,1,MM,L>& des
     )
     {
-        DLIB_ASSERT(get_rect(img).contains(centered_rect(center, (unsigned long)(31*scale),(unsigned long)(31*scale))) == true &&
+        DLIB_ASSERT(get_rect(img).contains(centered_rect(center, (unsigned long)(32*scale),(unsigned long)(32*scale))) == true &&
                     scale > 0,
             "\tvoid compute_surf_descriptor(img, center, scale, angle)"
             << "\n\tAll arguments to this function must be > 0"
@@ -175,6 +176,7 @@ namespace dlib
         point_rotator rot(angle);
         point_rotator inv_rot(-angle);
 
+        const long sc = static_cast<long>(scale+0.5);
         long count = 0;
 
         // loop over the 4x4 grid of histogram buckets 
@@ -184,17 +186,29 @@ namespace dlib
             {
                 dlib::vector<double,2> vect, abs_vect, temp;
 
-                // now loop over 25 points in this bucket and sum their features 
-                for (long y = r; y < r+5; ++y)
+                // now loop over 25 points in this bucket and sum their features.  Note
+                // that we include 1 pixels worth of padding around the outside of each 5x5
+                // cell.  This is to help neighboring cells interpolate their counts into
+                // each other a little bit.
+                for (long y = r-1; y < r+5+1; ++y)
                 {
-                    for (long x = c; x < c+5; ++x)
+                    if (y < -10 || y >= 10)
+                        continue;
+                    for (long x = c-1; x < c+5+1; ++x)
                     {
+                        if (x < -10 || x >= 10)
+                            continue;
+
                         // get the rotated point for this extraction point
                         point p(rot(point(x,y)*scale) + center); 
 
-                        const double gauss = gaussian(x,y, 3.3);
-                        temp.x() = gauss*haar_x(img, p, static_cast<long>(2*scale+0.5));
-                        temp.y() = gauss*haar_y(img, p, static_cast<long>(2*scale+0.5));
+                        // Give points farther from the center of the bucket a lower weight.  
+                        const long center_r = r+2;
+                        const long center_c = c+2;
+                        const double weight = 1.0/(4+std::abs(center_r-y) + std::abs(center_c-x));
+
+                        temp.x() = weight*haar_x(img, p, 2*sc);
+                        temp.y() = weight*haar_y(img, p, 2*sc);
 
                         // rotate this vector into alignment with the surf descriptor box 
                         temp = inv_rot(temp);
@@ -222,17 +236,23 @@ namespace dlib
     template <typename image_type>
     const std::vector<surf_point> get_surf_points (
         const image_type& img,
-        long max_points
+        long max_points = 10000,
+        double detection_threshold = 30.0
     )
     {
-        DLIB_ASSERT(max_points > 0,
+        DLIB_ASSERT(max_points > 0 && detection_threshold >= 0,
             "\t std::vector<surf_point> get_surf_points()"
-            << "\n\t invalid arguments to this function"
-            << "\n\t max_points: " << max_points 
+            << "\n\t Invalid arguments were given to this function."
+            << "\n\t max_points:          " << max_points 
+            << "\n\t detection_threshold: " << detection_threshold 
         );
 
+        // Figure out the proper scalar type we should use to work with these pixels.  
+        typedef typename pixel_traits<typename image_type::type>::basic_pixel_type bp_type;
+        typedef typename promote<bp_type>::type working_pixel_type;
+
         // make an integral image first
-        integral_image int_img;
+        integral_image_generic<working_pixel_type> int_img;
         int_img.load(img);
 
         // now make a hessian pyramid
@@ -241,7 +261,7 @@ namespace dlib
 
         // now get all the interest points from the hessian pyramid
         std::vector<interest_point> points; 
-        get_interest_points(pyr, 0.10, points);
+        get_interest_points(pyr, detection_threshold, points);
         std::vector<surf_point> spoints;
 
         // sort all the points by how strong their detect is
@@ -252,7 +272,7 @@ namespace dlib
         for (unsigned long i = 0; i < std::min((size_t)max_points,points.size()); ++i)
         {
             // ignore points that are close to the edge of the image
-            const double border = 31;
+            const double border = 32;
             const unsigned long border_size = static_cast<unsigned long>(border*points[i].scale);
             if (get_rect(int_img).contains(centered_rect(points[i].center, border_size, border_size)))
             {

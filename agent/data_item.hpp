@@ -25,11 +25,11 @@
 #include "globals.hpp"
 #include "change_observer.hpp"
 
-class Adapter;
-
 #ifdef PASCAL
 #undef PASCAL
 #endif
+
+class Adapter;
 
 class DataItem : public ChangeSignaler
 {
@@ -45,7 +45,14 @@ public:
   enum ERepresentation
   {
     VALUE,
-    TIME_SERIES
+    TIME_SERIES,
+    DISCRETE
+  };
+  
+  enum EFilterType
+  {
+    FILTER_MINIMUM_DELTA,
+    FILTER_NONE
   };
     
   
@@ -140,7 +147,9 @@ public:
   bool isAlarm() const { return mIsAlarm; }
   bool isMessage() const { return mIsMessage; }
   bool isAssetChanged() const { return mIsAssetChanged; }
+  bool isAssetRemoved() const { return mIsAssetRemoved; }
   bool isTimeSeries() const { return mRepresentation == TIME_SERIES; }
+  bool isDiscrete() const { return mRepresentation == DISCRETE; }
     
   /* Set/get component that data item is associated with */
   void setComponent(Component& component) { mComponent = &component; }
@@ -165,28 +174,51 @@ public:
     return false;
   }
   
+  /* Filter checking */
+  bool isFiltered(const double aValue) {
+    if (mCategory != SAMPLE || mFilterType == FILTER_NONE)
+      return false;
+    
+    if (!ISNAN(mLastSampleValue))
+    {
+      if (aValue > (mLastSampleValue - mFilterValue) && aValue < (mLastSampleValue + mFilterValue)) {
+        // Filter value
+        return true;      
+      }
+    }
+    
+    mLastSampleValue = aValue;
+    return false;
+  }
+  
   /* Constrainsts */
   bool hasConstraints() { return mHasConstraints; }
   std::string getMaximum() const { return mMaximum; }
   std::string getMinimum() const { return mMinimum; }
   std::vector<std::string> &getConstrainedValues() { return mValues; }
   
+  EFilterType getFilterType() const { return mFilterType; }
+  double getFilterValue() const { return mFilterValue; }
+  
   void setMaximum(std::string aMax) { mMaximum = aMax; mHasConstraints = true; }
   void setMinimum(std::string aMin) { mMinimum = aMin; mHasConstraints = true; }
   void addConstrainedValue(std::string aValue) { mValues.push_back(aValue); mHasConstraints = true; }
+  
+  void setFilterType(EFilterType aType) { mFilterType = aType; mHasConstraints = true; }
+  void setFilterValue(double aValue) { mFilterValue = aValue; }
 
   bool conversionRequired();
   std::string convertValue(const std::string& value);
   float convertValue(float aValue);
   
   Adapter *getDataSource() const { return mDataSource;  }
-  void setDataSource(Adapter *aSource) { if (mDataSource != aSource) mDataSource = aSource; }
+  void setDataSource(Adapter *aSource);
   bool operator<(DataItem &aOther);
 
   bool operator==(DataItem &aOther) {
     return mId == aOther.mId;
   }
-  
+    
 protected:
   double simpleFactor(const std::string& units);
   std::map<std::string, std::string> buildAttributes() const;
@@ -228,7 +260,7 @@ protected:
   float mNativeScale;
   bool mHasNativeScale;
   bool mThreeD;
-  bool mIsMessage, mIsAlarm, mIsAssetChanged;
+  bool mIsMessage, mIsAlarm, mIsAssetChanged, mIsAssetRemoved;
   
   /* Sig figs of data item */
   unsigned int mSignificantDigits;
@@ -245,11 +277,15 @@ protected:
   std::vector<std::string> mValues;
   bool mHasConstraints;
   
+  double mFilterValue;
+  EFilterType mFilterType;
+  
   /* Component that data item is associated with */  
   Component * mComponent;
 
-  /* Duplicate checking */
+  /* Duplicate and filter checking */
   std::string mLastValue;
+  double mLastSampleValue;
   
   /* Attrubutes */
   std::map<std::string, std::string> mAttributes;
@@ -260,7 +296,7 @@ protected:
   /* Conversion factor */
   double mConversionFactor;
   double mConversionOffset;
-  bool mConversionDetermined, mConversionRequired, mHasFactor;
+  bool mConversionDetermined, mConversionRequired, mHasFactor;  
 };
 
 #endif

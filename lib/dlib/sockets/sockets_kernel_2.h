@@ -113,8 +113,8 @@ namespace dlib
             connection*& new_connection,
             unsigned short foreign_port, 
             const std::string& foreign_ip, 
-            unsigned short local_port = 0,
-            const std::string& local_ip = ""
+            unsigned short local_port,
+            const std::string& local_ip
         );
 
     public:
@@ -182,6 +182,9 @@ namespace dlib
             sd_mutex.unlock();            
             return temp;
         }
+
+        int disable_nagle(
+        );
 
         typedef int socket_descriptor_type;
 
@@ -296,7 +299,7 @@ namespace dlib
         friend int create_listener (
             listener*& new_listener,
             unsigned short port,
-            const std::string& ip = ""
+            const std::string& ip
         );
 
     public:

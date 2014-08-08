@@ -78,12 +78,31 @@ namespace dlib
                   (i.e. rect must not be outside the integral image)
             ensures
                 - Let O denote the image this integral image was generated from.
-                  Then this function returns sum(subm(array_to_matrix(O),rect)).
+                  Then this function returns sum(subm(mat(O),rect)).
                   That is, this function returns the sum of the pixels in O that
                   are contained within the given rectangle.
         !*/
 
+        void swap(
+            integral_image_generic& item
+        );
+        /*!
+            ensures
+                - swaps *this and item
+        !*/
+
     };
+
+// ----------------------------------------------------------------------------------------
+
+    template < typename T >
+    void swap (
+        integral_image_generic<T>& a,
+        integral_image_generic<T>& b
+    ) { a.swap(b); }
+    /*!
+        provides a global swap function
+    !*/ 
 
 // ----------------------------------------------------------------------------------------
 

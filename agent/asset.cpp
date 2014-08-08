@@ -19,13 +19,28 @@
 
 using namespace std;
 
-Asset::Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent)
+Asset::Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
+             const bool aRemoved)
+  : mAssetId(aAssetId), mContent(aContent),  mType(aType), mRemoved(aRemoved)
 {
-  mAssetId = aAssetId;
-  mContent = aContent;
-  mType = aType;
 }
 
 Asset::~Asset()
 {
 }
+
+void Asset::addIdentity(const std::string &aKey, const std::string &aValue)
+{
+  if (aKey == "deviceUuid") {
+    mDeviceUuid = aValue;
+  } else if (aKey == "timestamp") {
+    mTimestamp = aValue;
+  } else if (aKey == "removed") {
+    mRemoved = aValue == "true";
+  } else if (aKey == "assetId") {
+    mAssetId = aValue;
+  } else {
+    mIdentity[aKey] = aValue;
+  }
+}
+

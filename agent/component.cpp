@@ -16,7 +16,9 @@
 
 #include "component.hpp"
 #include "data_item.hpp"
+#include "device.hpp"
 #include <stdlib.h>
+#include <stdexcept>
 
 using namespace std;
 
@@ -31,18 +33,22 @@ const string Component::SComponentSpecs[NumComponentSpecs] = {
   "Configuration",
   "Description",
   "Source",
-  "text"
+  "text",
+  "References",
+  "Reference"
 };
 
 /* Component public methods */
 Component::Component(const string& cls, map<string, string> attributes,
                      const string &aPrefix)
+ : mAssetChanged(NULL), mAssetRemoved(NULL)
 {
   mId = attributes["id"];
+  
   mName = attributes["name"];
   mNativeName = attributes["nativeName"];
-  
   mUuid = attributes["uuid"];
+  
   if (attributes["sampleInterval"].empty()) {
     mSampleInterval = (float) (attributes["sampleRate"].empty()) ?
       0.0f : atof(attributes["sampleRate"].c_str());
@@ -69,7 +75,11 @@ std::map<string, string> Component::buildAttributes() const
   std::map<string, string> attributes;
   
   attributes["id"] = mId;
-  attributes["name"] = mName;
+  
+  if (!mName.empty())
+  {
+    attributes["name"] = mName;
+  }
   
   if (mSampleInterval != 0.0f)
   {
@@ -91,47 +101,11 @@ std::map<string, string> Component::buildAttributes() const
 
 void Component::addDescription(string body, map<string, string> attributes)
 {
-  if (!attributes["manufacturer"].empty())
-  {
-    mManufacturer = attributes["manufacturer"];
-  }
-  
-  if (!attributes["serialNumber"].empty())
-  {
-    mSerialNumber = attributes["serialNumber"];
-  }
-  
-  if (!attributes["station"].empty())
-  {
-    mStation = attributes["station"];
-  }
-  
+  mDescription = attributes;
   if (!body.empty())
   {
     mDescriptionBody = body;
   }
-}
-
-std::map<string, string> Component::getDescription() const
-{
-  std::map<string, string> description;
-  
-  if (!mManufacturer.empty())
-  {
-    description["manufacturer"] = mManufacturer;
-  }
-  
-  if (!mSerialNumber.empty())
-  {
-    description["serialNumber"] = mSerialNumber;
-  }
-  
-  if (!mStation.empty())
-  {
-    description["station"] = mStation;
-  }
-  
-  return description;
 }
 
 Device * Component::getDevice()
@@ -156,7 +130,31 @@ void Component::addDataItem(DataItem& dataItem)
     mAvailability = &dataItem;
   else if (dataItem.getType() == "ASSET_CHANGED")
     mAssetChanged = &dataItem;
-    
+  else if (dataItem.getType() == "ASSET_REMOVED")
+    mAssetRemoved = &dataItem;
+  
   mDataItems.push_back(&dataItem); 
 }
+
+void Component::resolveReferences()
+{
+  Device *device = getDevice();
+  
+  std::list<Reference>::iterator iter;
+  for (iter = mReferences.begin(); iter != mReferences.end(); iter++)
+  {
+    DataItem *di = device->getDeviceDataItem(iter->mId);
+    if (di == NULL) {
+      throw runtime_error("Cannot resolve Reference for component " + mName + " to data item " + iter->mId);
+    }
+    iter->mDataItem = di;
+  }
+  
+  std::list<Component*>::iterator comp;
+  for (comp = mChildren.begin(); comp != mChildren.end(); comp++)
+  {
+    (*comp)->resolveReferences();
+  }
+}
+
 

@@ -27,7 +27,6 @@
 #include <dlib/config_reader.h>
 #include <dlib/queue.h>
 
-
 using namespace std;
 
 static const string sUnavailable("UNAVAILABLE");
@@ -40,12 +39,21 @@ static dlib::logger sLogger("agent");
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int aCheckpointFreq)
   : mPutEnabled(false), mLogStreamData(false)
 {
+  mMimeTypes["xsl"] = "text/xsl";
+  mMimeTypes["xml"] = "text/xml";
+  mMimeTypes["css"] = "text/css";
+  mMimeTypes["xsd"] = "text/xml";
+  mMimeTypes["jpg"] = "image/jpeg";
+  mMimeTypes["jpeg"] = "image/jpeg";
+  mMimeTypes["png"] = "image/png";
+  mMimeTypes["ico"] = "image/x-icon";
+  
   try
   {
     // Load the configuration for the Agent
     mXmlParser = new XmlParser();
     mDevices = mXmlParser->parseFile(configXmlPath);  
-    vector<Device *>::iterator device;
+    std::vector<Device *>::iterator device;
     std::set<std::string> uuids;
     for (device = mDevices.begin(); device != mDevices.end(); ++device) 
     {
@@ -53,6 +61,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
           throw runtime_error("Duplicate UUID: " + (*device)->getUuid());
       
       uuids.insert((*device)->getUuid());
+      (*device)->resolveReferences();
     }
   }
   catch (runtime_error & e)
@@ -96,7 +105,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   
   // Add the devices to the device map and create availability and 
   // asset changed events if they don't exist
-  vector<Device *>::iterator device;
+  std::vector<Device *>::iterator device;
   for (device = mDevices.begin(); device != mDevices.end(); ++device) 
   {
     mDeviceMap[(*device)->getName()] = *device;
@@ -119,12 +128,30 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       (*device)->mAvailabilityAdded = true;
     }
     
-    if ((*device)->getAssetChanged() == NULL)
+    int major, minor;
+    char c;
+    stringstream ss(XmlPrinter::getSchemaVersion());
+    ss >> major >> c >> minor;
+    if ((*device)->getAssetChanged() == NULL && (major > 1 || (major == 1 && minor >= 2)))
     {
-      // Create availability data item and add it to the device.
+      // Create asset change data item and add it to the device.
       std::map<string,string> attrs;
       attrs["type"] = "ASSET_CHANGED";
       attrs["id"] = (*device)->getId() + "_asset_chg";
+      attrs["category"] = "EVENT";
+      
+      DataItem *di = new DataItem(attrs);
+      di->setComponent(*(*device));
+      (*device)->addDataItem(*di);
+      (*device)->addDeviceDataItem(*di);
+    }
+  
+    if ((*device)->getAssetRemoved() == NULL && (major > 1 || (major == 1 && minor >= 3)))
+    {
+      // Create asset removed data item and add it to the device.
+      std::map<string,string> attrs;
+      attrs["type"] = "ASSET_REMOVED";
+      attrs["id"] = (*device)->getId() + "_asset_rem";
       attrs["category"] = "EVENT";
       
       DataItem *di = new DataItem(attrs);
@@ -164,8 +191,8 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
         mDataItemMap[d->getId()] = d;
       else {
         sLogger << LFATAL << "Duplicate DataItem id " << d->getId() <<
-        " for device: " << (*device)->getName() << " and data item name: " <<
-        d->getName();
+                  " for device: " << (*device)->getName() << " and data item name: " <<
+                  d->getName();
         exit(1);
       }
     }
@@ -185,13 +212,13 @@ void Agent::start()
 {
   try {
     // Start all the adapters
-    vector<Adapter*>::iterator iter;
+    std::vector<Adapter*>::iterator iter;
     for (iter = mAdapters.begin(); iter != mAdapters.end(); iter++) {
       (*iter)->start();
     }
     
     // Start the server. This blocks until the server stops.
-    server::http_1a::start();
+    server_http::start();
   }
   catch (dlib::socket_error &e) {
     sLogger << LFATAL << "Cannot start server: " << e.what();
@@ -202,7 +229,7 @@ void Agent::start()
 void Agent::clear()
 {
   // Stop all adapter threads...
-  vector<Adapter *>::iterator iter;
+  std::vector<Adapter *>::iterator iter;
   
   sLogger << LINFO << "Shutting down adapters";
   // Deletes adapter and waits for it to exit.
@@ -239,7 +266,9 @@ void Agent::registerFile(const string &aUri, const string &aPath)
       mFileMap.insert(pair<string,string>(uri, file.full_name()));
       
       // Check if the file name maps to a standard MTConnect schema file.
-      if (name.find("MTConnect") == 0 && name.substr(name.length() - 4, 4) == ".xsd") {
+      if (name.find("MTConnect") == 0 && name.substr(name.length() - 4, 4) == ".xsd" &&
+          XmlPrinter::getSchemaVersion() == name.substr(name.length() - 7, 3)) {
+        string version = name.substr(name.length() - 7, 3);
         if (name.substr(9, 5) == "Error") {
           string urn = "urn:mtconnect.org:MTConnectError:" + XmlPrinter::getSchemaVersion();
           XmlPrinter::addErrorNamespace(urn, uri, "m");
@@ -257,7 +286,7 @@ void Agent::registerFile(const string &aUri, const string &aPath)
     }
   }
   catch (directory::dir_not_found e) {
-    sLogger << LDEBUG << "registerFile: Path " << aPath << "is not a directory: "
+    sLogger << LDEBUG << "registerFile: Path " << aPath << " is not a directory: "
             << e.what() << ", trying as a file";
     try {
       file file(aPath);
@@ -319,14 +348,6 @@ const string Agent::on_request (const incoming_things& incoming,
     
     string first =  path.substr(1, loc1-1);
     string call, device;
-
-    // Check for explicate TE of chunked. Though not required, we will use it to signal 
-    // a chunked delivery. This will provide compatibility with WebRequest in .NET
-    bool chunked = false;
-    if (incoming.headers.count("TE") > 0)
-    {
-      chunked = incoming.headers["TE"].find("chunked") != string::npos;        
-    }
     
     if (first == "assets" || first == "asset")
     {
@@ -441,8 +462,7 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
 }
 
 bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
-                     const string &aType,
-                     const string &aTime)
+                     const string &aType, const string &aTime)
 {
   // Check to make sure the values are present
   if (aType.empty() || aAsset.empty() || aId.empty()) {
@@ -456,54 +476,72 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
   else
     time = aTime;
 
+  AssetPtr ptr;
   
   // Lock the asset addition to protect from multithreaded collisions. Releaes
   // before we add the event so we don't cause a race condition.
   {
     dlib::auto_mutex lock(*mAssetLock);
     
-    AssetPtr old = mAssetMap[aId];
-    if (old.getObject() != NULL)
-      mAssets.remove(old);
-    else
-      mAssetCounts[aType] += 1;
+    try {
+      ptr = mXmlParser->parseAsset(aId, aType, aAsset);
+    }
+    catch (runtime_error &e) {
+      sLogger << LERROR << "addAsset: Error parsing asset: " << aAsset << "\n" << e.what();
+      return false;
+    }
     
-    AssetPtr ptr;
-    if (aType == "CuttingTool") {
-      try {
-        ptr = mXmlParser->parseAsset(aId, aType, aAsset);
-      }
-      catch (runtime_error &e) {
-        sLogger << LERROR << "addAsset: Error parsing asset: " << aAsset << "\n" << e.what();
-        return false;
-      }
-    } else {
-      ptr.setObject(new Asset(aId, aType, aAsset), true);
-      ptr->setTimestamp(time);
-      ptr->setDeviceUuid(aDevice->getUuid());
+    if (ptr.getObject() == NULL)
+    {
+      sLogger << LERROR << "addAssete: Error parsing asset";
+      return false;
+    }
+
+    AssetPtr *old = &mAssetMap[aId];
+    if (!ptr->isRemoved())
+    {
+      if (old->getObject() != NULL)
+        mAssets.remove(old);
+      else
+        mAssetCounts[aType] += 1;
+    } else if (old->getObject() == NULL) {
+      sLogger << LWARN << "Cannot remove non-existent asset";
+      return false;
     }
     
     if (ptr.getObject() == NULL) {
       sLogger << LWARN << "Asset could not be created";
       return false;
     } else {
-      if (ptr->getTimestamp().empty())
-        ptr->setTimestamp(time);
-      if (ptr->getDeviceUuid().empty())
-        ptr->setDeviceUuid(aDevice->getUuid());
+      ptr->setAssetId(aId);
+      ptr->setTimestamp(time);
+      ptr->setDeviceUuid(aDevice->getUuid());
     }
     
     // Check for overflow
     if (mAssets.size() >= mMaxAssets)
     {
-      old = mAssets.front();
-      mAssetCounts[old->getType()] -= 1;
+      AssetPtr oldref(*mAssets.front());
+      mAssetCounts[oldref->getType()] -= 1;
       mAssets.pop_front();
-      mAssetMap.erase(old->getAssetId());
+      mAssetMap.erase(oldref->getAssetId());
+      
+      // Add secondary keys
+      AssetKeys &keys = oldref->getKeys();
+      AssetKeys::iterator iter;
+      for (iter = keys.begin(); iter != keys.end(); iter++)
+      {
+        AssetIndex &index = mAssetIndices[iter->first];
+        index.erase(iter->second);
+      }
     }
     
     mAssetMap[aId] = ptr;
-    mAssets.push_back(ptr);
+    if (!ptr->isRemoved())
+    {
+      AssetPtr &newPtr = mAssetMap[aId];
+      mAssets.push_back(&newPtr);
+    }
     
     // Add secondary keys
     AssetKeys &keys = ptr->getKeys();
@@ -516,7 +554,10 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
   }
   
   // Generate an asset chnaged event.
-  addToBuffer(aDevice->getAssetChanged(), aType + "|" + aId, time);
+  if (ptr->isRemoved())
+    addToBuffer(aDevice->getAssetRemoved(), aType + "|" + aId, time);
+  else
+    addToBuffer(aDevice->getAssetChanged(), aType + "|" + aId, time);
   
   return true;
 }
@@ -538,7 +579,7 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
     if (asset.getObject() == NULL)
       return false;
     
-    if (asset->getType() != "CuttingTool")
+    if (asset->getType() != "CuttingTool" && asset->getType() != "CuttingToolArchitype")
       return false;
     
     CuttingToolPtr tool((CuttingTool*) asset.getObject());
@@ -559,6 +600,10 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
       return false;
     }
     
+    // Move it to the front of the queue
+    mAssets.remove(&asset);
+    mAssets.push_back(&asset);
+    
     tool->setTimestamp(aTime);
     tool->setDeviceUuid(aDevice->getUuid());
     tool->changed();
@@ -569,8 +614,35 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
   return true;
 }
 
+bool Agent::removeAsset(Device *aDevice, const std::string &aId, const string &aTime)
+{
+  AssetPtr asset;
+
+  string time;
+  if (aTime.empty())
+    time = getCurrentTime(GMT_UV_SEC);
+  else
+    time = aTime;
+  
+  {
+    dlib::auto_mutex lock(*mAssetLock);
+    
+    asset = mAssetMap[aId];
+    if (asset.getObject() == NULL)
+      return false;
+    
+    asset->setRemoved(true);
+    asset->setTimestamp(aTime);
+  }
+  
+  addToBuffer(aDevice->getAssetRemoved(), asset->getType() + "|" + aId, time);
+  
+  return true;
+}
+
+
 /* Add values for related data items UNAVAILABLE */
-void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
+void Agent::disconnected(Adapter *anAdapter, std::vector<Device*> aDevices)
 {
   string time = getCurrentTime(GMT_UV_SEC);
   sLogger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
@@ -612,7 +684,7 @@ void Agent::disconnected(Adapter *anAdapter, vector<Device*> aDevices)
   }
 }
 
-void Agent::connected(Adapter *anAdapter, vector<Device*> aDevices)
+void Agent::connected(Adapter *anAdapter, std::vector<Device*> aDevices)
 {
   if (anAdapter->isAutoAvailable()) {
     string time = getCurrentTime(GMT_UV_SEC);
@@ -781,7 +853,7 @@ string Agent::handlePut(
 
 string Agent::handleProbe(const string& name)
 {
-  vector<Device *> mDeviceList;
+  std::vector<Device *> mDeviceList;
   
   if (!name.empty())
   {
@@ -854,7 +926,7 @@ std::string Agent::handleAssets(std::ostream& aOut,
                                 const std::string& aList)
 {
   using namespace dlib;  
-  vector<AssetPtr> assets;
+  std::vector<AssetPtr> assets;
   if (!aList.empty()) 
   {
     auto_mutex lock(*mAssetLock);
@@ -887,13 +959,15 @@ std::string Agent::handleAssets(std::ostream& aOut,
     // Return all asssets, first check if there is a type attribute
     
     string type = aQueries["type"];
+    bool removed = (aQueries.count("removed") > 0 && aQueries["removed"] == "true");    
+    int count = checkAndGetParam(aQueries, "count", mAssets.size(),
+                                1, false, NO_VALUE32);
     
-    list<AssetPtr>::iterator iter;
-    for (iter = mAssets.begin(); iter != mAssets.end(); ++iter)
+    list<AssetPtr*>::reverse_iterator iter;
+    for (iter = mAssets.rbegin(); iter != mAssets.rend() && count > 0; ++iter, --count)
     {
-      if (type.empty() || type == (*iter)->getType())
-      {
-        assets.push_back(*iter);
+      if ((type.empty() || type == (**iter)->getType()) && (removed || !(**iter)->isRemoved())) {
+        assets.push_back(**iter);
       }
     }    
   }
@@ -927,58 +1001,85 @@ std::string Agent::storeAsset(std::ostream& aOut,
 
 string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
 {
+  // Get the mime type for the file.
+  bool unknown = true;
+  size_t last = aUri.find_last_of("./");
+  string contentType;
+  if (last != string::npos && aUri[last] == '.')
+  {
+    string ext = aUri.substr(last + 1);
+    if (mMimeTypes.count(ext) > 0)
+    {
+      contentType = mMimeTypes[ext];
+      unknown = false;
+    }
+  }
+  if (unknown)
+    contentType = "application/octet-stream";
+  
   // Check if the file is cached
-  std::map<string,string>::iterator cached = mFileCache.find(aUri);
+  RefCountedPtr<CachedFile> cachedFile;
+  std::map<string, RefCountedPtr<CachedFile> >::iterator cached = mFileCache.find(aUri);
   if (cached != mFileCache.end())
-    return cached->second;
-  
-  std::map<string,string>::iterator file = mFileMap.find(aUri);
-  
-  // Should never happen
-  if (file == mFileMap.end()) {
-    aOutgoing.http_return = 404;
-    aOutgoing.http_return_status = "File not found";
-    return "";
+    cachedFile = cached->second;
+  else
+  {
+    
+    std::map<string,string>::iterator file = mFileMap.find(aUri);
+    
+    // Should never happen
+    if (file == mFileMap.end()) {
+      aOutgoing.http_return = 404;
+      aOutgoing.http_return_status = "File not found";
+      return "";
+    }
+    
+    const char *path = file->second.c_str();
+    
+    struct stat fs;
+    int res = stat(path, &fs);
+    if (res != 0) {
+      aOutgoing.http_return = 404;
+      aOutgoing.http_return_status = "File not found";
+      return "";
+    }
+    
+    int fd = open(path, O_RDONLY | O_BINARY);
+    if (res < 0) {
+      aOutgoing.http_return = 404;
+      aOutgoing.http_return_status = "File not found";
+      return "";
+    }
+    
+    cachedFile.setObject(new CachedFile(fs.st_size), true);
+    int bytes = read(fd, cachedFile->mBuffer, fs.st_size);
+    close(fd);
+    
+    if (bytes < fs.st_size) {
+      aOutgoing.http_return = 404;
+      aOutgoing.http_return_status = "File not found";
+      return "";
+    }
+    
+    // If this is a small file, cache it.
+    if (bytes <= SMALL_FILE) {
+      mFileCache.insert(pair<string, RefCountedPtr<CachedFile> >(aUri, cachedFile));
+    }
   }
   
-  const char *path = file->second.c_str();
+  (*aOutgoing.out) << "HTTP/1.1 200 OK\r\n"
+    "Date: " << getCurrentTime(HUM_READ) << "\r\n"
+    "Server: MTConnectAgent\r\n"
+    "Connection: close\r\n"
+    "Content-Length: " << cachedFile->mSize << "\r\n"
+    "Expires: " << getCurrentTime(time(NULL) + 60 * 60 * 24, 0, HUM_READ) << "\r\n"
+    "Content-Type: " << contentType << "\r\n\r\n";
+
+  aOutgoing.out->write(cachedFile->mBuffer, cachedFile->mSize);
   
-  struct stat fs;
-  int res = stat(path, &fs);
-  if (res != 0) {
-    aOutgoing.http_return = 404;
-    aOutgoing.http_return_status = "File not found";
-    return "";
-  }
-  
-  int fd = open(path, O_RDONLY);
-  if (res < 0) {
-    aOutgoing.http_return = 404;
-    aOutgoing.http_return_status = "File not found";
-    return "";
-  }
-  
-  char *buffer = (char*) malloc(fs.st_size + 1);
-  
-  int bytes = read(fd, buffer, fs.st_size);
-  close(fd);
-  
-  if (bytes < fs.st_size) {
-    aOutgoing.http_return = 404;
-    aOutgoing.http_return_status = "File not found";
-    free(buffer);
-    return "";
-  }
-  
-  buffer[fs.st_size] = '\0';
-  string result = buffer;
-  free(buffer);
-  
-  // If this is a small file, cache it.
-  if (fs.st_size < SMALL_FILE)
-    mFileCache.insert(pair<string,string>(aUri, result));
-  
-  return result;
+  aOutgoing.out->setstate(ios::badbit);
+
+  return "";
 }
 
 void Agent::streamData(ostream& out,
@@ -1250,15 +1351,9 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
     
     // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
     start = (start <= firstSeq) ? firstSeq : start;
-    end = start + count;
-    if (end >= mSequence) {
-      end = mSequence;
-      endOfBuffer = true;
-    } else {
-      endOfBuffer = false;
-    }
     
-    for (uint64_t i = start; i < end; i++)
+    uint64_t i;
+    for (i = start; results.size() < count && i < mSequence; i++)
     {
       // Filter out according to if it exists in the list
       const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
@@ -1268,6 +1363,12 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
         results.push_back(event);
       }
     }
+    
+    end = i;
+    if (i >= mSequence)
+      endOfBuffer = true;
+    else
+      endOfBuffer = false;
     
     if (aObserver != NULL) aObserver->reset();
   }

@@ -1,4 +1,4 @@
-// Copyright (C) 2008  Davis E. King (davis@dlib.net)
+// Copyright (C) 2008  Davis E. King (davis@dlib.net), Steve Taylor
 // License: Boost Software License   See LICENSE.txt for the full license.
 #ifndef DLIB_STATISTICs_
 #define DLIB_STATISTICs_
@@ -8,6 +8,7 @@
 #include <cmath>
 #include "../algs.h"
 #include "../matrix.h"
+#include "../sparse_vector.h"
 
 namespace dlib
 {
@@ -35,43 +36,30 @@ namespace dlib
         void clear()
         {
             sum = 0;
-            sum_sqr = 0;
+            sum_sqr  = 0;
+            sum_cub  = 0;
+            sum_four = 0;
+
             n = 0;
-            maximum_n = std::numeric_limits<T>::max();
             min_value = std::numeric_limits<T>::infinity();
             max_value = -std::numeric_limits<T>::infinity();
-        }
-
-        void set_max_n (
-            const T& val
-        )
-        {
-            maximum_n = val;
         }
 
         void add (
             const T& val
         )
         {
-            const T div_n   = 1/(n+1);
-            const T n_div_n = n*div_n;
-
-            sum     = n_div_n*sum     + val*div_n;
-            sum_sqr = n_div_n*sum_sqr + val*div_n*val;
+            sum      += val;
+            sum_sqr  += val*val;
+            sum_cub  += cubed(val);
+            sum_four += quaded(val);
 
             if (val < min_value)
                 min_value = val;
             if (val > max_value)
                 max_value = val;
 
-            if (n < maximum_n)
-                ++n;
-        }
-
-        T max_n (
-        ) const
-        {
-            return max_n;
+            ++n;
         }
 
         T current_n (
@@ -83,7 +71,10 @@ namespace dlib
         T mean (
         ) const
         {
-            return sum;
+            if (n != 0)
+                return sum/n;
+            else
+                return 0;
         }
 
         T max (
@@ -122,8 +113,8 @@ namespace dlib
                 << "\n\tthis: " << this
                 );
 
-            T temp = n/(n-1);
-            temp = temp*(sum_sqr - sum*sum);
+            T temp = 1/(n-1);
+            temp = temp*(sum_sqr - sum*sum/n);
             // make sure the variance is never negative.  This might
             // happen due to numerical errors.
             if (temp >= 0)
@@ -145,6 +136,43 @@ namespace dlib
             return std::sqrt(variance());
         }
 
+        T skewness (
+        ) const
+        {  
+            // make sure requires clause is not broken
+            DLIB_ASSERT(current_n() > 2,
+                "\tT running_stats::skewness"
+                << "\n\tyou have to add some numbers to this object first"
+                << "\n\tthis: " << this
+            );
+
+            T temp  = 1/n;
+            T temp1 = std::sqrt(n*(n-1))/(n-2); 
+            temp    = temp1*temp*(sum_cub - 3*sum_sqr*sum*temp + 2*cubed(sum)*temp*temp)/
+                      (std::sqrt(std::pow(temp*(sum_sqr-sum*sum*temp),3)));
+
+            return temp; 
+        }
+
+        T ex_kurtosis (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(current_n() > 3,
+                "\tT running_stats::kurtosis"
+                << "\n\tyou have to add some numbers to this object first"
+                << "\n\tthis: " << this
+            );
+
+            T temp = 1/n;
+            T m4   = temp*(sum_four - 4*sum_cub*sum*temp+6*sum_sqr*sum*sum*temp*temp
+                     -3*quaded(sum)*cubed(temp));
+            T m2   = temp*(sum_sqr-sum*sum*temp);
+            temp   = (n-1)*((n+1)*m4/(m2*m2)-3*(n-1))/((n-2)*(n-3));
+
+            return temp; 
+        }
+
         T scale (
             const T& val
         ) const
@@ -156,6 +184,22 @@ namespace dlib
                 << "\n\tthis: " << this
                 );
             return (val-mean())/std::sqrt(variance());
+        }
+
+        running_stats operator+ (
+            const running_stats& rhs
+        ) const
+        {
+            running_stats temp(*this);
+
+            temp.sum += rhs.sum;
+            temp.sum_sqr += rhs.sum_sqr;
+            temp.sum_cub += rhs.sum_cub;
+            temp.sum_four += rhs.sum_four;
+            temp.n += rhs.n;
+            temp.min_value = std::min(rhs.min_value, min_value);
+            temp.max_value = std::max(rhs.max_value, max_value);
+            return temp;
         }
 
         template <typename U>
@@ -173,10 +217,14 @@ namespace dlib
     private:
         T sum;
         T sum_sqr;
+        T sum_cub;
+        T sum_four;
         T n;
-        T maximum_n;
         T min_value;
         T max_value;
+    
+        T cubed  (const T& val) const {return val*val*val; }
+        T quaded (const T& val) const {return val*val*val*val; }
     };
 
     template <typename T>
@@ -185,10 +233,14 @@ namespace dlib
         std::ostream& out 
     )
     {
+        int version = 2;
+        serialize(version, out);
+
         serialize(item.sum, out);
         serialize(item.sum_sqr, out);
+        serialize(item.sum_cub, out);
+        serialize(item.sum_four, out);
         serialize(item.n, out);
-        serialize(item.maximum_n, out);
         serialize(item.min_value, out);
         serialize(item.max_value, out);
     }
@@ -199,10 +251,16 @@ namespace dlib
         std::istream& in
     ) 
     {
+        int version = 0;
+        deserialize(version, in);
+        if (version != 2)
+            throw dlib::serialization_error("Unexpected version number found while deserializing dlib::running_stats object.");
+
         deserialize(item.sum, in);
         deserialize(item.sum_sqr, in);
+        deserialize(item.sum_cub, in);
+        deserialize(item.sum_four, in);
         deserialize(item.n, in);
-        deserialize(item.maximum_n, in);
         deserialize(item.min_value, in);
         deserialize(item.max_value, in);
     }
@@ -287,13 +345,7 @@ namespace dlib
                 << "\n\tthis: " << this
                 );
 
-            T temp = 1/(n-1) * (sum_xy - sum_y*sum_x/n);
-            // make sure the variance is never negative.  This might
-            // happen due to numerical errors.
-            if (temp >= 0)
-                return temp;
-            else
-                return 0;
+            return 1/(n-1) * (sum_xy - sum_y*sum_x/n);
         }
 
         T correlation (
@@ -371,6 +423,21 @@ namespace dlib
                 );
 
             return std::sqrt(variance_y());
+        }
+
+        running_scalar_covariance operator+ (
+            const running_scalar_covariance& rhs
+        ) const
+        {
+            running_scalar_covariance temp(rhs);
+
+            temp.sum_xy += sum_xy;
+            temp.sum_x  += sum_x;
+            temp.sum_y  += sum_y;
+            temp.sum_xx += sum_xx;
+            temp.sum_yy += sum_yy;
+            temp.n      += n;
+            return temp;
         }
 
     private:
@@ -511,7 +578,7 @@ namespace dlib
                     << "\n\t b.size(): " << b.size()
         );
 
-        return mean(squared(matrix_cast<double>(vector_to_matrix(a))-matrix_cast<double>(vector_to_matrix(b))));
+        return mean(squared(matrix_cast<double>(mat(a))-matrix_cast<double>(mat(b))));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -574,9 +641,55 @@ namespace dlib
             return static_cast<long>(total_count);
         }
 
-        template <typename EXP>
-        void add (
-            const matrix_exp<EXP>& val
+        void set_dimension (
+            long size
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT( size > 0,
+                "\t void running_covariance::set_dimension()"
+                << "\n\t Invalid inputs were given to this function"
+                << "\n\t size: " << size 
+                << "\n\t this: " << this
+                );
+
+            clear();
+            vect_size = size;
+            total_sum.set_size(size);
+            total_cov.set_size(size,size);
+            total_sum = 0;
+            total_cov = 0;
+        }
+
+        template <typename T>
+        typename disable_if<is_matrix<T> >::type add (
+            const T& val
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(((long)max_index_plus_one(val) <= in_vector_size() && in_vector_size() > 0),
+                "\t void running_covariance::add()"
+                << "\n\t Invalid inputs were given to this function"
+                << "\n\t max_index_plus_one(val): " << max_index_plus_one(val) 
+                << "\n\t in_vector_size():        " << in_vector_size() 
+                << "\n\t this:                    " << this
+                );
+
+            for (typename T::const_iterator i = val.begin(); i != val.end(); ++i)
+            {
+                total_sum(i->first) += i->second;
+                for (typename T::const_iterator j = val.begin(); j != val.end(); ++j)
+                {
+                    total_cov(i->first, j->first) += i->second*j->second;
+                }
+            }
+
+            ++total_count;
+        }
+
+        template <typename T>
+        typename enable_if<is_matrix<T> >::type add (
+            const T& val
         )
         {
             // make sure requires clause is not broken
@@ -680,6 +793,340 @@ namespace dlib
     template <
         typename matrix_type
         >
+    class running_cross_covariance
+    {
+        /*!
+            INITIAL VALUE
+                - x_vect_size == 0
+                - y_vect_size == 0
+                - total_count == 0
+
+            CONVENTION
+                - x_vect_size == x_vector_size()
+                - y_vect_size == y_vector_size()
+                - total_count == current_n() 
+
+                - if (total_count != 0)
+                    - sum_x == the sum of all x vectors given to add()
+                    - sum_y == the sum of all y vectors given to add()
+                    - total_cov == sum of all x*trans(y) given to add()
+        !*/
+
+    public:
+
+        typedef typename matrix_type::mem_manager_type mem_manager_type;
+        typedef typename matrix_type::type scalar_type;
+        typedef typename matrix_type::layout_type layout_type;
+        typedef matrix<scalar_type,0,0,mem_manager_type,layout_type> general_matrix;
+        typedef matrix<scalar_type,0,1,mem_manager_type,layout_type> column_matrix;
+
+        running_cross_covariance(
+        )
+        {
+            clear();
+        }
+
+        void clear(
+        )
+        {
+            total_count = 0;
+
+            x_vect_size = 0;
+            y_vect_size = 0;
+
+            sum_x.set_size(0);
+            sum_y.set_size(0);
+            total_cov.set_size(0,0);
+        }
+
+        long x_vector_size (
+        ) const
+        {
+            return x_vect_size;
+        }
+
+        long y_vector_size (
+        ) const
+        {
+            return y_vect_size;
+        }
+
+        void set_dimensions (
+            long x_size,
+            long y_size
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT( x_size > 0 && y_size > 0,
+                "\t void running_cross_covariance::set_dimensions()"
+                << "\n\t Invalid inputs were given to this function"
+                << "\n\t x_size: " << x_size 
+                << "\n\t y_size: " << y_size 
+                << "\n\t this:   " << this
+                );
+
+            clear();
+            x_vect_size = x_size;
+            y_vect_size = y_size;
+            sum_x.set_size(x_size);
+            sum_y.set_size(y_size);
+            total_cov.set_size(x_size,y_size);
+
+            sum_x = 0;
+            sum_y = 0;
+            total_cov = 0;
+        }
+
+        long current_n (
+        ) const
+        {
+            return static_cast<long>(total_count);
+        }
+
+        template <typename T, typename U>
+        typename enable_if_c<!is_matrix<T>::value && !is_matrix<U>::value>::type add (
+            const T& x,
+            const U& y
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT( ((long)max_index_plus_one(x) <= x_vector_size() && x_vector_size() > 0) &&
+                         ((long)max_index_plus_one(y) <= y_vector_size() && y_vector_size() > 0) ,
+                "\t void running_cross_covariance::add()"
+                << "\n\t Invalid inputs were given to this function"
+                << "\n\t max_index_plus_one(x): " << max_index_plus_one(x) 
+                << "\n\t max_index_plus_one(y): " << max_index_plus_one(y) 
+                << "\n\t x_vector_size():       " << x_vector_size() 
+                << "\n\t y_vector_size():       " << y_vector_size() 
+                << "\n\t this:                  " << this
+                );
+
+            for (typename T::const_iterator i = x.begin(); i != x.end(); ++i)
+            {
+                sum_x(i->first) += i->second;
+                for (typename U::const_iterator j = y.begin(); j != y.end(); ++j)
+                {
+                    total_cov(i->first, j->first) += i->second*j->second;
+                }
+            }
+
+            // do sum_y += y
+            for (typename U::const_iterator j = y.begin(); j != y.end(); ++j)
+            {
+                sum_y(j->first) += j->second;
+            }
+
+            ++total_count;
+        }
+
+        template <typename T, typename U>
+        typename enable_if_c<is_matrix<T>::value && !is_matrix<U>::value>::type add (
+            const T& x,
+            const U& y
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT( (is_col_vector(x) && x.size() == x_vector_size() && x_vector_size() > 0) &&
+                         ((long)max_index_plus_one(y) <= y_vector_size() && y_vector_size() > 0) ,
+                "\t void running_cross_covariance::add()"
+                << "\n\t Invalid inputs were given to this function"
+                << "\n\t is_col_vector(x):      " << is_col_vector(x) 
+                << "\n\t x.size():              " << x.size() 
+                << "\n\t max_index_plus_one(y): " << max_index_plus_one(y) 
+                << "\n\t x_vector_size():       " << x_vector_size() 
+                << "\n\t y_vector_size():       " << y_vector_size() 
+                << "\n\t this:                  " << this
+                );
+
+            sum_x += x;
+
+            for (long i = 0; i < x.size(); ++i)
+            {
+                for (typename U::const_iterator j = y.begin(); j != y.end(); ++j)
+                {
+                    total_cov(i, j->first) += x(i)*j->second;
+                }
+            }
+
+            // do sum_y += y
+            for (typename U::const_iterator j = y.begin(); j != y.end(); ++j)
+            {
+                sum_y(j->first) += j->second;
+            }
+
+            ++total_count;
+        }
+
+        template <typename T, typename U>
+        typename enable_if_c<!is_matrix<T>::value && is_matrix<U>::value>::type add (
+            const T& x,
+            const U& y
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT( ((long)max_index_plus_one(x) <= x_vector_size() && x_vector_size() > 0) &&
+                         (is_col_vector(y) && y.size() == (long)y_vector_size() && y_vector_size() > 0) ,
+                "\t void running_cross_covariance::add()"
+                << "\n\t Invalid inputs were given to this function"
+                << "\n\t max_index_plus_one(x): " << max_index_plus_one(x) 
+                << "\n\t is_col_vector(y):      " << is_col_vector(y) 
+                << "\n\t y.size():              " << y.size() 
+                << "\n\t x_vector_size():       " << x_vector_size() 
+                << "\n\t y_vector_size():       " << y_vector_size() 
+                << "\n\t this:                  " << this
+                );
+
+            for (typename T::const_iterator i = x.begin(); i != x.end(); ++i)
+            {
+                sum_x(i->first) += i->second;
+                for (long j = 0; j < y.size(); ++j)
+                {
+                    total_cov(i->first, j) += i->second*y(j);
+                }
+            }
+
+            sum_y += y;
+
+            ++total_count;
+        }
+
+        template <typename T, typename U>
+        typename enable_if_c<is_matrix<T>::value && is_matrix<U>::value>::type add (
+            const T& x,
+            const U& y
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(is_col_vector(x) && (x_vector_size() == 0 || x.size() == x_vector_size()) &&
+                        is_col_vector(y) && (y_vector_size() == 0 || y.size() == y_vector_size()) &&
+                        x.size() != 0 &&
+                        y.size() != 0,
+                "\t void running_cross_covariance::add()"
+                << "\n\t Invalid inputs were given to this function"
+                << "\n\t is_col_vector(x): " << is_col_vector(x) 
+                << "\n\t x_vector_size():  " << x_vector_size() 
+                << "\n\t x.size():         " << x.size() 
+                << "\n\t is_col_vector(y): " << is_col_vector(y) 
+                << "\n\t y_vector_size():  " << y_vector_size() 
+                << "\n\t y.size():         " << y.size() 
+                << "\n\t this:             " << this
+                );
+
+            x_vect_size = x.size();
+            y_vect_size = y.size();
+            if (total_count == 0)
+            {
+                total_cov = x*trans(y);
+                sum_x = x;
+                sum_y = y;
+            }
+            else
+            {
+                total_cov += x*trans(y);
+                sum_x += x;
+                sum_y += y;
+            }
+            ++total_count;
+        }
+
+        const column_matrix mean_x (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT( current_n() != 0,
+                "\t running_cross_covariance::mean()"
+                << "\n\t This object can not execute this function in its current state."
+                << "\n\t current_n():      " << current_n() 
+                << "\n\t this:             " << this
+                );
+
+            return sum_x/total_count;
+        }
+
+        const column_matrix mean_y (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT( current_n() != 0,
+                "\t running_cross_covariance::mean()"
+                << "\n\t This object can not execute this function in its current state."
+                << "\n\t current_n():      " << current_n() 
+                << "\n\t this:             " << this
+                );
+
+            return sum_y/total_count;
+        }
+
+        const general_matrix covariance_xy (
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT( current_n() > 1,
+                "\t running_cross_covariance::covariance()"
+                << "\n\t This object can not execute this function in its current state."
+                << "\n\t x_vector_size(): " << x_vector_size() 
+                << "\n\t y_vector_size(): " << y_vector_size() 
+                << "\n\t current_n():     " << current_n() 
+                << "\n\t this:            " << this
+                );
+
+            return (total_cov - sum_x*trans(sum_y)/total_count)/(total_count-1);
+        }
+
+        const running_cross_covariance operator+ (
+            const running_cross_covariance& item
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT((x_vector_size() == 0 || item.x_vector_size() == 0 || x_vector_size() == item.x_vector_size()) &&
+                        (y_vector_size() == 0 || item.y_vector_size() == 0 || y_vector_size() == item.y_vector_size()),
+                "\t running_cross_covariance running_cross_covariance::operator+()"
+                << "\n\t The two running_cross_covariance objects being added must have compatible parameters"
+                << "\n\t x_vector_size():            " << x_vector_size() 
+                << "\n\t item.x_vector_size():       " << item.x_vector_size() 
+                << "\n\t y_vector_size():            " << y_vector_size() 
+                << "\n\t item.y_vector_size():       " << item.y_vector_size() 
+                << "\n\t this:                       " << this
+                );
+
+            running_cross_covariance temp(item);
+
+            // make sure we ignore empty matrices
+            if (total_count != 0 && temp.total_count != 0)
+            {
+                temp.total_cov += total_cov;
+                temp.sum_x += sum_x;
+                temp.sum_y += sum_y;
+                temp.total_count += total_count;
+            }
+            else if (total_count != 0)
+            {
+                temp.total_cov = total_cov;
+                temp.sum_x = sum_x;
+                temp.sum_y = sum_y;
+                temp.total_count = total_count;
+            }
+
+            return temp;
+        }
+
+
+    private:
+
+        general_matrix total_cov;
+        column_matrix sum_x;
+        column_matrix sum_y;
+        scalar_type total_count;
+
+        long x_vect_size;
+        long y_vect_size;
+    };
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename matrix_type
+        >
     class vector_normalizer
     {
     public:
@@ -699,8 +1146,10 @@ namespace dlib
                 << "\n\tthis: " << this
                 );
 
-            m = mean(vector_to_matrix(samples));
-            sd = reciprocal(sqrt(variance(vector_to_matrix(samples))));
+            m = mean(mat(samples));
+            sd = reciprocal(sqrt(variance(mat(samples))));
+
+            DLIB_ASSERT(is_finite(m), "Some of the input vectors to vector_normalizer::train() have infinite or NaN values");
         }
 
         long in_vector_size (
@@ -862,7 +1311,9 @@ namespace dlib
                 << "\n\tyou have to give a nonempty set of samples to this function"
                 << "\n\tthis: " << this
                 );
-            train_pca_impl(vector_to_matrix(samples),eps);
+            train_pca_impl(mat(samples),eps);
+
+            DLIB_ASSERT(is_finite(m), "Some of the input vectors to vector_normalizer_pca::train() have infinite or NaN values");
         }
 
         long in_vector_size (
@@ -926,29 +1377,17 @@ namespace dlib
             temp_out.swap(item.temp_out);
         }
 
+        template <typename T>
         friend void deserialize (
-            vector_normalizer_pca& item, 
+            vector_normalizer_pca<T>& item, 
             std::istream& in
-        )   
-        {
-            deserialize(item.m, in);
-            deserialize(item.sd, in);
-            deserialize(item.pca, in);
-            if (item.pca.nc() != item.m.nr())
-                throw serialization_error("Error deserializing object of type vector_normalizer_pca\n"   
-                                          "It looks like a serialized vector_normalizer was accidentally deserialized into \n"
-                                          "a vector_normalizer_pca object.");
-        }
+        );
 
+        template <typename T>
         friend void serialize (
-            const vector_normalizer_pca& item, 
+            const vector_normalizer_pca<T>& item, 
             std::ostream& out 
-        )
-        {
-            serialize(item.m, out);
-            serialize(item.sd, out);
-            serialize(item.pca, out);
-        }
+        );
 
     private:
 
@@ -1021,6 +1460,38 @@ namespace dlib
         vector_normalizer_pca<matrix_type>& a, 
         vector_normalizer_pca<matrix_type>& b 
     ) { a.swap(b); }   
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename matrix_type
+        >
+    void deserialize (
+        vector_normalizer_pca<matrix_type>& item, 
+        std::istream& in
+    )   
+    {
+        deserialize(item.m, in);
+        deserialize(item.sd, in);
+        deserialize(item.pca, in);
+        if (item.pca.nc() != item.m.nr())
+            throw serialization_error("Error deserializing object of type vector_normalizer_pca\n"   
+                                        "It looks like a serialized vector_normalizer was accidentally deserialized into \n"
+                                        "a vector_normalizer_pca object.");
+    }
+
+    template <
+        typename matrix_type
+        >
+    void serialize (
+        const vector_normalizer_pca<matrix_type>& item, 
+        std::ostream& out 
+    )
+    {
+        serialize(item.m, out);
+        serialize(item.sd, out);
+        serialize(item.pca, out);
+    }
 
 // ----------------------------------------------------------------------------------------
 

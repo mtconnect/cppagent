@@ -60,6 +60,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testBadPath);
   CPPUNIT_TEST(testProbe);
   CPPUNIT_TEST(testBadXPath);
+  CPPUNIT_TEST(testXPath);
   CPPUNIT_TEST(testBadCount);
   CPPUNIT_TEST(testBadFreq);
   CPPUNIT_TEST(testGoodPath);
@@ -90,6 +91,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAssetStorageWithoutType);
   CPPUNIT_TEST(testStreamData);
   CPPUNIT_TEST(testSequenceNumberRollover);
+  CPPUNIT_TEST(testSampleCount);
   CPPUNIT_TEST(testStreamDataObserver);
   CPPUNIT_TEST(testFailWithDuplicateDeviceUUID);
   CPPUNIT_TEST(testMultipleDisconnect);
@@ -100,6 +102,18 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDynamicCalibration);
   CPPUNIT_TEST(testInitialTimeSeriesValues);
   CPPUNIT_TEST(testUUIDChange);
+  CPPUNIT_TEST(testFilterValues);
+  CPPUNIT_TEST(testReferences);
+  CPPUNIT_TEST(testDiscrete);
+  CPPUNIT_TEST(testUpcaseValues);
+  CPPUNIT_TEST(testConditionSequence);
+  CPPUNIT_TEST(testAssetRemoval);
+  CPPUNIT_TEST(testAssetRemovalByAdapter);
+  CPPUNIT_TEST(testAssetAdditionOfAssetChanged12);
+  CPPUNIT_TEST(testAssetAdditionOfAssetRemoved13);
+  CPPUNIT_TEST(testAssetPrependId);
+  CPPUNIT_TEST(testBadAsset);
+
   CPPUNIT_TEST_SUITE_END();
   
   typedef map<std::string, std::string>::kernel_1a_c map_type;
@@ -114,11 +128,11 @@ protected:
   bool response;
   std::string path;
   std::string at;
-  Agent::key_value_map queries;
+  key_value_map queries;
   std::string result;
-  Agent::key_value_map cookies;
+  key_value_map cookies;
   queue_type new_cookies;
-  Agent::key_value_map incoming_headers;
+  key_value_map_ci incoming_headers;
   std::string foreign_ip;
   std::string local_ip;
   unsigned short foreign_port;
@@ -138,6 +152,7 @@ protected:
 
   /* test good */
   void testGoodPath();
+  void testXPath();
   
   /* Test calls */
   void testProbe();
@@ -177,7 +192,15 @@ protected:
   void testMultiLineAsset();
   void testAssetProbe();
   void testAssetStorageWithoutType();
-  void testStreamDataObserver();
+  
+  void testAssetRemoval();
+  void testAssetRemovalByAdapter();
+  
+  void testAssetAdditionOfAssetChanged12();
+  void testAssetAdditionOfAssetRemoved13();
+  
+  void testAssetPrependId();
+  void testBadAsset();
   
   // Test put for data items
   void testPut();
@@ -185,6 +208,8 @@ protected:
   void testPutBlockingFrom();
   
   // Streaming tests
+  void testStreamDataObserver();
+
   static void killThread(void *aArg);
   static void addThread(void *aArg);
   static void streamThread(void *aArg);
@@ -193,6 +218,7 @@ protected:
   
   // Sequence number tests
   void testSequenceNumberRollover();
+  void testSampleCount();
   
   // Test failure when adding a duplicate device uuid.
   void testFailWithDuplicateDeviceUUID();
@@ -206,11 +232,24 @@ protected:
   
   // Time series tests
   void testInitialTimeSeriesValues();
+  
+  // Filtering
+  void testFilterValues();
+  
+  // Reference tests
+  void testReferences();
+  
+  // Discrete
+  void testDiscrete();
+  void testUpcaseValues();
+  
+  // Conditions
+  void testConditionSequence();
     
   /* Helper method to test expected string, given optional query, & run tests */
-  xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, Agent::key_value_map &aQueries);
+  xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
   xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
-                              Agent::key_value_map &aQueries);
+                              key_value_map &aQueries);
   
 public:
   void setUp();

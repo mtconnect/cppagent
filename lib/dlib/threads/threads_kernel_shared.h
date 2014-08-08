@@ -35,6 +35,7 @@ namespace dlib
                     - destruct == false
                     - total_count == 0
                     - function_pointer == 0
+                    - do_not_ever_destruct == false
 
                 CONVENTION
                     - data_ready is associated with the mutex data_mutex 
@@ -73,7 +74,7 @@ namespace dlib
             );
             /*!
                 ensures
-                    - if (there are no threads currently running) then
+                    - if (there are no threads currently running and we haven't set do_not_ever_destruct) then
                         - calls delete this
                     - else
                         - does nothing
@@ -92,7 +93,7 @@ namespace dlib
                 void (T::*handler)()
             )
             {
-                member_function_pointer<>::kernel_1a mfp, junk_mfp;
+                member_function_pointer<> mfp, junk_mfp;
                 mfp.set(obj,handler);
 
                 thread_id_type junk_id;
@@ -119,7 +120,7 @@ namespace dlib
             )
             {
                 thread_id_type id = get_thread_id();
-                member_function_pointer<>::kernel_1a mfp;
+                member_function_pointer<> mfp;
                 mfp.set(obj,handler);
 
                 auto_mutex M(reg.m);
@@ -156,13 +157,14 @@ namespace dlib
             signaler data_empty;        // signaler to signal when the data is empty
             bool destruct;
             signaler destructed;        // signaler to signal when a thread has ended 
+            bool do_not_ever_destruct;
 
             struct registry_type
             {
                 mutex m;
                 binary_search_tree<
                     thread_id_type,
-                    member_function_pointer<>::kernel_1a,
+                    member_function_pointer<>,
                     memory_manager<char>::kernel_2a
                     >::kernel_2a_c reg;
             };

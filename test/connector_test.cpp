@@ -256,3 +256,68 @@ void ConnectorTest::testSendCommand()
   buf[15] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* Hello There;\n") == 0);  
 }
+
+void ConnectorTest::testIPV6Connection()
+{
+#if !defined(WIN32) || (NTDDI_VERSION >= NTDDI_VISTA)
+  mConnector.reset();
+  
+  CPPUNIT_ASSERT(create_listener(mServer, 0, "::1") == 0);
+  mPort = mServer->get_listening_port();
+  mConnector.reset(new TestConnector("::1", mPort));
+  mConnector->mDisconnected = true;
+  
+  CPPUNIT_ASSERT(mConnector->mDisconnected);
+  start();
+  
+  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
+  dlib::sleep(100);
+  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  CPPUNIT_ASSERT(!mConnector->mDisconnected);
+#endif
+}
+
+void ConnectorTest::testStartHeartbeats()
+{
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  
+  string line = "* PONG ";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  
+  line = "* PONK ";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+
+  line = "* PONG      ";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  
+  line = "* PONG FLAB";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(!mConnector->heartbeats());
+
+  line = "* PONG       123";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(mConnector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(123, mConnector->heartbeatFrequency());
+
+  mConnector->resetHeartbeats();
+
+  line = "* PONG       456 ";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(mConnector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(456, mConnector->heartbeatFrequency());
+
+  line = "* PONG 323";
+  mConnector->startHeartbeats(line);
+  
+  CPPUNIT_ASSERT(mConnector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(323, mConnector->heartbeatFrequency());
+}

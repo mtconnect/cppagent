@@ -81,6 +81,21 @@ std::vector<Device *> XmlParser::parseFile(const std::string &aPath)
     {
       path = addNamespace(path, "m");
       THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
+      
+      // Get schema version from Devices.xml
+      if (XmlPrinter::getSchemaVersion().empty())
+      {
+        string ns((const char*)root->ns->href);
+        if (ns.find_first_of("urn:mtconnect.org:MTConnectDevices") == 0)
+        {
+          int last = ns.find_last_of(':');
+          if (last != string::npos)
+          {
+            string version = ns.substr(last + 1);
+            XmlPrinter::setSchemaVersion(version);
+          }
+        }
+      }
     }
 
     // Add additional namespaces to the printer if they are referenced
@@ -268,9 +283,19 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
         { // Handle case where we are specifying the data items node...
           getDataItems(aFilterSet, "DataItem", n);          
         }
-        else // Find all the data items below this node
+        else if (xmlStrcmp(n->name, BAD_CAST "Reference") == 0)
+        {
+          xmlChar *id = xmlGetProp(n, BAD_CAST "dataItemId");
+          if (id != NULL)
+          {
+            aFilterSet.insert((const char *) id);
+            xmlFree(id);
+          }
+        }
+        else // Find all the data items and references below this node
         {
           getDataItems(aFilterSet, "*//DataItem", n);
+          getDataItems(aFilterSet, "*//Reference", n);
         }
       }
     }
@@ -314,6 +339,7 @@ Component * XmlParser::handleComponent(
     
   case Component::COMPONENTS:
   case Component::DATA_ITEMS:
+  case Component::REFERENCES:
     handleChildren(component, parent, device);
     break;
     
@@ -322,6 +348,10 @@ Component * XmlParser::handleComponent(
     break;
     
   case Component::TEXT:
+    break;
+      
+  case Component::REFERENCE:
+    handleRefenence(component, parent, device);
     break;
     
   default:
@@ -467,10 +497,15 @@ void XmlParser::loadDataItem(
           {
             d->setMaximum((const char *) text);
           }
+          else if (xmlStrcmp(constraint->name, BAD_CAST "Filter") == 0)
+          {
+            d->setFilterValue(strtod((const char*) text, NULL));
+            d->setFilterType(DataItem::FILTER_MINIMUM_DELTA);
+          }
           xmlFree(text);
         }
       }
-    }   
+    }
   }
   
   parent->addDataItem(*d);
@@ -492,6 +527,17 @@ void XmlParser::handleChildren(
   }
 }
 
+void XmlParser::handleRefenence(xmlNodePtr reference,
+                                        Component *parent,
+                                        Device *device)
+{
+  map<string,string> attrs = getAttributes(reference);
+  string name;
+  if (attrs.count("name") > 0) name = attrs["name"];
+  Component::Reference ref(attrs["dataItemId"], name);
+  parent->addReference(ref);
+}
+
 // Asset or Cutting Tool parser
 
 AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &aType, 
@@ -502,9 +548,14 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
   xmlXPathContextPtr xpathCtx = NULL;
   xmlXPathObjectPtr assetNodes = NULL;
   xmlDocPtr document = NULL;
+  xmlBufferPtr buffer = NULL;
 
   try {
-    
+    // TODO: Check for asset fragment - check if top node is MTConnectAssets
+    // If we don't have complete doc, parse as a fragment and create a top level node
+    // adding namespaces from the printer namespaces and then using xmlParseInNodeContext.
+    // This will solve fragment xml namespace issues (unless the fragment has namespace)
+    // definition.
     
     THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST aContent.c_str(), 
                                              ((string) "file://" + aAssetId + ".xml").c_str(), 
@@ -524,23 +575,31 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
     // all others add as plain text.
     xmlNodePtr node = NULL;
     assetNodes = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
-    if (assetNodes == NULL || assetNodes->nodesetval == NULL || assetNodes->nodesetval->nodeNr == 0)
+    if (assetNodes == NULL || assetNodes->nodesetval == NULL ||
+        assetNodes->nodesetval->nodeNr == 0)
     {
       // See if this is a fragment... the root node will be check when it is 
       // parsed...
       node = root;
-      
     } 
     else 
     {
       xmlNodeSetPtr nodeset = assetNodes->nodesetval;
       node = nodeset->nodeTab[0];
     }
-    
-    asset = handleCuttingTool(node);
+
+    THROW_IF_XML2_NULL(buffer = xmlBufferCreate());
+    for (xmlNodePtr child = node->children; child != NULL; child = child->next)
+    {
+      xmlNodeDump(buffer, document, child, 0, 0);
+    }
+
+    asset = handleAsset(node, aAssetId, aType,
+                        (const char *) buffer->content);
     
     // Cleanup objects...
-    xmlXPathFreeObject(assetNodes);    
+    xmlBufferFree(buffer);
+    xmlXPathFreeObject(assetNodes);
     xmlXPathFreeContext(xpathCtx);
     xmlFreeDoc(document);
 
@@ -553,6 +612,8 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       xmlXPathFreeContext(xpathCtx);
     if (document != NULL)
       xmlFreeDoc(document);
+    if (buffer != NULL)
+      xmlBufferFree(buffer);
 
     sLogger << dlib::LERROR << "Cannot parse asset XML: " << e;
     asset = NULL;
@@ -565,6 +626,10 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
       xmlXPathFreeContext(xpathCtx);
     if (document != NULL)
       xmlFreeDoc(document);
+    if (buffer != NULL)
+      xmlBufferFree(buffer);
+    
+    sLogger << dlib::LERROR << "Cannot parse asset XML, Unknown execption occurred";
     asset = NULL;
   }
 
@@ -574,7 +639,14 @@ AssetPtr XmlParser::parseAsset(const std::string &aAssetId, const std::string &a
 CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr aNode)
 {
   CuttingToolValuePtr value(new CuttingToolValue(), true);
-  value->mKey = (char*) aNode->name;
+  string name;
+  if (aNode->ns != NULL && aNode->ns->prefix != NULL) {
+    name = (const char *) aNode->ns->prefix;
+    name += ':';
+  }
+  
+  name += (const char*) aNode->name;
+  value->mKey = name;
   
   xmlChar *text = xmlNodeGetContent(aNode);
   if (text != NULL) {
@@ -662,27 +734,46 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode)
   }
 }
 
+AssetPtr XmlParser::handleAsset(xmlNodePtr anAsset, const std::string &aAssetId,
+                                const std::string &aType, const std::string &aContent)
+{
+  AssetPtr asset;
+  
+  // We only handle cuttng tools for now...
+  if (xmlStrcmp(anAsset->name, BAD_CAST "CuttingTool") == 0 ||
+      xmlStrcmp(anAsset->name, BAD_CAST "CuttingToolArchetype") == 0)
+  {
+    asset = handleCuttingTool(anAsset);
+  } else {
+    asset.setObject(new Asset(aAssetId, (const char*) anAsset->name, aContent), true);
+    
+    for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
+    {
+      if (attr->type == XML_ATTRIBUTE_NODE) {
+        asset->addIdentity(((const char*) attr->name), ((const char*) attr->children->content));
+      }
+    }
+  }
+  
+  return asset;
+}
+
 
 CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
 {
   CuttingToolPtr tool;
   
   // We only handle cuttng tools for now...
-  if (xmlStrcmp(anAsset->name, BAD_CAST "CuttingTool") == 0)
+  if (xmlStrcmp(anAsset->name, BAD_CAST "CuttingTool") == 0 ||
+      xmlStrcmp(anAsset->name, BAD_CAST "CuttingToolArchetype") == 0)
   {
     // Get the attributes...
-    tool.setObject(new CuttingTool("", "CuttingTool", ""), true);
+    tool.setObject(new CuttingTool("", (const char*) anAsset->name, ""), true);
         
     for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
     {
       if (attr->type == XML_ATTRIBUTE_NODE) {
-        if (xmlStrcmp(attr->name, BAD_CAST "assetId") == 0) {
-          tool->setAssetId((string) (const char*) attr->children->content);
-        } else if (xmlStrcmp(attr->name, BAD_CAST "timestamp") == 0) {
-          tool->setTimestamp((const char*) attr->children->content);
-        } else {
-          tool->addIdentity((const char*) attr->name, (const char*) attr->children->content);
-        }
+        tool->addIdentity((const char*) attr->name, (const char*) attr->children->content);
       }
     }
 
@@ -712,7 +803,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset)
 
 void XmlParser::updateAsset(AssetPtr aAsset, const std::string &aType, const std::string &aContent) 
 {
-  if (aType != "CuttingTool")
+  if (aType != "CuttingTool" && aType != "CuttingToolArchetype")
   {
     sLogger << dlib::LWARN << "Cannot update asset: " << aType 
             << " is unsupported for incremental updates";

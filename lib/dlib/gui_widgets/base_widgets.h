@@ -690,7 +690,7 @@ namespace dlib
 
             long x, y;
             tooltip_window win;
-            timer<tooltip>::kernel_2a tt_timer;
+            timer<tooltip> tt_timer;
 
         };
         friend struct data;
@@ -1410,10 +1410,10 @@ namespace dlib
         long max_pos; 
         long js;
 
-        timer<scroll_bar>::kernel_2a b1_timer;
-        timer<scroll_bar>::kernel_2a b2_timer;
-        timer<scroll_bar>::kernel_2a top_filler_timer;
-        timer<scroll_bar>::kernel_2a bottom_filler_timer;
+        timer<scroll_bar> b1_timer;
+        timer<scroll_bar> b2_timer;
+        timer<scroll_bar> top_filler_timer;
+        timer<scroll_bar> bottom_filler_timer;
         long delayed_pos;
         scoped_ptr<scroll_bar_style> style;
 
@@ -2058,7 +2058,7 @@ namespace dlib
         {
             auto_mutex M(wm);
 
-            member_function_pointer<>::kernel_1a temp;
+            member_function_pointer<> temp;
             temp.set(object,event_handler);
 
             // if this handler isn't already registered then add it
@@ -2144,7 +2144,7 @@ namespace dlib
         array<popup_menu*> submenus;
         unsigned long selected_item;
         bool submenu_open;
-        array<member_function_pointer<>::kernel_1a> hide_handlers;
+        array<member_function_pointer<> > hide_handlers;
 
         // restricted functions
         popup_menu(popup_menu&);        // copy constructor
@@ -2189,7 +2189,7 @@ namespace dlib
         virtual ~zoomable_region (
         )= 0;
 
-        void set_pos (
+        virtual void set_pos (
             long x,
             long y
         );
@@ -2231,7 +2231,7 @@ namespace dlib
         double max_zoom_scale (
         ) const;
 
-        void set_size (
+        virtual void set_size (
             unsigned long width,
             unsigned long height
         );
@@ -2253,6 +2253,8 @@ namespace dlib
         );
 
     protected:
+
+        virtual void on_view_changed () {}
 
         point graph_to_gui_space (
             const vector<double,2>& p
@@ -2436,7 +2438,7 @@ namespace dlib
             long order
         );
 
-        void set_size (
+        virtual void set_size (
             unsigned long width,
             unsigned long height
         );
@@ -2483,7 +2485,7 @@ namespace dlib
             long pos
         );
 
-        void set_pos (
+        virtual void set_pos (
             long x,
             long y
         );
@@ -2498,6 +2500,8 @@ namespace dlib
         );
 
     protected:
+
+        virtual void on_view_changed () {}
 
         const rectangle& display_rect (
         ) const;

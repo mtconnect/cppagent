@@ -105,6 +105,44 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    inline double poly_min_extrap (
+        double f0,
+        double d0,
+        double f1
+    );
+    /*!
+        ensures
+            - let c(x) be a 2nd degree polynomial such that:
+                - c(0) == f0
+                - c(1) == f1
+                - derivative of c(x) at x==0 is d0
+            - returns the point in the range [0,1] that minimizes the polynomial c(x) 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    inline double poly_min_extrap (
+        double f0,
+        double d0,
+        double x1,
+        double f_x1,
+        double x2,
+        double f_x2
+    )
+    /*!
+        requires
+            - 0 < x1 < x2
+        ensures
+            - let f(x) be a 3rd degree polynomial such that:
+                - f(0) == f0
+                - derivative of f(x) at x==0 is d0
+                - f(x1) == f_x1
+                - f(x2) == f_x2
+            - returns the point in the range [0,x2] that minimizes the polynomial f(x) 
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     inline double lagrange_poly_min_extrap (
         double p1, 
         double p2,
@@ -174,6 +212,42 @@ namespace dlib
         general can be found in the book Practical Methods of Optimization by R. Fletcher
         and also in the more recent book Numerical Optimization by Nocedal and Wright.
     */
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename funct
+        >
+    double backtracking_line_search (
+        const funct& f, 
+        double f0,
+        double d0,
+        double alpha,
+        double rho, 
+        unsigned long max_iter 
+    );
+    /*!
+        requires
+            - 0 < rho < 1
+            - f is a scalar function of scalars 
+              (e.g. a line_search_funct object)
+            - f0 == f(0)
+            - d0 == the derivative of f() at f(0). 
+            - max_iter > 0
+        ensures
+            - Performs a backtracking line search and uses the Armijo sufficient decrease
+              rule to decide when the search can stop.
+                - rho == the parameter of the sufficient decrease condition. 
+                - max_iter == the maximum number of iterations allowable.  After this many
+                  evaluations of f() backtracking_line_search() is guaranteed to terminate.
+            - The line search starts with the input alpha value and then backtracks until
+              it finds a good enough alpha value.  Once found, it returns the alpha value
+              such that f(alpha) is significantly closer to the minimum of f than f(0).
+            - The returned value of alpha will always be the last value of alpha which was
+              passed to f().  That is, it will always be the case that the last call to f()
+              made by backtracking_line_search() was f(alpha) where alpha is the return
+              value from this function.
+    !*/
 
 // ----------------------------------------------------------------------------------------
 

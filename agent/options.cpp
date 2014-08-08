@@ -182,7 +182,7 @@ void Option::expandFiles(const char *aFileName)
   }
 }
 
-bool Option::operator<(Option &aOther)
+bool Option::operator<(const Option &aOther) const
 {
   if (name_ == 0 && aOther.getName() != 0)
     return false;

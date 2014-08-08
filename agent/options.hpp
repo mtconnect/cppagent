@@ -83,7 +83,7 @@ public:
   bool getBool() const { return boolPtr_ != 0 ? *boolPtr_ : false; }
   int getInt() const { return intPtr_ != 0 ? *intPtr_ : -1; }
   const std::list<std::string> &getList() const { return *list_; }
-  bool operator<(Option &aOther);
+  bool operator<(const Option &aOther) const;
   
   bool setValue(const char *aCp);
 

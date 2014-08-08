@@ -67,7 +67,7 @@ namespace dlib
         )
         {
             COMPILE_TIME_ASSERT( pixel_traits<typename image_type::type>::has_alpha == false );
-            load_impl(array_to_matrix(img));
+            load_impl(mat(img));
         }
 
         inline void unload(
@@ -240,7 +240,6 @@ namespace dlib
             hist_counts.set_size(img.nr()-2, img.nc()-2);
 
 
-            const double pi = 3.1415926535898;
 
 
             for (long r = 0; r < hist_counts.nr(); ++r)

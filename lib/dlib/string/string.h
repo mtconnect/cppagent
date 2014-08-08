@@ -295,7 +295,7 @@ namespace dlib
             T temp;
             sin >> temp;
             if (!sin) throw string_cast_error(narrow(str));
-            if (sin.get() != char_traits<charT>::eof()) throw string_cast_error(narrow(str));   
+            if (sin.get() != std::char_traits<charT>::eof()) throw string_cast_error(narrow(str));   
             return temp;
         }
     };
@@ -355,7 +355,7 @@ namespace dlib
             else                                                    \
                 sin >> temp;                                        \
             if (!sin) throw string_cast_error(narrow(str));                 \
-            if (sin.get() != char_traits<charT>::eof()) throw string_cast_error(narrow(str));     \
+            if (sin.get() != std::char_traits<charT>::eof()) throw string_cast_error(narrow(str));     \
             return temp;                                            \
         }                                                           \
     };
@@ -918,6 +918,14 @@ namespace dlib
     )
     {
         return split(str,delim.c_str());
+    }
+
+    inline const std::vector<std::string> split (
+        const char* str,
+        const char* delim = " \n\r\t"
+    )
+    {
+        return split(std::string(str),delim);
     }
 
 // ----------------------------------------------------------------------------------------
