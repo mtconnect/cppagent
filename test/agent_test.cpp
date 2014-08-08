@@ -38,7 +38,6 @@
 #include <cppunit/portability/Stream.h>
 #include <dlib/server.h>
 
-
 #if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;
 #endif
