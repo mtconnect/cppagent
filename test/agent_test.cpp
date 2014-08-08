@@ -1192,6 +1192,17 @@ void AgentTest::testMultiLineAsset()
 
 }
 
+
+void AgentTest::testBadAsset()
+{
+  testAddAdapter();
+  
+  adapter->parseBuffer("TIME|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
+  adapter->parseBuffer((getFile("asset4.xml") + "\n").c_str());
+  adapter->parseBuffer("--multiline--AAAA\n");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 0, a->getAssetCount());
+}
+
 void AgentTest::testAssetProbe()
 {
   a->enablePut();

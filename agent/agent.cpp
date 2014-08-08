@@ -490,6 +490,12 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
       sLogger << LERROR << "addAsset: Error parsing asset: " << aAsset << "\n" << e.what();
       return false;
     }
+    
+    if (ptr.getObject() == NULL)
+    {
+      sLogger << LERROR << "addAssete: Error parsing asset";
+      return false;
+    }
 
     AssetPtr *old = &mAssetMap[aId];
     if (!ptr->isRemoved())

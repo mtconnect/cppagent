@@ -359,6 +359,14 @@ void XmlParserTest::testUpdateAsset()
   CPPUNIT_ASSERT_EQUAL((string) "14.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
 }
 
+void XmlParserTest::testBadAsset()
+{
+  string xml = getFile("asset4.xml");
+  
+  Asset* asset = a->parseAsset("XXX", "CuttingTool", xml);
+  CPPUNIT_ASSERT(asset == NULL);
+}
+
 void XmlParserTest::testNoNamespace()
 {
   a = new XmlParser();
