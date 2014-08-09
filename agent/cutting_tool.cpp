@@ -27,6 +27,8 @@ CuttingTool::~CuttingTool()
 
 void CuttingTool::addValue(const CuttingToolValuePtr aValue)
 {
+  mContent.clear();
+
   // Check for keys...
   if (aValue->mKey == "Location") {
     mKeys[aValue->mKey] = aValue->mValue;
@@ -55,6 +57,8 @@ inline static bool splitKey(string &key, string &sel, string &val)
 
 void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue)
 {
+  mContent.clear();
+  
   if (aKey == "Location") {
     mKeys[aKey] = aValue;
   }
@@ -105,6 +109,8 @@ void CuttingTool::updateValue(const std::string &aKey, const std::string &aValue
 
 void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue)
 {
+  mContent.clear();
+
   Asset::addIdentity(aKey, aValue);
   
   if (aKey == "toolId") {
@@ -115,7 +121,11 @@ void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue
 std::string &CuttingTool::getContent() 
 { 
   if (mContent.empty())
+  {
+    if (mIdentity.count("serialNumber") == 0 || mIdentity["serialNumber"].empty())
+      Asset::addIdentity("serialNumber", mAssetId);
     mContent = XmlPrinter::printCuttingTool(this);
+  }
   
   return mContent; 
 }

@@ -658,8 +658,7 @@ string XmlPrinter::printAssets(const unsigned int instanceId,
     for (iter = anAssets.begin(); iter != anAssets.end(); ++iter)
     {
       if ((*iter)->getType() == "CuttingTool" || (*iter)->getType() == "CuttingToolArchetype") {
-        CuttingToolPtr ptr((CuttingTool*) iter->getObject());
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST printCuttingTool(ptr).c_str()));
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST (*iter)->getContent().c_str()));
       } else {
         printAssetNode(writer, (*iter));
         THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST (*iter)->getContent().c_str()));        
