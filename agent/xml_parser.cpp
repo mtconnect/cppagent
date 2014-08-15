@@ -680,14 +680,14 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr aNode)
         CuttingToolValuePtr value = parseCuttingToolNode(meas);
         item->mMeasurements[value->mKey] = value;
       }      
-    } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
-      CuttingToolValuePtr value = parseCuttingToolNode(child);
-      item->mValues[value->mKey] = value;
     } else if (xmlStrcmp(child->name, BAD_CAST "ItemLife") == 0) {
       CuttingToolValuePtr value = parseCuttingToolNode(child);
       item->mLives.push_back(value);
+    } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
+      CuttingToolValuePtr value = parseCuttingToolNode(child);
+      item->mValues[value->mKey] = value;
     }
-  } 
+  }
   
   return item;
 }
