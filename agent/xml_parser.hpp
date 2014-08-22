@@ -102,13 +102,14 @@ protected:
 
   // Asset Parser
   AssetPtr handleAsset(xmlNodePtr anAsset, const std::string &aAssetId,
-                       const std::string &aType, const std::string &aContent);
+                       const std::string &aType, const std::string &aContent,
+                       xmlDocPtr aDoc);
   
   // Cutting Tool Parser
-  CuttingToolPtr handleCuttingTool(xmlNodePtr anAsset);
-  CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr aNode);
-  void parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode);
-  CuttingItemPtr parseCuttingItem(xmlNodePtr aNode);
+  CuttingToolPtr handleCuttingTool(xmlNodePtr anAsset, xmlDocPtr aDoc);
+  CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr aNode, xmlDocPtr aDoc);
+  void parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode, xmlDocPtr aDoc);
+  CuttingItemPtr parseCuttingItem(xmlNodePtr aNode, xmlDocPtr aDoc);
 };
 
 #endif

@@ -1461,6 +1461,11 @@ void AgentTest::testAssetPrependId()
 
 void AgentTest::testAssetWithSimpleCuttingItems()
 {
+  XmlPrinter::clearAssetsNamespaces();
+  XmlPrinter::addAssetsNamespace("urn:machine.com:MachineAssets:1.3",
+                                  "http://www.machine.com/schemas/MachineAssets_1.3.xsd",
+                                  "x");
+  
   testAddAdapter();
   
   adapter->parseBuffer("TIME|@ASSET@|XXX.200|CuttingTool|--multiline--AAAA\n");
@@ -1477,6 +1482,9 @@ void AgentTest::testAssetWithSimpleCuttingItems()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@countDirection", "UP");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@initial", "0");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@limit", "0");
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/x:ItemCutterStatus/m:Status", "AVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='2']/x:ItemCutterStatus/m:Status", "USED");
 
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife", "0");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@type", "PART_COUNT");
@@ -1484,7 +1492,8 @@ void AgentTest::testAssetWithSimpleCuttingItems()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@initial", "0");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@limit", "0");
   }
-
+  
+  XmlPrinter::clearAssetsNamespaces();
 }
 
 void AgentTest::testPut()

@@ -1056,13 +1056,25 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aI
                                                     BAD_CAST (*iter).second.c_str()));
   }
 
-  printCuttingToolValue(writer, aItem, "Description");
-  printCuttingToolValue(writer, aItem, "Locus");
+  set<string> remaining;
+  std::map<std::string,CuttingToolValuePtr>::const_iterator viter;
+  for (viter = aItem->mValues.begin(); viter != aItem->mValues.end(); viter++)
+    remaining.insert(viter->first);
+
+  
+  printCuttingToolValue(writer, aItem, "Description", &remaining);
+  printCuttingToolValue(writer, aItem, "Locus", &remaining);
   
   vector<CuttingToolValuePtr>::iterator life;
   for (life = aItem->mLives.begin(); life != aItem->mLives.end(); life++) {
     printCuttingToolValue(writer, *life);
   }
+  
+  // Print extended items...
+  set<string>::iterator prop;
+  for(prop = remaining.begin(); prop != remaining.end(); prop++)
+    printCuttingToolValue(writer, aItem, prop->c_str());
+
 
   // Print Measurements
   if (aItem->mMeasurements.size() > 0) {
