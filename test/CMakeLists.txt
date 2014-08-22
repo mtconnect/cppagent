@@ -94,6 +94,6 @@ if(WIN32)
 endif(WIN32)
 
 add_executable(agent_test ${test_srcs} ${test_headers})
-target_link_libraries(agent_test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})
-
+target_link_libraries(agent_test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})  
+set_target_properties(agent_test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1)
 
