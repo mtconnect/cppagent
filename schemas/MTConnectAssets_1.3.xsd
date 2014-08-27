@@ -936,7 +936,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         The collection of mobile assets
       </xs:documentation>
     </xs:annotation>
-    <xs:choice minOccurs='1' maxOccurs='unbounded'>
+    <xs:choice minOccurs='0' maxOccurs='unbounded'>
       <xs:element ref='Asset'/>
     </xs:choice>
   </xs:complexType>
