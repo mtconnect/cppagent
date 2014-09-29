@@ -633,6 +633,13 @@ bool Agent::removeAsset(Device *aDevice, const std::string &aId, const string &a
     
     asset->setRemoved(true);
     asset->setTimestamp(aTime);
+    
+    // Check if the asset changed id is the same as this asset.
+    ComponentEventPtr *ptr = mLatest.getEventPtr(aDevice->getAssetChanged()->getId());
+    if (ptr != NULL && (*ptr)->getValue() == aId)
+    {
+      addToBuffer(aDevice->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
+    }
   }
   
   addToBuffer(aDevice->getAssetRemoved(), asset->getType() + "|" + aId, time);
