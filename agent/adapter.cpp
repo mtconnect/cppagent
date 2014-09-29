@@ -316,6 +316,11 @@ void Adapter::processAsset(istringstream &toParse, const string &aKey, const str
   {
     mAgent->removeAsset(device, assetId, time);
   }
+  else if (key == "@REMOVE_ALL_ASSETS@")
+  {
+    mAgent->removeAllAssets(device, value, time);
+  }
+  
 }
 
 static inline bool is_true(const string &aValue)

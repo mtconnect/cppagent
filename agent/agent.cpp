@@ -604,7 +604,7 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
     mAssets.remove(&asset);
     mAssets.push_back(&asset);
     
-    tool->setTimestamp(aTime);
+    tool->setTimestamp(time);
     tool->setDeviceUuid(aDevice->getUuid());
     tool->changed();
   }
@@ -632,7 +632,7 @@ bool Agent::removeAsset(Device *aDevice, const std::string &aId, const string &a
       return false;
     
     asset->setRemoved(true);
-    asset->setTimestamp(aTime);
+    asset->setTimestamp(time);
     
     // Check if the asset changed id is the same as this asset.
     ComponentEventPtr *ptr = mLatest.getEventPtr(aDevice->getAssetChanged()->getId());
@@ -647,6 +647,40 @@ bool Agent::removeAsset(Device *aDevice, const std::string &aId, const string &a
   return true;
 }
 
+bool Agent::removeAllAssets(Device *aDevice, const std::string &aType, const std::string &aTime)
+{
+  string time;
+  if (aTime.empty())
+    time = getCurrentTime(GMT_UV_SEC);
+  else
+    time = aTime;
+  
+  {
+    dlib::auto_mutex lock(*mAssetLock);
+    
+    ComponentEventPtr *ptr = mLatest.getEventPtr(aDevice->getAssetChanged()->getId());
+    string changedId;
+    if (ptr != NULL)
+      changedId = (*ptr)->getValue();
+    
+    list<AssetPtr*>::reverse_iterator iter;
+    for (iter = mAssets.rbegin(); iter != mAssets.rend(); ++iter)
+    {
+      AssetPtr asset = (**iter);
+      if (aType == asset->getType() && !asset->isRemoved()) {
+        asset->setRemoved(true);
+        asset->setTimestamp(time);
+        
+        addToBuffer(aDevice->getAssetRemoved(), asset->getType() + "|" + asset->getAssetId(), time);
+        
+        if (changedId == asset->getAssetId())
+          addToBuffer(aDevice->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
+      }
+    }
+  }
+  
+  return true;
+}
 
 /* Add values for related data items UNAVAILABLE */
 void Agent::disconnected(Adapter *anAdapter, std::vector<Device*> aDevices)

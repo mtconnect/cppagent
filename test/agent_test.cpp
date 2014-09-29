@@ -1521,7 +1521,62 @@ void AgentTest::testRemoveLastAssetChanged()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "111");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+}
+
+void AgentTest::testRemoveAllAssets()
+{
+  testAddAdapter();
+  
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 4, a->getMaxAssets());
+  
+  adapter->processData("TIME|@ASSET@|111|Part|<Part>TEST 1</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, a->getAssetCount());
+  
+  
+  adapter->processData("TIME|@ASSET@|112|Part|<Part>TEST 2</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 2, a->getAssetCount());
+  
+  adapter->processData("TIME|@ASSET@|113|Part|<Part>TEST 3</Part>");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+  
+  path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "113");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+  
+  adapter->processData("TIME|@REMOVE_ALL_ASSETS@|Part");
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
+  
+  path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "111");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+  
+  path = "/assets";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 0);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+  }
+  
+  // TODO: When asset is removed and the content is literal, it will
+  // not regenerate the attributes for the asset.
+  queries["removed"] = "true";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
   }
 }
 

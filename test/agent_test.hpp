@@ -115,6 +115,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testBadAsset);
   CPPUNIT_TEST(testAssetWithSimpleCuttingItems);
   CPPUNIT_TEST(testRemoveLastAssetChanged);
+  CPPUNIT_TEST(testRemoveAllAssets);
 
   CPPUNIT_TEST_SUITE_END();
   
@@ -206,6 +207,7 @@ protected:
   void testAssetWithSimpleCuttingItems();
   
   void testRemoveLastAssetChanged();
+  void testRemoveAllAssets();
   
   // Test put for data items
   void testPut();

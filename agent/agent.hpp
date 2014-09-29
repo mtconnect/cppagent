@@ -135,6 +135,7 @@ public:
                    const std::string &aTime);
   
   bool removeAsset(Device *aDevice, const std::string &aId, const std::string &aTime);
+  bool removeAllAssets(Device *aDevice, const std::string &aType, const std::string &aTime);
   
   /* Message when adapter has connected and disconnected */
   void disconnected(Adapter *anAdapter, std::vector<Device*> aDevices);
