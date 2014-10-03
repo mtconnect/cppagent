@@ -116,6 +116,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testAssetWithSimpleCuttingItems);
   CPPUNIT_TEST(testRemoveLastAssetChanged);
   CPPUNIT_TEST(testRemoveAllAssets);
+  CPPUNIT_TEST(testEmptyLastItemFromAdapter);
 
   CPPUNIT_TEST_SUITE_END();
   
@@ -167,6 +168,7 @@ protected:
   void testCurrentAt64();
   void testCurrentAtOutOfRange();
   void testSampleAtNextSeq();
+  void testEmptyLastItemFromAdapter();
   
   /* Test Adapter */
   void testAdapter();

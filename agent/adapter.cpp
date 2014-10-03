@@ -173,8 +173,10 @@ void Adapter::processData(const string& data)
     if (processDataItem(toParse, data, key, value, time, true))
     {
       // Look for more key->value pairings in the rest of the data
-      while (getline(toParse, key, '|') && getline(toParse, value, '|'))
+      while (getline(toParse, key, '|'))
       {
+        value.clear();
+        getline(toParse, value, '|');
         processDataItem(toParse, data, key, value, time);
       }
     }

@@ -2167,6 +2167,75 @@ void AgentTest::testConditionSequence()
   }
 }
 
+void AgentTest::testEmptyLastItemFromAdapter()
+{
+  path = "/current";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  adapter->setDupCheck(true);
+  CPPUNIT_ASSERT(adapter);
+  
+  DataItem *program = a->getDataItemByName("LinuxCNC", "program");
+  CPPUNIT_ASSERT(program != NULL);
+
+  DataItem *tool_id = a->getDataItemByName("LinuxCNC", "block");
+  CPPUNIT_ASSERT(tool_id != NULL);
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "UNAVAILABLE");
+  }
+
+
+  adapter->processData("TIME|program|A|block|B");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "A");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "B");
+  }
+
+  adapter->processData("TIME|program||block|B");
+
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "B");
+  }
+
+  adapter->processData("TIME|program||block|");
+  
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
+  }
+
+  adapter->processData("TIME|program|A|block|B");
+  adapter->processData("TIME|program|A|block|");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "A");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
+  }
+
+  adapter->processData("TIME|program|A|block|B|line|C");
+  adapter->processData("TIME|program|D|block||line|E");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "D");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", "E");
+  }
+
+  
+}
+
 // Helper methods
 
 xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
