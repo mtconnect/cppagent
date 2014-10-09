@@ -239,7 +239,7 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
   else
   {
     sLogger << LDEBUG << "Could not find device: " << dev;
-    more = false;
+    // Continue on processing the rest of the fields. Assume key/value pairs...
   }
   
   return more;
