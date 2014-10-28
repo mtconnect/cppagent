@@ -49,6 +49,7 @@ public:
   void setAgent(Agent& agent);
   bool isDupChecking() { return mDupCheck; }
   void setDupCheck(bool aFlag) { mDupCheck = aFlag; }
+  Device *getDevice() const { return mDevice; }
 
   bool isAutoAvailable() { return mAutoAvailable; }
   void setAutoAvailable(bool aFlag) { mAutoAvailable = aFlag; }

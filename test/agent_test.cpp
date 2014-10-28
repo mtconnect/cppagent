@@ -656,6 +656,35 @@ void AgentTest::testAdapterCommands()
   
 }
 
+void AgentTest::testAdapterDeviceCommand()
+{
+  delete a;
+  a = new Agent("../samples/two_devices.xml", 8, 4, 25);
+  
+  path = "/probe";
+  
+  Device *device1 = a->getDeviceByName("Device1");
+  CPPUNIT_ASSERT(device1);
+  Device *device2 = a->getDeviceByName("Device2");
+  CPPUNIT_ASSERT(device2);
+  
+  adapter = a->addAdapter("*", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);  
+  CPPUNIT_ASSERT_EQUAL(static_cast<Device*>(NULL), adapter->getDevice());
+  
+  adapter->parseBuffer("* device: device-2\n");
+  CPPUNIT_ASSERT_EQUAL(device2, adapter->getDevice());
+
+  adapter->parseBuffer("* device: device-1\n");
+  CPPUNIT_ASSERT_EQUAL(device1, adapter->getDevice());
+
+  adapter->parseBuffer("* device: Device2\n");
+  CPPUNIT_ASSERT_EQUAL(device2, adapter->getDevice());
+
+  adapter->parseBuffer("* device: Device1\n");
+  CPPUNIT_ASSERT_EQUAL(device1, adapter->getDevice());
+}
+
 void AgentTest::testUUIDChange()
 {
   path = "/probe";

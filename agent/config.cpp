@@ -374,20 +374,18 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       string deviceName;      
       if (adapter.is_key_defined("Device")) {
         deviceName = adapter["Device"].c_str();
-        if (deviceName == "*")
-          device = defaultDevice();
-        else
-          device = mAgent->getDeviceByName(deviceName);
       } else {
         deviceName = *block;
-        device = mAgent->getDeviceByName(deviceName);
-        
-        if (device == NULL && mAgent->getDevices().size() == 1)
-          device = defaultDevice();
       }
       
+      device = mAgent->getDeviceByName(deviceName);
+
       if (device == NULL) {
-        throw runtime_error(static_cast<string>("Can't locate device '") + deviceName + "' in XML configuration file.");
+        sLogger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
+        device = defaultDevice();
+      }
+      if (device == NULL) {
+        sLogger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
       }
       
       const string host = get_with_default(adapter, "Host", (string)"localhost");
@@ -396,9 +394,9 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       int reconnectInterval = get_with_default(adapter, "ReconnectInterval", aReconnectInterval);
 
       
-      sLogger << LINFO << "Adding adapter for " << device->getName() << " on "
+      sLogger << LINFO << "Adding adapter for " << deviceName << " on "
               << host << ":" << port;
-      Adapter *adp = mAgent->addAdapter(device->getName(), host, port, false, legacyTimeout);
+      Adapter *adp = mAgent->addAdapter(deviceName, host, port, false, legacyTimeout);
       device->mPreserveUuid = get_bool_with_default(adapter, "PreserveUUID", aDefaultPreserve);
       
       // Add additional device information

@@ -26,6 +26,7 @@
 #include <dlib/dir_nav.h>
 #include <dlib/config_reader.h>
 #include <dlib/queue.h>
+#include <functional>
 
 using namespace std;
 
@@ -198,6 +199,20 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
     }
   }
 }
+
+Device *Agent::findDeviceByUUIDorName(const std::string& aId)
+{
+  Device *device = NULL;
+  
+  for (auto it = mDevices.begin(); device == NULL && it != mDevices.end(); it++)
+  {
+    if ((*it)->getUuid() == aId || (*it)->getName() == aId)
+      device = *it;
+  }
+  
+  return device;
+}
+
 
 Agent::~Agent()
 {

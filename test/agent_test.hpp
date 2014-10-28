@@ -117,6 +117,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testRemoveLastAssetChanged);
   CPPUNIT_TEST(testRemoveAllAssets);
   CPPUNIT_TEST(testEmptyLastItemFromAdapter);
+  CPPUNIT_TEST(testAdapterDeviceCommand);
 
   CPPUNIT_TEST_SUITE_END();
   
@@ -180,6 +181,7 @@ protected:
   
   // Adapter commands
   void testAdapterCommands();
+  void testAdapterDeviceCommand();
 
   // Duplicate checks
   void testDuplicateCheck();

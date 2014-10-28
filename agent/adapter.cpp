@@ -54,10 +54,10 @@ void Adapter::setAgent(Agent &aAgent)
 {
   mAgent = &aAgent;
   mDevice = mAgent->getDeviceByName(mDeviceName);
-  mDevice->addAdapter(this);
-
-  if (mDevice != NULL)
+  if (mDevice != NULL) {
+    mDevice->addAdapter(this);
     mAllDevices.push_back(mDevice);
+  }
 }
 
 void Adapter::addDevice(string &aName)
@@ -193,6 +193,7 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
   if (splitKey(key, dev)) {
     device = mAgent->getDeviceByName(dev);
   } else {
+    dev = mDeviceName;
     device = mDevice;
   }
   
@@ -373,6 +374,15 @@ void Adapter::protocolCommand(const std::string& data)
         mRelativeTime = is_true(value);
       else if (key == "realTime")
         mRealTime = is_true(value);
+      else if (key == "device") {
+        Device *device = mAgent->findDeviceByUUIDorName(value);
+        if (device != NULL)
+          mDevice = device;
+        else {
+          sLogger << LERROR << "Cannot find device for device command: " << value;
+          throw std::invalid_argument(string("Cannot find device for device name or uuid: ") + value);
+        }
+      }
       else
       {
         sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
@@ -431,9 +441,25 @@ void Adapter::thread()
       // make sure we're closed...
       close();
     }
+    
+    catch (std::invalid_argument &err)
+    {
+      sLogger << LERROR << "Adapter for " << mDeviceName << "'s thread threw an argument error, stopping adapter: "
+        << err.what();
+      stop();
+    }
+    
+    catch (std::exception &err)
+    {
+      sLogger << LERROR << "Adapter for " << mDeviceName << "'s thread threw an exceotion, stopping adapter: "
+        << err.what();
+      stop();
+    }
+    
     catch (...)
     {
-      sLogger << LERROR << "Thread for adapter " << mDeviceName << "'s thread threw an unhandled exception";
+      sLogger << LERROR << "Thread for adapter " << mDeviceName << "'s thread threw an unhandled exception, stopping adapter";
+      stop();
     }
 
     if (!mRunning) break;

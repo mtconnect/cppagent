@@ -117,6 +117,7 @@ public:
   
   /* Get device from device map */
   Device * getDeviceByName(const std::string& name) { return mDeviceMap[name]; }
+  Device * findDeviceByUUIDorName(const std::string& aId);
   const std::vector<Device *> &getDevices() { return mDevices; }
   
   /* Add component events to the sliding buffer */
