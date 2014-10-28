@@ -709,6 +709,124 @@ logger_config configuration items
             
         *Default*: NEVER
     
-Adapter Agent Protocol Version 1.2
+Adapter Agent Protocol Version 1.3
+=======
+
+The principle adapter data format is a simple plain text stream separated by the pipe character `|`. Every line except for commands starts with an optional timestamp in UTC. If the timestamp is not supplied the agent will supply a timestamp of its own taken at the arrival time of the data to the agent. The remainder of the line is a key followed by data – depending on the type of data item is being written to.
+
+A simple set of events and samples will look something like this:
+
+	2009-06-15T00:00:00.000000|power|ON|execution|ACTIVE|line|412|Xact|-1.1761875153|Yact|1766618937
+
+For simple events and samples, the data is pipe delimited key value pairs with multiple pairs on one line. Each line must have at least one k/v on it or else it has no meaning. The agent will discard any lines where the data is malformed. The end must end with a LF (ASCII 10) or CR-LF (ASCII 15 followed by ASCII 10) (UNIX or Windows conventions respectively).
+
+Conditions are a little more complex since there are multiple fields and must appear on one line. The fields are as follows:
+
+	<timestamp>|<data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
+	
+For a completed description of these fields, see the standard. An example line will look like this:
+
+	2014-09-29T23:59:33.460470Z|htemp|WARNING|HTEMP|1|HIGH|Oil Temperature High
+	
+The next special format is the Message. There is one additional field, native_code, which needs to be included:
+
+	2014-09-29T23:59:33.460470Z|message|CHG_INSRT|Change Inserts
+	
+Time series data also gets special treatment, the count and optional frequency are specified. In the following example we have 10 items at a frequency of 100hz:
+
+	2014-09-29T23:59:33.460470Z|current|10|100|1 2 3 4 5 6 7 8 9 10
+
+The data item name can also be prefixed with the device name if this adapter is supplying data to multiple devices. The following is an example of a power meter for three devices named `device1`, `device2`, and `device3`:
+
+	2014-09-29T23:59:33.460470Z|device1:current|12|device2:current|11|device3:current|10
+
+All data items follow the formatting requirements in the MTConnect standard for the vocabulary and coordinates like PathPosition. 
+
+Assets
 -----
 
+Assets are associated with a device but do not have a data item they are mapping to. They therefor get the special data item name `@ASSET@`. Assets can be sent either on one line or multiple lines depending on the adapter requirements. The single line form is as follows:
+
+	2012-02-21T23:59:33.460470Z|@ASSET@|KSSP300R.1|CuttingTool|<CuttingTool>...
+
+This form associates updates the asset id KSSP300R.1 for a cutting tool with the text at the end. For multiline assets, use the keyword `--multiline--` with a following unique string as follows:
+
+		2012-02-21T23:59:33.460470Z|@ASSET@|KSSP300R.1|CuttingTool|--multiline--
+		<CuttingTool>
+		...
+		</CuttingTool>
+		--multiline--0FED07ACED
+		
+The terminal text must appear on the first position after the last line of text. The adapter can also remove assets (1.3) by sending a @REMOVE_ASSET@ with an asset id:
+
+	2012-02-21T23:59:33.460470Z|@REMOVE_ASSET@|KSSP300R.1
+
+Or all assets can be removed in one shot for a certain asset type:
+
+	2012-02-21T23:59:33.460470Z|@REMOVE_ALL_ASSETS@|CuttingTool
+
+Partial updates to assets is also possible by using the @UPDATE_ASSET@ key, but this will only work for cutting tools. The asset id need to be given and then one of the properties or measurements with the new value for that entity. For example to update the overall tool length and the overall diameter max, you would provide the following:
+
+	2012-02-21T23:59:33.460470Z|@UPDATE_ASSET@|KSSP300R.1|OverallToolLength|323.64|CuttingDiameterMax|76.211
+
+Commands
+-----
+
+There are a number of commands that can be sent as part of the adapter stream. These change the behavior of the interpretation of the data or the associated device. Each of these items are given on a single line starting with an asterix `* ` and followed by a <key>: <value>. They are as follows:
+
+* Set the manufacturer in the devcie header of the associated device:
+ 
+	`* manufacturer: XXX`
+
+* Set the station in the devcie header of the associated device:
+ 
+	`* station: XXX`
+
+* Set the sderialNumber in the devcie header of the associated device:
+ 
+	`* sderialNumber: XXX`
+
+* Set the description in the devcie header of the associated device:
+ 
+	`* description: XXX`
+
+* Set the nativeName in the devcie component of the associated device:
+ 
+	`* nativeName: XXX`
+
+* Set the calibration in the devcie component of the associated device:
+ 
+	`* calibration: XXX`
+
+* Tell the agent that the data coming from this adapter requires conversion:
+ 
+	`* conversionRequired: <yes|no>`
+
+* Tell the agent that the data coming from this adapter is specified in relative time:
+ 
+	`* relativeTime: <yes|no>`
+
+* Tell the agent that the data coming from this adapter would like real-time priority:
+ 
+	`* realTime: <yes|no>`
+
+* Specify the default device for this adapter. The device can be specified as either the device name or UUID:
+
+	`* device: <uuid|name>`
+
+Any other command will be logged as a warning.
+
+Protocol
+----
+
+The agent and the adapter have a heartbeat that makes sure each is responsive to properly handle disconnects in a timely manor. The Heartbeat frequency is set by the adapter and honored by the agent. When the agent connects to the adapter, it first sends a `* PING` and then expects the response `* PONG: <timeout>` where `<timeout>` is specified in milliseconds. So if the following communications are given:
+
+Agent:
+
+	`* PING`
+
+Adapter:
+
+	`* PONG: 10000`
+
+This indicates that the adapter is expecting a `PING` every 10 seconds and if there is no `PING`, in 2x the frequency, then the adapter should close the connection. At the same time, if the agent does not receive a `PONG` within 2x frequency, then it will close the connection. If no `PONG` response is received, the agent assumes the adapter is incapable of participating in heartbeat protocol and uses the legacy time specified above.
