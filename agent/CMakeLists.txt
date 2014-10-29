@@ -42,7 +42,7 @@ if(WIN32)
     
   # Version info
   string(TIMESTAMP AGENT_VERSION_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
-  set(resource_file "${PROJECT_BINARY_DIR}/version.rc")
+  set(resource_file "${PROJECT_BINARY_DIR}/agent/version.rc")
   configure_file(
     ${PROJECT_SOURCE_DIR}/agent/version.rc.in
     ${resource_file})
