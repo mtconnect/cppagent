@@ -39,6 +39,16 @@ if(WIN32)
   
   set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION_RELEASE ${LibXML2_LIBRARIES})
   set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION_DEBUG ${LibXML2_DEBUG_LIBRARIES})
+    
+  # Version info
+  string(TIMESTAMP AGENT_VERSION_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
+  set(resource_file "${PROJECT_BINARY_DIR}/version.rc")
+  configure_file(
+    ${PROJECT_SOURCE_DIR}/agent/version.rc.in
+    ${resource_file})
+  
+else(WIN32)
+  set(resource_file "")
 endif(WIN32)
 
 if(UNIX)
@@ -95,12 +105,12 @@ endif(UNIX)
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
 include_directories(${LibXML2_INCLUDE_DIRS} ${PROJECT_BINARY_DIR})
 
-add_executable(agent ${agent_srcs} ${agent_headers})
+add_executable(agent ${agent_srcs} ${agent_headers} ${resource_file})
 target_link_libraries(agent ${LINUX_LIBRARIES} libxml2)
 
 if(WIN32)
   set(WINVER "0x0501" CACHE STRING "Windows Target Version: 0x0400 - 95 & NT 4.0, 0x0500 - 2000, 0x0501 - XP, 0x0600 - Vista, 0x0601 - 7, 0x0602 - 8")
-  
+    
   add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
 
   foreach(flag_var
