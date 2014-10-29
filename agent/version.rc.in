@@ -26,13 +26,13 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "CompanyName",      "System Insights, Inc."
-            VALUE "FileDescription",  "MTConnect Adapter"
+            VALUE "FileDescription",  "MTConnect Agent"
             VALUE "FileVersion",      VER_FILEVERSION_STR
-            VALUE "InternalName",     "adapter.exe"
+            VALUE "InternalName",     "agent.exe"
             VALUE "LegalCopyright",   "System Insights"
             VALUE "LegalTrademarks1", "MTConnect Institute"
-            VALUE "OriginalFilename", "adapter.exe"
-            VALUE "ProductName",      "Reference MTConnect Adapter"
+            VALUE "OriginalFilename", "agent.exe"
+            VALUE "ProductName",      "Reference MTConnect Agent"
             VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
             VALUE "Comments", "Build time: @AGENT_VERSION_TIME@"
         END
