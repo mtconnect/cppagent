@@ -772,7 +772,7 @@ Partial updates to assets is also possible by using the @UPDATE_ASSET@ key, but 
 Commands
 -----
 
-There are a number of commands that can be sent as part of the adapter stream. These change the behavior of the interpretation of the data or the associated device. Each of these items are given on a single line starting with an asterix `* ` and followed by a <key>: <value>. They are as follows:
+There are a number of commands that can be sent as part of the adapter stream. These change some dynamic elements of the device informaiton, the interpretation of the data, or the associated default device. Commands are given on a single line starting with an asterix `* ` as the first character of the line and followed by a <key>: <value>. They are as follows:
 
 * Set the manufacturer in the devcie header of the associated device:
  
