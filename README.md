@@ -8,6 +8,8 @@ protocol and data collection framework that will work as a standalone
 server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
+Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
 Version 1.3.0.0 added the filter constraints, references, cutting tool archetypes, and formatting styles.
 
 Version 1.2.0.0 added the capability to support assets.
