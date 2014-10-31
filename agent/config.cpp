@@ -383,7 +383,10 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       if (device == NULL) {
         sLogger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
         device = defaultDevice();
-        if (device != NULL) deviceName = device->getName();
+        if (device != NULL) {
+          deviceName = device->getName();
+          sLogger << LINFO << "Assigning default device " << deviceName << " to adapter";
+        }
       }
       if (device == NULL) {
         sLogger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";

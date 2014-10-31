@@ -376,9 +376,12 @@ void Adapter::protocolCommand(const std::string& data)
         mRealTime = is_true(value);
       else if (key == "device") {
         Device *device = mAgent->findDeviceByUUIDorName(value);
-        if (device != NULL)
+        if (device != NULL) {
           mDevice = device;
-        else {
+          sLogger << LINFO << "Device name given by the adapter " << value
+            << ", has been assigned to cfg " << mDeviceName;
+          mDeviceName = value;
+        } else {
           sLogger << LERROR << "Cannot find device for device command: " << value;
           throw std::invalid_argument(string("Cannot find device for device name or uuid: ") + value);
         }
