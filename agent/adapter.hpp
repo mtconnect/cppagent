@@ -19,6 +19,7 @@
 
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 #include "dlib/sockets.h"
 #include "dlib/threads.h"

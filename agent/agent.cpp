@@ -204,7 +204,8 @@ Device *Agent::findDeviceByUUIDorName(const std::string& aId)
 {
   Device *device = NULL;
   
-  for (auto it = mDevices.begin(); device == NULL && it != mDevices.end(); it++)
+  std::vector<Device *>::iterator it;
+  for (it = mDevices.begin(); device == NULL && it != mDevices.end(); it++)
   {
     if ((*it)->getUuid() == aId || (*it)->getName() == aId)
       device = *it;
