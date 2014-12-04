@@ -1,0 +1,51 @@
+		<Device id="####id" uuid="####xxx" name="NNNNNN">
+			<Description>Generic</Description>
+			<DataItems>
+				<DataItem id="####avail" name="avail"  type="AVAILABILITY" category="EVENT"/>
+			</DataItems>
+			<Components>
+						<Rotary id="####c" name="C">
+							<DataItems>
+								<DataItem type="LOAD" id="####sl" category="SAMPLE" name="Sload" units="PERCENT"/>
+								<DataItem type="ANGLE"  id="####ct" category="CONDITION" name="Ctravel"/>
+								<DataItem type="SPINDLE_SPEED" id="####cs" category="SAMPLE" name="Srpm" subType="ACTUAL" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE"/>
+								<DataItem type="SPINDLE_SPEED" id="####cso" category="SAMPLE" name="Sovr" subType="OVERRIDE" units="PERCENT" nativeUnits="PERCENT"/>
+								<DataItem type="TEMPERATURE" id="####ctemp" category="SAMPLE" name="Stemp"  units="CELSIUS" />
+							</DataItems>
+						</Rotary>
+				<Controller id="####cont" name="controller">
+					<DataItems>
+						<DataItem type="COMMUNICATIONS" category="CONDITION" id="####ccond" name="comms_cond" />
+						<DataItem type="LOGIC_PROGRAM" category="CONDITION" id="####logic" name="logic_cond" />
+						<DataItem type="SYSTEM" category="CONDITION" id="####system" name="system_cond" />
+					</DataItems>
+					<Components>
+						<Path id="####path1" name="path">
+							<DataItems>
+								<DataItem type="PROGRAM" id="####pgm" category="EVENT" name="program"/>
+								<DataItem type="PATH_FEEDRATE" id="####Fact" category="SAMPLE" name="path_feedratefrt" units="MILLIMETER/SECOND" nativeUnits="FOOT/MINUTE" subType="ACTUAL" coordinateSystem="WORK"/>
+								<DataItem type="TOOL_ID" id="####tid" category="EVENT" name="tool"/>
+								<DataItem type="EXECUTION" id="####exec" category="EVENT" name="execution"/>
+								<DataItem type="CONTROLLER_MODE" id="####mode" category="EVENT" name="controllermode"/>
+							</DataItems>
+						</Path>
+					</Components>
+				</Controller>
+				<Systems id="####systems" name="systems">
+					<Components>
+ 						<Electric name="electric" id="####elec">
+							<DataItems>
+								<DataItem type="POWER_STATE" category="EVENT" id="####pwr" name="power" />
+								<DataItem type="TEMPERATURE" category="CONDITION" id="####pwrt" name="electric_temp" />
+							</DataItems>
+						</Electric>
+						<Pneumatic name="pneumatic" id="####pneumatic">
+							<DataItems>
+								<DataItem type="PRESSURE" category="CONDITION" id="####pneupress" name="pneu_cond" />
+							</DataItems>
+						</Pneumatic>
+					</Components>
+				</Systems>
+			</Components>
+		</Device>
+

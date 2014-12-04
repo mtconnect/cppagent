@@ -1,0 +1,143 @@
+<HTML>
+<HEAD><style type="text/css" title="layout" media="screen">
+	BODY
+{
+	FONT-FAMILY: "Verdana", sans-serif;
+counter-reset:section;
+}
+	h1{     font-size:20px;}
+	h2{     font-size:16px;}
+	h3{     font-size:12px;}
+    h1 {counter-reset:subsection;}
+    h1:before
+   {
+    counter-increment:section;
+    content:counter(section) ". ";
+       font-weight:bold;
+    }
+    h2:before
+   {
+    counter-increment:subsection;
+   content:counter(section) "." counter(subsection) " ";
+   }
+  .break { page-break-before: always; }
+"style.css"); </style> </HEAD><BODY><P align="center" valign="middle" style="font-size: 200%"> MTConnect Agent <BR>VERSION DESCRIPTION DOCUMENT  </P> 
+<div style="width:100%;height:300px;"></div> 
+RELEASE DATE:  
+2014-12-04
+<H1 class="break" align="center">INTRODUCTION </H1><H2> PURPOSE </H2> 
+This document describes the software configuration for the MTConnect Agent. The  MTConnect Agent is based on C++ Open Source technology and is developed by the MTConnect Institute, but can be modified and redistributed by 3rd parties. The Agent software version -major, minor, revision, build - of the agent is ebmedded in the exe and is extracted and described in this document.<H2>SCOPE </H2>This document applies to the Product Acceptance Software of the Agent software.
+The agent is installed as an exe with the install version number emebedded in the name.
+The agent should install and run automatically (if installed correctly) as a Windows service.
+In the task manager the agent.exe is the executable file to look for.
+In the Windows Service Control Manager (SCM) the agent is launched automatically, and is given the service name on installation.
+The default agent service name is 'MTConnectAgent'.
+<BR>If running correctly, using the configured combination http and port, the agent should display XML describing the device:<BR>
+<PRE>
+http://127.0.0.1:5000/current</PRE>
+<H2>SECURITY REQUIREMENTS </H2>
+An administrator or equivalent must install and configure the agent.
+<H2>HARDWARE DESCRIPTION </H2>
+This agent distribution is PCs with 32 and 64 bit Microsoft Windows OS with Intel x86 chipsets.
+This agent will need a Ethernet Network Adapter to communicate device data to clients and to communicate with device Adapters.
+<H1 align="center">SOFTWARE DESCRIPTION </H1>
+<H2>SYSTEM SOFTWARE</H2>
+It has been validated to work on Windows 2000, XP and 7 platforms on Intel x86 chipsets.
+Depending on the underlying architecture, either a 64 or 32 bit agent.exe will be installed.
+<BR>Windows NT and Linux require a different distribution.
+<H2>APPLICATION SOFTWARE</H2>
+<TABLE>
+<TR><TH>Product Name</TH><TH>Supplier</TH><TH>Version</TH></TR>
+<TR><TD>MTConnect Agent</TD><TD>MTConnect Institute<BR> Mods NIST</TD><TD>1.3.0.6</TD>
+</TABLE>
+</BODY></HTML>
+<H1 align="center"> SOFTWARE SUPPORT INFORMATION </H1>
+ See https://github.com/mtconnect/cppagent/blob/master/README.md for more documentation on MTConnect Agent.
+<H2>SOFTWARE DOCUMENTATION</H2>
+<UL><LI><B>Document Title</B>  MTConnect Standard</LI>
+<LI><B>Vendor </B> MTConnect Institute</LI>
+<LI><B>Electronic Copy </B> https://github.com/mtconnect/standard</LI>
+<LI><B>Help/Bug/Issue</B> https://github.com/mtconnect/cppagent/issues/new</LI>
+</UL>
+<H2>SYSTEM SUPPORT DOCUMENTATION</H2>
+None.
+<H1 align="center">INSTALLAION SOFTWARE INFORMATION </H1>
+Note, the installation describes installation of the MTConnect Agent on a Windows platform only. It is assumed to be a Windows 2000, XP, or 7/8 installation. 
+It is known that this installation will not work on Windows NT system, and has not been tried on a Windows 95 or 98 or ME system. 
+Before you process, installation of the MTConnect Agent will require administrator priviledges on a Windows 7 platform. 
+<OL>
+<LI> You will need to double click the agent install software, MTConnectAgentInstallxx.xx.exe, where xx.xx is the distributed version of the agent.
+ The installation uses the NSIS software package. NSIS stands for the Nullsoft Scriptable Install System (NSIS) and is a script-driven installation system for Microsoft Windows with minimal overhead backed by Nullsoft, the creators of Winamp.
+ NSIS is free software released under a combination of free software licenses, primarily the zlib license.
+The Install is divided into Pages, with each Page either prompting the user for intput, or being informative, or both. 
+</LI> <LI> The first screen that will appear is a Welcome page. Click Next. At any time you can stop the install by clicking the Cancel button.  
+</LI><LI> The second screen is the License Agreement page. This outlines the terms of agreement for using the software.
+In effect there is no copyright. The License Agreement allows the right to distribute copies and modified versions of the Agent and but does NOT require that the same rights be preserved in modified versions of the work. 
+</LI><LI> The third screen is the Installation Directory page. The user is prompted to select a installation directory. 
+The default directory is C:\Program Files\MTConnect\MTConnectAgent for either 32 or 64 bit installs. The Instsall program will determine the underlying architecture. 
+Note, unlike some application exe 32 bit agents will  not run on 64 bit machines. 
+ Two agents could be installed at the same time, as long as they have different service names and installation diretories. 
+ The installation over an existing directory is not guaranteed to overwrite older versions (even though it should). 
+</LI><LI> After the user clicks Next, the fourth page details the installation of all the file is done, but has not been configured. 
+ Again, the installation program determines whether to use a 32 or 64 bit installation exe. 
+</LI><LI> The  fifth page prompts the user to configure the Agent specific parameters. 
+The User specifies service name, http port, delay, and debug level, which are agent specific parameters. 
+Note, You have the option of starting the agent service by checking the start agent checkbox. If this is your first agent installatino, it may be preferable to uncheck the box, and manually check the installation parameters. 
+The user clicks Next and now the adapter configuration installation will then be executed to configure the remaining portions of agent.cfg and devices.xml in the installation directory. 
+</LI><LI> A flash screen alerts the user that the Adapter Wizard is going to run. 
+Now, adapters will be configured. 	Adapter configuration is a NSIS install program that DOES NO INSTALLING. Instead, it prompts the users to specify the set of Adatpers that provide SHDR input to the Agent, and then creates a Devices.xml file and the Adapter configuration part of the Agent.cfg file. 
+ Advanced users should read https://github.com/mtconnect/adapter/blob/master/MTC_SHDR.docx for information on the SHDR protocol. Note, SHDR is not an MTConnect standard, but is widely used as a back-end for device communication. 
+<OL type=a> <LI> A Welcome page offers the user a Adapter configuration greeting. Clicking Next is all that is needed. 
+</LI><LI> The second Adapter configuration page, queries the user to select a vendor, machine type and version. 
+You must select an MTConnect to match your machine tool vendor CNC, and for which MTConnect templates are available. 
+Device descriptions are currently organized into MachineTools, Turning, or Robots. There are not many models, and it is unclear if this is the correct model for specifying MTConnect Adapters. 
+</LI><LI> The next Adapter configuration screen asks the necessary information  to configure an Adapter: Device Name, Type, IP and Port. 
+The manufacturer and model have already been selected. 
+When the users clicks Apply, an adapter.cfg entry and the devices.xml piece are saved, for later file writing. 
+The user clicks Apply button to save the configuration, and will take you back a slide to append a new adapter to your configuration. 
+The user clicks Done button completes the Adapter configuration process, writes the configuration files and returns to the Agent installation wizard. 
+</LI></OL> 
+<LI> The  final Agent installation page is the Finish Page, which signals the end of the installation process. 
+The user clicks Finish, and if the user selected start the agent, the agent service will be started. 
+</LI></OL>
+There are several steps to insure that the Agent installed correctly. 
+<OL><LI> First, you will need to double check that the MTConnectAgent installed correctly in the Windows Service Manager (SCM). 
+ To check the service, right click ont he My Computer and select Manage. You may need to provide administrator credentials, so be prepared. 
+Assuming you can manage My Computer, double click 'Services and Applications' and then double click 'Services'. 
+At this point, you should see a list of all the services in your Windows platform. You will need to scroll down to the service name (or default name) provided during the Agent installation. 
+We will assume the default name, 'MTConnectAgent', and scroll down to this entry, double click the name and a dialog popup describing the service parameters should appear. 
+In the popup, you should be on 'General' tab and the see the following: 
+<OL type=i> 
+<LI> Service Name should say MTConnectAgent (default) or the service name provided when installing the agent. </LI> 
+<LI> Startup type as automatic </LI> 
+<LI>Path to executable as (the default assuming you didnt change the install directory) C:\Program Files\MTConnect\MTConnectAgent\agent.exe 
+<LI> Service Status should be stopped. If you had checked the service startup it should say started. 
+<LI> The tabs Logon, Recovery and Dependencies can be ignored. 
+</OL> 
+<LI>If you see all the correct parameters, you can then start the Agent, by clicking the Start button. A popup dialog should appear and within a minute or so, the service should be started. 
+Close the Properties popup, and iF the agent status has not changed to 'Started' problems occured. 
+Assuming the Agent service started, you can now see XML data from your MTConnect Adapter(s) (really devices). 
+To see the output, open a web browser, (such as Internet Explorer), and type into the address bar: 
+<PRE> http://127.0.0.1:5000/current</PRE> 
+You should see data, as opposed to 'Unable to connect' or 'This page cannot be displayed' in the web browser. 
+If you dont see data the service is not running, or you configured the HTTP port in the agent to something besides 5000. 
+If you see data, but all the data is UNAVAILABLE, this is also most likely bad. 
+You see all UNAVAILABLE data either: 
+<OL type=i> 
+<LI> No adapters were configured. </LI> 
+<LI> The adapters is down, and no data is available. To check this, telnet to ip/port of the adapter, you should see output. </LI> 
+<LI> The adapters data blocked by the firewall. Firewall can be on either the host or the remote adapter computer.  To check this, telnet to ip/port of the adapter, you should see output. 
+If you see data, the firewall is most likely preventing the agent from remote access. 
+If you don't see data, (and you can 'ping' the remote computer, a firewall on the remote platform may be preventing an adapter from outputting SHDR to socket port 7878 (the default). 
+</OL> 
+<LI> If you see data, then the agent has installed and been configured correctly. Now, just monitor the agent for a couple days to insure that it is booting correctly and operating properly. 
+</OL> 
+<H1 align="center">UNINSTALLAION SOFTWARE INFORMATION </H1>
+There are two methods for uninstalling the Agent. Either use: <OL><LI>The Microsoft Windows Control Panel, 
+or <LI>navigate to the install directory (default C:\Program Files\MTConnect\MTConnectAgent) and click uninstall.exe. 
+</OL><P>The control panel uninstall procedure wil be described (although once the uninstall program is activated, the procedure is the same.) 
+<P>Uninstall uses the Windows mechanism: Start->Control Panale -> Programs and Features to fetch all the installed programs on the platform.
+Scroll down and find the MTConnectAgentxx.xx installation. Double click uninstall, YOU WILL NEED TO HAVE ADMINISTRATOR priviledges to uninstall on windows 7 machines. 
+Three uninstall pages will diplay: Click Next, then Uninstall and finally Finish, and the Agent will be removed. 
+<P>Uninstalling using the control panel is preferrable, but often some quirks appear. It may be necessary to manually top the MTConnectAgent service before uninstalling. 
+Also, the Control Panel programs and features may not remove the MTConnectAgentxx.xx entry even though it has uninstalled the agent. A refresh may take care of this. 

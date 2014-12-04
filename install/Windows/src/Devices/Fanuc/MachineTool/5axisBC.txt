@@ -1,0 +1,68 @@
+		<Device id="####d1" uuid="####xxx" name="NNNNNN">
+     			<Description serialNumber="xxxx">Siemens-840D</Description>
+ 			<DataItems>
+				<DataItem id="####avail1" name="avail"  type="AVAILABILITY" category="EVENT"/>
+			</DataItems>
+			<Components>
+				<Axes id="####a1" name="base">
+					<Components>
+						<Linear id="####x1" name="X">
+							<DataItems>
+								<DataItem type="POSITION" subType="ACTUAL" id="####xp1" category="SAMPLE" name="Xabs" units="MILLIMETER" nativeUnits="MILLIMETER" coordinateSystem="MACHINE"/>
+							</DataItems>
+						</Linear>
+						<Linear id="####y1" name="Y">
+							<DataItems>
+								<DataItem type="POSITION" subType="ACTUAL" id="####yp1" category="SAMPLE" name="Yabs" units="MILLIMETER" nativeUnits="MILLIMETER" coordinateSystem="MACHINE"/>
+							</DataItems>
+						</Linear>
+						<Linear id="####z1" name="Z">
+							<DataItems>
+								<DataItem type="POSITION" subType="ACTUAL" id="####zp1" category="SAMPLE" name="Zabs" units="MILLIMETER" nativeUnits="MILLIMETER" coordinateSystem="MACHINE"/>
+							</DataItems>
+						</Linear>
+						<Rotary id="####d1" name="B">
+							<DataItems>
+								<DataItem type="SPINDLE_SPEED" id="####b" category="SAMPLE" name="Babs" subType="ACTUAL" nativeUnits="DEGREE" />
+							</DataItems>
+						</Rotary>
+						<Rotary id="####d1" name="C">
+							<DataItems>
+								<DataItem type="SPINDLE_SPEED" id="####c" category="SAMPLE" name="Cabs" subType="ACTUAL" nativeUnits="DEGREE" />
+							</DataItems>
+						</Rotary>
+						<Rotary id="####d1" name="D">
+							<DataItems>
+								<DataItem type="SPINDLE_SPEED" id="####cs1" category="SAMPLE" name="Srpm"  units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE"/>
+								<DataItem type="SPINDLE_SPEED" id="####cso1" category="SAMPLE" name="Sovr" subType="OVERRIDE" units="PERCENT" nativeUnits="PERCENT"/>
+							</DataItems>
+						</Rotary>
+					</Components>
+				</Axes>
+				<Controller id="####cont1" name="controller">
+					<Components>
+						<Path id="####path1" name="path">
+							<DataItems>
+								<DataItem type="PROGRAM" id="####pgm1" category="EVENT" name="program"/>
+								<DataItem type="PART_COUNT" id="####pc1" category="EVENT" name="PartCountAct" />
+								<DataItem type="PATH_FEEDRATE" id="####pf1" category="SAMPLE" name="path_feedratefrt" units="MILLIMETER/SECOND" subType="ACTUAL" coordinateSystem="WORK"/>
+								<DataItem type="PATH_FEEDRATE" id="####pfo1" category="SAMPLE" name="path_feedrateovr" units="PERCENT" nativeUnits="PERCENT" subType="OVERRIDE" />
+								<DataItem type="TOOL_ID" id="####tid1" category="EVENT" name="Tool_number"/>
+								<DataItem type="EXECUTION" id="####exec1" category="EVENT" name="execution"/>
+								<DataItem type="CONTROLLER_MODE" id="####mode1" category="EVENT" name="controllermode"/>
+							</DataItems>
+						</Path>
+					</Components>
+				</Controller>
+				<Systems id="####systems1" name="systems">
+					<Components>
+						<Electric name="electric" id="####elec1">
+							<DataItems>
+								<DataItem type="POWER_STATE" category="EVENT" id="####pwr1" name="power" />
+							</DataItems>
+						</Electric>
+		
+					</Components>
+				</Systems>
+			</Components>
+		</Device>
