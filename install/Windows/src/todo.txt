@@ -1,0 +1,10 @@
+Todo:
+
+msvc dll install - silent?
+
+Devices.xml file generation
+Device type menu generation
+
+11/4/2014 2:35:29 PM
+* copy all Device templates in installation
+* finished SetFilePermission

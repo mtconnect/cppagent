@@ -1,0 +1,3 @@
+.\Agent.exe debug
+pause
+

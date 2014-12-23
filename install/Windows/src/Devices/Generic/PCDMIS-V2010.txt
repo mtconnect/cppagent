@@ -1,0 +1,60 @@
+		<Device id="####d1" uuid="####xxx" name="NNNNNN">
+			<Description>PCDMIS-V2010</Description>
+			<DataItems>
+				<DataItem id="####avail" name="avail"  type="AVAILABILITY" category="EVENT"/>
+			</DataItems>
+			<Components>
+				<Controller id="####cont" name="controller">
+					<DataItems>
+						<DataItem type="COMMUNICATIONS" category="CONDITION" id="####ccond" name="comms_cond" />
+						<DataItem type="LOGIC_PROGRAM" category="CONDITION" id="####logic" name="logic_cond" />
+						<DataItem type="SYSTEM" category="CONDITION" id="####system" name="system_cond" />
+					</DataItems>
+					<Components>
+						<Path id="####path1" name="path">
+							<DataItems>
+								<DataItem type="SPINDLE_SPEED" id="####cs" category="SAMPLE" name="Srpm" subType="ACTUAL" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE"/>
+
+								<DataItem type="PROGRAM" id="####program" category="EVENT" name="Part"/>
+								<DataItem type="PART_COUNT" id="####pc" category="EVENT" name="PartCountAct" />
+								<DataItem type="PART_COUNT" id="####pcb" category="EVENT" name="PartCountBad" />
+								<DataItem type="PATH_FEEDRATE" id="####Fact" category="SAMPLE" name="path_feedratefrt" units="MILLIMETER/SECOND" nativeUnits="FOOT/MINUTE" subType="ACTUAL" coordinateSystem="WORK"/>
+								<DataItem type="TOOL_ID" id="####tid" category="EVENT" name="probe"/>
+								<DataItem type="EXECUTION" id="####exec" category="EVENT" name="execution"/>
+								<DataItem type="CONTROLLER_MODE" id="####mode" category="EVENT" name="controllermode"/>
+								<DataItem type="EMERGENCY_STOP" id="####estop" category="EVENT" name="estop"/>
+
+								<DataItem type="PART_COUNT"    category="EVENT"  id="####probecnt1" name="probed"/>
+								<DataItem type="PATH_POSITION" category="SAMPLE" subType="PROBE" id="####sp1" name="SetPoint"    units="MILLIMETER" />
+								<DataItem type="PATH_POSITION" category="SAMPLE" subType="PROBE" id="####ap1" name="ActualPoint" units="MILLIMETER" />
+								<DataItem type="DISPLACEMENT"  category="SAMPLE" id="####tol1"      name="Tolerance" units="MILLIMETER" />
+								<DataItem type="DISPLACEMENT"  category="SAMPLE" id="####plustol1"  name="PlusTolerance" units="MILLIMETER"/>
+								<DataItem type="DISPLACEMENT"  category="SAMPLE" id="####mintol1"   name="MinusTolerance" units="MILLIMETER"/>
+								<DataItem type="DISPLACEMENT"  category="SAMPLE" id="####mindev1"   name="MinDeviation" units="MILLIMETER"/>
+								<DataItem type="DISPLACEMENT"  category="SAMPLE" id="####maxdev1"   name="MaxDeviation" units="MILLIMETER"/>
+								<DataItem type="DISPLACEMENT"  category="SAMPLE" id="####dev1"      name="Deviation" units="MILLIMETER"/>
+								<DataItem type="PART_COUNT"    category="EVENT"  id="####outtol1"   name="Outtol"/>
+								<DataItem type="TOOL_ID"       category="EVENT"  id="####pid1"      name="ProbeNumber"/>
+								<DataItem type="PART_ID"       category="EVENT"  id="####CharacteristicType" name="Characteristic"/>
+								<DataItem type="PART_ID"       category="EVENT"  id="####FeatureType" name="Feature"/>
+							</DataItems>
+						</Path>
+					</Components>
+				</Controller>
+				<Systems id="####systems" name="systems">
+					<Components>
+ 						<Electric name="electric" id="####elec">
+							<DataItems>
+								<DataItem type="POWER_STATE" category="EVENT" id="####pwr" name="power" />
+								<DataItem type="TEMPERATURE" category="CONDITION" id="####pwrt" name="electric_temp" />
+							</DataItems>
+						</Electric>
+						<Pneumatic name="pneumatic" id="####pneumatic">
+							<DataItems>
+								<DataItem type="PRESSURE" category="CONDITION" id="####pneupress" name="pneu_cond" />
+							</DataItems>
+						</Pneumatic>
+					</Components>
+				</Systems>
+			</Components>
+		</Device>

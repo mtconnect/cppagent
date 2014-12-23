@@ -1,0 +1,100 @@
+		<Device id="####dev" iso841Class="6" name="NNNNNN" sampleRate="10" uuid="####000">
+			<Description manufacturer="Fanuc">Fanuc - CNC4axis</Description>
+			<DataItems>
+				<DataItem category="EVENT" id="####avail" type="AVAILABILITY"/>
+			</DataItems>
+			<Components>
+				<Axes id="####ax" name="Axes">
+				  <DataItems>
+				    <DataItem category="CONDITION" id="####servo" type="ACTUATOR" />
+				  </DataItems>
+					<Components>
+						<Rotary id="####c1" name="C" nativeName="S1">
+							<DataItems>
+								<DataItem category="SAMPLE" id="####c2" name="S1speed" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="SPINDLE_SPEED" units="REVOLUTION/MINUTE"/>
+								<DataItem category="SAMPLE" id="####c4" name="S1load" nativeUnits="PERCENT" subType="ACTUAL" type="LOAD" units="PERCENT"/>
+								<DataItem category="SAMPLE" id="####c3" name="SspeedOvr" nativeUnits="PERCENT" subType="OVERRIDE" type="SPINDLE_SPEED" units="PERCENT"/>
+								<DataItem category="EVENT" id="####cm" name="Cmode" type="ROTARY_MODE">
+									<Constraints>
+										<Value>SPINDLE</Value>
+									</Constraints>
+								</DataItem>
+								<DataItem category="CONDITION" id="####spindle" type="ACTUATOR"/>
+							</DataItems>
+						</Rotary>
+						<Linear id="####x1" name="X">
+							<DataItems>
+								<DataItem category="SAMPLE" id="####x2" name="Xact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="####x4" name="Xcom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="####n3" name="Xload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+								<DataItem category="CONDITION" id="####Xservo" type="ACTUATOR"/>
+								<DataItem category="CONDITION" id="####Xovertemp" type="TEMPERATURE"/>
+								<DataItem category="CONDITION" id="####Xtravel" type="POSITION"/>
+							</DataItems>
+						</Linear>
+						<Linear id="####y1" name="Y">
+							<DataItems>
+								<DataItem category="SAMPLE" id="####y2" name="Yact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="####y4" name="Ycom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="####y3" name="Yload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+								<DataItem category="CONDITION" id="####Yservo" type="ACTUATOR"/>
+								<DataItem category="CONDITION" id="####Yovertemp" type="TEMPERATURE"/>
+								<DataItem category="CONDITION" id="####Ytravel" type="POSITION"/>
+							</DataItems>
+						</Linear>
+						<Linear id="####z1" name="Z">
+							<DataItems>
+								<DataItem category="SAMPLE" id="####z2" name="Zact" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="####z4" name="Zcom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>								
+								<DataItem category="SAMPLE" id="####z3" name="Zload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+								<DataItem category="CONDITION" id="####Zservo" type="ACTUATOR"/>
+								<DataItem category="CONDITION" id="####Zovertemp" type="TEMPERATURE"/>
+								<DataItem category="CONDITION" id="####Ztravel" type="POSITION"/>
+							</DataItems>
+						</Linear>
+						<Rotary id="####a1" name="A">
+							<DataItems>
+								<DataItem category="SAMPLE" id="####a2" name="Aact" nativeUnits="MILLIMETER" subType="ACTUAL" type="ANGLE" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="####a4" name="Acom" nativeUnits="MILLIMETER" subType="COMMANDED" type="POSITION" units="MILLIMETER"/>
+								<DataItem category="SAMPLE" id="####a3" name="Aload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+								<DataItem category="CONDITION" id="####Aservo" type="ACTUATOR"/>
+								<DataItem category="CONDITION" id="####Aovertemp" type="TEMPERATURE"/>
+								<DataItem category="CONDITION" id="####Atravel" type="POSITION"/>
+								<DataItem category="EVENT" id="####am" name="Amode" type="ROTARY_MODE">
+									<Constraints>
+										<Value>INDEX</Value>
+									</Constraints>
+								</DataItem>
+							</DataItems>
+						</Rotary>
+					</Components>
+				</Axes>
+				<Controller id="####cn1" name="controller">
+					<DataItems>
+						<DataItem category="EVENT" id="####message" type="MESSAGE"/>
+						<DataItem category="EVENT" id="####estop" type="EMERGENCY_STOP"/>
+						<DataItem category="CONDITION" id="####logic" type="LOGIC_PROGRAM"/>
+						<DataItem category="CONDITION" id="####comms" type="COMMUNICATIONS"/>
+						<DataItem category="CONDITION" id="####motion" type="MOTION_PROGRAM"/>
+						<DataItem category="CONDITION" id="####system" type="SYSTEM"/>
+					</DataItems>
+					<Components>
+						<Path id="####pth" name="path">
+							<DataItems>
+								<DataItem category="EVENT" id="####cn2" name="block" type="BLOCK"/>
+								<DataItem category="EVENT" id="####cn3" name="mode" type="CONTROLLER_MODE"/>
+								<DataItem category="EVENT" id="####cn4" name="line" type="LINE"/>
+								<DataItem category="EVENT" id="####cn5" name="program" type="PROGRAM"/>
+								<DataItem category="EVENT" id="####cn6" name="execution" type="EXECUTION"/>
+								<DataItem category="EVENT" id="####part" name="part" type="PART_ID"/>
+								<DataItem category="SAMPLE" id="####path_pos" nativeUnits="MILLIMETER_3D" subType="ACTUAL" type="PATH_POSITION" units="MILLIMETER_3D"/>
+								<DataItem category="SAMPLE" id="####probe" nativeUnits="MILLIMETER_3D" subType="PROBE" type="PATH_POSITION" units="MILLIMETER_3D"/>
+								<DataItem category="SAMPLE" id="####path_feedrate" nativeUnits="MILLIMETER/SECOND" type="PATH_FEEDRATE" units="MILLIMETER/SECOND"/>
+								<DataItem category="SAMPLE" id="####Fovr" nativeUnits="PERCENT" type="PATH_FEEDRATE" units="PERCENT"/>
+								
+							</DataItems>
+						</Path>
+					</Components>
+				</Controller>
+			</Components>
+		</Device>

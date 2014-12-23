@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file was created by NSISDialogDesigner 1.3.1.0
+http://coolsoft.altervista.org/nsisdialogdesigner
+Do not edit manually!
+-->
+<Dialog Name="MTCAdapterSelection" Title="Please Select Model" Subtitle="Vendor Adapter Selection" onBack="CustomButtonPushed">
+  <CreateFunctionCustomScript>Call ConfigPreCreate
+Call FindDevicesFiles</CreateFunctionCustomScript>
+  <GroupBox Name="GroupBox1" Location="18, 1" Size="404, 226" TabIndex="0" Visible="False">
+    <Link Name="Link1" Location="18, 206" Size="266, 17" Text="Link1" TabIndex="0" onClick="OnVendorUrlLinkClick" />
+    <DropList Name="AdapterDropList" Location="20, 76" Size="362, 21" TabIndex="1" />
+    <Label Name="Label4" Location="17, 16" Size="100, 17" Text="Device Name" TabIndex="2" />
+    <TextBox Name="DeviceNameTextBox" Location="17, 36" Size="366, 20" TabIndex="3" />
+    <Label Name="Label3" Location="17, 148" Size="100, 16" Text="Port" TabIndex="4" />
+    <TextBox Name="PortTextBox" Location="17, 167" Size="367, 20" Text="7878" TabIndex="5" />
+    <Label Name="Label2" Location="18, 107" Size="142, 15" Text="IP" TabIndex="6" />
+    <TextBox Name="IPTextBox" Location="17, 125" Size="367, 20" TabIndex="7" />
+    <Label Name="Label1" Location="17, 60" Size="233, 14" Text="Adapter Selection" TabIndex="8" />
+  </GroupBox>
+</Dialog>

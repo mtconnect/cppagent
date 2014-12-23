@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file was created by NSISDialogDesigner 1.3.1.0
+http://coolsoft.altervista.org/nsisdialogdesigner
+Do not edit manually!
+-->
+<Dialog Name="MTCAgentConfig" Title="Agent Configuration" Subtitle="Parameters">
+  <GroupBox Name="GroupBox1" Location="7, 16" Size="345, 147" TabIndex="0">
+    <Label Name="Label1" Location="11, 104" Size="78, 21" Text="Debug Level" TabIndex="0" />
+    <DropList Name="DropList1" Location="101, 105" Size="219, 21" TabIndex="1" SelectedItem="Fatal">
+      <Items>
+        <value>Fatal</value>
+        <value>Warning</value>
+        <value>Info</value>
+        <value>Debug</value>
+      </Items>
+    </DropList>
+    <TextBox Name="TextBox5" Location="100, 79" Size="220, 20" Text="2" TabIndex="2" />
+    <Label Name="Label5" Location="19, 76" Size="71, 23" Text="Delay (sec)" TabIndex="3" />
+    <TextBox Name="TextBox2" Location="100, 49" Size="220, 20" Text="5000" TabIndex="4" />
+    <Label Name="Label2" Location="18, 47" Size="72, 22" Text="Http Port" TabIndex="5" />
+    <TextBox Name="TextBox4" Location="101, 21" Size="219, 20" Text=" MTConnectAgent" TabIndex="6" />
+    <Label Name="Label4" Location="18, 21" Size="81, 20" Text="Service Name" TabIndex="7" />
+  </GroupBox>
+  <CheckBox Name="CheckBox2" Location="26, 176" Size="135, 21" Text="Start Agent Service" Checked="True" TabIndex="1" />
+</Dialog>

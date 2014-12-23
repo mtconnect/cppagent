@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file was created by NSISDialogDesigner 1.3.1.0
+http://coolsoft.altervista.org/nsisdialogdesigner
+Do not edit manually!
+-->
+<Dialog Name="MTCAdapterInstall" Title="Machine Selection" Subtitle="Choose from Available Vendors">
+  <GroupBox Name="GroupBox1" Location="30, 6" Size="390, 169" TabIndex="0">
+    <Label Name="Label3" Location="19, 115" Size="121, 14" Text="Version" TabIndex="0" />
+    <ComboBox Name="ComboBox4" Location="19, 132" Size="355, 21" TabIndex="1" SelectedItem="1.2">
+      <Items>
+        <value>0.9</value>
+        <value>1.0</value>
+        <value>1.1</value>
+        <value>1.2</value>
+        <value>1.3</value>
+      </Items>
+    </ComboBox>
+    <Label Name="Label2" Location="19, 65" Size="114, 16" Text="Machine Type" TabIndex="2" />
+    <ComboBox Name="ComboBox3" Location="19, 81" Size="353, 21" TabIndex="3">
+      <Items>
+        <value>MachineTool</value>
+        <value>Turning</value>
+        <value>Robot</value>
+        <value>Misc</value>
+      </Items>
+    </ComboBox>
+    <ComboBox Name="ComboBox2" Location="19, 38" Size="354, 21" TabIndex="4">
+      <Items>
+        <value>Mazak</value>
+        <value>Okuma</value>
+        <value>Fanuc</value>
+        <value>Siemens</value>
+        <value>Generic</value>
+      </Items>
+    </ComboBox>
+    <Label Name="Label1" Location="19, 24" Size="73, 19" Text="Vendor" TabIndex="5" />
+  </GroupBox>
+  <ComboBox Name="ComboBox1" Location="-431, 230" Size="292, 21" TabIndex="1" />
+</Dialog>
