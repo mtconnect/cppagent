@@ -3829,9 +3829,21 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='ProgramEditValueType'/>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='ACTIVE'/>
+        <xs:enumeration value='READY'/>
+        <xs:enumeration value='NOT_READY'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:element name='ProgramEdit' type='ProgramEditType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The program edit state
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='ProgramEditNameType'>
     <xs:annotation>
       <xs:documentation>
@@ -3839,9 +3851,16 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='ProgramValueType'/>
+      <xs:restriction base='EventType'/>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:element name='ProgramEditName' type='ProgramEditNameType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The name of the program being edited
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='PartCountDiscreteType'>
     <xs:annotation>
       <xs:documentation>
