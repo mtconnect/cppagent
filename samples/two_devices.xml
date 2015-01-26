@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.1">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.1"/>
+  <Devices>
+    <Device uuid="device-1" name="Device1" sampleInterval="1.0" id="d1">
+      <Description manufacturer="SI" serialNumber="0"/>
+      <DataItems>
+        <DataItem type="AVAILABILITY" name="avail" id="d1-1" category="EVENT"/>
+      </DataItems>
+      <Components>
+        <Controller name="Controller" id="d1-2">
+      	  <Components>
+      	    <Path name="path" id="d1-3">
+              <DataItems>
+            		<DataItem type="CONTROLLER_MODE" category="EVENT" id="d1-4" name="mode"/>
+            		<DataItem type="EXECUTION" category="EVENT" id="d1-5" name="exec"/>
+              </DataItems>
+      	    </Path>
+      	  </Components>
+        </Controller>
+      </Components>
+    </Device>
+    <Device uuid="device-2" name="Device2" sampleInterval="1.0" id="d2">
+      <Description manufacturer="SI" serialNumber="0"/>
+      <DataItems>
+        <DataItem type="AVAILABILITY" name="avail" id="d2-1" category="EVENT"/>
+      </DataItems>
+      <Components>
+        <Controller name="Controller" id="d2-2">
+      	  <Components>
+      	    <Path name="path" id="d2-3">
+              <DataItems>
+            		<DataItem type="CONTROLLER_MODE" category="EVENT" id="d2-4" name="mode"/>
+            		<DataItem type="EXECUTION" category="EVENT" id="d2-5" name="exec"/>
+              </DataItems>
+      	    </Path>
+      	  </Components>
+        </Controller>
+      </Components>
+    </Device>    
+  </Devices>
+</MTConnectDevices>
