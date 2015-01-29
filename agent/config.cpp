@@ -67,7 +67,7 @@ static inline bool get_bool_with_default(const config_reader::kernel_1a &reader,
 }
 
 AgentConfiguration::AgentConfiguration() :
-  mAgent(NULL), mLoggerFile(NULL)
+  mAgent(NULL), mLoggerFile(NULL), mMonitorFiles(false), mRestart(false)
 {
 }
 
@@ -105,9 +105,78 @@ AgentConfiguration::~AgentConfiguration()
   set_all_logging_output_streams(cout);
 }
 
+void AgentConfiguration::monitorThread()
+{
+  struct stat devices_at_start, cfg_at_start;
+  
+  if (stat(mConfigFile.c_str(), &cfg_at_start) != 0)
+    sLogger << LWARN << "Cannot stat config file: " << mConfigFile << ", exiting monitor";
+  if (stat(mDevicesFile.c_str(), &devices_at_start) != 0)
+    sLogger << LWARN << "Cannot stat devices file: " << mDevicesFile << ", exiting monitor";
+  
+  sLogger << LDEBUG << "Monitoring files: " << mConfigFile << " and " << mDevicesFile <<
+    ", will warm start if they change.";
+  
+  bool changed = false;
+  
+  // Check every 10 seconds
+  do {
+    ::sleep(10);
+    
+    struct stat devices, cfg;
+    
+    if (stat(mConfigFile.c_str(), &cfg) != 0) {
+      sLogger << LWARN << "Cannot stat config file: " << mConfigFile << ", retrying in 10 seconds";
+      continue;
+    }
+
+    if (stat(mDevicesFile.c_str(), &devices) != 0) {
+      sLogger << LWARN << "Cannot stat devices file: " << mDevicesFile << ", retrying in 10 seconds";
+      continue;
+    }
+    
+    // Check if the files have changed.
+    changed = cfg_at_start.st_mtime != cfg.st_mtime ||
+              devices_at_start.st_mtime != devices.st_mtime;
+    
+  } while (!changed && mAgent->is_running());
+  
+  // Restart agent if changed...
+  // stop agent and signal to bbbwarm start
+  if (mAgent->is_running() && changed)
+  {
+    mRestart = true;
+    mAgent->clear();
+    delete mAgent;
+    mAgent = NULL;
+    
+    // Re initialize
+    const char *argv[] = { mConfigFile.c_str() };
+    initialize(1, argv);
+  }
+}
+
 void AgentConfiguration::start()
 {
-  mAgent->start();
+  auto_ptr<dlib::thread_function> mon;
+  
+  do
+  {
+    mRestart = false;
+    if (mMonitorFiles)
+    {
+      // Start the file monitor to check for changes to cfg or devices.
+      mon.reset(new dlib::thread_function(make_mfp(*this, &AgentConfiguration::monitorThread)));
+    }
+
+    mAgent->start();
+    
+    if (mRestart && mMonitorFiles)
+    {
+      // Will destruct and wait to re-initialize.
+      mon.reset(0);
+    }
+  } while (mRestart);
 }
 
 void AgentConfiguration::stop()
@@ -278,7 +347,8 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   // Now get our configuration
   config_reader::kernel_1a reader(aFile);
   
-  configureLogger(reader);
+  if (mLoggerFile == NULL)
+    configureLogger(reader);
 
   bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
   int port = get_with_default(reader, "Port", 5000);
@@ -291,6 +361,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   bool ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
   bool conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
   bool upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
+  mMonitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
   
   mPidFile = get_with_default(reader, "PidFile", "agent.pid");
   const char *probe;
@@ -313,6 +384,8 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 			   " using Devices = <file>").c_str());
     }
   }
+  
+  mDevicesFile = probe;
 
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
   

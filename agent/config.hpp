@@ -48,10 +48,15 @@ protected:
                   const dlib::log_level& l,
                   const dlib::uint64 aThreadId,
                   const char* aMessage);
+  
+  void monitorThread();
 
 protected:
   Agent *mAgent;
   RollingFileLogger *mLoggerFile;
+  bool mMonitorFiles;
+  std::string mDevicesFile;
+  bool mRestart;
 };
 
 #endif
