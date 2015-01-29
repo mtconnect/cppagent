@@ -581,6 +581,10 @@ Configuration Parameters
 
     *Default*: true
 
+* `MonitorConfigFiles` - Monitor agent.cfg and Devices.xml files and restart agent if they change.
+
+    *Default*: false
+
 ###Adapter configuration items###
 
 * `Adapters` - Adapters begins a list of device blocks. If the Adapters
