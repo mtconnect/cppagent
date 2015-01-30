@@ -140,20 +140,27 @@ void AgentConfiguration::monitorThread()
               devices_at_start.st_mtime != devices.st_mtime;
     
   } while (!changed && mAgent->is_running());
+
   
   // Restart agent if changed...
   // stop agent and signal to bbbwarm start
   if (mAgent->is_running() && changed)
   {
+    sLogger << LWARN << "Monitor thread has detected change in configuration files, restarting agent.";
+
     mRestart = true;
     mAgent->clear();
     delete mAgent;
     mAgent = NULL;
+
+    sLogger << LWARN << "Monitor agent has completed shutdown, reinitializing agent.";
     
     // Re initialize
     const char *argv[] = { mConfigFile.c_str() };
     initialize(1, argv);
   }
+
+  sLogger << LDEBUG << "Monitor thread is exiting";
 }
 
 void AgentConfiguration::start()
@@ -166,6 +173,7 @@ void AgentConfiguration::start()
     if (mMonitorFiles)
     {
       // Start the file monitor to check for changes to cfg or devices.
+      sLogger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
       mon.reset(new dlib::thread_function(make_mfp(*this, &AgentConfiguration::monitorThread)));
     }
 
@@ -174,7 +182,9 @@ void AgentConfiguration::start()
     if (mRestart && mMonitorFiles)
     {
       // Will destruct and wait to re-initialize.
+      sLogger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
       mon.reset(0);
+      sLogger << LDEBUG << "Monitor has exited";
     }
   } while (mRestart);
 }
