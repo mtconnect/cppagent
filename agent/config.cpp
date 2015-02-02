@@ -123,22 +123,23 @@ void AgentConfiguration::monitorThread()
   
   // Check every 10 seconds
   do {
-    ::sleep(10);
+    dlib::sleep(10000);
     
     struct stat devices, cfg;
+    bool check = true;
     
     if (stat(mConfigFile.c_str(), &cfg) != 0) {
       sLogger << LWARN << "Cannot stat config file: " << mConfigFile << ", retrying in 10 seconds";
-      continue;
+      check = false;
     }
 
     if (stat(mDevicesFile.c_str(), &devices) != 0) {
       sLogger << LWARN << "Cannot stat devices file: " << mDevicesFile << ", retrying in 10 seconds";
-      continue;
+      check = false;
     }
     
     // Check if the files have changed.
-    if (cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime) {
+    if (check && (cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime)) {
       time_t now = time(NULL);
       sLogger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least " << mMinimumConfigReloadAge
                        <<" seconds old";
