@@ -26,6 +26,7 @@
 #include <dlib/config_reader.h>
 #include <dlib/logger.h>
 #include <stdexcept>
+#include <algorithm>
 #include <sys/stat.h>
 #include "rolling_file_logger.hpp"
 
@@ -136,9 +137,14 @@ void AgentConfiguration::monitorThread()
     }
     
     // Check if the files have changed.
-    changed = cfg_at_start.st_mtime != cfg.st_mtime ||
-              devices_at_start.st_mtime != devices.st_mtime;
-    
+    if (cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime) {
+      time_t now = time(NULL);
+      sLogger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least 15 seconds old";
+      sLogger << LWARN << "    Devices.xml file modified " << (now - devices.st_mtime) << " seconds ago";
+      sLogger << LWARN << "    ...cfg file modified " << (now - cfg.st_mtime) << " seconds ago";
+      
+      changed = (now - cfg.st_mtime) > 15 && (now - devices.st_mtime) > 15;
+    }
   } while (!changed && mAgent->is_running());
 
   
