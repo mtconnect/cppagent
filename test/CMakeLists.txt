@@ -6,6 +6,9 @@ set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
 set(CMAKE_FIND_APPBUNDLE NEVER)
 
+set(GCOV_COMPILE_FLAGS  "-fprofile-arcs -ftest-coverage")
+set(GCOV_LINK_FLAGS "-lgcov")
+
 if(WIN32)
   set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.9/include )
   
@@ -32,7 +35,25 @@ endif(UNIX)
 project (test)
 
 set(test_srcs test.cpp
-	       ../agent/adapter.cpp 
+	       adapter_test.cpp
+	       agent_test.cpp
+	       checkpoint_test.cpp
+	       config_test.cpp
+	       component_test.cpp
+	       component_event_test.cpp
+	       connector_test.cpp
+	       data_item_test.cpp
+	       device_test.cpp
+	       globals_test.cpp
+	       xml_parser_test.cpp
+	       test_globals.cpp
+	       xml_printer_test.cpp
+ 	       asset_test.cpp
+	       change_observer_test.cpp
+           cutting_tool_test.cpp
+           )
+
+set(agent_srcs ../agent/adapter.cpp 
 	       ../agent/agent.cpp 
 	       ../agent/checkpoint.cpp
 	       ../agent/component.cpp 
@@ -52,23 +73,10 @@ set(test_srcs test.cpp
           ../agent/asset.cpp
           ../agent/version.cpp
           ../agent/rolling_file_logger.cpp
-	       adapter_test.cpp
-	       agent_test.cpp
-	       checkpoint_test.cpp
-	       config_test.cpp
-	       component_test.cpp
-	       component_event_test.cpp
-	       connector_test.cpp
-	       data_item_test.cpp
-	       device_test.cpp
-	       globals_test.cpp
-	       xml_parser_test.cpp
-	       test_globals.cpp
-	       xml_printer_test.cpp
- 	       asset_test.cpp
-	       change_observer_test.cpp
-           cutting_tool_test.cpp
-           )
+          )
+
+set_property(SOURCE ${agent_srcs} APPEND PROPERTY COMPILE_FLAGS ${GCOV_COMPILE_FLAGS})
+
 
 file(GLOB test_headers *.hpp ../agent/*.hpp)
 
@@ -93,7 +101,17 @@ if(WIN32)
   endforeach(flag_var)
 endif(WIN32)
 
-add_executable(agent_test ${test_srcs} ${test_headers})
-target_link_libraries(agent_test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES})  
+add_executable(agent_test ${agent_srcs} ${test_srcs} ${test_headers})
+target_link_libraries(agent_test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES} ${GCOV_LINK_FLAGS})  
 set_target_properties(agent_test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1)
 
+add_custom_target( cov 
+				COMMAND [ -d Coverage ]&&rm -rf Coverage/||echo "Creating new folder"
+				COMMAND mkdir Coverage
+				COMMAND agent_test
+				COMMAND cp CMakeFiles/agent_test.dir/__/agent/*.gcno Coverage/
+				COMMAND mv CMakeFiles/agent_test.dir/__/agent/*.gcda Coverage/
+				COMMAND cd Coverage&&lcov -t "result" -o cppagent_coverage.info -c -d .
+				COMMAND cd Coverage&&genhtml -o coverage cppagent_coverage.info
+				COMMENT "Generating Coverage Report ..."
+                )
