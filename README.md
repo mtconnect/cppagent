@@ -585,6 +585,11 @@ Configuration Parameters
 
     *Default*: false
 
+* `MinimumConfigReloadAge` - The minimum age of a config file before an agent reload is triggered (seconds).
+
+    *Default*: 15
+
+
 ###Adapter configuration items###
 
 * `Adapters` - Adapters begins a list of device blocks. If the Adapters

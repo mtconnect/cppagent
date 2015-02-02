@@ -55,6 +55,7 @@ protected:
   Agent *mAgent;
   RollingFileLogger *mLoggerFile;
   bool mMonitorFiles;
+  int mMinimumConfigReloadAge;
   std::string mDevicesFile;
   bool mRestart;
 };

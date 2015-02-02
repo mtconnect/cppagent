@@ -68,7 +68,8 @@ static inline bool get_bool_with_default(const config_reader::kernel_1a &reader,
 }
 
 AgentConfiguration::AgentConfiguration() :
-  mAgent(NULL), mLoggerFile(NULL), mMonitorFiles(false), mRestart(false)
+  mAgent(NULL), mLoggerFile(NULL), mMonitorFiles(false), mRestart(false),
+  mMinimumConfigReloadAge(15)
 {
 }
 
@@ -139,11 +140,12 @@ void AgentConfiguration::monitorThread()
     // Check if the files have changed.
     if (cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime) {
       time_t now = time(NULL);
-      sLogger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least 15 seconds old";
+      sLogger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least " << mMinimumConfigReloadAge
+                       <<" seconds old";
       sLogger << LWARN << "    Devices.xml file modified " << (now - devices.st_mtime) << " seconds ago";
       sLogger << LWARN << "    ...cfg file modified " << (now - cfg.st_mtime) << " seconds ago";
       
-      changed = (now - cfg.st_mtime) > 15 && (now - devices.st_mtime) > 15;
+      changed = (now - cfg.st_mtime) > mMinimumConfigReloadAge && (now - devices.st_mtime) > mMinimumConfigReloadAge;
     }
   } while (!changed && mAgent->is_running());
 
@@ -378,6 +380,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   bool conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
   bool upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
   mMonitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
+  mMinimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
   
   mPidFile = get_with_default(reader, "PidFile", "agent.pid");
   const char *probe;
