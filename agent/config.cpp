@@ -152,7 +152,7 @@ void AgentConfiguration::monitorThread()
 
   
   // Restart agent if changed...
-  // stop agent and signal to bbbwarm start
+  // stop agent and signal to warm start
   if (mAgent->is_running() && changed)
   {
     sLogger << LWARN << "Monitor thread has detected change in configuration files, restarting agent.";
