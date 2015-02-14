@@ -100,6 +100,10 @@ protected:
   
   dlib::mutex *mCommandLock;
   
+  bool mConnectActive;
+  dlib::mutex *mConnectionMutex;
+  dlib::signaler *mConnectionClosed;
+  
 private:
   /* Size of buffer to read at a time from the socket */  
   static const unsigned int SOCKET_BUFFER_SIZE = 8192;

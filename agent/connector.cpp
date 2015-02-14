@@ -24,22 +24,52 @@ static dlib::logger sLogger("input.connector");
 /* Connector public methods */
 Connector::Connector(const string& server, unsigned int port, int aLegacyTimeout)
 : mConnected(false), mRealTime(false), mHeartbeats(false), 
-  mLegacyTimeout(aLegacyTimeout * 1000)
+  mLegacyTimeout(aLegacyTimeout * 1000), mConnectActive(false)
 {
   mServer = server;
   mPort = port;
   mCommandLock = new dlib::mutex;
+  mConnectionMutex = new dlib::mutex;
+  mConnectionClosed = new dlib::signaler(*mConnectionMutex);
 }
 
 Connector::~Connector()
 {
   delete mCommandLock;
+  delete mConnectionClosed;
+  delete mConnectionMutex;
 }
+
+class AutoSignal
+{
+public:
+  AutoSignal(dlib::mutex *aMutex, dlib::signaler *aSignal, bool *aVar)
+  : m(aMutex), s(aSignal), v(aVar)
+  {
+    dlib::auto_mutex lock(*m);
+    *v = true;
+  }
+  
+  ~AutoSignal()
+  {
+    dlib::auto_mutex lock(*m);
+    *v = false;
+    s->signal();
+  }
+  
+  
+private:
+  dlib::mutex *m;
+  dlib::signaler *s;
+  bool *v;
+};
 
 void Connector::connect()
 {
   mConnected = false;
   const char *ping = "* PING\n";
+  
+  AutoSignal sig(mConnectionMutex, mConnectionClosed, &mConnectActive);
 
   try
   {
@@ -106,7 +136,19 @@ void Connector::connect()
         timeout = 1;
       sockBuf[0] = 0;
       
-      status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
+      if (mConnected)
+        status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
+      else
+      {
+        sLogger << LDEBUG << "Connection was closed, exiting adapter connect";
+        break;
+      }
+      
+      if (!mConnected) {
+        sLogger << LDEBUG << "Connection was closed during read, exiting adapter";
+        break;
+      }
+      
       if (status > 0)
       {
         // Give a null terminator for the end of buffer
@@ -136,6 +178,7 @@ void Connector::connect()
         else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
         {
           dlib::auto_mutex lock(*mCommandLock);
+          
           sLogger << LDEBUG << "Sending a PING for " << mServer << " on port " << mPort;
           status = mConnection->write(ping, strlen(ping));
           if (status <= 0)
@@ -228,8 +271,9 @@ void Connector::parseBuffer(const char *aBuffer)
 
 void Connector::sendCommand(const string &aCommand)
 {
+  dlib::auto_mutex lock(*mCommandLock);
+
   if (mConnected) {
-    dlib::auto_mutex lock(*mCommandLock);
     string command = "* " + aCommand + "\n";
     int status = mConnection->write(command.c_str(), command.length());
     if (status <= 0)
@@ -266,15 +310,20 @@ void Connector::startHeartbeats(const string &aArg)
 
 void Connector::close()
 {
-  dlib::auto_mutex lock(*mCommandLock);
+  dlib::auto_mutex lock(*mConnectionMutex);
 
   if (mConnected && mConnection.get() != NULL)
   {
-    // Close the connection gracefully
+    // Shutdown the socket and close the connection.
+    mConnected = false;
+    mConnection->shutdown();
+    
+    sLogger << LWARN << "Waiting for connect method to exit and signal connection closed";
+    mConnectionClosed->wait();
+    
+    // Destroy the connection object.
     mConnection.reset();
 
-    // Call the disconnected callback.
-    mConnected = false;
     disconnected();
   }
 }
