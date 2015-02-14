@@ -192,6 +192,7 @@ void Connector::connect()
     }
     
     sLogger << LERROR << "connect: Connection exited with status: " << status;
+    mConnectActive = false;
     close();
   }
   catch (dlib::socket_error &e)
@@ -319,7 +320,8 @@ void Connector::close()
     mConnection->shutdown();
     
     sLogger << LWARN << "Waiting for connect method to exit and signal connection closed";
-    mConnectionClosed->wait();
+    if (mConnectActive)
+      mConnectionClosed->wait();
     
     // Destroy the connection object.
     mConnection.reset();
