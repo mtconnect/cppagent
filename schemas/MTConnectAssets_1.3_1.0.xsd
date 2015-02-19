@@ -31,7 +31,7 @@ WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
 THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
 SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 -->
-<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectAssets:1.3' xmlns:mt='urn:mtconnect.org:MTConnectAssets:1.3' targetNamespace='urn:mtconnect.org:MTConnectAssets:1.3' elementFormDefault='qualified' attributeFormDefault='unqualified' vc:minVersion='1.0'>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectAssets:1.3' xmlns:mt='urn:mtconnect.org:MTConnectAssets:1.3' targetNamespace='urn:mtconnect.org:MTConnectAssets:1.3' elementFormDefault='qualified' attributeFormDefault='unqualified'>
   <xs:element name='MTConnectAssets' type='MTConnectAssetsType'>
     <xs:annotation>
       <xs:documentation>
