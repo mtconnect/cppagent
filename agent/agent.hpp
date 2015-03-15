@@ -32,6 +32,7 @@
 #include "globals.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
+#include "json_printer.hpp"
 #include "checkpoint.hpp"
 #include "service.hpp"
 #include "asset.hpp"

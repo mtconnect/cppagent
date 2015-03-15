@@ -131,7 +131,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
     
     int major, minor;
     char c;
-    stringstream ss(XmlPrinter::getSchemaVersion());
+    stringstream ss(JsonPrinter::getSchemaVersion());
     ss >> major >> c >> minor;
     if ((*device)->getAssetChanged() == NULL && (major > 1 || (major == 1 && minor >= 2)))
     {
@@ -163,6 +163,11 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   }
   
   // Reload the document for path resolution
+  /*JsonPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
+                                                  mMaxAssets,
+                                                  mAssets.size(),
+                                                  mSequence, mDevices);
+  */ 
   mXmlParser->loadDocument(XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
                                                   mMaxAssets,
                                                   mAssets.size(),
@@ -283,20 +288,20 @@ void Agent::registerFile(const string &aUri, const string &aPath)
       
       // Check if the file name maps to a standard MTConnect schema file.
       if (name.find("MTConnect") == 0 && name.substr(name.length() - 4, 4) == ".xsd" &&
-          XmlPrinter::getSchemaVersion() == name.substr(name.length() - 7, 3)) {
+          JsonPrinter::getSchemaVersion() == name.substr(name.length() - 7, 3)) {
         string version = name.substr(name.length() - 7, 3);
         if (name.substr(9, 5) == "Error") {
-          string urn = "urn:mtconnect.org:MTConnectError:" + XmlPrinter::getSchemaVersion();
-          XmlPrinter::addErrorNamespace(urn, uri, "m");
+          string urn = "urn:mtconnect.org:MTConnectError:" + JsonPrinter::getSchemaVersion();
+          JsonPrinter::addErrorNamespace(urn, uri, "m");
         } else if (name.substr(9, 7) == "Devices") {
-          string urn = "urn:mtconnect.org:MTConnectDevices:" + XmlPrinter::getSchemaVersion();
-          XmlPrinter::addDevicesNamespace(urn, uri, "m");
+          string urn = "urn:mtconnect.org:MTConnectDevices:" + JsonPrinter::getSchemaVersion();
+          JsonPrinter::addDevicesNamespace(urn, uri, "m");
         } else if (name.substr(9, 6) == "Assets") {
-          string urn = "urn:mtconnect.org:MTConnectAssets:" + XmlPrinter::getSchemaVersion();
-          XmlPrinter::addAssetsNamespace(urn, uri, "m");
+          string urn = "urn:mtconnect.org:MTConnectAssets:" + JsonPrinter::getSchemaVersion();
+          JsonPrinter::addAssetsNamespace(urn, uri, "m");
         } else if (name.substr(9, 7) == "Streams") {
-          string urn = "urn:mtconnect.org:MTConnectStreams:" + XmlPrinter::getSchemaVersion();
-          XmlPrinter::addStreamsNamespace(urn, uri, "m");
+          string urn = "urn:mtconnect.org:MTConnectStreams:" + JsonPrinter::getSchemaVersion();
+          JsonPrinter::addStreamsNamespace(urn, uri, "m");
         }      
       }
     }
@@ -319,7 +324,7 @@ const string Agent::on_request (const incoming_things& incoming,
                                 outgoing_things& outgoing)
 {
   string result;
-  outgoing.headers["Content-Type"] = "text/xml";
+  outgoing.headers["Content-Type"] = "application/json";
   try 
   {
     sLogger << LDEBUG << "Request: " << incoming.request_type << " " << 
@@ -930,7 +935,7 @@ string Agent::handleProbe(const string& name)
     mDeviceList = mDevices;
   }
   
-  return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
+  return JsonPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
                                 mMaxAssets, mAssets.size(),
                                 mDeviceList, &mAssetCounts);
 }
@@ -1004,7 +1009,7 @@ std::string Agent::handleAssets(std::ostream& aOut,
       {
         AssetPtr ptr = mAssetMap[token];
         if (ptr.getObject() == NULL)
-          return XmlPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND", 
+          return JsonPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND", 
                                         (string) "Could not find asset: " + token);
         assets.push_back(ptr);
       }
@@ -1029,7 +1034,7 @@ std::string Agent::handleAssets(std::ostream& aOut,
     }    
   }
   
-  return XmlPrinter::printAssets(mInstanceId, mMaxAssets, mAssets.size(), assets);
+  return JsonPrinter::printAssets(mInstanceId, mMaxAssets, mAssets.size(), assets);
 }
 
 
@@ -1388,7 +1393,7 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
     }
   }
   
-  string toReturn = XmlPrinter::printSample(mInstanceId, mSlidingBufferSize,
+  string toReturn = JsonPrinter::printSample(mInstanceId, mSlidingBufferSize,
                                             seq, firstSeq, mSequence - 1, events);
   
   return toReturn;
@@ -1430,14 +1435,14 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
     if (aObserver != NULL) aObserver->reset();
   }
   
-  return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, end, 
+  return JsonPrinter::printSample(mInstanceId, mSlidingBufferSize, end, 
                                  firstSeq, mSequence - 1, results);
 }
 
 string Agent::printError(const string& errorCode, const string& text)
 {
   sLogger << LDEBUG << "Returning error " << errorCode << ": " << text;
-  return XmlPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
+  return JsonPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
                                 errorCode, text);
 }
 
