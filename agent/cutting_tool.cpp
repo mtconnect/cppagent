@@ -15,7 +15,6 @@
  */
 
 #include "cutting_tool.hpp"
-#include "xml_printer.hpp"
 #include "json_printer.hpp"
 
 #include <sstream>
