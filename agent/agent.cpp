@@ -131,7 +131,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
     
     int major, minor;
     char c;
-    stringstream ss(JsonPrinter::getSchemaVersion());
+    stringstream ss(XmlPrinter::getSchemaVersion());
     ss >> major >> c >> minor;
     if ((*device)->getAssetChanged() == NULL && (major > 1 || (major == 1 && minor >= 2)))
     {
@@ -163,11 +163,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   }
   
   // Reload the document for path resolution
-  /*JsonPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
-                                                  mMaxAssets,
-                                                  mAssets.size(),
-                                                  mSequence, mDevices);
-  */ 
+   
   mXmlParser->loadDocument(XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
                                                   mMaxAssets,
                                                   mAssets.size(),
@@ -288,20 +284,20 @@ void Agent::registerFile(const string &aUri, const string &aPath)
       
       // Check if the file name maps to a standard MTConnect schema file.
       if (name.find("MTConnect") == 0 && name.substr(name.length() - 4, 4) == ".xsd" &&
-          JsonPrinter::getSchemaVersion() == name.substr(name.length() - 7, 3)) {
+          XmlPrinter::getSchemaVersion() == name.substr(name.length() - 7, 3)) {
         string version = name.substr(name.length() - 7, 3);
         if (name.substr(9, 5) == "Error") {
-          string urn = "urn:mtconnect.org:MTConnectError:" + JsonPrinter::getSchemaVersion();
-          JsonPrinter::addErrorNamespace(urn, uri, "m");
+          string urn = "urn:mtconnect.org:MTConnectError:" + XmlPrinter::getSchemaVersion();
+          XmlPrinter::addErrorNamespace(urn, uri, "m");
         } else if (name.substr(9, 7) == "Devices") {
-          string urn = "urn:mtconnect.org:MTConnectDevices:" + JsonPrinter::getSchemaVersion();
-          JsonPrinter::addDevicesNamespace(urn, uri, "m");
+          string urn = "urn:mtconnect.org:MTConnectDevices:" + XmlPrinter::getSchemaVersion();
+          XmlPrinter::addDevicesNamespace(urn, uri, "m");
         } else if (name.substr(9, 6) == "Assets") {
-          string urn = "urn:mtconnect.org:MTConnectAssets:" + JsonPrinter::getSchemaVersion();
-          JsonPrinter::addAssetsNamespace(urn, uri, "m");
+          string urn = "urn:mtconnect.org:MTConnectAssets:" + XmlPrinter::getSchemaVersion();
+          XmlPrinter::addAssetsNamespace(urn, uri, "m");
         } else if (name.substr(9, 7) == "Streams") {
-          string urn = "urn:mtconnect.org:MTConnectStreams:" + JsonPrinter::getSchemaVersion();
-          JsonPrinter::addStreamsNamespace(urn, uri, "m");
+          string urn = "urn:mtconnect.org:MTConnectStreams:" + XmlPrinter::getSchemaVersion();
+          XmlPrinter::addStreamsNamespace(urn, uri, "m");
         }      
       }
     }

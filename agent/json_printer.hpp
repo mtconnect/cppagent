@@ -67,41 +67,8 @@ namespace JsonPrinter
   
   
   std::string printCuttingTool(CuttingToolPtr aTool);
-
   
-
-  void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 
-                           const std::string &aPrefix);
-  void addErrorNamespace(const std::string &aUrn, const std::string &aLocation, 
-                         const std::string &aPrefix);
-  void addStreamsNamespace(const std::string &aUrn, const std::string &aLocation, 
-                           const std::string &aPrefix);
-  void addAssetsNamespace(const std::string &aUrn, const std::string &aLocation, 
-                         const std::string &aPrefix);
-  void setSchemaVersion(const std::string &aVersion);
-  const std::string &getSchemaVersion();
-  
-  void setDevicesStyle(const std::string &aStyle);
-  void setStreamStyle(const std::string &aStyle);
-  void setAssetsStyle(const std::string &aStyle);
-  void setErrorStyle(const std::string &aStyle);
-
-  // For testing
-  void clearDevicesNamespaces();
-  void clearErrorNamespaces();
-  void clearStreamsNamespaces();
-  void clearAssetsNamespaces();
-
-  const std::string getDevicesUrn(const std::string &aPrefix);
-  const std::string getErrorUrn(const std::string &aPrefix);
-  const std::string getStreamsUrn(const std::string &aPrefix);
-  const std::string getAssetsUrn(const std::string &aPrefix);
-  
-  const std::string getDevicesLocation(const std::string &aPrefix);
-  const std::string getErrorLocation(const std::string &aPrefix);
-  const std::string getStreamsLocation(const std::string &aPrefix);
-  const std::string getAssetsLocation(const std::string &aPrefix);
-};
+  };
 
 #endif
 

@@ -20,7 +20,9 @@
 #include "version.h"
 #include <set>
 #include "../rapidjson/prettywriter.h"       
-#include "../rapidjson/stringbuffer.h" 
+#include "../rapidjson/stringbuffer.h"
+#include "../rapidjson/document.h"
+
 
 static dlib::logger sLogger("json.printer");
 
@@ -116,173 +118,6 @@ namespace JsonPrinter {
 
 };
 
-void JsonPrinter::addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 
-                         const std::string &aPrefix)
-
-{
-  pair<string, SchemaNamespace> item;
-  item.second.mUrn = aUrn;
-  item.second.mSchemaLocation = aLocation;
-  item.first = aPrefix;
-  
-  sDevicesNamespaces.insert(item);
-}
-
-void JsonPrinter::clearDevicesNamespaces()
-{
-  sDevicesNamespaces.clear();
-}
-
-const string JsonPrinter::getDevicesUrn(const std::string &aPrefix)
-{
-  map<string, SchemaNamespace>::iterator ns = sDevicesNamespaces.find(aPrefix);
-  if (ns != sDevicesNamespaces.end())
-    return ns->second.mUrn;
-  else
-    return "";
-}
-
-const string JsonPrinter::getDevicesLocation(const std::string &aPrefix)
-{
-  map<string, SchemaNamespace>::iterator ns = sDevicesNamespaces.find(aPrefix);
-  if (ns != sDevicesNamespaces.end())
-    return ns->second.mSchemaLocation;
-  else
-    return "";
-}
-
-
-void JsonPrinter::addErrorNamespace(const std::string &aUrn, const std::string &aLocation, 
-                       const std::string &aPrefix)
-{
-  pair<string, SchemaNamespace> item;
-  item.second.mUrn = aUrn;
-  item.second.mSchemaLocation = aLocation;
-  item.first = aPrefix;
-  
-  sErrorNamespaces.insert(item);  
-}
-
-void JsonPrinter::clearErrorNamespaces()
-{
-  sErrorNamespaces.clear();
-}
-
-const string JsonPrinter::getErrorUrn(const std::string &aPrefix)
-{
-  map<string, SchemaNamespace>::iterator ns = sErrorNamespaces.find(aPrefix);
-  if (ns != sErrorNamespaces.end())
-    return ns->second.mUrn;
-  else
-    return "";
-}
-
-const string JsonPrinter::getErrorLocation(const std::string &aPrefix)
-{
-  map<string, SchemaNamespace>::iterator ns = sErrorNamespaces.find(aPrefix);
-  if (ns != sErrorNamespaces.end())
-    return ns->second.mSchemaLocation;
-  else
-    return "";
-}
-
-void JsonPrinter::addStreamsNamespace(const std::string &aUrn, const std::string &aLocation, 
-                         const std::string &aPrefix)
-{
-  pair<string, SchemaNamespace> item;
-  item.second.mUrn = aUrn;
-  item.second.mSchemaLocation = aLocation;
-  item.first = aPrefix;
-  
-  sStreamsNamespaces.insert(item);  
-}
-
-void JsonPrinter::clearStreamsNamespaces()
-{
-  sStreamsNamespaces.clear();
-}
-
-void JsonPrinter::setSchemaVersion(const std::string &aVersion)
-{
-  sSchemaVersion = aVersion;
-}
-
-const std::string &JsonPrinter::getSchemaVersion()
-{
-  return sSchemaVersion;
-}
-
-const string JsonPrinter::getStreamsUrn(const std::string &aPrefix)
-{
-  map<string, SchemaNamespace>::iterator ns = sStreamsNamespaces.find(aPrefix);
-  if (ns != sStreamsNamespaces.end())
-    return ns->second.mUrn;
-  else
-    return "";
-}
-
-const string JsonPrinter::getStreamsLocation(const std::string &aPrefix)
-{
-  map<string, SchemaNamespace>::iterator ns = sStreamsNamespaces.find(aPrefix);
-  if (ns != sStreamsNamespaces.end())
-    return ns->second.mSchemaLocation;
-  else
-    return "";
-}
-
-void JsonPrinter::addAssetsNamespace(const std::string &aUrn, const std::string &aLocation, 
-                         const std::string &aPrefix)
-{
-  pair<string, SchemaNamespace> item;
-  item.second.mUrn = aUrn;
-  item.second.mSchemaLocation = aLocation;
-  item.first = aPrefix;
-  
-  sAssetsNamespaces.insert(item);  
-}
-
-void JsonPrinter::clearAssetsNamespaces()
-{
-  sAssetsNamespaces.clear();
-}
-
-const string JsonPrinter::getAssetsUrn(const std::string &aPrefix)
-{
-  map<string, SchemaNamespace>::iterator ns = sAssetsNamespaces.find(aPrefix);
-  if (ns != sAssetsNamespaces.end())
-    return ns->second.mUrn;
-  else
-    return "";
-}
-
-const string JsonPrinter::getAssetsLocation(const std::string &aPrefix)
-{
-  map<string, SchemaNamespace>::iterator ns = sAssetsNamespaces.find(aPrefix);
-  if (ns != sAssetsNamespaces.end())
-    return ns->second.mSchemaLocation;
-  else
-    return "";
-}
-
-void JsonPrinter::setStreamStyle(const std::string &aStyle)
-{
-  mStreamsStyle = aStyle;
-}
-
-void JsonPrinter::setDevicesStyle(const std::string &aStyle)
-{
-  mDevicesStyle = aStyle;
-}
-
-void JsonPrinter::setErrorStyle(const std::string &aStyle)
-{
-  mErrorStyle = aStyle;
-}
-
-void JsonPrinter::setAssetsStyle(const std::string &aStyle)
-{
-  mAssetsStyle = aStyle;
-}
 
 /* JsonPrinter main methods */
 string JsonPrinter::printError(const unsigned int instanceId,
@@ -654,6 +489,7 @@ string JsonPrinter::printAssets(const unsigned int instanceId,
   string ret;
   StringBuffer buffer;
   PrettyWriter <StringBuffer> writer(buffer);
+  Document d;
   
   try {
     initJsonDoc(writer, eASSETS, instanceId, 0, aBufferSize, anAssetCount, 0);
@@ -664,17 +500,20 @@ string JsonPrinter::printAssets(const unsigned int instanceId,
     vector<AssetPtr>::iterator iter;
     for (iter = anAssets.begin(); iter != anAssets.end(); ++iter)
     {
-      writer.StartObject();
+      //writer.StartObject();
       if ((*iter)->getType() == "CuttingTool" || (*iter)->getType() == "CuttingToolArchetype") {
-        writer.String("Raw");
-        writer.String((*iter)->getContent().c_str());
+        //writer.String("Raw");
+        d.Parse((*iter)->getContent().c_str());
+        d.Accept(writer);
       } 
       else {
         printAssetNode(writer, (*iter));
-        writer.String("Raw");
-        writer.String((*iter)->getContent().c_str());
+        //writer.String("Raw");
+        d.Parse((*iter)->getContent().c_str());
+        d.Accept(writer);
+      
       }
-      writer.EndObject();
+      //writer.EndObject();
     }
     
     writer.EndArray(); // Assets    
