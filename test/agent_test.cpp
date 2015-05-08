@@ -1983,6 +1983,14 @@ void AgentTest::testFilterValues()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
   }
+  
+  DataItem *item = a->getDataItemByName((string) "LinuxCNC", "pos");
+  CPPUNIT_ASSERT(item != NULL);
+  CPPUNIT_ASSERT_EQUAL(DataItem::FILTER_MINIMUM_DELTA, item->getFilterType());
+  
+  CPPUNIT_ASSERT(!item->isFiltered(0.0));
+  CPPUNIT_ASSERT(item->isFiltered(5.0));
+  CPPUNIT_ASSERT(!item->isFiltered(20.0));
 }
 
 void AgentTest::testReferences()
