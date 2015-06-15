@@ -338,6 +338,17 @@ void MTConnectService::remove()
     sLogger << dlib::LERROR << "Could not open Service " << mName;
                 return;
   }
+
+  // Check if service is running, if it is, stop the service.
+  SERVICE_STATUS status;
+  if (QueryServiceStatus(service, &status) && status.dwCurrentState != SERVICE_STOPPED) {
+    // Stop the service
+    if (!ControlService(service, SERVICE_CONTROL_STOP, &status))
+      sLogger << dlib::LERROR << "Could not stop service " << mName;
+    else
+      sLogger << dlib::LINFO << "Successfully stopped service " << mName;
+  }
+
   
         if(::DeleteService(service) == 0) {
     sLogger << dlib::LERROR << "Could delete service " << mName;
