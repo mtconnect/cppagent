@@ -678,6 +678,26 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:string'/>
   </xs:simpleType>
+  <xs:simpleType name='SpeedType'>
+    <xs:annotation>
+      <xs:documentation>
+        A speed in RPM or mm/s
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='MeasurementValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A measurement value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|'/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:simpleType name='LocationSizeType'>
     <xs:annotation>
       <xs:documentation>
@@ -685,6 +705,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='MeasurementAttrType'>
+    <xs:annotation>
+      <xs:documentation>
+        A measurement value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
   </xs:simpleType>
   <xs:simpleType name='ToolIdType'>
     <xs:annotation>
@@ -738,14 +766,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:pattern value='(\d+|\d+-\d+)(,(\d+|\d+-\d+))*'/>
     </xs:restriction>
   </xs:simpleType>
-  <xs:simpleType name='MeasurementValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        A measurement value
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:float'/>
-  </xs:simpleType>
   <xs:simpleType name='MinimumType'>
     <xs:annotation>
       <xs:documentation>
@@ -766,14 +786,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         A nominal value
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:float'/>
-  </xs:simpleType>
-  <xs:simpleType name='SpeedType'>
-    <xs:annotation>
-      <xs:documentation>
-        A speed in RPM or mm/s
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:float'/>
@@ -1328,9 +1340,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:attribute name='units' type='UnitsType' use='optional'/>
         <xs:attribute name='nativeUnits' type='NativeUnitsType' use='optional'/>
         <xs:attribute name='code' type='CodeType' use='optional'/>
-        <xs:attribute name='maximum' type='MeasurementValueType' use='optional'/>
-        <xs:attribute name='minimum' type='MeasurementValueType' use='optional'/>
-        <xs:attribute name='nominal' type='MeasurementValueType' use='optional'/>
+        <xs:attribute name='maximum' type='MeasurementAttrType' use='optional'/>
+        <xs:attribute name='minimum' type='MeasurementAttrType' use='optional'/>
+        <xs:attribute name='nominal' type='MeasurementAttrType' use='optional'/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
