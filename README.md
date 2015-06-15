@@ -841,3 +841,146 @@ Adapter:
 	* PONG: 10000
 
 This indicates that the adapter is expecting a `PING` every 10 seconds and if there is no `PING`, in 2x the frequency, then the adapter should close the connection. At the same time, if the agent does not receive a `PONG` within 2x frequency, then it will close the connection. If no `PONG` response is received, the agent assumes the adapter is incapable of participating in heartbeat protocol and uses the legacy time specified above.
+
+### HTTP PUT/POST Method of Uploading Data###
+
+There are two configuration settings mentioned above: `AllowPut` and `AllowPutFrom`. `AllowPut` alone will allow any process to use `HTTP` `POST` or `PUT` to send data to the agent and modify values. To restrict this to a limited number of
+machines, you can list the IP Addresses that are allowed to `POST` data to the agent. 
+
+An example would be:
+
+    AllowPut = yes
+    AllowPutFrom = 192.168.1.72, 192.168.1.73
+  
+This will allow the two machines to post data to the MTConnect agent. Any the data can be either data item values or assets. The primary use of this capability is uploading assets from a process or even the command line using utilities like curl. I'll be using curl for these examples.
+
+For example, with curl you can use the -d option to send data to the server. The data will be in standard form data format, so all you need to do is to pass the `<data_item_name>=<data_item_value>` to set the values, as follows:
+
+    curl -d 'avail=AVAILABLE&program_1=XXX' 'http://localhost:5000/ExampleDevice'
+    
+By specifying the device at the end of the URL, you tell the agent which device to use for the POST. This will set the availability tag to AVAILABLE and the program to XXX:
+
+    <Availability dataItemId="dtop_3" timestamp="2015-05-18T18:20:12.278236Z" name="avail" sequence="65">AVAILABLE</Availability>
+    ...
+    <Program dataItemId="path_51" timestamp="2015-05-18T18:20:12.278236Z" name="program_1" sequence="66">XXX</Program>
+    
+The full raw data being passed over looks like this:
+
+    => Send header, 161 bytes (0xa1)
+    0000: POST /ExampleDevice HTTP/1.1
+    001e: User-Agent: curl/7.37.1
+    0037: Host: localhost:5000
+    004d: Accept: */*
+    005a: Content-Length: 29
+    006e: Content-Type: application/x-www-form-urlencoded
+    009f: 
+    => Send data, 29 bytes (0x1d)
+    0000: avail=AVAILABLE&program_1=XXX
+    == Info: upload completely sent off: 29 out of 29 bytes
+    == Info: HTTP 1.0, assume close after body
+    <= Recv header, 17 bytes (0x11)
+    0000: HTTP/1.0 200 OK
+    <= Recv header, 20 bytes (0x14)
+    0000: Content-Length: 10
+    <= Recv header, 24 bytes (0x18)
+    0000: Content-Type: text/xml
+    <= Recv header, 2 bytes (0x2)
+    0000: 
+    <= Recv data, 10 bytes (0xa)
+    0000: <success/>
+    >== Info: Closing connection 0
+    
+This is using the --trace - to dump the internal data. The response will be a simple `<success/>` or `<fail/>`.
+    
+Any data item can be set in this fashion. Similarly conditions are set using the following syntax:
+
+    curl -d 'system=fault|XXX|1|LOW|Feeling%20low' 'http://localhost:5000/ExampleDevice'
+    
+One thing to note, the data and values are URL encoded, so the space needs to be encoded as a %20 to appear correctly. 
+
+    <Fault dataItemId="controller_46" timestamp="2015-05-18T18:24:48.407898Z" name="system" sequence="67" nativeCode="XXX" nativeSeverity="1" qualifier="LOW" type="SYSTEM">Feeling Low</Fault>
+
+Assets are posted in a similar fashon. The data will be taken from a file containing the XML for the content. The syntax is very similar to the other requests:
+
+    curl -d @B732A08500HP.xml 'http://localhost:5000/asset/B732A08500HP.1?device=ExampleDevice&type=CuttingTool'
+
+The @... uses the named file to pass the data and the URL must contain the asset id and the device name as well as the asset type. If the type is CuttingTool or CuttingToolArchetype, the data will be parsed and corrected if properties are out of order as with the adapter. If the device is not specified and there are more than one device in this adapter, it will cause an error to be returned.
+
+Programatically, send the data as the body of the POST or PUT request as follows. If we look at the raw data, you will see the data is sent over verbatum as follows: 
+
+    => Send header, 230 bytes (0xe6)
+    0000: POST /asset/B732A08500HP.1?device=ExampleDevice&type=CuttingTool
+    0040:  HTTP/1.1
+    004b: User-Agent: curl/7.37.1
+    0064: Host: localhost:5000
+    007a: Accept: */*
+    0087: Content-Length: 2057
+    009d: Content-Type: application/x-www-form-urlencoded
+    00ce: Expect: 100-continue
+    00e4: 
+    == Info: Done waiting for 100-continue
+    => Send data, 2057 bytes (0x809)
+    0000: (file data sent here, see below...)
+    == Info: HTTP 1.0, assume close after body
+    <= Recv header, 17 bytes (0x11)
+    0000: HTTP/1.0 200 OK
+    <= Recv header, 20 bytes (0x14)
+    0000: Content-Length: 10
+    <= Recv header, 24 bytes (0x18)
+    0000: Content-Type: text/xml
+    <= Recv header, 2 bytes (0x2)
+    0000: 
+    <= Recv data, 10 bytes (0xa)
+    0000: <success/>
+    <success/>== Info: Closing connection 0
+
+The file that was included looks like this:
+
+    <CuttingTool serialNumber="1 " toolId="B732A08500HP" timestamp="2011-05-11T13:55:22" assetId="B732A08500HP.1" manufacturers="KMT">
+    	<Description>
+    		Step Drill KMT, B732A08500HP Grade KC7315
+    		Adapter KMT CV50BHPVTT12M375
+    	</Description>
+    	<CuttingToolLifeCycle>
+    		<CutterStatus><Status>NEW</Status></CutterStatus>
+    		<ProcessSpindleSpeed nominal="5893">5893</ProcessSpindleSpeed>
+    		<ProcessFeedRate nominal="2.5">2.5</ProcessFeedRate>
+    		<ConnectionCodeMachineSide>CV50 Taper</ConnectionCodeMachineSide>
+    		<Measurements>
+    			<BodyDiameterMax code="BDX">31.8</BodyDiameterMax>
+    			<BodyLengthMax code="LBX" nominal="120.825" maximum="126.325" minimum="115.325">120.825</BodyLengthMax>
+    			<ProtrudingLength code="LPR" nominal="155.75" maximum="161.25" minimum="150.26">158.965</ProtrudingLength>
+    			<FlangeDiameterMax code="DF" nominal="98.425">98.425</FlangeDiameterMax>
+    			<OverallToolLength nominal="257.35" minimum="251.85" maximum="262.85" code="OAL">257.35</OverallToolLength>
+    		</Measurements>
+    		<CuttingItems count="2">
+    			<CuttingItem indices="1" manufacturers="KMT" grade="KC7315">
+    				<Measurements>
+    					<CuttingDiameter code="DC1" nominal="8.5" maximum="8.521" minimum="8.506">8.513</CuttingDiameter>
+    					<StepIncludedAngle code="STA1" nominal="90" maximum="91" minimum="89">89.8551</StepIncludedAngle>
+    					<FunctionalLength code="LF1" nominal="154.286" minimum="148.786" maximum="159.786">157.259</FunctionalLength>
+    					<StepDiameterLength code="SDL1" nominal="9">9</StepDiameterLength>
+    					<PointAngle code="SIG" nominal="135" minimum="133" maximum="137">135.1540</PointAngle>
+    				</Measurements>
+    			</CuttingItem>
+    			<CuttingItem indices="2" manufacturers="KMT" grade="KC7315">
+    				<Measurements>
+    					<CuttingDiameter code="DC2" nominal="12" maximum="12.011" minimum="12">11.999</CuttingDiameter>
+    					<FunctionalLength code="LF2" nominal="122.493" maximum="127.993" minimum="116.993">125.500</FunctionalLength>
+    					<StepDiameterLength code="SDL2" nominal="9">9</StepDiameterLength>
+    				</Measurements>
+    			</CuttingItem>
+    		</CuttingItems>
+    	</CuttingToolLifeCycle>
+    </CuttingTool>
+
+An example in ruby is as follows:
+
+    > require 'net/http'
+    => true
+    > h = Net::HTTP.new('localhost', 5000)
+    => #<Net::HTTP localhost:5000 open=false>
+    > r = h.post('/asset/B732A08500HP.1?type=CuttingTool&device=ExampleDevice', File.read('B732A08500HP.xml'))
+    => #<Net::HTTPOK 200 OK readbody=true>
+    > r.body
+    => "<success/>"
