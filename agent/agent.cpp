@@ -320,7 +320,17 @@ const string Agent::on_request (const incoming_things& incoming,
                                 outgoing_things& outgoing)
 {
   string result;
-  outgoing.headers["Content-Type"] = "application/json";
+  if (incoming.headers.count("Accept") && incoming.headers["Accept"] == "application/json")
+  {
+    outgoing.headers["Content-Type"] = "application/json";
+    accept_header = "JSON";
+  }
+  else
+  {
+    outgoing.headers["Content-Type"] = "application/xml";
+    accept_header = "XML";
+  }
+
   try 
   {
     sLogger << LDEBUG << "Request: " << incoming.request_type << " " << 
@@ -931,7 +941,12 @@ string Agent::handleProbe(const string& name)
     mDeviceList = mDevices;
   }
   
-  return JsonPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
+  if (accept_header == "JSON")
+    return JsonPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
+                                mMaxAssets, mAssets.size(),
+                                mDeviceList, &mAssetCounts);
+  else
+    return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
                                 mMaxAssets, mAssets.size(),
                                 mDeviceList, &mAssetCounts);
 }
@@ -1005,8 +1020,15 @@ std::string Agent::handleAssets(std::ostream& aOut,
       {
         AssetPtr ptr = mAssetMap[token];
         if (ptr.getObject() == NULL)
-          return JsonPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND", 
+         {
+
+           if (accept_header == "JSON")
+              return JsonPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND",
                                         (string) "Could not find asset: " + token);
+            else
+              return XmlPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND",
+                                        (string) "Could not find asset: " + token);
+          }
         assets.push_back(ptr);
       }
     }
@@ -1029,8 +1051,10 @@ std::string Agent::handleAssets(std::ostream& aOut,
       }
     }    
   }
-  
-  return JsonPrinter::printAssets(mInstanceId, mMaxAssets, mAssets.size(), assets);
+  if (accept_header == "JSON")
+    return JsonPrinter::printAssets(mInstanceId, mMaxAssets, mAssets.size(), assets);
+  else
+    return XmlPrinter::printAssets(mInstanceId, mMaxAssets, mAssets.size(), assets);
 }
 
 
@@ -1388,10 +1412,13 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
       check.getComponentEvents(events);
     }
   }
-  
-  string toReturn = JsonPrinter::printSample(mInstanceId, mSlidingBufferSize,
+  string toReturn;
+  if (accept_header == "JSON")
+    toReturn = JsonPrinter::printSample(mInstanceId, mSlidingBufferSize,
                                             seq, firstSeq, mSequence - 1, events);
-  
+  else
+    toReturn = XmlPrinter::printSample(mInstanceId, mSlidingBufferSize,
+                                            seq, firstSeq, mSequence - 1, events);
   return toReturn;
 }
 
@@ -1431,14 +1458,23 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
     if (aObserver != NULL) aObserver->reset();
   }
   
-  return JsonPrinter::printSample(mInstanceId, mSlidingBufferSize, end, 
+  if (accept_header == "JSON")
+    return JsonPrinter::printSample(mInstanceId, mSlidingBufferSize, end,
                                  firstSeq, mSequence - 1, results);
+  else
+    return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, end,
+                                 firstSeq, mSequence - 1, results);
+
 }
 
 string Agent::printError(const string& errorCode, const string& text)
 {
   sLogger << LDEBUG << "Returning error " << errorCode << ": " << text;
-  return JsonPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
+  if (accept_header == "JSON")
+    return JsonPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
+                                errorCode, text);
+  else
+    return XmlPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
                                 errorCode, text);
 }
 

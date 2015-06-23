@@ -16,6 +16,7 @@
 
 #include "cutting_tool.hpp"
 #include "json_printer.hpp"
+#include "xml_printer.hpp"
 
 #include <sstream>
 
@@ -118,13 +119,16 @@ void CuttingTool::addIdentity(const std::string &aKey, const std::string &aValue
   }
 }
 
-std::string &CuttingTool::getContent() 
+std::string &CuttingTool::getContent(string accept_header)
 { 
   if (mContent.empty())
   {
     if (mIdentity.count("serialNumber") == 0 || mIdentity["serialNumber"].empty())
       Asset::addIdentity("serialNumber", mAssetId);
-    mContent = JsonPrinter::printCuttingTool(this);
+    if (accept_header == "JSON")
+      mContent = JsonPrinter::printCuttingTool(this);
+    else
+      mContent = XmlPrinter::printCuttingTool(this);
   }
   
   return mContent; 

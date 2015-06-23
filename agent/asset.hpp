@@ -52,7 +52,7 @@ public:
   virtual ~Asset();
 
   const std::string &getAssetId() const { return mAssetId; }
-  virtual std::string &getContent() { return mContent; }
+  virtual std::string &getContent(std::string) { return mContent; }
   const std::string &getType() const { return mType; }
   AssetKeys   &getKeys() { return mKeys; }
   const std::string &getDeviceUuid() const { return mDeviceUuid; }

@@ -148,7 +148,7 @@ string JsonPrinter::printError(const unsigned int instanceId,
     writer.EndObject(); // Error
     writer.EndObject(); // Errors
     writer.EndObject(); // MTConnectError
-    writer.EndObject();
+    writer.EndObject(); // JsonDocument
 
     // Cleanup
     ret = (string) ((char*) buffer.GetString());
@@ -197,7 +197,7 @@ string JsonPrinter::printProbe(const unsigned int instanceId,
 
     writer.EndArray();  // Devices
     writer.EndObject(); // MTConnectDevices
-    writer.EndObject();
+    writer.EndObject(); // JsonDocument
 
     
     ret = (string) ((char*) buffer.GetString());
@@ -217,7 +217,7 @@ void JsonPrinter::printProbeHelper(Writer& writer,
 {
   writer.StartObject();
   addAttributes(writer, component->getAttributes());
-  
+  writer.EndObject(); // attrs
   std::map<string, string> desc = component->getDescription();
   string body = component->getDescriptionBody();
   
@@ -271,7 +271,7 @@ void JsonPrinter::printProbeHelper(Writer& writer,
         writer.String(ref->mName.c_str());
       }
       
-      writer.EndObject();
+      writer.EndObject(); // attrs
       writer.EndObject(); // Reference
       writer.EndObject();
     }
@@ -318,7 +318,7 @@ void JsonPrinter::printDataItem(Writer& writer, DataItem *dataItem)
   writer.String("DataItem");
   writer.StartObject();
   addAttributes(writer, dataItem->getAttributes());
-
+  writer.EndObject(); // attrs
   string source = dataItem->getSource();
   if (!source.empty())
   {
@@ -355,7 +355,7 @@ void JsonPrinter::printDataItem(Writer& writer, DataItem *dataItem)
       writer.EndObject();
     }
     
-    writer.EndArray();
+    writer.EndArray(); // ConstraintValues
     
     if (dataItem->getFilterType() == DataItem::FILTER_MINIMUM_DELTA)
     {
@@ -415,60 +415,81 @@ string JsonPrinter::printSample(const unsigned int instanceId,
       DataItem *dataItem = result->getDataItem();
       Component *component = dataItem->getComponent();
       Device *device = component->getDevice();
-      
-     if (device != lastDevice)
+      if (device != lastDevice)
       {
-        if (lastDevice != NULL)
-          writer.EndObject(); // DeviceStream
-        
-        lastDevice = device;
-        if (lastComponent != NULL)
-          writer.EndObject(); // ComponentStream
-        
-        lastComponent = NULL;
         if (lastCategory != -1)
-          writer.EndObject(); // Category
-        
+        {
+          writer.EndArray(); // Category
+        }
         lastCategory = -1;
+
+        if (lastComponent != NULL)
+        {
+          writer.EndObject(); // ComponentStream
+          writer.EndObject(); // ComponentStream
+        }
+        lastComponent = NULL;
+        
+        if (lastDevice != NULL)
+        {
+          writer.EndArray();  // ComponentStreams
+          writer.EndObject(); // DeviceStream
+          writer.EndObject(); // DeviceStream
+        }
+        lastDevice = device;
         addDeviceStream(writer, device);
       }
       
       if (component != lastComponent)
       {
+        if (lastCategory != -1)
+        {
+          writer.EndArray(); // Category
+        }
+        lastCategory = -1;
+
         if (lastComponent != NULL)
+        {
           writer.EndObject(); // ComponentStream
+          writer.EndObject();
+        }
 
         lastComponent = component;
-        if (lastCategory != -1)
-          writer.EndObject(); // Category
-        
-        lastCategory = -1;
         addComponentStream(writer, component);        
       }
       
       if (lastCategory != dataItem->getCategory())
       {
         if (lastCategory != -1)
-          writer.EndObject(); // Category
+        {
+            writer.EndArray(); // Category
+        }
 
         lastCategory = dataItem->getCategory();
         addCategory(writer, dataItem->getCategory());
       }
       addEvent(writer, result);
-      
-
     }
     
     if (lastCategory != -1)
-      writer.EndObject(); // Category
-    if (lastDevice != NULL)
-      writer.EndObject(); // DeviceStream
+    {
+      writer.EndArray(); // Category
+    }
     if (lastComponent != NULL)
+    {
       writer.EndObject(); // ComponentStream
-    
-    writer.EndArray(); // Streams  
+      writer.EndObject();
+    }
+    if (lastDevice != NULL)
+    {
+      writer.EndArray(); // ComponentStreams
+      writer.EndObject(); // DeviceStream
+      writer.EndObject(); // DeviceStream
+    }
+
+    writer.EndArray();  // Streams
     writer.EndObject(); // MTConnectStreams
-    writer.EndObject();
+    writer.EndObject(); // JsonDocument
     
     ret = (string) ((char*) buffer.GetString());
     buffer.Clear();    
@@ -496,29 +517,24 @@ string JsonPrinter::printAssets(const unsigned int instanceId,
     
     writer.String("Assets");
     writer.StartArray();
-    
+
     vector<AssetPtr>::iterator iter;
     for (iter = anAssets.begin(); iter != anAssets.end(); ++iter)
     {
-      //writer.StartObject();
       if ((*iter)->getType() == "CuttingTool" || (*iter)->getType() == "CuttingToolArchetype") {
-        //writer.String("Raw");
-        d.Parse((*iter)->getContent().c_str());
+        d.Parse((*iter)->getContent("JSON").c_str());
         d.Accept(writer);
       } 
       else {
         printAssetNode(writer, (*iter));
-        //writer.String("Raw");
-        d.Parse((*iter)->getContent().c_str());
+        d.Parse((*iter)->getContent("JSON").c_str());
         d.Accept(writer);
-      
       }
-      //writer.EndObject();
     }
     
     writer.EndArray(); // Assets    
     writer.EndObject(); // MTConnectAssets
-    
+    writer.EndObject(); // EndDocument
     ret = (string) ((char*) buffer.GetString());
     buffer.Clear();
   }
@@ -537,7 +553,7 @@ void JsonPrinter::printAssetNode(Writer& writer, Asset *anAsset)
   writer.String(anAsset->getType().c_str());
   writer.StartObject();
   addAttributes(writer, &anAsset->getIdentity());
-  
+
   // Add the timestamp and device uuid fields.
   writer.String("timestamp");
   writer.String(anAsset->getTimestamp().c_str());
@@ -551,12 +567,13 @@ void JsonPrinter::printAssetNode(Writer& writer, Asset *anAsset)
     writer.String("removed");
     writer.String("true");
   }
+  writer.EndObject(); // attrs
 }
 
 template <typename Writer>
 void JsonPrinter::addDeviceStream(Writer& writer, Device *device)
 {
-  
+  writer.StartObject();
   writer.String("DeviceStream");
   writer.StartObject();
   writer.String("attrs");
@@ -566,11 +583,14 @@ void JsonPrinter::addDeviceStream(Writer& writer, Device *device)
   writer.String("uuid");
   writer.String(device->getUuid().c_str());
   writer.EndObject();
+  writer.String("ComponentStreams");
+  writer.StartArray();
 }
 
 template <typename Writer>
 void JsonPrinter::addComponentStream(Writer& writer, Component *component)
 {
+  writer.StartObject();
   writer.String("ComponentStream");
   writer.StartObject();
   writer.String("attrs");
@@ -601,13 +621,15 @@ void JsonPrinter::addCategory(Writer& writer, DataItem::ECategory category)
       writer.String("Condition");
       break;
   }
-  writer.StartObject();
+  writer.StartArray();
 }
 
 template <typename Writer>
 void JsonPrinter::addEvent(Writer& writer, ComponentEvent *result)
 {
   DataItem *dataItem = result->getDataItem();
+  writer.StartObject();
+
   if (dataItem->isCondition()) {
     writer.String(result->getLevelString().c_str());
   } 
@@ -626,7 +648,7 @@ void JsonPrinter::addEvent(Writer& writer, ComponentEvent *result)
   }
   writer.StartObject();
   addAttributes(writer, result->getAttributes());
-
+  
   if (result->isTimeSeries() && result->getValue() != "UNAVAILABLE") {
     ostringstream ostr;
     ostr.precision(6);
@@ -634,14 +656,15 @@ void JsonPrinter::addEvent(Writer& writer, ComponentEvent *result)
     for (size_t i = 0; i < v.size(); i++)
       ostr << v[i] << ' ';
     string str = ostr.str();
-    writer.String("String");
+    writer.String("Raw");
     writer.String(str.c_str());
   } 
   else if (!result->getValue().empty()) {
     writer.String("Raw");
     writer.String(result->getValue().c_str());
   }
-  writer.EndObject(); // Streams    
+  writer.EndObject();
+  writer.EndObject();
 }
 
 template <typename Writer>
@@ -657,7 +680,6 @@ void JsonPrinter::addAttributes(Writer& writer,
     writer.String(attr->first.c_str());
     writer.String(attr->second.c_str());
   }
-  writer.EndObject();
 }
 
 
@@ -865,8 +887,10 @@ void JsonPrinter::addSimpleElement(Writer& writer, string element, string &body,
   writer.String(element.c_str());
   writer.StartObject();
   if (attributes != NULL && attributes->size() > 0) 
+  {
     addAttributes(writer, attributes);
-  
+    writer.EndObject(); // attrs
+  }
   if (!body.empty())
   {
     writer.String("Raw");
@@ -967,9 +991,8 @@ void JsonPrinter::printCuttingToolItem(Writer& writer, CuttingItemPtr aItem)
     }
     writer.EndObject();
   }
+  writer.EndObject(); // CuttingItem
   
-  // CuttingItem
-  writer.EndObject();
 }
 
 string JsonPrinter::printCuttingTool(CuttingToolPtr aTool)
@@ -1007,8 +1030,7 @@ string JsonPrinter::printCuttingTool(CuttingToolPtr aTool)
       writer.String(status->c_str());
       writer.EndObject(); 
     }
-    writer.EndArray();
-    writer.EndObject();
+    writer.EndArray(); // CutterStatus
     
     // Other values
     printCuttingToolValue(writer, aTool, "ReconditionCount", &remaining);
@@ -1058,14 +1080,14 @@ string JsonPrinter::printCuttingTool(CuttingToolPtr aTool)
       for (item = aTool->mItems.begin(); item != aTool->mItems.end(); item++) {
         printCuttingToolItem(writer, *(item));
       }
-      writer.EndObject();
+      writer.EndObject(); // CuttingItems
     }
     
-    // CuttingToolLifeCycle
-    writer.EndObject();
+    writer.EndObject(); // CuttingToolLifeCycle
     
-    // CuttingTool
-    writer.EndObject();
+    writer.EndObject(); // CuttingTool
+
+    writer.EndObject(); // JsonDocument
   
     ret = (string) ((char*) buffer.GetString());
     buffer.Clear();    

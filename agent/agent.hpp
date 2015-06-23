@@ -277,6 +277,9 @@ protected:
   DataItem * getDataItemById(const std::string& id) { return mDataItemMap[id]; }
   
 protected:
+  /* Incoming Request Accept header */
+  std::string accept_header;
+
   /* Unique id based on the time of creation */
   unsigned int mInstanceId;
   

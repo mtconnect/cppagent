@@ -69,7 +69,7 @@ public:
   void addValue(const CuttingToolValuePtr aValue);
   void updateValue(const std::string &aKey, const std::string &aValue);
   
-  virtual std::string &getContent();
+  virtual std::string &getContent(std::string);
   virtual void changed() { mContent.clear(); }
 
 public:
