@@ -327,7 +327,7 @@ const string Agent::on_request (const incoming_things& incoming,
   }
   else
   {
-    outgoing.headers["Content-Type"] = "application/xml";
+    outgoing.headers["Content-Type"] = "text/xml";
     accept_header = "XML";
   }
 
