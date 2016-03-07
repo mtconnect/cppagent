@@ -181,10 +181,8 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       const string *value = &sUnavailable;
       if (d->isCondition()) {
         value = &sConditionUnavailable;
-      } else if (d->hasConstraints()) { 
-        std::vector<std::string> &values = d->getConstrainedValues();
-        if (values.size() == 1)
-          value = &values[0];
+      } else if (d->hasConstantValue()) {
+        value = &(d->getConstrainedValues()[0]);
       }
       
       addToBuffer(d, *value, time);

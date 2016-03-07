@@ -6,8 +6,8 @@ set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
 set(CMAKE_FIND_APPBUNDLE NEVER)
 
-set(GCOV_COMPILE_FLAGS  "-fprofile-arcs -ftest-coverage")
-set(GCOV_LINK_FLAGS "-lgcov")
+#set(GCOV_COMPILE_FLAGS  "-fprofile-arcs -ftest-coverage")
+#set(GCOV_LINK_FLAGS "-lgcov")
 
 if(WIN32)
   set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.9/include )
@@ -31,6 +31,11 @@ if(UNIX)
     set(LINUX_LIBRARIES pthread)
   endif(CMAKE_SYSTEM_NAME MATCHES Linux)
 endif(UNIX)
+
+if (APPLE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef -Wno-deprecated-declarations")
+endif(APPLE)
+
 
 project (test)
 

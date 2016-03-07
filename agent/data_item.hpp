@@ -196,6 +196,7 @@ public:
   std::string getMaximum() const { return mMaximum; }
   std::string getMinimum() const { return mMinimum; }
   std::vector<std::string> &getConstrainedValues() { return mValues; }
+  bool hasConstantValue() { return mValues.size() == 1; }
   
   EFilterType getFilterType() const { return mFilterType; }
   double getFilterValue() const { return mFilterValue; }

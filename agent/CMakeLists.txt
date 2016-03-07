@@ -9,7 +9,7 @@ set(CMAKE_FIND_APPBUNDLE NEVER)
 set (AGENT_VERSION_MAJOR 1)
 set (AGENT_VERSION_MINOR 3)
 set (AGENT_VERSION_PATCH 0)
-set (AGENT_VERSION_BUILD 15)
+set (AGENT_VERSION_BUILD 16)
 set (AGENT_VERSION_RC "")
 
 if(WIN32)
@@ -57,6 +57,12 @@ if(UNIX)
     set(LINUX_LIBRARIES pthread)
   endif(CMAKE_SYSTEM_NAME MATCHES Linux)
 endif(UNIX)
+
+if (APPLE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef -Wno-deprecated-declarations")
+endif(APPLE)
+
+
 project (agent)
 
 set(agent_srcs cppagent.cpp 

@@ -2335,3 +2335,54 @@ xmlDocPtr AgentTest::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
   
   return xmlParseMemory(result.c_str(), result.length());
 }
+
+void AgentTest::testBadDataItem()
+{
+  path = "/sample";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
+  
+  adapter->processData("TIME|bad|ignore|dummy|1244|line|204");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+  }
+}
+
+void AgentTest::testConstantValue()
+{
+  path = "/sample";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  
+  DataItem *di = a->getDataItemByName("LinuxCNC", "block");
+  CPPUNIT_ASSERT(di);
+  di->addConstrainedValue("UNAVAILABLE");
+
+  CPPUNIT_ASSERT(adapter);
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block[1]", "UNAVAILABLE");
+  }
+  
+  adapter->processData("TIME|block|G01X00|Smode|INDEX|line|204");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Block", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode[1]", "SPINDLE");
+    CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:RotaryMode", 1);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+  }
+}
+

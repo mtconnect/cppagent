@@ -118,6 +118,8 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testRemoveAllAssets);
   CPPUNIT_TEST(testEmptyLastItemFromAdapter);
   CPPUNIT_TEST(testAdapterDeviceCommand);
+  CPPUNIT_TEST(testBadDataItem);
+  CPPUNIT_TEST(testConstantValue);
 
   CPPUNIT_TEST_SUITE_END();
   
@@ -261,6 +263,10 @@ protected:
   xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
   xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
                               key_value_map &aQueries);
+  
+  // Data item name handling
+  void testBadDataItem();
+  void testConstantValue();
   
 public:
   void setUp();

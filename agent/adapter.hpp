@@ -20,6 +20,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <set>
 
 #include "dlib/sockets.h"
 #include "dlib/threads.h"
@@ -147,6 +148,7 @@ protected:
   std::string mTime;
   std::ostringstream mBody;
   Device *mAssetDevice;
+  std::set<std::string> mLogOnce;
   
   // Timeout for reconnection attempts, given in milliseconds
   int mReconnectInterval;

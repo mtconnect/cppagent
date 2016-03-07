@@ -201,8 +201,21 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
     dataItem = device->getDeviceDataItem(key);
     if (dataItem == NULL)
     {
-      sLogger << LWARN << "(" << device->getName() << ") Could not find data item: " << key <<
-      " from line '" << aLine << "'";
+      if (mLogOnce.count(key) > 0)
+        sLogger << LTRACE <<  "(" << device->getName() << ") Could not find data item: " << key;
+      else
+      {
+        sLogger << LWARN << "(" << device->getName() << ") Could not find data item: " << key <<
+          " from line '" << aLine << "'";
+        mLogOnce.insert(key);
+      }
+    }
+    else if (dataItem->hasConstantValue())
+    {
+      if (mLogOnce.count(key) == 0) {
+        sLogger << LDEBUG << "(" << device->getName() << ") Ignoring value for: " << key << ", constant value";
+        mLogOnce.insert(key);
+      }
     }
     else
     {
