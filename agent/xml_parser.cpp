@@ -24,6 +24,10 @@
 #include "dlib/logger.h"
 #include <stdexcept>
 
+#if _MSC_VER >= 1900
+#define gets gets_s
+#endif
+
 using namespace std;
 
 static dlib::logger sLogger("xml.parser");

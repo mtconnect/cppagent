@@ -41,6 +41,11 @@
 #if _MSC_VER < 1800
 #define NAN numeric_limits<double>::quiet_NaN()
 #endif
+#if _MSC_VER >= 1900
+#define gets gets_s
+#define timezone _timezone
+#endif
+
 typedef unsigned __int64 uint64_t;
 #define strtoull _strtoui64
 #else

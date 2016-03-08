@@ -52,6 +52,10 @@ void MTConnectService::initialize(int aArgc, const char *aArgv[])
 #include <strsafe.h>
 #include <dlib/threads.h>
 
+#if _MSC_VER >= 1900
+#define gets gets_s
+#endif
+
 #pragma comment(lib, "advapi32.lib")
 
 #define SVC_ERROR                       ((DWORD)0xC0000001L)
