@@ -1,0 +1,6 @@
+[submodule "libxml2"]
+	path = libxml2
+	url = git://git.gnome.org/libxml2
+[submodule "cppunit"]
+	path = cppunit
+	url = git@github.com:openlvc/cppunit.git

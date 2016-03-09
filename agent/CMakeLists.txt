@@ -30,16 +30,9 @@ if(WIN32)
   else(CMAKE_CL_64)
     set(bits 32)
   endif(CMAKE_CL_64)  
-  
-  file(GLOB LibXML2_LIBRARIES "../win32/libxml2-2.9/lib/libxml2_a_v120_${bits}.lib")
-  file(GLOB LibXML2_DEBUG_LIBRARIES ../win32/libxml2-2.9/lib/libxml2d_a_v120_${bits}.lib)
-    
-  add_library(libxml2 STATIC IMPORTED)
-  set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.9/include )
-  
-  set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION_RELEASE ${LibXML2_LIBRARIES})
-  set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION_DEBUG ${LibXML2_DEBUG_LIBRARIES})
-    
+      
+  set(LibXML2_INCLUDE_DIRS ../libxml2/include)
+      
   # Version info
   string(TIMESTAMP AGENT_VERSION_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
   set(resource_file "${PROJECT_BINARY_DIR}/agent/version.rc")
@@ -101,8 +94,8 @@ configure_file (
   
 include_directories(../lib)
 
-find_package(LibXML2 REQUIRED)
 if(UNIX)
+  find_package(LibXML2 REQUIRED)
   add_library(libxml2 UNKNOWN IMPORTED)
   set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION ${LibXML2_LIBRARIES})
 endif(UNIX)

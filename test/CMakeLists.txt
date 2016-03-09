@@ -10,19 +10,11 @@ set(CMAKE_FIND_APPBUNDLE NEVER)
 #set(GCOV_LINK_FLAGS "-lgcov")
 
 if(WIN32)
-  set(LibXML2_INCLUDE_DIRS ../win32/libxml2-2.9/include )
+  set(LibXML2_INCLUDE_DIRS ../libxml2/include)
+  set(LibXML2_LIBRARIES libxml2)
   
-  if(CMAKE_CL_64)
-    set(bits 64)
-  else(CMAKE_CL_64)
-  set(bits 32)
-  endif(CMAKE_CL_64)
-  
-  file(GLOB LibXML2_LIBRARIES "../win32/libxml2-2.9/lib/libxml2_a_v120_${bits}.lib")
-  file(GLOB LibXML2_DEBUG_LIBRARIES ../win32/libxml2-2.9/lib/libxml2d_a_v120_${bits}.lib)
-
-  set(CPPUNIT_INCLUDE_DIR ../win32/cppunit-1.12.1/include)
-  file(GLOB CPPUNIT_LIBRARY ../win32/cppunit-1.12.1/lib/cppunitd_v120_a.lib)
+  set(CPPUNIT_INCLUDE_DIR ../cppunit/cppunit/include)
+  set(CPPUNIT_LIBRARY cppunit)  
 endif(WIN32)
 
 if(UNIX)
@@ -30,6 +22,8 @@ if(UNIX)
   if(CMAKE_SYSTEM_NAME MATCHES Linux)
     set(LINUX_LIBRARIES pthread)
   endif(CMAKE_SYSTEM_NAME MATCHES Linux)
+  find_package(LibXML2 REQUIRED)
+  find_package(CppUnit REQUIRED)
 endif(UNIX)
 
 if (APPLE)
@@ -86,9 +80,6 @@ set_property(SOURCE ${agent_srcs} APPEND PROPERTY COMPILE_FLAGS ${GCOV_COMPILE_F
 file(GLOB test_headers *.hpp ../agent/*.hpp)
 
 include_directories(../lib ../agent .)
-
-find_package(CppUnit REQUIRED)
-find_package(LibXML2 REQUIRED)
 
 add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
 include_directories(${LibXML2_INCLUDE_DIRS} ${CPPUNIT_INCLUDE_DIR})
