@@ -10,7 +10,7 @@ set(CMAKE_FIND_APPBUNDLE NEVER)
 #set(GCOV_LINK_FLAGS "-lgcov")
 
 if(WIN32)
-  set(LibXML2_INCLUDE_DIRS ../libxml2/include)
+  set(LibXML2_INCLUDE_DIRS ../libxml2/include ../libxml2_make/include)
   set(LibXML2_LIBRARIES libxml2)
   
   set(CPPUNIT_INCLUDE_DIR ../cppunit/cppunit/include)

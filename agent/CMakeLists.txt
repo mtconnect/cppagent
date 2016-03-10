@@ -31,7 +31,7 @@ if(WIN32)
     set(bits 32)
   endif(CMAKE_CL_64)  
       
-  set(LibXML2_INCLUDE_DIRS ../libxml2/include)
+  set(LibXML2_INCLUDE_DIRS ../libxml2/include ../libxml2_make/include)
       
   # Version info
   string(TIMESTAMP AGENT_VERSION_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
