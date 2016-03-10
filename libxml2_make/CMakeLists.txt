@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 project(libxml2 C)
 
 set(LibXML2_SRC_DIR ../libxml2)
-set(LibXML2_INCLUDE_DIRS ../libxml2/include)
+set(LibXML2_INCLUDE_DIRS ../libxml2/include .)
 
 file(GLOB internal_headers ${LibXML2_SRC_DIR}/[a-z_]*.h)
 file(GLOB install_headers ${LibXML2_INCLUDE_DIRS}/libxml2/[a-z_]*.h)
