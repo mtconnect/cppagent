@@ -77,6 +77,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testFileDownload);
   CPPUNIT_TEST(testFailedFileDownload);
   CPPUNIT_TEST(testDuplicateCheck);
+  CPPUNIT_TEST(testDuplicateCheckAfterDisconnect);
   CPPUNIT_TEST(testAutoAvailable);
   CPPUNIT_TEST(testIgnoreTimestamps);
   CPPUNIT_TEST(testAssetStorage);
@@ -187,6 +188,7 @@ protected:
 
   // Duplicate checks
   void testDuplicateCheck();
+  void testDuplicateCheckAfterDisconnect();
 
   void testAutoAvailable();
   void testIgnoreTimestamps();

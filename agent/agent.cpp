@@ -704,8 +704,8 @@ void Agent::disconnected(Adapter *anAdapter, std::vector<Device*> aDevices)
   
   std::vector<Device*>::iterator iter;
   for (iter = aDevices.begin(); iter != aDevices.end(); ++iter) {
-    std::map<std::string, DataItem *> dataItems = (*iter)->getDeviceDataItems();
-    std::map<std::string, DataItem*>::iterator dataItemAssoc;
+    const std::map<std::string, DataItem *> &dataItems = (*iter)->getDeviceDataItems();
+    std::map<std::string, DataItem*>::const_iterator dataItemAssoc;
     for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
     {
       DataItem *dataItem = (*dataItemAssoc).second;
@@ -729,7 +729,7 @@ void Agent::disconnected(Adapter *anAdapter, std::vector<Device*> aDevices)
             value = &sUnavailable;
           }
           
-          if (value != NULL)
+          if (value != NULL && !dataItem->isDuplicate(*value))
             addToBuffer(dataItem, *value, time);
         }
       } else if (dataItem == NULL) {
