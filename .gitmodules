@@ -3,4 +3,4 @@
 	url = git://git.gnome.org/libxml2
 [submodule "cppunit"]
 	path = cppunit
-	url = git@github.com:openlvc/cppunit.git
+	url = https://github.com/openlvc/cppunit.git
