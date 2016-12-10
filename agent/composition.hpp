@@ -36,7 +36,7 @@ public:
     Description(const Description &anObj) : mBody(anObj.mBody), mManufacturer(anObj.mManufacturer), mModel(anObj.mModel),
                 mSerialNumber(anObj.mSerialNumber), mStation(anObj.mStation), mHasAttributes(false) {}
     Description(const std::string &aBody, const std::map<std::string,std::string> &aAttributes)
-      : mHasAttributes(false)
+      : mBody(aBody), mHasAttributes(false)
     {
       if (aAttributes.count("manufacturer") > 0) mManufacturer = aAttributes.at("manufacturer");
       if (aAttributes.count("model") > 0) mModel = aAttributes.at("model");

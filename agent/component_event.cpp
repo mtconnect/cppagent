@@ -89,6 +89,8 @@ AttributeList *ComponentEvent::getAttributes()
       mAttributes.push_back(AttributeItem("timestamp", mTime));
       if (!mDataItem->getName().empty())
         mAttributes.push_back(AttributeItem("name", mDataItem->getName()));
+      if (!mDataItem->getCompositionId().empty())
+        mAttributes.push_back(AttributeItem("compositionId", mDataItem->getCompositionId()));
       mSequenceStr = int64ToString(mSequence);
       mAttributes.push_back(AttributeItem("sequence",mSequenceStr));
       if (!mDataItem->getSubType().empty())

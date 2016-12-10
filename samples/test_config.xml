@@ -57,7 +57,11 @@
                 <DataItem type="TEMPERATURE" category="SAMPLE" units="CELCIUS" id="zt2" name="z_amp_temp" compositionId="zamp"/>
               </DataItems>
 	      <Compositions>
-		<Composition id="zmotor" type="MOTOR"/>
+		<Composition id="zmotor" type="MOTOR" uuid="12345" name="motor_name">
+		  <Description manufacturer="open" model="vroom" serialNumber="12356" station="A">
+		    Hello There
+		  </Description>
+		</Composition>
 		<Composition id="zamp" type="AMPLIFIER"/>
 	      </Compositions>
             </Linear>

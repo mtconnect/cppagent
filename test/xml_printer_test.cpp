@@ -109,7 +109,16 @@ void XmlPrinterTest::testPrintProbe()
 
   // check for compositions
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']@type", "MOTOR");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zamp']@type", "AMPLIFIER");  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']@uuid", "12345");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']@name", "motor_name");
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']/m:Description", "Hello There");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']/m:Description@manufacturer", "open");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']/m:Description@model", "vroom");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']/m:Description@serialNumber", "12356");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']/m:Description@station", "A");
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zamp']@type", "AMPLIFIER");
 }
 
 void XmlPrinterTest::testPrintCurrent()

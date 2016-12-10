@@ -528,13 +528,13 @@ void XmlParser::handleComposition(xmlNodePtr composition,
   Composition *comp = new Composition(getAttributes(composition));
   for (xmlNodePtr child = composition->children; child != NULL; child = child->next)
   {
-      if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
+    if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
     {
       xmlChar *text = xmlNodeGetContent(child);
       string body;
       if (text != NULL)
       {
-        body = string(body);
+        body = string(static_cast<const char*>(static_cast<void*>(text)));
         xmlFree(text);
       }
       Composition::Description *desc = new Composition::Description(body, getAttributes(child));

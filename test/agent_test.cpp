@@ -2430,3 +2430,28 @@ void AgentTest::testConstantValue()
   }
 }
 
+void AgentTest::testComposition()
+{
+  path = "/current";
+  
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  adapter->setDupCheck(true);
+  CPPUNIT_ASSERT(adapter);
+  
+  DataItem *motor = a->getDataItemByName("LinuxCNC", "zt1");
+  CPPUNIT_ASSERT(motor != NULL);
+
+  DataItem *amp = a->getDataItemByName("LinuxCNC", "zt2");
+  CPPUNIT_ASSERT(amp != NULL);
+  
+  adapter->processData("TIME|zt1|100|zt2|200");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']", "100");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt2']", "200");
+    
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']@compositionId", "zmotor");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt2']@compositionId", "zamp");
+  }
+}
