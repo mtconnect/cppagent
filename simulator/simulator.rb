@@ -5,7 +5,7 @@ require 'readline'
 require 'time'
 
 
-server = TCPServer.new('127.0.0.1', ARGV[0].to_i)
+server = TCPServer.new('0.0.0.0', ARGV[0].to_i)
 
 puts "Waiting for connection on #{ARGV[0].to_i}..."
 

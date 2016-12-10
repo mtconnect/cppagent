@@ -94,6 +94,11 @@ protected:
     Component *parent = NULL,
     Device *device = NULL
   );
+  
+  void handleComposition(
+    xmlNodePtr dataItems,
+    Component *component
+  );
 
   /* Perform loading of references and set up relationships */
   void handleRefenence(xmlNodePtr components,

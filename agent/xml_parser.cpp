@@ -17,6 +17,7 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "cutting_tool.hpp"
+#include "composition.hpp"
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
@@ -344,6 +345,7 @@ Component * XmlParser::handleComponent(
   case Component::COMPONENTS:
   case Component::DATA_ITEMS:
   case Component::REFERENCES:
+  case Component::COMPOSITIONS:
     handleChildren(component, parent, device);
     break;
     
@@ -358,6 +360,10 @@ Component * XmlParser::handleComponent(
     handleRefenence(component, parent, device);
     break;
     
+  case Component::COMPOSITION:
+      handleComposition(component, parent);
+      break;
+
   default:
     // Assume component
     name = (const char*) component->name;
@@ -514,6 +520,29 @@ void XmlParser::loadDataItem(
   
   parent->addDataItem(*d);
   device->addDeviceDataItem(*d);
+}
+
+void XmlParser::handleComposition(xmlNodePtr composition,
+                                 Component *parent)
+{
+  Composition *comp = new Composition(getAttributes(composition));
+  for (xmlNodePtr child = composition->children; child != NULL; child = child->next)
+  {
+      if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
+    {
+      xmlChar *text = xmlNodeGetContent(child);
+      string body;
+      if (text != NULL)
+      {
+        body = string(body);
+        xmlFree(text);
+      }
+      Composition::Description *desc = new Composition::Description(body, getAttributes(child));
+      comp->setDescription(desc);
+    }
+  }
+  
+  parent->addComposition(comp);
 }
 
 void XmlParser::handleChildren(

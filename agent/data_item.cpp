@@ -150,6 +150,9 @@ DataItem::DataItem(std::map<string, string> attributes)
   {
     mCoordinateSystem = attributes["coordinateSystem"];
   }
+  
+  if (attributes.count("compositionId") > 0 && !attributes["compositionId"].empty())
+    mCompositionId = attributes["compositionId"];
 
   mComponent = NULL;
   mAttributes = buildAttributes();
@@ -241,6 +244,9 @@ std::map<string, string> DataItem::buildAttributes() const
   {
     attributes["coordinateSystem"] = mCoordinateSystem;
   }
+  
+  if (!mCompositionId.empty())
+    attributes["compositionId"] = mCompositionId;
   
   return attributes;
 }

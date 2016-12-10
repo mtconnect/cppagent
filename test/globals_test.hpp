@@ -55,6 +55,7 @@ class GlobalsTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testGetCurrentTime);
   CPPUNIT_TEST(testAddNamespace);
   CPPUNIT_TEST(testParseTimeMilli);
+  CPPUNIT_TEST(testInt64ToString);
   CPPUNIT_TEST_SUITE_END();
   
 protected:
@@ -68,6 +69,7 @@ protected:
   void testGetCurrentTime();
   void testAddNamespace();
   void testParseTimeMilli();
+  void testInt64ToString();
   
 public:
   void setUp();

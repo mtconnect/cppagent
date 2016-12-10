@@ -53,7 +53,13 @@
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="z1" subType="ACTUAL" name="Zact"/>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="z2" subType="COMMANDED" name="Zcom"/>
                 <DataItem type="LOAD" category="CONDITION" id="zlc" />
+                <DataItem type="TEMPERATURE" category="SAMPLE" units="CELCIUS" id="zt1" name="z_motor_temp" compositionId="zmotor"/>
+                <DataItem type="TEMPERATURE" category="SAMPLE" units="CELCIUS" id="zt2" name="z_amp_temp" compositionId="zamp"/>
               </DataItems>
+	      <Compositions>
+		<Composition id="zmotor" type="MOTOR"/>
+		<Composition id="zamp" type="AMPLIFIER"/>
+	      </Compositions>
             </Linear>
           </Components>
         </Axes>

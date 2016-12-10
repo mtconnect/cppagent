@@ -17,6 +17,7 @@
 #include "component.hpp"
 #include "data_item.hpp"
 #include "device.hpp"
+#include "composition.hpp"
 #include <stdlib.h>
 #include <stdexcept>
 
@@ -35,7 +36,9 @@ const string Component::SComponentSpecs[NumComponentSpecs] = {
   "Source",
   "text",
   "References",
-  "Reference"
+  "Reference",
+  "Compositions",
+  "Composition"
 };
 
 /* Component public methods */

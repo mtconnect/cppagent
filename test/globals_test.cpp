@@ -219,3 +219,8 @@ void GlobalsTest::testParseTimeMilli()
   time = parseTimeMicro(v);
   CPPUNIT_ASSERT(1353414802123000LL == time);
 }
+
+void GlobalsTest::testInt64ToString()
+{
+  CPPUNIT_ASSERT_EQUAL((string) "8805345009", int64ToString(8805345009ULL));
+}

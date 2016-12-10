@@ -102,7 +102,14 @@ void XmlPrinterTest::testPrintProbe()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Controller//m:Path/m:DataItems/m:DataItem[@type='PATH_POSITION']@name",
                                     "Ppos");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='clc']@category", "CONDITION");
+  
+  // Check for composition ids
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='zt1']@compositionId", "zmotor");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='zt2']@compositionId", "zamp");
 
+  // check for compositions
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zmotor']@type", "MOTOR");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zamp']@type", "AMPLIFIER");  
 }
 
 void XmlPrinterTest::testPrintCurrent()

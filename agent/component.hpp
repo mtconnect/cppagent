@@ -26,6 +26,7 @@
 
 class DataItem;
 class Device;
+class Composition;
 
 class Component
 {
@@ -54,10 +55,12 @@ public:
     SOURCE,
     TEXT,
     REFERENCES,
-    REFERENCE
+    REFERENCE,
+    COMPOSITIONS,
+    COMPOSITION
   };
   
-  static const unsigned int NumComponentSpecs = 10;
+  static const unsigned int NumComponentSpecs = 12;
   static const std::string SComponentSpecs[];
   
 public:
@@ -118,6 +121,10 @@ public:
   void addChild(Component& child) { mChildren.push_back(&child); }
   std::list<Component *> &getChildren() { return mChildren; }
   
+  // Add and get composition...
+  void addComposition(Composition *aComposition) { mCompositions.push_back(aComposition); }
+  std::list<Composition*> &getCompositions() { return mCompositions; }
+  
   /* Add to/get the component's std::list of data items */
   void addDataItem(DataItem& dataItem);
   const std::list<DataItem *> &getDataItems() const { return mDataItems; }
@@ -173,6 +180,9 @@ protected:
   
   /* Keep Track of all the data items associated with this component */
   std::list<DataItem *> mDataItems;
+  
+  /* List of all the compositions */
+  std::list<Composition *> mCompositions;
   
   /* The set of attribtues */
   std::map<std::string, std::string> mAttributes;

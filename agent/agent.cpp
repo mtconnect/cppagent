@@ -1400,7 +1400,7 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
   uint64_t firstSeq;
   {
     dlib::auto_mutex lock(*mSequenceLock);
-    
+  
     firstSeq = (mSequence > mSlidingBufferSize) ?
                         mSequence - mSlidingBufferSize : 1;
     
@@ -1547,7 +1547,7 @@ uint64_t Agent::checkAndGetParam64(const key_value_map& queries,
     if (minError)
     {
       throw ParameterError("OUT_OF_RANGE",
-                          "'" + param + "' must be greater than or equal to " + intToString(minValue) + ".");
+                          "'" + param + "' must be greater than or equal to " + int64ToString(minValue) + ".");
     }
     return minValue;
   }
@@ -1555,7 +1555,7 @@ uint64_t Agent::checkAndGetParam64(const key_value_map& queries,
   if (maxValue != NO_VALUE64 && value > maxValue)
   {
     throw ParameterError("OUT_OF_RANGE",
-                        "'" + param + "' must be less than or equal to " + intToString(maxValue) + ".");
+                        "'" + param + "' must be less than or equal to " + int64ToString(maxValue) + ".");
   }
   
   return value;

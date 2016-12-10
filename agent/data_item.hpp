@@ -123,6 +123,7 @@ public:
   const std::string &getPrefix() const { return mPrefix; }
   const std::string &getStatistic() const { return mStatistic; }
   const std::string &getSampleRate() const { return mSampleRate; }
+  const std::string &getCompositionId() const { return mCompositionId; }
   
   float getNativeScale() const { return mNativeScale; }
   double getConversionFactor() const { return mConversionFactor; }
@@ -256,6 +257,8 @@ protected:
   /* Representation of data item */
   ERepresentation mRepresentation;
   std::string mSampleRate;
+  
+  std::string mCompositionId;
   
   /* Native scale of data item */
   float mNativeScale;

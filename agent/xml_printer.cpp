@@ -15,6 +15,7 @@
  */
 
 #include "xml_printer.hpp"
+#include "composition.hpp"
 #include "dlib/sockets.h"
 #include "dlib/logger.h"
 #include "version.h"
@@ -76,13 +77,17 @@ namespace XmlPrinter {
   void addDeviceStream(xmlTextWriterPtr writer, Device *device);
   void addComponentStream(xmlTextWriterPtr writer, Component *component);
   void addCategory(xmlTextWriterPtr writer, DataItem::ECategory category);
-  void addSimpleElement(xmlTextWriterPtr writer, std::string element, std::string &body, 
-                        std::map<std::string, std::string> *attributes = NULL);
+  void addSimpleElement(xmlTextWriterPtr writer, std::string element, const std::string &body,
+                        const std::map<std::string, std::string> *attributes = NULL);
 
   void addAttributes(xmlTextWriterPtr writer,
-                     std::map<std::string, std::string> *attributes);
+                     const std::map<std::string, std::string> *attributes);
   void addAttributes(xmlTextWriterPtr writer,
-                     AttributeList *attributes);
+                     const std::map<std::string, std::string> &attributes) {
+    addAttributes(writer, &attributes);
+  }
+  void addAttributes(xmlTextWriterPtr writer,
+                     const AttributeList *attributes);
 
   void addEvent(xmlTextWriterPtr writer, ComponentEvent *result);
   
@@ -419,26 +424,6 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer,
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItems    
   }
   
-  if (component->getReferences().size() > 0)
-  {
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "References"));
-
-    list<Component::Reference>::const_iterator ref;
-    for (ref = component->getReferences().begin(); ref != component->getReferences().end(); ref++)
-    {
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId",
-                                                      BAD_CAST ref->mId.c_str()));
-      if (ref->mName.length() > 0) {
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
-                                                        BAD_CAST ref->mName.c_str()));
-      }
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
-    }
-    
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
-  }
-  
   list<Component *> children = component->getChildren();
   
   if (children.size() > 0)
@@ -465,6 +450,45 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer,
     }
     
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Components    
+  }
+  
+  if (component->getCompositions().size() > 0)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Compositions"));
+
+    for (auto comp : component->getCompositions() )
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Composition"));
+      addAttributes(writer, comp->getAttributes());
+      const Composition::Description *desc = comp->getDescription();
+      if (desc != NULL)
+      {
+        addSimpleElement(writer, "Description", desc->getBody(), &desc->getAttributes());
+      }
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Composition
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Compositions
+  }
+  
+  if (component->getReferences().size() > 0)
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "References"));
+    
+    list<Component::Reference>::const_iterator ref;
+    for (ref = component->getReferences().begin(); ref != component->getReferences().end(); ref++)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId",
+                                                      BAD_CAST ref->mId.c_str()));
+      if (ref->mName.length() > 0) {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
+                                                        BAD_CAST ref->mName.c_str()));
+      }
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Reference
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
   }
 }
 
@@ -796,25 +820,25 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 }
 
 void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
-                               std::map<string, string> *attributes)
+                               const std::map<string, string> *attributes)
 {
   std::map<string, string>::iterator attr;
-  for (attr= attributes->begin(); attr!=attributes->end(); attr++)
+  for (auto attr : *attributes)
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr->first.c_str(), 
-                                                    BAD_CAST attr->second.c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(), 
+                                                    BAD_CAST attr.second.c_str()));
 
   }
 }
 
 void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
-                               AttributeList *attributes)
+                               const AttributeList *attributes)
 {
   AttributeList::iterator attr;
-  for (attr= attributes->begin(); attr!=attributes->end(); attr++)
+  for (auto attr : *attributes)
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr->first, 
-                                                    BAD_CAST attr->second.c_str()));
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first, 
+                                                    BAD_CAST attr.second.c_str()));
     
   }
 }
@@ -988,8 +1012,8 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
 }
 
 
-void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, string &body, 
-                      map<string, string> *attributes)
+void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, const string &body,
+                      const map<string, string> *attributes)
 {
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST element.c_str()));
   
