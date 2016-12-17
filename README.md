@@ -751,7 +751,11 @@ The data item name can also be prefixed with the device name if this adapter is 
 
 	2014-09-29T23:59:33.460470Z|device1:current|12|device2:current|11|device3:current|10
 
-All data items follow the formatting requirements in the MTConnect standard for the vocabulary and coordinates like PathPosition. 
+All data items follow the formatting requirements in the MTConnect standard for the vocabulary and coordinates like PathPosition.
+
+A new feature in version 1.4 is the ability to announce a reset has been triggered. If we have a part count named `pcount` that gets reset daily, the new protocol is as follows:
+
+	2014-09-29T23:59:33.460470Z|pcount|0:DAY
 
 Assets
 -----
