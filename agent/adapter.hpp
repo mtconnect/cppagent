@@ -89,10 +89,10 @@ public:
   virtual void disconnected();
   virtual void connected();
   
-  bool isDuplicate(DataItem *aDataItem, const std::string &aValue) {
+  bool isDuplicate(DataItem *aDataItem, const std::string &aValue, double aTimeOffset) {
     if (!aDataItem->isDiscrete()) {
-      if (aDataItem->getFilterType() != DataItem::FILTER_NONE)
-        return aDataItem->isFiltered(aDataItem->convertValue(atof(aValue.c_str())));
+      if (aDataItem->hasMinimumDelta() || aDataItem->hasMinimumPeriod())
+        return aDataItem->isFiltered(aDataItem->convertValue(atof(aValue.c_str())), aTimeOffset);
       else
         return  mDupCheck && aDataItem->isDuplicate(aValue);
     } else {
@@ -111,8 +111,8 @@ protected:
   void processAsset(std::istringstream &toParse, const std::string &key, const std::string &value,
                     const std::string &time);
   bool processDataItem(std::istringstream &toParse, const std::string &aLine, const std::string &aKey, const std::string &aValue,
-                           const std::string &aTime, bool aFirst = false);
-  std::string extractTime(const std::string &time);
+                           const std::string &aTime, double anOffset, bool aFirst = false);
+  std::string extractTime(const std::string &time, double &anOffset);
   
 protected:
   /* Pointer to the agent */

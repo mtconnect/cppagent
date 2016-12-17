@@ -141,6 +141,9 @@ protected:
   // For condition tracking
   std::string mCode;
   
+  // For reset triggered.
+  std::string mResetTriggered;
+  
   // For back linking of condition
   ComponentEventPtr mPrev;
 

@@ -75,8 +75,7 @@ inline static bool splitKey(string &key, string &dev)
   if (found == string::npos) {
     return false;
   } else {
-    dev = key;
-    dev.erase(found);
+    dev = key.substr(0, found - 1);
     key.erase(0, found + 1);
     return true;
   }
@@ -92,7 +91,7 @@ inline static void trim(std::string &str)
     str.erase(index + 1);
 }
 
-inline string Adapter::extractTime(const string &time)
+inline string Adapter::extractTime(const string &time, double &anOffset)
 {
   // Check how to handle time. If the time is relative, then we need to compute the first
   // offsets, otherwise, if this function is being used as an API, add the current time.
@@ -114,6 +113,9 @@ inline string Adapter::extractTime(const string &time)
     } else {
       offset = ((uint64_t) (atof(time.c_str()) * 1000.0)) - mBaseOffset;
     }
+    
+    anOffset = offset;
+    
     result = getRelativeTimeString(mBaseTime + offset);
   } else if (mIgnoreTimestamps || time.empty()) {
     result = getCurrentTime(GMT_UV_SEC);
@@ -157,7 +159,8 @@ void Adapter::processData(const string& data)
   string key, value;
   
   getline(toParse, key, '|');
-  string time = extractTime(key);
+  double offset = NAN;
+  string time = extractTime(key, offset);
 
   
   getline(toParse, key, '|');
@@ -170,21 +173,21 @@ void Adapter::processData(const string& data)
   }
   else
   {
-    if (processDataItem(toParse, data, key, value, time, true))
+    if (processDataItem(toParse, data, key, value, time, offset, true))
     {
       // Look for more key->value pairings in the rest of the data
       while (getline(toParse, key, '|'))
       {
         value.clear();
         getline(toParse, value, '|');
-        processDataItem(toParse, data, key, value, time);
+        processDataItem(toParse, data, key, value, time, offset);
       }
     }
   }
 }
 
 bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const string &aKey, const string &aValue,
-                              const string &aTime, bool aFirst)
+                              const string &aTime, double anOffset, bool aFirst)
 {
   string dev, key = aKey;
   Device *device;
@@ -239,8 +242,16 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
       }
       
       dataItem->setDataSource(this);
+      
       trim(value);
-      if (!isDuplicate(dataItem, value))
+      string check = value;
+      if (dataItem->hasResetTrigger())
+      {
+        size_t found = value.find_first_of(':');
+        if (found != string::npos)
+          check.erase(found);
+      }
+      if (!isDuplicate(dataItem, check, anOffset))
       {
         mAgent->addToBuffer(dataItem, value, aTime);
       }

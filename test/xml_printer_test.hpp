@@ -56,6 +56,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE(XmlPrinterTest);
   CPPUNIT_TEST(testPrintError);
   CPPUNIT_TEST(testPrintProbe);
+  CPPUNIT_TEST(testPrintDataItemElements);
   CPPUNIT_TEST(testPrintCurrent);
   CPPUNIT_TEST(testPrintSample);
   CPPUNIT_TEST(testCondition);
@@ -94,6 +95,7 @@ protected:
   /* Main methods to test */
   void testPrintError();
   void testPrintProbe();
+  void testPrintDataItemElements();
   void testPrintCurrent();
   void testPrintSample();
   void testChangeDevicesNamespace();

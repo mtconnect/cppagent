@@ -7,10 +7,10 @@ set(CMAKE_FIND_APPBUNDLE NEVER)
 
 # The version number.
 set (AGENT_VERSION_MAJOR 1)
-set (AGENT_VERSION_MINOR 3)
+set (AGENT_VERSION_MINOR 4)
 set (AGENT_VERSION_PATCH 0)
-set (AGENT_VERSION_BUILD 17)
-set (AGENT_VERSION_RC "")
+set (AGENT_VERSION_BUILD 2)
+set (AGENT_VERSION_RC "RC2")
 
 if(WIN32)
   # For windows XP use: cmake -G "Visual Studio 12" -T v120_xp -D WINVER=0x0501

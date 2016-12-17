@@ -294,7 +294,7 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY_KV("from", "34");
+    PARSE_XML_RESPONSE_QUERY_KV("from", "35");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
@@ -2030,11 +2030,40 @@ void AgentTest::testFilterValues()
   
   DataItem *item = a->getDataItemByName((string) "LinuxCNC", "pos");
   CPPUNIT_ASSERT(item != NULL);
-  CPPUNIT_ASSERT_EQUAL(DataItem::FILTER_MINIMUM_DELTA, item->getFilterType());
+  CPPUNIT_ASSERT(item->hasMinimumDelta());
   
-  CPPUNIT_ASSERT(!item->isFiltered(0.0));
-  CPPUNIT_ASSERT(item->isFiltered(5.0));
-  CPPUNIT_ASSERT(!item->isFiltered(20.0));
+  CPPUNIT_ASSERT(!item->isFiltered(0.0, NAN));
+  CPPUNIT_ASSERT(item->isFiltered(5.0, NAN));
+  CPPUNIT_ASSERT(!item->isFiltered(20.0, NAN));
+}
+
+void AgentTest::testResetTriggered()
+{
+  adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(adapter);
+  
+  path = "/sample";
+  
+  adapter->processData("TIME1|pcount|0");
+  adapter->processData("TIME2|pcount|1");
+  adapter->processData("TIME3|pcount|2");
+  adapter->processData("TIME4|pcount|0:DAY");
+  adapter->processData("TIME3|pcount|5");
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[2]", "0");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[3]", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[3]@resetTriggered", NULL);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[4]", "2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[5]", "0");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[5]@resetTriggered", "DAY");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[6]", "5");
+  }
+  
+
+  
 }
 
 void AgentTest::testReferences()

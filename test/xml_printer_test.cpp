@@ -121,6 +121,20 @@ void XmlPrinterTest::testPrintProbe()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zamp']@type", "AMPLIFIER");
 }
 
+void XmlPrinterTest::testPrintDataItemElements()
+{
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='ylc']/m:Filters/m:Filter[2]@type", "PERIOD");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='ylc']/m:Filters/m:Filter[2]", "1");
+
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='ylc']/m:Filters/m:Filter[1]@type", "MINIMUM_DELTA");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='ylc']/m:Filters/m:Filter[1]", "2");
+
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='pcount']/m:InitialValue", "0");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='pcount']/m:ResetTrigger", "DAY");
+}
+
 void XmlPrinterTest::testPrintCurrent()
 {
   Checkpoint checkpoint;
@@ -613,8 +627,8 @@ void XmlPrinterTest::testProbeWithFilter()
   
   PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
   
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter", "5");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter@type", "MINIMUM_DELTA");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter", "5");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter@type", "MINIMUM_DELTA");
 }
 
 

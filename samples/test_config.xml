@@ -45,7 +45,12 @@
               <DataItems>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y1" subType="ACTUAL" name="Yact"/>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y2" subType="COMMANDED" name="Ycom"/>
-                <DataItem type="LOAD" category="CONDITION" id="ylc" />
+                <DataItem type="LOAD" category="CONDITION" id="ylc">
+		  <Filters>
+		    <Filter type="PERIOD">1.0</Filter>
+		    <Filter type="MINIMUM_DELTA">2.0</Filter>
+		  </Filters>
+		</DataItem>
               </DataItems>
             </Linear>
             <Linear name="Z" id="z">
@@ -82,6 +87,10 @@
                 <DataItem type="PATH_POSITION" category="EVENT" id="p6" name="Ppos" />
                 <DataItem type="x:TOOL_GROUP" category="EVENT" id="xp6" name="Ppos" />
                 <DataItem type="MOTION_PROGRAM" category="CONDITION" id="cmp" />
+		<DataItem type="PART_COUNT" category="EVENT" id="pcount">
+		  <InitialValue>0</InitialValue>
+		  <ResetTrigger>DAY</ResetTrigger>
+		</DataItem>
               </DataItems>
             </Path>
           </Components>
@@ -89,15 +98,15 @@
         <Power name="power" id="power">
           <Configuration>
             <SensorConfiguration>
-				<FirmwareVersion>1.0</FirmwareVersion>
-				<CalibrationDate>2011-08-10</CalibrationDate>
-				<CalibrationInitials>WS</CalibrationInitials>
-				<Channels>
-					<Channel number="1" name="AAA" >
-						<Description>Power Channel</Description>
-						<CalibrationDate>2011-08-01</CalibrationDate>
-					</Channel>
-				</Channels>
+	      <FirmwareVersion>1.0</FirmwareVersion>
+	      <CalibrationDate>2011-08-10</CalibrationDate>
+	      <CalibrationInitials>WS</CalibrationInitials>
+	      <Channels>
+		<Channel number="1" name="AAA" >
+		  <Description>Power Channel</Description>
+		  <CalibrationDate>2011-08-01</CalibrationDate>
+		</Channel>
+	      </Channels>
             </SensorConfiguration>
           </Configuration>
           <DataItems>

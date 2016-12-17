@@ -526,18 +526,42 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
       addSimpleElement(writer, "Value", *value);
     }
     
-    if (dataItem->getFilterType() == DataItem::FILTER_MINIMUM_DELTA)
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints
+  }
+  
+  if (dataItem->hasMinimumDelta() || dataItem->hasMinimumPeriod())
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Filters"));
+    
+    if (dataItem->hasMinimumDelta())
     {
       map<string, string> attributes;
       string value = floatToString(dataItem->getFilterValue());
       attributes["type"] = "MINIMUM_DELTA";
-      addSimpleElement(writer, "Filter", value, &attributes);      
+      addSimpleElement(writer, "Filter", value, &attributes);
     }
-    
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints   
+
+    if (dataItem->hasMinimumPeriod())
+    {
+      map<string, string> attributes;
+      string value = floatToString(dataItem->getFilterPeriod());
+      attributes["type"] = "PERIOD";
+      addSimpleElement(writer, "Filter", value, &attributes);
+    }
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Filters
   }
   
-  THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItem   
+  if (dataItem->hasInitialValue())
+  {
+    addSimpleElement(writer, "InitialValue", dataItem->getInitialValue());
+  }
+  
+  if (dataItem->hasResetTrigger())
+  {
+    addSimpleElement(writer, "ResetTrigger", dataItem->getResetTrigger());
+  }
+  
+  THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItem
 }
 
 typedef bool (*EventComparer)(ComponentEventPtr &aE1, ComponentEventPtr &aE2);

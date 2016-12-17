@@ -52,6 +52,7 @@ public:
   enum EFilterType
   {
     FILTER_MINIMUM_DELTA,
+    FILTER_PERIOD,
     FILTER_NONE
   };
     
@@ -151,7 +152,16 @@ public:
   bool isAssetRemoved() const { return mIsAssetRemoved; }
   bool isTimeSeries() const { return mRepresentation == TIME_SERIES; }
   bool isDiscrete() const { return mRepresentation == DISCRETE; }
-    
+  
+  bool hasResetTrigger() const { return !mResetTrigger.empty(); }
+  const std::string &getResetTrigger() const { return mResetTrigger; }
+  void setResetTrigger(const std::string &aTrigger) { mResetTrigger = aTrigger; }
+  
+  bool hasInitialValue() const { return !mInitialValue.empty(); }
+  const std::string &getInitialValue() const { return mInitialValue; }
+  void setInitialValue(const std::string &aValue) { mInitialValue = aValue; }
+
+  
   /* Set/get component that data item is associated with */
   void setComponent(Component& component) { mComponent = &component; }
   Component * getComponent() const { return mComponent; }
@@ -176,19 +186,32 @@ public:
   }
   
   /* Filter checking */
-  bool isFiltered(const double aValue) {
-    if (mCategory != SAMPLE || mFilterType == FILTER_NONE)
-      return false;
-    
-    if (!ISNAN(mLastSampleValue))
+  bool isFiltered(const double aValue, const double aTimeOffset) {
+    if (mHasMinimumDelta && mCategory == SAMPLE)
     {
-      if (aValue > (mLastSampleValue - mFilterValue) && aValue < (mLastSampleValue + mFilterValue)) {
-        // Filter value
-        return true;      
+      if (!ISNAN(mLastSampleValue))
+      {
+        if (aValue > (mLastSampleValue - mFilterValue) && aValue < (mLastSampleValue + mFilterValue)) {
+          // Filter value
+          return true;      
+        }
       }
+      
+      mLastSampleValue = aValue;
     }
     
-    mLastSampleValue = aValue;
+    if (mHasMinimumPeriod)
+    {
+      if (!ISNAN(mLastTimeOffset) && !ISNAN(aTimeOffset))
+      {
+        if (aTimeOffset < (mLastTimeOffset + mFilterPeriod)) {
+          // Filter value
+          return true;
+        }
+      }
+      
+      mLastTimeOffset = aTimeOffset;
+    }
     return false;
   }
   
@@ -199,16 +222,18 @@ public:
   std::vector<std::string> &getConstrainedValues() { return mValues; }
   bool hasConstantValue() { return mValues.size() == 1; }
   
-  EFilterType getFilterType() const { return mFilterType; }
+  bool hasMinimumDelta() const { return mHasMinimumDelta; }
+  bool hasMinimumPeriod() const { return mHasMinimumPeriod; }
   double getFilterValue() const { return mFilterValue; }
+  double getFilterPeriod() const { return mFilterPeriod; }
   
   void setMaximum(std::string aMax) { mMaximum = aMax; mHasConstraints = true; }
   void setMinimum(std::string aMin) { mMinimum = aMin; mHasConstraints = true; }
   void addConstrainedValue(std::string aValue) { mValues.push_back(aValue); mHasConstraints = true; }
   
-  void setFilterType(EFilterType aType) { mFilterType = aType; mHasConstraints = true; }
-  void setFilterValue(double aValue) { mFilterValue = aValue; }
-
+  void setMinmumDelta(double aValue) { mFilterValue = aValue; mHasMinimumDelta = true; }
+  void setMinmumPeriod(double aValue) { mFilterPeriod = aValue; mHasMinimumPeriod = true; }
+  
   bool conversionRequired();
   std::string convertValue(const std::string& value);
   float convertValue(float aValue);
@@ -276,13 +301,21 @@ protected:
   /* Extra source information of data item */
   std::string mSource;
   
+  // The reset trigger;
+  std::string mResetTrigger;
+  
+  // Initial value
+  std::string mInitialValue;
+  
   /* Constraints for this data item */
   std::string mMaximum, mMinimum;
   std::vector<std::string> mValues;
   bool mHasConstraints;
   
   double mFilterValue;
-  EFilterType mFilterType;
+  double mFilterPeriod;
+  bool mHasMinimumDelta;
+  bool mHasMinimumPeriod;
   
   /* Component that data item is associated with */  
   Component * mComponent;
@@ -290,6 +323,7 @@ protected:
   /* Duplicate and filter checking */
   std::string mLastValue;
   double mLastSampleValue;
+  double mLastTimeOffset;
   
   /* Attrubutes */
   std::map<std::string, std::string> mAttributes;
@@ -300,7 +334,7 @@ protected:
   /* Conversion factor */
   double mConversionFactor;
   double mConversionOffset;
-  bool mConversionDetermined, mConversionRequired, mHasFactor;  
+  bool mConversionDetermined, mConversionRequired, mHasFactor;
 };
 
 #endif

@@ -729,7 +729,7 @@ void Agent::disconnected(Adapter *anAdapter, std::vector<Device*> aDevices)
             value = &sUnavailable;
           }
           
-          if (value != NULL && !anAdapter->isDuplicate(dataItem, *value))
+          if (value != NULL && !anAdapter->isDuplicate(dataItem, *value, NAN))
             addToBuffer(dataItem, *value, time);
         }
       } else if (dataItem == NULL) {

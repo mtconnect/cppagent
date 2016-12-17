@@ -315,12 +315,22 @@ void DataItemTest::testDuplicates()
 
 void DataItemTest::testFilter()
 {
-  a->setFilterType(DataItem::FILTER_MINIMUM_DELTA);  
-  a->setFilterValue(5.0);
+  a->setMinmumDelta(5.0);
   
-  CPPUNIT_ASSERT(!a->isFiltered(5.0));
-  CPPUNIT_ASSERT(a->isFiltered(6.0));
-  CPPUNIT_ASSERT(!a->isFiltered(10.1));
-  CPPUNIT_ASSERT(a->isFiltered(6.0));
-  CPPUNIT_ASSERT(!a->isFiltered(5.0));
+  CPPUNIT_ASSERT(!a->isFiltered(5.0, 0.0));
+  CPPUNIT_ASSERT(a->isFiltered(6.0, 0.0));
+  CPPUNIT_ASSERT(!a->isFiltered(10.1, 0.0));
+  CPPUNIT_ASSERT(a->isFiltered(6.0, 0.0));
+  CPPUNIT_ASSERT(!a->isFiltered(5.0, 0.0));
+  
+  // Test period
+  a->setMinmumDelta(1.0);
+  a->setMinmumPeriod(1.0);
+  
+  CPPUNIT_ASSERT(!a->isFiltered(1.0, 0.0));
+  CPPUNIT_ASSERT(a->isFiltered(3.0, 0.1));
+  CPPUNIT_ASSERT(!a->isFiltered(5, 1.1));
+  CPPUNIT_ASSERT(a->isFiltered(7.0, 2.0));
+  CPPUNIT_ASSERT(!a->isFiltered(9.0, 2.2));
+  
 }

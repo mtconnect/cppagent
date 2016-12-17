@@ -509,11 +509,50 @@ void XmlParser::loadDataItem(
           }
           else if (xmlStrcmp(constraint->name, BAD_CAST "Filter") == 0)
           {
-            d->setFilterValue(strtod((const char*) text, NULL));
-            d->setFilterType(DataItem::FILTER_MINIMUM_DELTA);
+            d->setMinmumDelta(strtod((const char*) text, NULL));
           }
           xmlFree(text);
         }
+      }
+      else if (xmlStrcmp(child->name, BAD_CAST "Filters") == 0)
+      {
+        for (xmlNodePtr filter = child->children; filter != NULL; filter = filter->next)
+        {
+          if (filter->type != XML_ELEMENT_NODE)
+            continue;
+          
+          if (xmlStrcmp(filter->name, BAD_CAST "Filter") == 0)
+          {
+            xmlChar *text = xmlNodeGetContent(filter);
+            xmlChar *type = xmlGetProp(filter, BAD_CAST "type");
+            if (type != NULL)
+            {
+              if (xmlStrcmp(type, BAD_CAST "PERIOD") == 0)
+                d->setMinmumPeriod(strtod((const char *) text, NULL));
+              else
+                d->setMinmumDelta(strtod((const char *) text, NULL));
+              xmlFree(type);
+            }
+            else
+              d->setMinmumDelta(strtod((const char *) text, NULL));
+            
+            xmlFree(text);
+          }
+
+        }
+      }
+      else if (xmlStrcmp(child->name, BAD_CAST "InitialValue") == 0)
+      {
+        xmlChar *text = xmlNodeGetContent(child);
+        d->setInitialValue(string((const char*)text));
+        xmlFree(text);
+      }
+      else if (xmlStrcmp(child->name, BAD_CAST "ResetTrigger") == 0)
+      {
+        xmlChar *text = xmlNodeGetContent(child);
+        d->setResetTrigger(string((const char*)text));
+        xmlFree(text);
+
       }
     }
   }

@@ -390,7 +390,7 @@ void XmlParserTest::testFilteredDataItem()
   DataItem *di = dev->getDeviceDataItem("c1");
   
   CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
-  CPPUNIT_ASSERT_EQUAL(di->getFilterType(), DataItem::FILTER_MINIMUM_DELTA);
+  CPPUNIT_ASSERT(di->hasMinimumDelta());
 }
 
 

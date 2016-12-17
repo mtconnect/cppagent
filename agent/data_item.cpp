@@ -68,8 +68,8 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
 /* DataItem public methods */
 DataItem::DataItem(std::map<string, string> attributes) 
   : mRepresentation(VALUE), mHasNativeScale(false), mHasSignificantDigits(false),  
-    mHasConstraints(false), mFilterValue(0.0), mFilterType(FILTER_NONE), mLastSampleValue(NAN), mDataSource(NULL),
-    mConversionDetermined(false), mConversionRequired(false), mHasFactor(false)
+    mHasConstraints(false), mFilterValue(0.0), mHasMinimumDelta(false), mHasMinimumPeriod(false), mLastSampleValue(NAN),
+    mLastTimeOffset(NAN), mDataSource(NULL), mConversionDetermined(false), mConversionRequired(false), mHasFactor(false)
 {
   mId = attributes["id"];
   mName = attributes["name"];

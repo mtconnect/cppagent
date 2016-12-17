@@ -35,11 +35,24 @@ const string ComponentEvent::SLevels[NumLevels] =
   "Unavailable"
 };
 
+inline static bool splitValue(string &value, string &reset)
+{
+  size_t found = value.find_first_of(':');
+  if (found == string::npos) {
+    return false;
+  } else {
+    reset = value.substr(found + 1);
+    value.erase(found);
+    return true;
+  }
+}
+
 /* ComponentEvent public methods */
 ComponentEvent::ComponentEvent(DataItem& dataItem,
                                uint64_t sequence,
                                const string& time,
                                const string& value)
+  : mHasAttributes(false)
 {
   mDataItem = &dataItem;
   mIsTimeSeries = mDataItem->isTimeSeries();
@@ -53,8 +66,19 @@ ComponentEvent::ComponentEvent(DataItem& dataItem,
     mTime = time;
   }
   
-  mHasAttributes = false;  
-  convertValue(value);
+  if (mDataItem->hasResetTrigger())
+  {
+    string v = value, reset;
+    if (splitValue(v, reset))
+    {
+      mResetTriggered = reset;
+    }
+    convertValue(v);
+  }
+  else
+  {
+    convertValue(value);
+  }
 }
 
 ComponentEvent::ComponentEvent(ComponentEvent& ce)
@@ -99,6 +123,9 @@ AttributeList *ComponentEvent::getAttributes()
         mAttributes.push_back(AttributeItem("statistic", mDataItem->getStatistic()));
       if (!mDuration.empty())
         mAttributes.push_back(AttributeItem("duration", mDuration));
+      if (!mResetTriggered.empty())
+        mAttributes.push_back(AttributeItem("resetTriggered", mResetTriggered));
+      
       
       if (mDataItem->isCondition())
       {
@@ -183,6 +210,7 @@ AttributeList *ComponentEvent::getAttributes()
       {
         mAttributes.push_back(AttributeItem("assetType", mRest));
       }
+      
       mHasAttributes = true;
     }    
   }

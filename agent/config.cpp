@@ -68,8 +68,8 @@ static inline bool get_bool_with_default(const config_reader::kernel_1a &reader,
 }
 
 AgentConfiguration::AgentConfiguration() :
-  mAgent(NULL), mLoggerFile(NULL), mMonitorFiles(false), mRestart(false),
-  mMinimumConfigReloadAge(15)
+  mAgent(NULL), mLoggerFile(NULL), mMonitorFiles(false),
+  mMinimumConfigReloadAge(15), mRestart(false)
 {
 }
 

@@ -122,6 +122,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testBadDataItem);
   CPPUNIT_TEST(testConstantValue);
   CPPUNIT_TEST(testComposition);
+  CPPUNIT_TEST(testResetTriggered);
   
 
   CPPUNIT_TEST_SUITE_END();
@@ -252,6 +253,9 @@ protected:
   
   // Filtering
   void testFilterValues();
+  
+  // Reset Triggered
+  void testResetTriggered();
   
   // Reference tests
   void testReferences();
