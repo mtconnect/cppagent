@@ -967,7 +967,7 @@ void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
   if (location.empty() && !mtcLocation.empty()) {
     location = mtcLocation;
   } else if (location.empty()) {
-    location = xmlns + " http://www.mtconnect.org/schemas/" + rootName + "_" + sSchemaVersion + ".xsd";
+    location = xmlns + " http://schemas.mtconnect.org/schemas/" + rootName + "_" + sSchemaVersion + ".xsd";
   }
   
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
