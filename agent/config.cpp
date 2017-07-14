@@ -174,7 +174,7 @@ void AgentConfiguration::monitorThread()
 
 void AgentConfiguration::start()
 {
-  auto_ptr<dlib::thread_function> mon;
+  unique_ptr<dlib::thread_function> mon;
   
   do
   {
