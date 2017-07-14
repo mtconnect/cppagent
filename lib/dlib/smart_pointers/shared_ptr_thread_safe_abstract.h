@@ -116,7 +116,7 @@ namespace dlib
 
         template<typename Y>
         explicit shared_ptr_thread_safe(
-            std::auto_ptr<Y>& r
+            std::unique_ptr<Y>& r
         );
         /*!
             requires
@@ -170,7 +170,7 @@ namespace dlib
 
         template<typename Y> 
         shared_ptr_thread_safe& operator= (
-            std::auto_ptr<Y>& r
+            std::unique_ptr<Y>& r
         );
         /*!
             requires
