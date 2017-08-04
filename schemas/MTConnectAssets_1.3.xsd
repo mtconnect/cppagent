@@ -31,7 +31,7 @@ WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
 THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
 SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 -->
-<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:vc='http://www.w3.org/2007/XMLSchema-versioning' xmlns='urn:mtconnect.org:MTConnectAssets:1.3' xmlns:mt='urn:mtconnect.org:MTConnectAssets:1.3' targetNamespace='urn:mtconnect.org:MTConnectAssets:1.3' elementFormDefault='qualified' attributeFormDefault='unqualified' vc:minVersion='1.1'>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectAssets:1.3' xmlns:mt='urn:mtconnect.org:MTConnectAssets:1.3' targetNamespace='urn:mtconnect.org:MTConnectAssets:1.3' elementFormDefault='qualified' attributeFormDefault='unqualified' xmlns:vc='http://www.w3.org/2007/XMLSchema-versioning' vc:minVersion='1.1'>
   <xs:element name='MTConnectAssets' type='MTConnectAssetsType'>
     <xs:annotation>
       <xs:documentation>
@@ -309,7 +309,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='CONCENTRATION'/>
       <xs:enumeration value='CONDUCTIVITY'/>
       <xs:enumeration value='DISPLACEMENT'/>
-      <xs:enumeration value='ELECTRICAL_POWER'/>
+      <xs:enumeration value='ELECTRICAL_ENERGY'/>
       <xs:enumeration value='FILL_LEVEL'/>
       <xs:enumeration value='FLOW'/>
       <xs:enumeration value='LINEAR_FORCE'/>
@@ -338,6 +338,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='PART_ASSET_ID'/>
       <xs:enumeration value='PROGRAM_EDIT'/>
       <xs:enumeration value='PROGRAM_EDIT_NAME'/>
+      <xs:enumeration value='CLOCK_TIME'/>
       <xs:enumeration value='CHUCK_STATE'/>
       <xs:enumeration value='END_OF_BAR'/>
       <xs:enumeration value='AUXILIARY_END_OF_BAR'/>
@@ -413,6 +414,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='PRIMARY'/>
       <xs:enumeration value='AUXILIARY'/>
       <xs:enumeration value='MANUAL_UNCLAMP'/>
+      <xs:enumeration value='ROTARY'/>
+      <xs:enumeration value='LINEAR'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>

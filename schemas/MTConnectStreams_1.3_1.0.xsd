@@ -309,7 +309,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='CONCENTRATION'/>
       <xs:enumeration value='CONDUCTIVITY'/>
       <xs:enumeration value='DISPLACEMENT'/>
-      <xs:enumeration value='ELECTRICAL_POWER'/>
+      <xs:enumeration value='ELECTRICAL_ENERGY'/>
       <xs:enumeration value='FILL_LEVEL'/>
       <xs:enumeration value='FLOW'/>
       <xs:enumeration value='LINEAR_FORCE'/>
@@ -338,6 +338,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='PART_ASSET_ID'/>
       <xs:enumeration value='PROGRAM_EDIT'/>
       <xs:enumeration value='PROGRAM_EDIT_NAME'/>
+      <xs:enumeration value='CLOCK_TIME'/>
       <xs:enumeration value='CHUCK_STATE'/>
       <xs:enumeration value='END_OF_BAR'/>
       <xs:enumeration value='AUXILIARY_END_OF_BAR'/>
@@ -413,6 +414,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='PRIMARY'/>
       <xs:enumeration value='AUXILIARY'/>
       <xs:enumeration value='MANUAL_UNCLAMP'/>
+      <xs:enumeration value='ROTARY'/>
+      <xs:enumeration value='LINEAR'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
@@ -2739,7 +2742,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='FEED_HOLD'/>
       <xs:enumeration value='PROGRAM_COMPLETED'/>
       <xs:enumeration value='PROGRAM_STOPPED'/>
-      <xs:enumeration value='PROGRAM_OPTIONAL_STOP'/>
+      <xs:enumeration value='OPTIONAL_STOP'/>
       <xs:enumeration value='UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
@@ -3069,7 +3072,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:enumeration value='FEED_HOLD'/>
         <xs:enumeration value='PROGRAM_COMPLETED'/>
         <xs:enumeration value='PROGRAM_STOPPED'/>
-        <xs:enumeration value='PROGRAM_OPTIONAL_STOP'/>
+        <xs:enumeration value='OPTIONAL_STOP'/>
         <xs:enumeration value='UNAVAILABLE'/>
       </xs:restriction>
     </xs:simpleContent>

@@ -317,7 +317,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='CONCENTRATION'/>
       <xs:enumeration value='CONDUCTIVITY'/>
       <xs:enumeration value='DISPLACEMENT'/>
-      <xs:enumeration value='ELECTRICAL_POWER'/>
+      <xs:enumeration value='ELECTRICAL_ENERGY'/>
       <xs:enumeration value='FILL_LEVEL'/>
       <xs:enumeration value='FLOW'/>
       <xs:enumeration value='LINEAR_FORCE'/>
@@ -333,6 +333,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
       <xs:enumeration value='WATT_SECOND'/>
       <xs:enumeration value='VISCOSITY'/>
+      <xs:enumeration value='CLOCK_TIME'/>
       <xs:enumeration value='COMMUNICATIONS'/>
       <xs:enumeration value='LOGIC_PROGRAM'/>
       <xs:enumeration value='MOTION_PROGRAM'/>
@@ -346,6 +347,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='PART_ASSET_ID'/>
       <xs:enumeration value='PROGRAM_EDIT'/>
       <xs:enumeration value='PROGRAM_EDIT_NAME'/>
+      <xs:enumeration value='CLOCK_TIME'/>
       <xs:enumeration value='CHUCK_STATE'/>
       <xs:enumeration value='END_OF_BAR'/>
       <xs:enumeration value='AUXILIARY_END_OF_BAR'/>
@@ -379,6 +381,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='LINE_NUMBER'/>
       <xs:enumeration value='LINE_LABEL'/>
       <xs:enumeration value='BLOCK_COUNT'/>
+      <xs:enumeration value='USER'/>
+      <xs:enumeration value='PART_NUMBER'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemEnumType'>
@@ -437,6 +441,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='RELATIVE'/>
       <xs:enumeration value='TOOL_EDGE'/>
       <xs:enumeration value='TOOL_GROUP'/>
+      <xs:enumeration value='ROTARY'/>
+      <xs:enumeration value='LINEAR'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
@@ -638,18 +644,15 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:enumeration value='ACTIVITY'/>
-      <xs:enumeration value='ACTIVITY_GROUP'/>
-      <xs:enumeration value='PROCESS_STEP'/>
-      <xs:enumeration value='MAINTENANCE'/>
-      <xs:enumeration value='DAY'/>
-      <xs:enumeration value='LIFE'/>
+      <xs:enumeration value='ACTION_COMPLETE'/>
       <xs:enumeration value='ANNUAL'/>
+      <xs:enumeration value='DAY'/>
+      <xs:enumeration value='MAINTENANCE'/>
+      <xs:enumeration value='MANUAL'/>
       <xs:enumeration value='MONTH'/>
-      <xs:enumeration value='WEEK'/>
-      <xs:enumeration value='LAST_OPERATION'/>
       <xs:enumeration value='POWER_ON'/>
-      <xs:enumeration value='PROCESS'/>
+      <xs:enumeration value='SHIFT'/>
+      <xs:enumeration value='WEEK'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemResetValueType'>
@@ -1666,8 +1669,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         The type of filter
       </xs:documentation>
     </xs:annotation>
-    <xs:restriction base='xs:NMTOKEN'>
+    <xs:restriction base='xs:string'>
       <xs:enumeration value='MINIMUM_DELTA'/>
+      <xs:enumeration value='PERIOD'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name='DataItemsType'>
