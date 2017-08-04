@@ -296,11 +296,11 @@ namespace dlib
 
         template<typename Y>
         explicit shared_ptr(
-            std::auto_ptr<Y>& r
+            std::unique_ptr<Y>& r
         )
         {
             DLIB_ASSERT(r.get() != 0,
-                "\tshared_ptr::shared_ptr(auto_ptr r)"
+                "\tshared_ptr::shared_ptr(unique_ptr r)"
                 << "\n\tr.get() can't be null"
                 << "\n\tthis: " << this
                 );
@@ -328,11 +328,11 @@ namespace dlib
 
         template<typename Y> 
         shared_ptr& operator= (
-            std::auto_ptr<Y>& r
+            std::unique_ptr<Y>& r
         )
         {
             DLIB_ASSERT(r.get() != 0,
-                "\tshared_ptr::operator=(auto_ptr r)"
+                "\tshared_ptr::operator=(unqiue_ptr r)"
                 << "\n\tr.get() can't be null"
                 << "\n\tthis: " << this
                 );

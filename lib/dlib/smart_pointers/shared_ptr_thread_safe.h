@@ -7,6 +7,7 @@
 #include <memory>
 #include <typeinfo>
 #include <string>       // for the exceptions
+#include <memory>
 #include "../algs.h"
 #include "shared_ptr_thread_safe_abstract.h"
 #include "../threads/threads_kernel.h"
@@ -260,11 +261,11 @@ namespace dlib
 
         template<typename Y>
         explicit shared_ptr_thread_safe(
-            std::auto_ptr<Y>& r
+            std::unique_ptr<Y>& r
         )
         {
             DLIB_ASSERT(r.get() != 0,
-                "\tshared_ptr::shared_ptr_thread_safe(auto_ptr r)"
+                "\tshared_ptr::shared_ptr_thread_safe(unique_ptr r)"
                 << "\n\tr.get() can't be null"
                 << "\n\tthis: " << this
                 );
@@ -291,11 +292,11 @@ namespace dlib
 
         template<typename Y> 
         shared_ptr_thread_safe& operator= (
-            std::auto_ptr<Y>& r
+            std::unique_ptr<Y>& r
         )
         {
             DLIB_ASSERT(r.get() != 0,
-                "\tshared_ptr::operator=(auto_ptr r)"
+                "\tshared_ptr::operator=(unique_ptr r)"
                 << "\n\tr.get() can't be null"
                 << "\n\tthis: " << this
                 );

@@ -88,7 +88,7 @@ end
 
 def format_time
   time = Time.now.utc
-  time.strftime("%Y-%m-%dT%H:%M:%S.") + ("%06d" % time.usec)
+  time.strftime("%Y-%m-%dT%H:%M:%S.") + ("%06d" % time.usec) + "Z"
 end
 
 puts "Waiting for first connection"

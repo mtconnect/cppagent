@@ -766,7 +766,7 @@ Assets are associated with a device but do not have a data item they are mapping
 
 This form associates updates the asset id KSSP300R.1 for a cutting tool with the text at the end. For multiline assets, use the keyword `--multiline--` with a following unique string as follows:
 
-		2012-02-21T23:59:33.460470Z|@ASSET@|KSSP300R.1|CuttingTool|--multiline--
+		2012-02-21T23:59:33.460470Z|@ASSET@|KSSP300R.1|CuttingTool|--multiline--0FED07ACED
 		<CuttingTool>
 		...
 		</CuttingTool>

@@ -138,7 +138,7 @@ namespace dlib
 
         template<typename Y>
         explicit shared_ptr(
-            std::auto_ptr<Y>& r
+            std::unique_ptr<Y>& r
         );
         /*!
             requires
@@ -192,7 +192,7 @@ namespace dlib
 
         template<typename Y> 
         shared_ptr& operator= (
-            std::auto_ptr<Y>& r
+            std::unique_ptr<Y>& r
         );
         /*!
             requires
