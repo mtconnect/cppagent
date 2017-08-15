@@ -762,6 +762,12 @@ void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *anAsset)
                                                     BAD_CAST "removed",
                                                     BAD_CAST "true"));
   }
+
+  if (!anAsset->getDescription().empty()) {
+    string body = anAsset->getDescription();
+    addSimpleElement(writer, "Description", body, NULL);
+  }
+  
 }
 
 
@@ -1168,14 +1174,17 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingToolLifeCycle"));
     
     // Status...
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CutterStatus"));
-    vector<string>::iterator status;
-    for (status = aTool->mStatus.begin(); status != aTool->mStatus.end(); status++) {
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Status"));      
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST status->c_str()));
+    if (aTool->mStatus.size() > 0)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CutterStatus"));
+      vector<string>::iterator status;
+      for (status = aTool->mStatus.begin(); status != aTool->mStatus.end(); status++) {
+        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Status"));
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST status->c_str()));
+        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+      }
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
     }
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
     
     // Other values
     printCuttingToolValue(writer, aTool, "ReconditionCount", &remaining);

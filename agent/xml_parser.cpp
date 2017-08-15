@@ -858,7 +858,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset, xmlDocPtr aDoc)
   {
     // Get the attributes...
     tool.setObject(new CuttingTool("", (const char*) anAsset->name, ""), true);
-        
+
     for (xmlAttrPtr attr = anAsset->properties; attr != NULL; attr = attr->next)
     {
       if (attr->type == XML_ATTRIBUTE_NODE) {
@@ -870,10 +870,17 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset, xmlDocPtr aDoc)
     {
       for (xmlNodePtr child = anAsset->children; child != NULL; child = child->next)
       {
-        if (xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition") == 0) {
+        if (xmlStrcmp(child->name, BAD_CAST "Description") == 0) {
+          xmlChar *text = xmlNodeGetContent(child);
+          if (text != NULL) {
+            tool->setDescription((const char*) text);
+            xmlFree(text);
+          }
+        } else if (xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition") == 0) {
           xmlChar *text = xmlNodeGetContent(child);
           if (text != NULL) {            
             tool->addValue(parseCuttingToolNode(child, aDoc));
+            xmlFree(text);
           }
         } else if (xmlStrcmp(child->name, BAD_CAST "CuttingToolLifeCycle") == 0) {
           parseCuttingToolLife(tool, child, aDoc);
@@ -881,6 +888,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset, xmlDocPtr aDoc)
           xmlChar *text = xmlNodeGetContent(child);
           if (text != NULL) {            
             tool->addValue(parseCuttingToolNode(child, aDoc));
+            xmlFree(text);
           }
         }
       }

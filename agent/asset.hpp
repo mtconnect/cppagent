@@ -35,6 +35,8 @@ protected:
   std::string mType;
   std::string mDeviceUuid;
   std::string mTimestamp;
+  std::string mDescription;
+  
   bool        mRemoved;
   AssetKeys   mKeys;
   AssetKeys   mIdentity;
@@ -57,6 +59,7 @@ public:
   AssetKeys   &getKeys() { return mKeys; }
   const std::string &getDeviceUuid() const { return mDeviceUuid; }
   const std::string &getTimestamp() const { return mTimestamp; }
+  const std::string &getDescription() const { return mDescription; }
   bool isRemoved() const { return mRemoved; }
   
   AssetKeys &getIdentity() { return mIdentity; }
@@ -69,6 +72,7 @@ public:
   void setDeviceUuid(const std::string &aId) { mDeviceUuid = aId; }
   void setTimestamp(const std::string &aTs) { mTimestamp = aTs; }
   void setRemoved(bool aRemoved) { mRemoved = aRemoved; }
+  void setDescription(const std::string &aDesc) { mDescription = aDesc; }
   
   virtual void changed() { }
   virtual void addIdentity(const std::string &aKey, const std::string &aValue);  
