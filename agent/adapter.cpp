@@ -75,7 +75,7 @@ inline static bool splitKey(string &key, string &dev)
   if (found == string::npos) {
     return false;
   } else {
-    dev = key.substr(0, found - 1);
+    dev = key.substr(0, found);
     key.erase(0, found + 1);
     return true;
   }
