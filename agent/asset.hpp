@@ -26,6 +26,7 @@ typedef RefCountedPtr<Asset> AssetPtr;
 
 // An association of the index type to the value.
 typedef std::map<std::string,std::string> AssetKeys;
+typedef std::map<std::string,std::string> XmlAttributes;
 
 class Asset : public RefCounted
 {
@@ -36,6 +37,7 @@ protected:
   std::string mDeviceUuid;
   std::string mTimestamp;
   std::string mDescription;
+  XmlAttributes mArchetype;
   
   bool        mRemoved;
   AssetKeys   mKeys;
@@ -60,6 +62,7 @@ public:
   const std::string &getDeviceUuid() const { return mDeviceUuid; }
   const std::string &getTimestamp() const { return mTimestamp; }
   const std::string &getDescription() const { return mDescription; }
+  const XmlAttributes &getArchetype() const { return mArchetype; }
   bool isRemoved() const { return mRemoved; }
   
   AssetKeys &getIdentity() { return mIdentity; }
@@ -73,6 +76,7 @@ public:
   void setTimestamp(const std::string &aTs) { mTimestamp = aTs; }
   void setRemoved(bool aRemoved) { mRemoved = aRemoved; }
   void setDescription(const std::string &aDesc) { mDescription = aDesc; }
+  void setArchetype(const XmlAttributes &anArch) { mArchetype = anArch; }
   
   virtual void changed() { }
   virtual void addIdentity(const std::string &aKey, const std::string &aValue);  

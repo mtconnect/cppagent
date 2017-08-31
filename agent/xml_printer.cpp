@@ -763,6 +763,10 @@ void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *anAsset)
                                                     BAD_CAST "true"));
   }
 
+  if (!anAsset->getArchetype().empty()) {
+    addSimpleElement(writer, "AssetArchetypeRef", "", &anAsset->getArchetype());
+  }
+
   if (!anAsset->getDescription().empty()) {
     string body = anAsset->getDescription();
     addSimpleElement(writer, "Description", body, NULL);

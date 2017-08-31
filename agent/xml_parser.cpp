@@ -870,7 +870,18 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr anAsset, xmlDocPtr aDoc)
     {
       for (xmlNodePtr child = anAsset->children; child != NULL; child = child->next)
       {
-        if (xmlStrcmp(child->name, BAD_CAST "Description") == 0) {
+        if (xmlStrcmp(child->name, BAD_CAST "AssetArchetypeRef") == 0) {
+          XmlAttributes attrs;
+          
+          for (xmlAttrPtr attr = child->properties; attr != NULL; attr = attr->next)
+          {
+            if (attr->type == XML_ATTRIBUTE_NODE) {
+              attrs[(const char*) attr->name] = (const char*) attr->children->content;
+            }
+          }
+          
+          tool->setArchetype(attrs);
+        } else if (xmlStrcmp(child->name, BAD_CAST "Description") == 0) {
           xmlChar *text = xmlNodeGetContent(child);
           if (text != NULL) {
             tool->setDescription((const char*) text);
