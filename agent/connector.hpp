@@ -81,7 +81,8 @@ protected:
   
   /* The port number to connect to */
   unsigned int mPort;
-  
+  unsigned int mLocalPort;
+
   /* The string buffer to hold the data from socket */
   std::string mBuffer;
   
