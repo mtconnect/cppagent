@@ -81,6 +81,8 @@ void Connector::connect()
 	mLocalPort = mConnection->get_local_port();
 
     // Check to see if this connection supports heartbeats.
+	mHeartbeatFrequency = HEARTBEAT_FREQ;
+	mHeartbeats = false;
     sLogger << LDEBUG << "(Port:" << mLocalPort << ")" << "Sending initial PING";
     int status = mConnection->write(ping, strlen(ping));
     if (status < 0)
