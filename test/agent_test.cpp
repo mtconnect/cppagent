@@ -1428,7 +1428,7 @@ void AgentTest::testAssetRemovalByAdapter()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
   }
   
-  adapter->processData("TIME|@REMOVE_ASSET@|112");
+  adapter->processData("TIME|@REMOVE_ASSET@|112\r");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 3, a->getAssetCount());
 
   path = "/current";

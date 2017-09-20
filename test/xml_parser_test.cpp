@@ -269,7 +269,7 @@ void XmlParserTest::testParseAsset()
   // Top Level
   CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->mValues["CuttingToolDefinition"]->mValue);
   CPPUNIT_ASSERT_EQUAL((string) "EXPRESS", tool->mValues["CuttingToolDefinition"]->mProperties["format"]);
-  CPPUNIT_ASSERT_EQUAL((string) "Cutting tool ...", tool->mValues["Description"]->mValue);
+  CPPUNIT_ASSERT_EQUAL((string) "Cutting tool ...", tool->getDescription());
   
   // Status
   CPPUNIT_ASSERT_EQUAL((string) "NEW", tool->mStatus[0]);

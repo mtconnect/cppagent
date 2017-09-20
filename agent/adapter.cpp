@@ -169,6 +169,7 @@ void Adapter::processData(const string& data)
   // Data item name has a @, it is an asset special prefix.
   if (key.find('@') != string::npos)
   {
+    trim(value);
     processAsset(toParse, key, value, time);
   }
   else
