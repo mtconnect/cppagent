@@ -22,6 +22,8 @@
 
 #include "globals.hpp"
 
+#define HEARTBEAT_FREQ 60000
+
 using namespace dlib;
 
 class Connector
@@ -81,7 +83,8 @@ protected:
   
   /* The port number to connect to */
   unsigned int mPort;
-  
+  unsigned int mLocalPort;
+
   /* The string buffer to hold the data from socket */
   std::string mBuffer;
   
@@ -92,9 +95,9 @@ protected:
   bool mRealTime;
   
   // Heartbeats
-  bool mHeartbeats;
-  int mHeartbeatFrequency;
-  int mLegacyTimeout;
+  bool mHeartbeats = false;
+  int mHeartbeatFrequency = HEARTBEAT_FREQ;
+  int mLegacyTimeout = 600000;
   dlib::uint64 mLastHeartbeat;
   dlib::uint64 mLastSent;
   
