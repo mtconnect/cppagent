@@ -77,14 +77,17 @@ void Connector::connect()
     // Using a smart pointer to ensure connection is deleted if exception thrown
     sLogger << LDEBUG << "Connecting to data source: " << mServer << " on port: " << mPort;
     mConnection.reset(dlib::connect(mServer, mPort));
-    
+  
+	mLocalPort = mConnection->get_local_port();
 
     // Check to see if this connection supports heartbeats.
-    sLogger << LDEBUG << "Sending initial PING";
+	mHeartbeatFrequency = HEARTBEAT_FREQ;
+	mHeartbeats = false;
+    sLogger << LDEBUG << "(Port:" << mLocalPort << ")" << "Sending initial PING";
     int status = mConnection->write(ping, strlen(ping));
     if (status < 0)
     {
-      sLogger << LWARN << "connect: Could not write initial heartbeat: " << intToString(status);
+      sLogger << LWARN << "(Port:" << mLocalPort << ")" << "connect: Could not write initial heartbeat: " << intToString(status);
       close();
       return;
     }
@@ -120,18 +123,25 @@ void Connector::connect()
         sLogger << LDEBUG << "Cannot set high thread priority";
 #endif
     }
-
+	sLogger << LTRACE << "(Port:" << mLocalPort << ")" << "Heartbeat : " << mHeartbeats;
+	sLogger << LTRACE << "(Port:" << mLocalPort << ")" << "Heartbeat Freq: " << mHeartbeatFrequency;
     // Read from the socket, read is a blocking call
     while (mConnected)
     {
       uint64 now;
       now = stamper.get_timestamp();
       int timeout;
-      if (mHeartbeats)
-        timeout = (int) mHeartbeatFrequency - ((int) (now - mLastSent) / 1000);
-      else
-        timeout = mLegacyTimeout;
-        
+	  if (mHeartbeats)
+	  {
+		  timeout = (int)mHeartbeatFrequency - ((int)(now - mLastSent) / 1000);
+		  sLogger << LTRACE << "(Port:" << mLocalPort << ")" << "Heartbeat Send Countdown: " << timeout;
+	  }
+	  else
+	  {
+		  timeout = mLegacyTimeout;
+		  sLogger << LTRACE << "(Port:" << mLocalPort << ")" << "Legacy Timeout: " << timeout;
+	  }
+
       if (timeout < 0)
         timeout = 1;
       sockBuf[0] = 0;
@@ -140,12 +150,12 @@ void Connector::connect()
         status = mConnection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
       else
       {
-        sLogger << LDEBUG << "Connection was closed, exiting adapter connect";
+        sLogger << LDEBUG << "(Port:" << mLocalPort << ")" << "Connection was closed, exiting adapter connect";
         break;
       }
       
       if (!mConnected) {
-        sLogger << LDEBUG << "Connection was closed during read, exiting adapter";
+        sLogger << LDEBUG << "(Port:" << mLocalPort << ")" << "Connection was closed during read, exiting adapter";
         break;
       }
       
@@ -158,12 +168,12 @@ void Connector::connect()
       else if (status == TIMEOUT && !mHeartbeats && ((int) (stamper.get_timestamp() - now) / 1000) >= timeout) 
       {
         // We don't stop on heartbeats, but if we have a legacy timeout, then we stop.
-        sLogger << LERROR << "connect: Did not receive data for over: " << (timeout / 1000) << " seconds";
+        sLogger << LERROR << "(Port:" << mLocalPort << ")" << "connect: Did not receive data for over: " << (timeout / 1000) << " seconds";
         break;
       }
       else if (status != TIMEOUT) // Something other than timeout occurred
       {
-        sLogger << LERROR << "connect: Socket error, disconnecting";
+        sLogger << LERROR << "(Port:" << mLocalPort << ")" << "connect: Socket error, disconnecting";
         break;
       }
 
@@ -172,18 +182,18 @@ void Connector::connect()
         now = stamper.get_timestamp();
         if ((now - mLastHeartbeat) > (uint64) (mHeartbeatFrequency * 2000))
         {
-          sLogger << LERROR << "connect: Did not receive heartbeat for over: " << (mHeartbeatFrequency * 2);
+          sLogger << LERROR << "(Port:" << mLocalPort << ")" << "connect: Did not receive heartbeat for over: " << (mHeartbeatFrequency * 2);
           break;
         }
         else if ((now - mLastSent) >= (uint64) (mHeartbeatFrequency * 1000)) 
         {
           dlib::auto_mutex lock(*mCommandLock);
           
-          sLogger << LDEBUG << "Sending a PING for " << mServer << " on port " << mPort;
+          sLogger << LDEBUG << "(Port:" << mLocalPort << ")" << "Sending a PING for " << mServer << " on port " << mPort;
           status = mConnection->write(ping, strlen(ping));
           if (status <= 0)
           {
-            sLogger << LERROR << "connect: Could not write heartbeat: " << status;
+            sLogger << LERROR << "(Port:" << mLocalPort << ")" << "connect: Could not write heartbeat: " << status;
             break;
           }
           mLastSent = now;
@@ -191,17 +201,17 @@ void Connector::connect()
       }
     }
     
-    sLogger << LERROR << "connect: Connection exited with status: " << status;
+    sLogger << LERROR << "(Port:" << mLocalPort << ")" << "connect: Connection exited with status: " << status;
     mConnectActive = false;
     close();
   }
   catch (dlib::socket_error &e)
   {
-    sLogger << LWARN << "connect: Socket exception: " << e.what();
+	  sLogger << LWARN << "(Port:" << mLocalPort << ")" << "connect: Socket exception: " << e.what();
   }
   catch (exception & e)
   {
-    sLogger << LERROR << "connect: Exception in connect: " << e.what();
+    sLogger << LERROR << "(Port:" << mLocalPort << ")" << "connect: Exception in connect: " << e.what();
   }
 }
 
@@ -231,7 +241,7 @@ void Connector::parseBuffer(const char *aBuffer)
     while (!stream.eof())
     {
       getline(stream, line);
-      sLogger << LTRACE << "Received line: '" << line << '\'';
+      sLogger << LTRACE << "(Port:" << mLocalPort << ")" << "Received line: '" << line << '\'';
       
       if (line.empty()) continue;
 
@@ -241,10 +251,10 @@ void Connector::parseBuffer(const char *aBuffer)
         if (line.compare(0, 6, "* PONG") == 0)
         {
           if (sLogger.level().priority <= LDEBUG.priority) {
-            sLogger << LDEBUG << "Received a PONG for " << mServer << " on port " << mPort;
+            sLogger << LDEBUG << "(Port:" << mLocalPort << ")" << "Received a PONG for " << mServer << " on port " << mPort;
             dlib::timestamper stamper;
             int delta = (int) ((stamper.get_timestamp() - mLastHeartbeat) / 1000ull);
-            sLogger << LDEBUG << "    Time since last heartbeat: " << delta << "ms";
+            sLogger << LDEBUG << "(Port:" << mLocalPort << ")" << "    Time since last heartbeat: " << delta << "ms";
           }
           if (!mHeartbeats)
             startHeartbeats(line);
@@ -279,7 +289,7 @@ void Connector::sendCommand(const string &aCommand)
     int status = mConnection->write(command.c_str(), command.length());
     if (status <= 0)
     {
-      sLogger << LWARN << "sendCommand: Could not write command: '" << aCommand << "' - " 
+      sLogger << LWARN << "(Port:" << mLocalPort << ")" << "sendCommand: Could not write command: '" << aCommand << "' - "
               << intToString(status);
     }
   }
@@ -294,18 +304,18 @@ void Connector::startHeartbeats(const string &aArg)
     // Make the maximum timeout 30 minutes.
     if (freq > 0 && freq < 30 * 60 * 1000)
     {
-      sLogger << LDEBUG << "Received PONG, starting heartbeats every " << freq << "ms";
+      sLogger << LDEBUG << "(Port:" << mLocalPort << ")" << "Received PONG, starting heartbeats every " << freq << "ms";
       mHeartbeats = true;
       mHeartbeatFrequency = freq;
     }
     else
     {
-      sLogger << LERROR << "startHeartbeats: Bad heartbeat frequency " << aArg << ", ignoring";
+      sLogger << LERROR << "(Port:" << mLocalPort << ")" << "startHeartbeats: Bad heartbeat frequency " << aArg << ", ignoring";
     }
   }
   else
   {
-    sLogger << LERROR << "startHeartbeats: Bad heartbeat command " << aArg << ", ignoring";
+    sLogger << LERROR << "(Port:" << mLocalPort << ")" << "startHeartbeats: Bad heartbeat command " << aArg << ", ignoring";
   }
 }
 
@@ -319,7 +329,7 @@ void Connector::close()
     mConnected = false;
     mConnection->shutdown();
     
-    sLogger << LWARN << "Waiting for connect method to exit and signal connection closed";
+    sLogger << LWARN << "(Port:" << mLocalPort << ")" << "Waiting for connect method to exit and signal connection closed";
     if (mConnectActive)
       mConnectionClosed->wait();
     
