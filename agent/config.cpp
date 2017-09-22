@@ -30,6 +30,10 @@
 #include <sys/stat.h>
 #include "rolling_file_logger.hpp"
 
+#ifdef MACOSX
+#include <mach-o/dyld.h>
+#endif
+
 using namespace std;
 using namespace dlib;
 
@@ -69,8 +73,45 @@ static inline bool get_bool_with_default(const config_reader::kernel_1a &reader,
 
 AgentConfiguration::AgentConfiguration() :
   mAgent(NULL), mLoggerFile(NULL), mMonitorFiles(false),
-  mMinimumConfigReloadAge(15), mRestart(false)
+  mMinimumConfigReloadAge(15), mRestart(false), mExePath("")
 {
+  bool success = false;
+  char pathSep = '/';
+  
+#if _WINDOWS
+  char path[MAX_PATH];
+  pathSep = '\\';
+  success = GetModuleFileName(NULL, path, MAX_PATH) > 0;
+#else
+#ifdef __linux__
+  char path[PATH_MAX];
+  success = readlink("/proc/self/exe", path, PATH_MAX) >= 0;
+#else
+#ifdef MACOSX
+  char path[PATH_MAX];
+  uint32_t size = PATH_MAX;
+  success = _NSGetExecutablePath(path, &size) == 0;
+#else
+  char *path = "";
+  success = false;
+#endif
+#endif
+#endif
+  
+
+  if (success)
+  {
+    mExePath = path;
+    size_t found = mExePath.rfind(pathSep);
+    if (found != std::string::npos)
+    {
+      mExePath.erase(found + 1);
+    }
+    
+    cout << "Configuration search path: current directory and " << mExePath;
+  } else {
+    mExePath = "";
+  }
 }
 
 void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
@@ -87,6 +128,24 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
 
   try
   {
+    struct stat buf;
+    
+    // Check first if the file is in the current working directory...
+    if (stat(mConfigFile.c_str(), &buf) != 0) {
+      if (!mExePath.empty())
+      {
+        sLogger << LINFO << "Cannot find " << mConfigFile << " in current directory, searching exe path: " << mExePath;
+        cerr << "Cannot find " << mConfigFile << " in current directory, searching exe path: " << mExePath;
+        mConfigFile = mExePath + mConfigFile;
+      }
+      else
+      {
+        sLogger << LFATAL << "Agent failed to load: Cannot find configuration file: '" << mConfigFile;
+        cerr << "Agent failed to load: Cannot find configuration file: '" << mConfigFile << std::endl;
+        optionList.usage();
+      }
+    }
+    
     ifstream file(mConfigFile.c_str());
     loadConfig(file);
   }
@@ -384,28 +443,44 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   mMinimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
   
   mPidFile = get_with_default(reader, "PidFile", "agent.pid");
-  const char *probe;
-  struct stat buf;
+  std::vector<string> devices_files;
   if (reader.is_key_defined("Devices")) {
-    probe = reader["Devices"].c_str();
-    if (stat(probe, &buf) != 0) {
-      throw runtime_error(((string) "Please make sure the Devices XML configuration "
-			   "file " + probe + " is in the current path ").c_str());
-    }
-  } else {
-    probe = "probe.xml";
-    if (stat(probe, &buf) != 0)
-      probe = "Devices.xml";    
-    if (stat(probe, &buf) != 0) {
-      throw runtime_error(((string) "Please make sure the configuration "
-			   "file probe.xml or Devices.xml is in the current "
-			   "directory or specify the correct file "
-			   "in the configuration file " + mConfigFile +
-			   " using Devices = <file>").c_str());
-    }
+    string fileName = reader["Devices"];
+    devices_files.push_back(fileName);
+    if (!mExePath.empty() && fileName[0] != '/' && fileName[0] != '\\' && fileName[1] != ':')
+      devices_files.push_back(mExePath + reader["Devices"]);
   }
   
-  mDevicesFile = probe;
+  devices_files.push_back("Devices.xml");
+  if (!mExePath.empty())
+    devices_files.push_back(mExePath + "Devices.xml");
+  devices_files.push_back("probe.xml");
+  if (!mExePath.empty())
+    devices_files.push_back(mExePath +"probe.xml");
+  
+  mDevicesFile.clear();
+  
+  for (string probe: devices_files)
+  {
+    struct stat buf;
+    sLogger << LDEBUG << "Checking for Devices XML configuration file: " << probe;
+    if (stat(probe.c_str(), &buf) == 0) {
+      mDevicesFile = probe;
+      break;
+    }
+	sLogger << LDEBUG << "Could not find file: " << probe;
+	cout << "Could not locate file: " << probe << endl;
+  }
+  
+  if (mDevicesFile.empty())
+  {
+    throw runtime_error(((string) "Please make sure the configuration "
+                         "file probe.xml or Devices.xml is in the current "
+                         "directory or specify the correct file "
+                         "in the configuration file " + mConfigFile +
+                         " using Devices = <file>").c_str());
+  }
+  
 
   mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
   
@@ -416,7 +491,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   
   sLogger << LINFO << "Starting agent on port " << port;
   if (mAgent == NULL)
-    mAgent = new Agent(probe, bufferSize, maxAssets, checkpointFrequency);
+    mAgent = new Agent(mDevicesFile, bufferSize, maxAssets, checkpointFrequency);
   mAgent->set_listening_port(port);
   mAgent->set_listening_ip(serverIp);
   mAgent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));

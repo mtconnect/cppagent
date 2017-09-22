@@ -58,6 +58,7 @@ protected:
   int mMinimumConfigReloadAge;
   std::string mDevicesFile;
   bool mRestart;
+  std::string mExePath;
 };
 
 #endif
