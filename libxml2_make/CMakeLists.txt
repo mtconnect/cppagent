@@ -76,6 +76,8 @@ if(MSVC)
 	set(LIB_RT_SUFFIX "md")	# CMake defaults to /MD for MSVC
 	set(LIB_RT_OPTION "/MD")
 	#  
+
+	add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
   
 	if(NOT MSVC_SHARED_RT)	# User wants to have static runtime libraries (/MT, /ML)
 		if(MSVC_STHREADED_RT)	# User wants to have old single-threaded static runtime libraries

@@ -13,9 +13,11 @@
 #include <windows.h>
 #include "wincecompat.h"
 #else
+#if defined(_WINDOWS) && (WINVER >= 0x0600)
 #define HAVE_SYS_STAT_H
 #define HAVE__STAT
 #define HAVE_STAT
+#endif
 #define HAVE_STDLIB_H
 #define HAVE_TIME_H
 #define HAVE_FCNTL_H

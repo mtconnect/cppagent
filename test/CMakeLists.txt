@@ -15,6 +15,8 @@ if(WIN32)
   
   set(CPPUNIT_INCLUDE_DIR ../cppunit/cppunit/include)
   set(CPPUNIT_LIBRARY cppunit)  
+
+  set(WINDOWS_LIBRARIES shlwapi)
 endif(WIN32)
 
 if(UNIX)
@@ -100,7 +102,7 @@ if(WIN32)
 endif(WIN32)
 
 add_executable(agent_test ${agent_srcs} ${test_srcs} ${test_headers})
-target_link_libraries(agent_test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES} ${GCOV_LINK_FLAGS})  
+target_link_libraries(agent_test ${LibXML2_LIBRARIES} ${CPPUNIT_LIBRARY} ${LINUX_LIBRARIES} ${WINDOWS_LIBRARIES} ${GCOV_LINK_FLAGS})  
 set_target_properties(agent_test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1)
 
 add_custom_target( cov 

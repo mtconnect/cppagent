@@ -30,6 +30,12 @@
 #include <sys/stat.h>
 #include "rolling_file_logger.hpp"
 
+// If Windows XP
+#if defined(_WINDOWS) && (WINVER < 0x0600)
+#include "shlwapi.h"
+#define stat(P, B) (PathFileExists((const char*) P) ? 0 : -1)
+#endif
+
 #ifdef MACOSX
 #include <mach-o/dyld.h>
 #endif
@@ -135,7 +141,7 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
       if (!mExePath.empty())
       {
         sLogger << LINFO << "Cannot find " << mConfigFile << " in current directory, searching exe path: " << mExePath;
-        cerr << "Cannot find " << mConfigFile << " in current directory, searching exe path: " << mExePath;
+        cerr << "Cannot find " << mConfigFile << " in current directory, searching exe path: " << mExePath << endl;
         mConfigFile = mExePath + mConfigFile;
       }
       else
@@ -464,7 +470,10 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   {
     struct stat buf;
     sLogger << LDEBUG << "Checking for Devices XML configuration file: " << probe;
-    if (stat(probe.c_str(), &buf) == 0) {
+	int res = stat(probe.c_str(), &buf);
+	sLogger << LDEBUG << "  Stat returned: " << res;
+
+    if (res == 0) {
       mDevicesFile = probe;
       break;
     }
