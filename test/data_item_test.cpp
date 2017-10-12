@@ -160,6 +160,10 @@ void DataItemTest::testGetCamel()
   CPPUNIT_ASSERT(DataItem::getCamelType("", prefix).empty());
   CPPUNIT_ASSERT_EQUAL((string) "Camels", DataItem::getCamelType("CAMELS", prefix));
   CPPUNIT_ASSERT(prefix.empty());
+  
+  // Test the one exception to the rules...
+  CPPUNIT_ASSERT_EQUAL((string) "PH", DataItem::getCamelType("PH", prefix));
+
   CPPUNIT_ASSERT_EQUAL((string) "CamelCase", DataItem::getCamelType("CAMEL_CASE", prefix));
   CPPUNIT_ASSERT_EQUAL((string) "ABCc", DataItem::getCamelType("A_B_CC", prefix));
   prefix.clear();
