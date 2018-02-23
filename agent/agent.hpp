@@ -164,6 +164,7 @@ public:
 
   // For testing...
   void setSequence(uint64_t aSeq) { mSequence = aSeq; }
+  std::list<AssetPtr*> *getAssets() { return &mAssets; }
   
   // Starting
   virtual void start();
