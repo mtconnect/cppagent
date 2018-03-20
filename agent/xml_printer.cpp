@@ -685,7 +685,7 @@ string XmlPrinter::printSample(
 
 		// Sort the vector by category.
 		if (results.size() > 1)
-			dlib::qsort_array<ComponentEventPtrArray, EventComparer>(results, 0, results.size() - 1,
+			dlib::qsort_array<ComponentEventPtrArray, EventComparer>(results, 0ul, results.size() - 1ul,
 				EventCompare);
 
 		Device *lastDevice = nullptr;
@@ -815,7 +815,7 @@ string XmlPrinter::printAssets(
 		THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
 		THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
 
-		initXmlDoc(writer, eASSETS, instanceId, 0, bufferSize, assetCount, 0);
+		initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull);
 
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Assets"));
 

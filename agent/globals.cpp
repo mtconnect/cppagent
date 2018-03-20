@@ -35,11 +35,7 @@
 	#define localtime_r(t, tm) localtime_s(tm, t)
 	#define gmtime_r(t, tm) gmtime_s(tm, t)
 
-	#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
-		#define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
-	#else
-		#define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
-	#endif
+	#define DELTA_EPOCH_IN_MICROSECS  11644473600000000ull
 #endif
 
 using namespace std;
@@ -98,8 +94,8 @@ string getCurrentTime(TimeFormat format)
 	{
 #ifdef _WINDOWS
 		uint64_t now = getCurrentTimeInMicros();
-		sec = (long)(now / 1000000UL);
-		usec = (long)(now % 1000000UL);
+		sec = (long)(now / 1000000ull);
+		usec = (long)(now % 1000000ull);
 #else
 		struct timeval tv;
 		gettimeofday(&tv, nullptr);
@@ -130,19 +126,19 @@ string getCurrentTime(time_t aSec, int aUsec, TimeFormat format)
 	switch (format)
 	{
 	case HUM_READ:
-		std::strftime(timestamp, 50, "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
+		std::strftime(timestamp, 50u, "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
 		break;
 
 	case GMT:
-		strftime(timestamp, 50, "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
+		strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
 		break;
 
 	case GMT_UV_SEC:
-		strftime(timestamp, 50, "%Y-%m-%dT%H:%M:%S", &timeinfo);
+		strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S", &timeinfo);
 		break;
 
 	case LOCAL:
-		strftime(timestamp, 50, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
+		strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
 		break;
 	}
 
@@ -168,7 +164,7 @@ uint64_t getCurrentTimeInMicros()
 	now <<= 32;
 	now |= ft.dwLowDateTime;
 
-	now /= 10;  // convert into microseconds
+	now /= 10ull;  //convert into microseconds
 	now -= DELTA_EPOCH_IN_MICROSECS;
 #else
 	struct timeval tv;
@@ -188,8 +184,8 @@ string getRelativeTimeString(uint64_t aTime)
 	int micros;
 	struct tm *timeinfo;
 
-	seconds = aTime / 1000000;
-	micros = aTime % 1000000;
+	seconds = aTime / 1000000ull;
+	micros = aTime % 1000000ull;
 
 	timeinfo = gmtime(&seconds);
 	strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S", timeinfo);
@@ -260,12 +256,12 @@ uint64_t parseTimeMicro(const std::string &aTime)
 	timeinfo.tm_year -= 1900;
 
 
-	uint64_t time = (mktime(&timeinfo) - timezone) * 1000000;
+	uint64_t time = (mktime(&timeinfo) - timezone) * 1000000ull;
 
 	int ms_v = 0;
 	auto len = strlen(ms);
 
-	if (len > 0)
+	if (len > 0u)
 	{
 		ms_v = strtol(ms + 1, 0, 10);
 
@@ -311,7 +307,7 @@ string addNamespace(const string aPath, const string aPrefix)
 		return aPath;
 
 	string newPath = aPath;
-	string::size_type pos = 0;
+	string::size_type pos = 0u;
 
 	// Special case for relative pathing
 	if (newPath[pos] != '/')
@@ -333,7 +329,7 @@ string addNamespace(const string aPath, const string aPrefix)
 			insertPrefix(newPath, pos, aPrefix);
 	}
 
-	pos = 0;
+	pos = 0u;
 
 	while ((pos = newPath.find('|', pos)) != string::npos)
 	{
@@ -349,21 +345,21 @@ string addNamespace(const string aPath, const string aPrefix)
 
 bool isMTConnectUrn(const char *aUrn)
 {
-	return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27);
+	return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27u);
 }
 
 
 #if 0
 long getMemorySize()
 {
-	long size = 0;
+	long size = 0l;
 
 #ifdef _WINDOWS
 	HANDLE myself = GetCurrentProcess();
 	PROCESS_MEMORY_COUNTERS memory;
 
 	if (GetProcessMemoryInfo(myself, &memory, sizeof(memory)))
-		size = (long)(memory.PeakWorkingSetSize / 1024);
+		size = (long)(memory.PeakWorkingSetSize / 1024l);
 
 #else
 	struct rusage memory;

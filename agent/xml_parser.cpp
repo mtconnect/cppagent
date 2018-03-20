@@ -46,7 +46,7 @@ agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 
 	char buffer[2048] = {0};
 	va_start(args, msg);
-	vsnprintf(buffer, 2046, msg, args);
+	vsnprintf(buffer, 2046u, msg, args);
 	buffer[2047] = '0';
 	va_end(args);
 
@@ -114,7 +114,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 		string locationUrn;
 		auto location = (const char *) xmlGetProp(root, BAD_CAST "schemaLocation");
 
-		if (location && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34))
+		if (location && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34u))
 		{
 			string loc = location;
 			auto pos = loc.find(' ');
@@ -145,7 +145,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 				// Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the
 				// schema location again.
 				if (!isMTConnectUrn((const char *) ns->href) &&
-					strncmp((const char *) ns->href, "http://www.w3.org/", 18) &&
+					strncmp((const char *) ns->href, "http://www.w3.org/", 18u) &&
 					locationUrn != (const char *) ns->href &&
 					ns->prefix)
 				{
@@ -269,7 +269,7 @@ void XmlParser::getDataItems(
 			{
 				if (ns->prefix)
 				{
-					if (strncmp((const char *) ns->href, "urn:mtconnect.org:MTConnectDevices", 34))
+					if (strncmp((const char *) ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
 					{
 						THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
 					}
@@ -473,7 +473,7 @@ Component *XmlParser::loadComponent(
 
 		if (node->ns && 
 			node->ns->prefix &&
-			strncmp((const char *) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34))
+			strncmp((const char *) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
 		{
 			prefix = (const char *) node->ns->prefix;
 		}

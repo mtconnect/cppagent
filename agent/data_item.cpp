@@ -256,8 +256,8 @@ string DataItem::getCamelType(const string &type, string &prefix)
 
 	if (colon != string::npos)
 	{
-		prefix = type.substr(0, colon);
-		camel = type.substr(colon + 1);
+		prefix = type.substr(0ul, colon);
+		camel = type.substr(colon + 1ul);
 	}
 	else
 		camel = type;
@@ -271,7 +271,7 @@ string DataItem::getCamelType(const string &type, string &prefix)
 	while (word != camel.end())
 	{
 		camel.erase(word);
-		camel.replace(word, word + 1, 1, ::toupper(*word));
+		camel.replace(word, word + 1ul, 1ul, ::toupper(*word));
 		word = find(word, camel.end(), '_');
 	}
 
@@ -376,7 +376,7 @@ void DataItem::computeConversionFactors()
 		{
 			if (m_units == units)
 				m_conversionRequired = false;
-			else if (units.substr(0, 4) == "KILO" && units.substr(4) == m_units)
+			else if (units.substr(0ul, 4ul) == "KILO" && units.substr(4) == m_units)
 				m_conversionFactor = 1000.0;
 			else
 				m_conversionRequired = false;
@@ -400,7 +400,7 @@ void DataItem::computeConversionFactors()
 			m_conversionFactor = simpleFactor(numerator) / simpleFactor(denominator);
 		else
 		{
-			auto unit = denominator.substr(0, carotLoc);
+			auto unit = denominator.substr(0ul, carotLoc);
 			auto power = denominator.substr(carotLoc + 1);
 
 			double div = pow((double) simpleFactor(unit), (double) atof(power.c_str()));
