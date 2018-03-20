@@ -187,10 +187,10 @@ void AgentConfiguration::initialize(int argc, const char *argv[])
 
 AgentConfiguration::~AgentConfiguration()
 {
-	if (m_agent != nullptr)
+	if (m_agent)
 		delete m_agent;
 
-	if (m_loggerFile != nullptr)
+	if (m_loggerFile)
 		delete m_loggerFile;
 
 	set_all_logging_output_streams(cout);
@@ -349,7 +349,7 @@ void AgentConfiguration::LoggerHook(
 #else
 	out << "\n";
 #endif
-	if (m_loggerFile != nullptr)
+	if (m_loggerFile)
 		m_loggerFile->write(out.str().c_str());
 	else
 		cout << out.str();
@@ -382,7 +382,7 @@ static dlib::log_level string_to_log_level (const std::string& level)
 
 void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
 {
-	if (m_loggerFile != nullptr)
+	if (m_loggerFile)
 		delete m_loggerFile;
 
 	if (m_isDebug)
@@ -636,7 +636,7 @@ void AgentConfiguration::loadAdapters(
 				g_logger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
 				device = defaultDevice();
 
-				if (device != nullptr)
+				if (device)
 				{
 					deviceName = device->getName();
 					g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
@@ -699,7 +699,7 @@ void AgentConfiguration::loadAdapters(
 			}
 		}
 	}
-	else if ((device = defaultDevice()) != nullptr)
+	else if ((device = defaultDevice()))
 	{
 		g_logger << LINFO << "Adding default adapter for " << device->getName() << " on localhost:7878";
 		Adapter *adp = m_agent->addAdapter(device->getName(), "localhost", 7878, false, legacyTimeout);

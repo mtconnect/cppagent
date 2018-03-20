@@ -68,7 +68,7 @@ void ConnectorTest::testConnection()
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
 	dlib::sleep(100);
-	CPPUNIT_ASSERT(m_serverSocket.get() != nullptr);
+	CPPUNIT_ASSERT(m_serverSocket.get());
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 }
 
@@ -78,7 +78,7 @@ void ConnectorTest::testDataCapture()
 	start();
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
-	CPPUNIT_ASSERT(m_serverSocket.get() != nullptr);
+	CPPUNIT_ASSERT(m_serverSocket.get());
 
 	string command("Hello Connector\n");
 	CPPUNIT_ASSERT((size_t) m_serverSocket->write(command.c_str(),
@@ -96,7 +96,7 @@ void ConnectorTest::testDisconnect()
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
 	dlib::sleep(1000);
-	CPPUNIT_ASSERT(m_serverSocket.get() != nullptr);
+	CPPUNIT_ASSERT(m_serverSocket.get());
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 	m_serverSocket.reset();
 	dlib::sleep(1000);
@@ -109,7 +109,7 @@ void ConnectorTest::testProtocolCommand()
 	start();
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
-	CPPUNIT_ASSERT(m_serverSocket.get() != nullptr);
+	CPPUNIT_ASSERT(m_serverSocket.get());
 
 	const char *cmd = "* Hello Connector\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
@@ -125,7 +125,7 @@ void ConnectorTest::testHeartbeat()
 	start();
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
-	CPPUNIT_ASSERT(m_serverSocket.get() != nullptr);
+	CPPUNIT_ASSERT(m_serverSocket.get());
 
 	// Receive initial heartbeat request "* PING\n"
 	char buf[1024];
@@ -186,7 +186,7 @@ void ConnectorTest::testLegacyTimeout()
 	start();
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
-	CPPUNIT_ASSERT(m_serverSocket.get() != nullptr);
+	CPPUNIT_ASSERT(m_serverSocket.get());
 
 	char buf[1024];
 	CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
@@ -242,7 +242,7 @@ void ConnectorTest::testSendCommand()
 	start();
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
-	CPPUNIT_ASSERT(m_serverSocket.get() != nullptr);
+	CPPUNIT_ASSERT(m_serverSocket.get());
 
 	// Receive initial heartbeat request "* PING\n"
 	char buf[1024];
@@ -272,7 +272,7 @@ void ConnectorTest::testIPV6Connection()
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
 	dlib::sleep(100);
-	CPPUNIT_ASSERT(m_serverSocket.get() != nullptr);
+	CPPUNIT_ASSERT(m_serverSocket.get());
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 #endif
 }

@@ -133,7 +133,7 @@ public:
 		m_type(another.m_type),
 		m_hasAttributes(false)
 	{
-		if (another.m_description.get() != nullptr)
+		if (another.m_description.get())
 			m_description.reset(new Description(*another.m_description.get()));
 	}
 

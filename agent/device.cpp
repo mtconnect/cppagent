@@ -48,7 +48,7 @@ void Device::addDeviceDataItem(DataItem &dataItem)
 	if (!dataItem.getName().empty())
 		m_deviceDataItemsByName[dataItem.getName()] = &dataItem;
 
-	if (m_deviceDataItemsById[dataItem.getId()] != nullptr)
+	if (m_deviceDataItemsById[dataItem.getId()])
 	{
 		g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem.getId() << " for device "
 				<< m_name << ", skipping";

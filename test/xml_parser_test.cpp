@@ -58,7 +58,7 @@ void XmlParserTest::setUp()
 
 void XmlParserTest::tearDown()
 {
-	if (m_xmlParser != nullptr)
+	if (m_xmlParser)
 	delete m_xmlParser;
 }
 
@@ -219,10 +219,10 @@ void XmlParserTest::testExtendedSchema()
 void XmlParserTest::testTimeSeries()
 {
 	Device *dev = m_devices[0];
-	CPPUNIT_ASSERT(dev != nullptr);
+	CPPUNIT_ASSERT(dev);
 
 	DataItem *item = dev->getDeviceDataItem("Xact");
-	CPPUNIT_ASSERT(item != nullptr);
+	CPPUNIT_ASSERT(item);
 
 	item->getAttributes();
 	CPPUNIT_ASSERT_EQUAL((string)"AVERAGE", item->getStatistic());
@@ -232,7 +232,7 @@ void XmlParserTest::testTimeSeries()
 
 
 	item = dev->getDeviceDataItem("Xts");
-	CPPUNIT_ASSERT(item != nullptr);
+	CPPUNIT_ASSERT(item);
 	item->getAttributes();
 	CPPUNIT_ASSERT(item->isTimeSeries());
 	CPPUNIT_ASSERT_EQUAL(DataItem::TIME_SERIES, item->getRepresentation());
@@ -244,7 +244,7 @@ void XmlParserTest::testTimeSeries()
 void XmlParserTest::testConfiguration()
 {
 	Device *dev = m_devices[0];
-	CPPUNIT_ASSERT(dev != nullptr);
+	CPPUNIT_ASSERT(dev);
 
 	Component *power = nullptr;
 	std::list<Component *> &children = dev->getChildren();
@@ -311,7 +311,7 @@ void XmlParserTest::testParseOtherAsset()
 			  "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
 	AssetPtr asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
 
-	CPPUNIT_ASSERT(asset.getObject() != nullptr);
+	CPPUNIT_ASSERT(asset.getObject());
 	CPPUNIT_ASSERT_EQUAL((string) "XXX123", asset->getAssetId());
 	CPPUNIT_ASSERT_EQUAL((string) "2014-04-14T01:22:33.123", asset->getTimestamp());
 	CPPUNIT_ASSERT_EQUAL((string) "XXX", asset->getDeviceUuid());
@@ -322,7 +322,7 @@ void XmlParserTest::testParseOtherAsset()
 		   "serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
 	asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
 
-	CPPUNIT_ASSERT(asset.getObject() != nullptr);
+	CPPUNIT_ASSERT(asset.getObject());
 	CPPUNIT_ASSERT_EQUAL(true, asset->isRemoved());
 }
 
@@ -433,13 +433,13 @@ void XmlParserTest::testReferences()
 	CPPUNIT_ASSERT_EQUAL((string) "c4", ref.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.m_name);
 
-	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem != nullptr);
+	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem);
 
 	const Component::Reference &ref2 = refs.back();
 	CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "door", ref2.m_name);
 
-	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.m_dataItem != nullptr);
+	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.m_dataItem);
 
 	std::set<string> filter;
 	m_xmlParser->getDataItems(filter, "//BarFeederInterface");

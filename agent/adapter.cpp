@@ -70,7 +70,7 @@ void Adapter::setAgent(Agent &agent)
 {
 	m_agent = &agent;
 	m_device = m_agent->getDeviceByName(m_deviceName);
-	if (m_device != nullptr)
+	if (m_device)
 	{
 		m_device->addAdapter(this);
 		m_allDevices.push_back(m_device);
@@ -81,7 +81,7 @@ void Adapter::setAgent(Agent &agent)
 void Adapter::addDevice(string &device)
 {
 	Device *dev = m_agent->getDeviceByName(device);
-	if (dev != nullptr)
+	if (dev)
 	{
 		m_allDevices.push_back(dev);
 		dev->addAdapter(this);
@@ -232,7 +232,7 @@ bool Adapter::processDataItem(
 		device = m_device;
 	}
 
-	if (device != nullptr)
+	if (device)
 	{
 		dataItem = device->getDeviceDataItem(key);
 
@@ -439,7 +439,7 @@ void Adapter::protocolCommand(const std::string &data)
 			{
 				Device *device = m_agent->findDeviceByUUIDorName(value);
 
-				if (device != nullptr)
+				if (device)
 				{
 					m_device = device;
 					g_logger << LINFO << "Device name given by the adapter " << value

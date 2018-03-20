@@ -337,7 +337,7 @@ void Connector::close()
 {
 	dlib::auto_mutex lock(*m_connectionMutex);
 
-	if (m_connected && m_connection.get() != nullptr)
+	if (m_connected && m_connection.get())
 	{
 		// Shutdown the socket and close the connection.
 		m_connected = false;

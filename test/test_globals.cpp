@@ -112,9 +112,9 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
 
 	bool any = false;
 
-	for (xmlNsPtr ns = root->nsDef; ns != nullptr; ns = ns->next)
+	for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next)
 	{
-	if (ns->prefix != nullptr)
+	if (ns->prefix)
 	{
 		xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href);
 		any = true;
@@ -133,7 +133,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
 	message << "Xpath " << xpath << " did not match any nodes in XML document";
 	CPPUNIT_NS::Asserter::fail(message.str(), sourceLine);
 
-	if (obj != nullptr)
+	if (obj)
 		xmlXPathFreeObject(obj);
 
 	xmlXPathFreeContext(xpathCtx);
@@ -152,7 +152,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
 	{
 		message << "Xpath " << xpath << " was not supposed to have any children.";
 
-		for (xmlNodePtr child = first->children; !has_content && child != nullptr; child = child->next)
+		for (xmlNodePtr child = first->children; !has_content && child; child = child->next)
 		{
 		if (child->type == XML_ELEMENT_NODE)
 		{
@@ -170,7 +170,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
 		message << "Xpath " << xpath << " was not supposed to have an attribute.";
 		xmlChar *text = xmlGetProp(first, BAD_CAST attribute.c_str());
 
-		if (text != nullptr)
+		if (text)
 		{
 		message << "Value was: " << text;
 		has_content = true;
@@ -195,12 +195,12 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
 	{
 		text = xmlNodeGetContent(first);
 	}
-	else if (first->properties != nullptr)
+	else if (first->properties)
 	{
 		text = xmlGetProp(first, BAD_CAST attribute.c_str());
 	}
 
-	if (text != nullptr)
+	if (text)
 	{
 		actual = (const char *) text;
 		xmlFree(text);
@@ -254,9 +254,9 @@ void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
 
 	bool any = false;
 
-	for (xmlNsPtr ns = root->nsDef; ns != nullptr; ns = ns->next)
+	for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next)
 	{
-	if (ns->prefix != nullptr)
+	if (ns->prefix)
 	{
 		xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href);
 		any = true;
@@ -275,7 +275,7 @@ void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
 	message << "Xpath " << xpath << " did not match any nodes in XML document";
 	CPPUNIT_NS::Asserter::fail(message.str(), sourceLine);
 
-	if (obj != nullptr)
+	if (obj)
 		xmlXPathFreeObject(obj);
 
 	xmlXPathFreeContext(xpathCtx);

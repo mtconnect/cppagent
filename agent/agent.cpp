@@ -469,7 +469,7 @@ Adapter *Agent::addAdapter(
 
 	Device *dev = m_deviceMap[deviceName];
 
-	if (dev != nullptr && dev->m_availabilityAdded)
+	if (dev && dev->m_availabilityAdded)
 		adapter->setAutoAvailable(true);
 
 	if (start)
@@ -511,7 +511,7 @@ unsigned int Agent::addToBuffer(
 
 	// See if the next sequence has an event. If the event exists it
 	// should be added to the first checkpoint.
-	if ((*m_slidingBuffer)[m_sequence] != nullptr)
+	if ((*m_slidingBuffer)[m_sequence])
 	{
 		// Keep the last checkpoint up to date with the last.
 		m_first.addComponentEvent((*m_slidingBuffer)[m_sequence]);
@@ -570,7 +570,7 @@ bool Agent::addAsset(
 
 		if (!ptr->isRemoved())
 		{
-			if (old->getObject() != nullptr)
+			if (old->getObject())
 				m_assets.remove(old);
 			else
 				m_assetCounts[type] += 1;
@@ -724,7 +724,7 @@ bool Agent::removeAsset(
 
 		// Check if the asset changed id is the same as this asset.
 		ComponentEventPtr *ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
-		if (ptr != nullptr && (*ptr)->getValue() == id)
+		if (ptr && (*ptr)->getValue() == id)
 			addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
 	}
 
@@ -750,7 +750,7 @@ bool Agent::removeAllAssets(
 
 		ComponentEventPtr *ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
 		string changedId;
-		if (ptr != nullptr)
+		if (ptr)
 			changedId = (*ptr)->getValue();
 
 		list<AssetPtr*>::reverse_iterator iter;
@@ -792,14 +792,14 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 		{
 			DataItem *dataItem = (*dataItemAssoc).second;
 
-			if (dataItem != nullptr &&
+			if (dataItem &&
 				(dataItem->getDataSource() == adapter || (adapter->isAutoAvailable() &&
 				dataItem->getDataSource() == nullptr &&
 				dataItem->getType() == "AVAILABILITY")))
 			{
 				ComponentEventPtr *ptr = m_latest.getEventPtr(dataItem->getId());
 
-				if (ptr != nullptr)
+				if (ptr)
 				{
 					const string *value = nullptr;
 
@@ -818,7 +818,7 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 					else if ((*ptr)->getValue() != g_unavailable)
 						value = &g_unavailable;
 
-					if (value != nullptr &&
+					if (value &&
 						!adapter->isDuplicate(dataItem, *value, NAN))
 						addToBuffer(dataItem, *value, time);
 				}
@@ -841,7 +841,7 @@ void Agent::connected(Adapter *adapter, std::vector<Device *> devices)
 		{
 			g_logger << LDEBUG << "Connected to adapter, setting all Availability data items to AVAILABLE";
 
-			if ((*iter)->getAvailability() != nullptr)
+			if ((*iter)->getAvailability())
 			{
 				g_logger << LDEBUG << "Adding availabilty event for " << (*iter)->getAvailability()->getId();
 				addToBuffer((*iter)->getAvailability(), g_available, time);
@@ -921,7 +921,7 @@ string Agent::handleCall(
 				count,
 				heartbeat);
 		}
-		else if ((m_deviceMap[call] != nullptr) && device.empty())
+		else if ((m_deviceMap[call]) && device.empty())
 			return handleProbe(call);
 		else
 			return printError("UNSUPPORTED", "The following path is invalid: " + path);
@@ -986,7 +986,7 @@ string Agent::handlePut(
 			{
 				DataItem *di = dev->getDeviceDataItem(kv->first);
 
-				if (di != nullptr)
+				if (di)
 					addToBuffer(di, kv->second, time);
 				else
 					g_logger << LWARN << "(" << device << ") Could not find data item: " << kv->first;

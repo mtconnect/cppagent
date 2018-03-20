@@ -397,7 +397,7 @@ void CheckpointTest::testConditionChaining()
 	ComponentEventPtr *p7 = m_checkpoint->getEvents()[std::string("1")];
 	CPPUNIT_ASSERT_EQUAL(1, (int)(*p7)->refCount());
 
-	CPPUNIT_ASSERT(p7 != nullptr);
+	CPPUNIT_ASSERT(p7);
 	CPPUNIT_ASSERT(p5.getObject() != (*p7).getObject());
 	CPPUNIT_ASSERT_EQUAL(std::string("CODE3"), (*p7)->getCode());
 	CPPUNIT_ASSERT_EQUAL(std::string("CODE1"), (*p7)->getPrev()->getCode());
