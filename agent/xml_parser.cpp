@@ -394,7 +394,7 @@ Component *XmlParser::handleComponent(
 		break;
 
 	case Component::REFERENCE:
-		handleRefenence(component, parent, device);
+		handleReference(component, parent, device);
 		break;
 
 	case Component::COMPOSITION:
@@ -638,7 +638,7 @@ void XmlParser::handleChildren(
 }
 
 
-void XmlParser::handleRefenence(
+void XmlParser::handleReference(
 	xmlNodePtr reference,
 	Component *parent,
 	Device *device)
