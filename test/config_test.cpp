@@ -44,7 +44,7 @@ static dlib::logger sLogger("config_test");
 
 using namespace std;
 
-/* ComponentTest public methods */
+// ComponentTest public methods
 void ConfigTest::setUp()
 {
 	m_config = new AgentConfiguration();
@@ -56,7 +56,7 @@ void ConfigTest::tearDown()
 	m_config = NULL;
 }
 
-/* ComponentTest protected methods */
+// ComponentTest protected methods
 void ConfigTest::testBlankConfig()
 {
 	istringstream str("");

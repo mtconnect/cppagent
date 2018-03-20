@@ -20,7 +20,7 @@ using namespace std;
 
 static dlib::logger sLogger("input.connector");
 
-/* Connector public methods */
+// Connector public methods
 Connector::Connector(const string &server, unsigned int port, int aLegacyTimeout)
 	: m_connected(false), m_realTime(false), m_heartbeats(false),
 	  m_legacyTimeout(aLegacyTimeout * 1000), m_connectActive(false)

@@ -37,7 +37,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ConnectorTest);
 
 using namespace std;
 
-/* ConnectorTest public methods */
+// ConnectorTest public methods
 void ConnectorTest::setUp()
 {
 	CPPUNIT_ASSERT(create_listener(m_server, 0, "127.0.0.1") == 0);
@@ -60,7 +60,7 @@ void ConnectorTest::tearDown()
 	m_connector.reset();
 }
 
-/* ConnectorTest protected methods */
+// ConnectorTest protected methods
 void ConnectorTest::testConnection()
 {
 	CPPUNIT_ASSERT(m_connector->m_disconnected);

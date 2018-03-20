@@ -50,7 +50,7 @@ inline static bool splitValue(string &value, string &reset)
 	}
 }
 
-/* ComponentEvent public methods */
+// ComponentEvent public methods
 ComponentEvent::ComponentEvent(DataItem &dataItem,
 				   uint64_t sequence,
 				   const string &time,
@@ -258,7 +258,7 @@ void ComponentEvent::normal()
 	}
 }
 
-/* ComponentEvent protected methods */
+// ComponentEvent protected methods
 void ComponentEvent::convertValue(const string &value)
 {
 	// Check if the type is an alarm or if it doesn't have units

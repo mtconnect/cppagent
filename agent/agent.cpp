@@ -35,7 +35,7 @@ static const string sConditionUnavailable("UNAVAILABLE|||");
 static const string sAvailable("AVAILABLE");
 static dlib::logger sLogger("agent");
 
-/* Agent public methods */
+// Agent public methods
 Agent::Agent(const string &configXmlPath, int aBufferSize, int aMaxAssets, int aCheckpointFreq)
 	: m_putEnabled(false), m_logStreamData(false)
 {
@@ -170,7 +170,7 @@ Agent::Agent(const string &configXmlPath, int aBufferSize, int aMaxAssets, int a
 				  m_assets.size(),
 				  m_sequence, m_devices));
 
-	/* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
+	// Initialize the id mapping for the devices and set all data items to UNAVAILABLE
 	for (device = m_devices.begin(); device != m_devices.end(); ++device)
 	{
 	const std::map<string, DataItem *> &items = (*device)->getDeviceDataItems();
@@ -770,7 +770,7 @@ bool Agent::removeAllAssets(Device *aDevice, const std::string &aType, const std
 	return true;
 }
 
-/* Add values for related data items UNAVAILABLE */
+// Add values for related data items UNAVAILABLE
 void Agent::disconnected(Adapter *anAdapter, std::vector<Device *> aDevices)
 {
 	string time = getCurrentTime(GMT_UV_SEC);
@@ -851,7 +851,7 @@ void Agent::connected(Adapter *anAdapter, std::vector<Device *> aDevices)
 	}
 }
 
-/* Agent protected methods */
+// Agent protected methods
 string Agent::handleCall(ostream &out,
 			 const string &path,
 			 const key_value_map &queries,
@@ -943,7 +943,7 @@ string Agent::handleCall(ostream &out,
 	}
 }
 
-/* Agent protected methods */
+// Agent protected methods
 string Agent::handlePut(
 	ostream &out,
 	const string &path,

@@ -24,7 +24,7 @@ using namespace std;
 
 static dlib::logger sLogger("input.adapter");
 
-/* Adapter public methods */
+// Adapter public methods
 Adapter::Adapter(const string &device,
 		 const string &server,
 		 const unsigned int port,
@@ -153,15 +153,15 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
 	return result;
 }
 
-/**
- * Expected data to parse in SDHR format:
- *   Time|Alarm|Code|NativeCode|Severity|State|Description
- *   Time|Item|Value
- *   Time|Item1|Value1|Item2|Value2...
- *
- * Support for assets:
- *   Time|@ASSET@|id|type|<...>...</...>
- */
+//
+// Expected data to parse in SDHR format:
+//   Time|Alarm|Code|NativeCode|Severity|State|Description
+//   Time|Item|Value
+//   Time|Item1|Value1|Item2|Value2...
+//
+// Support for assets:
+//   Time|@ASSET@|id|type|<...>...</...>
+//
 
 void Adapter::processData(const string &data)
 {
@@ -522,7 +522,7 @@ void Adapter::connected()
 	m_agent->connected(this, m_allDevices);
 }
 
-/* Adapter private methods */
+// Adapter private methods
 void Adapter::thread()
 {
 	while (m_running)

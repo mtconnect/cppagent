@@ -37,7 +37,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AdapterTest);
 
 using namespace std;
 
-/* ComponentTest public methods */
+// ComponentTest public methods
 void AdapterTest::setUp()
 {
 }
@@ -46,7 +46,7 @@ void AdapterTest::tearDown()
 {
 }
 
-/* ComponentTest protected methods */
+// ComponentTest protected methods
 void AdapterTest::testAdapter()
 {
 }

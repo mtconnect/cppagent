@@ -161,7 +161,7 @@ uint64_t getCurrentTimeInMicros()
 	now <<= 32;
 	now |= ft.dwLowDateTime;
 
-	now /= 10;  /*convert into microseconds*/
+	now /= 10;  // convert into microseconds
 	now -= DELTA_EPOCH_IN_MICROSECS;
 #else
 	struct timeval tv;

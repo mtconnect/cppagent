@@ -44,7 +44,7 @@ bool ChangeObserver::removeSignaler(ChangeSignaler *aSig)
 	return false;
 }
 
-/* Signaler Management */
+// Signaler Management
 ChangeSignaler::~ChangeSignaler()
 {
 	dlib::auto_mutex lock(m_observerMutex);
