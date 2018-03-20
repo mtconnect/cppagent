@@ -33,9 +33,6 @@
 
 #pragma once
 
-#include <map>
-#include <string>
-
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
