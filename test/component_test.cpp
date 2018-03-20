@@ -56,13 +56,14 @@ void ComponentTest::setUp()
 	m_compB = new Component("Controller", attributes2);
 }
 
+
 void ComponentTest::tearDown()
 {
 	delete m_compA;
 	delete m_compB;
 }
 
-// ComponentTest protected methods
+
 void ComponentTest::testGetters()
 {
 	CPPUNIT_ASSERT_EQUAL((string) "Axes", m_compA->getClass());
@@ -77,6 +78,7 @@ void ComponentTest::testGetters()
 	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", m_compB->getUuid());
 	CPPUNIT_ASSERT(m_compB->getNativeName().empty());
 }
+
 
 void ComponentTest::testGetAttributes()
 {
@@ -94,6 +96,7 @@ void ComponentTest::testGetAttributes()
 	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", attributes2.at("uuid"));
 	CPPUNIT_ASSERT_EQUAL((string) "123.4", attributes2.at("sampleInterval"));
 }
+
 
 void ComponentTest::testDescription()
 {
@@ -119,6 +122,7 @@ void ComponentTest::testDescription()
 	CPPUNIT_ASSERT(m_compB->getDescriptionBody().empty());
 
 }
+
 
 void ComponentTest::testRelationships()
 {
@@ -153,6 +157,7 @@ void ComponentTest::testRelationships()
 	CPPUNIT_ASSERT_EQUAL(&thermostat, m_compA->getChildren().back());
 }
 
+
 void ComponentTest::testDataItems()
 {
 	CPPUNIT_ASSERT(m_compA->getDataItems().empty());
@@ -167,6 +172,7 @@ void ComponentTest::testDataItems()
 	CPPUNIT_ASSERT_EQUAL(&data1, m_compA->getDataItems().front());
 	CPPUNIT_ASSERT_EQUAL(&data2, m_compA->getDataItems().back());
 }
+
 
 void ComponentTest::testReferences()
 {

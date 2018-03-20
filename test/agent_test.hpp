@@ -125,7 +125,6 @@ class AgentTest : public CppUnit::TestFixture
 	CPPUNIT_TEST(testComposition);
 	CPPUNIT_TEST(testResetTriggered);
 
-
 	CPPUNIT_TEST_SUITE_END();
 
 	typedef map<std::string, std::string>::kernel_1a_c map_type;

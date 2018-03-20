@@ -39,13 +39,16 @@ CPPUNIT_TEST_SUITE_REGISTRATION(GlobalsTest);
 
 using namespace std;
 
+
 void GlobalsTest::setUp()
 {
 }
 
+
 void GlobalsTest::tearDown()
 {
 }
+
 
 void GlobalsTest::testIntToString()
 {
@@ -55,6 +58,7 @@ void GlobalsTest::testIntToString()
 	CPPUNIT_ASSERT_EQUAL((string) "1", intToString(1));
 }
 
+
 void GlobalsTest::testFloatToString()
 {
 	CPPUNIT_ASSERT_EQUAL((string) "1.234", floatToString(1.234));
@@ -62,6 +66,7 @@ void GlobalsTest::testFloatToString()
 	CPPUNIT_ASSERT_EQUAL((string) "0.123456", floatToString(.123456));
 	CPPUNIT_ASSERT_EQUAL((string) "1", floatToString(1.0));
 }
+
 
 void GlobalsTest::testToUpperCase()
 {
@@ -75,6 +80,7 @@ void GlobalsTest::testToUpperCase()
 	CPPUNIT_ASSERT_EQUAL((string) "QWERTY.ASDF|", toUpperCase(lower));
 }
 
+
 void GlobalsTest::testIsNonNegativeInteger()
 {
 	CPPUNIT_ASSERT(isNonNegativeInteger("12345"));
@@ -84,6 +90,7 @@ void GlobalsTest::testIsNonNegativeInteger()
 	CPPUNIT_ASSERT(!isNonNegativeInteger("123456789012345678901234567890a"));
 	CPPUNIT_ASSERT(!isNonNegativeInteger("123.45"));
 }
+
 
 void GlobalsTest::testTime()
 {
@@ -112,6 +119,7 @@ void GlobalsTest::testTime()
 	CPPUNIT_ASSERT(time7 < time9);
 }
 
+
 void GlobalsTest::testIllegalCharacters()
 {
 	string before1("Don't Change Me"), after1("Don't Change Me");
@@ -127,18 +135,19 @@ void GlobalsTest::testIllegalCharacters()
 	CPPUNIT_ASSERT_EQUAL(before3, after3);
 }
 
+
 void GlobalsTest::testGetEnumerations()
 {
 	unsigned int size = 7;
 	const string week[] =
 	{
-	"Sunday",
-	"Monday",
-	"Tuesday",
-	"Wednesday",
-	"Thursday",
-	"Friday",
-	"Saturday",
+		"Sunday",
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday",
+		"Saturday",
 	};
 
 	CPPUNIT_ASSERT_EQUAL(0, getEnumeration("Sunday", week, size));
@@ -176,11 +185,12 @@ void GlobalsTest::testGetCurrentTime()
 	char tzs[32];
 
 	int n = sscanf(human.c_str(), "%3s, %2d %3s %4d %2d:%2d:%2d %5s",
-		   wday, &day, mon, &year,
-		   &hour, &min, &sec, (char *) &tzs);
+		wday, &day, mon, &year,
+		&hour, &min, &sec, (char *) &tzs);
 
 	CPPUNIT_ASSERT_EQUAL(8, n);
 }
+
 
 void GlobalsTest::testAddNamespace()
 {
@@ -204,6 +214,7 @@ void GlobalsTest::testAddNamespace()
 	CPPUNIT_ASSERT_EQUAL(string("//m:Device/m:DataItems/"), result);
 }
 
+
 void GlobalsTest::testParseTimeMilli()
 {
 	string v = "2012-11-20T12:33:22.123456";
@@ -215,6 +226,7 @@ void GlobalsTest::testParseTimeMilli()
 	time = parseTimeMicro(v);
 	CPPUNIT_ASSERT(1353414802123000LL == time);
 }
+
 
 void GlobalsTest::testInt64ToString()
 {
