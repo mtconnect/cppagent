@@ -17,14 +17,14 @@
 #pragma once
 
 #ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS 1
+	#define __STDC_LIMIT_MACROS 1
 #endif
 #if _MSC_VER > 1500
-#include <stdint.h>
+	#include <stdint.h>
 #else
 #endif
 #ifndef UINT64_MAX
-#define UINT64_MAX 0xFFFFFFFFFFFFFFFFull
+	#define UINT64_MAX 0xFFFFFFFFFFFFFFFFull
 #endif
 
 #include <ctime>
@@ -36,24 +36,24 @@
 #include <limits>
 
 #ifdef _WINDOWS
-#define ISNAN(x) _isnan(x)
-#if _MSC_VER < 1800
-#define NAN numeric_limits<double>::quiet_NaN()
-#endif
-#if _MSC_VER >= 1900
-#define gets gets_s
-#define timezone _timezone
-#endif
+	#define ISNAN(x) _isnan(x)
+	#if _MSC_VER < 1800
+	#define NAN numeric_limits<double>::quiet_NaN()
+	#endif
+	#if _MSC_VER >= 1900
+	#define gets gets_s
+	#define timezone _timezone
+	#endif
 
-typedef unsigned __int64 uint64_t;
-#define strtoull _strtoui64
+	typedef unsigned __int64 uint64_t;
+	#define strtoull _strtoui64
 #else
-#define O_BINARY 0
-#define ISNAN(x) std::isnan(x)
-#include <stdint.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#include <memory>
+	#define O_BINARY 0
+	#define ISNAN(x) std::isnan(x)
+	#include <stdint.h>
+	#include <sys/resource.h>
+	#include <unistd.h>
+	#include <memory>
 #endif
 
 /***** CONSTANTS *****/
@@ -74,10 +74,10 @@ const int ENUM_MISS = -1;
 /* Time format */
 enum TimeFormat
 {
-  HUM_READ,
-  GMT,
-  GMT_UV_SEC,
-  LOCAL
+	HUM_READ,
+	GMT,
+	GMT_UV_SEC,
+	LOCAL
 };
 
 /***** METHODS *****/
@@ -89,10 +89,10 @@ std::string intToString(unsigned int i);
 std::string floatToString(double f);
 
 /* Convert a string to the same string with all upper case letters */
-std::string toUpperCase(std::string& text);
+std::string toUpperCase(std::string &text);
 
 /* Check if each char in a string is a positive integer */
-bool isNonNegativeInteger(const std::string& s);
+bool isNonNegativeInteger(const std::string &s);
 
 
 /* Get the current time formatted */
@@ -113,13 +113,13 @@ unsigned int getCurrentTimeInSec();
 uint64_t parseTimeMicro(const std::string &aTime);
 
 /* Replace illegal XML characters with the correct corresponding characters */
-void replaceIllegalCharacters(std::string& data);
+void replaceIllegalCharacters(std::string &data);
 
 /* Return enumeration values according to a string name and array */
 int getEnumeration(
-  const std::string& name,
-  const std::string *array,
-  unsigned int size
+	const std::string &name,
+	const std::string *array,
+	unsigned int size
 );
 
 std::string addNamespace(const std::string aPath, const std::string aPrefix);
@@ -130,13 +130,13 @@ bool isMTConnectUrn(const char *aUrn);
 long getMemorySize();
 
 #ifdef _WINDOWS
-#include <io.h>
-typedef long volatile AtomicInt;
+	#include <io.h>
+	typedef long volatile AtomicInt;
 #else
-#ifdef MACOSX
-#include <libkern/OSAtomic.h>
-typedef volatile long AtomicInt;
-#else
-typedef int AtomicInt;
-#endif
+	#ifdef MACOSX
+	#include <libkern/OSAtomic.h>
+	typedef volatile long AtomicInt;
+	#else
+	typedef int AtomicInt;
+	#endif
 #endif

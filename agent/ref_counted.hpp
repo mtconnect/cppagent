@@ -19,92 +19,102 @@
 #include "globals.hpp"
 
 template<class T>
-class RefCountedPtr {
+class RefCountedPtr
+{
 public:
-  // Constructors
-  RefCountedPtr() { m_object = NULL; }
-  RefCountedPtr(const RefCountedPtr &aPtr, bool aTakeRef = false) {
-    m_object = NULL;
-    setObject(aPtr.getObject(), aTakeRef);
-  }
-  RefCountedPtr(T &aObject, bool aTakeRef = false) {
-    m_object = NULL;
-    setObject(&aObject, aTakeRef);
-  }
-  RefCountedPtr(T *aObject, bool aTakeRef = false) {
-    m_object = NULL;
-    setObject(aObject, aTakeRef);
-  }
-  
-  // Destructor
-  ~RefCountedPtr();
-  
-  // Getters
-  T *getObject() const { return m_object; }
-  T *operator->(void) const { return m_object; }
-  operator T*(void ) const { return m_object; }
-  
-  // Setters
-  T *setObject(T *aEvent, bool aTakeRef = false);
-  T *operator=(T *aEvent) { return setObject(aEvent); }  
-  T *operator=(RefCountedPtr<T> &aPtr) { return setObject(aPtr.getObject()); }
-  
-  bool operator==(const RefCountedPtr &aOther) {
-    return *m_object == *(aOther.m_object);
-  }
-  
-  bool operator<(const RefCountedPtr &aOther);
+	// Constructors
+	RefCountedPtr() { m_object = NULL; }
+	RefCountedPtr(const RefCountedPtr &aPtr, bool aTakeRef = false)
+	{
+	m_object = NULL;
+	setObject(aPtr.getObject(), aTakeRef);
+	}
+	RefCountedPtr(T &aObject, bool aTakeRef = false)
+	{
+	m_object = NULL;
+	setObject(&aObject, aTakeRef);
+	}
+	RefCountedPtr(T *aObject, bool aTakeRef = false)
+	{
+	m_object = NULL;
+	setObject(aObject, aTakeRef);
+	}
+
+	// Destructor
+	~RefCountedPtr();
+
+	// Getters
+	T *getObject() const { return m_object; }
+	T *operator->(void) const { return m_object; }
+	operator T *(void) const { return m_object; }
+
+	// Setters
+	T *setObject(T *aEvent, bool aTakeRef = false);
+	T *operator=(T *aEvent) { return setObject(aEvent); }
+	T *operator=(RefCountedPtr<T> &aPtr) { return setObject(aPtr.getObject()); }
+
+	bool operator==(const RefCountedPtr &aOther)
+	{
+	return *m_object == *(aOther.m_object);
+	}
+
+	bool operator<(const RefCountedPtr &aOther);
 
 
 protected:
-  T *m_object;
+	T *m_object;
 };
 
 template<class T>
 inline RefCountedPtr<T>::~RefCountedPtr()
 {
-  if (m_object)
-    m_object->unrefer();
+	if (m_object)
+	m_object->unrefer();
 }
 
 template<class T>
 inline bool RefCountedPtr<T>::operator<(const RefCountedPtr<T> &aOther)
 {
-  return (*m_object) < (*aOther.m_object);
+	return (*m_object) < (*aOther.m_object);
 }
 
 template<class T>
-inline T *RefCountedPtr<T>::setObject(T *aEvent, bool aTakeRef) {
-  if (m_object != NULL)
-    m_object->unrefer();
-  m_object = aEvent;
-  if (aEvent != NULL && !aTakeRef)
-    m_object->referTo();
-  
-  return aEvent;
+inline T *RefCountedPtr<T>::setObject(T *aEvent, bool aTakeRef)
+{
+	if (m_object != NULL)
+	m_object->unrefer();
+
+	m_object = aEvent;
+
+	if (aEvent != NULL && !aTakeRef)
+	m_object->referTo();
+
+	return aEvent;
 }
 
-class RefCounted 
+class RefCounted
 {
 public:
-  RefCounted() {
-    m_refCount = 1;
-  }
-  RefCounted(RefCounted &aRef) {
-    m_refCount = 1;
-  }
-  
-  virtual ~RefCounted();
-  
-  /* Reference count management */
-  void referTo();
-  void unrefer();
-  
-  unsigned int refCount() { return m_refCount; }
+	RefCounted()
+	{
+	m_refCount = 1;
+	}
+	RefCounted(RefCounted &aRef)
+	{
+	m_refCount = 1;
+	}
+
+	virtual ~RefCounted();
+
+	/* Reference count management */
+	void referTo();
+	void unrefer();
+
+	unsigned int refCount() { return m_refCount; }
 //  bool operator<(RefCounted &aOther) { return this < &aOther; }
 
 protected:
-  /* Reference count */
-  AtomicInt m_refCount;
+	/* Reference count */
+	AtomicInt m_refCount;
 };
 

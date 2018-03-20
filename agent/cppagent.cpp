@@ -29,16 +29,16 @@ using namespace dlib;
 static logger sLogger("main");
 
 #ifdef _WINDOWS
-#define strncasecmp strnicmp
+	#define strncasecmp strnicmp
 #endif
 
 int main(int aArgc, const char *aArgv[])
 {
-  AgentConfiguration config;
+	AgentConfiguration config;
 
-  int ret = config.main(aArgc, aArgv);
-  fclose(stdin);
+	int ret = config.main(aArgc, aArgv);
+	fclose(stdin);
 
-  return ret;
+	return ret;
 }
 

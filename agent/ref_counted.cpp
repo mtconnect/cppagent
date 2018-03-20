@@ -16,7 +16,7 @@
 #include "ref_counted.hpp"
 #include "dlib/threads.h"
 #ifdef __APPLE__
-#include <libkern/OSAtomic.h>
+	#include <libkern/OSAtomic.h>
 #endif
 
 static dlib::rmutex sRefMutex;
@@ -28,13 +28,13 @@ RefCounted::~RefCounted()
 void RefCounted::referTo()
 {
 #ifdef _WINDOWS
-  InterlockedIncrement(&(this->m_refCount));
+	InterlockedIncrement(&(this->m_refCount));
 #else
 #ifdef MACOSX
-  OSAtomicIncrement32Barrier(&(this->m_refCount));
+	OSAtomicIncrement32Barrier(&(this->m_refCount));
 #else
-  dlib::auto_mutex lock(sRefMutex);
-  m_refCount++;
+	dlib::auto_mutex lock(sRefMutex);
+	m_refCount++;
 #endif
 #endif
 }
@@ -42,22 +42,28 @@ void RefCounted::referTo()
 void RefCounted::unrefer()
 {
 #ifdef _WINDOWS
-  if (InterlockedDecrement(&(this->m_refCount)) <= 0)
-  {
-    delete this;
-  }
+
+	if (InterlockedDecrement(&(this->m_refCount)) <= 0)
+	{
+	delete this;
+	}
+
 #else
 #ifdef MACOSX
-  if (OSAtomicDecrement32Barrier(&(this->m_refCount)) <= 0)
-  {
-    delete this;
-  }
+
+	if (OSAtomicDecrement32Barrier(&(this->m_refCount)) <= 0)
+	{
+	delete this;
+	}
+
 #else
-  dlib::auto_mutex lock(sRefMutex);
-  if (--m_refCount <= 0)
-  {
-    delete this;
-  }
+	dlib::auto_mutex lock(sRefMutex);
+
+	if (--m_refCount <= 0)
+	{
+	delete this;
+	}
+
 #endif
 #endif
 }

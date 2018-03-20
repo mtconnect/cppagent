@@ -43,18 +43,18 @@
 
 class AssetTest : public CppUnit::TestFixture
 {
-  CPPUNIT_TEST_SUITE(AssetTest);
-  CPPUNIT_TEST(testAsset);
-  CPPUNIT_TEST_SUITE_END();
-  
+	CPPUNIT_TEST_SUITE(AssetTest);
+	CPPUNIT_TEST(testAsset);
+	CPPUNIT_TEST_SUITE_END();
+
 public:
-  void setUp();
-  void tearDown();
-  
+	void setUp();
+	void tearDown();
+
 protected:
-  Asset *m_asset;
-  
+	Asset *m_asset;
+
 protected:
-  void testAsset();
+	void testAsset();
 };
 

@@ -23,54 +23,56 @@ class Device;
 class log_level;
 class RollingFileLogger;
 
-typedef void (NamespaceFunction)(const std::string &aUrn, const std::string &aLocation, 
-                                  const std::string &aPrefix);
+typedef void (NamespaceFunction)(const std::string &aUrn, const std::string &aLocation,
+				 const std::string &aPrefix);
 typedef void (StyleFunction)(const std::string &aLocation);
 
-class AgentConfiguration : public MTConnectService {
+class AgentConfiguration : public MTConnectService
+{
 public:
-  AgentConfiguration();
-  virtual ~AgentConfiguration();
-  
-  // For MTConnectService
-  virtual void stop();
-  virtual void start() ;
-  virtual void initialize(int aArgc, const char *aArgv[]);
+	AgentConfiguration();
+	virtual ~AgentConfiguration();
 
-  void configureLogger(dlib::config_reader::kernel_1a &aReader);
-  void loadConfig(std::istream &aFile);
+	// For MTConnectService
+	virtual void stop();
+	virtual void start() ;
+	virtual void initialize(int aArgc, const char *aArgv[]);
 
-  void setAgent(Agent *aAgent) { m_agent = aAgent; }
-  Agent *getAgent() { return m_agent; }
+	void configureLogger(dlib::config_reader::kernel_1a &aReader);
+	void loadConfig(std::istream &aFile);
 
-  RollingFileLogger *getLogger() { return m_loggerFile; }
-  
-protected:
-  Device *defaultDevice();
-  void loadAdapters(dlib::config_reader::kernel_1a &aReader, bool aDefaultPreserve,
-                    int aLegacyTimeout, int aReconnectInterval, bool aIgnoreTimestamps,
-                    bool aConversionRequired, bool aUpcaseValue);
-  void loadAllowPut(dlib::config_reader::kernel_1a &aReader);
-  void loadNamespace(dlib::config_reader::kernel_1a &aReader, 
-                     const char *aNamespaceType, 
-                     NamespaceFunction *aCallback);
-  void loadFiles(dlib::config_reader::kernel_1a &aReader);
-  void loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc, StyleFunction *aFunction);
-  void loadTypes(dlib::config_reader::kernel_1a &aReader);
-  
-  void LoggerHook(const std::string& aLoggerName,
-                  const dlib::log_level& l,
-                  const dlib::uint64 aThreadId,
-                  const char* aMessage);
-  
-  void monitorThread();
+	void setAgent(Agent *aAgent) { m_agent = aAgent; }
+	Agent *getAgent() { return m_agent; }
+
+	RollingFileLogger *getLogger() { return m_loggerFile; }
 
 protected:
-  Agent *m_agent;
-  RollingFileLogger *m_loggerFile;
-  bool m_monitorFiles;
-  int m_minimumConfigReloadAge;
-  std::string m_devicesFile;
-  bool m_restart;
-  std::string m_exePath;
+	Device *defaultDevice();
+	void loadAdapters(dlib::config_reader::kernel_1a &aReader, bool aDefaultPreserve,
+			  int aLegacyTimeout, int aReconnectInterval, bool aIgnoreTimestamps,
+			  bool aConversionRequired, bool aUpcaseValue);
+	void loadAllowPut(dlib::config_reader::kernel_1a &aReader);
+	void loadNamespace(dlib::config_reader::kernel_1a &aReader,
+			   const char *aNamespaceType,
+			   NamespaceFunction *aCallback);
+	void loadFiles(dlib::config_reader::kernel_1a &aReader);
+	void loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc,
+		   StyleFunction *aFunction);
+	void loadTypes(dlib::config_reader::kernel_1a &aReader);
+
+	void LoggerHook(const std::string &aLoggerName,
+			const dlib::log_level &l,
+			const dlib::uint64 aThreadId,
+			const char *aMessage);
+
+	void monitorThread();
+
+protected:
+	Agent *m_agent;
+	RollingFileLogger *m_loggerFile;
+	bool m_monitorFiles;
+	int m_minimumConfigReloadAge;
+	std::string m_devicesFile;
+	bool m_restart;
+	std::string m_exePath;
 };

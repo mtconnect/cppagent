@@ -47,13 +47,13 @@
 std::string getFile(std::string fileLoc);
 
 /* Fill the error */
-void fillErrorText(std::string& errorXml, const std::string& text);
+void fillErrorText(std::string &errorXml, const std::string &text);
 
 /* Search the xml and insert a value into an attribute (attribute="") */
 void fillAttribute(
-  std::string& xmlString,
-  const std::string& attribute,
-  const std::string& value
+	std::string &xmlString,
+	const std::string &attribute,
+	const std::string &value
 );
 
 // Trim white space from string
@@ -65,7 +65,7 @@ std::string &trim(std::string &str);
  ::xpathTest(doc, path, expected, CPPUNIT_SOURCELINE() )
 
 void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
-               CPPUNIT_NS::SourceLine sourceLine);
+		   CPPUNIT_NS::SourceLine sourceLine);
 
 #define PARSE_XML(expr) \
   string result = expr;\
@@ -77,5 +77,5 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   ::xpathTestCount(doc, path, expected, CPPUNIT_SOURCELINE() )
 
 void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
-               CPPUNIT_NS::SourceLine sourceLine);
+			CPPUNIT_NS::SourceLine sourceLine);
 
