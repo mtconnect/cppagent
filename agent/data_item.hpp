@@ -154,7 +154,7 @@ public:
 	void setConversionFactor(double factor, double offset);
 
 	// Returns if data item has this attribute
-	bool hasName(const std::string &name);
+	bool hasName(const std::string &name) const;
 	bool hasNativeScale() const {
 		return m_hasNativeScale; }
 
@@ -302,7 +302,7 @@ public:
 	Adapter *getDataSource() const {
 		return m_dataSource;  }
 	void setDataSource(Adapter *source);
-	bool operator<(DataItem &another);
+	bool operator<(const DataItem &another) const;
 
 	bool operator==(DataItem &another) const {
 		return m_id == another.m_id; }

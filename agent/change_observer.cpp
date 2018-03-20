@@ -72,7 +72,7 @@ bool ChangeSignaler::removeObserver(ChangeObserver *observer)
 }
 
 
-bool ChangeSignaler::hasObserver(ChangeObserver *observer)
+bool ChangeSignaler::hasObserver(ChangeObserver *observer) const
 {
 	dlib::auto_mutex lock(m_observerMutex);
 
@@ -81,7 +81,7 @@ bool ChangeSignaler::hasObserver(ChangeObserver *observer)
 }
 
 
-void ChangeSignaler::signalObservers(uint64_t sequence)
+void ChangeSignaler::signalObservers(uint64_t sequence) const
 {
 	dlib::auto_mutex lock(m_observerMutex);
 

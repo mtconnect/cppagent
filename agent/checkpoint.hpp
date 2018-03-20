@@ -32,15 +32,15 @@ public:
 	~Checkpoint();
 
 	void addComponentEvent(ComponentEvent *event);
-	void copy(Checkpoint &checkpoint, std::set<std::string> *filterSet = nullptr);
+	void copy(Checkpoint const &checkpoint, std::set<std::string> *filterSet = nullptr);
 	void clear();
-	void filter(std::set<std::string> &filterSet);
+	void filter(std::set<std::string> const &filterSet);
 
 	std::map<std::string, ComponentEventPtr *> &getEvents() {
 		return m_events; }
 
 	void getComponentEvents(ComponentEventPtrArray &list,
-		std::set<std::string> *filterSet = nullptr);
+		std::set<std::string> const *filterSet = nullptr) const;
 
 	ComponentEventPtr *getEventPtr(const std::string &id) {
 		return m_events[id]; }

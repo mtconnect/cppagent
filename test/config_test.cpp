@@ -62,7 +62,7 @@ void ConfigTest::testBlankConfig()
 	istringstream str("");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	CPPUNIT_ASSERT_EQUAL(1, (int) agent->getDevices().size());
 }
@@ -72,7 +72,7 @@ void ConfigTest::testBufferSize()
 	istringstream str("BufferSize = 4\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	CPPUNIT_ASSERT_EQUAL(16, (int) agent->getBufferSize());
 }
@@ -82,7 +82,7 @@ void ConfigTest::testDevice()
 	istringstream str("Devices = ../samples/test_config.xml\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	Device *device = agent->getDevices()[0];
 	Adapter *adapter = device->m_adapters[0];
@@ -108,7 +108,7 @@ void ConfigTest::testAdapter()
 			  "} }\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	Device *device = agent->getDevices()[0];
 	Adapter *adapter = device->m_adapters[0];
@@ -128,7 +128,7 @@ void ConfigTest::testDefaultPreserveUUID()
 			  "PreserveUUID = true\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	Device *device = agent->getDevices()[0];
 
@@ -144,7 +144,7 @@ void ConfigTest::testDefaultPreserveOverride()
 			  "} }\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	Device *device = agent->getDevices()[0];
 
@@ -157,7 +157,7 @@ void ConfigTest::testDisablePut()
 			  "AllowPut = true\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 
 	CPPUNIT_ASSERT(agent->isPutEnabled());
@@ -169,7 +169,7 @@ void ConfigTest::testLimitPut()
 			  "AllowPutFrom = localhost\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	CPPUNIT_ASSERT(agent->isPutEnabled());
 	CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "127.0.0.1"));
@@ -181,7 +181,7 @@ void ConfigTest::testLimitPutFromHosts()
 			  "AllowPutFrom = localhost, 192.168.0.1\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	CPPUNIT_ASSERT(agent->isPutEnabled());
 	CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "127.0.0.1"));
@@ -251,7 +251,7 @@ void ConfigTest::testLegacyTimeout()
 			  "LegacyTimeout = 2000\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	Device *device = agent->getDevices()[0];
 	Adapter *adapter = device->m_adapters[0];
@@ -265,7 +265,7 @@ void ConfigTest::testIgnoreTimestamps()
 			  "IgnoreTimestamps = true\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	Device *device = agent->getDevices()[0];
 	Adapter *adapter = device->m_adapters[0];
@@ -283,7 +283,7 @@ void ConfigTest::testIgnoreTimestampsOverride()
 			  "} }\n");
 	m_config->loadConfig(str);
 
-	Agent *agent = m_config->getAgent();
+	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
 	Device *device = agent->getDevices()[0];
 	Adapter *adapter = device->m_adapters[0];

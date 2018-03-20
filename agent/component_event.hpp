@@ -62,7 +62,7 @@ public:
 	);
 
 	// Copy constructor
-	ComponentEvent(ComponentEvent &ce);
+	ComponentEvent(const ComponentEvent &componentEvent);
 
 	ComponentEvent *deepCopy();
 	ComponentEvent *deepCopyAndRemove(ComponentEvent *old);

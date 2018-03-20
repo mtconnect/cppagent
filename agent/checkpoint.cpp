@@ -139,7 +139,7 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 }
 
 
-void Checkpoint::copy(Checkpoint &checkpoint, std::set<std::string> *filterSet)
+void Checkpoint::copy(Checkpoint const &checkpoint, std::set<std::string> *filterSet)
 {
 	clear();
 
@@ -159,7 +159,7 @@ void Checkpoint::copy(Checkpoint &checkpoint, std::set<std::string> *filterSet)
 }
 
 
-void Checkpoint::getComponentEvents(ComponentEventPtrArray &list, std::set<string> *filterSet)
+void Checkpoint::getComponentEvents(ComponentEventPtrArray &list, std::set<string> const *filterSet) const
 {
 	for (const auto &event : m_events)
 	{
@@ -179,7 +179,7 @@ void Checkpoint::getComponentEvents(ComponentEventPtrArray &list, std::set<strin
 }
 
 
-void Checkpoint::filter(std::set<std::string> &filterSet)
+void Checkpoint::filter(std::set<std::string> const &filterSet)
 {
 	m_filter = filterSet;
 

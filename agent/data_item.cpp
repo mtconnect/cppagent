@@ -238,7 +238,7 @@ std::map<string, string> DataItem::buildAttributes() const
 }
 
 
-bool DataItem::hasName(const string &name)
+bool DataItem::hasName(const string &name) const
 {
 	return m_id == name || m_name == name || (!m_source.empty() && m_source == name);
 }
@@ -504,7 +504,7 @@ double DataItem::simpleFactor(const string &units)
 
 
 // Sort by: Device, Component, Category, DataItem
-bool DataItem::operator<(DataItem &another)
+bool DataItem::operator<(const DataItem &another) const
 {
 	auto dev = m_component->getDevice();
 
