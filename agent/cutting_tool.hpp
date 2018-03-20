@@ -87,12 +87,12 @@ public:
 	}
 	~CuttingTool();
 
-	virtual void addIdentity(const std::string &key, const std::string &value);
+	void addIdentity(const std::string &key, const std::string &value) override;
 	void addValue(const CuttingToolValuePtr value);
 	void updateValue(const std::string &key, const std::string &value);
 
-	virtual std::string &getContent();
-	virtual void changed() {
+	std::string &getContent() override;
+	void changed() override {
 		m_content.clear(); }
 
 public:
