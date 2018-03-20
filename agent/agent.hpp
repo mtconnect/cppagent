@@ -22,6 +22,7 @@
 #include <map>
 #include <set>
 #include <list>
+#include <mutex>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -326,8 +327,8 @@ protected:
 	XmlParser *m_xmlParser;
 
 	// For access to the sequence number and sliding buffer, use the mutex
-	dlib::mutex *m_sequenceLock;
-	dlib::mutex *m_assetLock;
+	std::mutex m_sequenceLock;
+	std::mutex m_assetLock;
 
 	// Sequence number
 	uint64_t m_sequence;

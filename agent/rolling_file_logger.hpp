@@ -18,6 +18,7 @@
 #include "globals.hpp"
 #include <string>
 #include <streambuf>
+#include <mutex>
 #include <dlib/threads.h>
 #include <dlib/dir_nav.h>
 
@@ -50,7 +51,7 @@ protected:
 	int getFileAge();
 
 private:
-	dlib::mutex *m_fileLock;
+	std::mutex m_fileLock;
 
 	std::string m_name;
 	dlib::directory m_directory;
