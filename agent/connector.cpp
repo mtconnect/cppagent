@@ -255,7 +255,7 @@ void Connector::parseBuffer(const char *buffer)
 			// Check for heartbeats
 			if (line[0] == '*')
 			{
-				if (line.compare(0, 6, "* PONG") == 0)
+				if (!line.compare(0, 6, "* PONG"))
 				{
 					if (g_logger.level().priority <= LDEBUG.priority)
 					{

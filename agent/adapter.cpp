@@ -125,7 +125,7 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
 	{
 		uint64_t offset;
 
-		if (m_baseTime == 0)
+		if (!m_baseTime)
 		{
 			m_baseTime = getCurrentTimeInMicros();
 
@@ -250,7 +250,7 @@ bool Adapter::processDataItem(
 		}
 		else if (dataItem->hasConstantValue())
 		{
-			if (m_logOnce.count(key) == 0)
+			if (!m_logOnce.count(key))
 			{
 				g_logger << LDEBUG << "(" << device->getName() << ") Ignoring value for: " << key << ", constant value";
 				m_logOnce.insert(key);

@@ -304,11 +304,11 @@ void Option::expandFiles(const char *fileName)
 
 bool Option::operator<(const Option &another) const
 {
-	if (name_ == 0 && another.getName() != 0)
+	if (!name_ && another.getName() != 0)
 		return false;
-	else if (name_ != 0 && another.getName() == 0)
+	else if (name_ != 0 && !another.getName())
 		return true;
-	else if (name_ == 0 && another.getName() == 0)
+	else if (!name_ && !another.getName())
 	{
 		if (order_ == -1)
 			return false;
@@ -657,17 +657,17 @@ bool OptionsList::find(const char *optName, Option *&option)
 		const char *name = option->getName();
 
 		// Unnamed options are at the end of the list.
-		if (name == 0)
+		if (!name)
 			break;
 
 		size_t len = strlen(name);
 
 		if (option->ignoreCase())
 		{
-			if (strncasecmp(optName, name, len) == 0)
+			if (!strncasecmp(optName, name, len))
 				return true;
 		}
-		else if (strncmp(optName, name, len) == 0)
+		else if (!strncmp(optName, name, len))
 			return true;
 	}
 
@@ -682,7 +682,7 @@ bool OptionsList::find(int order, Option *&option)
 		option = &(*iter);
 
 		// Unnamed options are at the end of the list.
-		if (option->getName() == 0 && option->getOrder() == order)
+		if (!option->getName() && option->getOrder() == order)
 			return true;
 	}
 

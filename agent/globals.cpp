@@ -349,7 +349,7 @@ string addNamespace(const string aPath, const string aPrefix)
 
 bool isMTConnectUrn(const char *aUrn)
 {
-	return strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27) == 0;
+	return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27);
 }
 
 
@@ -368,7 +368,7 @@ long getMemorySize()
 #else
 	struct rusage memory;
 
-	if (getrusage(RUSAGE_SELF, &memory) == 0)
+	if (!getrusage(RUSAGE_SELF, &memory))
 		size = memory.ru_maxrss;
 
 #endif
