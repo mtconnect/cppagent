@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef CONNECTOR_HPP
-#define CONNECTOR_HPP
+#pragma once
 
 #include "dlib/sockets.h"
 #include "dlib/server.h"
@@ -111,6 +110,3 @@ private:
   /* Size of buffer to read at a time from the socket */  
   static const unsigned int SOCKET_BUFFER_SIZE = 8192;
 };
-
-#endif
-

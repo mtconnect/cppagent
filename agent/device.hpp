@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef DEVICE_HPP
-#define DEVICE_HPP
+#pragma once
 
 #include <map>
 
@@ -57,6 +56,3 @@ protected:
   std::map<std::string, DataItem *> mDeviceDataItemsById;
   std::map<std::string, DataItem *> mDeviceDataItemsBySource;
 };
-
-#endif
-

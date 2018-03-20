@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef OPTIONS_HPP
-#define OPTIONS_HPP
+#pragma once
 
 #include <list>
 #include <string>
@@ -142,6 +141,5 @@ protected:
 // ------------------------ Inline Methods ------------------------------
 // #include <Options.inl>
 
-#endif // Options_H
 
 

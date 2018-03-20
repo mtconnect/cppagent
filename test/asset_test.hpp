@@ -31,8 +31,7 @@
  * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
-#ifndef ASSET_TEST_HPP
-#define ASSET_TEST_HPP
+#pragma once
 
 #include <map>
 #include <string>
@@ -58,6 +57,4 @@ protected:
 protected:
   void testAsset();
 };
-
-#endif
 

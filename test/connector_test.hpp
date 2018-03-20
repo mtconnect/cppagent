@@ -31,8 +31,7 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef COMPONENT_EVENT_TEST_HPP
-#define COMPONENT_EVENT_TEST_HPP
+#pragma once
 
 #include <map>
 #include <string>
@@ -122,5 +121,4 @@ protected:
   void testStartHeartbeats();
 };
 
-#endif
 

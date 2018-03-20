@@ -31,8 +31,7 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef COMPONENT_TEST_HPP
-#define COMPONENT_TEST_HPP
+#pragma once
 
 #include <map>
 #include <string>
@@ -71,5 +70,4 @@ public:
   void tearDown();
 };
 
-#endif
 

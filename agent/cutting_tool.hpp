@@ -15,8 +15,7 @@
  */
 
 
-#ifndef CUTTING_TOOL_HPP
-#define CUTTING_TOOL_HPP
+#pragma once
 
 #include "asset.hpp"
 #include <vector>
@@ -80,5 +79,3 @@ public:
   std::vector<CuttingItemPtr> mItems;
   std::vector<CuttingToolValuePtr> mLives;
 };
-
-#endif

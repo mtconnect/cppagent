@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef AGENT_HPP
-#define AGENT_HPP
+#pragma once
 
 #include <sstream>
 #include <string>
@@ -375,6 +374,4 @@ protected:
   // For debugging
   bool mLogStreamData;
 };
-
-#endif
 
