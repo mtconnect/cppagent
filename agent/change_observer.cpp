@@ -14,13 +14,13 @@
 //    limitations under the License.
 //
 #include "change_observer.hpp"
-using namespace std;
+#include <algorithm>
 
 
 ChangeObserver::~ChangeObserver()
 {
-	for (vector<ChangeSignaler *>::iterator i = m_signalers.begin(); i != m_signalers.end(); i++)
-		(*i)->removeObserver(this);
+	for(const auto signaler : m_signalers)
+		signaler->removeObserver(this);
 }
 
 
@@ -32,16 +32,12 @@ void ChangeObserver::addSignaler(ChangeSignaler *sig)
 
 bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
 {
-	for (vector<ChangeSignaler *>::iterator i = m_signalers.begin(); i != m_signalers.end(); i++)
-	{
-		if (*i == sig)
-		{
-			m_signalers.erase(i);
-			return true;
-		}
-	}
+	auto newEndPos = std::remove(m_signalers.begin(), m_signalers.end(), sig);
+	if( newEndPos == m_signalers.end() )
+		return false;
 
-	return false;
+	m_signalers.erase(newEndPos);
+	return true;
 }
 
 
@@ -50,8 +46,8 @@ ChangeSignaler::~ChangeSignaler()
 {
 	dlib::auto_mutex lock(m_observerMutex);
 
-	for (vector<ChangeObserver *>::iterator i = m_observers.begin(); i != m_observers.end(); i++)
-		(*i)->removeSignaler(this);
+	for(const auto observer : m_observers)
+		observer->removeSignaler(this);
 }
 
 
@@ -67,16 +63,12 @@ bool ChangeSignaler::removeObserver(ChangeObserver *observer)
 {
 	dlib::auto_mutex lock(m_observerMutex);
 
-	for (vector<ChangeObserver *>::iterator i = m_observers.begin(); i != m_observers.end(); i++)
-	{
-		if (*i == observer)
-		{
-			m_observers.erase(i);
-			return true;
-		}
-	}
+	auto newEndPos = std::remove(m_observers.begin(), m_observers.end(), observer);
+	if( newEndPos == m_observers.end() )
+		return false;
 
-	return false;
+	m_observers.erase(newEndPos);
+	return true;
 }
 
 
@@ -84,11 +76,8 @@ bool ChangeSignaler::hasObserver(ChangeObserver *observer)
 {
 	dlib::auto_mutex lock(m_observerMutex);
 
-	for (vector<ChangeObserver *>::iterator i = m_observers.begin(); i != m_observers.end(); i++)
-	if (*i == observer)
-		return true;
-
-	return false;
+	auto foundPos = std::find(m_observers.begin(), m_observers.end(), observer);
+	return foundPos != m_observers.end();
 }
 
 
@@ -96,6 +85,6 @@ void ChangeSignaler::signalObservers(uint64_t sequence)
 {
 	dlib::auto_mutex lock(m_observerMutex);
 
-	for (vector<ChangeObserver *>::iterator i = m_observers.begin(); i != m_observers.end(); i++)
-		(*i)->signal(sequence);
+	for(const auto observer : m_observers)
+		observer->signal(sequence);
 }

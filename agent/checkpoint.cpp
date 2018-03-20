@@ -37,9 +37,8 @@ Checkpoint::Checkpoint(Checkpoint &checkpoint, std::set<std::string> *filterSet)
 
 void Checkpoint::clear()
 {
-	map<string, ComponentEventPtr *>::iterator it;
-	for (it = m_events.begin(); it != m_events.end(); it++)
-		delete (*it).second;
+	for(const auto event : m_events)
+		delete event.second;
 
 	m_events.clear();
 }
@@ -152,24 +151,22 @@ void Checkpoint::copy(Checkpoint &checkpoint, std::set<std::string> *filterSet)
 	else if (m_hasFilter)
 		filterSet = &m_filter;
 
-	map<string, ComponentEventPtr *>::iterator it;
-	for (it = checkpoint.m_events.begin(); it != checkpoint.m_events.end(); ++it)
+	for (const auto &event : checkpoint.m_events)
 	{
-		if (!filterSet || filterSet->count(it->first) > 0)
-			m_events[(*it).first] = new ComponentEventPtr((*it).second->getObject());
+		if (!filterSet || filterSet->count(event.first) > 0)
+			m_events[event.first] = new ComponentEventPtr(event.second->getObject());
 	}
 }
 
 
 void Checkpoint::getComponentEvents(ComponentEventPtrArray &list, std::set<string> *filterSet)
 {
-	map<string, ComponentEventPtr *>::iterator it;
-
-	for (it = m_events.begin(); it != m_events.end(); ++it)
+	for (const auto &event : m_events)
 	{
-		auto e = *((*it).second);
+		auto e = *(event.second);
 
-		if (!filterSet || (e.getObject() && filterSet->count(e->getDataItem()->getId()) > 0))
+		if (!filterSet ||
+			(e.getObject() && filterSet->count(e->getDataItem()->getId()) > 0) )
 		{
 			while (e.getObject())
 			{
@@ -186,25 +183,24 @@ void Checkpoint::filter(std::set<std::string> &filterSet)
 {
 	m_filter = filterSet;
 
-	if (!filterSet.empty())
-	{
-		map<string, ComponentEventPtr *>::iterator it = m_events.begin();
+	if (filterSet.empty())
+		return;
 
-		while (it != m_events.end())
+	auto it = m_events.begin();
+	while (it != m_events.end())
+	{
+		if (!m_filter.count(it->first))
 		{
-			if (m_filter.count(it->first) == 0)
-			{
 #ifdef _WINDOWS
-				it = m_events.erase(it);
+			it = m_events.erase(it);
 #else
-				map<string, ComponentEventPtr *>::iterator pos = it++;
-				m_events.erase(pos);
+			auto pos = it++;
+			m_events.erase(pos);
 #endif
-			}
-			else
-			{
-				++it;
-			}
+		}
+		else
+		{
+			++it;
 		}
 	}
 }

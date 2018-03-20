@@ -446,7 +446,7 @@ int OptionsList::parse(int &argc, const char **argv)
 		argc--;
 	}
 
-	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
+	for (auto iter = begin(); iter != end(); iter++)
 	{
 		opt = &(*iter);
 
@@ -499,7 +499,7 @@ void OptionsList::usage()
 
 	bool hasSimpleFlags = false;
 
-	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
+	for (auto iter = begin(); iter != end(); iter++)
 	{
 		Option *opt = &(*iter);
 
@@ -517,7 +517,7 @@ void OptionsList::usage()
 		*cp++ = '[';
 		*cp++ = '-';
 
-		for (list<Option>::iterator iter = begin(); iter != end(); iter++)
+		for (auto iter = begin(); iter != end(); iter++)
 		{
 			Option *opt = &(*iter);
 
@@ -535,7 +535,7 @@ void OptionsList::usage()
 
 	char staging[128], *cp2;
 
-	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
+	for (auto iter = begin(); iter != end(); iter++)
 	{
 		Option *opt = &(*iter);
 
@@ -600,7 +600,7 @@ void OptionsList::usage()
 	fputs(buffer, stderr);
 
 
-	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
+	for (auto iter = begin(); iter != end(); iter++)
 	{
 		Option *opt = &(*iter);
 
@@ -651,7 +651,7 @@ void OptionsList::usage()
 
 bool OptionsList::find(const char *optName, Option *&option)
 {
-	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
+	for (auto iter = begin(); iter != end(); iter++)
 	{
 		option = &(*iter);
 		const char *name = option->getName();
@@ -677,7 +677,7 @@ bool OptionsList::find(const char *optName, Option *&option)
 
 bool OptionsList::find(int order, Option *&option)
 {
-	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
+	for (auto iter = begin(); iter != end(); iter++)
 	{
 		option = &(*iter);
 
