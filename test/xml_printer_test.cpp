@@ -330,7 +330,7 @@ void XmlPrinterTest::testChangeErrorNamespace()
 		PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
 			"/m:MTConnectError@schemaLocation",
-			"urn:mtconnect.org:MTConnectError:1.2 http://www.mtconnect.org/schemas/MTConnectError_1.2.xsd");
+			"urn:mtconnect.org:MTConnectError:1.2 http://schemas.mtconnect.org/schemas/MTConnectError_1.2.xsd");
 	}
 
 	{
