@@ -180,9 +180,9 @@ void GlobalsTest::testGetCurrentTime()
 
 	string human = getCurrentTime(HUM_READ);
 	int year, day, hour, min, sec;
-	char wday[5];
-	char mon[4];
-	char tzs[32];
+	char wday[5] = {0};
+	char mon[4] = {0};
+	char tzs[32] = {0};
 
 	int n = sscanf(human.c_str(), "%3s, %2d %3s %4d %2d:%2d:%2d %5s",
 		wday, &day, mon, &year,

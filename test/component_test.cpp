@@ -59,8 +59,8 @@ void ComponentTest::setUp()
 
 void ComponentTest::tearDown()
 {
-	delete m_compA;
-	delete m_compB;
+	delete m_compA; m_compA = nullptr;
+	delete m_compB; m_compB = nullptr;
 }
 
 

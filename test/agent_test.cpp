@@ -62,8 +62,8 @@ void AgentTest::setUp()
 
 void AgentTest::tearDown()
 {
-	delete m_agent;
-	m_agent = nullptr;
+	delete m_agent; m_agent = nullptr;
+	m_adapter = nullptr;
 }
 
 
@@ -274,7 +274,7 @@ void AgentTest::testEmptyStream()
 
 	{
 		m_path = "/sample";
-	char line[80];
+		char line[80] = {0};
 		sprintf(line, "%d", (int) m_agent->getSequence());
 		PARSE_XML_RESPONSE_QUERY_KV("from", line);
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
@@ -385,7 +385,7 @@ void AgentTest::testCurrentAt()
 
 	// Get the current position
 	int seq = m_agent->getSequence();
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 1; i <= 100; i++)
@@ -451,7 +451,7 @@ void AgentTest::testCurrentAt64()
 	CPPUNIT_ASSERT(m_adapter);
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Initialize the sliding buffer at a very large number.
 	uint64_t start = (((uint64_t) 1) << 48) + 1317;
@@ -484,7 +484,7 @@ void AgentTest::testCurrentAtOutOfRange()
 	CPPUNIT_ASSERT(m_adapter);
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 1; i <= 200; i++)
@@ -524,7 +524,7 @@ void AgentTest::testSampleAtNextSeq()
 	CPPUNIT_ASSERT(m_adapter);
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 1; i <= 300; i++)
@@ -557,7 +557,7 @@ void AgentTest::testSequenceNumberRollover()
 	CPPUNIT_ASSERT_EQUAL((int64_t) 0xFFFFFFA0, seq);
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 0; i < 128; i++)
@@ -619,7 +619,7 @@ void AgentTest::testSampleCount()
 	int64_t seq = m_agent->getSequence();
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 0; i < 128; i++)
@@ -688,7 +688,7 @@ void AgentTest::testAdapterCommands()
 
 void AgentTest::testAdapterDeviceCommand()
 {
-	delete m_agent;
+	delete m_agent; m_agent = nullptr;
 	m_agent = new Agent("../samples/two_devices.xml", 8, 4, 25);
 
 	m_path = "/probe";
@@ -1591,7 +1591,7 @@ void AgentTest::testAssetAdditionOfAssetChanged12()
 	string version = XmlPrinter::getSchemaVersion();
 	XmlPrinter::setSchemaVersion("1.2");
 
-	delete m_agent;
+	delete m_agent; m_agent= nullptr;
 	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25);
 
 	{
@@ -1610,7 +1610,7 @@ void AgentTest::testAssetAdditionOfAssetRemoved13()
 	string version = XmlPrinter::getSchemaVersion();
 	XmlPrinter::setSchemaVersion("1.3");
 
-	delete m_agent;
+	delete m_agent; m_agent= nullptr;
 	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25);
 
 	{
@@ -2117,7 +2117,7 @@ void AgentTest::testInitialTimeSeriesValues()
 
 void AgentTest::testFilterValues()
 {
-	delete m_agent;
+	delete m_agent; m_agent= nullptr;
 	m_agent = new Agent("../samples/filter_example.xml", 8, 4, 25);
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2196,7 +2196,7 @@ void AgentTest::testResetTriggered()
 
 void AgentTest::testReferences()
 {
-	delete m_agent;
+	delete m_agent; m_agent = nullptr;
 	m_agent = new Agent("../samples/reference_example.xml", 8, 4, 25);
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2238,7 +2238,7 @@ void AgentTest::testReferences()
 
 void AgentTest::testDiscrete()
 {
-	delete m_agent;
+	delete m_agent; m_agent= nullptr;
 	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25);
 	m_path = "/sample";
 
@@ -2288,7 +2288,7 @@ void AgentTest::testDiscrete()
 void AgentTest::testUpcaseValues()
 {
 	m_path = "/current";
-	delete m_agent;
+	delete m_agent; m_agent = nullptr;
 	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25);
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	m_adapter->setDupCheck(true);

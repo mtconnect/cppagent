@@ -74,8 +74,8 @@ void ComponentEventTest::tearDown()
 {
 	m_compEventA->unrefer();
 	m_compEventB->unrefer();
-	delete m_dataItem1;
-	delete m_dataItem2;
+	delete m_dataItem1; m_dataItem1 = nullptr;
+	delete m_dataItem2; m_dataItem2 = nullptr;
 }
 
 
@@ -353,6 +353,7 @@ void ComponentEventTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL((string) "2", attrs2["nativeSeverity"]);
 	CPPUNIT_ASSERT_EQUAL((string) "Fault", event2->getLevelString());
 
+	delete d; d = nullptr;
 }
 
 
@@ -410,6 +411,7 @@ void ComponentEventTest::testTimeSeries()
 		CPPUNIT_ASSERT_EQUAL((float)((i + 1) * 10), values[i]);
 	}
 
+	delete d; d = nullptr;
 }
 
 
@@ -435,6 +437,7 @@ void ComponentEventTest::testDuration()
 	CPPUNIT_ASSERT_EQUAL((string) "2011-02-18T15:52:41Z", attrs1["timestamp"]);
 	CPPUNIT_ASSERT_EQUAL((string) "200.1232", attrs1["duration"]);
 
+	delete d; d = nullptr;
 }
 
 
@@ -459,4 +462,6 @@ void ComponentEventTest::testAssetChanged()
 
 	CPPUNIT_ASSERT_EQUAL((string) "CuttingTool", attrs1["assetType"]);
 	CPPUNIT_ASSERT_EQUAL((string) "123", event1->getValue());
+
+	delete d; d = nullptr;
 }

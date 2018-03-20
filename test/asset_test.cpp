@@ -46,7 +46,10 @@ void AssetTest::setUp()
 void AssetTest::tearDown()
 {
 	if (m_asset)
+	{
 		delete m_asset;
+		m_asset = nullptr;
+	}
 }
 
 void AssetTest::testAsset()

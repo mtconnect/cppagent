@@ -72,9 +72,9 @@ void DataItemTest::setUp()
 
 void DataItemTest::tearDown()
 {
-	delete m_dataItemA;
-	delete m_dataItemB;
-	delete m_dataItemC;
+	delete m_dataItemA; m_dataItemA = nullptr;
+	delete m_dataItemB; m_dataItemB = nullptr;
+	delete m_dataItemC; m_dataItemC = nullptr;
 }
 
 
@@ -268,7 +268,7 @@ void DataItemTest::testTimeSeries()
 	DataItem *d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("PositionTimeSeries"), d->getElementName());
-	delete d;
+	delete d; d = nullptr;
 
 	attributes1.clear();
 	attributes1["id"] = "1";
@@ -281,7 +281,7 @@ void DataItemTest::testTimeSeries()
 	d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("Position"), d->getElementName());
-	delete d;
+	delete d; d = nullptr;
 }
 
 
@@ -299,7 +299,7 @@ void DataItemTest::testStatistic()
 	DataItem *d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), d->getStatistic());
-	delete d;
+	delete d; d = nullptr;
 }
 
 
@@ -319,7 +319,7 @@ void DataItemTest::testSampleRate()
 	DataItem *d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("42000"), d->getSampleRate());
-	delete d;
+	delete d; d = nullptr;
 }
 
 
