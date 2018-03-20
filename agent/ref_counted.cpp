@@ -21,9 +21,11 @@
 
 static dlib::rmutex sRefMutex;
 
+
 RefCounted::~RefCounted()
 {
 }
+
 
 void RefCounted::referTo()
 {
@@ -45,7 +47,8 @@ void RefCounted::unrefer()
 
 	if (InterlockedDecrement(&(this->m_refCount)) <= 0)
 	{
-	delete this;
+	
+		delete this;
 	}
 
 #else
@@ -53,7 +56,8 @@ void RefCounted::unrefer()
 
 	if (OSAtomicDecrement32Barrier(&(this->m_refCount)) <= 0)
 	{
-	delete this;
+	
+		delete this;
 	}
 
 #else
@@ -61,7 +65,8 @@ void RefCounted::unrefer()
 
 	if (--m_refCount <= 0)
 	{
-	delete this;
+	
+		delete this;
 	}
 
 #endif
