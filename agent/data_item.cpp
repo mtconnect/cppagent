@@ -78,15 +78,15 @@ DataItem::DataItem(std::map<string, string> const &attributes) :
 	m_conversionRequired(false),
 	m_hasFactor(false)
 {
-	auto const idPos = attributes.find("id");
+	const auto idPos = attributes.find("id");
 	if(idPos != attributes.end())
 		m_id = idPos->second;
 
-	auto const namePos = attributes.find("name");
+	const auto namePos = attributes.find("name");
 	if(namePos != attributes.end())
 		m_name = namePos->second;
 
-	auto const typePos = attributes.find("type");
+	const auto typePos = attributes.find("type");
 	if(typePos != attributes.end())
 		m_type = typePos->second;
 
@@ -98,7 +98,7 @@ DataItem::DataItem(std::map<string, string> const &attributes) :
 
 	m_camelType = getCamelType(m_type, m_prefix);
 
-	auto const repPos = attributes.find("representation");
+	const auto repPos = attributes.find("representation");
 	if(repPos != attributes.end())
 	{
 		if (repPos->second == "TIME_SERIES")
@@ -120,11 +120,11 @@ DataItem::DataItem(std::map<string, string> const &attributes) :
 
 	m_threeD = false;
 
-	auto const subTypePos = attributes.find("subType");
+	const auto subTypePos = attributes.find("subType");
 	if(subTypePos != attributes.end())
 		m_subType = subTypePos->second;
 
-	auto const catPos = attributes.find("category");
+	const auto catPos = attributes.find("category");
 	if(catPos != attributes.end())
 	{
 		if (catPos->second == "SAMPLE")
@@ -139,11 +139,11 @@ DataItem::DataItem(std::map<string, string> const &attributes) :
 		}
 	}
 
-	auto const nativeUnitsPos = attributes.find("nativeUnits");
+	const auto nativeUnitsPos = attributes.find("nativeUnits");
 	if(nativeUnitsPos != attributes.end())
 		m_nativeUnits = nativeUnitsPos->second;
 
-	auto const unitsPos = attributes.find("units");
+	const auto unitsPos = attributes.find("units");
 	if(unitsPos != attributes.end())
 	{
 		m_units = unitsPos->second;
@@ -151,33 +151,33 @@ DataItem::DataItem(std::map<string, string> const &attributes) :
 			m_nativeUnits = m_units;
 	}
 
-	auto const statisticPos = attributes.find("statistic");
+	const auto statisticPos = attributes.find("statistic");
 	if(statisticPos != attributes.end())
 		m_statistic = statisticPos->second;
 
-	auto const sampleRatePos = attributes.find("sampleRate");
+	const auto sampleRatePos = attributes.find("sampleRate");
 	if(sampleRatePos != attributes.end())
 		m_sampleRate = sampleRatePos->second;
 
-	auto const nativeScalePos = attributes.find("nativeScale");
+	const auto nativeScalePos = attributes.find("nativeScale");
 	if(nativeScalePos != attributes.end())
 	{
 		m_nativeScale = atof(nativeScalePos->second.c_str());
 		m_hasNativeScale = true;
 	}
 
-	auto const significantDigitsPos = attributes.find("significantDigits");
+	const auto significantDigitsPos = attributes.find("significantDigits");
 	if(significantDigitsPos != attributes.end())
 	{
 		m_significantDigits = atoi(significantDigitsPos->second.c_str());
 		m_hasSignificantDigits = true;
 	}
 
-	auto const coordinateSystemPos = attributes.find("coordinateSystem");
+	const auto coordinateSystemPos = attributes.find("coordinateSystem");
 	if(coordinateSystemPos != attributes.end())
 		m_coordinateSystem = coordinateSystemPos->second;
 
-	auto const compositionIdPos = attributes.find("compositionId");
+	const auto compositionIdPos = attributes.find("compositionId");
 	if(compositionIdPos != attributes.end())
 		m_compositionId = compositionIdPos->second;
 

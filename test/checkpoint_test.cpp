@@ -148,7 +148,7 @@ void CheckpointTest::testCopy()
 	CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
 	CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
 
-	Checkpoint *copy = new Checkpoint(*m_checkpoint);
+	auto copy = new Checkpoint(*m_checkpoint);
 	CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
 	CPPUNIT_ASSERT_EQUAL(3, (int) p2->refCount());
 	delete copy; copy = nullptr;
@@ -186,7 +186,7 @@ void CheckpointTest::testGetComponentEvents()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	DataItem *d1 = new DataItem(attributes);
+	auto d1 = new DataItem(attributes);
 	filter.insert(d1->getId());
 
 	p = new ComponentEvent(*d1, 2, time, value);
@@ -239,7 +239,7 @@ void CheckpointTest::testFilter()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	DataItem *d1 = new DataItem(attributes);
+	auto d1 = new DataItem(attributes);
 
 	p4 = new ComponentEvent(*d1, 2, time, value);
 	m_checkpoint->addComponentEvent(p4);
@@ -289,7 +289,7 @@ void CheckpointTest::testCopyAndFilter()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	DataItem *d1 = new DataItem(attributes);
+	auto d1 = new DataItem(attributes);
 
 	p = new ComponentEvent(*d1, 2, time, value);
 	m_checkpoint->addComponentEvent(p);

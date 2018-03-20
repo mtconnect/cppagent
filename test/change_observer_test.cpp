@@ -65,7 +65,7 @@ void ChangeObserverTest::testAddObserver()
 
 static void signaler(void *aObj)
 {
-	ChangeSignaler *s = (ChangeSignaler *) aObj;
+	const auto s = (ChangeSignaler *) aObj;
 	this_thread::sleep_for(1000ms);
 	s->signalObservers(100);
 }
@@ -105,7 +105,7 @@ void ChangeObserverTest::testCleanup()
 
 static void signaler2(void *aObj)
 {
-	ChangeSignaler *s = (ChangeSignaler *) aObj;
+	const auto s = (ChangeSignaler *) aObj;
 	s->signalObservers(100);
 	s->signalObservers(200);
 	s->signalObservers(300);
@@ -131,7 +131,7 @@ void ChangeObserverTest::testChangeSequence()
 
 static void signaler3(void *aObj)
 {
-	ChangeSignaler *s = (ChangeSignaler *) aObj;
+	const auto s = (ChangeSignaler *) aObj;
 	s->signalObservers(100);
 	s->signalObservers(200);
 	s->signalObservers(300);

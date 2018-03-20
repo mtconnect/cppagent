@@ -80,7 +80,7 @@ void DeviceTest::testGetters()
 
 void DeviceTest::testGetAttributes()
 {
-	auto const &attributes1 = m_devA->getAttributes();
+	const auto &attributes1 = m_devA->getAttributes();
 
 	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1.at("id"));
 	CPPUNIT_ASSERT_EQUAL((string) "DeviceTest1", attributes1.at("name"));
@@ -88,7 +88,7 @@ void DeviceTest::testGetAttributes()
 	CPPUNIT_ASSERT(attributes1.find("sampleRate") == attributes1.end());
 	CPPUNIT_ASSERT_EQUAL((string) "4", attributes1.at("iso841Class"));
 
-	auto const &attributes2 = m_devB->getAttributes();
+	const auto &attributes2 = m_devB->getAttributes();
 
 	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2.at("id"));
 	CPPUNIT_ASSERT_EQUAL((string) "DeviceTest2", attributes2.at("name"));
@@ -105,7 +105,7 @@ void DeviceTest::testDescription()
 	attributes["serialNumber"] = "SERIAL_NUMBER";
 
 	m_devA->addDescription((string) "Machine 1", attributes);
-	map<string, string> description1 = m_devA->getDescription();
+	auto description1 = m_devA->getDescription();
 
 	CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description1["manufacturer"]);
 	CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description1["serialNumber"]);
@@ -115,7 +115,7 @@ void DeviceTest::testDescription()
 
 	attributes["station"] = "STATION";
 	m_devB->addDescription((string) "Machine 2", attributes);
-	map<string, string> description2 = m_devB->getDescription();
+	auto description2 = m_devB->getDescription();
 
 	CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description2["manufacturer"]);
 	CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description2["serialNumber"]);
@@ -131,7 +131,7 @@ void DeviceTest::testRelationships()
 	map<string, string> dummy;
 	Component linear("Linear", dummy);
 
-	Component *devPointer = dynamic_cast<Component *>(m_devA);
+	auto devPointer = dynamic_cast<Component *>(m_devA);
 	CPPUNIT_ASSERT(devPointer);
 
 	linear.setParent(*m_devA);

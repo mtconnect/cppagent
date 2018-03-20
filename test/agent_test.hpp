@@ -293,7 +293,7 @@ public:
   xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), queries); \
   CPPUNIT_ASSERT(doc)
 
-#define PARSE_XML_RESPONSE_PUT(body, queries)			    \
+#define PARSE_XML_RESPONSE_PUT(body, queries) \
   xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
   CPPUNIT_ASSERT(doc)
 

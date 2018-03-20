@@ -515,7 +515,7 @@ void XmlPrinterTest::testVeryLargeSequence()
 
 void XmlPrinterTest::testChangeDeviceAttributes()
 {
-	Device *device = m_devices.front();
+	auto device = m_devices.front();
 
 	string v = "Some_Crazy_Uuid";
 	device->setUuid(v);
@@ -811,7 +811,7 @@ void XmlPrinterTest::testAssetsStyle()
 
 DataItem *XmlPrinterTest::getDataItem(const char *name)
 {
-	Device *device = m_devices.front();
+	const auto device = m_devices.front();
 	CPPUNIT_ASSERT(device);
 
 	return device->getDeviceDataItem(name);
@@ -827,7 +827,7 @@ ComponentEvent *XmlPrinterTest::newEvent(
 	string time("TIME");
 
 	// Make sure the data item is there
-	DataItem *d = getDataItem(name);
+	const auto d = getDataItem(name);
 	CPPUNIT_ASSERT_MESSAGE((string) "Could not find data item " + name, d);
 
 	return new ComponentEvent(*d, sequence, time, value);
@@ -850,13 +850,12 @@ ComponentEvent *XmlPrinterTest::addEventToCheckpoint(
 // CuttingTool tests
 void XmlPrinterTest::testPrintCuttingTool()
 {
-	vector<AssetPtr> assets;
-
-	string document = getFile("asset1.xml");
-	AssetPtr asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
+	auto document = getFile("asset1.xml");
+	auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
 	CuttingToolPtr tool = (CuttingTool *) asset.getObject();
 
 
+	vector<AssetPtr> assets;
 	assets.push_back(asset);
 
 	{
@@ -869,14 +868,13 @@ void XmlPrinterTest::testPrintCuttingTool()
 
 void XmlPrinterTest::testPrintRemovedCuttingTool()
 {
-	vector<AssetPtr> assets;
-
-	string document = getFile("asset1.xml");
-	AssetPtr asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
+	auto document = getFile("asset1.xml");
+	auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
 	asset->setRemoved(true);
 	CuttingToolPtr tool = (CuttingTool *) asset.getObject();
 
 
+	vector<AssetPtr> assets;
 	assets.push_back(asset);
 
 	{
@@ -889,17 +887,15 @@ void XmlPrinterTest::testPrintRemovedCuttingTool()
 // CuttingTool tests
 void XmlPrinterTest::testPrintExtendedCuttingTool()
 {
-	vector<AssetPtr> assets;
-
-
 	XmlPrinter::addAssetsNamespace("urn:Example.com:Assets:1.3",
 		"/schemas/MTConnectAssets_1.3.xsd",
 		"x");
 
-	string document = getFile("ext_asset.xml");
-	AssetPtr asset = m_config->parseAsset("B732A08500HP.1", "CuttingTool", document);
+	auto document = getFile("ext_asset.xml");
+	auto asset = m_config->parseAsset("B732A08500HP.1", "CuttingTool", document);
 	CuttingToolPtr tool = (CuttingTool *) asset.getObject();
 
+	vector<AssetPtr> assets;
 	assets.push_back(asset);
 
 	{

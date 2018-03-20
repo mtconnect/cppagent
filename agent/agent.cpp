@@ -466,7 +466,7 @@ Adapter *Agent::addAdapter(
 	adapter->setAgent(*this);
 	m_adapters.push_back(adapter);
 
-	auto const dev = getDeviceByName(deviceName);
+	const auto dev = getDeviceByName(deviceName);
 	if (dev && dev->m_availabilityAdded)
 		adapter->setAutoAvailable(true);
 

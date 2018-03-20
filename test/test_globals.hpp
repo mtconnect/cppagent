@@ -69,7 +69,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
 
 #define PARSE_XML(expr) \
   string result = expr;\
-  xmlDocPtr doc = xmlParseMemory(result.c_str(), result.length()); \
+  auto doc = xmlParseMemory(result.c_str(), result.length()); \
   CPPUNIT_ASSERT(doc);
 
 /// Asserts that two XML strings are equivalent.

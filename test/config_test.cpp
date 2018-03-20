@@ -86,8 +86,8 @@ void ConfigTest::testDevice()
 
 	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
-	Device *device = agent->getDevices()[0];
-	Adapter *adapter = device->m_adapters[0];
+	const auto device = agent->getDevices()[0];
+	const auto adapter = device->m_adapters[0];
 
 	CPPUNIT_ASSERT_EQUAL((string) "LinuxCNC", device->getName());
 	CPPUNIT_ASSERT(!adapter->isDupChecking());
@@ -114,8 +114,8 @@ void ConfigTest::testAdapter()
 
 	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
-	Device *device = agent->getDevices()[0];
-	Adapter *adapter = device->m_adapters[0];
+	const auto device = agent->getDevices()[0];
+	const auto adapter = device->m_adapters[0];
 
 	CPPUNIT_ASSERT_EQUAL(23, (int) adapter->getPort());
 	CPPUNIT_ASSERT_EQUAL((string) "10.211.55.1", adapter->getServer());
@@ -136,7 +136,7 @@ void ConfigTest::testDefaultPreserveUUID()
 
 	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
-	Device *device = agent->getDevices()[0];
+	const auto device = agent->getDevices()[0];
 
 	CPPUNIT_ASSERT(device->m_preserveUuid);
 }
@@ -154,7 +154,7 @@ void ConfigTest::testDefaultPreserveOverride()
 
 	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
-	Device *device = agent->getDevices()[0];
+	const auto device = agent->getDevices()[0];
 
 	CPPUNIT_ASSERT(!device->m_preserveUuid);
 }
@@ -215,7 +215,7 @@ void ConfigTest::testNamespaces()
 		"}\n");
 
 	m_config->loadConfig(streams);
-	string path = XmlPrinter::getStreamsUrn("x");
+	auto path = XmlPrinter::getStreamsUrn("x");
 	CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleStreams:1.2", path);
 
 	istringstream devices(
@@ -274,8 +274,8 @@ void ConfigTest::testLegacyTimeout()
 
 	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
-	Device *device = agent->getDevices()[0];
-	Adapter *adapter = device->m_adapters[0];
+	const auto device = agent->getDevices()[0];
+	const auto adapter = device->m_adapters[0];
 
 	CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
 }
@@ -290,8 +290,8 @@ void ConfigTest::testIgnoreTimestamps()
 
 	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
-	Device *device = agent->getDevices()[0];
-	Adapter *adapter = device->m_adapters[0];
+	const auto device = agent->getDevices()[0];
+	const auto adapter = device->m_adapters[0];
 
 	CPPUNIT_ASSERT(adapter->isIgnoringTimestamps());
 
@@ -310,8 +310,8 @@ void ConfigTest::testIgnoreTimestampsOverride()
 
 	const auto agent = m_config->getAgent();
 	CPPUNIT_ASSERT(agent);
-	Device *device = agent->getDevices()[0];
-	Adapter *adapter = device->m_adapters[0];
+	const auto device = agent->getDevices()[0];
+	const auto adapter = device->m_adapters[0];
 
 	CPPUNIT_ASSERT(!adapter->isIgnoringTimestamps());
 
@@ -329,9 +329,9 @@ void ConfigTest::testSpecifyMTCNamespace()
 		"}\n");
 
 	m_config->loadConfig(streams);
-	string path = XmlPrinter::getStreamsUrn("m");
+	auto path = XmlPrinter::getStreamsUrn("m");
 	CPPUNIT_ASSERT_EQUAL((string) "", path);
-	string location = XmlPrinter::getStreamsLocation("m");
+	auto location = XmlPrinter::getStreamsLocation("m");
 	CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectStreams_1.2.xsd", location);
 
 	XmlPrinter::clearStreamsNamespaces();
@@ -343,7 +343,7 @@ void ConfigTest::testSetSchemaVersion()
 	istringstream streams("SchemaVersion = 1.4\n");
 
 	m_config->loadConfig(streams);
-	string version = XmlPrinter::getSchemaVersion();
+	auto version = XmlPrinter::getSchemaVersion();
 	CPPUNIT_ASSERT_EQUAL((string) "1.4", version);
 
 	XmlPrinter::setSchemaVersion("1.3");
@@ -362,9 +362,9 @@ void ConfigTest::testSchemaDirectory()
 		"}\n");
 
 	m_config->loadConfig(schemas);
-	string path = XmlPrinter::getStreamsUrn("m");
+	auto path = XmlPrinter::getStreamsUrn("m");
 	CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectStreams:1.3", path);
-	string location = XmlPrinter::getStreamsLocation("m");
+	auto location = XmlPrinter::getStreamsLocation("m");
 	CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectStreams_1.3.xsd", location);
 
 	path = XmlPrinter::getDevicesUrn("m");

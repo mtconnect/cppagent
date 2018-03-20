@@ -118,7 +118,7 @@ void ConnectorTest::testProtocolCommand()
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
 	CPPUNIT_ASSERT(m_serverSocket.get());
 
-	const char *cmd = "* Hello Connector\n";
+	const auto cmd = "* Hello Connector\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
 	this_thread::sleep_for(1000ms);
 
@@ -142,7 +142,7 @@ void ConnectorTest::testHeartbeat()
 	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
 	// Respond to the heartbeat of 1/2 second
-	const char *pong = "* PONG 1000\n";
+	const auto pong = "* PONG 1000\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
 	this_thread::sleep_for(1000ms);
 
@@ -156,7 +156,7 @@ void ConnectorTest::testHeartbeatPong()
 	testHeartbeat();
 
 	dlib::timestamper stamper;
-	uint64 last_heartbeat = stamper.get_timestamp();
+	auto last_heartbeat = stamper.get_timestamp();
 
 	// Test to make sure we can send and receive 5 heartbeats
 	for (int i = 0; i < 5; i++)
@@ -168,12 +168,12 @@ void ConnectorTest::testHeartbeatPong()
 		buf[7] = '\0';
 		CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
-		uint64 now = stamper.get_timestamp();
+		auto now = stamper.get_timestamp();
 		CPPUNIT_ASSERT(now - last_heartbeat < (uint64)(1000 * 2000));
 		last_heartbeat = now;
 
 		// Respond to the heartbeat of 1/2 second
-		const char *pong = "* PONG 1000\n";
+		const auto pong = "* PONG 1000\n";
 		CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
 		this_thread::sleep_for(10ms);
 
@@ -205,7 +205,7 @@ void ConnectorTest::testLegacyTimeout()
 	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
 	// Write some data...
-	const char *cmd = "* Hello Connector\n";
+	const auto cmd = "* Hello Connector\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
 
 	// No pings, but timeout after 5 seconds of silence
