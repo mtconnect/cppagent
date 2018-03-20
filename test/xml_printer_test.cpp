@@ -843,7 +843,7 @@ void XmlPrinterTest::testPrintCuttingTool()
 	{
 	PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
 	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@toolId", "KSSP300R4SD43L240");
-	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@removed", NULL);
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@removed", nullptr);
 	}
 }
 

@@ -40,13 +40,13 @@ using namespace std;
 // ComponentTest public methods
 void AssetTest::setUp()
 {
-	m_asset = NULL;
+	m_asset = nullptr;
 
 }
 
 void AssetTest::tearDown()
 {
-	if (m_asset != NULL)
+	if (m_asset != nullptr)
 	delete m_asset;
 }
 

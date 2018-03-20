@@ -278,7 +278,7 @@ protected:
 		unsigned int count,
 		uint64_t &end,
 		bool &endOfBuffer,
-		ChangeObserver *observer = NULL);
+		ChangeObserver *observer = nullptr);
 
 	// Output an XML Error
 	std::string printError(const std::string &errorCode, const std::string &text);
@@ -365,13 +365,13 @@ protected:
 		size_t m_size;
 
 		CachedFile() :
-			m_buffer(NULL),
+			m_buffer(nullptr),
 			m_size(0)
 		{
 		}
 
 		CachedFile(const CachedFile &file) :
-			m_buffer(NULL),
+			m_buffer(nullptr),
 			m_size(file.m_size)
 		{
 			m_buffer = (char*)malloc(file.m_size);
@@ -379,7 +379,7 @@ protected:
 		}
 
 		CachedFile(char *buffer, size_t size) :
-			m_buffer(NULL),
+			m_buffer(nullptr),
 			m_size(size)
 		{
 			m_buffer = (char*)malloc(size);
@@ -387,7 +387,7 @@ protected:
 		}
 
 		CachedFile(size_t size) :
-			m_buffer(NULL),
+			m_buffer(nullptr),
 			m_size(size)
 		{
 			m_buffer = (char*)malloc(size);

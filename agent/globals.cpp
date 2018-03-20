@@ -102,14 +102,14 @@ string getCurrentTime(TimeFormat format)
 		usec = (long)(now % 1000000UL);
 #else
 		struct timeval tv;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, nullptr);
 		sec = tv.tv_sec;
 		usec = tv.tv_usec;
 #endif
 	}
 	else
 	{
-		sec = time(NULL);
+		sec = time(nullptr);
 		usec = 0;
 	}
 
@@ -201,7 +201,7 @@ string getRelativeTimeString(uint64_t aTime)
 
 unsigned int getCurrentTimeInSec()
 {
-	return time(NULL);
+	return time(nullptr);
 }
 
 

@@ -44,7 +44,7 @@ Adapter::Adapter(const string &device,
 	m_baseOffset(0),
 	m_parseTime(false),
 	m_gatheringAsset(false),
-	m_assetDevice(NULL),
+	m_assetDevice(nullptr),
 	m_reconnectInterval(10 * 1000)
 {
 }
@@ -70,7 +70,7 @@ void Adapter::setAgent(Agent &agent)
 {
 	m_agent = &agent;
 	m_device = m_agent->getDeviceByName(m_deviceName);
-	if (m_device != NULL)
+	if (m_device != nullptr)
 	{
 		m_device->addAdapter(this);
 		m_allDevices.push_back(m_device);
@@ -81,7 +81,7 @@ void Adapter::setAgent(Agent &agent)
 void Adapter::addDevice(string &device)
 {
 	Device *dev = m_agent->getDeviceByName(device);
-	if (dev != NULL)
+	if (dev != nullptr)
 	{
 		m_allDevices.push_back(dev);
 		dev->addAdapter(this);
@@ -232,11 +232,11 @@ bool Adapter::processDataItem(
 		device = m_device;
 	}
 
-	if (device != NULL)
+	if (device != nullptr)
 	{
 		dataItem = device->getDeviceDataItem(key);
 
-		if (dataItem == NULL)
+		if (dataItem == nullptr)
 		{
 			if (m_logOnce.count(key) > 0)
 				g_logger << LTRACE <<  "(" << device->getName() << ") Could not find data item: " << key;
@@ -310,7 +310,7 @@ void Adapter::processAsset(
 	const string &value,
 	const string &time)
 {
-	Device *device(NULL);
+	Device *device(nullptr);
 	string key = inputKey, dev;
 	if (splitKey(key, dev))
 		device = m_agent->getDeviceByName(dev);
@@ -439,7 +439,7 @@ void Adapter::protocolCommand(const std::string &data)
 			{
 				Device *device = m_agent->findDeviceByUUIDorName(value);
 
-				if (device != NULL)
+				if (device != nullptr)
 				{
 					m_device = device;
 					g_logger << LINFO << "Device name given by the adapter " << value
@@ -478,12 +478,12 @@ void Adapter::parseCalibration(const std::string &aLine)
 		// Convert to a floating point number
 		DataItem *di = m_device->getDeviceDataItem(name);
 
-		if (di == NULL)
+		if (di == nullptr)
 			g_logger << LWARN << "Cannot find data item to calibrate for " << name;
 		else
 		{
-			double fact_value = strtod(factor.c_str(), NULL);
-			double off_value = strtod(offset.c_str(), NULL);
+			double fact_value = strtod(factor.c_str(), nullptr);
+			double off_value = strtod(offset.c_str(), nullptr);
 			di->setConversionFactor(fact_value, off_value);
 		}
 	}

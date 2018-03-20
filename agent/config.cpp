@@ -93,8 +93,8 @@ static inline bool get_bool_with_default(
 
 
 AgentConfiguration::AgentConfiguration() :
-	m_agent(NULL),
-	m_loggerFile(NULL),
+	m_agent(nullptr),
+	m_loggerFile(nullptr),
 	m_monitorFiles(false),
 	m_minimumConfigReloadAge(15),
 	m_restart(false),
@@ -106,7 +106,7 @@ AgentConfiguration::AgentConfiguration() :
 #if _WINDOWS
 	char path[MAX_PATH];
 	pathSep = '\\';
-	success = GetModuleFileName(NULL, path, MAX_PATH) > 0;
+	success = GetModuleFileName(nullptr, path, MAX_PATH) > 0;
 #else
 	#ifdef __linux__
 		char path[PATH_MAX];
@@ -187,10 +187,10 @@ void AgentConfiguration::initialize(int argc, const char *argv[])
 
 AgentConfiguration::~AgentConfiguration()
 {
-	if (m_agent != NULL)
+	if (m_agent != nullptr)
 		delete m_agent;
 
-	if (m_loggerFile != NULL)
+	if (m_loggerFile != nullptr)
 		delete m_loggerFile;
 
 	set_all_logging_output_streams(cout);
@@ -235,7 +235,7 @@ void AgentConfiguration::monitorThread()
 		if (check &&
 			(cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime) )
 		{
-			time_t now = time(NULL);
+			time_t now = time(nullptr);
 			g_logger << LWARN <<
 				"Dected change in configuarion files. Will reload when youngest file is at least " <<
 				m_minimumConfigReloadAge
@@ -257,7 +257,7 @@ void AgentConfiguration::monitorThread()
 		m_restart = true;
 		m_agent->clear();
 		delete m_agent;
-		m_agent = NULL;
+		m_agent = nullptr;
 
 		g_logger << LWARN << "Monitor agent has completed shutdown, reinitializing agent.";
 
@@ -309,7 +309,7 @@ Device *AgentConfiguration::defaultDevice()
 	if (devices.size() == 1)
 		return devices[0];
 	else
-		return NULL;
+		return nullptr;
 }
 
 
@@ -349,7 +349,7 @@ void AgentConfiguration::LoggerHook(
 #else
 	out << "\n";
 #endif
-	if (m_loggerFile != NULL)
+	if (m_loggerFile != nullptr)
 		m_loggerFile->write(out.str().c_str());
 	else
 		cout << out.str();
@@ -382,7 +382,7 @@ static dlib::log_level string_to_log_level (const std::string& level)
 
 void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
 {
-	if (m_loggerFile != NULL)
+	if (m_loggerFile != nullptr)
 		delete m_loggerFile;
 
 	if (m_isDebug)
@@ -479,7 +479,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 	// Now get our configuration
 	config_reader::kernel_1a reader(file);
 
-	if (m_loggerFile == NULL)
+	if (m_loggerFile == nullptr)
 		configureLogger(reader);
 
 	bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
@@ -561,7 +561,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 
 	g_logger << LINFO << "Starting agent on port " << port;
 
-	if (m_agent == NULL)
+	if (m_agent == nullptr)
 		m_agent = new Agent(m_devicesFile, bufferSize, maxAssets, checkpointFrequency);
 
 	m_agent->set_listening_port(port);
@@ -631,19 +631,19 @@ void AgentConfiguration::loadAdapters(
 
 			device = m_agent->getDeviceByName(deviceName);
 
-			if (device == NULL)
+			if (device == nullptr)
 			{
 				g_logger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
 				device = defaultDevice();
 
-				if (device != NULL)
+				if (device != nullptr)
 				{
 					deviceName = device->getName();
 					g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
 				}
 			}
 
-			if (device == NULL)
+			if (device == nullptr)
 			{
 				g_logger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
 			}
@@ -699,7 +699,7 @@ void AgentConfiguration::loadAdapters(
 			}
 		}
 	}
-	else if ((device = defaultDevice()) != NULL)
+	else if ((device = defaultDevice()) != nullptr)
 	{
 		g_logger << LINFO << "Adding default adapter for " << device->getName() << " on localhost:7878";
 		Adapter *adp = m_agent->addAdapter(device->getName(), "localhost", 7878, false, legacyTimeout);

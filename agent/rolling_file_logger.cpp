@@ -69,10 +69,10 @@ int RollingFileLogger::getFileAge()
 		return 0;
 	else
 #ifdef __APPLE__
-		return time(NULL) - buffer.st_ctimespec.tv_sec;
+		return time(nullptr) - buffer.st_ctimespec.tv_sec;
 
 #else
-		return time(NULL) - buffer.st_ctime;
+		return time(nullptr) - buffer.st_ctime;
 #endif
 }
 
