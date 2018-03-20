@@ -155,7 +155,7 @@ void AgentConfiguration::initialize(int argc, const char *argv[])
 
 	try
 	{
-		struct stat buf;
+		struct stat buf = {0};
 
 		// Check first if the file is in the current working directory...
 		if (stat(m_configFile.c_str(), &buf))
@@ -206,7 +206,7 @@ AgentConfiguration::~AgentConfiguration()
 
 void AgentConfiguration::monitorThread()
 {
-	struct stat devices_at_start, cfg_at_start;
+	struct stat devices_at_start = {0}, cfg_at_start = {0};
 
 	if (stat(m_configFile.c_str(), &cfg_at_start))
 		g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
@@ -223,7 +223,7 @@ void AgentConfiguration::monitorThread()
 	{
 		this_thread::sleep_for(10s);
 
-		struct stat devices, cfg;
+		struct stat devices = {0}, cfg = {0};
 		bool check = true;
 
 		if (stat(m_configFile.c_str(), &cfg))
@@ -537,7 +537,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 
 	for (const auto &probe : devices_files)
 	{
-		struct stat buf;
+		struct stat buf = {0};
 		g_logger << LDEBUG << "Checking for Devices XML configuration file: " << probe;
 		auto res = stat(probe.c_str(), &buf);
 		g_logger << LDEBUG << "  Stat returned: " << res;
