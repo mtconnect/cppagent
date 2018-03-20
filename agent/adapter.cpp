@@ -221,8 +221,8 @@ bool Adapter::processDataItem(
 	bool first)
 {
 	string dev, key = inputKey;
-	Device *device;
-	DataItem *dataItem;
+	Device *device(nullptr);
+	DataItem *dataItem(nullptr);
 	bool more = true;
 
 	if (splitKey(key, dev))

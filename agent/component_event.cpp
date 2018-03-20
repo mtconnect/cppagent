@@ -277,7 +277,7 @@ void ComponentEvent::convertValue(const string &value)
 			cp += lastPipe + 1;
 
 			// Check if conversion is required...
-			char *np;
+			char *np(nullptr);
 
 			while (cp && *cp != '\0')
 			{

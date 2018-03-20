@@ -62,7 +62,7 @@ string intToString(unsigned int i)
 
 string floatToString(double f)
 {
-	char s[32];
+	char s[32] = {0};
 	sprintf(s, "%.7g", f);
 	return (string) s;
 }
@@ -120,7 +120,7 @@ string getCurrentTime(TimeFormat format)
 string getCurrentTime(time_t aSec, int aUsec, TimeFormat format)
 {
 	struct tm timeinfo;
-	char timestamp[64];
+	char timestamp[64] = {0};
 
 	if (format == LOCAL)
 		localtime_r(&aSec, &timeinfo);
@@ -183,7 +183,7 @@ uint64_t getCurrentTimeInMicros()
 
 string getRelativeTimeString(uint64_t aTime)
 {
-	char timeBuffer[50];
+	char timeBuffer[50] = {0};
 	time_t seconds;
 	int micros;
 	struct tm *timeinfo;
@@ -245,7 +245,7 @@ uint64_t parseTimeMicro(const std::string &aTime)
 {
 	struct tm timeinfo;
 	memset(&timeinfo, 0, sizeof(timeinfo));
-	char ms[16];
+	char ms[16] = {0};
 
 	int c = sscanf(aTime.c_str(), "%d-%d-%dT%d:%d:%d%15s", &timeinfo.tm_year, &timeinfo.tm_mon,
 				   &timeinfo.tm_mday,

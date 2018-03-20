@@ -225,11 +225,11 @@ Device *Agent::findDeviceByUUIDorName(const std::string &aId)
 
 Agent::~Agent()
 {
-	delete m_slidingBuffer;
-	delete m_sequenceLock;
-	delete m_assetLock;
-	delete m_xmlParser;
-	delete[] m_checkpoints;
+	delete m_slidingBuffer; m_slidingBuffer = nullptr;
+	delete m_sequenceLock; m_sequenceLock = nullptr;
+	delete m_assetLock; m_assetLock = nullptr;
+	delete m_xmlParser; m_xmlParser = nullptr;
+	delete[] m_checkpoints; m_checkpoints = nullptr;
 }
 
 
@@ -1432,7 +1432,7 @@ string Agent::fetchCurrentData(std::set<string> &filterSet, uint64_t at)
 			long closestCp = checkIndex * m_checkpointFreq;
 			unsigned long index;
 
-			Checkpoint *ref;
+			Checkpoint *ref(nullptr);
 
 			// Compute the closest checkpoint. If the checkpoint is after the
 			// first checkpoint and before the next incremental checkpoint,
