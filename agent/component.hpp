@@ -32,31 +32,34 @@ class Component
 public:
 	struct Reference
 	{
-	Reference(std::string &aId, std::string aName) :
-		m_id(aId), m_name(aName), m_dataItem(NULL) {}
+		Reference(const std::string &id, const std::string &name) :
+			m_id(id),
+			m_name(name),
+			m_dataItem(NULL)
+		{}
 
-	std::string m_id;
-	std::string m_name;
-	DataItem *m_dataItem;
+		std::string m_id;
+		std::string m_name;
+		DataItem *m_dataItem;
 	};
 
 	// std::string enumeration for component parts and details
 	enum EComponentSpecs
 	{
-	// Component parts
-	DEVICE,
-	// Component details
-	COMPONENTS,
-	DATA_ITEM,
-	DATA_ITEMS,
-	CONFIGURATION,
-	DESCRIPTION,
-	SOURCE,
-	TEXT,
-	REFERENCES,
-	REFERENCE,
-	COMPOSITIONS,
-	COMPOSITION
+		// Component parts
+		DEVICE,
+		// Component details
+		COMPONENTS,
+		DATA_ITEM,
+		DATA_ITEMS,
+		CONFIGURATION,
+		DESCRIPTION,
+		SOURCE,
+		TEXT,
+		REFERENCES,
+		REFERENCE,
+		COMPOSITIONS,
+		COMPOSITION
 	};
 
 	static const unsigned int NumComponentSpecs = 12;
@@ -65,82 +68,121 @@ public:
 public:
 	// Take in a class name & mapping of attributes
 	Component(
-	const std::string &cls,
-	std::map<std::string, std::string> attributes,
-	const std::string &aPrefix = ""
+		const std::string &className,
+		std::map<std::string, std::string> attributes,
+		const std::string &prefix = ""
 	);
 
 	// Virtual destructor
 	virtual ~Component();
 
 	// Return a map of attributes of all the component specs
-	std::map<std::string, std::string> *getAttributes() { return &m_attributes; }
+	std::map<std::string, std::string> *getAttributes() {
+		return &m_attributes; }
 
 	// Return what part of the component it is
-	const std::string &getClass() const { return m_class; }
-	const std::string &getPrefixedClass() const { return m_prefixedClass; }
+	const std::string &getClass() const {
+		return m_class; }
+	const std::string &getPrefixedClass() const {
+		return m_prefixedClass; }
 
 	// Getter methods for the component ID/Name
-	const std::string &getId() const { return m_id; }
-	const std::string &getName() const { return m_name; }
-	const std::string &getNativeName() const { return m_nativeName; }
-	const std::string &getUuid() const { return m_uuid; }
-	const std::string &getDescriptionBody() const { return m_descriptionBody; }
-	const std::string &getPrefix() const { return m_prefix; }
-	const std::string &getConfiguration() const { return m_configuration; }
+	const std::string &getId() const {
+		return m_id; }
+	const std::string &getName() const {
+		return m_name; }
+	const std::string &getNativeName() const {
+		return m_nativeName; }
+	const std::string &getUuid() const {
+		return m_uuid; }
+	const std::string &getDescriptionBody() const {
+		return m_descriptionBody; }
+	const std::string &getPrefix() const {
+		return m_prefix; }
+	const std::string &getConfiguration() const {
+		return m_configuration; }
 
 	// Setter methods
-	void setUuid(const std::string &aUuid) { m_uuid = aUuid; reBuildAttributes(); }
-	void setManufacturer(const std::string &aManufacturer) { m_description["manufacturer"] = aManufacturer; }
-	void setSerialNumber(const std::string &aSerialNumber) { m_description["serialNumber"] = aSerialNumber; }
-	void setStation(const std::string &aStation) { m_description["station"] = aStation; }
-	void setDescription(const std::string &aDescription) { m_descriptionBody = aDescription; }
-	void setNativeName(const std::string &aNativeName) { m_nativeName = aNativeName; reBuildAttributes(); }
+	void setUuid(const std::string &uuid)
+	{
+		m_uuid = uuid;
+		reBuildAttributes();
+	}
+	void setManufacturer(const std::string &manufacturer) {
+		m_description["manufacturer"] = manufacturer; }
+	void setSerialNumber(const std::string &serialNumber) {
+		m_description["serialNumber"] = serialNumber; }
+	void setStation(const std::string &station) {
+		m_description["station"] = station; }
+	void setDescription(const std::string &description) {
+		m_descriptionBody = description; }
+	void setNativeName(const std::string &nativeName)
+	{
+		m_nativeName = nativeName;
+		reBuildAttributes();
+	}
 
 	// Cached data items
-	DataItem *getAvailability() const { return m_availability; }
-	DataItem *getAssetChanged() const { return m_assetChanged; }
-	DataItem *getAssetRemoved() const { return m_assetRemoved; }
+	DataItem *getAvailability() const {
+		return m_availability; }
+	DataItem *getAssetChanged() const {
+		return m_assetChanged; }
+	DataItem *getAssetRemoved() const {
+		return m_assetRemoved; }
 
 
 	// Add/get description specifications using an attribute map 
 	void addDescription(std::string body, std::map<std::string, std::string> attributes);
-	const std::map<std::string, std::string> &getDescription() const { return m_description; }
+	const std::map<std::string, std::string> &getDescription() const {
+		return m_description; }
 
-	void setConfiguration(const std::string &aConfiguration) { m_configuration = aConfiguration; }
+	void setConfiguration(const std::string &configuration) {
+		m_configuration = configuration; }
 
 	// Get the device that any component is associated with 
 	Device *getDevice();
 
 	// Set/Get the component's parent component
-	void setParent(Component &parent) { m_parent = &parent; }
-	Component *getParent() const { return m_parent; }
+	void setParent(Component &parent) {
+		m_parent = &parent; }
+	Component *getParent() const {
+		return m_parent; }
 
 	// Add to/get the component's std::list of children
-	void addChild(Component &child) { m_children.push_back(&child); }
-	std::list<Component *> &getChildren() { return m_children; }
+	void addChild(Component &child) {
+		m_children.push_back(&child); }
+	std::list<Component *> &getChildren() {
+		return m_children; }
 
 	// Add and get composition...
-	void addComposition(Composition *aComposition) { m_compositions.push_back(aComposition); }
-	std::list<Composition *> &getCompositions() { return m_compositions; }
+	void addComposition(Composition *composition) {
+		m_compositions.push_back(composition); }
+	std::list<Composition *> &getCompositions() {
+		return m_compositions; }
 
 	// Add to/get the component's std::list of data items
 	void addDataItem(DataItem &dataItem);
-	const std::list<DataItem *> &getDataItems() const { return m_dataItems; }
+	const std::list<DataItem *> &getDataItems() const {
+		return m_dataItems; }
 
-	bool operator<(const Component &comp) const { return m_id < comp.getId(); }
-	bool operator==(const Component &comp) const { return m_id == comp.getId(); }
+	bool operator<(const Component &comp) const {
+		return m_id < comp.getId(); }
+	bool operator==(const Component &comp) const {
+		return m_id == comp.getId(); }
 
 	// References
-	void addReference(Reference &aReference) { m_references.push_back(aReference); }
-	const std::list<Reference> &getReferences() const { return m_references; }
+	void addReference(Reference &reference) {
+		m_references.push_back(reference); }
+	const std::list<Reference> &getReferences() const {
+		return m_references; }
 
 	void resolveReferences();
 
 protected:
 	// Return a map of attributes of all the component specs
 	std::map<std::string, std::string> buildAttributes() const;
-	void reBuildAttributes() { m_attributes = buildAttributes(); }
+	void reBuildAttributes() {
+		m_attributes = buildAttributes(); }
 
 protected:
 	// Unique ID for each component
@@ -194,7 +236,7 @@ struct ComponentComp
 {
 	bool operator()(const Component *lhs, const Component *rhs) const
 	{
-	return *lhs < *rhs;
+		return *lhs < *rhs;
 	}
 };
 

@@ -147,16 +147,16 @@ protected:
 
 	// Construct a component event and set it as the data item's latest event
 	ComponentEvent *addEventToCheckpoint(
-	Checkpoint &aCheckpoint,
-	const char *name,
-	uint64_t sequence,
-	std::string value
+		Checkpoint &checkpoint,
+		const char *name,
+		uint64_t sequence,
+		std::string value
 	);
 
 	ComponentEvent *newEvent(
-	const char *name,
-	uint64_t sequence,
-	std::string value
+		const char *name,
+		uint64_t sequence,
+		std::string value
 	);
 
 public:

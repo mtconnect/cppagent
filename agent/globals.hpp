@@ -38,11 +38,11 @@
 #ifdef _WINDOWS
 	#define ISNAN(x) _isnan(x)
 	#if _MSC_VER < 1800
-	#define NAN numeric_limits<double>::quiet_NaN()
+		#define NAN numeric_limits<double>::quiet_NaN()
 	#endif
 	#if _MSC_VER >= 1900
-	#define gets gets_s
-	#define timezone _timezone
+		#define gets gets_s
+		#define timezone _timezone
 	#endif
 
 	typedef unsigned __int64 uint64_t;
@@ -134,9 +134,9 @@ long getMemorySize();
 	typedef long volatile AtomicInt;
 #else
 	#ifdef MACOSX
-	#include <libkern/OSAtomic.h>
-	typedef volatile long AtomicInt;
+		#include <libkern/OSAtomic.h>
+		typedef volatile long AtomicInt;
 	#else
-	typedef int AtomicInt;
+		typedef int AtomicInt;
 	#endif
 #endif

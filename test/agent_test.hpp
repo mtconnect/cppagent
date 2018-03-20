@@ -295,11 +295,11 @@ public:
   m_queries.clear(); \
   CPPUNIT_ASSERT(doc)
 
-#define PARSE_XML_RESPONSE_QUERY(aQueries) \
-  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), aQueries); \
+#define PARSE_XML_RESPONSE_QUERY(queries) \
+  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), queries); \
   CPPUNIT_ASSERT(doc)
 
-#define PARSE_XML_RESPONSE_PUT(body, m_queries)			    \
-  xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, m_queries); \
+#define PARSE_XML_RESPONSE_PUT(body, queries)			    \
+  xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
   CPPUNIT_ASSERT(doc)
 

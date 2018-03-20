@@ -44,16 +44,20 @@ public:
 	void updateDevice(Device *aDevice);
 
 	// Get std::list of data items in path
-	void getDataItems(std::set<std::string> &aFilterSet,
-			  const std::string &path, xmlNodePtr node = NULL);
+	void getDataItems(
+		std::set<std::string> &filterSet,
+		const std::string &path,
+		xmlNodePtr node = NULL);
 
 	// Get an asset object representing a parsed XML Asset document. This can be
 	// full document or a fragment.
-	AssetPtr parseAsset(const std::string &aAssetId, const std::string &aType,
-			const std::string &aContent);
+	AssetPtr parseAsset(
+		const std::string &assetId,
+		const std::string &type,
+		const std::string &content);
 
 	// Modify
-	void updateAsset(AssetPtr aPtr, const std::string &aType, const std::string &aContent);
+	void updateAsset(AssetPtr assetPtr, const std::string &type, const std::string &content);
 
 protected:
 	// LibXML XML Doc
@@ -62,55 +66,50 @@ protected:
 protected:
 	// Main method to process the nodes and return the objects
 	Component *handleComponent(
-	xmlNodePtr component,
-	Component *parent = NULL,
-	Device *device = NULL);
+		xmlNodePtr component,
+		Component *parent = NULL,
+		Device *device = NULL);
 
 	// Helper to handle/return each component of the device
 	Component *loadComponent(
-	xmlNodePtr node,
-	Component::EComponentSpecs spec,
-	std::string &name
-	);
+		xmlNodePtr node,
+		Component::EComponentSpecs spec,
+		std::string &name);
 
 	// Put all of the attributes of an element into a map
-	std::map<std::string, std::string> getAttributes(
-	const xmlNodePtr element
-	);
+	std::map<std::string, std::string> getAttributes(const xmlNodePtr element);
 
 	// Load the data items
-	void loadDataItem(
-	xmlNodePtr dataItems,
-	Component *component,
-	Device *device
-	);
+	void loadDataItem(xmlNodePtr dataItems, Component *component, Device *device);
 
 	// Perform loading on children and set up relationships
 	void handleChildren(
-	xmlNodePtr components,
-	Component *parent = NULL,
-	Device *device = NULL
-	);
+		xmlNodePtr components,
+		Component *parent = NULL,
+		Device *device = NULL);
 
 	void handleComposition(
-	xmlNodePtr dataItems,
-	Component *component
-	);
+		xmlNodePtr dataItems,
+		Component *component );
 
 	// Perform loading of references and set up relationships
-	void handleRefenence(xmlNodePtr components,
-			 Component *parent = NULL,
-			 Device *device = NULL);
+	void handleRefenence(
+		xmlNodePtr components,
+		Component *parent = NULL,
+		Device *device = NULL);
 
 	// Asset Parser
-	AssetPtr handleAsset(xmlNodePtr anAsset, const std::string &aAssetId,
-			 const std::string &aType, const std::string &aContent,
-			 xmlDocPtr aDoc);
+	AssetPtr handleAsset(
+		xmlNodePtr asset,
+		const std::string &assetId,
+		const std::string &type,
+		const std::string &content,
+		xmlDocPtr doc);
 
 	// Cutting Tool Parser
-	CuttingToolPtr handleCuttingTool(xmlNodePtr anAsset, xmlDocPtr aDoc);
-	CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr aNode, xmlDocPtr aDoc);
-	void parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode, xmlDocPtr aDoc);
-	CuttingItemPtr parseCuttingItem(xmlNodePtr aNode, xmlDocPtr aDoc);
+	CuttingToolPtr handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc);
+	CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr node, xmlDocPtr doc);
+	void parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDocPtr doc);
+	CuttingItemPtr parseCuttingItem(xmlNodePtr node, xmlDocPtr doc);
 };
 

@@ -29,7 +29,7 @@ class Connector
 {
 public:
 	// Instantiate the server by assigning it a server and port/
-	Connector(const std::string &server, unsigned int port, int aLegacyTimout = 600);
+	Connector(const std::string &server, unsigned int port, int legacyTimout = 600);
 
 	// Virtual desctructor
 	virtual ~Connector();
@@ -44,28 +44,35 @@ public:
 	virtual void protocolCommand(const std::string &data) = 0;
 
 	// The connected state of this connection
-	bool isConnected() { return m_connected; }
+	bool isConnected() const {
+		return m_connected; }
 
 	// Method called when connection is lost.
 	virtual void disconnected() = 0;
 	virtual void connected() = 0;
 
 	// heartbeats
-	bool heartbeats() const { return m_heartbeats; }
-	int heartbeatFrequency() const { return m_heartbeatFrequency; }
+	bool heartbeats() const {
+		return m_heartbeats; }
+	int heartbeatFrequency() const {
+		return m_heartbeatFrequency; }
 
 	// Collect data and until it is \n terminated
-	void parseBuffer(const char *aBuffer);
+	void parseBuffer(const char *buffer);
 
 	// Send a command to the adapter
-	void sendCommand(const std::string &aCommand);
+	void sendCommand(const std::string &command);
 
-	unsigned int getPort() const { return m_port; }
-	const std::string &getServer() const { return m_server; }
+	unsigned int getPort() const {
+		return m_port; }
+	const std::string &getServer() const {
+		return m_server; }
 
-	int getLegacyTimeout() { return m_legacyTimeout / 1000; }
+	int getLegacyTimeout() const {
+		return m_legacyTimeout / 1000; }
 
-	void setRealTime(bool aV = true) { m_realTime = aV; }
+	void setRealTime(bool realTime = true) {
+		m_realTime = realTime; }
 
 
 protected:

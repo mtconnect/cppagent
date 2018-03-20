@@ -43,10 +43,10 @@ class ComponentEvent : public RefCounted
 public:
 	enum ELevel
 	{
-	NORMAL,
-	WARNING,
-	FAULT,
-	UNAVAILABLE
+		NORMAL,
+		WARNING,
+		FAULT,
+		UNAVAILABLE
 	};
 
 	static const unsigned int NumLevels = 4;
@@ -55,54 +55,65 @@ public:
 public:
 	// Initialize with the data item reference, sequence number, time and value
 	ComponentEvent(
-	DataItem &dataItem,
-	uint64_t sequence,
-	const std::string &time,
-	const std::string &value
+		DataItem &dataItem,
+		uint64_t sequence,
+		const std::string &time,
+		const std::string &value
 	);
 
 	// Copy constructor
 	ComponentEvent(ComponentEvent &ce);
 
 	ComponentEvent *deepCopy();
-	ComponentEvent *deepCopyAndRemove(ComponentEvent *aOld);
+	ComponentEvent *deepCopyAndRemove(ComponentEvent *old);
 
 	// Extract the component event data into a map
 	AttributeList *getAttributes();
 
 	// Get the data item associated with this event
-	DataItem *getDataItem() const { return m_dataItem; }
+	DataItem *getDataItem() const {
+		return m_dataItem; }
 
 	// Get the value
-	const std::string &getValue() const { return m_value; }
+	const std::string &getValue() const {
+		return m_value; }
 	ELevel getLevel();
-	const std::string &getLevelString() { return SLevels[getLevel()]; }
-	const std::string &getCode() { getAttributes(); return m_code; }
+	const std::string &getLevelString() {
+		return SLevels[getLevel()]; }
+	const std::string &getCode()
+	{
+		getAttributes();
+		return m_code;
+	}
 	void normal();
 
 	// Time series info...
-	const std::vector<float> &getTimeSeries() { return m_timeSeries; }
-	bool isTimeSeries() const { return m_isTimeSeries; }
-	int getSampleCount() const { return m_sampleCount; }
+	const std::vector<float> &getTimeSeries() const {
+		return m_timeSeries; }
+	bool isTimeSeries() const {
+		return m_isTimeSeries; }
+	int getSampleCount() const {
+		return m_sampleCount; }
 
-	uint64_t getSequence() const { return m_sequence; }
+	uint64_t getSequence() const {
+		return m_sequence; }
 
 	ComponentEvent *getFirst();
-	ComponentEvent *getPrev() { return m_prev; }
-	void getList(std::list<ComponentEventPtr> &aList);
-	void appendTo(ComponentEvent *aEvent);
-	ComponentEvent *find(const std::string &aNativeCode);
-	bool replace(ComponentEvent *aOld,
-		 ComponentEvent *aNew);
+	ComponentEvent *getPrev() {
+		return m_prev; }
+	void getList(std::list<ComponentEventPtr> &list);
+	void appendTo(ComponentEvent *event);
+	ComponentEvent *find(const std::string &nativeCode);
+	bool replace(ComponentEvent *oldComponent, ComponentEvent *newComponent);
 
-	bool operator<(ComponentEvent &aOther)
+	bool operator<(ComponentEvent &another) const
 	{
-	if ((*m_dataItem) < (*aOther.m_dataItem))
-		return true;
-	else if (*m_dataItem == *aOther.m_dataItem)
-		return m_sequence < aOther.m_sequence;
-	else
-		return false;
+		if ((*m_dataItem) < (*another.m_dataItem))
+			return true;
+		else if (*m_dataItem == *another.m_dataItem)
+			return m_sequence < another.m_sequence;
+		else
+			return false;
 	}
 
 protected:
@@ -115,7 +126,7 @@ protected:
 
 	// Sequence number of the event
 	uint64_t m_sequence;
-	std::string mSequenceStr;
+	std::string m_sequenceStr;
 
 	// Timestamp of the event's occurence
 	std::string m_time;
@@ -153,15 +164,18 @@ protected:
 	void convertValue(const std::string &value);
 };
 
+
 inline ComponentEvent::ELevel ComponentEvent::getLevel()
 {
-	if (!m_hasAttributes) getAttributes();
+	if (!m_hasAttributes)
+		getAttributes();
 
 	return m_level;
 }
 
-inline void ComponentEvent::appendTo(ComponentEvent *aEvent)
+
+inline void ComponentEvent::appendTo(ComponentEvent *event)
 {
-	m_prev = aEvent;
+	m_prev = event;
 }
 

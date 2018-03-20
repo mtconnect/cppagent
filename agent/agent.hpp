@@ -49,24 +49,27 @@ class Agent : public server_http
 	class ParameterError
 	{
 	public:
-	ParameterError(const std::string &aCode, const std::string &aMessage)
-	{
-		m_code = aCode;
-		m_message = aMessage;
-	}
-	ParameterError(const ParameterError &aError)
-	{
-		m_code = aError.m_code;
-		m_message = aError.m_message;
-	}
-	ParameterError &operator=(const ParameterError &aError)
-	{
-		m_code = aError.m_code;
-		m_message = aError.m_message;
-		return *this;
-	}
-	std::string m_code;
-	std::string m_message;
+		ParameterError(const std::string &code, const std::string &message) 
+		{
+			m_code = code;
+			m_message = message;
+		}
+
+		ParameterError(const ParameterError &anotherError)
+		{
+			m_code = anotherError.m_code;
+			m_message = anotherError.m_message;
+		}
+
+		ParameterError &operator=(const ParameterError &anotherError)
+		{
+			m_code = anotherError.m_code;
+			m_message = anotherError.m_message;
+			return *this;
+		}
+
+		std::string m_code;
+		std::string m_message;
 	};
 
 public:
@@ -97,77 +100,96 @@ public:
 
 public:
 	// Load agent with the xml configuration 
-	Agent(const std::string &configXmlPath, int aBufferSize, int aMaxAssets,
-	  int aCheckpointFreq = 1000);
+	Agent(
+		const std::string &configXmlPath,
+		int aBufferSize,
+		int aMaxAssets,
+		int aCheckpointFreq = 1000);
 
 	// Virtual destructor
 	virtual ~Agent();
 
 	// Overridden method that is called per web request
 	virtual const std::string on_request(
-	const incoming_things &incoming,
-	outgoing_things &outgoing
-	);
+		const incoming_things &incoming,
+		outgoing_things &outgoing );
 
 	// Add an adapter to the agent
 	Adapter *addAdapter(const std::string &device,
-			const std::string &host,
-			const unsigned int port,
-			bool start = false,
-			int aLegacyTimeout = 600);
+						const std::string &host,
+						const unsigned int port,
+						bool start = false,
+						int legacyTimeout = 600);
 
 	// Get device from device map
-	Device *getDeviceByName(const std::string &name) { return m_deviceMap[name]; }
-	Device *findDeviceByUUIDorName(const std::string &aId);
-	const std::vector<Device *> &getDevices() { return m_devices; }
+	Device *getDeviceByName(const std::string &name) {
+		return m_deviceMap[name]; }
+	Device *findDeviceByUUIDorName(const std::string &idOrName);
+	const std::vector<Device *> &getDevices() const {
+		return m_devices; }
 
 	// Add component events to the sliding buffer
 	unsigned int addToBuffer(
-	DataItem *dataItem,
-	const std::string &value,
-	std::string time = ""
+		DataItem *dataItem,
+		const std::string &value,
+		std::string time = ""
 	);
 
 	// Asset management
-	bool addAsset(Device *aDevice, const std::string &aId, const std::string &aAsset,
-		  const std::string &aType,
-		  const std::string &aTime = "");
+	bool addAsset(
+		Device *device,
+		const std::string &id,
+		const std::string &asset,
+		const std::string &type,
+		const std::string &time = "");
 
-	bool updateAsset(Device *aDevice, const std::string &aId, AssetChangeList &aList,
-			 const std::string &aTime);
+	bool updateAsset(
+		Device *device, 
+		const std::string &id,
+		AssetChangeList &list,
+		const std::string &time);
 
-	bool removeAsset(Device *aDevice, const std::string &aId, const std::string &aTime);
-	bool removeAllAssets(Device *aDevice, const std::string &aType, const std::string &aTime);
+	bool removeAsset(Device *device, const std::string &id, const std::string &time);
+	bool removeAllAssets(Device *device, const std::string &type, const std::string &time);
 
 	// Message when adapter has connected and disconnected
-	void disconnected(Adapter *anAdapter, std::vector<Device *> aDevices);
-	void connected(Adapter *anAdapter, std::vector<Device *> aDevices);
+	void disconnected(Adapter *adapter, std::vector<Device *> devices);
+	void connected(Adapter *adapter, std::vector<Device *> devices);
 
-	DataItem *getDataItemByName(
-	const std::string &device,
-	const std::string &name
-	);
+	DataItem *getDataItemByName(const std::string &deviceName, const std::string &dataItemName );
 
-	ComponentEvent *getFromBuffer(uint64_t aSeq) const { return (*m_slidingBuffer)[aSeq]; }
-	uint64_t getSequence() const { return m_sequence; }
-	unsigned int getBufferSize() const { return m_slidingBufferSize; }
-	unsigned int getMaxAssets() const { return m_maxAssets; }
-	unsigned int getAssetCount() const { return m_assets.size(); }
-	int getAssetCount(const std::string &aType) const
-	{
-	return const_cast<std::map<std::string, int>& >(m_assetCounts)[aType];
+	ComponentEvent *getFromBuffer(uint64_t seq) const {
+		return (*m_slidingBuffer)[seq]; }
+	uint64_t getSequence() const {
+		return m_sequence; }
+	unsigned int getBufferSize() const {
+		return m_slidingBufferSize; }
+	unsigned int getMaxAssets() const {
+		return m_maxAssets; }
+	unsigned int getAssetCount() const {
+		return m_assets.size(); }
+
+	int getAssetCount(const std::string &type) const
+	{ 
+		auto const assetPos = m_assetCounts.find(type);
+		if(assetPos != m_assetCounts.end())
+			return assetPos->second;
+		return 0;
 	}
+
 	uint64_t getFirstSequence() const
 	{
-	if (m_sequence > m_slidingBufferSize)
-		return m_sequence - m_slidingBufferSize;
-	else
-		return 1;
+		if (m_sequence > m_slidingBufferSize)
+			return m_sequence - m_slidingBufferSize;
+		else
+			return 1;
 	}
 
 	// For testing...
-	void setSequence(uint64_t aSeq) { m_sequence = aSeq; }
-	std::list<AssetPtr *> *getAssets() { return &m_assets; }
+	void setSequence(uint64_t seq) {
+		m_sequence = seq; }
+	std::list<AssetPtr *> *getAssets() {
+		return &m_assets; }
 
 	// Starting
 	virtual void start();
@@ -175,109 +197,126 @@ public:
 	// Shutdown
 	void clear();
 
-	void registerFile(const std::string &aUri, const std::string &aPath);
-	void addMimeType(const std::string &aExt, const std::string &aType) { m_mimeTypes[aExt] = aType; }
+	void registerFile(const std::string &uri, const std::string &path);
+	void addMimeType(const std::string &ext, const std::string &type) {
+		m_mimeTypes[ext] = type; }
 
 	// PUT and POST handling
-	void enablePut(bool aFlag = true) { m_putEnabled = aFlag; }
-	bool isPutEnabled() { return m_putEnabled; }
-	void allowPutFrom(const std::string &aHost) { m_putAllowedHosts.insert(aHost); }
-	bool isPutAllowedFrom(const std::string &aHost) { return m_putAllowedHosts.count(aHost) > 0; }
+	void enablePut(bool flag = true) {
+		m_putEnabled = flag; }
+	bool isPutEnabled() const {
+		return m_putEnabled; }
+	void allowPutFrom(const std::string &host) {
+		m_putAllowedHosts.insert(host); }
+	bool isPutAllowedFrom(const std::string &host) const {
+		return m_putAllowedHosts.find(host) != m_putAllowedHosts.end(); }
 
 	// For debugging
-	void setLogStreamData(bool aLog) { m_logStreamData = aLog; }
+	void setLogStreamData(bool log) {
+		m_logStreamData = log; }
 
 	// Handle probe calls
 	std::string handleProbe(const std::string &device);
 
 	// Update DOM when key changes
-	void updateDom(Device *aDevice);
+	void updateDom(Device *device);
 
 protected:
 	// HTTP methods to handle the 3 basic calls
-	std::string handleCall(std::ostream &out,
-			   const std::string &path,
-			   const key_value_map &queries,
-			   const std::string &call,
-			   const std::string &device);
+	std::string handleCall(
+		std::ostream &out,
+		const std::string &path,
+		const key_value_map &queries,
+		const std::string &call,
+		const std::string &device);
 
 	// HTTP methods to handle the 3 basic calls
-	std::string handlePut(std::ostream &out,
-			  const std::string &path,
-			  const key_value_map &queries,
-			  const std::string &call,
-			  const std::string &device);
+	std::string handlePut(
+		std::ostream &out,
+		const std::string &path,
+		const key_value_map &queries,
+		const std::string &call,
+		const std::string &device);
 
 	// Handle stream calls, which includes both current and sample
-	std::string handleStream(std::ostream &out,
-				 const std::string &path,
-				 bool current,
-				 unsigned int frequency,
-				 uint64_t start = 0,
-				 unsigned int count = 0,
-				 unsigned int aHb = 10000);
+	std::string handleStream(
+		std::ostream &out,
+		const std::string &path,
+		bool current,
+		unsigned int frequency,
+		uint64_t start = 0,
+		unsigned int count = 0,
+		unsigned int heartbeat = 10000);
 
 	// Asset related methods
-	std::string handleAssets(std::ostream &aOut,
-				 const key_value_map &aQueries,
-				 const std::string &aList);
+	std::string handleAssets(
+		std::ostream &out,
+		const key_value_map &queries,
+		const std::string &list);
 
-	std::string storeAsset(std::ostream &aOut,
-			   const key_value_map &aQueries,
-			   const std::string &aAsset,
-			   const std::string &aBody);
+	std::string storeAsset(
+		std::ostream &out,
+		const key_value_map &queries,
+		const std::string &asset,
+		const std::string &body);
 
 	// Stream the data to the user
-	void streamData(std::ostream &out,
-			std::set<std::string> &aFilterSet,
-			bool current,
-			unsigned int frequency,
-			uint64_t start = 1,
-			unsigned int count = 0,
-			unsigned int aHb = 10000);
+	void streamData(
+		std::ostream &out,
+		std::set<std::string> &filterSet,
+		bool current,
+		unsigned int frequency,
+		uint64_t start = 1,
+		unsigned int count = 0,
+		unsigned int heartbeat = 10000);
 
 	// Fetch the current/sample data and return the XML in a std::string
-	std::string fetchCurrentData(std::set<std::string> &aFilter, uint64_t at);
-	std::string fetchSampleData(std::set<std::string> &aFilterSet,
-				uint64_t start, unsigned int count, uint64_t &end,
-				bool &endOfBuffer, ChangeObserver *aObserver = NULL);
+	std::string fetchCurrentData(std::set<std::string> &filterSet, uint64_t at);
+	std::string fetchSampleData(
+		std::set<std::string> &filterSet,
+		uint64_t start,
+		unsigned int count,
+		uint64_t &end,
+		bool &endOfBuffer,
+		ChangeObserver *observer = NULL);
 
 	// Output an XML Error
 	std::string printError(const std::string &errorCode, const std::string &text);
 
 	// Handle the device/path parameters for the xpath search
 	std::string devicesAndPath(
-	const std::string &path,
-	const std::string &device
-	);
+		const std::string &path,
+		const std::string &device );
 
 	// Get a file
-	std::string handleFile(const std::string &aUri, outgoing_things &aOutgoing);
+	std::string handleFile(const std::string &uri, outgoing_things &outgoing);
 
-	bool isFile(const std::string &aUri) { return m_fileMap.count(aUri) > 0; }
+	bool isFile(const std::string &uri) const {
+		return m_fileMap.find(uri) != m_fileMap.end(); }
 
 	// Perform a check on parameter and return a value or a code
 	int checkAndGetParam(
-	const key_value_map &queries,
-	const std::string &param,
-	const int defaultValue,
-	const int minValue = NO_VALUE32,
-	bool minError = false,
-	const int maxValue = NO_VALUE32
+		const key_value_map &queries,
+		const std::string &param,
+		const int defaultValue,
+		const int minValue = NO_VALUE32,
+		bool minError = false,
+		const int maxValue = NO_VALUE32
 	);
 
 	// Perform a check on parameter and return a value or a code
 	uint64_t checkAndGetParam64(
-	const key_value_map &queries,
-	const std::string &param,
-	const uint64_t defaultValue,
-	const uint64_t minValue = NO_VALUE64,
-	bool minError = false,
-	const uint64_t maxValue = NO_VALUE64
+		const key_value_map &queries,
+		const std::string &param,
+		const uint64_t defaultValue,
+		const uint64_t minValue = NO_VALUE64,
+		bool minError = false,
+		const uint64_t maxValue = NO_VALUE64
 	);
 
 	// Find data items by name/id
-	DataItem *getDataItemById(const std::string &id) { return m_dataItemMap[id]; }
+	DataItem *getDataItemById(const std::string &id) {
+		return m_dataItemMap[id]; }
 
 protected:
 	// Unique id based on the time of creation
@@ -310,7 +349,8 @@ protected:
 	Checkpoint m_first;
 	Checkpoint *m_checkpoints;
 
-	int mCheckpointFreq, m_checkpointCount;
+	int m_checkpointFreq;
+	int m_checkpointCount;
 
 	// Data containers
 	std::vector<Adapter *> m_adapters;
@@ -319,55 +359,62 @@ protected:
 	std::map<std::string, DataItem *> m_dataItemMap;
 	std::map<std::string, int> m_assetCounts;
 
-	struct CachedFile : public RefCounted
+	struct CachedFile : public RefCounted 
 	{
-	char    *m_buffer;
-	size_t   m_size;
+		char * m_buffer;
+		size_t m_size;
 
-	CachedFile() : m_buffer(NULL), m_size(0) { }
+		CachedFile() :
+			m_buffer(NULL),
+			m_size(0)
+		{
+		}
 
-	CachedFile(const CachedFile &aFile)
-		: m_size(aFile.m_size)
-	{
-		m_buffer = (char *)malloc(aFile.m_size);
-		memcpy(m_buffer, aFile.m_buffer, aFile.m_size);
-	}
+		CachedFile(const CachedFile &file) :
+			m_buffer(NULL),
+			m_size(file.m_size)
+		{
+			m_buffer = (char*)malloc(file.m_size);
+			memcpy(m_buffer, file.m_buffer, file.m_size);
+		}
 
+		CachedFile(char *buffer, size_t size) :
+			m_buffer(NULL),
+			m_size(size)
+		{
+			m_buffer = (char*)malloc(size);
+			memcpy(m_buffer, buffer, size);
+		}
 
-	CachedFile(char *aBuffer, size_t aSize)
-		: m_size(aSize)
-	{
-		m_buffer = (char *)malloc(aSize);
-		memcpy(m_buffer, aBuffer, aSize);
-	}
+		CachedFile(size_t size) :
+			m_buffer(NULL),
+			m_size(size)
+		{
+			m_buffer = (char*)malloc(size);
+		}
 
-	CachedFile(size_t aSize)
-		: m_size(aSize)
-	{
-		m_buffer = (char *)malloc(aSize);
-	}
+		~CachedFile()
+		{
+			free(m_buffer);
+		}
 
+		CachedFile &operator=(const CachedFile &file)
+		{
+			if (m_buffer)
+				free(m_buffer);
+			m_buffer = (char*)malloc(file.m_size);
+			memcpy(m_buffer, file.m_buffer, file.m_size);
+			m_size = file.m_size;
+			return *this;
+		}
 
-	~CachedFile()
-	{
-		free(m_buffer);
-	}
-
-	CachedFile &operator=(const CachedFile &aFile)
-	{
-		if (m_buffer != NULL) free(m_buffer);
-
-		m_buffer = (char *)malloc(aFile.m_size);
-		memcpy(m_buffer, aFile.m_buffer, aFile.m_size);
-		m_size = aFile.m_size;
-		return *this;
-	}
-
-	void allocate(size_t aSize)
-	{
-		m_buffer = (char *)malloc(aSize);
-		m_size = aSize;
-	}
+		void allocate(size_t size)
+		{
+			if (m_buffer)
+				free(m_buffer);
+			m_buffer = (char*)malloc(size);
+			m_size = size;
+		}
 	};
 
 	// For file handling, small files will be cached

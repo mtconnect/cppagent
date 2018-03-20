@@ -129,8 +129,8 @@ AttributeList *ComponentEvent::getAttributes()
 		if (!m_dataItem->getCompositionId().empty())
 		m_attributes.push_back(AttributeItem("compositionId", m_dataItem->getCompositionId()));
 
-		mSequenceStr = int64ToString(m_sequence);
-		m_attributes.push_back(AttributeItem("sequence", mSequenceStr));
+		m_sequenceStr = int64ToString(m_sequence);
+		m_attributes.push_back(AttributeItem("sequence", m_sequenceStr));
 
 		if (!m_dataItem->getSubType().empty())
 		m_attributes.push_back(AttributeItem("subType", m_dataItem->getSubType()));

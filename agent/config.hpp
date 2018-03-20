@@ -17,15 +17,15 @@
 
 #include "service.hpp"
 #include <string>
+#include "dlib/logger.h"
 
 class Agent;
 class Device;
 class log_level;
 class RollingFileLogger;
 
-typedef void (NamespaceFunction)(const std::string &aUrn, const std::string &aLocation,
-				 const std::string &aPrefix);
-typedef void (StyleFunction)(const std::string &aLocation);
+typedef void (NamespaceFunction)(const std::string &urn, const std::string &location, const std::string &prefix);
+typedef void (StyleFunction)(const std::string &location);
 
 class AgentConfiguration : public MTConnectService
 {
@@ -38,32 +38,38 @@ public:
 	virtual void start() ;
 	virtual void initialize(int aArgc, const char *aArgv[]);
 
-	void configureLogger(dlib::config_reader::kernel_1a &aReader);
-	void loadConfig(std::istream &aFile);
+	void configureLogger(dlib::config_reader::kernel_1a &reader);
+	void loadConfig(std::istream &file);
 
-	void setAgent(Agent *aAgent) { m_agent = aAgent; }
-	Agent *getAgent() { return m_agent; }
+	void setAgent(Agent *agent) {
+		m_agent = agent; }
+	Agent *getAgent() {
+		return m_agent; }
 
-	RollingFileLogger *getLogger() { return m_loggerFile; }
+	RollingFileLogger *getLogger() {
+		return m_loggerFile; }
 
 protected:
 	Device *defaultDevice();
-	void loadAdapters(dlib::config_reader::kernel_1a &aReader, bool aDefaultPreserve,
-			  int aLegacyTimeout, int aReconnectInterval, bool aIgnoreTimestamps,
-			  bool aConversionRequired, bool aUpcaseValue);
-	void loadAllowPut(dlib::config_reader::kernel_1a &aReader);
-	void loadNamespace(dlib::config_reader::kernel_1a &aReader,
-			   const char *aNamespaceType,
-			   NamespaceFunction *aCallback);
-	void loadFiles(dlib::config_reader::kernel_1a &aReader);
-	void loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc,
-		   StyleFunction *aFunction);
-	void loadTypes(dlib::config_reader::kernel_1a &aReader);
+	void loadAdapters(dlib::config_reader::kernel_1a &reader,
+					bool defaultPreserve,
+					int legacyTimeout,
+					int reconnectInterval,
+					bool ignoreTimestamps,
+					bool conversionRequired,
+					bool upcaseValue);
+	void loadAllowPut(dlib::config_reader::kernel_1a &reader);
+	void loadNamespace(dlib::config_reader::kernel_1a &reader,
+						const char *namespaceType,
+						NamespaceFunction *callback);
+	void loadFiles(dlib::config_reader::kernel_1a &reader);
+	void loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName, StyleFunction *styleFunction);
+	void loadTypes(dlib::config_reader::kernel_1a &reader);
 
-	void LoggerHook(const std::string &aLoggerName,
-			const dlib::log_level &l,
-			const dlib::uint64 aThreadId,
-			const char *aMessage);
+	void LoggerHook(const std::string& loggerName,
+					const dlib::log_level& l,
+					const dlib::uint64 threadId,
+					const char* message);
 
 	void monitorThread();
 
