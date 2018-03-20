@@ -158,7 +158,7 @@ void AgentConfiguration::initialize(int argc, const char *argv[])
 		struct stat buf;
 
 		// Check first if the file is in the current working directory...
-		if (stat(m_configFile.c_str(), &buf) != 0)
+		if (stat(m_configFile.c_str(), &buf))
 		{
 			if (!m_exePath.empty())
 			{
@@ -208,9 +208,9 @@ void AgentConfiguration::monitorThread()
 {
 	struct stat devices_at_start, cfg_at_start;
 
-	if (stat(m_configFile.c_str(), &cfg_at_start) != 0)
+	if (stat(m_configFile.c_str(), &cfg_at_start))
 		g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
-	if (stat(m_devicesFile.c_str(), &devices_at_start) != 0)
+	if (stat(m_devicesFile.c_str(), &devices_at_start))
 		g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
 
 	g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile <<
@@ -226,13 +226,13 @@ void AgentConfiguration::monitorThread()
 		struct stat devices, cfg;
 		bool check = true;
 
-		if (stat(m_configFile.c_str(), &cfg) != 0)
+		if (stat(m_configFile.c_str(), &cfg))
 		{
 			g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", retrying in 10 seconds";
 			check = false;
 		}
 
-		if (stat(m_devicesFile.c_str(), &devices) != 0)
+		if (stat(m_devicesFile.c_str(), &devices))
 		{
 			g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", retrying in 10 seconds";
 			check = false;

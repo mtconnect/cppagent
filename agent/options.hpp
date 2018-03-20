@@ -121,11 +121,11 @@ public:
 		return isSet_; }
 
 	const char *getCharPtr() const  {
-		return charPtrPtr_ != 0 ? *charPtrPtr_ : 0; }
+		return charPtrPtr_ ? *charPtrPtr_ : 0; }
 	bool getBool() const {
-		return boolPtr_ != 0 ? *boolPtr_ : false; }
+		return boolPtr_ ? *boolPtr_ : false; }
 	int getInt() const {
-		return intPtr_ != 0 ? *intPtr_ : -1; }
+		return intPtr_ ? *intPtr_ : -1; }
 	const std::list<std::string> &getList() const {
 		return *list_; }
 	bool operator<(const Option &another) const;

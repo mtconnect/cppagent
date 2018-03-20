@@ -1153,7 +1153,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 
 		struct stat fs;
 		auto res = stat(path, &fs);
-		if (res != 0)
+		if (res)
 		{
 			outgoing.http_return = 404;
 			outgoing.http_return_status = "File not found";

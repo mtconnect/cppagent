@@ -1144,7 +1144,7 @@ void XmlPrinter::initXmlDoc(
 
 	if (sHostname.empty())
 	{
-		if (dlib::get_local_hostname(sHostname) != 0)
+		if (dlib::get_local_hostname(sHostname))
 			sHostname = "localhost";
 	}
 
