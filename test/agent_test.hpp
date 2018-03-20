@@ -127,8 +127,8 @@ class AgentTest : public CppUnit::TestFixture
 
 	CPPUNIT_TEST_SUITE_END();
 
-	typedef map<std::string, std::string>::kernel_1a_c map_type;
-	typedef queue<std::string>::kernel_1a_c queue_type;
+	typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
+	typedef dlib::queue<std::string>::kernel_1a_c queue_type;
 
 protected:
 	Agent *m_agent;
@@ -137,10 +137,10 @@ protected:
 	std::string m_incomingIp;
 
 	std::string m_path;
-	key_value_map m_queries;
+	dlib::key_value_map m_queries;
 	std::string m_result;
-	key_value_map m_cookies;
-	key_value_map_ci m_incomingHeaders;
+	dlib::key_value_map m_cookies;
+	dlib::key_value_map_ci m_incomingHeaders;
 
 	std::ostringstream m_out;
 	int m_delay;
