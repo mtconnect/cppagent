@@ -102,14 +102,14 @@ public:
 
 public:
 	// Construct a data item with appropriate attributes mapping
-	DataItem(std::map<std::string, std::string> attributes);
+	DataItem(std::map<std::string, std::string> const &attributes);
 
 	// Destructor
 	~DataItem();
 
 	// Get a map of all the attributes of this data item
-	std::map<std::string, std::string> *getAttributes() {
-		return &m_attributes; }
+	const std::map<std::string, std::string>& getAttributes() const {
+		return m_attributes; }
 
 	// Getter methods for data item specs
 	const std::string &getId() const {
@@ -264,7 +264,7 @@ public:
 		return m_maximum; }
 	std::string getMinimum() const {
 		return m_minimum; }
-	std::vector<std::string> &getConstrainedValues() {
+	const std::vector<std::string> &getConstrainedValues() const {
 		return m_values; }
 	bool hasConstantValue() const {
 		return m_values.size() == 1; }

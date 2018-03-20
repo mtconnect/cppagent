@@ -63,7 +63,7 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
 
 
 // DataItem public methods
-DataItem::DataItem(std::map<string, string> attributes)	:
+DataItem::DataItem(std::map<string, string> const &attributes) : 
 	m_representation(VALUE),
 	m_hasNativeScale(false),
 	m_hasSignificantDigits(false),
@@ -78,9 +78,18 @@ DataItem::DataItem(std::map<string, string> attributes)	:
 	m_conversionRequired(false),
 	m_hasFactor(false)
 {
-	m_id = attributes["id"];
-	m_name = attributes["name"];
-	m_type = attributes["type"];
+	auto const idPos = attributes.find("id");
+	if(idPos != attributes.end())
+		m_id = idPos->second;
+
+	auto const namePos = attributes.find("name");
+	if(namePos != attributes.end())
+		m_name = namePos->second;
+
+	auto const typePos = attributes.find("type");
+	if(typePos != attributes.end())
+		m_type = typePos->second;
+
 	m_isAlarm = (m_type == "ALARM");
 	m_isMessage = (m_type == "MESSAGE");
 	m_isAssetChanged = (m_type == "ASSET_CHANGED");
@@ -89,15 +98,19 @@ DataItem::DataItem(std::map<string, string> attributes)	:
 
 	m_camelType = getCamelType(m_type, m_prefix);
 
-	if (attributes["representation"] == "TIME_SERIES")
+	auto const repPos = attributes.find("representation");
+	if(repPos != attributes.end())
 	{
-		m_representation = TIME_SERIES;
-		m_camelType += "TimeSeries";
-	}
-	else if (attributes["representation"] == "DISCRETE")
-	{
-		m_representation = DISCRETE;
-		m_camelType += "Discrete";
+		if (repPos->second == "TIME_SERIES")
+		{
+			m_representation = TIME_SERIES;
+			m_camelType += "TimeSeries";
+		}
+		else if (repPos->second == "DISCRETE")
+		{
+			m_representation = DISCRETE;
+			m_camelType += "Discrete";
+		}
 	}
 
 	if (!m_prefix.empty())
@@ -107,54 +120,66 @@ DataItem::DataItem(std::map<string, string> attributes)	:
 
 	m_threeD = false;
 
-	if (!attributes["subType"].empty())
-		m_subType = attributes["subType"];
+	auto const subTypePos = attributes.find("subType");
+	if(subTypePos != attributes.end())
+		m_subType = subTypePos->second;
 
-	if (attributes["category"] == "SAMPLE")
-		m_category = SAMPLE;
-	else if (attributes["category"] == "CONDITION")
-		m_category = CONDITION;
-	else if (attributes["category"] == "EVENT")
-		m_category = EVENT;
-	else
+	auto const catPos = attributes.find("category");
+	if(catPos != attributes.end())
 	{
-		// Raise an invlaid category exception...
+		if (catPos->second == "SAMPLE")
+			m_category = SAMPLE;
+		else if (catPos->second == "CONDITION")
+			m_category = CONDITION;
+		else if (catPos->second == "EVENT")
+			m_category = EVENT;
+		else
+		{
+			// Raise an invlaid category exception...
+		}
 	}
 
-	if (!attributes["nativeUnits"].empty())
-		m_nativeUnits = attributes["nativeUnits"];
+	auto const nativeUnitsPos = attributes.find("nativeUnits");
+	if(nativeUnitsPos != attributes.end())
+		m_nativeUnits = nativeUnitsPos->second;
 
-	if (!attributes["units"].empty())
+	auto const unitsPos = attributes.find("units");
+	if(unitsPos != attributes.end())
 	{
-		m_units = attributes["units"];
-
+		m_units = unitsPos->second;
 		if (m_nativeUnits.empty())
 			m_nativeUnits = m_units;
 	}
 
-	if (!attributes["statistic"].empty())
-		m_statistic = attributes["statistic"];
+	auto const statisticPos = attributes.find("statistic");
+	if(statisticPos != attributes.end())
+		m_statistic = statisticPos->second;
 
-	if (!attributes["sampleRate"].empty())
-		m_sampleRate = attributes["sampleRate"];
+	auto const sampleRatePos = attributes.find("sampleRate");
+	if(sampleRatePos != attributes.end())
+		m_sampleRate = sampleRatePos->second;
 
-	if (!attributes["nativeScale"].empty())
+	auto const nativeScalePos = attributes.find("nativeScale");
+	if(nativeScalePos != attributes.end())
 	{
-		m_nativeScale = atof(attributes["nativeScale"].c_str());
+		m_nativeScale = atof(nativeScalePos->second.c_str());
 		m_hasNativeScale = true;
 	}
 
-	if (!attributes["significantDigits"].empty())
+	auto const significantDigitsPos = attributes.find("significantDigits");
+	if(significantDigitsPos != attributes.end())
 	{
-		m_significantDigits = atoi(attributes["significantDigits"].c_str());
+		m_significantDigits = atoi(significantDigitsPos->second.c_str());
 		m_hasSignificantDigits = true;
 	}
 
-	if (!attributes["coordinateSystem"].empty())
-		m_coordinateSystem = attributes["coordinateSystem"];
+	auto const coordinateSystemPos = attributes.find("coordinateSystem");
+	if(coordinateSystemPos != attributes.end())
+		m_coordinateSystem = coordinateSystemPos->second;
 
-	if (attributes.count("compositionId") > 0 && !attributes["compositionId"].empty())
-		m_compositionId = attributes["compositionId"];
+	auto const compositionIdPos = attributes.find("compositionId");
+	if(compositionIdPos != attributes.end())
+		m_compositionId = compositionIdPos->second;
 
 	m_component = nullptr;
 	m_attributes = buildAttributes();

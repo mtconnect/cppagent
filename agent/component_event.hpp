@@ -68,7 +68,7 @@ public:
 	ComponentEvent *deepCopyAndRemove(ComponentEvent *old);
 
 	// Extract the component event data into a map
-	AttributeList *getAttributes();
+	const AttributeList &getAttributes();
 
 	// Get the data item associated with this event
 	DataItem *getDataItem() const {

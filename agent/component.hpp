@@ -69,7 +69,7 @@ public:
 	// Take in a class name & mapping of attributes
 	Component(
 		const std::string &className,
-		std::map<std::string, std::string> attributes,
+		const std::map<std::string, std::string> &attributes,
 		const std::string &prefix = ""
 	);
 
@@ -77,8 +77,8 @@ public:
 	virtual ~Component();
 
 	// Return a map of attributes of all the component specs
-	std::map<std::string, std::string> *getAttributes() {
-		return &m_attributes; }
+	const std::map<std::string, std::string> &getAttributes() {
+		return m_attributes; }
 
 	// Return what part of the component it is
 	const std::string &getClass() const {

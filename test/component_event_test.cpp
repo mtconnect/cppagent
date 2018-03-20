@@ -94,11 +94,11 @@ void ComponentEventTest::testConstructors()
 
 void ComponentEventTest::testGetAttributes()
 {
-	AttributeList *attr_list = m_compEventA->getAttributes();
+	auto const &attr_list1 = m_compEventA->getAttributes();
 	map<string, string> attributes1;
-	AttributeList::iterator attr;
 
-	for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attributes1[attr->first] = attr->second; }
+	for (const auto &attr : attr_list1)
+		attributes1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1["dataItemId"]);
 	CPPUNIT_ASSERT_EQUAL((string) "NOW", attributes1["timestamp"]);
@@ -112,10 +112,11 @@ void ComponentEventTest::testGetAttributes()
 	CPPUNIT_ASSERT_EQUAL((string) "CRITICAL", attributes1["severity"]);
 	CPPUNIT_ASSERT_EQUAL((string) "ACTIVE", attributes1["state"]);
 
-	attr_list = m_compEventB->getAttributes();
+	auto const &attr_list2 = m_compEventB->getAttributes();
 	map<string, string> attributes2;
 
-	for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attributes2[attr->first] = attr->second; }
+	for (const auto &attr : attr_list2)
+		attributes2[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["dataItemId"]);
 	CPPUNIT_ASSERT_EQUAL((string) "LATER", attributes2["timestamp"]);
@@ -312,11 +313,11 @@ void ComponentEventTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event1->getLevel());
 	CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event1->getValue());
 
-	AttributeList *attr_list = event1->getAttributes();
+	auto const &attr_list1 = event1->getAttributes();
 	map<string, string> attrs1;
-	AttributeList::iterator attr;
 
-	for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs1[attr->first] = attr->second; }
+	for (auto const &attr : attr_list1)
+		attrs1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", attrs1["type"]);
 	CPPUNIT_ASSERT_EQUAL((string) "123", attrs1["sequence"]);
@@ -331,10 +332,11 @@ void ComponentEventTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event2->getLevel());
 	CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event2->getValue());
 
-	attr_list = event2->getAttributes();
+	auto const &attr_list2 = event2->getAttributes();
 	map<string, string> attrs2;
 
-	for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs2[attr->first] = attr->second; }
+	for (auto const &attr : attr_list2)
+		attrs2[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", attrs2["type"]);
 	CPPUNIT_ASSERT_EQUAL((string) "123", attrs2["sequence"]);
@@ -358,20 +360,21 @@ void ComponentEventTest::testTimeSeries()
 	CPPUNIT_ASSERT(d->isTimeSeries());
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "6||1 2 3 4 5 6 "), true);
-	AttributeList *attr_list = event1->getAttributes();
+	auto const &attr_list1 = event1->getAttributes();
 	map<string, string> attrs1;
-	AttributeList::iterator attr;
 
-	for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs1[attr->first] = attr->second; }
+	for (auto const& attr : attr_list1)
+		attrs1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT(event1->isTimeSeries());
 
-	int i;
 	CPPUNIT_ASSERT_EQUAL(6, event1->getSampleCount());
-	std::vector<float> values = event1->getTimeSeries();
+	auto values = event1->getTimeSeries();
 
-	for (i = 0; i < event1->getSampleCount(); i++)
-	CPPUNIT_ASSERT_EQUAL((float)(i + 1), values[i]);
+	for (auto i = 0; i < event1->getSampleCount(); i++)
+	{
+		CPPUNIT_ASSERT_EQUAL((float)(i + 1), values[i]);
+	}
 
 	CPPUNIT_ASSERT_EQUAL((string) "", event1->getValue());
 	CPPUNIT_ASSERT_EQUAL(0, (int) attrs1.count("sampleRate"));
@@ -379,10 +382,11 @@ void ComponentEventTest::testTimeSeries()
 
 	ComponentEventPtr event2(new ComponentEvent(*d, 123, time,
 				 (string) "7|42000|10 20 30 40 50 60 70 "), true);
-	attr_list = event2->getAttributes();
+	auto const &attr_list2 = event2->getAttributes();
 	map<string, string> attrs2;
 
-	for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs2[attr->first] = attr->second; }
+	for (auto const& attr : attr_list2)
+		attrs2[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT(event2->isTimeSeries());
 
@@ -391,8 +395,10 @@ void ComponentEventTest::testTimeSeries()
 	CPPUNIT_ASSERT_EQUAL((string) "42000", attrs2["sampleRate"]);
 	values = event2->getTimeSeries();
 
-	for (i = 0; i < event1->getSampleCount(); i++)
-	CPPUNIT_ASSERT_EQUAL((float)((i + 1) * 10), values[i]);
+	for (auto i = 0; i < event1->getSampleCount(); i++)
+	{
+		CPPUNIT_ASSERT_EQUAL((float)((i + 1) * 10), values[i]);
+	}
 
 }
 
@@ -408,11 +414,11 @@ void ComponentEventTest::testDuration()
 	DataItem *d = new DataItem(attributes1);
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "11.0"), true);
-	AttributeList *attr_list = event1->getAttributes();
+	auto const &attr_list = event1->getAttributes();
 	map<string, string> attrs1;
-	AttributeList::iterator attr;
 
-	for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs1[attr->first] = attr->second; }
+	for (auto const &attr : attr_list)
+		attrs1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "AVERAGE", attrs1["statistic"]);
 	CPPUNIT_ASSERT_EQUAL((string) "2011-02-18T15:52:41Z", attrs1["timestamp"]);
@@ -433,11 +439,11 @@ void ComponentEventTest::testAssetChanged()
 	CPPUNIT_ASSERT(d->isAssetChanged());
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "CuttingTool|123"), true);
-	AttributeList *attr_list = event1->getAttributes();
+	auto const &attr_list = event1->getAttributes();
 	map<string, string> attrs1;
-	AttributeList::iterator attr;
 
-	for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attrs1[attr->first] = attr->second; }
+	for (auto const &attr : attr_list)
+		attrs1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "CuttingTool", attrs1["assetType"]);
 	CPPUNIT_ASSERT_EQUAL((string) "123", event1->getValue());

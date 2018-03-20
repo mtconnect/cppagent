@@ -478,7 +478,7 @@ string XmlPrinter::printProbe(
 
 void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 {
-	addAttributes(writer, *component->getAttributes());
+	addAttributes(writer, component->getAttributes());
 
 	const auto &desc = component->getDescription();
 	const auto &body = component->getDescriptionBody();
@@ -578,7 +578,7 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 {
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItem"));
 
-	addAttributes(writer, *dataItem->getAttributes());
+	addAttributes(writer, dataItem->getAttributes());
 	const auto &source = dataItem->getSource();
 
 	if (!source.empty())
@@ -976,7 +976,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, element));
 	}
 
-	addAttributes(writer, *result->getAttributes());
+	addAttributes(writer, result->getAttributes());
 
 	if (result->isTimeSeries() && result->getValue() != "UNAVAILABLE")
 	{

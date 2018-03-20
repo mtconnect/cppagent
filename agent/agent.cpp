@@ -28,6 +28,7 @@
 #include <dlib/config_reader.h>
 #include <dlib/queue.h>
 #include <functional>
+#include <algorithm>
 
 using namespace std;
 
@@ -203,19 +204,34 @@ Agent::Agent(
 }
 
 
-Device *Agent::findDeviceByUUIDorName(const std::string &aId)
+const Device * Agent::getDeviceByName(const std::string& name) const
 {
-	Device *device = nullptr;
+	auto devPos = m_deviceMap.find(name);
+	if(devPos != m_deviceMap.end())
+		return devPos->second;
 
-	std::vector<Device *>::iterator it;
+	return nullptr;
+}
 
-	for (it = m_devices.begin(); !device && it != m_devices.end(); it++)
+
+Device * Agent::getDeviceByName(const std::string& name)
+{
+	auto devPos = m_deviceMap.find(name);
+	if(devPos != m_deviceMap.end())
+		return devPos->second;
+
+	return nullptr;
+}
+
+
+Device *Agent::findDeviceByUUIDorName(const std::string& idOrName)
+{
+	auto foundPos =  std::find_if(m_devices.begin(), m_devices.end(), [idOrName](Device const *item)
 	{
-		if ((*it)->getUuid() == aId || (*it)->getName() == aId)
-			device = *it;
-	}
+		return item->getUuid() == idOrName || item->getName() == idOrName;
+	});
 
-	return device;
+	return foundPos != m_devices.end() ? *foundPos : nullptr;
 }
 
 
@@ -450,8 +466,7 @@ Adapter *Agent::addAdapter(
 	adapter->setAgent(*this);
 	m_adapters.push_back(adapter);
 
-	Device *dev = m_deviceMap[deviceName];
-
+	auto const dev = getDeviceByName(deviceName);
 	if (dev && dev->m_availabilityAdded)
 		adapter->setAutoAvailable(true);
 
@@ -889,7 +904,7 @@ string Agent::handleCall(
 				count,
 				heartbeat);
 		}
-		else if ((m_deviceMap[call]) && device.empty())
+		else if (getDeviceByName(call) && device.empty())
 			return handleProbe(call);
 		else
 			return printError("UNSUPPORTED", "The following path is invalid: " + path);
@@ -914,8 +929,7 @@ string Agent::handlePut(
 	else if (device.empty())
 		device = adapter;
 
-	auto dev = m_deviceMap[device];
-
+	auto dev = getDeviceByName(device);
 	if (!dev)
 	{
 		string message = ((string) "Cannot find device: ") + device;
@@ -1094,7 +1108,7 @@ std::string Agent::storeAsset(
 	Device *device = nullptr;
 
 	if (!name.empty())
-		device = m_deviceMap[name];
+		device = getDeviceByName(name);
 
 	// If the device was not found or was not provided, use the default device.
 	if (!device)
@@ -1118,7 +1132,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 		auto ext = uri.substr(last + 1u);
 		if (m_mimeTypes.count(ext) > 0)
 		{
-			contentType = m_mimeTypes[ext];
+			contentType = m_mimeTypes.at(ext);
 			unknown = false;
 		}
 	}
@@ -1626,9 +1640,9 @@ uint64_t Agent::checkAndGetParam64(
 }
 
 
-DataItem *Agent::getDataItemByName(const string &device, const string &dataItemName)
+DataItem * Agent::getDataItemByName(const string &deviceName, const string &dataItemName)
 {
-	auto dev = m_deviceMap[device];
+	auto dev = getDeviceByName(deviceName);
 	return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
 }
 

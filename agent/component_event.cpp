@@ -111,7 +111,7 @@ ComponentEvent::~ComponentEvent()
 }
 
 
-AttributeList *ComponentEvent::getAttributes()
+const AttributeList &ComponentEvent::getAttributes()
 {
 	if (!m_hasAttributes)
 	{
@@ -236,7 +236,7 @@ AttributeList *ComponentEvent::getAttributes()
 		m_hasAttributes = true;
 	}
 
-	return &m_attributes;
+	return m_attributes;
 }
 
 

@@ -227,8 +227,8 @@ void XmlParserTest::testTimeSeries()
 	item->getAttributes();
 	CPPUNIT_ASSERT_EQUAL((string)"AVERAGE", item->getStatistic());
 
-	std::map<std::string, std::string> *attrs = item->getAttributes();
-	CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), (*attrs)["statistic"]);
+	auto const &attrs1 = item->getAttributes();
+	CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), attrs1.at("statistic"));
 
 
 	item = dev->getDeviceDataItem("Xts");
@@ -237,8 +237,8 @@ void XmlParserTest::testTimeSeries()
 	CPPUNIT_ASSERT(item->isTimeSeries());
 	CPPUNIT_ASSERT_EQUAL(DataItem::TIME_SERIES, item->getRepresentation());
 
-	attrs = item->getAttributes();
-	CPPUNIT_ASSERT_EQUAL(string("TIME_SERIES"), (*attrs)["representation"]);
+	auto const &attrs2 = item->getAttributes();
+	CPPUNIT_ASSERT_EQUAL(string("TIME_SERIES"), attrs2.at("representation"));
 }
 
 void XmlParserTest::testConfiguration()
@@ -265,31 +265,31 @@ void XmlParserTest::testParseAsset()
 	AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
 	CuttingToolPtr tool = (CuttingTool *) asset.getObject();
 
-	CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240", tool->getIdentity()["toolId"]);
+	CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240", tool->getIdentity().at("toolId"));
 	CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240.1", tool->getAssetId());
-	CPPUNIT_ASSERT_EQUAL((string) "1", tool->getIdentity()["serialNumber"]);
-	CPPUNIT_ASSERT_EQUAL((string) "KMT,Parlec", tool->getIdentity()["manufacturers"]);
+	CPPUNIT_ASSERT_EQUAL((string) "1", tool->getIdentity().at("serialNumber"));
+	CPPUNIT_ASSERT_EQUAL((string) "KMT,Parlec", tool->getIdentity().at("manufacturers"));
 	CPPUNIT_ASSERT_EQUAL((string) "2011-05-11T13:55:22", tool->getTimestamp());
 	CPPUNIT_ASSERT_EQUAL(false, tool->isRemoved());
 
 	// Top Level
-	CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->m_values["CuttingToolDefinition"]->m_value);
+	CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->m_values.at("CuttingToolDefinition")->m_value);
 	CPPUNIT_ASSERT_EQUAL((string) "EXPRESS",
-			 tool->m_values["CuttingToolDefinition"]->m_properties["format"]);
+	                     tool->m_values.at("CuttingToolDefinition")->m_properties.at("format"));
 	CPPUNIT_ASSERT_EQUAL((string) "Cutting tool ...", tool->getDescription());
 
 	// Status
 	CPPUNIT_ASSERT_EQUAL((string) "NEW", tool->m_status[0]);
 
 	// Values
-	CPPUNIT_ASSERT_EQUAL((string) "10000", tool->m_values["ProgramSpindleSpeed"]->m_value);
-	CPPUNIT_ASSERT_EQUAL((string) "222", tool->m_values["ProgramFeedRate"]->m_value);
-	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->m_values["ProgramFeedRate"]->refCount());
+	CPPUNIT_ASSERT_EQUAL((string) "10000", tool->m_values.at("ProgramSpindleSpeed")->m_value);
+	CPPUNIT_ASSERT_EQUAL((string) "222", tool->m_values.at("ProgramFeedRate")->m_value);
+	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->m_values.at("ProgramFeedRate")->refCount());
 
 	// Measurements
-	CPPUNIT_ASSERT_EQUAL((string) "73.25", tool->m_measurements["BodyDiameterMax"]->m_value);
-	CPPUNIT_ASSERT_EQUAL((string) "76.2", tool->m_measurements["CuttingDiameterMax"]->m_value);
-	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->m_measurements["BodyDiameterMax"]->refCount());
+	CPPUNIT_ASSERT_EQUAL((string) "73.25", tool->m_measurements.at("BodyDiameterMax")->m_value);
+	CPPUNIT_ASSERT_EQUAL((string) "76.2", tool->m_measurements.at("CuttingDiameterMax")->m_value);
+	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->m_measurements.at("BodyDiameterMax")->refCount());
 
 	// Items
 	CPPUNIT_ASSERT_EQUAL((string) "24", tool->m_itemCount);
@@ -299,10 +299,10 @@ void XmlParserTest::testParseAsset()
 	CuttingItemPtr item = tool->m_items[0];
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 2, item->refCount());
 
-	CPPUNIT_ASSERT_EQUAL((string) "SDET43PDER8GB", item->m_identity["itemId"]);
-	CPPUNIT_ASSERT_EQUAL((string) "FLANGE: 1-4, ROW: 1", item->m_values["Locus"]->m_value);
-	CPPUNIT_ASSERT_EQUAL((string) "12.7", item->m_measurements["CuttingEdgeLength"]->m_value);
-	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, item->m_measurements["CuttingEdgeLength"]->refCount());
+	CPPUNIT_ASSERT_EQUAL((string) "SDET43PDER8GB", item->m_identity.at("itemId"));
+	CPPUNIT_ASSERT_EQUAL((string) "FLANGE: 1-4, ROW: 1", item->m_values.at("Locus")->m_value);
+	CPPUNIT_ASSERT_EQUAL((string) "12.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
+	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, item->m_measurements.at("CuttingEdgeLength")->refCount());
 }
 
 void XmlParserTest::testParseOtherAsset()
@@ -346,10 +346,10 @@ void XmlParserTest::testUpdateAsset()
 	m_xmlParser->updateAsset(asset, "CuttingTool", replacement);
 
 	CuttingItemPtr item = tool->m_items[0];
-	CPPUNIT_ASSERT_EQUAL((string) "10.123", tool->m_measurements["CuttingDiameterMax"]->m_value);
+	CPPUNIT_ASSERT_EQUAL((string) "10.123", tool->m_measurements.at("CuttingDiameterMax")->m_value);
 
 	// Test cutting item replacement
-	CPPUNIT_ASSERT_EQUAL((string) "12.7", item->m_measurements["CuttingEdgeLength"]->m_value);
+	CPPUNIT_ASSERT_EQUAL((string) "12.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
 
 	replacement =
 	"<CuttingItem indices=\"1-4\" itemId=\"SDET43PDER8GB\" manufacturers=\"KMT\" grade=\"KC725M\">"
@@ -365,7 +365,7 @@ void XmlParserTest::testUpdateAsset()
 	m_xmlParser->updateAsset(asset, "CuttingTool", replacement);
 
 	item = tool->m_items[0];
-	CPPUNIT_ASSERT_EQUAL((string) "14.7", item->m_measurements["CuttingEdgeLength"]->m_value);
+	CPPUNIT_ASSERT_EQUAL((string) "14.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
 }
 
 void XmlParserTest::testBadAsset()

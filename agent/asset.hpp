@@ -78,7 +78,7 @@ public:
 	bool isRemoved() const {
 		return m_removed; }
 
-	AssetKeys &getIdentity() {
+	const AssetKeys &getIdentity() const {
 		return m_identity; }
 
 	bool operator==(const Asset &another) const {
