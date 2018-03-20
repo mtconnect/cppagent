@@ -45,15 +45,15 @@ public:
   virtual void protocolCommand(const std::string& data) = 0;
   
   /* The connected state of this connection */
-  bool isConnected() { return mConnected; }
+  bool isConnected() { return m_connected; }
   
   /* Method called when connection is lost. */
   virtual void disconnected() = 0;
   virtual void connected() = 0;
 
   /* heartbeats */
-  bool heartbeats() const { return mHeartbeats; }
-  int heartbeatFrequency() const { return mHeartbeatFrequency; }
+  bool heartbeats() const { return m_heartbeats; }
+  int heartbeatFrequency() const { return m_heartbeatFrequency; }
 
   // Collect data and until it is \n terminated
   void parseBuffer(const char *aBuffer);
@@ -61,12 +61,12 @@ public:
   // Send a command to the adapter
   void sendCommand(const std::string &aCommand);
 
-  unsigned int getPort() const { return mPort; }
-  const std::string &getServer() const { return mServer; }
+  unsigned int getPort() const { return m_port; }
+  const std::string &getServer() const { return m_server; }
   
-  int getLegacyTimeout() { return mLegacyTimeout / 1000; }
+  int getLegacyTimeout() { return m_legacyTimeout / 1000; }
 
-  void setRealTime(bool aV = true) { mRealTime = aV; }
+  void setRealTime(bool aV = true) { m_realTime = aV; }
 
 
 protected:
@@ -75,36 +75,36 @@ protected:
 
 protected:
   /* Name of the server to connect to */
-  std::string mServer;
+  std::string m_server;
 
   // Connection
-  dlib::scoped_ptr<dlib::connection> mConnection;  
+  dlib::scoped_ptr<dlib::connection> m_connection;  
   
   /* The port number to connect to */
-  unsigned int mPort;
-  unsigned int mLocalPort;
+  unsigned int m_port;
+  unsigned int m_localPort;
 
   /* The string buffer to hold the data from socket */
-  std::string mBuffer;
+  std::string m_buffer;
   
   /* The connected state of this connector */
-  bool mConnected;
+  bool m_connected;
 
   /* Priority boost */
-  bool mRealTime;
+  bool m_realTime;
   
   // Heartbeats
-  bool mHeartbeats = false;
-  int mHeartbeatFrequency = HEARTBEAT_FREQ;
-  int mLegacyTimeout = 600000;
-  dlib::uint64 mLastHeartbeat;
-  dlib::uint64 mLastSent;
+  bool m_heartbeats = false;
+  int m_heartbeatFrequency = HEARTBEAT_FREQ;
+  int m_legacyTimeout = 600000;
+  dlib::uint64 m_lastHeartbeat;
+  dlib::uint64 m_lastSent;
   
-  dlib::mutex *mCommandLock;
+  dlib::mutex *m_commandLock;
   
-  bool mConnectActive;
-  dlib::mutex *mConnectionMutex;
-  dlib::signaler *mConnectionClosed;
+  bool m_connectActive;
+  dlib::mutex *m_connectionMutex;
+  dlib::signaler *m_connectionClosed;
   
 private:
   /* Size of buffer to read at a time from the socket */  

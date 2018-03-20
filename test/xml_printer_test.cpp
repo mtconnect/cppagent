@@ -40,14 +40,14 @@ using namespace std;
 
 void XmlPrinterTest::setUp()
 {
-  config = new XmlParser();
+  m_config = new XmlParser();
   XmlPrinter::setSchemaVersion("");
-  devices = config->parseFile("../samples/test_config.xml");
+  m_devices = m_config->parseFile("../samples/test_config.xml");
 }
 
 void XmlPrinterTest::tearDown()
 {
-  delete config;
+  delete m_config;
 }
 
 void XmlPrinterTest::testPrintError()
@@ -62,7 +62,7 @@ void XmlPrinterTest::testPrintError()
 
 void XmlPrinterTest::testPrintProbe()
 {  
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, m_devices));
     
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
@@ -122,7 +122,7 @@ void XmlPrinterTest::testPrintProbe()
 
 void XmlPrinterTest::testPrintDataItemElements()
 {
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, m_devices));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='ylc']/m:Filters/m:Filter[2]@type", "PERIOD");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='ylc']/m:Filters/m:Filter[2]", "1");
@@ -184,7 +184,7 @@ void XmlPrinterTest::testChangeDevicesNamespace()
   XmlPrinter::clearDevicesNamespaces();
   
   {
-    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
             "urn:mtconnect.org:MTConnectDevices:1.2 http://schemas.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
   }
@@ -194,7 +194,7 @@ void XmlPrinterTest::testChangeDevicesNamespace()
                                     "http://www.machine.com/schemas/MachineDevices_1.3.xsd",
                                     "e");
     
-    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));  
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));  
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
                     "urn:machine.com:MachineDevices:1.3 http://www.machine.com/schemas/MachineDevices_1.3.xsd");
@@ -256,7 +256,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
 
   {
     XmlParser ext;
-    devices = ext.parseFile("../samples/extension.xml");
+    m_devices = ext.parseFile("../samples/extension.xml");
 
     XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
                                     "ExtensionDevices_1.3.xsd",
@@ -277,7 +277,7 @@ void XmlPrinterTest::testChangeStreamsNamespace()
   
   {
     XmlParser ext;
-    devices = ext.parseFile("../samples/extension.xml");
+    m_devices = ext.parseFile("../samples/extension.xml");
     
     XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
                                     "ExtensionDevices_1.3.xsd",
@@ -454,7 +454,7 @@ void XmlPrinterTest::testVeryLargeSequence()
 
 void XmlPrinterTest::testChangeDeviceAttributes()
 {
-  Device *device = devices.front();
+  Device *device = m_devices.front();
   
   string v = "Some_Crazy_Uuid";
   device->setUuid(v);
@@ -465,9 +465,9 @@ void XmlPrinterTest::testChangeDeviceAttributes()
   v = "99999999";
   device->setStation(v);
   
-  device = devices.front();
+  device = m_devices.front();
   
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
     
   // Check Description
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "Some_Crazy_Uuid");
@@ -478,7 +478,7 @@ void XmlPrinterTest::testChangeDeviceAttributes()
 
 void XmlPrinterTest::testStatisticAndTimeSeriesProbe()
 {
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
     
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xact']@statistic", "AVERAGE");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xts']@representation", "TIME_SERIES");
@@ -558,7 +558,7 @@ void XmlPrinterTest::testPrintAssetProbe()
   map<string, int> counts;
   counts["CuttingTool"] = 10;
 
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices, &counts));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices, &counts));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount", "10");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount@assetType", "CuttingTool");
@@ -566,7 +566,7 @@ void XmlPrinterTest::testPrintAssetProbe()
 
 void XmlPrinterTest::testConfiguration()
 {
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, m_devices));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Power/m:Configuration/m:SensorConfiguration/m:CalibrationDate", "2011-08-10");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:SensorConfiguration/m:Channels/m:Channel@number", "1");
@@ -580,7 +580,7 @@ void XmlPrinterTest::testChangeVersion()
   XmlPrinter::clearDevicesNamespaces();
   
   {
-    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
                                       "urn:mtconnect.org:MTConnectDevices:1.2 http://schemas.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
   }
@@ -588,7 +588,7 @@ void XmlPrinterTest::testChangeVersion()
   XmlPrinter::setSchemaVersion("1.4");
   
   {
-    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
                                       "urn:mtconnect.org:MTConnectDevices:1.4 http://schemas.mtconnect.org/schemas/MTConnectDevices_1.4.xsd");
   }
@@ -608,7 +608,7 @@ void XmlPrinterTest::testChangeMTCLocation()
 
   
   {
-    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+    PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation", 
                                       "urn:mtconnect.org:MTConnectDevices:1.3 /schemas/MTConnectDevices_1.3.xsd");
   }  
@@ -619,12 +619,12 @@ void XmlPrinterTest::testChangeMTCLocation()
 
 void XmlPrinterTest::testProbeWithFilter()
 {
-  delete config;
+  delete m_config;
   
-  config = new XmlParser();
-  devices = config->parseFile("../samples/filter_example.xml");
+  m_config = new XmlParser();
+  m_devices = m_config->parseFile("../samples/filter_example.xml");
   
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter", "5");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter@type", "MINIMUM_DELTA");
@@ -633,12 +633,12 @@ void XmlPrinterTest::testProbeWithFilter()
 
 void XmlPrinterTest::testReferences()
 {
-  delete config;
+  delete m_config;
   
-  config = new XmlParser();
-  devices = config->parseFile("../samples/reference_example.xml");
+  m_config = new XmlParser();
+  m_devices = m_config->parseFile("../samples/reference_example.xml");
   
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@dataItemId", "c4");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@name", "chuck");
@@ -668,7 +668,7 @@ void XmlPrinterTest::testDevicesStyle()
 {
   XmlPrinter::setDevicesStyle("/styles/Devices.xsl");
   
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, devices));
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, m_devices));
   
   xmlNodePtr pi = doc->children;
   CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char*) pi->name));
@@ -713,7 +713,7 @@ void XmlPrinterTest::testAssetsStyle()
 
 DataItem * XmlPrinterTest::getDataItem(const char *name)
 {
-  Device *device = devices.front();
+  Device *device = m_devices.front();
   CPPUNIT_ASSERT(device);
   
   return device->getDeviceDataItem(name);
@@ -753,7 +753,7 @@ void XmlPrinterTest::testPrintCuttingTool()
   vector<AssetPtr> assets;
   
   string document = getFile("asset1.xml");
-  AssetPtr asset = config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
+  AssetPtr asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool*) asset.getObject();
 
   
@@ -771,7 +771,7 @@ void XmlPrinterTest::testPrintRemovedCuttingTool()
   vector<AssetPtr> assets;
   
   string document = getFile("asset1.xml");
-  AssetPtr asset = config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
+  AssetPtr asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
   asset->setRemoved(true);
   CuttingToolPtr tool = (CuttingTool*) asset.getObject();
   
@@ -796,7 +796,7 @@ void XmlPrinterTest::testPrintExtendedCuttingTool()
                                   "x");
 
   string document = getFile("ext_asset.xml");
-  AssetPtr asset = config->parseAsset("B732A08500HP.1", "CuttingTool", document);
+  AssetPtr asset = m_config->parseAsset("B732A08500HP.1", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool*) asset.getObject();
   
   assets.push_back(asset);

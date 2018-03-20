@@ -48,7 +48,7 @@ void DataItemTest::setUp()
   attributes1["type"] = "ACCELERATION";
   attributes1["category"] = "SAMPLE";
   attributes1["nativeUnits"] = "PERCENT";
-  a = new DataItem(attributes1);
+  m_dataItemA = new DataItem(attributes1);
   
   attributes2["id"] = "3";
   attributes2["name"] = "DataItemTest2";
@@ -59,44 +59,44 @@ void DataItemTest::setUp()
   attributes2["nativeScale"] = "1.0";
   attributes2["significantDigits"] = "1";
   attributes2["coordinateSystem"] = "testCoordinateSystem";
-  b = new DataItem(attributes2);
+  m_dataItemB = new DataItem(attributes2);
 
   attributes3["id"] = "4";
   attributes3["name"] = "DataItemTest3";
   attributes3["type"] = "LOAD";
   attributes3["category"] = "CONDITION";
-  c = new DataItem(attributes3);
+  m_dataItemC = new DataItem(attributes3);
 }
 
 void DataItemTest::tearDown()
 {
-  delete a;
-  delete b;
-  delete c;
+  delete m_dataItemA;
+  delete m_dataItemB;
+  delete m_dataItemC;
 }
 
 void DataItemTest::testGetters()
 {
-  CPPUNIT_ASSERT_EQUAL((string) "1", a->getId());
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", a->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", a->getType());
-  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", a->getElementName());
-  CPPUNIT_ASSERT_EQUAL((string) "PERCENT", a->getNativeUnits());
-  CPPUNIT_ASSERT(a->getSubType().empty());
-  CPPUNIT_ASSERT(!a->hasNativeScale());
+  CPPUNIT_ASSERT_EQUAL((string) "1", m_dataItemA->getId());
+  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", m_dataItemA->getName());
+  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", m_dataItemA->getType());
+  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", m_dataItemA->getElementName());
+  CPPUNIT_ASSERT_EQUAL((string) "PERCENT", m_dataItemA->getNativeUnits());
+  CPPUNIT_ASSERT(m_dataItemA->getSubType().empty());
+  CPPUNIT_ASSERT(!m_dataItemA->hasNativeScale());
   
-  CPPUNIT_ASSERT_EQUAL((string) "3", b->getId());
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", b->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", b->getType());
-  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", b->getElementName());
-  CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", b->getSubType());
-  CPPUNIT_ASSERT_EQUAL(b->getNativeUnits(), b->getUnits());
-  CPPUNIT_ASSERT_EQUAL(1.0f, b->getNativeScale());
+  CPPUNIT_ASSERT_EQUAL((string) "3", m_dataItemB->getId());
+  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", m_dataItemB->getName());
+  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", m_dataItemB->getType());
+  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", m_dataItemB->getElementName());
+  CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", m_dataItemB->getSubType());
+  CPPUNIT_ASSERT_EQUAL(m_dataItemB->getNativeUnits(), m_dataItemB->getUnits());
+  CPPUNIT_ASSERT_EQUAL(1.0f, m_dataItemB->getNativeScale());
 }
 
 void DataItemTest::testGetAttributes()
 {
-  std::map<string, string> &attributes1 = *a->getAttributes();
+  std::map<string, string> &attributes1 = *m_dataItemA->getAttributes();
   CPPUNIT_ASSERT_EQUAL((string) "1", attributes1["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", attributes1["name"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes1["type"]);
@@ -105,7 +105,7 @@ void DataItemTest::testGetAttributes()
   CPPUNIT_ASSERT(attributes1["getNativeScale"].empty());
   CPPUNIT_ASSERT(attributes1["coordinateSystem"].empty());
   
-  std::map<string, string> &attributes2 = *b->getAttributes();
+  std::map<string, string> &attributes2 = *m_dataItemB->getAttributes();
   CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", attributes2["name"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes2["type"]);
@@ -118,25 +118,25 @@ void DataItemTest::testGetAttributes()
 
 void DataItemTest::testHasNameAndSource()
 {
-  CPPUNIT_ASSERT(a->hasName("DataItemTest1"));
-  CPPUNIT_ASSERT(b->hasName("DataItemTest2"));
+  CPPUNIT_ASSERT(m_dataItemA->hasName("DataItemTest1"));
+  CPPUNIT_ASSERT(m_dataItemB->hasName("DataItemTest2"));
   
-  CPPUNIT_ASSERT(a->getSource().empty());
-  CPPUNIT_ASSERT(b->getSource().empty());
+  CPPUNIT_ASSERT(m_dataItemA->getSource().empty());
+  CPPUNIT_ASSERT(m_dataItemB->getSource().empty());
   
-  CPPUNIT_ASSERT(!b->hasName("DataItemTest2Source"));
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", b->getSourceOrName());
+  CPPUNIT_ASSERT(!m_dataItemB->hasName("DataItemTest2Source"));
+  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", m_dataItemB->getSourceOrName());
   
-  b->addSource("DataItemTest2Source");
-  CPPUNIT_ASSERT(b->hasName("DataItemTest2Source"));
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", b->getSource());
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", b->getSourceOrName());
+  m_dataItemB->addSource("DataItemTest2Source");
+  CPPUNIT_ASSERT(m_dataItemB->hasName("DataItemTest2Source"));
+  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", m_dataItemB->getSource());
+  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", m_dataItemB->getSourceOrName());
 }
 
 void DataItemTest::testIsSample()
 {
-  CPPUNIT_ASSERT(a->isSample());
-  CPPUNIT_ASSERT(!b->isSample());
+  CPPUNIT_ASSERT(m_dataItemA->isSample());
+  CPPUNIT_ASSERT(!m_dataItemB->isSample());
 }
 
 void DataItemTest::testComponent()
@@ -148,9 +148,9 @@ void DataItemTest::testComponent()
   attributes1["sampleRate"] = "100.11";
   
   Component axes ("Axes", attributes1);
-  a->setComponent(axes);
+  m_dataItemA->setComponent(axes);
   
-  CPPUNIT_ASSERT_EQUAL(&axes, a->getComponent());
+  CPPUNIT_ASSERT_EQUAL(&axes, m_dataItemA->getComponent());
 }
 
 void DataItemTest::testGetCamel()
@@ -240,7 +240,7 @@ void DataItemTest::testConversion()
 
 void DataItemTest::testCondition()
 {
-  CPPUNIT_ASSERT_EQUAL(DataItem::CONDITION, c->getCategory());
+  CPPUNIT_ASSERT_EQUAL(DataItem::CONDITION, m_dataItemC->getCategory());
 }
 
 void DataItemTest::testTimeSeries()
@@ -311,29 +311,29 @@ void DataItemTest::testSampleRate()
 
 void DataItemTest::testDuplicates()
 {
-  CPPUNIT_ASSERT(!a->isDuplicate("FOO"));
-  CPPUNIT_ASSERT(a->isDuplicate("FOO"));
-  CPPUNIT_ASSERT(!a->isDuplicate("FOO2"));
+  CPPUNIT_ASSERT(!m_dataItemA->isDuplicate("FOO"));
+  CPPUNIT_ASSERT(m_dataItemA->isDuplicate("FOO"));
+  CPPUNIT_ASSERT(!m_dataItemA->isDuplicate("FOO2"));
 }
 
 void DataItemTest::testFilter()
 {
-  a->setMinmumDelta(5.0);
+  m_dataItemA->setMinmumDelta(5.0);
   
-  CPPUNIT_ASSERT(!a->isFiltered(5.0, 0.0));
-  CPPUNIT_ASSERT(a->isFiltered(6.0, 0.0));
-  CPPUNIT_ASSERT(!a->isFiltered(10.1, 0.0));
-  CPPUNIT_ASSERT(a->isFiltered(6.0, 0.0));
-  CPPUNIT_ASSERT(!a->isFiltered(5.0, 0.0));
+  CPPUNIT_ASSERT(!m_dataItemA->isFiltered(5.0, 0.0));
+  CPPUNIT_ASSERT(m_dataItemA->isFiltered(6.0, 0.0));
+  CPPUNIT_ASSERT(!m_dataItemA->isFiltered(10.1, 0.0));
+  CPPUNIT_ASSERT(m_dataItemA->isFiltered(6.0, 0.0));
+  CPPUNIT_ASSERT(!m_dataItemA->isFiltered(5.0, 0.0));
   
   // Test period
-  a->setMinmumDelta(1.0);
-  a->setMinmumPeriod(1.0);
+  m_dataItemA->setMinmumDelta(1.0);
+  m_dataItemA->setMinmumPeriod(1.0);
   
-  CPPUNIT_ASSERT(!a->isFiltered(1.0, 0.0));
-  CPPUNIT_ASSERT(a->isFiltered(3.0, 0.1));
-  CPPUNIT_ASSERT(!a->isFiltered(5, 1.1));
-  CPPUNIT_ASSERT(a->isFiltered(7.0, 2.0));
-  CPPUNIT_ASSERT(!a->isFiltered(9.0, 2.2));
+  CPPUNIT_ASSERT(!m_dataItemA->isFiltered(1.0, 0.0));
+  CPPUNIT_ASSERT(m_dataItemA->isFiltered(3.0, 0.1));
+  CPPUNIT_ASSERT(!m_dataItemA->isFiltered(5, 1.1));
+  CPPUNIT_ASSERT(m_dataItemA->isFiltered(7.0, 2.0));
+  CPPUNIT_ASSERT(!m_dataItemA->isFiltered(9.0, 2.2));
   
 }

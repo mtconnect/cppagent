@@ -131,25 +131,25 @@ class AgentTest : public CppUnit::TestFixture
   typedef queue<std::string>::kernel_1a_c queue_type;
   
 protected:
-  Agent *a;
-  Adapter *adapter;
-  std::string agentId;
-  std::string incomingIp;
+  Agent *m_agent;
+  Adapter *m_adapter;
+  std::string m_agentId;
+  std::string m_incomingIp;
   
-  bool response;
-  std::string path;
-  std::string at;
-  key_value_map queries;
-  std::string result;
-  key_value_map cookies;
-  queue_type new_cookies;
-  key_value_map_ci incoming_headers;
-  std::string foreign_ip;
-  std::string local_ip;
-  unsigned short foreign_port;
-  unsigned short local_port;
-  std::ostringstream out;
-  int delay;
+  bool m_response;
+  std::string m_path;
+  std::string m_at;
+  key_value_map m_queries;
+  std::string m_result;
+  key_value_map m_cookies;
+  queue_type m_newCookies;
+  key_value_map_ci m_incomingHeaders;
+  std::string m_foreignIp;
+  std::string m_localIp;
+  unsigned short m_foreignPort;
+  unsigned short m_localPort;
+  std::ostringstream m_out;
+  int m_delay;
   
 protected:
   /* Test Basic */
@@ -286,20 +286,20 @@ public:
 };
 
 #define PARSE_XML_RESPONSE \
-  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), queries); \
+  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), m_queries); \
   CPPUNIT_ASSERT(doc)
 
 #define PARSE_XML_RESPONSE_QUERY_KV(key, value) \
-  queries[key] = value; \
-  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), queries); \
-  queries.clear(); \
+  m_queries[key] = value; \
+  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), m_queries); \
+  m_queries.clear(); \
   CPPUNIT_ASSERT(doc)
 
 #define PARSE_XML_RESPONSE_QUERY(aQueries) \
   xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), aQueries); \
   CPPUNIT_ASSERT(doc)
 
-#define PARSE_XML_RESPONSE_PUT(body, queries)			    \
-  xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
+#define PARSE_XML_RESPONSE_PUT(body, m_queries)			    \
+  xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, m_queries); \
   CPPUNIT_ASSERT(doc)
 

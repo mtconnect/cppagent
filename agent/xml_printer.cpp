@@ -479,10 +479,10 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer,
     {
       THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
       THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId",
-                                                      BAD_CAST ref->mId.c_str()));
-      if (ref->mName.length() > 0) {
+                                                      BAD_CAST ref->m_id.c_str()));
+      if (ref->m_name.length() > 0) {
         THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
-                                                        BAD_CAST ref->mName.c_str()));
+                                                        BAD_CAST ref->m_name.c_str()));
       }
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Reference
     }
@@ -1066,26 +1066,26 @@ void XmlPrinter::addSimpleElement(xmlTextWriterPtr writer, string element, const
 // Cutting tools
 void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr aValue)
 {
-  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST aValue->mKey.c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST aValue->m_key.c_str()));
   map<string,string>::iterator iter;
   
-  for (iter = aValue->mProperties.begin(); iter != aValue->mProperties.end(); iter++) {
+  for (iter = aValue->m_properties.begin(); iter != aValue->m_properties.end(); iter++) {
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                     BAD_CAST (*iter).first.c_str(),
                                                     BAD_CAST (*iter).second.c_str()));
   }
   
-  THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST aValue->mValue.c_str()));
+  THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST aValue->m_value.c_str()));
   THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));  
 }
 
 void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr aTool,
                                        const char *aValue, std::set<string> *aRemaining)
 {
-  if (aTool->mValues.count(aValue) > 0)
+  if (aTool->m_values.count(aValue) > 0)
   {
     if (aRemaining != NULL) aRemaining->erase(aValue);
-    CuttingToolValuePtr ptr = aTool->mValues[aValue];
+    CuttingToolValuePtr ptr = aTool->m_values[aValue];
     printCuttingToolValue(writer, ptr);
   }
 }
@@ -1093,10 +1093,10 @@ void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr a
 void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr aItem,
                                        const char *aValue, std::set<string> *aRemaining)
 {
-  if (aItem->mValues.count(aValue) > 0)
+  if (aItem->m_values.count(aValue) > 0)
   {
     if (aRemaining != NULL) aRemaining->erase(aValue);
-    CuttingToolValuePtr ptr = aItem->mValues[aValue];
+    CuttingToolValuePtr ptr = aItem->m_values[aValue];
     printCuttingToolValue(writer, ptr);
   }
 }
@@ -1107,7 +1107,7 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aI
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingItem"));
   
   map<string,string>::iterator iter;
-  for (iter = aItem->mIdentity.begin(); iter != aItem->mIdentity.end(); iter++) {
+  for (iter = aItem->m_identity.begin(); iter != aItem->m_identity.end(); iter++) {
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                                     BAD_CAST (*iter).first.c_str(),
                                                     BAD_CAST (*iter).second.c_str()));
@@ -1115,7 +1115,7 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aI
 
   set<string> remaining;
   std::map<std::string,CuttingToolValuePtr>::const_iterator viter;
-  for (viter = aItem->mValues.begin(); viter != aItem->mValues.end(); viter++)
+  for (viter = aItem->m_values.begin(); viter != aItem->m_values.end(); viter++)
     remaining.insert(viter->first);
 
   
@@ -1123,7 +1123,7 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aI
   printCuttingToolValue(writer, aItem, "Locus", &remaining);
   
   vector<CuttingToolValuePtr>::iterator life;
-  for (life = aItem->mLives.begin(); life != aItem->mLives.end(); life++) {
+  for (life = aItem->m_lives.begin(); life != aItem->m_lives.end(); life++) {
     printCuttingToolValue(writer, *life);
   }
   
@@ -1134,10 +1134,10 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr aI
 
 
   // Print Measurements
-  if (aItem->mMeasurements.size() > 0) {
+  if (aItem->m_measurements.size() > 0) {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Measurements"));
     map<string,CuttingToolValuePtr>::iterator meas;
-    for (meas = aItem->mMeasurements.begin(); meas != aItem->mMeasurements.end(); meas++) {
+    for (meas = aItem->m_measurements.begin(); meas != aItem->m_measurements.end(); meas++) {
       printCuttingToolValue(writer, *(meas->second));
     }
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));      
@@ -1166,7 +1166,7 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     
     set<string> remaining;
     std::map<std::string,CuttingToolValuePtr>::const_iterator viter;
-    for (viter = aTool->mValues.begin(); viter != aTool->mValues.end(); viter++)
+    for (viter = aTool->m_values.begin(); viter != aTool->m_values.end(); viter++)
       if (viter->first != "Description")
         remaining.insert(viter->first);
     
@@ -1177,11 +1177,11 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingToolLifeCycle"));
     
     // Status...
-    if (aTool->mStatus.size() > 0)
+    if (aTool->m_status.size() > 0)
     {
       THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CutterStatus"));
       vector<string>::iterator status;
-      for (status = aTool->mStatus.begin(); status != aTool->mStatus.end(); status++) {
+      for (status = aTool->m_status.begin(); status != aTool->m_status.end(); status++) {
         THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Status"));
         THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST status->c_str()));
         THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
@@ -1194,7 +1194,7 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
     
     // Tool life
     vector<CuttingToolValuePtr>::iterator life;
-    for (life = aTool->mLives.begin(); life != aTool->mLives.end(); life++) {
+    for (life = aTool->m_lives.begin(); life != aTool->m_lives.end(); life++) {
       printCuttingToolValue(writer, *life);
     }
         
@@ -1212,23 +1212,23 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr aTool)
       printCuttingToolValue(writer, aTool, prop->c_str());
     
     // Print Measurements
-    if (aTool->mMeasurements.size() > 0) {
+    if (aTool->m_measurements.size() > 0) {
       THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Measurements"));
       map<string,CuttingToolValuePtr>::iterator meas;
-      for (meas = aTool->mMeasurements.begin(); meas != aTool->mMeasurements.end(); meas++) {
+      for (meas = aTool->m_measurements.begin(); meas != aTool->m_measurements.end(); meas++) {
         printCuttingToolValue(writer, *(meas->second));
       }
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));      
     }
     
     // Print Cutting Items
-    if (aTool->mItems.size() > 0) {
+    if (aTool->m_items.size() > 0) {
       THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingItems"));
       THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "count", 
-                                                      BAD_CAST aTool->mItemCount.c_str()));
+                                                      BAD_CAST aTool->m_itemCount.c_str()));
 
       vector<CuttingItemPtr>::iterator item;
-      for (item = aTool->mItems.begin(); item != aTool->mItems.end(); item++) {
+      for (item = aTool->m_items.begin(); item != aTool->m_items.end(); item++) {
         printCuttingToolItem(writer, *(item));
       }
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));      

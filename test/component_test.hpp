@@ -55,7 +55,7 @@ class ComponentTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE_END();
   
 protected:
-  Component *a, *b;
+  Component *m_compA, *m_compB;
   
 protected:
   void testGetters();

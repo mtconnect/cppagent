@@ -29,99 +29,99 @@ public:
   class Description {
   public:
     Description(const std::string &aBody, const std::string &aManufacturer, const std::string &aModel, const std::string &aSerialNumber,
-                const std::string &aStation) : mBody(aBody), mManufacturer(aManufacturer), mModel(aModel), mSerialNumber(aSerialNumber),
-                mStation(aStation), mHasAttributes(false) {}
-    Description(const Description &anObj) : mBody(anObj.mBody), mManufacturer(anObj.mManufacturer), mModel(anObj.mModel),
-                mSerialNumber(anObj.mSerialNumber), mStation(anObj.mStation), mHasAttributes(false) {}
+                const std::string &aStation) : m_body(aBody), m_manufacturer(aManufacturer), m_model(aModel), m_serialNumber(aSerialNumber),
+                m_station(aStation), m_hasAttributes(false) {}
+    Description(const Description &anObj) : m_body(anObj.m_body), m_manufacturer(anObj.m_manufacturer), m_model(anObj.m_model),
+                m_serialNumber(anObj.m_serialNumber), m_station(anObj.m_station), m_hasAttributes(false) {}
     Description(const std::string &aBody, const std::map<std::string,std::string> &aAttributes)
-      : mBody(aBody), mHasAttributes(false)
+      : m_body(aBody), m_hasAttributes(false)
     {
-      if (aAttributes.count("manufacturer") > 0) mManufacturer = aAttributes.at("manufacturer");
-      if (aAttributes.count("model") > 0) mModel = aAttributes.at("model");
-      if (aAttributes.count("serialNumber") > 0) mSerialNumber = aAttributes.at("serialNumber");
-      if (aAttributes.count("station") > 0) mStation = aAttributes.at("station");
+      if (aAttributes.count("manufacturer") > 0) m_manufacturer = aAttributes.at("manufacturer");
+      if (aAttributes.count("model") > 0) m_model = aAttributes.at("model");
+      if (aAttributes.count("serialNumber") > 0) m_serialNumber = aAttributes.at("serialNumber");
+      if (aAttributes.count("station") > 0) m_station = aAttributes.at("station");
     }
 
     const std::map<std::string,std::string> &getAttributes() const {
-      if (!mHasAttributes)
+      if (!m_hasAttributes)
       {
         Description *self = const_cast<Description*>(this);
         
-        if (!mManufacturer.empty()) self->mAttributes["manufacturer"] = mManufacturer;
-        if (!mModel.empty()) self->mAttributes["model"] = mModel;
-        if (!mSerialNumber.empty()) self->mAttributes["serialNumber"] = mSerialNumber;
-        if (!mStation.empty()) self->mAttributes["station"] = mStation;
+        if (!m_manufacturer.empty()) self->m_attributes["manufacturer"] = m_manufacturer;
+        if (!m_model.empty()) self->m_attributes["model"] = m_model;
+        if (!m_serialNumber.empty()) self->m_attributes["serialNumber"] = m_serialNumber;
+        if (!m_station.empty()) self->m_attributes["station"] = m_station;
         
-        self->mHasAttributes = true;
+        self->m_hasAttributes = true;
       }
       
-      return mAttributes;
+      return m_attributes;
     }
-    const std::string &getBody() const { return mBody; }
+    const std::string &getBody() const { return m_body; }
 
   protected:
-    std::map<std::string,std::string> mAttributes;
+    std::map<std::string,std::string> m_attributes;
 
-    std::string mBody;
-    std::string mManufacturer;
-    std::string mModel;
-    std::string mSerialNumber;
-    std::string mStation;
-    bool mHasAttributes;
+    std::string m_body;
+    std::string m_manufacturer;
+    std::string m_model;
+    std::string m_serialNumber;
+    std::string m_station;
+    bool m_hasAttributes;
   };
   
 public:
   Composition(const std::string &aId, const std::string &aType, const std::string &aName,
-              const std::string &aUuid) : mId(aId), mUuid(aUuid), mName(aName), mType(aType),
-              mHasAttributes(false)
+              const std::string &aUuid) : m_id(aId), m_uuid(aUuid), m_name(aName), m_type(aType),
+              m_hasAttributes(false)
   { }
-  Composition(const Composition &anObj) : mId(anObj.mId), mUuid(anObj.mUuid), mName(anObj.mName),
-  mType(anObj.mType), mHasAttributes(false)
+  Composition(const Composition &anObj) : m_id(anObj.m_id), m_uuid(anObj.m_uuid), m_name(anObj.m_name),
+  m_type(anObj.m_type), m_hasAttributes(false)
   {
-    if (anObj.mDescription.get() != NULL)
+    if (anObj.m_description.get() != NULL)
     {
-      mDescription.reset(new Description(*anObj.mDescription.get()));
+      m_description.reset(new Description(*anObj.m_description.get()));
     }
   }
   Composition(const std::map<std::string,std::string> &aAttributes)
-    : mHasAttributes(false)
+    : m_hasAttributes(false)
   {
-    mId = aAttributes.at("id");
-    mType = aAttributes.at("type");
-    if (aAttributes.count("uuid") > 0) mUuid = aAttributes.at("uuid");
-    if (aAttributes.count("name") > 0) mName = aAttributes.at("name");
+    m_id = aAttributes.at("id");
+    m_type = aAttributes.at("type");
+    if (aAttributes.count("uuid") > 0) m_uuid = aAttributes.at("uuid");
+    if (aAttributes.count("name") > 0) m_name = aAttributes.at("name");
   }
   
   
   const std::map<std::string,std::string> &getAttributes() const {
-    if (!mHasAttributes)
+    if (!m_hasAttributes)
     {
       Composition *self = const_cast<Composition*>(this);
 
-      self->mAttributes["id"] = mId;
-      self->mAttributes["type"] = mType;
-      if (!mUuid.empty()) self->mAttributes["uuid"] = mUuid;
-      if (!mName.empty()) self->mAttributes["name"] = mName;
+      self->m_attributes["id"] = m_id;
+      self->m_attributes["type"] = m_type;
+      if (!m_uuid.empty()) self->m_attributes["uuid"] = m_uuid;
+      if (!m_name.empty()) self->m_attributes["name"] = m_name;
       
-      self->mHasAttributes = true;
+      self->m_hasAttributes = true;
     }
     
-    return mAttributes;
+    return m_attributes;
   }
   
-  const Description *getDescription() const { return mDescription.get(); }
+  const Description *getDescription() const { return m_description.get(); }
   void setDescription(Description *aDescription) {
-    mDescription.reset(aDescription);
+    m_description.reset(aDescription);
   }
   
 protected:
-  std::string mId;
-  std::string mUuid;
-  std::string mName;
-  std::string mType;
+  std::string m_id;
+  std::string m_uuid;
+  std::string m_name;
+  std::string m_type;
   
-  std::map<std::string,std::string> mAttributes;
-  bool mHasAttributes;
+  std::map<std::string,std::string> m_attributes;
+  bool m_hasAttributes;
   
-  std::unique_ptr<Description> mDescription;
+  std::unique_ptr<Description> m_description;
 };

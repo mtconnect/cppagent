@@ -29,41 +29,41 @@ Adapter::Adapter(const string& device,
                  const string& server,
                  const unsigned int port,
                  int aLegacyTimeout)
-  : Connector(server, port, aLegacyTimeout), mDeviceName(device), mRunning(true),
-    mDupCheck(false), mAutoAvailable(false), mIgnoreTimestamps(false), mRelativeTime(false), mConversionRequired(true),
-    mUpcaseValue(true), mBaseTime(0), mBaseOffset(0), mParseTime(false), mGatheringAsset(false),
-    mAssetDevice(NULL), mReconnectInterval(10 * 1000)
+  : Connector(server, port, aLegacyTimeout), m_deviceName(device), m_running(true),
+    m_dupCheck(false), m_autoAvailable(false), m_ignoreTimestamps(false), m_relativeTime(false), m_conversionRequired(true),
+    m_upcaseValue(true), m_baseTime(0), m_baseOffset(0), m_parseTime(false), m_gatheringAsset(false),
+    m_assetDevice(NULL), m_reconnectInterval(10 * 1000)
 {
 }
 
 Adapter::~Adapter()
 {
-  if (mRunning) stop();
+  if (m_running) stop();
 }
 
 void Adapter::stop()
 {
   // Will stop threaded object gracefully Adapter::thread()
-  mRunning = false;
+  m_running = false;
   close();
   wait();
 }
 
 void Adapter::setAgent(Agent &aAgent)
 {
-  mAgent = &aAgent;
-  mDevice = mAgent->getDeviceByName(mDeviceName);
-  if (mDevice != NULL) {
-    mDevice->addAdapter(this);
-    mAllDevices.push_back(mDevice);
+  m_agent = &aAgent;
+  m_device = m_agent->getDeviceByName(m_deviceName);
+  if (m_device != NULL) {
+    m_device->addAdapter(this);
+    m_allDevices.push_back(m_device);
   }
 }
 
 void Adapter::addDevice(string &aName)
 {
-  Device *dev = mAgent->getDeviceByName(aName);
+  Device *dev = m_agent->getDeviceByName(aName);
   if (dev != NULL) {
-    mAllDevices.push_back(dev);
+    m_allDevices.push_back(dev);
     dev->addAdapter(this);
   }
 }
@@ -95,28 +95,28 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
   // Check how to handle time. If the time is relative, then we need to compute the first
   // offsets, otherwise, if this function is being used as an API, add the current time.
   string result;
-  if (mRelativeTime) {
+  if (m_relativeTime) {
     uint64_t offset;
-    if (mBaseTime == 0) {
-      mBaseTime = getCurrentTimeInMicros();
+    if (m_baseTime == 0) {
+      m_baseTime = getCurrentTimeInMicros();
       
       if (time.find('T') != string::npos) {
-        mParseTime = true;
-        mBaseOffset = parseTimeMicro(time);
+        m_parseTime = true;
+        m_baseOffset = parseTimeMicro(time);
       } else {
-        mBaseOffset = (uint64_t) (atof(time.c_str()) * 1000.0);
+        m_baseOffset = (uint64_t) (atof(time.c_str()) * 1000.0);
       }
       offset = 0;
-    } else if (mParseTime) {
-      offset = parseTimeMicro(time) - mBaseOffset;
+    } else if (m_parseTime) {
+      offset = parseTimeMicro(time) - m_baseOffset;
     } else {
-      offset = ((uint64_t) (atof(time.c_str()) * 1000.0)) - mBaseOffset;
+      offset = ((uint64_t) (atof(time.c_str()) * 1000.0)) - m_baseOffset;
     }
     
     anOffset = offset;
     
-    result = getRelativeTimeString(mBaseTime + offset);
-  } else if (mIgnoreTimestamps || time.empty()) {
+    result = getRelativeTimeString(m_baseTime + offset);
+  } else if (m_ignoreTimestamps || time.empty()) {
     result = getCurrentTime(GMT_UV_SEC);
   }
   else
@@ -139,16 +139,16 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
 
 void Adapter::processData(const string& data)
 {
-  if (mGatheringAsset)
+  if (m_gatheringAsset)
   {
-    if (data == mTerminator)
+    if (data == m_terminator)
     {
-      mAgent->addAsset(mAssetDevice, mAssetId, mBody.str(), mAssetType, mTime);
-      mGatheringAsset = false;
+      m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time);
+      m_gatheringAsset = false;
     }
     else
     {
-      mBody << data << endl;
+      m_body << data << endl;
     }
     
     return;
@@ -194,30 +194,30 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
   DataItem *dataItem;
   bool more = true;
   if (splitKey(key, dev)) {
-    device = mAgent->getDeviceByName(dev);
+    device = m_agent->getDeviceByName(dev);
   } else {
-    dev = mDeviceName;
-    device = mDevice;
+    dev = m_deviceName;
+    device = m_device;
   }
   
   if (device != NULL) {
     dataItem = device->getDeviceDataItem(key);
     if (dataItem == NULL)
     {
-      if (mLogOnce.count(key) > 0)
+      if (m_logOnce.count(key) > 0)
         sLogger << LTRACE <<  "(" << device->getName() << ") Could not find data item: " << key;
       else
       {
         sLogger << LWARN << "(" << device->getName() << ") Could not find data item: " << key <<
           " from line '" << aLine << "'";
-        mLogOnce.insert(key);
+        m_logOnce.insert(key);
       }
     }
     else if (dataItem->hasConstantValue())
     {
-      if (mLogOnce.count(key) == 0) {
+      if (m_logOnce.count(key) == 0) {
         sLogger << LDEBUG << "(" << device->getName() << ") Ignoring value for: " << key << ", constant value";
-        mLogOnce.insert(key);
+        m_logOnce.insert(key);
       }
     }
     else
@@ -232,7 +232,7 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
       }
       else
       {
-        if (mUpcaseValue)
+        if (m_upcaseValue)
         {
           value.resize(aValue.length());
           transform(aValue.begin(), aValue.end(), value.begin(), ::toupper);
@@ -253,9 +253,9 @@ bool Adapter::processDataItem(istringstream &toParse, const string &aLine, const
       }
       if (!isDuplicate(dataItem, check, anOffset))
       {
-        mAgent->addToBuffer(dataItem, value, aTime);
+        m_agent->addToBuffer(dataItem, value, aTime);
       }
-      else if (mDupCheck)
+      else if (m_dupCheck)
       {
         sLogger << LTRACE << "Dropping duplicate value for " << key << " of " << value;
       }
@@ -276,9 +276,9 @@ void Adapter::processAsset(istringstream &toParse, const string &aKey, const str
   Device *device;
   string key = aKey, dev;
   if (splitKey(key, dev)) {
-    device = mAgent->getDeviceByName(dev);
+    device = m_agent->getDeviceByName(dev);
   } else {
-    device = mDevice;
+    device = m_device;
   }
 
   string assetId;
@@ -299,18 +299,18 @@ void Adapter::processAsset(istringstream &toParse, const string &aKey, const str
     // set multiline and accumulate until a completed document is found
     if (rest.find("--multiline--") != rest.npos)
     {
-      mAssetDevice = device;
-      mGatheringAsset = true;
-      mTerminator = rest;
-      mTime = time;
-      mAssetType = type;
-      mAssetId = assetId;
-      mBody.str("");
-      mBody.clear();
+      m_assetDevice = device;
+      m_gatheringAsset = true;
+      m_terminator = rest;
+      m_time = time;
+      m_assetType = type;
+      m_assetId = assetId;
+      m_body.str("");
+      m_body.clear();
     }
     else
     {
-      mAgent->addAsset(device, assetId, rest, type, time);
+      m_agent->addAsset(device, assetId, rest, type, time);
     }
   }
   else if (key == "@UPDATE_ASSET@")
@@ -337,15 +337,15 @@ void Adapter::processAsset(istringstream &toParse, const string &aKey, const str
       }
     }
     
-    mAgent->updateAsset(device, assetId, list, time);
+    m_agent->updateAsset(device, assetId, list, time);
   }
   else if (key == "@REMOVE_ASSET@")
   {
-    mAgent->removeAsset(device, assetId, time);
+    m_agent->removeAsset(device, assetId, time);
   }
   else if (key == "@REMOVE_ALL_ASSETS@")
   {
-    mAgent->removeAllAssets(device, value, time);
+    m_agent->removeAllAssets(device, value, time);
   }
   
 }
@@ -360,13 +360,13 @@ void Adapter::protocolCommand(const std::string& data)
   // Handle initial push of settings for uuid, serial number and manufacturer. 
   // This will override the settings in the device from the xml
   if (data == "* PROBE") {
-    string response = mAgent->handleProbe(mDeviceName);
+    string response = m_agent->handleProbe(m_deviceName);
     string probe = "* PROBE LENGTH=";
     probe.append(intToString(response.length()));
     probe.append("\n");
     probe.append(response);
     probe.append("\n");
-    mConnection->write(probe.c_str(), probe.length());
+    m_connection->write(probe.c_str(), probe.length());
   } else {
     size_t index = data.find(':', 2);
     if (index != string::npos)
@@ -379,32 +379,32 @@ void Adapter::protocolCommand(const std::string& data)
     
       bool updateDom = true;
       if (key == "uuid") {
-        if (!mDevice->mPreserveUuid) mDevice->setUuid(value);
+        if (!m_device->m_preserveUuid) m_device->setUuid(value);
       } else if (key == "manufacturer")
-        mDevice->setManufacturer(value);
+        m_device->setManufacturer(value);
       else if (key == "station")
-        mDevice->setStation(value);
+        m_device->setStation(value);
       else if (key == "serialNumber")
-        mDevice->setSerialNumber(value);
+        m_device->setSerialNumber(value);
       else if (key == "description")
-        mDevice->setDescription(value);
+        m_device->setDescription(value);
       else if (key == "nativeName")
-        mDevice->setNativeName(value);
+        m_device->setNativeName(value);
       else if (key == "calibration")
         parseCalibration(value);
       else if (key == "conversionRequired")
-        mConversionRequired = is_true(value);
+        m_conversionRequired = is_true(value);
       else if (key == "relativeTime")
-        mRelativeTime = is_true(value);
+        m_relativeTime = is_true(value);
       else if (key == "realTime")
-        mRealTime = is_true(value);
+        m_realTime = is_true(value);
       else if (key == "device") {
-        Device *device = mAgent->findDeviceByUUIDorName(value);
+        Device *device = m_agent->findDeviceByUUIDorName(value);
         if (device != NULL) {
-          mDevice = device;
+          m_device = device;
           sLogger << LINFO << "Device name given by the adapter " << value
-            << ", has been assigned to cfg " << mDeviceName;
-          mDeviceName = value;
+            << ", has been assigned to cfg " << m_deviceName;
+          m_deviceName = value;
         } else {
           sLogger << LERROR << "Cannot find device for device command: " << value;
           throw std::invalid_argument(string("Cannot find device for device name or uuid: ") + value);
@@ -412,12 +412,12 @@ void Adapter::protocolCommand(const std::string& data)
       }
       else
       {
-        sLogger << LWARN << "Unknown command '" << data << "' for device '" << mDeviceName;
+        sLogger << LWARN << "Unknown command '" << data << "' for device '" << m_deviceName;
         updateDom = false;
       }
       
       if (updateDom) {
-        mAgent->updateDom(mDevice);
+        m_agent->updateDom(m_device);
       }
     }
   }  
@@ -433,7 +433,7 @@ void Adapter::parseCalibration(const std::string &aLine)
          getline(toParse, factor, '|') &&
          getline(toParse, offset, '|')) {
     // Convert to a floating point number
-    DataItem *di = mDevice->getDeviceDataItem(name);
+    DataItem *di = m_device->getDeviceDataItem(name);
     if (di == NULL) {
       sLogger << LWARN << "Cannot find data item to calibrate for " << name;
     } else {
@@ -446,19 +446,19 @@ void Adapter::parseCalibration(const std::string &aLine)
 
 void Adapter::disconnected()
 {
-  mBaseTime = 0;
-  mAgent->disconnected(this, mAllDevices);
+  m_baseTime = 0;
+  m_agent->disconnected(this, m_allDevices);
 }
 
 void Adapter::connected()
 {
-  mAgent->connected(this, mAllDevices);
+  m_agent->connected(this, m_allDevices);
 }
 
 /* Adapter private methods */
 void Adapter::thread()
 {
-  while (mRunning)
+  while (m_running)
   {
     try
     {
@@ -471,29 +471,29 @@ void Adapter::thread()
     
     catch (std::invalid_argument &err)
     {
-      sLogger << LERROR << "Adapter for " << mDeviceName << "'s thread threw an argument error, stopping adapter: "
+      sLogger << LERROR << "Adapter for " << m_deviceName << "'s thread threw an argument error, stopping adapter: "
         << err.what();
       stop();
     }
     
     catch (std::exception &err)
     {
-      sLogger << LERROR << "Adapter for " << mDeviceName << "'s thread threw an exceotion, stopping adapter: "
+      sLogger << LERROR << "Adapter for " << m_deviceName << "'s thread threw an exceotion, stopping adapter: "
         << err.what();
       stop();
     }
     
     catch (...)
     {
-      sLogger << LERROR << "Thread for adapter " << mDeviceName << "'s thread threw an unhandled exception, stopping adapter";
+      sLogger << LERROR << "Thread for adapter " << m_deviceName << "'s thread threw an unhandled exception, stopping adapter";
       stop();
     }
 
-    if (!mRunning) break;
+    if (!m_running) break;
 
     // Try to reconnect every 10 seconds
-    sLogger << LINFO << "Will try to reconnect in " << mReconnectInterval << " milliseconds";
-    dlib::sleep(mReconnectInterval);
+    sLogger << LINFO << "Will try to reconnect in " << m_reconnectInterval << " milliseconds";
+    dlib::sleep(m_reconnectInterval);
   }
   sLogger << LINFO << "Adapter thread stopped";
 }

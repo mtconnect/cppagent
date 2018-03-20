@@ -69,7 +69,7 @@ public:
   void tearDown();
   
 protected:
-  AgentConfiguration *mConfig;
+  AgentConfiguration *m_config;
   
 protected:
   void testBlankConfig();

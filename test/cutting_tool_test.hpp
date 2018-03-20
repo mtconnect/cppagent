@@ -52,7 +52,7 @@ public:
   void tearDown();
   
 protected:
-  CuttingToolPtr mTool;
+  CuttingToolPtr m_tool;
   
 protected:
   void testCuttingTool();

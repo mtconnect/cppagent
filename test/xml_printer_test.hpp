@@ -84,8 +84,8 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE_END();
   
 protected:
-  XmlParser *config;
-  std::vector<Device *> devices;
+  XmlParser *m_config;
+  std::vector<Device *> m_devices;
   
 protected:
   /* Helper methods to test */

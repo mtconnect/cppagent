@@ -52,7 +52,7 @@ void ComponentEventTest::setUp()
   attributes1["name"] = "DataItemTest1";
   attributes1["type"] = "ALARM";
   attributes1["category"] = "EVENT";
-  d1 = new DataItem(attributes1);
+  m_dataItem1 = new DataItem(attributes1);
   
   attributes2["id"] = "3";
   attributes2["name"] = "DataItemTest2";
@@ -60,41 +60,41 @@ void ComponentEventTest::setUp()
   attributes2["nativeUnits"] = "MILLIMETER";
   attributes2["subType"] = "ACTUAL";
   attributes2["category"] = "SAMPLE";
-  d2 = new DataItem(attributes2);
+  m_dataItem2 = new DataItem(attributes2);
 
   string time("NOW"), value("CODE|NATIVE|CRITICAL|ACTIVE|DESCRIPTION");
-  a = new ComponentEvent(*d1, 2, time, value);
+  m_compEventA = new ComponentEvent(*m_dataItem1, 2, time, value);
   
   time = "LATER";
   value = "1.1231";
-  b = new ComponentEvent(*d2, 4, time, value);
+  m_compEventB = new ComponentEvent(*m_dataItem2, 4, time, value);
 }
 
 void ComponentEventTest::tearDown()
 {
-  a->unrefer();
-  b->unrefer();
-  delete d1;
-  delete d2;
+  m_compEventA->unrefer();
+  m_compEventB->unrefer();
+  delete m_dataItem1;
+  delete m_dataItem2;
 }
 
 void ComponentEventTest::testConstructors()
 {
-  ComponentEvent *ce = new ComponentEvent(*a);
+  ComponentEvent *ce = new ComponentEvent(*m_compEventA);
   
   // Copy constructor allocates different objects, so it has different addresses
-  CPPUNIT_ASSERT(a != ce);
+  CPPUNIT_ASSERT(m_compEventA != ce);
   
   // But the values should be the same
-  CPPUNIT_ASSERT_EQUAL(a->getDataItem(), ce->getDataItem());
-  CPPUNIT_ASSERT_EQUAL(a->getValue(), ce->getValue());
+  CPPUNIT_ASSERT_EQUAL(m_compEventA->getDataItem(), ce->getDataItem());
+  CPPUNIT_ASSERT_EQUAL(m_compEventA->getValue(), ce->getValue());
   
   ce->unrefer();
 }
 
 void ComponentEventTest::testGetAttributes()
 {
-  AttributeList *attr_list = a->getAttributes();
+  AttributeList *attr_list = m_compEventA->getAttributes();
   map<string, string> attributes1;
   AttributeList::iterator attr;
   for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attributes1[attr->first] = attr->second; }
@@ -110,7 +110,7 @@ void ComponentEventTest::testGetAttributes()
   CPPUNIT_ASSERT_EQUAL((string) "CRITICAL", attributes1["severity"]);
   CPPUNIT_ASSERT_EQUAL((string) "ACTIVE", attributes1["state"]);
   
-  attr_list = b->getAttributes();
+  attr_list = m_compEventB->getAttributes();
   map<string, string> attributes2;
   for (attr = attr_list->begin(); attr != attr_list->end(); attr++) { attributes2[attr->first] = attr->second; }
   CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["dataItemId"]);
@@ -122,11 +122,11 @@ void ComponentEventTest::testGetAttributes()
 
 void ComponentEventTest::testGetters()
 {
-  CPPUNIT_ASSERT_EQUAL(d1, a->getDataItem());
-  CPPUNIT_ASSERT_EQUAL(d2, b->getDataItem());
+  CPPUNIT_ASSERT_EQUAL(m_dataItem1, m_compEventA->getDataItem());
+  CPPUNIT_ASSERT_EQUAL(m_dataItem2, m_compEventB->getDataItem());
   
-  CPPUNIT_ASSERT_EQUAL((string) "DESCRIPTION", a->getValue());
-  CPPUNIT_ASSERT_EQUAL((string) "1.1231", b->getValue());
+  CPPUNIT_ASSERT_EQUAL((string) "DESCRIPTION", m_compEventA->getValue());
+  CPPUNIT_ASSERT_EQUAL((string) "1.1231", m_compEventB->getValue());
 }
 
 void ComponentEventTest::testConvertValue()
@@ -204,7 +204,7 @@ void ComponentEventTest::testValueHelper(
 void ComponentEventTest::testRefCounts()
 {
   string time("NOW"), value("111");
-  ComponentEvent *event = new ComponentEvent(*d1, 123, time, value);
+  ComponentEvent *event = new ComponentEvent(*m_dataItem1, 123, time, value);
 
   CPPUNIT_ASSERT(event->refCount() == 1);
   
@@ -247,7 +247,7 @@ void ComponentEventTest::testStlLists()
   std::vector<ComponentEventPtr> vector;
   
   string time("NOW"), value("111");
-  ComponentEvent *event = new ComponentEvent(*d1, 123, time, value);
+  ComponentEvent *event = new ComponentEvent(*m_dataItem1, 123, time, value);
 
   CPPUNIT_ASSERT_EQUAL(1, (int) event->refCount());
   vector.push_back(event);
@@ -262,9 +262,9 @@ void ComponentEventTest::testStlLists()
 void ComponentEventTest::testEventChaining()
 {
   string time("NOW"), value("111");
-  ComponentEventPtr event1(new ComponentEvent(*d1, 123, time, value), true);
-  ComponentEventPtr event2(new ComponentEvent(*d1, 123, time, value), true);
-  ComponentEventPtr event3(new ComponentEvent(*d1, 123, time, value), true);
+  ComponentEventPtr event1(new ComponentEvent(*m_dataItem1, 123, time, value), true);
+  ComponentEventPtr event2(new ComponentEvent(*m_dataItem1, 123, time, value), true);
+  ComponentEventPtr event3(new ComponentEvent(*m_dataItem1, 123, time, value), true);
   
   CPPUNIT_ASSERT_EQUAL(event1.getObject(), event1->getFirst());
   

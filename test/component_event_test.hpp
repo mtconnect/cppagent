@@ -40,6 +40,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "component_event.hpp"
+#include "data_item.hpp"
 
 class ComponentEventTest : public CppUnit::TestFixture
 {
@@ -62,8 +63,8 @@ public:
   void tearDown();
   
 protected:
-  ComponentEvent * a, * b;
-  DataItem * d1, * d2;
+  ComponentEvent * m_compEventA, * m_compEventB;
+  DataItem * m_dataItem1, * m_dataItem2;
   
 protected:
   void testConstructors();

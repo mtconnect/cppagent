@@ -108,65 +108,65 @@ public:
   ~DataItem();
   
   /* Get a map of all the attributes of this data item */
-  std::map<std::string, std::string> *getAttributes() { return &mAttributes; }
+  std::map<std::string, std::string> *getAttributes() { return &m_attributes; }
   
   /* Getter methods for data item specs */
-  const std::string &getId() const { return mId; }
-  const std::string &getName() const { return mName; }
-  const std::string &getSource() const { return mSource; }
-  const std::string &getType() const { return mType; }
-  const std::string &getElementName() const { return mCamelType; }
-  const std::string &getPrefixedElementName() const { return mPrefixedCamelType; }
-  const std::string &getSubType() const { return mSubType; }
-  const std::string &getNativeUnits() const { return mNativeUnits; }
-  const std::string &getUnits() const { return mUnits; }
-  const std::string &getPrefix() const { return mPrefix; }
-  const std::string &getStatistic() const { return mStatistic; }
-  const std::string &getSampleRate() const { return mSampleRate; }
-  const std::string &getCompositionId() const { return mCompositionId; }
+  const std::string &getId() const { return m_id; }
+  const std::string &getName() const { return m_name; }
+  const std::string &getSource() const { return m_source; }
+  const std::string &getType() const { return m_type; }
+  const std::string &getElementName() const { return m_camelType; }
+  const std::string &getPrefixedElementName() const { return m_prefixedCamelType; }
+  const std::string &getSubType() const { return m_subType; }
+  const std::string &getNativeUnits() const { return m_nativeUnits; }
+  const std::string &getUnits() const { return m_units; }
+  const std::string &getPrefix() const { return m_prefix; }
+  const std::string &getStatistic() const { return m_statistic; }
+  const std::string &getSampleRate() const { return m_sampleRate; }
+  const std::string &getCompositionId() const { return m_compositionId; }
   
-  float getNativeScale() const { return mNativeScale; }
-  double getConversionFactor() const { return mConversionFactor; }
-  double getConversionOffset() const { return mConversionOffset; }
-  bool hasFactor() const { return mHasFactor; }
-  ECategory getCategory() const { return mCategory; }
-  ERepresentation getRepresentation() const { return mRepresentation; }
+  float getNativeScale() const { return m_nativeScale; }
+  double getConversionFactor() const { return m_conversionFactor; }
+  double getConversionOffset() const { return m_conversionOffset; }
+  bool hasFactor() const { return m_hasFactor; }
+  ECategory getCategory() const { return m_category; }
+  ERepresentation getRepresentation() const { return m_representation; }
   
   void setConversionFactor(double aFactor, double aOffset);
   
   /* Returns if data item has this attribute */
   bool hasName(const std::string& name);
-  bool hasNativeScale() const { return mHasNativeScale; }
+  bool hasNativeScale() const { return m_hasNativeScale; }
   
   /* Add a source (extra information) to data item */
-  void addSource(const std::string& source) { mSource = source; }
+  void addSource(const std::string& source) { m_source = source; }
   
   /* Returns true if data item is a sample */
-  bool isSample() const { return mCategory == SAMPLE; }
-  bool isEvent() const { return mCategory == EVENT; }
-  bool isCondition() const { return mCategory == CONDITION; }
-  bool isAlarm() const { return mIsAlarm; }
-  bool isMessage() const { return mIsMessage; }
-  bool isAssetChanged() const { return mIsAssetChanged; }
-  bool isAssetRemoved() const { return mIsAssetRemoved; }
-  bool isTimeSeries() const { return mRepresentation == TIME_SERIES; }
-  bool isDiscrete() const { return mRepresentation == DISCRETE; }
+  bool isSample() const { return m_category == SAMPLE; }
+  bool isEvent() const { return m_category == EVENT; }
+  bool isCondition() const { return m_category == CONDITION; }
+  bool isAlarm() const { return m_isAlarm; }
+  bool isMessage() const { return m_isMessage; }
+  bool isAssetChanged() const { return m_isAssetChanged; }
+  bool isAssetRemoved() const { return m_isAssetRemoved; }
+  bool isTimeSeries() const { return m_representation == TIME_SERIES; }
+  bool isDiscrete() const { return m_representation == DISCRETE; }
   
-  bool hasResetTrigger() const { return !mResetTrigger.empty(); }
-  const std::string &getResetTrigger() const { return mResetTrigger; }
-  void setResetTrigger(const std::string &aTrigger) { mResetTrigger = aTrigger; }
+  bool hasResetTrigger() const { return !m_resetTrigger.empty(); }
+  const std::string &getResetTrigger() const { return m_resetTrigger; }
+  void setResetTrigger(const std::string &aTrigger) { m_resetTrigger = aTrigger; }
   
-  bool hasInitialValue() const { return !mInitialValue.empty(); }
-  const std::string &getInitialValue() const { return mInitialValue; }
-  void setInitialValue(const std::string &aValue) { mInitialValue = aValue; }
+  bool hasInitialValue() const { return !m_initialValue.empty(); }
+  const std::string &getInitialValue() const { return m_initialValue; }
+  void setInitialValue(const std::string &aValue) { m_initialValue = aValue; }
 
   
   /* Set/get component that data item is associated with */
-  void setComponent(Component& component) { mComponent = &component; }
-  Component * getComponent() const { return mComponent; }
+  void setComponent(Component& component) { m_component = &component; }
+  Component * getComponent() const { return m_component; }
   
   /* Get the name for the adapter feed */
-  std::string getSourceOrName() { return mSource.empty() ? (mName.empty() ? mId : mName) : mSource; }
+  std::string getSourceOrName() { return m_source.empty() ? (m_name.empty() ? m_id : m_name) : m_source; }
   
   /* Transform a name to camel casing */
   static std::string getCamelType(const std::string& aType, 
@@ -175,74 +175,74 @@ public:
   /* Duplicate Checking */
   bool isDuplicate(const std::string &aValue) {
     // Do not dupe check for time series.
-    if (mRepresentation != VALUE)
+    if (m_representation != VALUE)
       return false;
-    else if (aValue == mLastValue)
+    else if (aValue == m_lastValue)
       return true;
     
-    mLastValue = aValue;
+    m_lastValue = aValue;
     return false;
   }
   
   /* Filter checking */
   bool isFiltered(const double aValue, const double aTimeOffset) {
-    if (mHasMinimumDelta && mCategory == SAMPLE)
+    if (m_hasMinimumDelta && m_category == SAMPLE)
     {
-      if (!ISNAN(mLastSampleValue))
+      if (!ISNAN(m_lastSampleValue))
       {
-        if (aValue > (mLastSampleValue - mFilterValue) && aValue < (mLastSampleValue + mFilterValue)) {
+        if (aValue > (m_lastSampleValue - m_filterValue) && aValue < (m_lastSampleValue + m_filterValue)) {
           // Filter value
           return true;      
         }
       }
       
-      mLastSampleValue = aValue;
+      m_lastSampleValue = aValue;
     }
     
-    if (mHasMinimumPeriod)
+    if (m_hasMinimumPeriod)
     {
-      if (!ISNAN(mLastTimeOffset) && !ISNAN(aTimeOffset))
+      if (!ISNAN(m_lastTimeOffset) && !ISNAN(aTimeOffset))
       {
-        if (aTimeOffset < (mLastTimeOffset + mFilterPeriod)) {
+        if (aTimeOffset < (m_lastTimeOffset + m_filterPeriod)) {
           // Filter value
           return true;
         }
       }
       
-      mLastTimeOffset = aTimeOffset;
+      m_lastTimeOffset = aTimeOffset;
     }
     return false;
   }
   
   /* Constrainsts */
-  bool hasConstraints() { return mHasConstraints; }
-  std::string getMaximum() const { return mMaximum; }
-  std::string getMinimum() const { return mMinimum; }
-  std::vector<std::string> &getConstrainedValues() { return mValues; }
-  bool hasConstantValue() { return mValues.size() == 1; }
+  bool hasConstraints() { return m_hasConstraints; }
+  std::string getMaximum() const { return m_maximum; }
+  std::string getMinimum() const { return m_minimum; }
+  std::vector<std::string> &getConstrainedValues() { return m_values; }
+  bool hasConstantValue() { return m_values.size() == 1; }
   
-  bool hasMinimumDelta() const { return mHasMinimumDelta; }
-  bool hasMinimumPeriod() const { return mHasMinimumPeriod; }
-  double getFilterValue() const { return mFilterValue; }
-  double getFilterPeriod() const { return mFilterPeriod; }
+  bool hasMinimumDelta() const { return m_hasMinimumDelta; }
+  bool hasMinimumPeriod() const { return m_hasMinimumPeriod; }
+  double getFilterValue() const { return m_filterValue; }
+  double getFilterPeriod() const { return m_filterPeriod; }
   
-  void setMaximum(std::string aMax) { mMaximum = aMax; mHasConstraints = true; }
-  void setMinimum(std::string aMin) { mMinimum = aMin; mHasConstraints = true; }
-  void addConstrainedValue(std::string aValue) { mValues.push_back(aValue); mHasConstraints = true; }
+  void setMaximum(std::string aMax) { m_maximum = aMax; m_hasConstraints = true; }
+  void setMinimum(std::string aMin) { m_minimum = aMin; m_hasConstraints = true; }
+  void addConstrainedValue(std::string aValue) { m_values.push_back(aValue); m_hasConstraints = true; }
   
-  void setMinmumDelta(double aValue) { mFilterValue = aValue; mHasMinimumDelta = true; }
-  void setMinmumPeriod(double aValue) { mFilterPeriod = aValue; mHasMinimumPeriod = true; }
+  void setMinmumDelta(double aValue) { m_filterValue = aValue; m_hasMinimumDelta = true; }
+  void setMinmumPeriod(double aValue) { m_filterPeriod = aValue; m_hasMinimumPeriod = true; }
   
   bool conversionRequired();
   std::string convertValue(const std::string& value);
   float convertValue(float aValue);
   
-  Adapter *getDataSource() const { return mDataSource;  }
+  Adapter *getDataSource() const { return m_dataSource;  }
   void setDataSource(Adapter *aSource);
   bool operator<(DataItem &aOther);
 
   bool operator==(DataItem &aOther) {
-    return mId == aOther.mId;
+    return m_id == aOther.m_id;
   }
     
 protected:
@@ -252,86 +252,86 @@ protected:
   
 protected:
   /* Unique ID for each component */
-  std::string mId;
+  std::string m_id;
   
   /* Name for itself */
-  std::string mName;
+  std::string m_name;
   
   /* Type of data item */
-  std::string mType;
-  std::string mCamelType;
-  std::string mPrefixedCamelType;
-  std::string mPrefix;
+  std::string m_type;
+  std::string m_camelType;
+  std::string m_prefixedCamelType;
+  std::string m_prefix;
 
   /* Subtype of data item */
-  std::string mSubType;
+  std::string m_subType;
   
   /* Category of data item */
-  ECategory mCategory;
+  ECategory m_category;
   
   /* Native units of data item */
-  std::string mNativeUnits;
+  std::string m_nativeUnits;
   
   /* Units of data item */
-  std::string mUnits;
+  std::string m_units;
   
   /* The statistical process used on this data item */
-  std::string mStatistic;
+  std::string m_statistic;
 
   /* Representation of data item */
-  ERepresentation mRepresentation;
-  std::string mSampleRate;
+  ERepresentation m_representation;
+  std::string m_sampleRate;
   
-  std::string mCompositionId;
+  std::string m_compositionId;
   
   /* Native scale of data item */
-  float mNativeScale;
-  bool mHasNativeScale;
-  bool mThreeD;
-  bool mIsMessage, mIsAlarm, mIsAssetChanged, mIsAssetRemoved;
+  float m_nativeScale;
+  bool m_hasNativeScale;
+  bool m_threeD;
+  bool m_isMessage, m_isAlarm, m_isAssetChanged, m_isAssetRemoved;
   
   /* Sig figs of data item */
-  unsigned int mSignificantDigits;
-  bool mHasSignificantDigits;
+  unsigned int m_significantDigits;
+  bool m_hasSignificantDigits;
   
   /* Coordinate system of data item */
-  std::string mCoordinateSystem;
+  std::string m_coordinateSystem;
   
   /* Extra source information of data item */
-  std::string mSource;
+  std::string m_source;
   
   // The reset trigger;
-  std::string mResetTrigger;
+  std::string m_resetTrigger;
   
   // Initial value
-  std::string mInitialValue;
+  std::string m_initialValue;
   
   /* Constraints for this data item */
-  std::string mMaximum, mMinimum;
-  std::vector<std::string> mValues;
-  bool mHasConstraints;
+  std::string m_maximum, m_minimum;
+  std::vector<std::string> m_values;
+  bool m_hasConstraints;
   
-  double mFilterValue;
-  double mFilterPeriod;
-  bool mHasMinimumDelta;
-  bool mHasMinimumPeriod;
+  double m_filterValue;
+  double m_filterPeriod;
+  bool m_hasMinimumDelta;
+  bool m_hasMinimumPeriod;
   
   /* Component that data item is associated with */  
-  Component * mComponent;
+  Component * m_component;
 
   /* Duplicate and filter checking */
-  std::string mLastValue;
-  double mLastSampleValue;
-  double mLastTimeOffset;
+  std::string m_lastValue;
+  double m_lastSampleValue;
+  double m_lastTimeOffset;
   
   /* Attrubutes */
-  std::map<std::string, std::string> mAttributes;
+  std::map<std::string, std::string> m_attributes;
   
   /* The data source for this data item */
-  Adapter *mDataSource;
+  Adapter *m_dataSource;
 
   /* Conversion factor */
-  double mConversionFactor;
-  double mConversionOffset;
-  bool mConversionDetermined, mConversionRequired, mHasFactor;
+  double m_conversionFactor;
+  double m_conversionOffset;
+  bool m_conversionDetermined, m_conversionRequired, m_hasFactor;
 };
