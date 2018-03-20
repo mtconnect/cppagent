@@ -236,7 +236,7 @@ bool Adapter::processDataItem(
 	{
 		dataItem = device->getDeviceDataItem(key);
 
-		if (dataItem == nullptr)
+		if (!dataItem)
 		{
 			if (m_logOnce.count(key) > 0)
 				g_logger << LTRACE <<  "(" << device->getName() << ") Could not find data item: " << key;
@@ -478,7 +478,7 @@ void Adapter::parseCalibration(const std::string &aLine)
 		// Convert to a floating point number
 		DataItem *di = m_device->getDeviceDataItem(name);
 
-		if (di == nullptr)
+		if (!di)
 			g_logger << LWARN << "Cannot find data item to calibrate for " << name;
 		else
 		{

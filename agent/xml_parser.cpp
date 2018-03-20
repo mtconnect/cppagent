@@ -37,7 +37,7 @@ static dlib::logger g_logger("xml.parser");
 #define THROW_IF_XML2_ERROR(expr) \
 if ((expr) < 0) { throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
 #define THROW_IF_XML2_NULL(expr) \
-if ((expr) == nullptr) { throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+if (!(expr)) { throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
 
 extern "C" void XMLCDECL
 agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
@@ -157,12 +157,12 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 
 		devices = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
 
-		if (devices == nullptr)
+		if (!devices)
 			throw (string) xpathCtx->lastError.message;
 
 		xmlNodeSetPtr nodeset = devices->nodesetval;
 
-		if (nodeset == nullptr || nodeset->nodeNr == 0)
+		if (!nodeset || nodeset->nodeNr == 0)
 			throw (string) "Could not find Device in XML configuration";
 
 		// Collect the Devices...
@@ -241,7 +241,7 @@ void XmlParser::getDataItems(
 {
 	xmlNodePtr root = xmlDocGetRootElement(m_doc);
 
-	if (node == nullptr)
+	if (!node)
 		node = root;
 
 	xmlXPathContextPtr xpathCtx = nullptr;
@@ -284,7 +284,7 @@ void XmlParser::getDataItems(
 
 		objs = xmlXPathEvalExpression(BAD_CAST path.c_str(), xpathCtx);
 
-		if (objs == nullptr)
+		if (!objs)
 		{
 			xmlXPathFreeContext(xpathCtx);
 			return;
@@ -524,7 +524,7 @@ void XmlParser::loadDataItem(
 
 					xmlChar *text = xmlNodeGetContent(constraint);
 
-					if (text == nullptr)
+					if (!text)
 						continue;
 
 					if (xmlStrcmp(constraint->name, BAD_CAST "Value") == 0)
@@ -685,8 +685,8 @@ AssetPtr XmlParser::parseAsset(
 		xmlNodePtr node = nullptr;
 		assetNodes = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
 
-		if (assetNodes == nullptr ||
-			assetNodes->nodesetval == nullptr ||
+		if (!assetNodes ||
+			!assetNodes->nodesetval ||
 			assetNodes->nodesetval->nodeNr == 0)
 		{
 			// See if this is a fragment... the root node will be check when it is
@@ -770,7 +770,7 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr d
 	name += (const char *) node->name;
 	value->m_key = name;
 
-	if (node->children == nullptr)
+	if (!node->children)
 	{
 		xmlChar *text = xmlNodeGetContent(node);
 

@@ -479,7 +479,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 	// Now get our configuration
 	config_reader::kernel_1a reader(file);
 
-	if (m_loggerFile == nullptr)
+	if (!m_loggerFile)
 		configureLogger(reader);
 
 	bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
@@ -561,7 +561,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 
 	g_logger << LINFO << "Starting agent on port " << port;
 
-	if (m_agent == nullptr)
+	if (!m_agent)
 		m_agent = new Agent(m_devicesFile, bufferSize, maxAssets, checkpointFrequency);
 
 	m_agent->set_listening_port(port);
@@ -631,7 +631,7 @@ void AgentConfiguration::loadAdapters(
 
 			device = m_agent->getDeviceByName(deviceName);
 
-			if (device == nullptr)
+			if (!device)
 			{
 				g_logger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
 				device = defaultDevice();
@@ -643,7 +643,7 @@ void AgentConfiguration::loadAdapters(
 				}
 			}
 
-			if (device == nullptr)
+			if (!device)
 			{
 				g_logger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
 			}

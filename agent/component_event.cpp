@@ -336,7 +336,7 @@ bool ComponentEvent::replace(ComponentEvent *oldEvent,
 {
 	ComponentEvent *obj = m_prev.getObject();
 
-	if (obj == nullptr)
+	if (!obj)
 		return false;
 
 	if (obj == oldEvent)

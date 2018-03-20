@@ -26,7 +26,7 @@ Checkpoint::Checkpoint() :
 
 Checkpoint::Checkpoint(Checkpoint &checkpoint, std::set<std::string> *filterSet)
 {
-	if (filterSet == nullptr && checkpoint.m_hasFilter)
+	if (!filterSet && checkpoint.m_hasFilter)
 		filterSet = &checkpoint.m_filter;
 	else
 		m_hasFilter = false;
@@ -155,7 +155,7 @@ void Checkpoint::copy(Checkpoint &checkpoint, std::set<std::string> *filterSet)
 	map<string, ComponentEventPtr *>::iterator it;
 	for (it = checkpoint.m_events.begin(); it != checkpoint.m_events.end(); ++it)
 	{
-		if (filterSet == nullptr || filterSet->count(it->first) > 0)
+		if (!filterSet || filterSet->count(it->first) > 0)
 			m_events[(*it).first] = new ComponentEventPtr((*it).second->getObject());
 	}
 }
@@ -169,7 +169,7 @@ void Checkpoint::getComponentEvents(ComponentEventPtrArray &list, std::set<strin
 	{
 		ComponentEventPtr e = *((*it).second);
 
-		if (filterSet == nullptr || (e.getObject() && filterSet->count(e->getDataItem()->getId()) > 0))
+		if (!filterSet || (e.getObject() && filterSet->count(e->getDataItem()->getId()) > 0))
 		{
 			while (e.getObject())
 			{

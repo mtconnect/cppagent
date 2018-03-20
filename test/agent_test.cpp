@@ -281,7 +281,7 @@ void AgentTest::testBadDevices()
 
 void AgentTest::testAddAdapter()
 {
-	CPPUNIT_ASSERT(m_adapter == nullptr);
+	CPPUNIT_ASSERT(!m_adapter);
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
 }
@@ -296,7 +296,7 @@ void AgentTest::testAddToBuffer()
 	CPPUNIT_ASSERT_EQUAL(0, seqNum);
 
 	event1 = m_agent->getFromBuffer(seqNum);
-	CPPUNIT_ASSERT(nullptr == event1);
+	CPPUNIT_ASSERT(!event1);
 
 	{
 	m_path = "/sample";
