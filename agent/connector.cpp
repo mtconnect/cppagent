@@ -135,8 +135,7 @@ void Connector::connect()
 		// Read from the socket, read is a blocking call
 		while (m_connected)
 		{
-			uint64 now;
-			now = stamper.get_timestamp();
+			auto now = stamper.get_timestamp();
 			int timeout;
 			if (m_heartbeats)
 			{
@@ -228,7 +227,7 @@ void Connector::parseBuffer(const char *buffer)
 	// Append the temporary buffer to the socket buffer
 	m_buffer.append(buffer);
 
-	size_t newLine = m_buffer.find_last_of('\n');
+	auto newLine = m_buffer.find_last_of('\n');
 
 	// Check to see if there is even a '\n' in buffer
 	if (newLine != string::npos)

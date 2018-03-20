@@ -263,7 +263,7 @@ uint64_t parseTimeMicro(const std::string &aTime)
 	uint64_t time = (mktime(&timeinfo) - timezone) * 1000000;
 
 	int ms_v = 0;
-	int len = strlen(ms);
+	auto len = strlen(ms);
 
 	if (len > 0)
 	{

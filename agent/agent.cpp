@@ -129,7 +129,7 @@ Agent::Agent(
 			attrs["id"] = (*device)->getId() + "_avail";
 			attrs["category"] = "EVENT";
 
-			DataItem *di = new DataItem(attrs);
+			auto di = new DataItem(attrs);
 			di->setComponent(*(*device));
 			(*device)->addDataItem(*di);
 			(*device)->addDeviceDataItem(*di);
@@ -149,7 +149,7 @@ Agent::Agent(
 			attrs["id"] = (*device)->getId() + "_asset_chg";
 			attrs["category"] = "EVENT";
 
-			DataItem *di = new DataItem(attrs);
+			auto di = new DataItem(attrs);
 			di->setComponent(*(*device));
 			(*device)->addDataItem(*di);
 			(*device)->addDeviceDataItem(*di);
@@ -163,7 +163,7 @@ Agent::Agent(
 			attrs["id"] = (*device)->getId() + "_asset_rem";
 			attrs["category"] = "EVENT";
 
-			DataItem *di = new DataItem(attrs);
+			auto di = new DataItem(attrs);
 			di->setComponent(*(*device));
 			(*device)->addDataItem(*di);
 			(*device)->addDeviceDataItem(*di);
@@ -183,13 +183,13 @@ Agent::Agent(
 	// Initialize the id mapping for the devices and set all data items to UNAVAILABLE
 	for (device = m_devices.begin(); device != m_devices.end(); ++device)
 	{
-		const std::map<string, DataItem *> &items = (*device)->getDeviceDataItems();
+		const auto &items = (*device)->getDeviceDataItems();
 		std::map<string, DataItem *>::const_iterator item;
 
 		for (item = items.begin(); item != items.end(); ++item)
 		{
 			// Check for single valued constrained data items.
-			DataItem *d = item->second;
+			auto d = item->second;
 			const string *value = &g_unavailable;
 
 			if (d->isCondition())
@@ -391,8 +391,7 @@ const string Agent::on_request(const incoming_things &incoming, outgoing_things 
 
 		// Parse the URL path looking for '/'
 		string path = incoming.path;
-		size_t qm = path.find_last_of('?');
-
+		auto qm = path.find_last_of('?');
 		if (qm != string::npos)
 			path = path.substr(0, qm);
 
@@ -465,7 +464,7 @@ Adapter *Agent::addAdapter(
 	bool start,
 	int legacyTimeout )
 {
-	Adapter *adapter = new Adapter(deviceName, host, port, legacyTimeout);
+	auto adapter = new Adapter(deviceName, host, port, legacyTimeout);
 	adapter->setAgent(*this);
 	m_adapters.push_back(adapter);
 
@@ -491,8 +490,8 @@ unsigned int Agent::addToBuffer(
 
 	dlib::auto_mutex lock(*m_sequenceLock);
 
-	uint64_t seqNum = m_sequence++;
-	ComponentEvent *event = new ComponentEvent(*dataItem, seqNum, time, value);
+	auto seqNum = m_sequence++;
+	auto event = new ComponentEvent(*dataItem, seqNum, time, value);
 
 	(*m_slidingBuffer)[seqNum] = event;
 	m_latest.addComponentEvent(event);
@@ -568,8 +567,7 @@ bool Agent::addAsset(
 			return false;
 		}
 
-		AssetPtr *old = &m_assetMap[id];
-
+		auto old = &m_assetMap[id];
 		if (!ptr->isRemoved())
 		{
 			if (old->getObject())
@@ -604,7 +602,7 @@ bool Agent::addAsset(
 			m_assetMap.erase(oldref->getAssetId());
 
 			// Remove secondary keys
-			AssetKeys &keys = oldref->getKeys();
+			auto &keys = oldref->getKeys();
 			AssetKeys::iterator iter;
 			for (iter = keys.begin(); iter != keys.end(); iter++)
 			{
@@ -622,11 +620,11 @@ bool Agent::addAsset(
 		}
 
 		// Add secondary keys
-		AssetKeys &keys = ptr->getKeys();
+		auto &keys = ptr->getKeys();
 		AssetKeys::iterator iter;
 		for (iter = keys.begin(); iter != keys.end(); iter++)
 		{
-			AssetIndex &index = m_assetIndices[iter->first];
+			auto &index = m_assetIndices[iter->first];
 			index[iter->second] = ptr;
 		}
 	}
@@ -725,7 +723,7 @@ bool Agent::removeAsset(
 		asset->setTimestamp(time);
 
 		// Check if the asset changed id is the same as this asset.
-		ComponentEventPtr *ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
+		auto ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
 		if (ptr && (*ptr)->getValue() == id)
 			addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
 	}
@@ -750,7 +748,7 @@ bool Agent::removeAllAssets(
 	{
 		dlib::auto_mutex lock(*m_assetLock);
 
-		ComponentEventPtr *ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
+		auto ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
 		string changedId;
 		if (ptr)
 			changedId = (*ptr)->getValue();
@@ -780,26 +778,26 @@ bool Agent::removeAllAssets(
 // Add values for related data items UNAVAILABLE
 void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 {
-	string time = getCurrentTime(GMT_UV_SEC);
+	auto time = getCurrentTime(GMT_UV_SEC);
 	g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
 	std::vector<Device *>::iterator iter;
 
 	for (iter = devices.begin(); iter != devices.end(); ++iter)
 	{
-		const std::map<std::string, DataItem *> &dataItems = (*iter)->getDeviceDataItems();
+		const auto &dataItems = (*iter)->getDeviceDataItems();
 		std::map<std::string, DataItem *>::const_iterator dataItemAssoc;
 
 		for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
 		{
-			DataItem *dataItem = (*dataItemAssoc).second;
+			auto dataItem = (*dataItemAssoc).second;
 
 			if (dataItem &&
 				(dataItem->getDataSource() == adapter || (adapter->isAutoAvailable() &&
 				!dataItem->getDataSource() &&
 				dataItem->getType() == "AVAILABILITY")))
 			{
-				ComponentEventPtr *ptr = m_latest.getEventPtr(dataItem->getId());
+				auto ptr = m_latest.getEventPtr(dataItem->getId());
 
 				if (ptr)
 				{
@@ -812,7 +810,7 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 					}
 					else if (dataItem->hasConstraints())
 					{
-						std::vector<std::string> &values = dataItem->getConstrainedValues();
+						const auto &values = dataItem->getConstrainedValues();
 
 						if (values.size() > 1 && (*ptr)->getValue() != g_unavailable)
 							value = &g_unavailable;
@@ -836,7 +834,7 @@ void Agent::connected(Adapter *adapter, std::vector<Device *> devices)
 {
 	if (adapter->isAutoAvailable())
 	{
-		string time = getCurrentTime(GMT_UV_SEC);
+		auto time = getCurrentTime(GMT_UV_SEC);
 		std::vector<Device *>::iterator iter;
 
 		for (iter = devices.begin(); iter != devices.end(); ++iter)
@@ -879,8 +877,8 @@ string Agent::handleCall(
 			if (freq == NO_FREQ)
 				freq = checkAndGetParam(queries, "interval", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
 
-			uint64_t at = checkAndGetParam64(queries, "at", NO_START, getFirstSequence(), true, m_sequence - 1);
-			int heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
+			auto at = checkAndGetParam64(queries, "at", NO_START, getFirstSequence(), true, m_sequence - 1);
+			auto heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
 
 			if (freq != NO_FREQ && at != NO_START)
 				return printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
@@ -901,18 +899,18 @@ string Agent::handleCall(
 			string path = queries[(string) "path"];
 			string result;
 
-			int count = checkAndGetParam(queries, "count", DEFAULT_COUNT, 1, true, m_slidingBufferSize);
-			int freq = checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
+			auto count = checkAndGetParam(queries, "count", DEFAULT_COUNT, 1, true, m_slidingBufferSize);
+			auto freq = checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
 			// Check for 1.2 conversion to interval
 			if (freq == NO_FREQ)
 				freq = checkAndGetParam(queries, "interval", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
 
-			uint64 start = checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, m_sequence);
+			auto start = checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, m_sequence);
 
 			if (start == NO_START) // If there was no data in queries
 				start = checkAndGetParam64(queries, "from", 1, getFirstSequence(), true, m_sequence);
 
-			int heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
+			auto heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
 
 			return handleStream(
 				out,
@@ -948,7 +946,7 @@ string Agent::handlePut(
 	else if (device.empty())
 		device = adapter;
 
-	Device *dev = m_deviceMap[device];
+	auto dev = m_deviceMap[device];
 
 	if (!dev)
 	{
@@ -986,8 +984,7 @@ string Agent::handlePut(
 		{
 			if (kv->first != "time")
 			{
-				DataItem *di = dev->getDeviceDataItem(kv->first);
-
+				auto di = dev->getDeviceDataItem(kv->first);
 				if (di)
 					addToBuffer(di, kv->second, time);
 				else
@@ -1006,7 +1003,7 @@ string Agent::handleProbe(const string &name)
  
 	if (!name.empty())
 	{
-		Device *device = getDeviceByName(name);
+		auto device = getDeviceByName(name);
 		if (!device)
 			return printError("NO_DEVICE", "Could not find the device '" + name + "'");
 		else
@@ -1104,8 +1101,8 @@ std::string Agent::handleAssets(
 		// Return all asssets, first check if there is a type attribute
 
 		string type = queries["type"];
-		bool removed = (queries.count("removed") > 0 && queries["removed"] == "true");
-		int count = checkAndGetParam(queries, "count", m_assets.size(), 1, false, NO_VALUE32);
+		auto removed = (queries.count("removed") > 0 && queries["removed"] == "true");
+		auto count = checkAndGetParam(queries, "count", m_assets.size(), 1, false, NO_VALUE32);
 
 		std::list<AssetPtr*>::reverse_iterator iter;
 		for (iter = m_assets.rbegin(); iter != m_assets.rend() && count > 0; ++iter, --count)
@@ -1153,11 +1150,11 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 {
 	// Get the mime type for the file.
 	bool unknown = true;
-	size_t last = uri.find_last_of("./");
+	auto last = uri.find_last_of("./");
 	string contentType;
 	if (last != string::npos && uri[last] == '.')
 	{
-		string ext = uri.substr(last + 1);
+		auto ext = uri.substr(last + 1);
 		if (m_mimeTypes.count(ext) > 0)
 		{
 			contentType = m_mimeTypes[ext];
@@ -1170,12 +1167,12 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 
 	// Check if the file is cached
 	RefCountedPtr<CachedFile> cachedFile;
-	std::map<string, RefCountedPtr<CachedFile>>::iterator cached = m_fileCache.find(uri);
+	auto cached = m_fileCache.find(uri);
 	if (cached != m_fileCache.end())
 		cachedFile = cached->second;
 	else
 	{
-		std::map<string, string>::iterator file = m_fileMap.find(uri);
+		auto file = m_fileMap.find(uri);
 	
 		// Should never happen
 		if (file == m_fileMap.end())
@@ -1185,10 +1182,10 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 			return "";
 		}
 
-		const char *path = file->second.c_str();
+		const auto path = file->second.c_str();
 
 		struct stat fs;
-		int res = stat(path, &fs);
+		auto res = stat(path, &fs);
 		if (res != 0)
 		{
 			outgoing.http_return = 404;
@@ -1196,7 +1193,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 			return "";
 		}
 
-		int fd = open(path, O_RDONLY | O_BINARY);
+		auto fd = open(path, O_RDONLY | O_BINARY);
 		if (res < 0)
 		{
 			outgoing.http_return = 404;
@@ -1205,7 +1202,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 		}
 
 		cachedFile.setObject(new CachedFile(fs.st_size), true);
-		int bytes = read(fd, cachedFile->m_buffer, fs.st_size);
+		auto bytes = read(fd, cachedFile->m_buffer, fs.st_size);
 		close(fd);
 
 		if (bytes < fs.st_size)
@@ -1671,7 +1668,7 @@ uint64_t Agent::checkAndGetParam64(
 
 DataItem *Agent::getDataItemByName(const string &device, const string &dataItemName)
 {
-	Device *dev = m_deviceMap[device];
+	auto dev = m_deviceMap[device];
 	return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
 }
 
