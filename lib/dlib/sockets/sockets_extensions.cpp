@@ -13,6 +13,7 @@
 #include "../timeout.h"
 #include "../misc_api.h"
 #include "../serialize.h"
+#include "../string.h"
 
 namespace dlib
 {
@@ -114,7 +115,7 @@ namespace dlib
                 throw socket_error(ERESOLVE,"unable to resolve '" + host_or_ip + "' in connect()");
         }
 
-        if(create_connection(con,port,ip, 0, ""))
+        if(create_connection(con,port,ip))
         {
             std::ostringstream sout;
             sout << "unable to connect to '" << host_or_ip << ":" << port << "'";
@@ -261,10 +262,6 @@ namespace dlib
         std::string ip
     )
     {
-        // Check for an IPV6 address. We won't do too much checking at this point.
-        if (ip.find(':') != std::string::npos)
-          return true;
-      
         for (std::string::size_type i = 0; i < ip.size(); ++i)
         {
             if (ip[i] == '.')
@@ -297,14 +294,14 @@ namespace dlib
         unsigned long timeout 
     )
     {
-        scoped_ptr<connection> ptr(con);
+        std::unique_ptr<connection> ptr(con);
         close_gracefully(ptr,timeout);
     }
 
 // ----------------------------------------------------------------------------------------
 
     void close_gracefully (
-        scoped_ptr<connection>& con,
+        std::unique_ptr<connection>& con,
         unsigned long timeout 
     )
     {

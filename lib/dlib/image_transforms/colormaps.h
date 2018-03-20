@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_RANDOMLY_COlOR_IMAGE_H__
-#define DLIB_RANDOMLY_COlOR_IMAGE_H__
+#ifndef DLIB_RANDOMLY_COlOR_IMAGE_Hh_
+#define DLIB_RANDOMLY_COlOR_IMAGE_Hh_
 
 #include "colormaps_abstract.h"
 #include "../hash.h"
@@ -25,7 +25,7 @@ namespace dlib
         const static long NC = 0;
         typedef rgb_pixel type;
         typedef const rgb_pixel const_ret_type;
-        typedef typename T::mem_manager_type mem_manager_type;
+        typedef default_memory_manager mem_manager_type;
         typedef row_major_layout layout_type;
 
         const_ret_type apply (long r, long c ) const 
@@ -47,8 +47,8 @@ namespace dlib
             }
         }
 
-        long nr () const { return img.nr(); }
-        long nc () const { return img.nc(); }
+        long nr () const { return num_rows(img); }
+        long nc () const { return num_columns(img); }
     }; 
 
     template <
@@ -61,6 +61,32 @@ namespace dlib
     {
         typedef op_randomly_color_image<image_type> op;
         return matrix_op<op>(op(img));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline rgb_pixel colormap_heat (
+        double value,
+        double min_val,
+        double max_val
+    )
+    {
+        // scale the gray value into the range [0, 1]
+        const double gray = put_in_range(0, 1, (value - min_val)/(max_val-min_val));
+        rgb_pixel pix(0,0,0);
+
+        pix.red = static_cast<unsigned char>(std::min(gray/0.4,1.0)*255 + 0.5);
+
+        if (gray > 0.4)
+        {
+            pix.green = static_cast<unsigned char>(std::min((gray-0.4)/0.4,1.0)*255 + 0.5);
+        }
+        if (gray > 0.8)
+        {
+            pix.blue = static_cast<unsigned char>(std::min((gray-0.8)/0.2,1.0)*255 + 0.5);
+        }
+
+        return pix;
     }
 
 // ----------------------------------------------------------------------------------------
@@ -84,31 +110,16 @@ namespace dlib
         const static long NC = 0;
         typedef rgb_pixel type;
         typedef const rgb_pixel const_ret_type;
-        typedef typename T::mem_manager_type mem_manager_type;
+        typedef default_memory_manager mem_manager_type;
         typedef row_major_layout layout_type;
 
         const_ret_type apply (long r, long c ) const 
         { 
-            // scale the gray value into the range [0, 1]
-            const double gray = put_in_range(0, 1, (get_pixel_intensity(mat(img)(r,c)) - min_val)/(max_val-min_val));
-            rgb_pixel pix(0,0,0);
-
-            pix.red = static_cast<unsigned char>(std::min(gray/0.4,1.0)*255 + 0.5);
-
-            if (gray > 0.4)
-            {
-                pix.green = static_cast<unsigned char>(std::min((gray-0.4)/0.4,1.0)*255 + 0.5);
-            }
-            if (gray > 0.8)
-            {
-                pix.blue = static_cast<unsigned char>(std::min((gray-0.8)/0.2,1.0)*255 + 0.5);
-            }
-
-            return pix;
+            return colormap_heat(get_pixel_intensity(mat(img)(r,c)), min_val, max_val);
         }
 
-        long nr () const { return img.nr(); }
-        long nc () const { return img.nc(); }
+        long nr () const { return num_rows(img); }
+        long nc () const { return num_columns(img); }
     }; 
 
     template <
@@ -134,7 +145,58 @@ namespace dlib
     )
     {
         typedef op_heatmap<image_type> op;
-        return matrix_op<op>(op(img,max(mat(img)),min(mat(img))));
+        if (num_columns(img) * num_rows(img) != 0)
+            return matrix_op<op>(op(img,max(mat(img)),min(mat(img))));
+        else
+            return matrix_op<op>(op(img,0,0));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline rgb_pixel colormap_jet (
+        double value,
+        double min_val,
+        double max_val
+    )
+    {
+        // scale the gray value into the range [0, 8]
+        const double gray = 8*put_in_range(0, 1, (value - min_val)/(max_val-min_val));
+        rgb_pixel pix;
+        // s is the slope of color change
+        const double s = 1.0/2.0;
+
+        if (gray <= 1)
+        {
+            pix.red = 0;
+            pix.green = 0;
+            pix.blue = static_cast<unsigned char>((gray+1)*s*255 + 0.5);
+        }
+        else if (gray <= 3)
+        {
+            pix.red = 0;
+            pix.green = static_cast<unsigned char>((gray-1)*s*255 + 0.5);
+            pix.blue = 255;
+        }
+        else if (gray <= 5)
+        {
+            pix.red = static_cast<unsigned char>((gray-3)*s*255 + 0.5);
+            pix.green = 255;
+            pix.blue = static_cast<unsigned char>((5-gray)*s*255 + 0.5);
+        }
+        else if (gray <= 7)
+        {
+            pix.red = 255;
+            pix.green = static_cast<unsigned char>((7-gray)*s*255 + 0.5);
+            pix.blue = 0;
+        }
+        else
+        {
+            pix.red = static_cast<unsigned char>((9-gray)*s*255 + 0.5);
+            pix.green = 0;
+            pix.blue = 0;
+        }
+
+        return pix;
     }
 
 // ----------------------------------------------------------------------------------------
@@ -158,53 +220,16 @@ namespace dlib
         const static long NC = 0;
         typedef rgb_pixel type;
         typedef const rgb_pixel const_ret_type;
-        typedef typename T::mem_manager_type mem_manager_type;
+        typedef default_memory_manager mem_manager_type;
         typedef row_major_layout layout_type;
 
         const_ret_type apply (long r, long c ) const 
         { 
-            // scale the gray value into the range [0, 8]
-            const double gray = 8*put_in_range(0, 1, (get_pixel_intensity(mat(img)(r,c)) - min_val)/(max_val-min_val));
-            rgb_pixel pix;
-            // s is the slope of color change
-            const double s = 1.0/2.0;
-
-            if (gray <= 1)
-            {
-                pix.red = 0;
-                pix.green = 0;
-                pix.blue = static_cast<unsigned char>((gray+1)*s*255 + 0.5);
-            }
-            else if (gray <= 3)
-            {
-                pix.red = 0;
-                pix.green = static_cast<unsigned char>((gray-1)*s*255 + 0.5);
-                pix.blue = 255;
-            }
-            else if (gray <= 5)
-            {
-                pix.red = static_cast<unsigned char>((gray-3)*s*255 + 0.5);
-                pix.green = 255;
-                pix.blue = static_cast<unsigned char>((5-gray)*s*255 + 0.5);
-            }
-            else if (gray <= 7)
-            {
-                pix.red = 255;
-                pix.green = static_cast<unsigned char>((7-gray)*s*255 + 0.5);
-                pix.blue = 0;
-            }
-            else
-            {
-                pix.red = static_cast<unsigned char>((9-gray)*s*255 + 0.5);
-                pix.green = 0;
-                pix.blue = 0;
-            }
-
-            return pix;
+            return colormap_jet(get_pixel_intensity(mat(img)(r,c)), min_val, max_val);
         }
 
-        long nr () const { return img.nr(); }
-        long nc () const { return img.nc(); }
+        long nr () const { return num_rows(img); }
+        long nc () const { return num_columns(img); }
     }; 
 
     template <
@@ -230,12 +255,15 @@ namespace dlib
     )
     {
         typedef op_jet<image_type> op;
-        return matrix_op<op>(op(img,max(mat(img)),min(mat(img))));
+        if (num_columns(img) * num_rows(img) != 0)
+            return matrix_op<op>(op(img,max(mat(img)),min(mat(img))));
+        else
+            return matrix_op<op>(op(img,0,0));
     }
 
 // ----------------------------------------------------------------------------------------
 
 }
 
-#endif // DLIB_RANDOMLY_COlOR_IMAGE_H__
+#endif // DLIB_RANDOMLY_COlOR_IMAGE_Hh_
 

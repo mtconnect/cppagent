@@ -152,6 +152,13 @@ namespace dlib
                 - returns the length of the vector
         !*/
 
+        double length_squared(
+        ) const;
+        /*!
+            ensures
+                - returns length()*length() 
+        !*/
+
         T& x (
         );
         /*!
@@ -430,6 +437,12 @@ namespace dlib
     !*/
 
     typedef vector<long,2> point;
+
+    /*!A dpoint
+        This is just a typedef of the vector object. 
+    !*/
+
+    typedef vector<double,2> dpoint;
 
 // ----------------------------------------------------------------------------------------
 

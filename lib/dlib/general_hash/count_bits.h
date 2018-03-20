@@ -1,7 +1,7 @@
 // Copyright (C) 2013  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_COUNT_BiTS_H__
-#define DLIB_COUNT_BiTS_H__
+#ifndef DLIB_COUNT_BiTS_Hh_
+#define DLIB_COUNT_BiTS_Hh_
 
 #include "../algs.h"
 #include <climits>
@@ -56,7 +56,27 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename T
+        >
+    T hamming_distance (
+        const std::pair<T,T>& a,
+        const std::pair<T,T>& b
+    )
+    /*!
+        requires
+            - T is an unsigned integral type or a std::pair that, recursively, eventually
+              contains unsigned integral types.
+        ensures
+            - returns the number of bits which differ between a and b.
+    !*/
+    {
+        return hamming_distance(a.first,b.first) + hamming_distance(a.second, b.second);
+    }
+
+// ----------------------------------------------------------------------------------------
+
 }
 
-#endif // DLIB_COUNT_BiTS_H__
+#endif // DLIB_COUNT_BiTS_Hh_
 

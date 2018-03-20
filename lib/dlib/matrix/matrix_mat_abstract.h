@@ -1,7 +1,7 @@
 // Copyright (C) 2006  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_MATRIx_MAT_ABSTRACT_H__
-#ifdef DLIB_MATRIx_MAT_ABSTRACT_H__
+#undef DLIB_MATRIx_MAT_ABSTRACT_Hh_
+#ifdef DLIB_MATRIx_MAT_ABSTRACT_Hh_
 
 #include "matrix_abstract.h"
 #inclue <vector>
@@ -28,14 +28,20 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
-        typename T,
-        typename MM
+        typename image_type
         >
     const matrix_exp mat (
-        const array2d<T,MM>& array
+        const image_type& img
     );
     /*!
+        requires
+            - image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or image_type is a image_view or
+              const_image_view object.
         ensures
+            - This function converts any kind of generic image object into a dlib::matrix
+              expression.  Therefore, it is capable of converting objects like dlib::array2d
+              of dlib::cv_image.
             - returns a matrix R such that:
                 - R.nr() == array.nr() 
                 - R.nc() == array.nc()
@@ -108,8 +114,8 @@ namespace dlib
     );
     /*!
         requires
-            - nr > 0
-            - ptr == a pointer to at least nr T objects
+            - nr >= 0
+            - ptr == a pointer to at least nr T objects (or the NULL pointer if nr==0)
         ensures
             - returns a matrix M such that:
                 - M.nr() == nr
@@ -132,9 +138,9 @@ namespace dlib
     );
     /*!
         requires
-            - nr > 0
-            - nc > 0
-            - ptr == a pointer to at least nr*nc T objects
+            - nr >= 0
+            - nc >= 0
+            - ptr == a pointer to at least nr*nc T objects (or the NULL pointer if nr*nc==0)
         ensures
             - returns a matrix M such that:
                 - M.nr() == nr
@@ -143,6 +149,35 @@ namespace dlib
                   M(r,c) == ptr[r*nc + c]
                   (i.e. the pointer is interpreted as a matrix laid out in memory
                   in row major order)
+            - Note that the returned matrix doesn't take "ownership" of
+              the pointer and thus will not delete or free it.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T
+        >
+    const matrix_exp mat (
+        const T* ptr,
+        long nr,
+        long nc,
+        long stride
+    );
+    /*!
+        requires
+            - nr >= 0
+            - nc >= 0
+            - stride > 0
+            - ptr == a pointer to at least (nr-1)*stride+nc T objects (or the NULL pointer if nr*nc==0)
+        ensures
+            - returns a matrix M such that:
+                - M.nr() == nr
+                - m.nc() == nc 
+                - for all valid r and c:
+                  M(r,c) == ptr[r*stride + c]
+                  (i.e. the pointer is interpreted as a matrix laid out in memory
+                  in row major order, with a row stride of the given stride amount.)
             - Note that the returned matrix doesn't take "ownership" of
               the pointer and thus will not delete or free it.
     !*/
@@ -190,8 +225,19 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    matrix<double,1,1>      mat (double value);
+    matrix<float,1,1>       mat (float value);
+    matrix<long double,1,1> mat (long double value);
+    /*!
+        ensures
+            - Converts a scalar into a matrix containing just that scalar and returns the
+              results.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
 }
 
-#endif // DLIB_MATRIx_MAT_ABSTRACT_H__
+#endif // DLIB_MATRIx_MAT_ABSTRACT_Hh_
 
 

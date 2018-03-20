@@ -5,6 +5,7 @@
 
 #include "../pixel.h"
 #include "../matrix.h"
+#include "../image_processing/generic_image.h"
 
 namespace dlib
 {
@@ -27,15 +28,19 @@ namespace dlib
     );
     /*!
         requires
-            - in_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - out_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - pixel_traits<typename in_image_type::type>::has_alpha == false
-            - pixel_traits<typename out_image_type::type>::has_alpha == false 
+            - in_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - out_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - in_img and out_img do not contain pixels with an alpha channel.  That is,
+              pixel_traits::has_alpha is false for the pixels in these objects.
             - is_same_object(in_img, out_img) == false 
             - T must be some scalar type
+            - filter.size() != 0
             - scale != 0
-            - filter.nr() % 2 == 1  (i.e. must be odd)
-            - filter.nc() % 2 == 1  (i.e. must be odd)
+            - if (in_img doesn't contain grayscale pixels) then
+                - use_abs == false && add_to == false
+                  (i.e. You can only use the use_abs and add_to options with grayscale images)
         ensures
             - Applies the given spatial filter to in_img and stores the result in out_img (i.e.
               cross-correlates in_img with filter).  Also divides each resulting pixel by scale.  
@@ -45,17 +50,25 @@ namespace dlib
               any applicable color space conversion or value saturation is performed.  Note that if 
               add_to is true then the filtered output value will be added to out_img rather than 
               overwriting the original value.
-            - if (pixel_traits<typename in_image_type::type>::grayscale == false) then
-                - the pixel values are converted to the HSI color space and the filtering
-                  is done on the intensity channel only.
+            - if (in_img doesn't contain grayscale pixels) then
+                - The filter is applied to each color channel independently.
             - if (use_abs == true) then
                 - pixel values after filtering that are < 0 are converted to their absolute values.
+            - The filter is applied such that it's centered over the pixel it writes its
+              output into.  For centering purposes, we consider the center element of the
+              filter to be filter(filter.nr()/2,filter.nc()/2).  This means that the filter
+              that writes its output to a pixel at location point(c,r) and is W by H (width
+              by height) pixels in size operates on exactly the pixels in the rectangle
+              centered_rect(point(c,r),W,H) within in_img.
             - Pixels close enough to the edge of in_img to not have the filter still fit 
               inside the image are always set to zero.
             - #out_img.nc() == in_img.nc()
             - #out_img.nr() == in_img.nr()
             - returns a rectangle which indicates what pixels in #out_img are considered 
               non-border pixels and therefore contain output from the filter.
+            - if (use_abs == false && all images and filers contain float types) then
+                - This function will use SIMD instructions and is particularly fast.  So if
+                  you can use this form of the function it can give a decent speed boost.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -78,17 +91,22 @@ namespace dlib
     );
     /*!
         requires
-            - in_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - out_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - pixel_traits<typename in_image_type::type>::has_alpha == false
-            - pixel_traits<typename out_image_type::type>::has_alpha == false 
+            - in_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - out_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - in_img and out_img do not contain pixels with an alpha channel.  That is,
+              pixel_traits::has_alpha is false for the pixels in these objects.
             - is_same_object(in_img, out_img) == false 
             - T must be some scalar type
             - scale != 0
+            - row_filter.size() != 0
+            - col_filter.size() != 0
             - is_vector(row_filter) == true
             - is_vector(col_filter) == true
-            - row_filter.size() % 2 == 1  (i.e. must be odd)
-            - col_filter.size() % 2 == 1  (i.e. must be odd)
+            - if (in_img doesn't contain grayscale pixels) then
+                - use_abs == false && add_to == false
+                  (i.e. You can only use the use_abs and add_to options with grayscale images)
         ensures
             - Applies the given separable spatial filter to in_img and stores the result in out_img.  
               Also divides each resulting pixel by scale.  Calling this function has the same
@@ -101,17 +119,67 @@ namespace dlib
               any applicable color space conversion or value saturation is performed.  Note that if 
               add_to is true then the filtered output value will be added to out_img rather than 
               overwriting the original value.
-            - if (pixel_traits<typename in_image_type::type>::grayscale == false) then
-                - the pixel values are converted to the HSI color space and the filtering
-                  is done on the intensity channel only.
+            - if (in_img doesn't contain grayscale pixels) then
+                - The filter is applied to each color channel independently.
             - if (use_abs == true) then
                 - pixel values after filtering that are < 0 are converted to their absolute values
+            - The filter is applied such that it's centered over the pixel it writes its
+              output into.  For centering purposes, we consider the center element of the
+              filter to be FILT(col_filter.size()/2,row_filter.size()/2).  This means that
+              the filter that writes its output to a pixel at location point(c,r) and is W
+              by H (width by height) pixels in size operates on exactly the pixels in the
+              rectangle centered_rect(point(c,r),W,H) within in_img.
             - Pixels close enough to the edge of in_img to not have the filter still fit 
               inside the image are always set to zero.
             - #out_img.nc() == in_img.nc()
             - #out_img.nr() == in_img.nr()
             - returns a rectangle which indicates what pixels in #out_img are considered 
               non-border pixels and therefore contain output from the filter.
+            - if (use_abs == false && all images and filers contain float types) then
+                - This function will use SIMD instructions and is particularly fast.  So if
+                  you can use this form of the function it can give a decent speed boost.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename in_image_type,
+        typename out_image_type,
+        typename EXP1,
+        typename EXP2
+        >
+    rectangle float_spatially_filter_image_separable (
+        const in_image_type& in_img,
+        out_image_type& out_img,
+        const matrix_exp<EXP1>& row_filter,
+        const matrix_exp<EXP2>& col_filter,
+        out_image_type& scratch,
+        bool add_to = false
+    );
+    /*!
+        requires
+            - in_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - out_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - in_img, out_img, row_filter, and col_filter must all contain float type elements.
+            - is_same_object(in_img, out_img) == false 
+            - row_filter.size() != 0
+            - col_filter.size() != 0
+            - is_vector(row_filter) == true
+            - is_vector(col_filter) == true
+        ensures
+            - This function is identical to the above spatially_filter_image_separable()
+              function except that it can only be invoked on float images with float
+              filters.  In fact, spatially_filter_image_separable() invokes
+              float_spatially_filter_image_separable() in those cases.  So why is
+              float_spatially_filter_image_separable() in the public API?  The reason is
+              because the separable filtering routines internally allocate an image each
+              time they are called.  If you want to avoid this memory allocation then you
+              can call float_spatially_filter_image_separable() and provide the scratch
+              image as input.  This allows you to reuse the same scratch image for many
+              calls to float_spatially_filter_image_separable() and thereby avoid having it
+              allocated and freed for each call.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -135,10 +203,13 @@ namespace dlib
     );
     /*!
         requires
-            - in_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - out_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - pixel_traits<typename in_image_type::type>::has_alpha == false
-            - pixel_traits<typename out_image_type::type>::has_alpha == false 
+            - in_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - out_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - in_img and out_img do not contain pixels with an alpha channel.  That is,
+              pixel_traits::has_alpha is false for the pixels in these objects.
+            - out_img contains grayscale pixels.
             - is_same_object(in_img, out_img) == false 
             - T must be some scalar type
             - scale != 0
@@ -182,8 +253,8 @@ namespace dlib
     );
     /*!
         requires
-            - in_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - pixel_traits<typename in_image_type::type> must be defined 
+            - in_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
             - T and U should be scalar types
             - shrink_rect(get_rect(img),1).contains(c,r)
             - shrink_rect(get_rect(img),1).contains(c+NC-1,r+NR-1)
@@ -219,8 +290,10 @@ namespace dlib
     );
     /*!
         requires
-            - in_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - pixel_traits<typename in_image_type::type>::rgb == true
+            - in_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - img must contain RGB pixels, that is pixel_traits::rgb == true for the pixels
+              in img.
             - T should be a struct with .red .green and .blue members.
             - U should be a scalar type
             - shrink_rect(get_rect(img),1).contains(c,r)
@@ -280,7 +353,7 @@ namespace dlib
         typename in_image_type,
         typename out_image_type
         >
-    void gaussian_blur (
+    rectangle gaussian_blur (
         const in_image_type& in_img,
         out_image_type& out_img,
         double sigma = 1,
@@ -288,10 +361,12 @@ namespace dlib
     );
     /*!
         requires
-            - in_image_type  == is an implementation of array2d/array2d_kernel_abstract.h
-            - out_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - pixel_traits<typename in_image_type::type>::has_alpha == false
-            - pixel_traits<typename out_image_type::type>::has_alpha == false 
+            - in_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - out_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
+            - in_img and out_img do not contain pixels with an alpha channel.  That is,
+              pixel_traits::has_alpha is false for the pixels in these objects.
             - is_same_object(in_img, out_img) == false 
             - sigma > 0
             - max_size > 0
@@ -303,13 +378,14 @@ namespace dlib
               results are stored into #out_img.
             - Pixel values are stored into out_img using the assign_pixel() function and therefore
               any applicable color space conversion or value saturation is performed.
-            - if (pixel_traits<typename in_image_type::type>::grayscale == false) then
-                - the pixel values are converted to the HSI color space and the filtering
-                  is done on the intensity channel only.
+            - if (in_img doesn't contain grayscale pixels) then
+                - The filter is applied to each color channel independently.
             - Pixels close enough to the edge of in_img to not have the filter still fit 
               inside the image are set to zero.
             - #out_img.nc() == in_img.nc()
             - #out_img.nr() == in_img.nr()
+            - returns a rectangle which indicates what pixels in #out_img are considered 
+              non-border pixels and therefore contain output from the filter.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -327,10 +403,10 @@ namespace dlib
         requires
             - out.nr() == img.nr() 
             - out.nc() == img.nc()
-            - image_type1 == an implementation of array2d/array2d_kernel_abstract.h
-              and it must contain a scalar type
-            - image_type2 == an implementation of array2d/array2d_kernel_abstract.h
-              and it must contain a scalar type
+            - image_type1 == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h and it must contain grayscale pixels.
+            - image_type2 == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h and it must contain grayscale pixels.
             - is_same_object(img,out) == false
         ensures
             - for all valid r and c:
@@ -352,14 +428,14 @@ namespace dlib
     );
     /*!
         requires
-            - out.nr() == img.nr() 
-            - out.nc() == img.nc()
-            - image_type1 == an implementation of array2d/array2d_kernel_abstract.h
-              and it must contain a scalar type
-            - image_type2 == an implementation of array2d/array2d_kernel_abstract.h
-              and it must contain a scalar type
+            - image_type1 == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h and it must contain grayscale pixels.
+            - image_type2 == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h and it must contain grayscale pixels.
             - is_same_object(img,out) == false
         ensures
+            - #out.nr() == img.nr() 
+            - #out.nc() == img.nc()
             - for all valid r and c:
                 - let SUM(r,c) == sum of pixels from img which are inside the rectangle 
                   translate_rect(rect, point(c,r)).
@@ -377,16 +453,16 @@ namespace dlib
         image_type2& out,
         const long width,
         const long height,
-        const typename image_type1::type& thresh
+        const typename image_traits<image_type1>::pixel_type& thresh
     );
     /*!
         requires
             - out.nr() == img.nr() 
             - out.nc() == img.nc()
-            - image_type1 == an implementation of array2d/array2d_kernel_abstract.h
-              and it must contain a scalar type
-            - image_type2 == an implementation of array2d/array2d_kernel_abstract.h
-              and it must contain a scalar type
+            - image_type1 == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h and it must contain grayscale pixels.
+            - image_type2 == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h and it must contain grayscale pixels.
             - is_same_object(img,out) == false
             - width > 0 && height > 0
         ensures

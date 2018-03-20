@@ -1,7 +1,7 @@
 // Copyright (C) 2013  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_STRUCTURAL_SEQUENCE_sEGMENTATION_TRAINER_H__
-#define DLIB_STRUCTURAL_SEQUENCE_sEGMENTATION_TRAINER_H__
+#ifndef DLIB_STRUCTURAL_SEQUENCE_sEGMENTATION_TRAINER_Hh_
+#define DLIB_STRUCTURAL_SEQUENCE_sEGMENTATION_TRAINER_Hh_
 
 #include "structural_sequence_segmentation_trainer_abstract.h"
 #include "structural_sequence_labeling_trainer.h"
@@ -71,6 +71,16 @@ namespace dlib
 
         double get_epsilon (
         ) const { return trainer.get_epsilon(); }
+
+        unsigned long get_max_iterations (
+        ) const { return trainer.get_max_iterations(); }
+
+        void set_max_iterations (
+            unsigned long max_iter
+        ) 
+        {
+            trainer.set_max_iterations(max_iter);
+        }
 
         void set_max_cache_size (
             unsigned long max_size
@@ -267,5 +277,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_STRUCTURAL_SEQUENCE_sEGMENTATION_TRAINER_H__
+#endif // DLIB_STRUCTURAL_SEQUENCE_sEGMENTATION_TRAINER_Hh_
 

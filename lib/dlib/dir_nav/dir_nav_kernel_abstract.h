@@ -7,6 +7,7 @@
 #include <vector>
 #include "../uintn.h"
 #include "../algs.h"
+#include <chrono>
 
 namespace dlib
 {
@@ -137,6 +138,21 @@ namespace dlib
         /*!
             ensures
                 - returns the size of this file in bytes.
+        !*/
+
+        std::chrono::time_point<std::chrono::system_clock> last_modified (
+        ) const;
+        /*!
+            ensures
+                - returns the time the file was last modified.
+        !*/
+
+        operator std::string (
+        ) const; 
+        /*!
+            ensures
+                - returns full_name()
+                  (i.e. provides an implicit conversion to string from dlib::file)
         !*/
 
         file& operator= (
@@ -390,6 +406,14 @@ namespace dlib
                     - the last character of #full_name() is NOT get_separator()
         !*/
 
+        operator std::string (
+        ) const; 
+        /*!
+            ensures
+                - returns full_name()
+                  (i.e. provides an implicit conversion to string from dlib::directory)
+        !*/
+
         directory& operator= (
             const directory& rhs
         );
@@ -440,6 +464,28 @@ namespace dlib
         !*/ 
 
     };
+
+// ----------------------------------------------------------------------------------------
+
+    inline std::ostream& operator<< (
+        std::ostream& out,
+        const directory& item
+    );
+    /*!
+        ensures
+            - performs: out << item.full_name()
+            - returns out
+    !*/
+
+    inline std::ostream& operator<< (
+        std::ostream& out,
+        const file& item
+    );
+    /*!
+        ensures
+            - performs: out << item.full_name()
+            - returns out
+    !*/
 
 // ----------------------------------------------------------------------------------------
 

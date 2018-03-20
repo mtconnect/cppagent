@@ -15,7 +15,7 @@
 namespace dlib
 {
 
-    typedef dlib::shared_ptr<dlib::timeout> timeout_ptr;
+    typedef std::shared_ptr<dlib::timeout> timeout_ptr;
 
 
 #ifdef _MSC_VER
@@ -456,7 +456,7 @@ namespace dlib
                     std::ifstream in(si->second.c_str());
                     postBody << "--" << mime_boundary << "\r\n"
                         "Content-Disposition: form-data; name=\"" << ci->first << "\"; filename=\"" << get_basename(si->second) << "\"\r\n\r\n"
-                        << in << "\r\n";
+                        << in.rdbuf() << "\r\n";
                 }
             }
 
@@ -553,7 +553,10 @@ namespace dlib
             dlib::connection * conn(0);
             try
             {
-                conn = dlib::connect(host, port);
+                if (timeout > 0)
+                    conn = dlib::connect(host, port, timeout);
+                else
+                    conn = dlib::connect(host, port);
             }
             catch (const dlib::socket_error& e)
             {

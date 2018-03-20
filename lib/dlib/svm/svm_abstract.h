@@ -163,6 +163,102 @@ namespace dlib
     !*/
 
 // ----------------------------------------------------------------------------------------
+
+    template <
+        typename detection_type_,
+        typename label_type_ = long
+        >
+    struct labeled_detection
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This is a simple object, like std::pair, it just holds two objects.  It
+                serves the same purpose as std::pair except that it has informative names
+                describing its two members and is intended for use with track association
+                problems.
+        !*/
+
+        typedef detection_type_ detection_type;
+        typedef label_type_ label_type;
+
+        detection_type det;
+        label_type label;
+    };
+
+    template <
+        typename detection_type_,
+        typename label_type_ 
+        >
+    void serialize (const labeled_detection<detection_type_,label_type_>& item, std::ostream& out);
+    /*!
+        provides serialization support
+    !*/
+
+    template <
+        typename detection_type_,
+        typename label_type_ 
+        >
+    void deserialize (labeled_detection<detection_type_,label_type_>& item, std::istream& in);
+    /*!
+        provides deserialization support
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename detection_type, 
+        typename label_type 
+        >
+    bool is_track_association_problem (
+        const std::vector<std::vector<labeled_detection<detection_type,label_type> > >& samples
+    );
+    /*!
+        ensures
+            - In this tracking model you get a set of detections at each time step and are
+              expected to associate each detection with a track or have it spawn a new
+              track.  Therefore, a track association problem is a machine learning problem
+              where you are given a dataset of example input detections and are expected to
+              learn to perform the proper detection to track association.  
+            - This function checks if samples can form a valid dataset for this machine
+              learning problem and returns true if this is the case.  This means we should
+              interpret samples in the following way:
+                - samples is a track history and for each valid i:
+                    - samples[i] is a set of labeled detections from the i-th time step.
+                      Each detection has been labeled with its "true object identity".
+                      That is, all the detection throughout the history with the same
+                      label_type value are detections from the same object and therefore
+                      should be associated to the same track.
+              Putting this all together, samples is a valid track association learning
+              problem if and only if the following are all true:
+                - samples.size() > 0
+                - There are at least two values, i and j such that:
+                    - i != j
+                    - samples[i].size() > 0
+                    - samples[j].size() > 0
+                  Or in other words, there needs to be some detections in samples somewhere
+                  or it is impossible to learn anything.
+                - for all valid i:
+                    - for all valid j and k where j!=k:
+                        - samples[i][j].label != samples[i][k].label
+                          (i.e. the label_type values must be unique within each time step.
+                          Or in other words, you can't have two detections on the same
+                          object in a single time step.)
+    !*/
+
+    template <
+        typename detection_type, 
+        typename label_type 
+        >
+    bool is_track_association_problem (
+        const std::vector<std::vector<std::vector<labeled_detection<detection_type,label_type> > > >& samples
+    );
+    /*!
+        ensures
+            - returns true if is_track_association_problem(samples[i]) == true for all
+              valid i and false otherwise.
+    !*/
+
+// ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
@@ -273,7 +369,8 @@ namespace dlib
     /*!
         requires
             - is_binary_classification_problem(x,y) == true
-            - 1 < folds <= x.nr()
+            - 1 < folds <= std::min(sum(y>0),sum(y<0))
+              (e.g. There must be at least as many examples of each class as there are folds)
             - trainer_type == some kind of binary classification trainer object (e.g. svm_nu_trainer)
         ensures
             - performs k-fold cross validation by using the given trainer to solve the

@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_EDGE_LIST_GrAPHS_H__
-#define DLIB_EDGE_LIST_GrAPHS_H__
+#ifndef DLIB_EDGE_LIST_GrAPHS_Hh_
+#define DLIB_EDGE_LIST_GrAPHS_Hh_
 
 #include "edge_list_graphs_abstract.h"
 #include <limits>
@@ -286,7 +286,7 @@ namespace dlib
         // Hold the length for the longest edge for each node.  Initially they are all infinity.
         std::vector<double> worst_dists(samples.size(), std::numeric_limits<double>::infinity());
 
-        std::vector<sample_pair>::iterator begin_i, end_i, begin_j, end_j, itr;
+        std::vector<sample_pair>::iterator begin_i, end_i, begin_j, end_j;
         begin_i = edges.begin();
         end_i = begin_i + k;
 
@@ -560,7 +560,7 @@ namespace dlib
             }
         }
         if (neighbors.size() != 0)
-            neighbors[cur_node] = std::make_pair(start_idx, edges.size());
+            neighbors[cur_node] = std::make_pair(start_idx, (unsigned long)edges.size());
     }
 
 // ----------------------------------------------------------------------------------------
@@ -588,6 +588,6 @@ namespace dlib
 
 }
 
-#endif // DLIB_EDGE_LIST_GrAPHS_H__
+#endif // DLIB_EDGE_LIST_GrAPHS_Hh_
 
 

@@ -1,8 +1,9 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_CBLAS_CONSTAnTS_H__
-#define DLIB_CBLAS_CONSTAnTS_H__
+#ifndef DLIB_CBLAS_CONSTAnTS_Hh_
+#define DLIB_CBLAS_CONSTAnTS_Hh_
 
+#ifndef CBLAS_H
 namespace dlib
 {
     namespace blas_bindings
@@ -15,6 +16,7 @@ namespace dlib
 
     }
 }
+#endif // if not CBLAS_H
 
-#endif // DLIB_CBLAS_CONSTAnTS_H__
+#endif // DLIB_CBLAS_CONSTAnTS_Hh_
 

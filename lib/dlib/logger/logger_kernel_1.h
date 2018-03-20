@@ -3,20 +3,21 @@
 #ifndef DLIB_LOGGER_KERNEl_1_
 #define DLIB_LOGGER_KERNEl_1_
 
+#include <limits>
+#include <memory>
+#include <cstring>
+#include <streambuf>
+#include <vector>
+
 #include "../threads.h"
 #include "../misc_api.h"
 #include "../set.h"
 #include "logger_kernel_abstract.h"
-#include <limits>
-#include <cstring>
 #include "../algs.h"
 #include "../assert.h"
 #include "../uintn.h"
 #include "../map.h"
-#include "../smart_pointers.h"
 #include "../member_function_pointer.h"
-#include <streambuf>
-#include <vector>
 
 namespace dlib
 {
@@ -36,9 +37,20 @@ namespace dlib
             name[19] = '\0';
         }
 
+        bool operator< (const log_level& rhs) const { return priority <  rhs.priority; }
+        bool operator<=(const log_level& rhs) const { return priority <= rhs.priority; }
+        bool operator> (const log_level& rhs) const { return priority >  rhs.priority; }
+        bool operator>=(const log_level& rhs) const { return priority >= rhs.priority; }
+
         int priority;
         char name[20];
     };
+
+    inline std::ostream& operator<< (std::ostream& out, const log_level& item)
+    {
+        out << item.name;
+        return out;
+    }
 
     const log_level LALL  (std::numeric_limits<int>::min(),"ALL");
     const log_level LNONE (std::numeric_limits<int>::max(),"NONE");
@@ -57,6 +69,17 @@ namespace dlib
 
     void set_all_logging_levels (
         const log_level& new_level
+    );
+
+    typedef void (*print_header_type)(
+        std::ostream& out, 
+        const std::string& logger_name, 
+        const log_level& l,
+        const uint64 thread_id
+    );
+
+    void set_all_logging_headers (
+        const print_header_type& new_header
     );
 
 // ----------------------------------------------------------------------------------------
@@ -78,6 +101,16 @@ namespace dlib
                          const uint64 thread_id,
                          const char* message_to_log)
     );
+
+    template <
+        typename T
+        >
+    void set_all_logging_output_hooks (
+        T& object
+    )
+    {
+        set_all_logging_output_hooks(object, &T::log);
+    }
 
 // ----------------------------------------------------------------------------------------
 
@@ -206,7 +239,7 @@ namespace dlib
                                         const uint64, const char*> hook_mfp;
 
         logger (  
-            const char* name_
+            const std::string& name_
         );
 
         virtual ~logger (
@@ -331,13 +364,6 @@ namespace dlib
             gd.set_output_hook(logger_name, hook);
         }
 
-        typedef void (*print_header_type)(
-            std::ostream& out, 
-            const std::string& logger_name, 
-            const log_level& l,
-            const uint64 thread_id
-        );
-
         print_header_type logger_header (
         ) const { return print_header; }
 
@@ -420,7 +446,7 @@ namespace dlib
                 level_container ();
 
                 log_level val;
-                map<std::string,scoped_ptr<level_container> >::kernel_1b_c table;
+                map<std::string,std::unique_ptr<level_container> >::kernel_1b_c table;
             } level_table;
 
             const log_level level (
@@ -448,7 +474,7 @@ namespace dlib
             struct auto_flush_container
             {
                 bool val;
-                map<std::string,scoped_ptr<auto_flush_container> >::kernel_1b_c table;
+                map<std::string,std::unique_ptr<auto_flush_container> >::kernel_1b_c table;
             } auto_flush_table;
 
             bool auto_flush (
@@ -476,7 +502,7 @@ namespace dlib
             struct output_streambuf_container
             {
                 std::streambuf* val;
-                map<std::string,scoped_ptr<output_streambuf_container> >::kernel_1b_c table;
+                map<std::string,std::unique_ptr<output_streambuf_container> >::kernel_1b_c table;
             } streambuf_table;
 
             std::streambuf* output_streambuf (
@@ -517,7 +543,7 @@ namespace dlib
             struct output_hook_container
             {
                 hook_mfp val;
-                map<std::string,scoped_ptr<output_hook_container> >::kernel_1b_c table;
+                map<std::string,std::unique_ptr<output_hook_container> >::kernel_1b_c table;
             } hook_table;
 
             hook_mfp output_hook (
@@ -545,7 +571,7 @@ namespace dlib
             struct logger_header_container
             {
                 print_header_type val;
-                map<std::string,scoped_ptr<logger_header_container> >::kernel_1b_c table;
+                map<std::string,std::unique_ptr<logger_header_container> >::kernel_1b_c table;
             } header_table;
 
             print_header_type logger_header (
@@ -581,6 +607,10 @@ namespace dlib
             const log_level& new_level
         );
 
+        friend void set_all_logging_headers (
+            const print_header_type& new_header 
+        );
+
         friend void set_all_logging_output_streams (
             std::ostream& out
         );
@@ -603,7 +633,7 @@ namespace dlib
             // following line of code.  However, there is also a bug in gcc-3.3 
             // that causes it to error out if <T> is present.  So this works around
             // this problem.
-#if _MSC_VER == 1400
+#if defined(_MSC_VER) && _MSC_VER == 1400
             hook.set<T>(object, hook_);
 #else
             hook.set(object, hook_);

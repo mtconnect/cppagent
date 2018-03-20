@@ -3,6 +3,8 @@
 #undef DLIB_OPENCV_IMAGE_AbSTRACT_H_
 #ifdef DLIB_OPENCV_IMAGE_AbSTRACT_H_
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/types_c.h>
 #include "../algs.h"
 #include "../pixel.h"
 
@@ -152,6 +154,30 @@ namespace dlib
                 - 0 <= row < nr()
             ensures
                 - returns a pointer to the first pixel in the given row
+                  of this image
+        !*/
+
+        inline const pixel_type& operator()(
+            const long row, const long column
+        ) const
+        /*!
+            requires
+                - 0 <= row < nr()
+                - 0 <= column < nc()
+            ensures
+                - returns a const reference to the pixel at coordinates (row, column)
+                  of this image
+        !*/
+
+        inline pixel_type& operator()(
+            const long row, const long column
+        )
+        /*!
+            requires
+                - 0 <= row < nr()
+                - 0 <= column < nc()
+            ensures
+                - returns a reference to the pixel at coordinates (row, column)
                   of this image
         !*/
 

@@ -312,6 +312,7 @@ namespace
             running_stats<double> rs, rs2;
 
             running_scalar_covariance<double> rsc1, rsc2;
+            running_scalar_covariance_decayed<double> rscd1(1000000), rscd2(1000000);
 
             for (double i = 0; i < 100; ++i)
             {
@@ -320,6 +321,10 @@ namespace
                 rsc1.add(i,i);
                 rsc2.add(i,i);
                 rsc2.add(i,-i);
+
+                rscd1.add(i,i);
+                rscd2.add(i,i);
+                rscd2.add(i,-i);
             }
 
             // make sure the running_stats and running_scalar_covariance agree
@@ -333,6 +338,18 @@ namespace
 
             DLIB_TEST(std::abs(rsc1.correlation() - 1) < 1e-10);
             DLIB_TEST(std::abs(rsc2.correlation() - 0) < 1e-10);
+
+
+            const double s = 99/100.0;
+            const double ss = std::sqrt(s);;
+            DLIB_TEST_MSG(std::abs(rs.mean() - rscd1.mean_x()) < 1e-2, std::abs(rs.mean() - rscd1.mean_x()) << " " << rscd1.mean_x());
+            DLIB_TEST(std::abs(rs.mean() - rscd1.mean_y()) < 1e-2);
+            DLIB_TEST_MSG(std::abs(ss*rs.stddev() - rscd1.stddev_x()) < 1e-2, std::abs(ss*rs.stddev() - rscd1.stddev_x()));
+            DLIB_TEST(std::abs(ss*rs.stddev() - rscd1.stddev_y()) < 1e-2);
+            DLIB_TEST_MSG(std::abs(s*rs.variance() - rscd1.variance_x()) < 1e-2, std::abs(s*rs.variance() - rscd1.variance_x()));
+            DLIB_TEST(std::abs(s*rs.variance() - rscd1.variance_y()) < 1e-2);
+            DLIB_TEST(std::abs(rscd1.correlation() - 1) < 1e-2);
+            DLIB_TEST(std::abs(rscd2.correlation() - 0) < 1e-2);
 
 
 
@@ -692,10 +709,104 @@ namespace
 
         }
 
+        void prior_frobnorm_test()
+        {
+            frobmetric_training_sample<matrix<double,0,1> > sample;
+            std::vector<frobmetric_training_sample<matrix<double,0,1> > > samples;
+
+            matrix<double,3,1> x, near_, far_;
+            x    = 0,0,0;
+            near_ = 1,0,0;
+            far_  = 0,1,0;
+
+            sample.anchor_vect = x;
+            sample.near_vects.push_back(near_);
+            sample.far_vects.push_back(far_);
+
+            samples.push_back(sample);
+
+            vector_normalizer_frobmetric<matrix<double,0,1> > trainer;
+            trainer.set_c(100);
+            print_spinner();
+            trainer.train(samples);
+
+            matrix<double,3,3> correct;
+            correct = 0, 0, 0,
+                      0, 1, 0, 
+                      0, 0, 0;
+
+            dlog << LDEBUG << trainer.transform();
+            DLIB_TEST(max(abs(trainer.transform()-correct)) < 1e-8);
+
+            trainer.set_uses_identity_matrix_prior(true);
+            print_spinner();
+            trainer.train(samples);
+            correct = 1, 0, 0,
+                      0, 2, 0, 
+                      0, 0, 1;
+
+            dlog << LDEBUG << trainer.transform();
+            DLIB_TEST(max(abs(trainer.transform()-correct)) < 1e-8);
+
+        }
+
+        void test_lda ()
+        {
+            // This test makes sure we pick the right direction in a simple 2D -> 1D LDA
+            typedef matrix<double,2,1> sample_type;
+
+            std::vector<unsigned long> labels;
+            std::vector<sample_type> samples;
+            for (int i=0; i<4; i++)
+            {
+                sample_type s;
+                s(0) = i;
+                s(1) = i+1;
+                samples.push_back(s);
+                labels.push_back(1);       
+
+                sample_type s1;
+                s1(0) = i+1;
+                s1(1) = i;
+                samples.push_back(s1);      
+                labels.push_back(2);       
+            }
+
+            matrix<double> X;  
+            X.set_size(8,2);
+            for (int i=0; i<8; i++){
+                X(i,0) = samples[i](0);
+                X(i,1) = samples[i](1);
+            }  
+
+            matrix<double,0,1> mean;   
+
+            dlib::compute_lda_transform(X,mean,labels,1);
+
+            std::vector<double> vals1, vals2;
+            for (unsigned long i = 0; i < samples.size(); ++i)
+            {
+                double val = X*samples[i]-mean;
+                if (i%2 == 0)
+                    vals1.push_back(val);
+                else
+                    vals2.push_back(val);
+                dlog << LINFO << "1D LDA output: " << val;
+            }
+
+            if (vals1[0] > vals2[0])
+                swap(vals1, vals2);
+
+            const double err = equal_error_rate(vals1, vals2).first;
+            dlog << LINFO << "LDA ERR: " << err;
+            DLIB_TEST(err == 0);
+            DLIB_TEST(equal_error_rate(vals2, vals1).first == 1);
+        }
 
         void perform_test (
         )
         {
+            prior_frobnorm_test();
             dlib::rand rnd;
             for (int i = 0; i < 5; ++i)
                 test_vector_normalizer_frobmetric(rnd);
@@ -712,6 +823,7 @@ namespace
             test_randomize_samples2();
             another_test();
             test_average_precision();
+            test_lda();
         }
     } a;
 

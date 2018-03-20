@@ -31,12 +31,20 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     const matrix pinv (
-        const matrix_exp& m
+        const matrix_exp& m,
+        double tol = 0
     );
     /*!
+        requires
+            - tol >= 0
         ensures
             - returns the Moore-Penrose pseudoinverse of m.
             - The returned matrix has m.nc() rows and m.nr() columns.
+            - if (tol == 0) then
+                - singular values less than max(m.nr(),m.nc()) times the machine epsilon 
+                  times the largest singular value are ignored.  
+            - else
+                - singular values less than tol*max(singular value in m) are ignored.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -180,6 +188,9 @@ namespace dlib
                 Finding Structure with Randomness: Probabilistic Algorithms for
                 Constructing Approximate Matrix Decompositions by Halko et al.
               Therefore, it is very fast and suitable for use with very large matrices.
+              Moreover, q is the number of subspace iterations performed.  Larger
+              values of q might increase the accuracy of the solution but the default
+              value should be good for many problems.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -233,6 +244,9 @@ namespace dlib
                 Finding Structure with Randomness: Probabilistic Algorithms for
                 Constructing Approximate Matrix Decompositions by Halko et al.
               Therefore, it is very fast and suitable for use with very large matrices.
+              Moreover, q is the number of subspace iterations performed.  Larger
+              values of q might increase the accuracy of the solution but the default
+              value should be good for many problems.
     !*/
 
 // ----------------------------------------------------------------------------------------

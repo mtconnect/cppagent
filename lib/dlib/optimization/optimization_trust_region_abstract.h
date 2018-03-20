@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_OPTIMIZATION_TRUST_REGIoN_H_ABSTRACT__
-#ifdef DLIB_OPTIMIZATION_TRUST_REGIoN_H_ABSTRACT__
+#undef DLIB_OPTIMIZATION_TRUST_REGIoN_H_ABSTRACTh_
+#ifdef DLIB_OPTIMIZATION_TRUST_REGIoN_H_ABSTRACTh_
 
 #include "../matrix/matrix_abstract.h"
 
@@ -40,10 +40,62 @@ namespace dlib
                 Minimize: f(p) == 0.5*trans(p)*B*p + trans(g)*p
                 subject to the following constraint:
                     - length(p) <= radius
-            - returns the number of iterations performed.  If this method fails to
-              converge to eps accuracy then the number returned will be max_iter+1.
-            - if this function returns 0 or 1 then we are not hitting the radius bound.
-              Otherwise, the radius constraint is active and std::abs(length(#p)-radius) <= eps.
+            - returns the number of iterations performed.  If this method fails to converge
+              to eps accuracy then the number returned will be max_iter+1.
+            - if (this function didn't terminate due to hitting the max_iter iteration limit) then
+                - if this function returns 0 or 1 then we are not hitting the radius bound Otherwise, 
+                  the radius constraint is active and std::abs(length(#p)-radius)/radius <= eps.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP1,
+        typename EXP2,
+        typename T, long NR, long NC, typename MM, typename L,
+        typename EXP3
+        >
+    void solve_trust_region_subproblem_bounded ( 
+        const matrix_exp<EXP1>& B,
+        const matrix_exp<EXP2>& g,
+        const typename EXP1::type radius,
+        matrix<T,NR,NC,MM,L>& p,
+        double eps,
+        unsigned long max_iter,
+        const matrix_exp<EXP3>& lower,
+        const matrix_exp<EXP3>& upper
+    );
+    /*!
+        requires
+            - B == trans(B)
+              (i.e. B should be a symmetric matrix)
+            - B.nr() == B.nc()
+            - is_col_vector(g) == true
+            - is_col_vector(lower) == true
+            - is_col_vector(upper) == true
+            - g.size() == B.nr()
+            - lower.size() == B.nr()
+            - upper.size() == B.nr()
+            - p is capable of containing a column vector the size of g
+              (i.e. p = g; should be a legal expression)
+            - radius > 0
+            - eps > 0
+            - max_iter > 0
+            - min(upper-lower) >= 0
+            - length(clamp(zeros_matrix(lower),lower,upper)) <= radius
+              (i.e. the lower and upper bounds can't exclude all points with the desired radius.)
+        ensures
+            - This function solves the following optimization problem:
+                Minimize: f(p) == 0.5*trans(p)*B*p + trans(g)*p
+                subject to the following constraints:
+                    - length(p) <= radius
+                    - lower(i) <= p(i) <= upper(i), for all i
+            - Solves the problem to eps accuracy.  We do this by greedily finding the most
+              violated bound constraint, locking that variable to its constrained value, removing
+              it from the problem, and then resolving.  We do that until no more constraint
+              violations are present.  Each time we just call solve_trust_region_subproblem() 
+              to get the solution and pass eps and max_iter directly to these calls to
+              solve_trust_region_subproblem().
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -176,6 +228,6 @@ namespace dlib
 
 }
 
-#endif // DLIB_OPTIMIZATION_TRUST_REGIoN_H_ABSTRACT__
+#endif // DLIB_OPTIMIZATION_TRUST_REGIoN_H_ABSTRACTh_
 
 

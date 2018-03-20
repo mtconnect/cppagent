@@ -4,6 +4,7 @@
 #define DLIB_MULTITHREADED_OBJECT_EXTENSIOn_CPP
 
 #include "multithreaded_object_extension.h"
+#include "create_new_thread_extension.h"
 
 
 namespace dlib
@@ -27,11 +28,20 @@ namespace dlib
     ~multithreaded_object (
     )
     {
-        DLIB_ASSERT(number_of_threads_alive() == 0,
-               "\tmultithreaded_object::~multithreaded_object()"
-               << "\n\tYou have let a multithreaded object destruct itself before terminating its threads"
-               << "\n\tthis: " << this
-        );
+        try
+        {
+            DLIB_ASSERT(number_of_threads_alive() == 0,
+                   "\tmultithreaded_object::~multithreaded_object()"
+                   << "\n\tYou have let a multithreaded object destruct itself before terminating its threads"
+                   << "\n\tthis: " << this
+            );
+        }
+        catch (std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+            assert(false);
+            abort();
+        }
     }
 
 // ----------------------------------------------------------------------------------------
