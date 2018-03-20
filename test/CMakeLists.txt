@@ -52,7 +52,6 @@ set(AGENT_SRCS
 	../agent/xml_printer.cpp
 	../agent/config.cpp
 	../agent/service.cpp
-	../agent/ref_counted.cpp
 	../agent/asset.cpp
 	../agent/version.cpp
 	../agent/rolling_file_logger.cpp
