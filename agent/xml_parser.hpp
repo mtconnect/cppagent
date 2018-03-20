@@ -29,13 +29,12 @@
 class XmlParser
 {
 public:
-	/* Constructor to set the open the correct file */
+	// Constructor to set the open the correct file
 	XmlParser();
 
-	/* Virtual destructor */
 	virtual ~XmlParser();
 
-	/* Parses a file and returns a list of devices */
+	// Parses a file and returns a list of devices
 	std::vector<Device *> parseFile(const std::string &aPath);
 
 	// Just loads the document, assumed it has already been parsed before.
@@ -44,7 +43,7 @@ public:
 	// Update the dom for this device
 	void updateDevice(Device *aDevice);
 
-	/* Get std::list of data items in path */
+	// Get std::list of data items in path
 	void getDataItems(std::set<std::string> &aFilterSet,
 			  const std::string &path, xmlNodePtr node = NULL);
 
@@ -57,36 +56,36 @@ public:
 	void updateAsset(AssetPtr aPtr, const std::string &aType, const std::string &aContent);
 
 protected:
-	/* LibXML XML Doc */
+	// LibXML XML Doc
 	xmlDocPtr m_doc;
 
 protected:
-	/* Main method to process the nodes and return the objects */
+	// Main method to process the nodes and return the objects
 	Component *handleComponent(
 	xmlNodePtr component,
 	Component *parent = NULL,
 	Device *device = NULL);
 
-	/* Helper to handle/return each component of the device */
+	// Helper to handle/return each component of the device
 	Component *loadComponent(
 	xmlNodePtr node,
 	Component::EComponentSpecs spec,
 	std::string &name
 	);
 
-	/* Put all of the attributes of an element into a map */
+	// Put all of the attributes of an element into a map
 	std::map<std::string, std::string> getAttributes(
 	const xmlNodePtr element
 	);
 
-	/* Load the data items */
+	// Load the data items
 	void loadDataItem(
 	xmlNodePtr dataItems,
 	Component *component,
 	Device *device
 	);
 
-	/* Perform loading on children and set up relationships */
+	// Perform loading on children and set up relationships
 	void handleChildren(
 	xmlNodePtr components,
 	Component *parent = NULL,
@@ -98,7 +97,7 @@ protected:
 	Component *component
 	);
 
-	/* Perform loading of references and set up relationships */
+	// Perform loading of references and set up relationships
 	void handleRefenence(xmlNodePtr components,
 			 Component *parent = NULL,
 			 Device *device = NULL);

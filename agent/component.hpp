@@ -40,7 +40,7 @@ public:
 	DataItem *m_dataItem;
 	};
 
-	/* std::string enumeration for component parts and details */
+	// std::string enumeration for component parts and details
 	enum EComponentSpecs
 	{
 	// Component parts
@@ -63,24 +63,24 @@ public:
 	static const std::string SComponentSpecs[];
 
 public:
-	/* Take in a class name & mapping of attributes */
+	// Take in a class name & mapping of attributes
 	Component(
 	const std::string &cls,
 	std::map<std::string, std::string> attributes,
 	const std::string &aPrefix = ""
 	);
 
-	/* Virtual destructor */
+	// Virtual destructor
 	virtual ~Component();
 
-	/* Return a map of attributes of all the component specs */
+	// Return a map of attributes of all the component specs
 	std::map<std::string, std::string> *getAttributes() { return &m_attributes; }
 
-	/* Return what part of the component it is */
+	// Return what part of the component it is
 	const std::string &getClass() const { return m_class; }
 	const std::string &getPrefixedClass() const { return m_prefixedClass; }
 
-	/* Getter methods for the component ID/Name */
+	// Getter methods for the component ID/Name
 	const std::string &getId() const { return m_id; }
 	const std::string &getName() const { return m_name; }
 	const std::string &getNativeName() const { return m_nativeName; }
@@ -103,20 +103,20 @@ public:
 	DataItem *getAssetRemoved() const { return m_assetRemoved; }
 
 
-	/* Add/get description specifications using an attribute map */
+	// Add/get description specifications using an attribute map 
 	void addDescription(std::string body, std::map<std::string, std::string> attributes);
 	const std::map<std::string, std::string> &getDescription() const { return m_description; }
 
 	void setConfiguration(const std::string &aConfiguration) { m_configuration = aConfiguration; }
 
-	/* Get the device that any component is associated with */
+	// Get the device that any component is associated with 
 	Device *getDevice();
 
-	/* Set/Get the component's parent component */
+	// Set/Get the component's parent component
 	void setParent(Component &parent) { m_parent = &parent; }
 	Component *getParent() const { return m_parent; }
 
-	/* Add to/get the component's std::list of children */
+	// Add to/get the component's std::list of children
 	void addChild(Component &child) { m_children.push_back(&child); }
 	std::list<Component *> &getChildren() { return m_children; }
 
@@ -124,69 +124,69 @@ public:
 	void addComposition(Composition *aComposition) { m_compositions.push_back(aComposition); }
 	std::list<Composition *> &getCompositions() { return m_compositions; }
 
-	/* Add to/get the component's std::list of data items */
+	// Add to/get the component's std::list of data items
 	void addDataItem(DataItem &dataItem);
 	const std::list<DataItem *> &getDataItems() const { return m_dataItems; }
 
 	bool operator<(const Component &comp) const { return m_id < comp.getId(); }
 	bool operator==(const Component &comp) const { return m_id == comp.getId(); }
 
-	/* References */
+	// References
 	void addReference(Reference &aReference) { m_references.push_back(aReference); }
 	const std::list<Reference> &getReferences() const { return m_references; }
 
 	void resolveReferences();
 
 protected:
-	/* Return a map of attributes of all the component specs */
+	// Return a map of attributes of all the component specs
 	std::map<std::string, std::string> buildAttributes() const;
 	void reBuildAttributes() { m_attributes = buildAttributes(); }
 
 protected:
-	/* Unique ID for each component */
+	// Unique ID for each component
 	std::string m_id;
 
-	/* Name for itself */
+	// Name for itself
 	std::string m_name;
 	std::string m_nativeName;
 
-	/* The class */
+	// The class
 	std::string m_class;
 	std::string m_prefix;
 	std::string m_prefixedClass;
 
-	/* Universal unique identifier */
+	// Universal unique identifier
 	std::string m_uuid;
 
-	/* If receiving data, a sample rate is needed */
+	// If receiving data, a sample rate is needed
 	float m_sampleInterval;
 
-	/* Description of itself */
+	// Description of itself
 	std::map<std::string, std::string> m_description;
 	std::string m_descriptionBody;
 	std::string m_configuration;
 
-	/* Component relationships */
-	/* Pointer to the parent component */
+	// Component relationships
+	// Pointer to the parent component
 	Component *m_parent;
 	Device *m_device;
 	DataItem *m_availability;
 	DataItem *m_assetChanged;
 	DataItem *m_assetRemoved;
 
-	/* Each component keeps track of it's children in a std::list */
+	// Each component keeps track of it's children in a std::list
 	std::list<Component *> m_children;
 
-	/* Keep Track of all the data items associated with this component */
+	// Keep Track of all the data items associated with this component
 	std::list<DataItem *> m_dataItems;
 
-	/* List of all the compositions */
+	// List of all the compositions
 	std::list<Composition *> m_compositions;
 
-	/* The set of attribtues */
+	// The set of attribtues
 	std::map<std::string, std::string> m_attributes;
 
-	/* References */
+	// References
 	std::list<Reference> m_references;
 };
 

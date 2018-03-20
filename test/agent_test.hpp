@@ -152,20 +152,20 @@ protected:
 	int m_delay;
 
 protected:
-	/* Test Basic */
+	// Test Basic
 	void testConstructor();
 
-	/* Test Errors */
+	// Test Errors
 	void testBadPath();
 	void testBadXPath();
 	void testBadCount();
 	void testBadFreq();
 
-	/* test good */
+	// test good
 	void testGoodPath();
 	void testXPath();
 
-	/* Test calls */
+	// Test calls
 	void testProbe();
 	void testEmptyStream();
 	void testBadDevices();
@@ -177,7 +177,7 @@ protected:
 	void testSampleAtNextSeq();
 	void testEmptyLastItemFromAdapter();
 
-	/* Test Adapter */
+	// Test Adapter
 	void testAdapter();
 	void testUUIDChange();
 
@@ -268,7 +268,7 @@ protected:
 	// Conditions
 	void testConditionSequence();
 
-	/* Helper method to test expected string, given optional query, & run tests */
+	// Helper method to test expected string, given optional query, & run tests
 	xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
 	xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
 				key_value_map &aQueries);

@@ -80,7 +80,7 @@ protected:
 	void testDuration();
 	void testAssetChanged();
 
-	/* Helper to test values */
+	// Helper to test values
 	void testValueHelper(
 	std::map<std::string, std::string> &attributes,
 	const std::string &nativeUnits,

@@ -36,16 +36,16 @@ using namespace dlib;
 class Adapter : public Connector, public threaded_object
 {
 public:
-	/* Associate adapter with a device & connect to the server & port */
+	// Associate adapter with a device & connect to the server & port
 	Adapter(const std::string &device,
 		const std::string &server,
 		const unsigned int port,
 		int aLegacyTimeout = 600);
 
-	/* Virtual destructor */
+	// Virtual destructor
 	virtual ~Adapter();
 
-	/* Set pointer to the agent */
+	// Set pointer to the agent
 	void setAgent(Agent &agent);
 	bool isDupChecking() { return m_dupCheck; }
 	void setDupCheck(bool aFlag) { m_dupCheck = aFlag; }
@@ -75,15 +75,15 @@ public:
 	bool isParsingTime() { return m_parseTime; }
 	void setParseTime(bool aFlag) { m_parseTime = aFlag; }
 
-	/* For testing... */
+	// For testing...
 	void setBaseOffset(uint64_t aOffset) { m_baseOffset = aOffset; }
 	void setBaseTime(uint64_t aOffset) { m_baseTime = aOffset; }
 
-	/* Inherited method to incoming data from the server */
+	// Inherited method to incoming data from the server
 	virtual void processData(const std::string &data);
 	virtual void protocolCommand(const std::string &data);
 
-	/* Method called when connection is lost. */
+	// Method called when connection is lost.
 	virtual void disconnected();
 	virtual void connected();
 
@@ -105,7 +105,7 @@ public:
 	// Stop
 	void stop();
 
-	/* For the additional devices associated with this adapter */
+	// For the additional devices associated with this adapter
 	void addDevice(std::string &aDevice);
 
 protected:
@@ -118,18 +118,18 @@ protected:
 	std::string extractTime(const std::string &time, double &anOffset);
 
 protected:
-	/* Pointer to the agent */
+	// Pointer to the agent
 	Agent *m_agent;
 	Device *m_device;
 	std::vector<Device *> m_allDevices;
 
-	/* Name of device associated with adapter */
+	// Name of device associated with adapter
 	std::string m_deviceName;
 
-	/* If the connector has been running */
+	// If the connector has been running
 	bool m_running;
 
-	/* Check for dups */
+	// Check for dups
 	bool m_dupCheck;
 	bool m_autoAvailable;
 	bool m_ignoreTimestamps;
@@ -157,6 +157,6 @@ protected:
 	int m_reconnectInterval;
 
 private:
-	/* Inherited and is run as part of the threaded_object */
+	// Inherited and is run as part of the threaded_object
 	void thread();
 };

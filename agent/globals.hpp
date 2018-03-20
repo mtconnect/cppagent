@@ -56,22 +56,22 @@
 	#include <memory>
 #endif
 
-/***** CONSTANTS *****/
+//####### CONSTANTS #######
 
-/* Port number to put server on */
+// Port number to put server on
 const unsigned int SERVER_PORT = 8080;
 
-/* Size of sliding buffer */
+// Size of sliding buffer
 const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 
-/* Size of buffer exponent: 2^SLIDING_BUFFER_EXP */
+// Size of buffer exponent: 2^SLIDING_BUFFER_EXP
 const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 const unsigned int DEFAULT_MAX_ASSETS = 1024;
 
-/* Message for when enumerations do not exist in an array/enumeration */
+// Message for when enumerations do not exist in an array/enumeration
 const int ENUM_MISS = -1;
 
-/* Time format */
+// Time format
 enum TimeFormat
 {
 	HUM_READ,
@@ -80,42 +80,42 @@ enum TimeFormat
 	LOCAL
 };
 
-/***** METHODS *****/
+//####### METHODS #######
 std::string int64ToString(uint64_t i);
 
 std::string intToString(unsigned int i);
 
-/* Convert a float to string */
+// Convert a float to string
 std::string floatToString(double f);
 
-/* Convert a string to the same string with all upper case letters */
+// Convert a string to the same string with all upper case letters
 std::string toUpperCase(std::string &text);
 
-/* Check if each char in a string is a positive integer */
+// Check if each char in a string is a positive integer
 bool isNonNegativeInteger(const std::string &s);
 
 
-/* Get the current time formatted */
+// Get the current time formatted
 std::string getCurrentTime(time_t aTime, int aUsec, TimeFormat format);
 
-/* Get the current time formatted */
+// Get the current time formatted
 std::string getCurrentTime(TimeFormat format);
 
-/* time_t to the ms */
+// time_t to the ms
 uint64_t getCurrentTimeInMicros();
 
-/* Get the relative time from using an uint64 offset in ms to time_t as a web time */
+// Get the relative time from using an uint64 offset in ms to time_t as a web time
 std::string getRelativeTimeString(uint64_t aTime);
 
-/* Get the current time in number of seconds as an integer */
+// Get the current time in number of seconds as an integer
 unsigned int getCurrentTimeInSec();
 
 uint64_t parseTimeMicro(const std::string &aTime);
 
-/* Replace illegal XML characters with the correct corresponding characters */
+// Replace illegal XML characters with the correct corresponding characters
 void replaceIllegalCharacters(std::string &data);
 
-/* Return enumeration values according to a string name and array */
+// Return enumeration values according to a string name and array
 int getEnumeration(
 	const std::string &name,
 	const std::string *array,

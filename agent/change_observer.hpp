@@ -75,7 +75,7 @@ protected:
 class ChangeSignaler
 {
 public:
-	/* Observer Management */
+	// Observer Management
 	void addObserver(ChangeObserver *aObserver);
 	bool removeObserver(ChangeObserver *aObserver);
 	bool hasObserver(ChangeObserver *aObserver);
@@ -84,7 +84,7 @@ public:
 	virtual ~ChangeSignaler();
 
 protected:
-	/* Observer Lists */
+	// Observer Lists
 	dlib::rmutex m_observerMutex;
 	std::vector<ChangeObserver *> m_observers;
 };

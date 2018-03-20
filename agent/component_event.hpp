@@ -36,7 +36,7 @@ class ComponentEvent;
 typedef RefCountedPtr<ComponentEvent> ComponentEventPtr;
 typedef dlib::array<ComponentEventPtr> ComponentEventPtrArray;
 
-/* Component Event */
+
 class ComponentEvent : public RefCounted
 {
 
@@ -53,7 +53,7 @@ public:
 	static const std::string SLevels[];
 
 public:
-	/* Initialize with the data item reference, sequence number, time and value */
+	// Initialize with the data item reference, sequence number, time and value
 	ComponentEvent(
 	DataItem &dataItem,
 	uint64_t sequence,
@@ -61,19 +61,19 @@ public:
 	const std::string &value
 	);
 
-	/* Copy constructor */
+	// Copy constructor
 	ComponentEvent(ComponentEvent &ce);
 
 	ComponentEvent *deepCopy();
 	ComponentEvent *deepCopyAndRemove(ComponentEvent *aOld);
 
-	/* Extract the component event data into a map */
+	// Extract the component event data into a map
 	AttributeList *getAttributes();
 
-	/* Get the data item associated with this event */
+	// Get the data item associated with this event
 	DataItem *getDataItem() const { return m_dataItem; }
 
-	/* Get the value */
+	// Get the value
 	const std::string &getValue() const { return m_value; }
 	ELevel getLevel();
 	const std::string &getLevelString() { return SLevels[getLevel()]; }
@@ -106,36 +106,36 @@ public:
 	}
 
 protected:
-	/* Virtual destructor */
+	// Virtual destructor
 	virtual ~ComponentEvent();
 
 protected:
-	/* Holds the data item from the device */
+	// Holds the data item from the device
 	DataItem *m_dataItem;
 
-	/* Sequence number of the event */
+	// Sequence number of the event
 	uint64_t m_sequence;
 	std::string mSequenceStr;
 
-	/* Timestamp of the event's occurence */
+	// Timestamp of the event's occurence
 	std::string m_time;
 	std::string m_duration;
 
-	/* Hold the alarm data:  CODE|NATIVECODE|SEVERITY|STATE */
-	/* or the Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER */
-	/* or the message data:  NATIVE_CODE */
-	/* or the time series data */
+	// Hold the alarm data:  CODE|NATIVECODE|SEVERITY|STATE
+	// or the Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER
+	// or the message data:  NATIVE_CODE
+	// or the time series data
 	std::string m_rest;
 	ELevel m_level;
 
-	/* The value of the event, either as a float or a string */
+	// The value of the event, either as a float or a string
 	std::string m_value;
 	bool m_isFloat;
 	bool m_isTimeSeries;
 	std::vector<float> m_timeSeries;
 	int m_sampleCount;
 
-	/* The attributes, created on demand */
+	// The attributes, created on demand
 	bool m_hasAttributes;
 	AttributeList m_attributes;
 
@@ -149,7 +149,7 @@ protected:
 	ComponentEventPtr m_prev;
 
 protected:
-	/* Convert the value to the agent unit standards */
+	// Convert the value to the agent unit standards
 	void convertValue(const std::string &value);
 };
 

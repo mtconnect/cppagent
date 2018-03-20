@@ -106,7 +106,7 @@ public:
 
 	virtual ~RefCounted();
 
-	/* Reference count management */
+	// Reference count management
 	void referTo();
 	void unrefer();
 
@@ -114,7 +114,7 @@ public:
 //  bool operator<(RefCounted &aOther) { return this < &aOther; }
 
 protected:
-	/* Reference count */
+	// Reference count
 	AtomicInt m_refCount;
 };
 

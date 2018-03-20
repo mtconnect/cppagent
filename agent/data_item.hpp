@@ -33,7 +33,7 @@ class Adapter;
 class DataItem : public ChangeSignaler
 {
 public:
-	/* Enumeration for data item category */
+	// Enumeration for data item category
 	enum ECategory
 	{
 	SAMPLE,
@@ -56,7 +56,7 @@ public:
 	};
 
 
-	/* Enumeration for the simple units for simple conversions */
+	// Enumeration for the simple units for simple conversions
 	enum ESimpleUnits
 	{
 	AMPERE,
@@ -101,16 +101,16 @@ public:
 	static const std::string SSimpleUnits[];
 
 public:
-	/* Construct a data item with appropriate attributes mapping */
+	// Construct a data item with appropriate attributes mapping
 	DataItem(std::map<std::string, std::string> attributes);
 
-	/* Destructor */
+	// Destructor
 	~DataItem();
 
-	/* Get a map of all the attributes of this data item */
+	// Get a map of all the attributes of this data item
 	std::map<std::string, std::string> *getAttributes() { return &m_attributes; }
 
-	/* Getter methods for data item specs */
+	// Getter methods for data item specs
 	const std::string &getId() const { return m_id; }
 	const std::string &getName() const { return m_name; }
 	const std::string &getSource() const { return m_source; }
@@ -134,14 +134,14 @@ public:
 
 	void setConversionFactor(double aFactor, double aOffset);
 
-	/* Returns if data item has this attribute */
+	// Returns if data item has this attribute
 	bool hasName(const std::string &name);
 	bool hasNativeScale() const { return m_hasNativeScale; }
 
-	/* Add a source (extra information) to data item */
+	// Add a source (extra information) to data item
 	void addSource(const std::string &source) { m_source = source; }
 
-	/* Returns true if data item is a sample */
+	// Returns true if data item is a sample
 	bool isSample() const { return m_category == SAMPLE; }
 	bool isEvent() const { return m_category == EVENT; }
 	bool isCondition() const { return m_category == CONDITION; }
@@ -161,18 +161,18 @@ public:
 	void setInitialValue(const std::string &aValue) { m_initialValue = aValue; }
 
 
-	/* Set/get component that data item is associated with */
+	// Set/get component that data item is associated with
 	void setComponent(Component &component) { m_component = &component; }
 	Component *getComponent() const { return m_component; }
 
-	/* Get the name for the adapter feed */
+	// Get the name for the adapter feed
 	std::string getSourceOrName() { return m_source.empty() ? (m_name.empty() ? m_id : m_name) : m_source; }
 
-	/* Transform a name to camel casing */
+	// Transform a name to camel casing
 	static std::string getCamelType(const std::string &aType,
 					std::string &aPrefix);
 
-	/* Duplicate Checking */
+	// Duplicate Checking
 	bool isDuplicate(const std::string &aValue)
 	{
 	// Do not dupe check for time series.
@@ -185,7 +185,7 @@ public:
 	return false;
 	}
 
-	/* Filter checking */
+	// Filter checking
 	bool isFiltered(const double aValue, const double aTimeOffset)
 	{
 	if (m_hasMinimumDelta && m_category == SAMPLE)
@@ -219,7 +219,7 @@ public:
 	return false;
 	}
 
-	/* Constrainsts */
+	// Constraints
 	bool hasConstraints() { return m_hasConstraints; }
 	std::string getMaximum() const { return m_maximum; }
 	std::string getMinimum() const { return m_minimum; }
@@ -257,53 +257,53 @@ protected:
 	void computeConversionFactors();
 
 protected:
-	/* Unique ID for each component */
+	// Unique ID for each component
 	std::string m_id;
 
-	/* Name for itself */
+	// Name for itself
 	std::string m_name;
 
-	/* Type of data item */
+	// Type of data item
 	std::string m_type;
 	std::string m_camelType;
 	std::string m_prefixedCamelType;
 	std::string m_prefix;
 
-	/* Subtype of data item */
+	// Subtype of data item
 	std::string m_subType;
 
-	/* Category of data item */
+	// Category of data item
 	ECategory m_category;
 
-	/* Native units of data item */
+	// Native units of data item
 	std::string m_nativeUnits;
 
-	/* Units of data item */
+	// Units of data item
 	std::string m_units;
 
-	/* The statistical process used on this data item */
+	// The statistical process used on this data item
 	std::string m_statistic;
 
-	/* Representation of data item */
+	// Representation of data item
 	ERepresentation m_representation;
 	std::string m_sampleRate;
 
 	std::string m_compositionId;
 
-	/* Native scale of data item */
+	// Native scale of data item
 	float m_nativeScale;
 	bool m_hasNativeScale;
 	bool m_threeD;
 	bool m_isMessage, m_isAlarm, m_isAssetChanged, m_isAssetRemoved;
 
-	/* Sig figs of data item */
+	// Sig figs of data item
 	unsigned int m_significantDigits;
 	bool m_hasSignificantDigits;
 
-	/* Coordinate system of data item */
+	// Coordinate system of data item
 	std::string m_coordinateSystem;
 
-	/* Extra source information of data item */
+	// Extra source information of data item
 	std::string m_source;
 
 	// The reset trigger;
@@ -312,7 +312,7 @@ protected:
 	// Initial value
 	std::string m_initialValue;
 
-	/* Constraints for this data item */
+	// Constraints for this data item
 	std::string m_maximum, m_minimum;
 	std::vector<std::string> m_values;
 	bool m_hasConstraints;
@@ -322,21 +322,21 @@ protected:
 	bool m_hasMinimumDelta;
 	bool m_hasMinimumPeriod;
 
-	/* Component that data item is associated with */
+	// Component that data item is associated with
 	Component *m_component;
 
-	/* Duplicate and filter checking */
+	// Duplicate and filter checking
 	std::string m_lastValue;
 	double m_lastSampleValue;
 	double m_lastTimeOffset;
 
-	/* Attrubutes */
+	// Attrubutes
 	std::map<std::string, std::string> m_attributes;
 
-	/* The data source for this data item */
+	// The data source for this data item
 	Adapter *m_dataSource;
 
-	/* Conversion factor */
+	// Conversion factor
 	double m_conversionFactor;
 	double m_conversionOffset;
 	bool m_conversionDetermined, m_conversionRequired, m_hasFactor;
