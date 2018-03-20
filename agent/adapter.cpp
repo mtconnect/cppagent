@@ -19,6 +19,8 @@
 #include "globals.hpp"
 #include "dlib/logger.h"
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -539,7 +541,7 @@ void Adapter::thread()
 
 		// Try to reconnect every 10 seconds
 		g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval << " milliseconds";
-		dlib::sleep(m_reconnectInterval);
+		this_thread::sleep_for(chrono::milliseconds(m_reconnectInterval));
 	}
 	g_logger << LINFO << "Adapter thread stopped";
 }

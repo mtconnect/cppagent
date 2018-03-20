@@ -31,11 +31,8 @@
 // SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 //
 #include "globals_test.hpp"
-
-#ifdef _WINDOWS
-	#include <windows.h>
-	#define sleep(s) ::Sleep(s * 1000)
-#endif
+#include <chrono>
+#include <thread>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(GlobalsTest);
@@ -94,7 +91,7 @@ void GlobalsTest::testTime()
 	string time2 = getCurrentTime(GMT);
 	CPPUNIT_ASSERT_EQUAL(time1, time2);
 
-	sleep(1);
+	std::this_thread::sleep_for(1s);
 	string time3 = getCurrentTime(GMT);
 	CPPUNIT_ASSERT(time1 != time3);
 
@@ -102,7 +99,7 @@ void GlobalsTest::testTime()
 	string time5 = getCurrentTime(GMT);
 	CPPUNIT_ASSERT_EQUAL(time4, time5);
 
-	sleep(1);
+	std::this_thread::sleep_for(1s);
 	string time6 = getCurrentTime(GMT);
 	CPPUNIT_ASSERT(time4 != time6);
 
@@ -110,7 +107,7 @@ void GlobalsTest::testTime()
 	unsigned int time8 = getCurrentTimeInSec();
 	CPPUNIT_ASSERT_EQUAL(time7, time8);
 
-	sleep(2);
+	std::this_thread::sleep_for(2s);
 	unsigned int time9 = getCurrentTimeInSec();
 	CPPUNIT_ASSERT(time7 < time9);
 }
