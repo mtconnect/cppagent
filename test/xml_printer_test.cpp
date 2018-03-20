@@ -835,14 +835,14 @@ ComponentEvent *XmlPrinterTest::newEvent(
 
 
 ComponentEvent *XmlPrinterTest::addEventToCheckpoint(
-	Checkpoint &aCheckpoint,
+	Checkpoint &checkpoint,
 	const char *name,
 	uint64_t sequence,
 	string value
 )
 {
 	ComponentEvent *event = newEvent(name, sequence, value);
-	aCheckpoint.addComponentEvent(event);
+	checkpoint.addComponentEvent(event);
 	return event;
 }
 

@@ -1310,10 +1310,11 @@ void AgentTest::testMultiLineAsset()
 
 }
 
+
 void AgentTest::testAssetRefCounts()
 {
 	testAddAdapter();
-	std::list<AssetPtr *> *assets = m_agent->getAssets();
+	const auto assets = m_agent->getAssets();
 
 	m_adapter->parseBuffer(
 	R"ASSET(2018-02-19T22:54:03.0738Z|@ASSET@|M8010N9172N:1.0|CuttingTool|--multiline--SMOOTH
@@ -2095,7 +2096,9 @@ void AgentTest::testDynamicCalibration()
 		PARSE_XML_RESPONSE;
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='y1']", "4");
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='z1']", "18");
-		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']", "56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.19 56.19 56.18 56.18 56.17 56.17 56.19 56.19 56.18 56.18 56.18 56.18 56.18");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+			"//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']",
+			"56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.19 56.19 56.18 56.18 56.17 56.17 56.19 56.19 56.18 56.18 56.18 56.18 56.18");
 	}
 }
 
@@ -2109,7 +2112,9 @@ void AgentTest::testInitialTimeSeriesValues()
 
 	{
 		PARSE_XML_RESPONSE;
-		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+			"//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']",
+			"UNAVAILABLE");
 	}
 }
 

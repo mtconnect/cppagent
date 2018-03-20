@@ -42,7 +42,7 @@ using namespace std;
 
 void ConnectorTest::setUp()
 {
-	CPPUNIT_ASSERT(create_listener(m_server, 0, "127.0.0.1") == 0);
+	CPPUNIT_ASSERT(!create_listener(m_server, 0, "127.0.0.1"));
 	m_port = m_server->get_listening_port();
 	m_connector.reset(new TestConnector("127.0.0.1", m_port));
 	m_connector->m_disconnected = true;
@@ -166,7 +166,7 @@ void ConnectorTest::testHeartbeatPong()
 		char buf[1024] = {0};
 		CPPUNIT_ASSERT(m_serverSocket->read(buf, 1023, 1100) > 0);
 		buf[7] = '\0';
-		CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+		CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
 
 		auto now = stamper.get_timestamp();
 		CPPUNIT_ASSERT(now - last_heartbeat < (uint64)(1000 * 2000));
@@ -202,7 +202,7 @@ void ConnectorTest::testLegacyTimeout()
 	char buf[1024] = {0};
 	CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
 	buf[7] = '\0';
-	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+	CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
 
 	// Write some data...
 	const auto cmd = "* Hello Connector\n";
@@ -261,13 +261,13 @@ void ConnectorTest::testSendCommand()
 	char buf[1024];
 	CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 1000));
 	buf[7] = '\0';
-	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+	CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
 
 	m_connector->sendCommand("Hello There;");
 
 	CPPUNIT_ASSERT_EQUAL(15L, m_serverSocket->read(buf, 1023, 1000));
 	buf[15] = '\0';
-	CPPUNIT_ASSERT(strcmp(buf, "* Hello There;\n") == 0);
+	CPPUNIT_ASSERT(!strcmp(buf, "* Hello There;\n"));
 }
 
 
@@ -276,7 +276,7 @@ void ConnectorTest::testIPV6Connection()
 #if !defined(WIN32) || (NTDDI_VERSION >= NTDDI_VISTA)
 	m_connector.reset();
 
-	CPPUNIT_ASSERT(create_listener(m_server, 0, "::1") == 0);
+	CPPUNIT_ASSERT(!create_listener(m_server, 0, "::1"));
 	m_port = m_server->get_listening_port();
 	m_connector.reset(new TestConnector("::1", m_port));
 	m_connector->m_disconnected = true;
