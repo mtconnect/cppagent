@@ -505,6 +505,11 @@ Configuration Parameters
 
     *Default*: 17 -> 2^17 = 131,072 slots.
 
+* `MaxAssets` - The maximum number of assets the agent can hold in its buffer. The
+  number is the actual count, not an exponent.
+
+    *Default*: 1024
+
 * `CheckpointFrequency` - The frequency checkpoints are created in the
   stream. This is used for current with the at argument. This is an
   advanced configuration item and should not be changed unless you
