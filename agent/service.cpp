@@ -679,7 +679,7 @@ void MTConnectService::daemonize()
 	atexit(cleanup_pid);
 
 	// Create the pid file.
-	sPidFile = m_pidFile;
+	s_pidFile = m_pidFile;
 	auto lfp = open(m_pidFile.c_str(), O_RDWR|O_CREAT, 0640);
 	if (lfp < 0)
 		exit(1); // can not open
