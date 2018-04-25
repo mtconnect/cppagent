@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 1.3.0.0
+MTConnect C++ Agent Version 1.4.0.0
 --------
 
 The C++ Agent provides the a complete implementation of the HTTP
@@ -9,6 +9,8 @@ server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 1.4.0.0 added description for assets, support for asset archetype ref., composition element and better Windows XP support
 
 Version 1.3.0.0 added the filter constraints, references, cutting tool archetypes, and formatting styles.
 
