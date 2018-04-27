@@ -74,6 +74,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testPrintCuttingTool);
   CPPUNIT_TEST(testChangeVersion);
   CPPUNIT_TEST(testChangeMTCLocation);
+  CPPUNIT_TEST(testProbeWithFilter13);
   CPPUNIT_TEST(testProbeWithFilter);
   CPPUNIT_TEST(testReferences);
   CPPUNIT_TEST(testPrintExtendedCuttingTool);
@@ -132,6 +133,7 @@ protected:
   void testChangeMTCLocation();
   
   // Filter Tests
+  void testProbeWithFilter13();
   void testProbeWithFilter();
   
   // Reference tests
