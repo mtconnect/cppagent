@@ -17,7 +17,9 @@
                   <Source>spindle_speed</Source>
                 </DataItem>
                 <DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c2">
-                  <Constraints><Value>SPINDLE</Value></Constraints>
+                  <Constraints>
+                    <Value>SPINDLE</Value>
+                  </Constraints>
                 </DataItem>
                 <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="c3" subType="OVERRIDE" name="Sovr">
                   <Source>SspeedOvr</Source>
@@ -43,14 +45,17 @@
             </Linear>
             <Linear name="Y" id="y">
               <DataItems>
-                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y1" subType="ACTUAL" name="Yact"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y1" subType="ACTUAL" name="Yact">
+                  <Filters>
+                    <Filter type="MINIMUM_DELTA">2.0</Filter>
+                  </Filters>
+                </DataItem>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="y2" subType="COMMANDED" name="Ycom"/>
                 <DataItem type="LOAD" category="CONDITION" id="ylc">
-		  <Filters>
-		    <Filter type="PERIOD">1.0</Filter>
-		    <Filter type="MINIMUM_DELTA">2.0</Filter>
-		  </Filters>
-		</DataItem>
+                  <Filters>
+                    <Filter type="PERIOD">1.0</Filter>
+                  </Filters>
+                </DataItem>
               </DataItems>
             </Linear>
             <Linear name="Z" id="z">
@@ -61,14 +66,14 @@
                 <DataItem type="TEMPERATURE" category="SAMPLE" units="CELCIUS" id="zt1" name="z_motor_temp" compositionId="zmotor"/>
                 <DataItem type="TEMPERATURE" category="SAMPLE" units="CELCIUS" id="zt2" name="z_amp_temp" compositionId="zamp"/>
               </DataItems>
-	      <Compositions>
-		<Composition id="zmotor" type="MOTOR" uuid="12345" name="motor_name">
-		  <Description manufacturer="open" model="vroom" serialNumber="12356" station="A">
-		    Hello There
-		  </Description>
-		</Composition>
-		<Composition id="zamp" type="AMPLIFIER"/>
-	      </Compositions>
+              <Compositions>
+                <Composition id="zmotor" type="MOTOR" uuid="12345" name="motor_name">
+                  <Description manufacturer="open" model="vroom" serialNumber="12356" station="A">
+        Hello There
+                  </Description>
+                </Composition>
+                <Composition id="zamp" type="AMPLIFIER"/>
+              </Compositions>
             </Linear>
           </Components>
         </Axes>
@@ -87,10 +92,13 @@
                 <DataItem type="PATH_POSITION" category="EVENT" id="p6" name="Ppos" />
                 <DataItem type="x:TOOL_GROUP" category="EVENT" id="xp6" name="Ppos" />
                 <DataItem type="MOTION_PROGRAM" category="CONDITION" id="cmp" />
-		<DataItem type="PART_COUNT" category="EVENT" id="pcount">
-		  <InitialValue>0</InitialValue>
-		  <ResetTrigger>DAY</ResetTrigger>
-		</DataItem>
+                <DataItem type="PART_COUNT" category="EVENT" id="pcount">
+                  <InitialValue>0</InitialValue>
+                  <ResetTrigger>DAY</ResetTrigger>
+                </DataItem>
+                <DataItem type="PART_COUNT" subType="REMAINING" category="EVENT" id="pcountrem">
+                  <ResetTrigger>SHIFT</ResetTrigger>
+                </DataItem>
               </DataItems>
             </Path>
           </Components>
@@ -98,15 +106,15 @@
         <Power name="power" id="power">
           <Configuration>
             <SensorConfiguration>
-	      <FirmwareVersion>1.0</FirmwareVersion>
-	      <CalibrationDate>2011-08-10</CalibrationDate>
-	      <CalibrationInitials>WS</CalibrationInitials>
-	      <Channels>
-		<Channel number="1" name="AAA" >
-		  <Description>Power Channel</Description>
-		  <CalibrationDate>2011-08-01</CalibrationDate>
-		</Channel>
-	      </Channels>
+              <FirmwareVersion>1.0</FirmwareVersion>
+              <CalibrationDate>2011-08-10</CalibrationDate>
+              <CalibrationInitials>WS</CalibrationInitials>
+              <Channels>
+                <Channel number="1" name="AAA" >
+                  <Description>Power Channel</Description>
+                  <CalibrationDate>2011-08-01</CalibrationDate>
+                </Channel>
+              </Channels>
             </SensorConfiguration>
           </Configuration>
           <DataItems>
