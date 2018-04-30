@@ -16,7 +16,7 @@
 
 
 // Don't include WinSock.h when processing <windows.h>
-#ifdef WINDOWS
+#ifdef _WINDOWS
 	#define _WINSOCKAPI_
 	#include <winsock2.h>
 	#include <windows.h>
