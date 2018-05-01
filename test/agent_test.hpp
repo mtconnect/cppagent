@@ -40,6 +40,7 @@
 #include <map>
 #include <string>
 #include <iosfwd>
+#include <chrono>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -143,7 +144,7 @@ protected:
 	dlib::key_value_map_ci m_incomingHeaders;
 
 	std::ostringstream m_out;
-	int m_delay;
+	std::chrono::milliseconds m_delay;
 
 protected:
 	// Test Basic

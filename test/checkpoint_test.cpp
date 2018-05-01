@@ -44,7 +44,7 @@ void CheckpointTest::setUp()
 	m_agent = nullptr;
 	m_checkpoint = nullptr;
 	m_agent = new Agent("../samples/min_config.xml", 4, 4);
-	m_agentId = intToString(getCurrentTimeInSec());
+	m_agentId = int64ToString(getCurrentTimeInSec());
 	m_adapter = nullptr;
 	m_checkpoint = new Checkpoint();
 

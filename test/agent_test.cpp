@@ -47,13 +47,14 @@
 CPPUNIT_TEST_SUITE_REGISTRATION(AgentTest);
 
 using namespace std;
+using namespace std::chrono;
 
 
 void AgentTest::setUp()
 {
 	XmlPrinter::setSchemaVersion("1.3");
 	m_agent = nullptr;
-	m_agent = new Agent("../samples/test_config.xml", 8, 4, 25);
+	m_agent = new Agent("../samples/test_config.xml", 8, 4, 25ms);
 	m_agentId = intToString(getCurrentTimeInSec());
 	m_adapter = nullptr;
 	m_queries.clear();
@@ -688,7 +689,7 @@ void AgentTest::testAdapterCommands()
 void AgentTest::testAdapterDeviceCommand()
 {
 	delete m_agent; m_agent = nullptr;
-	m_agent = new Agent("../samples/two_devices.xml", 8, 4, 25);
+	m_agent = new Agent("../samples/two_devices.xml", 8, 4, 25ms);
 
 	m_path = "/probe";
 
@@ -1600,7 +1601,7 @@ void AgentTest::testAssetAdditionOfAssetChanged12()
 	XmlPrinter::setSchemaVersion("1.2");
 
 	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25);
+	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25ms);
 
 	{
 		m_path = "/probe";
@@ -1619,7 +1620,7 @@ void AgentTest::testAssetAdditionOfAssetRemoved13()
 	XmlPrinter::setSchemaVersion("1.3");
 
 	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25);
+	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25ms);
 
 	{
 		m_path = "/probe";
@@ -1865,7 +1866,7 @@ void AgentTest::testPutBlockingFrom()
 void AgentTest::killThread(void *aArg)
 {
 	auto test = (AgentTest *) aArg;
-	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
+	this_thread::sleep_for(test->m_delay);
 	test->m_out.setstate(ios::eofbit);
 }
 
@@ -1873,7 +1874,7 @@ void AgentTest::killThread(void *aArg)
 void AgentTest::addThread(void *aArg)
 {
 	auto test = (AgentTest *) aArg;
-	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
+	this_thread::sleep_for(test->m_delay);
 	test->m_adapter->processData("TIME|line|204");
 	test->m_out.setstate(ios::eofbit);
 }
@@ -1884,45 +1885,46 @@ void AgentTest::testStreamData()
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
 
+	auto heartbeatFreq{200ms};
+
 	// Start a thread...
 	key_value_map query;
 	query["interval"] = "50";
-	query["heartbeat"] = "200";
+	query["heartbeat"] = to_string(heartbeatFreq.count()).c_str();
 	query["from"] = int64ToString(m_agent->getSequence());
 	m_path = "/LinuxCNC/sample";
 
-	timestamper ts;
-
-	// Heartbeat test. Heartbeat should be sent in 100ms. Give
+	// Heartbeat test. Heartbeat should be sent in 200ms. Give
 	// 25ms range.
 	{
-		auto start = ts.get_timestamp();
+		auto startTime = system_clock::now();
 
-		m_delay = 25;
+		m_delay = 25ms;
 		dlib::create_new_thread(killThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
 
-		auto delta = ts.get_timestamp() - start;
-		CPPUNIT_ASSERT(delta < 225000);
-		CPPUNIT_ASSERT(delta > 200000);
+		auto delta = system_clock::now() - startTime;
+		CPPUNIT_ASSERT(delta < (heartbeatFreq + 25ms));
+		CPPUNIT_ASSERT(delta > heartbeatFreq);
 	}
 
 	m_out.clear();
 	m_out.str("");
 
-	// Set some data and make sure we get data within 20ms.
+	// Set some data and make sure we get data within 40ms.
 	// Again, allow for some slop.
+	auto minExpectedResponse{40ms};
 	{
-		auto start = ts.get_timestamp();
+		auto startTime = system_clock::now();
 
-		m_delay = 10;
+		m_delay = 10ms;
 		dlib::create_new_thread(addThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 
-		auto delta = ts.get_timestamp() - start;
-		CPPUNIT_ASSERT(delta < 70000);
-		CPPUNIT_ASSERT(delta > 40000);
+		auto delta = system_clock::now() - startTime;
+		CPPUNIT_ASSERT(delta < (minExpectedResponse + 30ms));
+		CPPUNIT_ASSERT(delta > minExpectedResponse);
 	}
 
 }
@@ -1930,15 +1932,15 @@ void AgentTest::testStreamData()
 
 void AgentTest::testFailWithDuplicateDeviceUUID()
 {
-	CPPUNIT_ASSERT_THROW(new Agent("../samples/dup_uuid.xml", 8, 4, 25), std::runtime_error);
+	CPPUNIT_ASSERT_THROW(new Agent("../samples/dup_uuid.xml", 8, 4, 25ms), std::runtime_error);
 }
 
 
 void AgentTest::streamThread(void *aArg)
 {
 	auto test = (AgentTest *) aArg;
-	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
-	test->m_agent->setSequence(test->m_agent->getSequence() + 20);
+	this_thread::sleep_for(test->m_delay);
+	test->m_agent->setSequence(test->m_agent->getSequence() + 20ull);
 	test->m_adapter->processData("TIME|line|204");
 	this_thread::sleep_for(120ms);
 	test->m_out.setstate(ios::eofbit);
@@ -1961,8 +1963,8 @@ void AgentTest::testStreamDataObserver()
 	// Test to make sure the signal will push the sequence number forward and capture
 	// the new data.
 	{
-		m_delay = 50;
-		auto seq = int64ToString(m_agent->getSequence() + 20);
+		m_delay = 50ms;
+		auto seq = int64ToString(m_agent->getSequence() + 20ull);
 		dlib::create_new_thread(streamThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
@@ -2130,7 +2132,7 @@ void AgentTest::testInitialTimeSeriesValues()
 void AgentTest::testFilterValues()
 {
 	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/filter_example.xml", 8, 4, 25);
+	m_agent = new Agent("../samples/filter_example.xml", 8, 4, 25ms);
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
@@ -2209,7 +2211,7 @@ void AgentTest::testResetTriggered()
 void AgentTest::testReferences()
 {
 	delete m_agent; m_agent = nullptr;
-	m_agent = new Agent("../samples/reference_example.xml", 8, 4, 25);
+	m_agent = new Agent("../samples/reference_example.xml", 8, 4, 25ms);
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
@@ -2251,7 +2253,7 @@ void AgentTest::testReferences()
 void AgentTest::testDiscrete()
 {
 	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25);
+	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25ms);
 	m_path = "/sample";
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2301,7 +2303,7 @@ void AgentTest::testUpcaseValues()
 {
 	m_path = "/current";
 	delete m_agent; m_agent = nullptr;
-	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25);
+	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25ms);
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);

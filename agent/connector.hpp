@@ -16,6 +16,7 @@
 
 #pragma once
 #include <mutex>
+#include <chrono>
 
 #include "dlib/sockets.h"
 #include "dlib/server.h"
@@ -30,7 +31,7 @@ class Connector
 {
 public:
 	// Instantiate the server by assigning it a server and port/
-	Connector(const std::string &server, unsigned int port, int legacyTimout = 600);
+	Connector(const std::string &server, unsigned int port, std::chrono::seconds legacyTimout = std::chrono::seconds{600});
 
 	// Virtual desctructor
 	virtual ~Connector();
@@ -55,7 +56,7 @@ public:
 	// heartbeats
 	bool heartbeats() const {
 		return m_heartbeats; }
-	int heartbeatFrequency() const {
+	std::chrono::milliseconds heartbeatFrequency() const {
 		return m_heartbeatFrequency; }
 
 	// Collect data and until it is \n terminated
@@ -69,8 +70,8 @@ public:
 	const std::string &getServer() const {
 		return m_server; }
 
-	int getLegacyTimeout() const {
-		return m_legacyTimeout / 1000; }
+	std::chrono::seconds getLegacyTimeout() const {
+		return std::chrono::duration_cast<std::chrono::seconds>(m_legacyTimeout); }
 
 	void setRealTime(bool realTime = true) {
 		m_realTime = realTime; }
@@ -102,10 +103,10 @@ protected:
 
 	// Heartbeats
 	bool m_heartbeats = false;
-	int m_heartbeatFrequency = HEARTBEAT_FREQ;
-	int m_legacyTimeout = 600000;
-	dlib::uint64 m_lastHeartbeat;
-	dlib::uint64 m_lastSent;
+	std::chrono::milliseconds m_heartbeatFrequency = std::chrono::milliseconds{HEARTBEAT_FREQ};
+	std::chrono::milliseconds m_legacyTimeout = std::chrono::milliseconds{600000};
+	std::chrono::time_point<std::chrono::system_clock> m_lastHeartbeat;
+	std::chrono::time_point<std::chrono::system_clock> m_lastSent;
 
 	std::mutex m_commandLock;
 

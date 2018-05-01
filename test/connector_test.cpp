@@ -33,11 +33,14 @@
 #include "connector_test.hpp"
 #include <chrono>
 #include <thread>
+#include <date/date.h> // This file is to allow std::chrono types to be output to a stream
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(ConnectorTest);
 
 using namespace std;
+using namespace std::chrono;
+using namespace date; // Use this namespace to allow std::chrono types to be used in CPPUNIT_ASSERT_EQUAL macros
 
 
 void ConnectorTest::setUp()
@@ -141,13 +144,13 @@ void ConnectorTest::testHeartbeat()
 	buf[7] = '\0';
 	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
-	// Respond to the heartbeat of 1/2 second
+	// Respond to the heartbeat of 1 second
 	const auto pong = "* PONG 1000\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
 	this_thread::sleep_for(1000ms);
 
 	CPPUNIT_ASSERT(m_connector->heartbeats());
-	CPPUNIT_ASSERT_EQUAL(1000, m_connector->heartbeatFrequency());
+	CPPUNIT_ASSERT_EQUAL(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
 }
 
 
@@ -155,8 +158,7 @@ void ConnectorTest::testHeartbeatPong()
 {
 	testHeartbeat();
 
-	dlib::timestamper stamper;
-	auto last_heartbeat = stamper.get_timestamp();
+	auto last_heartbeat = system_clock::now();
 
 	// Test to make sure we can send and receive 5 heartbeats
 	for (int i = 0; i < 5; i++)
@@ -168,11 +170,11 @@ void ConnectorTest::testHeartbeatPong()
 		buf[7] = '\0';
 		CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
 
-		auto now = stamper.get_timestamp();
-		CPPUNIT_ASSERT(now - last_heartbeat < (uint64)(1000 * 2000));
+		auto now = system_clock::now();
+		CPPUNIT_ASSERT(now - last_heartbeat < 2000ms);
 		last_heartbeat = now;
 
-		// Respond to the heartbeat of 1/2 second
+		// Respond to the heartbeat of 1 second
 		const auto pong = "* PONG 1000\n";
 		CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
 		this_thread::sleep_for(10ms);
@@ -320,7 +322,7 @@ void ConnectorTest::testStartHeartbeats()
 	m_connector->startHeartbeats(line);
 
 	CPPUNIT_ASSERT(m_connector->heartbeats());
-	CPPUNIT_ASSERT_EQUAL(123, m_connector->heartbeatFrequency());
+	CPPUNIT_ASSERT_EQUAL(std::chrono::milliseconds{123}, m_connector->heartbeatFrequency());
 
 	m_connector->resetHeartbeats();
 
@@ -328,11 +330,11 @@ void ConnectorTest::testStartHeartbeats()
 	m_connector->startHeartbeats(line);
 
 	CPPUNIT_ASSERT(m_connector->heartbeats());
-	CPPUNIT_ASSERT_EQUAL(456, m_connector->heartbeatFrequency());
+	CPPUNIT_ASSERT_EQUAL(std::chrono::milliseconds{456}, m_connector->heartbeatFrequency());
 
 	line = "* PONG 323";
 	m_connector->startHeartbeats(line);
 
 	CPPUNIT_ASSERT(m_connector->heartbeats());
-	CPPUNIT_ASSERT_EQUAL(323, m_connector->heartbeatFrequency());
+	CPPUNIT_ASSERT_EQUAL(std::chrono::milliseconds{323}, m_connector->heartbeatFrequency());
 }

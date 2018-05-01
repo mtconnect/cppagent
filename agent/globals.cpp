@@ -41,6 +41,7 @@
 #endif
 
 using namespace std;
+using namespace std::chrono;
 
 string int64ToString(uint64_t i)
 {
@@ -87,95 +88,57 @@ bool isNonNegativeInteger(const string &s)
 }
 
 
-string getCurrentTime(TimeFormat format)
+std::string getCurrentTime(TimeFormat format)
 {
-	time_t sec;
-	long usec;
-
-	if (format == GMT_UV_SEC)
-	{
-#ifdef _WINDOWS
-		uint64_t now = getCurrentTimeInMicros();
-		sec = (long)(now / 1000000ull);
-		usec = (long)(now % 1000000ull);
-#else
-		struct timeval tv;
-		gettimeofday(&tv, nullptr);
-		sec = tv.tv_sec;
-		usec = tv.tv_usec;
-#endif
-	}
-	else
-	{
-		sec = time(nullptr);
-		usec = 0;
-	}
-
-	return getCurrentTime(sec, usec, format);
+	return getCurrentTime(system_clock::now(), format);
 }
 
 
-string getCurrentTime(time_t aSec, int aUsec, TimeFormat format)
+std::string getCurrentTime(time_point<system_clock> timePoint, TimeFormat format)
 {
-	struct tm timeinfo;
-	char timestamp[64] = {0};
+	constexpr char* ISO_8601_FMT = "%Y-%m-%dT%H:%M:%SZ";
 
-	if (format == LOCAL)
-		localtime_r(&aSec, &timeinfo);
-	else
-		gmtime_r(&aSec, &timeinfo);
-
-	switch (format)
+	switch(format)
 	{
 	case HUM_READ:
-		std::strftime(timestamp, 50u, "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
-		break;
-
+		return date::format(
+			"%a, %d %b %Y %H:%M:%S GMT",
+			chrono::floor<seconds>(timePoint));
 	case GMT:
-		strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%SZ", &timeinfo);
-		break;
-
+		return date::format(ISO_8601_FMT,
+			chrono::floor<seconds>(timePoint));
 	case GMT_UV_SEC:
-		strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S", &timeinfo);
-		break;
-
+		return date::format(ISO_8601_FMT,
+			chrono::floor<microseconds>(timePoint));
 	case LOCAL:
+		auto time = system_clock::to_time_t(timePoint);
+		struct tm timeinfo = {0};
+		localtime_r(&time, &timeinfo);
+		char timestamp[64] = {0};
 		strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
-		break;
+		return timestamp;
 	}
 
-	if (format == GMT_UV_SEC)
-	{
-		sprintf(timestamp + strlen(timestamp), ".%06dZ", (int) aUsec);
-	}
+	return "";
+}
 
-	return string(timestamp);
+
+template<class timePeriod>
+uint64_t getCurrentTimeIn()
+{
+	return duration_cast<timePeriod>(system_clock::now().time_since_epoch()).count();
 }
 
 
 uint64_t getCurrentTimeInMicros()
 {
-	uint64_t now;
-#ifdef _WINDOWS
-	FILETIME ft;
-	static int tzflag;
+	return getCurrentTimeIn<microseconds>();
+}
 
-	GetSystemTimeAsFileTime(&ft);
 
-	now = ft.dwHighDateTime;
-	now <<= 32;
-	now |= ft.dwLowDateTime;
-
-	now /= 10ull;  //convert into microseconds
-	now -= DELTA_EPOCH_IN_MICROSECS;
-#else
-	struct timeval tv;
-	struct timezone tz;
-
-	gettimeofday(&tv, &tz);
-	now = tv.tv_sec * 1000000 + tv.tv_usec;
-#endif
-	return now;
+uint64_t getCurrentTimeInSec()
+{
+	return getCurrentTimeIn<seconds>();
 }
 
 
@@ -194,12 +157,6 @@ string getRelativeTimeString(uint64_t aTime)
 	sprintf(timeBuffer + strlen(timeBuffer), ".%06dZ", micros);
 
 	return string(timeBuffer);
-}
-
-
-unsigned int getCurrentTimeInSec()
-{
-	return time(nullptr);
 }
 
 

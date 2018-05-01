@@ -35,6 +35,7 @@
 
 #include <string>
 #include <vector>
+#include <chrono>
 #include <dlib/sockets.h>
 
 #include <cppunit/TestFixture.h>
@@ -49,7 +50,7 @@ public:
 	TestConnector(
 		const std::string &server,
 		unsigned int port,
-		int legacyTimeout = 5)
+		std::chrono::seconds legacyTimeout = std::chrono::seconds{5})
 		:
 		Connector(server, port, legacyTimeout),
 		m_disconnected(false)

@@ -17,6 +17,7 @@
 
 #include "service.hpp"
 #include <string>
+#include <chrono>
 #include "dlib/logger.h"
 
 class Agent;
@@ -53,8 +54,8 @@ protected:
 	Device *defaultDevice();
 	void loadAdapters(dlib::config_reader::kernel_1a &reader,
 					bool defaultPreserve,
-					int legacyTimeout,
-					int reconnectInterval,
+					std::chrono::seconds legacyTimeout,
+					std::chrono::milliseconds reconnectInterval,
 					bool ignoreTimestamps,
 					bool conversionRequired,
 					bool upcaseValue);

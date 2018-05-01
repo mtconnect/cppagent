@@ -23,6 +23,7 @@
 #include <set>
 #include <list>
 #include <mutex>
+#include <chrono>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -103,9 +104,9 @@ public:
 	// Load agent with the xml configuration 
 	Agent(
 		const std::string &configXmlPath,
-		int aBufferSize,
-		int aMaxAssets,
-		int aCheckpointFreq = 1000);
+		int bufferSize,
+		int maxAssets,
+		std::chrono::milliseconds checkpointFreq = std::chrono::milliseconds{1000});
 
 	// Virtual destructor
 	virtual ~Agent();
@@ -120,7 +121,7 @@ public:
 						const std::string &host,
 						const unsigned int port,
 						bool start = false,
-						int legacyTimeout = 600);
+						std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
 
 	// Get device from device map
 	Device *getDeviceByName(const std::string &name);
@@ -247,7 +248,7 @@ protected:
 		unsigned int frequency,
 		uint64_t start = 0,
 		unsigned int count = 0,
-		unsigned int heartbeat = 10000);
+		std::chrono::milliseconds heartbeat = std::chrono::milliseconds{10000});
 
 	// Asset related methods
 	std::string handleAssets(
@@ -269,7 +270,7 @@ protected:
 		unsigned int frequency,
 		uint64_t start = 1,
 		unsigned int count = 0,
-		unsigned int heartbeat = 10000);
+		std::chrono::milliseconds heartbeat = std::chrono::milliseconds{10000});
 
 	// Fetch the current/sample data and return the XML in a std::string
 	std::string fetchCurrentData(std::set<std::string> &filterSet, uint64_t at);
@@ -326,7 +327,7 @@ protected:
 
 protected:
 	// Unique id based on the time of creation
-	unsigned int m_instanceId;
+	uint64_t m_instanceId;
 
 	// Pointer to the configuration file for node access
 	XmlParser *m_xmlParser;

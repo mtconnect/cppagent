@@ -14,21 +14,24 @@
 //    limitations under the License.
 //
 #include "connector.hpp"
+#include <chrono>
 #include "dlib/logger.h"
 
 using namespace std;
+using namespace std::chrono;
 
 static dlib::logger g_logger("input.connector");
 
 // Connector public methods
-Connector::Connector(const string& server, unsigned int port, int legacyTimeout) :
+Connector::Connector(const string& server, unsigned int port, seconds legacyTimeout) :
 	m_server(server),
 	m_port(port),
 	m_localPort(0),
 	m_connected(false),
 	m_realTime(false),
-	m_heartbeats(false), 
-	m_legacyTimeout(legacyTimeout * 1000),
+	m_heartbeats(false),
+	m_heartbeatFrequency{HEARTBEAT_FREQ},
+	m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
 	m_connectActive(false)
 {
 	m_connectionMutex = new dlib::mutex;
@@ -86,7 +89,6 @@ void Connector::connect()
 		m_localPort = m_connection->get_local_port();
 
 		// Check to see if this connection supports heartbeats.
-		m_heartbeatFrequency = HEARTBEAT_FREQ;
 		m_heartbeats = false;
 		g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "Sending initial PING";
 		int status = m_connection->write(ping, strlen(ping));
@@ -99,10 +101,8 @@ void Connector::connect()
 
 		connected();
 
-		// If we have heartbeats, make sure we receive something every
-		// freq milliseconds.
-		dlib::timestamper stamper;
-		m_lastSent = m_lastHeartbeat = stamper.get_timestamp();
+		// If we have heartbeats, make sure we receive something every freq milliseconds.
+		m_lastSent = m_lastHeartbeat = system_clock::now();
 
 		// Make sure connection buffer is clear
 		m_buffer.clear();
@@ -129,29 +129,29 @@ void Connector::connect()
 		#endif
 		}
 		g_logger << LTRACE << "(Port:" << m_localPort << ")" << "Heartbeat : " << m_heartbeats;
-		g_logger << LTRACE << "(Port:" << m_localPort << ")" << "Heartbeat Freq: " << m_heartbeatFrequency;
+		g_logger << LTRACE << "(Port:" << m_localPort << ")" << "Heartbeat Freq: " << m_heartbeatFrequency.count();
 		// Read from the socket, read is a blocking call
 		while (m_connected)
 		{
-			auto now = stamper.get_timestamp();
-			int timeout(0);
+			auto now = system_clock::now();
+			milliseconds timeout(0);
 			if (m_heartbeats)
 			{
-				timeout = (int)m_heartbeatFrequency - ((int)(now - m_lastSent) / 1000);
-				g_logger << LTRACE << "(Port:" << m_localPort << ")" << "Heartbeat Send Countdown: " << timeout;
+				timeout = m_heartbeatFrequency - duration_cast<milliseconds>(now - m_lastSent);
+				g_logger << LTRACE << "(Port:" << m_localPort << ")" << "Heartbeat Send Countdown: " << timeout.count();
 			}
 			else
 			{
 				timeout = m_legacyTimeout;
-				g_logger << LTRACE << "(Port:" << m_localPort << ")" << "Legacy Timeout: " << timeout;
+				g_logger << LTRACE << "(Port:" << m_localPort << ")" << "Legacy Timeout: " << timeout.count();
 			}
 
-			if (timeout < 0)
-				timeout = 1;
+			if (timeout < milliseconds{0})
+				timeout = milliseconds{1};
 			sockBuf[0] = 0;
 
 			if (m_connected)
-				status = m_connection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout);
+				status = m_connection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout.count());
 			else
 			{
 				g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "Connection was closed, exiting adapter connect";
@@ -170,10 +170,10 @@ void Connector::connect()
 				sockBuf[status] = '\0';
 				parseBuffer(sockBuf);
 			}
-			else if (status == TIMEOUT && !m_heartbeats && ((int) (stamper.get_timestamp() - now) / 1000) >= timeout)
+			else if (status == TIMEOUT && !m_heartbeats && (system_clock::now() - now) >= timeout)
 			{
 				// We don't stop on heartbeats, but if we have a legacy timeout, then we stop.
-				g_logger << LERROR << "(Port:" << m_localPort << ")" << "connect: Did not receive data for over: " << (timeout / 1000) << " seconds";
+				g_logger << LERROR << "(Port:" << m_localPort << ")" << "connect: Did not receive data for over: " << duration_cast<seconds>(timeout).count() << " seconds";
 				break;
 			}
 			else if (status != TIMEOUT) // Something other than timeout occurred
@@ -184,13 +184,13 @@ void Connector::connect()
 
 			if (m_heartbeats)
 			{
-				now = stamper.get_timestamp();
-				if ((now - m_lastHeartbeat) > (uint64) (m_heartbeatFrequency * 2000))
+				now = system_clock::now();
+				if ((now - m_lastHeartbeat) > (m_heartbeatFrequency * 2))
 				{
-					g_logger << LERROR << "(Port:" << m_localPort << ")" << "connect: Did not receive heartbeat for over: " << (m_heartbeatFrequency * 2);
+					g_logger << LERROR << "(Port:" << m_localPort << ")" << "connect: Did not receive heartbeat for over: " << (m_heartbeatFrequency * 2).count();
 					break;
 				}
-				else if ((now - m_lastSent) >= (uint64) (m_heartbeatFrequency * 1000)) 
+				else if ((now - m_lastSent) >= m_heartbeatFrequency)
 				{
 					std::lock_guard<std::mutex> lock(m_commandLock);
 					g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "Sending a PING for " << m_server << " on port " << m_port;
@@ -258,16 +258,14 @@ void Connector::parseBuffer(const char *buffer)
 					if (g_logger.level().priority <= LDEBUG.priority)
 					{
 						g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "Received a PONG for " << m_server << " on port " << m_port;
-						dlib::timestamper stamper;
-						int delta = (int) ((stamper.get_timestamp() - m_lastHeartbeat) / 1000ull);
-						g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "    Time since last heartbeat: " << delta << "ms";
+						auto delta = floor<milliseconds>(system_clock::now() - m_lastHeartbeat);
+						g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "    Time since last heartbeat: " << delta.count() << "ms";
 					}
 					if (!m_heartbeats)
 						startHeartbeats(line);
 					else
 					{
-						dlib::timestamper stamper;
-						m_lastHeartbeat = stamper.get_timestamp();
+						m_lastHeartbeat = system_clock::now();
 					}
 				}
 				else
@@ -309,12 +307,12 @@ void Connector::startHeartbeats(const string &arg)
 	size_t pos;
 	if (arg.length() > 7 && arg[6] == ' ' && (pos = arg.find_first_of("0123456789", 7)) != string::npos)
 	{
-		int freq = atoi(arg.substr(pos).c_str());
-	
-		// Make the maximum timeout 30 minutes.
-		if (freq > 0 && freq < 30 * 60 * 1000)
+		auto freq = milliseconds{atoi(arg.substr(pos).c_str())};
+		constexpr minutes maxTimeOut = minutes{30};// Make the maximum timeout 30 minutes.
+
+		if (freq > 0ms && freq < maxTimeOut)
 		{
-			g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "Received PONG, starting heartbeats every " << freq << "ms";
+			g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "Received PONG, starting heartbeats every " << freq.count() << "ms";
 			m_heartbeats = true;
 			m_heartbeatFrequency = freq;
 		}

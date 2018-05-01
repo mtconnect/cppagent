@@ -30,7 +30,7 @@ static dlib::logger g_logger("input.adapter");
 Adapter::Adapter(const string &device,
 				 const string &server,
 				 const unsigned int port,
-				 int legacyTimeout) :
+				 std::chrono::seconds legacyTimeout) :
 	Connector(server, port, legacyTimeout),
 	m_agent(nullptr),
 	m_device(nullptr),
@@ -42,12 +42,12 @@ Adapter::Adapter(const string &device,
 	m_relativeTime(false),
 	m_conversionRequired(true),
 	m_upcaseValue(true),
-	m_baseTime(0),
-	m_baseOffset(0),
+	m_baseTime(0ull),
+	m_baseOffset(0ull),
 	m_parseTime(false),
 	m_gatheringAsset(false),
 	m_assetDevice(nullptr),
-	m_reconnectInterval(10 * 1000)
+	m_reconnectInterval{10000ms}
 {
 }
 
@@ -537,8 +537,8 @@ void Adapter::thread()
 			break;
 
 		// Try to reconnect every 10 seconds
-		g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval << " milliseconds";
-		this_thread::sleep_for(chrono::milliseconds(m_reconnectInterval));
+		g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval.count() << " milliseconds";
+		this_thread::sleep_for(m_reconnectInterval);
 	}
 	g_logger << LINFO << "Adapter thread stopped";
 }
