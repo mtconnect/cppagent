@@ -1,7 +1,7 @@
 // Copyright (C) 2003  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SOCKStREAMBUF_H__
-#define DLIB_SOCKStREAMBUF_H__
+#ifndef DLIB_SOCKStREAMBUF_Hh_
+#define DLIB_SOCKStREAMBUF_Hh_
 
 #include <iosfwd>
 #include <streambuf>
@@ -41,14 +41,13 @@ namespace dlib
             con(*con_),
             out_buffer(0),
             in_buffer(0),
-            autoflush(false),
-            timeout(0)
+            autoflush(false)
         {
             init();
         }
 
         sockstreambuf (
-            const scoped_ptr<connection>& con_
+            const std::unique_ptr<connection>& con_
         ) :
             con(*con_),
             out_buffer(0),
@@ -82,11 +81,6 @@ namespace dlib
         void do_not_flush_output_on_read()
         {
             autoflush = false;
-        }
-        
-        void set_read_timeout(unsigned long to)
-        {
-          timeout = to;
         }
 
     protected:
@@ -163,7 +157,7 @@ namespace dlib
         char* out_buffer;
         char* in_buffer;
         bool autoflush;
-        unsigned long timeout;
+    
     };
 
 // ---------------------------------------------------------------------------------------- 
@@ -174,5 +168,5 @@ namespace dlib
 #include "sockstreambuf.cpp"
 #endif
 
-#endif // DLIB_SOCKStREAMBUF_H__
+#endif // DLIB_SOCKStREAMBUF_Hh_
 

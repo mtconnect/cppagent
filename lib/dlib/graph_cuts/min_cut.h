@@ -1,7 +1,7 @@
 // Copyright (C) 2012  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_MIN_CuT_H__
-#define DLIB_MIN_CuT_H__
+#ifndef DLIB_MIN_CuT_Hh_
+#define DLIB_MIN_CuT_Hh_
 
 #include "min_cut_abstract.h"
 #include "../matrix.h"
@@ -162,9 +162,9 @@ namespace dlib
             g.set_label(sink_node, SINK_CUT);
 
             // used to indicate "no parent"
-            const unsigned long nil = g.number_of_nodes();
+            const unsigned long no_parent = g.number_of_nodes();
 
-            parent.assign(g.number_of_nodes(), nil);
+            parent.assign(g.number_of_nodes(), no_parent);
 
             time = 1;
             dist.assign(g.number_of_nodes(), 0);
@@ -194,14 +194,14 @@ namespace dlib
     private:
 
         unsigned long distance_to_origin (
-            const unsigned long nil,
+            const unsigned long no_parent,
             unsigned long p,
             unsigned long 
         ) const
         {
             unsigned long start = p;
             unsigned long count = 0;
-            while (p != nil)
+            while (p != no_parent)
             {
                 if (ts[p] == time)
                 {
@@ -233,12 +233,11 @@ namespace dlib
             const unsigned long sink
         ) const
         {
-            typedef typename flow_graph::edge_type edge_type;
             typedef typename flow_graph::out_edge_iterator out_edge_iterator;
             typedef typename flow_graph::in_edge_iterator in_edge_iterator;
 
             // used to indicate "no parent"
-            const unsigned long nil = g.number_of_nodes();
+            const unsigned long no_parent = g.number_of_nodes();
 
             while (orphans.size() > 0)
             {
@@ -261,7 +260,7 @@ namespace dlib
                         if (g.get_label(id) != label_p || g.get_flow(q) <= 0 )
                             continue;
 
-                        unsigned long temp = distance_to_origin(nil, id,source);
+                        unsigned long temp = distance_to_origin(no_parent, id,source);
                         if (temp < best_dist)
                         {
                             best_dist = temp;
@@ -277,7 +276,7 @@ namespace dlib
                     }
 
                     // if we didn't find a parent for p
-                    if (parent[p] == nil)
+                    if (parent[p] == no_parent)
                     {
                         for(in_edge_iterator q = begin; q != end; ++q)
                         {
@@ -291,7 +290,7 @@ namespace dlib
 
                             if (parent[id] == p)
                             {
-                                parent[id] = nil;
+                                parent[id] = no_parent;
                                 orphans.push_back(id);
                             }
                         }
@@ -310,7 +309,7 @@ namespace dlib
                         if (g.get_label(id) != label_p || g.get_flow(q) <= 0)
                             continue;
 
-                        unsigned long temp = distance_to_origin(nil, id,sink);
+                        unsigned long temp = distance_to_origin(no_parent, id,sink);
 
                         if (temp < best_dist)
                         {
@@ -327,7 +326,7 @@ namespace dlib
                     }
 
                     // if we didn't find a parent for p
-                    if (parent[p] == nil)
+                    if (parent[p] == no_parent)
                     {
                         for(out_edge_iterator q = begin; q != end; ++q)
                         {
@@ -341,7 +340,7 @@ namespace dlib
 
                             if (parent[id] == p)
                             {
-                                parent[id] = nil;
+                                parent[id] = no_parent;
                                 orphans.push_back(id);
                             }
                         }
@@ -365,11 +364,9 @@ namespace dlib
         ) const
         {
             typedef typename flow_graph::edge_type edge_type;
-            typedef typename flow_graph::out_edge_iterator out_edge_iterator;
-            typedef typename flow_graph::in_edge_iterator in_edge_iterator;
 
             // used to indicate "no parent"
-            const unsigned long nil = g.number_of_nodes();
+            const unsigned long no_parent = g.number_of_nodes();
 
             unsigned long s = source_side;
             unsigned long t = sink_side;
@@ -417,7 +414,7 @@ namespace dlib
                 g.adjust_flow(t,s, min_cap);
                 if (g.get_flow(s,t) <= 0)
                 {
-                    parent[t] = nil;
+                    parent[t] = no_parent;
                     orphans.push_back(t);
                 }
 
@@ -432,7 +429,7 @@ namespace dlib
                 g.adjust_flow(t,s, min_cap);
                 if (g.get_flow(s,t) <= 0)
                 {
-                    parent[s] = nil;
+                    parent[s] = no_parent;
                     orphans.push_back(s);
                 }
                 s = t;
@@ -458,7 +455,6 @@ namespace dlib
                     - returns false
         !*/
         {
-            typedef typename flow_graph::edge_type edge_type;
             typedef typename flow_graph::out_edge_iterator out_edge_iterator;
             typedef typename flow_graph::in_edge_iterator in_edge_iterator;
 
@@ -571,5 +567,5 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-#endif // DLIB_MIN_CuT_H__
+#endif // DLIB_MIN_CuT_Hh_
 

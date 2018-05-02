@@ -3,8 +3,7 @@
 #undef DLIB_LOAd_IMAGE_ABSTRACT_
 #ifdef DLIB_LOAd_IMAGE_ABSTRACT_
 
-#include "load_image_abstract.h"
-#include "../string.h"
+#include "../image_processing/generic_image.h"
 
 namespace dlib
 {
@@ -15,21 +14,16 @@ namespace dlib
     );
     /*!
         requires
-            - image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - pixel_traits<typename image_type::type> is defined  
+            - image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h 
         ensures
-            - let EXT == the extension of the file given by file_name converted
-              to lower case (i.e.  the part of the file after the '.')
-            - if (EXT == "png") then
-                - performs: load_png(image, file_name);
-            - else if (EXT == "jpg" || EXT == "jpeg") then
-                - performs: load_jpeg(image, file_name);
-            - else if (EXT == "bmp") then
-                - performs: load_bmp(image, file_name);
-            - else if (EXT == "dng") then
-                - performs: load_dng(image, file_name);
-            - else
-                - throws image_load_error
+            - This function loads an image from disk, in the indicated file file_name, and
+              writes it to the indicated image object.
+            - It is capable of reading the PNG, JPEG, BMP, GIF, and DNG image formats.  It
+              is always capable of reading BMP and DNG images.  However, for PNG, JPEG, and
+              GIF you must #define DLIB_PNG_SUPPORT, DLIB_JPEG_SUPPORT, and
+              DLIB_GIF_SUPPORT respectively and link your program to libpng, libjpeg, and
+              libgif respectively.
         throws
             - image_load_error
                 This exception is thrown if there is some error that prevents

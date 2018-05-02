@@ -22,7 +22,7 @@ namespace
     namespace pipe_kernel_test_helpers
     {
         const unsigned long proc1_count = 10000;
-        mutex m;
+        dlib::mutex m;
         signaler s(m);
         unsigned long threads_running = 0;
         bool found_error;
@@ -65,7 +65,7 @@ namespace
                 int last = -1;
                 for (unsigned long i = 0; i < proc1_count; ++i)
                 {
-                    int cur;
+                    int cur=0;
                     DLIB_TEST(p.dequeue(cur) == true);
                     DLIB_TEST(last + 1 == cur);
                     last = cur;

@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SVM_C_LiNEAR_TRAINER_H__
-#define DLIB_SVM_C_LiNEAR_TRAINER_H__
+#ifndef DLIB_SVM_C_LiNEAR_TRAINER_Hh_
+#define DLIB_SVM_C_LiNEAR_TRAINER_Hh_
 
 #include "svm_c_linear_trainer_abstract.h"
 #include "../algs.h"
@@ -44,7 +44,8 @@ namespace dlib
             const in_scalar_vector_type& labels_,
             const bool be_verbose_,
             const scalar_type eps_,
-            const unsigned long max_iter
+            const unsigned long max_iter,
+            const unsigned long dims_
         ) :
             samples(samples_),
             labels(labels_),
@@ -53,7 +54,8 @@ namespace dlib
             Cneg(C_neg/C),
             be_verbose(be_verbose_),
             eps(eps_),
-            max_iterations(max_iter)
+            max_iterations(max_iter),
+            dims(dims_)
         {
             dot_prods.resize(samples.size());
             is_first_call = true;
@@ -69,7 +71,7 @@ namespace dlib
         ) const 
         {
             // plus 1 for the bias term
-            return max_index_plus_one(samples) + 1;
+            return dims + 1;
         }
 
         virtual bool optimization_status (
@@ -189,7 +191,7 @@ namespace dlib
                 // Here we use the line search algorithm presented in section 3.1.1 of Franc and Sonnenburg.
 
                 const scalar_type A0 = length_squared(best_so_far - w);
-                const scalar_type B0 = dot(best_so_far, w - best_so_far);
+                const scalar_type BB0 = dot(best_so_far, w - best_so_far);
 
                 const scalar_type scale_pos = (get_c()*Cpos)/samples.size();
                 const scalar_type scale_neg = (get_c()*Cneg)/samples.size();
@@ -197,7 +199,7 @@ namespace dlib
                 ks.clear();
                 ks.reserve(samples.size());
 
-                scalar_type f0 = B0;
+                scalar_type f0 = BB0;
                 for (long i = 0; i < samples.size(); ++i)
                 {
                     const scalar_type& scale = (labels(i)>0) ? scale_pos : scale_neg;
@@ -300,6 +302,7 @@ namespace dlib
         const bool be_verbose;
         const scalar_type eps;
         const unsigned long max_iterations;
+        const unsigned long dims;
     };
 
 // ----------------------------------------------------------------------------------------
@@ -317,11 +320,12 @@ namespace dlib
         const in_scalar_vector_type& labels,
         const bool be_verbose,
         const scalar_type eps,
-        const unsigned long max_iterations
+        const unsigned long max_iterations,
+        const unsigned long dims
     )
     {
         return oca_problem_c_svm<matrix_type, in_sample_vector_type, in_scalar_vector_type>(
-            C_pos, C_neg, samples, labels, be_verbose, eps, max_iterations);
+            C_pos, C_neg, samples, labels, be_verbose, eps, max_iterations, dims);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -445,6 +449,8 @@ namespace dlib
         )
         {
             learn_nonnegative_weights = value;
+            if (learn_nonnegative_weights)
+                prior.set_size(0); 
         }
 
         bool forces_last_weight_to_1 (
@@ -458,6 +464,34 @@ namespace dlib
         )
         {
             last_weight_1 = should_last_weight_be_1;
+            if (last_weight_1)
+                prior.set_size(0);
+        }
+
+        void set_prior (
+            const trained_function_type& prior_
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(prior_.basis_vectors.size() == 1 &&
+                        prior_.alpha(0) == 1,
+                "\t void svm_c_linear_trainer::set_prior()"
+                << "\n\t The supplied prior could not have been created by this object's train() method."
+                << "\n\t prior_.basis_vectors.size(): " << prior_.basis_vectors.size() 
+                << "\n\t prior_.alpha(0):             " << prior_.alpha(0) 
+                << "\n\t this: " << this
+                );
+
+            prior = sparse_to_dense(prior_.basis_vectors(0));
+            prior_b = prior_.b;
+            learn_nonnegative_weights = false;
+            last_weight_1 = false;
+        }
+
+        bool has_prior (
+        ) const
+        {
+            return prior.size() != 0;
         }
 
         void set_c (
@@ -597,11 +631,41 @@ namespace dlib
             }
 
 
-            svm_objective = solver(
-                make_oca_problem_c_svm<w_type>(Cpos, Cneg, x, y, verbose, eps, max_iterations), 
-                w,
-                num_nonnegative,
-                force_weight_1_idx);
+            if (has_prior())
+            {
+                if (is_matrix<sample_type>::value)
+                {
+                    // make sure requires clause is not broken
+                    DLIB_CASSERT(num_dims == (unsigned long)prior.size(),
+                        "\t decision_function svm_c_linear_trainer::train(x,y)"
+                        << "\n\t The dimension of the training vectors must match the dimension of\n"
+                        << "\n\t those used to create the prior."
+                        << "\n\t num_dims:     " << num_dims 
+                        << "\n\t prior.size(): " << prior.size() 
+                    );
+                }
+                const unsigned long dims = std::max(num_dims, (unsigned long)prior.size());
+                // In the case of sparse sample vectors, it is possible that the input
+                // vector dimensionality is larger than the prior vector dimensionality.
+                // We need to check for this case and pad prior with zeros if it is the
+                // case.
+                matrix<scalar_type,0,1> prior_temp = join_cols(join_cols(prior, 
+                                                                         zeros_matrix<scalar_type>(dims-prior.size(),1)),
+                                                                         mat(prior_b));
+
+                svm_objective = solver(
+                    make_oca_problem_c_svm<w_type>(Cpos, Cneg, x, y, verbose, eps, max_iterations, dims), 
+                    w,
+                    prior_temp);
+            }
+            else
+            {
+                svm_objective = solver(
+                    make_oca_problem_c_svm<w_type>(Cpos, Cneg, x, y, verbose, eps, max_iterations, num_dims), 
+                    w,
+                    num_nonnegative,
+                    force_weight_1_idx);
+            }
 
             // put the solution into a decision function and then return it
             decision_function<kernel_type> df;
@@ -627,6 +691,8 @@ namespace dlib
         unsigned long max_iterations;
         bool learn_nonnegative_weights;
         bool last_weight_1;
+        matrix<scalar_type,0,1> prior;
+        scalar_type prior_b = 0;
     }; 
 
 // ----------------------------------------------------------------------------------------
@@ -636,5 +702,5 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
 
-#endif // DLIB_OCA_PROBLeM_SVM_C_H__
+#endif // DLIB_SVM_C_LiNEAR_TRAINER_Hh_
 

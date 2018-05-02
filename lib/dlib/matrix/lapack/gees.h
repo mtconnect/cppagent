@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_LAPACk_ES_H__
-#define DLIB_LAPACk_ES_H__
+#ifndef DLIB_LAPACk_ES_Hh_
+#define DLIB_LAPACk_ES_Hh_
 
 #include "fortran_id.h"
 #include "../matrix.h"
@@ -42,12 +42,12 @@ namespace dlib
                 integer info = 0;
                 char sort = 'N';
                 L_fp fnil = 0;
-                logical nil = 0;
+                logical bwork = 0;
                 integer sdim = 0;
                 DLIB_FORTRAN_ID(dgees)(&jobvs, &sort, fnil, &n,
                                        a, &lda, &sdim, wr,
                                        wi, vs, &ldvs, work,
-                                       &lwork, &nil, &info);
+                                       &lwork, &bwork, &info);
                 return info;
             }
 
@@ -61,12 +61,12 @@ namespace dlib
                 integer info = 0;
                 char sort = 'N';
                 L_fp fnil = 0;
-                logical nil = 0;
+                logical bwork = 0;
                 integer sdim = 0;
                 DLIB_FORTRAN_ID(sgees)(&jobvs, &sort, fnil, &n,
                                        a, &lda, &sdim, wr,
                                        wi, vs, &ldvs, work,
-                                       &lwork, &nil, &info);
+                                       &lwork, &bwork, &info);
                 return info;
             }
 
@@ -260,5 +260,5 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-#endif // DLIB_LAPACk_ES_H__
+#endif // DLIB_LAPACk_ES_Hh_
 

@@ -1,21 +1,20 @@
-/*
- * Copyright Copyright 2012, System Insights, Inc.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
+//
+// Copyright Copyright 2012, System Insights, Inc.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
 
-#ifndef AGENT_HPP
-#define AGENT_HPP
+#pragma once
 
 #include <sstream>
 #include <string>
@@ -23,6 +22,8 @@
 #include <map>
 #include <set>
 #include <list>
+#include <mutex>
+#include <chrono>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -43,338 +44,396 @@ class Device;
 
 using namespace dlib;
 
-typedef std::vector<std::pair<std::string, std::string> > AssetChangeList;
+typedef std::vector<std::pair<std::string, std::string>> AssetChangeList;
 
 class Agent : public server_http
 {
-  class ParameterError
-  {
-  public:
-    ParameterError(const std::string &aCode, const std::string &aMessage) 
-    {
-      mCode = aCode;
-      mMessage = aMessage;
-    }
-    ParameterError(const ParameterError &aError) {
-      mCode = aError.mCode;
-      mMessage = aError.mMessage;
-    }
-    ParameterError &operator=(const ParameterError &aError) {
-      mCode = aError.mCode;
-      mMessage = aError.mMessage;
-      return *this;
-    }
-    std::string mCode;
-    std::string mMessage;
-  };
-  
+	class ParameterError
+	{
+	public:
+		ParameterError(const std::string &code, const std::string &message) 
+		{
+			m_code = code;
+			m_message = message;
+		}
+
+		ParameterError(const ParameterError &anotherError)
+		{
+			m_code = anotherError.m_code;
+			m_message = anotherError.m_message;
+		}
+
+		ParameterError &operator=(const ParameterError &anotherError)
+		{
+			m_code = anotherError.m_code;
+			m_message = anotherError.m_message;
+			return *this;
+		}
+
+		std::string m_code;
+		std::string m_message;
+	};
+
 public:
-  /* Slowest frequency allowed */
-  static const int SLOWEST_FREQ = 2147483646;
-  
-  /* Fastest frequency allowed */
-  static const int FASTEST_FREQ = 0;
-  
-  /* Default count for sample query */
-  static const unsigned int DEFAULT_COUNT = 100;
-  
-  /* Code to return when a parameter has no value */
-  static const int NO_VALUE32 = -1;
-  static const uint64_t NO_VALUE64 = UINT64_MAX;
-  
-  /* Code to return for no frequency specified */
-  static const int NO_FREQ = -2;
-  
-  /* Code to return for no heartbeat specified */
-  static const int NO_HB = 0;
+	// Slowest frequency allowed
+	static const int SLOWEST_FREQ = 2147483646;
 
-  /* Code for no start value specified */
-  static const uint64_t NO_START = NO_VALUE64;
+	// Fastest frequency allowed
+	static const int FASTEST_FREQ = 0;
 
-  /* Small file size */
-  static const int SMALL_FILE = 10 * 1024; // 10k is considered small
-  
+	// Default count for sample query
+	static const unsigned int DEFAULT_COUNT = 100;
+
+	// Code to return when a parameter has no value
+	static const int NO_VALUE32 = -1;
+	static const uint64_t NO_VALUE64 = UINT64_MAX;
+
+	// Code to return for no frequency specified
+	static const int NO_FREQ = -2;
+
+	// Code to return for no heartbeat specified
+	static const int NO_HB = 0;
+
+	// Code for no start value specified
+	static const uint64_t NO_START = NO_VALUE64;
+
+	// Small file size
+	static const int SMALL_FILE = 10 * 1024; // 10k is considered small
+
 public:
-  /* Load agent with the xml configuration */
-  Agent(const std::string& configXmlPath, int aBufferSize, int aMaxAssets,
-        int aCheckpointFreq = 1000);
-  
-  /* Virtual destructor */
-  virtual ~Agent();
-  
-  /* Overridden method that is called per web request */  
-  virtual const std::string on_request (
-    const incoming_things& incoming,
-    outgoing_things& outgoing
-    );
-  
-  /* Add an adapter to the agent */
-  Adapter * addAdapter(const std::string& device,
-                       const std::string& host,
-                       const unsigned int port,
-                       bool start = false,
-                       int aLegacyTimeout = 600);
-  
-  /* Get device from device map */
-  Device * getDeviceByName(const std::string& name) { return mDeviceMap[name]; }
-  Device * findDeviceByUUIDorName(const std::string& aId);
-  const std::vector<Device *> &getDevices() { return mDevices; }
-  
-  /* Add component events to the sliding buffer */
-  unsigned int addToBuffer(
-    DataItem *dataItem,
-    const std::string& value,
-    std::string time = ""
-  );
-  
-  // Asset management
-  bool addAsset(Device *aDevice, const std::string &aId, const std::string &aAsset,
-                const std::string &aType,
-                const std::string &aTime = "");
-  
-  bool updateAsset(Device *aDevice, const std::string &aId, AssetChangeList &aList,
-                   const std::string &aTime);
-  
-  bool removeAsset(Device *aDevice, const std::string &aId, const std::string &aTime);
-  bool removeAllAssets(Device *aDevice, const std::string &aType, const std::string &aTime);
-  
-  /* Message when adapter has connected and disconnected */
-  void disconnected(Adapter *anAdapter, std::vector<Device*> aDevices);
-  void connected(Adapter *anAdapter, std::vector<Device*> aDevices);
-  
-  DataItem * getDataItemByName(
-    const std::string& device,
-    const std::string& name
-  );
-  
-  ComponentEvent *getFromBuffer(uint64_t aSeq) const { return (*mSlidingBuffer)[aSeq]; }
-  uint64_t getSequence() const { return mSequence; }
-  unsigned int getBufferSize() const { return mSlidingBufferSize; }
-  unsigned int getMaxAssets() const { return mMaxAssets; }
-  unsigned int getAssetCount() const { return mAssets.size(); }
-  int getAssetCount(const std::string &aType) const { 
-    return const_cast<std::map<std::string, int>& >(mAssetCounts)[aType];
-  }
-  uint64_t getFirstSequence() const {
-    if (mSequence > mSlidingBufferSize)
-      return mSequence - mSlidingBufferSize;
-    else
-      return 1;
-  }
+	// Load agent with the xml configuration 
+	Agent(
+		const std::string &configXmlPath,
+		int bufferSize,
+		int maxAssets,
+		std::chrono::milliseconds checkpointFreq = std::chrono::milliseconds{1000});
 
-  // For testing...
-  void setSequence(uint64_t aSeq) { mSequence = aSeq; }
-  std::list<AssetPtr*> *getAssets() { return &mAssets; }
-  
-  // Starting
-  virtual void start();
-  
-  // Shutdown
-  void clear();
+	// Virtual destructor
+	virtual ~Agent();
 
-  void registerFile(const std::string &aUri, const std::string &aPath);
-  void addMimeType(const std::string &aExt, const std::string &aType) { mMimeTypes[aExt] = aType; }
-  
-  // PUT and POST handling
-  void enablePut(bool aFlag = true) { mPutEnabled = aFlag; }
-  bool isPutEnabled() { return mPutEnabled; }
-  void allowPutFrom(const std::string &aHost) { mPutAllowedHosts.insert(aHost); }
-  bool isPutAllowedFrom(const std::string &aHost) { return mPutAllowedHosts.count(aHost) > 0; }
-  
-  // For debugging
-  void setLogStreamData(bool aLog) { mLogStreamData = aLog; }
-    
-  /* Handle probe calls */
-  std::string handleProbe(const std::string& device);
-  
-  // Update DOM when key changes
-  void updateDom(Device *aDevice);
-  
+	// Overridden method that is called per web request
+	const std::string on_request (
+		const incoming_things &incoming,
+		outgoing_things &outgoing ) override;
+
+	// Add an adapter to the agent
+	Adapter *addAdapter(const std::string &device,
+						const std::string &host,
+						const unsigned int port,
+						bool start = false,
+						std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
+
+	// Get device from device map
+	Device *getDeviceByName(const std::string &name);
+	const Device *getDeviceByName(const std::string &name) const;
+	Device *findDeviceByUUIDorName(const std::string &idOrName);
+	const std::vector<Device *> &getDevices() const {
+		return m_devices; }
+
+	// Add component events to the sliding buffer
+	unsigned int addToBuffer(
+		DataItem *dataItem,
+		const std::string &value,
+		std::string time = ""
+	);
+
+	// Asset management
+	bool addAsset(
+		Device *device,
+		const std::string &id,
+		const std::string &asset,
+		const std::string &type,
+		const std::string &time = "");
+
+	bool updateAsset(
+		Device *device, 
+		const std::string &id,
+		AssetChangeList &list,
+		const std::string &time);
+
+	bool removeAsset(Device *device, const std::string &id, const std::string &time);
+	bool removeAllAssets(Device *device, const std::string &type, const std::string &time);
+
+	// Message when adapter has connected and disconnected
+	void disconnected(Adapter *adapter, std::vector<Device *> devices);
+	void connected(Adapter *adapter, std::vector<Device *> devices);
+
+	DataItem *getDataItemByName(const std::string &deviceName, const std::string &dataItemName );
+
+	ComponentEvent *getFromBuffer(uint64_t seq) const {
+		return (*m_slidingBuffer)[seq]; }
+	uint64_t getSequence() const {
+		return m_sequence; }
+	unsigned int getBufferSize() const {
+		return m_slidingBufferSize; }
+	unsigned int getMaxAssets() const {
+		return m_maxAssets; }
+	unsigned int getAssetCount() const {
+		return m_assets.size(); }
+
+	int getAssetCount(const std::string &type) const
+	{ 
+		const auto assetPos = m_assetCounts.find(type);
+		if(assetPos != m_assetCounts.end())
+			return assetPos->second;
+		return 0;
+	}
+
+	uint64_t getFirstSequence() const
+	{
+		if (m_sequence > m_slidingBufferSize)
+			return m_sequence - m_slidingBufferSize;
+		else
+			return 1;
+	}
+
+	// For testing...
+	void setSequence(uint64_t seq) {
+		m_sequence = seq; }
+	std::list<AssetPtr *> *getAssets() {
+		return &m_assets; }
+
+	// Starting
+	virtual void start();
+
+	// Shutdown
+	void clear();
+
+	void registerFile(const std::string &uri, const std::string &path);
+	void addMimeType(const std::string &ext, const std::string &type) {
+		m_mimeTypes[ext] = type; }
+
+	// PUT and POST handling
+	void enablePut(bool flag = true) {
+		m_putEnabled = flag; }
+	bool isPutEnabled() const {
+		return m_putEnabled; }
+	void allowPutFrom(const std::string &host) {
+		m_putAllowedHosts.insert(host); }
+	bool isPutAllowedFrom(const std::string &host) const {
+		return m_putAllowedHosts.find(host) != m_putAllowedHosts.end(); }
+
+	// For debugging
+	void setLogStreamData(bool log) {
+		m_logStreamData = log; }
+
+	// Handle probe calls
+	std::string handleProbe(const std::string &device);
+
+	// Update DOM when key changes
+	void updateDom(Device *device);
+
 protected:
-  /* HTTP methods to handle the 3 basic calls */
-  std::string handleCall(std::ostream& out,
-                         const std::string& path,
-                         const key_value_map& queries,
-                         const std::string& call,
-                         const std::string& device);
-  
-  /* HTTP methods to handle the 3 basic calls */
-  std::string handlePut(std::ostream& out,
-                        const std::string& path,
-                        const key_value_map& queries,
-                        const std::string& call,
-                        const std::string& device);
+	// HTTP methods to handle the 3 basic calls
+	std::string handleCall(
+		std::ostream &out,
+		const std::string &path,
+		const key_value_map &queries,
+		const std::string &call,
+		const std::string &device);
 
-  /* Handle stream calls, which includes both current and sample */
-  std::string handleStream(std::ostream& out,
-                           const std::string& path,
-                           bool current,  
-                           unsigned int frequency,
-                           uint64_t start = 0,
-                           unsigned int count = 0,
-                           unsigned int aHb = 10000);
-  
-  /* Asset related methods */
-  std::string handleAssets(std::ostream& aOut,
-			   const key_value_map& aQueries,
-			   const std::string& aList);
-			   
-  std::string storeAsset(std::ostream& aOut,
-                         const key_value_map& aQueries,
-                         const std::string& aAsset,
-                         const std::string& aBody);
-  
-  /* Stream the data to the user */
-  void streamData(std::ostream& out,
-                  std::set<std::string> &aFilterSet,
-                  bool current,
-                  unsigned int frequency,
-                  uint64_t start = 1,
-                  unsigned int count = 0,
-                  unsigned int aHb = 10000);
-  
-  /* Fetch the current/sample data and return the XML in a std::string */
-  std::string fetchCurrentData(std::set<std::string> &aFilter, uint64_t at);
-  std::string fetchSampleData(std::set<std::string> &aFilterSet,
-                              uint64_t start, unsigned int count, uint64_t &end,
-                              bool &endOfBuffer, ChangeObserver *aObserver = NULL);
-  
-  /* Output an XML Error */
-  std::string printError(const std::string& errorCode, const std::string& text);
-  
-  /* Handle the device/path parameters for the xpath search */
-  std::string devicesAndPath(
-    const std::string& path,
-    const std::string& device
-  );
+	// HTTP methods to handle the 3 basic calls
+	std::string handlePut(
+		std::ostream &out,
+		const std::string &path,
+		const key_value_map &queries,
+		const std::string &call,
+		const std::string &device);
 
-  /* Get a file */
-  std::string handleFile(const std::string& aUri, outgoing_things& aOutgoing);
+	// Handle stream calls, which includes both current and sample
+	std::string handleStream(
+		std::ostream &out,
+		const std::string &path,
+		bool current,
+		unsigned int frequency,
+		uint64_t start = 0,
+		unsigned int count = 0,
+		std::chrono::milliseconds heartbeat = std::chrono::milliseconds{10000});
 
-  bool isFile(const std::string& aUri) { return mFileMap.count(aUri) > 0; }
-  
-  /* Perform a check on parameter and return a value or a code */
-  int checkAndGetParam(
-    const key_value_map& queries,
-    const std::string& param,
-    const int defaultValue,
-    const int minValue = NO_VALUE32,
-    bool minError = false,
-    const int maxValue = NO_VALUE32
-  );
-  
-  /* Perform a check on parameter and return a value or a code */
-  uint64_t checkAndGetParam64(
-    const key_value_map& queries,
-    const std::string& param,
-    const uint64_t defaultValue,
-    const uint64_t minValue = NO_VALUE64,
-    bool minError = false,
-    const uint64_t maxValue = NO_VALUE64
-  );
-  
-  /* Find data items by name/id */
-  DataItem * getDataItemById(const std::string& id) { return mDataItemMap[id]; }
-  
+	// Asset related methods
+	std::string handleAssets(
+		std::ostream &out,
+		const key_value_map &queries,
+		const std::string &list);
+
+	std::string storeAsset(
+		std::ostream &out,
+		const key_value_map &queries,
+		const std::string &asset,
+		const std::string &body);
+
+	// Stream the data to the user
+	void streamData(
+		std::ostream &out,
+		std::set<std::string> &filterSet,
+		bool current,
+		unsigned int frequency,
+		uint64_t start = 1,
+		unsigned int count = 0,
+		std::chrono::milliseconds heartbeat = std::chrono::milliseconds{10000});
+
+	// Fetch the current/sample data and return the XML in a std::string
+	std::string fetchCurrentData(std::set<std::string> &filterSet, uint64_t at);
+	std::string fetchSampleData(
+		std::set<std::string> &filterSet,
+		uint64_t start,
+		unsigned int count,
+		uint64_t &end,
+		bool &endOfBuffer,
+		ChangeObserver *observer = nullptr);
+
+	// Output an XML Error
+	std::string printError(const std::string &errorCode, const std::string &text);
+
+	// Handle the device/path parameters for the xpath search
+	std::string devicesAndPath(
+		const std::string &path,
+		const std::string &device );
+
+	// Get a file
+	std::string handleFile(const std::string &uri, outgoing_things &outgoing);
+
+	bool isFile(const std::string &uri) const {
+		return m_fileMap.find(uri) != m_fileMap.end(); }
+
+	// Perform a check on parameter and return a value or a code
+	int checkAndGetParam(
+		const key_value_map &queries,
+		const std::string &param,
+		const int defaultValue,
+		const int minValue = NO_VALUE32,
+		bool minError = false,
+		const int maxValue = NO_VALUE32
+	);
+
+	// Perform a check on parameter and return a value or a code
+	uint64_t checkAndGetParam64(
+		const key_value_map &queries,
+		const std::string &param,
+		const uint64_t defaultValue,
+		const uint64_t minValue = NO_VALUE64,
+		bool minError = false,
+		const uint64_t maxValue = NO_VALUE64
+	);
+
+	// Find data items by name/id
+	DataItem * getDataItemById(const std::string &id) const
+	{
+		auto diPos = m_dataItemMap.find(id);
+		if(diPos != m_dataItemMap.end())
+			return diPos->second;
+		return nullptr;
+	}
+
 protected:
-  /* Unique id based on the time of creation */
-  unsigned int mInstanceId;
-  
-  /* Pointer to the configuration file for node access */
-  XmlParser *mXmlParser;
-  
-  /* For access to the sequence number and sliding buffer, use the mutex */
-  dlib::mutex *mSequenceLock;
-  dlib::mutex *mAssetLock;
-  
-  /* Sequence number */
-  uint64_t mSequence;
-  
-  /* The sliding/circular buffer to hold all of the events/sample data */
-  dlib::sliding_buffer_kernel_1<ComponentEventPtr> *mSlidingBuffer;
-  unsigned int mSlidingBufferSize;
+	// Unique id based on the time of creation
+	uint64_t m_instanceId;
 
-  /* Asset storage, circ buffer stores ids */
-  std::list<AssetPtr*> mAssets;
-  AssetIndex mAssetMap;
-  
-  // Natural key indices for assets
-  std::map<std::string, AssetIndex> mAssetIndices;
-  unsigned int mMaxAssets;  
-  
-  /* Checkpoints */
-  Checkpoint mLatest;
-  Checkpoint mFirst;
-  Checkpoint *mCheckpoints;
+	// Pointer to the configuration file for node access
+	XmlParser *m_xmlParser;
 
-  int mCheckpointFreq, mCheckpointCount;
-  
-  /* Data containers */
-  std::vector<Adapter *> mAdapters;
-  std::vector<Device *> mDevices;
-  std::map<std::string, Device *> mDeviceMap;
-  std::map<std::string, DataItem *> mDataItemMap;
-  std::map<std::string, int> mAssetCounts;
-  
-  struct CachedFile : public RefCounted {
-    char    *mBuffer;
-    size_t   mSize;
-    
-    CachedFile() : mBuffer(NULL), mSize(0) { }
-    
-    CachedFile(const CachedFile &aFile)
-      : mSize(aFile.mSize)
-    {
-      mBuffer = (char*)malloc(aFile.mSize);
-      memcpy(mBuffer, aFile.mBuffer, aFile.mSize);
-    }
+	// For access to the sequence number and sliding buffer, use the mutex
+	std::mutex m_sequenceLock;
+	std::mutex m_assetLock;
 
-    
-    CachedFile(char *aBuffer, size_t aSize)
-      : mSize(aSize)
-    {
-      mBuffer = (char*)malloc(aSize);
-      memcpy(mBuffer, aBuffer, aSize);
-    }
-    
-    CachedFile(size_t aSize)
-      : mSize(aSize)
-    {
-      mBuffer = (char*)malloc(aSize);
-    }
+	// Sequence number
+	uint64_t m_sequence;
 
-    
-    ~CachedFile() {
-      free(mBuffer);
-    }
-    
-    CachedFile &operator=(const CachedFile &aFile) {
-      if (mBuffer != NULL) free(mBuffer);
-      mBuffer = (char*)malloc(aFile.mSize);
-      memcpy(mBuffer, aFile.mBuffer, aFile.mSize);
-      mSize = aFile.mSize;
-      return *this;
-    }
-    
-    void allocate(size_t aSize)
-    {
-      mBuffer = (char*)malloc(aSize);
-      mSize = aSize;
-    }
-  };
+	// The sliding/circular buffer to hold all of the events/sample data
+	dlib::sliding_buffer_kernel_1<ComponentEventPtr> *m_slidingBuffer;
+	unsigned int m_slidingBufferSize;
 
-  // For file handling, small files will be cached
-  std::map<std::string, std::string> mFileMap;
-  std::map<std::string, RefCountedPtr<CachedFile> > mFileCache;
-  std::map<std::string, std::string> mMimeTypes;
-  
-  // Put handling controls
-  bool mPutEnabled;
-  std::set<std::string> mPutAllowedHosts;
-  
-  // For debugging
-  bool mLogStreamData;
+	// Asset storage, circ buffer stores ids
+	std::list<AssetPtr *> m_assets;
+	AssetIndex m_assetMap;
+
+	// Natural key indices for assets
+	std::map<std::string, AssetIndex> m_assetIndices;
+	unsigned int m_maxAssets;
+
+	// Checkpoints
+	Checkpoint m_latest;
+	Checkpoint m_first;
+	Checkpoint *m_checkpoints;
+
+	int m_checkpointFreq;
+	int m_checkpointCount;
+
+	// Data containers
+	std::vector<Adapter *> m_adapters;
+	std::vector<Device *> m_devices;
+	std::map<std::string, Device *> m_deviceMap;
+	std::map<std::string, DataItem *> m_dataItemMap;
+	std::map<std::string, int> m_assetCounts;
+
+	struct CachedFile : public RefCounted 
+	{
+		char * m_buffer;
+		size_t m_size;
+
+		CachedFile() :
+			m_buffer(nullptr),
+			m_size(0)
+		{
+		}
+
+		CachedFile(const CachedFile &file) :
+			m_buffer(nullptr),
+			m_size(file.m_size)
+		{
+			m_buffer = (char*)malloc(file.m_size);
+			memcpy(m_buffer, file.m_buffer, file.m_size);
+		}
+
+		CachedFile(char *buffer, size_t size) :
+			m_buffer(nullptr),
+			m_size(size)
+		{
+			m_buffer = (char*)malloc(size);
+			memcpy(m_buffer, buffer, size);
+		}
+
+		CachedFile(size_t size) :
+			m_buffer(nullptr),
+			m_size(size)
+		{
+			m_buffer = (char*)malloc(size);
+		}
+
+		~CachedFile()
+		{
+			free(m_buffer);
+		}
+
+		CachedFile &operator=(const CachedFile &file)
+		{
+			if (m_buffer)
+				free(m_buffer);
+			m_buffer = (char*)malloc(file.m_size);
+			memcpy(m_buffer, file.m_buffer, file.m_size);
+			m_size = file.m_size;
+			return *this;
+		}
+
+		void allocate(size_t size)
+		{
+			if (m_buffer)
+				free(m_buffer);
+			m_buffer = (char*)malloc(size);
+			m_size = size;
+		}
+	};
+
+	// For file handling, small files will be cached
+	std::map<std::string, std::string> m_fileMap;
+	std::map<std::string, RefCountedPtr<CachedFile>> m_fileCache;
+	std::map<std::string, std::string> m_mimeTypes;
+
+	// Put handling controls
+	bool m_putEnabled;
+	std::set<std::string> m_putAllowedHosts;
+
+	// For debugging
+	bool m_logStreamData;
 };
-
-#endif
 

@@ -372,7 +372,7 @@ namespace
                         uniform_matrix<double>(x.size(),1,-1e100),
                         uniform_matrix<double>(x.size(),1,1e100),
                         (max(abs(x))+1)/10,
-                        1e-7,
+                        1e-8,
                         10000);
         DLIB_TEST_MSG(dlib::equal(x,opt, 1e-3),opt-x);
         DLIB_TEST(approx_equal(val , powell(x)));
@@ -998,7 +998,7 @@ namespace
             upper   
         );
 
-        DLIB_TEST(std::abs(val - neg_rosen(x)) < 1e-14);
+        DLIB_TEST_MSG(std::abs(val - neg_rosen(x)) < 1e-11, std::abs(val - neg_rosen(x)));
         dlog << LINFO << "neg_rosen solution:\n" << x;
 
         dlog << LINFO << "neg_rosen gradient: "<< trans(der_neg_rosen(x));
@@ -1077,7 +1077,7 @@ namespace
         }
 
 
-        DLIB_TEST(std::abs(val - rosen(x)) < 1e-14);
+        DLIB_TEST_MSG(std::abs(val - rosen(x)) < 1e-11, std::abs(val - rosen(x)));
         dlog << LINFO << "rosen solution:\n" << x;
 
         dlog << LINFO << "rosen gradient: "<< trans(der_rosen(x));
@@ -1151,8 +1151,8 @@ namespace
         dlog << LINFO << "mean brown gradient: " << rs.mean();
         dlog << LINFO << "max brown gradient:  " << rs.max();
         dlog << LINFO << "min brown gradient:  " << rs.min();
-        DLIB_TEST(rs.mean() < 1e-5);
-        DLIB_TEST(rs.max() < 1e-2);
+        DLIB_TEST(rs.mean() < 4e-5);
+        DLIB_TEST_MSG(rs.max() < 3e-2, rs.max());
         DLIB_TEST(rs.min() < 1e-10);
 
         dlog << LINFO << "test find_max_box_constrained() on neg_rosen";
@@ -1182,6 +1182,28 @@ namespace
         off = 1.0; DLIB_TEST(std::abs( poly_min_extrap(off*off, -2*off, (1-off)*(1-off)) - off) < 1e-13); 
     }
 
+    void test_solve_trust_region_subproblem_bounded()
+    {
+        print_spinner();
+        matrix<double> H(2,2);
+        H = 1, 0,
+        0, 1;
+        matrix<double,0,1> g, lower, upper, p, true_p;
+        g = {0, 0};
+
+        double radius = 0.5;
+        lower = {0.5, 0};
+        upper = {10, 10};
+
+
+        solve_trust_region_subproblem_bounded(H,g, radius, p,  0.001, 500, lower, upper);
+        true_p = { 0.5, 0};
+        DLIB_TEST_MSG(length(p-true_p) < 1e-12, p);
+
+    }
+
+// ----------------------------------------------------------------------------------------
+
     class optimization_tester : public tester
     {
     public:
@@ -1200,6 +1222,7 @@ namespace
             test_box_constrained_optimizers(lbfgs_search_strategy(5));
             test_poly_min_extract_2nd();
             optimization_test();
+            test_solve_trust_region_subproblem_bounded();
         }
     } a;
 

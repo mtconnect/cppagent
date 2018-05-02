@@ -65,7 +65,7 @@ namespace dlib
     );
     /*!
         requires
-            - rows and cols contain elements of type long
+            - rows and cols contain integral elements (e.g. int, long)
             - 0 <= min(rows) && max(rows) < m.nr() 
             - 0 <= min(cols) && max(cols) < m.nc()
             - rows.nr() == 1 || rows.nc() == 1
@@ -121,6 +121,46 @@ namespace dlib
                 - R.nc() == rect.width()
                 - for all valid r and c:
                   R(r, c) == m(r+rect.top(), c+rect.left())
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp subm_clipped (
+        const matrix_exp& m,
+        long row,
+        long col,
+        long nr,
+        long nc
+    );
+    /*!
+        ensures
+            - This function is just like subm() except that it will automatically clip the
+              indicated sub matrix window so that it does not extend outside m.
+              In particular:
+                - Let box = rectangle(col,row,col+nc-1,row+nr-1)
+                  (i.e. the box that contains the indicated sub matrix)
+                - Let box_clipped = box.intersect(get_rect(m))
+                - Then this function returns a matrix R such that:
+                    - R.nr() == box_clipped.height()
+                    - R.nc() == box_clipped.width()
+                    - for all valid r and c:
+                      R(r, c) == m(r+box_clipped.top(),c+box_clipped.left())
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp subm_clipped (
+        const matrix_exp& m,
+        const rectangle& rect
+    );
+    /*!
+        ensures
+            - Let box_clipped == rect.intersect(get_rect(m))
+            - returns a matrix R such that:
+                - R.nr() == box_clipped.height()  
+                - R.nc() == box_clipped.width()
+                - for all valid r and c:
+                  R(r, c) == m(r+box_clipped.top(), c+box_clipped.left())
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -197,7 +237,7 @@ namespace dlib
     );
     /*!
         requires
-            - rows contains elements of type long
+            - rows contains integral elements (e.g. int, long)
             - 0 <= min(rows) && max(rows) < m.nr() 
             - rows.nr() == 1 || rows.nc() == 1
               (i.e. rows must be a vector)
@@ -284,7 +324,7 @@ namespace dlib
     );
     /*!
         requires
-            - cols contains elements of type long
+            - cols contains integral elements (e.g. int, long)
             - 0 <= min(cols) && max(cols) < m.nc() 
             - cols.nr() == 1 || cols.nc() == 1
               (i.e. cols must be a vector)
@@ -295,6 +335,35 @@ namespace dlib
                 - R.nc() == cols.size()
                 - for all valid r and c:
                   R(r,c) == m(r,cols(c))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename T>
+    assignable_matrix_expression set_ptrm (
+        T* ptr,
+        long nr,
+        long nc = 1
+    );
+    /*!
+        requires
+            - ptr == a pointer to nr*nc elements of type T
+            - nr >= 0
+            - nc >= 0
+        ensures
+            - statements of the following form:
+                - set_ptrm(ptr,nr,nc) = some_matrix;
+              result in it being the case that:
+                - mat(ptr,nr,nc) == some_matrix.
+
+            - statements of the following form:
+                - set_ptrm(ptr,nr,nc) = scalar_value;
+              result in it being the case that:
+                - mat(ptr,nr,nc) == uniform_matrix<matrix::type>(nr,nc,scalar_value).
+
+            - In addition to the normal assignment statements using the = symbol, you may
+              also use the usual += and -= versions of the assignment operator.  In these
+              cases, they have their usual effect.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -365,7 +434,7 @@ namespace dlib
     );
     /*!
         requires
-            - rows and cols contain elements of type long
+            - rows and cols contain integral elements (e.g. int, long)
             - 0 <= min(rows) && max(rows) < m.nr() 
             - 0 <= min(cols) && max(cols) < m.nc()
             - rows.nr() == 1 || rows.nc() == 1
@@ -420,7 +489,7 @@ namespace dlib
     );
     /*!
         requires
-            - rows contains elements of type long
+            - rows contains integral elements (e.g. int, long)
             - 0 <= min(rows) && max(rows) < m.nr() 
             - rows.nr() == 1 || rows.nc() == 1
               (i.e. rows must be a vector)
@@ -473,7 +542,7 @@ namespace dlib
     );
     /*!
         requires
-            - cols contains elements of type long
+            - cols contains integral elements (e.g. int, long)
             - 0 <= min(cols) && max(cols) < m.nc() 
             - cols.nr() == 1 || cols.nc() == 1
               (i.e. cols must be a vector)

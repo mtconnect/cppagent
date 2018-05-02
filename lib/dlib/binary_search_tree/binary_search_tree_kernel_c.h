@@ -43,6 +43,30 @@ namespace dlib
                 range& r
             );
 
+            const map_pair<domain, range>& element(
+            ) const
+            {
+                DLIB_CASSERT(this->current_element_valid() == true,
+                    "\tconst map_pair<domain,range>& binary_search_tree::element() const"
+                    << "\n\tyou can't access the current element if it doesn't exist"
+                    << "\n\tthis: " << this
+                );
+
+                return bst_base::element();
+            }
+
+            map_pair<domain, range>& element(
+            )
+            {
+                DLIB_CASSERT(this->current_element_valid() == true,
+                    "\tmap_pair<domain,range>& binary_search_tree::element()"
+                    << "\n\tyou can't access the current element if it doesn't exist"
+                    << "\n\tthis: " << this
+                );
+
+                return bst_base::element();
+            }
+
             void remove_last_in_order (
                 domain& d,
                 range& r
@@ -54,29 +78,6 @@ namespace dlib
             );
 
 
-            const map_pair<domain,range>& element (
-            ) const
-            {
-              DLIB_CASSERT(this->current_element_valid() == true,
-                    "\tconst map_pair<domain,range>& binary_search_tree::element() const"
-                    << "\n\tyou can't access the current element if it doesn't exist"
-                    << "\n\tthis: " << this
-                    );
-
-                return bst_base::element();
-            }
-
-            map_pair<domain,range>& element (
-             )
-            {
-                DLIB_CASSERT(this->current_element_valid() == true,
-                    "\tmap_pair<domain,range>& binary_search_tree::element()"
-                    << "\n\tyou can't access the current element if it doesn't exist"
-                    << "\n\tthis: " << this
-                    );
-
-                return bst_base::element();
-            }
     };
 
 
@@ -184,7 +185,7 @@ namespace dlib
 
         bst_base::remove_any(d,r);
     }
-
+ 
 // ----------------------------------------------------------------------------------------
 
     template <

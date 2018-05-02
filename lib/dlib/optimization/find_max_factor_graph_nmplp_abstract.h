@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_FIND_MAX_FACTOR_GRAPH_nMPLP_ABSTRACT_H__
-#ifdef DLIB_FIND_MAX_FACTOR_GRAPH_nMPLP_ABSTRACT_H__
+#undef DLIB_FIND_MAX_FACTOR_GRAPH_nMPLP_ABSTRACT_Hh_
+#ifdef DLIB_FIND_MAX_FACTOR_GRAPH_nMPLP_ABSTRACT_Hh_
 
 #include <vector>
 
@@ -347,16 +347,19 @@ namespace dlib
               to the MAP problem.  However, for graphs with cycles, the solution may be approximate.
               
 
-            - This function is an implementation of the NMPLP algorithm introduced in the 
-              following paper:
-                Fixing Max-Product: Convergent Message Passing Algorithms for MAP LP-Relaxations 
+            - This function is an implementation of the NMPLP algorithm introduced in the
+              following papers:
+                Fixing Max-Product: Convergent Message Passing Algorithms for MAP LP-Relaxations (2008)
                 by Amir Globerson and Tommi Jaakkola
+
+                Introduction to dual decomposition for inference (2011)
+                by David Sontag, Amir Globerson, and Tommi Jaakkola 
     !*/
 
 // ----------------------------------------------------------------------------------------
 
 }
 
-#endif // DLIB_FIND_MAX_FACTOR_GRAPH_nMPLP_H__
+#endif // DLIB_FIND_MAX_FACTOR_GRAPH_nMPLP_ABSTRACT_Hh_
 
 

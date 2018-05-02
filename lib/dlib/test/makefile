@@ -2,17 +2,18 @@
 # on Debian Linux using the gcc compiler.
 
 # this is the name of the output executable
-TARGET = test 
+TARGET = dtest 
 
 # these are the compile time flags passed to gcc
-CFLAGS = -ggdb  -DDEBUG -DDLIB_NO_GUI_SUPPORT  -I ../..  -Wall
+CXXFLAGS ?= -ggdb -Wall
+CPPFLAGS ?= -std=c++11 -DDEBUG -DDLIB_NO_GUI_SUPPORT -I../..
 
 # These are the link time flags passed to gcc
 LFLAGS = -lpthread   -lnsl 
 
 # The name of the compiler.  If you only have one version of
 # gcc installed then you probably want to change this to just g++ 
-CC = nice g++
+CXX ?= nice g++
 
 ####################################################
 ####################################################
@@ -59,6 +60,7 @@ SRC += ekm_and_lisf.cpp
 SRC += empirical_kernel_map.cpp
 SRC += entropy_coder.cpp
 SRC += entropy_encoder_model.cpp
+SRC += face.cpp
 SRC += fft.cpp
 SRC += fhog.cpp
 SRC += filtering.cpp
@@ -79,8 +81,10 @@ SRC += is_same_object.cpp
 SRC += kcentroid.cpp
 SRC += kernel_matrix.cpp
 SRC += kmeans.cpp
+SRC += learning_to_track.cpp
 SRC += least_squares.cpp
 SRC += linear_manifold_regularizer.cpp
+SRC += lspi.cpp
 SRC += lz77_buffer.cpp
 SRC += map.cpp
 SRC += matrix2.cpp
@@ -96,6 +100,7 @@ SRC += max_sum_submatrix.cpp
 SRC += md5.cpp
 SRC += member_function_pointer.cpp
 SRC += metaprogramming.cpp
+SRC += mpc.cpp
 SRC += multithreaded_object.cpp
 SRC += numerical_integration.cpp
 SRC += object_detector.cpp
@@ -126,7 +131,6 @@ SRC += serialize.cpp
 SRC += set.cpp
 SRC += sldf.cpp
 SRC += sliding_buffer.cpp
-SRC += smart_pointers.cpp
 SRC += sockets2.cpp
 SRC += sockets.cpp
 SRC += sockstreambuf.cpp
@@ -161,12 +165,8 @@ OBJ = $(TMP:.c=.o)
 
 $(TARGET): $(OBJ) 
 	@echo Linking $@
-	@$(CC) $(OBJ) $(LFLAGS) -o $@
+	@$(CXX) $(LDFLAGS) $(OBJ) $(LFLAGS) -o $@
 	@echo Build Complete
-
-.cpp.o: $<
-	@echo Compiling $<
-	@$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
 	@rm -f $(OBJ) $(TARGET)

@@ -17,10 +17,12 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <libgen.h>
+#include <limits.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <chrono>
 
 #if !defined(__USE_LARGEFILE64 ) && !defined(_LARGEFILE64_SOURCE)
 #define stat64 stat
@@ -47,11 +49,13 @@ namespace dlib
                 state.name        == name()
                 state.full_name   == full_name()
                 state.file_size   == size()
+                state.last_modified == last_modified()
 
             CONVENTION
                 state.name        == name()
                 state.full_name   == full_name()
                 state.file_size   == size()
+                state.last_modified == last_modified()
 
         !*/
 
@@ -62,6 +66,7 @@ namespace dlib
             uint64 file_size;
             std::string name;
             std::string full_name;
+            std::chrono::time_point<std::chrono::system_clock> last_modified;
         };
 
         void init(const std::string& name);
@@ -73,12 +78,14 @@ namespace dlib
             const std::string& name,
             const std::string& full_name,
             const uint64 file_size,
+            const std::chrono::time_point<std::chrono::system_clock>& last_modified,
             private_constructor
         )
         {
             state.file_size = file_size;
             state.name = name;
             state.full_name = full_name;
+            state.last_modified = last_modified;
         }
 
 
@@ -108,6 +115,12 @@ namespace dlib
 
         inline uint64 size (
         ) const { return state.file_size; }
+
+        inline std::chrono::time_point<std::chrono::system_clock> last_modified (
+        ) const { return state.last_modified; }
+
+        operator std::string (
+        ) const { return full_name(); }
 
         bool operator == (
             const file& rhs
@@ -240,6 +253,9 @@ namespace dlib
         inline const std::string& full_name (
         ) const { return state.full_name; }
 
+        operator std::string (
+        ) const { return full_name(); }
+
         bool operator == (
             const directory& rhs
         ) const;
@@ -275,6 +291,18 @@ namespace dlib
         !*/
 
     };
+
+// ----------------------------------------------------------------------------------------
+
+    inline std::ostream& operator<< (
+        std::ostream& out,
+        const directory& item
+    ) { out << (std::string)item; return out; }
+
+    inline std::ostream& operator<< (
+        std::ostream& out,
+        const file& item
+    ) { out << (std::string)item; return out; }
 
 // ----------------------------------------------------------------------------------------
 
@@ -364,6 +392,10 @@ namespace dlib
                 {
                     file_size = static_cast<uint64>(buffer.st_size);
                 }
+                auto last_modified = std::chrono::system_clock::from_time_t(buffer.st_mtime);
+#ifdef _BSD_SOURCE 
+                last_modified += std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::nanoseconds(buffer.st_atim.tv_nsec));
+#endif
 
                 if (S_ISDIR(buffer.st_mode) == 0)
                 {
@@ -372,6 +404,7 @@ namespace dlib
                         data->d_name,
                         path+data->d_name,
                         file_size,
+                        last_modified,
                         file::private_constructor()
                         );
                     files.enqueue(temp);

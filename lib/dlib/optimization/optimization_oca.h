@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_OPTIMIZATIoN_OCA_H__
-#define DLIB_OPTIMIZATIoN_OCA_H__
+#ifndef DLIB_OPTIMIZATIoN_OCA_Hh_
+#define DLIB_OPTIMIZATIoN_OCA_Hh_
 
 #include "optimization_oca_abstract.h"
 
@@ -116,18 +116,87 @@ namespace dlib
             unsigned long force_weight_to_1 = std::numeric_limits<unsigned long>::max()
         ) const
         {
+            matrix_type empty_prior;
+            return oca_impl(problem, w, empty_prior, false, num_nonnegative, force_weight_to_1, 0);
+        }
+
+        template <
+            typename matrix_type
+            >
+        typename matrix_type::type solve_with_elastic_net (
+            const oca_problem<matrix_type>& problem,
+            matrix_type& w,
+            double lasso_lambda,
+            unsigned long force_weight_to_1 = std::numeric_limits<unsigned long>::max()
+        ) const
+        {
+            matrix_type empty_prior;
+            return oca_impl(problem, w, empty_prior, false, 0, force_weight_to_1, lasso_lambda);
+        }
+
+        template <
+            typename matrix_type
+            >
+        typename matrix_type::type operator() (
+            const oca_problem<matrix_type>& problem,
+            matrix_type& w,
+            const matrix_type& prior
+        ) const
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(is_col_vector(prior) && prior.size() == problem.get_num_dimensions(),
+                "\t scalar_type oca::operator()"
+                << "\n\t The prior vector does not have the correct dimensions."
+                << "\n\t is_col_vector(prior):         " << is_col_vector(prior) 
+                << "\n\t prior.size():                 " << prior.size() 
+                << "\n\t problem.get_num_dimensions(): " << problem.get_num_dimensions() 
+                << "\n\t this:                         " << this
+                );
+            // disable the force weight to 1 option for this mode.  We also disable the
+            // non-negative constraints.
+            unsigned long force_weight_to_1 = std::numeric_limits<unsigned long>::max();
+            return oca_impl(problem, w, prior, true, 0, force_weight_to_1, 0);
+        }
+
+    private:
+
+        template <
+            typename matrix_type
+            >
+        typename matrix_type::type oca_impl (
+            const oca_problem<matrix_type>& problem,
+            matrix_type& w,
+            const matrix_type& prior,
+            bool have_prior,
+            unsigned long num_nonnegative,
+            unsigned long force_weight_to_1,
+            const double lasso_lambda
+        ) const
+        {
             const unsigned long num_dims = problem.get_num_dimensions();
 
             // make sure requires clause is not broken
             DLIB_ASSERT(problem.get_c() > 0 &&
-                        problem.get_num_dimensions() > 0,
-                "\t void oca::operator()"
+                        problem.get_num_dimensions() > 0 && 
+                        0 <= lasso_lambda && lasso_lambda < 1,
+                "\t scalar_type oca::operator()"
                 << "\n\t The oca_problem is invalid"
                 << "\n\t problem.get_c():              " << problem.get_c() 
                 << "\n\t problem.get_num_dimensions(): " << num_dims 
+                << "\n\t lasso_lambda:                 " << lasso_lambda 
                 << "\n\t this: " << this
                 );
+            if (have_prior)
+            {
+                DLIB_ASSERT(lasso_lambda == 0, "Solver doesn't support using a prior with lasso.");
+                DLIB_ASSERT(num_nonnegative == 0, "Solver doesn't support using a prior with non-negative constraints.");
+            }
+            else if (lasso_lambda != 0)
+            {
+                DLIB_ASSERT(num_nonnegative == 0, "Solver doesn't support using lasso with non-negative constraints.");
+            }
 
+            const double ridge_lambda = 1-lasso_lambda;
 
             if (num_nonnegative > num_dims)
                 num_nonnegative = num_dims;
@@ -142,7 +211,7 @@ namespace dlib
             typename sequence<vect_type>::kernel_2a planes;
             std::vector<scalar_type> bs, miss_count;
 
-            vect_type new_plane, alpha;
+            vect_type new_plane, alpha, btemp;
 
             w.set_size(num_dims, 1);
             w = 0;
@@ -156,6 +225,12 @@ namespace dlib
             scalar_type cp_obj = 0;
 
             matrix<scalar_type,0,0,mem_manager_type, layout_type> K, Ktmp;
+            matrix<scalar_type,0,1,mem_manager_type, layout_type> lambda, d;
+            if (lasso_lambda != 0)
+                d.set_size(num_dims);
+            else
+                d.set_size(num_nonnegative);
+            d = lasso_lambda*ones_matrix(d);
 
             scalar_type R_lower_bound;
             if (problem.risk_has_lower_bound(R_lower_bound))
@@ -172,6 +247,7 @@ namespace dlib
                 K(0,0) = 0;
             }
 
+            const double prior_norm = have_prior ?  0.5*dot(prior,prior) : 0;
 
             unsigned long counter = 0;
             while (true)
@@ -196,7 +272,10 @@ namespace dlib
                     set_rowm(new_plane, range(force_weight_to_1, new_plane.size()-1)) = 0;
                 }
 
-                bs.push_back(cur_risk - dot(w,new_plane));
+                if (have_prior)
+                    bs.push_back(cur_risk - dot(w,new_plane) + dot(prior,new_plane));
+                else
+                    bs.push_back(cur_risk - dot(w,new_plane));
                 planes.add(planes.size(), new_plane);
                 miss_count.push_back(0);
 
@@ -207,11 +286,12 @@ namespace dlib
                 else
                     alpha = join_cols(alpha,zeros_matrix<scalar_type>(1,1));
 
-                const scalar_type wnorm = 0.5*trans(w)*w;
-                cur_obj = wnorm + C*cur_risk;
+                const scalar_type wnorm = 0.5*ridge_lambda*trans(w)*w + lasso_lambda*sum(abs(w));
+                const double prior_part = have_prior? dot(w,prior) : 0;
+                cur_obj = wnorm + C*cur_risk + prior_norm-prior_part;
 
                 // report current status
-                const scalar_type risk_gap = cur_risk - (cp_obj-wnorm)/C;
+                const scalar_type risk_gap = cur_risk - (cp_obj-wnorm+prior_part-prior_norm)/C;
                 if (counter > 0 && problem.optimization_status(cur_obj, cur_obj - cp_obj, 
                                                                cur_risk, risk_gap, planes.size(), counter))
                 {
@@ -233,21 +313,36 @@ namespace dlib
 
 
                 // solve the cutting plane subproblem for the next w.   We solve it to an
-                // accuracy that is related to how big the error gap is
-                scalar_type eps = std::min<scalar_type>(sub_eps, 0.1*(cur_obj-cp_obj)) ;
+                // accuracy that is related to how big the error gap is.  Also, we multiply
+                // by ridge_lambda because the objective function for the QP we solve was
+                // implicitly scaled by ridge_lambda.  That is, we want to ask the QP
+                // solver to solve the problem until the duality gap is 0.1 times smaller
+                // than what it is now.  So the factor of ridge_lambda is necessary to make
+                // this happen. 
+                scalar_type eps = std::min<scalar_type>(sub_eps, 0.1*ridge_lambda*(cur_obj-cp_obj));
                 // just a sanity check
                 if (eps < 1e-16)
                     eps = 1e-16;
                 // Note that we warm start this optimization by using the alpha from the last
                 // iteration as the starting point.
-                if (num_nonnegative != 0)
+                if (lasso_lambda != 0)
+                {
+                    // copy planes into a matrix so we can call solve_qp4_using_smo()
+                    matrix<scalar_type,0,0,mem_manager_type, layout_type> planes_mat(num_dims,planes.size());
+                    for (unsigned long i = 0; i < planes.size(); ++i)
+                        set_colm(planes_mat,i) = planes[i];
+
+                    btemp = ridge_lambda*mat(bs) - trans(planes_mat)*d;
+                    solve_qp4_using_smo(planes_mat, K, btemp, d, alpha, lambda, eps, sub_max_iter, (scalar_type)(2*lasso_lambda)); 
+                }
+                else if (num_nonnegative != 0)
                 {
                     // copy planes into a matrix so we can call solve_qp4_using_smo()
                     matrix<scalar_type,0,0,mem_manager_type, layout_type> planes_mat(num_nonnegative,planes.size());
                     for (unsigned long i = 0; i < planes.size(); ++i)
                         set_colm(planes_mat,i) = colm(planes[i],0,num_nonnegative);
 
-                    solve_qp4_using_smo(planes_mat, K, mat(bs), alpha, eps, sub_max_iter); 
+                    solve_qp4_using_smo(planes_mat, K, mat(bs), d, alpha, lambda, eps, sub_max_iter); 
                 }
                 else
                 {
@@ -258,8 +353,9 @@ namespace dlib
                 w = -alpha(0)*planes[0];
                 for (unsigned long i = 1; i < planes.size(); ++i)
                     w -= alpha(i)*planes[i];
-                // threshold the first num_nonnegative w elements if necessary.
-                if (num_nonnegative != 0)
+                if (lasso_lambda != 0)
+                    w = (lambda-d+w)/ridge_lambda;
+                else if (num_nonnegative != 0) // threshold the first num_nonnegative w elements if necessary.
                     set_rowm(w,range(0,num_nonnegative-1)) = lowerbound(rowm(w,range(0,num_nonnegative-1)),0);
 
                 for (long i = 0; i < alpha.size(); ++i)
@@ -272,8 +368,9 @@ namespace dlib
 
                 // Compute the lower bound on the true objective given to us by the cutting 
                 // plane subproblem.
-                cp_obj = -0.5*trans(w)*w + trans(alpha)*mat(bs);
-
+                cp_obj = -0.5*ridge_lambda*trans(w)*w + trans(alpha)*mat(bs);
+                if (have_prior)
+                    w += prior;
 
                 // If it has been a while since a cutting plane was an active constraint then
                 // we should throw it away.
@@ -296,8 +393,6 @@ namespace dlib
             return cur_obj;
         }
 
-    private:
-
         double sub_eps;
 
         unsigned long sub_max_iter;
@@ -308,5 +403,5 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-#endif // DLIB_OPTIMIZATIoN_OCA_H__
+#endif // DLIB_OPTIMIZATIoN_OCA_Hh_
 

@@ -17,7 +17,7 @@ namespace dlib
         typename in_sample_vector_type,
         typename in_scalar_vector_type
         >
-    const matrix<typename trainer_type::scalar_type, 1, 2, typename trainer_type::mem_manager_type> 
+    const matrix<double, 1, 2, typename trainer_type::mem_manager_type> 
     cross_validate_trainer_threaded (
         const trainer_type& trainer,
         const in_sample_vector_type& x,
@@ -28,9 +28,13 @@ namespace dlib
     /*!
         requires
             - is_binary_classification_problem(x,y) == true
-            - 1 < folds <= x.nr()
+            - 1 < folds <= std::min(sum(y>0),sum(y<0))
+              (e.g. There must be at least as many examples of each class as there are folds)
             - trainer_type == some kind of trainer object (e.g. svm_nu_trainer)
             - num_threads > 0
+            - It must be safe for multiple trainer objects to access the elements of x from
+              multiple threads at the same time.  Note that all trainers and kernels in
+              dlib are thread safe in this regard since they do not mutate the elements of x.
         ensures
             - performs k-fold cross validation by using the given trainer to solve the
               given binary classification problem for the given number of folds.

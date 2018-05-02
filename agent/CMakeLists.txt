@@ -1,129 +1,92 @@
-cmake_minimum_required (VERSION 2.6) 
-
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake;${CMAKE_MODULE_PATH}")
-
-set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
-set(CMAKE_FIND_APPBUNDLE NEVER)
 
 # The version number.
 set (AGENT_VERSION_MAJOR 1)
 set (AGENT_VERSION_MINOR 4)
 set (AGENT_VERSION_PATCH 0)
-set (AGENT_VERSION_BUILD 9)
-set (AGENT_VERSION_RC "RC9")
+set (AGENT_VERSION_BUILD 10)
+set (AGENT_VERSION_RC "")
 
 if(WIN32)
-  # For windows XP use: cmake -G "Visual Studio 12" -T v120_xp -D WINVER=0x0501
-  # for XP targeting
-  # For windows Vista+ use: cmake -G "Visual Studio 12" -T v120 -D WINVER=0x0601
-  # for XP targeting
+	# Version info
+	string(TIMESTAMP AGENT_VERSION_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
+	set(RESOURCE_FILE "${PROJECT_BINARY_DIR}/agent/version.rc")
+	configure_file(
+		${CMAKE_CURRENT_SOURCE_DIR}/version.rc.in
+		${RESOURCE_FILE} )
 
-  if(CMAKE_CL_64)
-    set(bits 64)
-    foreach(flag_var
-          CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-          CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-      if(${flag_var} MATCHES "WIN32")
-        string(REGEX REPLACE "32" "64" ${flag_var} "${${flag_var}}")
-      endif(${flag_var} MATCHES "WIN32")
-    endforeach(flag_var)          
-  else(CMAKE_CL_64)
-    set(bits 32)
-  endif(CMAKE_CL_64)  
-      
-  set(LibXML2_INCLUDE_DIRS ../libxml2/include ../libxml2_make/include)
-      
-  # Version info
-  string(TIMESTAMP AGENT_VERSION_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
-  set(resource_file "${PROJECT_BINARY_DIR}/agent/version.rc")
-  configure_file(
-    ${PROJECT_SOURCE_DIR}/agent/version.rc.in
-    ${resource_file})
-
-  set(WINDOWS_LIBRARIES shlwapi)
+	set(WINDOWS_LIBRARIES shlwapi)
   
-else(WIN32)
-  set(resource_file "")
-endif(WIN32)
+else()
+	set(RESOURCE_FILE "")
+endif()
 
 if(UNIX)
-  execute_process(COMMAND uname OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
-  if(CMAKE_SYSTEM_NAME MATCHES Linux)
-    set(LINUX_LIBRARIES pthread)
-  endif(CMAKE_SYSTEM_NAME MATCHES Linux)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	execute_process(COMMAND uname OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
+	if(CMAKE_SYSTEM_NAME MATCHES Linux)
+		set(LINUX_LIBRARIES pthread)
+	endif(CMAKE_SYSTEM_NAME MATCHES Linux)
 endif(UNIX)
 
 if (APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef -Wno-deprecated-declarations")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef -Wno-deprecated-declarations")
 endif(APPLE)
 
 
-project (agent)
+set(AGENT_SRCS cppagent.cpp 
+	adapter.cpp
+	asset.cpp
+	agent.cpp 
+	checkpoint.cpp
+	component.cpp 
+	component_event.cpp 
+	change_observer.cpp
+	connector.cpp
+	cutting_tool.cpp
+	data_item.cpp 
+	device.cpp 
+	globals.cpp 
+	options.cpp
+	service.cpp
+	config.cpp
+	version.cpp
+	xml_parser.cpp 
+	xml_printer.cpp
+	rolling_file_logger.cpp
+	)
 
-set(agent_srcs cppagent.cpp 
-	       adapter.cpp
-	       asset.cpp
-	       agent.cpp 
-	       checkpoint.cpp
-	       component.cpp 
-	       component_event.cpp 
-	       change_observer.cpp
-	       connector.cpp
-           cutting_tool.cpp
-	       data_item.cpp 
-	       device.cpp 
-	       globals.cpp 
-	       options.cpp
-	       service.cpp
-	       config.cpp
-           ref_counted.cpp
-           version.cpp
-	       xml_parser.cpp 
-	       xml_printer.cpp
-           rolling_file_logger.cpp)
-
-file(GLOB agent_headers *.hpp)
+file(GLOB AGENT_HEADERS *.hpp)
 
 # configure a header file to pass some of the CMake settings
 # to the source code
 add_custom_target(UPDATE_VERSION ALL
-                  COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${PROJECT_SOURCE_DIR}/version.cpp")
+				  COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/version.cpp")
 
-configure_file (
-  "${PROJECT_SOURCE_DIR}/version.h.in"
-  "${PROJECT_BINARY_DIR}/version.h"
-  )
-  
-include_directories(../lib)
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/version.h.in"
+	"${PROJECT_BINARY_DIR}/agent/version.h" )
 
-if(UNIX)
-  find_package(LibXML2 REQUIRED)
-  add_library(libxml2 UNKNOWN IMPORTED)
-  set_property(TARGET libxml2 PROPERTY IMPORTED_LOCATION ${LibXML2_LIBRARIES})
-endif(UNIX)
+# Allow better viewing and grouping of files in Visual Studio by defining source groups
+source_group("Headers Files" FILES ${AGENT_HEADERS})
+source_group("Source Files" FILES ${AGENT_SRCS})
+source_group("Resource Files" FILES ${RESOURCE_FILE})
 
+add_executable(agent
+	${AGENT_SRCS}
+	${AGENT_HEADERS}
+	${RESOURCE_FILE})
 
-add_definitions(-DDLIB_NO_GUI_SUPPORT ${LibXML2_DEFINITIONS})
-include_directories(${LibXML2_INCLUDE_DIRS} ${PROJECT_BINARY_DIR})
+AddMsvcXPSupport(agent)
+AddLibXML2Support(agent)
+AddDLibSupport(agent)
+AddDateSupport(agent)
 
-add_executable(agent ${agent_srcs} ${agent_headers} ${resource_file})
-target_link_libraries(agent ${LINUX_LIBRARIES} ${WINDOWS_LIBRARIES} libxml2)
+target_include_directories(agent
+	PRIVATE ${PROJECT_BINARY_DIR}/agent
+	)
 
-if(WIN32)
-  add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}")
+target_link_libraries(agent PRIVATE ${LINUX_LIBRARIES} PRIVATE ${WINDOWS_LIBRARIES})
 
-  foreach(flag_var
-          CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-          CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-     if(${flag_var} MATCHES "/MD")
-        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-     endif(${flag_var} MATCHES "/MD")
-  endforeach(flag_var)
-  if(NOT CMAKE_CL_64)
-    string(REGEX REPLACE "/STACK:[0-9]+" "/STACK:65536" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-  endif(NOT CMAKE_CL_64)
-endif(WIN32)
+add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}" "/DLIBXML_STATIC")
 
 INSTALL(TARGETS agent RUNTIME DESTINATION bin)
 add_dependencies(agent UPDATE_VERSION)

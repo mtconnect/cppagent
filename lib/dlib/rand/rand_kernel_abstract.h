@@ -35,6 +35,19 @@ namespace dlib
             !*/
 
             rand (
+                time_t seed_value
+            );
+            /*!
+                ensures 
+                    - #*this is properly initialized
+                    - #get_seed() == cast_to_string(seed_value) 
+                    - This version of the constructor is equivalent to using
+                      the default constructor and then calling set_seed(cast_to_string(seed_value))
+                throws
+                    - std::bad_alloc
+            !*/
+
+            rand (
                 const std::string& seed_value
             );
             /*!
@@ -120,6 +133,42 @@ namespace dlib
             /*!
                 ensures
                     - returns a random double number N where:  0.0 <= N < 1.0.
+            !*/
+
+            double get_double_in_range (
+                double begin,
+                double end
+            );
+            /*!
+                requires
+                    - begin <= end
+                ensures
+                    - if (begin < end) then
+                        - returns a random double number N where:  begin <= N < end.
+                    - else
+                        - returns begin
+            !*/
+
+            long long get_integer_in_range(
+                long long begin,
+                long long end
+            );
+            /*!
+                requires
+                    - begin <= end
+                ensures
+                    - returns a random integer selected from the range: begin <= N < end
+                      The integer is selected uniformly at random.
+            !*/
+
+            long long get_integer(
+                long long end
+            );
+            /*!
+                requires
+                    - 0 <= end
+                ensures
+                    - returns get_integer_in_range(0,end)
             !*/
 
             double get_random_gaussian (

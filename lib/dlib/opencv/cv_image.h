@@ -3,10 +3,13 @@
 #ifndef DLIB_CvIMAGE_H_
 #define DLIB_CvIMAGE_H_
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/types_c.h>
 #include "cv_image_abstract.h"
 #include "../algs.h"
 #include "../pixel.h"
 #include "../matrix/matrix_mat.h"
+#include "../image_processing/generic_image.h"
 
 namespace dlib
 {
@@ -24,7 +27,13 @@ namespace dlib
         {
             DLIB_CASSERT(img.depth() == cv::DataType<typename pixel_traits<pixel_type>::basic_pixel_type>::depth &&
                          img.channels() == pixel_traits<pixel_type>::num, 
-                         "The pixel type you gave doesn't match pixel used by the open cv Mat object.");
+                         "The pixel type you gave doesn't match pixel used by the open cv Mat object."
+                         << "\n\t img.depth():    " << img.depth() 
+                         << "\n\t img.cv::DataType<typename pixel_traits<pixel_type>::basic_pixel_type>::depth: " 
+                            << cv::DataType<typename pixel_traits<pixel_type>::basic_pixel_type>::depth 
+                         << "\n\t img.channels(): " << img.channels() 
+                         << "\n\t img.pixel_traits<pixel_type>::num: " << pixel_traits<pixel_type>::num 
+                         );
             IplImage temp = img;
             init(&temp);
         }
@@ -69,6 +78,32 @@ namespace dlib
                 );
 
             return reinterpret_cast<const pixel_type*>( _data + _widthStep*row);
+        }
+
+        inline const pixel_type& operator()(const long row, const long column) const
+        {
+          DLIB_ASSERT(0<= column && column < nc(),
+              "\tcont pixel_type& cv_image::operator()(const long rown const long column)"
+              << "\n\t you have asked for an out of bounds column "
+              << "\n\t column: " << column
+              << "\n\t nc(): " << nc()
+              << "\n\t this:  " << this
+              );
+
+          return (*this)[row][column];
+        }
+
+        inline pixel_type& operator()(const long row, const long column)
+        {
+          DLIB_ASSERT(0<= column && column < nc(),
+              "\tcont pixel_type& cv_image::operator()(const long rown const long column)"
+              << "\n\t you have asked for an out of bounds column "
+              << "\n\t column: " << column
+              << "\n\t nc(): " << nc()
+              << "\n\t this:  " << this
+              );
+
+          return (*this)[row][column];
         }
 
         long nr() const { return _nr; }
@@ -135,6 +170,51 @@ namespace dlib
     {
         typedef op_array2d_to_mat<cv_image<T> > op;
         return matrix_op<op>(op(m));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+// Define the global functions that make cv_image a proper "generic image" according to
+// ../image_processing/generic_image.h
+    template <typename T>
+    struct image_traits<cv_image<T> >
+    {
+        typedef T pixel_type;
+    };
+
+    template <typename T>
+    inline long num_rows( const cv_image<T>& img) { return img.nr(); }
+    template <typename T>
+    inline long num_columns( const cv_image<T>& img) { return img.nc(); }
+
+    template <typename T>
+    inline void* image_data(
+        cv_image<T>& img
+    )
+    {
+        if (img.size() != 0)
+            return &img[0][0];
+        else
+            return 0;
+    }
+
+    template <typename T>
+    inline const void* image_data(
+        const cv_image<T>& img
+    )
+    {
+        if (img.size() != 0)
+            return &img[0][0];
+        else
+            return 0;
+    }
+
+    template <typename T>
+    inline long width_step(
+        const cv_image<T>& img
+    ) 
+    { 
+        return img.width_step(); 
     }
 
 // ----------------------------------------------------------------------------------------

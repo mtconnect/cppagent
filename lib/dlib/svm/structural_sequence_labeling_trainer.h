@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_H__
-#define DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_H__
+#ifndef DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_Hh_
+#define DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_Hh_
 
 #include "structural_sequence_labeling_trainer_abstract.h"
 #include "../algs.h"
@@ -75,6 +75,16 @@ namespace dlib
 
         double get_epsilon (
         ) const { return eps; }
+
+        unsigned long get_max_iterations (
+        ) const { return max_iterations; }
+
+        void set_max_iterations (
+            unsigned long max_iter
+        ) 
+        {
+            max_iterations = max_iter;
+        }
 
         void set_max_cache_size (
             unsigned long max_size
@@ -215,6 +225,7 @@ namespace dlib
                 prob.be_verbose();
 
             prob.set_epsilon(eps);
+            prob.set_max_iterations(max_iterations);
             prob.set_c(C);
             prob.set_max_cache_size(max_cache_size);
             for (unsigned long i = 0; i < loss_values.size(); ++i)
@@ -230,6 +241,7 @@ namespace dlib
         double C;
         oca solver;
         double eps;
+        unsigned long max_iterations;
         bool verbose;
         unsigned long num_threads;
         unsigned long max_cache_size;
@@ -240,6 +252,7 @@ namespace dlib
             C = 100;
             verbose = false;
             eps = 0.1;
+            max_iterations = 10000;
             num_threads = 2;
             max_cache_size = 5;
             loss_values.assign(num_labels(), 1);
@@ -252,7 +265,7 @@ namespace dlib
 
 }
 
-#endif // DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_H__
+#endif // DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_Hh_
 
 
 

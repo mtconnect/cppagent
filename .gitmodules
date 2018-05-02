@@ -1,6 +1,9 @@
 [submodule "libxml2"]
 	path = libxml2
 	url = https://git.gnome.org/browse/libxml2
-[submodule "cppunit"]
-	path = cppunit
-	url = https://github.com/openlvc/cppunit.git
+[submodule "cppunit2"]
+	path = cppunit2
+	url = http://anongit.freedesktop.org/git/libreoffice/cppunit
+[submodule "date"]
+	path = date
+	url = https://github.com/HowardHinnant/date.git

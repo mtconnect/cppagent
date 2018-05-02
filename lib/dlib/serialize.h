@@ -4,9 +4,8 @@
 #define DLIB_SERIALIZe_
 
 /*!
-    There are two global functions in the dlib namespace that provide 
-    serialization and deserialization support.  Their signatures and specifications
-    are as follows:
+    There are two global functions in the dlib namespace that provide serialization and
+    deserialization support.  Their signatures and specifications are as follows:
         
         void serialize (
             const serializable_type& item,
@@ -47,12 +46,24 @@
                 - any other exception
         *!/
 
+    For convenience, you can also serialize to a file using this syntax:
+        serialize("your_file.dat") << some_object << another_object;
+
+    That overwrites the contents of your_file.dat with the serialized data from some_object
+    and another_object.  Then to recall the objects from the file you can do:
+        deserialize("your_file.dat") >> some_object >> another_object;
+
+    Finally, you can chain as many objects together using the << and >> operators as you
+    like.
+
 
     This file provides serialization support to the following object types:
         - The C++ base types (NOT including pointer types)
         - std::string
         - std::wstring
         - std::vector
+        - std::array
+        - std::deque
         - std::map
         - std::set
         - std::pair
@@ -70,6 +81,8 @@
         - std::string
         - std::wstring
         - std::vector
+        - std::array
+        - std::deque
         - std::map
         - std::set
         - std::pair
@@ -86,7 +99,7 @@
     Note that you can deserialize an integer value to any integral type (except for a 
     char type) if its value will fit into the target integer type.  I.e.  the types 
     short, int, long, unsigned short, unsigned int, unsigned long, and dlib::uint64 
-    can all receive serialized data from each other so long as the actual serizlied 
+    can all receive serialized data from each other so long as the actual serialized 
     value fits within the receiving integral type's range.
 
     Also note that for any container to be serializable the type of object it contains 
@@ -131,17 +144,20 @@
 #include <iomanip>
 #include <cstddef>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
+#include <array>
+#include <deque>
 #include <complex>
 #include <map>
+#include <memory>
 #include <set>
 #include <limits>
 #include "uintn.h"
 #include "interfaces/enumerable.h"
 #include "interfaces/map_pair.h"
 #include "enable_if.h"
-#include "unicode.h"
 #include "unicode.h"
 #include "byte_orderer.h"
 #include "float_details.h"
@@ -261,7 +277,7 @@ namespace dlib
             size &= 0x0F;
             
             // check if the serialized object is too big
-            if (size > sizeof(T))
+            if (size > (unsigned long)tmin<sizeof(T),8>::value || size == 0)
             {
                 return true;
             }
@@ -375,7 +391,7 @@ namespace dlib
             size &= 0x8F;
 
             // check if an error occurred 
-            if (size > sizeof(T)) 
+            if (size > (unsigned long)tmin<sizeof(T),8>::value || size == 0)
                 return true;
            
 
@@ -642,6 +658,18 @@ namespace dlib
         std::istream& in
     );
 
+    template <typename T, typename alloc>
+    void serialize (
+        const std::deque<T,alloc>& item,
+        std::ostream& out
+    );
+
+    template <typename T, typename alloc>
+    void deserialize (
+        std::deque<T,alloc>& item,
+        std::istream& in
+    );
+
     inline void serialize (
         const std::string& item,
         std::ostream& out
@@ -649,6 +677,26 @@ namespace dlib
 
     inline void deserialize (
         std::string& item,
+        std::istream& in
+    );
+
+    inline void serialize (
+        const std::wstring& item,
+        std::ostream& out
+    );
+
+    inline void deserialize (
+        std::wstring& item,
+        std::istream& in
+    );
+
+    inline void serialize (
+        const ustring& item,
+        std::ostream& out
+    );
+
+    inline void deserialize (
+        ustring& item,
         std::istream& in
     );
 
@@ -1007,6 +1055,44 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename T, typename alloc>
+    void serialize (
+        const std::deque<T,alloc>& item,
+        std::ostream& out
+    )
+    {
+        try
+        { 
+            const unsigned long size = static_cast<unsigned long>(item.size());
+
+            serialize(size,out); 
+            for (unsigned long i = 0; i < item.size(); ++i)
+                serialize(item[i],out);
+        }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while serializing object of type std::deque"); }
+    }
+
+    template <typename T, typename alloc>
+    void deserialize (
+        std::deque<T, alloc>& item,
+        std::istream& in
+    )
+    {
+        try 
+        { 
+            unsigned long size;
+            deserialize(size,in); 
+            item.resize(size);
+            for (unsigned long i = 0; i < size; ++i)
+                deserialize(item[i],in);
+        }
+        catch (serialization_error& e)
+        { throw serialization_error(e.info + "\n   while deserializing object of type std::deque"); }
+    }
+
+// ----------------------------------------------------------------------------------------
+
     inline void serialize (
         const std::string& item,
         std::ostream& out
@@ -1176,6 +1262,41 @@ namespace dlib
         }
     }
 
+    template <
+        size_t length
+        >
+    inline void serialize (
+        const char (&array)[length],
+        std::ostream& out
+    )
+    {
+        if (length != 0 && array[length-1] == '\0')
+        {
+            // If this is a null terminated string then don't serialize the trailing null.
+            // We do this so that the serialization format for C-strings is the same as
+            // std::string.
+            serialize(length-1, out);
+            out.write(array, length-1);
+            if (!out)
+                throw serialization_error("Error serializing a C-style string");
+        }
+        else 
+        {
+            try
+            {
+                serialize(length,out);
+            }
+            catch (serialization_error& e)
+            {
+                throw serialization_error(e.info + "\n   while serializing a C style array");
+            }
+            if (length != 0)
+                out.write(array, length);
+            if (!out)
+                throw serialization_error("Error serializing a C-style string");
+        }
+    }
+
 // ----------------------------------------------------------------------------------------
 
     template <
@@ -1204,6 +1325,103 @@ namespace dlib
 
         if (size != length)
             throw serialization_error("Error deserializing a C style array, lengths do not match");
+    }
+
+    template <
+        size_t length
+        >
+    inline void deserialize (
+        char (&array)[length],
+        std::istream& in
+    )
+    {
+        size_t size;
+        try
+        {
+            deserialize(size,in); 
+        }
+        catch (serialization_error& e)
+        {
+            throw serialization_error(e.info + "\n   while deserializing a C style array");
+        }
+
+        if (size == length)
+        {
+            in.read(array, size);
+            if (!in)
+                throw serialization_error("Error deserializing a C-style array");
+        }
+        else if (size+1 == length)
+        {
+            // In this case we are deserializing a C-style array so we need to add the null
+            // terminator.
+            in.read(array, size);
+            array[size] = '\0';
+            if (!in)
+                throw serialization_error("Error deserializing a C-style string");
+        }
+        else
+        {
+            throw serialization_error("Error deserializing a C style array, lengths do not match");
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T,
+        size_t N
+        >
+    inline void serialize (
+        const std::array<T,N>& array,
+        std::ostream& out
+    )
+    {
+        typedef T c_array_type[N];
+        serialize(*(const c_array_type*)array.data(), out);
+    }
+
+    template <
+        typename T,
+        size_t N
+        >
+    inline void deserialize (
+        std::array<T,N>& array,
+        std::istream& in 
+    )
+    {
+        typedef T c_array_type[N];
+        deserialize(*(c_array_type*)array.data(), in);
+    }
+
+    template <
+        typename T
+        >
+    inline void serialize (
+        const std::array<T,0>& /*array*/,
+        std::ostream& out
+    )
+    {
+        size_t N = 0;
+        serialize(N, out);
+    }
+
+    template <
+        typename T
+        >
+    inline void deserialize (
+        std::array<T,0>& /*array*/,
+        std::istream& in 
+    )
+    {
+        size_t N;
+        deserialize(N, in);
+        if (N != 0)
+        {
+            std::ostringstream sout;
+            sout << "Expected std::array of size 0 but found a size of " << N;
+            throw serialization_error(sout.str());
+        }
     }
 
 // ----------------------------------------------------------------------------------------
@@ -1251,6 +1469,125 @@ namespace dlib
     }
 
 // ----------------------------------------------------------------------------------------
+
+    class proxy_serialize 
+    {
+    public:
+        explicit proxy_serialize (
+            const std::string& filename
+        ) 
+        {
+            fout.reset(new std::ofstream(filename.c_str(), std::ios::binary));
+            if (!(*fout))
+                throw serialization_error("Unable to open " + filename + " for writing.");
+        }
+
+        template <typename T>
+        inline proxy_serialize& operator<<(const T& item)
+        {
+            serialize(item, *fout);
+            return *this;
+        }
+
+    private:
+        std::shared_ptr<std::ofstream> fout;
+    };
+
+    class proxy_deserialize 
+    {
+    public:
+        explicit proxy_deserialize (
+            const std::string& filename
+        )  : filename(filename)
+        {
+            fin.reset(new std::ifstream(filename.c_str(), std::ios::binary));
+            if (!(*fin))
+                throw serialization_error("Unable to open " + filename + " for reading.");
+
+            // read the file header into a buffer and then seek back to the start of the
+            // file.
+            fin->read(file_header,4);
+            fin->clear();
+            fin->seekg(0);
+        }
+
+        template <typename T>
+        inline proxy_deserialize& operator>>(T& item)
+        {
+            try
+            {
+                if (fin->peek() == EOF)
+                    throw serialization_error("No more objects were in the file!");
+                deserialize(item, *fin);
+            }
+            catch (serialization_error& e)
+            {
+                std::string suffix;
+                if (looks_like_a_compressed_file())
+                    suffix = "\n *** THIS LOOKS LIKE A COMPRESSED FILE.  DID YOU FORGET TO DECOMPRESS IT? *** \n";
+
+                if (objects_read == 0)
+                {
+                    throw serialization_error("An error occurred while trying to read the first" 
+                        " object from the file " + filename + ".\nERROR: " + e.info + "\n" + suffix);
+                }
+                else if (objects_read == 1)
+                {
+                    throw serialization_error("An error occurred while trying to read the second" 
+                        " object from the file " + filename +
+                        ".\nERROR: " + e.info + "\n" + suffix);
+                }
+                else if (objects_read == 2)
+                {
+                    throw serialization_error("An error occurred while trying to read the third" 
+                        " object from the file " + filename +
+                        ".\nERROR: " + e.info + "\n" + suffix);
+                }
+                else 
+                {
+                    throw serialization_error("An error occurred while trying to read the " +
+                        std::to_string(objects_read+1) + "th object from the file " + filename +
+                        ".\nERROR: " + e.info + "\n" + suffix);
+                }
+            }
+            ++objects_read;
+            return *this;
+        }
+
+    private:
+        int objects_read = 0;
+        std::string filename;
+        std::shared_ptr<std::ifstream> fin;
+
+        // We don't need to look at the file header.  However, it's here because people
+        // keep posting questions to the dlib forums asking why they get file load errors.
+        // Then it turns out that the problem is they have a compressed file that NEEDS TO
+        // BE DECOMPRESSED by bzip2 or whatever and the reason they are getting
+        // deserialization errors is because they didn't decompress the file.  So we are
+        // going to check if this file looks like a compressed file and if so then emit an
+        // error message telling them to unzip the file. :(
+        char file_header[4] = {0,0,0,0};
+
+        bool looks_like_a_compressed_file(
+        ) const 
+        {
+            if (file_header[0] == 'B' && file_header[1] == 'Z' && file_header[2] == 'h' &&
+                ('0' <= file_header[3] && file_header[3] <= '9') )
+            {
+                return true;
+            }
+
+            return false;
+        }
+    };
+
+    inline proxy_serialize serialize(const std::string& filename)
+    { return proxy_serialize(filename); }
+    inline proxy_deserialize deserialize(const std::string& filename)
+    { return proxy_deserialize(filename); }
+
+// ----------------------------------------------------------------------------------------
+
 }
 
 // forward declare the MessageLite object so we can reference it below.

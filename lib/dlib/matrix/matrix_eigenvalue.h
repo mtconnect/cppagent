@@ -141,13 +141,13 @@ namespace dlib
     template <typename EXP>
     eigenvalue_decomposition<matrix_exp_type>::
     eigenvalue_decomposition(
-        const matrix_exp<EXP>& A__
+        const matrix_exp<EXP>& A_
     ) 
     {
         COMPILE_TIME_ASSERT((is_same_type<type, typename EXP::type>::value));
 
 
-        const_temp_matrix<EXP> A(A__);
+        const_temp_matrix<EXP> A(A_);
 
         // make sure requires clause is not broken
         DLIB_ASSERT(A.nr() == A.nc() && A.size() > 0,
@@ -193,6 +193,7 @@ namespace dlib
 
                 lapack::integer temp;
                 lapack::syevr('V','A','L',tempA,0,0,0,0,-1,temp,d,V,isupz);
+                return;
             }
 #endif
             // Tridiagonalize.
@@ -611,7 +612,7 @@ namespace dlib
 
                     type g = d(l);
                     type p = (d(l+1) - g) / (2.0 * e(l));
-                    type r = hypot(p,1.0);
+                    type r = hypot(p,(type)1.0);
                     if (p < 0) 
                     {
                         r = -r;

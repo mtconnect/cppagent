@@ -1,6 +1,9 @@
 // Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
 
+// This is a legacy test for old dlib smart pointers which is excluded
+// from CMakeLists.txt. Including this test will pull legacy smart_pointers.h
+// code which is uncompilable on C++17 compilers
 
 #include <dlib/smart_pointers.h>
 #include <sstream>
@@ -9,6 +12,12 @@
 #include <ctime>
 
 #include "tester.h"
+
+// Don't warn about auto_ptr 
+#if (defined(__GNUC__) && ((__GNUC__ >= 4 && __GNUC_MINOR__ >= 6) || (__GNUC__ > 4))) || \
+    (defined(__clang__) && ((__clang_major__ >= 3 && __clang_minor__ >= 4)))
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 namespace  
 {
@@ -220,10 +229,10 @@ namespace
             DLIB_TEST(p11.unique() == false);
 
             // now p11, p2, and p22 all reference the same thing and the rest are null
-            DLIB_TEST_MSG((p11 < p2) == false,"")
-                DLIB_TEST_MSG((p2 < p11) == false,"")
+            DLIB_TEST_MSG((p11 < p2) == false,"");
+            DLIB_TEST_MSG((p2 < p11) == false,"");
 
-                DLIB_TEST(get_deleter<D>(p4) == 0);
+            DLIB_TEST(get_deleter<D>(p4) == 0);
             p4 = p2;
             DLIB_TEST(get_deleter<D>(p4) != 0);
             DLIB_TEST(get_deleter<D>(p4) == get_deleter<D>(p2));

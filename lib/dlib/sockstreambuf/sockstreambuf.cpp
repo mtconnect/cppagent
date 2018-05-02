@@ -118,7 +118,7 @@ namespace dlib
             }
         }
 
-        int  num = con.read(in_buffer+max_putback, in_buffer_size-max_putback, timeout);
+        int num = con.read(in_buffer+max_putback, in_buffer_size-max_putback);
         if (num <= 0)
         {
             // an error occurred or the connection is over which is EOF

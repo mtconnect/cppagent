@@ -127,6 +127,76 @@ namespace dlib
     template <
         typename EXP
         >
+    point max_point (
+        const matrix_exp<EXP>& m
+    )
+    {
+        DLIB_ASSERT(m.size() > 0, 
+            "\tpoint max_point(const matrix_exp& m)"
+            << "\n\tm can't be empty"
+            << "\n\tm.size():   " << m.size() 
+            << "\n\tm.nr():     " << m.nr() 
+            << "\n\tm.nc():     " << m.nc() 
+            );
+        typedef typename matrix_exp<EXP>::type type;
+
+        point best_point(0,0);
+        type val = m(0,0);
+        for (long r = 0; r < m.nr(); ++r)
+        {
+            for (long c = 0; c < m.nc(); ++c)
+            {
+                type temp = m(r,c);
+                if (dlib::impl::magnitude(temp) > dlib::impl::magnitude(val))
+                {
+                    val = temp;
+                    best_point = point(c,r);
+                }
+            }
+        }
+        return best_point;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP
+        >
+    point min_point (
+        const matrix_exp<EXP>& m
+    )
+    {
+        DLIB_ASSERT(m.size() > 0, 
+            "\tpoint min_point(const matrix_exp& m)"
+            << "\n\tm can't be empty"
+            << "\n\tm.size():   " << m.size() 
+            << "\n\tm.nr():     " << m.nr() 
+            << "\n\tm.nc():     " << m.nc() 
+            );
+        typedef typename matrix_exp<EXP>::type type;
+
+        point best_point(0,0);
+        type val = m(0,0);
+        for (long r = 0; r < m.nr(); ++r)
+        {
+            for (long c = 0; c < m.nc(); ++c)
+            {
+                type temp = m(r,c);
+                if (dlib::impl::magnitude(temp) < dlib::impl::magnitude(val))
+                {
+                    val = temp;
+                    best_point = point(c,r);
+                }
+            }
+        }
+        return best_point;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename EXP
+        >
     long index_of_max (
         const matrix_exp<EXP>& m
     )
@@ -242,6 +312,188 @@ namespace dlib
             }
         }
         return val;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename M1, typename M2>
+    struct op_binary_min : basic_op_mm<M1,M2>
+    {
+        op_binary_min( const M1& m1_, const M2& m2_) : basic_op_mm<M1,M2>(m1_,m2_){}
+
+        typedef typename M1::type type;
+        typedef const type const_ret_type;
+        const static long cost = M1::cost + M2::cost + 1;
+
+        const_ret_type apply ( long r, long c) const
+        { return std::min(this->m1(r,c),this->m2(r,c)); }
+    };
+
+    template <
+        typename EXP1,
+        typename EXP2
+        >
+    inline const matrix_op<op_binary_min<EXP1,EXP2> > min_pointwise (
+        const matrix_exp<EXP1>& a,
+        const matrix_exp<EXP2>& b 
+    )
+    {
+        COMPILE_TIME_ASSERT((is_same_type<typename EXP1::type,typename EXP2::type>::value == true));
+        COMPILE_TIME_ASSERT(EXP1::NR == EXP2::NR || EXP1::NR == 0 || EXP2::NR == 0);
+        COMPILE_TIME_ASSERT(EXP1::NC == EXP2::NC || EXP1::NC == 0 || EXP2::NC == 0);
+        DLIB_ASSERT(a.nr() == b.nr() &&
+               a.nc() == b.nc(), 
+            "\t const matrix_exp min_pointwise(const matrix_exp& a, const matrix_exp& b)"
+            << "\n\ta.nr(): " << a.nr()
+            << "\n\ta.nc(): " << a.nc() 
+            << "\n\tb.nr(): " << b.nr()
+            << "\n\tb.nc(): " << b.nc() 
+            );
+        typedef op_binary_min<EXP1,EXP2> op;
+        return matrix_op<op>(op(a.ref(),b.ref()));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename M1, typename M2, typename M3>
+    struct op_min_pointwise3 : basic_op_mmm<M1,M2,M3>
+    {
+        op_min_pointwise3( const M1& m1_, const M2& m2_, const M3& m3_) : 
+            basic_op_mmm<M1,M2,M3>(m1_,m2_,m3_){}
+
+        typedef typename M1::type type;
+        typedef const typename M1::type const_ret_type;
+        const static long cost = M1::cost + M2::cost + M3::cost + 2;
+
+        const_ret_type apply (long r, long c) const
+        { return std::min(this->m1(r,c),std::min(this->m2(r,c),this->m3(r,c))); }
+    };
+
+    template <
+        typename EXP1,
+        typename EXP2,
+        typename EXP3
+        >
+    inline const matrix_op<op_min_pointwise3<EXP1,EXP2,EXP3> > 
+    min_pointwise (
+        const matrix_exp<EXP1>& a,
+        const matrix_exp<EXP2>& b, 
+        const matrix_exp<EXP3>& c
+    )
+    {
+        COMPILE_TIME_ASSERT((is_same_type<typename EXP1::type,typename EXP2::type>::value == true));
+        COMPILE_TIME_ASSERT((is_same_type<typename EXP2::type,typename EXP3::type>::value == true));
+        COMPILE_TIME_ASSERT(EXP1::NR == EXP2::NR || EXP1::NR == 0 || EXP2::NR == 0);
+        COMPILE_TIME_ASSERT(EXP1::NC == EXP2::NC || EXP1::NR == 0 || EXP2::NC == 0);
+        COMPILE_TIME_ASSERT(EXP2::NR == EXP3::NR || EXP2::NR == 0 || EXP3::NR == 0);
+        COMPILE_TIME_ASSERT(EXP2::NC == EXP3::NC || EXP2::NC == 0 || EXP3::NC == 0);
+        DLIB_ASSERT(a.nr() == b.nr() &&
+               a.nc() == b.nc() &&
+               b.nr() == c.nr() &&
+               b.nc() == c.nc(), 
+            "\tconst matrix_exp min_pointwise(a,b,c)"
+            << "\n\tYou can only make a do a pointwise min between equally sized matrices"
+            << "\n\ta.nr(): " << a.nr()
+            << "\n\ta.nc(): " << a.nc() 
+            << "\n\tb.nr(): " << b.nr()
+            << "\n\tb.nc(): " << b.nc() 
+            << "\n\tc.nr(): " << c.nr()
+            << "\n\tc.nc(): " << c.nc() 
+            );
+
+        typedef op_min_pointwise3<EXP1,EXP2,EXP3> op;
+        return matrix_op<op>(op(a.ref(),b.ref(),c.ref()));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename M1, typename M2>
+    struct op_binary_max : basic_op_mm<M1,M2>
+    {
+        op_binary_max( const M1& m1_, const M2& m2_) : basic_op_mm<M1,M2>(m1_,m2_){}
+
+        typedef typename M1::type type;
+        typedef const type const_ret_type;
+        const static long cost = M1::cost + M2::cost + 1;
+
+        const_ret_type apply ( long r, long c) const
+        { return std::max(this->m1(r,c),this->m2(r,c)); }
+    };
+
+    template <
+        typename EXP1,
+        typename EXP2
+        >
+    inline const matrix_op<op_binary_max<EXP1,EXP2> > max_pointwise (
+        const matrix_exp<EXP1>& a,
+        const matrix_exp<EXP2>& b 
+    )
+    {
+        COMPILE_TIME_ASSERT((is_same_type<typename EXP1::type,typename EXP2::type>::value == true));
+        COMPILE_TIME_ASSERT(EXP1::NR == EXP2::NR || EXP1::NR == 0 || EXP2::NR == 0);
+        COMPILE_TIME_ASSERT(EXP1::NC == EXP2::NC || EXP1::NC == 0 || EXP2::NC == 0);
+        DLIB_ASSERT(a.nr() == b.nr() &&
+               a.nc() == b.nc(), 
+            "\t const matrix_exp max_pointwise(const matrix_exp& a, const matrix_exp& b)"
+            << "\n\ta.nr(): " << a.nr()
+            << "\n\ta.nc(): " << a.nc() 
+            << "\n\tb.nr(): " << b.nr()
+            << "\n\tb.nc(): " << b.nc() 
+            );
+        typedef op_binary_max<EXP1,EXP2> op;
+        return matrix_op<op>(op(a.ref(),b.ref()));
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename M1, typename M2, typename M3>
+    struct op_max_pointwise3 : basic_op_mmm<M1,M2,M3>
+    {
+        op_max_pointwise3( const M1& m1_, const M2& m2_, const M3& m3_) : 
+            basic_op_mmm<M1,M2,M3>(m1_,m2_,m3_){}
+
+        typedef typename M1::type type;
+        typedef const typename M1::type const_ret_type;
+        const static long cost = M1::cost + M2::cost + M3::cost + 2;
+
+        const_ret_type apply (long r, long c) const
+        { return std::max(this->m1(r,c),std::max(this->m2(r,c),this->m3(r,c))); }
+    };
+
+    template <
+        typename EXP1,
+        typename EXP2,
+        typename EXP3
+        >
+    inline const matrix_op<op_max_pointwise3<EXP1,EXP2,EXP3> > 
+    max_pointwise (
+        const matrix_exp<EXP1>& a,
+        const matrix_exp<EXP2>& b, 
+        const matrix_exp<EXP3>& c
+    )
+    {
+        COMPILE_TIME_ASSERT((is_same_type<typename EXP1::type,typename EXP2::type>::value == true));
+        COMPILE_TIME_ASSERT((is_same_type<typename EXP2::type,typename EXP3::type>::value == true));
+        COMPILE_TIME_ASSERT(EXP1::NR == EXP2::NR || EXP1::NR == 0 || EXP2::NR == 0);
+        COMPILE_TIME_ASSERT(EXP1::NC == EXP2::NC || EXP1::NR == 0 || EXP2::NC == 0);
+        COMPILE_TIME_ASSERT(EXP2::NR == EXP3::NR || EXP2::NR == 0 || EXP3::NR == 0);
+        COMPILE_TIME_ASSERT(EXP2::NC == EXP3::NC || EXP2::NC == 0 || EXP3::NC == 0);
+        DLIB_ASSERT(a.nr() == b.nr() &&
+               a.nc() == b.nc() &&
+               b.nr() == c.nr() &&
+               b.nc() == c.nc(), 
+            "\tconst matrix_exp max_pointwise(a,b,c)"
+            << "\n\tYou can only make a do a pointwise max between equally sized matrices"
+            << "\n\ta.nr(): " << a.nr()
+            << "\n\ta.nc(): " << a.nc() 
+            << "\n\tb.nr(): " << b.nr()
+            << "\n\tb.nc(): " << b.nc() 
+            << "\n\tc.nr(): " << c.nr()
+            << "\n\tc.nc(): " << c.nc() 
+            );
+
+        typedef op_max_pointwise3<EXP1,EXP2,EXP3> op;
+        return matrix_op<op>(op(a.ref(),b.ref(),c.ref()));
     }
 
 // ----------------------------------------------------------------------------------------
@@ -1347,6 +1599,16 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <typename EXP>
+    constexpr bool is_row_major (
+        const matrix_exp<EXP>&
+    )
+    {
+        return is_same_type<typename EXP::layout_type,row_major_layout>::value;
+    }
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename EXP
         >
@@ -1357,11 +1619,24 @@ namespace dlib
         typedef typename matrix_exp<EXP>::type type;
 
         type val = 0;
-        for (long r = 0; r < m.nr(); ++r)
+        if (is_row_major(m))
+        {
+            for (long r = 0; r < m.nr(); ++r)
+            {
+                for (long c = 0; c < m.nc(); ++c)
+                {
+                    val += m(r,c);
+                }
+            }
+        }
+        else
         {
             for (long c = 0; c < m.nc(); ++c)
             {
-                val += m(r,c);
+                for (long r = 0; r < m.nr(); ++r)
+                {
+                    val += m(r,c);
+                }
             }
         }
         return val;
@@ -1608,7 +1883,7 @@ namespace dlib
         typename visual_studio_sucks_cov_helper<EXP>::type cov(m(0).nr(),m(0).nr());
         set_all_elements(cov,0);
 
-        const matrix<double,EXP::type::NR,EXP::type::NC, typename EXP::mem_manager_type> avg = mean(m);
+        const typename EXP::type avg = mean(m);
 
         for (long r = 0; r < m.nr(); ++r)
         {
@@ -1677,7 +1952,7 @@ namespace dlib
         const T& val
     )
     {
-        DLIB_ASSERT(nr > 0 && nc > 0, 
+        DLIB_ASSERT(nr >= 0 && nc >= 0, 
             "\tconst matrix_exp uniform_matrix<T>(nr, nc, val)"
             << "\n\tnr and nc have to be bigger than 0"
             << "\n\tnr: " << nr
@@ -1697,9 +1972,9 @@ namespace dlib
         long nc
     )
     {
-        DLIB_ASSERT(nr > 0 && nc > 0, 
+        DLIB_ASSERT(nr >= 0 && nc >= 0, 
             "\tconst matrix_exp zeros_matrix<T>(nr, nc)"
-            << "\n\tnr and nc have to be bigger than 0"
+            << "\n\tnr and nc have to be >= 0"
             << "\n\tnr: " << nr
             << "\n\tnc: " << nc
             );
@@ -1716,9 +1991,9 @@ namespace dlib
         const matrix_exp<EXP>& mat
     )
     {
-        DLIB_ASSERT(mat.nr() > 0 && mat.nc() > 0, 
+        DLIB_ASSERT(mat.nr() >= 0 && mat.nc() >= 0, 
             "\tconst matrix_exp zeros_matrix(mat)"
-            << "\n\t nr and nc have to be bigger than 0"
+            << "\n\t nr and nc have to be >= 0"
             << "\n\t mat.nr(): " << mat.nr()
             << "\n\t mat.nc(): " << mat.nc()
             );
@@ -1737,9 +2012,9 @@ namespace dlib
         long nc
     )
     {
-        DLIB_ASSERT(nr > 0 && nc > 0, 
+        DLIB_ASSERT(nr >= 0 && nc >= 0, 
             "\tconst matrix_exp ones_matrix<T>(nr, nc)"
-            << "\n\tnr and nc have to be bigger than 0"
+            << "\n\tnr and nc have to be >= 0"
             << "\n\tnr: " << nr
             << "\n\tnc: " << nc
             );
@@ -1756,9 +2031,9 @@ namespace dlib
         const matrix_exp<EXP>& mat
     )
     {
-        DLIB_ASSERT(mat.nr() > 0 && mat.nc() > 0, 
+        DLIB_ASSERT(mat.nr() >= 0 && mat.nc() >= 0, 
             "\tconst matrix_exp ones_matrix(mat)"
-            << "\n\t nr and nc have to be bigger than 0"
+            << "\n\t nr and nc have to be >= 0"
             << "\n\t mat.nr(): " << mat.nr()
             << "\n\t mat.nc(): " << mat.nc()
             );
@@ -1945,12 +2220,16 @@ namespace dlib
     };
 
     template <
-        typename T
+        typename T,
+        typename U
         >
     const matrix_diag_op<op_identity_matrix_2<T> > identity_matrix (
-        const long& size 
+        const U& size 
     )
     {
+        // the size argument must be some scalar value, not a matrix!
+        COMPILE_TIME_ASSERT(is_matrix<U>::value == false);
+
         DLIB_ASSERT(size > 0, 
             "\tconst matrix_exp identity_matrix<T>(size)"
             << "\n\tsize must be bigger than 0"
@@ -2499,7 +2778,8 @@ namespace dlib
             pixel_traits<P>::grayscale,
             pixel_traits<P>::rgb,
             pixel_traits<P>::hsi,
-            pixel_traits<P>::rgb_alpha
+            pixel_traits<P>::rgb_alpha,
+            pixel_traits<P>::lab
             >::value
         >
     struct pixel_to_vector_helper;
@@ -2563,6 +2843,21 @@ namespace dlib
         }
     };
 
+    template <typename P>
+    struct pixel_to_vector_helper<P,5>
+    {
+        template <typename M>
+        static void assign (
+                M& m,
+                const P& pixel
+        )
+        {
+            m(0) = static_cast<typename M::type>(pixel.l);
+            m(1) = static_cast<typename M::type>(pixel.a);
+            m(2) = static_cast<typename M::type>(pixel.b);
+        }
+    };
+
 
     template <
         typename T,
@@ -2586,7 +2881,8 @@ namespace dlib
             pixel_traits<P>::grayscale,
             pixel_traits<P>::rgb,
             pixel_traits<P>::hsi,
-            pixel_traits<P>::rgb_alpha
+            pixel_traits<P>::rgb_alpha,
+            pixel_traits<P>::lab
             >::value
         >
     struct vector_to_pixel_helper;
@@ -2647,6 +2943,21 @@ namespace dlib
             pixel.green = static_cast<unsigned char>(m(1));
             pixel.blue = static_cast<unsigned char>(m(2));
             pixel.alpha = static_cast<unsigned char>(m(3));
+        }
+    };
+
+    template <typename P>
+    struct vector_to_pixel_helper<P,5>
+    {
+        template <typename M>
+        static void assign (
+                P& pixel,
+                const M& m
+        )
+        {
+            pixel.l = static_cast<unsigned char>(m(0));
+            pixel.a = static_cast<unsigned char>(m(1));
+            pixel.b = static_cast<unsigned char>(m(2));
         }
     };
 
@@ -3899,12 +4210,58 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    template <
+        typename T,
+        long NR_,
+        long NC_,
+        typename MM
+        >
+    struct op_mat_to_vect2
+    {
+        typedef matrix<T,NR_,NC_,MM,row_major_layout> M;
+        op_mat_to_vect2(const M& m_) : m(m_) {}
+        const M& m;
+
+        const static long cost = M::cost+2;
+        const static long NR = M::NC*M::NR;
+        const static long NC = 1;
+        typedef typename M::type type;
+        typedef typename M::const_ret_type const_ret_type;
+        typedef typename M::mem_manager_type mem_manager_type;
+        typedef typename M::layout_type layout_type;
+
+        const_ret_type apply ( long r, long ) const { return (&m(0,0))[r]; }
+
+        long nr () const { return m.size(); }
+        long nc () const { return 1; }
+
+        template <typename U> bool aliases               ( const matrix_exp<U>& item) const { return m.aliases(item); }
+        template <typename U> bool destructively_aliases ( const matrix_exp<U>& item) const { return m.aliases(item); }
+    }; 
+
+    template <
+        typename T,
+        long NR,
+        long NC,
+        typename MM
+        >
+    const matrix_op<op_mat_to_vect2<T,NR,NC,MM> > reshape_to_column_vector (
+        const matrix<T,NR,NC,MM,row_major_layout>& m
+    )
+    {
+        typedef op_mat_to_vect2<T,NR,NC,MM> op;
+        return matrix_op<op>(op(m.ref()));
+    }
+
+// ----------------------------------------------------------------------------------------
+
     template <typename M1, typename M2>
     struct op_join_rows 
     {
-        op_join_rows(const M1& m1_, const M2& m2_) : m1(m1_),m2(m2_) {}
+        op_join_rows(const M1& m1_, const M2& m2_) : m1(m1_),m2(m2_),_nr(std::max(m1.nr(),m2.nr())) {}
         const M1& m1;
         const M2& m2;
+        const long _nr;
 
         template <typename T, typename U, bool selection>
         struct type_selector;
@@ -3935,7 +4292,7 @@ namespace dlib
                 return m2(r,c-m1.nc());
         }
 
-        long nr () const { return m1.nr(); }
+        long nr () const { return _nr; }
         long nc () const { return m1.nc()+m2.nc(); }
 
         template <typename U> bool aliases               ( const matrix_exp<U>& item) const 
@@ -3958,11 +4315,13 @@ namespace dlib
         // don't have the same number of rows
         COMPILE_TIME_ASSERT(EXP1::NR == EXP2::NR || (EXP1::NR*EXP2::NR == 0));
 
-        DLIB_ASSERT(a.nr() == b.nr(),
+        DLIB_ASSERT(a.nr() == b.nr() || a.size() == 0 || b.size() == 0,
             "\tconst matrix_exp join_rows(const matrix_exp& a, const matrix_exp& b)"
             << "\n\tYou can only use join_rows() if both matrices have the same number of rows"
             << "\n\ta.nr(): " << a.nr()
             << "\n\tb.nr(): " << b.nr()
+            << "\n\ta.nc(): " << a.nc()
+            << "\n\tb.nc(): " << b.nc()
             );
 
         typedef op_join_rows<EXP1,EXP2> op;
@@ -3974,9 +4333,10 @@ namespace dlib
     template <typename M1, typename M2>
     struct op_join_cols 
     {
-        op_join_cols(const M1& m1_, const M2& m2_) : m1(m1_),m2(m2_) {}
+        op_join_cols(const M1& m1_, const M2& m2_) : m1(m1_),m2(m2_),_nc(std::max(m1.nc(),m2.nc())) {}
         const M1& m1;
         const M2& m2;
+        const long _nc;
 
         template <typename T, typename U, bool selection>
         struct type_selector;
@@ -4010,7 +4370,8 @@ namespace dlib
         }
 
         long nr () const { return m1.nr()+m2.nr(); }
-        long nc () const { return m1.nc(); }
+        long nc () const { return _nc; }
+
 
         template <typename U> bool aliases               ( const matrix_exp<U>& item) const 
         { return m1.aliases(item) || m2.aliases(item); }
@@ -4032,9 +4393,11 @@ namespace dlib
         // don't have the same number of columns 
         COMPILE_TIME_ASSERT(EXP1::NC == EXP2::NC || (EXP1::NC*EXP2::NC == 0));
 
-        DLIB_ASSERT(a.nc() == b.nc(),
+        DLIB_ASSERT(a.nc() == b.nc() || a.size() == 0 || b.size() == 0,
             "\tconst matrix_exp join_cols(const matrix_exp& a, const matrix_exp& b)"
             << "\n\tYou can only use join_cols() if both matrices have the same number of columns"
+            << "\n\ta.nr(): " << a.nr()
+            << "\n\tb.nr(): " << b.nr()
             << "\n\ta.nc(): " << a.nc()
             << "\n\tb.nc(): " << b.nc()
             );
