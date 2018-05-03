@@ -2039,10 +2039,10 @@ void AgentTest::testInitialTimeSeriesValues()
   }
 }
 
-void AgentTest::testFilterValues()
+void AgentTest::testFilterValues13()
 {
   delete a;
-  a = new Agent("../samples/filter_example.xml", 8, 4, 25);
+  a = new Agent("../samples/filter_example_1.3.xml", 8, 4, 25);
   
   adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(adapter);
@@ -2051,7 +2051,7 @@ void AgentTest::testFilterValues()
     
   {
     PARSE_XML_RESPONSE;
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
   }
   
   adapter->processData("TIME|load|100");
@@ -2089,6 +2089,148 @@ void AgentTest::testFilterValues()
   CPPUNIT_ASSERT(!item->isFiltered(0.0, NAN));
   CPPUNIT_ASSERT(item->isFiltered(5.0, NAN));
   CPPUNIT_ASSERT(!item->isFiltered(20.0, NAN));
+}
+
+void AgentTest::testFilterValues()
+{
+	delete a;
+	a = new Agent("../samples/filter_example.xml", 8, 4, 25);
+
+	adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+	CPPUNIT_ASSERT(adapter);
+
+	path = "/sample";
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+	}
+
+	adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+	}
+
+	adapter->processData("2018-04-27T05:00:32.000666|load|103|pos|25");
+	adapter->processData("2018-04-27T05:00:36.888666|load|106|pos|30");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+	}
+
+	adapter->processData("2018-04-27T05:00:40.25|load|106|load|108|load|112|pos|35|pos|40");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+	}
+
+	adapter->processData("2018-04-27T05:00:47.50|pos|45|pos|50");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[4]", "45");
+	}
+
+	// Test period filter with ignore timestamps
+	delete a;
+	a = new Agent("../samples/filter_example.xml", 8, 4, 25);
+
+	adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+	adapter->setIgnoreTimestamps(true);
+	CPPUNIT_ASSERT(adapter);
+
+	path = "/sample";
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+	}
+
+	adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+	}
+
+	adapter->processData("2018-04-27T05:01:32.000666|load|103|pos|25");
+	dlib::sleep(11*1000);
+	adapter->processData("2018-04-27T05:01:40.888666|load|106|pos|30");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+	}
+
+	// Test period filter with relative time
+	delete a;
+	a = new Agent("../samples/filter_example.xml", 8, 4, 25);
+
+	adapter = a->addAdapter("LinuxCNC", "server", 7878, false);
+	adapter->setRelativeTime(true);
+	CPPUNIT_ASSERT(adapter);
+
+	path = "/sample";
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+	}
+
+	adapter->processData("0|load|100|pos|20");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+	}
+
+	adapter->processData("5000|load|103|pos|25");
+	adapter->processData("11000|load|106|pos|30");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+	}
+
+	DataItem *item = a->getDataItemByName((string) "LinuxCNC", "load");
+	CPPUNIT_ASSERT(item != NULL);
+	CPPUNIT_ASSERT(item->hasMinimumDelta());
+
+	CPPUNIT_ASSERT(!item->isFiltered(0.0, NAN));
+	CPPUNIT_ASSERT(item->isFiltered(4.0, NAN));
+	CPPUNIT_ASSERT(!item->isFiltered(20.0, NAN));
 }
 
 void AgentTest::testResetTriggered()

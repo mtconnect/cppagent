@@ -104,6 +104,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDynamicCalibration);
   CPPUNIT_TEST(testInitialTimeSeriesValues);
   CPPUNIT_TEST(testUUIDChange);
+  CPPUNIT_TEST(testFilterValues13);
   CPPUNIT_TEST(testFilterValues);
   CPPUNIT_TEST(testReferences);
   CPPUNIT_TEST(testDiscrete);
@@ -254,8 +255,9 @@ protected:
   void testInitialTimeSeriesValues();
   
   // Filtering
+  void testFilterValues13();
   void testFilterValues();
-  
+
   // Reset Triggered
   void testResetTriggered();
   

@@ -618,12 +618,12 @@ void XmlPrinterTest::testChangeMTCLocation()
   XmlPrinter::setSchemaVersion("1.3");
 }
 
-void XmlPrinterTest::testProbeWithFilter()
+void XmlPrinterTest::testProbeWithFilter13()
 {
   delete config;
   
   config = new XmlParser();
-  devices = config->parseFile("../samples/filter_example.xml");
+  devices = config->parseFile("../samples/filter_example_1.3.xml");
   
   PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
   
@@ -631,6 +631,20 @@ void XmlPrinterTest::testProbeWithFilter()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter@type", "MINIMUM_DELTA");
 }
 
+void XmlPrinterTest::testProbeWithFilter()
+{
+	delete config;
+
+	config = new XmlParser();
+	devices = config->parseFile("../samples/filter_example.xml");
+
+	PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, devices));
+
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter", "5");
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter@type", "MINIMUM_DELTA");
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='pos']/m:Filters/m:Filter", "10");
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='pos']/m:Filters/m:Filter@type", "PERIOD");
+}
 
 void XmlPrinterTest::testReferences()
 {

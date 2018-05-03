@@ -313,6 +313,7 @@ protected:
   bool mHasConstraints;
   
   double mFilterValue;
+  // Period filter, in seconds
   double mFilterPeriod;
   bool mHasMinimumDelta;
   bool mHasMinimumPeriod;
