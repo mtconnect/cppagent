@@ -575,7 +575,7 @@ Configuration Parameters
     
 * `SchemaVersion` - Change the schema version to a different version number.
 
-    *Default*: 1.3
+    *Default*: 1.4
 
 * `ConversionRequired` - Global default for data item units conversion in the agent. 
   Assumes the adapter has already done unit conversion.
