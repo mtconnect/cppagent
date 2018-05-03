@@ -72,6 +72,9 @@ ComponentEvent::ComponentEvent(DataItem& dataItem,
     if (splitValue(v, reset))
     {
       mResetTriggered = reset;
+      if (mDataItem->hasInitialValue()) {
+        v = mDataItem->getInitialValue();
+      }
     }
     convertValue(v);
   }

@@ -294,7 +294,7 @@ void AgentTest::testAddToBuffer()
   
   {
     path = "/sample";
-    PARSE_XML_RESPONSE_QUERY_KV("from", "35");
+    PARSE_XML_RESPONSE_QUERY_KV("from", "36");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
   
@@ -2243,8 +2243,8 @@ void AgentTest::testResetTriggered()
   adapter->processData("TIME1|pcount|0");
   adapter->processData("TIME2|pcount|1");
   adapter->processData("TIME3|pcount|2");
-  adapter->processData("TIME4|pcount|0:DAY");
-  adapter->processData("TIME3|pcount|5");
+  adapter->processData("TIME4|pcount|reset:DAY");
+  adapter->processData("TIME5|pcount|5");
 
   {
     PARSE_XML_RESPONSE;
@@ -2258,6 +2258,23 @@ void AgentTest::testResetTriggered()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[6]", "5");
   }
   
+  adapter->processData("TIME6|pcountrem|10");
+  adapter->processData("TIME7|pcountrem|9");
+  adapter->processData("TIME8|pcountrem|8");
+  adapter->processData("TIME9|pcountrem|10:SHIFT");
+  adapter->processData("TIME10|pcountrem|9");
+
+  {
+	  PARSE_XML_RESPONSE;
+	  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[@subType='REMAINING'][1]", "UNAVAILABLE");
+	  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[@subType='REMAINING'][2]", "10");
+	  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[@subType='REMAINING'][3]", "9");
+	  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[@subType='REMAINING'][3]@resetTriggered", NULL);
+	  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[@subType='REMAINING'][4]", "8");
+	  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[@subType='REMAINING'][5]", "10");
+	  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[@subType='REMAINING'][5]@resetTriggered", "SHIFT");
+	  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[@subType='REMAINING'][6]", "9");
+  }
 
   
 }
