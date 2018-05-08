@@ -26,7 +26,7 @@ Checkpoint::Checkpoint() :
 
 Checkpoint::Checkpoint(Checkpoint &checkpoint, std::set<std::string> *filterSet)
 {
-	if (filterSet == NULL && checkpoint.m_hasFilter)
+	if (!filterSet && checkpoint.m_hasFilter)
 		filterSet = &checkpoint.m_filter;
 	else
 		m_hasFilter = false;
@@ -63,7 +63,7 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 	string id = item->getId();
 	ComponentEventPtr *ptr = m_events[id];
 
-	if (ptr != NULL)
+	if (ptr)
 	{
 		bool assigned = false;
 
@@ -80,18 +80,18 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 				// active condition
 				ComponentEvent *e = (*ptr)->find(event->getCode());
 
-				if (e != NULL)
+				if (e)
 				{
 					// Replace in chain.
 					ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
 					// Check if this is the only event...
 					(*ptr) = n;
-					if (n != NULL)
+					if (n)
 						n->unrefer();
 				}
 
 				// Chain the event
-				if (ptr->getObject() != NULL)
+				if (ptr->getObject())
 					event->appendTo(*ptr);
 			}
 			else  if (event->getLevel() == ComponentEvent::NORMAL)
@@ -101,13 +101,13 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 				{
 					ComponentEvent *e = (*ptr)->find(event->getCode());
 
-					if (e != NULL)
+					if (e)
 					{
 						// Clear the one condition by removing it from the chain
 							ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
 						(*ptr) = n;
 
-						if (n != NULL)
+						if (n)
 							n->unrefer();
 						else
 						{
@@ -155,7 +155,7 @@ void Checkpoint::copy(Checkpoint &checkpoint, std::set<std::string> *filterSet)
 	map<string, ComponentEventPtr *>::iterator it;
 	for (it = checkpoint.m_events.begin(); it != checkpoint.m_events.end(); ++it)
 	{
-		if (filterSet == NULL || filterSet->count(it->first) > 0)
+		if (!filterSet || filterSet->count(it->first) > 0)
 			m_events[(*it).first] = new ComponentEventPtr((*it).second->getObject());
 	}
 }
@@ -169,9 +169,9 @@ void Checkpoint::getComponentEvents(ComponentEventPtrArray &list, std::set<strin
 	{
 		ComponentEventPtr e = *((*it).second);
 
-		if (filterSet == NULL || (e.getObject() != NULL && filterSet->count(e->getDataItem()->getId()) > 0))
+		if (!filterSet || (e.getObject() && filterSet->count(e->getDataItem()->getId()) > 0))
 		{
-			while (e.getObject() != NULL)
+			while (e.getObject())
 			{
 				ComponentEventPtr p = e->getPrev();
 				list.push_back(e);

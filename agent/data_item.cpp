@@ -75,7 +75,7 @@ DataItem::DataItem(std::map<string, string> attributes)	:
 	m_hasMinimumPeriod(false),
 	m_lastSampleValue(NAN),
 	m_lastTimeOffset(NAN),
-	m_dataSource(NULL),
+	m_dataSource(nullptr),
 	m_conversionDetermined(false),
 	m_conversionRequired(false),
 	m_hasFactor(false)
@@ -158,7 +158,7 @@ DataItem::DataItem(std::map<string, string> attributes)	:
 	if (attributes.count("compositionId") > 0 && !attributes["compositionId"].empty())
 		m_compositionId = attributes["compositionId"];
 
-	m_component = NULL;
+	m_component = nullptr;
 	m_attributes = buildAttributes();
 }
 

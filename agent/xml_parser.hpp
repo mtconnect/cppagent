@@ -47,7 +47,7 @@ public:
 	void getDataItems(
 		std::set<std::string> &filterSet,
 		const std::string &path,
-		xmlNodePtr node = NULL);
+		xmlNodePtr node = nullptr);
 
 	// Get an asset object representing a parsed XML Asset document. This can be
 	// full document or a fragment.
@@ -67,8 +67,8 @@ protected:
 	// Main method to process the nodes and return the objects
 	Component *handleComponent(
 		xmlNodePtr component,
-		Component *parent = NULL,
-		Device *device = NULL);
+		Component *parent = nullptr,
+		Device *device = nullptr);
 
 	// Helper to handle/return each component of the device
 	Component *loadComponent(
@@ -85,8 +85,8 @@ protected:
 	// Perform loading on children and set up relationships
 	void handleChildren(
 		xmlNodePtr components,
-		Component *parent = NULL,
-		Device *device = NULL);
+		Component *parent = nullptr,
+		Device *device = nullptr);
 
 	void handleComposition(
 		xmlNodePtr dataItems,
@@ -95,8 +95,8 @@ protected:
 	// Perform loading of references and set up relationships
 	void handleRefenence(
 		xmlNodePtr components,
-		Component *parent = NULL,
-		Device *device = NULL);
+		Component *parent = nullptr,
+		Device *device = nullptr);
 
 	// Asset Parser
 	AssetPtr handleAsset(

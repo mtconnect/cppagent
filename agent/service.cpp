@@ -67,7 +67,7 @@ void MTConnectService::initialize(int argc, const char *argv[])
 
 SERVICE_STATUS			g_svcStatus;
 SERVICE_STATUS_HANDLE	g_svcStatusHandle;
-HANDLE					g_hSvcStopEvent = NULL;
+HANDLE					g_hSvcStopEvent = nullptr;
 
 VOID WINAPI SvcCtrlHandler(DWORD);
 VOID WINAPI SvcMain(DWORD, LPTSTR *);
@@ -76,7 +76,7 @@ VOID ReportSvcStatus(DWORD, DWORD, DWORD);
 VOID SvcInit(DWORD, LPTSTR *);
 VOID SvcReportEvent( LPSTR );
 
-static MTConnectService *g_service = NULL;
+static MTConnectService *g_service = nullptr;
 
 static void agent_termination_handler()
 {
@@ -86,7 +86,7 @@ void commandLine()
 {
 	puts("> ");
 	char line[1024];
-	while (gets(line) != NULL)
+	while (gets(line))
 	{
 		if (strncasecmp(line, "QUIT", 4) == 0)
 		{
@@ -154,7 +154,7 @@ int MTConnectService::main(int argc, const char *argv[])
 		SERVICE_TABLE_ENTRY DispatchTable[] = 
 		{
 			{ "", (LPSERVICE_MAIN_FUNCTION)SvcMain },
-			{ NULL, NULL }
+			{ nullptr, nullptr }
 		};
 
 		if (!StartServiceCtrlDispatcher( DispatchTable ))
@@ -179,7 +179,7 @@ int MTConnectService::main(int argc, const char *argv[])
 void MTConnectService::install()
 {
 	char path[MAX_PATH] = {0};
-	if( !GetModuleFileNameA(NULL, path, MAX_PATH ) )
+	if( !GetModuleFileNameA(nullptr, path, MAX_PATH ) )
 	{
 		g_logger << dlib::LERROR << "Cannot install service (" << GetLastError() << ")";
 		std::cerr << "Cannot install service GetModuleFileName failed (" << GetLastError() << ")" << std::endl;
@@ -189,7 +189,7 @@ void MTConnectService::install()
 	OSVERSIONINFO osver = { sizeof(osver) };
 	if (GetVersionExA(&osver) && osver.dwMajorVersion >= 6ul)
 	{
-		HANDLE token = NULL;
+		HANDLE token = nullptr;
 		if(!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
 		{
 			std::cerr << "OpenProcessToken failed (" << GetLastError() << ")" << std::endl;
@@ -209,7 +209,7 @@ void MTConnectService::install()
 			isElevated = (BOOL)tokenInformation.TokenIsElevated;
 		}
  
-		CloseHandle(token); token = NULL;
+		CloseHandle(token); token = nullptr;
 
 		if (!isElevated)
 		{
@@ -221,8 +221,8 @@ void MTConnectService::install()
 
 	// Get a handle to the SCM database.
 	SC_HANDLE manager = OpenSCManagerA(
-		NULL,				// local computer
-		NULL,				// ServicesActive database
+		nullptr,				// local computer
+		nullptr,				// ServicesActive database
 		SC_MANAGER_ALL_ACCESS);	// full access rights
 
 	if (!manager)
@@ -241,12 +241,12 @@ void MTConnectService::install()
 			SERVICE_NO_CHANGE,	// service start type
 			SERVICE_NO_CHANGE,	// error control: no change
 			path,				// binary path: no change
-			NULL,				// load order group: no change
-			NULL,				// tag ID: no change
-			NULL,				// dependencies: no change
-			NULL,				// account name: no change
-			NULL,				// password: no change
-			NULL) )				// display name: no change
+			nullptr,			// load order group: no change
+			nullptr,			// tag ID: no change
+			nullptr,			// dependencies: no change
+			nullptr,			// account name: no change
+			nullptr,			// password: no change
+			nullptr) )			// display name: no change
 		{
 			g_logger << dlib::LERROR << "OpenService failed (" << GetLastError() << ")";
 			std::cerr << "OpenService failed (" << GetLastError() << ")" << std::endl;
@@ -266,11 +266,11 @@ void MTConnectService::install()
 			SERVICE_AUTO_START,			// start type
 			SERVICE_ERROR_NORMAL,		// error control type
 			path,						// path to service's binary
-			NULL,						// no load ordering group
-			NULL,						// no tag identifier
+			nullptr,					// no load ordering group
+			nullptr,					// no tag identifier
 			"Tcpip\0Eventlog\0Netman\0",// dependencies
-			NULL,						// LocalSystem account
-			NULL);						// no password
+			nullptr,					// LocalSystem account
+			nullptr);					// no password
 
 		if (!service)
 		{
@@ -281,10 +281,10 @@ void MTConnectService::install()
 		}
 	}
 
-	CloseServiceHandle(service); service = NULL;
-	CloseServiceHandle(manager); manager = NULL;
+	CloseServiceHandle(service); service = nullptr;
+	CloseServiceHandle(manager); manager = nullptr;
 
-	HKEY software = NULL;
+	HKEY software = nullptr;
 	LSTATUS res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
 	if (res != ERROR_SUCCESS)
 	{
@@ -293,7 +293,7 @@ void MTConnectService::install()
 		return;
 	}
 
-	HKEY mtc = NULL;
+	HKEY mtc = nullptr;
 	res = RegOpenKeyA(software, "MTConnect", &mtc);
 	if (res != ERROR_SUCCESS)
 	{
@@ -309,7 +309,7 @@ void MTConnectService::install()
 	RegCloseKey(software);
 
 	// Create Service Key
-	HKEY agent = NULL;
+	HKEY agent = nullptr;
 	res = RegOpenKeyA(mtc, m_name.c_str(), &agent);
 	if (res != ERROR_SUCCESS)
 	{
@@ -342,7 +342,7 @@ void MTConnectService::install()
 
 void MTConnectService::remove()
 {
-	SC_HANDLE manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+	SC_HANDLE manager = OpenSCManagerA(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
 	if (!manager)
 	{
 		g_logger << dlib::LERROR << "Could not open Service Control Manager";
@@ -350,7 +350,7 @@ void MTConnectService::remove()
 	}
 
 	SC_HANDLE service = ::OpenServiceA(manager, m_name.c_str(), SERVICE_ALL_ACCESS);
-	CloseServiceHandle(manager); manager = NULL;
+	CloseServiceHandle(manager); manager = nullptr;
 	if (!service)
 	{
 		g_logger << dlib::LERROR << "Could not open Service " << m_name;
@@ -396,7 +396,7 @@ VOID WINAPI SvcMain( DWORD dwArgc, LPSTR *lpszArgv )
 	g_service->setName(lpszArgv[0]);
 
 	char path[MAX_PATH] = {0};
-	if( !GetModuleFileNameA(NULL, path, MAX_PATH) )
+	if( !GetModuleFileNameA(nullptr, path, MAX_PATH) )
 	{
 		g_logger << dlib::LERROR << "Cannot get path of executable (" << GetLastError() << ")";
 		return;
@@ -450,7 +450,7 @@ VOID SvcInit(DWORD dwArgc, LPTSTR *lpszArgv)
 	char key[1024] = {0};
 	snprintf(key, 1023u, "SOFTWARE\\MTConnect\\%s", g_service->name().c_str());
 
-	HKEY agent = NULL;
+	HKEY agent = nullptr;
 	LSTATUS res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, key, 0ul, KEY_READ, &agent);
 	if (res != ERROR_SUCCESS)
 	{
@@ -462,7 +462,7 @@ VOID SvcInit(DWORD dwArgc, LPTSTR *lpszArgv)
 	BYTE configFile[2048] = {};
 	DWORD len = sizeof(configFile) - 1ul, type(0ul);
 	res = RegQueryValueExA(agent, "ConfigurationFile", 0ul, &type, (BYTE*) configFile, &len);
-	RegCloseKey(agent); agent = NULL;
+	RegCloseKey(agent); agent = nullptr;
 	if (res != ERROR_SUCCESS)
 	{
 		SvcReportEvent("RegOpenKey: Could not open ConfigurationFile");
@@ -470,7 +470,7 @@ VOID SvcInit(DWORD dwArgc, LPTSTR *lpszArgv)
 		return;
 	}
 
-	const char *argp[2] = { NULL, NULL };
+	const char *argp[2] = { nullptr, nullptr };
 	argp[0] = (char*) configFile;
 	g_service->initialize(1, argp);
 
@@ -567,11 +567,11 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 //
 VOID SvcReportEvent(LPSTR szFunction)
 {
-	HANDLE hEventSource = RegisterEventSourceA(NULL, g_service->name().c_str());
+	HANDLE hEventSource = RegisterEventSourceA(nullptr, g_service->name().c_str());
 
 	if( hEventSource )
 	{
-		LPCSTR lpszStrings[2] = { NULL, NULL };
+		LPCSTR lpszStrings[2] = { nullptr, nullptr };
 		char Buffer[80] = {0};
 		sprintf_s(Buffer, 80u, "%s failed with %d", szFunction, GetLastError());
 		g_logger << dlib::LERROR << Buffer;
@@ -584,11 +584,11 @@ VOID SvcReportEvent(LPSTR szFunction)
 			EVENTLOG_ERROR_TYPE,	// event type
 			0,						// event category
 			SVC_ERROR,				// event identifier
-			NULL,					// no security identifier
+			nullptr,					// no security identifier
 			2,						// size of lpszStrings array
 			0ul,					// no binary data
 			lpszStrings,			// array of strings
-			NULL);					// no binary data
+			nullptr);					// no binary data
 
 		DeregisterEventSource(hEventSource);
 	}
@@ -596,7 +596,7 @@ VOID SvcReportEvent(LPSTR szFunction)
 
 VOID SvcLogEvent(WORD eventType, DWORD eventId, LPSTR logText)
 {
-	HANDLE hEventSource = RegisterEventSourceA(NULL, g_service->name().c_str());
+	HANDLE hEventSource = RegisterEventSourceA(nullptr, g_service->name().c_str());
 	if( hEventSource )
 	{
 		LPCSTR lpszStrings[3] = {
@@ -609,11 +609,11 @@ VOID SvcLogEvent(WORD eventType, DWORD eventId, LPSTR logText)
 			eventType,		// event type
 			0,				// event category
 			eventId,		// event identifier
-			NULL,			// no security identifier
+			nullptr,			// no security identifier
 			3,				// size of lpszStrings array
 			0,				// no binary data
 			lpszStrings,	// array of strings
-			NULL);			// no binary data
+			nullptr);			// no binary data
 
 		DeregisterEventSource(hEventSource);
 	}

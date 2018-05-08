@@ -119,7 +119,7 @@ Agent::Agent(
 		// Make sure we have two device level data items:
 		// 1. Availability
 		// 2. AssetChanged
-		if ((*device)->getAvailability() == NULL)
+		if (!(*device)->getAvailability())
 		{
 			// Create availability data item and add it to the device.
 			std::map<string, string> attrs;
@@ -139,7 +139,7 @@ Agent::Agent(
 		stringstream ss(XmlPrinter::getSchemaVersion());
 		ss >> major >> c >> minor;
 
-		if ((*device)->getAssetChanged() == NULL && (major > 1 || (major == 1 && minor >= 2)))
+		if (!(*device)->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
 		{
 			// Create asset change data item and add it to the device.
 			std::map<string,string> attrs;
@@ -153,7 +153,7 @@ Agent::Agent(
 			(*device)->addDeviceDataItem(*di);
 		}
 
-		if ((*device)->getAssetRemoved() == NULL && (major > 1 || (major == 1 && minor >= 3)))
+		if (!(*device)->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
 		{
 			// Create asset removed data item and add it to the device.
 			std::map<string, string> attrs;
@@ -212,11 +212,11 @@ Agent::Agent(
 
 Device *Agent::findDeviceByUUIDorName(const std::string &aId)
 {
-	Device *device = NULL;
+	Device *device = nullptr;
 
 	std::vector<Device *>::iterator it;
 
-	for (it = m_devices.begin(); device == NULL && it != m_devices.end(); it++)
+	for (it = m_devices.begin(); !device && it != m_devices.end(); it++)
 	{
 		if ((*it)->getUuid() == aId || (*it)->getName() == aId)
 			device = *it;
@@ -469,7 +469,7 @@ Adapter *Agent::addAdapter(
 
 	Device *dev = m_deviceMap[deviceName];
 
-	if (dev != NULL && dev->m_availabilityAdded)
+	if (dev && dev->m_availabilityAdded)
 		adapter->setAutoAvailable(true);
 
 	if (start)
@@ -484,7 +484,7 @@ unsigned int Agent::addToBuffer(
 	const string& value,
 	string time )
 {
-	if (dataItem == NULL)
+	if (!dataItem)
 		return 0;
 
 	dlib::auto_mutex lock(*m_sequenceLock);
@@ -511,7 +511,7 @@ unsigned int Agent::addToBuffer(
 
 	// See if the next sequence has an event. If the event exists it
 	// should be added to the first checkpoint.
-	if ((*m_slidingBuffer)[m_sequence] != NULL)
+	if ((*m_slidingBuffer)[m_sequence])
 	{
 		// Keep the last checkpoint up to date with the last.
 		m_first.addComponentEvent((*m_slidingBuffer)[m_sequence]);
@@ -560,7 +560,7 @@ bool Agent::addAsset(
 			return false;
 		}
 
-		if (ptr.getObject() == NULL)
+		if (!ptr.getObject())
 		{
 			g_logger << LERROR << "addAssete: Error parsing asset";
 			return false;
@@ -570,18 +570,18 @@ bool Agent::addAsset(
 
 		if (!ptr->isRemoved())
 		{
-			if (old->getObject() != NULL)
+			if (old->getObject())
 				m_assets.remove(old);
 			else
 				m_assetCounts[type] += 1;
 		}
-		else if (old->getObject() == NULL)
+		else if (!old->getObject())
 		{
 			g_logger << LWARN << "Cannot remove non-existent asset";
 			return false;
 		}
 
-		if (ptr.getObject() == NULL)
+		if (!ptr.getObject())
 		{
 			g_logger << LWARN << "Asset could not be created";
 			return false;
@@ -656,7 +656,7 @@ bool Agent::updateAsset(
 		dlib::auto_mutex lock(*m_assetLock);
 
 		asset = m_assetMap[id];
-		if (asset.getObject() == NULL)
+		if (!asset.getObject())
 			return false;
 
 		if (asset->getType() != "CuttingTool" &&
@@ -716,7 +716,7 @@ bool Agent::removeAsset(
 
 		asset = m_assetMap[id];
 
-		if (asset.getObject() == NULL)
+		if (!asset.getObject())
 			return false;
 
 		asset->setRemoved(true);
@@ -724,7 +724,7 @@ bool Agent::removeAsset(
 
 		// Check if the asset changed id is the same as this asset.
 		ComponentEventPtr *ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
-		if (ptr != NULL && (*ptr)->getValue() == id)
+		if (ptr && (*ptr)->getValue() == id)
 			addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
 	}
 
@@ -750,7 +750,7 @@ bool Agent::removeAllAssets(
 
 		ComponentEventPtr *ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
 		string changedId;
-		if (ptr != NULL)
+		if (ptr)
 			changedId = (*ptr)->getValue();
 
 		list<AssetPtr*>::reverse_iterator iter;
@@ -792,16 +792,16 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 		{
 			DataItem *dataItem = (*dataItemAssoc).second;
 
-			if (dataItem != NULL &&
+			if (dataItem &&
 				(dataItem->getDataSource() == adapter || (adapter->isAutoAvailable() &&
-				dataItem->getDataSource() == NULL &&
+				!dataItem->getDataSource() &&
 				dataItem->getType() == "AVAILABILITY")))
 			{
 				ComponentEventPtr *ptr = m_latest.getEventPtr(dataItem->getId());
 
-				if (ptr != NULL)
+				if (ptr)
 				{
-					const string *value = NULL;
+					const string *value = nullptr;
 
 					if (dataItem->isCondition())
 					{
@@ -818,12 +818,12 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 					else if ((*ptr)->getValue() != g_unavailable)
 						value = &g_unavailable;
 
-					if (value != NULL &&
+					if (value &&
 						!adapter->isDuplicate(dataItem, *value, NAN))
 						addToBuffer(dataItem, *value, time);
 				}
 			}
-			else if (dataItem == NULL)
+			else if (!dataItem)
 				g_logger << LWARN << "No data Item for " << (*dataItemAssoc).first;
 		}
 	}
@@ -841,7 +841,7 @@ void Agent::connected(Adapter *adapter, std::vector<Device *> devices)
 		{
 			g_logger << LDEBUG << "Connected to adapter, setting all Availability data items to AVAILABLE";
 
-			if ((*iter)->getAvailability() != NULL)
+			if ((*iter)->getAvailability())
 			{
 				g_logger << LDEBUG << "Adding availabilty event for " << (*iter)->getAvailability()->getId();
 				addToBuffer((*iter)->getAvailability(), g_available, time);
@@ -921,7 +921,7 @@ string Agent::handleCall(
 				count,
 				heartbeat);
 		}
-		else if ((m_deviceMap[call] != NULL) && device.empty())
+		else if ((m_deviceMap[call]) && device.empty())
 			return handleProbe(call);
 		else
 			return printError("UNSUPPORTED", "The following path is invalid: " + path);
@@ -948,7 +948,7 @@ string Agent::handlePut(
 
 	Device *dev = m_deviceMap[device];
 
-	if (dev == NULL)
+	if (!dev)
 	{
 		string message = ((string) "Cannot find device: ") + device;
 		return printError("UNSUPPORTED", message);
@@ -986,7 +986,7 @@ string Agent::handlePut(
 			{
 				DataItem *di = dev->getDeviceDataItem(kv->first);
 
-				if (di != NULL)
+				if (di)
 					addToBuffer(di, kv->second, time);
 				else
 					g_logger << LWARN << "(" << device << ") Could not find data item: " << kv->first;
@@ -1005,7 +1005,7 @@ string Agent::handleProbe(const string &name)
 	if (!name.empty())
 	{
 		Device *device = getDeviceByName(name);
-		if (device == NULL)
+		if (!device)
 			return printError("NO_DEVICE", "Could not find the device '" + name + "'");
 		else
 			deviceList.push_back(device);
@@ -1090,7 +1090,7 @@ std::string Agent::handleAssets(
 			if (type == tok.IDENTIFIER)
 			{
 				AssetPtr ptr = m_assetMap[token];
-				if (ptr.getObject() == NULL)
+				if (!ptr.getObject())
 					return XmlPrinter::printError(m_instanceId, 0, 0, "ASSET_NOT_FOUND", (string)"Could not find asset: " + token);
 				assets.push_back(ptr);
 			}
@@ -1131,13 +1131,13 @@ std::string Agent::storeAsset(
 {
 	string name = queries["device"];
 	string type = queries["type"];
-	Device *device = NULL;
+	Device *device = nullptr;
 
 	if (!name.empty())
 		device = m_deviceMap[name];
 
 	// If the device was not found or was not provided, use the default device.
-	if (device == NULL)
+	if (!device)
 		device = m_devices[0];
 
 	if (addAsset(device, id, body, type))
@@ -1224,7 +1224,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 	"Server: MTConnectAgent\r\n"
 	"Connection: close\r\n"
 	"Content-Length: " << cachedFile->m_size << "\r\n"
-	"Expires: " << getCurrentTime(time(NULL) + 60 * 60 * 24, 0, HUM_READ) << "\r\n"
+	"Expires: " << getCurrentTime(time(nullptr) + 60 * 60 * 24, 0, HUM_READ) << "\r\n"
 	"Content-Type: " << contentType << "\r\n\r\n";
 
 	outgoing.out->write(cachedFile->m_buffer, cachedFile->m_size);
@@ -1244,7 +1244,7 @@ void Agent::streamData(
 	unsigned int heartbeat )
 {
 	// Create header
-	string boundary = md5(intToString(time(NULL)));
+	string boundary = md5(intToString(time(nullptr)));
 
 	ofstream log;
 	if (m_logStreamData)
@@ -1613,7 +1613,7 @@ int Agent::checkAndGetParam(
 	if (!isNonNegativeInteger(queries[param]))
 		throw ParameterError("OUT_OF_RANGE","'" + param + "' must be a positive integer.");
 
-	long int value = strtol(queries[param].c_str(), NULL, 10);
+	long int value = strtol(queries[param].c_str(), nullptr, 10);
 
 	if (minValue != NO_VALUE32 && value < minValue)
 	{
@@ -1650,7 +1650,7 @@ uint64_t Agent::checkAndGetParam64(
 						"'" + param + "' must be a positive integer.");
 	}
 
-	uint64_t value = strtoull(queries[param].c_str(), NULL, 10);
+	uint64_t value = strtoull(queries[param].c_str(), nullptr, 10);
 
 	if (minValue != NO_VALUE64 && value < minValue)
 	{
@@ -1670,7 +1670,7 @@ uint64_t Agent::checkAndGetParam64(
 DataItem *Agent::getDataItemByName(const string &device, const string &dataItemName)
 {
 	Device *dev = m_deviceMap[device];
-	return (dev) ? dev->getDeviceDataItem(dataItemName) : NULL;
+	return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
 }
 
 

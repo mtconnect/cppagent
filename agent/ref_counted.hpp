@@ -25,24 +25,24 @@ public:
 	// Constructors
 	RefCountedPtr()
 	{
-		m_object = NULL;
+		m_object = nullptr;
 	}
 
 	RefCountedPtr(const RefCountedPtr &ptr, bool takeRef = false)
 	{
-		m_object = NULL;
+		m_object = nullptr;
 		setObject(ptr.getObject(), takeRef);
 	}
 
 	RefCountedPtr(T &object, bool takeRef = false)
 	{
-		m_object = NULL;
+		m_object = nullptr;
 		setObject(&object, takeRef);
 	}
 
 	RefCountedPtr(T *object, bool takeRef = false)
 	{
-		m_object = NULL;
+		m_object = nullptr;
 		setObject(object, takeRef);
 	}
 
@@ -95,12 +95,12 @@ inline bool RefCountedPtr<T>::operator<(const RefCountedPtr<T> &another)
 template<class T>
 inline T *RefCountedPtr<T>::setObject(T *object, bool takeRef)
 {
-	if (m_object != NULL)
+	if (m_object)
 		m_object->unrefer();
 
 	m_object = object;
 
-	if (object != NULL && !takeRef)
+	if (object && !takeRef)
 		m_object->referTo();
 
 	return object;

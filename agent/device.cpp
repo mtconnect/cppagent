@@ -48,7 +48,7 @@ void Device::addDeviceDataItem(DataItem &dataItem)
 	if (!dataItem.getName().empty())
 		m_deviceDataItemsByName[dataItem.getName()] = &dataItem;
 
-	if (m_deviceDataItemsById[dataItem.getId()] != NULL)
+	if (m_deviceDataItemsById[dataItem.getId()])
 	{
 		g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem.getId() << " for device "
 				<< m_name << ", skipping";
@@ -69,7 +69,7 @@ DataItem *Device::getDeviceDataItem(const std::string &name)
 	else if (m_deviceDataItemsById.count(name) > 0)
 		di = m_deviceDataItemsById[name];
 	else
-		di = NULL;
+		di = nullptr;
 
 	return di;
 }

@@ -47,8 +47,8 @@ Component::Component(
 	const string &className,
 	map<string, string> attributes,
 	const string &prefix) :
-	m_assetChanged(NULL),
-	m_assetRemoved(NULL)
+	m_assetChanged(nullptr),
+	m_assetRemoved(nullptr)
 {
 	m_id = attributes["id"];
 	m_name = attributes["name"];
@@ -60,10 +60,10 @@ Component::Component(
 	else
 		m_sampleInterval = atof(attributes["sampleInterval"].c_str());
 
-	m_parent = NULL;
-	m_device = NULL;
-	m_availability = NULL;
-	m_assetChanged = NULL;
+	m_parent = nullptr;
+	m_device = nullptr;
+	m_availability = nullptr;
+	m_assetChanged = nullptr;
 	m_class = className;
 	m_prefix = prefix;
 	m_prefixedClass = prefix + ":" + className;
@@ -108,11 +108,11 @@ void Component::addDescription(string body, map<string, string> attributes)
 
 Device *Component::getDevice()
 {
-	if (m_device == NULL)
+	if (!m_device)
 	{
 		if (getClass() == "Device")
 			m_device = (Device *) this;
-		else if (m_parent != NULL)
+		else if (m_parent)
 			m_device = m_parent->getDevice();
 	}
 
@@ -142,7 +142,7 @@ void Component::resolveReferences()
 	{
 		DataItem *di = device->getDeviceDataItem(iter->m_id);
 
-		if (di == NULL)
+		if (!di)
 			throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " + iter->m_id);
 
 		iter->m_dataItem = di;

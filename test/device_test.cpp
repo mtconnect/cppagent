@@ -172,8 +172,8 @@ void DeviceTest::testDataItems()
 void DeviceTest::testDeviceDataItem()
 {
 	CPPUNIT_ASSERT(m_devA->getDeviceDataItems().empty());
-	CPPUNIT_ASSERT(m_devA->getDeviceDataItem("DataItemTest1") == NULL);
-	CPPUNIT_ASSERT(m_devA->getDeviceDataItem("DataItemTest2") == NULL);
+	CPPUNIT_ASSERT(!m_devA->getDeviceDataItem("DataItemTest1"));
+	CPPUNIT_ASSERT(!m_devA->getDeviceDataItem("DataItemTest2"));
 
 	map<string, string> attributes;
 	attributes["id"] = "DataItemTest1";
