@@ -41,134 +41,114 @@ const string Component::SComponentSpecs[NumComponentSpecs] =
 	"Composition"
 };
 
+
 // Component public methods
-Component::Component(const string &cls, map<string, string> attributes,
-			 const string &aPrefix)
-	: m_assetChanged(NULL), m_assetRemoved(NULL)
+Component::Component(
+	const string &className,
+	map<string, string> attributes,
+	const string &prefix) :
+	m_assetChanged(NULL),
+	m_assetRemoved(NULL)
 {
 	m_id = attributes["id"];
-
 	m_name = attributes["name"];
 	m_nativeName = attributes["nativeName"];
 	m_uuid = attributes["uuid"];
 
 	if (attributes["sampleInterval"].empty())
-	{
-	m_sampleInterval = (float)(attributes["sampleRate"].empty()) ?
-			   0.0f : atof(attributes["sampleRate"].c_str());
-	}
+		m_sampleInterval = (float)(attributes["sampleRate"].empty()) ? 0.0f : atof(attributes["sampleRate"].c_str());
 	else
-	{
-	m_sampleInterval = atof(attributes["sampleInterval"].c_str());
-	}
+		m_sampleInterval = atof(attributes["sampleInterval"].c_str());
 
 	m_parent = NULL;
 	m_device = NULL;
 	m_availability = NULL;
 	m_assetChanged = NULL;
-	m_class = cls;
-	m_prefix = aPrefix;
-	m_prefixedClass = aPrefix + ":" + cls;
+	m_class = className;
+	m_prefix = prefix;
+	m_prefixedClass = prefix + ":" + className;
 	m_attributes = buildAttributes();
 }
+
 
 Component::~Component()
 {
 }
 
+
 std::map<string, string> Component::buildAttributes() const
 {
 	std::map<string, string> attributes;
-
 	attributes["id"] = m_id;
 
 	if (!m_name.empty())
-	{
-	attributes["name"] = m_name;
-	}
+		attributes["name"] = m_name;
 
 	if (m_sampleInterval != 0.0f)
-	{
-	attributes["sampleInterval"] = floatToString(m_sampleInterval);
-	}
+		attributes["sampleInterval"] = floatToString(m_sampleInterval);
 
 	if (!m_uuid.empty())
-	{
-	attributes["uuid"] = m_uuid;
-	}
+		attributes["uuid"] = m_uuid;
 
 	if (!m_nativeName.empty())
-	{
-	attributes["nativeName"] = m_nativeName;
-	}
+		attributes["nativeName"] = m_nativeName;
 
 	return attributes;
 }
+
 
 void Component::addDescription(string body, map<string, string> attributes)
 {
 	m_description = attributes;
 
 	if (!body.empty())
-	{
-	m_descriptionBody = body;
-	}
+		m_descriptionBody = body;
 }
+
 
 Device *Component::getDevice()
 {
 	if (m_device == NULL)
 	{
-	if (getClass() == "Device")
-	{
-		m_device = (Device *) this;
-	}
-	else if (m_parent != NULL)
-	{
-		m_device = m_parent->getDevice();
-	}
+		if (getClass() == "Device")
+			m_device = (Device *) this;
+		else if (m_parent != NULL)
+			m_device = m_parent->getDevice();
 	}
 
 	return m_device;
 }
 
+
 void Component::addDataItem(DataItem &dataItem)
 {
 	if (dataItem.getType() == "AVAILABILITY")
-	m_availability = &dataItem;
+		m_availability = &dataItem;
 	else if (dataItem.getType() == "ASSET_CHANGED")
-	m_assetChanged = &dataItem;
+		m_assetChanged = &dataItem;
 	else if (dataItem.getType() == "ASSET_REMOVED")
-	m_assetRemoved = &dataItem;
+		m_assetRemoved = &dataItem;
 
 	m_dataItems.push_back(&dataItem);
 }
+
 
 void Component::resolveReferences()
 {
 	Device *device = getDevice();
 
 	std::list<Reference>::iterator iter;
-
 	for (iter = m_references.begin(); iter != m_references.end(); iter++)
 	{
-	DataItem *di = device->getDeviceDataItem(iter->m_id);
+		DataItem *di = device->getDeviceDataItem(iter->m_id);
 
-	if (di == NULL)
-	{
-		throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " +
-				iter->m_id);
-	}
+		if (di == NULL)
+			throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " + iter->m_id);
 
-	iter->m_dataItem = di;
+		iter->m_dataItem = di;
 	}
 
 	std::list<Component *>::iterator comp;
-
 	for (comp = m_children.begin(); comp != m_children.end(); comp++)
-	{
-	(*comp)->resolveReferences();
-	}
+		(*comp)->resolveReferences();
 }
-
-

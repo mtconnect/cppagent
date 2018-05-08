@@ -39,6 +39,7 @@
 
 #include <map>
 #include <string>
+#include <iosfwd>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"

@@ -14,12 +14,12 @@
 //    limitations under the License.
 //
 #include "service.hpp"
-#include "string.h"
+#include <string.h>
 #include <fstream>
 #include "dlib/logger.h"
 #include "version.h"
 
-static dlib::logger sLogger("init.service");
+static dlib::logger g_logger("init.service");
 
 #ifdef _WINDOWS
 	#define stricmp _stricmp
@@ -31,17 +31,21 @@ static dlib::logger sLogger("init.service");
 #endif
 
 MTConnectService::MTConnectService() :
-	m_isService(false), m_isDebug(false)
+	m_isService(false),
+	m_isDebug(false)
 {
 }
 
-void MTConnectService::initialize(int aArgc, const char *aArgv[])
+void MTConnectService::initialize(int argc, const char *argv[])
 {
 }
 
 #ifdef _WINDOWS
 
+// Don't include WinSock.h when processing <windows.h>
+#define _WINSOCKAPI_
 #include <windows.h>
+
 #include <sys/stat.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -57,40 +61,38 @@ void MTConnectService::initialize(int aArgc, const char *aArgv[])
 
 #pragma comment(lib, "advapi32.lib")
 
-#define SVC_ERROR                       ((DWORD)0xC0000001L)
-#define SVC_WARNING                     ((DWORD)0x90000001L)
-#define SVC_INFO                        ((DWORD)0x50000001L)
+#define SVC_ERROR		((DWORD)0xC0000001L)
+#define SVC_WARNING		((DWORD)0x90000001L)
+#define SVC_INFO		((DWORD)0x50000001L)
 
-SERVICE_STATUS          gSvcStatus;
-SERVICE_STATUS_HANDLE   gSvcStatusHandle;
-HANDLE                  ghSvcStopEvent = NULL;
+SERVICE_STATUS			g_svcStatus;
+SERVICE_STATUS_HANDLE	g_svcStatusHandle;
+HANDLE					g_hSvcStopEvent = NULL;
 
 VOID WINAPI SvcCtrlHandler(DWORD);
 VOID WINAPI SvcMain(DWORD, LPTSTR *);
 
 VOID ReportSvcStatus(DWORD, DWORD, DWORD);
 VOID SvcInit(DWORD, LPTSTR *);
-VOID SvcReportEvent(LPTSTR);
+VOID SvcReportEvent( LPSTR );
 
-static MTConnectService *gService = NULL;
+static MTConnectService *g_service = NULL;
 
 static void agent_termination_handler()
 {
-
 }
 
 void commandLine()
 {
 	puts("> ");
 	char line[1024];
-
 	while (gets(line) != NULL)
 	{
-	if (strncasecmp(line, "QUIT", 4) == 0)
-	{
-		gService->stop();
-		return;
-	}
+		if (strncasecmp(line, "QUIT", 4) == 0)
+		{
+			g_service->stop();
+			return;
+		}
 	}
 }
 
@@ -101,72 +103,74 @@ int MTConnectService::main(int argc, const char *argv[])
 
 	try
 	{
-	// If command-line parameter is "install", install the service. If debug or run
-	// is specified than just run it as a command line process.
-	// Otherwise, the service is probably being started by the SCM.
-	if (argc > 1)
-	{
-		if (stricmp(argv[1], "help") == 0 || strncmp(argv[1], "-h", 2) == 0)
+		// If command-line parameter is "install", install the service. If debug or run
+		// is specified than just run it as a command line process. 
+		// Otherwise, the service is probably being started by the SCM.
+		if(argc > 1)
 		{
-		printf("Usage: agent [help|install|debug|run] [configuration_file]\n"
-			   "       help           Prints this message\n"
-			   "       install        Installs the service\n"
-			   "                      install with -h will display additional options\n"
-			   "       remove         Remove the service\n"
-			   "       debug          Runs the agent on the command line with verbose logging\n"
-			   "       run            Runs the agent on the command line\n"
-			   "       config_file    The configuration file to load\n"
-			   "                      Default: agent.cfg in current directory\n\n"
-			   "When the agent is started without any arguments it is assumed it will be running\n"
-			   "as a service and will begin the service initialization sequence\n");
-		exit(0);
-		}
-		else if (stricmp(argv[1], "install") == 0)
-		{
-		initialize(argc - 2, argv + 2);
-		install();
-		return 0;
-		}
-		else if (stricmp(argv[1], "remove") == 0)
-		{
-		initialize(argc - 2, argv + 2);
-		remove();
-		return 0;
-		}
-		else if (stricmp(argv[1], "debug") == 0 || stricmp(argv[1], "run") == 0)
-		{
-		if (stricmp(argv[1], "debug") == 0)
-			m_isDebug = true;
+			if (stricmp(argv[1], "help") == 0 ||
+				strncmp(argv[1], "-h", 2) == 0 )
+			{
+				printf("Usage: agent [help|install|debug|run] [configuration_file]\n"
+						"       help           Prints this message\n"
+						"       install        Installs the service\n"
+						"                      install with -h will display additional options\n"
+						"       remove         Remove the service\n"
+						"       debug          Runs the agent on the command line with verbose logging\n"
+						"       run            Runs the agent on the command line\n"
+						"       config_file    The configuration file to load\n"
+						"                      Default: agent.cfg in current directory\n\n"
+						"When the agent is started without any arguments it is assumed it will be running\n"
+						"as a service and will begin the service initialization sequence\n");
+				exit(0);
+			}
+			else if (stricmp(argv[1], "install") == 0)
+			{
+				initialize(argc - 2, argv + 2);
+				install();
+				return 0;
+			}
+			else if (stricmp(argv[1], "remove") == 0)
+			{
+				initialize(argc - 2, argv + 2);
+				remove();
+				return 0;
+			}
+			else if (stricmp(argv[1], "debug") == 0 ||
+					 stricmp(argv[1], "run") == 0)
+			{
+				if (stricmp(argv[1], "debug") == 0)
+					m_isDebug = true;
 
-		initialize(argc - 2, argv + 2);
-		start();
-		dlib::thread_function cmd(commandLine);
-		return 0;
+				initialize(argc - 2, argv + 2);
+				start();
+				dlib::thread_function cmd(commandLine);
+				return 0;
+			}
 		}
-	}
 
-	gService = this;
-	m_isService = true;
-	SERVICE_TABLE_ENTRY DispatchTable[] =
-	{
-		{  "", (LPSERVICE_MAIN_FUNCTION) SvcMain },
-		{ NULL, NULL }
-	};
+		g_service = this;
+		m_isService = true;
+		SERVICE_TABLE_ENTRY DispatchTable[] = 
+		{
+			{ "", (LPSERVICE_MAIN_FUNCTION)SvcMain },
+			{ NULL, NULL }
+		};
 
-	if (!StartServiceCtrlDispatcher(DispatchTable))
-	{
-		SvcReportEvent("StartServiceCtrlDispatcher");
-	}
+		if (!StartServiceCtrlDispatcher( DispatchTable ))
+		{
+			SvcReportEvent("StartServiceCtrlDispatcher");
+		}
 	}
 	catch (std::exception &e)
 	{
-	sLogger << dlib::LFATAL << "Agent top level exception: " << e.what();
-	std::cerr << "Agent top level exception: " << e.what() << std::endl;
+		g_logger << dlib::LFATAL << "Agent top level exception: " << e.what();
+		std::cerr << "Agent top level exception: " << e.what() << std::endl;
 	}
 	catch (std::string &s)
 	{
-	sLogger << dlib::LFATAL << "Agent top level exception: " << s;
-	std::cerr << "Agent top level exception: " << s << std::endl;
+		g_logger << dlib::LFATAL << "Agent top level exception: " << s;
+		std::cerr << "Agent top level exception: " << s << std::endl;
 	}
 
 	return 0;
@@ -174,223 +178,200 @@ int MTConnectService::main(int argc, const char *argv[])
 
 void MTConnectService::install()
 {
-	SC_HANDLE manager;
-	SC_HANDLE service;
-	char path[MAX_PATH];
-
-	if (!GetModuleFileName(NULL, path, MAX_PATH))
+	char path[MAX_PATH] = {0};
+	if( !GetModuleFileNameA(NULL, path, MAX_PATH ) )
 	{
-	sLogger << dlib::LERROR << "Cannot install service (" << GetLastError() << ")";
-	std::cerr << "Cannot install service GetModuleFileName failed (" << GetLastError() << ")" <<
-		  std::endl;
-	return;
+		g_logger << dlib::LERROR << "Cannot install service (" << GetLastError() << ")";
+		std::cerr << "Cannot install service GetModuleFileName failed (" << GetLastError() << ")" << std::endl;
+		return;
 	}
 
 	OSVERSIONINFO osver = { sizeof(osver) };
-
-	if (GetVersionEx(&osver) && osver.dwMajorVersion >= 6)
+	if (GetVersionExA(&osver) && osver.dwMajorVersion >= 6ul)
 	{
-	DWORD size = 0;
-	HANDLE token = NULL;
-	BOOL isElevated = FALSE;
+		HANDLE token = NULL;
+		if(!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+		{
+			std::cerr << "OpenProcessToken failed (" << GetLastError() << ")" << std::endl;
+			g_logger << dlib::LERROR << "OpenProcessToken (" << GetLastError() << ")";
+		}
 
-	TOKEN_ELEVATION tokenInformation;
+		DWORD size = 0;
+		BOOL isElevated = FALSE;
+		TOKEN_ELEVATION tokenInformation;
+		if (GetTokenInformation(
+				token,
+				TokenElevation,
+				&tokenInformation,
+				sizeof(TOKEN_ELEVATION),
+				&size))
+		{
+			isElevated = (BOOL)tokenInformation.TokenIsElevated;
+		}
+ 
+		CloseHandle(token); token = NULL;
 
-	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
-	{
-		std::cerr << "OpenProcessToken failed (" << GetLastError() << ")" << std::endl;
-		sLogger << dlib::LERROR << "OpenProcessToken (" << GetLastError() << ")";
+		if (!isElevated)
+		{
+			g_logger << dlib::LERROR << "Process must have elevated permissions to run";
+			std::cerr << "Process must have elevated permissions to run" << std::endl;
+			return;
+		}
 	}
 
-	if (GetTokenInformation(token, TokenElevation, &tokenInformation, sizeof(TOKEN_ELEVATION), &size))
-	{
-		isElevated = (BOOL)tokenInformation.TokenIsElevated;
-	}
+	// Get a handle to the SCM database.
+	SC_HANDLE manager = OpenSCManagerA(
+		NULL,				// local computer
+		NULL,				// ServicesActive database
+		SC_MANAGER_ALL_ACCESS);	// full access rights
 
-	CloseHandle(token);
-
-	if (!isElevated)
+	if (!manager)
 	{
-		sLogger << dlib::LERROR << "Process must have elevated permissions to run";
-		std::cerr << "Process must have elevated permissions to run" << std::endl;
+		g_logger << dlib::LERROR << "OpenSCManager failed (" << GetLastError() << ")";
+		std::cerr << "OpenSCManager failed (" << GetLastError() << ")" << std::endl;
 		return;
 	}
 
-
-	}
-
-// Get a handle to the SCM database.
-
-	manager = OpenSCManager(
-		  NULL,                    // local computer
-		  NULL,                    // ServicesActive database
-		  SC_MANAGER_ALL_ACCESS);  // full access rights
-
-	if (NULL == manager)
+	SC_HANDLE service = OpenServiceA(manager, m_name.c_str(), SC_MANAGER_ALL_ACCESS);
+	if (service)
 	{
-	sLogger << dlib::LERROR << "OpenSCManager failed (" << GetLastError() << ")";
-	std::cerr << "OpenSCManager failed (" << GetLastError() << ")" << std::endl;
-	return;
-	}
-
-	service = OpenService(manager, m_name.c_str(), SC_MANAGER_ALL_ACCESS);
-
-	if (service != NULL)
-	{
-	if (!ChangeServiceConfig(
-		service,            // handle of service
-		SERVICE_NO_CHANGE,     // service type: no change
-		SERVICE_NO_CHANGE,  // service start type
-		SERVICE_NO_CHANGE,     // error control: no change
-		path,                  // binary path: no change
-		NULL,                  // load order group: no change
-		NULL,                  // tag ID: no change
-		NULL,                  // dependencies: no change
-		NULL,                  // account name: no change
-		NULL,                  // password: no change
-		NULL))                 // display name: no change
-	{
-		sLogger << dlib::LERROR << "OpenService failed (" << GetLastError() << ")";
-		std::cerr << "OpenService failed (" << GetLastError() << ")" << std::endl;
-		CloseServiceHandle(manager);
-		return;
-	}
+		if (!ChangeServiceConfigA(
+			service,			// handle of service
+			SERVICE_NO_CHANGE,	// service type: no change
+			SERVICE_NO_CHANGE,	// service start type
+			SERVICE_NO_CHANGE,	// error control: no change
+			path,				// binary path: no change
+			NULL,				// load order group: no change
+			NULL,				// tag ID: no change
+			NULL,				// dependencies: no change
+			NULL,				// account name: no change
+			NULL,				// password: no change
+			NULL) )				// display name: no change
+		{
+			g_logger << dlib::LERROR << "OpenService failed (" << GetLastError() << ")";
+			std::cerr << "OpenService failed (" << GetLastError() << ")" << std::endl;
+			CloseServiceHandle(manager);
+			return;
+		}
 	}
 	else
 	{
-	// Create the service
-	service = CreateService(
-			  manager,              // SCM database
-			  m_name.c_str(),                   // name of service
-			  m_name.c_str(),                   // service name to display
-			  SERVICE_ALL_ACCESS,        // desired access
-			  SERVICE_WIN32_OWN_PROCESS, // service type
-			  SERVICE_AUTO_START,      // start type
-			  SERVICE_ERROR_NORMAL,      // error control type
-			  path,                    // path to service's binary
-			  NULL,                      // no load ordering group
-			  NULL,                      // no tag identifier
-			  "Tcpip\0Eventlog\0Netman\0", //  dependencies
-			  NULL,                      // LocalSystem account
-			  NULL);                     // no password
+		// Create the service
+		service = CreateService(
+			manager,					// SCM database
+			m_name.c_str(),				// name of service
+			m_name.c_str(),				// service name to display
+			SERVICE_ALL_ACCESS,			// desired access
+			SERVICE_WIN32_OWN_PROCESS,	// service type
+			SERVICE_AUTO_START,			// start type
+			SERVICE_ERROR_NORMAL,		// error control type
+			path,						// path to service's binary
+			NULL,						// no load ordering group
+			NULL,						// no tag identifier
+			"Tcpip\0Eventlog\0Netman\0",// dependencies
+			NULL,						// LocalSystem account
+			NULL);						// no password
 
-	if (service == NULL)
+		if (!service)
+		{
+			g_logger << dlib::LERROR << "CreateService failed (" << GetLastError() << ")";
+			std::cerr << "CreateService failed (" << GetLastError() << ")" << std::endl;
+			CloseServiceHandle(manager);
+			return;
+		}
+	}
+
+	CloseServiceHandle(service); service = NULL;
+	CloseServiceHandle(manager); manager = NULL;
+
+	HKEY software = NULL;
+	LSTATUS res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
+	if (res != ERROR_SUCCESS)
 	{
-		sLogger << dlib::LERROR << "CreateService failed (" << GetLastError() << ")";
-		std::cerr << "CreateService failed (" << GetLastError() << ")" << std::endl;
-		CloseServiceHandle(manager);
+		g_logger << dlib::LERROR << "Could not open software key (" << res << ")";
+		std::cerr <<  "Could not open software key (" << res << ")" << std::endl;
 		return;
 	}
-	}
 
-	CloseServiceHandle(service);
-	CloseServiceHandle(manager);
-
-	HKEY software;
-	LONG res = RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
-
+	HKEY mtc = NULL;
+	res = RegOpenKeyA(software, "MTConnect", &mtc);
 	if (res != ERROR_SUCCESS)
 	{
-	sLogger << dlib::LERROR << "Could not open software key (" << res << ")";
-	std::cerr <<  "Could not open software key (" << res << ")" << std::endl;
-	return;
+		res = RegCreateKeyA(software, "MTConnect", &mtc);
+		RegCloseKey(software);
+		if (res != ERROR_SUCCESS)
+		{
+			g_logger << dlib::LERROR << "Could not create MTConnect (" << res << ")";
+			std::cerr <<  "Could not create MTConnect key (" << res << ")" << std::endl;
+			return;
+		}
 	}
-
-	HKEY mtc;
-	res = RegOpenKey(software, "MTConnect", &mtc);
-
-	if (res != ERROR_SUCCESS)
-	{
-	res = RegCreateKey(software, "MTConnect", &mtc);
-	RegCloseKey(software);
-
-	if (res != ERROR_SUCCESS)
-	{
-		sLogger << dlib::LERROR << "Could not create MTConnect (" << res << ")";
-		std::cerr <<  "Could not create MTConnect key (" << res << ")" << std::endl;
-		return;
-	}
-	}
-
 	RegCloseKey(software);
 
 	// Create Service Key
-	HKEY agent;
-	res = RegOpenKey(mtc, m_name.c_str(), &agent);
-
+	HKEY agent = NULL;
+	res = RegOpenKeyA(mtc, m_name.c_str(), &agent);
 	if (res != ERROR_SUCCESS)
 	{
-	res = RegCreateKey(mtc, m_name.c_str(), &agent);
-
-	if (res != ERROR_SUCCESS)
-	{
-		RegCloseKey(mtc);
-		sLogger << dlib::LERROR << "Could not create " << m_name << " (" << res << ")";
-		std::cerr <<  "Could not create " << m_name << " (" << res << ")" << std::endl;
-		return;
+		res = RegCreateKeyA(mtc, m_name.c_str(), &agent);
+		if (res != ERROR_SUCCESS)
+		{
+			RegCloseKey(mtc);
+			g_logger << dlib::LERROR << "Could not create " << m_name << " (" << res << ")";
+			std::cerr <<  "Could not create " << m_name << " (" << res << ")" << std::endl;
+			return;
+		}
 	}
-	}
-
 	RegCloseKey(mtc);
 
 	// Fully qualify the configuration file name.
 	if (m_configFile[0] != '/' && m_configFile[0] != '\\' && m_configFile[1] != ':')
 	{
-	// Relative file name
-	char path[MAX_PATH];
-	GetCurrentDirectory(MAX_PATH, path);
-	m_configFile = ((std::string) path) + "\\" + m_configFile;
+		// Relative file name
+		char path[MAX_PATH] = {0};
+		GetCurrentDirectoryA(MAX_PATH, path);
+		m_configFile = ((std::string) path) + "\\" + m_configFile;
 	}
 
-	RegSetValueEx(agent, "ConfigurationFile", 0, REG_SZ, (const BYTE *) m_configFile.c_str(),
-		  m_configFile.size() + 1);
+	RegSetValueExA(agent, "ConfigurationFile", 0ul, REG_SZ, (const BYTE*)m_configFile.c_str(),
+				m_configFile.size() + 1);
 	RegCloseKey(agent);
 
-	sLogger << dlib::LINFO << "Service installed successfully.";
+	g_logger << dlib::LINFO << "Service installed successfully.";
 }
 
 void MTConnectService::remove()
 {
-	SC_HANDLE manager;
-	SC_HANDLE service;
-	manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-
-	if (manager == NULL)
+	SC_HANDLE manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+	if (!manager)
 	{
-	sLogger << dlib::LERROR << "Could not open Service Control Manager";
-	return;
+		g_logger << dlib::LERROR << "Could not open Service Control Manager";
+		return;
 	}
 
-	service = ::OpenService(manager, m_name.c_str(), SERVICE_ALL_ACCESS);
-	CloseServiceHandle(manager);
-
-	if (service == NULL)
+	SC_HANDLE service = ::OpenServiceA(manager, m_name.c_str(), SERVICE_ALL_ACCESS);
+	CloseServiceHandle(manager); manager = NULL;
+	if (!service)
 	{
-	sLogger << dlib::LERROR << "Could not open Service " << m_name;
-	return;
+		g_logger << dlib::LERROR << "Could not open Service " << m_name;
+		return;
 	}
 
 	// Check if service is running, if it is, stop the service.
 	SERVICE_STATUS status;
-
 	if (QueryServiceStatus(service, &status) && status.dwCurrentState != SERVICE_STOPPED)
 	{
-	// Stop the service
-	if (!ControlService(service, SERVICE_CONTROL_STOP, &status))
-		sLogger << dlib::LERROR << "Could not stop service " << m_name;
-	else
-		sLogger << dlib::LINFO << "Successfully stopped service " << m_name;
+		// Stop the service
+		if (!ControlService(service, SERVICE_CONTROL_STOP, &status))
+			g_logger << dlib::LERROR << "Could not stop service " << m_name;
+		else
+			g_logger << dlib::LINFO << "Successfully stopped service " << m_name;
 	}
 
-
-	if (::DeleteService(service) == 0)
-	{
-	sLogger << dlib::LERROR << "Could delete service " << m_name;
-	}
+	if(!::DeleteService(service))
+		g_logger << dlib::LERROR << "Could delete service " << m_name;
 	else
-	{
-	sLogger << dlib::LINFO << "Successfully removed service " << m_name;
-	}
+		g_logger << dlib::LINFO << "Successfully removed service " << m_name;
 
 	::CloseServiceHandle(service);
 }
@@ -409,50 +390,45 @@ void MTConnectService::remove()
 // Return value:
 //   None.
 //
-VOID WINAPI SvcMain(DWORD dwArgc, LPTSTR *lpszArgv)
+VOID WINAPI SvcMain( DWORD dwArgc, LPSTR *lpszArgv )
 {
 	// Register the handler function for the service
-	gService->setName(lpszArgv[0]);
+	g_service->setName(lpszArgv[0]);
 
-	char path[MAX_PATH];
-
-	if (!GetModuleFileName(NULL, path, MAX_PATH))
+	char path[MAX_PATH] = {0};
+	if( !GetModuleFileNameA(NULL, path, MAX_PATH) )
 	{
-	sLogger << dlib::LERROR << "Cannot get path of executable (" << GetLastError() << ")";
-	return;
+		g_logger << dlib::LERROR << "Cannot get path of executable (" << GetLastError() << ")";
+		return;
 	}
 
 	std::string wd = path;
 	size_t found = wd.rfind('\\');
-
 	if (found != std::string::npos)
 	{
-	wd.erase(found);
-	SetCurrentDirectory(wd.c_str());
+		wd.erase(found);
+		SetCurrentDirectoryA(wd.c_str());
 	}
 
-	gSvcStatusHandle = RegisterServiceCtrlHandler(
-			   gService->name().c_str(),
-			   SvcCtrlHandler);
+	g_svcStatusHandle = RegisterServiceCtrlHandlerA(
+		g_service->name().c_str(),
+		SvcCtrlHandler);
 
-	if (!gSvcStatusHandle)
+	if( !g_svcStatusHandle)
 	{
-	SvcReportEvent("RegisterServiceCtrlHandler");
-	return;
+		SvcReportEvent("RegisterServiceCtrlHandler");
+		return;
 	}
 
 	// These SERVICE_STATUS members remain as set here
-
-	gSvcStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-	gSvcStatus.dwServiceSpecificExitCode = 0;
+	g_svcStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+	g_svcStatus.dwServiceSpecificExitCode = 0ul;
 
 	// Report initial status to the SCM
-
-	ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
+	ReportSvcStatus( SERVICE_START_PENDING, NO_ERROR, 3000ul );
 
 	// Perform service-specific initialization and work.
-
-	SvcInit(dwArgc, lpszArgv);
+	SvcInit( dwArgc, lpszArgv );
 }
 
 //
@@ -470,44 +446,38 @@ VOID WINAPI SvcMain(DWORD dwArgc, LPTSTR *lpszArgv)
 //
 VOID SvcInit(DWORD dwArgc, LPTSTR *lpszArgv)
 {
-// Get the real arguments from the registry
-	char key[1024];
-	snprintf(key, 1023, "SOFTWARE\\MTConnect\\%s", gService->name().c_str());
+	// Get the real arguments from the registry
+	char key[1024] = {0};
+	snprintf(key, 1023u, "SOFTWARE\\MTConnect\\%s", g_service->name().c_str());
 
-	HKEY agent;
-	LONG res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, key, 0, KEY_READ, &agent);
-
+	HKEY agent = NULL;
+	LSTATUS res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, key, 0ul, KEY_READ, &agent);
 	if (res != ERROR_SUCCESS)
 	{
-	SvcReportEvent("RegOpenKey: Could not open MTConnect Agent Key");
-	ReportSvcStatus(SERVICE_STOPPED, 1, 0);
-	return;
+		SvcReportEvent("RegOpenKey: Could not open MTConnect Agent Key");
+		ReportSvcStatus( SERVICE_STOPPED, 1ul, 0ul );
+		return;
 	}
 
-	const char *argp[2];
-	BYTE configFile[2048];
-	DWORD len = sizeof(configFile) - 1, type;
-	res = RegQueryValueEx(agent, "ConfigurationFile", 0, &type, (BYTE *) configFile, &len);
-	RegCloseKey(agent);
-
+	BYTE configFile[2048] = {};
+	DWORD len = sizeof(configFile) - 1ul, type(0ul);
+	res = RegQueryValueExA(agent, "ConfigurationFile", 0ul, &type, (BYTE*) configFile, &len);
+	RegCloseKey(agent); agent = NULL;
 	if (res != ERROR_SUCCESS)
 	{
-	SvcReportEvent("RegOpenKey: Could not open ConfigurationFile");
-	ReportSvcStatus(SERVICE_STOPPED, 1, 0);
-	return;
+		SvcReportEvent("RegOpenKey: Could not open ConfigurationFile");
+		ReportSvcStatus( SERVICE_STOPPED, 1ul, 0ul );
+		return;
 	}
 
-	argp[0] = (char *) configFile;
-	argp[1] = 0;
-	gService->initialize(1, argp);
+	const char *argp[2] = { NULL, NULL };
+	argp[0] = (char*) configFile;
+	g_service->initialize(1, argp);
 
 	// Report running status when initialization is complete.
-
-	ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
-
-	gService->start();
-
-	ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+	ReportSvcStatus( SERVICE_RUNNING, NO_ERROR, 0ul );
+	g_service->start();
+	ReportSvcStatus( SERVICE_STOPPED, NO_ERROR, 0ul );
 }
 
 //
@@ -527,25 +497,26 @@ VOID ReportSvcStatus(DWORD dwCurrentState,
 			 DWORD dwWin32ExitCode,
 			 DWORD dwWaitHint)
 {
-	static DWORD dwCheckPoint = 1;
+	static DWORD dwCheckPoint = 1ul;
 
 	// Fill in the SERVICE_STATUS structure.
-
-	gSvcStatus.dwCurrentState = dwCurrentState;
-	gSvcStatus.dwWin32ExitCode = dwWin32ExitCode;
-	gSvcStatus.dwWaitHint = dwWaitHint;
+	g_svcStatus.dwCurrentState = dwCurrentState;
+	g_svcStatus.dwWin32ExitCode = dwWin32ExitCode;
+	g_svcStatus.dwWaitHint = dwWaitHint;
 
 	if (dwCurrentState == SERVICE_START_PENDING)
-	gSvcStatus.dwControlsAccepted = 0;
-	else gSvcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+		g_svcStatus.dwControlsAccepted = 0ul;
+	else
+		g_svcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
 
-	if ((dwCurrentState == SERVICE_RUNNING) ||
-	(dwCurrentState == SERVICE_STOPPED))
-	gSvcStatus.dwCheckPoint = 0;
-	else gSvcStatus.dwCheckPoint = dwCheckPoint++;
+	if ( dwCurrentState == SERVICE_RUNNING ||
+		 dwCurrentState == SERVICE_STOPPED )
+		g_svcStatus.dwCheckPoint = 0ul;
+	else
+		g_svcStatus.dwCheckPoint = dwCheckPoint++;
 
 	// Report the status of the service to the SCM.
-	SetServiceStatus(gSvcStatusHandle, &gSvcStatus);
+	SetServiceStatus(g_svcStatusHandle, &g_svcStatus);
 }
 
 //
@@ -561,28 +532,24 @@ VOID ReportSvcStatus(DWORD dwCurrentState,
 //
 VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 {
-// Handle the requested control code.
-
-	switch (dwCtrl)
+	// Handle the requested control code.
+	switch(dwCtrl) 
 	{
-	case SERVICE_CONTROL_STOP:
-	sLogger << dlib::LINFO << "Service stop requested";
-	ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
+	case SERVICE_CONTROL_STOP: 
+		g_logger << dlib::LINFO << "Service stop requested";
+		ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0ul);
+		if (g_service)
+			g_service->stop();
+		ReportSvcStatus(g_svcStatus.dwCurrentState, NO_ERROR, 0ul);
 
-	if (gService != NULL)
-		gService->stop();
+		return;
 
-	ReportSvcStatus(gSvcStatus.dwCurrentState, NO_ERROR, 0);
-
-	return;
-
-	case SERVICE_CONTROL_INTERROGATE:
-	break;
+	case SERVICE_CONTROL_INTERROGATE: 
+		break; 
 
 	default:
-	break;
+		break;
 	}
-
 }
 
 //
@@ -598,60 +565,57 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 // Remarks:
 //   The service must have an entry in the Application event log.
 //
-VOID SvcReportEvent(LPTSTR szFunction)
+VOID SvcReportEvent(LPSTR szFunction)
 {
-	HANDLE hEventSource;
-	LPCTSTR lpszStrings[2];
-	char Buffer[80];
+	HANDLE hEventSource = RegisterEventSourceA(NULL, g_service->name().c_str());
 
-	hEventSource = RegisterEventSource(NULL, gService->name().c_str());
-
-	if (NULL != hEventSource)
+	if( hEventSource )
 	{
-	sprintf_s(Buffer, 80, "%s failed with %d", szFunction, GetLastError());
-	sLogger << dlib::LERROR << Buffer;
+		LPCSTR lpszStrings[2] = { NULL, NULL };
+		char Buffer[80] = {0};
+		sprintf_s(Buffer, 80u, "%s failed with %d", szFunction, GetLastError());
+		g_logger << dlib::LERROR << Buffer;
 
-	lpszStrings[0] = gService->name().c_str();
-	lpszStrings[1] = Buffer;
+		lpszStrings[0] = g_service->name().c_str();
+		lpszStrings[1] = Buffer;
 
-	ReportEvent(hEventSource,        // event log handle
-			EVENTLOG_ERROR_TYPE, // event type
-			0,                   // event category
-			SVC_ERROR,           // event identifier
-			NULL,                // no security identifier
-			2,                   // size of lpszStrings array
-			0,                   // no binary data
-			lpszStrings,         // array of strings
-			NULL);               // no binary data
+		ReportEventA(
+			hEventSource,			// event log handle
+			EVENTLOG_ERROR_TYPE,	// event type
+			0,						// event category
+			SVC_ERROR,				// event identifier
+			NULL,					// no security identifier
+			2,						// size of lpszStrings array
+			0ul,					// no binary data
+			lpszStrings,			// array of strings
+			NULL);					// no binary data
 
-	DeregisterEventSource(hEventSource);
+		DeregisterEventSource(hEventSource);
 	}
 }
 
-VOID SvcLogEvent(WORD aType, DWORD aId, LPSTR aText)
+VOID SvcLogEvent(WORD eventType, DWORD eventId, LPSTR logText)
 {
-	HANDLE hEventSource;
-	LPCTSTR lpszStrings[3];
-
-	hEventSource = RegisterEventSource(NULL, gService->name().c_str());
-
-	if (NULL != hEventSource)
+	HANDLE hEventSource = RegisterEventSourceA(NULL, g_service->name().c_str());
+	if( hEventSource )
 	{
-	lpszStrings[0] = gService->name().c_str();
-	lpszStrings[1] = "\n\n";
-	lpszStrings[2] = aText;
+		LPCSTR lpszStrings[3] = {
+			g_service->name().c_str(),
+			"\n\n",
+			logText };
 
-	ReportEvent(hEventSource,        // event log handle
-			aType, // event type
-			0,                   // event category
-			aId,           // event identifier
-			NULL,                // no security identifier
-			3,                   // size of lpszStrings array
-			0,                   // no binary data
-			lpszStrings,         // array of strings
-			NULL);               // no binary data
+		ReportEventA(
+			hEventSource,	// event log handle
+			eventType,		// event type
+			0,				// event category
+			eventId,		// event identifier
+			NULL,			// no security identifier
+			3,				// size of lpszStrings array
+			0,				// no binary data
+			lpszStrings,	// array of strings
+			NULL);			// no binary data
 
-	DeregisterEventSource(hEventSource);
+		DeregisterEventSource(hEventSource);
 	}
 }
 
@@ -664,23 +628,23 @@ VOID SvcLogEvent(WORD aType, DWORD aId, LPSTR aText)
 
 static void signal_handler(int sig)
 {
-	switch (sig)
+	switch(sig)
 	{
 	case SIGHUP:
-	sLogger << dlib::LWARN << "hangup signal catched";
-	break;
+		g_logger << dlib::LWARN << "hangup signal catched";
+		break;
 
 	case SIGTERM:
-	sLogger << dlib::LWARN << "terminate signal catched";
-	exit(0);
-	break;
+		g_logger << dlib::LWARN << "terminate signal catched";
+		exit(0);
+		break;
 	}
 }
 
-static std::string sPidFile;
+static std::string s_pidFile;
 static void cleanup_pid()
 {
-	unlink(sPidFile.c_str());
+	unlink(s_pidFile.c_str());
 }
 
 void MTConnectService::daemonize()
@@ -688,16 +652,17 @@ void MTConnectService::daemonize()
 	int i, lfp;
 	char str[10];
 
-	if (getppid() == 1) return; // already a daemon
+	if (getppid() == 1)
+		return; // already a daemon
 
 	i = fork();
-
-	if (i < 0) exit(1); // fork error
+	if (i < 0) 
+		exit(1); // fork error
 
 	if (i > 0)
 	{
-	std::cout << "Parent process now exiting, child process started" << std::endl;
-	exit(0); // parent exits
+		std::cout << "Parent process now exiting, child process started" << std::endl;
+		exit(0); // parent exits
 	}
 
 	// child (daemon) continues
@@ -720,11 +685,12 @@ void MTConnectService::daemonize()
 	// Create the pid file.
 	sPidFile = m_pidFile;
 	lfp = open(m_pidFile.c_str(), O_RDWR | O_CREAT, 0640);
-
-	if (lfp < 0) exit(1); // can not open
+	if (lfp < 0)
+		exit(1); // can not open
 
 	// Lock the pid file.
-	if (lockf(lfp, F_TLOCK, 0) < 0) exit(0); // can not lock
+	if (lockf(lfp, F_TLOCK, 0) < 0)
+		exit(0); // can not lock
 
 	// first instance continues
 	sprintf(str, "%d\n", getpid());
