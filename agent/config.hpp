@@ -40,10 +40,10 @@ public:
   void configureLogger(dlib::config_reader::kernel_1a &aReader);
   void loadConfig(std::istream &aFile);
 
-  void setAgent(Agent *aAgent) { mAgent = aAgent; }
-  Agent *getAgent() { return mAgent; }
+  void setAgent(Agent *aAgent) { m_agent = aAgent; }
+  Agent *getAgent() { return m_agent; }
 
-  RollingFileLogger *getLogger() { return mLoggerFile; }
+  RollingFileLogger *getLogger() { return m_loggerFile; }
   
 protected:
   Device *defaultDevice();
@@ -66,11 +66,11 @@ protected:
   void monitorThread();
 
 protected:
-  Agent *mAgent;
-  RollingFileLogger *mLoggerFile;
-  bool mMonitorFiles;
-  int mMinimumConfigReloadAge;
-  std::string mDevicesFile;
-  bool mRestart;
-  std::string mExePath;
+  Agent *m_agent;
+  RollingFileLogger *m_loggerFile;
+  bool m_monitorFiles;
+  int m_minimumConfigReloadAge;
+  std::string m_devicesFile;
+  bool m_restart;
+  std::string m_exePath;
 };

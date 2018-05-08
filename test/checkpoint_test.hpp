@@ -57,11 +57,11 @@ class CheckpointTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE_END();
   
 protected:
-  Checkpoint *mCheckpoint;
-  Agent *mAgent;
-  Adapter *mAdapter;
-  std::string mAgentId;
-  DataItem *mDataItem1, *mDataItem2;
+  Checkpoint *m_checkpoint;
+  Agent *m_agent;
+  Adapter *m_adapter;
+  std::string m_agentId;
+  DataItem *m_dataItem1, *m_dataItem2;
   
 protected:
   void testAddComponentEvents();

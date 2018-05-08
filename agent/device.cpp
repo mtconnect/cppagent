@@ -24,14 +24,14 @@ static dlib::logger sLogger("device");
 
 /* Device public methods */
 Device::Device(std::map<std::string, std::string> attributes)
-  : Component("Device", attributes), mPreserveUuid(false), mAvailabilityAdded(false)
+  : Component("Device", attributes), m_preserveUuid(false), m_availabilityAdded(false)
 {
   if (!attributes["iso841Class"].empty())
   {
-    mIso841Class = atoi(attributes["iso841Class"].c_str());
-    mAttributes["iso841Class"] = attributes["iso841Class"];
+    m_iso841Class = atoi(attributes["iso841Class"].c_str());
+    m_attributes["iso841Class"] = attributes["iso841Class"];
   } else {
-    mIso841Class = -1;
+    m_iso841Class = -1;
   }
 }
 
@@ -41,26 +41,26 @@ Device::~Device()
 
 void Device::addDeviceDataItem(DataItem& dataItem) {
   if (!dataItem.getSource().empty())
-    mDeviceDataItemsBySource[dataItem.getSource()] = &dataItem;
+    m_deviceDataItemsBySource[dataItem.getSource()] = &dataItem;
   if (!dataItem.getName().empty())
-    mDeviceDataItemsByName[dataItem.getName()] = &dataItem;
+    m_deviceDataItemsByName[dataItem.getName()] = &dataItem;
   
-  if (mDeviceDataItemsById[dataItem.getId()] != NULL) {
+  if (m_deviceDataItemsById[dataItem.getId()] != NULL) {
     sLogger << dlib::LERROR << "Duplicate data item id: " << dataItem.getId() << " for device " 
-            << mName << ", skipping";
+            << m_name << ", skipping";
   } else {
-    mDeviceDataItemsById[dataItem.getId()] = &dataItem;
+    m_deviceDataItemsById[dataItem.getId()] = &dataItem;
   }
 }
 
 DataItem * Device::getDeviceDataItem(const std::string& aName) {
   DataItem * di;
-  if (mDeviceDataItemsBySource.count(aName) > 0 && (di = mDeviceDataItemsBySource[aName]))
+  if (m_deviceDataItemsBySource.count(aName) > 0 && (di = m_deviceDataItemsBySource[aName]))
     return di;
-  else if (mDeviceDataItemsByName.count(aName)> 0 && (di = mDeviceDataItemsByName[aName]))
+  else if (m_deviceDataItemsByName.count(aName)> 0 && (di = m_deviceDataItemsByName[aName]))
     return di;
-  else if (mDeviceDataItemsById.count(aName) > 0)
-    di = mDeviceDataItemsById[aName];
+  else if (m_deviceDataItemsById.count(aName) > 0)
+    di = m_deviceDataItemsById[aName];
   else
     di = NULL;
   return di;

@@ -51,20 +51,20 @@ class Agent : public server_http
   public:
     ParameterError(const std::string &aCode, const std::string &aMessage) 
     {
-      mCode = aCode;
-      mMessage = aMessage;
+      m_code = aCode;
+      m_message = aMessage;
     }
     ParameterError(const ParameterError &aError) {
-      mCode = aError.mCode;
-      mMessage = aError.mMessage;
+      m_code = aError.m_code;
+      m_message = aError.m_message;
     }
     ParameterError &operator=(const ParameterError &aError) {
-      mCode = aError.mCode;
-      mMessage = aError.mMessage;
+      m_code = aError.m_code;
+      m_message = aError.m_message;
       return *this;
     }
-    std::string mCode;
-    std::string mMessage;
+    std::string m_code;
+    std::string m_message;
   };
   
 public:
@@ -115,9 +115,9 @@ public:
                        int aLegacyTimeout = 600);
   
   /* Get device from device map */
-  Device * getDeviceByName(const std::string& name) { return mDeviceMap[name]; }
+  Device * getDeviceByName(const std::string& name) { return m_deviceMap[name]; }
   Device * findDeviceByUUIDorName(const std::string& aId);
-  const std::vector<Device *> &getDevices() { return mDevices; }
+  const std::vector<Device *> &getDevices() { return m_devices; }
   
   /* Add component events to the sliding buffer */
   unsigned int addToBuffer(
@@ -146,24 +146,24 @@ public:
     const std::string& name
   );
   
-  ComponentEvent *getFromBuffer(uint64_t aSeq) const { return (*mSlidingBuffer)[aSeq]; }
-  uint64_t getSequence() const { return mSequence; }
-  unsigned int getBufferSize() const { return mSlidingBufferSize; }
-  unsigned int getMaxAssets() const { return mMaxAssets; }
-  unsigned int getAssetCount() const { return mAssets.size(); }
+  ComponentEvent *getFromBuffer(uint64_t aSeq) const { return (*m_slidingBuffer)[aSeq]; }
+  uint64_t getSequence() const { return m_sequence; }
+  unsigned int getBufferSize() const { return m_slidingBufferSize; }
+  unsigned int getMaxAssets() const { return m_maxAssets; }
+  unsigned int getAssetCount() const { return m_assets.size(); }
   int getAssetCount(const std::string &aType) const { 
-    return const_cast<std::map<std::string, int>& >(mAssetCounts)[aType];
+    return const_cast<std::map<std::string, int>& >(m_assetCounts)[aType];
   }
   uint64_t getFirstSequence() const {
-    if (mSequence > mSlidingBufferSize)
-      return mSequence - mSlidingBufferSize;
+    if (m_sequence > m_slidingBufferSize)
+      return m_sequence - m_slidingBufferSize;
     else
       return 1;
   }
 
   // For testing...
-  void setSequence(uint64_t aSeq) { mSequence = aSeq; }
-  std::list<AssetPtr*> *getAssets() { return &mAssets; }
+  void setSequence(uint64_t aSeq) { m_sequence = aSeq; }
+  std::list<AssetPtr*> *getAssets() { return &m_assets; }
   
   // Starting
   virtual void start();
@@ -172,16 +172,16 @@ public:
   void clear();
 
   void registerFile(const std::string &aUri, const std::string &aPath);
-  void addMimeType(const std::string &aExt, const std::string &aType) { mMimeTypes[aExt] = aType; }
+  void addMimeType(const std::string &aExt, const std::string &aType) { m_mimeTypes[aExt] = aType; }
   
   // PUT and POST handling
-  void enablePut(bool aFlag = true) { mPutEnabled = aFlag; }
-  bool isPutEnabled() { return mPutEnabled; }
-  void allowPutFrom(const std::string &aHost) { mPutAllowedHosts.insert(aHost); }
-  bool isPutAllowedFrom(const std::string &aHost) { return mPutAllowedHosts.count(aHost) > 0; }
+  void enablePut(bool aFlag = true) { m_putEnabled = aFlag; }
+  bool isPutEnabled() { return m_putEnabled; }
+  void allowPutFrom(const std::string &aHost) { m_putAllowedHosts.insert(aHost); }
+  bool isPutAllowedFrom(const std::string &aHost) { return m_putAllowedHosts.count(aHost) > 0; }
   
   // For debugging
-  void setLogStreamData(bool aLog) { mLogStreamData = aLog; }
+  void setLogStreamData(bool aLog) { m_logStreamData = aLog; }
     
   /* Handle probe calls */
   std::string handleProbe(const std::string& device);
@@ -250,7 +250,7 @@ protected:
   /* Get a file */
   std::string handleFile(const std::string& aUri, outgoing_things& aOutgoing);
 
-  bool isFile(const std::string& aUri) { return mFileMap.count(aUri) > 0; }
+  bool isFile(const std::string& aUri) { return m_fileMap.count(aUri) > 0; }
   
   /* Perform a check on parameter and return a value or a code */
   int checkAndGetParam(
@@ -273,105 +273,105 @@ protected:
   );
   
   /* Find data items by name/id */
-  DataItem * getDataItemById(const std::string& id) { return mDataItemMap[id]; }
+  DataItem * getDataItemById(const std::string& id) { return m_dataItemMap[id]; }
   
 protected:
   /* Unique id based on the time of creation */
-  unsigned int mInstanceId;
+  unsigned int m_instanceId;
   
   /* Pointer to the configuration file for node access */
-  XmlParser *mXmlParser;
+  XmlParser *m_xmlParser;
   
   /* For access to the sequence number and sliding buffer, use the mutex */
-  dlib::mutex *mSequenceLock;
-  dlib::mutex *mAssetLock;
+  dlib::mutex *m_sequenceLock;
+  dlib::mutex *m_assetLock;
   
   /* Sequence number */
-  uint64_t mSequence;
+  uint64_t m_sequence;
   
   /* The sliding/circular buffer to hold all of the events/sample data */
-  dlib::sliding_buffer_kernel_1<ComponentEventPtr> *mSlidingBuffer;
-  unsigned int mSlidingBufferSize;
+  dlib::sliding_buffer_kernel_1<ComponentEventPtr> *m_slidingBuffer;
+  unsigned int m_slidingBufferSize;
 
   /* Asset storage, circ buffer stores ids */
-  std::list<AssetPtr*> mAssets;
-  AssetIndex mAssetMap;
+  std::list<AssetPtr*> m_assets;
+  AssetIndex m_assetMap;
   
   // Natural key indices for assets
-  std::map<std::string, AssetIndex> mAssetIndices;
-  unsigned int mMaxAssets;  
+  std::map<std::string, AssetIndex> m_assetIndices;
+  unsigned int m_maxAssets;  
   
   /* Checkpoints */
-  Checkpoint mLatest;
-  Checkpoint mFirst;
-  Checkpoint *mCheckpoints;
+  Checkpoint m_latest;
+  Checkpoint m_first;
+  Checkpoint *m_checkpoints;
 
-  int mCheckpointFreq, mCheckpointCount;
+  int mCheckpointFreq, m_checkpointCount;
   
   /* Data containers */
-  std::vector<Adapter *> mAdapters;
-  std::vector<Device *> mDevices;
-  std::map<std::string, Device *> mDeviceMap;
-  std::map<std::string, DataItem *> mDataItemMap;
-  std::map<std::string, int> mAssetCounts;
+  std::vector<Adapter *> m_adapters;
+  std::vector<Device *> m_devices;
+  std::map<std::string, Device *> m_deviceMap;
+  std::map<std::string, DataItem *> m_dataItemMap;
+  std::map<std::string, int> m_assetCounts;
   
   struct CachedFile : public RefCounted {
-    char    *mBuffer;
-    size_t   mSize;
+    char    *m_buffer;
+    size_t   m_size;
     
-    CachedFile() : mBuffer(NULL), mSize(0) { }
+    CachedFile() : m_buffer(NULL), m_size(0) { }
     
     CachedFile(const CachedFile &aFile)
-      : mSize(aFile.mSize)
+      : m_size(aFile.m_size)
     {
-      mBuffer = (char*)malloc(aFile.mSize);
-      memcpy(mBuffer, aFile.mBuffer, aFile.mSize);
+      m_buffer = (char*)malloc(aFile.m_size);
+      memcpy(m_buffer, aFile.m_buffer, aFile.m_size);
     }
 
     
     CachedFile(char *aBuffer, size_t aSize)
-      : mSize(aSize)
+      : m_size(aSize)
     {
-      mBuffer = (char*)malloc(aSize);
-      memcpy(mBuffer, aBuffer, aSize);
+      m_buffer = (char*)malloc(aSize);
+      memcpy(m_buffer, aBuffer, aSize);
     }
     
     CachedFile(size_t aSize)
-      : mSize(aSize)
+      : m_size(aSize)
     {
-      mBuffer = (char*)malloc(aSize);
+      m_buffer = (char*)malloc(aSize);
     }
 
     
     ~CachedFile() {
-      free(mBuffer);
+      free(m_buffer);
     }
     
     CachedFile &operator=(const CachedFile &aFile) {
-      if (mBuffer != NULL) free(mBuffer);
-      mBuffer = (char*)malloc(aFile.mSize);
-      memcpy(mBuffer, aFile.mBuffer, aFile.mSize);
-      mSize = aFile.mSize;
+      if (m_buffer != NULL) free(m_buffer);
+      m_buffer = (char*)malloc(aFile.m_size);
+      memcpy(m_buffer, aFile.m_buffer, aFile.m_size);
+      m_size = aFile.m_size;
       return *this;
     }
     
     void allocate(size_t aSize)
     {
-      mBuffer = (char*)malloc(aSize);
-      mSize = aSize;
+      m_buffer = (char*)malloc(aSize);
+      m_size = aSize;
     }
   };
 
   // For file handling, small files will be cached
-  std::map<std::string, std::string> mFileMap;
-  std::map<std::string, RefCountedPtr<CachedFile> > mFileCache;
-  std::map<std::string, std::string> mMimeTypes;
+  std::map<std::string, std::string> m_fileMap;
+  std::map<std::string, RefCountedPtr<CachedFile> > m_fileCache;
+  std::map<std::string, std::string> m_mimeTypes;
   
   // Put handling controls
-  bool mPutEnabled;
-  std::set<std::string> mPutAllowedHosts;
+  bool m_putEnabled;
+  std::set<std::string> m_putAllowedHosts;
   
   // For debugging
-  bool mLogStreamData;
+  bool m_logStreamData;
 };
 

@@ -30,52 +30,52 @@ typedef std::map<std::string,std::string> XmlAttributes;
 class Asset : public RefCounted
 {
 protected:
-  std::string mAssetId;
-  std::string mContent;
-  std::string mType;
-  std::string mDeviceUuid;
-  std::string mTimestamp;
-  std::string mDescription;
-  XmlAttributes mArchetype;
+  std::string m_assetId;
+  std::string m_content;
+  std::string m_type;
+  std::string m_deviceUuid;
+  std::string m_timestamp;
+  std::string m_description;
+  XmlAttributes m_archetype;
   
-  bool        mRemoved;
-  AssetKeys   mKeys;
-  AssetKeys   mIdentity;
+  bool        m_removed;
+  AssetKeys   m_keys;
+  AssetKeys   m_identity;
   
 public:
   Asset();
   Asset(const Asset &aOther) {
-    mAssetId = aOther.mAssetId;
-    mContent = aOther.mContent;
-    mType = aOther.mType;
-    mRemoved = aOther.mRemoved;
+    m_assetId = aOther.m_assetId;
+    m_content = aOther.m_content;
+    m_type = aOther.m_type;
+    m_removed = aOther.m_removed;
   }
   Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
         const bool aRemoved = false);
   virtual ~Asset();
 
-  const std::string &getAssetId() const { return mAssetId; }
-  virtual std::string &getContent() { return mContent; }
-  const std::string &getType() const { return mType; }
-  AssetKeys   &getKeys() { return mKeys; }
-  const std::string &getDeviceUuid() const { return mDeviceUuid; }
-  const std::string &getTimestamp() const { return mTimestamp; }
-  const std::string &getDescription() const { return mDescription; }
-  const XmlAttributes &getArchetype() const { return mArchetype; }
-  bool isRemoved() const { return mRemoved; }
+  const std::string &getAssetId() const { return m_assetId; }
+  virtual std::string &getContent() { return m_content; }
+  const std::string &getType() const { return m_type; }
+  AssetKeys   &getKeys() { return m_keys; }
+  const std::string &getDeviceUuid() const { return m_deviceUuid; }
+  const std::string &getTimestamp() const { return m_timestamp; }
+  const std::string &getDescription() const { return m_description; }
+  const XmlAttributes &getArchetype() const { return m_archetype; }
+  bool isRemoved() const { return m_removed; }
   
-  AssetKeys &getIdentity() { return mIdentity; }
+  AssetKeys &getIdentity() { return m_identity; }
   
   bool operator==(const Asset &aOther) {
-    return mAssetId == aOther.mAssetId;
+    return m_assetId == aOther.m_assetId;
   }
   
-  void setAssetId(const std::string &aId) { mAssetId = aId; }
-  void setDeviceUuid(const std::string &aId) { mDeviceUuid = aId; }
-  void setTimestamp(const std::string &aTs) { mTimestamp = aTs; }
-  void setRemoved(bool aRemoved) { mRemoved = aRemoved; }
-  void setDescription(const std::string &aDesc) { mDescription = aDesc; }
-  void setArchetype(const XmlAttributes &anArch) { mArchetype = anArch; }
+  void setAssetId(const std::string &aId) { m_assetId = aId; }
+  void setDeviceUuid(const std::string &aId) { m_deviceUuid = aId; }
+  void setTimestamp(const std::string &aTs) { m_timestamp = aTs; }
+  void setRemoved(bool aRemoved) { m_removed = aRemoved; }
+  void setDescription(const std::string &aDesc) { m_description = aDesc; }
+  void setArchetype(const XmlAttributes &anArch) { m_archetype = anArch; }
   
   virtual void changed() { }
   virtual void addIdentity(const std::string &aKey, const std::string &aValue);  

@@ -49,31 +49,31 @@ class TestConnector : public Connector
 public:
   TestConnector(const std::string& server, unsigned int port,
                 int aLegacyTimeout = 5)
-    : Connector(server, port, aLegacyTimeout), mDisconnected(false) {}
+    : Connector(server, port, aLegacyTimeout), m_disconnected(false) {}
   
   virtual void processData(const std::string& data) {
-    mData = data;
-    mList.push_back(mData);
+    m_data = data;
+    m_list.push_back(m_data);
   }
 
   virtual void protocolCommand(const std::string& data) {
-    mCommand = data;
+    m_command = data;
   }
 
-  virtual void disconnected() { mDisconnected = true; }
-  virtual void connected() { mDisconnected = false; }
-  bool heartbeats() { return mHeartbeats; }
+  virtual void disconnected() { m_disconnected = true; }
+  virtual void connected() { m_disconnected = false; }
+  bool heartbeats() { return m_heartbeats; }
 
   void pushData(const char *data) { parseBuffer(data); }
   
   void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
-  void resetHeartbeats() { mHeartbeats = false; }
+  void resetHeartbeats() { m_heartbeats = false; }
 
 public:
-  std::vector<std::string> mList;
-  std::string mData;
-  std::string mCommand;
-  bool mDisconnected;
+  std::vector<std::string> m_list;
+  std::string m_data;
+  std::string m_command;
+  bool m_disconnected;
 };
   
 class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
@@ -100,10 +100,10 @@ public:
   virtual void thread();
   
 protected:
-  dlib::scoped_ptr<dlib::listener> mServer;
-  dlib::scoped_ptr<dlib::connection> mServerSocket;
-  dlib::scoped_ptr<TestConnector> mConnector;
-  unsigned short mPort;
+  dlib::scoped_ptr<dlib::listener> m_server;
+  dlib::scoped_ptr<dlib::connection> m_serverSocket;
+  dlib::scoped_ptr<TestConnector> m_connector;
+  unsigned short m_port;
   
 protected:
   void testConnection();

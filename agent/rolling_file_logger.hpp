@@ -38,22 +38,22 @@ public:
   
   void write(const char *aLine);
 
-  int getMaxSize() const { return mMaxSize; }
+  int getMaxSize() const { return m_maxSize; }
 
 protected:
   void rollover(size_t aSize);
   int getFileAge();
   
 private:
-  dlib::mutex *mFileLock;
+  dlib::mutex *m_fileLock;
   
-  std::string mName;
-  dlib::directory mDirectory;
-  dlib::file mFile;
+  std::string m_name;
+  dlib::directory m_directory;
+  dlib::file m_file;
   
-  int mMaxBackupIndex;
-  size_t mMaxSize;
-  RollingSchedule mSchedule;
+  int m_maxBackupIndex;
+  size_t m_maxSize;
+  RollingSchedule m_schedule;
   
-  int mFd;
+  int m_fd;
 };

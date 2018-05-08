@@ -52,7 +52,7 @@ public:
   void tearDown();
   
 protected:
-  Asset *mAsset;
+  Asset *m_asset;
   
 protected:
   void testAsset();

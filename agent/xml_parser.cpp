@@ -56,13 +56,13 @@ agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 /* XmlParser public methods */
 XmlParser::XmlParser()
 {
-  mDoc = NULL;
+  m_doc = NULL;
 }
 
 std::vector<Device *> XmlParser::parseFile(const std::string &aPath)
 {
-  if (mDoc != NULL)    
-    xmlFreeDoc(mDoc);
+  if (m_doc != NULL)    
+    xmlFreeDoc(m_doc);
   
   xmlXPathContextPtr xpathCtx = NULL;
   xmlXPathObjectPtr devices = NULL;
@@ -74,13 +74,13 @@ std::vector<Device *> XmlParser::parseFile(const std::string &aPath)
     xmlXPathInit();
     xmlSetGenericErrorFunc(NULL, agentXMLErrorFunc);
     
-    THROW_IF_XML2_NULL(mDoc = xmlReadFile(aPath.c_str(), NULL, 
+    THROW_IF_XML2_NULL(m_doc = xmlReadFile(aPath.c_str(), NULL, 
                        XML_PARSE_NOBLANKS));
     
     std::string path = "//Devices/*";
-    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(mDoc));
+    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(m_doc));
     
-    xmlNodePtr root = xmlDocGetRootElement(mDoc);
+    xmlNodePtr root = xmlDocGetRootElement(m_doc);
     if (root->ns != NULL)
     {
       path = addNamespace(path, "m");
@@ -116,7 +116,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &aPath)
         string uri = loc.substr(pos + 1);
         
         // Try to find the prefix for this urn...
-        xmlNsPtr ns = xmlSearchNsByHref(mDoc, root, BAD_CAST locationUrn.c_str());
+        xmlNsPtr ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
         string prefix;
         if (ns->prefix != NULL)
           prefix = (const char*) ns->prefix;
@@ -189,14 +189,14 @@ std::vector<Device *> XmlParser::parseFile(const std::string &aPath)
 
 XmlParser::~XmlParser()
 {
-  if (mDoc != NULL)    
-    xmlFreeDoc(mDoc);
+  if (m_doc != NULL)    
+    xmlFreeDoc(m_doc);
 }
 
 void XmlParser::loadDocument(const std::string &aDoc)
 {
-  if (mDoc != NULL)    
-    xmlFreeDoc(mDoc);
+  if (m_doc != NULL)    
+    xmlFreeDoc(m_doc);
   
   try
   {
@@ -204,7 +204,7 @@ void XmlParser::loadDocument(const std::string &aDoc)
     xmlXPathInit();
     xmlSetGenericErrorFunc(NULL, agentXMLErrorFunc);
     
-    THROW_IF_XML2_NULL(mDoc = xmlReadMemory(aDoc.c_str(), aDoc.length(), 
+    THROW_IF_XML2_NULL(m_doc = xmlReadMemory(aDoc.c_str(), aDoc.length(), 
                                             "Devices.xml", NULL, XML_PARSE_NOBLANKS));
   }
   
@@ -224,7 +224,7 @@ void XmlParser::updateDevice(Device *aDevice)
 void XmlParser::getDataItems(set<string> &aFilterSet,
                              const string& aPath, xmlNodePtr node)
 {
-  xmlNodePtr root = xmlDocGetRootElement(mDoc);
+  xmlNodePtr root = xmlDocGetRootElement(m_doc);
   if (node == NULL) node = root;
   
   xmlXPathContextPtr xpathCtx = NULL;
@@ -233,7 +233,7 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
   try 
   {
     string path;
-    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(mDoc));
+    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(m_doc));
     xpathCtx->node = node;
     bool mtc = false;
       
@@ -718,14 +718,14 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr aNode, xmlDocPtr 
   }
   
   name += (const char*) aNode->name;
-  value->mKey = name;
+  value->m_key = name;
   
   if (aNode->children == NULL)
   {
     xmlChar *text = xmlNodeGetContent(aNode);
     if (text != NULL)
     {
-      value->mValue = (char*) text;
+      value->m_value = (char*) text;
       xmlFree(text);
     }
   }
@@ -738,13 +738,13 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr aNode, xmlDocPtr 
       xmlNodeDump(buffer, aDoc, child, 0, 0);
     }
 
-    value->mValue = (char*) buffer->content;
+    value->m_value = (char*) buffer->content;
     xmlBufferFree(buffer);
   }
   
   for (xmlAttrPtr attr = aNode->properties; attr != NULL; attr = attr->next) {
     if (attr->type == XML_ATTRIBUTE_NODE) {
-      value->mProperties[(const char*) attr->name] = (const char*) attr->children->content;
+      value->m_properties[(const char*) attr->name] = (const char*) attr->children->content;
     }
   }
   
@@ -757,7 +757,7 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr aNode, xmlDocPtr aDoc)
 
   for (xmlAttrPtr attr = aNode->properties; attr != NULL; attr = attr->next) {
     if (attr->type == XML_ATTRIBUTE_NODE) {
-      item->mIdentity[(const char*) attr->name] = (const char*) attr->children->content;
+      item->m_identity[(const char*) attr->name] = (const char*) attr->children->content;
     }
   }
 
@@ -766,14 +766,14 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr aNode, xmlDocPtr aDoc)
     if (xmlStrcmp(child->name, BAD_CAST "Measurements") == 0) {
       for (xmlNodePtr meas = child->children; meas != NULL; meas = meas->next) {
         CuttingToolValuePtr value = parseCuttingToolNode(meas, aDoc);
-        item->mMeasurements[value->mKey] = value;
+        item->m_measurements[value->m_key] = value;
       }      
     } else if (xmlStrcmp(child->name, BAD_CAST "ItemLife") == 0) {
       CuttingToolValuePtr value = parseCuttingToolNode(child, aDoc);
-      item->mLives.push_back(value);
+      item->m_lives.push_back(value);
     } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
       CuttingToolValuePtr value = parseCuttingToolNode(child, aDoc);
-      item->mValues[value->mKey] = value;
+      item->m_values[value->m_key] = value;
     }
   }
   
@@ -787,20 +787,20 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode, xml
     if (xmlStrcmp(child->name, BAD_CAST "CuttingItems") == 0) {
       for (xmlAttrPtr attr = child->properties; attr != NULL; attr = attr->next) {
         if (attr->type == XML_ATTRIBUTE_NODE && xmlStrcmp(attr->name, BAD_CAST "count") == 0) {
-          aTool->mItemCount = (const char*) attr->children->content;
+          aTool->m_itemCount = (const char*) attr->children->content;
         }
       }
       for (xmlNodePtr itemNode = child->children; itemNode != NULL; itemNode = itemNode->next) {
         if (xmlStrcmp(itemNode->name, BAD_CAST "CuttingItem") == 0) {
           CuttingItemPtr item = parseCuttingItem(itemNode, aDoc);
-          aTool->mItems.push_back(item);
+          aTool->m_items.push_back(item);
         }
       }      
     } else if (xmlStrcmp(child->name, BAD_CAST "Measurements") == 0) {
       for (xmlNodePtr meas = child->children; meas != NULL; meas = meas->next) {
         if (xmlStrcmp(meas->name, BAD_CAST "text") != 0) {
           CuttingToolValuePtr value = parseCuttingToolNode(meas, aDoc);
-          aTool->mMeasurements[value->mKey] = value;
+          aTool->m_measurements[value->m_key] = value;
         }
       }      
     } else if (xmlStrcmp(child->name, BAD_CAST "CutterStatus") == 0) {
@@ -808,14 +808,14 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr aTool, xmlNodePtr aNode, xml
         if (xmlStrcmp(status->name, BAD_CAST "Status") == 0) {
           xmlChar *text = xmlNodeGetContent(status);
           if (text != NULL) {                     
-            aTool->mStatus.push_back((const char*) text);
+            aTool->m_status.push_back((const char*) text);
             xmlFree(text);
           }
         }
       }
     } else if (xmlStrcmp(child->name, BAD_CAST "ToolLife") == 0) {
       CuttingToolValuePtr value = parseCuttingToolNode(child, aDoc);
-      aTool->mLives.push_back(value);
+      aTool->m_lives.push_back(value);
     } else if (xmlStrcmp(child->name, BAD_CAST "text") != 0) {
       aTool->addValue(parseCuttingToolNode(child, aDoc));
     }
@@ -928,11 +928,11 @@ void XmlParser::updateAsset(AssetPtr aAsset, const std::string &aType, const std
     if (xmlStrcmp(BAD_CAST "CuttingItem", root->name) == 0)
     {
       CuttingItemPtr item = parseCuttingItem(root, document);
-      for (size_t i = 0; i < ptr->mItems.size(); i++)
+      for (size_t i = 0; i < ptr->m_items.size(); i++)
       {
-        if (item->mIdentity["indices"] == ptr->mItems[i]->mIdentity["indices"])
+        if (item->m_identity["indices"] == ptr->m_items[i]->m_identity["indices"])
         {
-          ptr->mItems[i] = item;
+          ptr->m_items[i] = item;
           break;
         }
       }
@@ -940,10 +940,10 @@ void XmlParser::updateAsset(AssetPtr aAsset, const std::string &aType, const std
     else 
     {
       CuttingToolValuePtr value = parseCuttingToolNode(root, document);
-      if (ptr->mValues.count(value->mKey) > 0)
+      if (ptr->m_values.count(value->m_key) > 0)
         ptr->addValue(value);
-      else if (ptr->mMeasurements.count(value->mKey) > 0)
-        ptr->mMeasurements[value->mKey] = value;
+      else if (ptr->m_measurements.count(value->m_key) > 0)
+        ptr->m_measurements[value->m_key] = value;
     }
     
     ptr->changed();

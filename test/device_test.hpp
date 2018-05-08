@@ -55,7 +55,7 @@ class DeviceTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE_END();
   
 protected:
-  Device *a, *b;
+  Device *m_devA, *m_devB;
   
 protected:
   void testGetters();

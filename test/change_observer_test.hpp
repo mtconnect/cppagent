@@ -52,7 +52,7 @@ class ChangeObserverTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE_END();
   
 protected:
-  ChangeSignaler *mSignaler;
+  ChangeSignaler *m_signaler;
   
 public:
   void testAddObserver();

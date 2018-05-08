@@ -20,7 +20,7 @@ using namespace std;
 
 Asset::Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
              const bool aRemoved)
-  : mAssetId(aAssetId), mContent(aContent),  mType(aType), mDescription(""), mRemoved(aRemoved)
+  : m_assetId(aAssetId), m_content(aContent),  m_type(aType), m_description(""), m_removed(aRemoved)
 {
 }
 
@@ -31,15 +31,15 @@ Asset::~Asset()
 void Asset::addIdentity(const std::string &aKey, const std::string &aValue)
 {
   if (aKey == "deviceUuid") {
-    mDeviceUuid = aValue;
+    m_deviceUuid = aValue;
   } else if (aKey == "timestamp") {
-    mTimestamp = aValue;
+    m_timestamp = aValue;
   } else if (aKey == "removed") {
-    mRemoved = aValue == "true";
+    m_removed = aValue == "true";
   } else if (aKey == "assetId") {
-    mAssetId = aValue;
+    m_assetId = aValue;
   } else {
-    mIdentity[aKey] = aValue;
+    m_identity[aKey] = aValue;
   }
 }
 

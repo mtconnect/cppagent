@@ -58,7 +58,7 @@ public:
   
 protected:
   /* LibXML XML Doc */
-  xmlDocPtr mDoc;
+  xmlDocPtr m_doc;
   
 protected:
   /* Main method to process the nodes and return the objects */
