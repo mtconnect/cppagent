@@ -37,7 +37,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DeviceTest);
 
 using namespace std;
 
-/* DeviceTest public methods */
+// DeviceTest public methods
 void DeviceTest::setUp()
 {
 	std::map<string, string> attributes1;
@@ -62,7 +62,7 @@ void DeviceTest::tearDown()
 	delete m_devB;
 }
 
-/* DeviceTest protected methods */
+// DeviceTest protected methods
 void DeviceTest::testGetters()
 {
 	CPPUNIT_ASSERT_EQUAL((string) "Device", m_devA->getClass());

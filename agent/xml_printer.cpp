@@ -57,8 +57,8 @@ enum EDocumentType
 
 namespace XmlPrinter
 {
-/***** Helper Methods *****/
-/* Initiate all documents */
+
+// Initiate all documents
 void initXmlDoc(xmlTextWriterPtr writer,
 		EDocumentType aDocType,
 		const unsigned int instanceId,
@@ -70,12 +70,12 @@ void initXmlDoc(xmlTextWriterPtr writer,
 		const uint64_t lastSeq = 0,
 		const map<string, int> *aCounts = NULL);
 
-/* Helper to print individual components and details */
+// Helper to print individual components and details
 void printProbeHelper(xmlTextWriterPtr writer, Component *component);
 void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem);
 
 
-/* Add attributes to an xml element */
+// Add attributes to an xml element
 void addDeviceStream(xmlTextWriterPtr writer, Device *device);
 void addComponentStream(xmlTextWriterPtr writer, Component *component);
 void addCategory(xmlTextWriterPtr writer, DataItem::ECategory category);
@@ -281,7 +281,7 @@ void XmlPrinter::setAssetsStyle(const std::string &aStyle)
 	mAssetsStyle = aStyle;
 }
 
-/* XmlPrinter main methods */
+// XmlPrinter main methods
 string XmlPrinter::printError(const unsigned int instanceId,
 				  const unsigned int bufferSize,
 				  const uint64_t nextSeq,
@@ -970,7 +970,7 @@ void XmlPrinter::addAttributes(xmlTextWriterPtr writer,
 	}
 }
 
-/* XmlPrinter helper Methods */
+// XmlPrinter helper Methods
 void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer,
 				EDocumentType aType,
 				const unsigned int instanceId,

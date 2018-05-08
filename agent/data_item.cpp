@@ -22,7 +22,7 @@ using namespace std;
 
 dlib::logger sLogger("data_item");
 
-/* ComponentEvent public static constants */
+// ComponentEvent public static constants
 const string DataItem::SSimpleUnits[NumSimpleUnits] =
 {
 	"AMPERE",
@@ -64,7 +64,7 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
 };
 
 
-/* DataItem public methods */
+// DataItem public methods
 DataItem::DataItem(std::map<string, string> attributes)
 	: m_representation(VALUE), m_hasNativeScale(false), m_hasSignificantDigits(false),
 	  m_hasConstraints(false), m_filterValue(0.0), m_hasMinimumDelta(false), m_hasMinimumPeriod(false),
@@ -334,7 +334,7 @@ float DataItem::convertValue(float aValue)
 	}
 }
 
-/* ComponentEvent protected methods */
+// ComponentEvent protected methods
 string DataItem::convertValue(const string &value)
 {
 	// Check if the type is an alarm or if it doesn't have units

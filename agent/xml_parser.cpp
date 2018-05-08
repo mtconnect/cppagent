@@ -53,7 +53,7 @@ agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 	sLogger << dlib::LERROR << "XML: " << buffer;
 }
 
-/* XmlParser public methods */
+// XmlParser public methods
 XmlParser::XmlParser()
 {
 	m_doc = NULL;
@@ -345,7 +345,7 @@ void XmlParser::getDataItems(set<string> &aFilterSet,
 	}
 }
 
-/* XmlParser protected methods */
+// XmlParser protected methods
 Component *XmlParser::handleComponent(
 	xmlNodePtr component,
 	Component *parent,

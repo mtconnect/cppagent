@@ -22,7 +22,7 @@
 
 using namespace std;
 
-/* Component static constants */
+// Component static constants
 const string Component::SComponentSpecs[NumComponentSpecs] =
 {
 	// Component parts
@@ -41,7 +41,7 @@ const string Component::SComponentSpecs[NumComponentSpecs] =
 	"Composition"
 };
 
-/* Component public methods */
+// Component public methods
 Component::Component(const string &cls, map<string, string> attributes,
 			 const string &aPrefix)
 	: m_assetChanged(NULL), m_assetRemoved(NULL)

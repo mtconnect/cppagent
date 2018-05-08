@@ -37,7 +37,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AssetTest);
 
 using namespace std;
 
-/* ComponentTest public methods */
+// ComponentTest public methods
 void AssetTest::setUp()
 {
 	m_asset = NULL;
@@ -50,7 +50,7 @@ void AssetTest::tearDown()
 	delete m_asset;
 }
 
-/* ComponentTest protected methods */
+// ComponentTest protected methods
 void AssetTest::testAsset()
 {
 }

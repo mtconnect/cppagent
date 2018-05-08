@@ -1919,9 +1919,9 @@ void AgentTest::testRelativeTime()
 	
 	m_adapter->setRelativeTime(true);
 	m_adapter->setBaseOffset(1000);
-	m_adapter->setBaseTime(1353414802123456LL); /* 2012-11-20 12:33:22.123456 UTC */
+	m_adapter->setBaseTime(1353414802123456LL); // 2012-11-20 12:33:22.123456 UTC
 	
-	/* Add a 10.654321 seconds */
+	// Add a 10.654321 seconds
 	m_adapter->processData("10654|line|204");
 	
 	{
@@ -1942,10 +1942,10 @@ void AgentTest::testRelativeParsedTime()
 	
 	m_adapter->setRelativeTime(true);
 	m_adapter->setParseTime(true);
-	m_adapter->setBaseOffset(1354165286555666); /* 2012-11-29 05:01:26.555666 UTC */
-	m_adapter->setBaseTime(1353414802123456); /* 2012-11-20 12:33:22.123456 UTC */
+	m_adapter->setBaseOffset(1354165286555666); // 2012-11-29 05:01:26.555666 UTC
+	m_adapter->setBaseTime(1353414802123456); // 2012-11-20 12:33:22.123456 UTC
 
-	/* Add a 10.111000 seconds */
+	// Add a 10.111000 seconds
 	m_adapter->processData("2012-11-29T05:01:36.666666|line|100");
 	
 	{
@@ -1983,7 +1983,7 @@ void AgentTest::testRelativeParsedTimeDetection()
   
   m_adapter->setRelativeTime(true);
   
-  /* Add a 10.111000 seconds */
+  // Add a 10.111000 seconds
   m_adapter->processData("2012-11-29T05:01:26.555666|line|100");
   
   CPPUNIT_ASSERT(m_adapter->isParsingTime());
@@ -1999,7 +1999,7 @@ void AgentTest::testRelativeOffsetDetection()
   
   m_adapter->setRelativeTime(true);
 
-  /* Add a 10.111000 seconds */
+  // Add a 10.111000 seconds
   m_adapter->processData("1234556|line|100");
   
   CPPUNIT_ASSERT(!m_adapter->isParsingTime());
@@ -2011,7 +2011,7 @@ void AgentTest::testDynamicCalibration()
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
 
-  /* Add a 10.111000 seconds */
+  // Add a 10.111000 seconds
   m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
   DataItem *di = m_agent->getDataItemByName("LinuxCNC", "Yact");
   CPPUNIT_ASSERT(di);

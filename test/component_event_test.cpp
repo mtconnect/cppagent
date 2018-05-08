@@ -43,7 +43,7 @@ using namespace std;
   testValueHelper(attributes, nativeUnits, expected, value, CPPUNIT_SOURCELINE())
 
 
-/* ComponentEventTest public methods */
+// ComponentEventTest public methods
 void ComponentEventTest::setUp()
 {
 	std::map<string, string> attributes1, attributes2;

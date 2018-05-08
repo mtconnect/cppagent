@@ -22,7 +22,7 @@ using namespace std;
 static dlib::logger sLogger("device");
 
 
-/* Device public methods */
+// Device public methods
 Device::Device(std::map<std::string, std::string> attributes)
 	: Component("Device", attributes), m_preserveUuid(false), m_availabilityAdded(false)
 {

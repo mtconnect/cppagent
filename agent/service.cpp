@@ -688,20 +688,20 @@ void MTConnectService::daemonize()
 	int i, lfp;
 	char str[10];
 
-	if (getppid() == 1) return; /* already a daemon */
+	if (getppid() == 1) return; // already a daemon
 
 	i = fork();
 
-	if (i < 0) exit(1); /* fork error */
+	if (i < 0) exit(1); // fork error
 
 	if (i > 0)
 	{
 	std::cout << "Parent process now exiting, child process started" << std::endl;
-	exit(0); /* parent exits */
+	exit(0); // parent exits
 	}
 
-	/* child (daemon) continues */
-	setsid(); /* obtain a new process group */
+	// child (daemon) continues
+	setsid(); // obtain a new process group
 
 	// Close stdin
 	close(0);
@@ -710,9 +710,9 @@ void MTConnectService::daemonize()
 	// Redirect stdout and stderr to another file.
 	close(1);
 	close(2);
-	umask(027); /* set newly created file permissions */
+	umask(027); // set newly created file permissions
 	i = open("agent.output", O_WRONLY | O_CREAT, 0640);
-	dup(i); /* handle standart I/O */
+	dup(i); // handle standart I/O
 
 	// Set cleanup handler
 	atexit(cleanup_pid);
@@ -721,22 +721,22 @@ void MTConnectService::daemonize()
 	sPidFile = m_pidFile;
 	lfp = open(m_pidFile.c_str(), O_RDWR | O_CREAT, 0640);
 
-	if (lfp < 0) exit(1); /* can not open */
+	if (lfp < 0) exit(1); // can not open
 
 	// Lock the pid file.
-	if (lockf(lfp, F_TLOCK, 0) < 0) exit(0); /* can not lock */
+	if (lockf(lfp, F_TLOCK, 0) < 0) exit(0); // can not lock
 
-	/* first instance continues */
+	// first instance continues
 	sprintf(str, "%d\n", getpid());
-	write(lfp, str, strlen(str)); /* record pid to lockfile */
+	write(lfp, str, strlen(str)); // record pid to lockfile
 
-	signal(SIGCHLD, SIG_IGN); /* ignore child */
-	signal(SIGTSTP, SIG_IGN); /* ignore tty signals */
+	signal(SIGCHLD, SIG_IGN); // ignore child 
+	signal(SIGTSTP, SIG_IGN); // ignore tty signals
 	signal(SIGTTOU, SIG_IGN);
 	signal(SIGTTIN, SIG_IGN);
 
-	signal(SIGHUP, signal_handler); /* catch hangup signal */
-	signal(SIGTERM, signal_handler); /* catch kill signal */
+	signal(SIGHUP, signal_handler); // catch hangup signal
+	signal(SIGTERM, signal_handler); // catch kill signal
 }
 
 int MTConnectService::main(int argc, const char *argv[])

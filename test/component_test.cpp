@@ -37,7 +37,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ComponentTest);
 
 using namespace std;
 
-/* ComponentTest public methods */
+// ComponentTest public methods
 void ComponentTest::setUp()
 {
 	std::map<string, string> attributes1;
@@ -61,7 +61,7 @@ void ComponentTest::tearDown()
 	delete m_compB;
 }
 
-/* ComponentTest protected methods */
+// ComponentTest protected methods
 void ComponentTest::testGetters()
 {
 	CPPUNIT_ASSERT_EQUAL((string) "Axes", m_compA->getClass());
