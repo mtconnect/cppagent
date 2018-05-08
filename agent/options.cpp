@@ -32,77 +32,192 @@ using namespace std;
 #endif
 
 // For arguments which have no switch char but appear in a special order.
-Option::Option(int aOrder, const char *&aCharPtr, const char *aUsage,
-		   const char *aArgDesc, bool aRequired)
-	: name_(NULL), charPtrPtr_(&aCharPtr), boolPtr_(NULL), intPtr_(NULL),
-	  list_(0), type_(eCharacter), order_(aOrder), required_(aRequired),
-	  argument_(false), ignoreCase_(false), switch_(false), usage_(aUsage),
-	  isSet_(false), expand_(false), argDesc_(aArgDesc)
+Option::Option(
+	int order,
+	const char *&charPtr,
+	const char *usage,
+	const char *argDesc,
+	bool required) :
+	name_(nullptr),
+	charPtrPtr_(&charPtr),
+	boolPtr_(nullptr),
+	intPtr_(nullptr),
+	list_(nullptr),
+	type_(eCharacter),
+	order_(order),
+	required_(required),
+	argument_(false),
+	ignoreCase_(false),
+	switch_(false),
+	usage_(usage),
+	isSet_(false),
+	expand_(false),
+	argDesc_(argDesc)
 {
 }
+
 
 // For arguments which have no switch char but appear in a special order.
-Option::Option(int aOrder, int &aIntRef, const char *aUsage,
-		   const char *aArgDesc, bool aRequired)
-	: name_(NULL), charPtrPtr_(NULL), boolPtr_(NULL), intPtr_(&aIntRef), list_(0),
-	  type_(eInteger), order_(aOrder), required_(aRequired), argument_(false),
-	  ignoreCase_(false), switch_(false), usage_(aUsage), isSet_(false),
-	  expand_(false), argDesc_(aArgDesc)
+Option::Option(
+	int order,
+	int &intRef,
+	const char *usage,
+	const char *argDesc,
+	bool required) :
+	name_(nullptr),
+	charPtrPtr_(nullptr),
+	boolPtr_(nullptr),
+	intPtr_(&intRef),
+	list_(nullptr),
+	type_(eInteger),
+	order_(order),
+	required_(required),
+	argument_(false),
+	ignoreCase_(false),
+	switch_(false),
+	usage_(usage),
+	isSet_(false),
+	expand_(false),
+	argDesc_(argDesc)
 {
 }
+
 
 // For the rest of the argumets as in a file list.
-Option::Option(list<string> &aList, const char *aUsage,
-		   const char *aArgDesc, bool aRequired, bool aExpand)
-	: name_(NULL), charPtrPtr_(NULL), boolPtr_(NULL), intPtr_(NULL),
-	  list_(&aList), type_(eList), order_(-1), required_(aRequired),
-	  argument_(false), ignoreCase_(false), switch_(false), usage_(aUsage),
-	  isSet_(false), expand_(aExpand), argDesc_(aArgDesc)
+Option::Option(
+	list<string> &list,
+	const char *usage,
+	const char *argDesc,
+	bool required,
+	bool expand) :
+	name_(nullptr),
+	charPtrPtr_(nullptr),
+	boolPtr_(nullptr),
+	intPtr_(nullptr),
+	list_(&list),
+	type_(eList),
+	order_(-1),
+	required_(required),
+	argument_(false),
+	ignoreCase_(false),
+	switch_(false),
+	usage_(usage),
+	isSet_(false),
+	expand_(expand),
+	argDesc_(argDesc)
 {
 }
+
 
 // Given an agument with a switch char ('-') <name>
-Option::Option(const char *aName, const char *&aCharPtr, const char *aUsage,
-		   const char *aArgDesc, bool aRequired, bool aIgnoreCase)
-	: name_(aName), charPtrPtr_(&aCharPtr), boolPtr_(NULL), intPtr_(NULL),
-	  list_(NULL), type_(eCharacter), order_(-1), required_(aRequired),
-	  argument_(true), ignoreCase_(aIgnoreCase), switch_(true), usage_(aUsage),
-	  isSet_(false), expand_(false), argDesc_(aArgDesc)
+Option::Option(
+	const char *name,
+	const char *&charPtr,
+	const char *usage,
+	const char *argDesc,
+	bool required,
+	bool ignoreCase) :
+	name_(name),
+	charPtrPtr_(&charPtr),
+	boolPtr_(nullptr),
+	intPtr_(nullptr),
+	list_(nullptr),
+	type_(eCharacter),
+	order_(-1),
+	required_(required),
+	argument_(true),
+	ignoreCase_(ignoreCase),
+	switch_(true),
+	usage_(usage),
+	isSet_(false),
+	expand_(false),
+	argDesc_(argDesc)
 {
 }
 
 
 // Given an agument with a switch char ('-') <name>
-Option::Option(const char *aName, bool &aBoolRef, const char *aUsage,
-		   bool aArgument, const char *aArgDesc, bool aRequired,
-		   bool aIgnoreCase)
-	: name_(aName), charPtrPtr_(NULL), boolPtr_(&aBoolRef), intPtr_(NULL),
-	  list_(NULL), type_(eBoolean), order_(-1), required_(aRequired),
-	  argument_(aArgument), ignoreCase_(aIgnoreCase), switch_(true),
-	  usage_(aUsage), isSet_(false), expand_(false), argDesc_(aArgDesc)
+Option::Option(
+	const char *name,
+	bool &boolRef,
+	const char *usage,
+	bool aArgument,
+	const char *argDesc,
+	bool required,
+	bool ignoreCase) :
+	name_(name),
+	charPtrPtr_(nullptr),
+	boolPtr_(&boolRef),
+	intPtr_(nullptr),
+	list_(nullptr),
+	type_(eBoolean),
+	order_(-1),
+	required_(required),
+	argument_(aArgument),
+	ignoreCase_(ignoreCase),
+	switch_(true),
+	usage_(usage),
+	isSet_(false),
+	expand_(false),
+	argDesc_(argDesc)
 {
 }
 
+
 // Given an agument with a switch char ('-') <name>
-Option::Option(const char *aName, int &aIntRef, const char *aUsage,
-		   const char *aArgDesc, bool aRequired, bool aIgnoreCase)
-	: name_(aName), charPtrPtr_(NULL), boolPtr_(NULL), intPtr_(&aIntRef),
-	  list_(NULL), type_(eInteger), order_(-1), required_(aRequired),
-	  argument_(true), ignoreCase_(aIgnoreCase), switch_(true), usage_(aUsage),
-	  isSet_(false), expand_(false), argDesc_(aArgDesc)
+Option::Option(
+	const char *name,
+	int &intRef,
+	const char *usage,
+	const char *argDesc,
+	bool required,
+	bool ignoreCase) :
+	name_(name),
+	charPtrPtr_(nullptr),
+	boolPtr_(nullptr),
+	intPtr_(&intRef),
+	list_(nullptr),
+	type_(eInteger),
+	order_(-1),
+	required_(required),
+	argument_(true),
+	ignoreCase_(ignoreCase),
+	switch_(true),
+	usage_(usage),
+	isSet_(false),
+	expand_(false),
+	argDesc_(argDesc)
 {
 }
 
+
 // Given an agument with a switch char ('-') <name>
-Option::Option(const char *aName, list<string> &aList, const char *aUsage,
-		   const char *aArgDesc, bool aRequired, bool aExpand,
-		   bool aIgnoreCase)
-	: name_(aName), charPtrPtr_(NULL), boolPtr_(NULL), intPtr_(NULL),
-	  list_(&aList), type_(eList), order_(-1), required_(aRequired),
-	  argument_(true), ignoreCase_(aIgnoreCase), switch_(true), usage_(aUsage),
-	  isSet_(false), expand_(aExpand), argDesc_(aArgDesc)
+Option::Option(
+	const char *name,
+	list<string> &list,
+	const char *usage,
+	const char *argDesc,
+	bool required,
+	bool expand,
+	bool ignoreCase) :
+	name_(name),
+	charPtrPtr_(nullptr),
+	boolPtr_(nullptr),
+	intPtr_(nullptr),
+	list_(&list),
+	type_(eList),
+	order_(-1),
+	required_(required),
+	argument_(true),
+	ignoreCase_(ignoreCase),
+	switch_(true),
+	usage_(usage),
+	isSet_(false),
+	expand_(expand),
+	argDesc_(argDesc)
 {
 }
+
 
 bool Option::setValue(const char *aCp)
 {
@@ -110,101 +225,101 @@ bool Option::setValue(const char *aCp)
 
 	if (type_ != eList && isSet_)
 	{
-	if (name_ != NULL)
-		cerr << "Option " << name_ << " is already specified" << endl;
-	else
-		cerr << "Option is alread specified" << endl;
+		if (name_ != NULL)
+			cerr << "Option " << name_ << " is already specified" << endl;
+		else
+			cerr << "Option is alread specified" << endl;
 
-	return false;
+		return false;
 	}
 
 	switch (type_)
 	{
 	case eInteger:
-	if (isdigit(*aCp))
-		*(intPtr_) = atoi(aCp);
-	else
-		rc = false;
+		if (isdigit(*aCp))
+			*(intPtr_) = atoi(aCp);
+		else
+			rc = false;
 
-	break;
+		break;
 
 	case eBoolean:
-	*(boolPtr_) = (*aCp == 'Y' || *aCp == 'T') ? true : false;
-	break;
+		*(boolPtr_) = (*aCp == 'Y' || *aCp == 'T') ? true : false;
+		break;
 
 	case eCharacter:
-	*(charPtrPtr_) = aCp;
-	break;
+		*(charPtrPtr_) = aCp;
+		break;
 
 	case eList:
-	if (expand_)
-		expandFiles(aCp);
-	else
-		list_->push_back(aCp);
+		if (expand_)
+			expandFiles(aCp);
+		else
+			list_->push_back(aCp);
 
-	break;
+		break;
 
 	default:
-	cerr << "Bad option type" << endl;
-	rc = false;
+		cerr << "Bad option type" << endl;
+		rc = false;
 	}
 
 	if (rc)
-	isSet_ = true;
+		isSet_ = true;
 
 	return rc;
 }
 
-void Option::expandFiles(const char *aFileName)
+
+void Option::expandFiles(const char *fileName)
 {
-	if (strchr(aFileName, '*') != NULL || strchr(aFileName, '?') != NULL)
+	if (strchr(fileName, '*')|| strchr(fileName, '?'))
 	{
 #ifdef NOT_DEF
-	WIN32_FIND_DATA fileData;
-	HANDLE search = FindFirstFile(aFileName, &fileData);
+		WIN32_FIND_DATA fileData;
+		HANDLE search = FindFirstFile(fileName, &fileData);
 
-	if (search != INVALID_HANDLE_VALUE)
-	{
-		bool done = false;
-
-		while (!done)
+		if (search != INVALID_HANDLE_VALUE)
 		{
-		char *cp = new char[strlen(fileData.cFileName) + 1];
-		strcpy(cp, fileData.cFileName);
-		list_->append(cp);
+			bool done = false;
 
-		done = !FindNextFile(search, &fileData);
+			while (!done)
+			{
+				char *cp = new char[strlen(fileData.cFileName) + 1];
+				strcpy(cp, fileData.cFileName);
+				list_->append(cp);
+
+				done = !FindNextFile(search, &fileData);
+			}
+
+			FindClose(search);
 		}
-
-		FindClose(search);
-	}
 
 #endif
 	}
 	else
-	{
-	list_->push_back(aFileName);
-	}
+		list_->push_back(fileName);
 }
 
-bool Option::operator<(const Option &aOther) const
+
+bool Option::operator<(const Option &another) const
 {
-	if (name_ == 0 && aOther.getName() != 0)
-	return false;
-	else if (name_ != 0 && aOther.getName() == 0)
-	return true;
-	else if (name_ == 0 && aOther.getName() == 0)
-	{
-	if (order_ == -1)
+	if (name_ == 0 && another.getName() != 0)
 		return false;
-
-	if (aOther.getOrder() == -1)
+	else if (name_ != 0 && another.getName() == 0)
 		return true;
+	else if (name_ == 0 && another.getName() == 0)
+	{
+		if (order_ == -1)
+			return false;
 
-	return order_ < aOther.getOrder();
+		if (another.getOrder() == -1)
+			return true;
+
+		return order_ < another.getOrder();
 	}
 
-	return strcmp(name_, aOther.getName()) < 0;
+	return strcmp(name_, another.getName()) < 0;
 }
 
 
@@ -225,31 +340,31 @@ OptionsList::OptionsList()
 	program_ = NULL;
 }
 
-OptionsList::OptionsList(Option *aOptionList[])
+
+OptionsList::OptionsList(Option *optionList[])
 {
 	program_ = NULL;
 	unswitched_ = -1;
 	ownsOptions_ = false;
 	int i = 0;
 
-	while (aOptionList[i] != 0)
-	{
-	push_back(*aOptionList[i++]);
-	}
+	while (optionList[i] != 0)
+		push_back(*optionList[i++]);
 }
+
 
 OptionsList::~OptionsList()
 {
 }
 
 
-void OptionsList::addOption(Option &aOption)
+void OptionsList::addOption(Option &option)
 {
-	push_back(aOption);
+	push_back(option);
 }
 
 
-int OptionsList::parse(int &aArgc, const char **aArgv)
+int OptionsList::parse(int &argc, const char **argv)
 {
 	sort();
 
@@ -260,118 +375,118 @@ int OptionsList::parse(int &aArgc, const char **aArgv)
 	program_ = "agent";
 
 	Option *opt;
-	const char **argp = aArgv;
+	const char **argp = argv;
 	const char *cp;
 
-	while (aArgc > 0)
+	while (argc > 0)
 	{
-	if (**argp == '-')
-	{
-		cp = (*argp) + 1;
-		bool next = false;
-
-		while (*cp != 0 && !next)
+		if (**argp == '-')
 		{
-		if (find(cp, opt))
-		{
-			count++;
+			cp = (*argp) + 1;
+			bool next = false;
 
-			if (opt->hasArgument())
+			while (*cp != 0 && !next)
 			{
-			getArg(argp, aArgc, opt, cp);
-			next = true;
-			}
-			else
-			{
-			if (opt->type_ != Option::eBoolean)
-			{
-				cerr << "Bad argument definition: " << opt->getName() << endl;
-			}
-			else if (opt->isSet_)
-			{
-				cerr << "Option " << opt->getName() << " is already specified" << endl;
-				usage();
-			}
-			else
-			{
-				*(opt->boolPtr_) = true;
-			}
+				if (find(cp, opt))
+				{
+					count++;
 
-			cp += strlen(opt->getName());
-			}
+					if (opt->hasArgument())
+					{
+						getArg(argp, argc, opt, cp);
+						next = true;
+					}
+					else
+					{
+						if (opt->type_ != Option::eBoolean)
+						{
+							cerr << "Bad argument definition: " << opt->getName() << endl;
+						}
+						else if (opt->isSet_)
+						{
+							cerr << "Option " << opt->getName() << " is already specified" << endl;
+							usage();
+						}
+						else
+							*(opt->boolPtr_) = true;
 
-			opt->isSet_ = true;
+						cp += strlen(opt->getName());
+					}
+
+					opt->isSet_ = true;
+				}
+				else
+				{
+					cerr << "Bad argument:" << *argp << endl;
+					usage();
+				}
+			}
 		}
 		else
 		{
-			cerr << "Bad argument:" << *argp << endl;
-			usage();
-		}
-		}
-	}
-	else
-	{
-		if (find(order, opt))
-		{
-		if (!opt->setValue(*argp))
-			usage();
+			if (find(order, opt))
+			{
+				if (!opt->setValue(*argp))
+					usage();
 
-		count++;
-		}
-		else if (find(-1, opt))
-		{
-		if (!opt->setValue(*argp))
-			usage();
+				count++;
+			}
+			else if (find(-1, opt))
+			{
+				if (!opt->setValue(*argp))
+					usage();
 
-		count++;
+				count++;
+			}
+
+			order++;
 		}
 
-		order++;
-	}
-
-	argp++;
-	aArgc--;
+		argp++;
+		argc--;
 	}
 
 	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
 	{
-	opt = &(*iter);
+		opt = &(*iter);
 
-	if (opt->isRequired() && !opt->isSet())
-	{
-		if (opt->getName() != NULL)
-		cerr << "Required option -" << opt->getName() << " is not specified" << endl;
-		else
-		cerr << "Required option <" << opt->getArgDesc() << "> is not specified" << endl;
+		if (opt->isRequired() && !opt->isSet())
+		{
+			if (opt->getName() != NULL)
+				cerr << "Required option -" << opt->getName() << " is not specified" << endl;
+			else
+				cerr << "Required option <" << opt->getArgDesc() << "> is not specified" << endl;
 
-		usage();
-	}
+			usage();
+		}
 	}
 
 
 	return count;
 }
 
-void OptionsList::getArg(const char ** &aArgv, int &aArgc, Option *aOpt, const char *aAt)
+
+void OptionsList::getArg(const char ** &argv, int &argc, Option *option, const char *aAt)
 {
-	const char *cp = aAt + strlen(aOpt->getName());
+	const char *cp = aAt + strlen(option->getName());
 
 	if (*cp == '\0')
 	{
-	++aArgv;
-	cp = *aArgv;
-	aArgc--;
+		++argv;
+		cp = *argv;
+		argc--;
 
-	if (aArgc < 1 || *cp == '-')
-	{
-		cerr << "Argument required for -" << aOpt->getName() << endl;
+		if (argc < 1 || *cp == '-')
+		{
+			cerr << "Argument required for -" << option->getName() << endl;
+			usage();
+		}
+	}
+
+	if (!option->setValue(cp))
 		usage();
-	}
-	}
-
-	if (!aOpt->setValue(cp))
-	usage();
 }
+
 
 void OptionsList::usage()
 {
@@ -386,104 +501,98 @@ void OptionsList::usage()
 
 	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
 	{
-	Option *opt = &(*iter);
+		Option *opt = &(*iter);
 
-	if (opt->getName() != NULL &&
-		!opt->hasArgument() &&
-		(len = strlen(opt->getName())) == 1)
-	{
-		hasSimpleFlags = true;
-		break;
-	}
+		if (opt->getName() &&
+			!opt->hasArgument() &&
+			(len = strlen(opt->getName())) == 1)
+		{
+			hasSimpleFlags = true;
+			break;
+		}
 	}
 
 	if (hasSimpleFlags)
 	{
-	*cp++ = '[';
-	*cp++ = '-';
+		*cp++ = '[';
+		*cp++ = '-';
 
-	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
-	{
-		Option *opt = &(*iter);
-
-		if (opt->getName() != NULL &&
-		!opt->hasArgument() &&
-		(len = strlen(opt->getName())) == 1)
+		for (list<Option>::iterator iter = begin(); iter != end(); iter++)
 		{
-		strcpy(cp, opt->getName());
-		cp += len;
-		}
-	}
+			Option *opt = &(*iter);
 
-	*cp++ = ']';
+			if (opt->getName() != NULL &&
+				!opt->hasArgument() &&
+				(len = strlen(opt->getName())) == 1)
+			{
+				strcpy(cp, opt->getName());
+				cp += len;
+			}
+		}
+
+		*cp++ = ']';
 	}
 
 	char staging[128], *cp2;
 
 	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
 	{
-	Option *opt = &(*iter);
+		Option *opt = &(*iter);
 
-	if (opt->getName() != NULL && !opt->hasArgument() && (len = strlen(opt->getName())) == 1)
-		continue;
+		if (opt->getName() != NULL && !opt->hasArgument() && (len = strlen(opt->getName())) == 1)
+			continue;
 
-	*cp++ = ' ';
+		*cp++ = ' ';
 
-	cp2 = staging;
+		cp2 = staging;
 
-	if (!opt->isRequired())
-	{
-		*cp2++ = '[';
-	}
+		if (!opt->isRequired())
+			*cp2++ = '[';
 
-	if (opt->getType() == Option::eList)
-	{
-		*cp2++ = '{';
-	}
+		if (opt->getType() == Option::eList)
+			*cp2++ = '{';
 
-	if (opt->getName() != NULL && !opt->hasArgument() && strlen(opt->getName()) > 1)
-	{
-		len = sprintf(cp2, "-%s", opt->getName());
-		cp2 += len;
-	}
-	else if (opt->getName() != NULL && opt->hasArgument())
-	{
-		len = sprintf(cp2, "-%s <%s>", opt->getName(), opt->getArgDesc());
-		cp2 += len;
-	}
-	else if (opt->getName() == NULL)
-	{
-		len = sprintf(cp2, "<%s>", opt->getArgDesc());
-		cp2 += len;
-	}
+		if (opt->getName() != NULL && !opt->hasArgument() && strlen(opt->getName()) > 1)
+		{
+			len = sprintf(cp2, "-%s", opt->getName());
+			cp2 += len;
+		}
+		else if (opt->getName() != NULL && opt->hasArgument())
+		{
+			len = sprintf(cp2, "-%s <%s>", opt->getName(), opt->getArgDesc());
+			cp2 += len;
+		}
+		else if (opt->getName() == NULL)
+		{
+			len = sprintf(cp2, "<%s>", opt->getArgDesc());
+			cp2 += len;
+		}
 
-	if (opt->getType() == Option::eList)
-	{
-		*cp2++ = '}';
-		*cp2++ = '.';
-		*cp2++ = '.';
-		*cp2++ = '.';
-	}
+		if (opt->getType() == Option::eList)
+		{
+			*cp2++ = '}';
+			*cp2++ = '.';
+			*cp2++ = '.';
+			*cp2++ = '.';
+		}
 
-	if (!opt->isRequired())
-	{
-		*cp2++ = ']';
-	}
+		if (!opt->isRequired())
+			*cp2++ = ']';
 
-	*cp2 = '\0';
+		*cp2 = '\0';
 
-	if (((cp2 - staging) + (cp - buffer)) > 79)
-	{
-		*cp++ = '\n';
-		*cp = '\0';
+		if (((cp2 - staging) + (cp - buffer)) > 79)
+		{
+			*cp++ = '\n';
+			*cp = '\0';
 
-		fputs(buffer, stderr);
-		strcpy(buffer, "        ");
-		cp = buffer + 8;
-	}
+			fputs(buffer, stderr);
+			strcpy(buffer, "        ");
+			cp = buffer + 8;
+		}
 
-	strcpy(cp, staging);
-	cp += cp2 - staging;
+		strcpy(cp, staging);
+		cp += cp2 - staging;
 	}
 
 	*cp++ = '\n';
@@ -493,92 +602,88 @@ void OptionsList::usage()
 
 	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
 	{
-	Option *opt = &(*iter);
+		Option *opt = &(*iter);
 
-	if (opt->getName() != NULL)
-	{
-		if (opt->hasArgument())
-		sprintf(buffer, "-%-2.2s <%s>", opt->getName(), opt->getArgDesc());
-		else
-		sprintf(buffer, "-%-6.6s", opt->getName());
-	}
-	else if (opt->getOrder() >= 0)
-	{
-		sprintf(buffer, "<%s>", opt->getArgDesc());
-	}
-	else
-	{
-		sprintf(buffer, "<%s>...", opt->getArgDesc());
-	}
-
-	fprintf(stderr, "    %-20.20s : ", buffer);
-	const char *cp = opt->getUsage();
-
-	while (*cp != '\0')
-	{
-		if (*cp == '\n')
+		if (opt->getName() != NULL)
 		{
-		fputc(*cp, stderr);
-		int count = 4 + 20 + 1;
-
-		while (count--)
-			fputc(' ', stderr);
-
-		fputc('>', stderr);
-		fputc(' ', stderr);
+			if (opt->hasArgument())
+				sprintf(buffer, "-%-2.2s <%s>", opt->getName(), opt->getArgDesc());
+			else
+				sprintf(buffer, "-%-6.6s", opt->getName());
+		}
+		else if (opt->getOrder() >= 0)
+		{
+			sprintf(buffer, "<%s>", opt->getArgDesc());
 		}
 		else
+			sprintf(buffer, "<%s>...", opt->getArgDesc());
+
+		fprintf(stderr, "    %-20.20s : ", buffer);
+		const char *cp = opt->getUsage();
+
+		while (*cp != '\0')
 		{
-		fputc(*cp, stderr);
+			if (*cp == '\n')
+			{
+				fputc(*cp, stderr);
+				int count = 4 + 20 + 1;
+
+				while (count--)
+					fputc(' ', stderr);
+
+				fputc('>', stderr);
+				fputc(' ', stderr);
+			}
+			else
+			{
+				fputc(*cp, stderr);
+			}
+
+			cp++;
 		}
 
-		cp++;
-	}
-
-	fputc('\n', stderr);
+		fputc('\n', stderr);
 	}
 
 	exit(256);
 }
 
-bool OptionsList::find(const char *aOpt, Option *&aOption)
+
+bool OptionsList::find(const char *optName, Option *&option)
 {
 	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
 	{
-	aOption = &(*iter);
-	const char *name = aOption->getName();
+		option = &(*iter);
+		const char *name = option->getName();
 
-	// Unnamed options are at the end of the list.
-	if (name == 0)
-		break;
+		// Unnamed options are at the end of the list.
+		if (name == 0)
+			break;
 
-	size_t len = strlen(name);
+		size_t len = strlen(name);
 
-	if (aOption->ignoreCase())
-	{
-		if (strncasecmp(aOpt, name, len) == 0)
+		if (option->ignoreCase())
 		{
-		return true;
+			if (strncasecmp(optName, name, len) == 0)
+				return true;
 		}
-	}
-	else if (strncmp(aOpt, name, len) == 0)
-	{
-		return true;
-	}
+		else if (strncmp(optName, name, len) == 0)
+			return true;
 	}
 
 	return false;
 }
 
-bool OptionsList::find(int aOrder, Option *&aOption)
+
+bool OptionsList::find(int order, Option *&option)
 {
 	for (list<Option>::iterator iter = begin(); iter != end(); iter++)
 	{
-	aOption = &(*iter);
+		option = &(*iter);
 
-	// Unnamed options are at the end of the list.
-	if (aOption->getName() == 0 && aOption->getOrder() == aOrder)
-		return true;
+		// Unnamed options are at the end of the list.
+		if (option->getName() == 0 && option->getOrder() == order)
+			return true;
 	}
 
 	return false;

@@ -37,9 +37,6 @@
 	#define __STDC_LIMIT_MACROS 1
 #endif
 
-#include <map>
-#include <string>
-
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 

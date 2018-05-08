@@ -32,14 +32,9 @@
 //
 #pragma once
 
-#include <map>
-#include <string>
-
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "component.hpp"
-#include "data_item.hpp"
 #include "device.hpp"
 
 class DeviceTest : public CppUnit::TestFixture

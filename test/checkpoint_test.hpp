@@ -33,7 +33,6 @@
 
 #pragma once
 
-#include <map>
 #include <string>
 
 #include <cppunit/TestFixture.h>

@@ -18,37 +18,35 @@
 
 using namespace std;
 
-Asset::Asset(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
-		 const bool aRemoved)
-	: m_assetId(aAssetId), m_content(aContent),  m_type(aType), m_description(""), m_removed(aRemoved)
+Asset::Asset(
+	const std::string &asssetId,
+	const std::string &type,
+	const std::string &content,
+	const bool removed) : 
+	m_assetId(asssetId),
+	m_content(content),
+	m_type(type),
+	m_removed(removed)
 {
 }
+
 
 Asset::~Asset()
 {
 }
 
-void Asset::addIdentity(const std::string &aKey, const std::string &aValue)
+
+void Asset::addIdentity(const std::string &key, const std::string &value)
 {
-	if (aKey == "deviceUuid")
-	{
-	m_deviceUuid = aValue;
-	}
-	else if (aKey == "timestamp")
-	{
-	m_timestamp = aValue;
-	}
-	else if (aKey == "removed")
-	{
-	m_removed = aValue == "true";
-	}
-	else if (aKey == "assetId")
-	{
-	m_assetId = aValue;
-	}
+	if (key == "deviceUuid")
+		m_deviceUuid = value;
+	else if (key == "timestamp")
+		m_timestamp = value;
+	else if (key == "removed")
+		m_removed = value == "true";
+	else if (key == "assetId")
+		m_assetId = value;
 	else
-	{
-	m_identity[aKey] = aValue;
-	}
+		m_identity[key] = value;
 }
 

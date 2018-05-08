@@ -26,7 +26,7 @@ using namespace dlib;
 #include <dlib/logger.h>
 #include <dlib/threads.h>
 
-static logger sLogger("main");
+static logger g_logger("main");
 
 #ifdef _WINDOWS
 	#define strncasecmp strnicmp
