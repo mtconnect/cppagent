@@ -21,39 +21,41 @@
 #include <dlib/threads.h>
 #include <dlib/dir_nav.h>
 
-class RollingFileLogger {
+class RollingFileLogger
+{
 public:
-  enum RollingSchedule {
-    DAILY, WEEKLY, NEVER
-  };
-  
-  /* Default the rolling logger to change create a new file every 10M of data */
-  
-  RollingFileLogger(std::string aName,
-                    int aMaxBackupIndex = 9,
-                    size_t aMaxSize = 10*1024*1024,
-                    RollingSchedule aSchedule = NEVER);
-  ~RollingFileLogger();
-  
-  
-  void write(const char *aLine);
+	enum RollingSchedule
+	{
+	DAILY, WEEKLY, NEVER
+	};
 
-  int getMaxSize() const { return m_maxSize; }
+	/* Default the rolling logger to change create a new file every 10M of data */
+
+	RollingFileLogger(std::string aName,
+			  int aMaxBackupIndex = 9,
+			  size_t aMaxSize = 10 * 1024 * 1024,
+			  RollingSchedule aSchedule = NEVER);
+	~RollingFileLogger();
+
+
+	void write(const char *aLine);
+
+	int getMaxSize() const { return m_maxSize; }
 
 protected:
-  void rollover(size_t aSize);
-  int getFileAge();
-  
+	void rollover(size_t aSize);
+	int getFileAge();
+
 private:
-  dlib::mutex *m_fileLock;
-  
-  std::string m_name;
-  dlib::directory m_directory;
-  dlib::file m_file;
-  
-  int m_maxBackupIndex;
-  size_t m_maxSize;
-  RollingSchedule m_schedule;
-  
-  int m_fd;
+	dlib::mutex *m_fileLock;
+
+	std::string m_name;
+	dlib::directory m_directory;
+	dlib::file m_file;
+
+	int m_maxBackupIndex;
+	size_t m_maxSize;
+	RollingSchedule m_schedule;
+
+	int m_fd;
 };

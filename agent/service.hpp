@@ -20,29 +20,30 @@
 
 #define NAME_LEN 80
 
-class MTConnectService {
+class MTConnectService
+{
 public:
-  MTConnectService();
-  virtual int main(int aArgc, const char *aArgv[]);
-  virtual void initialize(int aArgc, const char *aArgv[]) = 0;
+	MTConnectService();
+	virtual int main(int aArgc, const char *aArgv[]);
+	virtual void initialize(int aArgc, const char *aArgv[]) = 0;
 
-  void setName(const std::string &aName) { m_name = aName; }
-  virtual void stop() = 0;
-  virtual void start() = 0;
-  const std::string &name() { return m_name; }
-  
+	void setName(const std::string &aName) { m_name = aName; }
+	virtual void stop() = 0;
+	virtual void start() = 0;
+	const std::string &name() { return m_name; }
+
 protected:
-  std::string m_name;
-  std::string m_configFile;
-  std::string m_pidFile;
-  bool m_isService;
-  bool m_isDebug;
-  
-  void install();
-  void remove();
-  
+	std::string m_name;
+	std::string m_configFile;
+	std::string m_pidFile;
+	bool m_isService;
+	bool m_isDebug;
+
+	void install();
+	void remove();
+
 #ifndef _WINDOWS
-  void daemonize();  
+	void daemonize();
 #endif
 
 };

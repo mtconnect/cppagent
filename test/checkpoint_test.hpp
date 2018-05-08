@@ -46,35 +46,35 @@
 
 class CheckpointTest : public CppUnit::TestFixture
 {
-  CPPUNIT_TEST_SUITE(CheckpointTest);
-  CPPUNIT_TEST(testAddComponentEvents);
-  CPPUNIT_TEST(testCopy);
-  CPPUNIT_TEST(testGetComponentEvents);
-  CPPUNIT_TEST(testFilter);
-  CPPUNIT_TEST(testCopyAndFilter);
-  CPPUNIT_TEST(testConditionChaining);
-  CPPUNIT_TEST(testLastConditionNormal);
-  CPPUNIT_TEST_SUITE_END();
-  
+	CPPUNIT_TEST_SUITE(CheckpointTest);
+	CPPUNIT_TEST(testAddComponentEvents);
+	CPPUNIT_TEST(testCopy);
+	CPPUNIT_TEST(testGetComponentEvents);
+	CPPUNIT_TEST(testFilter);
+	CPPUNIT_TEST(testCopyAndFilter);
+	CPPUNIT_TEST(testConditionChaining);
+	CPPUNIT_TEST(testLastConditionNormal);
+	CPPUNIT_TEST_SUITE_END();
+
 protected:
-  Checkpoint *m_checkpoint;
-  Agent *m_agent;
-  Adapter *m_adapter;
-  std::string m_agentId;
-  DataItem *m_dataItem1, *m_dataItem2;
-  
+	Checkpoint *m_checkpoint;
+	Agent *m_agent;
+	Adapter *m_adapter;
+	std::string m_agentId;
+	DataItem *m_dataItem1, *m_dataItem2;
+
 protected:
-  void testAddComponentEvents();
-  void testCopy();
-  void testGetComponentEvents();
-  void testFilter();
-  void testCopyAndFilter();
-  void testConditionChaining();
-  void testLastConditionNormal();
-  
+	void testAddComponentEvents();
+	void testCopy();
+	void testGetComponentEvents();
+	void testFilter();
+	void testCopyAndFilter();
+	void testConditionChaining();
+	void testLastConditionNormal();
+
 public:
-  void setUp();
-  void tearDown();
+	void setUp();
+	void tearDown();
 };
 
 

@@ -44,81 +44,83 @@
 #include "connector.hpp"
 
 // Simple subclass for testing
-class TestConnector : public Connector 
+class TestConnector : public Connector
 {
 public:
-  TestConnector(const std::string& server, unsigned int port,
-                int aLegacyTimeout = 5)
-    : Connector(server, port, aLegacyTimeout), m_disconnected(false) {}
-  
-  virtual void processData(const std::string& data) {
-    m_data = data;
-    m_list.push_back(m_data);
-  }
+	TestConnector(const std::string &server, unsigned int port,
+		  int aLegacyTimeout = 5)
+	: Connector(server, port, aLegacyTimeout), m_disconnected(false) {}
 
-  virtual void protocolCommand(const std::string& data) {
-    m_command = data;
-  }
+	virtual void processData(const std::string &data)
+	{
+	m_data = data;
+	m_list.push_back(m_data);
+	}
 
-  virtual void disconnected() { m_disconnected = true; }
-  virtual void connected() { m_disconnected = false; }
-  bool heartbeats() { return m_heartbeats; }
+	virtual void protocolCommand(const std::string &data)
+	{
+	m_command = data;
+	}
 
-  void pushData(const char *data) { parseBuffer(data); }
-  
-  void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
-  void resetHeartbeats() { m_heartbeats = false; }
+	virtual void disconnected() { m_disconnected = true; }
+	virtual void connected() { m_disconnected = false; }
+	bool heartbeats() { return m_heartbeats; }
+
+	void pushData(const char *data) { parseBuffer(data); }
+
+	void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
+	void resetHeartbeats() { m_heartbeats = false; }
 
 public:
-  std::vector<std::string> m_list;
-  std::string m_data;
-  std::string m_command;
-  bool m_disconnected;
+	std::vector<std::string> m_list;
+	std::string m_data;
+	std::string m_command;
+	bool m_disconnected;
 };
-  
+
 class ConnectorTest : public CppUnit::TestFixture, dlib::threaded_object
 {
-  CPPUNIT_TEST_SUITE(ConnectorTest);
-  CPPUNIT_TEST(testConnection);
-  CPPUNIT_TEST(testDataCapture);
-  CPPUNIT_TEST(testDisconnect);
-  CPPUNIT_TEST(testProtocolCommand);
-  CPPUNIT_TEST(testHeartbeat);
-  CPPUNIT_TEST(testHeartbeatPong);
-  CPPUNIT_TEST(testHeartbeatTimeout);
-  CPPUNIT_TEST(testParseBuffer);
-  CPPUNIT_TEST(testParseBufferFraming);
-  CPPUNIT_TEST(testSendCommand);
-  CPPUNIT_TEST(testLegacyTimeout);
-  CPPUNIT_TEST(testIPV6Connection);
-  CPPUNIT_TEST(testStartHeartbeats);
-  CPPUNIT_TEST_SUITE_END();
-  
+	CPPUNIT_TEST_SUITE(ConnectorTest);
+	CPPUNIT_TEST(testConnection);
+	CPPUNIT_TEST(testDataCapture);
+	CPPUNIT_TEST(testDisconnect);
+	CPPUNIT_TEST(testProtocolCommand);
+	CPPUNIT_TEST(testHeartbeat);
+	CPPUNIT_TEST(testHeartbeatPong);
+	CPPUNIT_TEST(testHeartbeatTimeout);
+	CPPUNIT_TEST(testParseBuffer);
+	CPPUNIT_TEST(testParseBufferFraming);
+	CPPUNIT_TEST(testSendCommand);
+	CPPUNIT_TEST(testLegacyTimeout);
+	CPPUNIT_TEST(testIPV6Connection);
+	CPPUNIT_TEST(testStartHeartbeats);
+	CPPUNIT_TEST_SUITE_END();
+
 public:
-  void setUp();
-  void tearDown();
-  virtual void thread();
-  
+	void setUp();
+	void tearDown();
+	virtual void thread();
+
 protected:
-  dlib::scoped_ptr<dlib::listener> m_server;
-  dlib::scoped_ptr<dlib::connection> m_serverSocket;
-  dlib::scoped_ptr<TestConnector> m_connector;
-  unsigned short m_port;
-  
+	dlib::scoped_ptr<dlib::listener> m_server;
+	dlib::scoped_ptr<dlib::connection> m_serverSocket;
+	dlib::scoped_ptr<TestConnector> m_connector;
+	unsigned short m_port;
+
 protected:
-  void testConnection();
-  void testDataCapture();
-  void testDisconnect();
-  void testProtocolCommand();
-  void testHeartbeat();
-  void testHeartbeatPong();
-  void testHeartbeatTimeout();
-  void testParseBuffer();
-  void testParseBufferFraming();
-  void testSendCommand();
-  void testLegacyTimeout();
-  void testIPV6Connection();
-  void testStartHeartbeats();
+	void testConnection();
+	void testDataCapture();
+	void testDisconnect();
+	void testProtocolCommand();
+	void testHeartbeat();
+	void testHeartbeatPong();
+	void testHeartbeatTimeout();
+	void testParseBuffer();
+	void testParseBufferFraming();
+	void testSendCommand();
+	void testLegacyTimeout();
+	void testIPV6Connection();
+	void testStartHeartbeats();
 };
 
 

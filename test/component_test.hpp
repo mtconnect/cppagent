@@ -45,29 +45,29 @@
 
 class ComponentTest : public CppUnit::TestFixture
 {
-  CPPUNIT_TEST_SUITE(ComponentTest);
-  CPPUNIT_TEST(testGetters);
-  CPPUNIT_TEST(testGetAttributes);
-  CPPUNIT_TEST(testDescription);
-  CPPUNIT_TEST(testRelationships);
-  CPPUNIT_TEST(testDataItems);
-  CPPUNIT_TEST(testReferences);
-  CPPUNIT_TEST_SUITE_END();
-  
+	CPPUNIT_TEST_SUITE(ComponentTest);
+	CPPUNIT_TEST(testGetters);
+	CPPUNIT_TEST(testGetAttributes);
+	CPPUNIT_TEST(testDescription);
+	CPPUNIT_TEST(testRelationships);
+	CPPUNIT_TEST(testDataItems);
+	CPPUNIT_TEST(testReferences);
+	CPPUNIT_TEST_SUITE_END();
+
 protected:
-  Component *m_compA, *m_compB;
-  
+	Component *m_compA, *m_compB;
+
 protected:
-  void testGetters();
-  void testGetAttributes();
-  void testDescription();
-  void testRelationships();
-  void testDataItems();
-  void testReferences();
-  
+	void testGetters();
+	void testGetAttributes();
+	void testDescription();
+	void testRelationships();
+	void testDataItems();
+	void testReferences();
+
 public:
-  void setUp();
-  void tearDown();
+	void setUp();
+	void tearDown();
 };
 
 

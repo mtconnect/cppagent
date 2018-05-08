@@ -40,7 +40,7 @@ using namespace std;
 /* ComponentTest public methods */
 void CuttingToolTest::setUp()
 {
-  
+
 }
 
 void CuttingToolTest::tearDown()

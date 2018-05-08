@@ -40,14 +40,14 @@ using namespace std;
 /* ComponentTest public methods */
 void AssetTest::setUp()
 {
-  m_asset = NULL;
-  
+	m_asset = NULL;
+
 }
 
 void AssetTest::tearDown()
 {
-  if (m_asset != NULL)
-    delete m_asset;
+	if (m_asset != NULL)
+	delete m_asset;
 }
 
 /* ComponentTest protected methods */

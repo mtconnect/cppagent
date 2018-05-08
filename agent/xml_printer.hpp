@@ -32,70 +32,70 @@
 class DataItem;
 
 namespace XmlPrinter
-{  
-  /***** Main methods to call *****/
-  std::string printError(
-    const unsigned int instanceId,
-    const unsigned int bufferSize,
-    const uint64_t nextSeq,
-    const std::string& errorCode,
-    const std::string& errorText
-  );
-  
-  std::string printProbe(const unsigned int instanceId,
-                         const unsigned int bufferSize,
-                         const uint64_t nextSeq,
-                         const unsigned int aAssetBufferSize,
-                         const unsigned int aAssetCount,
-                         std::vector<Device *>& devices,
-                         const std::map<std::string, int> *aCounts = NULL);
-  
-  std::string printSample(const unsigned int instanceId,
-                          const unsigned int bufferSize,
-                          const uint64_t nextSeq,
-                          const uint64_t firstSeq,
-                          const uint64_t lastSeq,
-                          ComponentEventPtrArray & results
-  );
+{
+/***** Main methods to call *****/
+std::string printError(
+	const unsigned int instanceId,
+	const unsigned int bufferSize,
+	const uint64_t nextSeq,
+	const std::string &errorCode,
+	const std::string &errorText
+);
 
-  std::string printAssets(const unsigned int anInstanceId,
-                          const unsigned int aBufferSize,
-                          const unsigned int anAssetCount,
-                          std::vector<AssetPtr> &anAssets);
-  
-  std::string printCuttingTool(CuttingToolPtr aTool);
+std::string printProbe(const unsigned int instanceId,
+			   const unsigned int bufferSize,
+			   const uint64_t nextSeq,
+			   const unsigned int aAssetBufferSize,
+			   const unsigned int aAssetCount,
+			   std::vector<Device *> &devices,
+			   const std::map<std::string, int> *aCounts = NULL);
 
-  
-  void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation, 
-                           const std::string &aPrefix);
-  void addErrorNamespace(const std::string &aUrn, const std::string &aLocation, 
-                         const std::string &aPrefix);
-  void addStreamsNamespace(const std::string &aUrn, const std::string &aLocation, 
-                           const std::string &aPrefix);
-  void addAssetsNamespace(const std::string &aUrn, const std::string &aLocation, 
-                         const std::string &aPrefix);
-  void setSchemaVersion(const std::string &aVersion);
-  const std::string &getSchemaVersion();
-  
-  void setDevicesStyle(const std::string &aStyle);
-  void setStreamStyle(const std::string &aStyle);
-  void setAssetsStyle(const std::string &aStyle);
-  void setErrorStyle(const std::string &aStyle);
+std::string printSample(const unsigned int instanceId,
+			const unsigned int bufferSize,
+			const uint64_t nextSeq,
+			const uint64_t firstSeq,
+			const uint64_t lastSeq,
+			ComponentEventPtrArray &results
+			   );
 
-  // For testing
-  void clearDevicesNamespaces();
-  void clearErrorNamespaces();
-  void clearStreamsNamespaces();
-  void clearAssetsNamespaces();
+std::string printAssets(const unsigned int anInstanceId,
+			const unsigned int aBufferSize,
+			const unsigned int anAssetCount,
+			std::vector<AssetPtr> &anAssets);
 
-  const std::string getDevicesUrn(const std::string &aPrefix);
-  const std::string getErrorUrn(const std::string &aPrefix);
-  const std::string getStreamsUrn(const std::string &aPrefix);
-  const std::string getAssetsUrn(const std::string &aPrefix);
-  
-  const std::string getDevicesLocation(const std::string &aPrefix);
-  const std::string getErrorLocation(const std::string &aPrefix);
-  const std::string getStreamsLocation(const std::string &aPrefix);
-  const std::string getAssetsLocation(const std::string &aPrefix);
+std::string printCuttingTool(CuttingToolPtr aTool);
+
+
+void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation,
+			 const std::string &aPrefix);
+void addErrorNamespace(const std::string &aUrn, const std::string &aLocation,
+			   const std::string &aPrefix);
+void addStreamsNamespace(const std::string &aUrn, const std::string &aLocation,
+			 const std::string &aPrefix);
+void addAssetsNamespace(const std::string &aUrn, const std::string &aLocation,
+			const std::string &aPrefix);
+void setSchemaVersion(const std::string &aVersion);
+const std::string &getSchemaVersion();
+
+void setDevicesStyle(const std::string &aStyle);
+void setStreamStyle(const std::string &aStyle);
+void setAssetsStyle(const std::string &aStyle);
+void setErrorStyle(const std::string &aStyle);
+
+// For testing
+void clearDevicesNamespaces();
+void clearErrorNamespaces();
+void clearStreamsNamespaces();
+void clearAssetsNamespaces();
+
+const std::string getDevicesUrn(const std::string &aPrefix);
+const std::string getErrorUrn(const std::string &aPrefix);
+const std::string getStreamsUrn(const std::string &aPrefix);
+const std::string getAssetsUrn(const std::string &aPrefix);
+
+const std::string getDevicesLocation(const std::string &aPrefix);
+const std::string getErrorLocation(const std::string &aPrefix);
+const std::string getStreamsLocation(const std::string &aPrefix);
+const std::string getAssetsLocation(const std::string &aPrefix);
 };
 

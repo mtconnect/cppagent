@@ -34,7 +34,7 @@
 #pragma once
 
 #ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS 1
+	#define __STDC_LIMIT_MACROS 1
 #endif
 
 #include <map>
@@ -47,16 +47,16 @@
 
 class AdapterTest : public CppUnit::TestFixture
 {
-  CPPUNIT_TEST_SUITE(AdapterTest);
-  CPPUNIT_TEST(testAdapter);
-  CPPUNIT_TEST_SUITE_END();
-  
+	CPPUNIT_TEST_SUITE(AdapterTest);
+	CPPUNIT_TEST(testAdapter);
+	CPPUNIT_TEST_SUITE_END();
+
 public:
-  void setUp();
-  void tearDown();
-  
+	void setUp();
+	void tearDown();
+
 protected:
-  
+
 protected:
-  void testAdapter();
+	void testAdapter();
 };
