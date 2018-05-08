@@ -26,21 +26,24 @@ class RollingFileLogger
 public:
 	enum RollingSchedule
 	{
-	DAILY, WEEKLY, NEVER
+		DAILY,
+		WEEKLY,
+		NEVER
 	};
 
 	// Default the rolling logger to change create a new file every 10M of data
+	RollingFileLogger(
+		std::string filename,
+		int maxBackupIndex = 9,
+		size_t maxSize = 10 * 1024 * 1024,
+		RollingSchedule schedule = NEVER);
 
-	RollingFileLogger(std::string aName,
-			  int aMaxBackupIndex = 9,
-			  size_t aMaxSize = 10 * 1024 * 1024,
-			  RollingSchedule aSchedule = NEVER);
 	~RollingFileLogger();
 
+	void write(const char *message);
 
-	void write(const char *aLine);
-
-	int getMaxSize() const { return m_maxSize; }
+	int getMaxSize() const {
+		return m_maxSize; }
 
 protected:
 	void rollover(size_t aSize);

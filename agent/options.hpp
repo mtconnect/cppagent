@@ -24,42 +24,74 @@ class Option
 public:
 	enum EType
 	{
-	eBoolean,
-	eCharacter,
-	eInteger,
-	eList
+		eBoolean,
+		eCharacter,
+		eInteger,
+		eList
 	};
 
 	//---- Constructors
 	// For arguments which have no switch char but appear in a special order.
-	Option(int aOrder, const char *&aCharPtr, const char *aUsage,
-	   const char *aArgDesc, bool aRequired = true);
+	Option(
+		int order,
+		const char *&charPtr,
+		const char *usage,
+		const char *argDesc,
+		bool required = true);
 
 	// For arguments which have no switch char but appear in a special order.
-	Option(int aOrder, int &aIntRef, const char *aUsage,
-	   const char *aArgDesc, bool aRequired = true);
+	Option(
+		int order,
+		int &intRef,
+		const char *usage,
+		const char *argDesc,
+		bool required = true);
 
 	// For the rest of the argumets as in a file list.
-	Option(std::list<std::string> &aList, const char *aUsage,
-	   const char *aArgDesc, bool aRequired = true, bool aExpand = false);
+	Option(
+		std::list<std::string> &list,
+		const char *usage,
+		const char *argDesc,
+		bool required = true,
+		bool expand = false);
 
 	// Given an agument with a switch char ('-') <name>
-	Option(const char *aName, const char *&aCharPtr, const char *aUsage,
-	   const char *aArgDesc, bool aRequired = false, bool aIgnoreCase = false);
+	Option(
+		const char *name,
+		const char *&charPtr,
+		const char *usage,
+		const char *argDesc,
+		bool required = false,
+		bool ignoreCase = false);
 
 	// Given an agument with a switch char ('-') <name>
-	Option(const char *aName, bool &aBoolRef, const char *aUsage,
-	   bool aArgument = false, const char *aArgDesc = NULL,
-	   bool aRequired = false, bool aIgnoreCase = false);
+	Option(
+		const char *name,
+		bool &boolRef,
+		const char *usage,
+		bool aArgument = false,
+		const char *argDesc = NULL,
+		bool required = false,
+		bool ignoreCase = false);
 
 	// Given an agument with a switch char ('-') <name>
-	Option(const char *aName, int &aIntRef, const char *aUsage,
-	   const char *aArgDesc, bool aRequired = false, bool aIgnoreCase = false);
+	Option(
+		const char *name,
+		int &intRef,
+		const char *usage,
+		const char *argDesc,
+		bool required = false,
+		bool ignoreCase = false);
 
 	// Given an agument with a switch char ('-') <name>
-	Option(const char *aName, std::list<std::string> &aList, const char *aUsage,
-	   const char *aArgDesc, bool aRequired = false,
-	   bool aExpand = false, bool aIgnoreCase = false);
+	Option(
+		const char *name,
+		std::list<std::string> &list,
+		const char *usage,
+		const char *argDesc,
+		bool required = false,
+		bool expand = false,
+		bool ignoreCase = false);
 
 	// Accept member-wise copy
 	// Option(const Option &aOption);
@@ -67,27 +99,41 @@ public:
 	//---- Destructor
 	~Option();
 
-	EType getType() const { return type_; }
-	const char *getName() const { return name_; }
-	const char *getUsage() const { return usage_; }
-	const char *getArgDesc() const { return argDesc_; }
-	int getOrder() const { return order_; }
-	bool ignoreCase() const { return ignoreCase_; }
-	bool hasArgument() const { return argument_; }
-	bool hasSwitch() const { return switch_; }
-	bool isRequired() const { return required_; }
-	bool isSet() const { return isSet_; }
+	EType getType() const {
+		return type_; }
+	const char *getName() const {
+		return name_; }
+	const char *getUsage() const {
+		return usage_; }
+	const char *getArgDesc() const {
+		return argDesc_; }
+	int getOrder() const {
+		return order_; }
+	bool ignoreCase() const {
+		return ignoreCase_; }
+	bool hasArgument() const {
+		return argument_; }
+	bool hasSwitch() const 
+	{ return switch_; }
+	bool isRequired() const {
+		return required_; }
+	bool isSet() const {
+		return isSet_; }
 
-	const char *getCharPtr() const  { return charPtrPtr_ != 0 ? *charPtrPtr_ : 0; }
-	bool getBool() const { return boolPtr_ != 0 ? *boolPtr_ : false; }
-	int getInt() const { return intPtr_ != 0 ? *intPtr_ : -1; }
-	const std::list<std::string> &getList() const { return *list_; }
-	bool operator<(const Option &aOther) const;
+	const char *getCharPtr() const  {
+		return charPtrPtr_ != 0 ? *charPtrPtr_ : 0; }
+	bool getBool() const {
+		return boolPtr_ != 0 ? *boolPtr_ : false; }
+	int getInt() const {
+		return intPtr_ != 0 ? *intPtr_ : -1; }
+	const std::list<std::string> &getList() const {
+		return *list_; }
+	bool operator<(const Option &another) const;
 
 	bool setValue(const char *aCp);
 
 protected:
-	void expandFiles(const char *aFileName);
+	void expandFiles(const char *fileName);
 
 protected:
 	const char  *name_;
@@ -109,28 +155,30 @@ protected:
 	friend class OptionsList;
 };
 
+
 class OptionsList : public std::list<Option>
 {
 public:
 	//---- Constructors
 	OptionsList();
-	OptionsList(Option *aOptionList[]);
+	OptionsList(Option *optionList[]);
 
 	//---- Destructor
 	virtual ~OptionsList();
 
-	void addOption(Option &aOption);
+	void addOption(Option &option);
 
-	int parse(int &aArgc, const char **aArgv);
+	int parse(int &argc, const char **argv);
 	void usage();
-	void setOwnsOptions(bool aFlag = true) { ownsOptions_ = aFlag; }
-	void append(Option *aOption) { push_back(*aOption); }
+	void setOwnsOptions(bool flag = true) {
+		ownsOptions_ = flag; }
+	void append(Option *option) {
+		push_back(*option); }
 
 protected:
-	void getArg(const char ** &aArgv, int &aArgc, Option *aOpt, const char *aAt);
-	bool find(const char *aopt, Option *&aOption);
-	bool find(int aOrder, Option *&aOption);
-	void setOpt(Option *aOption, const char *aCp);
+	void getArg(const char ** &argv, int &argc, Option *option, const char *aAt);
+	bool find(const char *optName, Option *&option);
+	bool find(int order, Option *&option);
 
 protected:
 	const char *program_;

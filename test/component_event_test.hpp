@@ -63,8 +63,10 @@ public:
 	void tearDown();
 
 protected:
-	ComponentEvent *m_compEventA, * m_compEventB;
-	DataItem *m_dataItem1, * m_dataItem2;
+	ComponentEvent *m_compEventA;
+	ComponentEvent *m_compEventB;
+	DataItem *m_dataItem1;
+	DataItem *m_dataItem2;
 
 protected:
 	void testConstructors();
@@ -82,11 +84,11 @@ protected:
 
 	// Helper to test values
 	void testValueHelper(
-	std::map<std::string, std::string> &attributes,
-	const std::string &nativeUnits,
-	float expected,
-	const std::string &value,
-	CPPUNIT_NS::SourceLine sourceLine
+		std::map<std::string, std::string> &attributes,
+		const std::string &nativeUnits,
+		float expected,
+		const std::string &value,
+		CPPUNIT_NS::SourceLine sourceLine
 	);
 };
 

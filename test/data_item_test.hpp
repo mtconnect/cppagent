@@ -61,7 +61,9 @@ class DataItemTest : public CppUnit::TestFixture
 	CPPUNIT_TEST_SUITE_END();
 
 protected:
-	DataItem *m_dataItemA, * m_dataItemB, * m_dataItemC;
+	DataItem *m_dataItemA;
+	DataItem *m_dataItemB;
+	DataItem *m_dataItemC;
 
 protected:
 	void testGetters();

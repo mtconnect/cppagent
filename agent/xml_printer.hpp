@@ -42,45 +42,57 @@ std::string printError(
 	const std::string &errorText
 );
 
-std::string printProbe(const unsigned int instanceId,
-			   const unsigned int bufferSize,
-			   const uint64_t nextSeq,
-			   const unsigned int aAssetBufferSize,
-			   const unsigned int aAssetCount,
-			   std::vector<Device *> &devices,
-			   const std::map<std::string, int> *aCounts = NULL);
+std::string printProbe(
+	const unsigned int instanceId,
+	const unsigned int bufferSize,
+	const uint64_t nextSeq,
+	const unsigned int assetBufferSize,
+	const unsigned int assetCount,
+	std::vector<Device *> &devices,
+	const std::map<std::string, int> *count = NULL);
 
-std::string printSample(const unsigned int instanceId,
-			const unsigned int bufferSize,
-			const uint64_t nextSeq,
-			const uint64_t firstSeq,
-			const uint64_t lastSeq,
-			ComponentEventPtrArray &results
-			   );
+std::string printSample(
+	const unsigned int instanceId,
+	const unsigned int bufferSize,
+	const uint64_t nextSeq,
+	const uint64_t firstSeq,
+	const uint64_t lastSeq,
+	ComponentEventPtrArray &results
+);
 
-std::string printAssets(const unsigned int anInstanceId,
-			const unsigned int aBufferSize,
-			const unsigned int anAssetCount,
-			std::vector<AssetPtr> &anAssets);
+std::string printAssets(
+	const unsigned int anInstanceId,
+	const unsigned int bufferSize,
+	const unsigned int assetCount,
+	std::vector<AssetPtr> &assets);
 
-std::string printCuttingTool(CuttingToolPtr aTool);
+std::string printCuttingTool(CuttingToolPtr tool);
 
 
-void addDevicesNamespace(const std::string &aUrn, const std::string &aLocation,
-			 const std::string &aPrefix);
-void addErrorNamespace(const std::string &aUrn, const std::string &aLocation,
-			   const std::string &aPrefix);
-void addStreamsNamespace(const std::string &aUrn, const std::string &aLocation,
-			 const std::string &aPrefix);
-void addAssetsNamespace(const std::string &aUrn, const std::string &aLocation,
-			const std::string &aPrefix);
-void setSchemaVersion(const std::string &aVersion);
+void addDevicesNamespace(
+	const std::string &urn, 
+	const std::string &location,
+	const std::string &prefix);
+void addErrorNamespace(
+	const std::string &urn,
+	const std::string &location,
+	const std::string &prefix);
+void addStreamsNamespace(
+	const std::string &urn,
+	const std::string &location,
+	const std::string &prefix);
+void addAssetsNamespace(
+	const std::string &urn,
+	const std::string &location,
+	const std::string &prefix);
+
+void setSchemaVersion(const std::string &version);
 const std::string &getSchemaVersion();
 
-void setDevicesStyle(const std::string &aStyle);
-void setStreamStyle(const std::string &aStyle);
-void setAssetsStyle(const std::string &aStyle);
-void setErrorStyle(const std::string &aStyle);
+void setDevicesStyle(const std::string &style);
+void setStreamStyle(const std::string &style);
+void setAssetsStyle(const std::string &style);
+void setErrorStyle(const std::string &style);
 
 // For testing
 void clearDevicesNamespaces();
@@ -88,14 +100,14 @@ void clearErrorNamespaces();
 void clearStreamsNamespaces();
 void clearAssetsNamespaces();
 
-const std::string getDevicesUrn(const std::string &aPrefix);
-const std::string getErrorUrn(const std::string &aPrefix);
-const std::string getStreamsUrn(const std::string &aPrefix);
-const std::string getAssetsUrn(const std::string &aPrefix);
+const std::string getDevicesUrn(const std::string &prefix);
+const std::string getErrorUrn(const std::string &prefix);
+const std::string getStreamsUrn(const std::string &prefix);
+const std::string getAssetsUrn(const std::string &prefix);
 
-const std::string getDevicesLocation(const std::string &aPrefix);
-const std::string getErrorLocation(const std::string &aPrefix);
-const std::string getStreamsLocation(const std::string &aPrefix);
-const std::string getAssetsLocation(const std::string &aPrefix);
+const std::string getDevicesLocation(const std::string &prefix);
+const std::string getErrorLocation(const std::string &prefix);
+const std::string getStreamsLocation(const std::string &prefix);
+const std::string getAssetsLocation(const std::string &prefix);
 };
 

@@ -16,21 +16,20 @@
 #pragma once
 
 #include <string>
-#include "dlib/logger.h"
-
-#define NAME_LEN 80
 
 class MTConnectService
 {
 public:
 	MTConnectService();
-	virtual int main(int aArgc, const char *aArgv[]);
-	virtual void initialize(int aArgc, const char *aArgv[]) = 0;
-
-	void setName(const std::string &aName) { m_name = aName; }
+	virtual int main(int argc, char const *argv[]);
+	virtual void initialize(int argc, char const *argv[]) = 0;
 	virtual void stop() = 0;
 	virtual void start() = 0;
-	const std::string &name() { return m_name; }
+
+	void setName(std::string const &name) {
+		m_name = name; }
+	std::string const & name() const {
+		return m_name; }
 
 protected:
 	std::string m_name;

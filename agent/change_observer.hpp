@@ -25,39 +25,45 @@ class ChangeSignaler;
 class ChangeObserver
 {
 public:
-	ChangeObserver() : m_signal(m_mutex), m_sequence(UINT64_MAX) { }
+	ChangeObserver() :
+		m_signal(m_mutex),
+		m_sequence(UINT64_MAX)
+	{ }
+
 	virtual ~ChangeObserver();
 
-	bool wait(unsigned long aTimeout)
+	bool wait(unsigned long timeout) const
 	{
-	dlib::auto_mutex lock(m_mutex);
+		dlib::auto_mutex lock(m_mutex);
 
-	if (m_sequence == UINT64_MAX)
-		return m_signal.wait_or_timeout(aTimeout);
-	else
-		return true;
+		if (m_sequence == UINT64_MAX)
+			return m_signal.wait_or_timeout(timeout);
+		else
+			return true;
 	}
-	void signal(uint64_t aSequence)
-	{
-	dlib::auto_mutex lock(m_mutex);
 
-	if (m_sequence > aSequence && aSequence != 0)
-		m_sequence = aSequence;
+	void signal(uint64_t sequence)
+	{
+		dlib::auto_mutex lock(m_mutex);
 
-	m_signal.signal();
+		if (m_sequence > sequence && sequence != 0)
+			m_sequence = sequence;
+
+		m_signal.signal();
 	}
-	uint64_t getSequence() const
-	{
-	return m_sequence;
+
+	uint64_t getSequence() const {
+		return m_sequence;
 	}
-	bool wasSignaled() const
-	{
-	return m_sequence != UINT64_MAX;
+
+	bool wasSignaled() const {
+		return m_sequence != UINT64_MAX;
 	}
+
 	void reset()
 	{
-	dlib::auto_mutex lock(m_mutex);
-	m_sequence = UINT64_MAX;
+		dlib::auto_mutex lock(m_mutex);
+		m_sequence = UINT64_MAX;
 	}
 
 private:
@@ -68,18 +74,19 @@ private:
 
 protected:
 	friend class ChangeSignaler;
-	void addSignaler(ChangeSignaler *aSig);
-	bool removeSignaler(ChangeSignaler *aSig);
+	void addSignaler(ChangeSignaler *sig);
+	bool removeSignaler(ChangeSignaler *sig);
 };
+
 
 class ChangeSignaler
 {
 public:
 	// Observer Management
-	void addObserver(ChangeObserver *aObserver);
-	bool removeObserver(ChangeObserver *aObserver);
-	bool hasObserver(ChangeObserver *aObserver);
-	void signalObservers(uint64_t aSequence);
+	void addObserver(ChangeObserver *observer);
+	bool removeObserver(ChangeObserver *observer);
+	bool hasObserver(ChangeObserver *observer);
+	void signalObservers(uint64_t sequence);
 
 	virtual ~ChangeSignaler();
 

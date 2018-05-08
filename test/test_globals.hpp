@@ -65,7 +65,7 @@ std::string &trim(std::string &str);
  ::xpathTest(doc, path, expected, CPPUNIT_SOURCELINE() )
 
 void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
-		   CPPUNIT_NS::SourceLine sourceLine);
+               CPPUNIT_NS::SourceLine sourceLine);
 
 #define PARSE_XML(expr) \
   string result = expr;\
@@ -77,5 +77,5 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   ::xpathTestCount(doc, path, expected, CPPUNIT_SOURCELINE() )
 
 void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
-			CPPUNIT_NS::SourceLine sourceLine);
+               CPPUNIT_NS::SourceLine sourceLine);
 

@@ -61,7 +61,8 @@ protected:
 	Agent *m_agent;
 	Adapter *m_adapter;
 	std::string m_agentId;
-	DataItem *m_dataItem1, *m_dataItem2;
+	DataItem *m_dataItem1;
+	DataItem *m_dataItem2;
 
 protected:
 	void testAddComponentEvents();

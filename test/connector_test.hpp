@@ -47,29 +47,41 @@
 class TestConnector : public Connector
 {
 public:
-	TestConnector(const std::string &server, unsigned int port,
-		  int aLegacyTimeout = 5)
-	: Connector(server, port, aLegacyTimeout), m_disconnected(false) {}
+	TestConnector(
+		const std::string &server,
+		unsigned int port,
+		int legacyTimeout = 5)
+		:
+		Connector(server, port, legacyTimeout),
+		m_disconnected(false)
+	{
+	}
 
 	virtual void processData(const std::string &data)
 	{
-	m_data = data;
-	m_list.push_back(m_data);
+		m_data = data;
+		m_list.push_back(m_data);
 	}
 
 	virtual void protocolCommand(const std::string &data)
 	{
-	m_command = data;
+		m_command = data;
 	}
 
-	virtual void disconnected() { m_disconnected = true; }
-	virtual void connected() { m_disconnected = false; }
-	bool heartbeats() { return m_heartbeats; }
+	virtual void disconnected() {
+		m_disconnected = true; }
+	virtual void connected() {
+		m_disconnected = false; }
+	bool heartbeats() {
+		return m_heartbeats; }
 
-	void pushData(const char *data) { parseBuffer(data); }
+	void pushData(const char *data) {
+		parseBuffer(data); }
 
-	void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
-	void resetHeartbeats() { m_heartbeats = false; }
+	void startHeartbeats(std::string &aString) {
+		Connector::startHeartbeats(aString); }
+	void resetHeartbeats() {
+		m_heartbeats = false; }
 
 public:
 	std::vector<std::string> m_list;

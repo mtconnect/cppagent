@@ -29,108 +29,153 @@ public:
 	class Description
 	{
 	public:
-	Description(const std::string &aBody, const std::string &aManufacturer, const std::string &aModel,
-			const std::string &aSerialNumber,
-			const std::string &aStation) : m_body(aBody), m_manufacturer(aManufacturer), m_model(aModel),
-		m_serialNumber(aSerialNumber),
-		m_station(aStation), m_hasAttributes(false) {}
-	Description(const Description &anObj) : m_body(anObj.m_body), m_manufacturer(anObj.m_manufacturer),
-		m_model(anObj.m_model),
-		m_serialNumber(anObj.m_serialNumber), m_station(anObj.m_station), m_hasAttributes(false) {}
-	Description(const std::string &aBody, const std::map<std::string, std::string> &aAttributes)
-		: m_body(aBody), m_hasAttributes(false)
+		Description(
+			const std::string &body,
+			const std::string &manufacturer,
+			const std::string &model,
+			const std::string &serialNumber,
+			const std::string &station) :
+			m_body(body),
+			m_manufacturer(manufacturer),
+			m_model(model),
+			m_serialNumber(serialNumber),
+			m_station(station),
+			m_hasAttributes(false)
+		{
+		}
+
+		Description(
+			const Description &another) : 
+			m_body(another.m_body),
+			m_manufacturer(another.m_manufacturer),
+			m_model(another.m_model),
+			m_serialNumber(another.m_serialNumber),
+			m_station(another.m_station),
+			m_hasAttributes(false)
+		{
+		}
+
+		Description(
+			const std::string &body,
+			const std::map<std::string, std::string> &attributes) :
+			m_body(body),
+			m_hasAttributes(false)
+		{
+			if (attributes.count("manufacturer") > 0)
+				m_manufacturer = attributes.at("manufacturer");
+
+			if (attributes.count("model") > 0)
+				m_model = attributes.at("model");
+
+			if (attributes.count("serialNumber") > 0)
+				m_serialNumber = attributes.at("serialNumber");
+
+			if (attributes.count("station") > 0)
+				m_station = attributes.at("station");
+		}
+
+		const std::map<std::string, std::string> &getAttributes() const
+		{
+			if (!m_hasAttributes)
+			{
+				Description *self = const_cast<Description *>(this);
+
+				if (!m_manufacturer.empty())
+					self->m_attributes["manufacturer"] = m_manufacturer;
+
+				if (!m_model.empty())
+					self->m_attributes["model"] = m_model;
+
+				if (!m_serialNumber.empty())
+					self->m_attributes["serialNumber"] = m_serialNumber;
+
+				if (!m_station.empty())
+					self->m_attributes["station"] = m_station;
+
+				self->m_hasAttributes = true;
+			}
+
+			return m_attributes;
+		}
+
+		const std::string &getBody() const {
+			return m_body; }
+
+	protected:
+		std::map<std::string, std::string> m_attributes;
+
+		std::string m_body;
+		std::string m_manufacturer;
+		std::string m_model;
+		std::string m_serialNumber;
+		std::string m_station;
+		bool m_hasAttributes;
+	};
+
+public:
+	Composition(
+		const std::string &aId,
+		const std::string &aType,
+		const std::string &aName,
+		const std::string &aUuid) : 
+		m_id(aId),
+		m_uuid(aUuid),
+		m_name(aName),
+		m_type(aType),
+		m_hasAttributes(false)
 	{
-		if (aAttributes.count("manufacturer") > 0) m_manufacturer = aAttributes.at("manufacturer");
+	}
 
-		if (aAttributes.count("model") > 0) m_model = aAttributes.at("model");
+	Composition(const Composition &another) :
+		m_id(another.m_id),
+		m_uuid(another.m_uuid),
+		m_name(another.m_name),
+		m_type(another.m_type),
+		m_hasAttributes(false)
+	{
+		if (another.m_description.get() != NULL)
+			m_description.reset(new Description(*another.m_description.get()));
+	}
 
-		if (aAttributes.count("serialNumber") > 0) m_serialNumber = aAttributes.at("serialNumber");
+	Composition(const std::map<std::string, std::string> &attributes) :
+		m_hasAttributes(false)
+	{
+		m_id = attributes.at("id");
+		m_type = attributes.at("type");
 
-		if (aAttributes.count("station") > 0) m_station = aAttributes.at("station");
+		if (attributes.count("uuid") > 0)
+			m_uuid = attributes.at("uuid");
+
+		if (attributes.count("name") > 0)
+			m_name = attributes.at("name");
 	}
 
 	const std::map<std::string, std::string> &getAttributes() const
 	{
 		if (!m_hasAttributes)
 		{
-		Description *self = const_cast<Description *>(this);
+			Composition *self = const_cast<Composition *>(this);
 
-		if (!m_manufacturer.empty()) self->m_attributes["manufacturer"] = m_manufacturer;
+			self->m_attributes["id"] = m_id;
+			self->m_attributes["type"] = m_type;
 
-		if (!m_model.empty()) self->m_attributes["model"] = m_model;
+			if (!m_uuid.empty())
+				self->m_attributes["uuid"] = m_uuid;
 
-		if (!m_serialNumber.empty()) self->m_attributes["serialNumber"] = m_serialNumber;
+			if (!m_name.empty())
+				self->m_attributes["name"] = m_name;
 
-		if (!m_station.empty()) self->m_attributes["station"] = m_station;
-
-		self->m_hasAttributes = true;
+			self->m_hasAttributes = true;
 		}
 
 		return m_attributes;
 	}
-	const std::string &getBody() const { return m_body; }
 
-	protected:
-	std::map<std::string, std::string> m_attributes;
-
-	std::string m_body;
-	std::string m_manufacturer;
-	std::string m_model;
-	std::string m_serialNumber;
-	std::string m_station;
-	bool m_hasAttributes;
-	};
-
-public:
-	Composition(const std::string &aId, const std::string &aType, const std::string &aName,
-		const std::string &aUuid) : m_id(aId), m_uuid(aUuid), m_name(aName), m_type(aType),
-	m_hasAttributes(false)
-	{ }
-	Composition(const Composition &anObj) : m_id(anObj.m_id), m_uuid(anObj.m_uuid),
-	m_name(anObj.m_name),
-	m_type(anObj.m_type), m_hasAttributes(false)
-	{
-	if (anObj.m_description.get() != NULL)
-	{
-		m_description.reset(new Description(*anObj.m_description.get()));
-	}
-	}
-	Composition(const std::map<std::string, std::string> &aAttributes)
-	: m_hasAttributes(false)
-	{
-	m_id = aAttributes.at("id");
-	m_type = aAttributes.at("type");
-
-	if (aAttributes.count("uuid") > 0) m_uuid = aAttributes.at("uuid");
-
-	if (aAttributes.count("name") > 0) m_name = aAttributes.at("name");
-	}
-
-
-	const std::map<std::string, std::string> &getAttributes() const
-	{
-	if (!m_hasAttributes)
-	{
-		Composition *self = const_cast<Composition *>(this);
-
-		self->m_attributes["id"] = m_id;
-		self->m_attributes["type"] = m_type;
-
-		if (!m_uuid.empty()) self->m_attributes["uuid"] = m_uuid;
-
-		if (!m_name.empty()) self->m_attributes["name"] = m_name;
-
-		self->m_hasAttributes = true;
-	}
-
-	return m_attributes;
-	}
-
-	const Description *getDescription() const { return m_description.get(); }
-	void setDescription(Description *aDescription)
-	{
-	m_description.reset(aDescription);
-	}
+	const Description *getDescription() const {
+		return m_description.get(); }
+	
+	void setDescription(Description *aDescription) {
+		m_description.reset(aDescription); }
 
 protected:
 	std::string m_id;
