@@ -86,7 +86,7 @@ void commandLine()
 {
 	puts("> ");
 	char line[1024];
-	while (gets(line) != nullptr)
+	while (gets(line))
 	{
 		if (strncasecmp(line, "QUIT", 4) == 0)
 		{

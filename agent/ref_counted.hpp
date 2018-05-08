@@ -95,12 +95,12 @@ inline bool RefCountedPtr<T>::operator<(const RefCountedPtr<T> &another)
 template<class T>
 inline T *RefCountedPtr<T>::setObject(T *object, bool takeRef)
 {
-	if (m_object != nullptr)
+	if (m_object)
 		m_object->unrefer();
 
 	m_object = object;
 
-	if (object != nullptr && !takeRef)
+	if (object && !takeRef)
 		m_object->referTo();
 
 	return object;

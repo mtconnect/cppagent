@@ -62,7 +62,7 @@ XmlParser::XmlParser() :
 
 std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 {
-	if (m_doc != nullptr)
+	if (m_doc)
 		xmlFreeDoc(m_doc);
 
 	xmlXPathContextPtr xpathCtx = nullptr;
@@ -83,7 +83,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 
 		xmlNodePtr root = xmlDocGetRootElement(m_doc);
 
-		if (root->ns != nullptr)
+		if (root->ns)
 		{
 			path = addNamespace(path, "m");
 			THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
@@ -111,7 +111,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 		string locationUrn;
 		const char *location = (const char *) xmlGetProp(root, BAD_CAST "schemaLocation");
 
-		if (location != nullptr && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34) != 0)
+		if (location && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34) != 0)
 		{
 			string loc = location;
 			size_t pos = loc.find(' ');
@@ -125,7 +125,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 				xmlNsPtr ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
 				string prefix;
 
-				if (ns->prefix != nullptr)
+				if (ns->prefix)
 					prefix = (const char *) ns->prefix;
 
 				XmlPrinter::addDevicesNamespace(locationUrn, uri, prefix);
@@ -137,14 +137,14 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 		{
 			xmlNsPtr ns = root->nsDef;
 
-			while (ns != nullptr)
+			while (ns)
 			{
 				// Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the
 				// schema location again.
 				if (!isMTConnectUrn((const char *) ns->href) &&
 					strncmp((const char *) ns->href, "http://www.w3.org/", 18) != 0 &&
 					locationUrn != (const char *) ns->href &&
-					ns->prefix != nullptr)
+					ns->prefix)
 				{
 					string urn = (const char *) ns->href;
 					string prefix = (const char *) ns->prefix;
@@ -174,10 +174,10 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 	}
 	catch (string e)
 	{
-		if (devices != nullptr)
+		if (devices)
 			xmlXPathFreeObject(devices);
 
-		if (xpathCtx != nullptr)
+		if (xpathCtx)
 			xmlXPathFreeContext(xpathCtx);
 
 		g_logger << dlib::LFATAL << "Cannot parse XML file: " << e;
@@ -185,10 +185,10 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 	}
 	catch (...)
 	{
-		if (devices != nullptr)
+		if (devices)
 			xmlXPathFreeObject(devices);
 
-		if (xpathCtx != nullptr)
+		if (xpathCtx)
 			xmlXPathFreeContext(xpathCtx);
 
 		throw;
@@ -200,14 +200,14 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 
 XmlParser::~XmlParser()
 {
-	if (m_doc != nullptr)
+	if (m_doc)
 		xmlFreeDoc(m_doc);
 }
 
 
 void XmlParser::loadDocument(const std::string &doc)
 {
-	if (m_doc != nullptr)
+	if (m_doc)
 		xmlFreeDoc(m_doc);
 
 	try
@@ -256,9 +256,9 @@ void XmlParser::getDataItems(
 
 		if (root->ns)
 		{
-			for (xmlNsPtr ns = root->nsDef; ns != nullptr; ns = ns->next)
+			for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next)
 			{
-				if (ns->prefix != nullptr)
+				if (ns->prefix)
 				{
 					if (strncmp((const char *) ns->href, "urn:mtconnect.org:MTConnectDevices", 34) != 0)
 					{
@@ -292,7 +292,7 @@ void XmlParser::getDataItems(
 
 		xmlNodeSetPtr nodeset = objs->nodesetval;
 
-		if (nodeset != nullptr)
+		if (nodeset)
 		{
 			for (int i = 0; i != nodeset->nodeNr; ++i)
 			{
@@ -302,7 +302,7 @@ void XmlParser::getDataItems(
 				{
 					xmlChar *id = xmlGetProp(n, BAD_CAST "id");
 
-					if (id != nullptr)
+					if (id)
 					{
 						filterSet.insert((const char *) id);
 						xmlFree(id);
@@ -317,7 +317,7 @@ void XmlParser::getDataItems(
 				{
 					xmlChar *id = xmlGetProp(n, BAD_CAST "dataItemId");
 
-					if (id != nullptr)
+					if (id)
 					{
 						filterSet.insert((const char *) id);
 						xmlFree(id);
@@ -336,10 +336,10 @@ void XmlParser::getDataItems(
 	}
 	catch (...)
 	{
-		if (objs != nullptr)
+		if (objs)
 			xmlXPathFreeObject(objs);
 
-		if (xpathCtx != nullptr)
+		if (xpathCtx)
 			xmlXPathFreeContext(xpathCtx);
 
 		g_logger << dlib::LWARN << "getDataItems: Could not parse path: " << inputPath;
@@ -400,16 +400,16 @@ Component *XmlParser::handleComponent(
 	}
 
 	// Construct relationships
-	if (toReturn != nullptr && parent != nullptr)
+	if (toReturn && parent)
 	{
 		parent->addChild(*toReturn);
 		toReturn->setParent(*parent);
 	}
 
 	// Check if there are children
-	if (toReturn != nullptr && component->children)
+	if (toReturn && component->children)
 	{
-		for (xmlNodePtr child = component->children; child != nullptr; child = child->next)
+		for (xmlNodePtr child = component->children; child; child = child->next)
 		{
 			if (child->type != XML_ELEMENT_NODE)
 				continue;
@@ -418,7 +418,7 @@ Component *XmlParser::handleComponent(
 			{
 				xmlChar *text = xmlNodeGetContent(child);
 
-				if (text != nullptr)
+				if (text)
 				{
 					toReturn->addDescription((string)(const char *) text, getAttributes(child));
 					xmlFree(text);
@@ -462,7 +462,7 @@ Component *XmlParser::loadComponent(
 	default:
 		string prefix;
 
-		if (node->ns != nullptr && 
+		if (node->ns && 
 			node->ns->prefix != 0 &&
 			strncmp((const char *) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34) != 0)
 		{
@@ -478,7 +478,7 @@ std::map<string, string> XmlParser::getAttributes(const xmlNodePtr node)
 {
 	std::map<string, string> toReturn;
 
-	for (xmlAttrPtr attr = node->properties; attr != nullptr; attr = attr->next)
+	for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
 	{
 		if (attr->type == XML_ATTRIBUTE_NODE)
 			toReturn[(const char *) attr->name] = (const char *) attr->children->content;
@@ -497,10 +497,10 @@ void XmlParser::loadDataItem(
 	DataItem *d = new DataItem(getAttributes(dataItem));
 	d->setComponent(*parent);
 
-	if (dataItem->children != nullptr)
+	if (dataItem->children)
 	{
 
-		for (xmlNodePtr child = dataItem->children; child != nullptr; child = child->next)
+		for (xmlNodePtr child = dataItem->children; child; child = child->next)
 		{
 			if (child->type != XML_ELEMENT_NODE)
 				continue;
@@ -509,7 +509,7 @@ void XmlParser::loadDataItem(
 			{
 				xmlChar *text = xmlNodeGetContent(child);
 
-				if (text != nullptr)
+				if (text)
 				{
 					d->addSource((const char *) text);
 					xmlFree(text);
@@ -517,7 +517,7 @@ void XmlParser::loadDataItem(
 			}
 			else if (xmlStrcmp(child->name, BAD_CAST "Constraints") == 0)
 			{
-				for (xmlNodePtr constraint = child->children; constraint != nullptr; constraint = constraint->next)
+				for (xmlNodePtr constraint = child->children; constraint; constraint = constraint->next)
 				{
 					if (constraint->type != XML_ELEMENT_NODE)
 						continue;
@@ -541,7 +541,7 @@ void XmlParser::loadDataItem(
 			}
 			else if (xmlStrcmp(child->name, BAD_CAST "Filters") == 0)
 			{
-				for (xmlNodePtr filter = child->children; filter != nullptr; filter = filter->next)
+				for (xmlNodePtr filter = child->children; filter; filter = filter->next)
 				{
 					if (filter->type != XML_ELEMENT_NODE)
 						continue;
@@ -551,7 +551,7 @@ void XmlParser::loadDataItem(
 						xmlChar *text = xmlNodeGetContent(filter);
 						xmlChar *type = xmlGetProp(filter, BAD_CAST "type");
 
-						if (type != nullptr)
+						if (type)
 						{
 							if (xmlStrcmp(type, BAD_CAST "PERIOD") == 0)
 								d->setMinmumPeriod(strtod((const char *) text, nullptr));
@@ -592,14 +592,14 @@ void XmlParser::handleComposition(xmlNodePtr composition,
 {
 	Composition *comp = new Composition(getAttributes(composition));
 
-	for (xmlNodePtr child = composition->children; child != nullptr; child = child->next)
+	for (xmlNodePtr child = composition->children; child; child = child->next)
 	{
 		if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
 		{
 			xmlChar *text = xmlNodeGetContent(child);
 			string body;
 
-			if (text != nullptr)
+			if (text)
 			{
 				body = string(static_cast<const char *>(static_cast<void *>(text)));
 				xmlFree(text);
@@ -619,7 +619,7 @@ void XmlParser::handleChildren(
 	Component *parent,
 	Device *device )
 {
-	for (xmlNodePtr child = components->children; child != nullptr; child = child->next)
+	for (xmlNodePtr child = components->children; child; child = child->next)
 	{
 		if (child->type != XML_ELEMENT_NODE)
 			continue;
@@ -674,7 +674,7 @@ AssetPtr XmlParser::parseAsset(
 
 		xmlNodePtr root = xmlDocGetRootElement(document);
 
-		if (root->ns != nullptr)
+		if (root->ns)
 		{
 			path = addNamespace(path, "m");
 			THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
@@ -701,7 +701,7 @@ AssetPtr XmlParser::parseAsset(
 
 		THROW_IF_XML2_NULL(buffer = xmlBufferCreate());
 
-		for (xmlNodePtr child = node->children; child != nullptr; child = child->next)
+		for (xmlNodePtr child = node->children; child; child = child->next)
 			xmlNodeDump(buffer, document, child, 0, 0);
 
 		asset = handleAsset(node,
@@ -719,16 +719,16 @@ AssetPtr XmlParser::parseAsset(
 	}
 	catch (string e)
 	{
-		if (assetNodes != nullptr)
+		if (assetNodes)
 			xmlXPathFreeObject(assetNodes);
 
-		if (xpathCtx != nullptr)
+		if (xpathCtx)
 			xmlXPathFreeContext(xpathCtx);
 
-		if (document != nullptr)
+		if (document)
 			xmlFreeDoc(document);
 
-		if (buffer != nullptr)
+		if (buffer)
 			xmlBufferFree(buffer);
 
 		g_logger << dlib::LERROR << "Cannot parse asset XML: " << e;
@@ -736,16 +736,16 @@ AssetPtr XmlParser::parseAsset(
 	}
 	catch (...)
 	{
-		if (assetNodes != nullptr)
+		if (assetNodes)
 			xmlXPathFreeObject(assetNodes);
 
-		if (xpathCtx != nullptr)
+		if (xpathCtx)
 			xmlXPathFreeContext(xpathCtx);
 
-		if (document != nullptr)
+		if (document)
 			xmlFreeDoc(document);
 
-		if (buffer != nullptr)
+		if (buffer)
 			xmlBufferFree(buffer);
 
 		g_logger << dlib::LERROR << "Cannot parse asset XML, Unknown execption occurred";
@@ -761,7 +761,7 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr d
 	CuttingToolValuePtr value(new CuttingToolValue(), true);
 	string name;
 
-	if (node->ns != nullptr && node->ns->prefix != nullptr)
+	if (node->ns && node->ns->prefix)
 	{
 		name = (const char *) node->ns->prefix;
 		name += ':';
@@ -774,7 +774,7 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr d
 	{
 		xmlChar *text = xmlNodeGetContent(node);
 
-		if (text != nullptr)
+		if (text)
 		{
 			value->m_value = (char *) text;
 			xmlFree(text);
@@ -785,14 +785,14 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr d
 		xmlBufferPtr buffer;
 		THROW_IF_XML2_NULL(buffer = xmlBufferCreate());
 
-		for (xmlNodePtr child = node->children; child != nullptr; child = child->next)
+		for (xmlNodePtr child = node->children; child; child = child->next)
 			xmlNodeDump(buffer, doc, child, 0, 0);
 
 		value->m_value = (char *) buffer->content;
 		xmlBufferFree(buffer);
 	}
 
-	for (xmlAttrPtr attr = node->properties; attr != nullptr; attr = attr->next)
+	for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
 	{
 		if (attr->type == XML_ATTRIBUTE_NODE)
 			value->m_properties[(const char *) attr->name] = (const char *) attr->children->content;
@@ -806,17 +806,17 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr node, xmlDocPtr doc)
 {
 	CuttingItemPtr item(new CuttingItem(), true);
 
-	for (xmlAttrPtr attr = node->properties; attr != nullptr; attr = attr->next)
+	for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
 	{
 		if (attr->type == XML_ATTRIBUTE_NODE)
 			item->m_identity[(const char *) attr->name] = (const char *) attr->children->content;
 	}
 
-	for (xmlNodePtr child = node->children; child != nullptr; child = child->next)
+	for (xmlNodePtr child = node->children; child; child = child->next)
 	{
 		if (xmlStrcmp(child->name, BAD_CAST "Measurements") == 0)
 		{
-			for (xmlNodePtr meas = child->children; meas != nullptr; meas = meas->next)
+			for (xmlNodePtr meas = child->children; meas; meas = meas->next)
 			{
 				CuttingToolValuePtr value = parseCuttingToolNode(meas, doc);
 				item->m_measurements[value->m_key] = value;
@@ -840,11 +840,11 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr node, xmlDocPtr doc)
 
 void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDocPtr doc)
 {
-	for (xmlNodePtr child = node->children; child != nullptr; child = child->next)
+	for (xmlNodePtr child = node->children; child; child = child->next)
 	{
 		if (xmlStrcmp(child->name, BAD_CAST "CuttingItems") == 0)
 		{
-			for (xmlAttrPtr attr = child->properties; attr != nullptr; attr = attr->next)
+			for (xmlAttrPtr attr = child->properties; attr; attr = attr->next)
 			{
 				if (attr->type == XML_ATTRIBUTE_NODE &&
 					xmlStrcmp(attr->name, BAD_CAST "count") == 0)
@@ -853,7 +853,7 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 				}
 			}
 
-			for (xmlNodePtr itemNode = child->children; itemNode != nullptr; itemNode = itemNode->next)
+			for (xmlNodePtr itemNode = child->children; itemNode; itemNode = itemNode->next)
 			{
 				if (xmlStrcmp(itemNode->name, BAD_CAST "CuttingItem") == 0)
 				{
@@ -864,7 +864,7 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 		}
 		else if (xmlStrcmp(child->name, BAD_CAST "Measurements") == 0)
 		{
-			for (xmlNodePtr meas = child->children; meas != nullptr; meas = meas->next)
+			for (xmlNodePtr meas = child->children; meas; meas = meas->next)
 			{
 				if (xmlStrcmp(meas->name, BAD_CAST "text") != 0)
 				{
@@ -875,13 +875,13 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 		}
 		else if (xmlStrcmp(child->name, BAD_CAST "CutterStatus") == 0)
 		{
-			for (xmlNodePtr status = child->children; status != nullptr; status = status->next)
+			for (xmlNodePtr status = child->children; status; status = status->next)
 			{
 				if (xmlStrcmp(status->name, BAD_CAST "Status") == 0)
 				{
 					xmlChar *text = xmlNodeGetContent(status);
 
-					if (text != nullptr)
+					if (text)
 					{
 						tool->m_status.push_back((const char *) text);
 						xmlFree(text);
@@ -919,7 +919,7 @@ AssetPtr XmlParser::handleAsset(
 	{
 		asset.setObject(new Asset(assetId, (const char *) inputAsset->name, content), true);
 
-		for (xmlAttrPtr attr = inputAsset->properties; attr != nullptr; attr = attr->next)
+		for (xmlAttrPtr attr = inputAsset->properties; attr; attr = attr->next)
 		{
 			if (attr->type == XML_ATTRIBUTE_NODE)
 				asset->addIdentity(((const char *) attr->name), ((const char *) attr->children->content));
@@ -941,21 +941,21 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 		// Get the attributes...
 		tool.setObject(new CuttingTool("", (const char *) asset->name, ""), true);
 
-		for (xmlAttrPtr attr = asset->properties; attr != nullptr; attr = attr->next)
+		for (xmlAttrPtr attr = asset->properties; attr; attr = attr->next)
 		{
 			if (attr->type == XML_ATTRIBUTE_NODE)
 				tool->addIdentity((const char *) attr->name, (const char *) attr->children->content);
 		}
 
-		if (asset->children != nullptr)
+		if (asset->children)
 		{
-			for (xmlNodePtr child = asset->children; child != nullptr; child = child->next)
+			for (xmlNodePtr child = asset->children; child; child = child->next)
 			{
 				if (xmlStrcmp(child->name, BAD_CAST "AssetArchetypeRef") == 0)
 				{
 					XmlAttributes attrs;
 
-					for (xmlAttrPtr attr = child->properties; attr != nullptr; attr = attr->next)
+					for (xmlAttrPtr attr = child->properties; attr; attr = attr->next)
 					{
 						if (attr->type == XML_ATTRIBUTE_NODE)
 							attrs[(const char *) attr->name] = (const char *) attr->children->content;
@@ -967,7 +967,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 				{
 					xmlChar *text = xmlNodeGetContent(child);
 
-					if (text != nullptr)
+					if (text)
 					{
 						tool->setDescription((const char *) text);
 						xmlFree(text);
@@ -977,7 +977,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 				{
 					xmlChar *text = xmlNodeGetContent(child);
 
-					if (text != nullptr)
+					if (text)
 					{
 						tool->addValue(parseCuttingToolNode(child, doc));
 						xmlFree(text);
@@ -991,7 +991,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 				{
 					xmlChar *text = xmlNodeGetContent(child);
 
-					if (text != nullptr)
+					if (text)
 					{
 						tool->addValue(parseCuttingToolNode(child, doc));
 						xmlFree(text);
@@ -1058,14 +1058,14 @@ void XmlParser::updateAsset(
 	}
 	catch (string e)
 	{
-		if (document != nullptr)
+		if (document)
 			xmlFreeDoc(document);
 
 		g_logger << dlib::LERROR << "Cannot parse asset XML: " << e;
 	}
 	catch (...)
 	{
-		if (document != nullptr)
+		if (document)
 			xmlFreeDoc(document);
 	}
 }

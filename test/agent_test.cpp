@@ -2097,7 +2097,7 @@ void AgentTest::testFilterValues13()
   }
   
   DataItem *item = m_agent->getDataItemByName((string) "LinuxCNC", "pos");
-  CPPUNIT_ASSERT(item != nullptr);
+  CPPUNIT_ASSERT(item);
   CPPUNIT_ASSERT(item->hasMinimumDelta());
   
   CPPUNIT_ASSERT(!item->isFiltered(0.0, NAN));
@@ -2239,7 +2239,7 @@ void AgentTest::testFilterValues()
 	}
 
 	DataItem *item = m_agent->getDataItemByName((string) "LinuxCNC", "load");
-	CPPUNIT_ASSERT(item != NULL);
+	CPPUNIT_ASSERT(item);
 	CPPUNIT_ASSERT(item->hasMinimumDelta());
 
 	CPPUNIT_ASSERT(!item->isFiltered(0.0, NAN));
@@ -2295,13 +2295,13 @@ void AgentTest::testReferences()
   CPPUNIT_ASSERT_EQUAL((string) "c4", ref.m_id);
   CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.m_name);
   
-  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem != nullptr);
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem);
   
   const Component::Reference &ref2 = refs.back();
   CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.m_id);
   CPPUNIT_ASSERT_EQUAL((string) "door", ref2.m_name);
   
-  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.m_dataItem != nullptr);
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.m_dataItem);
   
   m_path = "/current";
   key_value_map query;
@@ -2329,7 +2329,7 @@ void AgentTest::testDiscrete()
   CPPUNIT_ASSERT(m_adapter);
   
   DataItem *msg = m_agent->getDataItemByName("LinuxCNC", "message");
-  CPPUNIT_ASSERT(msg != nullptr);
+  CPPUNIT_ASSERT(msg);
   CPPUNIT_ASSERT_EQUAL(true, msg->isDiscrete());
 
   // Validate we are dup checking.
@@ -2401,7 +2401,7 @@ void AgentTest::testConditionSequence()
   CPPUNIT_ASSERT(m_adapter);
   
   DataItem *logic = m_agent->getDataItemByName("LinuxCNC", "lp");
-  CPPUNIT_ASSERT(logic != nullptr);
+  CPPUNIT_ASSERT(logic);
   
   // Validate we are dup checking.
   {
@@ -2497,10 +2497,10 @@ void AgentTest::testEmptyLastItemFromAdapter()
   CPPUNIT_ASSERT(m_adapter);
   
   DataItem *program = m_agent->getDataItemByName("LinuxCNC", "program");
-  CPPUNIT_ASSERT(program != nullptr);
+  CPPUNIT_ASSERT(program);
 
   DataItem *tool_id = m_agent->getDataItemByName("LinuxCNC", "block");
-  CPPUNIT_ASSERT(tool_id != nullptr);
+  CPPUNIT_ASSERT(tool_id);
   
   {
 	PARSE_XML_RESPONSE;
@@ -2679,10 +2679,10 @@ void AgentTest::testComposition()
   CPPUNIT_ASSERT(m_adapter);
   
   DataItem *motor = m_agent->getDataItemByName("LinuxCNC", "zt1");
-  CPPUNIT_ASSERT(motor != nullptr);
+  CPPUNIT_ASSERT(motor);
 
   DataItem *amp = m_agent->getDataItemByName("LinuxCNC", "zt2");
-  CPPUNIT_ASSERT(amp != nullptr);
+  CPPUNIT_ASSERT(amp);
   
   m_adapter->processData("TIME|zt1|100|zt2|200");
 

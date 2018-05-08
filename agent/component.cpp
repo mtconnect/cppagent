@@ -112,7 +112,7 @@ Device *Component::getDevice()
 	{
 		if (getClass() == "Device")
 			m_device = (Device *) this;
-		else if (m_parent != nullptr)
+		else if (m_parent)
 			m_device = m_parent->getDevice();
 	}
 
