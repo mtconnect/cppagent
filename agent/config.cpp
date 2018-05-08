@@ -509,7 +509,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
     mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
   
   if (XmlPrinter::getSchemaVersion().empty())
-    XmlPrinter::setSchemaVersion("1.3");
+    XmlPrinter::setSchemaVersion("1.4");
   
   loadAllowPut(reader);
   loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,
