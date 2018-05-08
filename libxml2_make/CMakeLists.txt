@@ -8,49 +8,49 @@ set(LibXML2_INCLUDE_DIRS ../libxml2/include ./include)
 file(GLOB internal_headers ${LibXML2_SRC_DIR}/[a-z_]*.h)
 file(GLOB install_headers ${LibXML2_INCLUDE_DIRS}/libxml2/[a-z_]*.h)
 set(sources ${LibXML2_SRC_DIR}/buf.c
-        	${LibXML2_SRC_DIR}/c14n.c
-        	${LibXML2_SRC_DIR}/catalog.c
-        	${LibXML2_SRC_DIR}/chvalid.c
-        	${LibXML2_SRC_DIR}/debugXML.c
-        	${LibXML2_SRC_DIR}/dict.c
-        	${LibXML2_SRC_DIR}/DOCBparser.c
-        	${LibXML2_SRC_DIR}/encoding.c
-        	${LibXML2_SRC_DIR}/entities.c
-        	${LibXML2_SRC_DIR}/error.c
-        	${LibXML2_SRC_DIR}/globals.c
-        	${LibXML2_SRC_DIR}/hash.c
-        	${LibXML2_SRC_DIR}/HTMLparser.c
-        	${LibXML2_SRC_DIR}/HTMLtree.c
-        	${LibXML2_SRC_DIR}/legacy.c
-        	${LibXML2_SRC_DIR}/list.c
-        	${LibXML2_SRC_DIR}/nanoftp.c
-        	${LibXML2_SRC_DIR}/nanohttp.c
-        	${LibXML2_SRC_DIR}/parser.c
-        	${LibXML2_SRC_DIR}/parserInternals.c
-        	${LibXML2_SRC_DIR}/pattern.c
-        	${LibXML2_SRC_DIR}/relaxng.c
-        	${LibXML2_SRC_DIR}/SAX2.c
-        	${LibXML2_SRC_DIR}/SAX.c
-        	${LibXML2_SRC_DIR}/schematron.c
-        	${LibXML2_SRC_DIR}/threads.c
-        	${LibXML2_SRC_DIR}/tree.c
-        	${LibXML2_SRC_DIR}/uri.c
-        	${LibXML2_SRC_DIR}/valid.c
-        	${LibXML2_SRC_DIR}/xinclude.c
-        	${LibXML2_SRC_DIR}/xlink.c
-        	${LibXML2_SRC_DIR}/xmlIO.c
-        	${LibXML2_SRC_DIR}/xmlmemory.c
-        	${LibXML2_SRC_DIR}/xmlreader.c
-        	${LibXML2_SRC_DIR}/xmlregexp.c
-        	${LibXML2_SRC_DIR}/xmlmodule.c
-        	${LibXML2_SRC_DIR}/xmlsave.c
-        	${LibXML2_SRC_DIR}/xmlschemas.c
-        	${LibXML2_SRC_DIR}/xmlschemastypes.c
-        	${LibXML2_SRC_DIR}/xmlunicode.c
-        	${LibXML2_SRC_DIR}/xmlwriter.c
-        	${LibXML2_SRC_DIR}/xpath.c
-        	${LibXML2_SRC_DIR}/xpointer.c
-            ${LibXML2_SRC_DIR}/xmlstring.c)
+			${LibXML2_SRC_DIR}/c14n.c
+			${LibXML2_SRC_DIR}/catalog.c
+			${LibXML2_SRC_DIR}/chvalid.c
+			${LibXML2_SRC_DIR}/debugXML.c
+			${LibXML2_SRC_DIR}/dict.c
+			${LibXML2_SRC_DIR}/DOCBparser.c
+			${LibXML2_SRC_DIR}/encoding.c
+			${LibXML2_SRC_DIR}/entities.c
+			${LibXML2_SRC_DIR}/error.c
+			${LibXML2_SRC_DIR}/globals.c
+			${LibXML2_SRC_DIR}/hash.c
+			${LibXML2_SRC_DIR}/HTMLparser.c
+			${LibXML2_SRC_DIR}/HTMLtree.c
+			${LibXML2_SRC_DIR}/legacy.c
+			${LibXML2_SRC_DIR}/list.c
+			${LibXML2_SRC_DIR}/nanoftp.c
+			${LibXML2_SRC_DIR}/nanohttp.c
+			${LibXML2_SRC_DIR}/parser.c
+			${LibXML2_SRC_DIR}/parserInternals.c
+			${LibXML2_SRC_DIR}/pattern.c
+			${LibXML2_SRC_DIR}/relaxng.c
+			${LibXML2_SRC_DIR}/SAX2.c
+			${LibXML2_SRC_DIR}/SAX.c
+			${LibXML2_SRC_DIR}/schematron.c
+			${LibXML2_SRC_DIR}/threads.c
+			${LibXML2_SRC_DIR}/tree.c
+			${LibXML2_SRC_DIR}/uri.c
+			${LibXML2_SRC_DIR}/valid.c
+			${LibXML2_SRC_DIR}/xinclude.c
+			${LibXML2_SRC_DIR}/xlink.c
+			${LibXML2_SRC_DIR}/xmlIO.c
+			${LibXML2_SRC_DIR}/xmlmemory.c
+			${LibXML2_SRC_DIR}/xmlreader.c
+			${LibXML2_SRC_DIR}/xmlregexp.c
+			${LibXML2_SRC_DIR}/xmlmodule.c
+			${LibXML2_SRC_DIR}/xmlsave.c
+			${LibXML2_SRC_DIR}/xmlschemas.c
+			${LibXML2_SRC_DIR}/xmlschemastypes.c
+			${LibXML2_SRC_DIR}/xmlunicode.c
+			${LibXML2_SRC_DIR}/xmlwriter.c
+			${LibXML2_SRC_DIR}/xpath.c
+			${LibXML2_SRC_DIR}/xpointer.c
+			${LibXML2_SRC_DIR}/xmlstring.c)
 
 
 include_directories(${LibXML2_INCLUDE_DIRS} ${LibXML2_SRC_DIR})
@@ -59,15 +59,19 @@ add_library(libxml2 ${sources} ${headers})
 
 # correct library names
 set_target_properties(libxml2 PROPERTIES
-  DEBUG_POSTFIX "d"
-  RELEASE_POSTFIX ""
-  MINSIZEREL_POSTFIX ""
-  RELWITHDEBINFO_POSTFIX ""
+	DEBUG_POSTFIX "d"
+	RELEASE_POSTFIX ""
+	MINSIZEREL_POSTFIX ""
+	RELWITHDEBINFO_POSTFIX ""
 )
-    
+	
 add_definitions(/D HAVE_WIN32_THREADS)
-    
+	
 if(MSVC)
+	
+	add_definitions(/D LIBXML_STATIC) # Set this definition so that symbols are exported correctly (without __declspec(dllexport) directive)
+	add_definitions(/D _CRT_SECURE_NO_WARNINGS) # Hush warnings about deprecated and insecure string functions.
+
 	### General stuff
 	# a) Change MSVC runtime library settings (/MD[d], /MT[d], /ML[d] (single-threaded until VS 2003))
 	#    plus set lib suffix for later use and project label accordingly
