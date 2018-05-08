@@ -40,21 +40,21 @@ using namespace std;
 
 void ChangeObserverTest::setUp()
 {
-  mSignaler = new ChangeSignaler;
+  m_signaler = new ChangeSignaler;
 }
 
 void ChangeObserverTest::tearDown()
 {
-  delete mSignaler;
+  delete m_signaler;
 }
 
 void ChangeObserverTest::testAddObserver()
 {
   ChangeObserver obj;
   
-  CPPUNIT_ASSERT(!mSignaler->hasObserver(&obj));
-  mSignaler->addObserver(&obj);
-  CPPUNIT_ASSERT(mSignaler->hasObserver(&obj));
+  CPPUNIT_ASSERT(!m_signaler->hasObserver(&obj));
+  m_signaler->addObserver(&obj);
+  CPPUNIT_ASSERT(m_signaler->hasObserver(&obj));
 }
 
 static void signaler(void *aObj)
@@ -68,12 +68,12 @@ void ChangeObserverTest::testSignalObserver()
 {
   ChangeObserver obj;
   
-  mSignaler->addObserver(&obj);
-  dlib::create_new_thread(signaler, mSignaler);
+  m_signaler->addObserver(&obj);
+  dlib::create_new_thread(signaler, m_signaler);
   CPPUNIT_ASSERT(obj.wait(2000));
   obj.reset();
   
-  dlib::create_new_thread(signaler, mSignaler);
+  dlib::create_new_thread(signaler, m_signaler);
   CPPUNIT_ASSERT(!obj.wait(500)); 
   
   // Wait for things to clean up...
@@ -86,12 +86,12 @@ void ChangeObserverTest::testCleanup()
 
   {
     obj = new ChangeObserver;
-    mSignaler->addObserver(obj);
-    CPPUNIT_ASSERT(mSignaler->hasObserver(obj));
+    m_signaler->addObserver(obj);
+    CPPUNIT_ASSERT(m_signaler->hasObserver(obj));
     delete obj;
   }
   
-  CPPUNIT_ASSERT(!mSignaler->hasObserver(obj));
+  CPPUNIT_ASSERT(!m_signaler->hasObserver(obj));
 }
 
 static void signaler2(void *aObj)
@@ -106,9 +106,9 @@ void ChangeObserverTest::testChangeSequence()
 {
   ChangeObserver obj;
   
-  mSignaler->addObserver(&obj);
+  m_signaler->addObserver(&obj);
   CPPUNIT_ASSERT(!obj.wasSignaled());
-  dlib::create_new_thread(signaler2, mSignaler);
+  dlib::create_new_thread(signaler2, m_signaler);
   CPPUNIT_ASSERT(obj.wait(2000));
   CPPUNIT_ASSERT(obj.wasSignaled());
   
@@ -131,8 +131,8 @@ void ChangeObserverTest::testChangeSequence2()
 {
   ChangeObserver obj;
   
-  mSignaler->addObserver(&obj);
-  dlib::create_new_thread(signaler3, mSignaler);
+  m_signaler->addObserver(&obj);
+  dlib::create_new_thread(signaler3, m_signaler);
   CPPUNIT_ASSERT(obj.wait(2000));
   dlib::sleep(500);
 

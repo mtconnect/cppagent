@@ -43,29 +43,29 @@ const string Component::SComponentSpecs[NumComponentSpecs] = {
 /* Component public methods */
 Component::Component(const string& cls, map<string, string> attributes,
                      const string &aPrefix)
- : mAssetChanged(NULL), mAssetRemoved(NULL)
+ : m_assetChanged(NULL), m_assetRemoved(NULL)
 {
-  mId = attributes["id"];
+  m_id = attributes["id"];
   
-  mName = attributes["name"];
-  mNativeName = attributes["nativeName"];
-  mUuid = attributes["uuid"];
+  m_name = attributes["name"];
+  m_nativeName = attributes["nativeName"];
+  m_uuid = attributes["uuid"];
   
   if (attributes["sampleInterval"].empty()) {
-    mSampleInterval = (float) (attributes["sampleRate"].empty()) ?
+    m_sampleInterval = (float) (attributes["sampleRate"].empty()) ?
       0.0f : atof(attributes["sampleRate"].c_str());
   } else {
-    mSampleInterval = atof(attributes["sampleInterval"].c_str());
+    m_sampleInterval = atof(attributes["sampleInterval"].c_str());
   }
     
-  mParent = NULL;
-  mDevice = NULL;
-  mAvailability = NULL;
-  mAssetChanged = NULL;
-  mClass = cls;
-  mPrefix = aPrefix;
-  mPrefixedClass = aPrefix + ":" + cls;
-  mAttributes = buildAttributes();
+  m_parent = NULL;
+  m_device = NULL;
+  m_availability = NULL;
+  m_assetChanged = NULL;
+  m_class = cls;
+  m_prefix = aPrefix;
+  m_prefixedClass = aPrefix + ":" + cls;
+  m_attributes = buildAttributes();
 }
 
 Component::~Component()
@@ -76,26 +76,26 @@ std::map<string, string> Component::buildAttributes() const
 {
   std::map<string, string> attributes;
   
-  attributes["id"] = mId;
+  attributes["id"] = m_id;
   
-  if (!mName.empty())
+  if (!m_name.empty())
   {
-    attributes["name"] = mName;
+    attributes["name"] = m_name;
   }
   
-  if (mSampleInterval != 0.0f)
+  if (m_sampleInterval != 0.0f)
   {
-    attributes["sampleInterval"] = floatToString(mSampleInterval);
+    attributes["sampleInterval"] = floatToString(m_sampleInterval);
   }
   
-  if (!mUuid.empty())
+  if (!m_uuid.empty())
   {
-    attributes["uuid"] = mUuid;
+    attributes["uuid"] = m_uuid;
   }
   
-  if (!mNativeName.empty())
+  if (!m_nativeName.empty())
   {
-    attributes["nativeName"] = mNativeName;
+    attributes["nativeName"] = m_nativeName;
   }
 
   return attributes;
@@ -103,39 +103,39 @@ std::map<string, string> Component::buildAttributes() const
 
 void Component::addDescription(string body, map<string, string> attributes)
 {
-  mDescription = attributes;
+  m_description = attributes;
   if (!body.empty())
   {
-    mDescriptionBody = body;
+    m_descriptionBody = body;
   }
 }
 
 Device * Component::getDevice()
 {
-  if (mDevice == NULL) 
+  if (m_device == NULL) 
   {
     if (getClass() == "Device")
     {
-      mDevice = (Device*) this;
+      m_device = (Device*) this;
     }
-    else if (mParent != NULL)
+    else if (m_parent != NULL)
     {
-      mDevice = mParent->getDevice();
+      m_device = m_parent->getDevice();
     }
   }  
-  return mDevice;
+  return m_device;
 }
 
 void Component::addDataItem(DataItem& dataItem) 
 { 
   if (dataItem.getType() == "AVAILABILITY")
-    mAvailability = &dataItem;
+    m_availability = &dataItem;
   else if (dataItem.getType() == "ASSET_CHANGED")
-    mAssetChanged = &dataItem;
+    m_assetChanged = &dataItem;
   else if (dataItem.getType() == "ASSET_REMOVED")
-    mAssetRemoved = &dataItem;
+    m_assetRemoved = &dataItem;
   
-  mDataItems.push_back(&dataItem); 
+  m_dataItems.push_back(&dataItem); 
 }
 
 void Component::resolveReferences()
@@ -143,17 +143,17 @@ void Component::resolveReferences()
   Device *device = getDevice();
   
   std::list<Reference>::iterator iter;
-  for (iter = mReferences.begin(); iter != mReferences.end(); iter++)
+  for (iter = m_references.begin(); iter != m_references.end(); iter++)
   {
-    DataItem *di = device->getDeviceDataItem(iter->mId);
+    DataItem *di = device->getDeviceDataItem(iter->m_id);
     if (di == NULL) {
-      throw runtime_error("Cannot resolve Reference for component " + mName + " to data item " + iter->mId);
+      throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " + iter->m_id);
     }
-    iter->mDataItem = di;
+    iter->m_dataItem = di;
   }
   
   std::list<Component*>::iterator comp;
-  for (comp = mChildren.begin(); comp != mChildren.end(); comp++)
+  for (comp = m_children.begin(); comp != m_children.end(); comp++)
   {
     (*comp)->resolveReferences();
   }

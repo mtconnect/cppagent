@@ -45,48 +45,48 @@ void ComponentTest::setUp()
   attributes1["name"] = "ComponentTest1";
   attributes1["nativeName"] = "NativeName";
   attributes1["uuid"] = "UnivUniqId1";
-  a = new Component("Axes", attributes1);
+  m_compA = new Component("Axes", attributes1);
   
   std::map<string, string> attributes2;
   attributes2["id"] = "3";
   attributes2["name"] = "ComponentTest2";
   attributes2["uuid"] = "UnivUniqId2";
   attributes2["sampleRate"] = "123.4";
-  b = new Component("Controller", attributes2);
+  m_compB = new Component("Controller", attributes2);
 }
 
 void ComponentTest::tearDown()
 {
-  delete a;
-  delete b;
+  delete m_compA;
+  delete m_compB;
 }
 
 /* ComponentTest protected methods */
 void ComponentTest::testGetters()
 {
-  CPPUNIT_ASSERT_EQUAL((string) "Axes", a->getClass());
-  CPPUNIT_ASSERT_EQUAL((string) "1", a->getId());
-  CPPUNIT_ASSERT_EQUAL((string) "ComponentTest1", a->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", a->getUuid());
-  CPPUNIT_ASSERT_EQUAL((string) "NativeName", a->getNativeName());
+  CPPUNIT_ASSERT_EQUAL((string) "Axes", m_compA->getClass());
+  CPPUNIT_ASSERT_EQUAL((string) "1", m_compA->getId());
+  CPPUNIT_ASSERT_EQUAL((string) "ComponentTest1", m_compA->getName());
+  CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", m_compA->getUuid());
+  CPPUNIT_ASSERT_EQUAL((string) "NativeName", m_compA->getNativeName());
   
-  CPPUNIT_ASSERT_EQUAL((string) "Controller", b->getClass());
-  CPPUNIT_ASSERT_EQUAL((string) "3", b->getId());
-  CPPUNIT_ASSERT_EQUAL((string) "ComponentTest2", b->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", b->getUuid());
-  CPPUNIT_ASSERT(b->getNativeName().empty());
+  CPPUNIT_ASSERT_EQUAL((string) "Controller", m_compB->getClass());
+  CPPUNIT_ASSERT_EQUAL((string) "3", m_compB->getId());
+  CPPUNIT_ASSERT_EQUAL((string) "ComponentTest2", m_compB->getName());
+  CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", m_compB->getUuid());
+  CPPUNIT_ASSERT(m_compB->getNativeName().empty());
 }
 
 void ComponentTest::testGetAttributes()
 {
-  map<string, string> *attributes1 = a->getAttributes();
+  map<string, string> *attributes1 = m_compA->getAttributes();
   
   CPPUNIT_ASSERT_EQUAL((string) "1",(*attributes1)["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "ComponentTest1", (*attributes1)["name"]);
   CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", (*attributes1)["uuid"]);
   CPPUNIT_ASSERT((*attributes1)["sampleRate"].empty());
   
-  map<string, string> *attributes2 = b->getAttributes();
+  map<string, string> *attributes2 = m_compB->getAttributes();
   
   CPPUNIT_ASSERT_EQUAL((string) "3", (*attributes2)["id"]);
   CPPUNIT_ASSERT_EQUAL((string) "ComponentTest2", (*attributes2)["name"]);
@@ -100,22 +100,22 @@ void ComponentTest::testDescription()
   attributes["manufacturer"] = "MANUFACTURER";
   attributes["serialNumber"] = "SERIAL_NUMBER";
   
-  a->addDescription((string) "Machine 1", attributes);
-  map<string, string> description1 = a->getDescription();
+  m_compA->addDescription((string) "Machine 1", attributes);
+  map<string, string> description1 = m_compA->getDescription();
   
   CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description1["manufacturer"]);
   CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description1["serialNumber"]);
   CPPUNIT_ASSERT(description1["station"].empty());
-  CPPUNIT_ASSERT_EQUAL((string) "Machine 1", a->getDescriptionBody());
+  CPPUNIT_ASSERT_EQUAL((string) "Machine 1", m_compA->getDescriptionBody());
   
   attributes["station"] = "STATION";
-  b->addDescription((string) "", attributes);
-  map<string, string> description2 = b->getDescription();
+  m_compB->addDescription((string) "", attributes);
+  map<string, string> description2 = m_compB->getDescription();
   
   CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description2["manufacturer"]);
   CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description2["serialNumber"]);
   CPPUNIT_ASSERT_EQUAL((string) "STATION", description2["station"]);
-  CPPUNIT_ASSERT(b->getDescriptionBody().empty());
+  CPPUNIT_ASSERT(m_compB->getDescriptionBody().empty());
 
 }
 
@@ -125,8 +125,8 @@ void ComponentTest::testRelationships()
   map<string, string> dummy;
   Component linear("Linear", dummy);
   
-  a->setParent(linear);
-  CPPUNIT_ASSERT_EQUAL(&linear, a->getParent());
+  m_compA->setParent(linear);
+  CPPUNIT_ASSERT_EQUAL(&linear, m_compA->getParent());
   
   Device device(dummy);
   Component * devPointer = dynamic_cast<Component *>(&device);
@@ -136,35 +136,35 @@ void ComponentTest::testRelationships()
   CPPUNIT_ASSERT_EQUAL(devPointer, linear.getParent());
   
   // Test get device
-  CPPUNIT_ASSERT_EQUAL(&device, a->getDevice());
+  CPPUNIT_ASSERT_EQUAL(&device, m_compA->getDevice());
   CPPUNIT_ASSERT_EQUAL(&device, linear.getDevice());
   CPPUNIT_ASSERT_EQUAL(&device, device.getDevice());
   
   // Test add/get children
-  CPPUNIT_ASSERT(a->getChildren().empty());
+  CPPUNIT_ASSERT(m_compA->getChildren().empty());
   
   Component axes("Axes", dummy), thermostat("Thermostat", dummy);
-  a->addChild(axes);
-  a->addChild(thermostat);
+  m_compA->addChild(axes);
+  m_compA->addChild(thermostat);
   
-  CPPUNIT_ASSERT_EQUAL((size_t) 2, a->getChildren().size());
-  CPPUNIT_ASSERT_EQUAL(&axes, a->getChildren().front());
-  CPPUNIT_ASSERT_EQUAL(&thermostat, a->getChildren().back());
+  CPPUNIT_ASSERT_EQUAL((size_t) 2, m_compA->getChildren().size());
+  CPPUNIT_ASSERT_EQUAL(&axes, m_compA->getChildren().front());
+  CPPUNIT_ASSERT_EQUAL(&thermostat, m_compA->getChildren().back());
 }
 
 void ComponentTest::testDataItems()
 {
-  CPPUNIT_ASSERT(a->getDataItems().empty());
+  CPPUNIT_ASSERT(m_compA->getDataItems().empty());
 
   map<string, string> dummy;
   
   DataItem data1(dummy), data2(dummy);
-  a->addDataItem(data1);
-  a->addDataItem(data2);
+  m_compA->addDataItem(data1);
+  m_compA->addDataItem(data2);
   
-  CPPUNIT_ASSERT_EQUAL((size_t) 2, a->getDataItems().size());
-  CPPUNIT_ASSERT_EQUAL(&data1, a->getDataItems().front());
-  CPPUNIT_ASSERT_EQUAL(&data2, a->getDataItems().back());
+  CPPUNIT_ASSERT_EQUAL((size_t) 2, m_compA->getDataItems().size());
+  CPPUNIT_ASSERT_EQUAL(&data1, m_compA->getDataItems().front());
+  CPPUNIT_ASSERT_EQUAL(&data2, m_compA->getDataItems().back());
 }
 
 void ComponentTest::testReferences()
@@ -172,10 +172,10 @@ void ComponentTest::testReferences()
   string id("a"), name("xxx");
   Component::Reference ref(id, name);
   
-  a->addReference(ref);
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, a->getReferences().size());
+  m_compA->addReference(ref);
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, m_compA->getReferences().size());
   
-  CPPUNIT_ASSERT_EQUAL((string) "xxx", a->getReferences().front().mName);
-  CPPUNIT_ASSERT_EQUAL((string) "a", a->getReferences().front().mId);
+  CPPUNIT_ASSERT_EQUAL((string) "xxx", m_compA->getReferences().front().m_name);
+  CPPUNIT_ASSERT_EQUAL((string) "a", m_compA->getReferences().front().m_id);
 }
 

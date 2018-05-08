@@ -65,8 +65,8 @@ class XmlParserTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE_END();
   
 protected:
-  XmlParser * a;
-  std::vector<Device *> mDevices;
+  XmlParser * m_xmlParser;
+  std::vector<Device *> m_devices;
   
 protected:
   void testConstructor();

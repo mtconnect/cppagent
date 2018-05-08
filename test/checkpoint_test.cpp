@@ -40,12 +40,12 @@ using namespace std;
 void CheckpointTest::setUp()
 {
   // Create an agent with only 16 slots and 8 data items.
-  mAgent = NULL;
-  mCheckpoint = NULL;
-  mAgent = new Agent("../samples/min_config.xml", 4, 4);
-  mAgentId = intToString(getCurrentTimeInSec());
-  mAdapter = NULL;
-  mCheckpoint = new Checkpoint();
+  m_agent = NULL;
+  m_checkpoint = NULL;
+  m_agent = new Agent("../samples/min_config.xml", 4, 4);
+  m_agentId = intToString(getCurrentTimeInSec());
+  m_adapter = NULL;
+  m_checkpoint = new Checkpoint();
   
   std::map<string, string> attributes1, attributes2;
   
@@ -53,7 +53,7 @@ void CheckpointTest::setUp()
   attributes1["name"] = "DataItemTest1";
   attributes1["type"] = "LOAD";
   attributes1["category"] = "CONDITION";
-  mDataItem1 = new DataItem(attributes1);
+  m_dataItem1 = new DataItem(attributes1);
   
   attributes2["id"] = "3";
   attributes2["name"] = "DataItemTest2";
@@ -61,13 +61,13 @@ void CheckpointTest::setUp()
   attributes2["nativeUnits"] = "MILLIMETER";
   attributes2["subType"] = "ACTUAL";
   attributes2["category"] = "SAMPLE";
-  mDataItem2 = new DataItem(attributes2);
+  m_dataItem2 = new DataItem(attributes2);
 }
 
 void CheckpointTest::tearDown()
 {
-  delete mAgent;
-  delete mCheckpoint;
+  delete m_agent;
+  delete m_checkpoint;
 }
 
 void CheckpointTest::testAddComponentEvents()
@@ -79,44 +79,44 @@ void CheckpointTest::testAddComponentEvents()
     normal("NORMAL|||"),
     unavailable("UNAVAILABLE|||");
   
-  p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
+  p1 = new ComponentEvent(*m_dataItem1, 2, time, warning1);
   p1->unrefer();
   
   CPPUNIT_ASSERT_EQUAL(1, (int) p1->refCount());
-  mCheckpoint->addComponentEvent(p1);
+  m_checkpoint->addComponentEvent(p1);
   CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
   
-  p2 = new ComponentEvent(*mDataItem1, 2, time, warning2);
+  p2 = new ComponentEvent(*m_dataItem1, 2, time, warning2);
   p2->unrefer();
 
-  mCheckpoint->addComponentEvent(p2);
+  m_checkpoint->addComponentEvent(p2);
   CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
 
-  p3 = new ComponentEvent(*mDataItem1, 2, time, normal);
+  p3 = new ComponentEvent(*m_dataItem1, 2, time, normal);
   p3->unrefer();
 
-  mCheckpoint->addComponentEvent(p3);
+  m_checkpoint->addComponentEvent(p3);
   CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p3->getPrev());
   CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
   CPPUNIT_ASSERT_EQUAL(1, (int) p2->refCount());
 
-  p4 = new ComponentEvent(*mDataItem1, 2, time, warning1);
+  p4 = new ComponentEvent(*m_dataItem1, 2, time, warning1);
   p4->unrefer();
 
-  mCheckpoint->addComponentEvent(p4);
+  m_checkpoint->addComponentEvent(p4);
   CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p4->getPrev());
   CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
 
   // Test non condition
-  p3 = new ComponentEvent(*mDataItem2, 2, time, value);
+  p3 = new ComponentEvent(*m_dataItem2, 2, time, value);
   p3->unrefer();
-  mCheckpoint->addComponentEvent(p3);
+  m_checkpoint->addComponentEvent(p3);
   CPPUNIT_ASSERT_EQUAL(2, (int) p3->refCount());
   
-  p4 = new ComponentEvent(*mDataItem2, 2, time, value);
+  p4 = new ComponentEvent(*m_dataItem2, 2, time, value);
   p4->unrefer();
 
-  mCheckpoint->addComponentEvent(p4);
+  m_checkpoint->addComponentEvent(p4);
   CPPUNIT_ASSERT_EQUAL(2, (int) p4->refCount());
   
   CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p4->getPrev());
@@ -131,18 +131,18 @@ void CheckpointTest::testCopy()
     warning2("WARNING|CODE2|HIGH|Over..."),
     normal("NORMAL|||");
   
-  p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
+  p1 = new ComponentEvent(*m_dataItem1, 2, time, warning1);
   p1->unrefer();
-  mCheckpoint->addComponentEvent(p1);
+  m_checkpoint->addComponentEvent(p1);
   CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
   
-  p2 = new ComponentEvent(*mDataItem1, 2, time, warning2);
+  p2 = new ComponentEvent(*m_dataItem1, 2, time, warning2);
   p2->unrefer();
-  mCheckpoint->addComponentEvent(p2);
+  m_checkpoint->addComponentEvent(p2);
   CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
   CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
 
-  Checkpoint *copy = new Checkpoint(*mCheckpoint);
+  Checkpoint *copy = new Checkpoint(*m_checkpoint);
   CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
   CPPUNIT_ASSERT_EQUAL(3, (int) p2->refCount());
   delete copy;
@@ -157,19 +157,19 @@ void CheckpointTest::testGetComponentEvents()
     warning2("WARNING|CODE2|HIGH|Over..."),
     normal("NORMAL|||");
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
+  filter.insert(m_dataItem1->getId());
   
-  p = new ComponentEvent(*mDataItem1, 2, time, warning1);
-  mCheckpoint->addComponentEvent(p);
+  p = new ComponentEvent(*m_dataItem1, 2, time, warning1);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
   
-  p = new ComponentEvent(*mDataItem1, 2, time, warning2);
-  mCheckpoint->addComponentEvent(p);
+  p = new ComponentEvent(*m_dataItem1, 2, time, warning2);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
 
-  filter.insert(mDataItem2->getId());
-  p = new ComponentEvent(*mDataItem2, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  filter.insert(m_dataItem2->getId());
+  p = new ComponentEvent(*m_dataItem2, 2, time, value);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
   
   std::map<string, string> attributes;
@@ -183,19 +183,19 @@ void CheckpointTest::testGetComponentEvents()
   filter.insert(d1->getId());
   
   p = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
 
   ComponentEventPtrArray list;
-  mCheckpoint->getComponentEvents(list, &filter);
+  m_checkpoint->getComponentEvents(list, &filter);
 
   CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
   
   std::set<string> filter2;
-  filter2.insert(mDataItem1->getId());
+  filter2.insert(m_dataItem1->getId());
 
   ComponentEventPtrArray list2;
-  mCheckpoint->getComponentEvents(list2, &filter2);
+  m_checkpoint->getComponentEvents(list2, &filter2);
 
   CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
   
@@ -210,18 +210,18 @@ void CheckpointTest::testFilter()
     warning2("WARNING|CODE2|HIGH|Over..."),
     normal("NORMAL|||");
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
+  filter.insert(m_dataItem1->getId());
   
-  p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
-  mCheckpoint->addComponentEvent(p1);
+  p1 = new ComponentEvent(*m_dataItem1, 2, time, warning1);
+  m_checkpoint->addComponentEvent(p1);
   p1->unrefer();
   
-  p2 = new ComponentEvent(*mDataItem1, 2, time, warning2);
-  mCheckpoint->addComponentEvent(p2);
+  p2 = new ComponentEvent(*m_dataItem1, 2, time, warning2);
+  m_checkpoint->addComponentEvent(p2);
   p2->unrefer();
 
-  p3 = new ComponentEvent(*mDataItem2, 2, time, value);
-  mCheckpoint->addComponentEvent(p3);
+  p3 = new ComponentEvent(*m_dataItem2, 2, time, value);
+  m_checkpoint->addComponentEvent(p3);
   p3->unrefer();
   
   std::map<string, string> attributes;
@@ -234,17 +234,17 @@ void CheckpointTest::testFilter()
   DataItem *d1 = new DataItem(attributes);
   
   p4 = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p4);
+  m_checkpoint->addComponentEvent(p4);
   p4->unrefer();
 
   ComponentEventPtrArray list;
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
 
   CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
   list.clear();
   
-  mCheckpoint->filter(filter);
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->filter(filter);
+  m_checkpoint->getComponentEvents(list);
 
   CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
 }
@@ -258,18 +258,18 @@ void CheckpointTest::testCopyAndFilter()
     warning3("WARNING|CODE3|HIGH|Over..."),
     normal("NORMAL|||");
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
+  filter.insert(m_dataItem1->getId());
   
-  p = new ComponentEvent(*mDataItem1, 2, time, warning1);
-  mCheckpoint->addComponentEvent(p);
+  p = new ComponentEvent(*m_dataItem1, 2, time, warning1);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
   
-  p = new ComponentEvent(*mDataItem1, 2, time, warning2);
-  mCheckpoint->addComponentEvent(p);
+  p = new ComponentEvent(*m_dataItem1, 2, time, warning2);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
 
-  p = new ComponentEvent(*mDataItem2, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  p = new ComponentEvent(*m_dataItem2, 2, time, value);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
   
   std::map<string, string> attributes;
@@ -282,22 +282,22 @@ void CheckpointTest::testCopyAndFilter()
   DataItem *d1 = new DataItem(attributes);
   
   p = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
 
   ComponentEventPtrArray list;
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
 
   CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
   list.clear();
 
-  Checkpoint check(*mCheckpoint, &filter);
+  Checkpoint check(*m_checkpoint, &filter);
   check.getComponentEvents(list);
   
   CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
   list.clear();
 
-  p = new ComponentEvent(*mDataItem1, 2, time, warning3);
+  p = new ComponentEvent(*m_dataItem1, 2, time, warning3);
   check.addComponentEvent(p);
   p->unrefer();
 
@@ -307,7 +307,7 @@ void CheckpointTest::testCopyAndFilter()
   list.clear();
 
   p = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  m_checkpoint->addComponentEvent(p);
   p->unrefer();
 
   check.getComponentEvents(list);
@@ -329,44 +329,44 @@ void CheckpointTest::testConditionChaining()
     unavailable("UNAVAILABLE|||");
 
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
+  filter.insert(m_dataItem1->getId());
   ComponentEventPtrArray list;
   
-  p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
+  p1 = new ComponentEvent(*m_dataItem1, 2, time, warning1);
   p1->unrefer();
-  mCheckpoint->addComponentEvent(p1);
+  m_checkpoint->addComponentEvent(p1);
   
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
   list.clear();
   
-  p2 = new ComponentEvent(*mDataItem1, 2, time, warning2);
+  p2 = new ComponentEvent(*m_dataItem1, 2, time, warning2);
   p2->unrefer();
 
-  mCheckpoint->addComponentEvent(p2);
+  m_checkpoint->addComponentEvent(p2);
   CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
   list.clear();
   
-  p3 = new ComponentEvent(*mDataItem1, 2, time, warning3);
+  p3 = new ComponentEvent(*m_dataItem1, 2, time, warning3);
   p3->unrefer();
 
-  mCheckpoint->addComponentEvent(p3);
+  m_checkpoint->addComponentEvent(p3);
   CPPUNIT_ASSERT_EQUAL(p2.getObject(), p3->getPrev());
   CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
   CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, p1->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
   list.clear();
   
   // Replace Warning on CODE 2 with a fault
-  p4 = new ComponentEvent(*mDataItem1, 2, time, fault2);
+  p4 = new ComponentEvent(*m_dataItem1, 2, time, fault2);
   p4->unrefer();
 
-  mCheckpoint->addComponentEvent(p4);
+  m_checkpoint->addComponentEvent(p4);
   CPPUNIT_ASSERT_EQUAL(2, (int) p4->refCount());
   CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
   CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
@@ -382,19 +382,19 @@ void CheckpointTest::testConditionChaining()
   CPPUNIT_ASSERT_EQUAL(1, (int) p4->getPrev()->getPrev()->refCount());
   CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, p4->getPrev()->getPrev()->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
   list.clear();
   
   // Clear Code 2
-  p5 = new ComponentEvent(*mDataItem1, 2, time, normal2);
+  p5 = new ComponentEvent(*m_dataItem1, 2, time, normal2);
   p5->unrefer();
   
-  mCheckpoint->addComponentEvent(p5);
+  m_checkpoint->addComponentEvent(p5);
   CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, p5->getPrev());
 
   // Check cleanup
-  ComponentEventPtr *p7 = mCheckpoint->getEvents()[std::string("1")];
+  ComponentEventPtr *p7 = m_checkpoint->getEvents()[std::string("1")];
   CPPUNIT_ASSERT_EQUAL(1, (int) (*p7)->refCount());
   
   CPPUNIT_ASSERT(p7 != NULL);
@@ -403,18 +403,18 @@ void CheckpointTest::testConditionChaining()
   CPPUNIT_ASSERT_EQUAL(std::string("CODE1"), (*p7)->getPrev()->getCode());
   CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, (*p7)->getPrev()->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
   list.clear();
 
   // Clear all
-  p6 = new ComponentEvent(*mDataItem1, 2, time, normal);
+  p6 = new ComponentEvent(*m_dataItem1, 2, time, normal);
   p6->unrefer();
 
-  mCheckpoint->addComponentEvent(p6);
+  m_checkpoint->addComponentEvent(p6);
   CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, p6->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
   list.clear();
 }
@@ -428,23 +428,23 @@ void CheckpointTest::testLastConditionNormal()
     normal1("NORMAL|CODE1||");
 
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
+  filter.insert(m_dataItem1->getId());
   ComponentEventPtrArray list;
   
   
-  p1 = new ComponentEvent(*mDataItem1, 2, time, fault1);
+  p1 = new ComponentEvent(*m_dataItem1, 2, time, fault1);
   p1->unrefer();
-  mCheckpoint->addComponentEvent(p1);
+  m_checkpoint->addComponentEvent(p1);
   
-  mCheckpoint->getComponentEvents(list);
+  m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
   list.clear();
   
-  p2 = new ComponentEvent(*mDataItem1, 2, time, normal1);
+  p2 = new ComponentEvent(*m_dataItem1, 2, time, normal1);
   p2->unrefer();
-  mCheckpoint->addComponentEvent(p2);
+  m_checkpoint->addComponentEvent(p2);
 
-  mCheckpoint->getComponentEvents(list, &filter);
+  m_checkpoint->getComponentEvents(list, &filter);
   CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
 
   p3 = list[0];

@@ -34,16 +34,16 @@ typedef RefCountedPtr<CuttingItem> CuttingItemPtr;
 class CuttingToolValue : public RefCounted {
 public:  
   CuttingToolValue(const std::string &aKey, const std::string &aValue) 
-    : mKey(aKey), mValue(aValue) {}
+    : m_key(aKey), m_value(aValue) {}
   CuttingToolValue() {}
   CuttingToolValue(const CuttingToolValue &aOther) 
-    : mProperties(aOther.mProperties), mKey(aOther.mKey), mValue(aOther.mValue)  {}
+    : m_properties(aOther.m_properties), m_key(aOther.m_key), m_value(aOther.m_value)  {}
   virtual ~CuttingToolValue();
     
 public:
-  std::map<std::string, std::string> mProperties;
-  std::string mKey;
-  std::string mValue;
+  std::map<std::string, std::string> m_properties;
+  std::string m_key;
+  std::string m_value;
 };
 
 class CuttingItem : public RefCounted {
@@ -51,10 +51,10 @@ public:
   virtual ~CuttingItem();
 
 public:
-  std::map<std::string,std::string> mIdentity;
-  std::map<std::string,CuttingToolValuePtr> mValues;
-  std::map<std::string,CuttingToolValuePtr> mMeasurements;
-  std::vector<CuttingToolValuePtr> mLives;
+  std::map<std::string,std::string> m_identity;
+  std::map<std::string,CuttingToolValuePtr> m_values;
+  std::map<std::string,CuttingToolValuePtr> m_measurements;
+  std::vector<CuttingToolValuePtr> m_lives;
 };
 
 class CuttingTool : public Asset {
@@ -69,13 +69,13 @@ public:
   void updateValue(const std::string &aKey, const std::string &aValue);
   
   virtual std::string &getContent();
-  virtual void changed() { mContent.clear(); }
+  virtual void changed() { m_content.clear(); }
 
 public:
-  std::vector<std::string> mStatus;
-  std::map<std::string,CuttingToolValuePtr> mValues;
-  std::map<std::string,CuttingToolValuePtr> mMeasurements;  
-  std::string mItemCount;
-  std::vector<CuttingItemPtr> mItems;
-  std::vector<CuttingToolValuePtr> mLives;
+  std::vector<std::string> m_status;
+  std::map<std::string,CuttingToolValuePtr> m_values;
+  std::map<std::string,CuttingToolValuePtr> m_measurements;  
+  std::string m_itemCount;
+  std::vector<CuttingItemPtr> m_items;
+  std::vector<CuttingToolValuePtr> m_lives;
 };

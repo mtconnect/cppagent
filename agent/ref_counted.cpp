@@ -28,13 +28,13 @@ RefCounted::~RefCounted()
 void RefCounted::referTo()
 {
 #ifdef _WINDOWS
-  InterlockedIncrement(&(this->mRefCount));
+  InterlockedIncrement(&(this->m_refCount));
 #else
 #ifdef MACOSX
-  OSAtomicIncrement32Barrier(&(this->mRefCount));
+  OSAtomicIncrement32Barrier(&(this->m_refCount));
 #else
   dlib::auto_mutex lock(sRefMutex);
-  mRefCount++;
+  m_refCount++;
 #endif
 #endif
 }
@@ -42,19 +42,19 @@ void RefCounted::referTo()
 void RefCounted::unrefer()
 {
 #ifdef _WINDOWS
-  if (InterlockedDecrement(&(this->mRefCount)) <= 0)
+  if (InterlockedDecrement(&(this->m_refCount)) <= 0)
   {
     delete this;
   }
 #else
 #ifdef MACOSX
-  if (OSAtomicDecrement32Barrier(&(this->mRefCount)) <= 0)
+  if (OSAtomicDecrement32Barrier(&(this->m_refCount)) <= 0)
   {
     delete this;
   }
 #else
   dlib::auto_mutex lock(sRefMutex);
-  if (--mRefCount <= 0)
+  if (--m_refCount <= 0)
   {
     delete this;
   }

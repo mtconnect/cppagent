@@ -27,34 +27,34 @@ RollingFileLogger::RollingFileLogger(std::string aName,
                                      int aMaxBackupIndex,
                                      size_t aMaxSize,
                                      RollingSchedule aSchedule)
-  : mName(aName), mMaxBackupIndex(aMaxBackupIndex), mMaxSize(aMaxSize),
-    mSchedule(aSchedule), mFd(0)
+  : m_name(aName), m_maxBackupIndex(aMaxBackupIndex), m_maxSize(aMaxSize),
+    m_schedule(aSchedule), m_fd(0)
 {
-  mFileLock = new dlib::mutex();
+  m_fileLock = new dlib::mutex();
   
-  mFd = ::open(aName.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
-  if (mFd < 0)
+  m_fd = ::open(aName.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
+  if (m_fd < 0)
   {
     cerr << "Cannot log open file " << aName << endl;
     cerr << "Exiting...";
     exit(1);
   }
   file f(aName);
-  mFile = f;
-  mDirectory = get_parent_directory(mFile);
+  m_file = f;
+  m_directory = get_parent_directory(m_file);
 }
 
 RollingFileLogger::~RollingFileLogger()
 {
-  delete mFileLock;
-  ::close(mFd);
+  delete m_fileLock;
+  ::close(m_fd);
 }
 
 int RollingFileLogger::getFileAge()
 {
   struct stat buffer;
 
-  int res = ::stat(mFile.full_name().c_str(), &buffer);
+  int res = ::stat(m_file.full_name().c_str(), &buffer);
   if (res < 0)
     return 0;
   else
@@ -71,65 +71,65 @@ void RollingFileLogger::write(const char *aMessage)
 {
   size_t len = strlen(aMessage);
   
-  if (mSchedule != NEVER) {
+  if (m_schedule != NEVER) {
     int age = getFileAge();
-    if ((mSchedule == DAILY && age > DAY) ||
-        (mSchedule == WEEKLY && age > 7 * DAY))
+    if ((m_schedule == DAILY && age > DAY) ||
+        (m_schedule == WEEKLY && age > 7 * DAY))
       rollover(0);
     
   } else {
-    file f(mFile.full_name());
+    file f(m_file.full_name());
     size_t size = f.size();
-    if (size + len >= mMaxSize)
+    if (size + len >= m_maxSize)
       rollover(size);
   }
   
-  ::write(mFd, aMessage, len);
+  ::write(m_fd, aMessage, len);
 }
 
 void RollingFileLogger::rollover(size_t aSize)
 {
-  dlib::auto_mutex M(*mFileLock);
+  dlib::auto_mutex M(*m_fileLock);
 
   // File was probable rolled over... threading race.
-  if (mSchedule != NEVER) {
+  if (m_schedule != NEVER) {
     int age = getFileAge();
-    if ((mSchedule == DAILY && age < DAY) ||
-        (mSchedule == WEEKLY && age < 7 * DAY))
+    if ((m_schedule == DAILY && age < DAY) ||
+        (m_schedule == WEEKLY && age < 7 * DAY))
       return;
   } else {
-    file f(mFile.full_name());
+    file f(m_file.full_name());
     if (f.size() < aSize)
       return;
   }
 
   // Close the current file
-  ::close(mFd);
+  ::close(m_fd);
   
   // Remove the last file
-  std::string name = mFile.full_name() + "." + intToString(mMaxBackupIndex);
+  std::string name = m_file.full_name() + "." + intToString(m_maxBackupIndex);
   if (file_exists(name))
     ::remove(name.c_str());
   
   // Roll over old log files.
-  for (int i = mMaxBackupIndex - 1; i >= 1; i--)
+  for (int i = m_maxBackupIndex - 1; i >= 1; i--)
   {
-    std::string from = mFile.full_name() + "." + intToString(i);
+    std::string from = m_file.full_name() + "." + intToString(i);
     if (file_exists(from))
     {
-      name = mFile.full_name() + "." + intToString(i + 1);
+      name = m_file.full_name() + "." + intToString(i + 1);
       ::rename(from.c_str(), name.c_str());
     }
   }
   
-  name = mFile.full_name() + ".1";
-  ::rename(mFile.full_name().c_str(), name.c_str());
+  name = m_file.full_name() + ".1";
+  ::rename(m_file.full_name().c_str(), name.c_str());
   
   // Open new log file
-  mFd = ::open(mFile.full_name().c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
-  if (mFd < 0)
+  m_fd = ::open(m_file.full_name().c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
+  if (m_fd < 0)
   {
-    cerr << "Cannot log open file " << mName << endl;
+    cerr << "Cannot log open file " << m_name << endl;
     cerr << "Exiting...";
     exit(1);
   }

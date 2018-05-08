@@ -47,37 +47,37 @@ public:
   
   /* Set pointer to the agent */
   void setAgent(Agent& agent);
-  bool isDupChecking() { return mDupCheck; }
-  void setDupCheck(bool aFlag) { mDupCheck = aFlag; }
-  Device *getDevice() const { return mDevice; }
+  bool isDupChecking() { return m_dupCheck; }
+  void setDupCheck(bool aFlag) { m_dupCheck = aFlag; }
+  Device *getDevice() const { return m_device; }
 
-  bool isAutoAvailable() { return mAutoAvailable; }
-  void setAutoAvailable(bool aFlag) { mAutoAvailable = aFlag; }
+  bool isAutoAvailable() { return m_autoAvailable; }
+  void setAutoAvailable(bool aFlag) { m_autoAvailable = aFlag; }
 
-  bool isIgnoringTimestamps() { return mIgnoreTimestamps; }
-  void setIgnoreTimestamps(bool aFlag) { mIgnoreTimestamps = aFlag; }
+  bool isIgnoringTimestamps() { return m_ignoreTimestamps; }
+  void setIgnoreTimestamps(bool aFlag) { m_ignoreTimestamps = aFlag; }
   
-  void setReconnectInterval(int aInterval) { mReconnectInterval = aInterval; }
-  int getReconnectInterval() const { return mReconnectInterval; }
+  void setReconnectInterval(int aInterval) { m_reconnectInterval = aInterval; }
+  int getReconnectInterval() const { return m_reconnectInterval; }
   
-  void setRelativeTime(bool aFlag) { mRelativeTime = aFlag; }
-  bool getrelativeTime() { return mRelativeTime; }
+  void setRelativeTime(bool aFlag) { m_relativeTime = aFlag; }
+  bool getrelativeTime() { return m_relativeTime; }
   
-  void setConversionRequired(bool aFlag) { mConversionRequired = aFlag; }
-  bool conversionRequired() const { return mConversionRequired; }
+  void setConversionRequired(bool aFlag) { m_conversionRequired = aFlag; }
+  bool conversionRequired() const { return m_conversionRequired; }
   
-  void setUpcaseValue(bool aFlag) { mUpcaseValue = aFlag; }
-  bool upcaseValue() const { return mUpcaseValue; }
+  void setUpcaseValue(bool aFlag) { m_upcaseValue = aFlag; }
+  bool upcaseValue() const { return m_upcaseValue; }
   
-  uint64_t getBaseTime() { return mBaseTime; }
-  uint64_t getBaseOffset() { return mBaseOffset; }
+  uint64_t getBaseTime() { return m_baseTime; }
+  uint64_t getBaseOffset() { return m_baseOffset; }
   
-  bool isParsingTime() { return mParseTime; }
-  void setParseTime(bool aFlag) { mParseTime = aFlag; }
+  bool isParsingTime() { return m_parseTime; }
+  void setParseTime(bool aFlag) { m_parseTime = aFlag; }
   
   /* For testing... */
-  void setBaseOffset(uint64_t aOffset) { mBaseOffset = aOffset; }
-  void setBaseTime(uint64_t aOffset) { mBaseTime = aOffset; }
+  void setBaseOffset(uint64_t aOffset) { m_baseOffset = aOffset; }
+  void setBaseTime(uint64_t aOffset) { m_baseTime = aOffset; }
   
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);
@@ -92,7 +92,7 @@ public:
       if (aDataItem->hasMinimumDelta() || aDataItem->hasMinimumPeriod())
         return aDataItem->isFiltered(aDataItem->convertValue(atof(aValue.c_str())), aTimeOffset);
       else
-        return  mDupCheck && aDataItem->isDuplicate(aValue);
+        return  m_dupCheck && aDataItem->isDuplicate(aValue);
     } else {
       return false;
     }      
@@ -114,42 +114,42 @@ protected:
   
 protected:
   /* Pointer to the agent */
-  Agent *mAgent;
-  Device *mDevice;
-  std::vector<Device*> mAllDevices;
+  Agent *m_agent;
+  Device *m_device;
+  std::vector<Device*> m_allDevices;
 
   /* Name of device associated with adapter */
-  std::string mDeviceName;
+  std::string m_deviceName;
   
   /* If the connector has been running */
-  bool mRunning;
+  bool m_running;
 
   /* Check for dups */
-  bool mDupCheck;
-  bool mAutoAvailable;
-  bool mIgnoreTimestamps;
-  bool mRelativeTime;
-  bool mConversionRequired;
-  bool mUpcaseValue;
+  bool m_dupCheck;
+  bool m_autoAvailable;
+  bool m_ignoreTimestamps;
+  bool m_relativeTime;
+  bool m_conversionRequired;
+  bool m_upcaseValue;
   
   // For relative times
-  uint64_t mBaseTime;
-  uint64_t mBaseOffset;
+  uint64_t m_baseTime;
+  uint64_t m_baseOffset;
   
-  bool mParseTime;
+  bool m_parseTime;
   
   // For multiline asset parsing...
-  bool mGatheringAsset;
-  std::string mTerminator;
-  std::string mAssetId;
-  std::string mAssetType;
-  std::string mTime;
-  std::ostringstream mBody;
-  Device *mAssetDevice;
-  std::set<std::string> mLogOnce;
+  bool m_gatheringAsset;
+  std::string m_terminator;
+  std::string m_assetId;
+  std::string m_assetType;
+  std::string m_time;
+  std::ostringstream m_body;
+  Device *m_assetDevice;
+  std::set<std::string> m_logOnce;
   
   // Timeout for reconnection attempts, given in milliseconds
-  int mReconnectInterval;
+  int m_reconnectInterval;
   
 private:
   /* Inherited and is run as part of the threaded_object */

@@ -22,17 +22,17 @@ template<class T>
 class RefCountedPtr {
 public:
   // Constructors
-  RefCountedPtr() { mObject = NULL; }
+  RefCountedPtr() { m_object = NULL; }
   RefCountedPtr(const RefCountedPtr &aPtr, bool aTakeRef = false) {
-    mObject = NULL;
+    m_object = NULL;
     setObject(aPtr.getObject(), aTakeRef);
   }
   RefCountedPtr(T &aObject, bool aTakeRef = false) {
-    mObject = NULL;
+    m_object = NULL;
     setObject(&aObject, aTakeRef);
   }
   RefCountedPtr(T *aObject, bool aTakeRef = false) {
-    mObject = NULL;
+    m_object = NULL;
     setObject(aObject, aTakeRef);
   }
   
@@ -40,9 +40,9 @@ public:
   ~RefCountedPtr();
   
   // Getters
-  T *getObject() const { return mObject; }
-  T *operator->(void) const { return mObject; }
-  operator T*(void ) const { return mObject; }
+  T *getObject() const { return m_object; }
+  T *operator->(void) const { return m_object; }
+  operator T*(void ) const { return m_object; }
   
   // Setters
   T *setObject(T *aEvent, bool aTakeRef = false);
@@ -50,36 +50,36 @@ public:
   T *operator=(RefCountedPtr<T> &aPtr) { return setObject(aPtr.getObject()); }
   
   bool operator==(const RefCountedPtr &aOther) {
-    return *mObject == *(aOther.mObject);
+    return *m_object == *(aOther.m_object);
   }
   
   bool operator<(const RefCountedPtr &aOther);
 
 
 protected:
-  T *mObject;
+  T *m_object;
 };
 
 template<class T>
 inline RefCountedPtr<T>::~RefCountedPtr()
 {
-  if (mObject)
-    mObject->unrefer();
+  if (m_object)
+    m_object->unrefer();
 }
 
 template<class T>
 inline bool RefCountedPtr<T>::operator<(const RefCountedPtr<T> &aOther)
 {
-  return (*mObject) < (*aOther.mObject);
+  return (*m_object) < (*aOther.m_object);
 }
 
 template<class T>
 inline T *RefCountedPtr<T>::setObject(T *aEvent, bool aTakeRef) {
-  if (mObject != NULL)
-    mObject->unrefer();
-  mObject = aEvent;
+  if (m_object != NULL)
+    m_object->unrefer();
+  m_object = aEvent;
   if (aEvent != NULL && !aTakeRef)
-    mObject->referTo();
+    m_object->referTo();
   
   return aEvent;
 }
@@ -88,10 +88,10 @@ class RefCounted
 {
 public:
   RefCounted() {
-    mRefCount = 1;
+    m_refCount = 1;
   }
   RefCounted(RefCounted &aRef) {
-    mRefCount = 1;
+    m_refCount = 1;
   }
   
   virtual ~RefCounted();
@@ -100,11 +100,11 @@ public:
   void referTo();
   void unrefer();
   
-  unsigned int refCount() { return mRefCount; }
+  unsigned int refCount() { return m_refCount; }
 //  bool operator<(RefCounted &aOther) { return this < &aOther; }
 
 protected:
   /* Reference count */
-  AtomicInt mRefCount;
+  AtomicInt m_refCount;
 };
 

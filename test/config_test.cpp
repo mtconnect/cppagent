@@ -47,22 +47,22 @@ using namespace std;
 /* ComponentTest public methods */
 void ConfigTest::setUp()
 {
-  mConfig = new AgentConfiguration();
+  m_config = new AgentConfiguration();
 }
 
 void ConfigTest::tearDown()
 {
-  delete mConfig;
-  mConfig = NULL;
+  delete m_config;
+  m_config = NULL;
 }
 
 /* ComponentTest protected methods */
 void ConfigTest::testBlankConfig()
 {
   istringstream str("");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   CPPUNIT_ASSERT_EQUAL(1, (int) agent->getDevices().size());
 }
@@ -70,9 +70,9 @@ void ConfigTest::testBlankConfig()
 void ConfigTest::testBufferSize()
 {
   istringstream str("BufferSize = 4\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   CPPUNIT_ASSERT_EQUAL(16, (int) agent->getBufferSize());
 }
@@ -80,18 +80,18 @@ void ConfigTest::testBufferSize()
 void ConfigTest::testDevice()
 {
   istringstream str("Devices = ../samples/test_config.xml\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   Device *device = agent->getDevices()[0];
-  Adapter *adapter = device->mAdapters[0];
+  Adapter *adapter = device->m_adapters[0];
 
   CPPUNIT_ASSERT_EQUAL((string) "LinuxCNC", device->getName());
   CPPUNIT_ASSERT(!adapter->isDupChecking());
   CPPUNIT_ASSERT(!adapter->isAutoAvailable());
   CPPUNIT_ASSERT(!adapter->isIgnoringTimestamps());
-  CPPUNIT_ASSERT(device->mPreserveUuid);
+  CPPUNIT_ASSERT(device->m_preserveUuid);
 }
 
 void ConfigTest::testAdapter()
@@ -106,12 +106,12 @@ void ConfigTest::testAdapter()
                     "PreserveUUID = true\n"
                     "LegacyTimeout = 2000\n"
                     "} }\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   Device *device = agent->getDevices()[0];
-  Adapter *adapter = device->mAdapters[0];
+  Adapter *adapter = device->m_adapters[0];
 
   CPPUNIT_ASSERT_EQUAL(23, (int) adapter->getPort());
   CPPUNIT_ASSERT_EQUAL((string) "10.211.55.1", adapter->getServer());
@@ -119,20 +119,20 @@ void ConfigTest::testAdapter()
   CPPUNIT_ASSERT(adapter->isAutoAvailable());
   CPPUNIT_ASSERT(adapter->isIgnoringTimestamps());
   CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
-  CPPUNIT_ASSERT(device->mPreserveUuid);
+  CPPUNIT_ASSERT(device->m_preserveUuid);
 }
 
 void ConfigTest::testDefaultPreserveUUID()
 {
   istringstream str("Devices = ../samples/test_config.xml\n"
                     "PreserveUUID = true\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   Device *device = agent->getDevices()[0];
 
-  CPPUNIT_ASSERT(device->mPreserveUuid);
+  CPPUNIT_ASSERT(device->m_preserveUuid);
 }
 
 void ConfigTest::testDefaultPreserveOverride()
@@ -142,22 +142,22 @@ void ConfigTest::testDefaultPreserveOverride()
                     "Adapters { LinuxCNC { \n"
                     "PreserveUUID = false\n"
                     "} }\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   Device *device = agent->getDevices()[0];
 
-  CPPUNIT_ASSERT(!device->mPreserveUuid);
+  CPPUNIT_ASSERT(!device->m_preserveUuid);
 }
 
 void ConfigTest::testDisablePut()
 {
   istringstream str("Devices = ../samples/test_config.xml\n"
                     "AllowPut = true\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
 
   CPPUNIT_ASSERT(agent->isPutEnabled());
@@ -167,9 +167,9 @@ void ConfigTest::testLimitPut()
 {
   istringstream str("Devices = ../samples/test_config.xml\n"
                     "AllowPutFrom = localhost\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   CPPUNIT_ASSERT(agent->isPutEnabled());
   CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "127.0.0.1"));
@@ -179,9 +179,9 @@ void ConfigTest::testLimitPutFromHosts()
 {
   istringstream str("Devices = ../samples/test_config.xml\n"
                     "AllowPutFrom = localhost, 192.168.0.1\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   CPPUNIT_ASSERT(agent->isPutEnabled());
   CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "127.0.0.1"));
@@ -198,7 +198,7 @@ void ConfigTest::testNamespaces()
                     "}\n"
                     "}\n");
   
-  mConfig->loadConfig(streams);  
+  m_config->loadConfig(streams);  
   string path = XmlPrinter::getStreamsUrn("x");
   CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleStreams:1.2", path);
 
@@ -210,7 +210,7 @@ void ConfigTest::testNamespaces()
                         "}\n"
                         "}\n");
   
-  mConfig->loadConfig(devices);  
+  m_config->loadConfig(devices);  
   path = XmlPrinter::getDevicesUrn("y");
   CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleDevices:1.2", path);
 
@@ -223,7 +223,7 @@ void ConfigTest::testNamespaces()
                         "}\n"
                         "}\n");
   
-  mConfig->loadConfig(assets);  
+  m_config->loadConfig(assets);  
   path = XmlPrinter::getAssetsUrn("z");
   CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleAssets:1.2", path);
 
@@ -235,7 +235,7 @@ void ConfigTest::testNamespaces()
                        "}\n"
                        "}\n");
   
-  mConfig->loadConfig(errors);  
+  m_config->loadConfig(errors);  
   path = XmlPrinter::getErrorUrn("a");
   CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleErrors:1.2", path);
 
@@ -249,12 +249,12 @@ void ConfigTest::testLegacyTimeout()
 {
   istringstream str("Devices = ../samples/test_config.xml\n"
                     "LegacyTimeout = 2000\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   Device *device = agent->getDevices()[0];
-  Adapter *adapter = device->mAdapters[0];
+  Adapter *adapter = device->m_adapters[0];
   
   CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
 }
@@ -263,12 +263,12 @@ void ConfigTest::testIgnoreTimestamps()
 {
   istringstream str("Devices = ../samples/test_config.xml\n"
                     "IgnoreTimestamps = true\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   Device *device = agent->getDevices()[0];
-  Adapter *adapter = device->mAdapters[0];
+  Adapter *adapter = device->m_adapters[0];
   
   CPPUNIT_ASSERT(adapter->isIgnoringTimestamps());
 
@@ -281,12 +281,12 @@ void ConfigTest::testIgnoreTimestampsOverride()
                     "Adapters { LinuxCNC { \n"
                     "IgnoreTimestamps = false\n"
                     "} }\n");
-  mConfig->loadConfig(str);
+  m_config->loadConfig(str);
   
-  Agent *agent = mConfig->getAgent();
+  Agent *agent = m_config->getAgent();
   CPPUNIT_ASSERT(agent);
   Device *device = agent->getDevices()[0];
-  Adapter *adapter = device->mAdapters[0];
+  Adapter *adapter = device->m_adapters[0];
   
   CPPUNIT_ASSERT(!adapter->isIgnoringTimestamps());
   
@@ -301,7 +301,7 @@ void ConfigTest::testSpecifyMTCNamespace()
                         "}\n"
                         "}\n");
   
-  mConfig->loadConfig(streams);  
+  m_config->loadConfig(streams);  
   string path = XmlPrinter::getStreamsUrn("m");
   CPPUNIT_ASSERT_EQUAL((string) "", path);
   string location = XmlPrinter::getStreamsLocation("m");
@@ -314,7 +314,7 @@ void ConfigTest::testSetSchemaVersion()
 {
   istringstream streams("SchemaVersion = 1.4\n");
   
-  mConfig->loadConfig(streams);  
+  m_config->loadConfig(streams);  
   string version = XmlPrinter::getSchemaVersion();
   CPPUNIT_ASSERT_EQUAL((string) "1.4", version);
   
@@ -331,7 +331,7 @@ void ConfigTest::testSchemaDirectory()
                         "}\n"
                         "}\n");
 
-  mConfig->loadConfig(schemas);
+  m_config->loadConfig(schemas);
   string path = XmlPrinter::getStreamsUrn("m");
   CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectStreams:1.3", path);
   string location = XmlPrinter::getStreamsLocation("m");
@@ -373,7 +373,7 @@ void ConfigTest::testLogFileRollover()
     ::remove(buffer);
   }
   
-  mConfig->loadConfig(logger);
+  m_config->loadConfig(logger);
   
   CPPUNIT_ASSERT(file_exists("agent.log"));
   CPPUNIT_ASSERT(file_exists("agent.log.1"));
@@ -410,38 +410,38 @@ void ConfigTest::testMaxSize()
   istringstream logger("logger_config {"
                         "max_size = 150\n"
                         "}\n");
-  mConfig->loadConfig(logger);
-  RollingFileLogger *fl = mConfig->getLogger();
+  m_config->loadConfig(logger);
+  RollingFileLogger *fl = m_config->getLogger();
   CPPUNIT_ASSERT_EQUAL(150, fl->getMaxSize());
-  delete mConfig;
+  delete m_config;
   
-  mConfig = new AgentConfiguration();
+  m_config = new AgentConfiguration();
   istringstream logger2("logger_config {"
                        "max_size = 15K\n"
                        "}\n");
-  mConfig->loadConfig(logger2);
+  m_config->loadConfig(logger2);
   
-  fl = mConfig->getLogger();
+  fl = m_config->getLogger();
   CPPUNIT_ASSERT_EQUAL(15 * 1024, fl->getMaxSize());
-  delete mConfig;
+  delete m_config;
   
-  mConfig = new AgentConfiguration();
+  m_config = new AgentConfiguration();
   istringstream logger3("logger_config {"
                         "max_size = 15M\n"
                         "}\n");
-  mConfig->loadConfig(logger3);
+  m_config->loadConfig(logger3);
   
-  fl = mConfig->getLogger();
+  fl = m_config->getLogger();
   CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024, fl->getMaxSize());
-  delete mConfig;
+  delete m_config;
   
-  mConfig = new AgentConfiguration();
+  m_config = new AgentConfiguration();
   istringstream logger4("logger_config {"
                         "max_size = 15G\n"
                         "}\n");
-  mConfig->loadConfig(logger4);
+  m_config->loadConfig(logger4);
   
-  fl = mConfig->getLogger();
+  fl = m_config->getLogger();
   CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024 * 1024, fl->getMaxSize());
 
 }

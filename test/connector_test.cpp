@@ -40,36 +40,36 @@ using namespace std;
 /* ConnectorTest public methods */
 void ConnectorTest::setUp()
 {
-  CPPUNIT_ASSERT(create_listener(mServer, 0, "127.0.0.1") == 0);
-  mPort = mServer->get_listening_port();
-  mConnector.reset(new TestConnector("127.0.0.1", mPort));
-  mConnector->mDisconnected = true;
+  CPPUNIT_ASSERT(create_listener(m_server, 0, "127.0.0.1") == 0);
+  m_port = m_server->get_listening_port();
+  m_connector.reset(new TestConnector("127.0.0.1", m_port));
+  m_connector->m_disconnected = true;
 }
 
 void ConnectorTest::thread()
 {
-  mConnector->connect();
+  m_connector->connect();
 }
 
 void ConnectorTest::tearDown()
 {
-  mServer.reset();
-  mServerSocket.reset();
+  m_server.reset();
+  m_serverSocket.reset();
   stop();
   wait();
-  mConnector.reset();
+  m_connector.reset();
 }
 
 /* ConnectorTest protected methods */
 void ConnectorTest::testConnection()
 {
-  CPPUNIT_ASSERT(mConnector->mDisconnected);
+  CPPUNIT_ASSERT(m_connector->m_disconnected);
   start();
 
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
+  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
   dlib::sleep(100);
-  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
-  CPPUNIT_ASSERT(!mConnector->mDisconnected);
+  CPPUNIT_ASSERT(m_serverSocket.get() != NULL);
+  CPPUNIT_ASSERT(!m_connector->m_disconnected);
 }
 
 void ConnectorTest::testDataCapture()
@@ -77,15 +77,15 @@ void ConnectorTest::testDataCapture()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
-  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  CPPUNIT_ASSERT(m_serverSocket.get() != NULL);
 
   string command("Hello Connector\n");
-  CPPUNIT_ASSERT((size_t) mServerSocket->write(command.c_str(), command.length()) == command.length());
+  CPPUNIT_ASSERT((size_t) m_serverSocket->write(command.c_str(), command.length()) == command.length());
   dlib::sleep(1000);
 
   // \n is stripped from the posted data.
-  CPPUNIT_ASSERT_EQUAL(command.substr(0, command.length() - 1), mConnector->mData); 
+  CPPUNIT_ASSERT_EQUAL(command.substr(0, command.length() - 1), m_connector->m_data); 
 }
 
 void ConnectorTest::testDisconnect()
@@ -93,13 +93,13 @@ void ConnectorTest::testDisconnect()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
+  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
   dlib::sleep(1000);
-  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
-  CPPUNIT_ASSERT(!mConnector->mDisconnected);
-  mServerSocket.reset();
+  CPPUNIT_ASSERT(m_serverSocket.get() != NULL);
+  CPPUNIT_ASSERT(!m_connector->m_disconnected);
+  m_serverSocket.reset();
   dlib::sleep(1000);
-  CPPUNIT_ASSERT(mConnector->mDisconnected);
+  CPPUNIT_ASSERT(m_connector->m_disconnected);
 }
 
 void ConnectorTest::testProtocolCommand()
@@ -107,15 +107,15 @@ void ConnectorTest::testProtocolCommand()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
-  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  CPPUNIT_ASSERT(m_serverSocket.get() != NULL);
 
   const char *cmd ="* Hello Connector\n";
-  CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) mServerSocket->write(cmd, strlen(cmd)));
+  CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
   dlib::sleep(1000);
 
   // \n is stripped from the posted data.
-  CPPUNIT_ASSERT(strncmp(cmd, mConnector->mCommand.c_str(), strlen(cmd) - 1) == 0); 
+  CPPUNIT_ASSERT(strncmp(cmd, m_connector->m_command.c_str(), strlen(cmd) - 1) == 0); 
 }
 
 void ConnectorTest::testHeartbeat()
@@ -123,22 +123,22 @@ void ConnectorTest::testHeartbeat()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
-  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  CPPUNIT_ASSERT(m_serverSocket.get() != NULL);
 
   // Receive initial heartbeat request "* PING\n"
   char buf[1024];
-  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 5000));
+  CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
   buf[7] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
   // Respond to the heartbeat of 1/2 second
   const char *pong = "* PONG 1000\n";
-  CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) mServerSocket->write(pong, strlen(pong)));
+  CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
   dlib::sleep(1000);
   
-  CPPUNIT_ASSERT(mConnector->heartbeats());
-  CPPUNIT_ASSERT_EQUAL(1000, mConnector->heartbeatFrequency());
+  CPPUNIT_ASSERT(m_connector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(1000, m_connector->heartbeatFrequency());
 }
 
 void ConnectorTest::testHeartbeatPong()
@@ -154,7 +154,7 @@ void ConnectorTest::testHeartbeatPong()
     // Receive initial heartbeat request "* PING\n"
     
     char buf[1024];
-    CPPUNIT_ASSERT(mServerSocket->read(buf, 1023, 1100) > 0);
+    CPPUNIT_ASSERT(m_serverSocket->read(buf, 1023, 1100) > 0);
     buf[7] = '\0';
     CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
@@ -164,10 +164,10 @@ void ConnectorTest::testHeartbeatPong()
     
     // Respond to the heartbeat of 1/2 second
     const char *pong = "* PONG 1000\n";
-    CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) mServerSocket->write(pong, strlen(pong)));
+    CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
     dlib::sleep(10);
 
-    CPPUNIT_ASSERT(!mConnector->mDisconnected);
+    CPPUNIT_ASSERT(!m_connector->m_disconnected);
   }
 }
 
@@ -176,7 +176,7 @@ void ConnectorTest::testHeartbeatTimeout()
   testHeartbeat();
   dlib::sleep(2100);
   
-  CPPUNIT_ASSERT(mConnector->mDisconnected);
+  CPPUNIT_ASSERT(m_connector->m_disconnected);
 }
 
 void ConnectorTest::testLegacyTimeout()
@@ -184,55 +184,55 @@ void ConnectorTest::testLegacyTimeout()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
-  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  CPPUNIT_ASSERT(m_serverSocket.get() != NULL);
   
   char buf[1024];
-  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 5000));
+  CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
   buf[7] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
   // Write some data...
   const char *cmd ="* Hello Connector\n";
-  CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) mServerSocket->write(cmd, strlen(cmd)));
+  CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
 
   // No pings, but timeout after 5 seconds of silence
   dlib::sleep(11000);
   
-  CPPUNIT_ASSERT(mConnector->mDisconnected);  
+  CPPUNIT_ASSERT(m_connector->m_disconnected);  
 }
 
 
 void ConnectorTest::testParseBuffer()
 {
   // Test data fragmentation
-  mConnector->pushData("Hello");
-  CPPUNIT_ASSERT_EQUAL((string) "", mConnector->mData);
+  m_connector->pushData("Hello");
+  CPPUNIT_ASSERT_EQUAL((string) "", m_connector->m_data);
 
-  mConnector->pushData(" There\n");
-  CPPUNIT_ASSERT_EQUAL((string) "Hello There", mConnector->mData);
-  mConnector->mData.clear();
+  m_connector->pushData(" There\n");
+  CPPUNIT_ASSERT_EQUAL((string) "Hello There", m_connector->m_data);
+  m_connector->m_data.clear();
 
-  mConnector->pushData("Hello");
-  CPPUNIT_ASSERT_EQUAL((string) "", mConnector->mData);
+  m_connector->pushData("Hello");
+  CPPUNIT_ASSERT_EQUAL((string) "", m_connector->m_data);
 
-  mConnector->pushData(" There\nAnd ");
-  CPPUNIT_ASSERT_EQUAL((string) "Hello There", mConnector->mData);
+  m_connector->pushData(" There\nAnd ");
+  CPPUNIT_ASSERT_EQUAL((string) "Hello There", m_connector->m_data);
 
-  mConnector->pushData("Again\nXXX");
-  CPPUNIT_ASSERT_EQUAL((string) "And Again", mConnector->mData);
+  m_connector->pushData("Again\nXXX");
+  CPPUNIT_ASSERT_EQUAL((string) "And Again", m_connector->m_data);
 }
   
 void ConnectorTest::testParseBufferFraming()
 {
-  mConnector->mList.clear();
-  mConnector->pushData("first\nseco");
-  mConnector->pushData("nd\nthird\nfourth\nfifth");
-  CPPUNIT_ASSERT_EQUAL((size_t) 4, mConnector->mList.size());
-  CPPUNIT_ASSERT_EQUAL((string) "first", mConnector->mList[0]);
-  CPPUNIT_ASSERT_EQUAL((string) "second", mConnector->mList[1]);
-  CPPUNIT_ASSERT_EQUAL((string) "third", mConnector->mList[2]);
-  CPPUNIT_ASSERT_EQUAL((string) "fourth", mConnector->mList[3]);
+  m_connector->m_list.clear();
+  m_connector->pushData("first\nseco");
+  m_connector->pushData("nd\nthird\nfourth\nfifth");
+  CPPUNIT_ASSERT_EQUAL((size_t) 4, m_connector->m_list.size());
+  CPPUNIT_ASSERT_EQUAL((string) "first", m_connector->m_list[0]);
+  CPPUNIT_ASSERT_EQUAL((string) "second", m_connector->m_list[1]);
+  CPPUNIT_ASSERT_EQUAL((string) "third", m_connector->m_list[2]);
+  CPPUNIT_ASSERT_EQUAL((string) "fourth", m_connector->m_list[3]);
 }
 
 void ConnectorTest::testSendCommand()
@@ -240,18 +240,18 @@ void ConnectorTest::testSendCommand()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
-  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
+  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  CPPUNIT_ASSERT(m_serverSocket.get() != NULL);
   
   // Receive initial heartbeat request "* PING\n"
   char buf[1024];
-  CPPUNIT_ASSERT_EQUAL(7L, mServerSocket->read(buf, 1023, 1000));
+  CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 1000));
   buf[7] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
   
-  mConnector->sendCommand("Hello There;");
+  m_connector->sendCommand("Hello There;");
 
-  CPPUNIT_ASSERT_EQUAL(15L, mServerSocket->read(buf, 1023, 1000));
+  CPPUNIT_ASSERT_EQUAL(15L, m_serverSocket->read(buf, 1023, 1000));
   buf[15] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* Hello There;\n") == 0);  
 }
@@ -259,64 +259,64 @@ void ConnectorTest::testSendCommand()
 void ConnectorTest::testIPV6Connection()
 {
 #if !defined(WIN32) || (NTDDI_VERSION >= NTDDI_VISTA)
-  mConnector.reset();
+  m_connector.reset();
   
-  CPPUNIT_ASSERT(create_listener(mServer, 0, "::1") == 0);
-  mPort = mServer->get_listening_port();
-  mConnector.reset(new TestConnector("::1", mPort));
-  mConnector->mDisconnected = true;
+  CPPUNIT_ASSERT(create_listener(m_server, 0, "::1") == 0);
+  m_port = m_server->get_listening_port();
+  m_connector.reset(new TestConnector("::1", m_port));
+  m_connector->m_disconnected = true;
   
-  CPPUNIT_ASSERT(mConnector->mDisconnected);
+  CPPUNIT_ASSERT(m_connector->m_disconnected);
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, mServer->accept(mServerSocket));
+  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
   dlib::sleep(100);
-  CPPUNIT_ASSERT(mServerSocket.get() != NULL);
-  CPPUNIT_ASSERT(!mConnector->mDisconnected);
+  CPPUNIT_ASSERT(m_serverSocket.get() != NULL);
+  CPPUNIT_ASSERT(!m_connector->m_disconnected);
 #endif
 }
 
 void ConnectorTest::testStartHeartbeats()
 {
-  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  CPPUNIT_ASSERT(!m_connector->heartbeats());
   
   string line = "* PONG ";
-  mConnector->startHeartbeats(line);
+  m_connector->startHeartbeats(line);
   
-  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  CPPUNIT_ASSERT(!m_connector->heartbeats());
   
   line = "* PONK ";
-  mConnector->startHeartbeats(line);
+  m_connector->startHeartbeats(line);
   
-  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  CPPUNIT_ASSERT(!m_connector->heartbeats());
 
   line = "* PONG      ";
-  mConnector->startHeartbeats(line);
+  m_connector->startHeartbeats(line);
   
-  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  CPPUNIT_ASSERT(!m_connector->heartbeats());
   
   line = "* PONG FLAB";
-  mConnector->startHeartbeats(line);
+  m_connector->startHeartbeats(line);
   
-  CPPUNIT_ASSERT(!mConnector->heartbeats());
+  CPPUNIT_ASSERT(!m_connector->heartbeats());
 
   line = "* PONG       123";
-  mConnector->startHeartbeats(line);
+  m_connector->startHeartbeats(line);
   
-  CPPUNIT_ASSERT(mConnector->heartbeats());
-  CPPUNIT_ASSERT_EQUAL(123, mConnector->heartbeatFrequency());
+  CPPUNIT_ASSERT(m_connector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(123, m_connector->heartbeatFrequency());
 
-  mConnector->resetHeartbeats();
+  m_connector->resetHeartbeats();
 
   line = "* PONG       456 ";
-  mConnector->startHeartbeats(line);
+  m_connector->startHeartbeats(line);
   
-  CPPUNIT_ASSERT(mConnector->heartbeats());
-  CPPUNIT_ASSERT_EQUAL(456, mConnector->heartbeatFrequency());
+  CPPUNIT_ASSERT(m_connector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(456, m_connector->heartbeatFrequency());
 
   line = "* PONG 323";
-  mConnector->startHeartbeats(line);
+  m_connector->startHeartbeats(line);
   
-  CPPUNIT_ASSERT(mConnector->heartbeats());
-  CPPUNIT_ASSERT_EQUAL(323, mConnector->heartbeatFrequency());
+  CPPUNIT_ASSERT(m_connector->heartbeats());
+  CPPUNIT_ASSERT_EQUAL(323, m_connector->heartbeatFrequency());
 }

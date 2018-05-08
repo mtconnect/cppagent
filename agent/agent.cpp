@@ -37,25 +37,25 @@ static dlib::logger sLogger("agent");
 
 /* Agent public methods */
 Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int aCheckpointFreq)
-  : mPutEnabled(false), mLogStreamData(false)
+  : m_putEnabled(false), m_logStreamData(false)
 {
-  mMimeTypes["xsl"] = "text/xsl";
-  mMimeTypes["xml"] = "text/xml";
-  mMimeTypes["css"] = "text/css";
-  mMimeTypes["xsd"] = "text/xml";
-  mMimeTypes["jpg"] = "image/jpeg";
-  mMimeTypes["jpeg"] = "image/jpeg";
-  mMimeTypes["png"] = "image/png";
-  mMimeTypes["ico"] = "image/x-icon";
+  m_mimeTypes["xsl"] = "text/xsl";
+  m_mimeTypes["xml"] = "text/xml";
+  m_mimeTypes["css"] = "text/css";
+  m_mimeTypes["xsd"] = "text/xml";
+  m_mimeTypes["jpg"] = "image/jpeg";
+  m_mimeTypes["jpeg"] = "image/jpeg";
+  m_mimeTypes["png"] = "image/png";
+  m_mimeTypes["ico"] = "image/x-icon";
   
   try
   {
     // Load the configuration for the Agent
-    mXmlParser = new XmlParser();
-    mDevices = mXmlParser->parseFile(configXmlPath);  
+    m_xmlParser = new XmlParser();
+    m_devices = m_xmlParser->parseFile(configXmlPath);  
     std::vector<Device *>::iterator device;
     std::set<std::string> uuids;
-    for (device = mDevices.begin(); device != mDevices.end(); ++device) 
+    for (device = m_devices.begin(); device != m_devices.end(); ++device) 
     {
       if (uuids.count((*device)->getUuid()) > 0)
           throw runtime_error("Duplicate UUID: " + (*device)->getUuid());
@@ -83,32 +83,32 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   string time = getCurrentTime(GMT_UV_SEC);
   
   // Unique id number for agent instance
-  mInstanceId = getCurrentTimeInSec();
+  m_instanceId = getCurrentTimeInSec();
   
   // Sequence number and sliding buffer for data
-  mSequence = 1;
-  mSlidingBufferSize = 1 << aBufferSize;
-  mSlidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
-  mSlidingBuffer->set_size(aBufferSize);
+  m_sequence = 1;
+  m_slidingBufferSize = 1 << aBufferSize;
+  m_slidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
+  m_slidingBuffer->set_size(aBufferSize);
   mCheckpointFreq = aCheckpointFreq;
-  mCheckpointCount = (mSlidingBufferSize / aCheckpointFreq) + 1;
+  m_checkpointCount = (m_slidingBufferSize / aCheckpointFreq) + 1;
   
   // Asset sliding buffer
-  mMaxAssets = aMaxAssets;
+  m_maxAssets = aMaxAssets;
   
   // Create the checkpoints at a regular frequency
-  mCheckpoints = new Checkpoint[mCheckpointCount];
+  m_checkpoints = new Checkpoint[m_checkpointCount];
   
   // Mutex used for synchronized access to sliding buffer and sequence number
-  mSequenceLock = new dlib::mutex;
-  mAssetLock = new dlib::mutex;
+  m_sequenceLock = new dlib::mutex;
+  m_assetLock = new dlib::mutex;
   
   // Add the devices to the device map and create availability and 
   // asset changed events if they don't exist
   std::vector<Device *>::iterator device;
-  for (device = mDevices.begin(); device != mDevices.end(); ++device) 
+  for (device = m_devices.begin(); device != m_devices.end(); ++device) 
   {
-    mDeviceMap[(*device)->getName()] = *device;
+    m_deviceMap[(*device)->getName()] = *device;
     
     // Make sure we have two device level data items:
     // 1. Availability
@@ -125,7 +125,7 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       di->setComponent(*(*device));
       (*device)->addDataItem(*di);
       (*device)->addDeviceDataItem(*di);
-      (*device)->mAvailabilityAdded = true;
+      (*device)->m_availabilityAdded = true;
     }
     
     int major, minor;
@@ -162,13 +162,13 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
   }
   
   // Reload the document for path resolution
-  mXmlParser->loadDocument(XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, 
-                                                  mMaxAssets,
-                                                  mAssets.size(),
-                                                  mSequence, mDevices));
+  m_xmlParser->loadDocument(XmlPrinter::printProbe(m_instanceId, m_slidingBufferSize, 
+                                                  m_maxAssets,
+                                                  m_assets.size(),
+                                                  m_sequence, m_devices));
    
   /* Initialize the id mapping for the devices and set all data items to UNAVAILABLE */
-  for (device = mDevices.begin(); device != mDevices.end(); ++device) 
+  for (device = m_devices.begin(); device != m_devices.end(); ++device) 
   {
     const std::map<string, DataItem*> &items = (*device)->getDeviceDataItems();
     std::map<string, DataItem *>::const_iterator item;
@@ -185,8 +185,8 @@ Agent::Agent(const string& configXmlPath, int aBufferSize, int aMaxAssets, int a
       }
       
       addToBuffer(d, *value, time);
-      if (mDataItemMap.count(d->getId()) == 0)
-        mDataItemMap[d->getId()] = d;
+      if (m_dataItemMap.count(d->getId()) == 0)
+        m_dataItemMap[d->getId()] = d;
       else {
         sLogger << LFATAL << "Duplicate DataItem id " << d->getId() <<
                   " for device: " << (*device)->getName() << " and data item name: " <<
@@ -202,7 +202,7 @@ Device *Agent::findDeviceByUUIDorName(const std::string& aId)
   Device *device = NULL;
   
   std::vector<Device *>::iterator it;
-  for (it = mDevices.begin(); device == NULL && it != mDevices.end(); it++)
+  for (it = m_devices.begin(); device == NULL && it != m_devices.end(); it++)
   {
     if ((*it)->getUuid() == aId || (*it)->getName() == aId)
       device = *it;
@@ -214,11 +214,11 @@ Device *Agent::findDeviceByUUIDorName(const std::string& aId)
 
 Agent::~Agent()
 {
-  delete mSlidingBuffer;
-  delete mSequenceLock;
-  delete mAssetLock;
-  delete mXmlParser;
-  delete[] mCheckpoints;
+  delete m_slidingBuffer;
+  delete m_sequenceLock;
+  delete m_assetLock;
+  delete m_xmlParser;
+  delete[] m_checkpoints;
 }
 
 void Agent::start()
@@ -226,7 +226,7 @@ void Agent::start()
   try {
     // Start all the adapters
     std::vector<Adapter*>::iterator iter;
-    for (iter = mAdapters.begin(); iter != mAdapters.end(); iter++) {
+    for (iter = m_adapters.begin(); iter != m_adapters.end(); iter++) {
       (*iter)->start();
     }
     
@@ -246,7 +246,7 @@ void Agent::clear()
   
   sLogger << LINFO << "Shutting down adapters";
   // Deletes adapter and waits for it to exit.
-  for (iter = mAdapters.begin(); iter != mAdapters.end(); iter++) {
+  for (iter = m_adapters.begin(); iter != m_adapters.end(); iter++) {
     (*iter)->stop();
   }
     
@@ -254,11 +254,11 @@ void Agent::clear()
   server::http_1a::clear();
   sLogger << LINFO << "Shutting completed";
 
-  for (iter = mAdapters.begin(); iter != mAdapters.end(); iter++) {
+  for (iter = m_adapters.begin(); iter != m_adapters.end(); iter++) {
     delete (*iter);
   }
   
-  mAdapters.clear();
+  m_adapters.clear();
 
 }
 
@@ -276,7 +276,7 @@ void Agent::registerFile(const string &aUri, const string &aPath)
       file &file = files.element();
       string name = file.name();
       string uri = baseUri + name;
-      mFileMap.insert(pair<string,string>(uri, file.full_name()));
+      m_fileMap.insert(pair<string,string>(uri, file.full_name()));
       
       // Check if the file name maps to a standard MTConnect schema file.
       if (name.find("MTConnect") == 0 && name.substr(name.length() - 4, 4) == ".xsd" &&
@@ -303,7 +303,7 @@ void Agent::registerFile(const string &aUri, const string &aPath)
             << e.what() << ", trying as a file";
     try {
       file file(aPath);
-      mFileMap.insert(pair<string,string>(aUri, aPath));
+      m_fileMap.insert(pair<string,string>(aUri, aPath));
     } catch (file::file_not_found e) {
       sLogger << LERROR << "Cannot register file: " << aPath << ": " << e.what();
     }
@@ -322,10 +322,10 @@ const string Agent::on_request (const incoming_things& incoming,
     sLogger << LDEBUG << "Request: " << incoming.request_type << " " << 
       incoming.path << " from " << incoming.foreign_ip << ":" << incoming.foreign_port;
     
-    if (mPutEnabled)
+    if (m_putEnabled)
     {
       if ((incoming.request_type == "PUT" || incoming.request_type == "POST") && 
-          !mPutAllowedHosts.empty() && mPutAllowedHosts.count(incoming.foreign_ip) == 0)
+          !m_putAllowedHosts.empty() && m_putAllowedHosts.count(incoming.foreign_ip) == 0)
       {
         return printError("UNSUPPORTED",
                           "HTTP PUT is not allowed from " + incoming.foreign_ip);        
@@ -420,10 +420,10 @@ Adapter * Agent::addAdapter(const string& aDeviceName,
 {
   Adapter *adapter = new Adapter(aDeviceName, aHost, aPort, aLegacyTimeout);
   adapter->setAgent(*this);
-  mAdapters.push_back(adapter);
+  m_adapters.push_back(adapter);
   
-  Device *dev = mDeviceMap[aDeviceName];
-  if (dev != NULL && dev->mAvailabilityAdded)
+  Device *dev = m_deviceMap[aDeviceName];
+  if (dev != NULL && dev->m_availabilityAdded)
     adapter->setAutoAvailable(true);
   
   if (aStart)
@@ -439,34 +439,34 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
 {
   if (dataItem == NULL) return 0;
   
-  dlib::auto_mutex lock(*mSequenceLock);
+  dlib::auto_mutex lock(*m_sequenceLock);
   
-  uint64_t seqNum = mSequence++;
+  uint64_t seqNum = m_sequence++;
   ComponentEvent *event = new ComponentEvent(*dataItem, seqNum,
                                              time, value);
-  (*mSlidingBuffer)[seqNum] = event;
-  mLatest.addComponentEvent(event);
+  (*m_slidingBuffer)[seqNum] = event;
+  m_latest.addComponentEvent(event);
   event->unrefer();
   
   // Special case for the first event in the series to prime the first checkpoint.
   if (seqNum == 1) {
-    mFirst.addComponentEvent(event);
+    m_first.addComponentEvent(event);
   }
   
   // Checkpoint management
-  int index = mSlidingBuffer->get_element_id(seqNum);
-  if (mCheckpointCount > 0 && index % mCheckpointFreq == 0) {
+  int index = m_slidingBuffer->get_element_id(seqNum);
+  if (m_checkpointCount > 0 && index % mCheckpointFreq == 0) {
     // Copy the checkpoint from the current into the slot
-    mCheckpoints[index / mCheckpointFreq].copy(mLatest);
+    m_checkpoints[index / mCheckpointFreq].copy(m_latest);
   }
   
   
   // See if the next sequence has an event. If the event exists it
   // should be added to the first checkpoint.
-  if ((*mSlidingBuffer)[mSequence] != NULL)
+  if ((*m_slidingBuffer)[m_sequence] != NULL)
   {
     // Keep the last checkpoint up to date with the last.
-    mFirst.addComponentEvent((*mSlidingBuffer)[mSequence]);
+    m_first.addComponentEvent((*m_slidingBuffer)[m_sequence]);
   }
   
   dataItem->signalObservers(seqNum);
@@ -494,10 +494,10 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
   // Lock the asset addition to protect from multithreaded collisions. Releaes
   // before we add the event so we don't cause a race condition.
   {
-    dlib::auto_mutex lock(*mAssetLock);
+    dlib::auto_mutex lock(*m_assetLock);
     
     try {
-      ptr = mXmlParser->parseAsset(aId, aType, aAsset);
+      ptr = m_xmlParser->parseAsset(aId, aType, aAsset);
     }
     catch (runtime_error &e) {
       sLogger << LERROR << "addAsset: Error parsing asset: " << aAsset << "\n" << e.what();
@@ -510,13 +510,13 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
       return false;
     }
 
-    AssetPtr *old = &mAssetMap[aId];
+    AssetPtr *old = &m_assetMap[aId];
     if (!ptr->isRemoved())
     {
       if (old->getObject() != NULL)
-        mAssets.remove(old);
+        m_assets.remove(old);
       else
-        mAssetCounts[aType] += 1;
+        m_assetCounts[aType] += 1;
     } else if (old->getObject() == NULL) {
       sLogger << LWARN << "Cannot remove non-existent asset";
       return false;
@@ -532,28 +532,28 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     }
     
     // Check for overflow
-    if (mAssets.size() >= mMaxAssets)
+    if (m_assets.size() >= m_maxAssets)
     {
-      AssetPtr oldref(*mAssets.front());
-      mAssetCounts[oldref->getType()] -= 1;
-      mAssets.pop_front();
-      mAssetMap.erase(oldref->getAssetId());
+      AssetPtr oldref(*m_assets.front());
+      m_assetCounts[oldref->getType()] -= 1;
+      m_assets.pop_front();
+      m_assetMap.erase(oldref->getAssetId());
       
       // Remove secondary keys
       AssetKeys &keys = oldref->getKeys();
       AssetKeys::iterator iter;
       for (iter = keys.begin(); iter != keys.end(); iter++)
       {
-        AssetIndex &index = mAssetIndices[iter->first];
+        AssetIndex &index = m_assetIndices[iter->first];
         index.erase(iter->second);
       }
     }
     
-    mAssetMap[aId] = ptr;
+    m_assetMap[aId] = ptr;
     if (!ptr->isRemoved())
     {
-      AssetPtr &newPtr = mAssetMap[aId];
-      mAssets.push_back(&newPtr);
+      AssetPtr &newPtr = m_assetMap[aId];
+      m_assets.push_back(&newPtr);
     }
     
     // Add secondary keys
@@ -561,7 +561,7 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
     AssetKeys::iterator iter;
     for (iter = keys.begin(); iter != keys.end(); iter++)
     {
-      AssetIndex &index = mAssetIndices[iter->first];
+      AssetIndex &index = m_assetIndices[iter->first];
       index[iter->second] = ptr;
     }
   }
@@ -586,9 +586,9 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
     time = aTime;
   
   {
-    dlib::auto_mutex lock(*mAssetLock);
+    dlib::auto_mutex lock(*m_assetLock);
     
-    asset = mAssetMap[aId];
+    asset = m_assetMap[aId];
     if (asset.getObject() == NULL)
       return false;
     
@@ -602,7 +602,7 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
       for (iter = aList.begin(); iter != aList.end(); ++iter)
       {
         if (iter->first == "xml") {
-          mXmlParser->updateAsset(asset, asset->getType(), iter->second);        
+          m_xmlParser->updateAsset(asset, asset->getType(), iter->second);        
         } else {
           tool->updateValue(iter->first, iter->second);
         }        
@@ -614,8 +614,8 @@ bool Agent::updateAsset(Device *aDevice, const std::string &aId, AssetChangeList
     }
     
     // Move it to the front of the queue
-    mAssets.remove(&asset);
-    mAssets.push_back(&asset);
+    m_assets.remove(&asset);
+    m_assets.push_back(&asset);
     
     tool->setTimestamp(time);
     tool->setDeviceUuid(aDevice->getUuid());
@@ -638,9 +638,9 @@ bool Agent::removeAsset(Device *aDevice, const std::string &aId, const string &a
     time = aTime;
   
   {
-    dlib::auto_mutex lock(*mAssetLock);
+    dlib::auto_mutex lock(*m_assetLock);
     
-    asset = mAssetMap[aId];
+    asset = m_assetMap[aId];
     if (asset.getObject() == NULL)
       return false;
     
@@ -648,7 +648,7 @@ bool Agent::removeAsset(Device *aDevice, const std::string &aId, const string &a
     asset->setTimestamp(time);
     
     // Check if the asset changed id is the same as this asset.
-    ComponentEventPtr *ptr = mLatest.getEventPtr(aDevice->getAssetChanged()->getId());
+    ComponentEventPtr *ptr = m_latest.getEventPtr(aDevice->getAssetChanged()->getId());
     if (ptr != NULL && (*ptr)->getValue() == aId)
     {
       addToBuffer(aDevice->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
@@ -669,15 +669,15 @@ bool Agent::removeAllAssets(Device *aDevice, const std::string &aType, const std
     time = aTime;
   
   {
-    dlib::auto_mutex lock(*mAssetLock);
+    dlib::auto_mutex lock(*m_assetLock);
     
-    ComponentEventPtr *ptr = mLatest.getEventPtr(aDevice->getAssetChanged()->getId());
+    ComponentEventPtr *ptr = m_latest.getEventPtr(aDevice->getAssetChanged()->getId());
     string changedId;
     if (ptr != NULL)
       changedId = (*ptr)->getValue();
     
     list<AssetPtr*>::reverse_iterator iter;
-    for (iter = mAssets.rbegin(); iter != mAssets.rend(); ++iter)
+    for (iter = m_assets.rbegin(); iter != m_assets.rend(); ++iter)
     {
       AssetPtr asset = (**iter);
       if (aType == asset->getType() && !asset->isRemoved()) {
@@ -713,7 +713,7 @@ void Agent::disconnected(Adapter *anAdapter, std::vector<Device*> aDevices)
                                 dataItem->getDataSource() == NULL &&
                                 dataItem->getType() == "AVAILABILITY")))
       {
-        ComponentEventPtr *ptr = mLatest.getEventPtr(dataItem->getId());
+        ComponentEventPtr *ptr = m_latest.getEventPtr(dataItem->getId());
         
         if (ptr != NULL) {
           const string *value = NULL;
@@ -785,7 +785,7 @@ string Agent::handleCall(ostream& out,
         freq = checkAndGetParam(queries, "interval", NO_FREQ,
                                 FASTEST_FREQ, false, SLOWEST_FREQ);
       uint64_t at = checkAndGetParam64(queries, "at", NO_START, getFirstSequence(), true,
-                                    mSequence - 1);
+                                    m_sequence - 1);
       int heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
       
       if (freq != NO_FREQ && at != NO_START) {
@@ -806,7 +806,7 @@ string Agent::handleCall(ostream& out,
       string result;
       
       int count = checkAndGetParam(queries, "count", DEFAULT_COUNT,
-                                   1, true, mSlidingBufferSize);
+                                   1, true, m_slidingBufferSize);
       int freq = checkAndGetParam(queries, "frequency", NO_FREQ,
                                   FASTEST_FREQ, false, SLOWEST_FREQ);
       // Check for 1.2 conversion to interval
@@ -815,12 +815,12 @@ string Agent::handleCall(ostream& out,
                                 FASTEST_FREQ, false, SLOWEST_FREQ);
       
       uint64 start = checkAndGetParam64(queries, "start", NO_START, getFirstSequence(),
-                                       true, mSequence);
+                                       true, m_sequence);
       
       if (start == NO_START) // If there was no data in queries
       {
         start = checkAndGetParam64(queries, "from", 1,
-                                   getFirstSequence(), true, mSequence);
+                                   getFirstSequence(), true, m_sequence);
       }
       
       int heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
@@ -828,7 +828,7 @@ string Agent::handleCall(ostream& out,
       return handleStream(out, devicesAndPath(path, deviceName), false,
                           freq, start, count, heartbeat);
     }
-    else if ((mDeviceMap[call] != NULL) && device.empty())
+    else if ((m_deviceMap[call] != NULL) && device.empty())
     {
       return handleProbe(call);
     }
@@ -840,7 +840,7 @@ string Agent::handleCall(ostream& out,
   }
   catch (ParameterError &aError)
   {
-    return printError(aError.mCode, aError.mMessage);
+    return printError(aError.m_code, aError.m_message);
   }
 }
 
@@ -862,7 +862,7 @@ string Agent::handlePut(
     device = adapter;
   }
   
-  Device *dev = mDeviceMap[device];
+  Device *dev = m_deviceMap[device];
   if (dev == NULL) {
     string message = ((string) "Cannot find device: ") + device;
     return printError("UNSUPPORTED", message);
@@ -873,7 +873,7 @@ string Agent::handlePut(
   {
     std::vector<Adapter*>::iterator adpt;
     
-    for (adpt = dev->mAdapters.begin(); adpt != dev->mAdapters.end(); adpt++) {
+    for (adpt = dev->m_adapters.begin(); adpt != dev->m_adapters.end(); adpt++) {
       key_value_map::const_iterator kv;
       for (kv = queries.begin(); kv != queries.end(); kv++) {
         string command = kv->first + "=" + kv->second;
@@ -924,12 +924,12 @@ string Agent::handleProbe(const string& name)
   }
   else
   {
-    mDeviceList = mDevices;
+    mDeviceList = m_devices;
   }
   
-  return XmlPrinter::printProbe(mInstanceId, mSlidingBufferSize, mSequence,
-                                mMaxAssets, mAssets.size(),
-                                mDeviceList, &mAssetCounts);
+  return XmlPrinter::printProbe(m_instanceId, m_slidingBufferSize, m_sequence,
+                                m_maxAssets, m_assets.size(),
+                                mDeviceList, &m_assetCounts);
 }
 
 string Agent::handleStream(
@@ -945,7 +945,7 @@ string Agent::handleStream(
   std::set<string> filter;
   try
   {
-    mXmlParser->getDataItems(filter, path);
+    m_xmlParser->getDataItems(filter, path);
   }
   catch (exception& e)
   {
@@ -983,7 +983,7 @@ std::string Agent::handleAssets(std::ostream& aOut,
   std::vector<AssetPtr> assets;
   if (!aList.empty()) 
   {
-    auto_mutex lock(*mAssetLock);
+    auto_mutex lock(*m_assetLock);
     istringstream str(aList);
     tokenizer_kernel_1 tok;
     tok.set_stream(str);
@@ -999,9 +999,9 @@ std::string Agent::handleAssets(std::ostream& aOut,
     {
       if (type == tok.IDENTIFIER)
       {
-        AssetPtr ptr = mAssetMap[token];
+        AssetPtr ptr = m_assetMap[token];
         if (ptr.getObject() == NULL)
-          return XmlPrinter::printError(mInstanceId, 0, 0, "ASSET_NOT_FOUND", 
+          return XmlPrinter::printError(m_instanceId, 0, 0, "ASSET_NOT_FOUND", 
                                         (string) "Could not find asset: " + token);
         assets.push_back(ptr);
       }
@@ -1009,16 +1009,16 @@ std::string Agent::handleAssets(std::ostream& aOut,
   }
   else
   {
-    auto_mutex lock(*mAssetLock);
+    auto_mutex lock(*m_assetLock);
     // Return all asssets, first check if there is a type attribute
     
     string type = aQueries["type"];
     bool removed = (aQueries.count("removed") > 0 && aQueries["removed"] == "true");    
-    int count = checkAndGetParam(aQueries, "count", mAssets.size(),
+    int count = checkAndGetParam(aQueries, "count", m_assets.size(),
                                 1, false, NO_VALUE32);
     
     list<AssetPtr*>::reverse_iterator iter;
-    for (iter = mAssets.rbegin(); iter != mAssets.rend() && count > 0; ++iter, --count)
+    for (iter = m_assets.rbegin(); iter != m_assets.rend() && count > 0; ++iter, --count)
     {
       if ((type.empty() || type == (**iter)->getType()) && (removed || !(**iter)->isRemoved())) {
         assets.push_back(**iter);
@@ -1026,7 +1026,7 @@ std::string Agent::handleAssets(std::ostream& aOut,
     }    
   }
   
-  return XmlPrinter::printAssets(mInstanceId, mMaxAssets, mAssets.size(), assets);
+  return XmlPrinter::printAssets(m_instanceId, m_maxAssets, m_assets.size(), assets);
 }
 
 
@@ -1042,10 +1042,10 @@ std::string Agent::storeAsset(std::ostream& aOut,
   string type = aQueries["type"];
   Device *device = NULL;
   
-  if (!name.empty()) device = mDeviceMap[name];
+  if (!name.empty()) device = m_deviceMap[name];
   
   // If the device was not found or was not provided, use the default device.
-  if (device == NULL) device = mDevices[0];
+  if (device == NULL) device = m_devices[0];
 
   if (addAsset(device, aId, aBody, type))
     return "<success/>";
@@ -1062,9 +1062,9 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
   if (last != string::npos && aUri[last] == '.')
   {
     string ext = aUri.substr(last + 1);
-    if (mMimeTypes.count(ext) > 0)
+    if (m_mimeTypes.count(ext) > 0)
     {
-      contentType = mMimeTypes[ext];
+      contentType = m_mimeTypes[ext];
       unknown = false;
     }
   }
@@ -1073,16 +1073,16 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
   
   // Check if the file is cached
   RefCountedPtr<CachedFile> cachedFile;
-  std::map<string, RefCountedPtr<CachedFile> >::iterator cached = mFileCache.find(aUri);
-  if (cached != mFileCache.end())
+  std::map<string, RefCountedPtr<CachedFile> >::iterator cached = m_fileCache.find(aUri);
+  if (cached != m_fileCache.end())
     cachedFile = cached->second;
   else
   {
     
-    std::map<string,string>::iterator file = mFileMap.find(aUri);
+    std::map<string,string>::iterator file = m_fileMap.find(aUri);
     
     // Should never happen
-    if (file == mFileMap.end()) {
+    if (file == m_fileMap.end()) {
       aOutgoing.http_return = 404;
       aOutgoing.http_return_status = "File not found";
       return "";
@@ -1106,7 +1106,7 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
     }
     
     cachedFile.setObject(new CachedFile(fs.st_size), true);
-    int bytes = read(fd, cachedFile->mBuffer, fs.st_size);
+    int bytes = read(fd, cachedFile->m_buffer, fs.st_size);
     close(fd);
     
     if (bytes < fs.st_size) {
@@ -1117,7 +1117,7 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
     
     // If this is a small file, cache it.
     if (bytes <= SMALL_FILE) {
-      mFileCache.insert(pair<string, RefCountedPtr<CachedFile> >(aUri, cachedFile));
+      m_fileCache.insert(pair<string, RefCountedPtr<CachedFile> >(aUri, cachedFile));
     }
   }
   
@@ -1125,11 +1125,11 @@ string Agent::handleFile(const string &aUri, outgoing_things& aOutgoing)
     "Date: " << getCurrentTime(HUM_READ) << "\r\n"
     "Server: MTConnectAgent\r\n"
     "Connection: close\r\n"
-    "Content-Length: " << cachedFile->mSize << "\r\n"
+    "Content-Length: " << cachedFile->m_size << "\r\n"
     "Expires: " << getCurrentTime(time(NULL) + 60 * 60 * 24, 0, HUM_READ) << "\r\n"
     "Content-Type: " << contentType << "\r\n\r\n";
 
-  aOutgoing.out->write(cachedFile->mBuffer, cachedFile->mSize);
+  aOutgoing.out->write(cachedFile->m_buffer, cachedFile->m_size);
   
   aOutgoing.out->setstate(ios::badbit);
 
@@ -1149,7 +1149,7 @@ void Agent::streamData(ostream& out,
   string boundary = md5(intToString(time(NULL)));
   
   ofstream log;
-  if (mLogStreamData)
+  if (m_logStreamData)
   {
     string filename = "Stream_" + getCurrentTime(LOCAL) + "_" +
                       int64ToString((uint64_t) dlib::get_thread_id()) + ".log";
@@ -1172,7 +1172,7 @@ void Agent::streamData(ostream& out,
   // Add observers
   std::set<string>::iterator iter;
   for (iter = aFilter.begin(); iter != aFilter.end(); ++iter)
-    mDataItemMap[*iter]->addObserver(&observer);
+    m_dataItemMap[*iter]->addObserver(&observer);
   
   uint64_t interMicros = aInterval * 1000;
   uint64_t firstSeq = getFirstSequence();
@@ -1210,7 +1210,7 @@ void Agent::streamData(ostream& out,
                                     endOfBuffer, &observer);                
         }
         
-        if (mLogStreamData)
+        if (m_logStreamData)
           log << content << endl;
       }
 
@@ -1264,7 +1264,7 @@ void Agent::streamData(ostream& out,
           }
           
           {
-            dlib::auto_mutex lock(*mSequenceLock);
+            dlib::auto_mutex lock(*m_sequenceLock);
           
             // Make sure the observer was signaled!
             if (!observer.wasSignaled()) {
@@ -1274,7 +1274,7 @@ void Agent::streamData(ostream& out,
               // was signaled between the time the wait timed out and the mutex was locked.
               // Otherwise, nothing has arrived and we set to the next sequence number to
               // the next sequence number to be allocated and continue.
-              start = mSequence;
+              start = m_sequence;
             } else {
               // Get the sequence # signaled in the observer when the earliest event arrived.
               // This will allow the next set of data to be pulled. Any later events will have
@@ -1299,7 +1299,7 @@ void Agent::streamData(ostream& out,
     sLogger << LINFO << "Caught a parameter error.";
     if (out.good()) {
       ostringstream str;
-      string content = printError(aError.mCode, aError.mMessage);
+      string content = printError(aError.m_code, aError.m_message);
       str << "--" << boundary << "\r\n"
         "Content-type: text/xml\r\n"
         "Content-length: " << content.length() << "\r\n\r\n"
@@ -1341,17 +1341,17 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
   ComponentEventPtrArray events;
   uint64_t firstSeq, seq;
   {
-    dlib::auto_mutex lock(*mSequenceLock);
+    dlib::auto_mutex lock(*m_sequenceLock);
     firstSeq = getFirstSequence();
-    seq = mSequence;
+    seq = m_sequence;
     if (at == NO_START)
     {
-      mLatest.getComponentEvents(events, &aFilter);
+      m_latest.getComponentEvents(events, &aFilter);
     }
     else
     {
-      long pos = (long) mSlidingBuffer->get_element_id(at);
-      long first = (long) mSlidingBuffer->get_element_id(firstSeq);
+      long pos = (long) m_slidingBuffer->get_element_id(at);
+      long first = (long) m_slidingBuffer->get_element_id(firstSeq);
       long checkIndex = pos / mCheckpointFreq;
       long closestCp = checkIndex * mCheckpointFreq;
       unsigned long index;
@@ -1363,7 +1363,7 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
       // use first.
       if (first > closestCp && pos >= first)
       {
-        ref = &mFirst;
+        ref = &m_first;
         // The checkpoint is inclusive of the "first" event. So we add one
         // so we don't duplicate effort.
         index = first + 1;
@@ -1371,22 +1371,22 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
       else
       {
         index = closestCp + 1;
-        ref = &mCheckpoints[checkIndex];
+        ref = &m_checkpoints[checkIndex];
       }
       
       Checkpoint check(*ref, &aFilter);
       
       // Roll forward from the checkpoint.
       for (; index <= (unsigned long) pos; index++) {
-        check.addComponentEvent(((*mSlidingBuffer)[(unsigned long)index]).getObject());
+        check.addComponentEvent(((*m_slidingBuffer)[(unsigned long)index]).getObject());
       }
       
       check.getComponentEvents(events);
     }
   }
   
-  string toReturn = XmlPrinter::printSample(mInstanceId, mSlidingBufferSize,
-                                            seq, firstSeq, mSequence - 1, events);
+  string toReturn = XmlPrinter::printSample(m_instanceId, m_slidingBufferSize,
+                                            seq, firstSeq, m_sequence - 1, events);
   
   return toReturn;
 }
@@ -1398,28 +1398,28 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
   ComponentEventPtrArray results;
   uint64_t firstSeq;
   {
-    dlib::auto_mutex lock(*mSequenceLock);
+    dlib::auto_mutex lock(*m_sequenceLock);
   
-    firstSeq = (mSequence > mSlidingBufferSize) ?
-                        mSequence - mSlidingBufferSize : 1;
+    firstSeq = (m_sequence > m_slidingBufferSize) ?
+                        m_sequence - m_slidingBufferSize : 1;
     
     // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
     start = (start <= firstSeq) ? firstSeq : start;
     
     uint64_t i;
-    for (i = start; results.size() < count && i < mSequence; i++)
+    for (i = start; results.size() < count && i < m_sequence; i++)
     {
       // Filter out according to if it exists in the list
-      const string &dataId = (*mSlidingBuffer)[i]->getDataItem()->getId();
+      const string &dataId = (*m_slidingBuffer)[i]->getDataItem()->getId();
       if (aFilter.count(dataId) > 0)
       {
-        ComponentEventPtr event = (*mSlidingBuffer)[i];
+        ComponentEventPtr event = (*m_slidingBuffer)[i];
         results.push_back(event);
       }
     }
     
     end = i;
-    if (i >= mSequence)
+    if (i >= m_sequence)
       endOfBuffer = true;
     else
       endOfBuffer = false;
@@ -1427,14 +1427,14 @@ string Agent::fetchSampleData(std::set<string> &aFilter,
     if (aObserver != NULL) aObserver->reset();
   }
   
-  return XmlPrinter::printSample(mInstanceId, mSlidingBufferSize, end, 
-                                 firstSeq, mSequence - 1, results);
+  return XmlPrinter::printSample(m_instanceId, m_slidingBufferSize, end, 
+                                 firstSeq, m_sequence - 1, results);
 }
 
 string Agent::printError(const string& errorCode, const string& text)
 {
   sLogger << LDEBUG << "Returning error " << errorCode << ": " << text;
-  return XmlPrinter::printError(mInstanceId, mSlidingBufferSize, mSequence,
+  return XmlPrinter::printError(m_instanceId, m_slidingBufferSize, m_sequence,
                                 errorCode, text);
 }
 
@@ -1563,12 +1563,12 @@ uint64_t Agent::checkAndGetParam64(const key_value_map& queries,
 
 DataItem * Agent::getDataItemByName(const string& device, const string& name)
 {
-  Device *dev = mDeviceMap[device];
+  Device *dev = m_deviceMap[device];
   return (dev) ? dev->getDeviceDataItem(name) : NULL;
 }
 
 void Agent::updateDom(Device *aDevice)
 {
-  mXmlParser->updateDevice(aDevice);
+  m_xmlParser->updateDevice(aDevice);
 }
 

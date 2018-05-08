@@ -31,7 +31,7 @@ static dlib::logger sLogger("init.service");
 #endif
 
 MTConnectService::MTConnectService() :
-mIsService(false), mIsDebug(false)
+m_isService(false), m_isDebug(false)
 {
 }
 
@@ -125,7 +125,7 @@ int MTConnectService::main(int argc, const char *argv[])
         return 0;
       } else if (stricmp( argv[1], "debug") == 0 || stricmp( argv[1], "run") == 0) {
         if (stricmp( argv[1], "debug") == 0)
-          mIsDebug = true;
+          m_isDebug = true;
           
         initialize(argc - 2, argv + 2);
         start();
@@ -135,7 +135,7 @@ int MTConnectService::main(int argc, const char *argv[])
     }
   
     gService = this;
-    mIsService = true;
+    m_isService = true;
     SERVICE_TABLE_ENTRY DispatchTable[] = 
       { 
         {  "", (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
@@ -220,7 +220,7 @@ void MTConnectService::install()
     return;
   }
 
-  service = OpenService(manager, mName.c_str(), SC_MANAGER_ALL_ACCESS);
+  service = OpenService(manager, m_name.c_str(), SC_MANAGER_ALL_ACCESS);
   if (service != NULL) {
     if (!ChangeServiceConfig( 
       service,            // handle of service 
@@ -244,8 +244,8 @@ void MTConnectService::install()
     // Create the service
     service = CreateService( 
       manager,              // SCM database 
-      mName.c_str(),                   // name of service 
-      mName.c_str(),                   // service name to display 
+      m_name.c_str(),                   // name of service 
+      m_name.c_str(),                   // service name to display 
       SERVICE_ALL_ACCESS,        // desired access 
       SERVICE_WIN32_OWN_PROCESS, // service type 
       SERVICE_AUTO_START,      // start type 
@@ -295,31 +295,31 @@ void MTConnectService::install()
 
   // Create Service Key
   HKEY agent;
-  res = RegOpenKey(mtc, mName.c_str(), &agent);
+  res = RegOpenKey(mtc, m_name.c_str(), &agent);
   if (res != ERROR_SUCCESS)
   {
-    res = RegCreateKey(mtc, mName.c_str(), &agent);
+    res = RegCreateKey(mtc, m_name.c_str(), &agent);
     if (res != ERROR_SUCCESS)
     {
       RegCloseKey(mtc);
-      sLogger << dlib::LERROR << "Could not create " << mName << " (" << res << ")";
-      std::cerr <<  "Could not create " << mName << " (" << res << ")" << std::endl;
+      sLogger << dlib::LERROR << "Could not create " << m_name << " (" << res << ")";
+      std::cerr <<  "Could not create " << m_name << " (" << res << ")" << std::endl;
       return;
     }
   }
   RegCloseKey(mtc);
 
   // Fully qualify the configuration file name.
-  if (mConfigFile[0] != '/' && mConfigFile[0] != '\\' && mConfigFile[1] != ':')
+  if (m_configFile[0] != '/' && m_configFile[0] != '\\' && m_configFile[1] != ':')
   {
     // Relative file name
     char path[MAX_PATH];
     GetCurrentDirectory(MAX_PATH, path);
-    mConfigFile = ((std::string) path) + "\\" + mConfigFile;
+    m_configFile = ((std::string) path) + "\\" + m_configFile;
   }
 
-  RegSetValueEx(agent, "ConfigurationFile", 0, REG_SZ, (const BYTE*) mConfigFile.c_str(), 
-                mConfigFile.size() + 1);
+  RegSetValueEx(agent, "ConfigurationFile", 0, REG_SZ, (const BYTE*) m_configFile.c_str(), 
+                m_configFile.size() + 1);
   RegCloseKey(agent);
 
   sLogger << dlib::LINFO << "Service installed successfully.";
@@ -335,10 +335,10 @@ void MTConnectService::remove()
     sLogger << dlib::LERROR << "Could not open Service Control Manager";
                 return;
   }
-        service = ::OpenService(manager, mName.c_str(), SERVICE_ALL_ACCESS);
+        service = ::OpenService(manager, m_name.c_str(), SERVICE_ALL_ACCESS);
   CloseServiceHandle(manager);
         if (service == NULL) {
-    sLogger << dlib::LERROR << "Could not open Service " << mName;
+    sLogger << dlib::LERROR << "Could not open Service " << m_name;
                 return;
   }
 
@@ -347,16 +347,16 @@ void MTConnectService::remove()
   if (QueryServiceStatus(service, &status) && status.dwCurrentState != SERVICE_STOPPED) {
     // Stop the service
     if (!ControlService(service, SERVICE_CONTROL_STOP, &status))
-      sLogger << dlib::LERROR << "Could not stop service " << mName;
+      sLogger << dlib::LERROR << "Could not stop service " << m_name;
     else
-      sLogger << dlib::LINFO << "Successfully stopped service " << mName;
+      sLogger << dlib::LINFO << "Successfully stopped service " << m_name;
   }
 
   
         if(::DeleteService(service) == 0) {
-    sLogger << dlib::LERROR << "Could delete service " << mName;
+    sLogger << dlib::LERROR << "Could delete service " << m_name;
   } else {
-    sLogger << dlib::LINFO << "Successfully removed service " << mName;
+    sLogger << dlib::LINFO << "Successfully removed service " << m_name;
   }
   
         ::CloseServiceHandle(service);
@@ -674,8 +674,8 @@ void MTConnectService::daemonize()
   atexit(cleanup_pid);
   
   // Create the pid file.
-  sPidFile = mPidFile;
-  lfp = open(mPidFile.c_str(), O_RDWR|O_CREAT, 0640);
+  sPidFile = m_pidFile;
+  lfp = open(m_pidFile.c_str(), O_RDWR|O_CREAT, 0640);
   if (lfp<0) exit(1); /* can not open */
 
   // Lock the pid file.
@@ -711,13 +711,13 @@ int MTConnectService::main(int argc, const char *argv[])
              "When the agent is started without any arguments it will default to run\n");
      exit(0);
     } else if (strcasecmp( argv[1], "daemonize") == 0 ) {
-      mIsService = true;
-      mPidFile = "agent.pid";
+      m_isService = true;
+      m_pidFile = "agent.pid";
       initialize(argc - 2, argv + 2);
       daemonize();
       sLogger << dlib::LINFO << "Starting daemon";
     } else if (strcasecmp( argv[1], "debug") == 0) {
-      mIsDebug = true;
+      m_isDebug = true;
       initialize(argc - 2, argv + 2);
     } else {
       initialize(argc - 2, argv + 2);

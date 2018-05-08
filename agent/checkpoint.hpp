@@ -34,14 +34,14 @@ public:
   void clear();
   void filter(std::set<std::string> &aFilter);
 
-  std::map<std::string, ComponentEventPtr*> &getEvents() { return mEvents; }
+  std::map<std::string, ComponentEventPtr*> &getEvents() { return m_events; }
   void getComponentEvents(ComponentEventPtrArray &list,
                           std::set<std::string> *aFilter = NULL);
-  ComponentEventPtr *getEventPtr(std::string anId) { return mEvents[anId]; }
+  ComponentEventPtr *getEventPtr(std::string anId) { return m_events[anId]; }
   
 protected:
-  std::map<std::string, ComponentEventPtr*> mEvents;
-  std::set<std::string> mFilter;
-  bool mHasFilter;
+  std::map<std::string, ComponentEventPtr*> m_events;
+  std::set<std::string> m_filter;
+  bool m_hasFilter;
 };
 

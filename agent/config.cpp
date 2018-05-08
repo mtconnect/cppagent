@@ -77,8 +77,8 @@ static inline bool get_bool_with_default(const config_reader::kernel_1a &reader,
 }
 
 AgentConfiguration::AgentConfiguration() :
-  mAgent(NULL), mLoggerFile(NULL), mMonitorFiles(false),
-  mMinimumConfigReloadAge(15), mRestart(false), mExePath("")
+  m_agent(NULL), m_loggerFile(NULL), m_monitorFiles(false),
+  m_minimumConfigReloadAge(15), m_restart(false), m_exePath("")
 {
   bool success = false;
   char pathSep = '/';
@@ -106,16 +106,16 @@ AgentConfiguration::AgentConfiguration() :
 
   if (success)
   {
-    mExePath = path;
-    size_t found = mExePath.rfind(pathSep);
+    m_exePath = path;
+    size_t found = m_exePath.rfind(pathSep);
     if (found != std::string::npos)
     {
-      mExePath.erase(found + 1);
+      m_exePath.erase(found + 1);
     }
     
-    cout << "Configuration search path: current directory and " << mExePath;
+    cout << "Configuration search path: current directory and " << m_exePath;
   } else {
-    mExePath = "";
+    m_exePath = "";
   }
 }
 
@@ -129,29 +129,29 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
   optionList.append(new Option(0, configFile, "The configuration file", "file", false));  
   optionList.parse(aArgc, (const char**) aArgv);
   
-  mConfigFile = configFile;
+  m_configFile = configFile;
 
   try
   {
     struct stat buf;
     
     // Check first if the file is in the current working directory...
-    if (stat(mConfigFile.c_str(), &buf) != 0) {
-      if (!mExePath.empty())
+    if (stat(m_configFile.c_str(), &buf) != 0) {
+      if (!m_exePath.empty())
       {
-        sLogger << LINFO << "Cannot find " << mConfigFile << " in current directory, searching exe path: " << mExePath;
-        cerr << "Cannot find " << mConfigFile << " in current directory, searching exe path: " << mExePath << endl;
-        mConfigFile = mExePath + mConfigFile;
+        sLogger << LINFO << "Cannot find " << m_configFile << " in current directory, searching exe path: " << m_exePath;
+        cerr << "Cannot find " << m_configFile << " in current directory, searching exe path: " << m_exePath << endl;
+        m_configFile = m_exePath + m_configFile;
       }
       else
       {
-        sLogger << LFATAL << "Agent failed to load: Cannot find configuration file: '" << mConfigFile;
-        cerr << "Agent failed to load: Cannot find configuration file: '" << mConfigFile << std::endl;
+        sLogger << LFATAL << "Agent failed to load: Cannot find configuration file: '" << m_configFile;
+        cerr << "Agent failed to load: Cannot find configuration file: '" << m_configFile << std::endl;
         optionList.usage();
       }
     }
     
-    ifstream file(mConfigFile.c_str());
+    ifstream file(m_configFile.c_str());
     loadConfig(file);
   }
   catch (std::exception & e)
@@ -164,10 +164,10 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
 
 AgentConfiguration::~AgentConfiguration()
 {
-  if (mAgent != NULL)
-    delete mAgent;
-  if (mLoggerFile != NULL)
-    delete mLoggerFile;
+  if (m_agent != NULL)
+    delete m_agent;
+  if (m_loggerFile != NULL)
+    delete m_loggerFile;
   set_all_logging_output_streams(cout);
 }
 
@@ -175,12 +175,12 @@ void AgentConfiguration::monitorThread()
 {
   struct stat devices_at_start, cfg_at_start;
   
-  if (stat(mConfigFile.c_str(), &cfg_at_start) != 0)
-    sLogger << LWARN << "Cannot stat config file: " << mConfigFile << ", exiting monitor";
-  if (stat(mDevicesFile.c_str(), &devices_at_start) != 0)
-    sLogger << LWARN << "Cannot stat devices file: " << mDevicesFile << ", exiting monitor";
+  if (stat(m_configFile.c_str(), &cfg_at_start) != 0)
+    sLogger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
+  if (stat(m_devicesFile.c_str(), &devices_at_start) != 0)
+    sLogger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
   
-  sLogger << LDEBUG << "Monitoring files: " << mConfigFile << " and " << mDevicesFile <<
+  sLogger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile <<
     ", will warm start if they change.";
   
   bool changed = false;
@@ -192,44 +192,44 @@ void AgentConfiguration::monitorThread()
     struct stat devices, cfg;
     bool check = true;
     
-    if (stat(mConfigFile.c_str(), &cfg) != 0) {
-      sLogger << LWARN << "Cannot stat config file: " << mConfigFile << ", retrying in 10 seconds";
+    if (stat(m_configFile.c_str(), &cfg) != 0) {
+      sLogger << LWARN << "Cannot stat config file: " << m_configFile << ", retrying in 10 seconds";
       check = false;
     }
 
-    if (stat(mDevicesFile.c_str(), &devices) != 0) {
-      sLogger << LWARN << "Cannot stat devices file: " << mDevicesFile << ", retrying in 10 seconds";
+    if (stat(m_devicesFile.c_str(), &devices) != 0) {
+      sLogger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", retrying in 10 seconds";
       check = false;
     }
     
     // Check if the files have changed.
     if (check && (cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime)) {
       time_t now = time(NULL);
-      sLogger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least " << mMinimumConfigReloadAge
+      sLogger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least " << m_minimumConfigReloadAge
                        <<" seconds old";
       sLogger << LWARN << "    Devices.xml file modified " << (now - devices.st_mtime) << " seconds ago";
       sLogger << LWARN << "    ...cfg file modified " << (now - cfg.st_mtime) << " seconds ago";
       
-      changed = (now - cfg.st_mtime) > mMinimumConfigReloadAge && (now - devices.st_mtime) > mMinimumConfigReloadAge;
+      changed = (now - cfg.st_mtime) > m_minimumConfigReloadAge && (now - devices.st_mtime) > m_minimumConfigReloadAge;
     }
-  } while (!changed && mAgent->is_running());
+  } while (!changed && m_agent->is_running());
 
   
   // Restart agent if changed...
   // stop agent and signal to warm start
-  if (mAgent->is_running() && changed)
+  if (m_agent->is_running() && changed)
   {
     sLogger << LWARN << "Monitor thread has detected change in configuration files, restarting agent.";
 
-    mRestart = true;
-    mAgent->clear();
-    delete mAgent;
-    mAgent = NULL;
+    m_restart = true;
+    m_agent->clear();
+    delete m_agent;
+    m_agent = NULL;
 
     sLogger << LWARN << "Monitor agent has completed shutdown, reinitializing agent.";
     
     // Re initialize
-    const char *argv[] = { mConfigFile.c_str() };
+    const char *argv[] = { m_configFile.c_str() };
     initialize(1, argv);
   }
 
@@ -242,34 +242,34 @@ void AgentConfiguration::start()
   
   do
   {
-    mRestart = false;
-    if (mMonitorFiles)
+    m_restart = false;
+    if (m_monitorFiles)
     {
       // Start the file monitor to check for changes to cfg or devices.
       sLogger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
       mon.reset(new dlib::thread_function(make_mfp(*this, &AgentConfiguration::monitorThread)));
     }
 
-    mAgent->start();
+    m_agent->start();
     
-    if (mRestart && mMonitorFiles)
+    if (m_restart && m_monitorFiles)
     {
       // Will destruct and wait to re-initialize.
       sLogger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
       mon.reset(0);
       sLogger << LDEBUG << "Monitor has exited";
     }
-  } while (mRestart);
+  } while (m_restart);
 }
 
 void AgentConfiguration::stop()
 {
-  mAgent->clear();
+  m_agent->clear();
 }
 
 Device *AgentConfiguration::defaultDevice()
 {
-  const std::vector<Device*> &devices = mAgent->getDevices();
+  const std::vector<Device*> &devices = m_agent->getDevices();
   if (devices.size() == 1)
     return devices[0];
   else
@@ -310,8 +310,8 @@ void AgentConfiguration::LoggerHook(const std::string& aLoggerName,
 #else
   out << "\n";
 #endif
-  if (mLoggerFile != NULL)
-    mLoggerFile->write(out.str().c_str());
+  if (m_loggerFile != NULL)
+    m_loggerFile->write(out.str().c_str());
   else
     cout << out.str();
 }
@@ -345,10 +345,10 @@ static dlib::log_level string_to_log_level (
 
 void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &aReader)
 {
-  if (mLoggerFile != NULL)
-    delete mLoggerFile;
+  if (m_loggerFile != NULL)
+    delete m_loggerFile;
 
-  if (mIsDebug) {
+  if (m_isDebug) {
     set_all_logging_output_streams(cout);
     set_all_logging_levels(LDEBUG);
   }
@@ -410,7 +410,7 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &aReader
         sched = RollingFileLogger::WEEKLY;
     }
     
-    mLoggerFile = new RollingFileLogger(name, maxIndex, maxSize, sched);
+    m_loggerFile = new RollingFileLogger(name, maxIndex, maxSize, sched);
     set_all_logging_output_hooks<AgentConfiguration>(*this, &AgentConfiguration::LoggerHook);
   }
 }
@@ -430,7 +430,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   // Now get our configuration
   config_reader::kernel_1a reader(aFile);
   
-  if (mLoggerFile == NULL)
+  if (m_loggerFile == NULL)
     configureLogger(reader);
 
   bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
@@ -444,26 +444,26 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   bool ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
   bool conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
   bool upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
-  mMonitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
-  mMinimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
+  m_monitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
+  m_minimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
   
-  mPidFile = get_with_default(reader, "PidFile", "agent.pid");
+  m_pidFile = get_with_default(reader, "PidFile", "agent.pid");
   std::vector<string> devices_files;
   if (reader.is_key_defined("Devices")) {
     string fileName = reader["Devices"];
     devices_files.push_back(fileName);
-    if (!mExePath.empty() && fileName[0] != '/' && fileName[0] != '\\' && fileName[1] != ':')
-      devices_files.push_back(mExePath + reader["Devices"]);
+    if (!m_exePath.empty() && fileName[0] != '/' && fileName[0] != '\\' && fileName[1] != ':')
+      devices_files.push_back(m_exePath + reader["Devices"]);
   }
   
   devices_files.push_back("Devices.xml");
-  if (!mExePath.empty())
-    devices_files.push_back(mExePath + "Devices.xml");
+  if (!m_exePath.empty())
+    devices_files.push_back(m_exePath + "Devices.xml");
   devices_files.push_back("probe.xml");
-  if (!mExePath.empty())
-    devices_files.push_back(mExePath +"probe.xml");
+  if (!m_exePath.empty())
+    devices_files.push_back(m_exePath +"probe.xml");
   
-  mDevicesFile.clear();
+  m_devicesFile.clear();
   
   for (string probe: devices_files)
   {
@@ -473,24 +473,24 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
 	sLogger << LDEBUG << "  Stat returned: " << res;
 
     if (res == 0) {
-      mDevicesFile = probe;
+      m_devicesFile = probe;
       break;
     }
 	sLogger << LDEBUG << "Could not find file: " << probe;
 	cout << "Could not locate file: " << probe << endl;
   }
   
-  if (mDevicesFile.empty())
+  if (m_devicesFile.empty())
   {
     throw runtime_error(((string) "Please make sure the configuration "
                          "file probe.xml or Devices.xml is in the current "
                          "directory or specify the correct file "
-                         "in the configuration file " + mConfigFile +
+                         "in the configuration file " + m_configFile +
                          " using Devices = <file>").c_str());
   }
   
 
-  mName = get_with_default(reader, "ServiceName", "MTConnect Agent");
+  m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
   
   // Check for schema version
   string schemaVersion = get_with_default(reader, "SchemaVersion", "");
@@ -498,14 +498,14 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
     XmlPrinter::setSchemaVersion(schemaVersion);
   
   sLogger << LINFO << "Starting agent on port " << port;
-  if (mAgent == NULL)
-    mAgent = new Agent(mDevicesFile, bufferSize, maxAssets, checkpointFrequency);
-  mAgent->set_listening_port(port);
-  mAgent->set_listening_ip(serverIp);
-  mAgent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
+  if (m_agent == NULL)
+    m_agent = new Agent(m_devicesFile, bufferSize, maxAssets, checkpointFrequency);
+  m_agent->set_listening_port(port);
+  m_agent->set_listening_ip(serverIp);
+  m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
 
-  for (size_t i = 0; i < mAgent->getDevices().size(); i++)
-    mAgent->getDevices()[i]->mPreserveUuid = defaultPreserve;
+  for (size_t i = 0; i < m_agent->getDevices().size(); i++)
+    m_agent->getDevices()[i]->m_preserveUuid = defaultPreserve;
   
   if (XmlPrinter::getSchemaVersion().empty())
     XmlPrinter::setSchemaVersion("1.4");
@@ -554,7 +554,7 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
         deviceName = *block;
       }
       
-      device = mAgent->getDeviceByName(deviceName);
+      device = m_agent->getDeviceByName(deviceName);
 
       if (device == NULL) {
         sLogger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
@@ -576,8 +576,8 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
       
       sLogger << LINFO << "Adding adapter for " << deviceName << " on "
               << host << ":" << port;
-      Adapter *adp = mAgent->addAdapter(deviceName, host, port, false, legacyTimeout);
-      device->mPreserveUuid = get_bool_with_default(adapter, "PreserveUUID", aDefaultPreserve);
+      Adapter *adp = m_agent->addAdapter(deviceName, host, port, false, legacyTimeout);
+      device->m_preserveUuid = get_bool_with_default(adapter, "PreserveUUID", aDefaultPreserve);
       
       // Add additional device information
       if (adapter.is_key_defined("UUID"))
@@ -619,10 +619,10 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
   else if ((device = defaultDevice()) != NULL)
   {
     sLogger << LINFO << "Adding default adapter for " << device->getName() << " on localhost:7878";
-    Adapter *adp = mAgent->addAdapter(device->getName(), "localhost", 7878, false, aLegacyTimeout);
+    Adapter *adp = m_agent->addAdapter(device->getName(), "localhost", 7878, false, aLegacyTimeout);
     adp->setIgnoreTimestamps(aIgnoreTimestamps || adp->isIgnoringTimestamps());
     adp->setReconnectInterval(aReconnectInterval);
-    device->mPreserveUuid = aDefaultPreserve;
+    device->m_preserveUuid = aDefaultPreserve;
   }
   else
   {
@@ -633,7 +633,7 @@ void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &aReader,
 void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &aReader)
 {
   bool putEnabled = get_bool_with_default(aReader, "AllowPut", false);
-  mAgent->enablePut(putEnabled);
+  m_agent->enablePut(putEnabled);
   
   string putHosts = get_with_default(aReader, "AllowPutFrom", "");
   if (!putHosts.empty())
@@ -649,8 +649,8 @@ void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &aReader)
         for (n = 0; dlib::hostname_to_ip(putHost, ip, n) == 0 && ip == "0.0.0.0"; n++)
           ip = "";
         if (!ip.empty()) {
-          mAgent->enablePut();
-          mAgent->allowPutFrom(ip);
+          m_agent->enablePut();
+          m_agent->allowPutFrom(ip);
         }
       }
     } while (!toParse.eof());
@@ -682,7 +682,7 @@ void AgentConfiguration::loadNamespace(dlib::config_reader::kernel_1a &aReader,
           urn = ns["Urn"];        
         (*aCallback)(urn, location, *block);
         if (ns.is_key_defined("Path") && !location.empty())
-          mAgent->registerFile(location, ns["Path"]);        
+          m_agent->registerFile(location, ns["Path"]);        
       }
     }
   }
@@ -703,7 +703,7 @@ void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader)
       {
         sLogger << LERROR << "Name space must have a Location (uri) or Directory and Path: " << *block;
       } else {
-        mAgent->registerFile(file["Location"], file["Path"]);
+        m_agent->registerFile(file["Location"], file["Path"]);
       }
     }
   }
@@ -719,7 +719,7 @@ void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &aReader, cons
       string location = doc["Location"];
       aFunction(location);
       if (doc.is_key_defined("Path"))
-        mAgent->registerFile(location, doc["Path"]);
+        m_agent->registerFile(location, doc["Path"]);
     }
   }
 }
@@ -733,7 +733,7 @@ void AgentConfiguration::loadTypes(dlib::config_reader::kernel_1a &aReader)
     
     std::vector<string>::iterator key;
     for (key = keys.begin(); key != keys.end(); ++key) {
-      mAgent->addMimeType(*key, types[*key]);
+      m_agent->addMimeType(*key, types[*key]);
     }
   }
 }

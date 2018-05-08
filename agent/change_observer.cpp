@@ -21,22 +21,22 @@ using namespace std;
 
 ChangeObserver::~ChangeObserver()
 {
-  for (vector<ChangeSignaler*>::iterator i = mSignalers.begin(); i != mSignalers.end(); i++)
+  for (vector<ChangeSignaler*>::iterator i = m_signalers.begin(); i != m_signalers.end(); i++)
     (*i)->removeObserver(this);
 }
 
 void ChangeObserver::addSignaler(ChangeSignaler *aSig)
 {
-  mSignalers.push_back(aSig);
+  m_signalers.push_back(aSig);
 }
 
 bool ChangeObserver::removeSignaler(ChangeSignaler *aSig)
 {
-  for (vector<ChangeSignaler*>::iterator i = mSignalers.begin(); i != mSignalers.end(); i++)
+  for (vector<ChangeSignaler*>::iterator i = m_signalers.begin(); i != m_signalers.end(); i++)
   {
     if (*i == aSig)
     {
-      mSignalers.erase(i);
+      m_signalers.erase(i);
       return true;
     }
   }
@@ -46,26 +46,26 @@ bool ChangeObserver::removeSignaler(ChangeSignaler *aSig)
 /* Signaler Management */
 ChangeSignaler::~ChangeSignaler()
 {
-  dlib::auto_mutex lock(mObserverMutex);
-  for (vector<ChangeObserver*>::iterator i = mObservers.begin(); i != mObservers.end(); i++)
+  dlib::auto_mutex lock(m_observerMutex);
+  for (vector<ChangeObserver*>::iterator i = m_observers.begin(); i != m_observers.end(); i++)
     (*i)->removeSignaler(this);
 }
 
 void ChangeSignaler::addObserver(ChangeObserver *aObserver)
 {
-  dlib::auto_mutex lock(mObserverMutex);
-  mObservers.push_back(aObserver);
+  dlib::auto_mutex lock(m_observerMutex);
+  m_observers.push_back(aObserver);
   aObserver->addSignaler(this);
 }  
 
 bool ChangeSignaler::removeObserver(ChangeObserver *aObserver)
 {
-  dlib::auto_mutex lock(mObserverMutex);
-  for (vector<ChangeObserver*>::iterator i = mObservers.begin(); i != mObservers.end(); i++)
+  dlib::auto_mutex lock(m_observerMutex);
+  for (vector<ChangeObserver*>::iterator i = m_observers.begin(); i != m_observers.end(); i++)
   {
     if (*i == aObserver)
     {
-      mObservers.erase(i);
+      m_observers.erase(i);
       return true;
     }
   }
@@ -74,8 +74,8 @@ bool ChangeSignaler::removeObserver(ChangeObserver *aObserver)
 
 bool ChangeSignaler::hasObserver(ChangeObserver *aObserver)
 {
-  dlib::auto_mutex lock(mObserverMutex);
-  for (vector<ChangeObserver*>::iterator i = mObservers.begin(); i != mObservers.end(); i++)
+  dlib::auto_mutex lock(m_observerMutex);
+  for (vector<ChangeObserver*>::iterator i = m_observers.begin(); i != m_observers.end(); i++)
     if (*i == aObserver)
       return true;
   
@@ -84,8 +84,8 @@ bool ChangeSignaler::hasObserver(ChangeObserver *aObserver)
 
 void ChangeSignaler::signalObservers(uint64_t aSequence)
 {
-  dlib::auto_mutex lock(mObserverMutex);
-  for (vector<ChangeObserver*>::iterator i = mObservers.begin(); i != mObservers.end(); i++)
+  dlib::auto_mutex lock(m_observerMutex);
+  for (vector<ChangeObserver*>::iterator i = m_observers.begin(); i != m_observers.end(); i++)
     (*i)->signal(aSequence);
 }
 

@@ -70,24 +70,24 @@ public:
   AttributeList *getAttributes();
   
   /* Get the data item associated with this event */
-  DataItem * getDataItem() const { return mDataItem; }
+  DataItem * getDataItem() const { return m_dataItem; }
   
   /* Get the value */
-  const std::string &getValue() const { return mValue; }
+  const std::string &getValue() const { return m_value; }
   ELevel getLevel();
   const std::string &getLevelString() { return SLevels[getLevel()]; }
-  const std::string &getCode() { getAttributes(); return mCode; }
+  const std::string &getCode() { getAttributes(); return m_code; }
   void normal();
 
   // Time series info...
-  const std::vector<float> &getTimeSeries() { return mTimeSeries; }
-  bool isTimeSeries() const { return mIsTimeSeries; }
-  int getSampleCount() const { return mSampleCount; }
+  const std::vector<float> &getTimeSeries() { return m_timeSeries; }
+  bool isTimeSeries() const { return m_isTimeSeries; }
+  int getSampleCount() const { return m_sampleCount; }
   
-  uint64_t getSequence() const { return mSequence; }
+  uint64_t getSequence() const { return m_sequence; }
   
   ComponentEvent *getFirst();
-  ComponentEvent *getPrev() { return mPrev; }
+  ComponentEvent *getPrev() { return m_prev; }
   void getList(std::list<ComponentEventPtr> &aList);
   void appendTo(ComponentEvent *aEvent);
   ComponentEvent *find(const std::string &aNativeCode);
@@ -95,10 +95,10 @@ public:
                ComponentEvent *aNew); 
 
   bool operator<(ComponentEvent &aOther) {
-    if ((*mDataItem) < (*aOther.mDataItem))
+    if ((*m_dataItem) < (*aOther.m_dataItem))
       return true;
-    else if (*mDataItem == *aOther.mDataItem)
-      return mSequence < aOther.mSequence;
+    else if (*m_dataItem == *aOther.m_dataItem)
+      return m_sequence < aOther.m_sequence;
     else
       return false;
   }
@@ -109,42 +109,42 @@ protected:
   
 protected:
   /* Holds the data item from the device */
-  DataItem * mDataItem;
+  DataItem * m_dataItem;
   
   /* Sequence number of the event */
-  uint64_t mSequence;
+  uint64_t m_sequence;
   std::string mSequenceStr;
   
   /* Timestamp of the event's occurence */
-  std::string mTime;
-  std::string mDuration;
+  std::string m_time;
+  std::string m_duration;
   
   /* Hold the alarm data:  CODE|NATIVECODE|SEVERITY|STATE */
   /* or the Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER */
   /* or the message data:  NATIVE_CODE */
   /* or the time series data */
-  std::string mRest;
-  ELevel mLevel;
+  std::string m_rest;
+  ELevel m_level;
   
   /* The value of the event, either as a float or a string */
-  std::string mValue;
-  bool mIsFloat;
-  bool mIsTimeSeries;
-  std::vector<float> mTimeSeries;
-  int mSampleCount;
+  std::string m_value;
+  bool m_isFloat;
+  bool m_isTimeSeries;
+  std::vector<float> m_timeSeries;
+  int m_sampleCount;
   
   /* The attributes, created on demand */
-  bool mHasAttributes;
-  AttributeList mAttributes;
+  bool m_hasAttributes;
+  AttributeList m_attributes;
 
   // For condition tracking
-  std::string mCode;
+  std::string m_code;
   
   // For reset triggered.
-  std::string mResetTriggered;
+  std::string m_resetTriggered;
   
   // For back linking of condition
-  ComponentEventPtr mPrev;
+  ComponentEventPtr m_prev;
 
 protected:
   /* Convert the value to the agent unit standards */
@@ -153,12 +153,12 @@ protected:
 
 inline ComponentEvent::ELevel ComponentEvent::getLevel()
 {
-  if (!mHasAttributes) getAttributes();
-  return mLevel;
+  if (!m_hasAttributes) getAttributes();
+  return m_level;
 }
 
 inline void ComponentEvent::appendTo(ComponentEvent *aEvent) 
 { 
-  mPrev = aEvent; 
+  m_prev = aEvent; 
 }
 
