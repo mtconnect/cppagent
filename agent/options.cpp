@@ -225,7 +225,7 @@ bool Option::setValue(const char *aCp)
 
 	if (type_ != eList && isSet_)
 	{
-		if (name_ != NULL)
+		if (name_ != nullptr)
 			cerr << "Option " << name_ << " is already specified" << endl;
 		else
 			cerr << "Option is alread specified" << endl;
@@ -337,13 +337,13 @@ OptionsList::OptionsList()
 {
 	unswitched_ = -1;
 	ownsOptions_ = false;
-	program_ = NULL;
+	program_ = nullptr;
 }
 
 
 OptionsList::OptionsList(Option *optionList[])
 {
-	program_ = NULL;
+	program_ = nullptr;
 	unswitched_ = -1;
 	ownsOptions_ = false;
 	int i = 0;
@@ -452,7 +452,7 @@ int OptionsList::parse(int &argc, const char **argv)
 
 		if (opt->isRequired() && !opt->isSet())
 		{
-			if (opt->getName() != NULL)
+			if (opt->getName() != nullptr)
 				cerr << "Required option -" << opt->getName() << " is not specified" << endl;
 			else
 				cerr << "Required option <" << opt->getArgDesc() << "> is not specified" << endl;
@@ -521,7 +521,7 @@ void OptionsList::usage()
 		{
 			Option *opt = &(*iter);
 
-			if (opt->getName() != NULL &&
+			if (opt->getName() != nullptr &&
 				!opt->hasArgument() &&
 				(len = strlen(opt->getName())) == 1)
 			{
@@ -539,7 +539,7 @@ void OptionsList::usage()
 	{
 		Option *opt = &(*iter);
 
-		if (opt->getName() != NULL && !opt->hasArgument() && (len = strlen(opt->getName())) == 1)
+		if (opt->getName() != nullptr && !opt->hasArgument() && (len = strlen(opt->getName())) == 1)
 			continue;
 
 		*cp++ = ' ';
@@ -552,17 +552,17 @@ void OptionsList::usage()
 		if (opt->getType() == Option::eList)
 			*cp2++ = '{';
 
-		if (opt->getName() != NULL && !opt->hasArgument() && strlen(opt->getName()) > 1)
+		if (opt->getName() != nullptr && !opt->hasArgument() && strlen(opt->getName()) > 1)
 		{
 			len = sprintf(cp2, "-%s", opt->getName());
 			cp2 += len;
 		}
-		else if (opt->getName() != NULL && opt->hasArgument())
+		else if (opt->getName() != nullptr && opt->hasArgument())
 		{
 			len = sprintf(cp2, "-%s <%s>", opt->getName(), opt->getArgDesc());
 			cp2 += len;
 		}
-		else if (opt->getName() == NULL)
+		else if (opt->getName() == nullptr)
 		{
 			len = sprintf(cp2, "<%s>", opt->getArgDesc());
 			cp2 += len;
@@ -604,7 +604,7 @@ void OptionsList::usage()
 	{
 		Option *opt = &(*iter);
 
-		if (opt->getName() != NULL)
+		if (opt->getName() != nullptr)
 		{
 			if (opt->hasArgument())
 				sprintf(buffer, "-%-2.2s <%s>", opt->getName(), opt->getArgDesc());

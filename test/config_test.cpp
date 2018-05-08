@@ -53,7 +53,7 @@ void ConfigTest::setUp()
 void ConfigTest::tearDown()
 {
 	delete m_config;
-	m_config = NULL;
+	m_config = nullptr;
 }
 
 // ComponentTest protected methods

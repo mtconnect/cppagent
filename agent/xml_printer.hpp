@@ -49,7 +49,7 @@ std::string printProbe(
 	const unsigned int assetBufferSize,
 	const unsigned int assetCount,
 	std::vector<Device *> &devices,
-	const std::map<std::string, int> *count = NULL);
+	const std::map<std::string, int> *count = nullptr);
 
 std::string printSample(
 	const unsigned int instanceId,

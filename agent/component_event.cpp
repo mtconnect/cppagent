@@ -281,7 +281,7 @@ void ComponentEvent::convertValue(const string &value)
 			// Check if conversion is required...
 			char *np;
 
-			while (cp != NULL && *cp != '\0')
+			while (cp != nullptr && *cp != '\0')
 			{
 				float v = strtof(cp, &np);
 
@@ -290,7 +290,7 @@ void ComponentEvent::convertValue(const string &value)
 					m_timeSeries.push_back(m_dataItem->convertValue(v));
 				}
 				else
-					np = NULL;
+					np = nullptr;
 
 				cp = np;
 			}
@@ -307,7 +307,7 @@ void ComponentEvent::convertValue(const string &value)
 
 ComponentEvent *ComponentEvent::getFirst()
 {
-	if (m_prev.getObject() != NULL)
+	if (m_prev.getObject() != nullptr)
 		return m_prev->getFirst();
 	else
 		return this;
@@ -328,10 +328,10 @@ ComponentEvent *ComponentEvent::find(const std::string &code)
 	if (m_code == code)
 		return this;
 
-	if (m_prev.getObject() != NULL)
+	if (m_prev.getObject() != nullptr)
 		return m_prev->find(code);
 
-	return NULL;
+	return nullptr;
 }
 
 
@@ -340,7 +340,7 @@ bool ComponentEvent::replace(ComponentEvent *oldEvent,
 {
 	ComponentEvent *obj = m_prev.getObject();
 
-	if (obj == NULL)
+	if (obj == nullptr)
 		return false;
 
 	if (obj == oldEvent)
@@ -358,7 +358,7 @@ ComponentEvent *ComponentEvent::deepCopy()
 {
 	ComponentEvent *n = new ComponentEvent(*this);
 
-	if (m_prev.getObject() != NULL)
+	if (m_prev.getObject() != nullptr)
 	{
 		n->m_prev = m_prev->deepCopy();
 		n->m_prev->unrefer();
@@ -371,19 +371,19 @@ ComponentEvent *ComponentEvent::deepCopyAndRemove(ComponentEvent *old)
 {
 	if (this == old)
 	{
-		if (m_prev.getObject() != NULL)
+		if (m_prev.getObject() != nullptr)
 			return m_prev->deepCopy();
 		else
-			return NULL;
+			return nullptr;
 	}
 
 	ComponentEvent *n = new ComponentEvent(*this);
 
-	if (m_prev.getObject() != NULL)
+	if (m_prev.getObject() != nullptr)
 	{
 		n->m_prev = m_prev->deepCopyAndRemove(old);
 
-		if (n->m_prev.getObject() != NULL)
+		if (n->m_prev.getObject() != nullptr)
 			n->m_prev->unrefer();
 	}
 

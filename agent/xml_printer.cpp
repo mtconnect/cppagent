@@ -27,7 +27,7 @@ static dlib::logger g_logger("xml.printer");
 #define THROW_IF_XML2_ERROR(expr) \
   if ((expr) < 0) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
 #define THROW_IF_XML2_NULL(expr) \
-  if ((expr) == NULL) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+  if ((expr) == nullptr) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
 
 using namespace std;
 
@@ -70,7 +70,7 @@ void initXmlDoc(
 	const uint64_t nextSeq,
 	const uint64_t firstSeq = 0,
 	const uint64_t lastSeq = 0,
-	const map<string, int> *counts = NULL);
+	const map<string, int> *counts = nullptr);
 
 // Helper to print individual components and details
 void printProbeHelper(xmlTextWriterPtr writer, Component *component);
@@ -85,7 +85,7 @@ void addSimpleElement(
 	xmlTextWriterPtr writer,
 	std::string element,
 	const std::string &body,
-	const std::map<std::string, std::string> *attributes = NULL);
+	const std::map<std::string, std::string> *attributes = nullptr);
 
 void addAttributes(xmlTextWriterPtr writer,
 		   const std::map<std::string, std::string> *attributes);
@@ -104,12 +104,12 @@ void printCuttingToolValue(
 	xmlTextWriterPtr writer,
 	CuttingToolPtr tool,
 	const char *value,
-	std::set<string> *remaining = NULL);
+	std::set<string> *remaining = nullptr);
 void printCuttingToolValue(
 	xmlTextWriterPtr writer,
 	CuttingItemPtr item,
 	const char *value,
-	std::set<string> *remaining = NULL);
+	std::set<string> *remaining = nullptr);
 void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value);
 void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item);
 void printAssetNode(xmlTextWriterPtr writer, Asset *asset);
@@ -320,8 +320,8 @@ string XmlPrinter::printError(
 	const string &errorCode,
 	const string &errorText )
 {
-	xmlTextWriterPtr writer = NULL;
-	xmlBufferPtr buf = NULL;
+	xmlTextWriterPtr writer = nullptr;
+	xmlBufferPtr buf = nullptr;
 	string ret;
 
 	try
@@ -346,7 +346,7 @@ string XmlPrinter::printError(
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Error"));
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "errorCode",
 							BAD_CAST errorCode.c_str()));
-		xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST errorText.c_str());
+		xmlChar *text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST errorText.c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
 		xmlFree(text);
 
@@ -362,20 +362,20 @@ string XmlPrinter::printError(
 	}
 	catch (string error)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printError: " << error;
 	}
 	catch (...)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printError: unknown error";
@@ -394,8 +394,8 @@ string XmlPrinter::printProbe(
 	vector<Device *> &deviceList,
 	const std::map<std::string, int> *count )
 {
-	xmlTextWriterPtr writer = NULL;
-	xmlBufferPtr buf = NULL;
+	xmlTextWriterPtr writer = nullptr;
+	xmlBufferPtr buf = nullptr;
 	string ret;
 
 	try
@@ -439,20 +439,20 @@ string XmlPrinter::printProbe(
 	}
 	catch (string error)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printProbe: " << error;
 	}
 	catch (...)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printProbe: unknown error";
@@ -502,7 +502,7 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 
 		for (child = children.begin(); child != children.end(); child++)
 		{
-			xmlChar *name = NULL;
+			xmlChar *name = nullptr;
 			if (!(*child)->getPrefix().empty())
 			{
 				map<string, SchemaNamespace>::iterator ns = g_devicesNamespaces.find((*child)->getPrefix());
@@ -511,7 +511,7 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 					name = BAD_CAST(*child)->getPrefixedClass().c_str();
 			}
 
-			if (name == NULL)
+			if (name == nullptr)
 				name = BAD_CAST(*child)->getClass().c_str();
 
 			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, name));
@@ -533,7 +533,7 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 			addAttributes(writer, comp->getAttributes());
 			const Composition::Description *desc = comp->getDescription();
 
-			if (desc != NULL)
+			if (desc != nullptr)
 				addSimpleElement(writer, "Description", desc->getBody(), &desc->getAttributes());
 
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Composition
@@ -677,8 +677,8 @@ string XmlPrinter::printSample(
 			dlib::qsort_array<ComponentEventPtrArray, EventComparer>(results, 0, results.size() - 1,
 				EventCompare);
 
-		Device *lastDevice = NULL;
-		Component *lastComponent = NULL;
+		Device *lastDevice = nullptr;
+		Component *lastComponent = nullptr;
 		int lastCategory = -1;
 
 		for (unsigned int i = 0; i < results.size(); i++)
@@ -690,15 +690,15 @@ string XmlPrinter::printSample(
 
 			if (device != lastDevice)
 			{
-				if (lastDevice != NULL)
+				if (lastDevice != nullptr)
 					THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DeviceStream
 
 				lastDevice = device;
 
-				if (lastComponent != NULL)
+				if (lastComponent != nullptr)
 					THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
 
-				lastComponent = NULL;
+				lastComponent = nullptr;
 
 				if (lastCategory != -1)
 					THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
@@ -709,7 +709,7 @@ string XmlPrinter::printSample(
 
 			if (component != lastComponent)
 			{
-				if (lastComponent != NULL)
+				if (lastComponent != nullptr)
 					THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
 
 				lastComponent = component;
@@ -736,10 +736,10 @@ string XmlPrinter::printSample(
 		if (lastCategory != -1)
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
 
-		if (lastDevice != NULL)
+		if (lastDevice != nullptr)
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DeviceStream
 
-		if (lastComponent != NULL)
+		if (lastComponent != nullptr)
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
 
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Streams
@@ -752,20 +752,20 @@ string XmlPrinter::printSample(
 	}
 	catch (string error)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printProbe: " << error;
 	}
 	catch (...)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printProbe: unknown error";
@@ -782,8 +782,8 @@ string XmlPrinter::printAssets(
 	const unsigned int assetCount,
 	std::vector<AssetPtr> &assets )
 {
-	xmlTextWriterPtr writer = NULL;
-	xmlBufferPtr buf = NULL;
+	xmlTextWriterPtr writer = nullptr;
+	xmlBufferPtr buf = nullptr;
 	string ret;
 
 	try
@@ -822,20 +822,20 @@ string XmlPrinter::printAssets(
 	}
 	catch (string error)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printProbe: " << error;
 	}
 	catch (...)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printProbe: unknown error";
@@ -876,7 +876,7 @@ void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset)
 	if (!asset->getDescription().empty())
 	{
 		string body = asset->getDescription();
-		addSimpleElement(writer, "Description", body, NULL);
+		addSimpleElement(writer, "Description", body, nullptr);
 	}
 }
 
@@ -933,7 +933,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 	}
 	else
 	{
-		xmlChar *element = NULL;
+		xmlChar *element = nullptr;
 
 		if (!dataItem->getPrefix().empty())
 		{
@@ -943,7 +943,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 				element = BAD_CAST dataItem->getPrefixedElementName().c_str();
 		}
 
-		if (element == NULL)
+		if (element == nullptr)
 			element = BAD_CAST dataItem->getElementName().c_str();
 
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, element));
@@ -965,7 +965,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 	}
 	else if (!result->getValue().empty())
 	{
-		xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST result->getValue().c_str());
+		xmlChar *text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST result->getValue().c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
 		xmlFree(text);
 	}
@@ -1008,7 +1008,7 @@ void XmlPrinter::initXmlDoc(
 	const uint64_t lastSeq,
 	const map<string, int> *count )
 {
-	THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL));
+	THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, nullptr, "UTF-8", nullptr));
 
 	// TODO: Cache the locations and header attributes.
 	// Write the root element
@@ -1157,7 +1157,7 @@ void XmlPrinter::initXmlDoc(
 			BAD_CAST int64ToString(lastSeq).c_str()));
 	}
 
-	if (aType == eDEVICES && count != NULL && count->size() > 0)
+	if (aType == eDEVICES && count != nullptr && count->size() > 0)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCounts"));
 
@@ -1188,12 +1188,12 @@ void XmlPrinter::addSimpleElement(
 {
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST element.c_str()));
 
-	if (attributes != NULL && attributes->size() > 0)
+	if (attributes != nullptr && attributes->size() > 0)
 		addAttributes(writer, attributes);
 
 	if (!body.empty())
 	{
-		xmlChar *text = xmlEncodeEntitiesReentrant(NULL, BAD_CAST body.c_str());
+		xmlChar *text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
 		xmlFree(text);
 	}
@@ -1245,7 +1245,7 @@ void XmlPrinter::printCuttingToolValue(
 {
 	if (item->m_values.count(value) > 0)
 	{
-		if (remaining != NULL)
+		if (remaining != nullptr)
 			remaining->erase(value);
 
 		CuttingToolValuePtr ptr = item->m_values[value];
@@ -1309,8 +1309,8 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr it
 string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
 {
 
-	xmlTextWriterPtr writer = NULL;
-	xmlBufferPtr buf = NULL;
+	xmlTextWriterPtr writer = nullptr;
+	xmlBufferPtr buf = nullptr;
 	string ret;
 
 	try
@@ -1413,20 +1413,20 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
 	}
 	catch (string error)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printCuttingTool: " << error;
 	}
 	catch (...)
 	{
-		if (buf != NULL)
+		if (buf != nullptr)
 			xmlBufferFree(buf);
 
-		if (writer != NULL)
+		if (writer != nullptr)
 			xmlFreeTextWriter(writer);
 
 		g_logger << dlib::LERROR << "printCuttingTool: unknown error";

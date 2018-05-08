@@ -28,11 +28,11 @@ class Checkpoint
 {
 public:
 	Checkpoint();
-	Checkpoint(Checkpoint &checkpoint, std::set<std::string> *filterSet = NULL);
+	Checkpoint(Checkpoint &checkpoint, std::set<std::string> *filterSet = nullptr);
 	~Checkpoint();
 
 	void addComponentEvent(ComponentEvent *event);
-	void copy(Checkpoint &checkpoint, std::set<std::string> *filterSet = NULL);
+	void copy(Checkpoint &checkpoint, std::set<std::string> *filterSet = nullptr);
 	void clear();
 	void filter(std::set<std::string> &filterSet);
 
@@ -40,7 +40,7 @@ public:
 		return m_events; }
 
 	void getComponentEvents(ComponentEventPtrArray &list,
-		std::set<std::string> *filterSet = NULL);
+		std::set<std::string> *filterSet = nullptr);
 
 	ComponentEventPtr *getEventPtr(const std::string &id) {
 		return m_events[id]; }

@@ -35,7 +35,7 @@ public:
 		Reference(const std::string &id, const std::string &name) :
 			m_id(id),
 			m_name(name),
-			m_dataItem(NULL)
+			m_dataItem(nullptr)
 		{}
 
 		std::string m_id;

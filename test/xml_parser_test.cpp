@@ -43,7 +43,7 @@ using namespace std;
 
 void XmlParserTest::setUp()
 {
-	m_xmlParser = NULL;
+	m_xmlParser = nullptr;
 
 	try
 	{
@@ -58,7 +58,7 @@ void XmlParserTest::setUp()
 
 void XmlParserTest::tearDown()
 {
-	if (m_xmlParser != NULL)
+	if (m_xmlParser != nullptr)
 	delete m_xmlParser;
 }
 
@@ -186,7 +186,7 @@ void XmlParserTest::testGetDataItemsExt()
 void XmlParserTest::testExtendedSchema()
 {
 	delete m_xmlParser;
-	m_xmlParser = NULL;
+	m_xmlParser = nullptr;
 
 	try
 	{
@@ -219,10 +219,10 @@ void XmlParserTest::testExtendedSchema()
 void XmlParserTest::testTimeSeries()
 {
 	Device *dev = m_devices[0];
-	CPPUNIT_ASSERT(dev != NULL);
+	CPPUNIT_ASSERT(dev != nullptr);
 
 	DataItem *item = dev->getDeviceDataItem("Xact");
-	CPPUNIT_ASSERT(item != NULL);
+	CPPUNIT_ASSERT(item != nullptr);
 
 	item->getAttributes();
 	CPPUNIT_ASSERT_EQUAL((string)"AVERAGE", item->getStatistic());
@@ -232,7 +232,7 @@ void XmlParserTest::testTimeSeries()
 
 
 	item = dev->getDeviceDataItem("Xts");
-	CPPUNIT_ASSERT(item != NULL);
+	CPPUNIT_ASSERT(item != nullptr);
 	item->getAttributes();
 	CPPUNIT_ASSERT(item->isTimeSeries());
 	CPPUNIT_ASSERT_EQUAL(DataItem::TIME_SERIES, item->getRepresentation());
@@ -244,13 +244,13 @@ void XmlParserTest::testTimeSeries()
 void XmlParserTest::testConfiguration()
 {
 	Device *dev = m_devices[0];
-	CPPUNIT_ASSERT(dev != NULL);
+	CPPUNIT_ASSERT(dev != nullptr);
 
-	Component *power = NULL;
+	Component *power = nullptr;
 	std::list<Component *> &children = dev->getChildren();
 	std::list<Component *>::iterator iter;
 
-	for (iter = children.begin(); power == NULL && iter != children.end(); ++iter)
+	for (iter = children.begin(); power == nullptr && iter != children.end(); ++iter)
 	{
 	if ((*iter)->getName() == "power")
 		power = *iter;
@@ -311,7 +311,7 @@ void XmlParserTest::testParseOtherAsset()
 			  "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
 	AssetPtr asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
 
-	CPPUNIT_ASSERT(asset.getObject() != NULL);
+	CPPUNIT_ASSERT(asset.getObject() != nullptr);
 	CPPUNIT_ASSERT_EQUAL((string) "XXX123", asset->getAssetId());
 	CPPUNIT_ASSERT_EQUAL((string) "2014-04-14T01:22:33.123", asset->getTimestamp());
 	CPPUNIT_ASSERT_EQUAL((string) "XXX", asset->getDeviceUuid());
@@ -322,7 +322,7 @@ void XmlParserTest::testParseOtherAsset()
 		   "serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
 	asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
 
-	CPPUNIT_ASSERT(asset.getObject() != NULL);
+	CPPUNIT_ASSERT(asset.getObject() != nullptr);
 	CPPUNIT_ASSERT_EQUAL(true, asset->isRemoved());
 }
 
@@ -373,7 +373,7 @@ void XmlParserTest::testBadAsset()
 	string xml = getFile("asset4.xml");
 
 	Asset *asset = m_xmlParser->parseAsset("XXX", "CuttingTool", xml);
-	CPPUNIT_ASSERT(asset == NULL);
+	CPPUNIT_ASSERT(asset == nullptr);
 }
 
 void XmlParserTest::testNoNamespace()
@@ -384,37 +384,37 @@ void XmlParserTest::testNoNamespace()
 
 void XmlParserTest::testFilteredDataItem13()
 {
-  delete m_xmlParser; m_xmlParser = NULL;
-  try
-  {
-    m_xmlParser = new XmlParser();
-    m_devices = m_xmlParser->parseFile("../samples/filter_example_1.3.xml");
-  }
-  catch (exception & e)
-  {
-    CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example_1.3.xml");
-  }
-  
-  Device *dev = m_devices[0];
-  DataItem *di = dev->getDeviceDataItem("c1");
-  
-  CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
-  CPPUNIT_ASSERT(di->hasMinimumDelta());
+	delete m_xmlParser; m_xmlParser = nullptr;
+	try
+	{
+		m_xmlParser = new XmlParser();
+		m_devices = m_xmlParser->parseFile("../samples/filter_example_1.3.xml");
+	}
+	catch (exception & e)
+	{
+		CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example_1.3.xml");
+	}
+
+	Device *dev = m_devices[0];
+	DataItem *di = dev->getDeviceDataItem("c1");
+
+	CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
+	CPPUNIT_ASSERT(di->hasMinimumDelta());
 }
 
 void XmlParserTest::testFilteredDataItem()
 {
 	delete m_xmlParser;
-	m_xmlParser = NULL;
+	m_xmlParser = nullptr;
 
 	try
 	{
-	m_xmlParser = new XmlParser();
-	m_devices = m_xmlParser->parseFile("../samples/filter_example.xml");
+		m_xmlParser = new XmlParser();
+		m_devices = m_xmlParser->parseFile("../samples/filter_example.xml");
 	}
 	catch (exception &e)
 	{
-	CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example.xml");
+		CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example.xml");
 	}
 
 	Device *dev = m_devices[0];
@@ -432,7 +432,7 @@ void XmlParserTest::testFilteredDataItem()
 void XmlParserTest::testReferences()
 {
 	delete m_xmlParser;
-	m_xmlParser = NULL;
+	m_xmlParser = nullptr;
 
 	try
 	{
@@ -457,13 +457,13 @@ void XmlParserTest::testReferences()
 	CPPUNIT_ASSERT_EQUAL((string) "c4", ref.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.m_name);
 
-	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem != NULL);
+	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem != nullptr);
 
 	const Component::Reference &ref2 = refs.back();
 	CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "door", ref2.m_name);
 
-	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.m_dataItem != NULL);
+	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.m_dataItem != nullptr);
 
 	std::set<string> filter;
 	m_xmlParser->getDataItems(filter, "//BarFeederInterface");

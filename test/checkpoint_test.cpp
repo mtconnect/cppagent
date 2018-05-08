@@ -40,11 +40,11 @@ using namespace std;
 void CheckpointTest::setUp()
 {
 	// Create an agent with only 16 slots and 8 data items.
-	m_agent = NULL;
-	m_checkpoint = NULL;
+	m_agent = nullptr;
+	m_checkpoint = nullptr;
 	m_agent = new Agent("../samples/min_config.xml", 4, 4);
 	m_agentId = intToString(getCurrentTimeInSec());
-	m_adapter = NULL;
+	m_adapter = nullptr;
 	m_checkpoint = new Checkpoint();
 
 	std::map<string, string> attributes1, attributes2;
@@ -397,7 +397,7 @@ void CheckpointTest::testConditionChaining()
 	ComponentEventPtr *p7 = m_checkpoint->getEvents()[std::string("1")];
 	CPPUNIT_ASSERT_EQUAL(1, (int)(*p7)->refCount());
 
-	CPPUNIT_ASSERT(p7 != NULL);
+	CPPUNIT_ASSERT(p7 != nullptr);
 	CPPUNIT_ASSERT(p5.getObject() != (*p7).getObject());
 	CPPUNIT_ASSERT_EQUAL(std::string("CODE3"), (*p7)->getCode());
 	CPPUNIT_ASSERT_EQUAL(std::string("CODE1"), (*p7)->getPrev()->getCode());

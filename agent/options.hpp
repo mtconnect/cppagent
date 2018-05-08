@@ -70,7 +70,7 @@ public:
 		bool &boolRef,
 		const char *usage,
 		bool aArgument = false,
-		const char *argDesc = NULL,
+		const char *argDesc = nullptr,
 		bool required = false,
 		bool ignoreCase = false);
 
