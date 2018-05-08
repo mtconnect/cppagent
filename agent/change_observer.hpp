@@ -23,60 +23,68 @@
 class ChangeSignaler;
 
 class ChangeObserver
-{  
-public:
-  ChangeObserver() : m_signal(m_mutex), m_sequence(UINT64_MAX) { }
-  virtual ~ChangeObserver();
-
-  bool wait(unsigned long aTimeout) {
-    dlib::auto_mutex lock(m_mutex);
-    if (m_sequence == UINT64_MAX)
-      return m_signal.wait_or_timeout(aTimeout); 
-    else
-      return true;
-  }
-  void signal(uint64_t aSequence) {
-    dlib::auto_mutex lock(m_mutex);
-    if (m_sequence > aSequence && aSequence != 0)
-      m_sequence = aSequence;
-    m_signal.signal(); 
-  }
-  uint64_t getSequence() const {
-    return m_sequence;
-  }
-  bool wasSignaled() const {
-    return m_sequence != UINT64_MAX;
-  }
-  void reset() { 
-    dlib::auto_mutex lock(m_mutex); 
-    m_sequence = UINT64_MAX; 
-  }
-  
-private:
-  dlib::rmutex m_mutex;
-  dlib::rsignaler m_signal;
-  std::vector<ChangeSignaler*> m_signalers;
-  volatile uint64_t m_sequence;
-  
-protected:
-  friend class ChangeSignaler;
-  void addSignaler(ChangeSignaler *aSig);
-  bool removeSignaler(ChangeSignaler *aSig);
-};
-
-class ChangeSignaler 
 {
 public:
-  /* Observer Management */
-  void addObserver(ChangeObserver *aObserver);
-  bool removeObserver(ChangeObserver *aObserver);
-  bool hasObserver(ChangeObserver *aObserver);
-  void signalObservers(uint64_t aSequence);
-  
-  virtual ~ChangeSignaler();
-  
+	ChangeObserver() : m_signal(m_mutex), m_sequence(UINT64_MAX) { }
+	virtual ~ChangeObserver();
+
+	bool wait(unsigned long aTimeout)
+	{
+	dlib::auto_mutex lock(m_mutex);
+
+	if (m_sequence == UINT64_MAX)
+		return m_signal.wait_or_timeout(aTimeout);
+	else
+		return true;
+	}
+	void signal(uint64_t aSequence)
+	{
+	dlib::auto_mutex lock(m_mutex);
+
+	if (m_sequence > aSequence && aSequence != 0)
+		m_sequence = aSequence;
+
+	m_signal.signal();
+	}
+	uint64_t getSequence() const
+	{
+	return m_sequence;
+	}
+	bool wasSignaled() const
+	{
+	return m_sequence != UINT64_MAX;
+	}
+	void reset()
+	{
+	dlib::auto_mutex lock(m_mutex);
+	m_sequence = UINT64_MAX;
+	}
+
+private:
+	dlib::rmutex m_mutex;
+	dlib::rsignaler m_signal;
+	std::vector<ChangeSignaler *> m_signalers;
+	volatile uint64_t m_sequence;
+
 protected:
-  /* Observer Lists */
-  dlib::rmutex m_observerMutex;
-  std::vector<ChangeObserver*> m_observers;
+	friend class ChangeSignaler;
+	void addSignaler(ChangeSignaler *aSig);
+	bool removeSignaler(ChangeSignaler *aSig);
+};
+
+class ChangeSignaler
+{
+public:
+	// Observer Management
+	void addObserver(ChangeObserver *aObserver);
+	bool removeObserver(ChangeObserver *aObserver);
+	bool hasObserver(ChangeObserver *aObserver);
+	void signalObservers(uint64_t aSequence);
+
+	virtual ~ChangeSignaler();
+
+protected:
+	// Observer Lists
+	dlib::rmutex m_observerMutex;
+	std::vector<ChangeObserver *> m_observers;
 };

@@ -43,19 +43,19 @@
 
 class CuttingToolTest : public CppUnit::TestFixture
 {
-  CPPUNIT_TEST_SUITE(CuttingToolTest);
-  CPPUNIT_TEST(testCuttingTool);
-  CPPUNIT_TEST_SUITE_END();
-  
+	CPPUNIT_TEST_SUITE(CuttingToolTest);
+	CPPUNIT_TEST(testCuttingTool);
+	CPPUNIT_TEST_SUITE_END();
+
 public:
-  void setUp();
-  void tearDown();
-  
+	void setUp();
+	void tearDown();
+
 protected:
-  CuttingToolPtr m_tool;
-  
+	CuttingToolPtr m_tool;
+
 protected:
-  void testCuttingTool();
+	void testCuttingTool();
 };
 
 

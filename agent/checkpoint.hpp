@@ -23,25 +23,26 @@
 #include <set>
 #include <dlib/array.h>
 
-class Checkpoint {
+class Checkpoint
+{
 public:
-  Checkpoint();
-  Checkpoint(Checkpoint &aCheckpoint, std::set<std::string> *aFilter = NULL);
-  ~Checkpoint();
-  
-  void addComponentEvent(ComponentEvent *aEvent);
-  void copy(Checkpoint &aCheckpoint, std::set<std::string> *aFilter = NULL);
-  void clear();
-  void filter(std::set<std::string> &aFilter);
+	Checkpoint();
+	Checkpoint(Checkpoint &aCheckpoint, std::set<std::string> *aFilter = NULL);
+	~Checkpoint();
 
-  std::map<std::string, ComponentEventPtr*> &getEvents() { return m_events; }
-  void getComponentEvents(ComponentEventPtrArray &list,
-                          std::set<std::string> *aFilter = NULL);
-  ComponentEventPtr *getEventPtr(std::string anId) { return m_events[anId]; }
-  
+	void addComponentEvent(ComponentEvent *aEvent);
+	void copy(Checkpoint &aCheckpoint, std::set<std::string> *aFilter = NULL);
+	void clear();
+	void filter(std::set<std::string> &aFilter);
+
+	std::map<std::string, ComponentEventPtr *> &getEvents() { return m_events; }
+	void getComponentEvents(ComponentEventPtrArray &list,
+				std::set<std::string> *aFilter = NULL);
+	ComponentEventPtr *getEventPtr(std::string anId) { return m_events[anId]; }
+
 protected:
-  std::map<std::string, ComponentEventPtr*> m_events;
-  std::set<std::string> m_filter;
-  bool m_hasFilter;
+	std::map<std::string, ComponentEventPtr *> m_events;
+	std::set<std::string> m_filter;
+	bool m_hasFilter;
 };
 

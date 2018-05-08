@@ -37,17 +37,17 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CuttingToolTest);
 
 using namespace std;
 
-/* ComponentTest public methods */
+// ComponentTest public methods
 void CuttingToolTest::setUp()
 {
-  
+
 }
 
 void CuttingToolTest::tearDown()
 {
 }
 
-/* ComponentTest protected methods */
+// ComponentTest protected methods
 void CuttingToolTest::testCuttingTool()
 {
 }

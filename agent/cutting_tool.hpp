@@ -31,51 +31,54 @@ class CuttingItem;
 typedef RefCountedPtr<CuttingItem> CuttingItemPtr;
 
 
-class CuttingToolValue : public RefCounted {
-public:  
-  CuttingToolValue(const std::string &aKey, const std::string &aValue) 
-    : m_key(aKey), m_value(aValue) {}
-  CuttingToolValue() {}
-  CuttingToolValue(const CuttingToolValue &aOther) 
-    : m_properties(aOther.m_properties), m_key(aOther.m_key), m_value(aOther.m_value)  {}
-  virtual ~CuttingToolValue();
-    
+class CuttingToolValue : public RefCounted
+{
 public:
-  std::map<std::string, std::string> m_properties;
-  std::string m_key;
-  std::string m_value;
+	CuttingToolValue(const std::string &aKey, const std::string &aValue)
+	: m_key(aKey), m_value(aValue) {}
+	CuttingToolValue() {}
+	CuttingToolValue(const CuttingToolValue &aOther)
+	: m_properties(aOther.m_properties), m_key(aOther.m_key), m_value(aOther.m_value)  {}
+	virtual ~CuttingToolValue();
+
+public:
+	std::map<std::string, std::string> m_properties;
+	std::string m_key;
+	std::string m_value;
 };
 
-class CuttingItem : public RefCounted {
+class CuttingItem : public RefCounted
+{
 public:
-  virtual ~CuttingItem();
+	virtual ~CuttingItem();
 
 public:
-  std::map<std::string,std::string> m_identity;
-  std::map<std::string,CuttingToolValuePtr> m_values;
-  std::map<std::string,CuttingToolValuePtr> m_measurements;
-  std::vector<CuttingToolValuePtr> m_lives;
+	std::map<std::string, std::string> m_identity;
+	std::map<std::string, CuttingToolValuePtr> m_values;
+	std::map<std::string, CuttingToolValuePtr> m_measurements;
+	std::vector<CuttingToolValuePtr> m_lives;
 };
 
-class CuttingTool : public Asset {
+class CuttingTool : public Asset
+{
 public:
-  CuttingTool(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
-              bool aRemoved = false)
-    : Asset(aAssetId, aType, aContent, aRemoved) {}
-  ~CuttingTool();
-  
-  virtual void addIdentity(const std::string &aKey, const std::string &aValue);
-  void addValue(const CuttingToolValuePtr aValue);
-  void updateValue(const std::string &aKey, const std::string &aValue);
-  
-  virtual std::string &getContent();
-  virtual void changed() { m_content.clear(); }
+	CuttingTool(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
+		bool aRemoved = false)
+	: Asset(aAssetId, aType, aContent, aRemoved) {}
+	~CuttingTool();
+
+	virtual void addIdentity(const std::string &aKey, const std::string &aValue);
+	void addValue(const CuttingToolValuePtr aValue);
+	void updateValue(const std::string &aKey, const std::string &aValue);
+
+	virtual std::string &getContent();
+	virtual void changed() { m_content.clear(); }
 
 public:
-  std::vector<std::string> m_status;
-  std::map<std::string,CuttingToolValuePtr> m_values;
-  std::map<std::string,CuttingToolValuePtr> m_measurements;  
-  std::string m_itemCount;
-  std::vector<CuttingItemPtr> m_items;
-  std::vector<CuttingToolValuePtr> m_lives;
+	std::vector<std::string> m_status;
+	std::map<std::string, CuttingToolValuePtr> m_values;
+	std::map<std::string, CuttingToolValuePtr> m_measurements;
+	std::string m_itemCount;
+	std::vector<CuttingItemPtr> m_items;
+	std::vector<CuttingToolValuePtr> m_lives;
 };

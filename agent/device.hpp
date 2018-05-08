@@ -25,34 +25,34 @@ class Component;
 class Adapter;
 
 class Device : public Component
-{ 
+{
 public:
-  /* Constructor that sets variables from an attribute map */
-  Device(std::map<std::string, std::string> attributes);
-  
-  /* Destructor */
-  ~Device();
-    
-  /* Add/get items to/from the device name to data item mapping */
-  void addDeviceDataItem(DataItem& dataItem);
-  DataItem * getDeviceDataItem(const std::string& aName);
-  void addAdapter(Adapter *anAdapter) { m_adapters.push_back(anAdapter); }
-  
-  /* Return the mapping of Device to data items */
-  const std::map<std::string, DataItem *> &getDeviceDataItems() const {
-    return m_deviceDataItemsById;
-  }
+	// Constructor that sets variables from an attribute map
+	Device(std::map<std::string, std::string> attributes);
 
-  std::vector<Adapter*> m_adapters;
-  bool m_preserveUuid;
-  bool m_availabilityAdded;
+	~Device();
+
+	// Add/get items to/from the device name to data item mapping
+	void addDeviceDataItem(DataItem &dataItem);
+	DataItem *getDeviceDataItem(const std::string &aName);
+	void addAdapter(Adapter *anAdapter) { m_adapters.push_back(anAdapter); }
+
+	// Return the mapping of Device to data items
+	const std::map<std::string, DataItem *> &getDeviceDataItems() const
+	{
+	return m_deviceDataItemsById;
+	}
+
+	std::vector<Adapter *> m_adapters;
+	bool m_preserveUuid;
+	bool m_availabilityAdded;
 
 protected:
-  /* The iso841Class of the device */
-  unsigned int m_iso841Class;
-  
-  /* Mapping of device names to data items*/
-  std::map<std::string, DataItem *> m_deviceDataItemsByName;
-  std::map<std::string, DataItem *> m_deviceDataItemsById;
-  std::map<std::string, DataItem *> m_deviceDataItemsBySource;
+	// The iso841Class of the device
+	unsigned int m_iso841Class;
+
+	// Mapping of device names to data items
+	std::map<std::string, DataItem *> m_deviceDataItemsByName;
+	std::map<std::string, DataItem *> m_deviceDataItemsById;
+	std::map<std::string, DataItem *> m_deviceDataItemsBySource;
 };

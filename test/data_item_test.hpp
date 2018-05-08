@@ -44,42 +44,42 @@
 
 class DataItemTest : public CppUnit::TestFixture
 {
-  CPPUNIT_TEST_SUITE(DataItemTest);
-  CPPUNIT_TEST(testGetters);
-  CPPUNIT_TEST(testGetAttributes);
-  CPPUNIT_TEST(testHasNameAndSource);
-  CPPUNIT_TEST(testIsSample);
-  CPPUNIT_TEST(testComponent);
-  CPPUNIT_TEST(testGetCamel);
-  CPPUNIT_TEST(testConversion);
-  CPPUNIT_TEST(testCondition);
-  CPPUNIT_TEST(testTimeSeries);
-  CPPUNIT_TEST(testStatistic);
-  CPPUNIT_TEST(testSampleRate);
-  CPPUNIT_TEST(testDuplicates);
-  CPPUNIT_TEST(testFilter);
-  CPPUNIT_TEST_SUITE_END();
-  
+	CPPUNIT_TEST_SUITE(DataItemTest);
+	CPPUNIT_TEST(testGetters);
+	CPPUNIT_TEST(testGetAttributes);
+	CPPUNIT_TEST(testHasNameAndSource);
+	CPPUNIT_TEST(testIsSample);
+	CPPUNIT_TEST(testComponent);
+	CPPUNIT_TEST(testGetCamel);
+	CPPUNIT_TEST(testConversion);
+	CPPUNIT_TEST(testCondition);
+	CPPUNIT_TEST(testTimeSeries);
+	CPPUNIT_TEST(testStatistic);
+	CPPUNIT_TEST(testSampleRate);
+	CPPUNIT_TEST(testDuplicates);
+	CPPUNIT_TEST(testFilter);
+	CPPUNIT_TEST_SUITE_END();
+
 protected:
-  DataItem * m_dataItemA, * m_dataItemB, * m_dataItemC;
-  
+	DataItem *m_dataItemA, * m_dataItemB, * m_dataItemC;
+
 protected:
-  void testGetters();
-  void testGetAttributes();
-  void testHasNameAndSource();
-  void testIsSample();
-  void testComponent();
-  void testGetCamel();
-  void testConversion();
-  void testCondition();
-  void testTimeSeries();
-  void testStatistic();
-  void testSampleRate();
-  void testDuplicates();
-  void testFilter();
-  void testReferences();
-  
+	void testGetters();
+	void testGetAttributes();
+	void testHasNameAndSource();
+	void testIsSample();
+	void testComponent();
+	void testGetCamel();
+	void testConversion();
+	void testCondition();
+	void testTimeSeries();
+	void testStatistic();
+	void testSampleRate();
+	void testDuplicates();
+	void testFilter();
+	void testReferences();
+
 public:
-  void setUp();
-  void tearDown();
+	void setUp();
+	void tearDown();
 };
