@@ -34,11 +34,23 @@ typedef RefCountedPtr<CuttingItem> CuttingItemPtr;
 class CuttingToolValue : public RefCounted
 {
 public:
-	CuttingToolValue(const std::string &aKey, const std::string &aValue)
-	: m_key(aKey), m_value(aValue) {}
-	CuttingToolValue() {}
-	CuttingToolValue(const CuttingToolValue &aOther)
-	: m_properties(aOther.m_properties), m_key(aOther.m_key), m_value(aOther.m_value)  {}
+	CuttingToolValue(const std::string &aKey, const std::string &aValue) :
+		m_key(aKey),
+		m_value(aValue)
+	{
+	}
+
+	CuttingToolValue()
+	{
+	}
+
+	CuttingToolValue(const CuttingToolValue &another) :
+		m_properties(another.m_properties),
+		m_key(another.m_key),
+		m_value(another.m_value)
+	{
+	}
+
 	virtual ~CuttingToolValue();
 
 public:
@@ -46,6 +58,7 @@ public:
 	std::string m_key;
 	std::string m_value;
 };
+
 
 class CuttingItem : public RefCounted
 {
@@ -59,20 +72,28 @@ public:
 	std::vector<CuttingToolValuePtr> m_lives;
 };
 
+
 class CuttingTool : public Asset
 {
 public:
-	CuttingTool(const std::string &aAssetId, const std::string &aType, const std::string &aContent,
-		bool aRemoved = false)
-	: Asset(aAssetId, aType, aContent, aRemoved) {}
+	CuttingTool(
+		const std::string &assetId,
+		const std::string &type,
+		const std::string &content,
+		bool removed = false)
+		:
+		Asset(assetId, type, content, removed)
+	{
+	}
 	~CuttingTool();
 
-	virtual void addIdentity(const std::string &aKey, const std::string &aValue);
-	void addValue(const CuttingToolValuePtr aValue);
-	void updateValue(const std::string &aKey, const std::string &aValue);
+	virtual void addIdentity(const std::string &key, const std::string &value);
+	void addValue(const CuttingToolValuePtr value);
+	void updateValue(const std::string &key, const std::string &value);
 
 	virtual std::string &getContent();
-	virtual void changed() { m_content.clear(); }
+	virtual void changed() {
+		m_content.clear(); }
 
 public:
 	std::vector<std::string> m_status;

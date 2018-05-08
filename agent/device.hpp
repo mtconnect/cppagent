@@ -34,13 +34,13 @@ public:
 
 	// Add/get items to/from the device name to data item mapping
 	void addDeviceDataItem(DataItem &dataItem);
-	DataItem *getDeviceDataItem(const std::string &aName);
-	void addAdapter(Adapter *anAdapter) { m_adapters.push_back(anAdapter); }
+	DataItem *getDeviceDataItem(const std::string &name);
+	void addAdapter(Adapter *anAdapter) {
+		m_adapters.push_back(anAdapter); }
 
 	// Return the mapping of Device to data items
-	const std::map<std::string, DataItem *> &getDeviceDataItems() const
-	{
-	return m_deviceDataItemsById;
+	const std::map<std::string, DataItem *> &getDeviceDataItems() const {
+		return m_deviceDataItemsById;
 	}
 
 	std::vector<Adapter *> m_adapters;

@@ -38,46 +38,67 @@ class Adapter : public Connector, public threaded_object
 public:
 	// Associate adapter with a device & connect to the server & port
 	Adapter(const std::string &device,
-		const std::string &server,
-		const unsigned int port,
-		int aLegacyTimeout = 600);
+			const std::string &server, 
+			const unsigned int port,
+			int legacyTimeout = 600);
 
 	// Virtual destructor
 	virtual ~Adapter();
 
 	// Set pointer to the agent
 	void setAgent(Agent &agent);
-	bool isDupChecking() { return m_dupCheck; }
-	void setDupCheck(bool aFlag) { m_dupCheck = aFlag; }
-	Device *getDevice() const { return m_device; }
+	bool isDupChecking() const {
+		return m_dupCheck; }
+	void setDupCheck(bool flag) {
+		m_dupCheck = flag; }
+	Device *getDevice() const {
+		return m_device; }
 
-	bool isAutoAvailable() { return m_autoAvailable; }
-	void setAutoAvailable(bool aFlag) { m_autoAvailable = aFlag; }
+	bool isAutoAvailable() const {
+		return m_autoAvailable; }
+	void setAutoAvailable(bool flag) {
+		m_autoAvailable = flag; }
 
-	bool isIgnoringTimestamps() { return m_ignoreTimestamps; }
-	void setIgnoreTimestamps(bool aFlag) { m_ignoreTimestamps = aFlag; }
+	bool isIgnoringTimestamps() const {
+		return m_ignoreTimestamps; }
+	void setIgnoreTimestamps(bool flag) {
+		m_ignoreTimestamps = flag; }
 
-	void setReconnectInterval(int aInterval) { m_reconnectInterval = aInterval; }
-	int getReconnectInterval() const { return m_reconnectInterval; }
+	void setReconnectInterval(int interval) {
+		m_reconnectInterval = interval; }
+	int getReconnectInterval() const {
+		return m_reconnectInterval; }
 
-	void setRelativeTime(bool aFlag) { m_relativeTime = aFlag; }
-	bool getrelativeTime() { return m_relativeTime; }
+	void setRelativeTime(bool flag) {
+		m_relativeTime = flag; }
+	bool getrelativeTime() const {
+		return m_relativeTime; }
 
-	void setConversionRequired(bool aFlag) { m_conversionRequired = aFlag; }
-	bool conversionRequired() const { return m_conversionRequired; }
+	void setConversionRequired(bool flag) {
+		m_conversionRequired = flag; }
+	bool conversionRequired() const {
+		return m_conversionRequired; }
 
-	void setUpcaseValue(bool aFlag) { m_upcaseValue = aFlag; }
-	bool upcaseValue() const { return m_upcaseValue; }
+	void setUpcaseValue(bool flag) {
+		m_upcaseValue = flag; }
+	bool upcaseValue() const {
+		return m_upcaseValue; }
 
-	uint64_t getBaseTime() { return m_baseTime; }
-	uint64_t getBaseOffset() { return m_baseOffset; }
+	uint64_t getBaseTime() const {
+		return m_baseTime; }
+	uint64_t getBaseOffset() const {
+		return m_baseOffset; }
 
-	bool isParsingTime() { return m_parseTime; }
-	void setParseTime(bool aFlag) { m_parseTime = aFlag; }
+	bool isParsingTime() const {
+		return m_parseTime; }
+	void setParseTime(bool flag) {
+		m_parseTime = flag; }
 
 	// For testing...
-	void setBaseOffset(uint64_t aOffset) { m_baseOffset = aOffset; }
-	void setBaseTime(uint64_t aOffset) { m_baseTime = aOffset; }
+	void setBaseOffset(uint64_t offset) {
+		m_baseOffset = offset; }
+	void setBaseTime(uint64_t offset) {
+		m_baseTime = offset; }
 
 	// Inherited method to incoming data from the server
 	virtual void processData(const std::string &data);
@@ -87,35 +108,41 @@ public:
 	virtual void disconnected();
 	virtual void connected();
 
-	bool isDuplicate(DataItem *aDataItem, const std::string &aValue, double aTimeOffset)
+	bool isDuplicate(DataItem *dataItem, const std::string &value, double timeOffset) const
 	{
-	if (!aDataItem->isDiscrete())
-	{
-		if (aDataItem->hasMinimumDelta() || aDataItem->hasMinimumPeriod())
-		return aDataItem->isFiltered(aDataItem->convertValue(atof(aValue.c_str())), aTimeOffset);
+		if (!dataItem->isDiscrete())
+		{
+			if (dataItem->hasMinimumDelta() || dataItem->hasMinimumPeriod())
+				return dataItem->isFiltered(dataItem->convertValue(atof(value.c_str())), timeOffset);
+			else
+				return  m_dupCheck && dataItem->isDuplicate(value);
+		}
 		else
-		return  m_dupCheck && aDataItem->isDuplicate(aValue);
-	}
-	else
-	{
-		return false;
-	}
+			return false;
 	}
 
 	// Stop
 	void stop();
 
 	// For the additional devices associated with this adapter
-	void addDevice(std::string &aDevice);
+	void addDevice(std::string &device);
 
 protected:
-	void parseCalibration(const std::string &aString);
-	void processAsset(std::istringstream &toParse, const std::string &key, const std::string &value,
-			  const std::string &time);
-	bool processDataItem(std::istringstream &toParse, const std::string &aLine,
-			 const std::string &aKey, const std::string &aValue,
-			 const std::string &aTime, double anOffset, bool aFirst = false);
-	std::string extractTime(const std::string &time, double &anOffset);
+	void parseCalibration(const std::string &calibString);
+	void processAsset(
+		std::istringstream &toParse,
+		const std::string &key,
+		const std::string &value,
+		const std::string &time);
+	bool processDataItem(
+		std::istringstream &toParse,
+		const std::string &line,
+		const std::string &key,
+		const std::string &value,
+		const std::string &time,
+		double offset,
+		bool first = false);
+	std::string extractTime(const std::string &time, double &offset);
 
 protected:
 	// Pointer to the agent

@@ -23,22 +23,28 @@
 #include <set>
 #include <dlib/array.h>
 
+
 class Checkpoint
 {
 public:
 	Checkpoint();
-	Checkpoint(Checkpoint &aCheckpoint, std::set<std::string> *aFilter = NULL);
+	Checkpoint(Checkpoint &checkpoint, std::set<std::string> *filterSet = NULL);
 	~Checkpoint();
 
-	void addComponentEvent(ComponentEvent *aEvent);
-	void copy(Checkpoint &aCheckpoint, std::set<std::string> *aFilter = NULL);
+	void addComponentEvent(ComponentEvent *event);
+	void copy(Checkpoint &checkpoint, std::set<std::string> *filterSet = NULL);
 	void clear();
-	void filter(std::set<std::string> &aFilter);
+	void filter(std::set<std::string> &filterSet);
 
-	std::map<std::string, ComponentEventPtr *> &getEvents() { return m_events; }
+	std::map<std::string, ComponentEventPtr *> &getEvents() {
+		return m_events; }
+
 	void getComponentEvents(ComponentEventPtrArray &list,
-				std::set<std::string> *aFilter = NULL);
-	ComponentEventPtr *getEventPtr(std::string anId) { return m_events[anId]; }
+		std::set<std::string> *filterSet = NULL);
+
+	ComponentEventPtr *getEventPtr(const std::string &id) {
+		return m_events[id]; }
+
 
 protected:
 	std::map<std::string, ComponentEventPtr *> m_events;

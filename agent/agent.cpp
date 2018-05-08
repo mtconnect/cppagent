@@ -91,7 +91,7 @@ Agent::Agent(const string &configXmlPath, int aBufferSize, int aMaxAssets, int a
 	m_slidingBufferSize = 1 << aBufferSize;
 	m_slidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
 	m_slidingBuffer->set_size(aBufferSize);
-	mCheckpointFreq = aCheckpointFreq;
+	m_checkpointFreq = aCheckpointFreq;
 	m_checkpointCount = (m_slidingBufferSize / aCheckpointFreq) + 1;
 
 	// Asset sliding buffer
@@ -500,10 +500,10 @@ unsigned int Agent::addToBuffer(DataItem *dataItem,
 	// Checkpoint management
 	int index = m_slidingBuffer->get_element_id(seqNum);
 
-	if (m_checkpointCount > 0 && index % mCheckpointFreq == 0)
+	if (m_checkpointCount > 0 && index % m_checkpointFreq == 0)
 	{
 	// Copy the checkpoint from the current into the slot
-	m_checkpoints[index / mCheckpointFreq].copy(m_latest);
+	m_checkpoints[index / m_checkpointFreq].copy(m_latest);
 	}
 
 
@@ -1511,8 +1511,8 @@ string Agent::fetchCurrentData(std::set<string> &aFilter, uint64_t at)
 	{
 		long pos = (long) m_slidingBuffer->get_element_id(at);
 		long first = (long) m_slidingBuffer->get_element_id(firstSeq);
-		long checkIndex = pos / mCheckpointFreq;
-		long closestCp = checkIndex * mCheckpointFreq;
+		long checkIndex = pos / m_checkpointFreq;
+		long closestCp = checkIndex * m_checkpointFreq;
 		unsigned long index;
 
 		Checkpoint *ref;
