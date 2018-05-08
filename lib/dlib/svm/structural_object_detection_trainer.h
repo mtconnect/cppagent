@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_STRUCTURAL_OBJECT_DETECTION_TRAiNER_H__
-#define DLIB_STRUCTURAL_OBJECT_DETECTION_TRAiNER_H__
+#ifndef DLIB_STRUCTURAL_OBJECT_DETECTION_TRAiNER_Hh_
+#define DLIB_STRUCTURAL_OBJECT_DETECTION_TRAiNER_Hh_
 
 #include "structural_object_detection_trainer_abstract.h"
 #include "../algs.h"
@@ -14,6 +14,21 @@
 
 namespace dlib
 {
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_scanner_type,
+        typename svm_struct_prob_type
+        >
+    void configure_nuclear_norm_regularizer (
+        const image_scanner_type&,
+        svm_struct_prob_type& 
+    )
+    { 
+        // does nothing by default.  Specific scanner types overload this function to do
+        // whatever is appropriate.
+    }
 
 // ----------------------------------------------------------------------------------------
 
@@ -42,7 +57,7 @@ namespace dlib
 
             C = 1;
             verbose = false;
-            eps = 0.3;
+            eps = 0.1;
             num_threads = 2;
             max_cache_size = 5;
             match_eps = 0.5;
@@ -248,12 +263,76 @@ namespace dlib
             const std::vector<std::vector<full_object_detection> >& truth_object_detections
         ) const
         {
+            std::vector<std::vector<rectangle> > empty_ignore(images.size());
+            return train_impl(images, truth_object_detections, empty_ignore, test_box_overlap());
+        }
+
+        template <
+            typename image_array_type
+            >
+        const trained_function_type train (
+            const image_array_type& images,
+            const std::vector<std::vector<full_object_detection> >& truth_object_detections,
+            const std::vector<std::vector<rectangle> >& ignore,
+            const test_box_overlap& ignore_overlap_tester = test_box_overlap()
+        ) const
+        {
+            return train_impl(images, truth_object_detections, ignore, ignore_overlap_tester);
+        }
+
+        template <
+            typename image_array_type
+            >
+        const trained_function_type train (
+            const image_array_type& images,
+            const std::vector<std::vector<rectangle> >& truth_object_detections
+        ) const
+        {
+            std::vector<std::vector<rectangle> > empty_ignore(images.size());
+            return train(images, truth_object_detections, empty_ignore, test_box_overlap());
+        }
+
+        template <
+            typename image_array_type
+            >
+        const trained_function_type train (
+            const image_array_type& images,
+            const std::vector<std::vector<rectangle> >& truth_object_detections,
+            const std::vector<std::vector<rectangle> >& ignore,
+            const test_box_overlap& ignore_overlap_tester = test_box_overlap()
+        ) const
+        {
+            std::vector<std::vector<full_object_detection> > truth_dets(truth_object_detections.size());
+            for (unsigned long i = 0; i < truth_object_detections.size(); ++i)
+            {
+                for (unsigned long j = 0; j < truth_object_detections[i].size(); ++j)
+                {
+                    truth_dets[i].push_back(full_object_detection(truth_object_detections[i][j]));
+                }
+            }
+
+            return train_impl(images, truth_dets, ignore, ignore_overlap_tester);
+        }
+
+    private:
+
+        template <
+            typename image_array_type
+            >
+        const trained_function_type train_impl (
+            const image_array_type& images,
+            const std::vector<std::vector<full_object_detection> >& truth_object_detections,
+            const std::vector<std::vector<rectangle> >& ignore,
+            const test_box_overlap& ignore_overlap_tester
+        ) const
+        {
 #ifdef ENABLE_ASSERTS
             // make sure requires clause is not broken
-            DLIB_ASSERT(is_learning_problem(images,truth_object_detections) == true,
+            DLIB_ASSERT(is_learning_problem(images,truth_object_detections) == true && images.size() == ignore.size(),
                 "\t trained_function_type structural_object_detection_trainer::train()"
                 << "\n\t invalid inputs were given to this function"
                 << "\n\t images.size():      " << images.size()
+                << "\n\t ignore.size():      " << ignore.size()
                 << "\n\t truth_object_detections.size(): " << truth_object_detections.size()
                 << "\n\t is_learning_problem(images,truth_object_detections): " << is_learning_problem(images,truth_object_detections)
                 );
@@ -276,7 +355,8 @@ namespace dlib
 #endif
 
             structural_svm_object_detection_problem<image_scanner_type,image_array_type > 
-                svm_prob(scanner, overlap_tester, auto_overlap_tester, images, truth_object_detections, num_threads);
+                svm_prob(scanner, overlap_tester, auto_overlap_tester, images,
+                    truth_object_detections, ignore, ignore_overlap_tester, num_threads);
 
             if (verbose)
                 svm_prob.be_verbose();
@@ -287,6 +367,7 @@ namespace dlib
             svm_prob.set_match_eps(match_eps);
             svm_prob.set_loss_per_missed_target(loss_per_missed_target);
             svm_prob.set_loss_per_false_alarm(loss_per_false_alarm);
+            configure_nuclear_norm_regularizer(scanner, svm_prob);
             matrix<double,0,1> w;
 
             // Run the optimizer to find the optimal w.
@@ -295,28 +376,6 @@ namespace dlib
             // report the results of the training.
             return object_detector<image_scanner_type>(scanner, svm_prob.get_overlap_tester(), w);
         }
-
-        template <
-            typename image_array_type
-            >
-        const trained_function_type train (
-            const image_array_type& images,
-            const std::vector<std::vector<rectangle> >& truth_object_detections
-        ) const
-        {
-            std::vector<std::vector<full_object_detection> > truth_dets(truth_object_detections.size());
-            for (unsigned long i = 0; i < truth_object_detections.size(); ++i)
-            {
-                for (unsigned long j = 0; j < truth_object_detections[i].size(); ++j)
-                {
-                    truth_dets[i].push_back(full_object_detection(truth_object_detections[i][j]));
-                }
-            }
-
-            return train(images, truth_dets);
-        }
-
-    private:
 
         image_scanner_type scanner;
         test_box_overlap overlap_tester;
@@ -338,6 +397,6 @@ namespace dlib
 
 }
 
-#endif // DLIB_STRUCTURAL_OBJECT_DETECTION_TRAiNER_H__
+#endif // DLIB_STRUCTURAL_OBJECT_DETECTION_TRAiNER_Hh_
 
 

@@ -18,6 +18,7 @@
 #include "../optimization.h"
 #include "svm_nu_trainer.h"
 #include <vector>
+#include <set>
 
 namespace dlib
 {
@@ -109,9 +110,6 @@ namespace dlib
         const in_scalar_vector_type& y_test
     )
     {
-        typedef typename dec_funct_type::sample_type sample_type;
-        typedef typename dec_funct_type::mem_manager_type mem_manager_type;
-        typedef matrix<sample_type,0,1,mem_manager_type> sample_vector_type;
 
         // make sure requires clause is not broken
         DLIB_ASSERT( is_binary_classification_problem(x_test,y_test) == true,
@@ -312,6 +310,96 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
+        typename detection_type_,
+        typename label_type_ = long
+        >
+    struct labeled_detection
+    {
+        typedef detection_type_ detection_type;
+        typedef label_type_ label_type;
+        detection_type det;
+        label_type label;
+    };
+
+    template <
+        typename detection_type_,
+        typename label_type_ 
+        >
+    inline void serialize ( const labeled_detection<detection_type_,label_type_>& item, std::ostream& out)
+    {
+        serialize(item.det, out);
+        serialize(item.label, out);
+    }
+
+    template <
+        typename detection_type_,
+        typename label_type_ 
+        >
+    inline void deserialize (labeled_detection<detection_type_,label_type_>& item, std::istream& in)
+    {
+        deserialize(item.det, in);
+        deserialize(item.label, in);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename detection_type, 
+        typename label_type 
+        >
+    bool is_track_association_problem (
+        const std::vector<std::vector<labeled_detection<detection_type,label_type> > >& samples
+    )
+    {
+        if (samples.size() == 0)
+            return false;
+
+        unsigned long num_nonzero_elements = 0;
+        for (unsigned long i = 0; i < samples.size(); ++i)
+        {
+            if (samples.size() > 0)
+                ++num_nonzero_elements;
+        }
+        if (num_nonzero_elements < 2)
+            return false;
+
+        // now make sure the label_type values are unique within each time step.
+        for (unsigned long i = 0; i < samples.size(); ++i)
+        {
+            std::set<label_type> vals;
+            for (unsigned long j = 0; j < samples[i].size(); ++j)
+                vals.insert(samples[i][j].label);
+            if (vals.size() != samples[i].size())
+                return false;
+        }
+
+        // passed all tests so it's good
+        return true;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename detection_type, 
+        typename label_type 
+        >
+    bool is_track_association_problem (
+        const std::vector<std::vector<std::vector<labeled_detection<detection_type,label_type> > > >& samples
+    )
+    {
+        for (unsigned long i = 0; i < samples.size(); ++i)
+        {
+            if (!is_track_association_problem(samples[i]))
+                return false;
+        }
+
+        // passed all tests so it's good
+        return true;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
         typename trainer_type,
         typename in_sample_vector_type,
         typename in_scalar_vector_type
@@ -325,17 +413,15 @@ namespace dlib
     )
     {
         typedef typename in_scalar_vector_type::value_type scalar_type;
-        typedef typename trainer_type::sample_type sample_type;
         typedef typename trainer_type::mem_manager_type mem_manager_type;
-        typedef matrix<sample_type,0,1,mem_manager_type> sample_vector_type;
         typedef matrix<scalar_type,0,1,mem_manager_type> scalar_vector_type;
 
         // make sure requires clause is not broken
         DLIB_ASSERT(is_binary_classification_problem(x,y) == true &&
-                    1 < folds && folds <= x.nr(),
+                    1 < folds && folds <= std::min(sum(y>0),sum(y<0)),
             "\tmatrix cross_validate_trainer()"
             << "\n\t invalid inputs were given to this function"
-            << "\n\t x.nr(): " << x.nr() 
+            << "\n\t std::min(sum(y>0),sum(y<0)): " << std::min(sum(y>0),sum(y<0))
             << "\n\t folds:  " << folds 
             << "\n\t is_binary_classification_problem(x,y): " << ((is_binary_classification_problem(x,y))? "true":"false")
             );
@@ -359,7 +445,7 @@ namespace dlib
         const long num_neg_train_samples = num_neg - num_neg_test_samples; 
 
 
-        sample_vector_type x_test, x_train;
+        matrix<long,0,1> x_test, x_train;
         scalar_vector_type y_test, y_train;
         x_test.set_size (num_pos_test_samples  + num_neg_test_samples);
         y_test.set_size (num_pos_test_samples  + num_neg_test_samples);
@@ -381,7 +467,7 @@ namespace dlib
             {
                 if (y(pos_idx) == +1.0)
                 {
-                    x_test(cur) = x(pos_idx);
+                    x_test(cur) = pos_idx;
                     y_test(cur) = +1.0;
                     ++cur;
                 }
@@ -393,7 +479,7 @@ namespace dlib
             {
                 if (y(neg_idx) == -1.0)
                 {
-                    x_test(cur) = x(neg_idx);
+                    x_test(cur) = neg_idx;
                     y_test(cur) = -1.0;
                     ++cur;
                 }
@@ -411,7 +497,7 @@ namespace dlib
             {
                 if (y(train_pos_idx) == +1.0)
                 {
-                    x_train(cur) = x(train_pos_idx);
+                    x_train(cur) = train_pos_idx;
                     y_train(cur) = +1.0;
                     ++cur;
                 }
@@ -423,7 +509,7 @@ namespace dlib
             {
                 if (y(train_neg_idx) == -1.0)
                 {
-                    x_train(cur) = x(train_neg_idx);
+                    x_train(cur) = train_neg_idx;
                     y_train(cur) = -1.0;
                     ++cur;
                 }
@@ -433,7 +519,7 @@ namespace dlib
             try
             {
                 // do the training and testing
-                res += test_binary_decision_function(trainer.train(x_train,y_train),x_test,y_test);
+                res += test_binary_decision_function(trainer.train(rowm(x,x_train),y_train),rowm(x,x_test),y_test);
             }
             catch (invalid_nu_error&)
             {
@@ -821,7 +907,7 @@ namespace dlib
     {
         typedef probabilistic_function<typename trainer_type::trained_function_type> trained_function_type;
 
-        const trainer_type& trainer;
+        const trainer_type trainer;
         const long folds;
 
         trainer_adapter_probabilistic (
@@ -886,11 +972,8 @@ namespace dlib
         long n = t.size()-1;
         while (n > 0)
         {
-            // put a random integer into idx
-            unsigned long idx = r.get_random_32bit_number();
-
-            // make idx be less than n
-            idx %= n;
+            // pick a random index to swap into t[n]
+            const unsigned long idx = r.get_random_32bit_number()%(n+1);
 
             // swap our randomly selected index into the n position
             exchange(t(idx), t(n));
@@ -928,11 +1011,8 @@ namespace dlib
         long n = t.size()-1;
         while (n > 0)
         {
-            // put a random integer into idx
-            unsigned long idx = r.get_random_32bit_number();
-
-            // make idx be less than n
-            idx %= n;
+            // pick a random index to swap into t[n]
+            const unsigned long idx = r.get_random_32bit_number()%(n+1);
 
             // swap our randomly selected index into the n position
             exchange(t[idx], t[n]);
@@ -987,11 +1067,8 @@ namespace dlib
         long n = t.size()-1;
         while (n > 0)
         {
-            // put a random integer into idx
-            unsigned long idx = r.get_random_32bit_number();
-
-            // make idx be less than n
-            idx %= n;
+            // pick a random index to swap into t[n]
+            const unsigned long idx = r.get_random_32bit_number()%(n+1);
 
             // swap our randomly selected index into the n position
             exchange(t(idx), t(n));
@@ -1025,11 +1102,8 @@ namespace dlib
         long n = t.size()-1;
         while (n > 0)
         {
-            // put a random integer into idx
-            unsigned long idx = r.get_random_32bit_number();
-
-            // make idx be less than n
-            idx %= n;
+            // pick a random index to swap into t[n]
+            const unsigned long idx = r.get_random_32bit_number()%(n+1);
 
             // swap our randomly selected index into the n position
             exchange(t[idx], t[n]);
@@ -1076,11 +1150,8 @@ namespace dlib
         long n = t.size()-1;
         while (n > 0)
         {
-            // put a random integer into idx
-            unsigned long idx = r.get_random_32bit_number();
-
-            // make idx be less than n
-            idx %= n;
+            // pick a random index to swap into t[n]
+            const unsigned long idx = r.get_random_32bit_number()%(n+1);
 
             // swap our randomly selected index into the n position
             exchange(t(idx), t(n));
@@ -1103,11 +1174,8 @@ namespace dlib
         long n = t.size()-1;
         while (n > 0)
         {
-            // put a random integer into idx
-            unsigned long idx = r.get_random_32bit_number();
-
-            // make idx be less than n
-            idx %= n;
+            // pick a random index to swap into t[n]
+            const unsigned long idx = r.get_random_32bit_number()%(n+1);
 
             // swap our randomly selected index into the n position
             exchange(t[idx], t[n]);

@@ -1,13 +1,14 @@
 // Copyright (C) 2012  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_IOSOCKSTrEAM_H__
-#define DLIB_IOSOCKSTrEAM_H__
+#ifndef DLIB_IOSOCKSTrEAM_Hh_
+#define DLIB_IOSOCKSTrEAM_Hh_
 
 #include "iosockstream_abstract.h"
 
 #include <iostream>
+#include <memory>
+
 #include "../sockstreambuf.h"
-#include "../smart_pointers_thread_safe.h"
 #include "../timeout.h"
 
 #ifdef _MSC_VER
@@ -59,6 +60,7 @@ namespace dlib
             const network_address& addr
         )
         {
+            auto_mutex lock(class_mutex);
             close();
             con.reset(connect(addr));
             buf.reset(new sockstreambuf(con.get()));
@@ -79,6 +81,7 @@ namespace dlib
             unsigned long timeout
         )
         {
+            auto_mutex lock(class_mutex);
             close(timeout);
             con.reset(connect(addr.host_address, addr.port, timeout));
             buf.reset(new sockstreambuf(con.get()));
@@ -91,6 +94,7 @@ namespace dlib
             unsigned long timeout = 10000
         )
         {
+            auto_mutex lock(class_mutex);
             rdbuf(0);
             try
             {
@@ -126,24 +130,34 @@ namespace dlib
             unsigned long timeout
         )
         {
+            auto_mutex lock(class_mutex);
             if (con)
             {
                 con_timeout.reset(new dlib::timeout(*this,&iosockstream::terminate_connection,timeout,con));
             }
         }
 
+        void shutdown (
+        ) 
+        {
+            auto_mutex lock(class_mutex);
+            if (con)
+                con->shutdown();
+        }
+
     private:
 
         void terminate_connection(
-            shared_ptr_thread_safe<connection> thecon
+            std::shared_ptr<connection> thecon
         )
         {
             thecon->shutdown();
         }
 
-        scoped_ptr<timeout> con_timeout;
-        shared_ptr_thread_safe<connection> con;
-        scoped_ptr<sockstreambuf> buf;
+        std::unique_ptr<timeout> con_timeout;
+        rmutex class_mutex; 
+        std::shared_ptr<connection> con;
+        std::unique_ptr<sockstreambuf> buf;
 
     };
 
@@ -152,6 +166,6 @@ namespace dlib
 }
 
 
-#endif // DLIB_IOSOCKSTrEAM_H__
+#endif // DLIB_IOSOCKSTrEAM_Hh_
 
 

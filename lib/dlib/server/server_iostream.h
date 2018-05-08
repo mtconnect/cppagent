@@ -74,16 +74,13 @@ namespace dlib
         )
         {
             bool my_fault = true;
-            uint64 this_con_id;
+            uint64 this_con_id=0;
             try
             {
                 sockstreambuf buf(&con);
                 std::istream in(&buf);
                 std::ostream out(&buf);
                 in.tie(&out);
-                
-                // Set the timeout for server connections
-                buf.set_read_timeout(10000);
 
                 // add this connection to the con_map
                 {

@@ -44,6 +44,7 @@ namespace dlib
         #define DLIB_TEST_BLAS_BINDING_SCAL
 #endif
 
+#ifndef CBLAS_H
         extern "C"
         {
             // Here we declare the prototypes for the CBLAS calls used by the BLAS bindings below
@@ -62,56 +63,56 @@ namespace dlib
             void cblas_cscal(const int N, const void *alpha, void *X, const int incX);
             void cblas_zscal(const int N, const void *alpha, void *X, const int incX);
 
-            void cblas_sgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
-                             const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+            void cblas_sgemm(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE TransA,
+                             const CBLAS_TRANSPOSE TransB, const int M, const int N,
                              const int K, const float alpha, const float *A,
                              const int lda, const float *B, const int ldb,
                              const float beta, float *C, const int ldc);
-            void cblas_dgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
-                             const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+            void cblas_dgemm(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE TransA,
+                             const CBLAS_TRANSPOSE TransB, const int M, const int N,
                              const int K, const double alpha, const double *A,
                              const int lda, const double *B, const int ldb,
                              const double beta, double *C, const int ldc);
-            void cblas_cgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
-                             const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+            void cblas_cgemm(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE TransA,
+                             const CBLAS_TRANSPOSE TransB, const int M, const int N,
                              const int K, const void *alpha, const void *A,
                              const int lda, const void *B, const int ldb,
                              const void *beta, void *C, const int ldc);
-            void cblas_zgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
-                             const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+            void cblas_zgemm(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE TransA,
+                             const CBLAS_TRANSPOSE TransB, const int M, const int N,
                              const int K, const void *alpha, const void *A,
                              const int lda, const void *B, const int ldb,
                              const void *beta, void *C, const int ldc);
-            void cblas_sgemv(const enum CBLAS_ORDER order,
-                             const enum CBLAS_TRANSPOSE TransA, const int M, const int N,
+            void cblas_sgemv(const CBLAS_ORDER order,
+                             const CBLAS_TRANSPOSE TransA, const int M, const int N,
                              const float alpha, const float *A, const int lda,
                              const float *X, const int incX, const float beta,
                              float *Y, const int incY);
-            void cblas_dgemv(const enum CBLAS_ORDER order,
-                             const enum CBLAS_TRANSPOSE TransA, const int M, const int N,
+            void cblas_dgemv(const CBLAS_ORDER order,
+                             const CBLAS_TRANSPOSE TransA, const int M, const int N,
                              const double alpha, const double *A, const int lda,
                              const double *X, const int incX, const double beta,
                              double *Y, const int incY);
-            void cblas_cgemv(const enum CBLAS_ORDER order,
-                             const enum CBLAS_TRANSPOSE TransA, const int M, const int N,
+            void cblas_cgemv(const CBLAS_ORDER order,
+                             const CBLAS_TRANSPOSE TransA, const int M, const int N,
                              const void *alpha, const void *A, const int lda,
                              const void *X, const int incX, const void *beta,
                              void *Y, const int incY);
-            void cblas_zgemv(const enum CBLAS_ORDER order,
-                             const enum CBLAS_TRANSPOSE TransA, const int M, const int N,
+            void cblas_zgemv(const CBLAS_ORDER order,
+                             const CBLAS_TRANSPOSE TransA, const int M, const int N,
                              const void *alpha, const void *A, const int lda,
                              const void *X, const int incX, const void *beta,
                              void *Y, const int incY);
-            void cblas_sger(const enum CBLAS_ORDER order, const int M, const int N,
+            void cblas_sger(const CBLAS_ORDER order, const int M, const int N,
                             const float alpha, const float *X, const int incX,
                             const float *Y, const int incY, float *A, const int lda);
-            void cblas_dger(const enum CBLAS_ORDER order, const int M, const int N,
+            void cblas_dger(const CBLAS_ORDER order, const int M, const int N,
                             const double alpha, const double *X, const int incX,
                             const double *Y, const int incY, double *A, const int lda);
-            void cblas_cgerc(const enum CBLAS_ORDER order, const int M, const int N,
+            void cblas_cgerc(const CBLAS_ORDER order, const int M, const int N,
                              const void *alpha, const void *X, const int incX,
                              const void *Y, const int incY, void *A, const int lda);
-            void cblas_zgerc(const enum CBLAS_ORDER order, const int M, const int N,
+            void cblas_zgerc(const CBLAS_ORDER order, const int M, const int N,
                              const void *alpha, const void *X, const int incX,
                              const void *Y, const int incY, void *A, const int lda);
             float  cblas_sdot(const int N, const float  *X, const int incX,
@@ -126,13 +127,14 @@ namespace dlib
                                    const void *Y, const int incY, void *dotc);
             void   cblas_zdotc_sub(const int N, const void *X, const int incX,
                                    const void *Y, const int incY, void *dotc);
-            void cblas_cgeru(const enum CBLAS_ORDER order, const int M, const int N,
+            void cblas_cgeru(const CBLAS_ORDER order, const int M, const int N,
                              const void *alpha, const void *X, const int incX,
                              const void *Y, const int incY, void *A, const int lda);
-            void cblas_zgeru(const enum CBLAS_ORDER order, const int M, const int N,
+            void cblas_zgeru(const CBLAS_ORDER order, const int M, const int N,
                              const void *alpha, const void *X, const int incX,
                              const void *Y, const int incY, void *A, const int lda);
         }
+#endif // if not CBLAS_H
 
     // ----------------------------------------------------------------------------------------
     // ----------------------------------------------------------------------------------------
@@ -193,8 +195,8 @@ namespace dlib
 
     // ----------------------------------------------------------------------------------------
 
-        inline void cblas_gemm( const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
-                                const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+        inline void cblas_gemm( const CBLAS_ORDER Order, const CBLAS_TRANSPOSE TransA,
+                                const CBLAS_TRANSPOSE TransB, const int M, const int N,
                                 const int K, const float alpha, const float *A,
                                 const int lda, const float *B, const int ldb,
                                 const float beta, float *C, const int ldc)
@@ -204,8 +206,8 @@ namespace dlib
                           K,  alpha, A, lda, B,  ldb, beta, C,  ldc);
         }
 
-        inline void cblas_gemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
-                         const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+        inline void cblas_gemm(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE TransA,
+                         const CBLAS_TRANSPOSE TransB, const int M, const int N,
                          const int K, const double alpha, const double *A,
                          const int lda, const double *B, const int ldb,
                          const double beta, double *C, const int ldc)
@@ -215,8 +217,8 @@ namespace dlib
                           K,  alpha, A, lda, B,  ldb, beta, C,  ldc);
         }
 
-        inline void cblas_gemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
-                         const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+        inline void cblas_gemm(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE TransA,
+                         const CBLAS_TRANSPOSE TransB, const int M, const int N,
                          const int K, const std::complex<float>& alpha, const std::complex<float> *A,
                          const int lda, const std::complex<float> *B, const int ldb,
                          const std::complex<float>& beta, std::complex<float> *C, const int ldc)
@@ -226,8 +228,8 @@ namespace dlib
                           K,  &alpha, A, lda, B,  ldb, &beta, C,  ldc);
         }
 
-        inline void cblas_gemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
-                         const enum CBLAS_TRANSPOSE TransB, const int M, const int N,
+        inline void cblas_gemm(const CBLAS_ORDER Order, const CBLAS_TRANSPOSE TransA,
+                         const CBLAS_TRANSPOSE TransB, const int M, const int N,
                          const int K, const std::complex<double>& alpha, const std::complex<double> *A,
                          const int lda, const std::complex<double> *B, const int ldb,
                          const std::complex<double>& beta, std::complex<double> *C, const int ldc)
@@ -239,8 +241,8 @@ namespace dlib
 
     // ----------------------------------------------------------------------------------------
 
-        inline void cblas_gemv(const enum CBLAS_ORDER order,
-                        const enum CBLAS_TRANSPOSE TransA, const int M, const int N,
+        inline void cblas_gemv(const CBLAS_ORDER order,
+                        const CBLAS_TRANSPOSE TransA, const int M, const int N,
                         const float alpha, const float *A, const int lda,
                         const float *X, const int incX, const float beta,
                         float *Y, const int incY)
@@ -249,8 +251,8 @@ namespace dlib
             cblas_sgemv(order, TransA, M, N, alpha, A, lda, X, incX, beta, Y, incY);
         }
 
-        inline void cblas_gemv(const enum CBLAS_ORDER order,
-                        const enum CBLAS_TRANSPOSE TransA, const int M, const int N,
+        inline void cblas_gemv(const CBLAS_ORDER order,
+                        const CBLAS_TRANSPOSE TransA, const int M, const int N,
                         const double alpha, const double *A, const int lda,
                         const double *X, const int incX, const double beta,
                         double *Y, const int incY)
@@ -259,8 +261,8 @@ namespace dlib
             cblas_dgemv(order, TransA, M, N, alpha, A, lda, X, incX, beta, Y, incY);
         }
 
-        inline void cblas_gemv(const enum CBLAS_ORDER order,
-                        const enum CBLAS_TRANSPOSE TransA, const int M, const int N,
+        inline void cblas_gemv(const CBLAS_ORDER order,
+                        const CBLAS_TRANSPOSE TransA, const int M, const int N,
                         const std::complex<float>& alpha, const std::complex<float> *A, const int lda,
                         const std::complex<float> *X, const int incX, const std::complex<float>& beta,
                         std::complex<float> *Y, const int incY)
@@ -269,8 +271,8 @@ namespace dlib
             cblas_cgemv(order, TransA, M, N, &alpha, A, lda, X, incX, &beta, Y, incY);
         }
 
-        inline void cblas_gemv(const enum CBLAS_ORDER order,
-                        const enum CBLAS_TRANSPOSE TransA, const int M, const int N,
+        inline void cblas_gemv(const CBLAS_ORDER order,
+                        const CBLAS_TRANSPOSE TransA, const int M, const int N,
                         const std::complex<double>& alpha, const std::complex<double> *A, const int lda,
                         const std::complex<double> *X, const int incX, const std::complex<double>& beta,
                         std::complex<double> *Y, const int incY)
@@ -281,7 +283,7 @@ namespace dlib
 
     // ----------------------------------------------------------------------------------------
 
-        inline void cblas_ger(const enum CBLAS_ORDER order, const int M, const int N,
+        inline void cblas_ger(const CBLAS_ORDER order, const int M, const int N,
                         const std::complex<float>& alpha, const std::complex<float> *X, const int incX,
                         const std::complex<float> *Y, const int incY, std::complex<float> *A, const int lda)
         {
@@ -289,7 +291,7 @@ namespace dlib
             cblas_cgeru (order,  M, N, &alpha, X, incX, Y, incY, A, lda);
         }
 
-        inline void cblas_ger(const enum CBLAS_ORDER order, const int M, const int N,
+        inline void cblas_ger(const CBLAS_ORDER order, const int M, const int N,
                         const std::complex<double>& alpha, const std::complex<double> *X, const int incX,
                         const std::complex<double> *Y, const int incY, std::complex<double> *A, const int lda)
         {
@@ -297,7 +299,7 @@ namespace dlib
             cblas_zgeru (order,  M, N, &alpha, X, incX, Y, incY, A, lda);
         }
 
-        inline void cblas_ger(const enum CBLAS_ORDER order, const int M, const int N,
+        inline void cblas_ger(const CBLAS_ORDER order, const int M, const int N,
                         const float alpha, const float *X, const int incX,
                         const float *Y, const int incY, float *A, const int lda)
         {
@@ -305,7 +307,7 @@ namespace dlib
             cblas_sger (order,  M, N, alpha, X, incX, Y, incY, A, lda);
         }
 
-        inline void cblas_ger(const enum CBLAS_ORDER order, const int M, const int N,
+        inline void cblas_ger(const CBLAS_ORDER order, const int M, const int N,
                         const double alpha, const double *X, const int incX,
                         const double *Y, const int incY, double *A, const int lda)
         {
@@ -315,7 +317,7 @@ namespace dlib
 
     // ----------------------------------------------------------------------------------------
 
-        inline void cblas_gerc(const enum CBLAS_ORDER order, const int M, const int N,
+        inline void cblas_gerc(const CBLAS_ORDER order, const int M, const int N,
                         const std::complex<float>& alpha, const std::complex<float> *X, const int incX,
                         const std::complex<float> *Y, const int incY, std::complex<float> *A, const int lda)
         {
@@ -323,7 +325,7 @@ namespace dlib
             cblas_cgerc (order,  M, N, &alpha, X, incX, Y, incY, A, lda);
         }
 
-        inline void cblas_gerc(const enum CBLAS_ORDER order, const int M, const int N,
+        inline void cblas_gerc(const CBLAS_ORDER order, const int M, const int N,
                         const std::complex<double>& alpha, const std::complex<double> *X, const int incX,
                         const std::complex<double> *Y, const int incY, std::complex<double> *A, const int lda)
         {
@@ -408,10 +410,95 @@ namespace dlib
         template <typename T, long NR, long NC, typename MM>
         int get_ld (const assignable_sub_matrix<T,NR,NC,MM,column_major_layout>& m) { return m.m.nr(); }
 
+        template <typename T, long NR, long NC, typename MM>
+        int get_ld (const assignable_col_matrix<T,NR,NC,MM,row_major_layout>& m) { return m.m.nc(); }
+
+        template <typename T, long NR, long NC, typename MM>
+        int get_ld (const assignable_col_matrix<T,NR,NC,MM,column_major_layout>& m) { return m.m.nr(); }
+
+        template <typename T, long NR, long NC, typename MM>
+        int get_ld (const assignable_row_matrix<T,NR,NC,MM,row_major_layout>& m) { return m.m.nc(); }
+
+        template <typename T, long NR, long NC, typename MM>
+        int get_ld (const assignable_row_matrix<T,NR,NC,MM,column_major_layout>& m) { return m.m.nr(); }
+
+        template <typename T>
+        int get_ld (const assignable_ptr_matrix<T>& m) { return m.nc(); }
+
+        template <typename T, typename MM>
+        int get_ld (const matrix_op<op_array2d_to_mat<array2d<T,MM> > >& m) { return m.nc(); }
+        template <typename T, typename MM>
+        int get_ld (const matrix_op<op_array_to_mat<array<T,MM> > >& m) { return m.nc(); }
+        template < typename value_type, typename alloc >
+        int get_ld (const matrix_op<op_std_vect_to_mat<std::vector<value_type,alloc> > >& m) { return m.nc(); }
+        template < typename value_type, typename alloc >
+        int get_ld (const matrix_op<op_std_vect_to_mat<std_vector_c<value_type,alloc> > >& m) { return m.nc(); }
+        template <typename T>
+        int get_ld (const matrix_op<op_pointer_to_col_vect<T> >& m) { return m.nc(); }
+        template <typename T>
+        int get_ld (const matrix_op<op_pointer_to_mat<T> >& m) { return m.op.stride; }
+
         // --------
+
+        // get_inc() returns the offset from one element to another.  If an object has a
+        // non-uniform offset between elements then returns 0 (e.g. a subm() view could
+        // have a non-uniform offset between elements).
+
+        template <typename T, typename MM>
+        int get_inc (const matrix_op<op_array2d_to_mat<array2d<T,MM> > >& ) { return 1; }
+        template <typename T, typename MM>
+        int get_inc (const matrix_op<op_array_to_mat<array<T,MM> > >& ) { return 1; }
+        template < typename value_type, typename alloc >
+        int get_inc (const matrix_op<op_std_vect_to_mat<std::vector<value_type,alloc> > >& ) { return 1; }
+        template < typename value_type, typename alloc >
+        int get_inc (const matrix_op<op_std_vect_to_mat<std_vector_c<value_type,alloc> > >& ) { return 1; }
+        template <typename T>
+        int get_inc (const matrix_op<op_pointer_to_col_vect<T> >& ) { return 1; }
+        template <typename T>
+        int get_inc (const matrix_op<op_pointer_to_mat<T> >& m) { return m.op.stride==m.op.cols ? 1 : 0; }
 
         template <typename T, long NR, long NC, typename MM, typename L>
         int get_inc (const matrix<T,NR,NC,MM,L>& ) { return 1; }
+
+        template <typename T, long NR, long NC, typename MM>
+        int get_inc (const matrix_op<op_subm<matrix<T,NR,NC,MM,row_major_layout> > >& m) 
+        { 
+            // if the sub-view doesn't cover all the columns then it can't have a uniform
+            // layout.
+            if (m.nc() < m.op.m.nc())
+                return 0;
+            else
+                return 1;
+        }
+
+        template <typename T, long NR, long NC, typename MM>
+        int get_inc (const matrix_op<op_subm<matrix<T,NR,NC,MM,column_major_layout> > >& m) 
+        { 
+            if (m.nr() < m.op.m.nr())
+                return 0;
+            else
+                return 1;
+        }
+
+        template <typename T, long NR, long NC, typename MM>
+        int get_inc (const assignable_sub_matrix<T,NR,NC,MM,row_major_layout>& m) 
+        { 
+            if (m.nc() < m.m.nc())
+                return 0;
+            else
+                return 1;
+        }
+        template <typename T, long NR, long NC, typename MM>
+        int get_inc (const assignable_sub_matrix<T,NR,NC,MM,column_major_layout>& m) 
+        {
+            if (m.nr() < m.m.nr())
+                return 0;
+            else
+                return 1;
+        }
+
+        template <typename T>
+        int get_inc (const assignable_ptr_matrix<T>& ) { return 1; }
 
         template <typename T, long NR, long NC, typename MM>
         int get_inc(const matrix_op<op_colm<matrix<T,NR,NC,MM,row_major_layout> > >& m)
@@ -522,6 +609,22 @@ namespace dlib
         template <typename T, long NR, long NC, typename MM, typename L>
         T* get_ptr (assignable_sub_matrix<T,NR,NC,MM,L>& m) { return &m(0,0); }
 
+        template <typename T>
+        T* get_ptr (assignable_ptr_matrix<T>& m) { return m.ptr; }
+
+        template <typename T, typename MM>
+        const T* get_ptr (const matrix_op<op_array2d_to_mat<array2d<T,MM> > >& m) { return &m.op.array[0][0]; }
+        template <typename T, typename MM>
+        const T* get_ptr (const matrix_op<op_array_to_mat<array<T,MM> > >& m) { return &m.op.vect[0]; }
+        template < typename T, typename alloc >
+        const T* get_ptr (const matrix_op<op_std_vect_to_mat<std::vector<T,alloc> > >& m) { return &m.op.vect[0]; }
+        template < typename T, typename alloc >
+        const T* get_ptr (const matrix_op<op_std_vect_to_mat<std_vector_c<T,alloc> > >& m) { return &m.op.vect[0]; }
+        template <typename T>
+        const T* get_ptr (const matrix_op<op_pointer_to_col_vect<T> >& m) { return m.op.ptr; }
+        template <typename T>
+        const T* get_ptr (const matrix_op<op_pointer_to_mat<T> >& m) { return m.op.ptr; }
+
     // ----------------------------------------------------------------------------------------
     // ----------------------------------------------------------------------------------------
 
@@ -550,18 +653,17 @@ namespace dlib
             {
                 if (add_to)
                 {
-                    cblas_axpy(N, alpha, get_ptr(src), 1, get_ptr(dest), 1);
+                    if (get_inc(src) && get_inc(dest))
+                        cblas_axpy(N, alpha, get_ptr(src), get_inc(src), get_ptr(dest), get_inc(dest));
+                    else
+                        matrix_assign_default(dest, src, alpha, add_to);
                 }
                 else
                 {
                     if (get_ptr(src) == get_ptr(dest))
-                    {
                         cblas_scal(N, alpha, get_ptr(dest));
-                    }
                     else
-                    {
                         matrix_assign_default(dest, src, alpha, add_to);
-                    }
                 }
             }
             else
@@ -579,18 +681,17 @@ namespace dlib
             {
                 if (add_to)
                 {
-                    cblas_axpy(N, alpha, get_ptr(src), 1, get_ptr(dest), 1);
+                    if (get_inc(src) && get_inc(dest))
+                        cblas_axpy(N, alpha, get_ptr(src), get_inc(src), get_ptr(dest), get_inc(dest));
+                    else
+                        matrix_assign_default(dest, src, alpha, add_to);
                 }
                 else
                 {
                     if (get_ptr(src) == get_ptr(dest))
-                    {
                         cblas_scal(N, alpha, get_ptr(dest));
-                    }
                     else
-                    {
                         matrix_assign_default(dest, src, alpha, add_to);
-                    }
                 }
             }
             else
@@ -608,18 +709,17 @@ namespace dlib
             {
                 if (add_to)
                 {
-                    cblas_axpy(N, alpha, get_ptr(src), 1, get_ptr(dest), 1);
+                    if (get_inc(src) && get_inc(dest))
+                        cblas_axpy(N, alpha, get_ptr(src), get_inc(src), get_ptr(dest), get_inc(dest));
+                    else
+                        matrix_assign_default(dest, src, alpha, add_to);
                 }
                 else
                 {
                     if (get_ptr(src) == get_ptr(dest))
-                    {
                         cblas_scal(N, alpha, get_ptr(dest));
-                    }
                     else
-                    {
                         matrix_assign_default(dest, src, alpha, add_to);
-                    }
                 }
             }
             else

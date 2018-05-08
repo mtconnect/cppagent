@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_ABSTRACT_H__
-#ifdef DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_ABSTRACT_H__
+#undef DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_ABSTRACT_Hh_
+#ifdef DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_ABSTRACT_Hh_
 
 
 #include "../matrix.h"
@@ -27,9 +27,9 @@ namespace dlib
                 the example_feature_extractor defined in dlib/svm/assignment_function_abstract.h.
 
             WHAT THIS OBJECT REPRESENTS
-                This object is a tool for learning the weight vector needed to use
-                an assignment_function object.  It learns the parameter vector by 
-                formulating the problem as a structural SVM problem.  
+                This object is a tool for learning the parameters needed to use an
+                assignment_function object.  It learns the parameters by formulating the
+                problem as a structural SVM problem.  
         !*/
 
     public:
@@ -45,10 +45,14 @@ namespace dlib
             const std::vector<label_type>& labels,
             const feature_extractor& fe,
             bool force_assignment,
-            unsigned long num_threads = 2
+            unsigned long num_threads,
+            const double loss_per_false_association,
+            const double loss_per_missed_association
         );
         /*!
             requires
+                - loss_per_false_association > 0
+                - loss_per_missed_association > 0
                 - is_assignment_problem(samples,labels) == true
                 - if (force_assignment) then
                     - is_forced_assignment_problem(samples,labels) == true
@@ -56,13 +60,19 @@ namespace dlib
                 - This object attempts to learn a mapping from the given samples to the 
                   given labels.  In particular, it attempts to learn to predict labels[i] 
                   based on samples[i].  Or in other words, this object can be used to learn 
-                  a parameter vector, w, such that an assignment_function declared as:
-                    assignment_function<feature_extractor> assigner(w,fe,force_assignment)
+                  a parameter vector and bias, w and b, such that an assignment_function declared as:
+                    assignment_function<feature_extractor> assigner(w,b,fe,force_assignment)
                   results in an assigner object which attempts to compute the following mapping:
                     labels[i] == labeler(samples[i])
                 - This object will use num_threads threads during the optimization 
                   procedure.  You should set this parameter equal to the number of 
                   available processing cores on your machine.
+                - When solving the structural SVM problem, we will use
+                  loss_per_false_association as the loss for incorrectly associating
+                  objects that shouldn't be associated.
+                - When solving the structural SVM problem, we will use
+                  loss_per_missed_association as the loss for failing to associate to
+                  objects that are supposed to be associated with each other.
         !*/
 
     };
@@ -71,7 +81,7 @@ namespace dlib
 
 }
 
-#endif // DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_ABSTRACT_H__
+#endif // DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_ABSTRACT_Hh_
 
 
 

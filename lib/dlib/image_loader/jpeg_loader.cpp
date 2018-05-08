@@ -11,7 +11,11 @@
 #include "../dir_nav.h"
 #include "jpeg_loader.h"
 #include <stdio.h>
-#include <jpeglib.h>
+#ifdef DLIB_JPEG_STATIC
+#   include "../external/libjpeg/jpeglib.h"
+#else
+#   include <jpeglib.h>
+#endif
 #include <sstream>
 #include <setjmp.h>
 
@@ -54,6 +58,13 @@ namespace dlib
     bool jpeg_loader::is_rgb() const
     {
         return (output_components_ == 3);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    bool jpeg_loader::is_rgba() const
+    {
+        return (output_components_ == 4);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -119,7 +130,8 @@ namespace dlib
         output_components_ = cinfo.output_components;
 
         if (output_components_ != 1 && 
-            output_components_ != 3)
+            output_components_ != 3 &&
+            output_components_ != 4)
         {
             fclose( fp );
             jpeg_destroy_decompress(&cinfo);

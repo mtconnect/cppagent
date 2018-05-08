@@ -247,7 +247,7 @@ namespace
         randomize_samples(samples, labels);
         dlog << LINFO << "KRR MSE and R-squared: "<< cross_validate_regression_trainer(krr_test, samples, labels, 6);
         dlog << LINFO << "SVR MSE and R-squared: "<< cross_validate_regression_trainer(svr_test, samples, labels, 6);
-        matrix<double,1,2> cv = cross_validate_regression_trainer(krr_test, samples, labels, 6);
+        matrix<double,1,4> cv = cross_validate_regression_trainer(krr_test, samples, labels, 6);
         DLIB_TEST(cv(0) < 1e-4);
         DLIB_TEST(cv(1) > 0.99);
         cv = cross_validate_regression_trainer(svr_test, samples, labels, 6);
@@ -388,14 +388,14 @@ namespace
 
 // ----------------------------------------------------------------------------------------
 
-    void test_binary_classification (
+    void unittest_binary_classification (
     )
     /*!
         ensures
             - runs tests on the svm stuff compliance with the specs
     !*/
     {        
-        dlog << LINFO << "   begin test_binary_classification()";
+        dlog << LINFO << "   begin unittest_binary_classification()";
         print_spinner();
 
 
@@ -526,7 +526,7 @@ namespace
         DLIB_TEST_MSG(mean(svm_cv) > 0.9, svm_cv);
 
         DLIB_TEST(df.basis_vectors.size() <= 19);
-        dlog << LINFO << "   end test_binary_classification()";
+        dlog << LINFO << "   end unittest_binary_classification()";
     }
 
 // ----------------------------------------------------------------------------------------
@@ -648,7 +648,7 @@ namespace
         )
         {
             test_kernel_derivative();
-            test_binary_classification();
+            unittest_binary_classification();
             test_clutering();
             test_regression();
             test_anomaly_detection();

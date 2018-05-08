@@ -117,13 +117,13 @@ namespace dlib
     !*/
 
     int create_listener (
-        scoped_ptr<listener>& new_listener,
+        std::unique_ptr<listener>& new_listener,
         unsigned short port,
         const std::string& ip = ""
     );
     /*!
         This function is just an overload of the above function but it gives you a
-        scoped_ptr smart pointer instead of a C pointer.
+        std::unique_ptr smart pointer instead of a C pointer.
     !*/
 
     int create_connection ( 
@@ -154,7 +154,7 @@ namespace dlib
         !*/
 
     int create_connection ( 
-        scoped_ptr<connection>& new_connection,
+        std::unique_ptr<connection>& new_connection,
         unsigned short foreign_port, 
         const std::string& foreign_ip, 
         unsigned short local_port = 0,
@@ -162,7 +162,7 @@ namespace dlib
     );
     /*!
         This function is just an overload of the above function but it gives you a
-        scoped_ptr smart pointer instead of a C pointer.
+        std::unique_ptr smart pointer instead of a C pointer.
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -242,7 +242,7 @@ namespace dlib
                 - num > 0 
                 - buf points to an array of at least num bytes
             ensures
-                - will block until ONE of the following occurrs:
+                - will block until ONE of the following occurs:
                     - num bytes from buf have been written to the connection 
                     - an error has occurred
                     - the outgoing channel of the connection has been shutdown locally
@@ -459,12 +459,12 @@ namespace dlib
         !*/
 
         int accept (
-            scoped_ptr<connection>& new_connection,
+            std::unique_ptr<connection>& new_connection,
             unsigned long timeout = 0
         );
         /*!
             This function is just an overload of the above function but it gives you a
-            scoped_ptr smart pointer instead of a C pointer.
+            std::unique_ptr smart pointer instead of a C pointer.
         !*/
 
         unsigned short get_listening_port (

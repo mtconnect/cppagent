@@ -11,7 +11,13 @@
 #include "misc_api_kernel_1.h"
 
 #include "../windows_magic.h"
+#include <mmsystem.h>
 #include <windows.h>
+
+// tell visual studio to link to the library needed to call timeGetTime() 
+#ifdef _MSC_VER
+#pragma comment (lib, "winmm.lib")
+#endif
 
 #ifdef __BORLANDC__
 // Apparently the borland compiler doesn't define this.
@@ -89,7 +95,7 @@ namespace dlib
     get_timestamp (
     ) const
     {
-        unsigned long temp = GetTickCount();
+        unsigned long temp = timeGetTime();
         if (temp >= last_time)
         {            
             last_time = temp;

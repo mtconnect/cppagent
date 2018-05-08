@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_ONE_VS_ONE_TRAiNER_ABSTRACT_H__
-#ifdef DLIB_ONE_VS_ONE_TRAiNER_ABSTRACT_H__
+#undef DLIB_ONE_VS_ONE_TRAiNER_ABSTRACT_Hh_
+#ifdef DLIB_ONE_VS_ONE_TRAiNER_ABSTRACT_Hh_
 
 
 #include "one_vs_one_decision_function_abstract.h"
@@ -55,10 +55,11 @@ namespace dlib
         );
         /*!
             ensures
-                - this object is properly initialized
-                - this object will not be verbose unless be_verbose() is called
-                - no binary trainers are associated with *this.  I.e. you have to
-                  call set_trainer() before calling train()
+                - This object is properly initialized
+                - This object will not be verbose unless be_verbose() is called.
+                - No binary trainers are associated with *this.  I.e. you have to
+                  call set_trainer() before calling train().
+                - #get_num_threads() == 4
         !*/
 
         void set_trainer (
@@ -97,6 +98,23 @@ namespace dlib
         /*!
             ensures
                 - this object will not print anything to standard out
+        !*/
+
+        void set_num_threads (
+            unsigned long num
+        );
+        /*!
+            ensures
+                - #get_num_threads() == num
+        !*/
+
+        unsigned long get_num_threads (
+        ) const;
+        /*!
+            ensures
+                - returns the number of threads used during training.  You should 
+                  usually set this equal to the number of processing cores on your
+                  machine.
         !*/
 
         struct invalid_label : public dlib::error 
@@ -143,6 +161,6 @@ namespace dlib
 
 }
 
-#endif // DLIB_ONE_VS_ONE_TRAiNER_ABSTRACT_H__
+#endif // DLIB_ONE_VS_ONE_TRAiNER_ABSTRACT_Hh_
 
 

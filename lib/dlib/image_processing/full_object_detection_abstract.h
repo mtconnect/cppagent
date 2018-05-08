@@ -1,7 +1,7 @@
 // Copyright (C) 2012  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_FULL_OBJECT_DeTECTION_ABSTRACT_H__
-#ifdef DLIB_FULL_OBJECT_DeTECTION_ABSTRACT_H__
+#undef DLIB_FULL_OBJECT_DeTECTION_ABSTRACT_Hh_
+#ifdef DLIB_FULL_OBJECT_DeTECTION_ABSTRACT_Hh_
 
 #include <vector>
 #include "../geometry.h"
@@ -64,6 +64,14 @@ namespace dlib
                   this should be the bounding box for the object.
         !*/
 
+        rectangle& get_rect(
+        ); 
+        /*!
+            ensures
+                - returns the rectangle that indicates where this object is.  In general,
+                  this should be the bounding box for the object.
+        !*/
+
         unsigned long num_parts(
         ) const;
         /*!
@@ -82,6 +90,27 @@ namespace dlib
                   Note that it is valid for a part to be "not present".  This is indicated
                   when the return value of part() is equal to OBJECT_PART_NOT_PRESENT. 
                   This is useful for modeling object parts that are not always observed.
+        !*/
+
+        point& part(
+            unsigned long idx
+        ); 
+        /*!
+            requires
+                - idx < num_parts()
+            ensures
+                - returns the location of the center of the idx-th part of this object.
+                  Note that it is valid for a part to be "not present".  This is indicated
+                  when the return value of part() is equal to OBJECT_PART_NOT_PRESENT. 
+                  This is useful for modeling object parts that are not always observed.
+        !*/
+
+        bool operator==(
+            const full_object_detection& rhs
+        ) const;
+        /*!
+            ensures
+                - returns true if and only if *this and rhs have identical state.
         !*/
     };
 
@@ -117,9 +146,58 @@ namespace dlib
     !*/
 
 // ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+    struct mmod_rect
+    {
+        /*!
+            WHAT THIS OBJECT REPRESENTS
+                This is a simple struct that is used to give training data and receive detections
+                from the Max-Margin Object Detection loss layer loss_mmod_ object.
+        !*/
+
+        mmod_rect() = default; 
+        mmod_rect(const rectangle& r) : rect(r) {}
+        mmod_rect(const rectangle& r, double score) : rect(r),detection_confidence(score) {}
+        mmod_rect(const rectangle& r, double score, const std::string& label) : rect(r),detection_confidence(score),label(label) {}
+
+        rectangle rect;
+        double detection_confidence = 0;
+        bool ignore = false;
+        std::string label;
+
+        operator rectangle() const { return rect; }
+
+        bool operator == (const mmod_rect& rhs) const;
+        /*!
+            ensures
+                - returns true if and only if all the elements of this object compare equal
+                  to the corresponding elements of rhs.
+        !*/
+    };
+
+    mmod_rect ignored_mmod_rect(
+        const rectangle& r
+    );
+    /*!
+        ensures
+            - returns a mmod_rect R such that:
+                - R.rect == r
+                - R.ignore == true
+                - R.detection_confidence == 0
+                - R.label == ""
+    !*/
+
+    void serialize(const mmod_rect& item, std::ostream& out);
+    void deserialize(mmod_rect& item, std::istream& in);
+    /*!
+        provides serialization support
+    !*/
+
+// ----------------------------------------------------------------------------------------
 
 }
 
-#endif // DLIB_FULL_OBJECT_DeTECTION_ABSTRACT_H__
+#endif // DLIB_FULL_OBJECT_DeTECTION_ABSTRACT_Hh_
 
 

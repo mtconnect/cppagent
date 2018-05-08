@@ -596,7 +596,8 @@ namespace
             c_check_equal( tmp(c_temp + conj(c_rv4)*c_cv4), c_temp + conj(c_rv4)*c_cv4);
             c_check_equal( tmp(c_temp + trans(conj(c_cv4))*trans(c_rv4)), c_temp + trans(conj(c_cv4))*trans(c_rv4));
 
-            DLIB_TEST(abs((static_cast<complex<type> >(c_rv4*c_cv4) + i) - ((c_rv4*c_cv4)(0) + i)) < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul );
+            complex<type> tmp = c_rv4*c_cv4;
+            DLIB_TEST(abs((tmp + i) - ((c_rv4*c_cv4)(0) + i)) < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul );
             DLIB_TEST(max(abs((rv4*cv4 + 1.0) - ((rv4*cv4)(0) + 1.0))) < std::sqrt(std::numeric_limits<type>::epsilon())*eps_mul);
 
         }
@@ -610,6 +611,7 @@ namespace
             m2 = 1,2,3,4,5,6;
 
             DLIB_TEST(reshape_to_column_vector(m) == m2);
+            DLIB_TEST(reshape_to_column_vector(m+m) == m2+m2);
 
         }
         {
@@ -622,6 +624,7 @@ namespace
             m2 = 1,2,3,4,5,6;
 
             DLIB_TEST(reshape_to_column_vector(m) == m2);
+            DLIB_TEST(reshape_to_column_vector(m+m) == m2+m2);
 
         }
     }
@@ -634,7 +637,6 @@ namespace
             - runs tests on the matrix stuff compliance with the specs
     !*/
     {        
-        typedef memory_manager_stateless<char>::kernel_2_2a MM;
         print_spinner();
 
 
@@ -830,9 +832,9 @@ namespace
             DLIB_TEST(join_rows(a,a) == b);
             DLIB_TEST(join_rows(a,abs(a)) == b);
             DLIB_TEST(join_cols(trans(a), trans(a)) == trans(b));
-            DLIB_TEST(join_cols(a,a) == c)
-            DLIB_TEST(join_cols(a,abs(a)) == c)
-            DLIB_TEST(join_rows(trans(a),trans(a)) == trans(c))
+            DLIB_TEST(join_cols(a,a) == c);
+            DLIB_TEST(join_cols(a,abs(a)) == c);
+            DLIB_TEST(join_rows(trans(a),trans(a)) == trans(c));
         }
 
         {
@@ -854,9 +856,9 @@ namespace
             DLIB_TEST(join_rows(a,a) == b);
             DLIB_TEST(join_rows(a,abs(a)) == b);
             DLIB_TEST(join_cols(trans(a), trans(a)) == trans(b));
-            DLIB_TEST(join_cols(a,a) == c)
-            DLIB_TEST(join_cols(a,abs(a)) == c)
-            DLIB_TEST(join_rows(trans(a),trans(a)) == trans(c))
+            DLIB_TEST(join_cols(a,a) == c);
+            DLIB_TEST(join_cols(a,abs(a)) == c);
+            DLIB_TEST(join_rows(trans(a),trans(a)) == trans(c));
         }
 
         {
@@ -881,9 +883,9 @@ namespace
             DLIB_TEST(join_rows(a,a2) == b);
             DLIB_TEST(join_rows(a2,a) == b);
             DLIB_TEST(join_cols(trans(a2), trans(a)) == trans(b));
-            DLIB_TEST(join_cols(a2,a) == c)
-            DLIB_TEST(join_cols(a,a2) == c)
-            DLIB_TEST(join_rows(trans(a2),trans(a)) == trans(c))
+            DLIB_TEST(join_cols(a2,a) == c);
+            DLIB_TEST(join_cols(a,a2) == c);
+            DLIB_TEST(join_rows(trans(a2),trans(a)) == trans(c));
         }
 
         {
@@ -998,6 +1000,21 @@ namespace
             DLIB_TEST(sum_rows(a) == c);
 
         }
+
+        {
+            matrix<int> m(3,4), s(3,4);
+            m = -2, 1, 5, -5,
+                5, 5, 5, 5,
+                9, 0, -4, -2;
+
+            s = -1, 1, 1, -1,
+                 1, 1, 1, 1, 
+                 1, 1, -1, -1;
+
+            DLIB_TEST(sign(m) == s);
+            DLIB_TEST(sign(matrix_cast<double>(m)) == matrix_cast<double>(s));
+        }
+
     }
 
 
@@ -1044,20 +1061,54 @@ namespace
         {
             istringstream sin(" 1 2\n3");
             matrix<double> m;
-            DLIB_TEST(sin);
+            DLIB_TEST(sin.good());
             sin >> m;
-            DLIB_TEST(!sin);
+            DLIB_TEST(!sin.good());
         }
         {
             istringstream sin("");
             matrix<double> m;
-            DLIB_TEST(sin);
+            DLIB_TEST(sin.good());
             sin >> m;
-            DLIB_TEST(!sin);
+            DLIB_TEST(!sin.good());
         }
     }
 
 
+    void test_axpy()
+    {
+        const int n = 4;
+        matrix<double> B = dlib::randm(n,n);
+
+        matrix<double> g = dlib::uniform_matrix<double>(n,1,0.0);
+
+        const double tau = 1;
+
+        matrix<double> p = g + tau*dlib::colm(B,0);
+        matrix<double> q = dlib::colm(B,0);
+        DLIB_TEST(max(abs(p-q)) < 1e-14);
+
+        p = tau*dlib::colm(B,0);
+        q = dlib::colm(B,0);
+        DLIB_TEST(max(abs(p-q)) < 1e-14);
+
+
+
+
+        g = dlib::uniform_matrix<double>(n,n,0.0);
+        p = g + tau*B;
+        DLIB_TEST(max(abs(p-B)) < 1e-14);
+
+        p = g + tau*subm(B,get_rect(B));
+        DLIB_TEST(max(abs(p-B)) < 1e-14);
+
+        g = dlib::uniform_matrix<double>(2,2,0.0);
+        p = g + tau*subm(B,1,1,2,2);
+        DLIB_TEST(max(abs(p-subm(B,1,1,2,2))) < 1e-14);
+
+        set_subm(p,0,0,2,2) = g + tau*subm(B,1,1,2,2);
+        DLIB_TEST(max(abs(p-subm(B,1,1,2,2))) < 1e-14);
+    }
 
 
     class matrix_tester : public tester
@@ -1072,6 +1123,7 @@ namespace
         void perform_test (
         )
         {
+            test_axpy();
             test_matrix_IO();
             matrix_test();
         }

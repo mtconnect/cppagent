@@ -565,6 +565,20 @@ namespace
             obj.assert_in_state_2();
             */
 
+
+        test_object obj2;
+        obj.set_state_1();
+        obj2.set_state_2();
+        dlib::serialize("serialization_test.dat") << obj << obj2;
+        obj.assert_in_state_1();
+        obj2.assert_in_state_2();
+        obj.set_state_2();
+        obj2.set_state_1();
+        obj.assert_in_state_2();
+        obj2.assert_in_state_1();
+        dlib::deserialize("serialization_test.dat") >> obj >> obj2;
+        obj.assert_in_state_1();
+        obj2.assert_in_state_2();
     }
 
 
@@ -600,6 +614,35 @@ namespace
         dlib::deserialize(a, sin);
         DLIB_TEST(a.size() == 0);
         DLIB_TEST(c.size() == 0);
+    }
+
+    void test_std_array (
+    )
+    {
+        std::array<int,5> a, b;
+
+        a = {1, 2, 3, 4, 5};
+
+        ostringstream sout;
+        dlib::serialize(a, sout);
+        istringstream sin(sout.str());
+
+        dlib::deserialize(b, sin);
+
+
+        DLIB_TEST(a.size() == b.size());
+        DLIB_TEST(a.size() == 5);
+        for (unsigned long i = 0; i < a.size(); ++i)
+        {
+            DLIB_TEST(a[i] == b[i]);
+        }
+
+        std::array<int,0> aa, bb;
+        sout.str("");
+        dlib::serialize(aa, sout);
+        sin.str(sout.str());
+        dlib::deserialize(bb, sin);
+        DLIB_TEST(bb.size() == 0);
     }
 
     void test_vector_bool (
@@ -928,6 +971,59 @@ namespace
 
 // ----------------------------------------------------------------------------------------
 
+    void test_strings()
+    {
+        string str1 = "stuff";
+        char buf[6];
+        buf[0] = 0;
+        buf[1] = 1;
+        buf[2] = 2;
+        buf[3] = 0;
+        buf[4] = 3;
+        buf[5] = 3;
+
+        dlib::serialize("ser_test_string.dat") << str1 << buf << "morestuff" << "";
+
+        string str2, str3, str4;
+        char buf2[6];
+        memset(buf2,0,sizeof(buf2));
+        dlib::deserialize("ser_test_string.dat") >> str2 >> buf2 >> str3 >> str4;
+        DLIB_TEST(str2 == "stuff");
+        DLIB_TEST(str3 == "morestuff");
+        DLIB_TEST(str4 == "");
+        DLIB_TEST(buf2[0] == 0);
+        DLIB_TEST(buf2[1] == 1);
+        DLIB_TEST(buf2[2] == 2);
+        DLIB_TEST(buf2[3] == 0);
+        DLIB_TEST(buf2[4] == 3);
+        DLIB_TEST(buf2[5] == 3);
+
+
+        ofstream fout("ser_test_string.dat", ios::binary);
+        dlib::serialize(str1, fout);
+        dlib::serialize(buf, fout);
+        dlib::serialize("morestuff", fout);
+        fout.close();
+        ifstream fin("ser_test_string.dat", ios::binary);
+        memset(buf2,0,sizeof(buf2));
+        str2.clear();
+        str3.clear();
+        dlib::deserialize(str2, fin);
+        dlib::deserialize(buf2, fin);
+        dlib::deserialize(str3, fin);
+
+        DLIB_TEST(str2 == "stuff");
+        DLIB_TEST(str3 == "morestuff");
+        DLIB_TEST(buf2[0] == 0);
+        DLIB_TEST(buf2[1] == 1);
+        DLIB_TEST(buf2[2] == 2);
+        DLIB_TEST(buf2[3] == 0);
+        DLIB_TEST(buf2[4] == 3);
+        DLIB_TEST(buf2[5] == 3);
+    }
+
+// ----------------------------------------------------------------------------------------
+
     class serialize_tester : public tester
     {
         /*!
@@ -952,6 +1048,8 @@ namespace
             test_vector<int>();
             test_vector_bool();
             test_array2d_and_matrix_serialization();
+            test_strings();
+            test_std_array();
         }
     } a;
 

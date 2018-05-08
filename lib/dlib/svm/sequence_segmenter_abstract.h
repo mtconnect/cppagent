@@ -1,7 +1,7 @@
 // Copyright (C) 2013  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_SEQUENCE_SeGMENTER_ABSTRACT_H___
-#ifdef DLIB_SEQUENCE_SeGMENTER_ABSTRACT_H___
+#undef DLIB_SEQUENCE_SeGMENTER_ABSTRACT_H_h_
+#ifdef DLIB_SEQUENCE_SeGMENTER_ABSTRACT_H_h_
 
 #include "../matrix.h"
 #include <vector>
@@ -387,7 +387,9 @@ namespace dlib
             ensures
                 - Takes an input sequence and returns a list of detected segments within
                   that sequence.
-                - returns a std::vector Y of segments such that:
+                - None of the returned segments will overlap.
+                - The returned segments are listed in the order they appeared in the input sequence.
+                - To be precise, this function returns a std::vector Y of segments such that:
                     - Y.size() == the number of segments detected in the input sequence x.
                     - for all valid i:
                         - Y[i].first  == the start of the i-th segment.
@@ -398,6 +400,8 @@ namespace dlib
                         - Y[i].second <= x.size()
                         - Y[i].first < Y[i].second
                           (i.e. This function never outputs empty segments)
+                        - Y[i].second <= Y[i+1].first
+                          (i.e. the segments are listed in order of appearance and do not overlap)
         !*/
 
         void segment_sequence (
@@ -444,5 +448,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_SEQUENCE_SeGMENTER_ABSTRACT_H___
+#endif // DLIB_SEQUENCE_SeGMENTER_ABSTRACT_H_h_
 

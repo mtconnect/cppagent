@@ -4,16 +4,16 @@
 #define DLIB_KKMEANs_
 
 #include <cmath>
+#include <vector>
+
 #include "../matrix/matrix_abstract.h"
 #include "../algs.h"
 #include "../serialize.h"
-#include "kernel_abstract.h"
+#include "kernel.h"
 #include "../array.h"
 #include "kcentroid.h"
 #include "kkmeans_abstract.h"
 #include "../noncopyable.h"
-#include "../smart_pointers.h"
-#include <vector>
 
 namespace dlib
 {
@@ -176,7 +176,7 @@ namespace dlib
             item.centers.resize(num);
             for (unsigned long i = 0; i < item.centers.size(); ++i)
             {
-                scoped_ptr<kcentroid<kernel_type> > temp(new kcentroid<kernel_type>(kernel_type()));
+                std::unique_ptr<kcentroid<kernel_type> > temp(new kcentroid<kernel_type>(kernel_type()));
                 deserialize(*temp, in);
                 item.centers[i].swap(temp);
             }
@@ -270,7 +270,7 @@ namespace dlib
 
         }
 
-        array<scoped_ptr<kcentroid<kernel_type> > > centers;
+        array<std::unique_ptr<kcentroid<kernel_type> > > centers;
         kcentroid<kernel_type> kc;
         scalar_type min_change;
 
@@ -288,7 +288,7 @@ namespace dlib
 
     struct dlib_pick_initial_centers_data
     {
-        dlib_pick_initial_centers_data():idx(0), dist(1e200){}
+        dlib_pick_initial_centers_data():idx(0), dist(std::numeric_limits<double>::infinity()){}
         long idx;
         double dist;
         bool operator< (const dlib_pick_initial_centers_data& d) const { return dist < d.dist; }
@@ -331,7 +331,7 @@ namespace dlib
         // pick the first sample as one of the centers
         centers.push_back(samples[0]);
 
-        const long best_idx = static_cast<long>(samples.size() - samples.size()*percentile - 1);
+        const long best_idx = static_cast<long>(std::max(0.0,samples.size() - samples.size()*percentile - 1));
 
         // pick the next center
         for (long i = 0; i < num_centers-1; ++i)
@@ -364,12 +364,30 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
     template <
-        typename vector_type, 
+        typename vector_type1, 
+        typename vector_type2
+        >
+    void pick_initial_centers(
+        long num_centers, 
+        vector_type1& centers, 
+        const vector_type2& samples, 
+        double percentile = 0.01
+    )
+    {
+        typedef typename vector_type1::value_type sample_type;
+        linear_kernel<sample_type> kern;
+        pick_initial_centers(num_centers, centers, samples, kern, percentile);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename array_type, 
         typename sample_type,
         typename alloc
         >
     void find_clusters_using_kmeans (
-        const vector_type& samples,
+        const array_type& samples,
         std::vector<sample_type, alloc>& centers,
         unsigned long max_iter = 1000
     )
@@ -407,10 +425,10 @@ namespace dlib
         sample_type zero(centers[0]);
         set_all_elements(zero, 0);
 
-        std::vector<unsigned long, alloc> center_element_count;
+        std::vector<unsigned long> center_element_count;
 
         // tells which center a sample belongs to
-        std::vector<unsigned long, alloc> assignments(samples.size(), samples.size());
+        std::vector<unsigned long> assignments(samples.size(), samples.size());
 
 
         unsigned long iter = 0;
@@ -459,6 +477,172 @@ namespace dlib
             }
         }
 
+
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename array_type, 
+        typename sample_type,
+        typename alloc
+        >
+    void find_clusters_using_angular_kmeans (
+        const array_type& samples,
+        std::vector<sample_type, alloc>& centers,
+        unsigned long max_iter = 1000
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(samples.size() > 0 && centers.size() > 0,
+            "\tvoid find_clusters_using_angular_kmeans()"
+            << "\n\tYou passed invalid arguments to this function"
+            << "\n\t samples.size(): " << samples.size() 
+            << "\n\t centers.size(): " << centers.size() 
+            );
+
+#ifdef ENABLE_ASSERTS
+        {
+        const long nr = samples[0].nr();
+        const long nc = samples[0].nc();
+        for (unsigned long i = 0; i < samples.size(); ++i)
+        {
+            DLIB_ASSERT(is_vector(samples[i]) && samples[i].nr() == nr && samples[i].nc() == nc,
+                "\tvoid find_clusters_using_angular_kmeans()"
+                << "\n\t You passed invalid arguments to this function"
+                << "\n\t is_vector(samples[i]): " << is_vector(samples[i])
+                << "\n\t samples[i].nr():       " << samples[i].nr()
+                << "\n\t nr:                    " << nr
+                << "\n\t samples[i].nc():       " << samples[i].nc()
+                << "\n\t nc:                    " << nc
+                << "\n\t i:                     " << i
+                );
+        }
+        }
+#endif
+
+        typedef typename sample_type::type scalar_type;
+
+        sample_type zero(centers[0]);
+        set_all_elements(zero, 0);
+
+        unsigned long seed = 0;
+
+        // tells which center a sample belongs to
+        std::vector<unsigned long> assignments(samples.size(), samples.size());
+        std::vector<double> lengths;
+        for (unsigned long i = 0; i < samples.size(); ++i)
+        {
+            lengths.push_back(length(samples[i]));
+            // If there are zero vectors in samples then just say their length is 1 so we
+            // can avoid a division by zero check later on.  Also, this doesn't matter
+            // since zero vectors can be assigned to any cluster randomly as there is no
+            // basis for picking one based on angle.
+            if (lengths.back() == 0)
+                lengths.back() = 1;
+        }
+
+        // We will keep the centers as unit vectors at all times throughout the processing.
+        for (unsigned long i = 0; i < centers.size(); ++i)
+        {
+            double len = length(centers[i]);
+            // Avoid having length 0 centers.  If that is the case then pick another center
+            // at random.
+            while(len == 0)
+            {
+                centers[i] = matrix_cast<scalar_type>(gaussian_randm(centers[i].nr(), centers[i].nc(), seed++));
+                len = length(centers[i]);
+            }
+            centers[i] /= len;
+        }
+
+
+        unsigned long iter = 0;
+        bool centers_changed = true;
+        while (centers_changed && iter < max_iter)
+        {
+            ++iter;
+            centers_changed = false;
+
+            // loop over each sample and see which center it is closest to
+            for (unsigned long i = 0; i < samples.size(); ++i)
+            {
+                // find the best center for sample[i]
+                scalar_type best_angle = std::numeric_limits<scalar_type>::max();
+                unsigned long best_center = 0;
+                for (unsigned long j = 0; j < centers.size(); ++j)
+                {
+                    scalar_type angle = -dot(centers[j],samples[i])/lengths[i];
+
+                    if (angle < best_angle)
+                    {
+                        best_angle = angle;
+                        best_center = j;
+                    }
+                }
+
+                if (assignments[i] != best_center)
+                {
+                    centers_changed = true;
+                    assignments[i] = best_center;
+                }
+            }
+
+            // now update all the centers
+            centers.assign(centers.size(), zero);
+            for (unsigned long i = 0; i < samples.size(); ++i)
+            {
+                centers[assignments[i]] += samples[i];
+            }
+            // Now length normalize all the centers.
+            for (unsigned long i = 0; i < centers.size(); ++i)
+            {
+                double len = length(centers[i]);
+                // Avoid having length 0 centers.  If that is the case then pick another center
+                // at random.
+                while(len == 0)
+                {
+                    centers[i] = matrix_cast<scalar_type>(gaussian_randm(centers[i].nr(), centers[i].nc(), seed++));
+                    len = length(centers[i]);
+                    centers_changed = true;
+                }
+                centers[i] /= len;
+            }
+        }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename array_type, 
+        typename EXP 
+        >
+    unsigned long nearest_center (
+        const array_type& centers,
+        const matrix_exp<EXP>& sample
+    )
+    {
+        // make sure requires clause is not broken
+        DLIB_ASSERT(centers.size() > 0 && sample.size() > 0 && is_vector(sample),
+            "\t unsigned long nearest_center()"
+            << "\n\t You have given invalid inputs to this function."
+            << "\n\t centers.size():    " << centers.size() 
+            << "\n\t sample.size():     " << sample.size() 
+            << "\n\t is_vector(sample): " << is_vector(sample) 
+            );
+
+        double best_dist = length_squared(centers[0] - sample);
+        unsigned long best_idx = 0;
+        for (unsigned long i = 1; i < centers.size(); ++i)
+        {
+            const double dist = length_squared(centers[i] - sample);
+            if (dist < best_dist)
+            {
+                best_dist = dist;
+                best_idx = i;
+            }
+        }
+        return best_idx;
     }
 
 // ----------------------------------------------------------------------------------------

@@ -32,7 +32,6 @@ namespace
             - runs tests on the matrix stuff compliance with the specs
     !*/
     {        
-        typedef memory_manager_stateless<char>::kernel_2_2a MM;
         print_spinner();
 
         {
@@ -631,6 +630,16 @@ namespace
             M = 1,2,3,
                 3,3,3;
             DLIB_TEST(upperbound(m,3) == M);
+        }
+        
+        {
+            matrix<double,9,5> A = randm(9,5);
+            matrix<double> B = A;
+            
+            orthogonalize(A);
+            orthogonalize(B);
+            
+            DLIB_TEST(equal(A,B));
         }
     }
 

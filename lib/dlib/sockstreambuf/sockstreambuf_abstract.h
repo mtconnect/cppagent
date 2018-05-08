@@ -4,7 +4,9 @@
 #ifdef DLIB_SOCKSTREAMBUF_ABSTRACT_
 
 #include <iosfwd>
+#include <memory>
 #include <streambuf>
+
 #include "../sockets/sockets_kernel_abstract.h"
 
 namespace dlib
@@ -32,16 +34,17 @@ namespace dlib
                 once enough data has arrived.
 
             THREADING
-                generally speaking, this object has the same kind of threading
+                Generally speaking, this object has the same kind of threading
                 restrictions as a connection object.  those being:
-                - do not try to write to a sockstreambuf from more than one thread
-                - do not try to read from a sockstreambuf from more than one thread
-                - you may call shutdown() on the connection object and this will
+                - Do not try to write to a sockstreambuf from more than one thread.
+                - Do not try to read from a sockstreambuf from more than one thread.
+                - You may call shutdown() on the connection object and this will
                   cause any reading or writing calls to end.  To the sockstreambuf it
                   will appear the same as hitting EOF.  (note that EOF for a sockstreambuf
                   means that the connection has closed)
-                - it is safe to read from and write to the sockstreambuf at the same time
-                - it is not safe to try to putback a char and read from the stream from
+                - It is safe to read from and write to the sockstreambuf at the same time
+                  from different threads so long as flushes_output_on_read()==false.
+                - It is not safe to try to putback a char and read from the stream from
                   different threads
         !*/
     public:
@@ -59,7 +62,7 @@ namespace dlib
         !*/
 
         sockstreambuf (
-            const scoped_ptr<connection>& con
+            const std::unique_ptr<connection>& con
         );
         /*!
             requires
@@ -103,6 +106,8 @@ namespace dlib
             ensures
                 - This function returns true if this object will flush its output buffer
                   to the network socket before performing any network read.   
+                - if (flushes_output_on_read() == true)
+                    - It is not safe to make concurrent read and write calls to this object.
         !*/
 
         void do_not_flush_output_on_read (

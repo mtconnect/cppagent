@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_ABSTRACT_H__
-#ifdef DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_ABSTRACT_H__
+#undef DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_ABSTRACT_Hh_
+#ifdef DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_ABSTRACT_Hh_
 
 #include "../algs.h"
 #include "../optimization.h"
@@ -47,6 +47,7 @@ namespace dlib
                 - #get_c() == 100
                 - this object isn't verbose
                 - #get_epsilon() == 0.1
+                - #get_max_iterations() == 10000
                 - #get_num_threads() == 2
                 - #get_max_cache_size() == 5
                 - #get_feature_extractor() == a default initialized feature_extractor
@@ -60,6 +61,7 @@ namespace dlib
                 - #get_c() == 100
                 - this object isn't verbose
                 - #get_epsilon() == 0.1
+                - #get_max_iterations() == 10000
                 - #get_num_threads() == 2
                 - #get_max_cache_size() == 5
                 - #get_feature_extractor() == fe 
@@ -117,6 +119,22 @@ namespace dlib
                   to train.  You can think of this epsilon value as saying "solve the 
                   optimization problem until the average number of labeling mistakes per 
                   training sample is within epsilon of its optimal value".
+        !*/
+
+        void set_max_iterations (
+            unsigned long max_iter
+        );
+        /*!
+            ensures
+                - #get_max_iterations() == max_iter
+        !*/
+
+        unsigned long get_max_iterations (
+        ); 
+        /*!
+            ensures
+                - returns the maximum number of iterations the SVM optimizer is allowed to
+                  run before it is required to stop and return a result.
         !*/
 
         void set_max_cache_size (
@@ -241,7 +259,7 @@ namespace dlib
 
 }
 
-#endif // DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_ABSTRACT_H__
+#endif // DLIB_STRUCTURAL_SEQUENCE_LABELING_TRAiNER_ABSTRACT_Hh_
 
 
 

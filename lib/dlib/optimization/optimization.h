@@ -42,7 +42,7 @@ namespace dlib
                 e(i) = old_val - eps;
                 const double delta_minus = f(e);
 
-                der(i) = (delta_plus - delta_minus)/(2*eps);
+                der(i) = (delta_plus - delta_minus)/((old_val+eps)-(old_val-eps)); 
 
                 // and finally restore the old value of this element
                 e(i) = old_val;
@@ -68,7 +68,7 @@ namespace dlib
                 e(i) = old_val - eps;
                 const double delta_minus = f(item,e);
 
-                der(i) = (delta_plus - delta_minus)/(2*eps);
+                der(i) = (delta_plus - delta_minus)/((old_val+eps)-(old_val-eps)); 
 
                 // and finally restore the old value of this element
                 e(i) = old_val;
@@ -80,7 +80,7 @@ namespace dlib
 
         double operator()(const double& x) const
         {
-            return (f(x+eps)-f(x-eps))/(2*eps);
+            return (f(x+eps)-f(x-eps))/((x+eps)-(x-eps));
         }
 
     private:
@@ -101,27 +101,6 @@ namespace dlib
         );
         return central_differences<funct>(f,eps); 
     }
-
-// ----------------------------------------------------------------------------------------
-
-    template <typename funct>
-    class negate_function_object 
-    {
-    public:
-        negate_function_object(const funct& f_) : f(f_){}
-
-        template <typename T>
-        double operator()(const T& x) const
-        {
-            return -f(x);
-        }
-
-    private:
-        const funct& f;
-    };
-
-    template <typename funct>
-    const negate_function_object<funct> negate_function(const funct& f) { return negate_function_object<funct>(f); }
 
 // ----------------------------------------------------------------------------------------
 
@@ -184,7 +163,7 @@ namespace dlib
         // The starting point (i.e. x) must be a column vector.  
         COMPILE_TIME_ASSERT(T::NC <= 1);
 
-        DLIB_ASSERT (
+        DLIB_CASSERT (
             is_col_vector(x),
             "\tdouble find_min()"
             << "\n\tYou have to supply column vectors to this function"
@@ -197,8 +176,10 @@ namespace dlib
         double f_value = f(x);
         g = der(x);
 
-        DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-        DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+        if (!is_finite(f_value))
+            throw error("The objective function generated non-finite outputs");
+        if (!is_finite(g))
+            throw error("The objective function generated non-finite outputs");
 
         while(stop_strategy.should_continue_search(x, f_value, g) && f_value > min_f)
         {
@@ -215,8 +196,10 @@ namespace dlib
             // Take the search step indicated by the above line search
             x += alpha*s;
 
-            DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-            DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+            if (!is_finite(f_value))
+                throw error("The objective function generated non-finite outputs");
+            if (!is_finite(g))
+                throw error("The objective function generated non-finite outputs");
         }
 
         return f_value;
@@ -244,7 +227,7 @@ namespace dlib
         // The starting point (i.e. x) must be a column vector.  
         COMPILE_TIME_ASSERT(T::NC <= 1);
 
-        DLIB_ASSERT (
+        DLIB_CASSERT (
             is_col_vector(x),
             "\tdouble find_max()"
             << "\n\tYou have to supply column vectors to this function"
@@ -259,8 +242,10 @@ namespace dlib
         double f_value = -f(x);
         g = -der(x);
 
-        DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-        DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+        if (!is_finite(f_value))
+            throw error("The objective function generated non-finite outputs");
+        if (!is_finite(g))
+            throw error("The objective function generated non-finite outputs");
 
         while(stop_strategy.should_continue_search(x, f_value, g) && f_value > -max_f)
         {
@@ -283,8 +268,10 @@ namespace dlib
             g *= -1;
             f_value *= -1;
 
-            DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-            DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+            if (!is_finite(f_value))
+                throw error("The objective function generated non-finite outputs");
+            if (!is_finite(g))
+                throw error("The objective function generated non-finite outputs");
         }
 
         return -f_value;
@@ -311,7 +298,7 @@ namespace dlib
         // The starting point (i.e. x) must be a column vector.  
         COMPILE_TIME_ASSERT(T::NC <= 1);
 
-        DLIB_ASSERT (
+        DLIB_CASSERT (
             is_col_vector(x) && derivative_eps > 0,
             "\tdouble find_min_using_approximate_derivatives()"
             << "\n\tYou have to supply column vectors to this function"
@@ -324,8 +311,10 @@ namespace dlib
         double f_value = f(x);
         g = derivative(f,derivative_eps)(x);
 
-        DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-        DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+        if (!is_finite(f_value))
+            throw error("The objective function generated non-finite outputs");
+        if (!is_finite(g))
+            throw error("The objective function generated non-finite outputs");
 
         while(stop_strategy.should_continue_search(x, f_value, g) && f_value > min_f)
         {
@@ -346,8 +335,10 @@ namespace dlib
 
             g = derivative(f,derivative_eps)(x);
 
-            DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-            DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+            if (!is_finite(f_value))
+                throw error("The objective function generated non-finite outputs");
+            if (!is_finite(g))
+                throw error("The objective function generated non-finite outputs");
         }
 
         return f_value;
@@ -374,7 +365,7 @@ namespace dlib
         // The starting point (i.e. x) must be a column vector.  
         COMPILE_TIME_ASSERT(T::NC <= 1);
 
-        DLIB_ASSERT (
+        DLIB_CASSERT (
             is_col_vector(x) && derivative_eps > 0,
             "\tdouble find_max_using_approximate_derivatives()"
             << "\n\tYou have to supply column vectors to this function"
@@ -436,7 +427,7 @@ namespace dlib
         for (long i = 0; i < gradient.size(); ++i)
         {
             const double tol = eps*std::abs(x(i));
-            // if x(i) is an active bound constraint then we should set it's search
+            // If x(i) is an active bound constraint then we should set its search
             // direction such that a single step along the direction either does nothing or
             // closes the gap of size tol before hitting the bound exactly.
             if (x_lower(i)+tol >= x(i) && gradient(i) > 0)
@@ -478,7 +469,7 @@ namespace dlib
         // The starting point (i.e. x) must be a column vector.  
         COMPILE_TIME_ASSERT(T::NC <= 1);
 
-        DLIB_ASSERT (
+        DLIB_CASSERT (
             is_col_vector(x) && is_col_vector(x_lower) && is_col_vector(x_upper) &&
             x.size() == x_lower.size() && x.size() == x_upper.size(),
             "\tdouble find_min_box_constrained()"
@@ -491,7 +482,7 @@ namespace dlib
             << "\n\t x_upper.size():         " << x_upper.size()
         );
         DLIB_ASSERT (
-            min(x_upper-x_lower) > 0,
+            min(x_upper-x_lower) >= 0,
             "\tdouble find_min_box_constrained()"
             << "\n\t You have to supply proper box constraints to this function."
             << "\n\r min(x_upper-x_lower): " << min(x_upper-x_lower)
@@ -502,8 +493,10 @@ namespace dlib
         double f_value = f(x);
         g = der(x);
 
-        DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-        DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+        if (!is_finite(f_value))
+            throw error("The objective function generated non-finite outputs");
+        if (!is_finite(g))
+            throw error("The objective function generated non-finite outputs");
 
         // gap_eps determines how close we have to get to a bound constraint before we
         // start basically dropping it from the optimization and consider it to be an
@@ -534,11 +527,13 @@ namespace dlib
                 last_alpha = alpha;
 
             // Take the search step indicated by the above line search
-            x = clamp(x + alpha*s, x_lower, x_upper);
+            x = dlib::clamp(x + alpha*s, x_lower, x_upper);
             g = der(x);
 
-            DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-            DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+            if (!is_finite(f_value))
+                throw error("The objective function generated non-finite outputs");
+            if (!is_finite(g))
+                throw error("The objective function generated non-finite outputs");
         }
 
         return f_value;
@@ -602,7 +597,7 @@ namespace dlib
         // The starting point (i.e. x) must be a column vector.  
         COMPILE_TIME_ASSERT(T::NC <= 1);
 
-        DLIB_ASSERT (
+        DLIB_CASSERT (
             is_col_vector(x) && is_col_vector(x_lower) && is_col_vector(x_upper) &&
             x.size() == x_lower.size() && x.size() == x_upper.size(),
             "\tdouble find_max_box_constrained()"
@@ -615,7 +610,7 @@ namespace dlib
             << "\n\t x_upper.size():         " << x_upper.size()
         );
         DLIB_ASSERT (
-            min(x_upper-x_lower) > 0,
+            min(x_upper-x_lower) >= 0,
             "\tdouble find_max_box_constrained()"
             << "\n\t You have to supply proper box constraints to this function."
             << "\n\r min(x_upper-x_lower): " << min(x_upper-x_lower)
@@ -629,8 +624,10 @@ namespace dlib
         double f_value = -f(x);
         g = -der(x);
 
-        DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-        DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+        if (!is_finite(f_value))
+            throw error("The objective function generated non-finite outputs");
+        if (!is_finite(g))
+            throw error("The objective function generated non-finite outputs");
 
         // gap_eps determines how close we have to get to a bound constraint before we
         // start basically dropping it from the optimization and consider it to be an
@@ -661,15 +658,17 @@ namespace dlib
                 last_alpha = alpha;
 
             // Take the search step indicated by the above line search
-            x = clamp(x + alpha*s, x_lower, x_upper);
+            x = dlib::clamp(x + alpha*s, x_lower, x_upper);
             g = -der(x);
 
             // Don't forget to negate the output from the line search since it is  from the
             // unnegated version of f() 
             f_value *= -1;
 
-            DLIB_ASSERT(is_finite(f_value), "The objective function generated non-finite outputs");
-            DLIB_ASSERT(is_finite(g), "The objective function generated non-finite outputs");
+            if (!is_finite(f_value))
+                throw error("The objective function generated non-finite outputs");
+            if (!is_finite(g))
+                throw error("The objective function generated non-finite outputs");
         }
 
         return -f_value;

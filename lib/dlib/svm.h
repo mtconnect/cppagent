@@ -1,7 +1,12 @@
 // Copyright (C) 2007  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
+
+#ifdef DLIB_ALL_SOURCE_END
+#include "dlib_basic_cpp_build_tutorial.txt"
+#endif
+
 #ifndef DLIB_SVm_HEADER
-#define DLIB_SVM_HEADER
+#define DLIB_SVm_HEADER
 
 #include "svm/svm_rank_trainer.h"
 #include "svm/svm.h"
@@ -32,7 +37,6 @@
 #include "svm/svr_trainer.h"
 
 #include "svm/one_vs_one_decision_function.h"
-#include "svm/one_vs_one_trainer.h"
 #include "svm/multiclass_tools.h"
 #include "svm/cross_validate_multiclass_trainer.h"
 #include "svm/cross_validate_regression_trainer.h"
@@ -42,16 +46,14 @@
 #include "svm/cross_validate_assignment_trainer.h"
 
 #include "svm/one_vs_all_decision_function.h"
-#include "svm/one_vs_all_trainer.h"
 
 #include "svm/structural_svm_problem.h"
-#include "svm/svm_multiclass_linear_trainer.h"
 #include "svm/sequence_labeler.h"
 #include "svm/assignment_function.h"
+#include "svm/track_association_function.h"
 #include "svm/active_learning.h"
 #include "svm/svr_linear_trainer.h"
 #include "svm/sequence_segmenter.h"
-#include "svm/structural_sequence_segmentation_trainer.h"
 
 #endif // DLIB_SVm_HEADER
 

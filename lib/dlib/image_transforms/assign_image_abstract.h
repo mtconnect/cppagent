@@ -4,6 +4,7 @@
 #ifdef DLIB_ASSIGN_IMAGe_ABSTRACT
 
 #include "../pixel.h"
+#include "../image_processing/generic_image.h"
 
 namespace dlib
 {
@@ -20,12 +21,11 @@ namespace dlib
     );
     /*!
         requires
-            - src_image_type == is an implementation of array2d/array2d_kernel_abstract.h or
-              a dlib::matrix or something convertible to a matrix via mat()
-            - dest_image_type == is an implementation of array2d/array2d_kernel_abstract.h or
-              is a dlib::matrix.
-            - pixel_traits<typename src_image_type::type> is defined  
-            - pixel_traits<typename dest_image_type::type> is defined  
+            - src_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or any object convertible to a matrix
+              via mat().
+            - dest_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or an image_view.
         ensures
             - #dest_img.nc() == src_img.nc()
             - #dest_img.nr() == src_img.nr()
@@ -47,12 +47,11 @@ namespace dlib
     );
     /*!
         requires
-            - src_image_type == is an implementation of array2d/array2d_kernel_abstract.h or
-              a dlib::matrix or something convertible to a matrix via mat()
-            - dest_image_type == is an implementation of array2d/array2d_kernel_abstract.h or
-              is a dlib::matrix.
-            - pixel_traits<typename src_image_type::type> is defined  
-            - pixel_traits<typename dest_image_type::type> is defined  
+            - src_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or any object convertible to a matrix
+              via mat().
+            - dest_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or an image_view.
             - thresh > 0
         ensures
             - #dest_img.nc() == src_img.nc()
@@ -77,8 +76,8 @@ namespace dlib
                       the following mapping:
                         let SRC_UPPER  = min(M + thresh*D, max(mat(src_img)))
                         let SRC_LOWER  = max(M - thresh*D, min(mat(src_img)))
-                        let DEST_UPPER = pixel_traits<dest_image_type::type>::max()
-                        let DEST_LOWER = pixel_traits<dest_image_type::type>::min()
+                        let DEST_UPPER = pixel_traits<image_traits<dest_image_type>::pixel_type>::max()
+                        let DEST_LOWER = pixel_traits<image_traits<dest_image_type>::pixel_type>::min()
 
                         MAPPING: [SRC_LOWER, SRC_UPPER] -> [DEST_LOWER, DEST_UPPER]
 
@@ -101,8 +100,8 @@ namespace dlib
     );
     /*!
         requires
-            - dest_image_type == is an implementation of array2d/array2d_kernel_abstract.h
-            - pixel_traits<typename dest_image_type::type> is defined  
+            - dest_image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or an image_view.
             - pixel_traits<src_pixel_type> is defined  
         ensures
             - #dest_img.nc() == dest_img.nc()
@@ -122,11 +121,12 @@ namespace dlib
         image_type& img,
         long x_border_size,
         long y_border_size,
-        const typename image_type::type& p
+        const typename image_traits<image_type>::pixel_type& p
     );
     /*!
         requires
-            - image_type == is an implementation of array2d/array2d_kernel_abstract.h
+            - image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or an image_view
             - x_border_size >= 0
             - y_border_size >= 0
         ensures
@@ -151,10 +151,10 @@ namespace dlib
     );
     /*!
         requires
-            - image_type == is an implementation of array2d/array2d_kernel_abstract.h
+            - image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or an image_view
             - x_border_size >= 0
             - y_border_size >= 0
-            - pixel_traits<typename image_type::type> is defined  
         ensures
             - #img.nc() == img.nc()
             - #img.nr() == img.nr()
@@ -163,6 +163,28 @@ namespace dlib
                 - for all valid c such that c+x_border_size or c-x_border_size gives an invalid column 
                     - performs assign_pixel(#img[r][c], 0 ) 
                       (i.e. assigns 0 to every pixel in the border of img)
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename image_type
+        >
+    void zero_border_pixels (
+        image_type& img,
+        rectangle inside
+    );
+    /*!
+        requires
+            - image_type == an image object that implements the interface defined in
+              dlib/image_processing/generic_image.h or an image_view
+        ensures
+            - #img.nc() == img.nc()
+            - #img.nr() == img.nr()
+              (i.e. the size of img isn't changed by this function)
+            - All the pixels in img that are not contained inside the inside rectangle
+              given to this function are set to 0.  That is, anything not "inside" is on
+              the border and set to 0.
     !*/
 
 // ----------------------------------------------------------------------------------------
