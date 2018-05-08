@@ -33,7 +33,7 @@ class DataItem;
 
 namespace XmlPrinter
 {
-/***** Main methods to call *****/
+
 std::string printError(
 	const unsigned int instanceId,
 	const unsigned int bufferSize,

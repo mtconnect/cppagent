@@ -29,7 +29,7 @@ public:
 	DAILY, WEEKLY, NEVER
 	};
 
-	/* Default the rolling logger to change create a new file every 10M of data */
+	// Default the rolling logger to change create a new file every 10M of data
 
 	RollingFileLogger(std::string aName,
 			  int aMaxBackupIndex = 9,

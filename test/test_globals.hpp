@@ -43,13 +43,13 @@
 
 #include "globals.hpp"
 
-/* Retrieve a sample file, open it, and return it as a string */
+// Retrieve a sample file, open it, and return it as a string
 std::string getFile(std::string fileLoc);
 
-/* Fill the error */
+// Fill the error
 void fillErrorText(std::string &errorXml, const std::string &text);
 
-/* Search the xml and insert a value into an attribute (attribute="") */
+// Search the xml and insert a value into an attribute (attribute="")
 void fillAttribute(
 	std::string &xmlString,
 	const std::string &attribute,

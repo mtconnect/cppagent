@@ -89,9 +89,9 @@ protected:
 	std::vector<Device *> m_devices;
 
 protected:
-	/* Helper methods to test */
+	// Helper methods to test
 
-	/* Main methods to test */
+	// Main methods to test
 	void testPrintError();
 	void testPrintProbe();
 	void testPrintDataItemElements();
@@ -144,10 +144,10 @@ protected:
 	void testAssetsStyle();
 
 
-	/* Retrieve a data item by name string */
+	// Retrieve a data item by name string
 	DataItem *getDataItem(const char *name);
 
-	/* Construct a component event and set it as the data item's latest event */
+	// Construct a component event and set it as the data item's latest event
 	ComponentEvent *addEventToCheckpoint(
 	Checkpoint &aCheckpoint,
 	const char *name,
