@@ -241,12 +241,12 @@ void MTConnectService::install()
 			SERVICE_NO_CHANGE,	// service start type
 			SERVICE_NO_CHANGE,	// error control: no change
 			path,				// binary path: no change
-			nullptr,				// load order group: no change
-			nullptr,				// tag ID: no change
-			nullptr,				// dependencies: no change
-			nullptr,				// account name: no change
-			nullptr,				// password: no change
-			nullptr) )				// display name: no change
+			nullptr,			// load order group: no change
+			nullptr,			// tag ID: no change
+			nullptr,			// dependencies: no change
+			nullptr,			// account name: no change
+			nullptr,			// password: no change
+			nullptr) )			// display name: no change
 		{
 			g_logger << dlib::LERROR << "OpenService failed (" << GetLastError() << ")";
 			std::cerr << "OpenService failed (" << GetLastError() << ")" << std::endl;
@@ -266,11 +266,11 @@ void MTConnectService::install()
 			SERVICE_AUTO_START,			// start type
 			SERVICE_ERROR_NORMAL,		// error control type
 			path,						// path to service's binary
-			nullptr,						// no load ordering group
-			nullptr,						// no tag identifier
+			nullptr,					// no load ordering group
+			nullptr,					// no tag identifier
 			"Tcpip\0Eventlog\0Netman\0",// dependencies
-			nullptr,						// LocalSystem account
-			nullptr);						// no password
+			nullptr,					// LocalSystem account
+			nullptr);					// no password
 
 		if (!service)
 		{

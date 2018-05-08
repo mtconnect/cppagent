@@ -250,7 +250,7 @@ void XmlParserTest::testConfiguration()
 	std::list<Component *> &children = dev->getChildren();
 	std::list<Component *>::iterator iter;
 
-	for (iter = children.begin(); power == nullptr && iter != children.end(); ++iter)
+	for (iter = children.begin(); !power && iter != children.end(); ++iter)
 	{
 	if ((*iter)->getName() == "power")
 		power = *iter;
@@ -373,7 +373,7 @@ void XmlParserTest::testBadAsset()
 	string xml = getFile("asset4.xml");
 
 	Asset *asset = m_xmlParser->parseAsset("XXX", "CuttingTool", xml);
-	CPPUNIT_ASSERT(asset == nullptr);
+	CPPUNIT_ASSERT(!asset);
 }
 
 void XmlParserTest::testNoNamespace()

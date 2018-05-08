@@ -108,7 +108,7 @@ void Component::addDescription(string body, map<string, string> attributes)
 
 Device *Component::getDevice()
 {
-	if (m_device == nullptr)
+	if (!m_device)
 	{
 		if (getClass() == "Device")
 			m_device = (Device *) this;
@@ -142,7 +142,7 @@ void Component::resolveReferences()
 	{
 		DataItem *di = device->getDeviceDataItem(iter->m_id);
 
-		if (di == nullptr)
+		if (!di)
 			throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " + iter->m_id);
 
 		iter->m_dataItem = di;

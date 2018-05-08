@@ -562,7 +562,7 @@ void OptionsList::usage()
 			len = sprintf(cp2, "-%s <%s>", opt->getName(), opt->getArgDesc());
 			cp2 += len;
 		}
-		else if (opt->getName() == nullptr)
+		else if (!opt->getName())
 		{
 			len = sprintf(cp2, "<%s>", opt->getArgDesc());
 			cp2 += len;

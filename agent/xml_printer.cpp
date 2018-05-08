@@ -27,7 +27,7 @@ static dlib::logger g_logger("xml.printer");
 #define THROW_IF_XML2_ERROR(expr) \
   if ((expr) < 0) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
 #define THROW_IF_XML2_NULL(expr) \
-  if ((expr) == nullptr) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
+  if (!(expr)) { throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); }
 
 using namespace std;
 
@@ -511,7 +511,7 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 					name = BAD_CAST(*child)->getPrefixedClass().c_str();
 			}
 
-			if (name == nullptr)
+			if (!name)
 				name = BAD_CAST(*child)->getClass().c_str();
 
 			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, name));
@@ -943,7 +943,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 				element = BAD_CAST dataItem->getPrefixedElementName().c_str();
 		}
 
-		if (element == nullptr)
+		if (!element)
 			element = BAD_CAST dataItem->getElementName().c_str();
 
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, element));

@@ -119,7 +119,7 @@ Agent::Agent(
 		// Make sure we have two device level data items:
 		// 1. Availability
 		// 2. AssetChanged
-		if ((*device)->getAvailability() == nullptr)
+		if (!(*device)->getAvailability())
 		{
 			// Create availability data item and add it to the device.
 			std::map<string, string> attrs;
@@ -139,7 +139,7 @@ Agent::Agent(
 		stringstream ss(XmlPrinter::getSchemaVersion());
 		ss >> major >> c >> minor;
 
-		if ((*device)->getAssetChanged() == nullptr && (major > 1 || (major == 1 && minor >= 2)))
+		if (!(*device)->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
 		{
 			// Create asset change data item and add it to the device.
 			std::map<string,string> attrs;
@@ -153,7 +153,7 @@ Agent::Agent(
 			(*device)->addDeviceDataItem(*di);
 		}
 
-		if ((*device)->getAssetRemoved() == nullptr && (major > 1 || (major == 1 && minor >= 3)))
+		if (!(*device)->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
 		{
 			// Create asset removed data item and add it to the device.
 			std::map<string, string> attrs;
@@ -216,7 +216,7 @@ Device *Agent::findDeviceByUUIDorName(const std::string &aId)
 
 	std::vector<Device *>::iterator it;
 
-	for (it = m_devices.begin(); device == nullptr && it != m_devices.end(); it++)
+	for (it = m_devices.begin(); !device && it != m_devices.end(); it++)
 	{
 		if ((*it)->getUuid() == aId || (*it)->getName() == aId)
 			device = *it;
@@ -484,7 +484,7 @@ unsigned int Agent::addToBuffer(
 	const string& value,
 	string time )
 {
-	if (dataItem == nullptr)
+	if (!dataItem)
 		return 0;
 
 	dlib::auto_mutex lock(*m_sequenceLock);
@@ -560,7 +560,7 @@ bool Agent::addAsset(
 			return false;
 		}
 
-		if (ptr.getObject() == nullptr)
+		if (!ptr.getObject())
 		{
 			g_logger << LERROR << "addAssete: Error parsing asset";
 			return false;
@@ -575,13 +575,13 @@ bool Agent::addAsset(
 			else
 				m_assetCounts[type] += 1;
 		}
-		else if (old->getObject() == nullptr)
+		else if (!old->getObject())
 		{
 			g_logger << LWARN << "Cannot remove non-existent asset";
 			return false;
 		}
 
-		if (ptr.getObject() == nullptr)
+		if (!ptr.getObject())
 		{
 			g_logger << LWARN << "Asset could not be created";
 			return false;
@@ -656,7 +656,7 @@ bool Agent::updateAsset(
 		dlib::auto_mutex lock(*m_assetLock);
 
 		asset = m_assetMap[id];
-		if (asset.getObject() == nullptr)
+		if (!asset.getObject())
 			return false;
 
 		if (asset->getType() != "CuttingTool" &&
@@ -716,7 +716,7 @@ bool Agent::removeAsset(
 
 		asset = m_assetMap[id];
 
-		if (asset.getObject() == nullptr)
+		if (!asset.getObject())
 			return false;
 
 		asset->setRemoved(true);
@@ -794,7 +794,7 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 
 			if (dataItem &&
 				(dataItem->getDataSource() == adapter || (adapter->isAutoAvailable() &&
-				dataItem->getDataSource() == nullptr &&
+				!dataItem->getDataSource() &&
 				dataItem->getType() == "AVAILABILITY")))
 			{
 				ComponentEventPtr *ptr = m_latest.getEventPtr(dataItem->getId());
@@ -823,7 +823,7 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 						addToBuffer(dataItem, *value, time);
 				}
 			}
-			else if (dataItem == nullptr)
+			else if (!dataItem)
 				g_logger << LWARN << "No data Item for " << (*dataItemAssoc).first;
 		}
 	}
@@ -948,7 +948,7 @@ string Agent::handlePut(
 
 	Device *dev = m_deviceMap[device];
 
-	if (dev == nullptr)
+	if (!dev)
 	{
 		string message = ((string) "Cannot find device: ") + device;
 		return printError("UNSUPPORTED", message);
@@ -1005,7 +1005,7 @@ string Agent::handleProbe(const string &name)
 	if (!name.empty())
 	{
 		Device *device = getDeviceByName(name);
-		if (device == nullptr)
+		if (!device)
 			return printError("NO_DEVICE", "Could not find the device '" + name + "'");
 		else
 			deviceList.push_back(device);
@@ -1090,7 +1090,7 @@ std::string Agent::handleAssets(
 			if (type == tok.IDENTIFIER)
 			{
 				AssetPtr ptr = m_assetMap[token];
-				if (ptr.getObject() == nullptr)
+				if (!ptr.getObject())
 					return XmlPrinter::printError(m_instanceId, 0, 0, "ASSET_NOT_FOUND", (string)"Could not find asset: " + token);
 				assets.push_back(ptr);
 			}
@@ -1137,7 +1137,7 @@ std::string Agent::storeAsset(
 		device = m_deviceMap[name];
 
 	// If the device was not found or was not provided, use the default device.
-	if (device == nullptr)
+	if (!device)
 		device = m_devices[0];
 
 	if (addAsset(device, id, body, type))
