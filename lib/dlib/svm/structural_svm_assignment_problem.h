@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_H__
-#define DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_H__
+#ifndef DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_Hh_
+#define DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_Hh_
 
 
 #include "structural_svm_assignment_problem_abstract.h"
@@ -14,16 +14,41 @@
 
 namespace dlib
 {
+    template <long n, typename T>
+    struct column_matrix_static_resize
+    {
+        typedef T type;
+    };
+
+    template <long n, typename T, long NR, long NC, typename MM, typename L>
+    struct column_matrix_static_resize<n, matrix<T,NR,NC,MM,L> >
+    {
+        typedef matrix<T,NR+n,NC,MM,L> type;
+    };
+
+    template <long n, typename T, long NC, typename MM, typename L>
+    struct column_matrix_static_resize<n, matrix<T,0,NC,MM,L> >
+    {
+        typedef matrix<T,0,NC,MM,L> type;
+    };
+
+    template <typename T>
+    struct add_one_to_static_feat_size
+    {
+        typedef typename column_matrix_static_resize<1,typename T::feature_vector_type>::type type;
+    };
+
+// ----------------------------------------------------------------------------------------
 
     template <
         typename feature_extractor
         >
     class structural_svm_assignment_problem : noncopyable,
-        public structural_svm_problem_threaded<matrix<double,0,1>, typename feature_extractor::feature_vector_type >
+        public structural_svm_problem_threaded<matrix<double,0,1>, typename add_one_to_static_feat_size<feature_extractor>::type >
     {
     public:
         typedef matrix<double,0,1> matrix_type;
-        typedef typename feature_extractor::feature_vector_type feature_vector_type;
+        typedef typename add_one_to_static_feat_size<feature_extractor>::type feature_vector_type;
 
         typedef typename feature_extractor::lhs_element lhs_element;
         typedef typename feature_extractor::rhs_element rhs_element;
@@ -38,16 +63,27 @@ namespace dlib
             const std::vector<label_type>& labels_,
             const feature_extractor& fe_,
             bool force_assignment_,
-            unsigned long num_threads = 2
+            unsigned long num_threads,
+            const double loss_per_false_association_,
+            const double loss_per_missed_association_
         ) :
             structural_svm_problem_threaded<matrix_type,feature_vector_type>(num_threads),
             samples(samples_),
             labels(labels_),
             fe(fe_),
-            force_assignment(force_assignment_)
+            force_assignment(force_assignment_),
+            loss_per_false_association(loss_per_false_association_),
+            loss_per_missed_association(loss_per_missed_association_)
         {
             // make sure requires clause is not broken
 #ifdef ENABLE_ASSERTS
+            DLIB_ASSERT(loss_per_false_association > 0 && loss_per_missed_association > 0,
+                "\t structural_svm_assignment_problem::structural_svm_assignment_problem()"
+                << "\n\t invalid inputs were given to this function"
+                << "\n\t loss_per_false_association:  " << loss_per_false_association
+                << "\n\t loss_per_missed_association: " << loss_per_missed_association
+                << "\n\t this: " << this
+            );
             if (force_assignment)
             {
                 DLIB_ASSERT(is_forced_assignment_problem(samples, labels),
@@ -77,7 +113,7 @@ namespace dlib
         virtual long get_num_dimensions (
         ) const 
         {
-            return fe.num_features();
+            return fe.num_features()+1; // +1 for the bias term
         }
 
         virtual long get_num_samples (
@@ -94,14 +130,15 @@ namespace dlib
         ) const 
         {
             typename feature_extractor::feature_vector_type feats;
-            psi.set_size(fe.num_features());
+            psi.set_size(get_num_dimensions());
             psi = 0;
             for (unsigned long i = 0; i < sample.first.size(); ++i)
             {
                 if (label[i] != -1)
                 {
                     fe.get_features(sample.first[i], sample.second[label[i]], feats);
-                    psi += feats;
+                    set_rowm(psi,range(0,feats.size()-1)) += feats;
+                    psi(get_num_dimensions()-1) += 1;
                 }
             }
         }
@@ -123,15 +160,18 @@ namespace dlib
         ) const 
         {
             psi.clear();
-            typename feature_extractor::feature_vector_type feats;
+            feature_vector_type feats;
+            int num_assignments = 0;
             for (unsigned long i = 0; i < sample.first.size(); ++i)
             {
                 if (label[i] != -1)
                 {
                     fe.get_features(sample.first[i], sample.second[label[i]], feats);
                     append_to_sparse_vect(psi, feats);
+                    ++num_assignments;
                 }
             }
+            psi.push_back(std::make_pair(get_num_dimensions()-1,num_assignments));
         }
 
         virtual void get_truth_joint_feature_vector (
@@ -176,12 +216,13 @@ namespace dlib
                         if (c < (long)samples[idx].second.size())
                         {
                             fe.get_features(samples[idx].first[r], samples[idx].second[c], feats);
-                            cost(r,c) = dot(current_solution, feats);
+                            const double bias = current_solution(current_solution.size()-1);
+                            cost(r,c) = dot(colm(current_solution,0,current_solution.size()-1), feats) + bias;
 
                             // add in the loss since this corresponds to an incorrect prediction.
                             if (c != labels[idx][r])
                             {
-                                cost(r,c) += 1;
+                                cost(r,c) += loss_per_false_association;
                             }
                         }
                         else
@@ -189,7 +230,7 @@ namespace dlib
                             if (labels[idx][r] == -1)
                                 cost(r,c) = 0;
                             else
-                                cost(r,c) = 1; // 1 for the loss
+                                cost(r,c) = loss_per_missed_association; 
                         }
 
                     }
@@ -220,7 +261,12 @@ namespace dlib
                     assignment[i] = -1;
 
                 if (assignment[i] != labels[idx][i])
-                    loss += 1;
+                {
+                    if (assignment[i] == -1)
+                        loss += loss_per_missed_association;
+                    else
+                        loss += loss_per_false_association;
+                }
             }
 
             get_joint_feature_vector(samples[idx], assignment, psi);
@@ -230,11 +276,13 @@ namespace dlib
         const std::vector<label_type>& labels;
         const feature_extractor& fe;
         bool force_assignment;
+        const double loss_per_false_association;
+        const double loss_per_missed_association;
     };
 
 // ----------------------------------------------------------------------------------------
 
 }
 
-#endif // DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_H__
+#endif // DLIB_STRUCTURAL_SVM_ASSiGNMENT_PROBLEM_Hh_
 

@@ -206,7 +206,7 @@ void test_pyramid_down_rgb2()
 template <typename pyramid_down_type>
 void test_pyramid_down_grayscale2()
 {
-    array2d<unsigned char> img, img3;
+    array2d<unsigned char> img;
     array2d<unsigned char> img2, img4;
 
 
@@ -225,7 +225,6 @@ void test_pyramid_down_grayscale2()
     pyramid_down_type pyr;
 
     pyr(img, img2);
-    pyr(img, img3);
 
 
     DLIB_TEST(((rect1.tl_corner() - pyr.rect_down(pyr.rect_up(rect1,2),2).tl_corner()).length()) < 1);
@@ -246,17 +245,13 @@ void test_pyramid_down_grayscale2()
     /*
     image_window my_window(img);
     image_window win2(img2);
-    image_window win3(img3);
     win2.add_overlay(image_window::overlay_rect(rect1, rgb_pixel(255,0,0)));
     win2.add_overlay(image_window::overlay_rect(rect2, rgb_pixel(255,0,0)));
     win2.add_overlay(image_window::overlay_rect(rect3, rgb_pixel(255,0,0)));
-    win3.add_overlay(image_window::overlay_rect(rect1, rgb_pixel(255,0,0)));
-    win3.add_overlay(image_window::overlay_rect(rect2, rgb_pixel(255,0,0)));
-    win3.add_overlay(image_window::overlay_rect(rect3, rgb_pixel(255,0,0)));
     */
 
 
-    DLIB_TEST(std::abs((int)mean(subm(matrix_cast<long>(mat(img2)),rect1)) - 255) < 3);
+    DLIB_TEST(std::abs((int)mean(subm(matrix_cast<long>(mat(img2)),rect1)) - 255) <= 3);
     DLIB_TEST(std::abs((int)mean(subm(matrix_cast<long>(mat(img2)),rect2)) - 170) < 3);
     DLIB_TEST(std::abs((int)mean(subm(matrix_cast<long>(mat(img2)),rect3)) - 100) < 3);
     assign_image(img4, img);
@@ -268,13 +263,42 @@ void test_pyramid_down_grayscale2()
 
 
     // make sure the coordinate mapping is invertible when it should be
-    for (long x = -10; x <= 10; ++x)
+    for (int l = 0; l < 4; ++l)
     {
-        for (long y = -10; y <= 10; ++y)
+        for (long x = -10; x <= 10; ++x)
         {
-            DLIB_TEST_MSG(point(pyr.point_down(pyr.point_up(point(x,y)))) == point(x,y), 
-                          point(x,y) << "  " << pyr.point_up(point(x,y)) << "   " << pyr.point_down(pyr.point_up(point(x,y))));
+            for (long y = -10; y <= 10; ++y)
+            {
+                DLIB_TEST_MSG(point(pyr.point_down(pyr.point_up(point(x,y),l),l)) == point(x,y), 
+                    point(x,y) << "  " << pyr.point_up(point(x,y),l) << "   " << pyr.point_down(pyr.point_up(point(x,y),l),l));
+                DLIB_TEST_MSG(point(pyr.point_down(point(pyr.point_up(point(x,y),l)),l)) == point(x,y), 
+                    point(x,y) << "  " << pyr.point_up(point(x,y),l) << "   " << pyr.point_down(point(pyr.point_up(point(x,y),l)),l));
+            }
         }
+    }
+}
+
+// ----------------------------------------------------------------------------------------
+
+template <typename pyramid_down_type>
+void test_pyr_sizes()
+{
+    dlib::rand rnd;
+
+    for (int iter = 0; iter < 20; ++iter)
+    {
+        long nr = rnd.get_random_32bit_number()%10+40;
+        long nc = rnd.get_random_32bit_number()%10+40;
+
+        array2d<unsigned char> img(nr,nc), img2;
+        assign_all_pixels(img,0);
+
+        pyramid_down_type pyr;
+
+        pyr(img, img2);
+        find_pyramid_down_output_image_size(pyr, nr, nc);
+        DLIB_TEST(img2.nr() == nr);
+        DLIB_TEST(img2.nc() == nc);
     }
 }
 
@@ -284,6 +308,7 @@ void test_pyramid_down_grayscale2()
 template <typename pyramid_down_type>
 void test_pyramid_down_small_sizes()
 {
+    print_spinner();
     // just make sure it doesn't get messed up with small images.  This test
     // is only really useful if asserts are enabled.
     pyramid_down_type pyr;
@@ -378,6 +403,17 @@ void test_pyramid_down_small_sizes()
             print_spinner();
             dlog << LINFO << "call test_pyramid_down_grayscale2<pyramid_down<6> >();";
             test_pyramid_down_grayscale2<pyramid_down<6> >();
+
+
+            test_pyr_sizes<pyramid_down<1>>();
+            test_pyr_sizes<pyramid_down<2>>();
+            test_pyr_sizes<pyramid_down<3>>();
+            test_pyr_sizes<pyramid_down<4>>();
+            test_pyr_sizes<pyramid_down<5>>();
+            test_pyr_sizes<pyramid_down<6>>();
+            test_pyr_sizes<pyramid_down<7>>();
+            test_pyr_sizes<pyramid_down<8>>();
+            test_pyr_sizes<pyramid_down<28>>();
         }
     } a;
 

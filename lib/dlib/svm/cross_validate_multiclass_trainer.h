@@ -1,11 +1,10 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_CROSS_VALIDATE_MULTICLASS_TRaINER_H__
-#define DLIB_CROSS_VALIDATE_MULTICLASS_TRaINER_H__
+#ifndef DLIB_CROSS_VALIDATE_MULTICLASS_TRaINER_Hh_
+#define DLIB_CROSS_VALIDATE_MULTICLASS_TRaINER_Hh_
 
 #include <vector>
 #include "../matrix.h"
-#include "one_vs_one_trainer.h"
 #include "cross_validate_multiclass_trainer_abstract.h"
 #include <sstream>
 
@@ -25,7 +24,6 @@ namespace dlib
         const std::vector<label_type>& y_test
     )
     {
-        typedef typename dec_funct_type::mem_manager_type mem_manager_type;
 
         // make sure requires clause is not broken
         DLIB_ASSERT( is_learning_problem(x_test,y_test) == true,
@@ -206,5 +204,5 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-#endif // DLIB_CROSS_VALIDATE_MULTICLASS_TRaINER_H__
+#endif // DLIB_CROSS_VALIDATE_MULTICLASS_TRaINER_Hh_
 

@@ -17,7 +17,7 @@ function(AddCppUnitSupport projectTarget)
 	if(WIN32)
 		# For Windows we compile our own version of CppUnit from our Git submodule source
 		# Define a dependency between the targets and link them.
-		set(CPPUNIT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/cppunit/cppunit/include)
+		set(CPPUNIT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/cppunit2/include)
 		set(CPPUNIT_LIBRARY cppunit)
 		
 		add_dependencies(${projectTarget} cppunit)

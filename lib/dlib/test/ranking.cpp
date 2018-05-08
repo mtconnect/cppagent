@@ -2,10 +2,12 @@
 // License: Boost Software License   See LICENSE.txt for the full license.
 #include <dlib/svm.h>
 #include <dlib/rand.h>
+#include <dlib/dnn.h>
 #include <sstream>
 #include <string>
 #include <cstdlib>
 #include <ctime>
+#include <map>
 
 #include "tester.h"
 
@@ -71,6 +73,75 @@ namespace
             DLIB_TEST(mat(x_count) == mat(x_count2));
             DLIB_TEST(mat(y_count) == mat(y_count2));
         }
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void run_prior_test()
+    {
+        print_spinner();
+        typedef matrix<double,3,1> sample_type;
+        typedef linear_kernel<sample_type> kernel_type;
+
+        svm_rank_trainer<kernel_type> trainer;
+
+        ranking_pair<sample_type> data;
+
+        sample_type samp;
+        samp = 0, 0, 1; data.relevant.push_back(samp); 
+        samp = 0, 1, 0; data.nonrelevant.push_back(samp); 
+
+        trainer.set_c(10);
+        decision_function<kernel_type> df = trainer.train(data);
+
+        trainer.set_prior(df);
+
+        data.relevant.clear();
+        data.nonrelevant.clear();
+        samp = 1, 0, 0; data.relevant.push_back(samp); 
+        samp = 0, 1, 0; data.nonrelevant.push_back(samp); 
+
+        df = trainer.train(data);
+
+        dlog << LINFO << trans(df.basis_vectors(0));
+        DLIB_TEST(df.basis_vectors(0)(0) > 0);
+        DLIB_TEST(df.basis_vectors(0)(1) < 0);
+        DLIB_TEST(df.basis_vectors(0)(2) > 0);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    void run_prior_sparse_test()
+    {
+        print_spinner();
+        typedef std::map<unsigned long,double> sample_type;
+        typedef sparse_linear_kernel<sample_type> kernel_type;
+
+        svm_rank_trainer<kernel_type> trainer;
+
+        ranking_pair<sample_type> data;
+
+        sample_type samp;
+        samp[0] = 1; data.relevant.push_back(samp); samp.clear();
+        samp[1] = 1; data.nonrelevant.push_back(samp); samp.clear();
+
+        trainer.set_c(10);
+        decision_function<kernel_type> df = trainer.train(data);
+
+        trainer.set_prior(df);
+
+        data.relevant.clear();
+        data.nonrelevant.clear();
+        samp[2] = 1; data.relevant.push_back(samp); samp.clear();
+        samp[1] = 1; data.nonrelevant.push_back(samp); samp.clear();
+
+        df = trainer.train(data);
+
+        matrix<double,0,1> w = sparse_to_dense(df.basis_vectors(0));
+        dlog << LINFO << trans(w);
+        DLIB_TEST(w(0) > 0.1);
+        DLIB_TEST(w(1) < -0.1);
+        DLIB_TEST(w(2) > 0.1);
     }
 
 // ----------------------------------------------------------------------------------------
@@ -334,6 +405,50 @@ namespace
     }
 
 // ----------------------------------------------------------------------------------------
+
+    void test_dnn_ranking_loss()
+    {
+        print_spinner();
+        typedef matrix<double,2,1> sample_type;
+
+
+        ranking_pair<sample_type> data;
+        sample_type samp;
+
+        // Make one relevant example.
+        samp = 1, 0; 
+        data.relevant.push_back(samp);
+
+        // Now make a non-relevant example.
+        samp = 0, 1; 
+        data.nonrelevant.push_back(samp);
+
+
+        using net_type = loss_ranking<fc_no_bias<1,input<matrix<float,2,1>>>>;
+        net_type net;
+        dnn_trainer<net_type> trainer(net, sgd(1.0, 0.9));
+        std::vector<matrix<float,2,1>> x;
+        std::vector<float> y;
+
+        x.push_back(matrix_cast<float>(data.relevant[0]));  y.push_back(1);
+        x.push_back(matrix_cast<float>(data.nonrelevant[0]));  y.push_back(-1);
+
+        //trainer.be_verbose();
+        trainer.set_learning_rate_schedule(logspace(-1, -7, 4000));
+        trainer.train(x,y);
+
+        matrix<float> params = mat(net.subnet().layer_details().get_layer_params());
+        dlog << LINFO << "params: "<< params;
+        dlog << LINFO << "relevant output score: " << net(x[0]);
+        dlog << LINFO << "nonrelevant output score: " << net(x[1]);
+
+        DLIB_TEST(std::abs(params(0) - 1) < 0.001);
+        DLIB_TEST(std::abs(params(1) + 1) < 0.001);
+        DLIB_TEST(std::abs(net(x[0]) - 1) < 0.001);
+        DLIB_TEST(std::abs(net(x[1]) + 1) < 0.001);
+    }
+
+// ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
@@ -355,6 +470,9 @@ namespace
             dotest_sparse_vectors();
             test_svmrank_weight_force_dense<true>();
             test_svmrank_weight_force_dense<false>();
+            run_prior_test();
+            run_prior_sparse_test();
+            test_dnn_ranking_loss();
 
         }
     } a;

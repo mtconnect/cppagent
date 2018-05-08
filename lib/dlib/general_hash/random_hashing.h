@@ -1,7 +1,7 @@
 // Copyright (C) 2012  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_RANDOM_HAsHING_H__ 
-#define DLIB_RANDOM_HAsHING_H__ 
+#ifndef DLIB_RANDOM_HAsHING_Hh_ 
+#define DLIB_RANDOM_HAsHING_Hh_ 
 
 #include "random_hashing_abstract.h"
 #include "murmur_hash3.h"
@@ -35,7 +35,7 @@ namespace dlib
 
         const static unsigned int max = 4096;
 
-        const static float logvals[max] = { 
+        const static double logvals[max] = { 
         4.079, 3.905, 3.8, 3.723, 3.663, 3.613, 3.57, 3.532, 3.499, 3.468, 
         3.441, 3.416, 3.392, 3.37, 3.35, 3.33, 3.312, 3.295, 3.278, 3.263, 
         3.248, 3.233, 3.219, 3.206, 3.193, 3.181, 3.169, 3.158, 3.147, 3.136, 
@@ -447,7 +447,7 @@ namespace dlib
         0.08566, 0.08275, 0.07974, 0.0766, 0.07334, 0.06992, 0.06633, 0.06253, 0.05849, 0.05415, 
         0.04943, 0.0442, 0.03828, 0.03125, 0.0221, -0};
 
-        const static float cosvals[max] = { 
+        const static double cosvals[max] = { 
         1, 1, 1, 1, 1, 1, 0.9999, 0.9999, 0.9999, 0.9999, 
         0.9999, 0.9998, 0.9998, 0.9998, 0.9997, 0.9997, 0.9997, 0.9996, 0.9996, 0.9995, 
         0.9995, 0.9994, 0.9994, 0.9993, 0.9993, 0.9992, 0.9991, 0.9991, 0.999, 0.9989, 
@@ -862,7 +862,7 @@ namespace dlib
         const static uint64 mask = max-1; 
         return logvals[h.first&mask]*cosvals[h.second&mask];
 
-        // Note that we are just using the Box–Muller transform to compute the result.  In
+        // Note that we are just using the Box-Muller transform to compute the result.  In
         // particular, we are doing this (where u1 and u2 are uniform random variables in
         // the range [0,1]): 
         //    return sqrt(-2*log(u1)) * cos(2*PI*u2);
@@ -873,5 +873,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_RANDOM_HAsHING_H__
+#endif // DLIB_RANDOM_HAsHING_Hh_
 

@@ -5,6 +5,7 @@
 #include "tokenizer_kernel_1.h"
 
 #include <iostream>
+#include <cstdio>
 
 namespace dlib
 {
@@ -28,7 +29,7 @@ namespace dlib
         catch (...)
         {
             if (headset) delete [] headset;
-            if (bodyset) delete [] headset;
+            if (bodyset) delete [] bodyset;
             throw;
         }
     }

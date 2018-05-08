@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_STRUCTURAL_ASSiGNMENT_TRAINER_H__
-#define DLIB_STRUCTURAL_ASSiGNMENT_TRAINER_H__
+#ifndef DLIB_STRUCTURAL_ASSiGNMENT_TRAINER_Hh_
+#define DLIB_STRUCTURAL_ASSiGNMENT_TRAINER_Hh_
 
 #include "structural_assignment_trainer_abstract.h"
 #include "../algs.h"
@@ -143,6 +143,61 @@ namespace dlib
             force_assignment = new_value;
         }
 
+        void set_loss_per_false_association (
+            double loss
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(loss > 0, 
+                "\t void structural_assignment_trainer::set_loss_per_false_association(loss)"
+                << "\n\t Invalid inputs were given to this function "
+                << "\n\t loss: " << loss
+                << "\n\t this: " << this
+                );
+
+            loss_per_false_association = loss;
+        }
+
+        double get_loss_per_false_association (
+        ) const
+        {
+            return loss_per_false_association;
+        }
+
+        void set_loss_per_missed_association (
+            double loss
+        )
+        {
+            // make sure requires clause is not broken
+            DLIB_ASSERT(loss > 0, 
+                "\t void structural_assignment_trainer::set_loss_per_missed_association(loss)"
+                << "\n\t Invalid inputs were given to this function "
+                << "\n\t loss: " << loss
+                << "\n\t this: " << this
+                );
+
+            loss_per_missed_association = loss;
+        }
+
+        double get_loss_per_missed_association (
+        ) const
+        {
+            return loss_per_missed_association;
+        }
+
+        bool forces_last_weight_to_1 (
+        ) const
+        {
+            return last_weight_1;
+        }
+
+        void force_last_weight_to_1 (
+            bool should_last_weight_be_1
+        )
+        {
+            last_weight_1 = should_last_weight_be_1;
+        }
+
         const assignment_function<feature_extractor> train (  
             const std::vector<sample_type>& samples,
             const std::vector<label_type>& labels
@@ -173,7 +228,8 @@ namespace dlib
 
 
 
-            structural_svm_assignment_problem<feature_extractor> prob(samples,labels, fe, force_assignment, num_threads);
+            structural_svm_assignment_problem<feature_extractor> prob(samples,labels, fe, force_assignment, num_threads,
+                loss_per_false_association, loss_per_missed_association);
 
             if (verbose)
                 prob.be_verbose();
@@ -184,9 +240,16 @@ namespace dlib
 
             matrix<double,0,1> weights; 
 
-            solver(prob, weights, num_nonnegative_weights(fe));
+            // Take the min here because we want to prevent the user from accidentally
+            // forcing the bias term to be non-negative.
+            const unsigned long num_nonneg = std::min(fe.num_features(),num_nonnegative_weights(fe));
+            if (last_weight_1)
+                solver(prob, weights, num_nonneg, fe.num_features()-1);
+            else
+                solver(prob, weights, num_nonneg);
 
-            return assignment_function<feature_extractor>(weights,fe,force_assignment);
+            const double bias = weights(weights.size()-1);
+            return assignment_function<feature_extractor>(colm(weights,0,weights.size()-1), bias,fe,force_assignment);
 
         }
 
@@ -200,15 +263,21 @@ namespace dlib
         bool verbose;
         unsigned long num_threads;
         unsigned long max_cache_size;
+        double loss_per_false_association;
+        double loss_per_missed_association;
+        bool last_weight_1;
 
         void set_defaults ()
         {
             force_assignment = false;
             C = 100;
             verbose = false;
-            eps = 0.1;
+            eps = 0.01;
             num_threads = 2;
             max_cache_size = 5;
+            loss_per_false_association = 1;
+            loss_per_missed_association = 1;
+            last_weight_1 = false;
         }
 
         feature_extractor fe;
@@ -218,7 +287,7 @@ namespace dlib
 
 }
 
-#endif // DLIB_STRUCTURAL_ASSiGNMENT_TRAINER_H__
+#endif // DLIB_STRUCTURAL_ASSiGNMENT_TRAINER_Hh_
 
 
 

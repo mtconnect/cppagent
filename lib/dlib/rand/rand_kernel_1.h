@@ -10,6 +10,7 @@
 #include "../is_kind.h"
 #include <iostream>
 #include "../serialize.h"
+#include "../string.h"
 
 namespace dlib
 {
@@ -37,6 +38,14 @@ namespace dlib
             ) 
             {
                 init();
+            }
+
+            rand (
+                time_t seed_value
+            )
+            {
+                init();
+                set_seed(cast_to_string(seed_value));
             }
 
             rand (
@@ -126,6 +135,44 @@ namespace dlib
                 const uint64 a = get_random_32bit_number();
                 const uint64 b = get_random_32bit_number();
                 return (a<<32)|b;
+            }
+
+            double get_double_in_range (
+                double begin,
+                double end
+            )
+            {
+                DLIB_ASSERT(begin <= end);
+                return begin + get_random_double()*(end-begin);
+            }
+
+            long long get_integer_in_range(
+                long long begin,
+                long long end
+            )
+            {
+                DLIB_ASSERT(begin <= end);
+                if (begin == end)
+                    return begin;
+
+                auto r = get_random_64bit_number();
+                const auto limit = std::numeric_limits<decltype(r)>::max();
+                const auto range = end-begin;
+                // Use rejection sampling to remove the biased sampling you would get with
+                // the naive get_random_64bit_number()%range sampling. 
+                while(r >= (limit/range)*range)
+                    r = get_random_64bit_number();
+
+                return begin + static_cast<long long>(r%range);
+            }
+
+            long long get_integer(
+                long long end
+            )
+            {
+                DLIB_ASSERT(end >= 0);
+
+                return get_integer_in_range(0,end);
             }
 
             double get_random_double (
@@ -241,7 +288,7 @@ namespace dlib
                 max_val =  0xFFFFFF;
                 max_val *= 0x1000000;
                 max_val += 0xFFFFFF;
-                max_val += 0.01;
+                max_val += 0.05;
 
 
                 has_gaussian = false;

@@ -18,6 +18,17 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
+    template <typename EXP>
+    constexpr bool is_row_major (
+        const matrix_exp<EXP>&
+    );
+    /*!
+        ensures
+            - returns true if and only if the given matrix expression uses the row_major_layout.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     const matrix_exp diag (
         const matrix_exp& m
     );
@@ -241,7 +252,7 @@ namespace dlib
     );
     /*!
         requires
-            - nr > 0 && nc > 0
+            - nr >= 0 && nc >= 0
         ensures
             - returns an nr by nc matrix with elements of type T and all set to val.
     !*/
@@ -253,7 +264,7 @@ namespace dlib
     );
     /*!
         requires
-            - mat.nr() > 0 && mat.nc() > 0
+            - mat.nr() >= 0 && mat.nc() >= 0
         ensures
             - Let T denote the type of element in mat. Then this function
               returns uniform_matrix<T>(mat.nr(), mat.nc(), 1)
@@ -270,7 +281,7 @@ namespace dlib
     );
     /*!
         requires
-            - nr > 0 && nc > 0
+            - nr >= 0 && nc >= 0
         ensures
             - returns uniform_matrix<T>(nr, nc, 1)
     !*/
@@ -282,7 +293,7 @@ namespace dlib
     );
     /*!
         requires
-            - mat.nr() > 0 && mat.nc() > 0
+            - mat.nr() >= 0 && mat.nc() >= 0
         ensures
             - Let T denote the type of element in mat. Then this function
               returns uniform_matrix<T>(mat.nr(), mat.nc(), 0)
@@ -299,7 +310,7 @@ namespace dlib
     );
     /*!
         requires
-            - nr > 0 && nc > 0
+            - nr >= 0 && nc >= 0
         ensures
             - returns uniform_matrix<T>(nr, nc, 0)
     !*/
@@ -797,7 +808,7 @@ namespace dlib
     );
     /*!
         requires
-            - a.nr() == b.nr()
+            - a.nr() == b.nr() || a.size() == 0 || b.size() == 0
             - a and b both contain the same type of element
         ensures
             - This function joins two matrices together by concatenating their rows.
@@ -820,7 +831,7 @@ namespace dlib
     );
     /*!
         requires
-            - a.nc() == b.nc()
+            - a.nc() == b.nc() || a.size() == 0 || b.size() == 0
             - a and b both contain the same type of element
         ensures
             - This function joins two matrices together by concatenating their columns.
@@ -1352,6 +1363,34 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    const matrix_exp min_pointwise (
+        const matrix_exp& a,
+        const matrix_exp& b 
+    );
+    /*!
+        requires
+            - a.nr() == b.nr()
+            - a.nc() == b.nc()
+            - a and b both contain the same type of element 
+        ensures
+            - returns a matrix R such that:
+                - R::type == the same type that was in a and b.
+                - R has the same dimensions as a and b. 
+                - for all valid r and c:
+                  R(r,c) == std::min(a(r,c), b(r,c))
+    !*/
+
+    const matrix_exp min_pointwise (
+        const matrix_exp& a,
+        const matrix_exp& b,
+        const matrix_exp& c 
+    );
+    /*!
+        performs min_pointwise(a,min_pointwise(b,c));
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     const matrix_exp::type max (
         const matrix_exp& m
     );
@@ -1362,6 +1401,34 @@ namespace dlib
             - returns the value of the biggest element of m.  If m contains complex
               elements then the element returned is the one with the largest norm
               according to std::norm().
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    const matrix_exp max_pointwise (
+        const matrix_exp& a,
+        const matrix_exp& b 
+    );
+    /*!
+        requires
+            - a.nr() == b.nr()
+            - a.nc() == b.nc()
+            - a and b both contain the same type of element 
+        ensures
+            - returns a matrix R such that:
+                - R::type == the same type that was in a and b.
+                - R has the same dimensions as a and b. 
+                - for all valid r and c:
+                  R(r,c) == std::max(a(r,c), b(r,c))
+    !*/
+
+    const matrix_exp max_pointwise (
+        const matrix_exp& a,
+        const matrix_exp& b,
+        const matrix_exp& c 
+    );
+    /*!
+        performs max_pointwise(a,max_pointwise(b,c));
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1407,6 +1474,47 @@ namespace dlib
         ensures
             - returns the index of the smallest element in m.  
               (i.e. m(index_of_min(m)) == min(m))
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    point max_point (
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - m.size() > 0
+        ensures
+            - returns the location of the maximum element of the array, that is, if the
+              returned point is P then it will be the case that: m(P.y(),P.x()) == max(m).
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    dlib::vector<double,2> max_point_interpolated (
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - m.size() > 0
+        ensures
+            - Like max_point(), this function finds the location in m with the largest
+              value.  However, we additionally use some quadratic interpolation to find the
+              location of the maximum point with sub-pixel accuracy.  Therefore, the
+              returned point is equal to max_point(m) + some small sub-pixel delta.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    point min_point (
+        const matrix_exp& m
+    );
+    /*!
+        requires
+            - m.size() > 0
+        ensures
+            - returns the location of the minimum element of the array, that is, if the
+              returned point is P then it will be the case that: m(P.y(),P.x()) == min(m).
     !*/
 
 // ----------------------------------------------------------------------------------------
@@ -1601,7 +1709,7 @@ namespace dlib
         typename T,
         typename P
         >
-    const matrix_exp pixel_to_vector (
+    const matrix<T,pixel_traits<P>::num,1> pixel_to_vector (
         const P& pixel
     );
     /*!

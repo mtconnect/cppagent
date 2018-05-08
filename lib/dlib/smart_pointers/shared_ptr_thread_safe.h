@@ -7,7 +7,6 @@
 #include <memory>
 #include <typeinfo>
 #include <string>       // for the exceptions
-#include <memory>
 #include "../algs.h"
 #include "shared_ptr_thread_safe_abstract.h"
 #include "../threads/threads_kernel.h"
@@ -258,21 +257,6 @@ namespace dlib
             }
         }
 
-
-        template<typename Y>
-        explicit shared_ptr_thread_safe(
-            std::unique_ptr<Y>& r
-        )
-        {
-            DLIB_ASSERT(r.get() != 0,
-                "\tshared_ptr::shared_ptr_thread_safe(unique_ptr r)"
-                << "\n\tr.get() can't be null"
-                << "\n\tthis: " << this
-                );
-            shared_node = new shared_ptr_thread_safe_node;
-            data = r.release();
-        }
-
         shared_ptr_thread_safe& operator= (
             const shared_ptr_thread_safe& r
         )
@@ -287,23 +271,6 @@ namespace dlib
         )
         {
             shared_ptr_thread_safe(r).swap(*this);
-            return *this;
-        }
-
-        template<typename Y> 
-        shared_ptr_thread_safe& operator= (
-            std::unique_ptr<Y>& r
-        )
-        {
-            DLIB_ASSERT(r.get() != 0,
-                "\tshared_ptr::operator=(unique_ptr r)"
-                << "\n\tr.get() can't be null"
-                << "\n\tthis: " << this
-                );
-
-            reset();
-            shared_node = new shared_ptr_thread_safe_node;
-            data = r.release();
             return *this;
         }
 
@@ -402,10 +369,7 @@ namespace dlib
                 if (shared_node->del)
                     return static_cast<D*>(shared_node->del->get_deleter_void(typeid(D)));
             }
-            else
-            {
-                return 0;
-            }
+            return 0;
         }
 
         template <typename Y>

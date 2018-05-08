@@ -8,6 +8,17 @@
 #include "../platform.h"
 #include <iostream>
 
+// The point of this block of code is to cause a link time error that will prevent a user
+// from compiling part of their application with DLIB_ASSERT enabled and part with them
+// disabled since doing that would be a violation of C++'s one definition rule. 
+extern "C"
+{
+#ifdef ENABLE_ASSERTS
+    int USER_ERROR__missing_dlib_all_source_cpp_file__OR__inconsistent_use_of_DEBUG_or_ENABLE_ASSERTS_preprocessor_directives;
+#else
+    int USER_ERROR__missing_dlib_all_source_cpp_file__OR__inconsistent_use_of_DEBUG_or_ENABLE_ASSERTS_preprocessor_directives_;
+#endif
+}
 
 #ifndef DLIB_THREAD_POOL_TIMEOUT
 // default to 30000 milliseconds
@@ -30,15 +41,6 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
-        threader& thread_pool (
-        ) 
-        {
-            static threader* thread_pool = new threader;
-            return *thread_pool;
-        }
-
-// ----------------------------------------------------------------------------------------
-
         struct threader_destruct_helper
         {
             // cause the thread pool to begin its destruction process when 
@@ -48,7 +50,16 @@ namespace dlib
                 thread_pool().destruct_if_ready();
             }
         };
-        static threader_destruct_helper a;
+
+// ----------------------------------------------------------------------------------------
+
+        threader& thread_pool (
+        ) 
+        {
+            static threader* thread_pool = new threader;
+            static threader_destruct_helper a;
+            return *thread_pool;
+        }
 
 // ----------------------------------------------------------------------------------------
 
@@ -176,7 +187,7 @@ namespace dlib
             // get a lock on the data mutex
             auto_mutex M(data_mutex);
 
-            // loop to ensure that the new function poitner is in the data
+            // loop to ensure that the new function pointer is in the data
             while (true)
             {
                 // if the data is empty then add new data and quit loop
@@ -195,7 +206,7 @@ namespace dlib
 
 
             // get a thread for this new data
-            // if a new thread must be crated
+            // if a new thread must be created
             if (pool_count == 0)
             {
                 // make thread and add it to the pool

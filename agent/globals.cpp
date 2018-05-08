@@ -13,6 +13,15 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
+
+
+// Don't include WinSock.h when processing <windows.h>
+#ifdef _WINDOWS
+	#define _WINSOCKAPI_
+	#include <winsock2.h>
+	#include <windows.h>
+#endif
+
 #include "../lib/dlib/all/source.cpp"
 
 #include "globals.hpp"

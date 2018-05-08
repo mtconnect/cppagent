@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_STRUCTURAL_SVM_ObJECT_DETECTION_PROBLEM_H__
-#define DLIB_STRUCTURAL_SVM_ObJECT_DETECTION_PROBLEM_H__
+#ifndef DLIB_STRUCTURAL_SVM_ObJECT_DETECTION_PROBLEM_Hh_
+#define DLIB_STRUCTURAL_SVM_ObJECT_DETECTION_PROBLEM_Hh_
 
 #include "structural_svm_object_detection_problem_abstract.h"
 #include "../matrix.h"
@@ -14,14 +14,6 @@
 
 namespace dlib
 {
-
-// ----------------------------------------------------------------------------------------
-
-    class impossible_labeling_error : public dlib::error 
-    { 
-    public: 
-        impossible_labeling_error(const std::string& msg) : dlib::error(msg) {};
-    };
 
 // ----------------------------------------------------------------------------------------
 
@@ -40,12 +32,16 @@ namespace dlib
             const bool auto_overlap_tester,
             const image_array_type& images_,
             const std::vector<std::vector<full_object_detection> >& truth_object_detections_,
+            const std::vector<std::vector<rectangle> >& ignore_,
+            const test_box_overlap& ignore_overlap_tester_,
             unsigned long num_threads = 2
         ) :
             structural_svm_problem_threaded<matrix<double,0,1> >(num_threads),
             boxes_overlap(overlap_tester),
             images(images_),
             truth_object_detections(truth_object_detections_),
+            ignore(ignore_),
+            ignore_overlap_tester(ignore_overlap_tester_),
             match_eps(0.5),
             loss_per_false_alarm(1),
             loss_per_missed_target(1)
@@ -53,11 +49,14 @@ namespace dlib
 #ifdef ENABLE_ASSERTS
             // make sure requires clause is not broken
             DLIB_ASSERT(is_learning_problem(images_, truth_object_detections_) && 
+                        ignore_.size() == images_.size() &&
                          scanner.get_num_detection_templates() > 0,
                 "\t structural_svm_object_detection_problem::structural_svm_object_detection_problem()"
                 << "\n\t Invalid inputs were given to this function "
                 << "\n\t scanner.get_num_detection_templates(): " << scanner.get_num_detection_templates()
                 << "\n\t is_learning_problem(images_,truth_object_detections_): " << is_learning_problem(images_,truth_object_detections_)
+                << "\n\t ignore.size(): " << ignore.size() 
+                << "\n\t images.size(): " << images.size() 
                 << "\n\t this: " << this
                 );
             for (unsigned long i = 0; i < truth_object_detections.size(); ++i)
@@ -82,7 +81,7 @@ namespace dlib
             // detections we will consider.  We do this purely for computational reasons
             // since otherwise we can end up wasting large amounts of time on certain
             // pathological cases during optimization which ultimately do not influence the
-            // result.  Therefore, we for the separation oracle to only consider the
+            // result.  Therefore, we force the separation oracle to only consider the
             // max_num_dets strongest detections.
             max_num_dets = 0;
             for (unsigned long i = 0; i < truth_object_detections.size(); ++i)
@@ -237,7 +236,7 @@ namespace dlib
                         sout << "the truth labels for an image contain rectangles which overlap according to the ";
                         sout << "test_box_overlap object supplied for non-max suppression.  To resolve this, you ";
                         sout << "either need to relax the test_box_overlap object so it doesn't mark these rectangles as ";
-                        sout << "overlapping or adjust the truth rectangles. ";
+                        sout << "overlapping or adjust the truth rectangles in your training dataset. ";
 
                         // make sure the above string fits nicely into a command prompt window.
                         string temp = sout.str();
@@ -267,14 +266,15 @@ namespace dlib
                     ostringstream sout;
                     sout << "An impossible set of object labels was detected.  This is happening because ";
                     sout << "none of the object locations checked by the supplied image scanner is a close ";
-                    sout << "enough match to one of the truth boxes.  To resolve this you need to either lower the match_eps ";
-                    sout << "or adjust the settings of the image scanner so that it hits this truth box.  ";
-                    sout << "Or you could adjust the ";
-                    sout << "offending truth rectangle so it can be matched by the current image scanner.  Also, if you ";
-                    sout << "are using the scan_image_pyramid object then you could try using a finer image pyramid ";
-                    sout << "or adding more detection templates.  E.g. if one of ";
-                    sout << "your existing detection templates has a matching width/height ratio and smaller area ";
-                    sout << "than the offending rectangle then a finer image pyramid would probably help.";
+                    sout << "enough match to one of the truth boxes in your training dataset.  To resolve this ";
+                    sout << "you need to either lower the match_eps, adjust the settings of the image scanner ";
+                    sout << "so that it is capable of hitting this truth box, or adjust the offending truth rectangle so it ";
+                    sout << "can be matched by the current image scanner.  Also, if you ";
+                    sout << "are using the scan_fhog_pyramid object then you could try using a finer image pyramid.  ";
+                    sout << "Additionally, the scan_fhog_pyramid scans a fixed aspect ratio box across the image when it ";
+                    sout << "searches for objects.  So if you are getting this error and you are using the scan_fhog_pyramid, ";
+                    sout << "it's very likely the problem is that your training dataset contains truth rectangles of widely ";
+                    sout << "varying aspect ratios.  The solution is to make sure your training boxes all have about the same aspect ratio. ";
 
 
                     // make sure the above string fits nicely into a command prompt window.
@@ -327,7 +327,7 @@ namespace dlib
             // The point of this loop is to fill out the truth_score_hits array. 
             for (unsigned long i = 0; i < dets.size() && final_dets.size() < max_num_dets; ++i)
             {
-                if (overlaps_any_box(final_dets, dets[i].second))
+                if (overlaps_any_box(boxes_overlap, final_dets, dets[i].second))
                     continue;
 
                 const std::pair<double,unsigned int> truth = find_best_match(truth_object_detections[idx], dets[i].second);
@@ -338,7 +338,7 @@ namespace dlib
                 // if hit truth rect
                 if (truth_match > match_eps)
                 {
-                    // if this is the first time we have seen a detect which hit truth_object_detections[truth.second]
+                    // if this is the first time we have seen a detect which hit truth_object_detections[idx][truth.second]
                     const double score = dets[i].first - thresh;
                     if (hit_truth_table[truth.second] == false)
                     {
@@ -364,7 +364,7 @@ namespace dlib
             // detections.
             for (unsigned long i = 0; i < dets.size() && final_dets.size() < max_num_dets; ++i)
             {
-                if (overlaps_any_box(final_dets, dets[i].second))
+                if (overlaps_any_box(boxes_overlap, final_dets, dets[i].second))
                     continue;
 
                 const std::pair<double,unsigned int> truth = find_best_match(truth_object_detections[idx], dets[i].second);
@@ -393,7 +393,7 @@ namespace dlib
                         }
                     }
                 }
-                else
+                else if (!overlaps_ignore_box(idx,dets[i].second))
                 {
                     // didn't hit anything
                     final_dets.push_back(dets[i].second);
@@ -411,12 +411,12 @@ namespace dlib
 
 #ifdef ENABLE_ASSERTS
             const double psi_score = dot(psi, current_solution);
-            DLIB_ASSERT(std::abs(psi_score-total_score)*std::max(psi_score,total_score) < 1e-8,
+            DLIB_CASSERT(std::abs(psi_score-total_score) <= 1e-4 * std::max(1.0,std::max(std::abs(psi_score),std::abs(total_score))),
                         "\t The get_feature_vector() and detect() methods of image_scanner_type are not in sync." 
                         << "\n\t The relative error is too large to be attributed to rounding error."
-                        << "\n\t relative error: " << std::abs(psi_score-total_score)*std::max(psi_score,total_score)
-                        << "\n\t psi_score:      " << psi_score
-                        << "\n\t total_score:    " << total_score
+                        << "\n\t error:       " << std::abs(psi_score-total_score)
+                        << "\n\t psi_score:   " << psi_score
+                        << "\n\t total_score: " << total_score
             );
 #endif
 
@@ -424,14 +424,14 @@ namespace dlib
         }
 
 
-        bool overlaps_any_box (
-            const std::vector<rectangle>& truth_object_detections,
+        bool overlaps_ignore_box (
+            const long idx,
             const dlib::rectangle& rect
         ) const
         {
-            for (unsigned long i = 0; i < truth_object_detections.size(); ++i)
+            for (unsigned long i = 0; i < ignore[idx].size(); ++i)
             {
-                if (boxes_overlap(truth_object_detections[i], rect))
+                if (ignore_overlap_tester(ignore[idx][i], rect))
                     return true;
             }
             return false;
@@ -513,6 +513,8 @@ namespace dlib
 
         const image_array_type& images;
         const std::vector<std::vector<full_object_detection> >& truth_object_detections;
+        const std::vector<std::vector<rectangle> >& ignore;
+        const test_box_overlap ignore_overlap_tester;
 
         unsigned long max_num_dets;
         double match_eps;
@@ -524,6 +526,6 @@ namespace dlib
 
 }
 
-#endif // DLIB_STRUCTURAL_SVM_ObJECT_DETECTION_PROBLEM_H__
+#endif // DLIB_STRUCTURAL_SVM_ObJECT_DETECTION_PROBLEM_Hh_
 
 

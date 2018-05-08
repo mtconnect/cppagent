@@ -242,6 +242,66 @@ namespace
         DLIB_TEST(wv.size() == 2);
         DLIB_TEST(wv[0] == L"test");
         DLIB_TEST(wv[1] == L"string");
+
+        wstr = L"Über alle Maßen\u00A0Öttingenstraße";
+        wv = split(wstr, L" \u00A0\n\r\t");
+        DLIB_TEST(wv.size() == 4);
+        DLIB_TEST(wv[0] == L"Über");
+        DLIB_TEST(wv[1] == L"alle");
+        DLIB_TEST(wv[2] == L"Maßen");
+        DLIB_TEST(wv[3] == L"Öttingenstraße");
+
+        wstr = L"test string hah";
+        DLIB_TEST(split_on_first(wstr).first == L"test");
+        DLIB_TEST(split_on_first(wstr).second == L"string hah");
+        DLIB_TEST(split_on_first(wstr,L"#").first == L"test string hah");
+        DLIB_TEST(split_on_first(wstr,L"#").second == L"");
+        DLIB_TEST(split_on_last(wstr).first == L"test string");
+        DLIB_TEST(split_on_last(wstr).second == L"hah");
+        DLIB_TEST(split_on_last(wstr,L"#").first == L"test string hah");
+        DLIB_TEST(split_on_last(wstr,L"#").second == L"");
+        wstr = L"";
+        DLIB_TEST(split_on_first(wstr).first == L"");
+        DLIB_TEST(split_on_first(wstr).second == L"");
+
+        str = "test string hah";
+        DLIB_TEST(split_on_first(str).first == "test");
+        DLIB_TEST(split_on_first(str).second == "string hah");
+        DLIB_TEST(split_on_first(str,"#").first == "test string hah");
+        DLIB_TEST(split_on_first(str,"#").second == "");
+        DLIB_TEST(split_on_last(str).first == "test string");
+        DLIB_TEST(split_on_last(str).second == "hah");
+        DLIB_TEST(split_on_last(str,"#").first == "test string hah");
+        DLIB_TEST(split_on_last(str,"#").second == "");
+        str = "";
+        DLIB_TEST(split_on_first(str).first == "");
+        DLIB_TEST(split_on_first(str).second == "");
+
+        wstr = L"test.string.hah";
+        DLIB_TEST(split_on_first(wstr,L".").first == L"test");
+        DLIB_TEST(split_on_first(wstr,L".").second == L"string.hah");
+        DLIB_TEST(split_on_first(wstr).first == L"test.string.hah");
+        DLIB_TEST(split_on_first(wstr).second == L"");
+        DLIB_TEST(split_on_last(wstr,L".").first == L"test.string");
+        DLIB_TEST(split_on_last(wstr,L".").second == L"hah");
+        DLIB_TEST(split_on_last(wstr).first == L"test.string.hah");
+        DLIB_TEST(split_on_last(wstr).second == L"");
+        wstr = L"";
+        DLIB_TEST(split_on_first(wstr).first == L"");
+        DLIB_TEST(split_on_first(wstr).second == L"");
+
+        str = "test.string.hah";
+        DLIB_TEST(split_on_first(str,".").first == "test");
+        DLIB_TEST(split_on_first(str,".").second == "string.hah");
+        DLIB_TEST(split_on_first(str).first == "test.string.hah");
+        DLIB_TEST(split_on_first(str).second == "");
+        DLIB_TEST(split_on_last(str,".").first == "test.string");
+        DLIB_TEST(split_on_last(str,".").second == "hah");
+        DLIB_TEST(split_on_last(str).first == "test.string.hah");
+        DLIB_TEST(split_on_last(str).second == "");
+        str = "";
+        DLIB_TEST(split_on_first(str).first == "");
+        DLIB_TEST(split_on_first(str).second == "");
     }
 
 

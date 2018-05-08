@@ -1,7 +1,7 @@
 // Copyright (C) 2013  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_SVR_LINEAR_TrAINER_H__
-#define DLIB_SVR_LINEAR_TrAINER_H__
+#ifndef DLIB_SVR_LINEAR_TrAINER_Hh_
+#define DLIB_SVR_LINEAR_TrAINER_Hh_
 
 #include "svr_linear_trainer_abstract.h"
 
@@ -72,6 +72,8 @@ namespace dlib
             unsigned long num_iterations
         ) const 
         {
+            current_risk_value /= samples.size();
+            current_risk_gap /= samples.size();
             if (be_verbose)
             {
                 using namespace std;
@@ -418,5 +420,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_SVR_LINEAR_TrAINER_H__
+#endif // DLIB_SVR_LINEAR_TrAINER_Hh_
 

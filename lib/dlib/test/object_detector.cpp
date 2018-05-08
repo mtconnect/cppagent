@@ -11,6 +11,7 @@
 #include <dlib/pixel.h>
 #include <dlib/svm_threaded.h>
 #include <dlib/array.h>
+#include <dlib/set_utils.h>
 #include <dlib/array2d.h>
 #include <dlib/image_keypoint.h>
 #include <dlib/image_processing.h>
@@ -46,7 +47,8 @@ namespace
         >
     void validate_some_object_detector_stuff (
         const image_array_type& images,
-        detector_type& detector
+        detector_type& detector,
+        double eps = 1e-10
     )
     {
         for (unsigned long i = 0; i < images.size(); ++i)
@@ -70,7 +72,7 @@ namespace
                 detector.get_scanner().get_feature_vector(fdet, psi);
 
                 double check_score = dot(psi,detector.get_w()) - thresh;
-                DLIB_TEST(std::abs(check_score - dets2[j].first) < 1e-10);
+                DLIB_TEST_MSG(std::abs(check_score - dets2[j].first) < eps, std::abs(check_score - dets2[j].first) << "  check_score: "<< check_score);
             }
 
         }
@@ -365,6 +367,71 @@ namespace
             }
         }
     }
+
+// ----------------------------------------------------------------------------------------
+
+    void test_fhog_pyramid (
+    )
+    {        
+        print_spinner();
+        dlog << LINFO << "test_fhog_pyramid()";
+
+        typedef dlib::array<array2d<unsigned char> >  grayscale_image_array_type;
+        grayscale_image_array_type images;
+        std::vector<std::vector<rectangle> > object_locations;
+        make_simple_test_data(images, object_locations);
+
+        typedef scan_fhog_pyramid<pyramid_down<2> > image_scanner_type;
+        image_scanner_type scanner;
+        scanner.set_detection_window_size(35,35);
+        structural_object_detection_trainer<image_scanner_type> trainer(scanner);
+        trainer.set_num_threads(4);  
+        trainer.set_overlap_tester(test_box_overlap(0,0));
+        object_detector<image_scanner_type> detector = trainer.train(images, object_locations);
+
+        matrix<double> res = test_object_detection_function(detector, images, object_locations);
+        dlog << LINFO << "Test detector (precision,recall): " << res;
+        DLIB_TEST(sum(res) == 3);
+
+        {
+            ostringstream sout;
+            serialize(detector, sout);
+            istringstream sin(sout.str());
+            object_detector<image_scanner_type> d2;
+            deserialize(d2, sin);
+            matrix<double> res = test_object_detection_function(d2, images, object_locations);
+            dlog << LINFO << "Test detector (precision,recall): " << res;
+            DLIB_TEST(sum(res) == 3);
+
+            validate_some_object_detector_stuff(images, detector, 1e-6);
+        }
+
+        {
+            std::vector<object_detector<image_scanner_type> > detectors;
+            detectors.push_back(detector);
+            detectors.push_back(detector);
+            detectors.push_back(detector);
+
+            std::vector<rectangle> dets1 = evaluate_detectors(detectors, images[0]);
+            std::vector<rectangle> dets2 = detector(images[0]);
+            DLIB_TEST(dets1.size() > 0);
+            DLIB_TEST(dets2.size()*3 == dets1.size());
+            dlib::set<rectangle>::kernel_1a_c d1, d2;
+            for (unsigned long i = 0; i < dets1.size(); ++i)
+            {
+                if (!d1.is_member(dets1[i]))
+                    d1.add(dets1[i]);
+            }
+            for (unsigned long i = 0; i < dets2.size(); ++i)
+            {
+                if (!d2.is_member(dets2[i]))
+                    d2.add(dets2[i]);
+            }
+            DLIB_TEST(d1.size() == d2.size());
+            DLIB_TEST(set_intersection_size(d1,d2) == d1.size());
+        }
+    }
+
 // ----------------------------------------------------------------------------------------
 
     void test_1 (
@@ -940,6 +1007,7 @@ namespace
         void perform_test (
         )
         {
+            test_fhog_pyramid();
             test_1_boxes();
             test_1_poly_nn_boxes();
             test_3_boxes();

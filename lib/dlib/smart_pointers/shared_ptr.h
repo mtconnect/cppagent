@@ -10,7 +10,6 @@
 #include "../algs.h"
 #include "shared_ptr_abstract.h"
 
-
 namespace dlib 
 {
 
@@ -294,21 +293,6 @@ namespace dlib
             shared_node->ref_count += 1;
         }
 
-        template<typename Y>
-        explicit shared_ptr(
-            std::unique_ptr<Y>& r
-        )
-        {
-            DLIB_ASSERT(r.get() != 0,
-                "\tshared_ptr::shared_ptr(unique_ptr r)"
-                << "\n\tr.get() can't be null"
-                << "\n\tthis: " << this
-                );
-            shared_node = new shared_ptr_node;
-            shared_node->del = new default_deleter;
-            data = r.release();
-        }
-
         shared_ptr& operator= (
             const shared_ptr& r
         )
@@ -323,24 +307,6 @@ namespace dlib
         )
         {
             shared_ptr(r).swap(*this);
-            return *this;
-        }
-
-        template<typename Y> 
-        shared_ptr& operator= (
-            std::unique_ptr<Y>& r
-        )
-        {
-            DLIB_ASSERT(r.get() != 0,
-                "\tshared_ptr::operator=(unqiue_ptr r)"
-                << "\n\tr.get() can't be null"
-                << "\n\tthis: " << this
-                );
-
-            reset();
-            shared_node = new shared_ptr_node;
-            shared_node->del = new default_deleter;
-            data = r.release();
             return *this;
         }
 
@@ -520,6 +486,7 @@ namespace dlib
 // ----------------------------------------------------------------------------------------
 
 }
+
 
 #endif // DLIB_SHARED_PTr_
 

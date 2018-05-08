@@ -1,7 +1,7 @@
 // Copyright (C) 2010  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#ifndef DLIB_OPTIMIZATION_TEST_FUNCTiONS_H___
-#define DLIB_OPTIMIZATION_TEST_FUNCTiONS_H___
+#ifndef DLIB_OPTIMIZATION_TEST_FUNCTiONS_H_h_
+#define DLIB_OPTIMIZATION_TEST_FUNCTiONS_H_h_
 
 #include <dlib/matrix.h>
 #include <sstream>
@@ -15,6 +15,12 @@
     The original Fortran can be found here: http://orion.math.iastate.edu/burkardt/f_src/testopt/testopt.html
 
 */
+
+// GCC 4.8 gives false alarms about some variables being uninitialized.  Disable these
+// false warnings.
+#if ( defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 
 
 namespace dlib
@@ -298,7 +304,7 @@ namespace dlib
     }
 }
 
-#endif // DLIB_OPTIMIZATION_TEST_FUNCTiONS_H___
+#endif // DLIB_OPTIMIZATION_TEST_FUNCTiONS_H_h_
 
 
 

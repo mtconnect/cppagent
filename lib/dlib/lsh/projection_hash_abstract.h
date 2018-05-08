@@ -1,7 +1,7 @@
 // Copyright (C) 2011  Davis E. King (davis@dlib.net)
 // License: Boost Software License   See LICENSE.txt for the full license.
-#undef DLIB_PROJECTION_HASh_ABSTRACT_H__
-#ifdef DLIB_PROJECTION_HASh_ABSTRACT_H__
+#undef DLIB_PROJECTION_HASh_ABSTRACT_Hh_
+#ifdef DLIB_PROJECTION_HASh_ABSTRACT_Hh_
 
 #include "../matrix.h"
 
@@ -25,6 +25,11 @@ namespace dlib
                     ...
                 Where v is the vector to be hashed.  The parameters of the projection
                 hash are the P and O matrices.  
+
+            THREAD SAFETY
+                The const members of this object can be called concurrently from multiple
+                threads, however, any operation that modifies the state of an instance of
+                this object must serialize access to that instance.
         !*/
     public:
 
@@ -110,5 +115,5 @@ namespace dlib
 
 }
 
-#endif // DLIB_PROJECTION_HASh_ABSTRACT_H__
+#endif // DLIB_PROJECTION_HASh_ABSTRACT_Hh_
 
