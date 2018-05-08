@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef CHANGE_OBSERVER_HPP
-#define CHANGE_OBSERVER_HPP
+#pragma once
 
 #include <vector>
 #include "dlib/threads.h"
@@ -81,5 +80,3 @@ protected:
   dlib::rmutex mObserverMutex;
   std::vector<ChangeObserver*> mObservers;
 };
-
-#endif

@@ -31,8 +31,7 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef GLOBALS_TEST_HPP
-#define GLOBALS_TEST_HPP
+#pragma once
 
 #include <map>
 #include <string>
@@ -76,5 +75,4 @@ public:
   void tearDown();
 };
 
-#endif
 

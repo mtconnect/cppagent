@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef XML_PRINTER_HPP
-#define XML_PRINTER_HPP
+#pragma once
 
 #include <map>
 #include <list>
@@ -100,6 +99,4 @@ namespace XmlPrinter
   const std::string getStreamsLocation(const std::string &aPrefix);
   const std::string getAssetsLocation(const std::string &aPrefix);
 };
-
-#endif
 

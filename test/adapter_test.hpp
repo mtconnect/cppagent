@@ -31,8 +31,7 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef COMPONENT_EVENT_TEST_HPP
-#define COMPONENT_EVENT_TEST_HPP
+#pragma once
 
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS 1
@@ -61,6 +60,3 @@ protected:
 protected:
   void testAdapter();
 };
-
-#endif
-

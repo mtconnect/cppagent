@@ -1,5 +1,4 @@
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
+#pragma once
 
 #include "service.hpp"
 #include <string>
@@ -60,5 +59,3 @@ protected:
   bool mRestart;
   std::string mExePath;
 };
-
-#endif

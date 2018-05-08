@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef REF_COUNTED_HPP
-#define REF_COUNTED_HPP
+#pragma once
 
 #include <cmath>
 #include "globals.hpp"
@@ -109,6 +108,4 @@ protected:
   /* Reference count */
   AtomicInt mRefCount;
 };
-
-#endif
 

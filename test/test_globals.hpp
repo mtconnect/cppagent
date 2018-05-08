@@ -31,6 +31,8 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
+#pragma once
+
 #include <sstream>
 #include <fstream>
 #include <string>

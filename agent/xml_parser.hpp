@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef XML_PARSER_HPP
-#define XML_PARSER_HPP
+#pragma once
 
 #include <list>
 #include <set>
@@ -117,4 +116,3 @@ protected:
   CuttingItemPtr parseCuttingItem(xmlNodePtr aNode, xmlDocPtr aDoc);
 };
 
-#endif

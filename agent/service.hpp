@@ -1,5 +1,4 @@
-#ifndef SERVICE_HPP
-#define SERVICE_HPP
+#pragma once
 
 #include <string>
 #include "dlib/logger.h"
@@ -32,5 +31,3 @@ protected:
 #endif
 
 };
-
-#endif

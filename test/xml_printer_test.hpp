@@ -31,8 +31,7 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef XML_PRINTER_TEST_HPP
-#define XML_PRINTER_TEST_HPP
+#pragma once
 
 #include <string>
 #include <fstream>
@@ -167,6 +166,3 @@ public:
   void setUp();
   void tearDown();
 };
-
-#endif
-
