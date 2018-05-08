@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef COMPONENT_HPP
-#define COMPONENT_HPP
+#pragma once
 
 #include <sstream>
 #include <string>
@@ -197,5 +196,4 @@ struct ComponentComp {
   }
 };
 
-#endif
 

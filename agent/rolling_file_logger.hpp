@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef ROLLING_FILE_LOGGER_HPP
-#define ROLLING_FILE_LOGGER_HPP
+#pragma once
 
 #include "globals.hpp"
 #include <string>
@@ -59,5 +58,3 @@ private:
   
   int mFd;
 };
-
-#endif

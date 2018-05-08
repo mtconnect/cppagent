@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef CHECKPOINT_HPP
-#define CHECKPOINT_HPP
+#pragma once
 
 #include "component_event.hpp"
 #include <map>
@@ -46,4 +45,3 @@ protected:
   bool mHasFilter;
 };
 
-#endif

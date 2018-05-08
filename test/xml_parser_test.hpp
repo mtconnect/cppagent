@@ -31,8 +31,7 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef XML_PARSER_TEST_HPP
-#define XML_PARSER_TEST_HPP
+#pragma once
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
@@ -95,6 +94,3 @@ public:
   void setUp();
   void tearDown();
 };
-
-#endif
-

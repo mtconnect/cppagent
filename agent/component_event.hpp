@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef COMPONENT_EVENT_HPP
-#define COMPONENT_EVENT_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -162,5 +161,4 @@ inline void ComponentEvent::appendTo(ComponentEvent *aEvent)
 { 
   mPrev = aEvent; 
 }
-#endif
 

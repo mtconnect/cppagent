@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef GLOBALS_HPP
-#define GLOBALS_HPP
+#pragma once
 
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS 1
@@ -141,7 +140,3 @@ typedef volatile long AtomicInt;
 typedef int AtomicInt;
 #endif
 #endif
-
-
-#endif
-

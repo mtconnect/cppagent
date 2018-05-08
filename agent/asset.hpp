@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef ASSET_HPP
-#define ASSET_HPP
+#pragma once
 
 #include <string>
 #include <map>
@@ -84,5 +83,3 @@ public:
 
 typedef std::map<std::string, AssetPtr> AssetIndex;
 
-
-#endif

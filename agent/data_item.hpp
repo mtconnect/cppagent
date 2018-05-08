@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef DATA_ITEM_HPP
-#define DATA_ITEM_HPP
+#pragma once
 
 #include <map>
 
@@ -337,6 +336,3 @@ protected:
   double mConversionOffset;
   bool mConversionDetermined, mConversionRequired, mHasFactor;
 };
-
-#endif
-

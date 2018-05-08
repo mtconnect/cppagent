@@ -14,8 +14,7 @@
  *    limitations under the License.
  */
 
-#ifndef ADAPTER_HPP
-#define ADAPTER_HPP
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -157,6 +156,3 @@ private:
   /* Inherited and is run as part of the threaded_object */
   void thread();
 };
-
-#endif
-

@@ -31,8 +31,7 @@
 * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-#ifndef AGENT_TEST_HPP
-#define AGENT_TEST_HPP
+#pragma once
 
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS 1
@@ -305,6 +304,4 @@ public:
 #define PARSE_XML_RESPONSE_PUT(body, queries)			    \
   xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
   CPPUNIT_ASSERT(doc)
-
-#endif
 
