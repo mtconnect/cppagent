@@ -88,7 +88,7 @@ void commandLine()
 	char line[1024] = {0};
 	while (gets(line))
 	{
-		if (!strncasecmp(line, "QUIT", 4))
+		if (!strncasecmp(line, "QUIT", 4u))
 		{
 			g_service->stop();
 			return;
@@ -109,7 +109,7 @@ int MTConnectService::main(int argc, const char *argv[])
 		if(argc > 1)
 		{
 			if (!stricmp(argv[1], "help") ||
-				!strncmp(argv[1], "-h", 2) )
+				!strncmp( argv[1], "-h", 2u) )
 			{
 				printf("Usage: agent [help|install|debug|run] [configuration_file]\n"
 						"       help           Prints this message\n"

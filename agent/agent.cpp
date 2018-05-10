@@ -92,7 +92,7 @@ Agent::Agent(
 	m_instanceId = getCurrentTimeInSec();
 
 	// Sequence number and sliding buffer for data
-	m_sequence = 1;
+	m_sequence = 1ull;
 	m_slidingBufferSize = 1 << bufferSize;
 	m_slidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
 	m_slidingBuffer->set_size(bufferSize);
@@ -288,27 +288,27 @@ void Agent::registerFile(const string &aUri, const string &aPath)
 
 			// Check if the file name maps to a standard MTConnect schema file.
 			if (!name.find("MTConnect") &&
-				name.substr(name.length() - 4, 4) == ".xsd" &&
-				XmlPrinter::getSchemaVersion() == name.substr(name.length() - 7, 3))
+				name.substr(name.length() - 4u, 4u) == ".xsd" &&
+				XmlPrinter::getSchemaVersion() == name.substr(name.length() - 7u, 3u) )
 			{
-				string version = name.substr(name.length() - 7, 3);
+				string version = name.substr(name.length() - 7u, 3u);
 
-				if (name.substr(9, 5) == "Error")
+				if (name.substr(9u, 5u) == "Error")
 				{
 					string urn = "urn:mtconnect.org:MTConnectError:" + XmlPrinter::getSchemaVersion();
 					XmlPrinter::addErrorNamespace(urn, uri, "m");
 				}
-				else if (name.substr(9, 7) == "Devices")
+				else if (name.substr(9u, 7u) == "Devices")
 				{
 					string urn = "urn:mtconnect.org:MTConnectDevices:" + XmlPrinter::getSchemaVersion();
 					XmlPrinter::addDevicesNamespace(urn, uri, "m");
 				}
-				else if (name.substr(9, 6) == "Assets")
+				else if (name.substr(9u, 6u) == "Assets")
 				{
 					string urn = "urn:mtconnect.org:MTConnectAssets:" + XmlPrinter::getSchemaVersion();
 					XmlPrinter::addAssetsNamespace(urn, uri, "m");
 				}
-				else if (name.substr(9, 7) == "Streams")
+				else if (name.substr(9u, 7u) == "Streams")
 				{
 					string urn = "urn:mtconnect.org:MTConnectStreams:" + XmlPrinter::getSchemaVersion();
 					XmlPrinter::addStreamsNamespace(urn, uri, "m");
@@ -1115,7 +1115,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 	string contentType;
 	if (last != string::npos && uri[last] == '.')
 	{
-		auto ext = uri.substr(last + 1);
+		auto ext = uri.substr(last + 1u);
 		if (m_mimeTypes.count(ext) > 0)
 		{
 			contentType = m_mimeTypes[ext];
@@ -1184,7 +1184,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 	"Server: MTConnectAgent\r\n"
 	"Connection: close\r\n"
 	"Content-Length: " << cachedFile->m_size << "\r\n"
-	"Expires: " << getCurrentTime(time(nullptr) + 60 * 60 * 24, 0, HUM_READ) << "\r\n"
+	"Expires: " << getCurrentTime(time(nullptr) + 60ll * 60ll * 24ll, 0, HUM_READ) << "\r\n"
 	"Content-Type: " << contentType << "\r\n\r\n";
 
 	outgoing.out->write(cachedFile->m_buffer, cachedFile->m_size);
@@ -1321,12 +1321,12 @@ void Agent::streamData(
 					// on separate condition variables and this pops out too soon. This will make sure
 					// observer was actually signaled and instead of throwing an error will wait again
 					// for the remaining hartbeat interval.
-					delta = (ts.get_timestamp() - last) / 1000;
+					delta = (ts.get_timestamp() - last) / 1000ull;
 					while ( delta < heartbeat &&
 							observer.wait(heartbeat - delta) &&
 							!observer.wasSignaled() )
 					{
-						delta = (ts.get_timestamp() - last) / 1000;
+						delta = (ts.get_timestamp() - last) / 1000ull;
 					}
 
 					{
