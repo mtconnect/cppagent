@@ -48,7 +48,7 @@ std::string printProbe(
 	const uint64_t nextSeq,
 	const unsigned int assetBufferSize,
 	const unsigned int assetCount,
-	std::vector<Device *> &devices,
+	const std::vector<Device *> &devices,
 	const std::map<std::string, int> *count = nullptr);
 
 std::string printSample(
@@ -64,9 +64,9 @@ std::string printAssets(
 	const unsigned int anInstanceId,
 	const unsigned int bufferSize,
 	const unsigned int assetCount,
-	std::vector<AssetPtr> &assets);
+	std::vector<AssetPtr> const &assets);
 
-std::string printCuttingTool(CuttingToolPtr tool);
+std::string printCuttingTool(CuttingToolPtr const tool);
 
 
 void addDevicesNamespace(
@@ -100,14 +100,14 @@ void clearErrorNamespaces();
 void clearStreamsNamespaces();
 void clearAssetsNamespaces();
 
-const std::string getDevicesUrn(const std::string &prefix);
-const std::string getErrorUrn(const std::string &prefix);
-const std::string getStreamsUrn(const std::string &prefix);
-const std::string getAssetsUrn(const std::string &prefix);
+std::string getDevicesUrn(const std::string &prefix);
+std::string getErrorUrn(const std::string &prefix);
+std::string getStreamsUrn(const std::string &prefix);
+std::string getAssetsUrn(const std::string &prefix);
 
-const std::string getDevicesLocation(const std::string &prefix);
-const std::string getErrorLocation(const std::string &prefix);
-const std::string getStreamsLocation(const std::string &prefix);
-const std::string getAssetsLocation(const std::string &prefix);
+std::string getDevicesLocation(const std::string &prefix);
+std::string getErrorLocation(const std::string &prefix);
+std::string getStreamsLocation(const std::string &prefix);
+std::string getAssetsLocation(const std::string &prefix);
 };
 

@@ -85,8 +85,8 @@ public:
 	// Observer Management
 	void addObserver(ChangeObserver *observer);
 	bool removeObserver(ChangeObserver *observer);
-	bool hasObserver(ChangeObserver *observer);
-	void signalObservers(uint64_t sequence);
+	bool hasObserver(ChangeObserver *observer) const;
+	void signalObservers(uint64_t sequence) const;
 
 	virtual ~ChangeSignaler();
 

@@ -90,7 +90,7 @@ ComponentEvent::ComponentEvent(
 }
 
 
-ComponentEvent::ComponentEvent(ComponentEvent &componentEvent)
+ComponentEvent::ComponentEvent(const ComponentEvent &componentEvent)
 {
 	m_dataItem = componentEvent.getDataItem();
 	m_time = componentEvent.m_time;
