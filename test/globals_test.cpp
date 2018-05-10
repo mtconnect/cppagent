@@ -94,28 +94,28 @@ void GlobalsTest::testIsNonNegativeInteger()
 
 void GlobalsTest::testTime()
 {
-	string time1 = getCurrentTime(GMT);
-	string time2 = getCurrentTime(GMT);
+	auto time1 = getCurrentTime(GMT);
+	auto time2 = getCurrentTime(GMT);
 	CPPUNIT_ASSERT_EQUAL(time1, time2);
 
 	std::this_thread::sleep_for(1s);
-	string time3 = getCurrentTime(GMT);
+	auto time3 = getCurrentTime(GMT);
 	CPPUNIT_ASSERT(time1 != time3);
 
-	string time4 = getCurrentTime(GMT);
-	string time5 = getCurrentTime(GMT);
+	auto time4 = getCurrentTime(GMT);
+	auto time5 = getCurrentTime(GMT);
 	CPPUNIT_ASSERT_EQUAL(time4, time5);
 
 	std::this_thread::sleep_for(1s);
-	string time6 = getCurrentTime(GMT);
+	auto time6 = getCurrentTime(GMT);
 	CPPUNIT_ASSERT(time4 != time6);
 
-	unsigned int time7 = getCurrentTimeInSec();
-	unsigned int time8 = getCurrentTimeInSec();
+	auto time7 = getCurrentTimeInSec();
+	auto time8 = getCurrentTimeInSec();
 	CPPUNIT_ASSERT_EQUAL(time7, time8);
 
 	std::this_thread::sleep_for(2s);
-	unsigned int time9 = getCurrentTimeInSec();
+	auto time9 = getCurrentTimeInSec();
 	CPPUNIT_ASSERT(time7 < time9);
 }
 
@@ -165,24 +165,24 @@ void GlobalsTest::testGetEnumerations()
 
 void GlobalsTest::testGetCurrentTime()
 {
-	string gmt = getCurrentTime(GMT);
-	uint64_t time = parseTimeMicro(gmt);
+	auto gmt = getCurrentTime(GMT);
+	auto time = parseTimeMicro(gmt);
 	CPPUNIT_ASSERT(time != 0);
 
-	string gmtUsec = getCurrentTime(GMT_UV_SEC);
+	auto gmtUsec = getCurrentTime(GMT_UV_SEC);
 	time = parseTimeMicro(gmtUsec);
 	CPPUNIT_ASSERT(time != 0);
 
-	string local = getCurrentTime(LOCAL);
+	auto local = getCurrentTime(LOCAL);
 	time = parseTimeMicro(local);
 	CPPUNIT_ASSERT(time != 0);
 
 
-	string human = getCurrentTime(HUM_READ);
+	auto human = getCurrentTime(HUM_READ);
 	int year, day, hour, min, sec;
-	char wday[5];
-	char mon[4];
-	char tzs[32];
+	char wday[5] = {0};
+	char mon[4] = {0};
+	char tzs[32] = {0};
 
 	int n = sscanf(human.c_str(), "%3s, %2d %3s %4d %2d:%2d:%2d %5s",
 		wday, &day, mon, &year,
@@ -194,8 +194,7 @@ void GlobalsTest::testGetCurrentTime()
 
 void GlobalsTest::testAddNamespace()
 {
-	string result;
-	result = addNamespace("//Device//Foo", "m");
+	auto result = addNamespace("//Device//Foo", "m");
 	CPPUNIT_ASSERT_EQUAL(string("//m:Device//m:Foo"), result);
 
 	result = addNamespace("//Device//*", "m");
@@ -219,7 +218,7 @@ void GlobalsTest::testParseTimeMilli()
 {
 	string v = "2012-11-20T12:33:22.123456";
 
-	uint64_t time = parseTimeMicro(v);
+	auto time = parseTimeMicro(v);
 	CPPUNIT_ASSERT(1353414802123456LL == time);
 
 	v = "2012-11-20T12:33:22.123";

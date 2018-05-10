@@ -59,8 +59,8 @@ void ComponentTest::setUp()
 
 void ComponentTest::tearDown()
 {
-	delete m_compA;
-	delete m_compB;
+	delete m_compA; m_compA = nullptr;
+	delete m_compB; m_compB = nullptr;
 }
 
 
@@ -82,14 +82,14 @@ void ComponentTest::testGetters()
 
 void ComponentTest::testGetAttributes()
 {
-	auto const &attributes1 = m_compA->getAttributes();
+	const auto &attributes1 = m_compA->getAttributes();
 
 	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1.at("id"));
 	CPPUNIT_ASSERT_EQUAL((string) "ComponentTest1", attributes1.at("name"));
 	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", attributes1.at("uuid"));
 	CPPUNIT_ASSERT(attributes1.find("sampleRate") == attributes1.end());
 
-	auto const &attributes2 = m_compB->getAttributes();
+	const auto &attributes2 = m_compB->getAttributes();
 
 	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2.at("id"));
 	CPPUNIT_ASSERT_EQUAL((string) "ComponentTest2", attributes2.at("name"));
@@ -105,7 +105,7 @@ void ComponentTest::testDescription()
 	attributes["serialNumber"] = "SERIAL_NUMBER";
 
 	m_compA->addDescription((string) "Machine 1", attributes);
-	map<string, string> description1 = m_compA->getDescription();
+	auto description1 = m_compA->getDescription();
 
 	CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description1["manufacturer"]);
 	CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description1["serialNumber"]);
@@ -114,7 +114,7 @@ void ComponentTest::testDescription()
 
 	attributes["station"] = "STATION";
 	m_compB->addDescription((string) "", attributes);
-	map<string, string> description2 = m_compB->getDescription();
+	auto description2 = m_compB->getDescription();
 
 	CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description2["manufacturer"]);
 	CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description2["serialNumber"]);
@@ -134,7 +134,7 @@ void ComponentTest::testRelationships()
 	CPPUNIT_ASSERT_EQUAL(&linear, m_compA->getParent());
 
 	Device device(dummy);
-	Component *devPointer = dynamic_cast<Component *>(&device);
+	auto devPointer = dynamic_cast<Component *>(&device);
 
 	CPPUNIT_ASSERT(devPointer);
 	linear.setParent(*devPointer);

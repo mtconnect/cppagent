@@ -137,18 +137,12 @@ protected:
 	std::string m_agentId;
 	std::string m_incomingIp;
 
-	bool m_response;
 	std::string m_path;
-	std::string m_at;
 	dlib::key_value_map m_queries;
 	std::string m_result;
 	dlib::key_value_map m_cookies;
-	queue_type m_newCookies;
 	dlib::key_value_map_ci m_incomingHeaders;
-	std::string m_foreignIp;
-	std::string m_localIp;
-	unsigned short m_foreignPort;
-	unsigned short m_localPort;
+
 	std::ostringstream m_out;
 	int m_delay;
 
@@ -301,7 +295,7 @@ public:
   xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), queries); \
   CPPUNIT_ASSERT(doc)
 
-#define PARSE_XML_RESPONSE_PUT(body, queries)			    \
+#define PARSE_XML_RESPONSE_PUT(body, queries) \
   xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
   CPPUNIT_ASSERT(doc)
 

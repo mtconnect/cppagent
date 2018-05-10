@@ -146,7 +146,7 @@ std::string &CuttingTool::getContent()
 {
 	if (m_content.empty())
 	{
-		auto const serialNumberPos = m_identity.find("serialNumber");
+		const auto serialNumberPos = m_identity.find("serialNumber");
 		if(serialNumberPos ==  m_identity.end())
 			Asset::addIdentity("serialNumber", m_assetId);
 		else if(serialNumberPos->second.empty())

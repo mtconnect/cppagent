@@ -74,14 +74,14 @@ void ComponentEventTest::tearDown()
 {
 	m_compEventA->unrefer();
 	m_compEventB->unrefer();
-	delete m_dataItem1;
-	delete m_dataItem2;
+	delete m_dataItem1; m_dataItem1 = nullptr;
+	delete m_dataItem2; m_dataItem2 = nullptr;
 }
 
 
 void ComponentEventTest::testConstructors()
 {
-	ComponentEvent *ce = new ComponentEvent(*m_compEventA);
+	auto ce = new ComponentEvent(*m_compEventA);
 
 	// Copy constructor allocates different objects, so it has different addresses
 	CPPUNIT_ASSERT(m_compEventA != ce);
@@ -96,7 +96,7 @@ void ComponentEventTest::testConstructors()
 
 void ComponentEventTest::testGetAttributes()
 {
-	auto const &attr_list1 = m_compEventA->getAttributes();
+	const auto &attr_list1 = m_compEventA->getAttributes();
 	map<string, string> attributes1;
 
 	for (const auto &attr : attr_list1)
@@ -114,7 +114,7 @@ void ComponentEventTest::testGetAttributes()
 	CPPUNIT_ASSERT_EQUAL((string) "CRITICAL", attributes1["severity"]);
 	CPPUNIT_ASSERT_EQUAL((string) "ACTIVE", attributes1["state"]);
 
-	auto const &attr_list2 = m_compEventB->getAttributes();
+	const auto &attr_list2 = m_compEventB->getAttributes();
 	map<string, string> attributes2;
 
 	for (const auto &attr : attr_list2)
@@ -217,7 +217,7 @@ void ComponentEventTest::testValueHelper(
 void ComponentEventTest::testRefCounts()
 {
 	string time("NOW"), value("111");
-	ComponentEvent *event = new ComponentEvent(*m_dataItem1, 123, time, value);
+	auto event = new ComponentEvent(*m_dataItem1, 123, time, value);
 
 	CPPUNIT_ASSERT(event->refCount() == 1);
 
@@ -261,7 +261,7 @@ void ComponentEventTest::testStlLists()
 	std::vector<ComponentEventPtr> vector;
 
 	string time("NOW"), value("111");
-	ComponentEvent *event = new ComponentEvent(*m_dataItem1, 123, time, value);
+	auto event = new ComponentEvent(*m_dataItem1, 123, time, value);
 
 	CPPUNIT_ASSERT_EQUAL(1, (int) event->refCount());
 	vector.push_back(event);
@@ -315,17 +315,17 @@ void ComponentEventTest::testCondition()
 	attributes1["name"] = "DataItemTest1";
 	attributes1["type"] = "TEMPERATURE";
 	attributes1["category"] = "CONDITION";
-	DataItem *d = new DataItem(attributes1);
+	auto d = new DataItem(attributes1);
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "FAULT|4321|1|HIGH|Overtemp"), true);
 
 	CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event1->getLevel());
 	CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event1->getValue());
 
-	auto const &attr_list1 = event1->getAttributes();
+	const auto &attr_list1 = event1->getAttributes();
 	map<string, string> attrs1;
 
-	for (auto const &attr : attr_list1)
+	for (const auto &attr : attr_list1)
 		attrs1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", attrs1["type"]);
@@ -340,10 +340,10 @@ void ComponentEventTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event2->getLevel());
 	CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event2->getValue());
 
-	auto const &attr_list2 = event2->getAttributes();
+	const auto &attr_list2 = event2->getAttributes();
 	map<string, string> attrs2;
 
-	for (auto const &attr : attr_list2)
+	for (const auto &attr : attr_list2)
 		attrs2[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "TEMPERATURE", attrs2["type"]);
@@ -353,6 +353,7 @@ void ComponentEventTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL((string) "2", attrs2["nativeSeverity"]);
 	CPPUNIT_ASSERT_EQUAL((string) "Fault", event2->getLevelString());
 
+	delete d; d = nullptr;
 }
 
 
@@ -365,15 +366,15 @@ void ComponentEventTest::testTimeSeries()
 	attributes1["type"] = "TEMPERATURE";
 	attributes1["category"] = "SAMPLE";
 	attributes1["representation"] = "TIME_SERIES";
-	DataItem *d = new DataItem(attributes1);
+	auto d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT(d->isTimeSeries());
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "6||1 2 3 4 5 6 "), true);
-	auto const &attr_list1 = event1->getAttributes();
+	const auto &attr_list1 = event1->getAttributes();
 	map<string, string> attrs1;
 
-	for (auto const& attr : attr_list1)
+	for (const auto& attr : attr_list1)
 		attrs1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT(event1->isTimeSeries());
@@ -392,10 +393,10 @@ void ComponentEventTest::testTimeSeries()
 
 	ComponentEventPtr event2(new ComponentEvent(*d, 123, time,
 		(string) "7|42000|10 20 30 40 50 60 70 "), true);
-	auto const &attr_list2 = event2->getAttributes();
+	const auto &attr_list2 = event2->getAttributes();
 	map<string, string> attrs2;
 
-	for (auto const& attr : attr_list2)
+	for (const auto& attr : attr_list2)
 		attrs2[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT(event2->isTimeSeries());
@@ -410,6 +411,7 @@ void ComponentEventTest::testTimeSeries()
 		CPPUNIT_ASSERT_EQUAL((float)((i + 1) * 10), values[i]);
 	}
 
+	delete d; d = nullptr;
 }
 
 
@@ -422,19 +424,20 @@ void ComponentEventTest::testDuration()
 	attributes1["type"] = "TEMPERATURE";
 	attributes1["category"] = "SAMPLE";
 	attributes1["statistic"] = "AVERAGE";
-	DataItem *d = new DataItem(attributes1);
+	auto d = new DataItem(attributes1);
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "11.0"), true);
-	auto const &attr_list = event1->getAttributes();
+	const auto &attr_list = event1->getAttributes();
 	map<string, string> attrs1;
 
-	for (auto const &attr : attr_list)
+	for (const auto &attr : attr_list)
 		attrs1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "AVERAGE", attrs1["statistic"]);
 	CPPUNIT_ASSERT_EQUAL((string) "2011-02-18T15:52:41Z", attrs1["timestamp"]);
 	CPPUNIT_ASSERT_EQUAL((string) "200.1232", attrs1["duration"]);
 
+	delete d; d = nullptr;
 }
 
 
@@ -446,17 +449,19 @@ void ComponentEventTest::testAssetChanged()
 	attributes1["name"] = "ac";
 	attributes1["type"] = "ASSET_CHANGED";
 	attributes1["category"] = "EVENT";
-	DataItem *d = new DataItem(attributes1);
+	auto d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT(d->isAssetChanged());
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "CuttingTool|123"), true);
-	auto const &attr_list = event1->getAttributes();
+	const auto &attr_list = event1->getAttributes();
 	map<string, string> attrs1;
 
-	for (auto const &attr : attr_list)
+	for (const auto &attr : attr_list)
 		attrs1[attr.first] = attr.second;
 
 	CPPUNIT_ASSERT_EQUAL((string) "CuttingTool", attrs1["assetType"]);
 	CPPUNIT_ASSERT_EQUAL((string) "123", event1->getValue());
+
+	delete d; d = nullptr;
 }

@@ -28,7 +28,7 @@ Device::Device(const std::map<std::string, std::string> &attributes) :
 	m_availabilityAdded(false),
 	m_iso841Class(-1)
 {
-	auto const isoPos = attributes.find("iso841Class");
+	const auto isoPos = attributes.find("iso841Class");
 	if (isoPos != attributes.end())
 	{
 		m_iso841Class = atoi(isoPos->second.c_str());
@@ -62,15 +62,15 @@ void Device::addDeviceDataItem(DataItem &dataItem)
 
 DataItem *Device::getDeviceDataItem(const std::string &name)
 {
-	auto const sourcePos = m_deviceDataItemsBySource.find(name);
+	const auto sourcePos = m_deviceDataItemsBySource.find(name);
 	if(sourcePos != m_deviceDataItemsBySource.end())
 		return sourcePos->second;
 
-	auto const namePos = m_deviceDataItemsByName.find(name);
+	const auto namePos = m_deviceDataItemsByName.find(name);
 	if(namePos != m_deviceDataItemsByName.end())
 		return namePos->second;
 
-	auto const &idPos = m_deviceDataItemsById.find(name);
+	const auto &idPos = m_deviceDataItemsById.find(name);
 	if(idPos != m_deviceDataItemsById.end())
 		return idPos->second;
 

@@ -62,8 +62,8 @@ void AgentTest::setUp()
 
 void AgentTest::tearDown()
 {
-	delete m_agent;
-	m_agent = nullptr;
+	delete m_agent; m_agent = nullptr;
+	m_adapter = nullptr;
 }
 
 
@@ -76,7 +76,7 @@ void AgentTest::testConstructor()
 
 void AgentTest::testBadPath()
 {
-	string pathError = getFile("../samples/test_error.xml");
+	auto pathError = getFile("../samples/test_error.xml");
 
 	{
 		m_path = "/bad_path";
@@ -274,7 +274,7 @@ void AgentTest::testEmptyStream()
 
 	{
 		m_path = "/sample";
-	char line[80];
+		char line[80] = {0};
 		sprintf(line, "%d", (int) m_agent->getSequence());
 		PARSE_XML_RESPONSE_QUERY_KV("from", line);
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
@@ -305,13 +305,12 @@ void AgentTest::testAddAdapter()
 void AgentTest::testAddToBuffer()
 {
 	string device("LinuxCNC"), key("badKey"), value("ON");
-	int seqNum;
-	ComponentEvent *event1, *event2;
-	DataItem *di1 = m_agent->getDataItemByName(device, key);
-	seqNum = m_agent->addToBuffer(di1, value, "NOW");
+	auto di1 = m_agent->getDataItemByName(device, key);
+	CPPUNIT_ASSERT(!di1);
+	int seqNum = m_agent->addToBuffer(di1, value, "NOW");
 	CPPUNIT_ASSERT_EQUAL(0, seqNum);
 
-	event1 = m_agent->getFromBuffer(seqNum);
+	auto event1 = m_agent->getFromBuffer(seqNum);
 	CPPUNIT_ASSERT(!event1);
 
 	{
@@ -322,9 +321,9 @@ void AgentTest::testAddToBuffer()
 
 	key = "power";
 
-	DataItem *di2 = m_agent->getDataItemByName(device, key);
+	auto di2 = m_agent->getDataItemByName(device, key);
 	seqNum = m_agent->addToBuffer(di2, value, "NOW");
-	event2 = m_agent->getFromBuffer(seqNum);
+	auto event2 = m_agent->getFromBuffer(seqNum);
 	CPPUNIT_ASSERT_EQUAL(2, (int) event2->refCount());
 
 	{
@@ -385,7 +384,7 @@ void AgentTest::testCurrentAt()
 
 	// Get the current position
 	int seq = m_agent->getSequence();
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 1; i <= 100; i++)
@@ -451,7 +450,7 @@ void AgentTest::testCurrentAt64()
 	CPPUNIT_ASSERT(m_adapter);
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Initialize the sliding buffer at a very large number.
 	uint64_t start = (((uint64_t) 1) << 48) + 1317;
@@ -484,7 +483,7 @@ void AgentTest::testCurrentAtOutOfRange()
 	CPPUNIT_ASSERT(m_adapter);
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 1; i <= 200; i++)
@@ -524,7 +523,7 @@ void AgentTest::testSampleAtNextSeq()
 	CPPUNIT_ASSERT(m_adapter);
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 1; i <= 300; i++)
@@ -557,7 +556,7 @@ void AgentTest::testSequenceNumberRollover()
 	CPPUNIT_ASSERT_EQUAL((int64_t) 0xFFFFFFA0, seq);
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 0; i < 128; i++)
@@ -619,7 +618,7 @@ void AgentTest::testSampleCount()
 	int64_t seq = m_agent->getSequence();
 
 	// Get the current position
-	char line[80];
+	char line[80] = {0};
 
 	// Add many events
 	for (int i = 0; i < 128; i++)
@@ -655,7 +654,7 @@ void AgentTest::testAdapterCommands()
 {
 	m_path = "/probe";
 
-	Device *device = m_agent->getDeviceByName("LinuxCNC");
+	auto device = m_agent->getDeviceByName("LinuxCNC");
 	CPPUNIT_ASSERT(device);
 	CPPUNIT_ASSERT(!device->m_preserveUuid);
 
@@ -688,14 +687,14 @@ void AgentTest::testAdapterCommands()
 
 void AgentTest::testAdapterDeviceCommand()
 {
-	delete m_agent;
+	delete m_agent; m_agent = nullptr;
 	m_agent = new Agent("../samples/two_devices.xml", 8, 4, 25);
 
 	m_path = "/probe";
 
-	Device *device1 = m_agent->getDeviceByName("Device1");
+	auto device1 = m_agent->getDeviceByName("Device1");
 	CPPUNIT_ASSERT(device1);
-	Device *device2 = m_agent->getDeviceByName("Device2");
+	auto device2 = m_agent->getDeviceByName("Device2");
 	CPPUNIT_ASSERT(device2);
 
 	m_adapter = m_agent->addAdapter("*", "server", 7878, false);
@@ -720,7 +719,7 @@ void AgentTest::testUUIDChange()
 {
 	m_path = "/probe";
 
-	Device *device = m_agent->getDeviceByName("LinuxCNC");
+	auto device = m_agent->getDeviceByName("LinuxCNC");
 	CPPUNIT_ASSERT(device);
 	CPPUNIT_ASSERT(!device->m_preserveUuid);
 
@@ -875,7 +874,7 @@ void AgentTest::testAutoAvailable()
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
 	m_adapter->setAutoAvailable(true);
-	Device *d = m_agent->getDevices()[0];
+	auto d = m_agent->getDevices()[0];
 	std::vector<Device *> devices;
 	devices.push_back(d);
 
@@ -920,7 +919,7 @@ void AgentTest::testMultipleDisconnect()
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
-	Device *d = m_agent->getDevices()[0];
+	auto d = m_agent->getDevices()[0];
 	std::vector<Device *> devices;
 	devices.push_back(d);
 
@@ -1311,16 +1310,18 @@ void AgentTest::testMultiLineAsset()
 
 }
 
+
 void AgentTest::testAssetRefCounts()
 {
 	testAddAdapter();
-	std::list<AssetPtr *> *assets = m_agent->getAssets();
+	const auto assets = m_agent->getAssets();
 
 	m_adapter->parseBuffer(
-	R"ASSET(2018-02-19T22:54:03.0738Z|@ASSET@|M8010N9172N:1.0|CuttingTool|--multiline--SMOOTH
-	<CuttingTool toolId="0" serialNumber="0" removed="False" assetId="M8010N9172N:1.0"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit="">1</ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit="">1</ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">1</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>1.0</ProgramToolNumber><CutterStatus><Status>USED</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="0">0</FunctionalLength><CuttingDiameterMax code="DC" nominal="0">200</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
-	--multiline--SMOOTH
-	)ASSET");
+R"ASSET(2018-02-19T22:54:03.0738Z|@ASSET@|M8010N9172N:1.0|CuttingTool|--multiline--SMOOTH
+<CuttingTool toolId="0" serialNumber="0" removed="False" assetId="M8010N9172N:1.0"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit="">1</ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit="">1</ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">1</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>1.0</ProgramToolNumber><CutterStatus><Status>USED</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="0">0</FunctionalLength><CuttingDiameterMax code="DC" nominal="0">200</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
+--multiline--SMOOTH
+)ASSET");
+
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 4, m_agent->getMaxAssets());
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
 
@@ -1328,26 +1329,32 @@ void AgentTest::testAssetRefCounts()
 	AssetPtr first(*(assets->front()));
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 4, first.getObject()->refCount());
 
-	m_adapter->parseBuffer(R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multiline--SMOOTH
-	<CuttingTool toolId="0" serialNumber="1" removed="False" assetId="M8010N9172N:1.2"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit=""></ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit=""></ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">1</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>1.2</ProgramToolNumber><CutterStatus><Status>NEW</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="649640">649640</FunctionalLength><CuttingDiameterMax code="DC" nominal="-177708">100</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
-	--multiline--SMOOTH
-	)ASSET");
+	m_adapter->parseBuffer(
+R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multiline--SMOOTH
+<CuttingTool toolId="0" serialNumber="1" removed="False" assetId="M8010N9172N:1.2"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit=""></ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit=""></ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">1</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>1.2</ProgramToolNumber><CutterStatus><Status>NEW</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="649640">649640</FunctionalLength><CuttingDiameterMax code="DC" nominal="-177708">100</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
+--multiline--SMOOTH
+)ASSET");
 
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 2, m_agent->getAssetCount());
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 2, first.getObject()->refCount());
 
-	m_adapter->parseBuffer(R"ASSET(2018-02-19T22:54:03.2760Z|@ASSET@|M8010N9172N:1.0|CuttingTool|--multiline--SMOOTH
-	<CuttingTool toolId="0" serialNumber="0" removed="False" assetId="M8010N9172N:1.0"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit=""></ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit=""></ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">1</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>1.0</ProgramToolNumber><CutterStatus><Status>NEW</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="0">0</FunctionalLength><CuttingDiameterMax code="DC" nominal="0">0</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
-	--multiline--SMOOTH
-	)ASSET");
-	m_adapter->parseBuffer(R"ASSET(2018-02-19T22:54:03.3771Z|@ASSET@|M8010N9172N:2.5|CuttingTool|--multiline--SMOOTH
-	<CuttingTool toolId="0" serialNumber="0" removed="False" assetId="M8010N9172N:2.5"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit="">11</ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit="">4</ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">2</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>2.5</ProgramToolNumber><CutterStatus><Status>USED</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="615207">615207</FunctionalLength><CuttingDiameterMax code="DC" nominal="-174546">200</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
-	--multiline--SMOOTH
-	)ASSET");
-	m_adapter->parseBuffer(R"ASSET(2018-02-19T22:54:03.4782Z|@ASSET@|M8010N9172N:2.2|CuttingTool|--multiline--SMOOTH
-	<CuttingTool toolId="0" serialNumber="0" removed="False" assetId="M8010N9172N:2.2"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit="">11</ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit="">4</ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">2</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>2.2</ProgramToolNumber><CutterStatus><Status>USED</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="615207">615207</FunctionalLength><CuttingDiameterMax code="DC" nominal="174546">200</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
-	--multiline--SMOOTH
-	)ASSET");
+	m_adapter->parseBuffer(
+R"ASSET(2018-02-19T22:54:03.2760Z|@ASSET@|M8010N9172N:1.0|CuttingTool|--multiline--SMOOTH
+<CuttingTool toolId="0" serialNumber="0" removed="False" assetId="M8010N9172N:1.0"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit=""></ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit=""></ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">1</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>1.0</ProgramToolNumber><CutterStatus><Status>NEW</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="0">0</FunctionalLength><CuttingDiameterMax code="DC" nominal="0">0</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
+--multiline--SMOOTH
+)ASSET");
+
+	m_adapter->parseBuffer(
+R"ASSET(2018-02-19T22:54:03.3771Z|@ASSET@|M8010N9172N:2.5|CuttingTool|--multiline--SMOOTH
+<CuttingTool toolId="0" serialNumber="0" removed="False" assetId="M8010N9172N:2.5"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit="">11</ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit="">4</ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">2</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>2.5</ProgramToolNumber><CutterStatus><Status>USED</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="615207">615207</FunctionalLength><CuttingDiameterMax code="DC" nominal="-174546">200</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
+--multiline--SMOOTH
+)ASSET");
+
+	m_adapter->parseBuffer(
+R"ASSET(2018-02-19T22:54:03.4782Z|@ASSET@|M8010N9172N:2.2|CuttingTool|--multiline--SMOOTH
+<CuttingTool toolId="0" serialNumber="0" removed="False" assetId="M8010N9172N:2.2"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit="">11</ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit="">4</ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">2</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>2.2</ProgramToolNumber><CutterStatus><Status>USED</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="615207">615207</FunctionalLength><CuttingDiameterMax code="DC" nominal="174546">200</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
+--multiline--SMOOTH
+)ASSET");
 
 	// First asset should now be removed (we are holding the one ref)
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, first.getObject()->refCount());
@@ -1358,10 +1365,11 @@ void AgentTest::testAssetRefCounts()
 	CPPUNIT_ASSERT_EQUAL(string("M8010N9172N:1.2"), second.getObject()->getAssetId());
 
 	// Update the asset
-	m_adapter->parseBuffer(R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multiline--SMOOTH
-	<CuttingTool toolId="0" serialNumber="1" removed="False" assetId="M8010N9172N:1.2"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit=""></ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit=""></ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">1</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>1.2</ProgramToolNumber><CutterStatus><Status>NEW</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="649640">649640</FunctionalLength><CuttingDiameterMax code="DC" nominal="-177708">100</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
-	--multiline--SMOOTH
-	)ASSET");
+	m_adapter->parseBuffer(
+R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multiline--SMOOTH
+<CuttingTool toolId="0" serialNumber="1" removed="False" assetId="M8010N9172N:1.2"><CuttingToolLifeCycle><ToolLife type="MINUTES" countDirection="UP" initial="0" limit=""></ToolLife><ToolLife type="PART_COUNT" countDirection="UP" initial="0" limit=""></ToolLife><Location type="POT" positiveOverlap="0" negativeOverlap="0">1</Location><ProgramToolGroup>0</ProgramToolGroup><ProgramToolNumber>1.2</ProgramToolNumber><CutterStatus><Status>NEW</Status><Status>ALLOCATED</Status><Status>AVAILABLE</Status></CutterStatus><Measurements><FunctionalLength code="LF" nominal="649640">649640</FunctionalLength><CuttingDiameterMax code="DC" nominal="-177708">100</CuttingDiameterMax></Measurements></CuttingToolLifeCycle></CuttingTool>
+--multiline--SMOOTH
+)ASSET");
 
 	// should be deleted
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, second.getObject()->refCount());
@@ -1591,7 +1599,7 @@ void AgentTest::testAssetAdditionOfAssetChanged12()
 	string version = XmlPrinter::getSchemaVersion();
 	XmlPrinter::setSchemaVersion("1.2");
 
-	delete m_agent;
+	delete m_agent; m_agent= nullptr;
 	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25);
 
 	{
@@ -1610,7 +1618,7 @@ void AgentTest::testAssetAdditionOfAssetRemoved13()
 	string version = XmlPrinter::getSchemaVersion();
 	XmlPrinter::setSchemaVersion("1.3");
 
-	delete m_agent;
+	delete m_agent; m_agent= nullptr;
 	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25);
 
 	{
@@ -1856,7 +1864,7 @@ void AgentTest::testPutBlockingFrom()
 
 void AgentTest::killThread(void *aArg)
 {
-	AgentTest *test = (AgentTest*) aArg;
+	auto test = (AgentTest *) aArg;
 	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
 	test->m_out.setstate(ios::eofbit);
 }
@@ -1864,7 +1872,7 @@ void AgentTest::killThread(void *aArg)
 
 void AgentTest::addThread(void *aArg)
 {
-	AgentTest *test = (AgentTest*) aArg;
+	auto test = (AgentTest *) aArg;
 	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
 	test->m_adapter->processData("TIME|line|204");
 	test->m_out.setstate(ios::eofbit);
@@ -1888,14 +1896,14 @@ void AgentTest::testStreamData()
 	// Heartbeat test. Heartbeat should be sent in 100ms. Give
 	// 25ms range.
 	{
-		uint64 start = ts.get_timestamp();
+		auto start = ts.get_timestamp();
 
 		m_delay = 25;
 		dlib::create_new_thread(killThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
 
-		int64 delta = ts.get_timestamp() - start;
+		auto delta = ts.get_timestamp() - start;
 		CPPUNIT_ASSERT(delta < 225000);
 		CPPUNIT_ASSERT(delta > 200000);
 	}
@@ -1906,13 +1914,13 @@ void AgentTest::testStreamData()
 	// Set some data and make sure we get data within 20ms.
 	// Again, allow for some slop.
 	{
-		uint64 start = ts.get_timestamp();
+		auto start = ts.get_timestamp();
 
 		m_delay = 10;
 		dlib::create_new_thread(addThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 
-		int64 delta = ts.get_timestamp() - start;
+		auto delta = ts.get_timestamp() - start;
 		CPPUNIT_ASSERT(delta < 70000);
 		CPPUNIT_ASSERT(delta > 40000);
 	}
@@ -1928,7 +1936,7 @@ void AgentTest::testFailWithDuplicateDeviceUUID()
 
 void AgentTest::streamThread(void *aArg)
 {
-	AgentTest *test = (AgentTest*) aArg;
+	auto test = (AgentTest *) aArg;
 	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
 	test->m_agent->setSequence(test->m_agent->getSequence() + 20);
 	test->m_adapter->processData("TIME|line|204");
@@ -1954,7 +1962,7 @@ void AgentTest::testStreamDataObserver()
 	// the new data.
 	{
 		m_delay = 50;
-		string seq = int64ToString(m_agent->getSequence() + 20);
+		auto seq = int64ToString(m_agent->getSequence() + 20);
 		dlib::create_new_thread(streamThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
@@ -2073,7 +2081,7 @@ void AgentTest::testDynamicCalibration()
 
 	// Add a 10.111000 seconds
 	m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
-	DataItem *di = m_agent->getDataItemByName("LinuxCNC", "Yact");
+	auto di = m_agent->getDataItemByName("LinuxCNC", "Yact");
 	CPPUNIT_ASSERT(di);
 
 	CPPUNIT_ASSERT(di->hasFactor());
@@ -2096,7 +2104,9 @@ void AgentTest::testDynamicCalibration()
 		PARSE_XML_RESPONSE;
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='y1']", "4");
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='z1']", "18");
-		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']", "56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.19 56.19 56.18 56.18 56.17 56.17 56.19 56.19 56.18 56.18 56.18 56.18 56.18");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+			"//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']",
+			"56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.19 56.19 56.18 56.18 56.17 56.17 56.19 56.19 56.18 56.18 56.18 56.18 56.18");
 	}
 }
 
@@ -2110,7 +2120,9 @@ void AgentTest::testInitialTimeSeriesValues()
 
 	{
 		PARSE_XML_RESPONSE;
-		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+			"//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']",
+			"UNAVAILABLE");
 	}
 }
 
@@ -2158,7 +2170,7 @@ void AgentTest::testFilterValues13()
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
 	}
 
-	DataItem *item = m_agent->getDataItemByName((string) "LinuxCNC", "pos");
+	auto item = m_agent->getDataItemByName((string) "LinuxCNC", "pos");
 	CPPUNIT_ASSERT(item);
 	CPPUNIT_ASSERT(item->hasMinimumDelta());
 
@@ -2169,7 +2181,7 @@ void AgentTest::testFilterValues13()
 
 void AgentTest::testFilterValues()
 {
-	delete m_agent;
+	delete m_agent; m_agent= nullptr;
 	m_agent = new Agent("../samples/filter_example.xml", 8, 4, 25);
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2339,18 +2351,18 @@ void AgentTest::testResetTriggered()
 
 void AgentTest::testReferences()
 {
-	delete m_agent;
+	delete m_agent; m_agent = nullptr;
 	m_agent = new Agent("../samples/reference_example.xml", 8, 4, 25);
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
 
 	string id = "mf";
-	DataItem *item = m_agent->getDataItemByName((string) "LinuxCNC", id);
-	Component *comp = item->getComponent();
+	auto item = m_agent->getDataItemByName((string) "LinuxCNC", id);
+	auto comp = item->getComponent();
 
-	const list<Component::Reference> refs = comp->getReferences();
-	const Component::Reference &ref = refs.front();
+	const auto refs = comp->getReferences();
+	const auto ref = refs.front();
 
 	CPPUNIT_ASSERT_EQUAL((string) "c4", ref.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.m_name);
@@ -2381,7 +2393,7 @@ void AgentTest::testReferences()
 
 void AgentTest::testDiscrete()
 {
-	delete m_agent;
+	delete m_agent; m_agent= nullptr;
 	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25);
 	m_path = "/sample";
 
@@ -2389,7 +2401,7 @@ void AgentTest::testDiscrete()
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);
 
-	DataItem *msg = m_agent->getDataItemByName("LinuxCNC", "message");
+	auto msg = m_agent->getDataItemByName("LinuxCNC", "message");
 	CPPUNIT_ASSERT(msg);
 	CPPUNIT_ASSERT_EQUAL(true, msg->isDiscrete());
 
@@ -2431,7 +2443,7 @@ void AgentTest::testDiscrete()
 void AgentTest::testUpcaseValues()
 {
 	m_path = "/current";
-	delete m_agent;
+	delete m_agent; m_agent = nullptr;
 	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25);
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	m_adapter->setDupCheck(true);
@@ -2463,7 +2475,7 @@ void AgentTest::testConditionSequence()
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);
 
-	DataItem *logic = m_agent->getDataItemByName("LinuxCNC", "lp");
+	auto logic = m_agent->getDataItemByName("LinuxCNC", "lp");
 	CPPUNIT_ASSERT(logic);
 
 	// Validate we are dup checking.
@@ -2560,10 +2572,10 @@ void AgentTest::testEmptyLastItemFromAdapter()
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);
 
-	DataItem *program = m_agent->getDataItemByName("LinuxCNC", "program");
+	auto  program = m_agent->getDataItemByName("LinuxCNC", "program");
 	CPPUNIT_ASSERT(program);
 
-	DataItem *tool_id = m_agent->getDataItemByName("LinuxCNC", "block");
+	auto tool_id = m_agent->getDataItemByName("LinuxCNC", "block");
 	CPPUNIT_ASSERT(tool_id);
 
 	{
@@ -2640,7 +2652,7 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
 	if (m_result.empty())
 	{
 		m_result = m_out.str();
-		size_t pos = m_result.rfind("\n--");
+		auto pos = m_result.rfind("\n--");
 		if (pos != string::npos)
 		{
 			pos = m_result.find('<', pos);
@@ -2715,7 +2727,7 @@ void AgentTest::testConstantValue()
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 
-	DataItem *di = m_agent->getDataItemByName("LinuxCNC", "block");
+	auto di = m_agent->getDataItemByName("LinuxCNC", "block");
 	CPPUNIT_ASSERT(di);
 	di->addConstrainedValue("UNAVAILABLE");
 

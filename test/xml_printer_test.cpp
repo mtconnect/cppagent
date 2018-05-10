@@ -49,7 +49,7 @@ void XmlPrinterTest::setUp()
 
 void XmlPrinterTest::tearDown()
 {
-	delete m_config;
+	delete m_config; m_config = nullptr;
 }
 
 
@@ -336,7 +336,7 @@ void XmlPrinterTest::testChangeErrorNamespace()
 		PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
 			"/m:MTConnectError@schemaLocation",
-			"urn:mtconnect.org:MTConnectError:1.2 http://www.mtconnect.org/schemas/MTConnectError_1.2.xsd");
+			"urn:mtconnect.org:MTConnectError:1.2 http://schemas.mtconnect.org/schemas/MTConnectError_1.2.xsd");
 	}
 
 	{
@@ -521,7 +521,7 @@ void XmlPrinterTest::testVeryLargeSequence()
 
 void XmlPrinterTest::testChangeDeviceAttributes()
 {
-	Device *device = m_devices.front();
+	auto device = m_devices.front();
 
 	string v = "Some_Crazy_Uuid";
 	device->setUuid(v);
@@ -726,7 +726,7 @@ void XmlPrinterTest::testProbeWithFilter13()
 
 void XmlPrinterTest::testProbeWithFilter()
 {
-	delete m_config;
+	delete m_config; m_config = nullptr;
 
 	m_config = new XmlParser();
 	m_devices = m_config->parseFile("../samples/filter_example.xml");
@@ -742,7 +742,7 @@ void XmlPrinterTest::testProbeWithFilter()
 
 void XmlPrinterTest::testReferences()
 {
-	delete m_config;
+	delete m_config; m_config = nullptr;
 
 	m_config = new XmlParser();
 	m_devices = m_config->parseFile("../samples/reference_example.xml");
@@ -831,7 +831,7 @@ void XmlPrinterTest::testAssetsStyle()
 
 DataItem *XmlPrinterTest::getDataItem(const char *name)
 {
-	Device *device = m_devices.front();
+	const auto device = m_devices.front();
 	CPPUNIT_ASSERT(device);
 
 	return device->getDeviceDataItem(name);
@@ -847,7 +847,7 @@ ComponentEvent *XmlPrinterTest::newEvent(
 	string time("TIME");
 
 	// Make sure the data item is there
-	DataItem *d = getDataItem(name);
+	const auto d = getDataItem(name);
 	CPPUNIT_ASSERT_MESSAGE((string) "Could not find data item " + name, d);
 
 	return new ComponentEvent(*d, sequence, time, value);
@@ -855,14 +855,14 @@ ComponentEvent *XmlPrinterTest::newEvent(
 
 
 ComponentEvent *XmlPrinterTest::addEventToCheckpoint(
-	Checkpoint &aCheckpoint,
+	Checkpoint &checkpoint,
 	const char *name,
 	uint64_t sequence,
 	string value
 )
 {
 	ComponentEvent *event = newEvent(name, sequence, value);
-	aCheckpoint.addComponentEvent(event);
+	checkpoint.addComponentEvent(event);
 	return event;
 }
 
@@ -870,13 +870,12 @@ ComponentEvent *XmlPrinterTest::addEventToCheckpoint(
 // CuttingTool tests
 void XmlPrinterTest::testPrintCuttingTool()
 {
-	vector<AssetPtr> assets;
-
-	string document = getFile("asset1.xml");
-	AssetPtr asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
+	auto document = getFile("asset1.xml");
+	auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
 	CuttingToolPtr tool = (CuttingTool *) asset.getObject();
 
 
+	vector<AssetPtr> assets;
 	assets.push_back(asset);
 
 	{
@@ -889,14 +888,13 @@ void XmlPrinterTest::testPrintCuttingTool()
 
 void XmlPrinterTest::testPrintRemovedCuttingTool()
 {
-	vector<AssetPtr> assets;
-
-	string document = getFile("asset1.xml");
-	AssetPtr asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
+	auto document = getFile("asset1.xml");
+	auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
 	asset->setRemoved(true);
 	CuttingToolPtr tool = (CuttingTool *) asset.getObject();
 
 
+	vector<AssetPtr> assets;
 	assets.push_back(asset);
 
 	{
@@ -909,17 +907,15 @@ void XmlPrinterTest::testPrintRemovedCuttingTool()
 // CuttingTool tests
 void XmlPrinterTest::testPrintExtendedCuttingTool()
 {
-	vector<AssetPtr> assets;
-
-
 	XmlPrinter::addAssetsNamespace("urn:Example.com:Assets:1.3",
 		"/schemas/MTConnectAssets_1.3.xsd",
 		"x");
 
-	string document = getFile("ext_asset.xml");
-	AssetPtr asset = m_config->parseAsset("B732A08500HP.1", "CuttingTool", document);
+	auto document = getFile("ext_asset.xml");
+	auto asset = m_config->parseAsset("B732A08500HP.1", "CuttingTool", document);
 	CuttingToolPtr tool = (CuttingTool *) asset.getObject();
 
+	vector<AssetPtr> assets;
 	assets.push_back(asset);
 
 	{

@@ -42,7 +42,7 @@ using namespace std;
 
 void ConnectorTest::setUp()
 {
-	CPPUNIT_ASSERT(create_listener(m_server, 0, "127.0.0.1") == 0);
+	CPPUNIT_ASSERT(!create_listener(m_server, 0, "127.0.0.1"));
 	m_port = m_server->get_listening_port();
 	m_connector.reset(new TestConnector("127.0.0.1", m_port));
 	m_connector->m_disconnected = true;
@@ -118,7 +118,7 @@ void ConnectorTest::testProtocolCommand()
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
 	CPPUNIT_ASSERT(m_serverSocket.get());
 
-	const char *cmd = "* Hello Connector\n";
+	const auto cmd = "* Hello Connector\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
 	this_thread::sleep_for(1000ms);
 
@@ -136,13 +136,13 @@ void ConnectorTest::testHeartbeat()
 	CPPUNIT_ASSERT(m_serverSocket.get());
 
 	// Receive initial heartbeat request "* PING\n"
-	char buf[1024];
+	char buf[1024] = {0};
 	CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
 	buf[7] = '\0';
 	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
 	// Respond to the heartbeat of 1/2 second
-	const char *pong = "* PONG 1000\n";
+	const auto pong = "* PONG 1000\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
 	this_thread::sleep_for(1000ms);
 
@@ -156,24 +156,24 @@ void ConnectorTest::testHeartbeatPong()
 	testHeartbeat();
 
 	dlib::timestamper stamper;
-	uint64 last_heartbeat = stamper.get_timestamp();
+	auto last_heartbeat = stamper.get_timestamp();
 
 	// Test to make sure we can send and receive 5 heartbeats
 	for (int i = 0; i < 5; i++)
 	{
 		// Receive initial heartbeat request "* PING\n"
 
-		char buf[1024];
+		char buf[1024] = {0};
 		CPPUNIT_ASSERT(m_serverSocket->read(buf, 1023, 1100) > 0);
 		buf[7] = '\0';
-		CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+		CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
 
-		uint64 now = stamper.get_timestamp();
+		auto now = stamper.get_timestamp();
 		CPPUNIT_ASSERT(now - last_heartbeat < (uint64)(1000 * 2000));
 		last_heartbeat = now;
 
 		// Respond to the heartbeat of 1/2 second
-		const char *pong = "* PONG 1000\n";
+		const auto pong = "* PONG 1000\n";
 		CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
 		this_thread::sleep_for(10ms);
 
@@ -199,13 +199,13 @@ void ConnectorTest::testLegacyTimeout()
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
 	CPPUNIT_ASSERT(m_serverSocket.get());
 
-	char buf[1024];
+	char buf[1024] = {0};
 	CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
 	buf[7] = '\0';
-	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+	CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
 
 	// Write some data...
-	const char *cmd = "* Hello Connector\n";
+	const auto cmd = "* Hello Connector\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
 
 	// No pings, but timeout after 5 seconds of silence
@@ -261,13 +261,13 @@ void ConnectorTest::testSendCommand()
 	char buf[1024];
 	CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 1000));
 	buf[7] = '\0';
-	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+	CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
 
 	m_connector->sendCommand("Hello There;");
 
 	CPPUNIT_ASSERT_EQUAL(15L, m_serverSocket->read(buf, 1023, 1000));
 	buf[15] = '\0';
-	CPPUNIT_ASSERT(strcmp(buf, "* Hello There;\n") == 0);
+	CPPUNIT_ASSERT(!strcmp(buf, "* Hello There;\n"));
 }
 
 
@@ -276,7 +276,7 @@ void ConnectorTest::testIPV6Connection()
 #if !defined(WIN32) || (NTDDI_VERSION >= NTDDI_VISTA)
 	m_connector.reset();
 
-	CPPUNIT_ASSERT(create_listener(m_server, 0, "::1") == 0);
+	CPPUNIT_ASSERT(!create_listener(m_server, 0, "::1"));
 	m_port = m_server->get_listening_port();
 	m_connector.reset(new TestConnector("::1", m_port));
 	m_connector->m_disconnected = true;

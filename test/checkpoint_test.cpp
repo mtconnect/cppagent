@@ -68,8 +68,10 @@ void CheckpointTest::setUp()
 
 void CheckpointTest::tearDown()
 {
-	delete m_agent;
-	delete m_checkpoint;
+	delete m_agent; m_agent = nullptr;
+	delete m_checkpoint; m_checkpoint = nullptr;
+	delete m_dataItem1; m_dataItem1 = nullptr;
+	delete m_dataItem2; m_dataItem2 = nullptr;
 }
 
 
@@ -146,10 +148,10 @@ void CheckpointTest::testCopy()
 	CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
 	CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
 
-	Checkpoint *copy = new Checkpoint(*m_checkpoint);
+	auto copy = new Checkpoint(*m_checkpoint);
 	CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
 	CPPUNIT_ASSERT_EQUAL(3, (int) p2->refCount());
-	delete copy;
+	delete copy; copy = nullptr;
 	CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
 }
 
@@ -184,7 +186,7 @@ void CheckpointTest::testGetComponentEvents()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	DataItem *d1 = new DataItem(attributes);
+	auto d1 = new DataItem(attributes);
 	filter.insert(d1->getId());
 
 	p = new ComponentEvent(*d1, 2, time, value);
@@ -204,7 +206,7 @@ void CheckpointTest::testGetComponentEvents()
 
 	CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
 
-	delete d1;
+	delete d1; d1 = nullptr;
 }
 
 
@@ -237,7 +239,7 @@ void CheckpointTest::testFilter()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	DataItem *d1 = new DataItem(attributes);
+	auto d1 = new DataItem(attributes);
 
 	p4 = new ComponentEvent(*d1, 2, time, value);
 	m_checkpoint->addComponentEvent(p4);
@@ -253,6 +255,7 @@ void CheckpointTest::testFilter()
 	m_checkpoint->getComponentEvents(list);
 
 	CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
+	delete d1; d1 = nullptr;
 }
 
 
@@ -286,7 +289,7 @@ void CheckpointTest::testCopyAndFilter()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	DataItem *d1 = new DataItem(attributes);
+	auto d1 = new DataItem(attributes);
 
 	p = new ComponentEvent(*d1, 2, time, value);
 	m_checkpoint->addComponentEvent(p);
@@ -320,6 +323,7 @@ void CheckpointTest::testCopyAndFilter()
 	check.getComponentEvents(list);
 	CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
 
+	delete d1; d1 = nullptr;
 }
 
 

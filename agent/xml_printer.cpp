@@ -691,9 +691,9 @@ string XmlPrinter::printSample(
 		for (auto i = 0ul; i < results.size(); i++)
 		{
 			auto result = results[i];
-			auto const dataItem = result->getDataItem();
-			auto const component = dataItem->getComponent();
-			auto const device = component->getDevice();
+			const auto dataItem = result->getDataItem();
+			const auto component = dataItem->getComponent();
+			const auto device = component->getDevice();
 
 			if (device != lastDevice)
 			{
