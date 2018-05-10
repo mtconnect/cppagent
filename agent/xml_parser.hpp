@@ -93,7 +93,7 @@ protected:
 		Component *component );
 
 	// Perform loading of references and set up relationships
-	void handleRefenence(
+	void handleReference(
 		xmlNodePtr components,
 		Component *parent = nullptr,
 		Device *device = nullptr);
