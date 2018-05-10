@@ -220,8 +220,17 @@ uint64_t parseTimeMicro(const std::string &aTime)
 	timeinfo.tm_mon -= 1;
 	timeinfo.tm_year -= 1900;
 
+#ifndef _WINDOWS
+	auto existingTz = getenv("TZ");
+	setenv("TZ", "UTC", 1);
+#endif
 
 	uint64_t time = (mktime(&timeinfo) - timezone) * 1000000ull;
+
+#ifndef _WINDOWS
+	if(existingTz)
+		setenv("TZ", existingTz, 1);
+#endif
 
 	int ms_v = 0;
 	auto len = strlen(ms);
