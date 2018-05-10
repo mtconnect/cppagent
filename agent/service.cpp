@@ -88,7 +88,7 @@ void commandLine()
 	char line[1024] = {0};
 	while (gets(line))
 	{
-		if (strncasecmp(line, "QUIT", 4) == 0)
+		if (!strncasecmp(line, "QUIT", 4))
 		{
 			g_service->stop();
 			return;
@@ -108,8 +108,8 @@ int MTConnectService::main(int argc, const char *argv[])
 		// Otherwise, the service is probably being started by the SCM.
 		if(argc > 1)
 		{
-			if (stricmp(argv[1], "help") == 0 ||
-				strncmp(argv[1], "-h", 2) == 0 )
+			if (!stricmp(argv[1], "help") ||
+				!strncmp(argv[1], "-h", 2) )
 			{
 				printf("Usage: agent [help|install|debug|run] [configuration_file]\n"
 						"       help           Prints this message\n"
@@ -124,22 +124,22 @@ int MTConnectService::main(int argc, const char *argv[])
 						"as a service and will begin the service initialization sequence\n");
 				exit(0);
 			}
-			else if (stricmp(argv[1], "install") == 0)
+			else if (!stricmp(argv[1], "install"))
 			{
 				initialize(argc - 2, argv + 2);
 				install();
 				return 0;
 			}
-			else if (stricmp(argv[1], "remove") == 0)
+			else if (!stricmp(argv[1], "remove"))
 			{
 				initialize(argc - 2, argv + 2);
 				remove();
 				return 0;
 			}
-			else if (stricmp(argv[1], "debug") == 0 ||
-					 stricmp(argv[1], "run") == 0)
+			else if (!stricmp(argv[1], "debug") ||
+					 !stricmp(argv[1], "run") )
 			{
-				if (stricmp(argv[1], "debug") == 0)
+				if (!stricmp(argv[1], "debug"))
 					m_isDebug = true;
 
 				initialize(argc - 2, argv + 2);
@@ -708,8 +708,8 @@ int MTConnectService::main(int argc, const char *argv[])
 
 	if (argc > 1)
 	{
-		if (strcasecmp(argv[1], "help") == 0 ||
-			strncmp(argv[1], "-h", 2) == 0)
+		if (!strcasecmp(argv[1], "help") ||
+			!strncmp(argv[1], "-h", 2) )
 		{
 			printf("Usage: agent [help|daemonize|debug|run] [configuration_file]\n"
 					"       help           Prints this message\n"
@@ -722,7 +722,7 @@ int MTConnectService::main(int argc, const char *argv[])
 					"When the agent is started without any arguments it will default to run\n");
 			exit(0);
 		}
-		else if (strcasecmp(argv[1], "daemonize") == 0)
+		else if (!strcasecmp(argv[1], "daemonize"))
 		{
 			m_isService = true;
 			m_pidFile = "agent.pid";
@@ -730,7 +730,7 @@ int MTConnectService::main(int argc, const char *argv[])
 			daemonize();
 			g_logger << dlib::LINFO << "Starting daemon";
 		}
-		else if (strcasecmp( argv[1], "debug") == 0)
+		else if (!strcasecmp( argv[1], "debug"))
 		{
 			m_isDebug = true;
 			initialize(argc - 2, argv + 2);

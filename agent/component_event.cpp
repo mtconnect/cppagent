@@ -151,11 +151,11 @@ AttributeList *ComponentEvent::getAttributes()
 
 			getline(toParse, token, '|');
 
-			if (strcasecmp(token.c_str(), "normal") == 0)
+			if (!strcasecmp(token.c_str(), "normal"))
 				m_level = NORMAL;
-			else if (strcasecmp(token.c_str(), "warning") == 0)
+			else if (!strcasecmp(token.c_str(), "warning"))
 				m_level = WARNING;
-			else if (strcasecmp(token.c_str(), "fault") == 0)
+			else if (!strcasecmp(token.c_str(), "fault"))
 				m_level = FAULT;
 			else // Assume unavailable
 				m_level = UNAVAILABLE;

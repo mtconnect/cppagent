@@ -96,7 +96,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 			{
 				string ns((const char *)root->ns->href);
 
-				if (ns.find_first_of("urn:mtconnect.org:MTConnectDevices") == 0)
+				if (!ns.find_first_of("urn:mtconnect.org:MTConnectDevices"))
 				{
 					auto last = ns.find_last_of(':');
 
@@ -165,7 +165,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 
 		xmlNodeSetPtr nodeset = devices->nodesetval;
 
-		if (!nodeset || nodeset->nodeNr == 0)
+		if (!nodeset || !nodeset->nodeNr)
 			throw (string) "Could not find Device in XML configuration";
 
 		// Collect the Devices...
@@ -307,7 +307,7 @@ void XmlParser::getDataItems(
 			{
 				xmlNodePtr n = nodeset->nodeTab[i];
 
-				if (xmlStrcmp(n->name, BAD_CAST "DataItem") == 0)
+				if (!xmlStrcmp(n->name, BAD_CAST "DataItem"))
 				{
 					auto id = xmlGetProp(n, BAD_CAST "id");
 
@@ -317,12 +317,12 @@ void XmlParser::getDataItems(
 						xmlFree(id); id = nullptr;
 					}
 				}
-				else if (xmlStrcmp(n->name, BAD_CAST "DataItems") == 0)
+				else if (!xmlStrcmp(n->name, BAD_CAST "DataItems"))
 				{
 					// Handle case where we are specifying the data items node...
 					getDataItems(filterSet, "DataItem", n);
 				}
-				else if (xmlStrcmp(n->name, BAD_CAST "Reference") == 0)
+				else if (!xmlStrcmp(n->name, BAD_CAST "Reference"))
 				{
 					auto id = xmlGetProp(n, BAD_CAST "dataItemId");
 
@@ -423,7 +423,7 @@ Component *XmlParser::handleComponent(
 			if (child->type != XML_ELEMENT_NODE)
 				continue;
 
-			if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
+			if (!xmlStrcmp(child->name, BAD_CAST "Description"))
 			{
 				auto text = xmlNodeGetContent(child);
 
@@ -434,7 +434,7 @@ Component *XmlParser::handleComponent(
 				}
 
 			}
-			else if (xmlStrcmp(child->name, BAD_CAST "Configuration") == 0)
+			else if (!xmlStrcmp(child->name, BAD_CAST "Configuration"))
 			{
 				xmlNodePtr config = child->children;
 				xmlBufferPtr buf;
@@ -514,7 +514,7 @@ void XmlParser::loadDataItem(
 			if (child->type != XML_ELEMENT_NODE)
 				continue;
 
-			if (xmlStrcmp(child->name, BAD_CAST "Source") == 0)
+			if (!xmlStrcmp(child->name, BAD_CAST "Source"))
 			{
 				auto text = xmlNodeGetContent(child);
 
@@ -524,7 +524,7 @@ void XmlParser::loadDataItem(
 					xmlFree(text); text = nullptr;
 				}
 			}
-			else if (xmlStrcmp(child->name, BAD_CAST "Constraints") == 0)
+			else if (!xmlStrcmp(child->name, BAD_CAST "Constraints"))
 			{
 				for (xmlNodePtr constraint = child->children; constraint; constraint = constraint->next)
 				{
@@ -536,33 +536,33 @@ void XmlParser::loadDataItem(
 					if (!text)
 						continue;
 
-					if (xmlStrcmp(constraint->name, BAD_CAST "Value") == 0)
+					if (!xmlStrcmp(constraint->name, BAD_CAST "Value"))
 						d->addConstrainedValue((const char *) text);
-					else if (xmlStrcmp(constraint->name, BAD_CAST "Minimum") == 0)
+					else if (!xmlStrcmp(constraint->name, BAD_CAST "Minimum"))
 						d->setMinimum((const char *) text);
-					else if (xmlStrcmp(constraint->name, BAD_CAST "Maximum") == 0)
+					else if (!xmlStrcmp(constraint->name, BAD_CAST "Maximum"))
 						d->setMaximum((const char *) text);
-					else if (xmlStrcmp(constraint->name, BAD_CAST "Filter") == 0)
+					else if (!xmlStrcmp(constraint->name, BAD_CAST "Filter"))
 						d->setMinmumDelta(strtod((const char *) text, nullptr));
 
 					xmlFree(text); text = nullptr;
 				}
 			}
-			else if (xmlStrcmp(child->name, BAD_CAST "Filters") == 0)
+			else if (!xmlStrcmp(child->name, BAD_CAST "Filters"))
 			{
 				for (xmlNodePtr filter = child->children; filter; filter = filter->next)
 				{
 					if (filter->type != XML_ELEMENT_NODE)
 						continue;
 
-					if (xmlStrcmp(filter->name, BAD_CAST "Filter") == 0)
+					if (!xmlStrcmp(filter->name, BAD_CAST "Filter"))
 					{
 						xmlChar *text = xmlNodeGetContent(filter);
 						xmlChar *type = xmlGetProp(filter, BAD_CAST "type");
 
 						if (type)
 						{
-							if (xmlStrcmp(type, BAD_CAST "PERIOD") == 0)
+							if (!xmlStrcmp(type, BAD_CAST "PERIOD"))
 								d->setMinmumPeriod(strtod((const char *) text, nullptr));
 							else
 								d->setMinmumDelta(strtod((const char *) text, nullptr));
@@ -576,13 +576,13 @@ void XmlParser::loadDataItem(
 					}
 				}
 			}
-			else if (xmlStrcmp(child->name, BAD_CAST "InitialValue") == 0)
+			else if (!xmlStrcmp(child->name, BAD_CAST "InitialValue"))
 			{
 				auto text = xmlNodeGetContent(child);
 				d->setInitialValue(string((const char *)text));
 				xmlFree(text); text = nullptr;
 			}
-			else if (xmlStrcmp(child->name, BAD_CAST "ResetTrigger") == 0)
+			else if (!xmlStrcmp(child->name, BAD_CAST "ResetTrigger"))
 			{
 				auto text = xmlNodeGetContent(child);
 				d->setResetTrigger(string((const char *)text));
@@ -603,7 +603,7 @@ void XmlParser::handleComposition(xmlNodePtr composition,
 
 	for (xmlNodePtr child = composition->children; child; child = child->next)
 	{
-		if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
+		if (!xmlStrcmp(child->name, BAD_CAST "Description"))
 		{
 			auto text = xmlNodeGetContent(child);
 			string body;
@@ -696,7 +696,7 @@ AssetPtr XmlParser::parseAsset(
 
 		if (!assetNodes ||
 			!assetNodes->nodesetval ||
-			assetNodes->nodesetval->nodeNr == 0)
+			!assetNodes->nodesetval->nodeNr)
 		{
 			// See if this is a fragment... the root node will be check when it is
 			// parsed...
@@ -847,7 +847,7 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr node, xmlDocPtr doc)
 
 	for (xmlNodePtr child = node->children; child; child = child->next)
 	{
-		if (xmlStrcmp(child->name, BAD_CAST "Measurements") == 0)
+		if (!xmlStrcmp(child->name, BAD_CAST "Measurements"))
 		{
 			for (xmlNodePtr meas = child->children; meas; meas = meas->next)
 			{
@@ -855,7 +855,7 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr node, xmlDocPtr doc)
 				item->m_measurements[value->m_key] = value;
 			}
 		}
-		else if (xmlStrcmp(child->name, BAD_CAST "ItemLife") == 0)
+		else if (!xmlStrcmp(child->name, BAD_CAST "ItemLife"))
 		{
 			CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
 			item->m_lives.push_back(value);
@@ -875,12 +875,12 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 {
 	for (xmlNodePtr child = node->children; child; child = child->next)
 	{
-		if (xmlStrcmp(child->name, BAD_CAST "CuttingItems") == 0)
+		if (!xmlStrcmp(child->name, BAD_CAST "CuttingItems"))
 		{
 			for (xmlAttrPtr attr = child->properties; attr; attr = attr->next)
 			{
 				if (attr->type == XML_ATTRIBUTE_NODE &&
-					xmlStrcmp(attr->name, BAD_CAST "count") == 0)
+					!xmlStrcmp(attr->name, BAD_CAST "count"))
 				{
 					tool->m_itemCount = (const char *) attr->children->content;
 				}
@@ -888,14 +888,14 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 
 			for (xmlNodePtr itemNode = child->children; itemNode; itemNode = itemNode->next)
 			{
-				if (xmlStrcmp(itemNode->name, BAD_CAST "CuttingItem") == 0)
+				if (!xmlStrcmp(itemNode->name, BAD_CAST "CuttingItem"))
 				{
 					CuttingItemPtr item = parseCuttingItem(itemNode, doc);
 					tool->m_items.push_back(item);
 				}
 			}
 		}
-		else if (xmlStrcmp(child->name, BAD_CAST "Measurements") == 0)
+		else if (!xmlStrcmp(child->name, BAD_CAST "Measurements"))
 		{
 			for (xmlNodePtr meas = child->children; meas; meas = meas->next)
 			{
@@ -906,11 +906,11 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 				}
 			}
 		}
-		else if (xmlStrcmp(child->name, BAD_CAST "CutterStatus") == 0)
+		else if (!xmlStrcmp(child->name, BAD_CAST "CutterStatus"))
 		{
 			for (xmlNodePtr status = child->children; status; status = status->next)
 			{
-				if (xmlStrcmp(status->name, BAD_CAST "Status") == 0)
+				if (!xmlStrcmp(status->name, BAD_CAST "Status"))
 				{
 					xmlChar *text = xmlNodeGetContent(status);
 
@@ -922,7 +922,7 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 				}
 			}
 		}
-		else if (xmlStrcmp(child->name, BAD_CAST "ToolLife") == 0)
+		else if (!xmlStrcmp(child->name, BAD_CAST "ToolLife"))
 		{
 			CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
 			tool->m_lives.push_back(value);
@@ -943,8 +943,8 @@ AssetPtr XmlParser::handleAsset(
 	AssetPtr asset;
 
 	// We only handle cuttng tools for now...
-	if (xmlStrcmp(inputAsset->name, BAD_CAST "CuttingTool") == 0 ||
-		xmlStrcmp(inputAsset->name, BAD_CAST "CuttingToolArchetype") == 0)
+	if (!xmlStrcmp(inputAsset->name, BAD_CAST "CuttingTool") ||
+		!xmlStrcmp(inputAsset->name, BAD_CAST "CuttingToolArchetype") )
 	{
 		asset = handleCuttingTool(inputAsset, doc);
 	}
@@ -968,8 +968,8 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 	CuttingToolPtr tool;
 
 	// We only handle cuttng tools for now...
-	if (xmlStrcmp(asset->name, BAD_CAST "CuttingTool") == 0 ||
-		xmlStrcmp(asset->name, BAD_CAST "CuttingToolArchetype") == 0)
+	if (!xmlStrcmp(asset->name, BAD_CAST "CuttingTool") ||
+		!xmlStrcmp(asset->name, BAD_CAST "CuttingToolArchetype") )
 	{
 		// Get the attributes...
 		tool.setObject(new CuttingTool("", (const char *) asset->name, ""), true);
@@ -984,7 +984,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 		{
 			for (xmlNodePtr child = asset->children; child; child = child->next)
 			{
-				if (xmlStrcmp(child->name, BAD_CAST "AssetArchetypeRef") == 0)
+				if (!xmlStrcmp(child->name, BAD_CAST "AssetArchetypeRef"))
 				{
 					XmlAttributes attrs;
 
@@ -996,7 +996,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 
 					tool->setArchetype(attrs);
 				}
-				else if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
+				else if (!xmlStrcmp(child->name, BAD_CAST "Description"))
 				{
 					auto text = xmlNodeGetContent(child);
 
@@ -1006,7 +1006,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 						xmlFree(text); text = nullptr;
 					}
 				}
-				else if (xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition") == 0)
+				else if (!xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition"))
 				{
 					auto text = xmlNodeGetContent(child);
 
@@ -1016,7 +1016,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 						xmlFree(text); text = nullptr;
 					}
 				}
-				else if (xmlStrcmp(child->name, BAD_CAST "CuttingToolLifeCycle") == 0)
+				else if (!xmlStrcmp(child->name, BAD_CAST "CuttingToolLifeCycle"))
 				{
 					parseCuttingToolLife(tool, child, doc);
 				}
@@ -1060,7 +1060,7 @@ void XmlParser::updateAsset(
 
 		auto root = xmlDocGetRootElement(document);
 
-		if (xmlStrcmp(BAD_CAST "CuttingItem", root->name) == 0)
+		if (!xmlStrcmp(BAD_CAST "CuttingItem", root->name))
 		{
 			auto item = parseCuttingItem(root, document);
 

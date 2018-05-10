@@ -146,7 +146,7 @@ std::string &CuttingTool::getContent()
 {
 	if (m_content.empty())
 	{
-		if (m_identity.count("serialNumber") == 0 || m_identity["serialNumber"].empty())
+		if (!m_identity.count("serialNumber") || m_identity["serialNumber"].empty())
 			Asset::addIdentity("serialNumber", m_assetId);
 
 		m_content = XmlPrinter::printCuttingTool(this);
