@@ -95,28 +95,19 @@ void XmlParserTest::testGetDevices()
 
 	vector<DataItem *> dataItems;
 	const auto &dataItemsMap = device->getDeviceDataItems();
-	std::map<string, DataItem *>::const_iterator iter;
 
-	for (iter = dataItemsMap.begin(); iter != dataItemsMap.end(); iter++)
-	{
-		dataItems.push_back(iter->second);
-	}
+	for (auto const &mapItem : dataItemsMap)
+		dataItems.push_back(mapItem.second);
 
 	bool hasExec = false, hasZcom = false;
 
-	vector<DataItem *>::iterator dataItem;
-
-	for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
+	for (auto const &dataItem : dataItems)
 	{
-		if ((*dataItem)->getId() == "p5" && (*dataItem)->getName() == "execution")
-		{
+		if (dataItem->getId() == "p5" && dataItem->getName() == "execution")
 			hasExec = true;
-		}
 
-		if ((*dataItem)->getId() == "z2" && (*dataItem)->getName() == "Zcom")
-		{
+		if (dataItem->getId() == "z2" && dataItem->getName() == "Zcom")
 			hasZcom = true;
-		}
 	}
 
 	CPPUNIT_ASSERT(hasExec);
@@ -274,14 +265,14 @@ void XmlParserTest::testConfiguration()
 
 	Component *power = nullptr;
 	const auto &children = dev->getChildren();
-	std::list<Component *>::const_iterator iter;
 
-	for (iter = children.begin(); !power && iter != children.end(); ++iter)
+	for (auto const &iter : children)
 	{
-		if ((*iter)->getName() == "power")
-			power = *iter;
+		if (iter->getName() == "power")
+			power = iter;
 	}
 
+	CPPUNIT_ASSERT(power);
 	CPPUNIT_ASSERT(!power->getConfiguration().empty());
 }
 
