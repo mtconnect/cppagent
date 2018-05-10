@@ -59,8 +59,8 @@ void DeviceTest::setUp()
 
 void DeviceTest::tearDown()
 {
-	delete m_devA;
-	delete m_devB;
+	delete m_devA; m_devA = nullptr;
+	delete m_devB; m_devB = nullptr;
 }
 
 
@@ -219,12 +219,12 @@ void DeviceTest::testGetDataItem()
 
 
 	CPPUNIT_ASSERT_EQUAL(&data1, m_devA->getDeviceDataItem("by_id"));
-	CPPUNIT_ASSERT_EQUAL((DataItem *) 0, m_devA->getDeviceDataItem("by_name"));
-	CPPUNIT_ASSERT_EQUAL((DataItem *) 0, m_devA->getDeviceDataItem("by_source"));
+	CPPUNIT_ASSERT_EQUAL((DataItem *)nullptr, m_devA->getDeviceDataItem("by_name"));
+	CPPUNIT_ASSERT_EQUAL((DataItem *)nullptr, m_devA->getDeviceDataItem("by_source"));
 
 	CPPUNIT_ASSERT_EQUAL(&data2, m_devA->getDeviceDataItem("by_id2"));
 	CPPUNIT_ASSERT_EQUAL(&data2, m_devA->getDeviceDataItem("by_name2"));
-	CPPUNIT_ASSERT_EQUAL((DataItem *) 0, m_devA->getDeviceDataItem("by_source2"));
+	CPPUNIT_ASSERT_EQUAL((DataItem *)nullptr, m_devA->getDeviceDataItem("by_source2"));
 
 	CPPUNIT_ASSERT_EQUAL(&data3, m_devA->getDeviceDataItem("by_id3"));
 	CPPUNIT_ASSERT_EQUAL(&data3, m_devA->getDeviceDataItem("by_name3"));

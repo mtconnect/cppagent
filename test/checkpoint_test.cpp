@@ -68,8 +68,10 @@ void CheckpointTest::setUp()
 
 void CheckpointTest::tearDown()
 {
-	delete m_agent;
-	delete m_checkpoint;
+	delete m_agent; m_agent = nullptr;
+	delete m_checkpoint; m_checkpoint = nullptr;
+	delete m_dataItem1; m_dataItem1 = nullptr;
+	delete m_dataItem2; m_dataItem2 = nullptr;
 }
 
 
@@ -149,7 +151,7 @@ void CheckpointTest::testCopy()
 	Checkpoint *copy = new Checkpoint(*m_checkpoint);
 	CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
 	CPPUNIT_ASSERT_EQUAL(3, (int) p2->refCount());
-	delete copy;
+	delete copy; copy = nullptr;
 	CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
 }
 
@@ -204,7 +206,7 @@ void CheckpointTest::testGetComponentEvents()
 
 	CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
 
-	delete d1;
+	delete d1; d1 = nullptr;
 }
 
 
@@ -253,6 +255,7 @@ void CheckpointTest::testFilter()
 	m_checkpoint->getComponentEvents(list);
 
 	CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
+	delete d1; d1 = nullptr;
 }
 
 
@@ -320,6 +323,7 @@ void CheckpointTest::testCopyAndFilter()
 	check.getComponentEvents(list);
 	CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
 
+	delete d1; d1 = nullptr;
 }
 
 

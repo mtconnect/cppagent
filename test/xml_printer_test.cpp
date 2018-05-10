@@ -49,7 +49,7 @@ void XmlPrinterTest::setUp()
 
 void XmlPrinterTest::tearDown()
 {
-	delete m_config;
+	delete m_config; m_config = nullptr;
 }
 
 
@@ -726,7 +726,7 @@ void XmlPrinterTest::testProbeWithFilter13()
 
 void XmlPrinterTest::testProbeWithFilter()
 {
-	delete m_config;
+	delete m_config; m_config = nullptr;
 
 	m_config = new XmlParser();
 	m_devices = m_config->parseFile("../samples/filter_example.xml");
@@ -742,7 +742,7 @@ void XmlPrinterTest::testProbeWithFilter()
 
 void XmlPrinterTest::testReferences()
 {
-	delete m_config;
+	delete m_config; m_config = nullptr;
 
 	m_config = new XmlParser();
 	m_devices = m_config->parseFile("../samples/reference_example.xml");

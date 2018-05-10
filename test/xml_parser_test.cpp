@@ -61,15 +61,24 @@ void XmlParserTest::setUp()
 void XmlParserTest::tearDown()
 {
 	if (m_xmlParser)
+	{
 		delete m_xmlParser;
+		m_xmlParser = nullptr;
+	}
 }
 
 
 void XmlParserTest::testConstructor()
 {
+	if (m_xmlParser)
+	{
+		delete m_xmlParser;
+		m_xmlParser = nullptr;
+	}
+
 	m_xmlParser = new XmlParser();
 	CPPUNIT_ASSERT_THROW(m_xmlParser->parseFile("../samples/badPath.xml"), std::runtime_error);
-	delete m_xmlParser;
+	delete m_xmlParser; m_xmlParser = nullptr;
 	m_xmlParser = new XmlParser();
 	CPPUNIT_ASSERT_NO_THROW(m_xmlParser->parseFile("../samples/test_config.xml"));
 }
@@ -169,6 +178,12 @@ void XmlParserTest::testGetDataItemsExt()
 {
 	std::set<string> filter;
 
+	if(m_xmlParser)
+	{
+		delete m_xmlParser;
+		m_xmlParser = nullptr;
+	}
+
 	// For the rest we will check with the extended schema
 	try
 	{
@@ -187,14 +202,16 @@ void XmlParserTest::testGetDataItemsExt()
 	filter.clear();
 	m_xmlParser->getDataItems(filter, "//Device//x:Pump");
 	CPPUNIT_ASSERT_EQUAL(1, (int) filter.size());
-
 }
 
 
 void XmlParserTest::testExtendedSchema()
 {
-	delete m_xmlParser;
-	m_xmlParser = nullptr;
+	if(m_xmlParser)
+	{
+		delete m_xmlParser;
+		m_xmlParser = nullptr;
+	}
 
 	try
 	{
@@ -394,6 +411,12 @@ void XmlParserTest::testBadAsset()
 
 void XmlParserTest::testNoNamespace()
 {
+	if(m_xmlParser)
+	{
+		delete m_xmlParser;
+		m_xmlParser = nullptr;
+	}
+
 	m_xmlParser = new XmlParser();
 	CPPUNIT_ASSERT_NO_THROW(m_xmlParser->parseFile("../samples/NoNamespace.xml"));
 }
@@ -420,8 +443,11 @@ void XmlParserTest::testFilteredDataItem13()
 
 void XmlParserTest::testFilteredDataItem()
 {
-	delete m_xmlParser;
-	m_xmlParser = nullptr;
+	if(m_xmlParser)
+	{
+		delete m_xmlParser;
+		m_xmlParser = nullptr;
+	}
 
 	try
 	{
@@ -447,8 +473,11 @@ void XmlParserTest::testFilteredDataItem()
 
 void XmlParserTest::testReferences()
 {
-	delete m_xmlParser;
-	m_xmlParser = nullptr;
+	if(m_xmlParser)
+	{
+		delete m_xmlParser;
+		m_xmlParser = nullptr;
+	}
 
 	try
 	{

@@ -53,8 +53,7 @@ void ConfigTest::setUp()
 
 void ConfigTest::tearDown()
 {
-	delete m_config;
-	m_config = nullptr;
+	delete m_config; m_config = nullptr;
 }
 
 
@@ -399,7 +398,7 @@ void ConfigTest::testLogFileRollover()
 		"max_index = 5\n"
 		"output = file agent.log"
 		"}\n");
-	char buffer[64];
+	char buffer[64] = {0};
 	::remove("agent.log");
 
 	for (int i = 1; i <= 10; i++)
@@ -450,7 +449,7 @@ void ConfigTest::testMaxSize()
 	m_config->loadConfig(logger);
 	auto fl = m_config->getLogger();
 	CPPUNIT_ASSERT_EQUAL(150ull, fl->getMaxSize());
-	delete m_config;
+	delete m_config; m_config = nullptr;
 
 	m_config = new AgentConfiguration();
 	istringstream logger2(
@@ -461,7 +460,7 @@ void ConfigTest::testMaxSize()
 
 	fl = m_config->getLogger();
 	CPPUNIT_ASSERT_EQUAL(15ull * 1024ull, fl->getMaxSize());
-	delete m_config;
+	delete m_config; m_config = nullptr;
 
 	m_config = new AgentConfiguration();
 	istringstream logger3(
@@ -472,7 +471,7 @@ void ConfigTest::testMaxSize()
 
 	fl = m_config->getLogger();
 	CPPUNIT_ASSERT_EQUAL(15ull * 1024ull * 1024ull, fl->getMaxSize());
-	delete m_config;
+	delete m_config; m_config = nullptr;
 
 	m_config = new AgentConfiguration();
 	istringstream logger4(

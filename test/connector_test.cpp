@@ -136,7 +136,7 @@ void ConnectorTest::testHeartbeat()
 	CPPUNIT_ASSERT(m_serverSocket.get());
 
 	// Receive initial heartbeat request "* PING\n"
-	char buf[1024];
+	char buf[1024] = {0};
 	CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
 	buf[7] = '\0';
 	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
@@ -163,7 +163,7 @@ void ConnectorTest::testHeartbeatPong()
 	{
 		// Receive initial heartbeat request "* PING\n"
 
-		char buf[1024];
+		char buf[1024] = {0};
 		CPPUNIT_ASSERT(m_serverSocket->read(buf, 1023, 1100) > 0);
 		buf[7] = '\0';
 		CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
@@ -199,7 +199,7 @@ void ConnectorTest::testLegacyTimeout()
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
 	CPPUNIT_ASSERT(m_serverSocket.get());
 
-	char buf[1024];
+	char buf[1024] = {0};
 	CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
 	buf[7] = '\0';
 	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);

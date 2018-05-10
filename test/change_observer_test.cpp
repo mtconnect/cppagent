@@ -49,7 +49,7 @@ void ChangeObserverTest::setUp()
 
 void ChangeObserverTest::tearDown()
 {
-	delete m_signaler;
+	delete m_signaler; m_signaler = nullptr;
 }
 
 
@@ -90,7 +90,7 @@ void ChangeObserverTest::testSignalObserver()
 
 void ChangeObserverTest::testCleanup()
 {
-	ChangeObserver *obj;
+	ChangeObserver *obj = nullptr;
 
 	{
 		obj = new ChangeObserver;
