@@ -39,7 +39,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ConnectorTest);
 
 using namespace std;
 
-// ConnectorTest public methods
+
 void ConnectorTest::setUp()
 {
 	CPPUNIT_ASSERT(create_listener(m_server, 0, "127.0.0.1") == 0);
@@ -48,10 +48,12 @@ void ConnectorTest::setUp()
 	m_connector->m_disconnected = true;
 }
 
+
 void ConnectorTest::thread()
 {
 	m_connector->connect();
 }
+
 
 void ConnectorTest::tearDown()
 {
@@ -62,7 +64,7 @@ void ConnectorTest::tearDown()
 	m_connector.reset();
 }
 
-// ConnectorTest protected methods
+
 void ConnectorTest::testConnection()
 {
 	CPPUNIT_ASSERT(m_connector->m_disconnected);
@@ -74,6 +76,7 @@ void ConnectorTest::testConnection()
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 }
 
+
 void ConnectorTest::testDataCapture()
 {
 	// Start the accept thread
@@ -84,12 +87,13 @@ void ConnectorTest::testDataCapture()
 
 	string command("Hello Connector\n");
 	CPPUNIT_ASSERT((size_t) m_serverSocket->write(command.c_str(),
-		   command.length()) == command.length());
+		command.length()) == command.length());
 	this_thread::sleep_for(1000ms);
 
 	// \n is stripped from the posted data.
 	CPPUNIT_ASSERT_EQUAL(command.substr(0, command.length() - 1), m_connector->m_data);
 }
+
 
 void ConnectorTest::testDisconnect()
 {
@@ -104,6 +108,7 @@ void ConnectorTest::testDisconnect()
 	this_thread::sleep_for(1000ms);
 	CPPUNIT_ASSERT(m_connector->m_disconnected);
 }
+
 
 void ConnectorTest::testProtocolCommand()
 {
@@ -120,6 +125,7 @@ void ConnectorTest::testProtocolCommand()
 	// \n is stripped from the posted data.
 	CPPUNIT_ASSERT(strncmp(cmd, m_connector->m_command.c_str(), strlen(cmd) - 1) == 0);
 }
+
 
 void ConnectorTest::testHeartbeat()
 {
@@ -144,6 +150,7 @@ void ConnectorTest::testHeartbeat()
 	CPPUNIT_ASSERT_EQUAL(1000, m_connector->heartbeatFrequency());
 }
 
+
 void ConnectorTest::testHeartbeatPong()
 {
 	testHeartbeat();
@@ -154,25 +161,26 @@ void ConnectorTest::testHeartbeatPong()
 	// Test to make sure we can send and receive 5 heartbeats
 	for (int i = 0; i < 5; i++)
 	{
-	// Receive initial heartbeat request "* PING\n"
+		// Receive initial heartbeat request "* PING\n"
 
-	char buf[1024];
-	CPPUNIT_ASSERT(m_serverSocket->read(buf, 1023, 1100) > 0);
-	buf[7] = '\0';
-	CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
+		char buf[1024];
+		CPPUNIT_ASSERT(m_serverSocket->read(buf, 1023, 1100) > 0);
+		buf[7] = '\0';
+		CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
 
-	uint64 now = stamper.get_timestamp();
-	CPPUNIT_ASSERT(now - last_heartbeat < (uint64)(1000 * 2000));
-	last_heartbeat = now;
+		uint64 now = stamper.get_timestamp();
+		CPPUNIT_ASSERT(now - last_heartbeat < (uint64)(1000 * 2000));
+		last_heartbeat = now;
 
-	// Respond to the heartbeat of 1/2 second
-	const char *pong = "* PONG 1000\n";
-	CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
-	this_thread::sleep_for(10ms);
+		// Respond to the heartbeat of 1/2 second
+		const char *pong = "* PONG 1000\n";
+		CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
+		this_thread::sleep_for(10ms);
 
-	CPPUNIT_ASSERT(!m_connector->m_disconnected);
+		CPPUNIT_ASSERT(!m_connector->m_disconnected);
 	}
 }
+
 
 void ConnectorTest::testHeartbeatTimeout()
 {
@@ -181,6 +189,7 @@ void ConnectorTest::testHeartbeatTimeout()
 
 	CPPUNIT_ASSERT(m_connector->m_disconnected);
 }
+
 
 void ConnectorTest::testLegacyTimeout()
 {
@@ -226,6 +235,7 @@ void ConnectorTest::testParseBuffer()
 	CPPUNIT_ASSERT_EQUAL((string) "And Again", m_connector->m_data);
 }
 
+
 void ConnectorTest::testParseBufferFraming()
 {
 	m_connector->m_list.clear();
@@ -237,6 +247,7 @@ void ConnectorTest::testParseBufferFraming()
 	CPPUNIT_ASSERT_EQUAL((string) "third", m_connector->m_list[2]);
 	CPPUNIT_ASSERT_EQUAL((string) "fourth", m_connector->m_list[3]);
 }
+
 
 void ConnectorTest::testSendCommand()
 {
@@ -259,6 +270,7 @@ void ConnectorTest::testSendCommand()
 	CPPUNIT_ASSERT(strcmp(buf, "* Hello There;\n") == 0);
 }
 
+
 void ConnectorTest::testIPV6Connection()
 {
 #if !defined(WIN32) || (NTDDI_VERSION >= NTDDI_VISTA)
@@ -278,6 +290,7 @@ void ConnectorTest::testIPV6Connection()
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 #endif
 }
+
 
 void ConnectorTest::testStartHeartbeats()
 {

@@ -41,26 +41,29 @@ CPPUNIT_TEST_SUITE_REGISTRATION(XmlParserTest);
 
 using namespace std;
 
+
 void XmlParserTest::setUp()
 {
 	m_xmlParser = nullptr;
 
 	try
 	{
-	m_xmlParser = new XmlParser();
-	m_devices = m_xmlParser->parseFile("../samples/test_config.xml");
+		m_xmlParser = new XmlParser();
+		m_devices = m_xmlParser->parseFile("../samples/test_config.xml");
 	}
 	catch (exception &e)
 	{
-	CPPUNIT_FAIL("Could not locate test xml: ../samples/test_config.xml");
+		CPPUNIT_FAIL("Could not locate test xml: ../samples/test_config.xml");
 	}
 }
+
 
 void XmlParserTest::tearDown()
 {
 	if (m_xmlParser)
-	delete m_xmlParser;
+		delete m_xmlParser;
 }
+
 
 void XmlParserTest::testConstructor()
 {
@@ -70,6 +73,7 @@ void XmlParserTest::testConstructor()
 	m_xmlParser = new XmlParser();
 	CPPUNIT_ASSERT_NO_THROW(m_xmlParser->parseFile("../samples/test_config.xml"));
 }
+
 
 void XmlParserTest::testGetDevices()
 {
@@ -86,7 +90,7 @@ void XmlParserTest::testGetDevices()
 
 	for (iter = dataItemsMap.begin(); iter != dataItemsMap.end(); iter++)
 	{
-	dataItems.push_back(iter->second);
+		dataItems.push_back(iter->second);
 	}
 
 	bool hasExec = false, hasZcom = false;
@@ -95,20 +99,21 @@ void XmlParserTest::testGetDevices()
 
 	for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
 	{
-	if ((*dataItem)->getId() == "p5" && (*dataItem)->getName() == "execution")
-	{
-		hasExec = true;
-	}
+		if ((*dataItem)->getId() == "p5" && (*dataItem)->getName() == "execution")
+		{
+			hasExec = true;
+		}
 
-	if ((*dataItem)->getId() == "z2" && (*dataItem)->getName() == "Zcom")
-	{
-		hasZcom = true;
-	}
+		if ((*dataItem)->getId() == "z2" && (*dataItem)->getName() == "Zcom")
+		{
+			hasZcom = true;
+		}
 	}
 
 	CPPUNIT_ASSERT(hasExec);
 	CPPUNIT_ASSERT(hasZcom);
 }
+
 
 void XmlParserTest::testCondition()
 {
@@ -124,6 +129,7 @@ void XmlParserTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL((string) "clc", item->getId());
 	CPPUNIT_ASSERT(item->isCondition());
 }
+
 
 void XmlParserTest::testGetDataItems()
 {
@@ -154,9 +160,10 @@ void XmlParserTest::testGetDataItems()
 
 	filter.clear();
 	m_xmlParser->getDataItems(filter,
-				  "//Rotary[@name=\"C\"]//DataItem[@category=\"CONDITION\" or @category=\"SAMPLE\"]");
+		"//Rotary[@name=\"C\"]//DataItem[@category=\"CONDITION\" or @category=\"SAMPLE\"]");
 	CPPUNIT_ASSERT_EQUAL(5, (int) filter.size());
 }
+
 
 void XmlParserTest::testGetDataItemsExt()
 {
@@ -165,12 +172,12 @@ void XmlParserTest::testGetDataItemsExt()
 	// For the rest we will check with the extended schema
 	try
 	{
-	m_xmlParser = new XmlParser();
-	m_xmlParser->parseFile("../samples/extension.xml");
+		m_xmlParser = new XmlParser();
+		m_xmlParser->parseFile("../samples/extension.xml");
 	}
 	catch (exception &e)
 	{
-	CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
+		CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
 	}
 
 	filter.clear();
@@ -183,6 +190,7 @@ void XmlParserTest::testGetDataItemsExt()
 
 }
 
+
 void XmlParserTest::testExtendedSchema()
 {
 	delete m_xmlParser;
@@ -190,12 +198,12 @@ void XmlParserTest::testExtendedSchema()
 
 	try
 	{
-	m_xmlParser = new XmlParser();
-	m_devices = m_xmlParser->parseFile("../samples/extension.xml");
+		m_xmlParser = new XmlParser();
+		m_devices = m_xmlParser->parseFile("../samples/extension.xml");
 	}
 	catch (exception &e)
 	{
-	CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
+		CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
 	}
 
 	CPPUNIT_ASSERT_EQUAL((size_t) 1, m_devices.size());
@@ -215,6 +223,7 @@ void XmlParserTest::testExtendedSchema()
 	CPPUNIT_ASSERT_EQUAL((string) "Flow", item->getElementName());
 	CPPUNIT_ASSERT_EQUAL((string) "x", item->getPrefix());
 }
+
 
 void XmlParserTest::testTimeSeries()
 {
@@ -241,6 +250,7 @@ void XmlParserTest::testTimeSeries()
 	CPPUNIT_ASSERT_EQUAL(string("TIME_SERIES"), attrs2.at("representation"));
 }
 
+
 void XmlParserTest::testConfiguration()
 {
 	Device *dev = m_devices[0];
@@ -252,12 +262,13 @@ void XmlParserTest::testConfiguration()
 
 	for (iter = children.begin(); !power && iter != children.end(); ++iter)
 	{
-	if ((*iter)->getName() == "power")
-		power = *iter;
+		if ((*iter)->getName() == "power")
+			power = *iter;
 	}
 
 	CPPUNIT_ASSERT(!power->getConfiguration().empty());
 }
+
 
 void XmlParserTest::testParseAsset()
 {
@@ -305,10 +316,11 @@ void XmlParserTest::testParseAsset()
 	CPPUNIT_ASSERT_EQUAL((unsigned int) 1, item->m_measurements.at("CuttingEdgeLength")->refCount());
 }
 
+
 void XmlParserTest::testParseOtherAsset()
 {
 	string document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
-			  "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
+		"serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
 	AssetPtr asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
 
 	CPPUNIT_ASSERT(asset.getObject());
@@ -319,12 +331,13 @@ void XmlParserTest::testParseOtherAsset()
 	CPPUNIT_ASSERT_EQUAL(false, asset->isRemoved());
 
 	document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
-		   "serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
+		"serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
 	asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
 
 	CPPUNIT_ASSERT(asset.getObject());
 	CPPUNIT_ASSERT_EQUAL(true, asset->isRemoved());
 }
+
 
 void XmlParserTest::testParseRemovedAsset()
 {
@@ -334,6 +347,7 @@ void XmlParserTest::testParseRemovedAsset()
 
 	CPPUNIT_ASSERT_EQUAL(true, tool->isRemoved());
 }
+
 
 void XmlParserTest::testUpdateAsset()
 {
@@ -368,6 +382,7 @@ void XmlParserTest::testUpdateAsset()
 	CPPUNIT_ASSERT_EQUAL((string) "14.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
 }
 
+
 void XmlParserTest::testBadAsset()
 {
 	string xml = getFile("asset4.xml");
@@ -375,6 +390,7 @@ void XmlParserTest::testBadAsset()
 	Asset *asset = m_xmlParser->parseAsset("XXX", "CuttingTool", xml);
 	CPPUNIT_ASSERT(!asset);
 }
+
 
 void XmlParserTest::testNoNamespace()
 {
@@ -436,12 +452,12 @@ void XmlParserTest::testReferences()
 
 	try
 	{
-	m_xmlParser = new XmlParser();
-	m_devices = m_xmlParser->parseFile("../samples/reference_example.xml");
+		m_xmlParser = new XmlParser();
+		m_devices = m_xmlParser->parseFile("../samples/reference_example.xml");
 	}
 	catch (exception &e)
 	{
-	CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
+		CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
 	}
 
 	string id = "mf";
@@ -474,6 +490,7 @@ void XmlParserTest::testReferences()
 	CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("d2"));
 }
 
+
 void XmlParserTest::testExtendedAsset()
 {
 	string document = getFile("ext_asset.xml");
@@ -483,6 +500,7 @@ void XmlParserTest::testExtendedAsset()
 
 	CPPUNIT_ASSERT_EQUAL(((size_t) 1), tool->m_values.count("x:Color"));
 }
+
 
 void XmlParserTest::testExtendedAssetFragment()
 {

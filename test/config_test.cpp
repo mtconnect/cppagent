@@ -44,11 +44,12 @@ static dlib::logger sLogger("config_test");
 
 using namespace std;
 
-// ComponentTest public methods
+
 void ConfigTest::setUp()
 {
 	m_config = new AgentConfiguration();
 }
+
 
 void ConfigTest::tearDown()
 {
@@ -56,7 +57,7 @@ void ConfigTest::tearDown()
 	m_config = nullptr;
 }
 
-// ComponentTest protected methods
+
 void ConfigTest::testBlankConfig()
 {
 	istringstream str("");
@@ -67,6 +68,7 @@ void ConfigTest::testBlankConfig()
 	CPPUNIT_ASSERT_EQUAL(1, (int) agent->getDevices().size());
 }
 
+
 void ConfigTest::testBufferSize()
 {
 	istringstream str("BufferSize = 4\n");
@@ -76,6 +78,7 @@ void ConfigTest::testBufferSize()
 	CPPUNIT_ASSERT(agent);
 	CPPUNIT_ASSERT_EQUAL(16, (int) agent->getBufferSize());
 }
+
 
 void ConfigTest::testDevice()
 {
@@ -94,18 +97,20 @@ void ConfigTest::testDevice()
 	CPPUNIT_ASSERT(device->m_preserveUuid);
 }
 
+
 void ConfigTest::testAdapter()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "Adapters { LinuxCNC { \n"
-			  "Port = 23\n"
-			  "Host = 10.211.55.1\n"
-			  "FilterDuplicates = true\n"
-			  "AutoAvailable = true\n"
-			  "IgnoreTimestamps = true\n"
-			  "PreserveUUID = true\n"
-			  "LegacyTimeout = 2000\n"
-			  "} }\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"Adapters { LinuxCNC { \n"
+		"Port = 23\n"
+		"Host = 10.211.55.1\n"
+		"FilterDuplicates = true\n"
+		"AutoAvailable = true\n"
+		"IgnoreTimestamps = true\n"
+		"PreserveUUID = true\n"
+		"LegacyTimeout = 2000\n"
+		"} }\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -122,10 +127,12 @@ void ConfigTest::testAdapter()
 	CPPUNIT_ASSERT(device->m_preserveUuid);
 }
 
+
 void ConfigTest::testDefaultPreserveUUID()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "PreserveUUID = true\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"PreserveUUID = true\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -135,13 +142,15 @@ void ConfigTest::testDefaultPreserveUUID()
 	CPPUNIT_ASSERT(device->m_preserveUuid);
 }
 
+
 void ConfigTest::testDefaultPreserveOverride()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "PreserveUUID = true\n"
-			  "Adapters { LinuxCNC { \n"
-			  "PreserveUUID = false\n"
-			  "} }\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"PreserveUUID = true\n"
+		"Adapters { LinuxCNC { \n"
+		"PreserveUUID = false\n"
+		"} }\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -151,10 +160,12 @@ void ConfigTest::testDefaultPreserveOverride()
 	CPPUNIT_ASSERT(!device->m_preserveUuid);
 }
 
+
 void ConfigTest::testDisablePut()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "AllowPut = true\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"AllowPut = true\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -163,10 +174,12 @@ void ConfigTest::testDisablePut()
 	CPPUNIT_ASSERT(agent->isPutEnabled());
 }
 
+
 void ConfigTest::testLimitPut()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "AllowPutFrom = localhost\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"AllowPutFrom = localhost\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -175,10 +188,12 @@ void ConfigTest::testLimitPut()
 	CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "127.0.0.1"));
 }
 
+
 void ConfigTest::testLimitPutFromHosts()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "AllowPutFrom = localhost, 192.168.0.1\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"AllowPutFrom = localhost, 192.168.0.1\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -188,52 +203,57 @@ void ConfigTest::testLimitPutFromHosts()
 	CPPUNIT_ASSERT(agent->isPutAllowedFrom((string) "192.168.0.1"));
 }
 
+
 void ConfigTest::testNamespaces()
 {
-	istringstream streams("StreamsNamespaces {\n"
-			  "x {\n"
-			  "Urn = urn:example.com:ExampleStreams:1.2\n"
-			  "Location = /schemas/ExampleStreams_1.2.xsd\n"
-			  "Path = ./ExampleStreams_1.2.xsd\n"
-			  "}\n"
-			  "}\n");
+	istringstream streams(
+		"StreamsNamespaces {\n"
+		"x {\n"
+		"Urn = urn:example.com:ExampleStreams:1.2\n"
+		"Location = /schemas/ExampleStreams_1.2.xsd\n"
+		"Path = ./ExampleStreams_1.2.xsd\n"
+		"}\n"
+		"}\n");
 
 	m_config->loadConfig(streams);
 	string path = XmlPrinter::getStreamsUrn("x");
 	CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleStreams:1.2", path);
 
-	istringstream devices("DevicesNamespaces {\n"
-			  "y {\n"
-			  "Urn = urn:example.com:ExampleDevices:1.2\n"
-			  "Location = /schemas/ExampleDevices_1.2.xsd\n"
-			  "Path = ./ExampleDevices_1.2.xsd\n"
-			  "}\n"
-			  "}\n");
+	istringstream devices(
+		"DevicesNamespaces {\n"
+		"y {\n"
+		"Urn = urn:example.com:ExampleDevices:1.2\n"
+		"Location = /schemas/ExampleDevices_1.2.xsd\n"
+		"Path = ./ExampleDevices_1.2.xsd\n"
+		"}\n"
+		"}\n");
 
 	m_config->loadConfig(devices);
 	path = XmlPrinter::getDevicesUrn("y");
 	CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleDevices:1.2", path);
 
 
-	istringstream assets("AssetsNamespaces {\n"
-			 "z {\n"
-			 "Urn = urn:example.com:ExampleAssets:1.2\n"
-			 "Location = /schemas/ExampleAssets_1.2.xsd\n"
-			 "Path = ./ExampleAssets_1.2.xsd\n"
-			 "}\n"
-			 "}\n");
+	istringstream assets(
+		"AssetsNamespaces {\n"
+		"z {\n"
+		"Urn = urn:example.com:ExampleAssets:1.2\n"
+		"Location = /schemas/ExampleAssets_1.2.xsd\n"
+		"Path = ./ExampleAssets_1.2.xsd\n"
+		"}\n"
+		"}\n");
 
 	m_config->loadConfig(assets);
 	path = XmlPrinter::getAssetsUrn("z");
 	CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleAssets:1.2", path);
 
-	istringstream errors("ErrorNamespaces {\n"
-			 "a {\n"
-			 "Urn = urn:example.com:ExampleErrors:1.2\n"
-			 "Location = /schemas/ExampleErrors_1.2.xsd\n"
-			 "Path = ./ExampleErrorss_1.2.xsd\n"
-			 "}\n"
-			 "}\n");
+	istringstream errors(
+		"ErrorNamespaces {\n"
+		"a {\n"
+		"Urn = urn:example.com:ExampleErrors:1.2\n"
+		"Location = /schemas/ExampleErrors_1.2.xsd\n"
+		"Path = ./ExampleErrorss_1.2.xsd\n"
+		"}\n"
+		"}\n");
 
 	m_config->loadConfig(errors);
 	path = XmlPrinter::getErrorUrn("a");
@@ -245,10 +265,12 @@ void ConfigTest::testNamespaces()
 	XmlPrinter::clearAssetsNamespaces();
 }
 
+
 void ConfigTest::testLegacyTimeout()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "LegacyTimeout = 2000\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"LegacyTimeout = 2000\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -259,10 +281,12 @@ void ConfigTest::testLegacyTimeout()
 	CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
 }
 
+
 void ConfigTest::testIgnoreTimestamps()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "IgnoreTimestamps = true\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"IgnoreTimestamps = true\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -274,13 +298,15 @@ void ConfigTest::testIgnoreTimestamps()
 
 }
 
+
 void ConfigTest::testIgnoreTimestampsOverride()
 {
-	istringstream str("Devices = ../samples/test_config.xml\n"
-			  "IgnoreTimestamps = true\n"
-			  "Adapters { LinuxCNC { \n"
-			  "IgnoreTimestamps = false\n"
-			  "} }\n");
+	istringstream str(
+		"Devices = ../samples/test_config.xml\n"
+		"IgnoreTimestamps = true\n"
+		"Adapters { LinuxCNC { \n"
+		"IgnoreTimestamps = false\n"
+		"} }\n");
 	m_config->loadConfig(str);
 
 	const auto agent = m_config->getAgent();
@@ -292,14 +318,16 @@ void ConfigTest::testIgnoreTimestampsOverride()
 
 }
 
+
 void ConfigTest::testSpecifyMTCNamespace()
 {
-	istringstream streams("StreamsNamespaces {\n"
-			  "m {\n"
-			  "Location = /schemas/MTConnectStreams_1.2.xsd\n"
-			  "Path = ./MTConnectStreams_1.2.xsd\n"
-			  "}\n"
-			  "}\n");
+	istringstream streams(
+		"StreamsNamespaces {\n"
+		"m {\n"
+		"Location = /schemas/MTConnectStreams_1.2.xsd\n"
+		"Path = ./MTConnectStreams_1.2.xsd\n"
+		"}\n"
+		"}\n");
 
 	m_config->loadConfig(streams);
 	string path = XmlPrinter::getStreamsUrn("m");
@@ -309,6 +337,7 @@ void ConfigTest::testSpecifyMTCNamespace()
 
 	XmlPrinter::clearStreamsNamespaces();
 }
+
 
 void ConfigTest::testSetSchemaVersion()
 {
@@ -321,15 +350,17 @@ void ConfigTest::testSetSchemaVersion()
 	XmlPrinter::setSchemaVersion("1.3");
 }
 
+
 void ConfigTest::testSchemaDirectory()
 {
-	istringstream schemas("SchemaVersion = 1.3\n"
-			  "Files {\n"
-			  "schemas {\n"
-			  "Location = /schemas\n"
-			  "Path = ../schemas\n"
-			  "}\n"
-			  "}\n");
+	istringstream schemas(
+		"SchemaVersion = 1.3\n"
+		"Files {\n"
+		"schemas {\n"
+		"Location = /schemas\n"
+		"Path = ../schemas\n"
+		"}\n"
+		"}\n");
 
 	m_config->loadConfig(schemas);
 	string path = XmlPrinter::getStreamsUrn("m");
@@ -358,21 +389,23 @@ void ConfigTest::testSchemaDirectory()
 	XmlPrinter::clearAssetsNamespaces();
 }
 
+
 void ConfigTest::testLogFileRollover()
 {
-	istringstream logger("logger_config {"
-			 "logging_level = ALL\n"
-			 "max_size = 150\n"
-			 "max_index = 5\n"
-			 "output = file agent.log"
-			 "}\n");
+	istringstream logger(
+		"logger_config {"
+		"logging_level = ALL\n"
+		"max_size = 150\n"
+		"max_index = 5\n"
+		"output = file agent.log"
+		"}\n");
 	char buffer[64];
 	::remove("agent.log");
 
 	for (int i = 1; i <= 10; i++)
 	{
-	sprintf(buffer, "agent.log.%d", i);
-	::remove(buffer);
+		sprintf(buffer, "agent.log.%d", i);
+		::remove(buffer);
 	}
 
 	m_config->loadConfig(logger);
@@ -406,6 +439,7 @@ void ConfigTest::testLogFileRollover()
 	CPPUNIT_ASSERT(file_exists("agent.log.5"));
 	CPPUNIT_ASSERT(!file_exists("agent.log.6"));
 }
+
 
 void ConfigTest::testMaxSize()
 {

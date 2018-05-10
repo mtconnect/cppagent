@@ -40,15 +40,18 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ChangeObserverTest);
 
 using namespace std;
 
+
 void ChangeObserverTest::setUp()
 {
 	m_signaler = new ChangeSignaler;
 }
 
+
 void ChangeObserverTest::tearDown()
 {
 	delete m_signaler;
 }
+
 
 void ChangeObserverTest::testAddObserver()
 {
@@ -59,12 +62,14 @@ void ChangeObserverTest::testAddObserver()
 	CPPUNIT_ASSERT(m_signaler->hasObserver(&obj));
 }
 
+
 static void signaler(void *aObj)
 {
 	ChangeSignaler *s = (ChangeSignaler *) aObj;
 	this_thread::sleep_for(1000ms);
 	s->signalObservers(100);
 }
+
 
 void ChangeObserverTest::testSignalObserver()
 {
@@ -82,19 +87,21 @@ void ChangeObserverTest::testSignalObserver()
 	this_thread::sleep_for(1000ms);
 }
 
+
 void ChangeObserverTest::testCleanup()
 {
 	ChangeObserver *obj;
 
 	{
-	obj = new ChangeObserver;
-	m_signaler->addObserver(obj);
-	CPPUNIT_ASSERT(m_signaler->hasObserver(obj));
-	delete obj;
+		obj = new ChangeObserver;
+		m_signaler->addObserver(obj);
+		CPPUNIT_ASSERT(m_signaler->hasObserver(obj));
+		delete obj; // Not setting to nullptr so we can test observer was removed
 	}
 
 	CPPUNIT_ASSERT(!m_signaler->hasObserver(obj));
 }
+
 
 static void signaler2(void *aObj)
 {
@@ -103,6 +110,7 @@ static void signaler2(void *aObj)
 	s->signalObservers(200);
 	s->signalObservers(300);
 }
+
 
 void ChangeObserverTest::testChangeSequence()
 {
@@ -120,6 +128,7 @@ void ChangeObserverTest::testChangeSequence()
 	this_thread::sleep_for(1000ms);
 }
 
+
 static void signaler3(void *aObj)
 {
 	ChangeSignaler *s = (ChangeSignaler *) aObj;
@@ -128,6 +137,7 @@ static void signaler3(void *aObj)
 	s->signalObservers(300);
 	s->signalObservers(30);
 }
+
 
 void ChangeObserverTest::testChangeSequence2()
 {

@@ -37,7 +37,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DeviceTest);
 
 using namespace std;
 
-// DeviceTest public methods
+
 void DeviceTest::setUp()
 {
 	std::map<string, string> attributes1;
@@ -56,13 +56,14 @@ void DeviceTest::setUp()
 	m_devB = new Device(attributes2);
 }
 
+
 void DeviceTest::tearDown()
 {
 	delete m_devA;
 	delete m_devB;
 }
 
-// DeviceTest protected methods
+
 void DeviceTest::testGetters()
 {
 	CPPUNIT_ASSERT_EQUAL((string) "Device", m_devA->getClass());
@@ -75,6 +76,7 @@ void DeviceTest::testGetters()
 	CPPUNIT_ASSERT_EQUAL((string) "DeviceTest2", m_devB->getName());
 	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", m_devB->getUuid());
 }
+
 
 void DeviceTest::testGetAttributes()
 {
@@ -94,6 +96,7 @@ void DeviceTest::testGetAttributes()
 	CPPUNIT_ASSERT_EQUAL((string) "123.4", attributes2.at("sampleInterval"));
 	CPPUNIT_ASSERT_EQUAL((string) "6", attributes2.at("iso841Class"));
 }
+
 
 void DeviceTest::testDescription()
 {
@@ -120,6 +123,7 @@ void DeviceTest::testDescription()
 
 	CPPUNIT_ASSERT_EQUAL((string) "Machine 2", m_devB->getDescriptionBody());
 }
+
 
 void DeviceTest::testRelationships()
 {
@@ -154,6 +158,7 @@ void DeviceTest::testRelationships()
 	CPPUNIT_ASSERT_EQUAL(&thermostat, m_devA->getChildren().back());
 }
 
+
 void DeviceTest::testDataItems()
 {
 	CPPUNIT_ASSERT(m_devA->getDataItems().empty());
@@ -168,6 +173,7 @@ void DeviceTest::testDataItems()
 	CPPUNIT_ASSERT_EQUAL(&data1, m_devA->getDataItems().front());
 	CPPUNIT_ASSERT_EQUAL(&data2, m_devA->getDataItems().back());
 }
+
 
 void DeviceTest::testDeviceDataItem()
 {
@@ -189,6 +195,7 @@ void DeviceTest::testDeviceDataItem()
 	CPPUNIT_ASSERT_EQUAL(&data1, m_devA->getDeviceDataItem("DataItemTest1"));
 	CPPUNIT_ASSERT_EQUAL(&data2, m_devA->getDeviceDataItem("DataItemTest2"));
 }
+
 
 void DeviceTest::testGetDataItem()
 {

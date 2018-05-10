@@ -37,6 +37,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CheckpointTest);
 
 using namespace std;
 
+
 void CheckpointTest::setUp()
 {
 	// Create an agent with only 16 slots and 8 data items.
@@ -64,20 +65,22 @@ void CheckpointTest::setUp()
 	m_dataItem2 = new DataItem(attributes2);
 }
 
+
 void CheckpointTest::tearDown()
 {
 	delete m_agent;
 	delete m_checkpoint;
 }
 
+
 void CheckpointTest::testAddComponentEvents()
 {
 	ComponentEventPtr p1, p2, p3, p4, p5, p6;
 	string time("NOW"), value("123"),
-	   warning1("WARNING|CODE1|HIGH|Over..."),
-	   warning2("WARNING|CODE2|HIGH|Over..."),
-	   normal("NORMAL|||"),
-	   unavailable("UNAVAILABLE|||");
+		warning1("WARNING|CODE1|HIGH|Over..."),
+		warning2("WARNING|CODE2|HIGH|Over..."),
+		normal("NORMAL|||"),
+		unavailable("UNAVAILABLE|||");
 
 	p1 = new ComponentEvent(*m_dataItem1, 2, time, warning1);
 	p1->unrefer();
@@ -123,13 +126,14 @@ void CheckpointTest::testAddComponentEvents()
 	CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
 }
 
+
 void CheckpointTest::testCopy()
 {
 	ComponentEventPtr p1, p2, p3, p4, p5, p6;
 	string time("NOW"), value("123"),
-	   warning1("WARNING|CODE1|HIGH|Over..."),
-	   warning2("WARNING|CODE2|HIGH|Over..."),
-	   normal("NORMAL|||");
+		warning1("WARNING|CODE1|HIGH|Over..."),
+		warning2("WARNING|CODE2|HIGH|Over..."),
+		normal("NORMAL|||");
 
 	p1 = new ComponentEvent(*m_dataItem1, 2, time, warning1);
 	p1->unrefer();
@@ -149,13 +153,14 @@ void CheckpointTest::testCopy()
 	CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
 }
 
+
 void CheckpointTest::testGetComponentEvents()
 {
 	ComponentEventPtr p;
 	string time("NOW"), value("123"),
-	   warning1("WARNING|CODE1|HIGH|Over..."),
-	   warning2("WARNING|CODE2|HIGH|Over..."),
-	   normal("NORMAL|||");
+		warning1("WARNING|CODE1|HIGH|Over..."),
+		warning2("WARNING|CODE2|HIGH|Over..."),
+		normal("NORMAL|||");
 	std::set<string> filter;
 	filter.insert(m_dataItem1->getId());
 
@@ -202,13 +207,14 @@ void CheckpointTest::testGetComponentEvents()
 	delete d1;
 }
 
+
 void CheckpointTest::testFilter()
 {
 	ComponentEventPtr p1, p2, p3, p4;
 	string time("NOW"), value("123"),
-	   warning1("WARNING|CODE1|HIGH|Over..."),
-	   warning2("WARNING|CODE2|HIGH|Over..."),
-	   normal("NORMAL|||");
+		warning1("WARNING|CODE1|HIGH|Over..."),
+		warning2("WARNING|CODE2|HIGH|Over..."),
+		normal("NORMAL|||");
 	std::set<string> filter;
 	filter.insert(m_dataItem1->getId());
 
@@ -249,14 +255,15 @@ void CheckpointTest::testFilter()
 	CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
 }
 
+
 void CheckpointTest::testCopyAndFilter()
 {
 	ComponentEventPtr p;
 	string time("NOW"), value("123"),
-	   warning1("WARNING|CODE1|HIGH|Over..."),
-	   warning2("WARNING|CODE2|HIGH|Over..."),
-	   warning3("WARNING|CODE3|HIGH|Over..."),
-	   normal("NORMAL|||");
+		warning1("WARNING|CODE1|HIGH|Over..."),
+		warning2("WARNING|CODE2|HIGH|Over..."),
+		warning3("WARNING|CODE3|HIGH|Over..."),
+		normal("NORMAL|||");
 	std::set<string> filter;
 	filter.insert(m_dataItem1->getId());
 
@@ -312,21 +319,23 @@ void CheckpointTest::testCopyAndFilter()
 
 	check.getComponentEvents(list);
 	CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
+
 }
+
 
 void CheckpointTest::testConditionChaining()
 {
 	ComponentEventPtr p1, p2, p3, p4, p5, p6;
 	string time("NOW"),
-	   value("123"),
-	   warning1("WARNING|CODE1|HIGH|Over..."),
-	   warning2("WARNING|CODE2|HIGH|Over..."),
-	   fault2("FAULT|CODE2|HIGH|Over..."),
-	   warning3("WARNING|CODE3|HIGH|Over..."),
-	   normal("NORMAL|||"),
-	   normal1("NORMAL|CODE1||"),
-	   normal2("NORMAL|CODE2||"),
-	   unavailable("UNAVAILABLE|||");
+		value("123"),
+		warning1("WARNING|CODE1|HIGH|Over..."),
+		warning2("WARNING|CODE2|HIGH|Over..."),
+		fault2("FAULT|CODE2|HIGH|Over..."),
+		warning3("WARNING|CODE3|HIGH|Over..."),
+		normal("NORMAL|||"),
+		normal1("NORMAL|CODE1||"),
+		normal2("NORMAL|CODE2||"),
+		unavailable("UNAVAILABLE|||");
 
 	std::set<string> filter;
 	filter.insert(m_dataItem1->getId());
@@ -419,13 +428,14 @@ void CheckpointTest::testConditionChaining()
 	list.clear();
 }
 
+
 void CheckpointTest::testLastConditionNormal()
 {
 	ComponentEventPtr p1, p2, p3;
 
 	string time("NOW"),
-	   fault1("FAULT|CODE1|HIGH|Over..."),
-	   normal1("NORMAL|CODE1||");
+		fault1("FAULT|CODE1|HIGH|Over..."),
+		normal1("NORMAL|CODE1||");
 
 	std::set<string> filter;
 	filter.insert(m_dataItem1->getId());
