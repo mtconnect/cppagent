@@ -35,8 +35,6 @@ RollingFileLogger::RollingFileLogger(
 	m_schedule(schedule),
 	m_fd(0)
 {
-	m_fileLock = new dlib::mutex();
-
 	m_fd = ::open(filename.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
 
 	if (m_fd < 0)
@@ -54,7 +52,6 @@ RollingFileLogger::RollingFileLogger(
 
 RollingFileLogger::~RollingFileLogger()
 {
-	delete m_fileLock; m_fileLock = nullptr;
 	::close(m_fd);
 }
 
@@ -105,7 +102,7 @@ void RollingFileLogger::write(const char *message)
 
 void RollingFileLogger::rollover(size_t size)
 {
-	dlib::auto_mutex M(*m_fileLock);
+	std::lock_guard<std::mutex> lock(m_fileLock);
 
 	// File was probable rolled over... threading race.
 	if (m_schedule != NEVER)

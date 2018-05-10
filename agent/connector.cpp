@@ -31,7 +31,6 @@ Connector::Connector(const string& server, unsigned int port, int legacyTimeout)
 	m_legacyTimeout(legacyTimeout * 1000),
 	m_connectActive(false)
 {
-	m_commandLock = new dlib::mutex;
 	m_connectionMutex = new dlib::mutex;
 	m_connectionClosed = new dlib::signaler(*m_connectionMutex);
 }
@@ -39,7 +38,6 @@ Connector::Connector(const string& server, unsigned int port, int legacyTimeout)
 
 Connector::~Connector()
 {
-	delete m_commandLock; m_commandLock = nullptr;
 	delete m_connectionClosed; m_connectionClosed = nullptr;
 	delete m_connectionMutex; m_connectionMutex = nullptr;
 }
@@ -194,7 +192,7 @@ void Connector::connect()
 				}
 				else if ((now - m_lastSent) >= (uint64) (m_heartbeatFrequency * 1000)) 
 				{
-					dlib::auto_mutex lock(*m_commandLock);
+					std::lock_guard<std::mutex> lock(m_commandLock);
 					g_logger << LDEBUG << "(Port:" << m_localPort << ")" << "Sending a PING for " << m_server << " on port " << m_port;
 					status = m_connection->write(ping, strlen(ping));
 					if (status <= 0)
@@ -291,7 +289,7 @@ void Connector::parseBuffer(const char *buffer)
 
 void Connector::sendCommand(const string &command)
 {
-	dlib::auto_mutex lock(*m_commandLock);
+	std::lock_guard<std::mutex> lock(m_commandLock);
 
 	if (m_connected)
 	{

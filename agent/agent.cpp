@@ -105,10 +105,6 @@ Agent::Agent(
 	// Create the checkpoints at a regular frequency
 	m_checkpoints = new Checkpoint[m_checkpointCount];
 
-	// Mutex used for synchronized access to sliding buffer and sequence number
-	m_sequenceLock = new dlib::mutex;
-	m_assetLock = new dlib::mutex;
-
 	// Add the devices to the device map and create availability and 
 	// asset changed events if they don't exist
 	for (const auto device  : m_devices)
@@ -226,8 +222,6 @@ Device *Agent::findDeviceByUUIDorName(const std::string &aId)
 Agent::~Agent()
 {
 	delete m_slidingBuffer; m_slidingBuffer = nullptr;
-	delete m_sequenceLock; m_sequenceLock = nullptr;
-	delete m_assetLock; m_assetLock = nullptr;
 	delete m_xmlParser; m_xmlParser = nullptr;
 	delete[] m_checkpoints; m_checkpoints = nullptr;
 }
@@ -476,7 +470,7 @@ unsigned int Agent::addToBuffer(
 	if (!dataItem)
 		return 0;
 
-	dlib::auto_mutex lock(*m_sequenceLock);
+	std::lock_guard<std::mutex> lock(m_sequenceLock);
 
 	auto seqNum = m_sequence++;
 	auto event = new ComponentEvent(*dataItem, seqNum, time, value);
@@ -537,7 +531,7 @@ bool Agent::addAsset(
 	// Lock the asset addition to protect from multithreaded collisions. Releaes
 	// before we add the event so we don't cause a race condition.
 	{
-		dlib::auto_mutex lock(*m_assetLock);
+		std::lock_guard<std::mutex> lock(m_assetLock);
 
 		try
 		{
@@ -638,7 +632,7 @@ bool Agent::updateAsset(
 		time = inputTime;
 
 	{
-		dlib::auto_mutex lock(*m_assetLock);
+		std::lock_guard<std::mutex> lock(m_assetLock);
 
 		asset = m_assetMap[id];
 		if (!asset.getObject())
@@ -695,7 +689,7 @@ bool Agent::removeAsset(
 		time = inputTime;
 
 	{
-		dlib::auto_mutex lock(*m_assetLock);
+		std::lock_guard<std::mutex> lock(m_assetLock);
 
 		asset = m_assetMap[id];
 		if (!asset.getObject())
@@ -728,7 +722,7 @@ bool Agent::removeAllAssets(
 		time = inputTime;
 
 	{
-		dlib::auto_mutex lock(*m_assetLock);
+		std::lock_guard<std::mutex> lock(m_assetLock);
 
 		auto ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
 		string changedId;
@@ -1039,7 +1033,7 @@ std::string Agent::handleAssets(
 	std::vector<AssetPtr> assets;
 	if (!list.empty()) 
 	{
-		auto_mutex lock(*m_assetLock);
+		std::lock_guard<std::mutex> lock(m_assetLock);
 		istringstream str(list);
 		tokenizer_kernel_1 tok;
 		tok.set_stream(str);
@@ -1064,7 +1058,7 @@ std::string Agent::handleAssets(
 	}
 	else
 	{
-		auto_mutex lock(*m_assetLock);
+		std::lock_guard<std::mutex> lock(m_assetLock);
 		// Return all asssets, first check if there is a type attribute
 
 		string type = queries["type"];
@@ -1336,7 +1330,7 @@ void Agent::streamData(
 					}
 
 					{
-						dlib::auto_mutex lock(*m_sequenceLock);
+						std::lock_guard<std::mutex> lock(m_sequenceLock);
 
 						// Make sure the observer was signaled!
 						if (!observer.wasSignaled())
@@ -1419,7 +1413,7 @@ string Agent::fetchCurrentData(std::set<string> &filterSet, uint64_t at)
 	ComponentEventPtrArray events;
 	uint64_t firstSeq, seq;
 	{
-		dlib::auto_mutex lock(*m_sequenceLock);
+		std::lock_guard<std::mutex> lock(m_sequenceLock);
 		firstSeq = getFirstSequence();
 		seq = m_sequence;
 		if (at == NO_START)
@@ -1480,7 +1474,7 @@ string Agent::fetchSampleData(
 	ComponentEventPtrArray results;
 	uint64_t firstSeq;
 	{
-		dlib::auto_mutex lock(*m_sequenceLock);
+		std::lock_guard<std::mutex> lock(m_sequenceLock);
 
 		firstSeq = (m_sequence > m_slidingBufferSize) ?
 						m_sequence - m_slidingBufferSize : 1;
