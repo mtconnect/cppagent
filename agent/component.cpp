@@ -97,7 +97,7 @@ std::map<string, string> Component::buildAttributes() const
 }
 
 
-void Component::addDescription(string body, map<string, string> attributes)
+void Component::addDescription(string body, const map<string, string> &attributes)
 {
 	m_description = attributes;
 

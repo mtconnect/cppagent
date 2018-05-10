@@ -78,21 +78,17 @@ void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem);
 
 
 // Add attributes to an xml element
-void addDeviceStream(xmlTextWriterPtr writer, Device *device);
-void addComponentStream(xmlTextWriterPtr writer, Component *component);
+void addDeviceStream(xmlTextWriterPtr writer, const Device *device);
+void addComponentStream(xmlTextWriterPtr writer, const Component *component);
 void addCategory(xmlTextWriterPtr writer, DataItem::ECategory category);
 void addSimpleElement(
 	xmlTextWriterPtr writer,
-	std::string element,
+	const std::string &element,
 	const std::string &body,
 	const std::map<std::string, std::string> *attributes = nullptr);
 
-void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> *attributes);
-void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> &attributes)
-{
-	addAttributes(writer, &attributes);
-}
-void addAttributes(xmlTextWriterPtr writer, const AttributeList *attributes);
+void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> &attributes);
+void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes);
 
 void addEvent(xmlTextWriterPtr writer, ComponentEvent *result);
 
@@ -134,7 +130,7 @@ void XmlPrinter::clearDevicesNamespaces()
 }
 
 
-const string XmlPrinter::getDevicesUrn(const std::string &prefix)
+string XmlPrinter::getDevicesUrn(const std::string &prefix)
 {
 	auto ns = g_devicesNamespaces.find(prefix);
 	if (ns != g_devicesNamespaces.end())
@@ -144,7 +140,7 @@ const string XmlPrinter::getDevicesUrn(const std::string &prefix)
 }
 
 
-const string XmlPrinter::getDevicesLocation(const std::string &prefix)
+string XmlPrinter::getDevicesLocation(const std::string &prefix)
 {
 	auto ns = g_devicesNamespaces.find(prefix);
 	if (ns != g_devicesNamespaces.end())
@@ -174,7 +170,7 @@ void XmlPrinter::clearErrorNamespaces()
 }
 
 
-const string XmlPrinter::getErrorUrn(const std::string &prefix)
+string XmlPrinter::getErrorUrn(const std::string &prefix)
 {
 	auto ns = g_errorNamespaces.find(prefix);
 	if (ns != g_errorNamespaces.end())
@@ -184,7 +180,7 @@ const string XmlPrinter::getErrorUrn(const std::string &prefix)
 }
 
 
-const string XmlPrinter::getErrorLocation(const std::string &prefix)
+string XmlPrinter::getErrorLocation(const std::string &prefix)
 {
 	auto ns = g_errorNamespaces.find(prefix);
 	if (ns != g_errorNamespaces.end())
@@ -226,7 +222,7 @@ const std::string &XmlPrinter::getSchemaVersion()
 }
 
 
-const string XmlPrinter::getStreamsUrn(const std::string &prefix)
+string XmlPrinter::getStreamsUrn(const std::string &prefix)
 {
 	auto ns = g_streamsNamespaces.find(prefix);
 	if (ns != g_streamsNamespaces.end())
@@ -236,7 +232,7 @@ const string XmlPrinter::getStreamsUrn(const std::string &prefix)
 }
 
 
-const string XmlPrinter::getStreamsLocation(const std::string &prefix)
+string XmlPrinter::getStreamsLocation(const std::string &prefix)
 {
 	auto ns = g_streamsNamespaces.find(prefix);
 	if (ns != g_streamsNamespaces.end())
@@ -266,7 +262,7 @@ void XmlPrinter::clearAssetsNamespaces()
 }
 
 
-const string XmlPrinter::getAssetsUrn(const std::string &prefix)
+string XmlPrinter::getAssetsUrn(const std::string &prefix)
 {
 	auto ns = g_assetsNamespaces.find(prefix);
 	if (ns != g_assetsNamespaces.end())
@@ -276,7 +272,7 @@ const string XmlPrinter::getAssetsUrn(const std::string &prefix)
 }
 
 
-const string XmlPrinter::getAssetsLocation(const std::string &prefix)
+string XmlPrinter::getAssetsLocation(const std::string &prefix)
 {
 	auto ns = g_assetsNamespaces.find(prefix);
 	if (ns != g_assetsNamespaces.end())
@@ -400,7 +396,7 @@ string XmlPrinter::printProbe(
 	const uint64_t nextSeq,
 	const unsigned int assetBufferSize,
 	const unsigned int assetCount,
-	vector<Device *> &deviceList,
+	const vector<Device *> &deviceList,
 	const std::map<std::string, int> *count )
 {
 	xmlTextWriterPtr writer = nullptr;
@@ -482,7 +478,7 @@ string XmlPrinter::printProbe(
 
 void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 {
-	addAttributes(writer, component->getAttributes());
+	addAttributes(writer, *component->getAttributes());
 
 	const auto &desc = component->getDescription();
 	const auto &body = component->getDescriptionBody();
@@ -582,7 +578,7 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 {
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItem"));
 
-	addAttributes(writer, dataItem->getAttributes());
+	addAttributes(writer, *dataItem->getAttributes());
 	const auto &source = dataItem->getSource();
 
 	if (!source.empty())
@@ -695,9 +691,9 @@ string XmlPrinter::printSample(
 		for (auto i = 0ul; i < results.size(); i++)
 		{
 			auto result = results[i];
-			auto dataItem = result->getDataItem();
-			auto component = dataItem->getComponent();
-			auto device = component->getDevice();
+			auto const dataItem = result->getDataItem();
+			auto const component = dataItem->getComponent();
+			auto const device = component->getDevice();
 
 			if (device != lastDevice)
 			{
@@ -802,7 +798,7 @@ string XmlPrinter::printAssets(
 	const unsigned int instanceId,
 	const unsigned int bufferSize,
 	const unsigned int assetCount,
-	std::vector<AssetPtr> &assets )
+	std::vector<AssetPtr> const &assets)
 {
 	xmlTextWriterPtr writer = nullptr;
 	xmlBufferPtr buf = nullptr;
@@ -882,7 +878,7 @@ void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset)
 	// TODO: Check if cutting tool or archetype - should be in type
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST asset->getType().c_str()));
 
-	addAttributes(writer, &asset->getIdentity());
+	addAttributes(writer, asset->getIdentity());
 
 	// Add the timestamp and device uuid fields.
 	THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
@@ -913,7 +909,7 @@ void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset)
 }
 
 
-void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, Device *device)
+void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, const Device *device)
 {
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DeviceStream"));
 	THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
@@ -923,7 +919,7 @@ void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, Device *device)
 }
 
 
-void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, Component *component)
+void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, const Component *component)
 {
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentStream"));
 	THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "component",
@@ -980,7 +976,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, element));
 	}
 
-	addAttributes(writer, result->getAttributes());
+	addAttributes(writer, *result->getAttributes());
 
 	if (result->isTimeSeries() && result->getValue() != "UNAVAILABLE")
 	{
@@ -1005,9 +1001,9 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 }
 
 
-void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const std::map<string, string> *attributes)
+void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const std::map<string, string> &attributes)
 {
-	for (const auto &attr : *attributes)
+	for (const auto &attr : attributes)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
 			BAD_CAST attr.second.c_str()));
@@ -1015,9 +1011,9 @@ void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const std::map<string, s
 }
 
 
-void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const AttributeList *attributes)
+void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes)
 {
-	for (const auto & attr : *attributes)
+	for (const auto & attr : attributes)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first,
 			BAD_CAST attr.second.c_str()));
@@ -1207,14 +1203,14 @@ void XmlPrinter::initXmlDoc(
 
 void XmlPrinter::addSimpleElement(
 	xmlTextWriterPtr writer,
-	string element,
+	const string &element,
 	const string &body,
 	const map<string, string> *attributes)
 {
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST element.c_str()));
 
 	if (attributes && attributes->size() > 0)
-		addAttributes(writer, attributes);
+		addAttributes(writer, *attributes);
 
 	if (!body.empty())
 	{
@@ -1321,7 +1317,7 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr it
 }
 
 
-string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
+string XmlPrinter::printCuttingTool(CuttingToolPtr const tool)
 {
 
 	xmlTextWriterPtr writer = nullptr;

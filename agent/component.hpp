@@ -132,7 +132,7 @@ public:
 
 
 	// Add/get description specifications using an attribute map 
-	void addDescription(std::string body, std::map<std::string, std::string> attributes);
+	void addDescription(std::string body, const std::map<std::string, std::string> &attributes);
 	const std::map<std::string, std::string> &getDescription() const {
 		return m_description; }
 

@@ -107,9 +107,9 @@ protected:
 		xmlDocPtr doc);
 
 	// Cutting Tool Parser
-	CuttingToolPtr handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc);
-	CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr node, xmlDocPtr doc);
-	void parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDocPtr doc);
-	CuttingItemPtr parseCuttingItem(xmlNodePtr node, xmlDocPtr doc);
+	static CuttingToolPtr handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc);
+	static CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr node, xmlDocPtr doc);
+	static void parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDocPtr doc);
+	static CuttingItemPtr parseCuttingItem(xmlNodePtr node, xmlDocPtr doc);
 };
 

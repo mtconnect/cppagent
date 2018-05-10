@@ -43,10 +43,10 @@ public:
 
 	void setAgent(Agent *agent) {
 		m_agent = agent; }
-	Agent *getAgent() {
+	const Agent * getAgent() const {
 		return m_agent; }
 
-	RollingFileLogger *getLogger() {
+	const RollingFileLogger *getLogger() const {
 		return m_loggerFile; }
 
 protected:
