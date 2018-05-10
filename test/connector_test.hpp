@@ -56,20 +56,20 @@ public:
 	{
 	}
 
-	virtual void processData(const std::string &data)
+	void processData(const std::string &data) override
 	{
 		m_data = data;
 		m_list.push_back(m_data);
 	}
 
-	virtual void protocolCommand(const std::string &data)
+	void protocolCommand(const std::string &data) override
 	{
 		m_command = data;
 	}
 
-	virtual void disconnected() {
+	void disconnected() override {
 		m_disconnected = true; }
-	virtual void connected() {
+	void connected() override {
 		m_disconnected = false; }
 	bool heartbeats() {
 		return m_heartbeats; }
