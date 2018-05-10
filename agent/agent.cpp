@@ -19,6 +19,8 @@
 #include <fcntl.h>
 #include <sstream>
 #include <stdexcept>
+#include <chrono>
+#include <thread>
 #include <dlib/tokenizer.h>
 #include <dlib/misc_api.h>
 #include <dlib/array.h>
@@ -1346,7 +1348,7 @@ void Agent::streamData(
 		
 				// For replaying of events, we will stream as fast as we can with a 1ms sleep
 				// to allow other threads to run.
-				dlib::sleep(1);
+				this_thread::sleep_for(1ms);
 			}
 			else
 			{
@@ -1397,7 +1399,7 @@ void Agent::streamData(
 				if (delta < interMicros)
 				{
 					// Sleep the remainder
-					dlib::sleep((interMicros - delta) / 1000);
+					this_thread::sleep_for(chrono::milliseconds((interMicros - delta) / 1000ull));
 				}
 			}
 		}

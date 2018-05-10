@@ -34,6 +34,8 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
+#include <chrono>
+#include <thread>
 #include <cppunit/portability/Stream.h>
 #include <dlib/server.h>
 
@@ -1808,7 +1810,7 @@ void AgentTest::testPutBlockingFrom()
 void AgentTest::killThread(void *aArg)
 {
   AgentTest *test = (AgentTest*) aArg;
-  dlib::sleep(test->m_delay);
+	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
   test->m_out.setstate(ios::eofbit);
 }
 
@@ -1816,7 +1818,7 @@ void AgentTest::killThread(void *aArg)
 void AgentTest::addThread(void *aArg)
 {
   AgentTest *test = (AgentTest*) aArg;
-  dlib::sleep(test->m_delay);
+	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
   test->m_adapter->processData("TIME|line|204");
   test->m_out.setstate(ios::eofbit);
 }
@@ -1878,10 +1880,10 @@ void AgentTest::testFailWithDuplicateDeviceUUID()
 void AgentTest::streamThread(void *aArg)
 {
   AgentTest *test = (AgentTest*) aArg;
-  dlib::sleep(test->m_delay);
+	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
   test->m_agent->setSequence(test->m_agent->getSequence() + 20);
   test->m_adapter->processData("TIME|line|204");
-  dlib::sleep(120);
+	this_thread::sleep_for(120ms);
   test->m_out.setstate(ios::eofbit);
 }
 

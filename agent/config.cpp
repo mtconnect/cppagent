@@ -22,6 +22,8 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <chrono>
+#include <thread>
 #include <dlib/config_reader.h>
 #include <dlib/logger.h>
 #include <stdexcept>
@@ -215,7 +217,7 @@ void AgentConfiguration::monitorThread()
 	// Check every 10 seconds
 	do
 	{
-		dlib::sleep(10000);
+		this_thread::sleep_for(10s);
 
 		struct stat devices, cfg;
 		bool check = true;
