@@ -31,6 +31,8 @@
 // SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 //
 #include "connector_test.hpp"
+#include <chrono>
+#include <thread>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(ConnectorTest);
@@ -67,7 +69,7 @@ void ConnectorTest::testConnection()
 	start();
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
-	dlib::sleep(100);
+	this_thread::sleep_for(100ms);
 	CPPUNIT_ASSERT(m_serverSocket.get());
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 }
@@ -83,7 +85,7 @@ void ConnectorTest::testDataCapture()
 	string command("Hello Connector\n");
 	CPPUNIT_ASSERT((size_t) m_serverSocket->write(command.c_str(),
 		   command.length()) == command.length());
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 
 	// \n is stripped from the posted data.
 	CPPUNIT_ASSERT_EQUAL(command.substr(0, command.length() - 1), m_connector->m_data);
@@ -95,11 +97,11 @@ void ConnectorTest::testDisconnect()
 	start();
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 	CPPUNIT_ASSERT(m_serverSocket.get());
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 	m_serverSocket.reset();
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 	CPPUNIT_ASSERT(m_connector->m_disconnected);
 }
 
@@ -113,7 +115,7 @@ void ConnectorTest::testProtocolCommand()
 
 	const char *cmd = "* Hello Connector\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 
 	// \n is stripped from the posted data.
 	CPPUNIT_ASSERT(strncmp(cmd, m_connector->m_command.c_str(), strlen(cmd) - 1) == 0);
@@ -136,7 +138,7 @@ void ConnectorTest::testHeartbeat()
 	// Respond to the heartbeat of 1/2 second
 	const char *pong = "* PONG 1000\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 
 	CPPUNIT_ASSERT(m_connector->heartbeats());
 	CPPUNIT_ASSERT_EQUAL(1000, m_connector->heartbeatFrequency());
@@ -166,7 +168,7 @@ void ConnectorTest::testHeartbeatPong()
 	// Respond to the heartbeat of 1/2 second
 	const char *pong = "* PONG 1000\n";
 	CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
-	dlib::sleep(10);
+	this_thread::sleep_for(10ms);
 
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 	}
@@ -175,7 +177,7 @@ void ConnectorTest::testHeartbeatPong()
 void ConnectorTest::testHeartbeatTimeout()
 {
 	testHeartbeat();
-	dlib::sleep(2100);
+	this_thread::sleep_for(2100ms);
 
 	CPPUNIT_ASSERT(m_connector->m_disconnected);
 }
@@ -198,7 +200,7 @@ void ConnectorTest::testLegacyTimeout()
 	CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
 
 	// No pings, but timeout after 5 seconds of silence
-	dlib::sleep(11000);
+	this_thread::sleep_for(11000ms);
 
 	CPPUNIT_ASSERT(m_connector->m_disconnected);
 }
@@ -271,7 +273,7 @@ void ConnectorTest::testIPV6Connection()
 	start();
 
 	CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
-	dlib::sleep(100);
+	this_thread::sleep_for(100ms);
 	CPPUNIT_ASSERT(m_serverSocket.get());
 	CPPUNIT_ASSERT(!m_connector->m_disconnected);
 #endif

@@ -22,6 +22,8 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <chrono>
+#include <thread>
 #include <dlib/config_reader.h>
 #include <dlib/logger.h>
 #include <stdexcept>
@@ -215,7 +217,7 @@ void AgentConfiguration::monitorThread()
 	// Check every 10 seconds
 	do
 	{
-		dlib::sleep(10000);
+		this_thread::sleep_for(10s);
 
 		struct stat devices, cfg;
 		bool check = true;
@@ -526,7 +528,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 
 	m_devicesFile.clear();
 
-	for (string probe : devices_files)
+	for (const auto &probe : devices_files)
 	{
 		struct stat buf;
 		g_logger << LDEBUG << "Checking for Devices XML configuration file: " << probe;
@@ -556,7 +558,6 @@ void AgentConfiguration::loadConfig(std::istream &file)
 
 	// Check for schema version
 	string schemaVersion = get_with_default(reader, "SchemaVersion", "");
-
 	if (!schemaVersion.empty())
 		XmlPrinter::setSchemaVersion(schemaVersion);
 
@@ -620,15 +621,14 @@ void AgentConfiguration::loadAdapters(
 		std::vector<string> blocks;
 		adapters.get_blocks(blocks);
 
-		std::vector<string>::iterator block;
-		for (block = blocks.begin(); block != blocks.end(); ++block)
+		for (const auto &block : blocks)
 		{
-			const auto &adapter = adapters.block(*block);
+			const auto &adapter = adapters.block(block);
 			string deviceName;
 			if (adapter.is_key_defined("Device"))
 				deviceName = adapter["Device"].c_str();
 			else
-				deviceName = *block;
+				deviceName = block;
 
 			device = m_agent->getDeviceByName(deviceName);
 
@@ -756,14 +756,12 @@ void AgentConfiguration::loadNamespace(
 		std::vector<string> blocks;
 		namespaces.get_blocks(blocks);
 
-		std::vector<string>::iterator block;
-		for (block = blocks.begin(); block != blocks.end(); ++block)
+		for (const auto &block : blocks)
 		{
-			const auto &ns = namespaces.block(*block);
-
-			if (*block != "m" && !ns.is_key_defined("Urn"))
+			const auto &ns = namespaces.block(block);
+			if (block != "m" && !ns.is_key_defined("Urn"))
 			{
-				g_logger << LERROR << "Name space must have a Urn: " << *block;
+				g_logger << LERROR << "Name space must have a Urn: " << block;
 			}
 			else
 			{
@@ -772,7 +770,7 @@ void AgentConfiguration::loadNamespace(
 					location = ns["Location"];
 				if (ns.is_key_defined("Urn"))
 					urn = ns["Urn"];
-				(*callback)(urn, location, *block);
+				(*callback)(urn, location, block);
 				if (ns.is_key_defined("Path") && !location.empty())
 					m_agent->registerFile(location, ns["Path"]);
 			}
@@ -788,19 +786,18 @@ void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &reader)
 		const auto &files = reader.block("Files");
 		std::vector<string> blocks;
 		files.get_blocks(blocks);
-
-		std::vector<string>::iterator block;
-		for (block = blocks.begin(); block != blocks.end(); ++block)
+	
+		for (const auto &block : blocks)
 		{
-			const auto &file = files.block(*block);
-
+			const auto &file = files.block(block);
 			if (!file.is_key_defined("Location") || !file.is_key_defined("Path"))
-				g_logger << LERROR << "Name space must have a Location (uri) or Directory and Path: " << *block;
+				g_logger << LERROR << "Name space must have a Location (uri) or Directory and Path: " << block;
 			else
 				m_agent->registerFile(file["Location"], file["Path"]);
 		}
 	}
 }
+
 
 void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName, StyleFunction *styleFunction)
 {
@@ -828,9 +825,7 @@ void AgentConfiguration::loadTypes(dlib::config_reader::kernel_1a &reader)
 		std::vector<string> keys;
 		types.get_keys(keys);
 
-		std::vector<string>::iterator key;
-
-		for (key = keys.begin(); key != keys.end(); ++key)
-			m_agent->addMimeType(*key, types[*key]);
+		for (const auto &key : keys)
+			m_agent->addMimeType(key, types[key]);
 	}
 }

@@ -19,6 +19,8 @@
 #include <fcntl.h>
 #include <sstream>
 #include <stdexcept>
+#include <chrono>
+#include <thread>
 #include <dlib/tokenizer.h>
 #include <dlib/misc_api.h>
 #include <dlib/array.h>
@@ -58,15 +60,14 @@ Agent::Agent(
 		// Load the configuration for the Agent
 		m_xmlParser = new XmlParser();
 		m_devices = m_xmlParser->parseFile(configXmlPath);
-		std::vector<Device *>::iterator device;
 		std::set<std::string> uuids;
-		for (device = m_devices.begin(); device != m_devices.end(); ++device)
+		for (const auto &device : m_devices)
 		{
-			if (uuids.count((*device)->getUuid()) > 0)
-				throw runtime_error("Duplicate UUID: " + (*device)->getUuid());
+			if (uuids.count(device->getUuid()) > 0)
+				throw runtime_error("Duplicate UUID: " + device->getUuid());
 
-			uuids.insert((*device)->getUuid());
-			(*device)->resolveReferences();
+			uuids.insert(device->getUuid());
+			device->resolveReferences();
 		}
 	}
 	catch (runtime_error & e)
@@ -110,61 +111,59 @@ Agent::Agent(
 
 	// Add the devices to the device map and create availability and 
 	// asset changed events if they don't exist
-	std::vector<Device *>::iterator device;
-
-	for (device = m_devices.begin(); device != m_devices.end(); ++device)
+	for (const auto device  : m_devices)
 	{
-		m_deviceMap[(*device)->getName()] = *device;
+		m_deviceMap[device->getName()] = device;
 
 		// Make sure we have two device level data items:
 		// 1. Availability
 		// 2. AssetChanged
-		if (!(*device)->getAvailability())
+		if ( !device->getAvailability() )
 		{
 			// Create availability data item and add it to the device.
 			std::map<string, string> attrs;
 			attrs["type"] = "AVAILABILITY";
-			attrs["id"] = (*device)->getId() + "_avail";
+			attrs["id"] = device->getId() + "_avail";
 			attrs["category"] = "EVENT";
 
 			auto di = new DataItem(attrs);
-			di->setComponent(*(*device));
-			(*device)->addDataItem(*di);
-			(*device)->addDeviceDataItem(*di);
-			(*device)->m_availabilityAdded = true;
+			di->setComponent(*device);
+			device->addDataItem(*di);
+			device->addDeviceDataItem(*di);
+			device->m_availabilityAdded = true;
 		}
 
 		int major, minor;
 		char c;
 		stringstream ss(XmlPrinter::getSchemaVersion());
 		ss >> major >> c >> minor;
-
-		if (!(*device)->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
+		if ( !device->getAssetChanged() && 
+			(major > 1 || (major == 1 && minor >= 2)) )
 		{
 			// Create asset change data item and add it to the device.
 			std::map<string,string> attrs;
 			attrs["type"] = "ASSET_CHANGED";
-			attrs["id"] = (*device)->getId() + "_asset_chg";
+			attrs["id"] = device->getId() + "_asset_chg";
 			attrs["category"] = "EVENT";
-
 			auto di = new DataItem(attrs);
-			di->setComponent(*(*device));
-			(*device)->addDataItem(*di);
-			(*device)->addDeviceDataItem(*di);
+			di->setComponent(*device);
+			device->addDataItem(*di);
+			device->addDeviceDataItem(*di);
 		}
 
-		if (!(*device)->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
+		if ( !device->getAssetRemoved() &&
+			(major > 1 || (major == 1 && minor >= 3)) )
 		{
 			// Create asset removed data item and add it to the device.
 			std::map<string, string> attrs;
 			attrs["type"] = "ASSET_REMOVED";
-			attrs["id"] = (*device)->getId() + "_asset_rem";
+			attrs["id"] = device->getId() + "_asset_rem";
 			attrs["category"] = "EVENT";
 
 			auto di = new DataItem(attrs);
-			di->setComponent(*(*device));
-			(*device)->addDataItem(*di);
-			(*device)->addDeviceDataItem(*di);
+			di->setComponent(*device);
+			device->addDataItem(*di);
+			device->addDeviceDataItem(*di);
 		}
 	}
 
@@ -179,17 +178,15 @@ Agent::Agent(
 			m_devices) );
 
 	// Initialize the id mapping for the devices and set all data items to UNAVAILABLE
-	for (device = m_devices.begin(); device != m_devices.end(); ++device)
+	for (const auto device : m_devices)
 	{
-		const auto &items = (*device)->getDeviceDataItems();
-		std::map<string, DataItem *>::const_iterator item;
+		const auto &items = device->getDeviceDataItems();
 
-		for (item = items.begin(); item != items.end(); ++item)
+		for (const auto item : items)
 		{
 			// Check for single valued constrained data items.
-			auto d = item->second;
+			auto d = item.second;
 			const string *value = &g_unavailable;
-
 			if (d->isCondition())
 				value = &g_conditionUnavailable;
 			else if (d->hasConstantValue())
@@ -201,8 +198,8 @@ Agent::Agent(
 			else
 			{
 				g_logger << LFATAL << "Duplicate DataItem id " << d->getId() <<
-					" for device: " << (*device)->getName() << " and data item name: " <<
-					d->getName();
+							" for device: " << device->getName() << " and data item name: " <<
+							d->getName();
 				std::exit(1);
 			}
 		}
@@ -241,10 +238,8 @@ void Agent::start()
 	try
 	{
 		// Start all the adapters
-		std::vector<Adapter *>::iterator iter;
-
-		for (iter = m_adapters.begin(); iter != m_adapters.end(); iter++)
-			(*iter)->start();
+		for (const auto adapter : m_adapters)
+			adapter->start();
 
 		// Start the server. This blocks until the server stops.
 		server_http::start();
@@ -260,23 +255,19 @@ void Agent::start()
 void Agent::clear()
 {
 	// Stop all adapter threads...
-	std::vector<Adapter *>::iterator iter;
-
 	g_logger << LINFO << "Shutting down adapters";
-
 	// Deletes adapter and waits for it to exit.
-	for (iter = m_adapters.begin(); iter != m_adapters.end(); iter++)
-		(*iter)->stop();
+	for (const auto adapter : m_adapters)
+		adapter->stop();
 
 	g_logger << LINFO << "Shutting down server";
 	server::http_1a::clear();
 	g_logger << LINFO << "Shutting completed";
 
-	for (iter = m_adapters.begin(); iter != m_adapters.end(); iter++)
-		delete (*iter);
+	for (const auto adapter : m_adapters)
+		delete adapter;
 
 	m_adapters.clear();
-
 }
 
 
@@ -406,7 +397,6 @@ const string Agent::on_request(const incoming_things &incoming, outgoing_things 
 		if (first == "assets" || first == "asset")
 		{
 			string list;
-
 			if (loc1 != string::npos)
 				list = path.substr(loc1 + 1);
 
@@ -600,17 +590,15 @@ bool Agent::addAsset(
 			m_assetMap.erase(oldref->getAssetId());
 
 			// Remove secondary keys
-			auto &keys = oldref->getKeys();
-			AssetKeys::iterator iter;
-			for (iter = keys.begin(); iter != keys.end(); iter++)
+			const auto &keys = oldref->getKeys();
+			for (const auto &key : keys)
 			{
-				AssetIndex &index = m_assetIndices[iter->first];
-				index.erase(iter->second);
+				auto &index = m_assetIndices[key.first];
+				index.erase(key.second);
 			}
 		}
 
 		m_assetMap[id] = ptr;
-
 		if (!ptr->isRemoved())
 		{
 			AssetPtr &newPtr = m_assetMap[id];
@@ -618,12 +606,11 @@ bool Agent::addAsset(
 		}
 
 		// Add secondary keys
-		auto &keys = ptr->getKeys();
-		AssetKeys::iterator iter;
-		for (iter = keys.begin(); iter != keys.end(); iter++)
+		const auto &keys = ptr->getKeys();
+		for (const auto &key : keys)
 		{
-			auto &index = m_assetIndices[iter->first];
-			index[iter->second] = ptr;
+			auto &index = m_assetIndices[key.first];
+			index[key.second] = ptr;
 		}
 	}
 
@@ -665,14 +652,12 @@ bool Agent::updateAsset(
 
 		try
 		{
-			AssetChangeList::iterator iter;
-
-			for (iter = assetChangeList.begin(); iter != assetChangeList.end(); ++iter)
+			for (const auto & assetChange : assetChangeList)
 			{
-				if (iter->first == "xml")
-					m_xmlParser->updateAsset(asset, asset->getType(), iter->second);
+				if (assetChange.first == "xml")
+					m_xmlParser->updateAsset(asset, asset->getType(), assetChange.second);
 				else
-					tool->updateValue(iter->first, iter->second);
+					tool->updateValue(assetChange.first, assetChange.second);
 			}
 		}
 		catch (runtime_error &e)
@@ -713,7 +698,6 @@ bool Agent::removeAsset(
 		dlib::auto_mutex lock(*m_assetLock);
 
 		asset = m_assetMap[id];
-
 		if (!asset.getObject())
 			return false;
 
@@ -779,28 +763,23 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 	auto time = getCurrentTime(GMT_UV_SEC);
 	g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
-	std::vector<Device *>::iterator iter;
-
-	for (iter = devices.begin(); iter != devices.end(); ++iter)
+	for (const auto device : devices)
 	{
-		const auto &dataItems = (*iter)->getDeviceDataItems();
-		std::map<std::string, DataItem *>::const_iterator dataItemAssoc;
-
-		for (dataItemAssoc = dataItems.begin(); dataItemAssoc != dataItems.end(); ++dataItemAssoc)
+		const auto &dataItems = device->getDeviceDataItems();
+		for (const auto & dataItemAssoc : dataItems)
 		{
-			auto dataItem = (*dataItemAssoc).second;
-
+			auto dataItem = dataItemAssoc.second;
 			if (dataItem &&
-				(dataItem->getDataSource() == adapter || (adapter->isAutoAvailable() &&
-				!dataItem->getDataSource() &&
-				dataItem->getType() == "AVAILABILITY")))
+				(dataItem->getDataSource() == adapter ||
+				( adapter->isAutoAvailable() &&
+				  !dataItem->getDataSource() &&
+				  dataItem->getType() == "AVAILABILITY") ) )
 			{
 				auto ptr = m_latest.getEventPtr(dataItem->getId());
 
 				if (ptr)
 				{
 					const string *value = nullptr;
-
 					if (dataItem->isCondition())
 					{
 						if ((*ptr)->getLevel() != ComponentEvent::UNAVAILABLE)
@@ -809,7 +788,6 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 					else if (dataItem->hasConstraints())
 					{
 						const auto &values = dataItem->getConstrainedValues();
-
 						if (values.size() > 1 && (*ptr)->getValue() != g_unavailable)
 							value = &g_unavailable;
 					}
@@ -822,7 +800,7 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 				}
 			}
 			else if (!dataItem)
-				g_logger << LWARN << "No data Item for " << (*dataItemAssoc).first;
+				g_logger << LWARN << "No data Item for " << dataItemAssoc.first;
 		}
 	}
 }
@@ -830,23 +808,21 @@ void Agent::disconnected(Adapter *adapter, std::vector<Device*> devices)
 
 void Agent::connected(Adapter *adapter, std::vector<Device *> devices)
 {
-	if (adapter->isAutoAvailable())
+	if (!adapter->isAutoAvailable())
+		return;
+
+	auto time = getCurrentTime(GMT_UV_SEC);
+	for (const auto device : devices)
 	{
-		auto time = getCurrentTime(GMT_UV_SEC);
-		std::vector<Device *>::iterator iter;
+		g_logger << LDEBUG << "Connected to adapter, setting all Availability data items to AVAILABLE";
 
-		for (iter = devices.begin(); iter != devices.end(); ++iter)
+		if (device->getAvailability() )
 		{
-			g_logger << LDEBUG << "Connected to adapter, setting all Availability data items to AVAILABLE";
-
-			if ((*iter)->getAvailability())
-			{
-				g_logger << LDEBUG << "Adding availabilty event for " << (*iter)->getAvailability()->getId();
-				addToBuffer((*iter)->getAvailability(), g_available, time);
-			}
-			else
-				g_logger << LDEBUG << "Cannot find availability for " << (*iter)->getName();
+			g_logger << LDEBUG << "Adding availabilty event for " << device->getAvailability()->getId();
+			addToBuffer(device->getAvailability(), g_available, time);
 		}
+		else
+			g_logger << LDEBUG << "Cannot find availability for " << device->getName();
 	}
 }
 
@@ -955,38 +931,31 @@ string Agent::handlePut(
 	// First check if this is an adapter put or a data put...
 	if (queries["_type"] == "command")
 	{
-		std::vector<Adapter *>::iterator adpt;
-
-		for (adpt = dev->m_adapters.begin(); adpt != dev->m_adapters.end(); adpt++)
+		for (const auto adpt : dev->m_adapters)
 		{
-			key_value_map::const_iterator kv;
-
-			for (kv = queries.begin(); kv != queries.end(); kv++)
+			for (const auto & kv : queries)
 			{
-				string command = kv->first + "=" + kv->second;
+				string command = kv.first + "=" + kv.second;
 				g_logger << LDEBUG << "Sending command '" << command << "' to " << device;
-				(*adpt)->sendCommand(command);
+				adpt->sendCommand(command);
 			}
 		}
 	}
 	else
 	{
 		string time = queries["time"];
-
 		if (time.empty())
 			time = getCurrentTime(GMT_UV_SEC);
 
-		key_value_map::const_iterator kv;
-
-		for (kv = queries.begin(); kv != queries.end(); kv++)
+		for (const auto & kv : queries)
 		{
-			if (kv->first != "time")
+			if (kv.first != "time") 
 			{
-				auto di = dev->getDeviceDataItem(kv->first);
+				auto di = dev->getDeviceDataItem(kv.first);
 				if (di)
-					addToBuffer(di, kv->second, time);
+					addToBuffer(di, kv.second, time);
 				else
-					g_logger << LWARN << "(" << device << ") Could not find data item: " << kv->first;
+					g_logger << LWARN << "(" << device << ") Could not find data item: " << kv.first;
 			}
 		}
 	}
@@ -1265,9 +1234,8 @@ void Agent::streamData(
 	ChangeObserver observer;
 
 	// Add observers
-	std::set<string>::iterator iter;
-	for (iter = filterSet.begin(); iter != filterSet.end(); ++iter)
-		m_dataItemMap[*iter]->addObserver(&observer);
+	for (const auto &item : filterSet)
+		m_dataItemMap[item]->addObserver(&observer);
 
 	uint64_t interMicros = interval * 1000u;
 	uint64_t firstSeq = getFirstSequence();
@@ -1346,7 +1314,7 @@ void Agent::streamData(
 		
 				// For replaying of events, we will stream as fast as we can with a 1ms sleep
 				// to allow other threads to run.
-				dlib::sleep(1);
+				this_thread::sleep_for(1ms);
 			}
 			else
 			{
@@ -1397,7 +1365,7 @@ void Agent::streamData(
 				if (delta < interMicros)
 				{
 					// Sleep the remainder
-					dlib::sleep((interMicros - delta) / 1000);
+					this_thread::sleep_for(chrono::milliseconds((interMicros - delta) / 1000ull));
 				}
 			}
 		}

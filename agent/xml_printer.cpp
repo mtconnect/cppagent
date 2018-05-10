@@ -416,13 +416,10 @@ string XmlPrinter::printProbe(
 
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Devices"));
 
-
-		vector<Device *>::iterator dev;
-
-		for (dev = deviceList.begin(); dev != deviceList.end(); dev++)
+		for (const auto dev : deviceList)
 		{
 			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Device"));
-			printProbeHelper(writer, *dev);
+			printProbeHelper(writer, dev);
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Device
 		}
 
@@ -482,38 +479,34 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItems"));
 
-		list<DataItem *>::iterator data;
-		for (data = datum.begin(); data != datum.end(); data++)
-			printDataItem(writer, *data);
+		for (const auto data : datum)
+			printDataItem(writer, data);
 
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItems
 	}
 
-	list<Component *> children = component->getChildren();
+	const auto children = component->getChildren();
 
 	if (children.size() > 0)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Components"));
 
-		list<Component *>::iterator child;
-
-		for (child = children.begin(); child != children.end(); child++)
+		for (const auto &child : children)
 		{
 			xmlChar *name = nullptr;
-			if (!(*child)->getPrefix().empty())
+			if (!child->getPrefix().empty())
 			{
-				map<string, SchemaNamespace>::iterator ns = g_devicesNamespaces.find((*child)->getPrefix());
-
+				const auto ns = g_devicesNamespaces.find(child->getPrefix());
 				if (ns != g_devicesNamespaces.end())
-					name = BAD_CAST(*child)->getPrefixedClass().c_str();
+					name = BAD_CAST child->getPrefixedClass().c_str();
 			}
 
 			if (!name)
-				name = BAD_CAST(*child)->getClass().c_str();
+				name = BAD_CAST child->getClass().c_str();
 
 			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, name));
 
-			printProbeHelper(writer, *child);
+			printProbeHelper(writer, child);
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Component
 		}
 
@@ -543,16 +536,14 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "References"));
 
-		list<Component::Reference>::const_iterator ref;
-
-		for (ref = component->getReferences().begin(); ref != component->getReferences().end(); ref++)
+		for (const auto &ref : component->getReferences())
 		{
 			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
-			THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId", BAD_CAST ref->m_id.c_str()));
+			THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId", BAD_CAST ref.m_id.c_str()));
 
-			if (ref->m_name.length() > 0)
+			if (ref.m_name.length() > 0)
 			{
-				THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST ref->m_name.c_str()));
+				THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST ref.m_name.c_str()));
 			}
 
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Reference
@@ -587,10 +578,9 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 		if (!s.empty())
 			addSimpleElement(writer, "Minimum", s);
 
-		auto &values = dataItem->getConstrainedValues();
-		vector<string>::iterator value;
-		for (value = values.begin(); value != values.end(); value++)
-			addSimpleElement(writer, "Value", *value);
+		const auto &values = dataItem->getConstrainedValues();
+		for (const auto &value : values)
+			addSimpleElement(writer, "Value", value);
 
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints
 	}
@@ -678,7 +668,7 @@ string XmlPrinter::printSample(
 		Component *lastComponent = nullptr;
 		int lastCategory = -1;
 
-		for (unsigned int i = 0; i < results.size(); i++)
+		for (auto i = 0ul; i < results.size(); i++)
 		{
 			auto result = results[i];
 			auto dataItem = result->getDataItem();
@@ -793,18 +783,16 @@ string XmlPrinter::printAssets(
 
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Assets"));
 
-		vector<AssetPtr>::iterator iter;
-
-		for (iter = assets.begin(); iter != assets.end(); ++iter)
+		for (const auto asset : assets)
 		{
-			if ((*iter)->getType() == "CuttingTool" || (*iter)->getType() == "CuttingToolArchetype")
+			if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
 			{
-				THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST(*iter)->getContent().c_str()));
+				THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent().c_str()));
 			}
 			else
 			{
-				printAssetNode(writer, (*iter));
-				THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST(*iter)->getContent().c_str()));
+				printAssetNode(writer, asset);
+				THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent().c_str()));
 				THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 			}
 		}
@@ -952,7 +940,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 		ostr.precision(6);
 		const auto &v = result->getTimeSeries();
 
-		for (size_t i = 0; i < v.size(); i++)
+		for (auto i = 0u; i < v.size(); i++)
 			ostr << v[i] << ' ';
 
 		string str = ostr.str();
@@ -971,8 +959,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 
 void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const std::map<string, string> *attributes)
 {
-	std::map<string, string>::iterator attr;
-	for (auto attr : *attributes)
+	for (const auto &attr : *attributes)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
 			BAD_CAST attr.second.c_str()));
@@ -982,8 +969,7 @@ void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const std::map<string, s
 
 void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const AttributeList *attributes)
 {
-	AttributeList::iterator attr;
-	for (auto attr : *attributes)
+	for (const auto & attr : *attributes)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first,
 			BAD_CAST attr.second.c_str()));
@@ -1066,28 +1052,26 @@ void XmlPrinter::initXmlDoc(
 	string mtcLocation;
 
 	// Add in the other namespaces if they exist
-	map<string, SchemaNamespace>::iterator ns;
-
-	for (ns = namespaces->begin(); ns != namespaces->end(); ns++)
+	for (const auto ns : *namespaces)
 	{
 		// Skip the mtconnect ns (always m)
-		if (ns->first != "m")
+		if (ns.first != "m")
 		{
-			string attr = "xmlns:" + ns->first;
+			string attr = "xmlns:" + ns.first;
 			THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
 				BAD_CAST attr.c_str(),
-				BAD_CAST ns->second.mUrn.c_str()));
+				BAD_CAST ns.second.mUrn.c_str()));
 
-			if (location.empty() && !ns->second.mSchemaLocation.empty())
+			if (location.empty() && !ns.second.mSchemaLocation.empty())
 			{
 				// Always take the first location. There should only be one location!
-				location = ns->second.mUrn + " " + ns->second.mSchemaLocation;
+				location = ns.second.mUrn + " " + ns.second.mSchemaLocation;
 			}
 		}
-		else if (!ns->second.mSchemaLocation.empty())
+		else if (!ns.second.mSchemaLocation.empty())
 		{
 			// This is the mtconnect namespace
-			mtcLocation = xmlns + " " + ns->second.mSchemaLocation;
+			mtcLocation = xmlns + " " + ns.second.mSchemaLocation;
 		}
 	}
 
@@ -1156,15 +1140,13 @@ void XmlPrinter::initXmlDoc(
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCounts"));
 
-		map<string, int>::const_iterator iter;
-
-		for (iter = count->begin(); iter != count->end(); ++iter)
+		for (const auto &pair : *count)
 		{
 			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCount"));
 			THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetType",
-				BAD_CAST iter->first.c_str()));
+				BAD_CAST pair.first.c_str()));
 			THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer,
-				BAD_CAST int64ToString(iter->second).c_str()));
+				BAD_CAST int64ToString(pair.second).c_str()));
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 		}
 
@@ -1201,13 +1183,12 @@ void XmlPrinter::addSimpleElement(
 void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value)
 {
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST value->m_key.c_str()));
-	map<string, string>::iterator iter;
 
-	for (iter = value->m_properties.begin(); iter != value->m_properties.end(); iter++)
+	for (const auto prop : value->m_properties)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-			BAD_CAST(*iter).first.c_str(),
-			BAD_CAST(*iter).second.c_str()));
+			BAD_CAST prop.first.c_str(),
+			BAD_CAST prop.second.c_str()));
 	}
 
 	THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST value->m_value.c_str()));
@@ -1253,45 +1234,36 @@ void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr it
 {
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingItem"));
 
-	map<string, string>::iterator iter;
-
-	for (iter = item->m_identity.begin(); iter != item->m_identity.end(); iter++)
+	for (const auto pair : item->m_identity)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-			BAD_CAST(*iter).first.c_str(),
-			BAD_CAST(*iter).second.c_str()));
+			BAD_CAST pair.first.c_str(),
+			BAD_CAST pair.second.c_str()));
 	}
 
 	set<string> remaining;
-	std::map<std::string, CuttingToolValuePtr>::const_iterator viter;
 
-	for (viter = item->m_values.begin(); viter != item->m_values.end(); viter++)
-		remaining.insert(viter->first);
-
+	for (const auto &value : item->m_values)
+		remaining.insert(value.first);
 
 	printCuttingToolValue(writer, item, "Description", &remaining);
 	printCuttingToolValue(writer, item, "Locus", &remaining);
 
-	vector<CuttingToolValuePtr>::iterator life;
-
-	for (life = item->m_lives.begin(); life != item->m_lives.end(); life++)
-		printCuttingToolValue(writer, *life);
+	for (const auto &life : item->m_lives)
+		printCuttingToolValue(writer, life);
 
 	// Print extended items...
-	set<string>::iterator prop;
-
-	for (prop = remaining.begin(); prop != remaining.end(); prop++)
-		printCuttingToolValue(writer, item, prop->c_str());
+	for (const auto &prop : remaining)
+		printCuttingToolValue(writer, item, prop.c_str());
 
 
 	// Print Measurements
 	if (item->m_measurements.size() > 0)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Measurements"));
-		map<string, CuttingToolValuePtr>::iterator meas;
 
-		for (meas = item->m_measurements.begin(); meas != item->m_measurements.end(); meas++)
-			printCuttingToolValue(writer, *(meas->second));
+		for (const auto &meas : item->m_measurements)
+			printCuttingToolValue(writer, meas.second);
 
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 	}
@@ -1318,11 +1290,12 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
 		printAssetNode(writer, tool);
 
 		set<string> remaining;
-		std::map<std::string, CuttingToolValuePtr>::const_iterator viter;
 
-		for (viter = tool->m_values.begin(); viter != tool->m_values.end(); viter++)
-			if (viter->first != "Description")
-				remaining.insert(viter->first);
+		for (const auto &value : tool->m_values)
+		{
+			if (value.first != "Description")
+				remaining.insert(value.first);
+		}
 
 		// Check for cutting tool definition
 		printCuttingToolValue(writer, tool, "CuttingToolDefinition", &remaining);
@@ -1334,12 +1307,11 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
 		if (tool->m_status.size() > 0)
 		{
 			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CutterStatus"));
-			vector<string>::iterator status;
 
-			for (status = tool->m_status.begin(); status != tool->m_status.end(); status++)
+			for (const auto &status : tool->m_status)
 			{
 				THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Status"));
-				THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST status->c_str()));
+				THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST status.c_str()));
 				THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 			}
 
@@ -1350,10 +1322,8 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
 		printCuttingToolValue(writer, tool, "ReconditionCount", &remaining);
 
 		// Tool life
-		vector<CuttingToolValuePtr>::iterator life;
-
-		for (life = tool->m_lives.begin(); life != tool->m_lives.end(); life++)
-			printCuttingToolValue(writer, *life);
+		for (const auto &life : tool->m_lives)
+			printCuttingToolValue(writer, life);
 
 		// Remaining items
 		printCuttingToolValue(writer, tool, "ProgramToolGroup", &remaining);
@@ -1364,19 +1334,16 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
 		printCuttingToolValue(writer, tool, "ConnectionCodeMachineSide", &remaining);
 
 		// Print extended items...
-		set<string>::iterator prop;
-
-		for (prop = remaining.begin(); prop != remaining.end(); prop++)
-			printCuttingToolValue(writer, tool, prop->c_str());
+		for (const auto &prop : remaining)
+			printCuttingToolValue(writer, tool, prop.c_str());
 
 		// Print Measurements
 		if (tool->m_measurements.size() > 0)
 		{
 			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Measurements"));
-			map<string, CuttingToolValuePtr>::iterator meas;
 
-			for (meas = tool->m_measurements.begin(); meas != tool->m_measurements.end(); meas++)
-				printCuttingToolValue(writer, *(meas->second));
+			for (const auto &meas : tool->m_measurements)
+				printCuttingToolValue(writer, meas.second);
 
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 		}
@@ -1388,10 +1355,8 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
 			THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "count",
 					BAD_CAST tool->m_itemCount.c_str()));
 
-			vector<CuttingItemPtr>::iterator item;
-
-			for (item = tool->m_items.begin(); item != tool->m_items.end(); item++)
-				printCuttingToolItem(writer, *(item));
+			for (const auto &item : tool->m_items)
+				printCuttingToolItem(writer, item);
 
 			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 		}

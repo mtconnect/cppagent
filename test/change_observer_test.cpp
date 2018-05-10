@@ -31,6 +31,8 @@
 // SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 //
 #include "change_observer_test.hpp"
+#include <chrono>
+#include <thread>
 #include <dlib/misc_api.h>
 
 // Registers the fixture into the 'registry'
@@ -60,7 +62,7 @@ void ChangeObserverTest::testAddObserver()
 static void signaler(void *aObj)
 {
 	ChangeSignaler *s = (ChangeSignaler *) aObj;
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 	s->signalObservers(100);
 }
 
@@ -77,7 +79,7 @@ void ChangeObserverTest::testSignalObserver()
 	CPPUNIT_ASSERT(!obj.wait(500));
 
 	// Wait for things to clean up...
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 }
 
 void ChangeObserverTest::testCleanup()
@@ -115,7 +117,7 @@ void ChangeObserverTest::testChangeSequence()
 	CPPUNIT_ASSERT_EQUAL((uint64_t) 100ull, obj.getSequence());
 
 	// Wait for things to clean up...
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 }
 
 static void signaler3(void *aObj)
@@ -134,10 +136,10 @@ void ChangeObserverTest::testChangeSequence2()
 	m_signaler->addObserver(&obj);
 	dlib::create_new_thread(signaler3, m_signaler);
 	CPPUNIT_ASSERT(obj.wait(2000));
-	dlib::sleep(500);
+	this_thread::sleep_for(500ms);
 
 	CPPUNIT_ASSERT_EQUAL((uint64_t) 30ull, obj.getSequence());
 
 	// Wait for things to clean up...
-	dlib::sleep(1000);
+	this_thread::sleep_for(1000ms);
 }
