@@ -27,7 +27,7 @@ using namespace std;
 RollingFileLogger::RollingFileLogger(
 	std::string filename,
 	int maxBackupIndex,
-	size_t maxSize,
+	uint64 maxSize,
 	RollingSchedule schedule) :
 	m_name(filename),
 	m_maxBackupIndex(maxBackupIndex),
@@ -100,7 +100,7 @@ void RollingFileLogger::write(const char *message)
 }
 
 
-void RollingFileLogger::rollover(size_t size)
+void RollingFileLogger::rollover(uint64 size)
 {
 	std::lock_guard<std::mutex> lock(m_fileLock);
 
