@@ -15,8 +15,8 @@
 //
 #pragma once
 
-#include <cmath>
-#include "globals.hpp"
+#include <atomic>
+
 
 template<class T>
 class RefCountedPtr
@@ -112,25 +112,36 @@ class RefCounted
 public:
 	RefCounted()
 	{
-		m_refCount = 1;
+		m_refCount.store(1);
 	}
+
 	RefCounted(RefCounted &aRef)
 	{
-		m_refCount = 1;
+		m_refCount.store(1);
 	}
 
-	virtual ~RefCounted();
+	virtual ~RefCounted()
+	{
+	}
 
 	// Reference count management
-	void referTo();
-	void unrefer();
+	void referTo()
+	{
+		std::atomic_fetch_add(&m_refCount, 1);
+	}
+
+	void unrefer()
+	{
+		std::atomic_fetch_sub(&m_refCount, 1);
+		if(m_refCount <= 0)
+			delete this;
+	}
 
 	unsigned int refCount() {
-		return m_refCount; }
-//  bool operator<(RefCounted &aOther) { return this < &aOther; }
+		return m_refCount.load(); }
 
 protected:
 	// Reference count
-	AtomicInt m_refCount;
+	std::atomic_int m_refCount;
 };
 
