@@ -76,7 +76,7 @@ void AgentTest::testConstructor()
 
 void AgentTest::testBadPath()
 {
-	string pathError = getFile("../samples/test_error.xml");
+	auto pathError = getFile("../samples/test_error.xml");
 
 	{
 		m_path = "/bad_path";
@@ -305,13 +305,12 @@ void AgentTest::testAddAdapter()
 void AgentTest::testAddToBuffer()
 {
 	string device("LinuxCNC"), key("badKey"), value("ON");
-	int seqNum;
-	ComponentEvent *event1, *event2;
-	DataItem *di1 = m_agent->getDataItemByName(device, key);
-	seqNum = m_agent->addToBuffer(di1, value, "NOW");
+	auto di1 = m_agent->getDataItemByName(device, key);
+	CPPUNIT_ASSERT(!di1);
+	int seqNum = m_agent->addToBuffer(di1, value, "NOW");
 	CPPUNIT_ASSERT_EQUAL(0, seqNum);
 
-	event1 = m_agent->getFromBuffer(seqNum);
+	auto event1 = m_agent->getFromBuffer(seqNum);
 	CPPUNIT_ASSERT(!event1);
 
 	{
@@ -322,9 +321,9 @@ void AgentTest::testAddToBuffer()
 
 	key = "power";
 
-	DataItem *di2 = m_agent->getDataItemByName(device, key);
+	auto di2 = m_agent->getDataItemByName(device, key);
 	seqNum = m_agent->addToBuffer(di2, value, "NOW");
-	event2 = m_agent->getFromBuffer(seqNum);
+	auto event2 = m_agent->getFromBuffer(seqNum);
 	CPPUNIT_ASSERT_EQUAL(2, (int) event2->refCount());
 
 	{
@@ -655,7 +654,7 @@ void AgentTest::testAdapterCommands()
 {
 	m_path = "/probe";
 
-	Device *device = m_agent->getDeviceByName("LinuxCNC");
+	auto device = m_agent->getDeviceByName("LinuxCNC");
 	CPPUNIT_ASSERT(device);
 	CPPUNIT_ASSERT(!device->m_preserveUuid);
 
@@ -693,9 +692,9 @@ void AgentTest::testAdapterDeviceCommand()
 
 	m_path = "/probe";
 
-	Device *device1 = m_agent->getDeviceByName("Device1");
+	auto device1 = m_agent->getDeviceByName("Device1");
 	CPPUNIT_ASSERT(device1);
-	Device *device2 = m_agent->getDeviceByName("Device2");
+	auto device2 = m_agent->getDeviceByName("Device2");
 	CPPUNIT_ASSERT(device2);
 
 	m_adapter = m_agent->addAdapter("*", "server", 7878, false);
@@ -720,7 +719,7 @@ void AgentTest::testUUIDChange()
 {
 	m_path = "/probe";
 
-	Device *device = m_agent->getDeviceByName("LinuxCNC");
+	auto device = m_agent->getDeviceByName("LinuxCNC");
 	CPPUNIT_ASSERT(device);
 	CPPUNIT_ASSERT(!device->m_preserveUuid);
 
@@ -875,7 +874,7 @@ void AgentTest::testAutoAvailable()
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
 	m_adapter->setAutoAvailable(true);
-	Device *d = m_agent->getDevices()[0];
+	auto d = m_agent->getDevices()[0];
 	std::vector<Device *> devices;
 	devices.push_back(d);
 
@@ -920,7 +919,7 @@ void AgentTest::testMultipleDisconnect()
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
-	Device *d = m_agent->getDevices()[0];
+	auto d = m_agent->getDevices()[0];
 	std::vector<Device *> devices;
 	devices.push_back(d);
 
@@ -1856,7 +1855,7 @@ void AgentTest::testPutBlockingFrom()
 
 void AgentTest::killThread(void *aArg)
 {
-	AgentTest *test = (AgentTest*) aArg;
+	auto test = (AgentTest *) aArg;
 	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
 	test->m_out.setstate(ios::eofbit);
 }
@@ -1864,7 +1863,7 @@ void AgentTest::killThread(void *aArg)
 
 void AgentTest::addThread(void *aArg)
 {
-	AgentTest *test = (AgentTest*) aArg;
+	auto test = (AgentTest *) aArg;
 	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
 	test->m_adapter->processData("TIME|line|204");
 	test->m_out.setstate(ios::eofbit);
@@ -1888,14 +1887,14 @@ void AgentTest::testStreamData()
 	// Heartbeat test. Heartbeat should be sent in 100ms. Give
 	// 25ms range.
 	{
-		uint64 start = ts.get_timestamp();
+		auto start = ts.get_timestamp();
 
 		m_delay = 25;
 		dlib::create_new_thread(killThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
 
-		int64 delta = ts.get_timestamp() - start;
+		auto delta = ts.get_timestamp() - start;
 		CPPUNIT_ASSERT(delta < 225000);
 		CPPUNIT_ASSERT(delta > 200000);
 	}
@@ -1906,13 +1905,13 @@ void AgentTest::testStreamData()
 	// Set some data and make sure we get data within 20ms.
 	// Again, allow for some slop.
 	{
-		uint64 start = ts.get_timestamp();
+		auto start = ts.get_timestamp();
 
 		m_delay = 10;
 		dlib::create_new_thread(addThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 
-		int64 delta = ts.get_timestamp() - start;
+		auto delta = ts.get_timestamp() - start;
 		CPPUNIT_ASSERT(delta < 70000);
 		CPPUNIT_ASSERT(delta > 40000);
 	}
@@ -1928,7 +1927,7 @@ void AgentTest::testFailWithDuplicateDeviceUUID()
 
 void AgentTest::streamThread(void *aArg)
 {
-	AgentTest *test = (AgentTest*) aArg;
+	auto test = (AgentTest *) aArg;
 	this_thread::sleep_for(chrono::milliseconds(test->m_delay));
 	test->m_agent->setSequence(test->m_agent->getSequence() + 20);
 	test->m_adapter->processData("TIME|line|204");
@@ -1954,7 +1953,7 @@ void AgentTest::testStreamDataObserver()
 	// the new data.
 	{
 		m_delay = 50;
-		string seq = int64ToString(m_agent->getSequence() + 20);
+		auto seq = int64ToString(m_agent->getSequence() + 20);
 		dlib::create_new_thread(streamThread, this);
 		PARSE_XML_RESPONSE_QUERY(query);
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
@@ -2073,7 +2072,7 @@ void AgentTest::testDynamicCalibration()
 
 	// Add a 10.111000 seconds
 	m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
-	DataItem *di = m_agent->getDataItemByName("LinuxCNC", "Yact");
+	auto di = m_agent->getDataItemByName("LinuxCNC", "Yact");
 	CPPUNIT_ASSERT(di);
 
 	CPPUNIT_ASSERT(di->hasFactor());
@@ -2158,7 +2157,7 @@ void AgentTest::testFilterValues13()
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
 	}
 
-	DataItem *item = m_agent->getDataItemByName((string) "LinuxCNC", "pos");
+	auto item = m_agent->getDataItemByName((string) "LinuxCNC", "pos");
 	CPPUNIT_ASSERT(item);
 	CPPUNIT_ASSERT(item->hasMinimumDelta());
 
@@ -2346,11 +2345,11 @@ void AgentTest::testReferences()
 	CPPUNIT_ASSERT(m_adapter);
 
 	string id = "mf";
-	DataItem *item = m_agent->getDataItemByName((string) "LinuxCNC", id);
-	Component *comp = item->getComponent();
+	auto item = m_agent->getDataItemByName((string) "LinuxCNC", id);
+	auto comp = item->getComponent();
 
-	const list<Component::Reference> refs = comp->getReferences();
-	const Component::Reference &ref = refs.front();
+	const auto refs = comp->getReferences();
+	const auto ref = refs.front();
 
 	CPPUNIT_ASSERT_EQUAL((string) "c4", ref.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.m_name);
@@ -2389,7 +2388,7 @@ void AgentTest::testDiscrete()
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);
 
-	DataItem *msg = m_agent->getDataItemByName("LinuxCNC", "message");
+	auto msg = m_agent->getDataItemByName("LinuxCNC", "message");
 	CPPUNIT_ASSERT(msg);
 	CPPUNIT_ASSERT_EQUAL(true, msg->isDiscrete());
 
@@ -2463,7 +2462,7 @@ void AgentTest::testConditionSequence()
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);
 
-	DataItem *logic = m_agent->getDataItemByName("LinuxCNC", "lp");
+	auto logic = m_agent->getDataItemByName("LinuxCNC", "lp");
 	CPPUNIT_ASSERT(logic);
 
 	// Validate we are dup checking.
@@ -2560,10 +2559,10 @@ void AgentTest::testEmptyLastItemFromAdapter()
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);
 
-	DataItem *program = m_agent->getDataItemByName("LinuxCNC", "program");
+	auto  program = m_agent->getDataItemByName("LinuxCNC", "program");
 	CPPUNIT_ASSERT(program);
 
-	DataItem *tool_id = m_agent->getDataItemByName("LinuxCNC", "block");
+	auto tool_id = m_agent->getDataItemByName("LinuxCNC", "block");
 	CPPUNIT_ASSERT(tool_id);
 
 	{
@@ -2640,7 +2639,7 @@ xmlDocPtr AgentTest::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
 	if (m_result.empty())
 	{
 		m_result = m_out.str();
-		size_t pos = m_result.rfind("\n--");
+		auto pos = m_result.rfind("\n--");
 		if (pos != string::npos)
 		{
 			pos = m_result.find('<', pos);
@@ -2715,7 +2714,7 @@ void AgentTest::testConstantValue()
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 
-	DataItem *di = m_agent->getDataItemByName("LinuxCNC", "block");
+	auto di = m_agent->getDataItemByName("LinuxCNC", "block");
 	CPPUNIT_ASSERT(di);
 	di->addConstrainedValue("UNAVAILABLE");
 

@@ -50,29 +50,29 @@ Component::Component(
 	m_assetChanged(nullptr),
 	m_assetRemoved(nullptr)
 {
-	auto const idPos = attributes.find("id");
+	const auto idPos = attributes.find("id");
 	if(idPos != attributes.end())
 		m_id = idPos->second;
 
-	auto const namePos = attributes.find("name");
+	const auto namePos = attributes.find("name");
 	if(namePos != attributes.end())
 		m_name = namePos->second;
 
-	auto const nativeNamePos = attributes.find("nativeName");
+	const auto nativeNamePos = attributes.find("nativeName");
 	if(nativeNamePos != attributes.end())
 		m_nativeName = nativeNamePos->second;
 
-	auto const uuidPos = attributes.find("uuid");
+	const auto uuidPos = attributes.find("uuid");
 	if(uuidPos != attributes.end())
 		m_uuid = uuidPos->second;
 
 
-	auto const sampleIntervalPos = attributes.find("sampleInterval");
+	const auto sampleIntervalPos = attributes.find("sampleInterval");
 	if(sampleIntervalPos != attributes.end())
 		m_sampleInterval = atof(sampleIntervalPos->second.c_str());
 	else
 	{
-		auto const sampleRatePos = attributes.find("sampleRate");
+		const auto sampleRatePos = attributes.find("sampleRate");
 		if(sampleRatePos == attributes.end())
 			m_sampleInterval = 0.0f;
 		else

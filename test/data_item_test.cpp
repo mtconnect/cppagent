@@ -100,7 +100,7 @@ void DataItemTest::testGetters()
 
 void DataItemTest::testGetAttributes()
 {
-	auto const &attributes1 = m_dataItemA->getAttributes();
+	const auto &attributes1 = m_dataItemA->getAttributes();
 	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1.at("id"));
 	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", attributes1.at("name"));
 	CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes1.at("type"));
@@ -109,7 +109,7 @@ void DataItemTest::testGetAttributes()
 	CPPUNIT_ASSERT(attributes1.find("getNativeScale") == attributes1.end());
 	CPPUNIT_ASSERT(attributes1.find("coordinateSystem") == attributes1.end());
 
-	auto const &attributes2 = m_dataItemB->getAttributes();
+	const auto &attributes2 = m_dataItemB->getAttributes();
 	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2.at("id"));
 	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", attributes2.at("name"));
 	CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes2.at("type"));
@@ -265,7 +265,7 @@ void DataItemTest::testTimeSeries()
 	attributes1["units"] = "MILLIMETER";
 	attributes1["nativeUnits"] = "MILLIMETER";
 	attributes1["representation"] = "TIME_SERIES";
-	DataItem *d = new DataItem(attributes1);
+	auto d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("PositionTimeSeries"), d->getElementName());
 	delete d; d = nullptr;
@@ -296,7 +296,7 @@ void DataItemTest::testStatistic()
 	attributes1["units"] = "MILLIMETER";
 	attributes1["nativeUnits"] = "MILLIMETER";
 	attributes1["statistic"] = "AVERAGE";
-	DataItem *d = new DataItem(attributes1);
+	auto d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), d->getStatistic());
 	delete d; d = nullptr;
@@ -316,7 +316,7 @@ void DataItemTest::testSampleRate()
 	attributes1["statistic"] = "AVERAGE";
 	attributes1["representation"] = "TIME_SERIES";
 	attributes1["sampleRate"] = "42000";
-	DataItem *d = new DataItem(attributes1);
+	auto d = new DataItem(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("42000"), d->getSampleRate());
 	delete d; d = nullptr;
