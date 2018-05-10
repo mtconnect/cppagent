@@ -193,7 +193,7 @@ Agent::Agent(
 				value = &(d->getConstrainedValues()[0]);
 
 			addToBuffer(d, *value, time);
-			if (m_dataItemMap.count(d->getId()) == 0)
+			if (!m_dataItemMap.count(d->getId()))
 				m_dataItemMap[d->getId()] = d;
 			else
 			{
@@ -293,7 +293,7 @@ void Agent::registerFile(const string &aUri, const string &aPath)
 			m_fileMap.insert(pair<string, string>(uri, file.full_name()));
 
 			// Check if the file name maps to a standard MTConnect schema file.
-			if (name.find("MTConnect") == 0 &&
+			if (!name.find("MTConnect") &&
 				name.substr(name.length() - 4, 4) == ".xsd" &&
 				XmlPrinter::getSchemaVersion() == name.substr(name.length() - 7, 3))
 			{
@@ -355,7 +355,7 @@ const string Agent::on_request(const incoming_things &incoming, outgoing_things 
 		{
 			if ((incoming.request_type == "PUT" || incoming.request_type == "POST") &&
 				!m_putAllowedHosts.empty() &&
-				m_putAllowedHosts.count(incoming.foreign_ip) == 0)
+				!m_putAllowedHosts.count(incoming.foreign_ip))
 			{
 				return printError("UNSUPPORTED",
 					"HTTP PUT is not allowed from " + incoming.foreign_ip);
@@ -491,7 +491,7 @@ unsigned int Agent::addToBuffer(
 
 	// Checkpoint management
 	int index = m_slidingBuffer->get_element_id(seqNum);
-	if (m_checkpointCount > 0 && index % m_checkpointFreq == 0)
+	if (m_checkpointCount > 0 && !(index % m_checkpointFreq))
 	{
 		// Copy the checkpoint from the current into the slot
 		m_checkpoints[index / m_checkpointFreq].copy(m_latest);
@@ -1153,7 +1153,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 
 		struct stat fs;
 		auto res = stat(path, &fs);
-		if (res != 0)
+		if (res)
 		{
 			outgoing.http_return = 404;
 			outgoing.http_return_status = "File not found";

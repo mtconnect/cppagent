@@ -118,7 +118,7 @@ AgentConfiguration::AgentConfiguration() :
 		#ifdef MACOSX
 			char path[PATH_MAX];
 			uint32_t size = PATH_MAX;
-			success = _NSGetExecutablePath(path, &size) == 0;
+			success = !_NSGetExecutablePath(path, &size);
 		#else
 			char *path = "";
 			success = false;
@@ -158,7 +158,7 @@ void AgentConfiguration::initialize(int argc, const char *argv[])
 		struct stat buf;
 
 		// Check first if the file is in the current working directory...
-		if (stat(m_configFile.c_str(), &buf) != 0)
+		if (stat(m_configFile.c_str(), &buf))
 		{
 			if (!m_exePath.empty())
 			{
@@ -208,9 +208,9 @@ void AgentConfiguration::monitorThread()
 {
 	struct stat devices_at_start, cfg_at_start;
 
-	if (stat(m_configFile.c_str(), &cfg_at_start) != 0)
+	if (stat(m_configFile.c_str(), &cfg_at_start))
 		g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
-	if (stat(m_devicesFile.c_str(), &devices_at_start) != 0)
+	if (stat(m_devicesFile.c_str(), &devices_at_start))
 		g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
 
 	g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile <<
@@ -226,13 +226,13 @@ void AgentConfiguration::monitorThread()
 		struct stat devices, cfg;
 		bool check = true;
 
-		if (stat(m_configFile.c_str(), &cfg) != 0)
+		if (stat(m_configFile.c_str(), &cfg))
 		{
 			g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", retrying in 10 seconds";
 			check = false;
 		}
 
-		if (stat(m_devicesFile.c_str(), &devices) != 0)
+		if (stat(m_devicesFile.c_str(), &devices))
 		{
 			g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", retrying in 10 seconds";
 			check = false;
@@ -430,7 +430,7 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
 					sin >> one;
 					sin >> two;
 					sin >> three;
-					if (one == "file" && three.size() == 0)
+					if (one == "file" && !three.size())
 						name = two;
 					else
 						name = one;
@@ -542,7 +542,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 		auto res = stat(probe.c_str(), &buf);
 		g_logger << LDEBUG << "  Stat returned: " << res;
 
-		if (res == 0)
+		if (!res)
 		{
 			m_devicesFile = probe;
 			break;
@@ -738,7 +738,7 @@ void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &reader)
 			if (!putHost.empty())
 			{
 				string ip;
-				for (auto n = 0; dlib::hostname_to_ip(putHost, ip, n) == 0 && ip == "0.0.0.0"; n++)
+				for (auto n = 0; !dlib::hostname_to_ip(putHost, ip, n) && ip == "0.0.0.0"; n++)
 					ip = "";
 				if (!ip.empty())
 				{

@@ -126,7 +126,7 @@ void Connector::connect()
 		#else
 			struct sched_param param;
 			param.sched_priority = 30;
-			if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param) != 0)
+			if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param))
 			g_logger << LDEBUG << "Cannot set high thread priority";
 		#endif
 		}
@@ -255,7 +255,7 @@ void Connector::parseBuffer(const char *buffer)
 			// Check for heartbeats
 			if (line[0] == '*')
 			{
-				if (line.compare(0, 6, "* PONG") == 0)
+				if (!line.compare(0, 6, "* PONG"))
 				{
 					if (g_logger.level().priority <= LDEBUG.priority)
 					{
