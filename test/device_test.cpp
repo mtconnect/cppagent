@@ -78,21 +78,21 @@ void DeviceTest::testGetters()
 
 void DeviceTest::testGetAttributes()
 {
-	map<string, string> &attributes1 = *m_devA->getAttributes();
+	auto const &attributes1 = m_devA->getAttributes();
 
-	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1["id"]);
-	CPPUNIT_ASSERT_EQUAL((string) "DeviceTest1", attributes1["name"]);
-	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", attributes1["uuid"]);
-	CPPUNIT_ASSERT(attributes1["sampleRate"].empty());
-	CPPUNIT_ASSERT_EQUAL((string) "4", attributes1["iso841Class"]);
+	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1.at("id"));
+	CPPUNIT_ASSERT_EQUAL((string) "DeviceTest1", attributes1.at("name"));
+	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", attributes1.at("uuid"));
+	CPPUNIT_ASSERT(attributes1.find("sampleRate") == attributes1.end());
+	CPPUNIT_ASSERT_EQUAL((string) "4", attributes1.at("iso841Class"));
 
-	map<string, string> &attributes2 = *m_devB->getAttributes();
+	auto const &attributes2 = m_devB->getAttributes();
 
-	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["id"]);
-	CPPUNIT_ASSERT_EQUAL((string) "DeviceTest2", attributes2["name"]);
-	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", attributes2["uuid"]);
-	CPPUNIT_ASSERT_EQUAL((string) "123.4", attributes2["sampleInterval"]);
-	CPPUNIT_ASSERT_EQUAL((string) "6", attributes2["iso841Class"]);
+	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2.at("id"));
+	CPPUNIT_ASSERT_EQUAL((string) "DeviceTest2", attributes2.at("name"));
+	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", attributes2.at("uuid"));
+	CPPUNIT_ASSERT_EQUAL((string) "123.4", attributes2.at("sampleInterval"));
+	CPPUNIT_ASSERT_EQUAL((string) "6", attributes2.at("iso841Class"));
 }
 
 void DeviceTest::testDescription()

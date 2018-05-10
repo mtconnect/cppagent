@@ -22,16 +22,17 @@ using namespace std;
 static dlib::logger g_logger("device");
 
 
-Device::Device(std::map<std::string, std::string> attributes) :
+Device::Device(const std::map<std::string, std::string> &attributes) : 
 	Component("Device", attributes),
 	m_preserveUuid(false),
 	m_availabilityAdded(false),
 	m_iso841Class(-1)
 {
-	if (!attributes["iso841Class"].empty())
+	auto const isoPos = attributes.find("iso841Class");
+	if (isoPos != attributes.end())
 	{
-		m_iso841Class = atoi(attributes["iso841Class"].c_str());
-		m_attributes["iso841Class"] = attributes["iso841Class"];
+		m_iso841Class = atoi(isoPos->second.c_str());
+		m_attributes["iso841Class"] = isoPos->second;
 	}
 }
 
@@ -49,7 +50,7 @@ void Device::addDeviceDataItem(DataItem &dataItem)
 	if (!dataItem.getName().empty())
 		m_deviceDataItemsByName[dataItem.getName()] = &dataItem;
 
-	if (m_deviceDataItemsById[dataItem.getId()])
+	if(m_deviceDataItemsById.find(dataItem.getId()) != m_deviceDataItemsById.end())
 	{
 		g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem.getId() << " for device "
 				<< m_name << ", skipping";
@@ -61,16 +62,17 @@ void Device::addDeviceDataItem(DataItem &dataItem)
 
 DataItem *Device::getDeviceDataItem(const std::string &name)
 {
-	DataItem *di;
+	auto const sourcePos = m_deviceDataItemsBySource.find(name);
+	if(sourcePos != m_deviceDataItemsBySource.end())
+		return sourcePos->second;
 
-	if (m_deviceDataItemsBySource.count(name) > 0 && (di = m_deviceDataItemsBySource[name]))
-		return di;
-	else if (m_deviceDataItemsByName.count(name) > 0 && (di = m_deviceDataItemsByName[name]))
-		return di;
-	else if (m_deviceDataItemsById.count(name) > 0)
-		di = m_deviceDataItemsById[name];
-	else
-		di = nullptr;
+	auto const namePos = m_deviceDataItemsByName.find(name);
+	if(namePos != m_deviceDataItemsByName.end())
+		return namePos->second;
 
-	return di;
+	auto const &idPos = m_deviceDataItemsById.find(name);
+	if(idPos != m_deviceDataItemsById.end())
+		return idPos->second;
+
+	return nullptr;
 }

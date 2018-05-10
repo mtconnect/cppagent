@@ -80,19 +80,19 @@ void ComponentTest::testGetters()
 
 void ComponentTest::testGetAttributes()
 {
-	map<string, string> *attributes1 = m_compA->getAttributes();
+	auto const &attributes1 = m_compA->getAttributes();
 
-	CPPUNIT_ASSERT_EQUAL((string) "1", (*attributes1)["id"]);
-	CPPUNIT_ASSERT_EQUAL((string) "ComponentTest1", (*attributes1)["name"]);
-	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", (*attributes1)["uuid"]);
-	CPPUNIT_ASSERT((*attributes1)["sampleRate"].empty());
+	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1.at("id"));
+	CPPUNIT_ASSERT_EQUAL((string) "ComponentTest1", attributes1.at("name"));
+	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", attributes1.at("uuid"));
+	CPPUNIT_ASSERT(attributes1.find("sampleRate") == attributes1.end());
 
-	map<string, string> *attributes2 = m_compB->getAttributes();
+	auto const &attributes2 = m_compB->getAttributes();
 
-	CPPUNIT_ASSERT_EQUAL((string) "3", (*attributes2)["id"]);
-	CPPUNIT_ASSERT_EQUAL((string) "ComponentTest2", (*attributes2)["name"]);
-	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", (*attributes2)["uuid"]);
-	CPPUNIT_ASSERT_EQUAL((string) "123.4", (*attributes2)["sampleInterval"]);
+	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2.at("id"));
+	CPPUNIT_ASSERT_EQUAL((string) "ComponentTest2", attributes2.at("name"));
+	CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", attributes2.at("uuid"));
+	CPPUNIT_ASSERT_EQUAL((string) "123.4", attributes2.at("sampleInterval"));
 }
 
 void ComponentTest::testDescription()

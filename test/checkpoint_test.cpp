@@ -394,7 +394,7 @@ void CheckpointTest::testConditionChaining()
 	CPPUNIT_ASSERT_EQUAL((ComponentEvent *) 0, p5->getPrev());
 
 	// Check cleanup
-	ComponentEventPtr *p7 = m_checkpoint->getEvents()[std::string("1")];
+	ComponentEventPtr *p7 = m_checkpoint->getEvents().at(std::string("1"));
 	CPPUNIT_ASSERT_EQUAL(1, (int)(*p7)->refCount());
 
 	CPPUNIT_ASSERT(p7);
