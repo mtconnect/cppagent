@@ -304,9 +304,9 @@ void Option::expandFiles(const char *fileName)
 
 bool Option::operator<(const Option &another) const
 {
-	if (!name_ && another.getName() != 0)
+	if (!name_ && another.getName())
 		return false;
-	else if (name_ != 0 && !another.getName())
+	else if (name_ && !another.getName())
 		return true;
 	else if (!name_ && !another.getName())
 	{
@@ -348,7 +348,7 @@ OptionsList::OptionsList(Option *optionList[])
 	ownsOptions_ = false;
 	int i = 0;
 
-	while (optionList[i] != 0)
+	while (optionList[i])
 		push_back(*optionList[i++]);
 }
 
@@ -385,7 +385,7 @@ int OptionsList::parse(int &argc, const char **argv)
 			cp = (*argp) + 1;
 			bool next = false;
 
-			while (*cp != 0 && !next)
+			while (*cp && !next)
 			{
 				if (find(cp, opt))
 				{

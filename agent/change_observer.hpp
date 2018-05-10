@@ -46,7 +46,7 @@ public:
 	{
 		dlib::auto_mutex lock(m_mutex);
 
-		if (m_sequence > sequence && sequence != 0)
+		if (m_sequence > sequence && sequence)
 			m_sequence = sequence;
 
 		m_signal.signal();

@@ -114,7 +114,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 		string locationUrn;
 		auto location = (const char *) xmlGetProp(root, BAD_CAST "schemaLocation");
 
-		if (location && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34) != 0)
+		if (location && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34))
 		{
 			string loc = location;
 			auto pos = loc.find(' ');
@@ -145,7 +145,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 				// Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the
 				// schema location again.
 				if (!isMTConnectUrn((const char *) ns->href) &&
-					strncmp((const char *) ns->href, "http://www.w3.org/", 18) != 0 &&
+					strncmp((const char *) ns->href, "http://www.w3.org/", 18) &&
 					locationUrn != (const char *) ns->href &&
 					ns->prefix)
 				{
@@ -269,7 +269,7 @@ void XmlParser::getDataItems(
 			{
 				if (ns->prefix)
 				{
-					if (strncmp((const char *) ns->href, "urn:mtconnect.org:MTConnectDevices", 34) != 0)
+					if (strncmp((const char *) ns->href, "urn:mtconnect.org:MTConnectDevices", 34))
 					{
 						THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
 					}
@@ -472,8 +472,8 @@ Component *XmlParser::loadComponent(
 		string prefix;
 
 		if (node->ns && 
-			node->ns->prefix != 0 &&
-			strncmp((const char *) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34) != 0)
+			node->ns->prefix &&
+			strncmp((const char *) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34))
 		{
 			prefix = (const char *) node->ns->prefix;
 		}
@@ -860,7 +860,7 @@ CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr node, xmlDocPtr doc)
 			CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
 			item->m_lives.push_back(value);
 		}
-		else if (xmlStrcmp(child->name, BAD_CAST "text") != 0)
+		else if (xmlStrcmp(child->name, BAD_CAST "text"))
 		{
 			CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
 			item->m_values[value->m_key] = value;
@@ -899,7 +899,7 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 		{
 			for (xmlNodePtr meas = child->children; meas; meas = meas->next)
 			{
-				if (xmlStrcmp(meas->name, BAD_CAST "text") != 0)
+				if (xmlStrcmp(meas->name, BAD_CAST "text"))
 				{
 					CuttingToolValuePtr value = parseCuttingToolNode(meas, doc);
 					tool->m_measurements[value->m_key] = value;
@@ -927,7 +927,7 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 			CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
 			tool->m_lives.push_back(value);
 		}
-		else if (xmlStrcmp(child->name, BAD_CAST "text") != 0)
+		else if (xmlStrcmp(child->name, BAD_CAST "text"))
 			tool->addValue(parseCuttingToolNode(child, doc));
 	}
 }
@@ -1020,7 +1020,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 				{
 					parseCuttingToolLife(tool, child, doc);
 				}
-				else if (xmlStrcmp(child->name, BAD_CAST "text") != 0)
+				else if (xmlStrcmp(child->name, BAD_CAST "text"))
 				{
 					auto text = xmlNodeGetContent(child);
 

@@ -126,7 +126,7 @@ void Connector::connect()
 		#else
 			struct sched_param param;
 			param.sched_priority = 30;
-			if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param) != 0)
+			if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param))
 			g_logger << LDEBUG << "Cannot set high thread priority";
 		#endif
 		}
