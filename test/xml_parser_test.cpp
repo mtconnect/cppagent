@@ -419,7 +419,7 @@ void XmlParserTest::testFilteredDataItem13()
 		m_xmlParser = new XmlParser();
 		m_devices = m_xmlParser->parseFile("../samples/filter_example_1.3.xml");
 	}
-	catch (exception & e)
+	catch (exception &)
 	{
 		CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example_1.3.xml");
 	}
