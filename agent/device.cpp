@@ -35,6 +35,7 @@ Device::Device(std::map<std::string, std::string> attributes) :
 	}
 }
 
+
 Device::~Device()
 {
 }

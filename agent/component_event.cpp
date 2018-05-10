@@ -37,7 +37,7 @@ const string ComponentEvent::SLevels[NumLevels] =
 
 inline static bool splitValue(string &value, string &reset)
 {
-	size_t found = value.find_first_of(':');
+	auto found = value.find_first_of(':');
 
 	if (found == string::npos)
 	{
@@ -62,7 +62,7 @@ ComponentEvent::ComponentEvent(
 	m_dataItem = &dataItem;
 	m_isTimeSeries = m_dataItem->isTimeSeries();
 	m_sequence = sequence;
-	size_t pos = time.find('@');
+	auto pos = time.find('@');
 
 	if (pos != string::npos)
 	{
@@ -86,6 +86,7 @@ ComponentEvent::ComponentEvent(
 	else
 		convertValue(value);
 }
+
 
 ComponentEvent::ComponentEvent(ComponentEvent &componentEvent)
 {
@@ -240,6 +241,7 @@ AttributeList *ComponentEvent::getAttributes()
 	return &m_attributes;
 }
 
+
 void ComponentEvent::normal()
 {
 	if (m_dataItem->isCondition())
@@ -265,7 +267,7 @@ void ComponentEvent::convertValue(const string &value)
 		m_dataItem->isAssetChanged() ||
 		m_dataItem->isAssetRemoved())
 	{
-		string::size_type lastPipe = value.rfind('|');
+		auto lastPipe = value.rfind('|');
 
 		// Alarm data = CODE|NATIVECODE|SEVERITY|STATE
 		// Conditon data: SEVERITY|NATIVE_CODE|[SUB_TYPE]
@@ -275,7 +277,7 @@ void ComponentEvent::convertValue(const string &value)
 		// sValue = DESCRIPTION
 		if (m_isTimeSeries)
 		{
-			const char *cp = value.c_str();
+			auto cp = value.c_str();
 			cp += lastPipe + 1;
 
 			// Check if conversion is required...
@@ -338,7 +340,7 @@ ComponentEvent *ComponentEvent::find(const std::string &code)
 bool ComponentEvent::replace(ComponentEvent *oldEvent,
 							 ComponentEvent *newEvent)
 {
-	ComponentEvent *obj = m_prev.getObject();
+	auto obj = m_prev.getObject();
 
 	if (!obj)
 		return false;
@@ -356,7 +358,7 @@ bool ComponentEvent::replace(ComponentEvent *oldEvent,
 
 ComponentEvent *ComponentEvent::deepCopy()
 {
-	ComponentEvent *n = new ComponentEvent(*this);
+	auto n = new ComponentEvent(*this);
 
 	if (m_prev.getObject())
 	{
@@ -377,7 +379,7 @@ ComponentEvent *ComponentEvent::deepCopyAndRemove(ComponentEvent *old)
 			return nullptr;
 	}
 
-	ComponentEvent *n = new ComponentEvent(*this);
+	auto n = new ComponentEvent(*this);
 
 	if (m_prev.getObject())
 	{

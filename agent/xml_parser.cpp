@@ -81,7 +81,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 		std::string path = "//Devices/*";
 		THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(m_doc));
 
-		xmlNodePtr root = xmlDocGetRootElement(m_doc);
+		auto root = xmlDocGetRootElement(m_doc);
 
 		if (root->ns)
 		{
@@ -95,7 +95,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 
 				if (ns.find_first_of("urn:mtconnect.org:MTConnectDevices") == 0)
 				{
-					int last = ns.find_last_of(':');
+					auto last = ns.find_last_of(':');
 
 					if (last != string::npos)
 					{
@@ -109,20 +109,20 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 		// Add additional namespaces to the printer if they are referenced
 		// here.
 		string locationUrn;
-		const char *location = (const char *) xmlGetProp(root, BAD_CAST "schemaLocation");
+		auto location = (const char *) xmlGetProp(root, BAD_CAST "schemaLocation");
 
 		if (location && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34) != 0)
 		{
 			string loc = location;
-			size_t pos = loc.find(' ');
+			auto pos = loc.find(' ');
 
 			if (pos != string::npos)
 			{
 				locationUrn = loc.substr(0, pos);
-				string uri = loc.substr(pos + 1);
+				auto uri = loc.substr(pos + 1);
 
 				// Try to find the prefix for this urn...
-				xmlNsPtr ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
+				auto ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
 				string prefix;
 
 				if (ns->prefix)
@@ -135,7 +135,7 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 		// Add the rest of the namespaces...
 		if (root->nsDef)
 		{
-			xmlNsPtr ns = root->nsDef;
+			auto ns = root->nsDef;
 
 			while (ns)
 			{
@@ -416,7 +416,7 @@ Component *XmlParser::handleComponent(
 
 			if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
 			{
-				xmlChar *text = xmlNodeGetContent(child);
+				auto text = xmlNodeGetContent(child);
 
 				if (text)
 				{
@@ -430,7 +430,7 @@ Component *XmlParser::handleComponent(
 				xmlNodePtr config = child->children;
 				xmlBufferPtr buf;
 				THROW_IF_XML2_NULL(buf = xmlBufferCreate());
-				int count = xmlNodeDump(buf, config->doc, config, 0, 0);
+				auto count = xmlNodeDump(buf, config->doc, config, 0, 0);
 
 				if (count > 0)
 					toReturn->setConfiguration((string)(const char *) buf->content);
@@ -452,7 +452,7 @@ Component *XmlParser::loadComponent(
 	string &name
 )
 {
-	std::map<string, string> attributes = getAttributes(node);
+	auto attributes = getAttributes(node);
 
 	switch (spec)
 	{
@@ -494,7 +494,7 @@ void XmlParser::loadDataItem(
 	Device *device
 )
 {
-	DataItem *d = new DataItem(getAttributes(dataItem));
+	auto d = new DataItem(getAttributes(dataItem));
 	d->setComponent(*parent);
 
 	if (dataItem->children)
@@ -507,7 +507,7 @@ void XmlParser::loadDataItem(
 
 			if (xmlStrcmp(child->name, BAD_CAST "Source") == 0)
 			{
-				xmlChar *text = xmlNodeGetContent(child);
+				auto text = xmlNodeGetContent(child);
 
 				if (text)
 				{
@@ -522,7 +522,7 @@ void XmlParser::loadDataItem(
 					if (constraint->type != XML_ELEMENT_NODE)
 						continue;
 
-					xmlChar *text = xmlNodeGetContent(constraint);
+					auto text = xmlNodeGetContent(constraint);
 
 					if (!text)
 						continue;
@@ -569,13 +569,13 @@ void XmlParser::loadDataItem(
 			}
 			else if (xmlStrcmp(child->name, BAD_CAST "InitialValue") == 0)
 			{
-				xmlChar *text = xmlNodeGetContent(child);
+				auto text = xmlNodeGetContent(child);
 				d->setInitialValue(string((const char *)text));
 				xmlFree(text);
 			}
 			else if (xmlStrcmp(child->name, BAD_CAST "ResetTrigger") == 0)
 			{
-				xmlChar *text = xmlNodeGetContent(child);
+				auto text = xmlNodeGetContent(child);
 				d->setResetTrigger(string((const char *)text));
 				xmlFree(text);
 			}
@@ -590,13 +590,13 @@ void XmlParser::loadDataItem(
 void XmlParser::handleComposition(xmlNodePtr composition,
 				  Component *parent)
 {
-	Composition *comp = new Composition(getAttributes(composition));
+	auto comp = new Composition(getAttributes(composition));
 
 	for (xmlNodePtr child = composition->children; child; child = child->next)
 	{
 		if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
 		{
-			xmlChar *text = xmlNodeGetContent(child);
+			auto text = xmlNodeGetContent(child);
 			string body;
 
 			if (text)
@@ -634,7 +634,7 @@ void XmlParser::handleRefenence(
 	Component *parent,
 	Device *device)
 {
-	map<string, string> attrs = getAttributes(reference);
+	auto attrs = getAttributes(reference);
 	string name;
 
 	if (attrs.count("name") > 0)
@@ -672,7 +672,7 @@ AssetPtr XmlParser::parseAsset(
 		std::string path = "//Assets/*";
 		THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(document));
 
-		xmlNodePtr root = xmlDocGetRootElement(document);
+		auto root = xmlDocGetRootElement(document);
 
 		if (root->ns)
 		{
@@ -695,7 +695,7 @@ AssetPtr XmlParser::parseAsset(
 		}
 		else
 		{
-			xmlNodeSetPtr nodeset = assetNodes->nodesetval;
+			auto nodeset = assetNodes->nodesetval;
 			node = nodeset->nodeTab[0];
 		}
 
@@ -772,7 +772,7 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr d
 
 	if (!node->children)
 	{
-		xmlChar *text = xmlNodeGetContent(node);
+		auto text = xmlNodeGetContent(node);
 
 		if (text)
 		{
@@ -965,7 +965,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 				}
 				else if (xmlStrcmp(child->name, BAD_CAST "Description") == 0)
 				{
-					xmlChar *text = xmlNodeGetContent(child);
+					auto text = xmlNodeGetContent(child);
 
 					if (text)
 					{
@@ -975,7 +975,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 				}
 				else if (xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition") == 0)
 				{
-					xmlChar *text = xmlNodeGetContent(child);
+					auto text = xmlNodeGetContent(child);
 
 					if (text)
 					{
@@ -989,7 +989,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 				}
 				else if (xmlStrcmp(child->name, BAD_CAST "text") != 0)
 				{
-					xmlChar *text = xmlNodeGetContent(child);
+					auto text = xmlNodeGetContent(child);
 
 					if (text)
 					{
@@ -1025,11 +1025,11 @@ void XmlParser::updateAsset(
 		THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST content.c_str(), "file://node.xml",
 						  nullptr, XML_PARSE_NOBLANKS));
 
-		xmlNodePtr root = xmlDocGetRootElement(document);
+		auto root = xmlDocGetRootElement(document);
 
 		if (xmlStrcmp(BAD_CAST "CuttingItem", root->name) == 0)
 		{
-			CuttingItemPtr item = parseCuttingItem(root, document);
+			auto item = parseCuttingItem(root, document);
 
 			for (size_t i = 0; i < ptr->m_items.size(); i++)
 			{
@@ -1042,7 +1042,7 @@ void XmlParser::updateAsset(
 		}
 		else
 		{
-			CuttingToolValuePtr value = parseCuttingToolNode(root, document);
+			auto value = parseCuttingToolNode(root, document);
 
 			if (ptr->m_values.count(value->m_key) > 0)
 				ptr->addValue(value);
