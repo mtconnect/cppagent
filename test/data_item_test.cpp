@@ -39,6 +39,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DataItemTest);
 
 using namespace std;
 
+
 void DataItemTest::setUp()
 {
 	std::map<string, string> attributes1, attributes2, attributes3;
@@ -68,12 +69,14 @@ void DataItemTest::setUp()
 	m_dataItemC = new DataItem(attributes3);
 }
 
+
 void DataItemTest::tearDown()
 {
 	delete m_dataItemA;
 	delete m_dataItemB;
 	delete m_dataItemC;
 }
+
 
 void DataItemTest::testGetters()
 {
@@ -93,6 +96,7 @@ void DataItemTest::testGetters()
 	CPPUNIT_ASSERT_EQUAL(m_dataItemB->getNativeUnits(), m_dataItemB->getUnits());
 	CPPUNIT_ASSERT_EQUAL(1.0f, m_dataItemB->getNativeScale());
 }
+
 
 void DataItemTest::testGetAttributes()
 {
@@ -116,6 +120,7 @@ void DataItemTest::testGetAttributes()
 						 attributes2.at("coordinateSystem"));
 }
 
+
 void DataItemTest::testHasNameAndSource()
 {
 	CPPUNIT_ASSERT(m_dataItemA->hasName("DataItemTest1"));
@@ -133,11 +138,13 @@ void DataItemTest::testHasNameAndSource()
 	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", m_dataItemB->getSourceOrName());
 }
 
+
 void DataItemTest::testIsSample()
 {
 	CPPUNIT_ASSERT(m_dataItemA->isSample());
 	CPPUNIT_ASSERT(!m_dataItemB->isSample());
 }
+
 
 void DataItemTest::testComponent()
 {
@@ -152,6 +159,7 @@ void DataItemTest::testComponent()
 
 	CPPUNIT_ASSERT_EQUAL(&axes, m_dataItemA->getComponent());
 }
+
 
 void DataItemTest::testGetCamel()
 {
@@ -169,6 +177,7 @@ void DataItemTest::testGetCamel()
 	CPPUNIT_ASSERT_EQUAL((string) "CamelCase", DataItem::getCamelType("x:CAMEL_CASE", prefix));
 	CPPUNIT_ASSERT_EQUAL((string) "x", prefix);
 }
+
 
 void DataItemTest::testConversion()
 {
@@ -238,10 +247,12 @@ void DataItemTest::testConversion()
 
 }
 
+
 void DataItemTest::testCondition()
 {
 	CPPUNIT_ASSERT_EQUAL(DataItem::CONDITION, m_dataItemC->getCategory());
 }
+
 
 void DataItemTest::testTimeSeries()
 {
@@ -273,6 +284,7 @@ void DataItemTest::testTimeSeries()
 	delete d;
 }
 
+
 void DataItemTest::testStatistic()
 {
 	std::map<string, string> attributes1;
@@ -289,6 +301,7 @@ void DataItemTest::testStatistic()
 	CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), d->getStatistic());
 	delete d;
 }
+
 
 void DataItemTest::testSampleRate()
 {
@@ -309,12 +322,14 @@ void DataItemTest::testSampleRate()
 	delete d;
 }
 
+
 void DataItemTest::testDuplicates()
 {
 	CPPUNIT_ASSERT(!m_dataItemA->isDuplicate("FOO"));
 	CPPUNIT_ASSERT(m_dataItemA->isDuplicate("FOO"));
 	CPPUNIT_ASSERT(!m_dataItemA->isDuplicate("FOO2"));
 }
+
 
 void DataItemTest::testFilter()
 {

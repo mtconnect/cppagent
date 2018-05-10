@@ -43,7 +43,6 @@ using namespace std;
   testValueHelper(attributes, nativeUnits, expected, value, CPPUNIT_SOURCELINE())
 
 
-// ComponentEventTest public methods
 void ComponentEventTest::setUp()
 {
 	std::map<string, string> attributes1, attributes2;
@@ -70,6 +69,7 @@ void ComponentEventTest::setUp()
 	m_compEventB = new ComponentEvent(*m_dataItem2, 4, time, value);
 }
 
+
 void ComponentEventTest::tearDown()
 {
 	m_compEventA->unrefer();
@@ -77,6 +77,7 @@ void ComponentEventTest::tearDown()
 	delete m_dataItem1;
 	delete m_dataItem2;
 }
+
 
 void ComponentEventTest::testConstructors()
 {
@@ -91,6 +92,7 @@ void ComponentEventTest::testConstructors()
 
 	ce->unrefer();
 }
+
 
 void ComponentEventTest::testGetAttributes()
 {
@@ -125,6 +127,7 @@ void ComponentEventTest::testGetAttributes()
 	CPPUNIT_ASSERT_EQUAL((string) "4", attributes2["sequence"]);
 }
 
+
 void ComponentEventTest::testGetters()
 {
 	CPPUNIT_ASSERT_EQUAL(m_dataItem1, m_compEventA->getDataItem());
@@ -133,6 +136,7 @@ void ComponentEventTest::testGetters()
 	CPPUNIT_ASSERT_EQUAL((string) "DESCRIPTION", m_compEventA->getValue());
 	CPPUNIT_ASSERT_EQUAL((string) "1.1231", m_compEventB->getValue());
 }
+
 
 void ComponentEventTest::testConvertValue()
 {
@@ -148,12 +152,13 @@ void ComponentEventTest::testConvertValue()
 	TEST_VALUE(attributes, "REVOLUTION/SECOND", 2.0f * 60.0f, value);
 	TEST_VALUE(attributes, "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, value);
 	TEST_VALUE(attributes, "MILLIMETER/MINUTE^3",
-		   (2.0f) / (60.0f * 60.0f * 60.0f), value);
+		(2.0f) / (60.0f * 60.0f * 60.0f), value);
 
 	attributes["nativeScale"] = "0.5";
 	TEST_VALUE(attributes, "MILLIMETER/MINUTE^3",
-		   (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), value);
+		(2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), value);
 }
+
 
 void ComponentEventTest::testConvertSimpleUnits()
 {
@@ -171,7 +176,7 @@ void ComponentEventTest::testConvertSimpleUnits()
 	TEST_VALUE(attributes, "DECIMETER", 2.0f * 100.0f, value);
 	TEST_VALUE(attributes, "METER", 2.0f * 1000.0f, value);
 	TEST_VALUE(attributes, "FAHRENHEIT",
-		   (2.0f - 32.0f) * (5.0f / 9.0f), value);
+		(2.0f - 32.0f) * (5.0f / 9.0f), value);
 	TEST_VALUE(attributes, "POUND", 2.0f * 0.45359237f, value);
 	TEST_VALUE(attributes, "GRAM", 2.0f / 1000.0f, value);
 	TEST_VALUE(attributes, "RADIAN", 2.0f * 57.2957795f, value);
@@ -180,6 +185,7 @@ void ComponentEventTest::testConvertSimpleUnits()
 	TEST_VALUE(attributes, "MILLIMETER", 2.0f, value);
 	TEST_VALUE(attributes, "PERCENT", 2.0f, value);
 }
+
 
 void ComponentEventTest::testValueHelper(
 	std::map<string, string> &attributes,
@@ -203,9 +209,10 @@ void ComponentEventTest::testValueHelper(
 		" and actual "
 		<< event->getValue() << " differ (" << diff << ") by more than 0.001";
 	CPPUNIT_NS::Asserter::failIf(diff > 0.001,
-				 message.str(),
-				 sourceLine);
+		message.str(),
+		sourceLine);
 }
+
 
 void ComponentEventTest::testRefCounts()
 {
@@ -227,26 +234,27 @@ void ComponentEventTest::testRefCounts()
 	CPPUNIT_ASSERT(event->refCount() == 1);
 
 	{
-	ComponentEventPtr prt(event);
-	CPPUNIT_ASSERT(event->refCount() == 2);
+		ComponentEventPtr prt(event);
+		CPPUNIT_ASSERT(event->refCount() == 2);
 	}
 
 	CPPUNIT_ASSERT(event->refCount() == 1);
 	event->referTo();
 	CPPUNIT_ASSERT(event->refCount() == 2);
 	{
-	ComponentEventPtr prt(event, true);
-	CPPUNIT_ASSERT(event->refCount() == 2);
+		ComponentEventPtr prt(event, true);
+		CPPUNIT_ASSERT(event->refCount() == 2);
 	}
 	CPPUNIT_ASSERT(event->refCount() == 1);
 
 	{
-	ComponentEventPtr prt;
-	prt = event;
-	CPPUNIT_ASSERT(prt->refCount() == 2);
+		ComponentEventPtr prt;
+		prt = event;
+		CPPUNIT_ASSERT(prt->refCount() == 2);
 	}
 	CPPUNIT_ASSERT(event->refCount() == 1);
 }
+
 
 void ComponentEventTest::testStlLists()
 {
@@ -264,6 +272,7 @@ void ComponentEventTest::testStlLists()
 	CPPUNIT_ASSERT_EQUAL(3, (int) event->refCount());
 
 }
+
 
 void ComponentEventTest::testEventChaining()
 {
@@ -297,6 +306,7 @@ void ComponentEventTest::testEventChaining()
 	CPPUNIT_ASSERT_EQUAL(list2.back().getObject(), event2.getObject());
 }
 
+
 void ComponentEventTest::testCondition()
 {
 	string time("NOW");
@@ -307,8 +317,7 @@ void ComponentEventTest::testCondition()
 	attributes1["category"] = "CONDITION";
 	DataItem *d = new DataItem(attributes1);
 
-	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "FAULT|4321|1|HIGH|Overtemp"),
-				 true);
+	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "FAULT|4321|1|HIGH|Overtemp"), true);
 
 	CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event1->getLevel());
 	CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event1->getValue());
@@ -326,8 +335,7 @@ void ComponentEventTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL((string) "1", attrs1["nativeSeverity"]);
 	CPPUNIT_ASSERT_EQUAL((string) "Fault", event1->getLevelString());
 
-	ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4322|2|LOW|Overtemp"),
-				 true);
+	ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4322|2|LOW|Overtemp"), true);
 
 	CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event2->getLevel());
 	CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event2->getValue());
@@ -344,7 +352,9 @@ void ComponentEventTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL((string) "LOW", attrs2["qualifier"]);
 	CPPUNIT_ASSERT_EQUAL((string) "2", attrs2["nativeSeverity"]);
 	CPPUNIT_ASSERT_EQUAL((string) "Fault", event2->getLevelString());
+
 }
+
 
 void ComponentEventTest::testTimeSeries()
 {
@@ -381,7 +391,7 @@ void ComponentEventTest::testTimeSeries()
 
 
 	ComponentEventPtr event2(new ComponentEvent(*d, 123, time,
-				 (string) "7|42000|10 20 30 40 50 60 70 "), true);
+		(string) "7|42000|10 20 30 40 50 60 70 "), true);
 	auto const &attr_list2 = event2->getAttributes();
 	map<string, string> attrs2;
 
@@ -401,6 +411,7 @@ void ComponentEventTest::testTimeSeries()
 	}
 
 }
+
 
 void ComponentEventTest::testDuration()
 {
@@ -425,6 +436,7 @@ void ComponentEventTest::testDuration()
 	CPPUNIT_ASSERT_EQUAL((string) "200.1232", attrs1["duration"]);
 
 }
+
 
 void ComponentEventTest::testAssetChanged()
 {
