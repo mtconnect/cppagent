@@ -15,12 +15,10 @@
 //
 #include "data_item.hpp"
 #include "device.hpp"
-#include "dlib/logger.h"
 #include "adapter.hpp"
 
 using namespace std;
 
-dlib::logger sLogger("data_item");
 
 // ComponentEvent public static constants
 const string DataItem::SSimpleUnits[NumSimpleUnits] =
@@ -254,7 +252,7 @@ string DataItem::getCamelType(const string &type, string &prefix)
 		return "PH";
 
 	string camel;
-	size_t colon = type.find(':');
+	auto colon = type.find(':');
 
 	if (colon != string::npos)
 	{
@@ -264,11 +262,11 @@ string DataItem::getCamelType(const string &type, string &prefix)
 	else
 		camel = type;
 
-	string::iterator second = camel.begin();
+	auto second = camel.begin();
 	second++;
 	transform(second, camel.end(), second, ::tolower);
 
-	string::iterator word = find(second, camel.end(), '_');
+	auto word = find(second, camel.end(), '_');
 
 	while (word != camel.end())
 	{
@@ -331,7 +329,7 @@ string DataItem::convertValue(const string &value)
 
 			for (int i = 0; i < 3; i++)
 			{
-				string::size_type pos = value.find(" ", start);
+				auto pos = value.find(" ", start);
 				result << floatToString((atof(value.substr(start, pos).c_str()) + m_conversionOffset) * m_conversionFactor);
 
 				if (pos != string::npos)
@@ -359,9 +357,9 @@ string DataItem::convertValue(const string &value)
 void DataItem::computeConversionFactors()
 {
 	string units = m_nativeUnits;
-	string::size_type threeD = units.find("_3D");
+	auto threeD = units.find("_3D");
 	m_conversionOffset = 0.0;
-	string::size_type slashLoc = units.find('/');
+	auto slashLoc = units.find('/');
 
 	// Convert units of numerator / denominator (^ power)
 	if (slashLoc == string::npos)
@@ -391,10 +389,10 @@ void DataItem::computeConversionFactors()
 	}
 	else
 	{
-		string numerator = units.substr(0, slashLoc);
-		string denominator = units.substr(slashLoc + 1);
+		auto numerator = units.substr(0, slashLoc);
+		auto denominator = units.substr(slashLoc + 1);
 
-		string::size_type carotLoc = denominator.find('^');
+		auto carotLoc = denominator.find('^');
 
 		if (numerator == "REVOLUTION" && denominator == "SECOND")
 			m_conversionFactor = 60.0;
@@ -402,8 +400,8 @@ void DataItem::computeConversionFactors()
 			m_conversionFactor = simpleFactor(numerator) / simpleFactor(denominator);
 		else
 		{
-			string unit = denominator.substr(0, carotLoc);
-			string power = denominator.substr(carotLoc + 1);
+			auto unit = denominator.substr(0, carotLoc);
+			auto power = denominator.substr(carotLoc + 1);
 
 			double div = pow((double) simpleFactor(unit), (double) atof(power.c_str()));
 			m_conversionFactor = simpleFactor(numerator) / div;
@@ -508,7 +506,7 @@ double DataItem::simpleFactor(const string &units)
 // Sort by: Device, Component, Category, DataItem
 bool DataItem::operator<(DataItem &another)
 {
-	Device *dev = m_component->getDevice();
+	auto dev = m_component->getDevice();
 
 	if (dev->getId() < another.getComponent()->getDevice()->getId())
 		return true;

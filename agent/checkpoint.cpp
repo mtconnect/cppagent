@@ -59,9 +59,9 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 		return;
 	}
 
-	DataItem *item = event->getDataItem();
-	string id = item->getId();
-	ComponentEventPtr *ptr = m_events[id];
+	auto item = event->getDataItem();
+	const auto & id = item->getId();
+	auto ptr = m_events[id];
 
 	if (ptr)
 	{
@@ -78,12 +78,12 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 			{
 				// Check to see if the native code matches an existing
 				// active condition
-				ComponentEvent *e = (*ptr)->find(event->getCode());
+				auto e = (*ptr)->find(event->getCode());
 
 				if (e)
 				{
 					// Replace in chain.
-					ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
+					auto n = (*ptr)->deepCopyAndRemove(e);
 					// Check if this is the only event...
 					(*ptr) = n;
 					if (n)
@@ -99,12 +99,12 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 				// Check for a normal that clears an active condition by code
 				if (event->getCode()[0] != '\0')
 				{
-					ComponentEvent *e = (*ptr)->find(event->getCode());
+					auto e = (*ptr)->find(event->getCode());
 
 					if (e)
 					{
 						// Clear the one condition by removing it from the chain
-							ComponentEvent *n = (*ptr)->deepCopyAndRemove(e);
+						auto n = (*ptr)->deepCopyAndRemove(e);
 						(*ptr) = n;
 
 						if (n)
@@ -167,13 +167,13 @@ void Checkpoint::getComponentEvents(ComponentEventPtrArray &list, std::set<strin
 
 	for (it = m_events.begin(); it != m_events.end(); ++it)
 	{
-		ComponentEventPtr e = *((*it).second);
+		auto e = *((*it).second);
 
 		if (!filterSet || (e.getObject() && filterSet->count(e->getDataItem()->getId()) > 0))
 		{
 			while (e.getObject())
 			{
-				ComponentEventPtr p = e->getPrev();
+				auto p = e->getPrev();
 				list.push_back(e);
 				e = p;
 			}

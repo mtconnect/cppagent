@@ -87,15 +87,12 @@ void addSimpleElement(
 	const std::string &body,
 	const std::map<std::string, std::string> *attributes = nullptr);
 
-void addAttributes(xmlTextWriterPtr writer,
-		   const std::map<std::string, std::string> *attributes);
-void addAttributes(xmlTextWriterPtr writer,
-		   const std::map<std::string, std::string> &attributes)
+void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> *attributes);
+void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> &attributes)
 {
 	addAttributes(writer, &attributes);
 }
-void addAttributes(xmlTextWriterPtr writer,
-		   const AttributeList *attributes);
+void addAttributes(xmlTextWriterPtr writer, const AttributeList *attributes);
 
 void addEvent(xmlTextWriterPtr writer, ComponentEvent *result);
 
@@ -139,7 +136,7 @@ void XmlPrinter::clearDevicesNamespaces()
 
 const string XmlPrinter::getDevicesUrn(const std::string &prefix)
 {
-	map<string, SchemaNamespace>::iterator ns = g_devicesNamespaces.find(prefix);
+	auto ns = g_devicesNamespaces.find(prefix);
 	if (ns != g_devicesNamespaces.end())
 		return ns->second.mUrn;
 	else
@@ -149,7 +146,7 @@ const string XmlPrinter::getDevicesUrn(const std::string &prefix)
 
 const string XmlPrinter::getDevicesLocation(const std::string &prefix)
 {
-	map<string, SchemaNamespace>::iterator ns = g_devicesNamespaces.find(prefix);
+	auto ns = g_devicesNamespaces.find(prefix);
 	if (ns != g_devicesNamespaces.end())
 		return ns->second.mSchemaLocation;
 	else
@@ -179,7 +176,7 @@ void XmlPrinter::clearErrorNamespaces()
 
 const string XmlPrinter::getErrorUrn(const std::string &prefix)
 {
-	map<string, SchemaNamespace>::iterator ns = g_errorNamespaces.find(prefix);
+	auto ns = g_errorNamespaces.find(prefix);
 	if (ns != g_errorNamespaces.end())
 		return ns->second.mUrn;
 	else
@@ -189,7 +186,7 @@ const string XmlPrinter::getErrorUrn(const std::string &prefix)
 
 const string XmlPrinter::getErrorLocation(const std::string &prefix)
 {
-	map<string, SchemaNamespace>::iterator ns = g_errorNamespaces.find(prefix);
+	auto ns = g_errorNamespaces.find(prefix);
 	if (ns != g_errorNamespaces.end())
 		return ns->second.mSchemaLocation;
 	else
@@ -231,7 +228,7 @@ const std::string &XmlPrinter::getSchemaVersion()
 
 const string XmlPrinter::getStreamsUrn(const std::string &prefix)
 {
-	map<string, SchemaNamespace>::iterator ns = g_streamsNamespaces.find(prefix);
+	auto ns = g_streamsNamespaces.find(prefix);
 	if (ns != g_streamsNamespaces.end())
 		return ns->second.mUrn;
 	else
@@ -241,7 +238,7 @@ const string XmlPrinter::getStreamsUrn(const std::string &prefix)
 
 const string XmlPrinter::getStreamsLocation(const std::string &prefix)
 {
-	map<string, SchemaNamespace>::iterator ns = g_streamsNamespaces.find(prefix);
+	auto ns = g_streamsNamespaces.find(prefix);
 	if (ns != g_streamsNamespaces.end())
 		return ns->second.mSchemaLocation;
 	else
@@ -271,7 +268,7 @@ void XmlPrinter::clearAssetsNamespaces()
 
 const string XmlPrinter::getAssetsUrn(const std::string &prefix)
 {
-	map<string, SchemaNamespace>::iterator ns = g_assetsNamespaces.find(prefix);
+	auto ns = g_assetsNamespaces.find(prefix);
 	if (ns != g_assetsNamespaces.end())
 		return ns->second.mUrn;
 	else
@@ -281,7 +278,7 @@ const string XmlPrinter::getAssetsUrn(const std::string &prefix)
 
 const string XmlPrinter::getAssetsLocation(const std::string &prefix)
 {
-	map<string, SchemaNamespace>::iterator ns = g_assetsNamespaces.find(prefix);
+	auto ns = g_assetsNamespaces.find(prefix);
 	if (ns != g_assetsNamespaces.end())
 		return ns->second.mSchemaLocation;
 	else
@@ -346,7 +343,7 @@ string XmlPrinter::printError(
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Error"));
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "errorCode",
 							BAD_CAST errorCode.c_str()));
-		xmlChar *text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST errorText.c_str());
+		auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST errorText.c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
 		xmlFree(text);
 
@@ -466,8 +463,8 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 {
 	addAttributes(writer, component->getAttributes());
 
-	std::map<string, string> desc = component->getDescription();
-	string body = component->getDescriptionBody();
+	const auto &desc = component->getDescription();
+	const auto &body = component->getDescriptionBody();
 
 	if (desc.size() > 0 || !body.empty())
 		addSimpleElement(writer, "Description", body, &desc);
@@ -479,7 +476,7 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Configuration
 	}
 
-	list<DataItem *> datum = component->getDataItems();
+	auto datum = component->getDataItems();
 
 	if (datum.size() > 0)
 	{
@@ -571,7 +568,7 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItem"));
 
 	addAttributes(writer, dataItem->getAttributes());
-	string source = dataItem->getSource();
+	const auto &source = dataItem->getSource();
 
 	if (!source.empty())
 		addSimpleElement(writer, "Source", source);
@@ -580,7 +577,7 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 	{
 		THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Constraints"));
 
-		string s = dataItem->getMaximum();
+		auto s = dataItem->getMaximum();
 
 		if (!s.empty())
 			addSimpleElement(writer, "Maximum", s);
@@ -590,7 +587,7 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 		if (!s.empty())
 			addSimpleElement(writer, "Minimum", s);
 
-		vector<string> values = dataItem->getConstrainedValues();
+		auto &values = dataItem->getConstrainedValues();
 		vector<string>::iterator value;
 		for (value = values.begin(); value != values.end(); value++)
 			addSimpleElement(writer, "Value", *value);
@@ -605,7 +602,7 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 		if (dataItem->hasMinimumDelta())
 		{
 			map<string, string> attributes;
-			string value = floatToString(dataItem->getFilterValue());
+			auto value = floatToString(dataItem->getFilterValue());
 			attributes["type"] = "MINIMUM_DELTA";
 			addSimpleElement(writer, "Filter", value, &attributes);
 		}
@@ -613,7 +610,7 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 		if (dataItem->hasMinimumPeriod())
 		{
 			map<string, string> attributes;
-			string value = floatToString(dataItem->getFilterPeriod());
+			auto value = floatToString(dataItem->getFilterPeriod());
 			attributes["type"] = "PERIOD";
 			addSimpleElement(writer, "Filter", value, &attributes);
 		}
@@ -683,10 +680,10 @@ string XmlPrinter::printSample(
 
 		for (unsigned int i = 0; i < results.size(); i++)
 		{
-			ComponentEventPtr result = results[i];
-			DataItem *dataItem = result->getDataItem();
-			Component *component = dataItem->getComponent();
-			Device *device = component->getDevice();
+			auto result = results[i];
+			auto dataItem = result->getDataItem();
+			auto component = dataItem->getComponent();
+			auto device = component->getDevice();
 
 			if (device != lastDevice)
 			{
@@ -773,7 +770,6 @@ string XmlPrinter::printSample(
 
 	return ret;
 }
-
 
 
 string XmlPrinter::printAssets(
@@ -875,7 +871,7 @@ void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset)
 
 	if (!asset->getDescription().empty())
 	{
-		string body = asset->getDescription();
+		const auto &body = asset->getDescription();
 		addSimpleElement(writer, "Description", body, nullptr);
 	}
 }
@@ -925,7 +921,7 @@ void XmlPrinter::addCategory(xmlTextWriterPtr writer, DataItem::ECategory catego
 
 void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 {
-	DataItem *dataItem = result->getDataItem();
+	auto dataItem = result->getDataItem();
 
 	if (dataItem->isCondition())
 	{
@@ -937,8 +933,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 
 		if (!dataItem->getPrefix().empty())
 		{
-			map<string, SchemaNamespace>::iterator ns = g_streamsNamespaces.find(dataItem->getPrefix());
-
+			auto ns = g_streamsNamespaces.find(dataItem->getPrefix());
 			if (ns != g_streamsNamespaces.end())
 				element = BAD_CAST dataItem->getPrefixedElementName().c_str();
 		}
@@ -955,7 +950,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 	{
 		ostringstream ostr;
 		ostr.precision(6);
-		const vector<float> &v = result->getTimeSeries();
+		const auto &v = result->getTimeSeries();
 
 		for (size_t i = 0; i < v.size(); i++)
 			ostr << v[i] << ' ';
@@ -965,7 +960,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 	}
 	else if (!result->getValue().empty())
 	{
-		xmlChar *text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST result->getValue().c_str());
+		auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST result->getValue().c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
 		xmlFree(text);
 	}
@@ -1193,7 +1188,7 @@ void XmlPrinter::addSimpleElement(
 
 	if (!body.empty())
 	{
-		xmlChar *text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
+		const auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
 		xmlFree(text);
 	}
@@ -1231,7 +1226,7 @@ void XmlPrinter::printCuttingToolValue(
 		if (remaining)
 			remaining->erase(value);
 
-		CuttingToolValuePtr ptr = tool->m_values[value];
+		auto ptr = tool->m_values[value];
 		printCuttingToolValue(writer, ptr);
 	}
 }
@@ -1248,7 +1243,7 @@ void XmlPrinter::printCuttingToolValue(
 		if (remaining)
 			remaining->erase(value);
 
-		CuttingToolValuePtr ptr = item->m_values[value];
+		auto ptr = item->m_values[value];
 		printCuttingToolValue(writer, ptr);
 	}
 }

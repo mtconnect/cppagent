@@ -171,7 +171,7 @@ public:
 
 	int getAssetCount(const std::string &type) const
 	{ 
-		auto const assetPos = m_assetCounts.find(type);
+		const auto assetPos = m_assetCounts.find(type);
 		if(assetPos != m_assetCounts.end())
 			return assetPos->second;
 		return 0;

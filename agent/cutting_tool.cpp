@@ -40,7 +40,7 @@ void CuttingTool::addValue(const CuttingToolValuePtr value)
 
 inline static bool splitKey(string &key, string &sel, string &val)
 {
-	size_t found = key.find_first_of('@');
+	auto found = key.find_first_of('@');
 
 	if (found != string::npos)
 	{
@@ -78,7 +78,7 @@ void CuttingTool::updateValue(const std::string &inputKey, const std::string &va
 		{
 			for (size_t i = 0; i < m_lives.size(); i++)
 			{
-				CuttingToolValuePtr life = m_lives[i];
+				auto life = m_lives[i];
 
 				if (life->m_properties.count(sel) > 0 &&
 					life->m_properties[sel] == val)
@@ -92,7 +92,7 @@ void CuttingTool::updateValue(const std::string &inputKey, const std::string &va
 		{
 			for (size_t i = 0; i < m_items.size(); i++)
 			{
-				CuttingItemPtr item = m_items[i];
+				auto item = m_items[i];
 
 				if (item->m_identity.count(sel) > 0 &&
 					val == item->m_identity[sel])

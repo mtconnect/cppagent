@@ -140,7 +140,7 @@ void Component::resolveReferences()
 	std::list<Reference>::iterator iter;
 	for (iter = m_references.begin(); iter != m_references.end(); iter++)
 	{
-		DataItem *di = device->getDeviceDataItem(iter->m_id);
+		auto di = device->getDeviceDataItem(iter->m_id);
 
 		if (!di)
 			throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " + iter->m_id);

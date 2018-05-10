@@ -220,7 +220,7 @@ void MTConnectService::install()
 	}
 
 	// Get a handle to the SCM database.
-	SC_HANDLE manager = OpenSCManagerA(
+	auto manager = OpenSCManagerA(
 		nullptr,				// local computer
 		nullptr,				// ServicesActive database
 		SC_MANAGER_ALL_ACCESS);	// full access rights
@@ -232,7 +232,7 @@ void MTConnectService::install()
 		return;
 	}
 
-	SC_HANDLE service = OpenServiceA(manager, m_name.c_str(), SC_MANAGER_ALL_ACCESS);
+	auto service = OpenServiceA(manager, m_name.c_str(), SC_MANAGER_ALL_ACCESS);
 	if (service)
 	{
 		if (!ChangeServiceConfigA(
@@ -285,7 +285,7 @@ void MTConnectService::install()
 	CloseServiceHandle(manager); manager = nullptr;
 
 	HKEY software = nullptr;
-	LSTATUS res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
+	auto res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
 	if (res != ERROR_SUCCESS)
 	{
 		g_logger << dlib::LERROR << "Could not open software key (" << res << ")";
@@ -342,14 +342,14 @@ void MTConnectService::install()
 
 void MTConnectService::remove()
 {
-	SC_HANDLE manager = OpenSCManagerA(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
+	auto manager = OpenSCManagerA(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
 	if (!manager)
 	{
 		g_logger << dlib::LERROR << "Could not open Service Control Manager";
 		return;
 	}
 
-	SC_HANDLE service = ::OpenServiceA(manager, m_name.c_str(), SERVICE_ALL_ACCESS);
+	auto service = ::OpenService(manager, m_name.c_str(), SERVICE_ALL_ACCESS);
 	CloseServiceHandle(manager); manager = nullptr;
 	if (!service)
 	{
@@ -403,7 +403,7 @@ VOID WINAPI SvcMain( DWORD dwArgc, LPSTR *lpszArgv )
 	}
 
 	std::string wd = path;
-	size_t found = wd.rfind('\\');
+	auto found = wd.rfind('\\');
 	if (found != std::string::npos)
 	{
 		wd.erase(found);
@@ -451,7 +451,7 @@ VOID SvcInit(DWORD dwArgc, LPTSTR *lpszArgv)
 	snprintf(key, 1023u, "SOFTWARE\\MTConnect\\%s", g_service->name().c_str());
 
 	HKEY agent = nullptr;
-	LSTATUS res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, key, 0ul, KEY_READ, &agent);
+	auto res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, key, 0ul, KEY_READ, &agent);
 	if (res != ERROR_SUCCESS)
 	{
 		SvcReportEvent("RegOpenKey: Could not open MTConnect Agent Key");
@@ -567,7 +567,7 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 //
 VOID SvcReportEvent(LPSTR szFunction)
 {
-	HANDLE hEventSource = RegisterEventSourceA(nullptr, g_service->name().c_str());
+	auto hEventSource = RegisterEventSourceA(nullptr, g_service->name().c_str());
 
 	if( hEventSource )
 	{
@@ -584,11 +584,11 @@ VOID SvcReportEvent(LPSTR szFunction)
 			EVENTLOG_ERROR_TYPE,	// event type
 			0,						// event category
 			SVC_ERROR,				// event identifier
-			nullptr,					// no security identifier
+			nullptr,				// no security identifier
 			2,						// size of lpszStrings array
 			0ul,					// no binary data
 			lpszStrings,			// array of strings
-			nullptr);					// no binary data
+			nullptr);				// no binary data
 
 		DeregisterEventSource(hEventSource);
 	}
@@ -596,7 +596,7 @@ VOID SvcReportEvent(LPSTR szFunction)
 
 VOID SvcLogEvent(WORD eventType, DWORD eventId, LPSTR logText)
 {
-	HANDLE hEventSource = RegisterEventSourceA(nullptr, g_service->name().c_str());
+	auto hEventSource = RegisterEventSourceA(nullptr, g_service->name().c_str());
 	if( hEventSource )
 	{
 		LPCSTR lpszStrings[3] = {
@@ -609,11 +609,11 @@ VOID SvcLogEvent(WORD eventType, DWORD eventId, LPSTR logText)
 			eventType,		// event type
 			0,				// event category
 			eventId,		// event identifier
-			nullptr,			// no security identifier
+			nullptr,		// no security identifier
 			3,				// size of lpszStrings array
 			0,				// no binary data
 			lpszStrings,	// array of strings
-			nullptr);			// no binary data
+			nullptr);		// no binary data
 
 		DeregisterEventSource(hEventSource);
 	}
@@ -649,16 +649,12 @@ static void cleanup_pid()
 
 void MTConnectService::daemonize()
 {
-	int i, lfp;
-	char str[10];
-
-	if (getppid() == 1)
+	if(getppid() == 1)
 		return; // already a daemon
 
-	i = fork();
-	if (i < 0) 
+	auto i = fork();
+	if (i < 0)
 		exit(1); // fork error
-
 	if (i > 0)
 	{
 		std::cout << "Parent process now exiting, child process started" << std::endl;
@@ -684,7 +680,7 @@ void MTConnectService::daemonize()
 
 	// Create the pid file.
 	sPidFile = m_pidFile;
-	lfp = open(m_pidFile.c_str(), O_RDWR | O_CREAT, 0640);
+	auto lfp = open(m_pidFile.c_str(), O_RDWR|O_CREAT, 0640);
 	if (lfp < 0)
 		exit(1); // can not open
 
@@ -693,6 +689,7 @@ void MTConnectService::daemonize()
 		exit(0); // can not lock
 
 	// first instance continues
+	char str[10] = {0};
 	sprintf(str, "%d\n", getpid());
 	write(lfp, str, strlen(str)); // record pid to lockfile
 
@@ -711,45 +708,46 @@ int MTConnectService::main(int argc, const char *argv[])
 
 	if (argc > 1)
 	{
-	if (strcasecmp(argv[1], "help") == 0 || strncmp(argv[1], "-h", 2) == 0)
-	{
-		printf("Usage: agent [help|daemonize|debug|run] [configuration_file]\n"
-		   "       help           Prints this message\n"
-		   "       daemonize      Run this process as a background daemon.\n"
-		   "                      daemonize with -h will display additional options\n"
-		   "       debug          Runs the agent on the command line with verbose logging\n"
-		   "       run            Runs the agent on the command line\n"
-		   "       config_file    The configuration file to load\n"
-		   "                      Default: agent.cfg in current directory\n\n"
-		   "When the agent is started without any arguments it will default to run\n");
-		exit(0);
-	}
-	else if (strcasecmp(argv[1], "daemonize") == 0)
-	{
-		m_isService = true;
-		m_pidFile = "agent.pid";
-		initialize(argc - 2, argv + 2);
-		daemonize();
-		sLogger << dlib::LINFO << "Starting daemon";
-	}
-	else if (strcasecmp(argv[1], "debug") == 0)
-	{
-		m_isDebug = true;
-		initialize(argc - 2, argv + 2);
+		if (strcasecmp(argv[1], "help") == 0 ||
+			strncmp(argv[1], "-h", 2) == 0)
+		{
+			printf("Usage: agent [help|daemonize|debug|run] [configuration_file]\n"
+					"       help           Prints this message\n"
+					"       daemonize      Run this process as a background daemon.\n"
+					"                      daemonize with -h will display additional options\n"
+					"       debug          Runs the agent on the command line with verbose logging\n"
+					"       run            Runs the agent on the command line\n"
+					"       config_file    The configuration file to load\n"
+					"                      Default: agent.cfg in current directory\n\n"
+					"When the agent is started without any arguments it will default to run\n");
+			exit(0);
+		}
+		else if (strcasecmp(argv[1], "daemonize") == 0)
+		{
+			m_isService = true;
+			m_pidFile = "agent.pid";
+			initialize(argc - 2, argv + 2);
+			daemonize();
+			g_logger << dlib::LINFO << "Starting daemon";
+		}
+		else if (strcasecmp( argv[1], "debug") == 0)
+		{
+			m_isDebug = true;
+			initialize(argc - 2, argv + 2);
+		}
+		else
+		{
+			initialize(argc - 2, argv + 2);
+		}
 	}
 	else
 	{
 		initialize(argc - 2, argv + 2);
-	}
-	}
-	else
-	{
-	initialize(argc - 2, argv + 2);
 	}
 
 	start();
 	return 0;
-}
+} 
 
 void MTConnectService::install()
 {

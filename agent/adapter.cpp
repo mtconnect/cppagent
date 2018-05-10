@@ -80,7 +80,7 @@ void Adapter::setAgent(Agent &agent)
 
 void Adapter::addDevice(string &device)
 {
-	Device *dev = m_agent->getDeviceByName(device);
+	auto dev = m_agent->getDeviceByName(device);
 	if (dev)
 	{
 		m_allDevices.push_back(dev);
@@ -91,7 +91,7 @@ void Adapter::addDevice(string &device)
 
 inline static bool splitKey(string &key, string &dev)
 {
-	size_t found = key.find_first_of(':');
+	auto found = key.find_first_of(':');
 	if (found == string::npos)
 		return false;
 	else
@@ -105,8 +105,7 @@ inline static bool splitKey(string &key, string &dev)
 
 inline static void trim(std::string &str)
 {
-	size_t index = str.find_first_not_of(" \r\t");
-
+	auto index = str.find_first_not_of(" \r\t");
 	if (index != string::npos && index > 0)
 		str.erase(0, index);
 	index = str.find_last_not_of(" \r\t");
@@ -191,7 +190,7 @@ void Adapter::processData(const string &data)
 
 	getline(toParse, key, '|');
 	double offset = NAN;
-	string time = extractTime(key, offset);
+	auto time = extractTime(key, offset);
 	getline(toParse, key, '|');
 	getline(toParse, value, '|');
 
@@ -290,7 +289,7 @@ bool Adapter::processDataItem(
 
 			if (dataItem->hasResetTrigger())
 			{
-				size_t found = value.find_first_of(':');
+				auto found = value.find_first_of(':');
 				if (found != string::npos)
 					check.erase(found);
 			}
@@ -444,8 +443,7 @@ void Adapter::protocolCommand(const std::string &data)
 				m_realTime = is_true(value);
 			else if (key == "device")
 			{
-				Device *device = m_agent->findDeviceByUUIDorName(value);
-
+				auto device = m_agent->findDeviceByUUIDorName(value);
 				if (device)
 				{
 					m_device = device;
@@ -483,8 +481,7 @@ void Adapter::parseCalibration(const std::string &aLine)
 			getline(toParse, offset, '|'))
 	{
 		// Convert to a floating point number
-		DataItem *di = m_device->getDeviceDataItem(name);
-
+		auto di = m_device->getDeviceDataItem(name);
 		if (!di)
 			g_logger << LWARN << "Cannot find data item to calibrate for " << name;
 		else

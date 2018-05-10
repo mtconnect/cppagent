@@ -44,6 +44,7 @@ using namespace dlib;
 
 static logger g_logger("init.config");
 
+
 static inline const char *get_with_default(
 	const config_reader::kernel_1a &reader, 
 	const char *key,
@@ -235,7 +236,7 @@ void AgentConfiguration::monitorThread()
 		if (check &&
 			(cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime) )
 		{
-			time_t now = time(nullptr);
+			auto now = time(nullptr);
 			g_logger << LWARN <<
 				"Dected change in configuarion files. Will reload when youngest file is at least " <<
 				m_minimumConfigReloadAge
@@ -305,7 +306,7 @@ void AgentConfiguration::stop()
 
 Device *AgentConfiguration::defaultDevice()
 {
-	const std::vector<Device *> &devices = m_agent->getDevices();
+	const auto &devices = m_agent->getDevices();
 	if (devices.size() == 1)
 		return devices[0];
 	else
@@ -393,13 +394,13 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
 	else
 	{
 		string name("agent.log");
-		RollingFileLogger::RollingSchedule sched = RollingFileLogger::NEVER;
+		auto sched = RollingFileLogger::NEVER;
 		int maxSize = 10 * 1024 * 1024; // 10MB
 		int maxIndex = 9;
 
 		if (reader.is_block_defined("logger_config"))
 		{
-			const config_reader::kernel_1a &cr = reader.block("logger_config");
+			const auto &cr = reader.block("logger_config");
 
 			if (cr.is_key_defined("logging_level"))
 				set_all_logging_levels(string_to_log_level(cr["logging_level"]));
@@ -465,7 +466,7 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
 
 inline static void trim(std::string &str)
 {
-	size_t index = str.find_first_not_of(" \r\t");
+	auto index = str.find_first_not_of(" \r\t");
 	if (index != string::npos && index > 0)
 		str.erase(0, index);
 	index = str.find_last_not_of(" \r\t");
@@ -482,17 +483,17 @@ void AgentConfiguration::loadConfig(std::istream &file)
 	if (!m_loggerFile)
 		configureLogger(reader);
 
-	bool defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
-	int port = get_with_default(reader, "Port", 5000);
+	auto defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
+	auto port = get_with_default(reader, "Port", 5000);
 	string serverIp = get_with_default(reader, "ServerIp", "");
-	int bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
-	int maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
-	int checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
-	int legacyTimeout = get_with_default(reader, "LegacyTimeout", 600);
-	int reconnectInterval = get_with_default(reader, "ReconnectInterval", 10 * 1000);
-	bool ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
-	bool conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
-	bool upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
+	auto bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
+	auto maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
+	auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
+	auto legacyTimeout = get_with_default(reader, "LegacyTimeout", 600);
+	auto reconnectInterval = get_with_default(reader, "ReconnectInterval", 10 * 1000);
+	auto ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
+	auto conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
+	auto upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
 	m_monitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
 	m_minimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
 
@@ -501,7 +502,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 
 	if (reader.is_key_defined("Devices"))
 	{
-		string fileName = reader["Devices"];
+		auto fileName = reader["Devices"];
 		devices_files.push_back(fileName);
 
 		if (!m_exePath.empty() &&
@@ -529,7 +530,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 	{
 		struct stat buf;
 		g_logger << LDEBUG << "Checking for Devices XML configuration file: " << probe;
-		int res = stat(probe.c_str(), &buf);
+		auto res = stat(probe.c_str(), &buf);
 		g_logger << LDEBUG << "  Stat returned: " << res;
 
 		if (res == 0)
@@ -615,14 +616,14 @@ void AgentConfiguration::loadAdapters(
 	Device *device;
 	if (reader.is_block_defined("Adapters"))
 	{
-		const config_reader::kernel_1a &adapters = reader.block("Adapters");
+		const auto &adapters = reader.block("Adapters");
 		std::vector<string> blocks;
 		adapters.get_blocks(blocks);
 
 		std::vector<string>::iterator block;
 		for (block = blocks.begin(); block != blocks.end(); ++block)
 		{
-			const config_reader::kernel_1a &adapter = adapters.block(*block);
+			const auto &adapter = adapters.block(*block);
 			string deviceName;
 			if (adapter.is_key_defined("Device"))
 				deviceName = adapter["Device"].c_str();
@@ -635,30 +636,29 @@ void AgentConfiguration::loadAdapters(
 			{
 				g_logger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
 				device = defaultDevice();
-
 				if (device)
 				{
 					deviceName = device->getName();
 					g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
 				}
 			}
-
 			if (!device)
 			{
 				g_logger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
 			}
 
 			const string host = get_with_default(adapter, "Host", (string)"localhost");
-			int port = get_with_default(adapter, "Port", 7878);
+			auto port = get_with_default(adapter, "Port", 7878);
+
 
 			g_logger << LINFO << "Adding adapter for " << deviceName << " on "
 				<< host << ":" << port;
-			Adapter *adp = m_agent->addAdapter(
+			auto adp = m_agent->addAdapter(
 				deviceName,
 				host,
 				port,
 				false,
-				get_with_default(adapter, "LegacyTimeout", legacyTimeout));
+				get_with_default(adapter, "LegacyTimeout", legacyTimeout) );
 			device->m_preserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
 
 			// Add additional device information
@@ -687,7 +687,7 @@ void AgentConfiguration::loadAdapters(
 				string name;
 				while (getline(devices, name, ','))
 				{
-					size_t index = name.find_first_not_of(" \r\t");
+					auto index = name.find_first_not_of(" \r\t");
 					if (index != string::npos && index > 0)
 						name.erase(0, index);
 					index = name.find_last_not_of(" \r\t");
@@ -702,7 +702,7 @@ void AgentConfiguration::loadAdapters(
 	else if ((device = defaultDevice()))
 	{
 		g_logger << LINFO << "Adding default adapter for " << device->getName() << " on localhost:7878";
-		Adapter *adp = m_agent->addAdapter(device->getName(), "localhost", 7878, false, legacyTimeout);
+		auto adp = m_agent->addAdapter(device->getName(), "localhost", 7878, false, legacyTimeout);
 		adp->setIgnoreTimestamps(ignoreTimestamps || adp->isIgnoringTimestamps());
 		adp->setReconnectInterval(reconnectInterval);
 		device->m_preserveUuid = defaultPreserve;
@@ -716,7 +716,7 @@ void AgentConfiguration::loadAdapters(
 
 void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &reader)
 {
-	bool putEnabled = get_bool_with_default(reader, "AllowPut", false);
+	auto putEnabled = get_bool_with_default(reader, "AllowPut", false);
 	m_agent->enablePut(putEnabled);
 
 	string putHosts = get_with_default(reader, "AllowPutFrom", "");
@@ -731,8 +731,7 @@ void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &reader)
 			if (!putHost.empty())
 			{
 				string ip;
-				int n;
-				for (n = 0; dlib::hostname_to_ip(putHost, ip, n) == 0 && ip == "0.0.0.0"; n++)
+				for (auto n = 0; dlib::hostname_to_ip(putHost, ip, n) == 0 && ip == "0.0.0.0"; n++)
 					ip = "";
 				if (!ip.empty())
 				{
@@ -753,14 +752,14 @@ void AgentConfiguration::loadNamespace(
 	// Load namespaces, allow for local file system serving as well.
 	if (reader.is_block_defined(namespaceType))
 	{
-		const config_reader::kernel_1a &namespaces = reader.block(namespaceType);
+		const auto &namespaces = reader.block(namespaceType);
 		std::vector<string> blocks;
 		namespaces.get_blocks(blocks);
 
 		std::vector<string>::iterator block;
 		for (block = blocks.begin(); block != blocks.end(); ++block)
 		{
-			const config_reader::kernel_1a &ns = namespaces.block(*block);
+			const auto &ns = namespaces.block(*block);
 
 			if (*block != "m" && !ns.is_key_defined("Urn"))
 			{
@@ -786,14 +785,14 @@ void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &reader)
 {
 	if (reader.is_block_defined("Files"))
 	{
-		const config_reader::kernel_1a &files = reader.block("Files");
+		const auto &files = reader.block("Files");
 		std::vector<string> blocks;
 		files.get_blocks(blocks);
 
 		std::vector<string>::iterator block;
 		for (block = blocks.begin(); block != blocks.end(); ++block)
 		{
-			const config_reader::kernel_1a &file = files.block(*block);
+			const auto &file = files.block(*block);
 
 			if (!file.is_key_defined("Location") || !file.is_key_defined("Path"))
 				g_logger << LERROR << "Name space must have a Location (uri) or Directory and Path: " << *block;
@@ -825,7 +824,7 @@ void AgentConfiguration::loadTypes(dlib::config_reader::kernel_1a &reader)
 {
 	if (reader.is_block_defined("MimeTypes"))
 	{
-		const config_reader::kernel_1a &types = reader.block("MimeTypes");
+		const auto &types = reader.block("MimeTypes");
 		std::vector<string> keys;
 		types.get_keys(keys);
 
