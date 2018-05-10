@@ -28,7 +28,7 @@ class Device : public Component
 {
 public:
 	// Constructor that sets variables from an attribute map
-	Device(std::map<std::string, std::string> attributes);
+	Device(const std::map<std::string, std::string> &attributes);
 
 	~Device();
 

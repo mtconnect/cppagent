@@ -123,8 +123,8 @@ public:
 						int legacyTimeout = 600);
 
 	// Get device from device map
-	Device *getDeviceByName(const std::string &name) {
-		return m_deviceMap[name]; }
+	Device *getDeviceByName(const std::string &name);
+	const Device *getDeviceByName(const std::string &name) const;
 	Device *findDeviceByUUIDorName(const std::string &idOrName);
 	const std::vector<Device *> &getDevices() const {
 		return m_devices; }
@@ -316,8 +316,13 @@ protected:
 	);
 
 	// Find data items by name/id
-	DataItem *getDataItemById(const std::string &id) {
-		return m_dataItemMap[id]; }
+	DataItem * getDataItemById(const std::string &id) const
+	{
+		auto diPos = m_dataItemMap.find(id);
+		if(diPos != m_dataItemMap.end())
+			return diPos->second;
+		return nullptr;
+	}
 
 protected:
 	// Unique id based on the time of creation

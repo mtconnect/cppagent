@@ -45,20 +45,39 @@ const string Component::SComponentSpecs[NumComponentSpecs] =
 // Component public methods
 Component::Component(
 	const string &className,
-	map<string, string> attributes,
+	const map<string, string> &attributes,
 	const string &prefix) :
 	m_assetChanged(nullptr),
 	m_assetRemoved(nullptr)
 {
-	m_id = attributes["id"];
-	m_name = attributes["name"];
-	m_nativeName = attributes["nativeName"];
-	m_uuid = attributes["uuid"];
+	auto const idPos = attributes.find("id");
+	if(idPos != attributes.end())
+		m_id = idPos->second;
 
-	if (attributes["sampleInterval"].empty())
-		m_sampleInterval = (float)(attributes["sampleRate"].empty()) ? 0.0f : atof(attributes["sampleRate"].c_str());
+	auto const namePos = attributes.find("name");
+	if(namePos != attributes.end())
+		m_name = namePos->second;
+
+	auto const nativeNamePos = attributes.find("nativeName");
+	if(nativeNamePos != attributes.end())
+		m_nativeName = nativeNamePos->second;
+
+	auto const uuidPos = attributes.find("uuid");
+	if(uuidPos != attributes.end())
+		m_uuid = uuidPos->second;
+
+
+	auto const sampleIntervalPos = attributes.find("sampleInterval");
+	if(sampleIntervalPos != attributes.end())
+		m_sampleInterval = atof(sampleIntervalPos->second.c_str());
 	else
-		m_sampleInterval = atof(attributes["sampleInterval"].c_str());
+	{
+		auto const sampleRatePos = attributes.find("sampleRate");
+		if(sampleRatePos == attributes.end())
+			m_sampleInterval = 0.0f;
+		else
+			m_sampleInterval = atof(sampleRatePos->second.c_str());
+	}
 
 	m_parent = nullptr;
 	m_device = nullptr;

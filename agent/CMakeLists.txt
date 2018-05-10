@@ -14,10 +14,10 @@ if(WIN32)
 		${CMAKE_CURRENT_SOURCE_DIR}/version.rc.in
 		${RESOURCE_FILE} )
 
-set(WINDOWS_LIBRARIES shlwapi)
+	set(WINDOWS_LIBRARIES shlwapi)
   
 else()
-	set(resource_file "")
+	set(RESOURCE_FILE "")
 endif()
 
 if(UNIX)
@@ -86,7 +86,7 @@ target_include_directories(agent
 
 target_link_libraries(agent PRIVATE ${LINUX_LIBRARIES} PRIVATE ${WINDOWS_LIBRARIES})
 
-	add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}" "/DLIBXML_STATIC")
+add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}" "/DLIBXML_STATIC")
 
 INSTALL(TARGETS agent RUNTIME DESTINATION bin)
 add_dependencies(agent UPDATE_VERSION)

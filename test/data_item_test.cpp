@@ -96,24 +96,24 @@ void DataItemTest::testGetters()
 
 void DataItemTest::testGetAttributes()
 {
-	std::map<string, string> &attributes1 = *m_dataItemA->getAttributes();
-	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1["id"]);
-	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", attributes1["name"]);
-	CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes1["type"]);
-	CPPUNIT_ASSERT(attributes1["subType"].empty());
-	CPPUNIT_ASSERT_EQUAL((string) "PERCENT", attributes1["nativeUnits"]);
-	CPPUNIT_ASSERT(attributes1["getNativeScale"].empty());
-	CPPUNIT_ASSERT(attributes1["coordinateSystem"].empty());
+	auto const &attributes1 = m_dataItemA->getAttributes();
+	CPPUNIT_ASSERT_EQUAL((string) "1", attributes1.at("id"));
+	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", attributes1.at("name"));
+	CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes1.at("type"));
+	CPPUNIT_ASSERT(attributes1.find("subType") == attributes1.end());
+	CPPUNIT_ASSERT_EQUAL((string) "PERCENT", attributes1.at("nativeUnits"));
+	CPPUNIT_ASSERT(attributes1.find("getNativeScale") == attributes1.end());
+	CPPUNIT_ASSERT(attributes1.find("coordinateSystem") == attributes1.end());
 
-	std::map<string, string> &attributes2 = *m_dataItemB->getAttributes();
-	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["id"]);
-	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", attributes2["name"]);
-	CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes2["type"]);
-	CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", attributes2["subType"]);
-	CPPUNIT_ASSERT_EQUAL(attributes2["nativeUnits"], attributes2["units"]);
-	CPPUNIT_ASSERT_EQUAL((string) "1", attributes2["nativeScale"]);
+	auto const &attributes2 = m_dataItemB->getAttributes();
+	CPPUNIT_ASSERT_EQUAL((string) "3", attributes2.at("id"));
+	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", attributes2.at("name"));
+	CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes2.at("type"));
+	CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", attributes2.at("subType"));
+	CPPUNIT_ASSERT_EQUAL(attributes2.at("nativeUnits"), attributes2.at("units"));
+	CPPUNIT_ASSERT_EQUAL((string) "1", attributes2.at("nativeScale"));
 	CPPUNIT_ASSERT_EQUAL((string) "testCoordinateSystem",
-			 attributes2["coordinateSystem"]);
+						 attributes2.at("coordinateSystem"));
 }
 
 void DataItemTest::testHasNameAndSource()

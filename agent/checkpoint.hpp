@@ -36,15 +36,19 @@ public:
 	void clear();
 	void filter(std::set<std::string> const &filterSet);
 
-	std::map<std::string, ComponentEventPtr *> &getEvents() {
+	const std::map<std::string, ComponentEventPtr *> &getEvents() const {
 		return m_events; }
 
 	void getComponentEvents(ComponentEventPtrArray &list,
 		std::set<std::string> const *filterSet = nullptr) const;
 
-	ComponentEventPtr *getEventPtr(const std::string &id) {
-		return m_events[id]; }
-
+	ComponentEventPtr *getEventPtr(const std::string &id)
+	{
+		auto pos = m_events.find(id);
+		if(pos != m_events.end())
+			return pos->second;
+		return nullptr;
+	}
 
 protected:
 	std::map<std::string, ComponentEventPtr *> m_events;
