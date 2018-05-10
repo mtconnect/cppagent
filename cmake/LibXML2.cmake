@@ -26,11 +26,11 @@ function(AddLibXML2Support projectTarget)
 		find_package(LibXML2 REQUIRED)
 		
 		# Create a target from this source if not already done
-		if(TARGET libxml2)
+		if(NOT TARGET libxml2)
 			add_library(libxml2 UNKNOWN IMPORTED)
 		endif()
 		
-		set_property(${projectTarget} libxml2 PROPERTY IMPORTED_LOCATION ${LibXML2_LIBRARIES})
+		set_property(TARGET ${projectTarget} libxml2 PROPERTY IMPORTED_LOCATION ${LibXML2_LIBRARIES})
 	endif()
 	
 	add_dependencies(${projectTarget} libxml2)
