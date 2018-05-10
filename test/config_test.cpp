@@ -409,41 +409,45 @@ void ConfigTest::testLogFileRollover()
 
 void ConfigTest::testMaxSize()
 {
-	istringstream logger("logger_config {"
-			 "max_size = 150\n"
-			 "}\n");
+	istringstream logger(
+		"logger_config {"
+		"max_size = 150\n"
+		"}\n");
 	m_config->loadConfig(logger);
-	RollingFileLogger *fl = m_config->getLogger();
-	CPPUNIT_ASSERT_EQUAL(150, fl->getMaxSize());
+	auto fl = m_config->getLogger();
+	CPPUNIT_ASSERT_EQUAL(150ull, fl->getMaxSize());
 	delete m_config;
 
 	m_config = new AgentConfiguration();
-	istringstream logger2("logger_config {"
-			  "max_size = 15K\n"
-			  "}\n");
+	istringstream logger2(
+		"logger_config {"
+		"max_size = 15K\n"
+		"}\n");
 	m_config->loadConfig(logger2);
 
 	fl = m_config->getLogger();
-	CPPUNIT_ASSERT_EQUAL(15 * 1024, fl->getMaxSize());
+	CPPUNIT_ASSERT_EQUAL(15ull * 1024ull, fl->getMaxSize());
 	delete m_config;
 
 	m_config = new AgentConfiguration();
-	istringstream logger3("logger_config {"
-			  "max_size = 15M\n"
-			  "}\n");
+	istringstream logger3(
+		"logger_config {"
+		"max_size = 15M\n"
+		"}\n");
 	m_config->loadConfig(logger3);
 
 	fl = m_config->getLogger();
-	CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024, fl->getMaxSize());
+	CPPUNIT_ASSERT_EQUAL(15ull * 1024ull * 1024ull, fl->getMaxSize());
 	delete m_config;
 
 	m_config = new AgentConfiguration();
-	istringstream logger4("logger_config {"
-			  "max_size = 15G\n"
-			  "}\n");
+	istringstream logger4(
+		"logger_config {"
+		"max_size = 15G\n"
+		"}\n");
 	m_config->loadConfig(logger4);
 
 	fl = m_config->getLogger();
-	CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024 * 1024, fl->getMaxSize());
+	CPPUNIT_ASSERT_EQUAL(15ull * 1024ull * 1024ull * 1024ull, fl->getMaxSize());
 
 }

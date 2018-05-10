@@ -348,7 +348,7 @@ void AgentConfiguration::LoggerHook(
 	const char* message)
 {
 	stringstream out;
-	char buffer[64];
+	char buffer[64] = {0};
 	timestamp(buffer);
 	out << buffer << ": " << l.name << " [" << threadId << "] " << loggerName << ": " << message;
 #ifdef WIN32
@@ -404,7 +404,7 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
 	{
 		string name("agent.log");
 		auto sched = RollingFileLogger::NEVER;
-		int maxSize = 10 * 1024 * 1024; // 10MB
+		uint64 maxSize = 10ull * 1024ull * 1024ull; // 10MB
 		int maxIndex = 9;
 
 		if (reader.is_block_defined("logger_config"))
@@ -446,13 +446,13 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
 			{
 				case 'G':
 				case 'g':
-					maxSize *= 1024;
+					maxSize *= 1024ull;
 				case 'M':
 				case 'm':
-					maxSize *= 1024;
+					maxSize *= 1024ull;
 				case 'K':
 				case 'k':
-					maxSize *= 1024;
+					maxSize *= 1024ull;
 				case 'B':
 				case 'b':
 				case '\0':
