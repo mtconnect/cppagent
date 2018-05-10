@@ -48,7 +48,6 @@ set(AGENT_SRCS cppagent.cpp
 	options.cpp
 	service.cpp
 	config.cpp
-	ref_counted.cpp
 	version.cpp
 	xml_parser.cpp 
 	xml_printer.cpp
