@@ -191,11 +191,15 @@ void AgentConfiguration::initialize(int argc, const char *argv[])
 AgentConfiguration::~AgentConfiguration()
 {
 	if (m_agent)
+	{
 		delete m_agent;
-
+		m_agent = nullptr;
+	}
 	if (m_loggerFile)
+	{
 		delete m_loggerFile;
-
+		m_loggerFile = nullptr;
+	}
 	set_all_logging_output_streams(cout);
 }
 
@@ -386,7 +390,10 @@ static dlib::log_level string_to_log_level (const std::string& level)
 void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
 {
 	if (m_loggerFile)
+	{
 		delete m_loggerFile;
+		m_loggerFile = nullptr;
+	}
 
 	if (m_isDebug)
 	{

@@ -345,7 +345,7 @@ string XmlPrinter::printError(
 							BAD_CAST errorCode.c_str()));
 		auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST errorText.c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-		xmlFree(text);
+		xmlFree(text); text = nullptr;
 
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Error
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Errors
@@ -353,27 +353,39 @@ string XmlPrinter::printError(
 		THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
 
 		// Cleanup
-		xmlFreeTextWriter(writer);
+		xmlFreeTextWriter(writer); writer = nullptr;
 		ret = (string)((char *) buf->content);
-		xmlBufferFree(buf);
+		xmlBufferFree(buf); buf = nullptr;
 	}
 	catch (string error)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printError: " << error;
 	}
 	catch (...)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printError: unknown error";
 	}
@@ -427,27 +439,39 @@ string XmlPrinter::printProbe(
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectDevices
 		THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
 
-		xmlFreeTextWriter(writer);
+		xmlFreeTextWriter(writer); writer = nullptr;
 		ret = (string)((char *) buf->content);
-		xmlBufferFree(buf);
+		xmlBufferFree(buf); buf = nullptr;
 	}
 	catch (string error)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printProbe: " << error;
 	}
 	catch (...)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printProbe: unknown error";
 	}
@@ -635,8 +659,8 @@ string XmlPrinter::printSample(
 	const uint64_t lastSeq,
 	ComponentEventPtrArray &results )
 {
-	xmlTextWriterPtr writer;
-	xmlBufferPtr buf;
+	xmlTextWriterPtr writer(nullptr);
+	xmlBufferPtr buf(nullptr);
 	string ret;
 
 	try
@@ -733,27 +757,39 @@ string XmlPrinter::printSample(
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectStreams
 		THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
 
-		xmlFreeTextWriter(writer);
+		xmlFreeTextWriter(writer); writer = nullptr;
 		ret = (string)((char *) buf->content);
-		xmlBufferFree(buf);
+		xmlBufferFree(buf); buf = nullptr;
 	}
 	catch (string error)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printProbe: " << error;
 	}
 	catch (...)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printProbe: unknown error";
 	}
@@ -800,27 +836,39 @@ string XmlPrinter::printAssets(
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Assets
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectAssets
 
-		xmlFreeTextWriter(writer);
+		xmlFreeTextWriter(writer); writer = nullptr;
 		ret = (string)((char *) buf->content);
-		xmlBufferFree(buf);
+		xmlBufferFree(buf); buf = nullptr;
 	}
 	catch (string error)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printProbe: " << error;
 	}
 	catch (...)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printProbe: unknown error";
 	}
@@ -950,7 +998,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 	{
 		auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST result->getValue().c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-		xmlFree(text);
+		xmlFree(text); text = nullptr;
 	}
 
 	THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Streams
@@ -1104,7 +1152,7 @@ void XmlPrinter::initXmlDoc(
 		BAD_CAST sHostname.c_str()));
 	THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId",
 		BAD_CAST intToString(instanceId).c_str()));
-	char version[32];
+	char version[32] = {0};
 	sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
 		AGENT_VERSION_BUILD);
 	THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST version));
@@ -1170,9 +1218,9 @@ void XmlPrinter::addSimpleElement(
 
 	if (!body.empty())
 	{
-		const auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
+		auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-		xmlFree(text);
+		xmlFree(text); text = nullptr;
 	}
 
 	THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Element
@@ -1367,27 +1415,39 @@ string XmlPrinter::printCuttingTool(CuttingToolPtr tool)
 		// CuttingTool
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
 
-		xmlFreeTextWriter(writer);
+		xmlFreeTextWriter(writer); writer = nullptr;
 		ret = (string)((char *) buf->content);
-		xmlBufferFree(buf);
+		xmlBufferFree(buf); buf = nullptr;
 	}
 	catch (string error)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printCuttingTool: " << error;
 	}
 	catch (...)
 	{
 		if (buf)
+		{
 			xmlBufferFree(buf);
+			buf = nullptr;
+		}
 
 		if (writer)
+		{
 			xmlFreeTextWriter(writer);
+			writer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "printCuttingTool: unknown error";
 	}

@@ -491,7 +491,7 @@ void OptionsList::getArg(const char ** &argv, int &argc, Option *option, const c
 void OptionsList::usage()
 {
 	size_t len;
-	char buffer[1024], *cp;
+	char buffer[1024] = {0}, *cp = nullptr;
 
 	cp = buffer;
 	len = sprintf(buffer, "Usage: %s ", program_);
@@ -533,7 +533,7 @@ void OptionsList::usage()
 		*cp++ = ']';
 	}
 
-	char staging[128], *cp2;
+	char staging[128] = {0}, *cp2 = nullptr;
 
 	for (auto iter = begin(); iter != end(); iter++)
 	{

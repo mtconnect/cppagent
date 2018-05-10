@@ -39,9 +39,9 @@ Connector::Connector(const string& server, unsigned int port, int legacyTimeout)
 
 Connector::~Connector()
 {
-	delete m_commandLock;
-	delete m_connectionClosed;
-	delete m_connectionMutex;
+	delete m_commandLock; m_commandLock = nullptr;
+	delete m_connectionClosed; m_connectionClosed = nullptr;
+	delete m_connectionMutex; m_connectionMutex = nullptr;
 }
 
 
@@ -110,7 +110,7 @@ void Connector::connect()
 		m_buffer.clear();
 
 		// Socket buffer to put the extracted data into
-		char sockBuf[SOCKET_BUFFER_SIZE + 1];
+		char sockBuf[SOCKET_BUFFER_SIZE + 1] = {0};
 
 		// Keep track of the status return, else status = character bytes read
 		// Assuming it always enters the while loop, it should never be 1
@@ -136,7 +136,7 @@ void Connector::connect()
 		while (m_connected)
 		{
 			auto now = stamper.get_timestamp();
-			int timeout;
+			int timeout(0);
 			if (m_heartbeats)
 			{
 				timeout = (int)m_heartbeatFrequency - ((int)(now - m_lastSent) / 1000);
