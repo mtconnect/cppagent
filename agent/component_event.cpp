@@ -14,6 +14,8 @@
 //    limitations under the License.
 //
 #include "component_event.hpp"
+#include <mutex>
+
 #include "data_item.hpp"
 #include "dlib/threads.h"
 
@@ -24,7 +26,7 @@
 #endif
 
 using namespace std;
-static dlib::rmutex sAttributeMutex;
+static std::mutex g_attributeMutex;
 
 
 const string ComponentEvent::SLevels[NumLevels] =
@@ -117,7 +119,7 @@ AttributeList *ComponentEvent::getAttributes()
 {
 	if (!m_hasAttributes)
 	{
-		dlib::auto_mutex lock(sAttributeMutex);
+		lock_guard<std::mutex> lock(g_attributeMutex);
 
 		m_attributes.push_back(AttributeItem("dataItemId", m_dataItem->getId()));
 		m_attributes.push_back(AttributeItem("timestamp", m_time));

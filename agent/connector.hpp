@@ -15,6 +15,7 @@
 //
 
 #pragma once
+#include <mutex>
 
 #include "dlib/sockets.h"
 #include "dlib/server.h"
@@ -106,7 +107,7 @@ protected:
 	dlib::uint64 m_lastHeartbeat;
 	dlib::uint64 m_lastSent;
 
-	dlib::mutex *m_commandLock;
+	std::mutex m_commandLock;
 
 	bool m_connectActive;
 	dlib::mutex *m_connectionMutex;
