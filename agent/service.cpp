@@ -85,7 +85,7 @@ static void agent_termination_handler()
 void commandLine()
 {
 	puts("> ");
-	char line[1024];
+	char line[1024] = {0};
 	while (gets(line))
 	{
 		if (strncasecmp(line, "QUIT", 4) == 0)

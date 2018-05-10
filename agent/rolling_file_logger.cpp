@@ -54,7 +54,7 @@ RollingFileLogger::RollingFileLogger(
 
 RollingFileLogger::~RollingFileLogger()
 {
-	delete m_fileLock;
+	delete m_fileLock; m_fileLock = nullptr;
 	::close(m_fd);
 }
 

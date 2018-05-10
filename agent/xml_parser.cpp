@@ -44,7 +44,7 @@ agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 {
 	va_list args;
 
-	char buffer[2048];
+	char buffer[2048] = {0};
 	va_start(args, msg);
 	vsnprintf(buffer, 2046, msg, args);
 	buffer[2047] = '0';
@@ -63,7 +63,10 @@ XmlParser::XmlParser() :
 std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 {
 	if (m_doc)
+	{
 		xmlFreeDoc(m_doc);
+		m_doc = nullptr;
+	}
 
 	xmlXPathContextPtr xpathCtx = nullptr;
 	xmlXPathObjectPtr devices = nullptr;
@@ -201,14 +204,20 @@ std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
 XmlParser::~XmlParser()
 {
 	if (m_doc)
+	{
 		xmlFreeDoc(m_doc);
+		m_doc = nullptr;
+	}
 }
 
 
 void XmlParser::loadDocument(const std::string &doc)
 {
 	if (m_doc)
+	{
 		xmlFreeDoc(m_doc);
+		m_doc = nullptr;
+	}
 
 	try
 	{
@@ -300,12 +309,12 @@ void XmlParser::getDataItems(
 
 				if (xmlStrcmp(n->name, BAD_CAST "DataItem") == 0)
 				{
-					xmlChar *id = xmlGetProp(n, BAD_CAST "id");
+					auto id = xmlGetProp(n, BAD_CAST "id");
 
 					if (id)
 					{
 						filterSet.insert((const char *) id);
-						xmlFree(id);
+						xmlFree(id); id = nullptr;
 					}
 				}
 				else if (xmlStrcmp(n->name, BAD_CAST "DataItems") == 0)
@@ -315,12 +324,12 @@ void XmlParser::getDataItems(
 				}
 				else if (xmlStrcmp(n->name, BAD_CAST "Reference") == 0)
 				{
-					xmlChar *id = xmlGetProp(n, BAD_CAST "dataItemId");
+					auto id = xmlGetProp(n, BAD_CAST "dataItemId");
 
 					if (id)
 					{
 						filterSet.insert((const char *) id);
-						xmlFree(id);
+						xmlFree(id); id = nullptr;
 					}
 				}
 				else // Find all the data items and references below this node
@@ -421,7 +430,7 @@ Component *XmlParser::handleComponent(
 				if (text)
 				{
 					toReturn->addDescription((string)(const char *) text, getAttributes(child));
-					xmlFree(text);
+					xmlFree(text); text = nullptr;
 				}
 
 			}
@@ -512,7 +521,7 @@ void XmlParser::loadDataItem(
 				if (text)
 				{
 					d->addSource((const char *) text);
-					xmlFree(text);
+					xmlFree(text); text = nullptr;
 				}
 			}
 			else if (xmlStrcmp(child->name, BAD_CAST "Constraints") == 0)
@@ -536,7 +545,7 @@ void XmlParser::loadDataItem(
 					else if (xmlStrcmp(constraint->name, BAD_CAST "Filter") == 0)
 						d->setMinmumDelta(strtod((const char *) text, nullptr));
 
-					xmlFree(text);
+					xmlFree(text); text = nullptr;
 				}
 			}
 			else if (xmlStrcmp(child->name, BAD_CAST "Filters") == 0)
@@ -558,12 +567,12 @@ void XmlParser::loadDataItem(
 							else
 								d->setMinmumDelta(strtod((const char *) text, nullptr));
 
-							xmlFree(type);
+							xmlFree(type); type = nullptr;
 						}
 						else
 							d->setMinmumDelta(strtod((const char *) text, nullptr));
 
-						xmlFree(text);
+						xmlFree(text); text = nullptr;
 					}
 				}
 			}
@@ -571,13 +580,13 @@ void XmlParser::loadDataItem(
 			{
 				auto text = xmlNodeGetContent(child);
 				d->setInitialValue(string((const char *)text));
-				xmlFree(text);
+				xmlFree(text); text = nullptr;
 			}
 			else if (xmlStrcmp(child->name, BAD_CAST "ResetTrigger") == 0)
 			{
 				auto text = xmlNodeGetContent(child);
 				d->setResetTrigger(string((const char *)text));
-				xmlFree(text);
+				xmlFree(text); text = nullptr;
 			}
 		}
 	}
@@ -602,7 +611,7 @@ void XmlParser::handleComposition(xmlNodePtr composition,
 			if (text)
 			{
 				body = string(static_cast<const char *>(static_cast<void *>(text)));
-				xmlFree(text);
+				xmlFree(text); text = nullptr;
 			}
 
 			Composition::Description *desc = new Composition::Description(body, getAttributes(child));
@@ -711,25 +720,37 @@ AssetPtr XmlParser::parseAsset(
 			document);
 
 		// Cleanup objects...
-		xmlBufferFree(buffer);
-		xmlXPathFreeObject(assetNodes);
-		xmlXPathFreeContext(xpathCtx);
-		xmlFreeDoc(document);
+		xmlBufferFree(buffer); buffer = nullptr;
+		xmlXPathFreeObject(assetNodes); assetNodes = nullptr;
+		xmlXPathFreeContext(xpathCtx); xpathCtx = nullptr;
+		xmlFreeDoc(document); document = nullptr;
 
 	}
 	catch (string e)
 	{
 		if (assetNodes)
+		{
 			xmlXPathFreeObject(assetNodes);
+			assetNodes = nullptr;
+		}
 
 		if (xpathCtx)
+		{
 			xmlXPathFreeContext(xpathCtx);
+			xpathCtx = nullptr;
+		}
 
 		if (document)
+		{
 			xmlFreeDoc(document);
+			document = nullptr;
+		}
 
 		if (buffer)
+		{
 			xmlBufferFree(buffer);
+			buffer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "Cannot parse asset XML: " << e;
 		asset = nullptr;
@@ -737,16 +758,28 @@ AssetPtr XmlParser::parseAsset(
 	catch (...)
 	{
 		if (assetNodes)
+		{
 			xmlXPathFreeObject(assetNodes);
+			assetNodes = nullptr;
+		}
 
 		if (xpathCtx)
+		{
 			xmlXPathFreeContext(xpathCtx);
+			xpathCtx = nullptr;
+		}
 
 		if (document)
+		{
 			xmlFreeDoc(document);
+			document = nullptr;
+		}
 
 		if (buffer)
+		{
 			xmlBufferFree(buffer);
+			buffer = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "Cannot parse asset XML, Unknown execption occurred";
 		asset = nullptr;
@@ -777,7 +810,7 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr d
 		if (text)
 		{
 			value->m_value = (char *) text;
-			xmlFree(text);
+			xmlFree(text); text = nullptr;
 		}
 	}
 	else
@@ -789,7 +822,7 @@ CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr d
 			xmlNodeDump(buffer, doc, child, 0, 0);
 
 		value->m_value = (char *) buffer->content;
-		xmlBufferFree(buffer);
+		xmlBufferFree(buffer); buffer = nullptr;
 	}
 
 	for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
@@ -884,7 +917,7 @@ void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDo
 					if (text)
 					{
 						tool->m_status.push_back((const char *) text);
-						xmlFree(text);
+						xmlFree(text); text = nullptr;
 					}
 				}
 			}
@@ -970,7 +1003,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 					if (text)
 					{
 						tool->setDescription((const char *) text);
-						xmlFree(text);
+						xmlFree(text); text = nullptr;
 					}
 				}
 				else if (xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition") == 0)
@@ -980,7 +1013,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 					if (text)
 					{
 						tool->addValue(parseCuttingToolNode(child, doc));
-						xmlFree(text);
+						xmlFree(text); text = nullptr;
 					}
 				}
 				else if (xmlStrcmp(child->name, BAD_CAST "CuttingToolLifeCycle") == 0)
@@ -994,7 +1027,7 @@ CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
 					if (text)
 					{
 						tool->addValue(parseCuttingToolNode(child, doc));
-						xmlFree(text);
+						xmlFree(text); text = nullptr;
 					}
 				}
 			}
@@ -1053,19 +1086,25 @@ void XmlParser::updateAsset(
 		ptr->changed();
 
 		// Cleanup objects...
-		xmlFreeDoc(document);
+		xmlFreeDoc(document); document = nullptr;
 
 	}
 	catch (string e)
 	{
 		if (document)
+		{
 			xmlFreeDoc(document);
+			document = nullptr;
+		}
 
 		g_logger << dlib::LERROR << "Cannot parse asset XML: " << e;
 	}
 	catch (...)
 	{
 		if (document)
+		{
 			xmlFreeDoc(document);
+			document = nullptr;
+		}
 	}
 }
