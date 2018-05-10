@@ -48,6 +48,8 @@ class GlobalsTest : public CppUnit::TestFixture
 	CPPUNIT_TEST(testIllegalCharacters);
 	CPPUNIT_TEST(testGetEnumerations);
 	CPPUNIT_TEST(testGetCurrentTime);
+	CPPUNIT_TEST(testGetCurrentTime2);
+	CPPUNIT_TEST(testParseTimeMicro);
 	CPPUNIT_TEST(testAddNamespace);
 	CPPUNIT_TEST(testParseTimeMilli);
 	CPPUNIT_TEST(testInt64ToString);
@@ -62,6 +64,8 @@ protected:
 	void testIllegalCharacters();
 	void testGetEnumerations();
 	void testGetCurrentTime();
+	void testGetCurrentTime2();
+	void testParseTimeMicro();
 	void testAddNamespace();
 	void testParseTimeMilli();
 	void testInt64ToString();

@@ -78,6 +78,7 @@ add_executable(agent
 AddMsvcXPSupport(agent)
 AddLibXML2Support(agent)
 AddDLibSupport(agent)
+AddDateSupport(agent)
 
 target_include_directories(agent
 	PRIVATE ${PROJECT_BINARY_DIR}/agent

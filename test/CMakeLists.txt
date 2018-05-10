@@ -75,6 +75,7 @@ AddMsvcXPSupport(agent_test)
 AddLibXML2Support(agent_test)
 AddCppUnitSupport(agent_test)
 AddDLibSupport(agent_test)
+AddDateSupport(agent_test)
 
 target_include_directories(agent_test
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../agent

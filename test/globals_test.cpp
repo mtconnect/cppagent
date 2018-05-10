@@ -33,6 +33,7 @@
 #include "globals_test.hpp"
 #include <chrono>
 #include <thread>
+#include <date/date.h>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(GlobalsTest);
@@ -189,6 +190,46 @@ void GlobalsTest::testGetCurrentTime()
 		&hour, &min, &sec, (char *) &tzs);
 
 	CPPUNIT_ASSERT_EQUAL(8, n);
+}
+
+
+void GlobalsTest::testGetCurrentTime2()
+{
+	// Build a known system time point
+	auto knownTimePoint = std::chrono::system_clock::from_time_t(0); // 1 Jan 1970 00:00:00
+
+	auto gmt = getCurrentTime(knownTimePoint, GMT);
+	CPPUNIT_ASSERT_EQUAL(string("1970-01-01T00:00:00Z"), gmt);
+	auto gmtUvSec = getCurrentTime(knownTimePoint, GMT_UV_SEC);
+	CPPUNIT_ASSERT_EQUAL(string("1970-01-01T00:00:00.000000Z"), gmtUvSec);
+	auto humRead = getCurrentTime(knownTimePoint, HUM_READ);
+	CPPUNIT_ASSERT_EQUAL(string("Thu, 01 Jan 1970 00:00:00 GMT"), humRead);
+
+	// Add a small amount of time 50.123456 seconds
+	auto offsetTimePoint = knownTimePoint + std::chrono::microseconds(50123456);
+
+	gmt = getCurrentTime(offsetTimePoint, GMT);
+	CPPUNIT_ASSERT_EQUAL(string("1970-01-01T00:00:50Z"), gmt);
+	gmtUvSec = getCurrentTime(offsetTimePoint, GMT_UV_SEC);
+	CPPUNIT_ASSERT_EQUAL(string("1970-01-01T00:00:50.123456Z"), gmtUvSec);
+	humRead = getCurrentTime(offsetTimePoint, HUM_READ);
+	CPPUNIT_ASSERT_EQUAL(string("Thu, 01 Jan 1970 00:00:50 GMT"), humRead);
+
+	// Offset again but by a time period that should be rounded down for some formats, 10.654321 seconds
+	offsetTimePoint = knownTimePoint + std::chrono::microseconds(10654321);
+	gmt = getCurrentTime(offsetTimePoint, GMT);
+	CPPUNIT_ASSERT_EQUAL(string("1970-01-01T00:00:10Z"), gmt);
+	gmtUvSec = getCurrentTime(offsetTimePoint, GMT_UV_SEC);
+	CPPUNIT_ASSERT_EQUAL(string("1970-01-01T00:00:10.654321Z"), gmtUvSec);
+	humRead = getCurrentTime(offsetTimePoint, HUM_READ);
+	CPPUNIT_ASSERT_EQUAL(string("Thu, 01 Jan 1970 00:00:10 GMT"), humRead);
+}
+
+
+void GlobalsTest::testParseTimeMicro()
+{
+	// This time is 123456 microseconds after the epoch
+	CPPUNIT_ASSERT_EQUAL(123456ull, parseTimeMicro("1970-01-01T00:00:00.123456Z"));
 }
 
 
