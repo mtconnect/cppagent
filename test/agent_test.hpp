@@ -137,18 +137,12 @@ protected:
 	std::string m_agentId;
 	std::string m_incomingIp;
 
-	bool m_response;
 	std::string m_path;
-	std::string m_at;
 	dlib::key_value_map m_queries;
 	std::string m_result;
 	dlib::key_value_map m_cookies;
-	queue_type m_newCookies;
 	dlib::key_value_map_ci m_incomingHeaders;
-	std::string m_foreignIp;
-	std::string m_localIp;
-	unsigned short m_foreignPort;
-	unsigned short m_localPort;
+
 	std::ostringstream m_out;
 	int m_delay;
 
