@@ -237,10 +237,10 @@ void DataItemTest::testConversion()
 
 	DataItem item5(attributes4);
 
-	Adapter a("", "", 0);
-	a.setConversionRequired(false);
+	Adapter adapter("", "", 0);
+	adapter.setConversionRequired(false);
 
-	item5.setDataSource(&a);
+	item5.setDataSource(&adapter);
 	CPPUNIT_ASSERT(!item5.conversionRequired());
 
 	CPPUNIT_ASSERT_EQUAL((string) "0.13", item5.convertValue("0.13"));

@@ -58,7 +58,8 @@ int main(int argc, char *argv[])
 	testrunner.addTest(CPPUNIT_NS :: TestFactoryRegistry :: getRegistry().makeTest());
 	std::string path;
 
-	if (argc > 1) path = argv[1];
+	if (argc > 1)
+		path = argv[1];
 
 	testrunner.run(testresult, path);
 
