@@ -51,7 +51,7 @@ void XmlParserTest::setUp()
 		m_xmlParser = new XmlParser();
 		m_devices = m_xmlParser->parseFile("../samples/test_config.xml");
 	}
-	catch (exception &e)
+	catch (exception &)
 	{
 		CPPUNIT_FAIL("Could not locate test xml: ../samples/test_config.xml");
 	}
@@ -180,7 +180,7 @@ void XmlParserTest::testGetDataItemsExt()
 		m_xmlParser = new XmlParser();
 		m_xmlParser->parseFile("../samples/extension.xml");
 	}
-	catch (exception &e)
+	catch (exception &)
 	{
 		CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
 	}
@@ -208,7 +208,7 @@ void XmlParserTest::testExtendedSchema()
 		m_xmlParser = new XmlParser();
 		m_devices = m_xmlParser->parseFile("../samples/extension.xml");
 	}
-	catch (exception &e)
+	catch (exception &)
 	{
 		CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
 	}
@@ -444,7 +444,7 @@ void XmlParserTest::testFilteredDataItem()
 		m_xmlParser = new XmlParser();
 		m_devices = m_xmlParser->parseFile("../samples/filter_example.xml");
 	}
-	catch (exception &e)
+	catch (exception &)
 	{
 		CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example.xml");
 	}
@@ -473,7 +473,7 @@ void XmlParserTest::testReferences()
 		m_xmlParser = new XmlParser();
 		m_devices = m_xmlParser->parseFile("../samples/reference_example.xml");
 	}
-	catch (exception &e)
+	catch (exception &)
 	{
 		CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
 	}
