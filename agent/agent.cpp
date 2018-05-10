@@ -43,7 +43,7 @@ Agent::Agent(
 	const string& configXmlPath,
 	int bufferSize,
 	int maxAssets,
-	int checkpointFreq) :
+	std::chrono::milliseconds checkpointFreq) :
 	m_putEnabled(false),
 	m_logStreamData(false)
 {
@@ -97,8 +97,8 @@ Agent::Agent(
 	m_slidingBufferSize = 1 << bufferSize;
 	m_slidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
 	m_slidingBuffer->set_size(bufferSize);
-	m_checkpointFreq = checkpointFreq;
-	m_checkpointCount = (m_slidingBufferSize / checkpointFreq) + 1;
+	m_checkpointFreq = checkpointFreq.count();
+	m_checkpointCount = (m_slidingBufferSize / checkpointFreq.count()) + 1;
 
 	// Asset sliding buffer
 	m_maxAssets = maxAssets;
@@ -460,7 +460,7 @@ Adapter *Agent::addAdapter(
 	const string& host,
 	const unsigned int port,
 	bool start,
-	int legacyTimeout )
+	std::chrono::seconds legacyTimeout )
 {
 	auto adapter = new Adapter(deviceName, host, port, legacyTimeout);
 	adapter->setAgent(*this);
@@ -861,7 +861,7 @@ string Agent::handleCall(
 				freq = checkAndGetParam(queries, "interval", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
 
 			auto at = checkAndGetParam64(queries, "at", NO_START, getFirstSequence(), true, m_sequence - 1);
-			auto heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
+			auto heartbeat = std::chrono::milliseconds{checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
 
 			if (freq != NO_FREQ && at != NO_START)
 				return printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
@@ -893,7 +893,7 @@ string Agent::handleCall(
 			if (start == NO_START) // If there was no data in queries
 				start = checkAndGetParam64(queries, "from", 1, getFirstSequence(), true, m_sequence);
 
-			auto heartbeat = checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000);
+			auto heartbeat = std::chrono::milliseconds{checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
 
 			return handleStream(
 				out,
@@ -1005,7 +1005,7 @@ string Agent::handleStream(
 	unsigned int frequency,
 	uint64_t start,
 	unsigned int count,
-	unsigned int heatbeat )
+	std::chrono::milliseconds heartbeat )
 {
 	std::set<string> filter;
 	try
@@ -1023,7 +1023,7 @@ string Agent::handleStream(
 	// Check if there is a frequency to stream data or not
 	if (frequency != (unsigned)NO_FREQ )
 	{
-		streamData(out, filter, current, frequency, start, count, heatbeat);
+		streamData(out, filter, current, frequency, start, count, heartbeat);
 		return "";
 	}
 	else
@@ -1198,7 +1198,7 @@ string Agent::handleFile(const string &uri, outgoing_things& outgoing)
 	"Server: MTConnectAgent\r\n"
 	"Connection: close\r\n"
 	"Content-Length: " << cachedFile->m_size << "\r\n"
-	"Expires: " << getCurrentTime(time(nullptr) + 60ll * 60ll * 24ll, 0, HUM_READ) << "\r\n"
+	"Expires: " << getCurrentTime(std::chrono::system_clock::now() + std::chrono::seconds(60*60*24), HUM_READ) << "\r\n"
 	"Content-Type: " << contentType << "\r\n\r\n";
 
 	outgoing.out->write(cachedFile->m_buffer, cachedFile->m_size);
@@ -1215,7 +1215,7 @@ void Agent::streamData(
 	unsigned int interval,
 	uint64_t start,
 	unsigned int count,
-	unsigned int heartbeat )
+	std::chrono::milliseconds heartbeat )
 {
 	// Create header
 	string boundary = md5(intToString(time(nullptr)));
@@ -1245,7 +1245,7 @@ void Agent::streamData(
 	for (const auto &item : filterSet)
 		m_dataItemMap[item]->addObserver(&observer);
 
-	uint64_t interMicros = interval * 1000u;
+	chrono::milliseconds interMilli{interval};
 	uint64_t firstSeq = getFirstSequence();
 	if (start < firstSeq)
 		start = firstSeq;
@@ -1253,17 +1253,16 @@ void Agent::streamData(
 	try
 	{
 		// Loop until the user closes the connection
-		timestamper ts;
 		while (out.good())
 		{
 			// Remember when we started this grab...
-			uint64_t last = ts.get_timestamp();
+			auto last = chrono::system_clock::now();
 
 			// Fetch sample data now resets the observer while holding the sequence
 			// mutex to make sure that a new event will be recorded in the observer
 			// when it returns.
 			string content;
-			uint64_t end;
+			uint64_t end(0ull);
 			bool endOfBuffer = true;
 			if (current)
 				content = fetchCurrentData(filterSet, NO_START);
@@ -1326,7 +1325,7 @@ void Agent::streamData(
 			}
 			else
 			{
-				uint64 delta;
+				chrono::milliseconds delta;
 
 				if (!current)
 				{
@@ -1335,12 +1334,12 @@ void Agent::streamData(
 					// on separate condition variables and this pops out too soon. This will make sure
 					// observer was actually signaled and instead of throwing an error will wait again
 					// for the remaining hartbeat interval.
-					delta = (ts.get_timestamp() - last) / 1000ull;
+					delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
 					while ( delta < heartbeat &&
-							observer.wait(heartbeat - delta) &&
+							observer.wait((heartbeat - delta).count()) &&
 							!observer.wasSignaled() )
 					{
-						delta = (ts.get_timestamp() - last) / 1000ull;
+						delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
 					}
 
 					{
@@ -1369,11 +1368,11 @@ void Agent::streamData(
 				}
 		
 				// Now wait the remainder if we triggered before the timer was up.
-				delta = ts.get_timestamp() - last;
-				if (delta < interMicros)
+				delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
+				if (delta < interMilli)
 				{
 					// Sleep the remainder
-					this_thread::sleep_for(chrono::milliseconds((interMicros - delta) / 1000ull));
+					this_thread::sleep_for(interMilli - delta);
 				}
 			}
 		}

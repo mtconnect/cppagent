@@ -35,6 +35,8 @@
 #include "adapter.hpp"
 #include "rolling_file_logger.hpp"
 #include <sstream>
+#include <chrono>
+#include <date/date.h>
 #include <dlib/dir_nav.h>
 
 // Registers the fixture into the 'registry'
@@ -43,6 +45,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ConfigTest);
 static dlib::logger g_logger("config_test");
 
 using namespace std;
+using namespace std::chrono;
+using namespace date;
 
 
 void ConfigTest::setUp()
@@ -122,7 +126,7 @@ void ConfigTest::testAdapter()
 	CPPUNIT_ASSERT(adapter->isDupChecking());
 	CPPUNIT_ASSERT(adapter->isAutoAvailable());
 	CPPUNIT_ASSERT(adapter->isIgnoringTimestamps());
-	CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
+	CPPUNIT_ASSERT_EQUAL(2000s, adapter->getLegacyTimeout());
 	CPPUNIT_ASSERT(device->m_preserveUuid);
 }
 
@@ -277,7 +281,7 @@ void ConfigTest::testLegacyTimeout()
 	const auto device = agent->getDevices()[0];
 	const auto adapter = device->m_adapters[0];
 
-	CPPUNIT_ASSERT_EQUAL(2000, adapter->getLegacyTimeout());
+	CPPUNIT_ASSERT_EQUAL(2000s, adapter->getLegacyTimeout());
 }
 
 

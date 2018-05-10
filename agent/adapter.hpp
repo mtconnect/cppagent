@@ -19,6 +19,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <set>
+#include <chrono>
 
 #include "dlib/sockets.h"
 #include "dlib/threads.h"
@@ -40,7 +41,7 @@ public:
 	Adapter(const std::string &device,
 			const std::string &server, 
 			const unsigned int port,
-			int legacyTimeout = 600);
+			std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
 
 	// Virtual destructor
 	virtual ~Adapter();
@@ -64,9 +65,9 @@ public:
 	void setIgnoreTimestamps(bool flag) {
 		m_ignoreTimestamps = flag; }
 
-	void setReconnectInterval(int interval) {
+	void setReconnectInterval(std::chrono::milliseconds interval) {
 		m_reconnectInterval = interval; }
-	int getReconnectInterval() const {
+	std::chrono::milliseconds getReconnectInterval() const {
 		return m_reconnectInterval; }
 
 	void setRelativeTime(bool flag) {
@@ -181,7 +182,7 @@ protected:
 	std::set<std::string> m_logOnce;
 
 	// Timeout for reconnection attempts, given in milliseconds
-	int m_reconnectInterval;
+	std::chrono::milliseconds m_reconnectInterval;
 
 private:
 	// Inherited and is run as part of the threaded_object

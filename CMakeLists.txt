@@ -31,6 +31,7 @@ include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/LibXML2.cmake)
 include(cmake/CppUnit.cmake)
 include(cmake/DLib.cmake)
+include(cmake/Date.cmake)
 
 # Add our projects
 add_subdirectory(agent)

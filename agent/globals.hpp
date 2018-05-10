@@ -34,6 +34,9 @@
 #include <fstream>
 #include <string>
 #include <limits>
+#include <chrono>
+
+#include <date/date.h>
 
 #ifdef _WINDOWS
 	#define ISNAN(x) _isnan(x)
@@ -95,8 +98,8 @@ std::string toUpperCase(std::string &text);
 bool isNonNegativeInteger(const std::string &s);
 
 
-// Get the current time formatted
-std::string getCurrentTime(time_t aTime, int aUsec, TimeFormat format);
+// Get a specified time formatted
+std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint, TimeFormat format);
 
 // Get the current time formatted
 std::string getCurrentTime(TimeFormat format);
@@ -108,7 +111,7 @@ uint64_t getCurrentTimeInMicros();
 std::string getRelativeTimeString(uint64_t aTime);
 
 // Get the current time in number of seconds as an integer
-unsigned int getCurrentTimeInSec();
+uint64_t getCurrentTimeInSec();
 
 uint64_t parseTimeMicro(const std::string &aTime);
 

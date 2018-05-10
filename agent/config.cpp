@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <sys/stat.h>
 #include "rolling_file_logger.hpp"
+#include <date/date.h>
 
 // If Windows XP
 #if defined(_WINDOWS)
@@ -68,6 +69,30 @@ static inline int get_with_default(
 {
 	if (reader.is_key_defined(key))
 		return atoi(reader[key].c_str());
+	else
+		return defaultValue;
+}
+
+
+static inline std::chrono::milliseconds get_with_default(
+	const config_reader::kernel_1a &reader, 
+	const char *key,
+	std::chrono::milliseconds defaultValue)
+{
+	if (reader.is_key_defined(key))
+		return std::chrono::milliseconds{ atoi(reader[key].c_str()) };
+	else
+		return defaultValue;
+}
+
+
+static inline std::chrono::seconds get_with_default(
+	const config_reader::kernel_1a &reader, 
+	const char *key,
+	std::chrono::seconds defaultValue)
+{
+	if (reader.is_key_defined(key))
+		return std::chrono::seconds{ atoi(reader[key].c_str()) };
 	else
 		return defaultValue;
 }
@@ -322,24 +347,11 @@ Device *AgentConfiguration::defaultDevice()
 }
 
 
-static const char *timestamp(char *buffer)
+static std::string timestamp()
 {
-#ifdef _WINDOWS
-	SYSTEMTIME st;
-	GetSystemTime(&st);
-	sprintf(buffer, "%4d-%02d-%02dT%02d:%02d:%02d.%04dZ", st.wYear, st.wMonth, st.wDay, st.wHour,
-			st.wMinute, st.wSecond, st.wMilliseconds);
-#else
-	struct timeval tv;
-	struct timezone tz;
-
-	gettimeofday(&tv, &tz);
-
-	strftime(buffer, 64, "%Y-%m-%dT%H:%M:%S", gmtime(&tv.tv_sec));
-	sprintf(buffer + strlen(buffer), ".%06dZ", (int) tv.tv_usec);
-#endif
-
-	return buffer;
+	return date::format(
+		"%Y-%m-%dT%H:%M:%SZ",
+		date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
 }
 
 
@@ -350,9 +362,7 @@ void AgentConfiguration::LoggerHook(
 	const char* message)
 {
 	stringstream out;
-	char buffer[64] = {0};
-	timestamp(buffer);
-	out << buffer << ": " << l.name << " [" << threadId << "] " << loggerName << ": " << message;
+	out << timestamp() << ": " << l.name << " [" << threadId << "] " << loggerName << ": " << message;
 #ifdef WIN32
 	out << "\r\n";
 #else
@@ -499,9 +509,9 @@ void AgentConfiguration::loadConfig(std::istream &file)
 	string serverIp = get_with_default(reader, "ServerIp", "");
 	auto bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
 	auto maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
-	auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
-	auto legacyTimeout = get_with_default(reader, "LegacyTimeout", 600);
-	auto reconnectInterval = get_with_default(reader, "ReconnectInterval", 10 * 1000);
+	auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000ms);
+	auto legacyTimeout = get_with_default(reader, "LegacyTimeout", 600s);
+	auto reconnectInterval = get_with_default(reader, "ReconnectInterval", 10000ms);
 	auto ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
 	auto conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
 	auto upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
@@ -617,8 +627,8 @@ void AgentConfiguration::loadConfig(std::istream &file)
 void AgentConfiguration::loadAdapters(
 	dlib::config_reader::kernel_1a &reader,
 	bool defaultPreserve,
-	int legacyTimeout,
-	int reconnectInterval,
+	std::chrono::seconds legacyTimeout,
+	std::chrono::milliseconds reconnectInterval,
 	bool ignoreTimestamps,
 	bool conversionRequired,
 	bool upcaseValue)
