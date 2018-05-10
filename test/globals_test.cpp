@@ -229,7 +229,7 @@ void GlobalsTest::testGetCurrentTime2()
 void GlobalsTest::testParseTimeMicro()
 {
 	// This time is 123456 microseconds after the epoch
-	CPPUNIT_ASSERT_EQUAL(123456ull, parseTimeMicro("1970-01-01T00:00:00.123456Z"));
+	CPPUNIT_ASSERT_EQUAL(uint64_t{ 123456 }, parseTimeMicro("1970-01-01T00:00:00.123456Z"));
 }
 
 
