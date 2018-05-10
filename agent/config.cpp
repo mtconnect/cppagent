@@ -32,9 +32,11 @@
 #include "rolling_file_logger.hpp"
 
 // If Windows XP
-#if defined(_WINDOWS) && (WINVER < 0x0600)
-	#include "shlwapi.h"
-	#define stat(P, B) (PathFileExists((const char*) P) ? 0 : -1)
+#if defined(_WINDOWS)
+	#if WINVER < 0x0600
+		#include "shlwapi.h"
+		#define stat(P, B) (PathFileExists((const char*) P) ? 0 : -1)
+	#endif
 #endif
 
 #ifdef MACOSX
