@@ -110,9 +110,9 @@ public:
 	virtual ~Agent();
 
 	// Overridden method that is called per web request
-	virtual const std::string on_request(
+	const std::string on_request (
 		const incoming_things &incoming,
-		outgoing_things &outgoing );
+		outgoing_things &outgoing ) override;
 
 	// Add an adapter to the agent
 	Adapter *addAdapter(const std::string &device,

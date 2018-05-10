@@ -34,9 +34,9 @@ public:
 	virtual ~AgentConfiguration();
 
 	// For MTConnectService
-	virtual void stop();
-	virtual void start() ;
-	virtual void initialize(int aArgc, const char *aArgv[]);
+	void stop() override;
+	void start() override;
+	void initialize(int argc, const char *argv[]) override;
 
 	void configureLogger(dlib::config_reader::kernel_1a &reader);
 	void loadConfig(std::istream &file);

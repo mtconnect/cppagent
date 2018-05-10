@@ -101,12 +101,12 @@ public:
 		m_baseTime = offset; }
 
 	// Inherited method to incoming data from the server
-	virtual void processData(const std::string &data);
-	virtual void protocolCommand(const std::string &data);
+	void processData(const std::string &data) override;
+	void protocolCommand(const std::string &data) override;
 
 	// Method called when connection is lost.
-	virtual void disconnected();
-	virtual void connected();
+	void disconnected() override;
+	void connected() override;
 
 	bool isDuplicate(DataItem *dataItem, const std::string &value, double timeOffset) const
 	{
@@ -185,5 +185,5 @@ protected:
 
 private:
 	// Inherited and is run as part of the threaded_object
-	void thread();
+	void thread() override;
 };
