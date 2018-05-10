@@ -72,7 +72,7 @@ string floatToString(double f)
 
 string toUpperCase(string &text)
 {
-	for (unsigned int i = 0; i < text.length(); i++)
+	for (auto i = 0u; i < text.length(); i++)
 		text[i] = toupper(text[i]);
 
 	return text;
@@ -81,7 +81,7 @@ string toUpperCase(string &text)
 
 bool isNonNegativeInteger(const string &s)
 {
-	for (unsigned int i = 0; i < s.length(); i++)
+	for (auto i = 0u; i < s.length(); i++)
 	{
 		if (!isdigit(s[i]))
 			return false;
@@ -209,7 +209,7 @@ unsigned int getCurrentTimeInSec()
 
 void replaceIllegalCharacters(string &data)
 {
-	for (unsigned int i = 0; i < data.length(); i++)
+	for (auto i = 0u; i < data.length(); i++)
 	{
 		char c = data[i];
 
@@ -233,7 +233,7 @@ void replaceIllegalCharacters(string &data)
 
 int getEnumeration(const string &name, const string *array, unsigned int size)
 {
-	for (unsigned int i = 0; i < size; i++)
+	for (auto i = 0u; i < size; i++)
 	{
 		if (name == array[i])
 			return i;
