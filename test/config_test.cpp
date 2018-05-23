@@ -30,13 +30,18 @@
 // THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
 // SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 //
+
+namespace date {};
+using namespace date;
+
+#include <sstream>
+#include <chrono>
+#include <date/date.h>
+
 #include "config_test.hpp"
 #include "agent.hpp"
 #include "adapter.hpp"
 #include "rolling_file_logger.hpp"
-#include <sstream>
-#include <chrono>
-#include <date/date.h>
 #include <dlib/dir_nav.h>
 
 // Registers the fixture into the 'registry'
@@ -46,8 +51,6 @@ static dlib::logger g_logger("config_test");
 
 using namespace std;
 using namespace std::chrono;
-using namespace date;
-
 
 void ConfigTest::setUp()
 {

@@ -30,18 +30,21 @@
 // THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
 // SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 //
-#include "connector_test.hpp"
+
+namespace date {};
+using namespace date;
+
+#include <sstream>
 #include <chrono>
-#include <thread>
 #include <date/date.h> // This file is to allow std::chrono types to be output to a stream
+#include <thread>
+#include "connector_test.hpp"
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(ConnectorTest);
 
 using namespace std;
 using namespace std::chrono;
-using namespace date; // Use this namespace to allow std::chrono types to be used in CPPUNIT_ASSERT_EQUAL macros
-
 
 void ConnectorTest::setUp()
 {
