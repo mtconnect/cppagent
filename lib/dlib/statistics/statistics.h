@@ -499,7 +499,7 @@ namespace dlib
             sum_x  = sum_x*forget + x;
             sum_y  = sum_y*forget + y;
 
-            n = n*forget + forget;
+            n = n*forget + 1;
         }
 
         T current_n (
@@ -530,20 +530,20 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 0,
+            DLIB_ASSERT(current_n() > 1,
                 "\tT running_scalar_covariance_decayed::covariance()"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
                 );
 
-            return 1/n * (sum_xy - sum_y*sum_x/n);
+            return 1/(n-1) * (sum_xy - sum_y*sum_x/n);
         }
 
         T correlation (
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 0,
+            DLIB_ASSERT(current_n() > 1,
                 "\tT running_scalar_covariance_decayed::correlation()"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
@@ -560,13 +560,13 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 0,
+            DLIB_ASSERT(current_n() > 1,
                 "\tT running_scalar_covariance_decayed::variance_x()"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
                 );
 
-            T temp = 1/n * (sum_xx - sum_x*sum_x/n);
+            T temp = 1/(n-1) * (sum_xx - sum_x*sum_x/n);
             // make sure the variance is never negative.  This might
             // happen due to numerical errors.
             if (temp >= 0)
@@ -579,13 +579,13 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 0,
+            DLIB_ASSERT(current_n() > 1,
                 "\tT running_scalar_covariance_decayed::variance_y()"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
                 );
 
-            T temp = 1/n * (sum_yy - sum_y*sum_y/n);
+            T temp = 1/(n-1) * (sum_yy - sum_y*sum_y/n);
             // make sure the variance is never negative.  This might
             // happen due to numerical errors.
             if (temp >= 0)
@@ -598,7 +598,7 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 0,
+            DLIB_ASSERT(current_n() > 1,
                 "\tT running_scalar_covariance_decayed::stddev_x()"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
@@ -611,7 +611,7 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 0,
+            DLIB_ASSERT(current_n() > 1,
                 "\tT running_scalar_covariance_decayed::stddev_y()"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
@@ -673,7 +673,7 @@ namespace dlib
 
             sum_x  = sum_x*forget + x;
 
-            n = n*forget + forget;
+            n = n*forget + 1;
         }
 
         T current_n (
@@ -695,13 +695,13 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 0,
+            DLIB_ASSERT(current_n() > 1,
                 "\tT running_stats_decayed::variance()"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
                 );
 
-            T temp = 1/n * (sum_xx - sum_x*sum_x/n);
+            T temp = 1/(n-1) * (sum_xx - sum_x*sum_x/n);
             // make sure the variance is never negative.  This might
             // happen due to numerical errors.
             if (temp >= 0)
@@ -714,7 +714,7 @@ namespace dlib
         ) const
         {
             // make sure requires clause is not broken
-            DLIB_ASSERT(current_n() > 0,
+            DLIB_ASSERT(current_n() > 1,
                 "\tT running_stats_decayed::stddev()"
                 << "\n\tyou have to add some numbers to this object first"
                 << "\n\tthis: " << this
@@ -1816,6 +1816,70 @@ namespace dlib
         serialize(item.m, out);
         serialize(item.sd, out);
         serialize(item.pca, out);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline double binomial_random_vars_are_different (
+        uint64_t k1,
+        uint64_t n1,
+        uint64_t k2,
+        uint64_t n2
+    )
+    {
+        DLIB_ASSERT(k1 <= n1, "k1: "<< k1 << "  n1: "<< n1);
+        DLIB_ASSERT(k2 <= n2, "k2: "<< k2 << "  n2: "<< n2);
+
+        const double p1 = k1/(double)n1;
+        const double p2 = k2/(double)n2;
+        const double p = (k1+k2)/(double)(n1+n2);
+
+        auto ll = [](double p, uint64_t k, uint64_t n) {      
+            if (p == 0 || p == 1)
+                return 0.0;
+            return k*std::log(p) + (n-k)*std::log(1-p);
+        };
+
+        auto logll = ll(p1,k1,n1) + ll(p2,k2,n2) - ll(p,k1,n1) - ll(p,k2,n2); 
+
+        // The basic statistic only tells you if the random variables are different.  But
+        // it's nice to know which way they are different, i.e., which one is bigger.  So
+        // stuff that information into the sign bit of the return value.
+        if (p1>=p2)
+            return logll;
+        else
+            return -logll;
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    inline double event_correlation (
+        uint64_t A_count,
+        uint64_t B_count,
+        uint64_t AB_count,
+        uint64_t total_num_observations
+    )
+    {
+        DLIB_ASSERT(AB_count <= A_count && A_count <= total_num_observations,
+            "AB_count: " << AB_count << ", A_count: "<< A_count << ", total_num_observations: " << total_num_observations);
+        DLIB_ASSERT(AB_count <= B_count && B_count <= total_num_observations,
+            "AB_count: " << AB_count << ", B_count: "<< B_count << ", total_num_observations: " << total_num_observations);
+
+        if (total_num_observations == 0)
+            return 0;
+
+        DLIB_ASSERT(A_count + B_count - AB_count <= total_num_observations,
+            "AB_count: " << AB_count << " A_count: " << A_count <<  ", B_count: "<< B_count << ", total_num_observations: " << total_num_observations);
+
+
+        const auto AnotB_count = A_count - AB_count;
+        const auto notB_count = total_num_observations - B_count;
+        // How likely is it that the odds of A happening is different when conditioned on
+        // whether or not B happened?
+        return binomial_random_vars_are_different( 
+            AB_count, B_count,      // A conditional on the presence of B
+            AnotB_count, notB_count // A conditional on the absence of B 
+        );
     }
 
 // ----------------------------------------------------------------------------------------

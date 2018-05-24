@@ -60,6 +60,9 @@ namespace dlib
          
         typedef T type;
         typedef mem_manager mem_manager_type;
+        typedef T*          iterator;       
+        typedef const T*    const_iterator; 
+
 
         // -----------------------------------
 
@@ -312,14 +315,35 @@ namespace dlib
             }
         }
 
-        unsigned long size (
-        ) const { return static_cast<unsigned long>(nc_ * nr_); }
+        size_t size (
+        ) const { return static_cast<size_t>(nc_) * static_cast<size_t>(nr_); }
 
         long width_step (
         ) const
         {
             return nc_*sizeof(T);
         }
+
+        iterator begin() 
+        {
+            return data;
+        }
+
+        iterator end()
+        {
+            return data+size();
+        }
+
+        const_iterator begin()  const
+        {
+            return data;
+        }
+
+        const_iterator end() const
+        {
+            return data+size();
+        }
+
 
     private:
 

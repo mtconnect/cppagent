@@ -106,6 +106,7 @@ namespace std
 #include <algorithm>    // for std::swap
 #include <new>          // for std::bad_alloc
 #include <cstdlib>
+#include <stddef.h>
 #include <limits> // for std::numeric_limits for is_finite()
 #include "assert.h"
 #include "error.h"
@@ -801,10 +802,10 @@ namespace dlib
             abs<4>::value == 4
     !*/
 
-        template <long x, typename enabled=void>
-        struct tabs { const static long value = x; };
-        template <long x>
-        struct tabs<x,typename enable_if_c<(x < 0)>::type> { const static long value = -x; };
+    template <long x, typename enabled=void>
+    struct tabs { const static long value = x; };
+    template <long x>
+    struct tabs<x,typename enable_if_c<(x < 0)>::type> { const static long value = -x; };
 
 // ----------------------------------------------------------------------------------------
 
@@ -816,10 +817,10 @@ namespace dlib
             abs<4,7>::value == 7
     !*/
 
-        template <long x, long y, typename enabled=void>
-        struct tmax { const static long value = x; };
-        template <long x, long y>
-        struct tmax<x,y,typename enable_if_c<(y > x)>::type> { const static long value = y; };
+    template <long x, long y, typename enabled=void>
+    struct tmax { const static long value = x; };
+    template <long x, long y>
+    struct tmax<x,y,typename enable_if_c<(y > x)>::type> { const static long value = y; };
 
 // ----------------------------------------------------------------------------------------
 
@@ -831,12 +832,12 @@ namespace dlib
             abs<4,7>::value == 4
     !*/
 
-        template <long x, long y, typename enabled=void>
-        struct tmin { const static long value = x; };
-        template <long x, long y>
-        struct tmin<x,y,typename enable_if_c<(y < x)>::type> { const static long value = y; };
+    template <long x, long y, typename enabled=void>
+    struct tmin { const static long value = x; };
+    template <long x, long y>
+    struct tmin<x,y,typename enable_if_c<(y < x)>::type> { const static long value = y; };
 
-    // ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
 
 #define DLIB_MAKE_HAS_MEMBER_FUNCTION_TEST(testname, returnT, funct_name, args)                        \
     struct _two_bytes_##testname { char a[2]; };                                                       \
@@ -1066,6 +1067,88 @@ namespace dlib
         // warnings from gcc about violations of strict-aliasing rules.
         void* const data; 
     };
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename F
+        >
+    auto max_scoring_element(
+        const T& container,
+        F score_func
+    ) -> decltype(std::make_pair(*container.begin(), 0.0))
+    /*!
+        requires
+            - container has .begin() and .end(), allowing it to be enumerated.
+            - score_func() is a function that takes an element of the container and returns a double.
+        ensures
+            - This function finds the element of container that has the largest score,
+              according to score_func(), and returns a std::pair containing that maximal
+              element along with the score.
+            - If the container is empty then make_pair(a default initialized object, -infinity) is returned.
+    !*/
+    {
+        double best_score = -std::numeric_limits<double>::infinity();
+        auto best_i = container.begin();
+        for (auto i = container.begin(); i != container.end(); ++i)
+        {
+            auto score = score_func(*i);
+            if (score > best_score)
+            {
+                best_score = score;
+                best_i = i;
+            }
+        }
+
+        using item_type = typename std::remove_reference<decltype(*best_i)>::type;
+
+        if (best_i == container.end())
+            return std::make_pair(item_type(), best_score);
+        else
+            return std::make_pair(*best_i, best_score);
+    }
+
+// ----------------------------------------------------------------------------------------
+
+    template <
+        typename T, 
+        typename F
+        >
+    auto min_scoring_element(
+        const T& container, 
+        F score_func
+    ) -> decltype(std::make_pair(*container.begin(), 0.0))
+    /*!
+        requires
+            - container has .begin() and .end(), allowing it to be enumerated.
+            - score_func() is a function that takes an element of the container and returns a double.
+        ensures
+            - This function finds the element of container that has the smallest score,
+              according to score_func(), and returns a std::pair containing that minimal
+              element along with the score.
+            - If the container is empty then make_pair(a default initialized object, infinity) is returned.
+    !*/
+    {
+        double best_score = std::numeric_limits<double>::infinity();
+        auto best_i = container.begin();
+        for (auto i = container.begin(); i != container.end(); ++i)
+        {
+            auto score = score_func(*i);
+            if (score < best_score)
+            {
+                best_score = score;
+                best_i = i;
+            }
+        }
+
+        using item_type = typename std::remove_reference<decltype(*best_i)>::type;
+
+        if (best_i == container.end())
+            return std::make_pair(item_type(), best_score);
+        else
+            return std::make_pair(*best_i, best_score);
+    }
 
 // ----------------------------------------------------------------------------------------
 

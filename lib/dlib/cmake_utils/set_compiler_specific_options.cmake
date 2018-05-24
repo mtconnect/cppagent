@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 if (POLICY CMP0054)
-    cmake_policy(SET CMP0054 NEW)
+   cmake_policy(SET CMP0054 NEW)
 endif()
 
 set(USING_OLD_VISUAL_STUDIO_COMPILER 0)
@@ -121,6 +121,11 @@ if (MSVC)
    # them.  So this flag enables > 65k sections, but produces .obj files
    # that will not be readable by VS 2005.
    list(APPEND active_compile_opts "/bigobj")
+
+   # Build dlib with all cores.  Don't propagate the setting to client programs
+   # though since they might compile large translation units that use too much
+   # RAM.
+   list(APPEND active_compile_opts_private "/MP")
 
    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.3) 
       # Clang can compile all Dlib's code at Windows platform. Tested with Clang 5

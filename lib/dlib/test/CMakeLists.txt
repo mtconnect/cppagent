@@ -73,6 +73,7 @@ set (tests
    image.cpp
    iosockstream.cpp
    is_same_object.cpp
+   isotonic_regression.cpp
    kcentroid.cpp
    kernel_matrix.cpp
    kmeans.cpp
@@ -118,6 +119,7 @@ set (tests
    read_write_mutex.cpp
    reference_counter.cpp
    rls.cpp
+   random_forest.cpp
    sammon.cpp
    scan_image.cpp
    sequence.cpp

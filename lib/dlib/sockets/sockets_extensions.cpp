@@ -262,10 +262,6 @@ namespace dlib
         std::string ip
     )
     {
-        // Check for an IPV6 address. We won't do too much checking at this point.
-        if (ip.find(':') != std::string::npos)
-            return true;
-
         for (std::string::size_type i = 0; i < ip.size(); ++i)
         {
             if (ip[i] == '.')

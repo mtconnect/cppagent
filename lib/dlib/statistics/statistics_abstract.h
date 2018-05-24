@@ -107,6 +107,75 @@ namespace dlib
 
 // ----------------------------------------------------------------------------------------
 
+    double binomial_random_vars_are_different (
+        uint64_t k1,
+        uint64_t n1,
+        uint64_t k2,
+        uint64_t n2
+    );
+    /*!
+        requires
+            - k1 <= n1
+            - k2 <= n2
+        ensures
+            - Given two binomially distributed random variables, X1 and X2, we want to know
+              if these variables have the same parameter (i.e. the chance of "success").
+              So assume that:
+                - You observed X1 to give k1 successes out of n1 trials.
+                - You observed X2 to give k2 successes out of n2 trials.
+            - This function performs a simple likelihood ratio test to determine if X1 and
+              X2 have the same parameter.  The return value of this function will be:
+                - Close to 0 if they are probably the same.
+                - Larger than 0 if X1 probably has a higher "success" rate than X2. 
+                - Smaller than 0 if X2 probably has a higher "success" rate than X1. 
+              Moreover, the larger the absolute magnitude of the return value the more
+              likely it is that X1 and X2 have different distributions.
+            - For a discussion of the technique and applications see:
+                  Dunning, Ted. "Accurate methods for the statistics of surprise and
+                  coincidence." Computational linguistics 19.1 (1993): 61-74.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
+    double event_correlation (
+        uint64_t A_count,
+        uint64_t B_count,
+        uint64_t AB_count,
+        uint64_t total_num_observations
+    );
+    /*!
+        requires
+            - AB_count <= A_count <= total_num_observations
+            - AB_count <= B_count <= total_num_observations
+            - A_count + B_count - AB_count <= total_num_observations
+        ensures
+            - This function does a statistical test to determine if two events co-occur in
+              a statistically significant way.  In particular, we assume you performed
+              total_num_observations measurements and during those measurements you:
+                - Observed event A to happen A_count times.
+                - Observed event B to happen B_count times.
+                - Observed AB_count co-occurrences of the events.  That is, AB_count is the
+                  number of times the events happened together during the same measurement.
+            - This function returns a number, COR, which can take any real value.  It has
+              the following interpretations:
+                - COR == 0: there is no evidence of correlation between the two events.
+                  They appear to be unrelated.
+                - COR > 0: There is evidence that A and B co-occur together.  That is,
+                  they happen at the same times more often than you would expect if they
+                  were independent events.  The larger the magnitude of COR the more
+                  evidence we have for the correlation.
+                - COR < 0: There is evidence that A and B are anti-correlated.  That is,
+                  when A happens B is unlikely to happen and vise versa.  The larger the
+                  magnitude of COR the more evidence we have for the anti-correlation.
+            - This function implements the simple likelihood ratio test discussed in the
+              following paper:
+                  Dunning, Ted. "Accurate methods for the statistics of surprise and
+                  coincidence." Computational linguistics 19.1 (1993): 61-74.
+              So for an extended discussion of the method see the above paper.
+    !*/
+
+// ----------------------------------------------------------------------------------------
+
     template <
         typename T
         >
@@ -501,7 +570,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - current_n() > 0
+                - current_n() > 1
             ensures
                 - returns the covariance between all the x and y samples presented
                   to this object via add()
@@ -511,7 +580,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - current_n() > 0
+                - current_n() > 1
             ensures
                 - returns the correlation coefficient between all the x and y samples 
                   presented to this object via add()
@@ -521,7 +590,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - current_n() > 0
+                - current_n() > 1
             ensures
                 - returns the sample variance value of all x samples presented 
                   to this object via add().
@@ -531,7 +600,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - current_n() > 0
+                - current_n() > 1
             ensures
                 - returns the sample variance value of all y samples presented 
                   to this object via add().
@@ -541,7 +610,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - current_n() > 0
+                - current_n() > 1
             ensures
                 - returns the sample standard deviation of all x samples
                   presented to this object via add().
@@ -551,7 +620,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - current_n() > 0
+                - current_n() > 1
             ensures
                 - returns the sample standard deviation of all y samples
                   presented to this object via add().
@@ -634,7 +703,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - current_n() > 0
+                - current_n() > 1
             ensures
                 - returns the sample variance value of all x samples presented to this
                   object via add().
@@ -644,7 +713,7 @@ namespace dlib
         ) const;
         /*!
             requires
-                - current_n() > 0
+                - current_n() > 1
             ensures
                 - returns the sample standard deviation of all x samples presented to this
                   object via add().

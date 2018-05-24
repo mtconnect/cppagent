@@ -4,7 +4,7 @@
 #define DLIB_DNn_SOLVERS_H_
 
 #include "solvers_abstract.h"
-#include "tensor.h"
+#include "../cuda/tensor.h"
 #include <iostream>
 #include "layers.h"
 
@@ -14,9 +14,9 @@ namespace dlib
     {
     public:
 
-        sgd(
+        explicit sgd(
             float weight_decay_,
-            float momentum_ 
+            float momentum_ = 0.9
         ) 
         { 
             weight_decay = weight_decay_;

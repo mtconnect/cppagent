@@ -3,6 +3,9 @@
 #ifndef DLIB_INTERPOlATIONh_
 #define DLIB_INTERPOlATIONh_ 
 
+#include "../threads.h"
+#include <algorithm>
+
 #include "interpolation_abstract.h"
 #include "../pixel.h"
 #include "../matrix.h"
@@ -1182,7 +1185,10 @@ namespace dlib
             parts.reserve(obj.num_parts());
             for (unsigned long i = 0; i < obj.num_parts(); ++i)
             {
-                parts.push_back(tran(obj.part(i)));
+                if (obj.part(i) != OBJECT_PART_NOT_PRESENT)
+                    parts.push_back(tran(obj.part(i)));
+                else
+                    parts.push_back(OBJECT_PART_NOT_PRESENT);
             }
             return full_object_detection(tform_object(tran,obj.get_rect()), parts);
         }
@@ -1540,33 +1546,29 @@ namespace dlib
             << "\n\t objects2.size():   " << objects2.size() 
             );
 
-        image_array_type new_images;
-        std::vector<std::vector<T> > new_objects;
-        std::vector<std::vector<U> > new_objects2;
+        using namespace impl;
 
-        using namespace impl; 
+        image_array_type new_images(images.size() * angles.size());
+        std::vector<std::vector<T>> new_objects(images.size() * angles.size());
+        std::vector<std::vector<U>> new_objects2(images.size() * angles.size());
 
-        std::vector<T> objtemp;
-        std::vector<U> objtemp2;
-        typename image_array_type::value_type temp;
-        for (long i = 0; i < angles.size(); ++i)
-        {
-            for (unsigned long j = 0; j < images.size(); ++j)
+        dlib::parallel_for(0, images.size(), [&](long j) {
+            typename image_array_type::value_type temp;
+
+            long dst_base = j * angles.size();
+            for (long i = 0; i < angles.size(); ++i)
             {
+                long dst = dst_base + i;
                 const point_transform_affine tran = rotate_image(images[j], temp, angles(i));
-                new_images.push_back(std::move(temp));
+                exchange(new_images[dst], temp);
 
-                objtemp.clear();
                 for (unsigned long k = 0; k < objects[j].size(); ++k)
-                    objtemp.push_back(tform_object(tran, objects[j][k]));
-                new_objects.push_back(objtemp);
+                    new_objects[dst].push_back(tform_object(tran, objects[j][k]));
 
-                objtemp2.clear();
                 for (unsigned long k = 0; k < objects2[j].size(); ++k)
-                    objtemp2.push_back(tform_object(tran, objects2[j][k]));
-                new_objects2.push_back(objtemp2);
+                    new_objects2[dst].push_back(tform_object(tran, objects2[j][k]));
             }
-        }
+        });
 
         new_images.swap(images);
         new_objects.swap(objects);
@@ -1798,7 +1800,12 @@ namespace dlib
         full_object_detection res(det);
         // map the parts
         for (unsigned long l = 0; l < det.num_parts(); ++l)
-            res.part(l) = tform(det.part(l));
+        {
+            if (det.part(l) != OBJECT_PART_NOT_PRESENT)
+                res.part(l) = tform(det.part(l));
+            else
+                res.part(l) = OBJECT_PART_NOT_PRESENT;
+        }
         // map the main rectangle
         rectangle rect;
         rect += tform(det.get_rect().tl_corner());
@@ -2170,7 +2177,7 @@ namespace dlib
         const auto crop_rect = centered_rect(center(rect)+rand_translate, box_size, box_size);
         const double angle = rnd.get_double_in_range(-max_rotation_degrees, max_rotation_degrees)*pi/180;
         image_type crop;
-        extract_image_chip(img, chip_details(crop_rect, chip_dims(img.nr(),img.nc()), angle), crop);
+        extract_image_chip(img, chip_details(crop_rect, chip_dims(num_rows(img),num_columns(img)), angle), crop);
         if (rnd.get_random_double() > 0.5)
             flip_image_left_right(crop); 
 

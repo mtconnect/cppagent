@@ -793,6 +793,33 @@ namespace
 
 #ifdef DLIB_USE_CUDA
 
+    void test_scale_channels()
+    {
+        tt::tensor_rand rnd;
+
+        resizable_tensor dest1(2,3,4,5), dest2;
+        rnd.fill_gaussian(dest1);
+        dest2 = dest1;
+
+        resizable_tensor src(2,3,4,5);
+        resizable_tensor scales(2,3);
+        rnd.fill_gaussian(src);
+        rnd.fill_gaussian(scales);
+
+
+        cpu::scale_channels(true, dest1, src, scales);
+        cuda::scale_channels(true, dest2, src, scales);
+
+        DLIB_TEST(max(abs(mat(dest1)-mat(dest2))) < 1e-6);
+
+        cpu::scale_channels(false, dest1, src, scales);
+        cuda::scale_channels(false, dest2, src, scales);
+
+        DLIB_TEST(max(abs(mat(dest1)-mat(dest2))) < 1e-6);
+    }
+
+// ----------------------------------------------------------------------------------------
+
     void test_affine_rect()
     {
         dlib::rand rnd;
@@ -1229,6 +1256,24 @@ namespace
             out2 = scale_rows(mat(data), mat(invnorms1));
             DLIB_TEST(max(abs(mat(out1)-mat(out2))) < 1e-6);
         }
+
+        {
+            resizable_tensor a(123,432), b(123,432);
+            rnd.fill_gaussian(a);
+            rnd.fill_gaussian(b);
+
+            resizable_tensor out;
+            dot_prods(out, a,b);
+            const matrix<float> truth = sum_cols(pointwise_multiply(mat(a), mat(b)));
+            DLIB_TEST(max(abs(mat(out) - truth)) < 1e-4);
+            out = 0;
+            DLIB_TEST(max(abs(mat(out) - truth)) > 1e-2);
+            dot_prods(false, out, a,b);
+            DLIB_TEST(max(abs(mat(out) - truth)) < 1e-4);
+            dot_prods(true, out, a,b);
+            DLIB_TEST(max(abs(mat(out)/2 - truth)) < 1e-4);
+            DLIB_TEST(max(abs(mat(out) - truth)) > 1e-2);
+        }
     }
 
 // ----------------------------------------------------------------------------------------
@@ -1610,6 +1655,24 @@ namespace
         {
             print_spinner();
             upsample_<3,3> l;
+            auto res = test_layer(l);
+            DLIB_TEST_MSG(res, res);
+        }
+        {
+            print_spinner();
+            resize_to_<1,1> l;
+            auto res = test_layer(l);
+            DLIB_TEST_MSG(res, res);
+        }
+        {
+            print_spinner();
+            resize_to_<2,1> l;
+            auto res = test_layer(l);
+            DLIB_TEST_MSG(res, res);
+        }
+        {
+            print_spinner();
+            resize_to_<2,2> l;
             auto res = test_layer(l);
             DLIB_TEST_MSG(res, res);
         }
@@ -3051,6 +3114,65 @@ namespace
 
 // ----------------------------------------------------------------------------------------
 
+    void test_loss_multimulticlass_log()
+    {
+        print_spinner();
+        std::map<string,std::vector<string>> all_labels;
+        all_labels["c1"] = {"a", "b", "c"};
+        all_labels["c2"] = {"d", "e", "f"};
+
+        // make training data
+        std::vector<matrix<float>> samples;
+        std::vector<std::map<string,string>> labels;
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                matrix<float> samp(2,3);
+                samp = 0;
+                samp(0,i) = 1;
+                samp(1,j) = 1;
+                samples.push_back(samp);
+
+                std::map<string,string> l;
+                if (i == 0) l["c1"] = "a";
+                if (i == 1) l["c1"] = "b";
+                if (i == 2) l["c1"] = "c";
+                if (j == 0) l["c2"] = "d";
+                if (j == 1) l["c2"] = "e";
+                if (j == 2) l["c2"] = "f";
+                labels.push_back(l);
+            }
+        }
+
+        using net_type = loss_multimulticlass_log<
+            fc<1,        
+            input<matrix<float>> 
+            >>;
+
+        net_type net(all_labels);
+        net.subnet().layer_details().set_num_outputs(net.loss_details().number_of_labels());
+
+        dnn_trainer<net_type> trainer(net, sgd(0.1));
+        trainer.set_learning_rate(0.1);
+        trainer.set_min_learning_rate(0.00001);
+        trainer.set_iterations_without_progress_threshold(500);
+
+        trainer.train(samples, labels);
+
+        auto predicted_labels = net(samples);
+
+        // make sure the network predicts the right labels
+        for (size_t i = 0; i < samples.size(); ++i)
+        {
+            DLIB_TEST(predicted_labels[i]["c1"] == labels[i]["c1"]);
+            DLIB_TEST(predicted_labels[i]["c2"] == labels[i]["c2"]);
+        }
+
+    }
+
+// ----------------------------------------------------------------------------------------
+
     class dnn_tester : public tester
     {
     public:
@@ -3084,6 +3206,7 @@ namespace
             compare_adam();
             test_copy_tensor_gpu();
             test_copy_tensor_add_to_gpu();
+            test_scale_channels();
 #endif
             test_tensor_resize_bilinear(2, 3, 6,6, 11, 11);
             test_tensor_resize_bilinear(2, 3, 6,6, 3, 4);
@@ -3136,6 +3259,7 @@ namespace
             test_loss_multiclass_per_pixel_weighted();
             test_serialization();
             test_loss_dot();
+            test_loss_multimulticlass_log();
         }
 
         void perform_test()

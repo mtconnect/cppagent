@@ -42,21 +42,21 @@ namespace dlib
             public:
 
                 T& operator() (
-                    long r, 
-                    long c
+                    size_t r, 
+                    size_t c
                 );
 
                 const T& operator() (
-                    long r, 
-                    long c
+                    size_t r, 
+                    size_t c
                 );
 
                 T& operator() (
-                    long i 
+                    size_t i 
                 );
 
                 const T& operator() (
-                    long i
+                    size_t i
                 ) const;
 
                 void swap(
@@ -70,8 +70,8 @@ namespace dlib
                 ) const;
 
                 void set_size (
-                    long nr_,
-                    long nc_
+                    size_t nr_,
+                    size_t nc_
                 );
             };
         };
@@ -141,21 +141,21 @@ namespace dlib
             layout() {}
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return *(data+r*num_cols + c); }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return *(data+r*num_cols + c); }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i
+                size_t i
             ) const { return data[i]; }
 
             void swap(
@@ -178,8 +178,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long ,
-                long 
+                size_t ,
+                size_t 
             )
             {
             }
@@ -216,21 +216,21 @@ namespace dlib
             { pool.deallocate_array(data); }
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[r*num_cols + c]; }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[r*num_cols + c]; }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void swap(
@@ -248,8 +248,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long ,
-                long 
+                size_t ,
+                size_t 
             )
             {
             }
@@ -265,7 +265,7 @@ namespace dlib
 
             T* data;
             typename mem_manager::template rebind<T>::other pool;
-            };
+        };
 
     // ------------------------------------------------------------------------------------
 
@@ -291,21 +291,21 @@ namespace dlib
             }
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[r*num_cols + c]; }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[r*num_cols + c]; }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void swap(
@@ -324,8 +324,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long nr,
-                long nc
+                size_t nr,
+                size_t nc
             )
             {
                 if (data) 
@@ -334,6 +334,14 @@ namespace dlib
                 }
                 data = pool.allocate_array(nr*nc);
                 nr_ = nr;
+            }
+
+            std::unique_ptr<T[]> steal_memory()
+            {
+                auto ret = pool.extract_array(data);
+                data = nullptr;
+                nr_ = 0;
+                return ret;
             }
 
 #ifdef MATLAB_MEX_FILE
@@ -348,7 +356,7 @@ namespace dlib
             T* data;
             long nr_;
             typename mem_manager::template rebind<T>::other pool;
-            };
+        };
 
     // ------------------------------------------------------------------------------------
 
@@ -376,21 +384,21 @@ namespace dlib
             }
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[r*nc_ + c]; }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[r*nc_ + c]; }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void swap(
@@ -409,8 +417,8 @@ namespace dlib
             ) const { return nc_; }
 
             void set_size (
-                long nr,
-                long nc
+                size_t nr,
+                size_t nc
             )
             {
                 if (data) 
@@ -419,6 +427,14 @@ namespace dlib
                 }
                 data = pool.allocate_array(nr*nc);
                 nc_ = nc;
+            }
+
+            std::unique_ptr<T[]> steal_memory()
+            {
+                auto ret = pool.extract_array(data);
+                data = nullptr;
+                nc_ = 0;
+                return ret;
             }
 
 #ifdef MATLAB_MEX_FILE
@@ -433,7 +449,7 @@ namespace dlib
             T* data;
             long nc_;
             typename mem_manager::template rebind<T>::other pool;
-            };
+        };
 
     // ------------------------------------------------------------------------------------
 
@@ -461,21 +477,21 @@ namespace dlib
             }
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[r*nc_ + c]; }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[r*nc_ + c]; }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void swap(
@@ -495,8 +511,8 @@ namespace dlib
             ) const { return nc_; }
 
             void set_size (
-                long nr,
-                long nc
+                size_t nr,
+                size_t nc
             )
             {
                 if (data) 
@@ -506,6 +522,15 @@ namespace dlib
                 data = pool.allocate_array(nr*nc);
                 nr_ = nr;
                 nc_ = nc;
+            }
+
+            std::unique_ptr<T[]> steal_memory()
+            {
+                auto ret = pool.extract_array(data);
+                data = nullptr;
+                nr_ = 0;
+                nc_ = 0;
+                return ret;
             }
 
 #ifdef MATLAB_MEX_FILE
@@ -519,7 +544,7 @@ namespace dlib
             long nr_;
             long nc_;
             typename mem_manager::template rebind<T>::other pool;
-            };
+        };
 
     };
 
@@ -588,21 +613,21 @@ namespace dlib
             layout() {}
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return *(data+c*num_rows + r); }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return *(data+c*num_rows + r); }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i
+                size_t i
             ) const { return data[i]; }
 
             void swap(
@@ -625,8 +650,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long,
-                long 
+                size_t,
+                size_t 
             )
             {
             }
@@ -663,21 +688,21 @@ namespace dlib
             { pool.deallocate_array(data); }
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[c*num_rows + r]; }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[c*num_rows + r]; }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void swap(
@@ -695,8 +720,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long ,
-                long 
+                size_t ,
+                size_t 
             )
             {
             }
@@ -712,7 +737,7 @@ namespace dlib
 
             T* data;
             typename mem_manager::template rebind<T>::other pool;
-            };
+        };
 
     // ------------------------------------------------------------------------------------
 
@@ -738,21 +763,21 @@ namespace dlib
             }
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[c*nr_ + r]; }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[c*nr_ + r]; }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void swap(
@@ -771,8 +796,8 @@ namespace dlib
             ) const { return num_cols; }
 
             void set_size (
-                long nr,
-                long nc
+                size_t nr,
+                size_t nc
             )
             {
                 if (data) 
@@ -781,6 +806,14 @@ namespace dlib
                 }
                 data = pool.allocate_array(nr*nc);
                 nr_ = nr;
+            }
+
+            std::unique_ptr<T[]> steal_memory()
+            {
+                auto ret = pool.extract_array(data);
+                data = nullptr;
+                nr_ = 0;
+                return ret;
             }
 
 #ifdef MATLAB_MEX_FILE
@@ -795,7 +828,7 @@ namespace dlib
             T* data;
             long nr_;
             typename mem_manager::template rebind<T>::other pool;
-            };
+        };
 
     // ------------------------------------------------------------------------------------
 
@@ -823,21 +856,21 @@ namespace dlib
             }
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[c*num_rows + r]; }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[c*num_rows + r]; }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void swap(
@@ -856,8 +889,8 @@ namespace dlib
             ) const { return nc_; }
 
             void set_size (
-                long nr,
-                long nc
+                size_t nr,
+                size_t nc
             )
             {
                 if (data) 
@@ -866,6 +899,14 @@ namespace dlib
                 }
                 data = pool.allocate_array(nr*nc);
                 nc_ = nc;
+            }
+
+            std::unique_ptr<T[]> steal_memory()
+            {
+                auto ret = pool.extract_array(data);
+                data = nullptr;
+                nc_ = 0;
+                return ret;
             }
 
 #ifdef MATLAB_MEX_FILE
@@ -880,7 +921,7 @@ namespace dlib
             T* data;
             long nc_;
             typename mem_manager::template rebind<T>::other pool;
-            };
+        };
 
     // ------------------------------------------------------------------------------------
 
@@ -908,21 +949,21 @@ namespace dlib
             }
 
             T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[c*nr_ + r]; }
 
             const T& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[c*nr_ + r]; }
 
             T& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const T& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void swap(
@@ -949,8 +990,8 @@ namespace dlib
             ) const { return nc_; }
 
             void set_size (
-                long nr,
-                long nc
+                size_t nr,
+                size_t nc
             )
             {
                 if (data) 
@@ -960,6 +1001,15 @@ namespace dlib
                 data = pool.allocate_array(nr*nc);
                 nr_ = nr;
                 nc_ = nc;
+            }
+
+            std::unique_ptr<T[]> steal_memory()
+            {
+                auto ret = pool.extract_array(data);
+                data = nullptr;
+                nr_ = 0;
+                nc_ = 0;
+                return ret;
             }
 
         private:
@@ -1002,21 +1052,21 @@ namespace dlib
             }
 
             double& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[c*nr_ + r]; }
 
             const double& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[c*nr_ + r]; }
 
             double& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const double& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void _private_set_mxArray (
@@ -1075,8 +1125,8 @@ namespace dlib
             ) const { return nc_; }
 
             void set_size (
-                long nr,
-                long nc
+                size_t nr,
+                size_t nc
             )
             {
                 if (owned_by_matlab)
@@ -1102,6 +1152,16 @@ namespace dlib
                 }
                 nr_ = nr;
                 nc_ = nc;
+            }
+
+            std::unique_ptr<double[]> steal_memory()
+            {
+                DLIB_CASSERT(!owned_by_matlab, "You can't steal the memory from a matrix if it's owned by MATLAB.");
+                std::unique_ptr<double[]> ret(data);
+                data = nullptr;
+                nr_ = 0;
+                nc_ = 0;
+                return ret;
             }
 
         private:
@@ -1145,21 +1205,21 @@ namespace dlib
             }
 
             float& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) { return data[c*nr_ + r]; }
 
             const float& operator() (
-                long r, 
-                long c
+                size_t r, 
+                size_t c
             ) const { return data[c*nr_ + r]; }
 
             float& operator() (
-                long i 
+                size_t i 
             ) { return data[i]; }
 
             const float& operator() (
-                long i 
+                size_t i 
             ) const { return data[i]; }
 
             void _private_set_mxArray (
@@ -1218,8 +1278,8 @@ namespace dlib
             ) const { return nc_; }
 
             void set_size (
-                long nr,
-                long nc
+                size_t nr,
+                size_t nc
             )
             {
                 if (owned_by_matlab)
@@ -1245,6 +1305,16 @@ namespace dlib
                 }
                 nr_ = nr;
                 nc_ = nc;
+            }
+
+            std::unique_ptr<float[]> steal_memory()
+            {
+                DLIB_CASSERT(!owned_by_matlab, "You can't steal the memory from a matrix if it's owned by MATLAB.");
+                std::unique_ptr<float[]> ret(data);
+                data = nullptr;
+                nr_ = 0;
+                nc_ = 0;
+                return ret;
             }
 
         private:
