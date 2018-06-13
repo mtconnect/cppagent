@@ -84,8 +84,8 @@ Download cmake from [cmake](http://www.cmake.org/cmake/resources/software.html)
 
 Make sure to initialize submodules:
 
-* git submodule init
-* git submodule update
+    git submodule init
+    git submodule update
 
 Configure cmake using the `CMakeLists.txt` file in the agent
 directory. This will generate a project file for the target
