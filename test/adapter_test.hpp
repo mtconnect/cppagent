@@ -50,6 +50,7 @@ class AdapterTest : public CppUnit::TestFixture
 {
   CPPUNIT_TEST_SUITE(AdapterTest);
   CPPUNIT_TEST(testAdapter);
+  CPPUNIT_TEST(testEscapedLine);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -60,6 +61,7 @@ protected:
   
 protected:
   void testAdapter();
+  void testEscapedLine();
 };
 
 #endif
