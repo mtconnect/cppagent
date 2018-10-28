@@ -41,7 +41,7 @@ static map<string, SchemaNamespace> sDevicesNamespaces;
 static map<string, SchemaNamespace> sStreamsNamespaces;
 static map<string, SchemaNamespace> sErrorNamespaces;
 static map<string, SchemaNamespace> sAssetsNamespaces;
-static string sSchemaVersion("1.3");
+static string sSchemaVersion("1.4");
 static string mStreamsStyle;
 static string mDevicesStyle;
 static string mErrorStyle;

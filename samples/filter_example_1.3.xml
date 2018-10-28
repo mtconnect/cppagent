@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.4">
+<!-- Version 1.4 deprecated using filters as a constraint, but the agent still supports for backwards compatability -->
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.3">
   <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.1"/>
   <Devices>
     <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
@@ -13,14 +14,14 @@
             <Rotary name="C" id="c">
               <DataItems>
                 <DataItem type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="c1" name="load">
-                  <Filters>
-                    <Filter type="MINIMUM_DELTA">5.0</Filter>
-                  </Filters>
+                  <Constraints>
+                    <Filter>5.0</Filter>
+                  </Constraints>
                 </DataItem>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="c2" name="pos">
-                  <Filters>
-                    <Filter type="PERIOD">10.0</Filter>
-                  </Filters>
+                  <Constraints>
+                    <Filter type="MINIMUM_DELTA">10.0</Filter>
+                  </Constraints>
                 </DataItem>
                 <DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c3">
                   <Constraints>

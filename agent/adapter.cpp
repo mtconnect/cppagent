@@ -114,14 +114,17 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
       offset = ((uint64_t) (atof(time.c_str()) * 1000.0)) - mBaseOffset;
     }
     
-    anOffset = offset;
+	// convert microseconds to seconds
+	anOffset = offset / 1000000;
     
     result = getRelativeTimeString(mBaseTime + offset);
   } else if (mIgnoreTimestamps || time.empty()) {
+    anOffset = getCurrentTimeInSec();
     result = getCurrentTime(GMT_UV_SEC);
   }
   else
   {
+    anOffset = parseTimeMicro(time) / 1000000;
     result = time;
   }
   

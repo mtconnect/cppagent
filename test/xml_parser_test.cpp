@@ -373,17 +373,17 @@ void XmlParserTest::testNoNamespace()
   CPPUNIT_ASSERT_NO_THROW(a->parseFile("../samples/NoNamespace.xml"));
 }
 
-void XmlParserTest::testFilteredDataItem()
+void XmlParserTest::testFilteredDataItem13()
 {
   delete a; a = NULL;
   try
   {
     a = new XmlParser();
-    mDevices = a->parseFile("../samples/filter_example.xml");
+    mDevices = a->parseFile("../samples/filter_example_1.3.xml");
   }
   catch (exception & e)
   {
-    CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example.xml");
+    CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example_1.3.xml");
   }
   
   Device *dev = mDevices[0];
@@ -393,6 +393,30 @@ void XmlParserTest::testFilteredDataItem()
   CPPUNIT_ASSERT(di->hasMinimumDelta());
 }
 
+void XmlParserTest::testFilteredDataItem()
+{
+	delete a; a = NULL;
+	try
+	{
+		a = new XmlParser();
+		mDevices = a->parseFile("../samples/filter_example.xml");
+	}
+	catch (exception & e)
+	{
+		CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example.xml");
+	}
+
+	Device *dev = mDevices[0];
+	DataItem *di = dev->getDeviceDataItem("c1");
+
+	CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
+	CPPUNIT_ASSERT(di->hasMinimumDelta());
+
+	di = dev->getDeviceDataItem("c2");
+
+	CPPUNIT_ASSERT_EQUAL(di->getFilterPeriod(), 10.0);
+	CPPUNIT_ASSERT(di->hasMinimumPeriod());
+}
 
 void XmlParserTest::testReferences()
 {
