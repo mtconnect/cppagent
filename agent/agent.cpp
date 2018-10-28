@@ -540,7 +540,7 @@ bool Agent::addAsset(Device *aDevice, const string &aId, const string &aAsset,
       mAssets.pop_front();
       mAssetMap.erase(oldref->getAssetId());
       
-      // Add secondary keys
+      // Remove secondary keys
       AssetKeys &keys = oldref->getKeys();
       AssetKeys::iterator iter;
       for (iter = keys.begin(); iter != keys.end(); iter++)

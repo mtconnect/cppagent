@@ -88,6 +88,7 @@ class AgentTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testPutBlockingFrom);
   CPPUNIT_TEST(testAdapterAddAsset);
   CPPUNIT_TEST(testMultiLineAsset);
+  CPPUNIT_TEST(testAssetRefCounts);
   CPPUNIT_TEST(testAssetProbe);
   CPPUNIT_TEST(testAssetStorageWithoutType);
   CPPUNIT_TEST(testStreamData);
@@ -204,6 +205,7 @@ protected:
   void testAssetBuffer();
   void testAdapterAddAsset();
   void testMultiLineAsset();
+  void testAssetRefCounts();
   void testAssetProbe();
   void testAssetStorageWithoutType();
   

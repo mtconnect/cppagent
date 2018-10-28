@@ -262,6 +262,10 @@ string DataItem::getCamelType(const string& aType, string &aPrefix)
   {
     return "";
   }
+  else if (aType == "PH") // Exception to the rule.
+  {
+    return "PH";
+  }
   
   string camel;
   size_t colon = aType.find(':');
