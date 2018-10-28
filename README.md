@@ -847,7 +847,7 @@ Any other command will be logged as a warning.
 Protocol
 ----
 
-The agent and the adapter have a heartbeat that makes sure each is responsive to properly handle disconnects in a timely manner. The Heartbeat frequency is set by the adapter and honored by the agent. When the agent connects to the adapter, it first sends a `* PING` and then expects the response `* PONG: <timeout>` where `<timeout>` is specified in milliseconds. So if the following communications are given:
+The agent and the adapter have a heartbeat that makes sure each is responsive to properly handle disconnects in a timely manner. The Heartbeat frequency is set by the adapter and honored by the agent. When the agent connects to the adapter, it first sends a `* PING` and then expects the response `* PONG <timeout>` where `<timeout>` is specified in milliseconds. So if the following communications are given:
 
 Agent:
 
@@ -855,7 +855,7 @@ Agent:
 
 Adapter:
 
-	* PONG: 10000
+	* PONG 10000
 
 This indicates that the adapter is expecting a `PING` every 10 seconds and if there is no `PING`, in 2x the frequency, then the adapter should close the connection. At the same time, if the agent does not receive a `PONG` within 2x frequency, then it will close the connection. If no `PONG` response is received, the agent assumes the adapter is incapable of participating in heartbeat protocol and uses the legacy time specified above.
 
