@@ -3,7 +3,7 @@
 	url = https://git.gnome.org/browse/libxml2
 [submodule "cppunit2"]
 	path = cppunit2
-	url = http://anongit.freedesktop.org/git/libreoffice/cppunit
+	url = https://anongit.freedesktop.org/git/libreoffice/cppunit
 [submodule "date"]
 	path = date
 	url = https://github.com/HowardHinnant/date.git
