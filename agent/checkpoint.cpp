@@ -52,8 +52,7 @@ Checkpoint::~Checkpoint()
 
 void Checkpoint::addComponentEvent(ComponentEvent *event)
 {
-	if (m_hasFilter &&
-		!m_filter.count(event->getDataItem()->getId()))
+	if (m_hasFilter && !m_filter.count(event->getDataItem()->getId()))
 	{
 		return;
 	}
@@ -129,11 +128,41 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 				}
 			}
 		}
+    else if (item->isDataSet())
+    {
+      if (!event->isUnavailable() &&
+          !(*ptr)->isUnavailable())
+      {
+        // Get the existing data set from the
+        DataSet &set = const_cast<DataSet&>((*ptr)->getDataSet());
+
+        // Check for reset...
+        if (!event->getResetTriggered().empty())
+        {
+          // Reset the set to the current event.
+          set.clear();
+        }
+        else
+        {
+          
+        }
+        
+        // For data sets merge the maps together
+        for (auto & e : event->getDataSet())
+          set[e.first] = e.second;
+      }
+      else
+        (*ptr) = new ComponentEvent(*event);
+      
+      assigned = true;
+    }
 
 		if (!assigned)
 			(*ptr) = event;
 	}
-	else
+  else if (event->isDataSet())
+    m_events[id] = new ComponentEventPtr(new ComponentEvent(*event));
+  else
 		m_events[id] = new ComponentEventPtr(event);
 
 }

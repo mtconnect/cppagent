@@ -267,13 +267,20 @@ bool Adapter::processDataItem(
 		{
 			string rest, value;
 			if (first &&
-				(dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage() || dataItem->isTimeSeries() ) )
+				(dataItem->isCondition() ||
+         dataItem->isAlarm() ||
+         dataItem->isMessage() ||
+         dataItem->isTimeSeries() ||
+         dataItem->isDataSet()) )
 			{
 				getline(toParse, rest);
-				value = inputValue + "|" + rest;
+        if (rest.size() > 0)
+          value = inputValue + "|" + rest;
+        else
+          value = inputValue;
 				more = false;
 			}
-			else
+      else
 			{
 				if (m_upcaseValue)
 				{

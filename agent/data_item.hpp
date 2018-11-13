@@ -45,7 +45,8 @@ public:
 	{
 		VALUE,
 		TIME_SERIES,
-		DISCRETE
+		DISCRETE,
+    DATA_SET
 	};
 
 	enum EFilterType
@@ -181,6 +182,8 @@ public:
 		return m_representation == TIME_SERIES; }
 	bool isDiscrete() const {
 		return m_representation == DISCRETE; }
+  bool isDataSet() const {
+    return m_representation == DATA_SET; }
 
 	bool hasResetTrigger() const {
 		return !m_resetTrigger.empty(); }

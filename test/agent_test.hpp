@@ -53,6 +53,7 @@
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "test_globals.hpp"
+#include "agent_test_helper.hpp"
 
 class AgentTest : public CppUnit::TestFixture
 {
@@ -135,16 +136,9 @@ class AgentTest : public CppUnit::TestFixture
 protected:
 	Agent *m_agent;
 	Adapter *m_adapter;
-	std::string m_agentId;
-	std::string m_incomingIp;
+  std::string m_agentId;
+  AgentTestHelper m_agentTestHelper;
 
-	std::string m_path;
-	dlib::key_value_map m_queries;
-	std::string m_result;
-	dlib::key_value_map m_cookies;
-	dlib::key_value_map_ci m_incomingHeaders;
-
-	std::ostringstream m_out;
 	std::chrono::milliseconds m_delay;
 
 protected:
@@ -265,11 +259,6 @@ protected:
 	// Conditions
 	void testConditionSequence();
 
-	// Helper method to test expected string, given optional query, & run tests
-	xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
-	xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
-				key_value_map &aQueries);
-
 	// Data item name handling
 	void testBadDataItem();
 	void testConstantValue();
@@ -281,22 +270,4 @@ public:
 	void setUp();
 	void tearDown();
 };
-
-#define PARSE_XML_RESPONSE \
-  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), m_queries); \
-  CPPUNIT_ASSERT(doc)
-
-#define PARSE_XML_RESPONSE_QUERY_KV(key, value) \
-  m_queries[key] = value; \
-  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), m_queries); \
-  m_queries.clear(); \
-  CPPUNIT_ASSERT(doc)
-
-#define PARSE_XML_RESPONSE_QUERY(queries) \
-  xmlDocPtr doc = responseHelper(CPPUNIT_SOURCELINE(), queries); \
-  CPPUNIT_ASSERT(doc)
-
-#define PARSE_XML_RESPONSE_PUT(body, queries) \
-  xmlDocPtr doc = putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
-  CPPUNIT_ASSERT(doc)
 

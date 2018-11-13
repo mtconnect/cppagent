@@ -984,12 +984,22 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 		ostr.precision(6);
 		const auto &v = result->getTimeSeries();
 
-		for (auto i = 0u; i < v.size(); i++)
-			ostr << v[i] << ' ';
+    for (auto &e : v)
+      ostr << e << ' ';
 
 		string str = ostr.str();
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
 	}
+  else if (result->isDataSet() && result->getValue() != "UNAVAILABLE")
+  {
+    ostringstream ostr;
+    const DataSet &set = result->getDataSet();
+    for (auto &e : set)
+      ostr << e.first << ':' << e.second << ' ';
+    
+    string str = ostr.str();
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
+  }
 	else if (!result->getValue().empty())
 	{
 		auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST result->getValue().c_str());

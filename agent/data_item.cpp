@@ -110,6 +110,11 @@ DataItem::DataItem(std::map<string, string> const &attributes) :
 		{
 			m_representation = DISCRETE;
 			m_camelType += "Discrete";
+    }
+    else if (repPos->second == "DATA_SET")
+    {
+      m_representation = DATA_SET;
+      m_camelType += "DataSet";
 		}
 	}
 
@@ -231,6 +236,12 @@ std::map<string, string> DataItem::buildAttributes() const
 
 	if (m_representation == TIME_SERIES)
 		attributes["representation"] = "TIME_SERIES";
+
+  if (m_representation == DISCRETE)
+    attributes["representation"] = "DISCRETE";
+
+  if (m_representation == DATA_SET)
+    attributes["representation"] = "DATA_SET";
 
 	if (!m_statistic.empty())
 		attributes["statistic"] = m_statistic;

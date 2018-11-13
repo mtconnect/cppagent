@@ -35,6 +35,7 @@ typedef std::vector<AttributeItem> AttributeList;
 class ComponentEvent;
 typedef RefCountedPtr<ComponentEvent> ComponentEventPtr;
 typedef dlib::array<ComponentEventPtr> ComponentEventPtrArray;
+typedef std::map<std::string,std::string> DataSet;
 
 
 class ComponentEvent : public RefCounted
@@ -94,7 +95,19 @@ public:
 		return m_isTimeSeries; }
 	int getSampleCount() const {
 		return m_sampleCount; }
-
+  const DataSet &getDataSet() const {
+    return m_dataSet;
+  }
+  const std::string &getResetTriggered() const {
+    return m_resetTriggered;
+  }
+  bool isDataSet() const {
+    return m_dataItem->isDataSet();
+  }
+  bool isUnavailable() const {
+    return m_value == "UNAVAILABLE";
+  }
+  
 	uint64_t getSequence() const {
 		return m_sequence; }
 
@@ -158,6 +171,9 @@ protected:
 
 	// For back linking of condition
 	ComponentEventPtr m_prev;
+  
+  // For data sets
+  DataSet m_dataSet;
 
 protected:
 	// Convert the value to the agent unit standards
