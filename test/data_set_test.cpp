@@ -314,9 +314,9 @@ void DataSetTest::testCurrentAt()
   auto seq = m_agent->getSequence();
   
   m_adapter->processData("TIME|vars|a:1 b:2 c:3");
-  m_adapter->processData("TIME|vars|c:5");
+  m_adapter->processData("TIME|vars| c:5 ");
   m_adapter->processData("TIME|vars|c:8");
-  m_adapter->processData("TIME|vars|b:10 a:xxx");
+  m_adapter->processData("TIME|vars|b:10   a:xxx");
   m_adapter->processData("TIME|vars|RESET|q:hello_there");
   m_adapter->processData("TIME|vars|r:good_bye");
 
