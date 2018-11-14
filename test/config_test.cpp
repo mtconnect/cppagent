@@ -404,7 +404,7 @@ void ConfigTest::testLogFileRollover()
 #ifndef _WINDOWS
 	istringstream logger(
 		"logger_config {"
-		"logging_level = ALL\n"
+		"logging_level = ERROR\n"
 		"max_size = 150\n"
 		"max_index = 5\n"
 		"output = file agent.log"
@@ -421,21 +421,25 @@ void ConfigTest::testLogFileRollover()
 	m_config->loadConfig(logger);
 
 	CPPUNIT_ASSERT(file_exists("agent.log"));
-	CPPUNIT_ASSERT(file_exists("agent.log.1"));
+	CPPUNIT_ASSERT(!file_exists("agent.log.1"));
 	CPPUNIT_ASSERT(!file_exists("agent.log.2"));
 	CPPUNIT_ASSERT(!file_exists("agent.log.3"));
 	CPPUNIT_ASSERT(!file_exists("agent.log.4"));
 	CPPUNIT_ASSERT(!file_exists("agent.log.5"));
 
 	g_logger << LERROR << "12345678901234567890";
+  g_logger << LERROR << "12345678901234567890";
+  g_logger << LERROR << "12345678901234567890";
+	CPPUNIT_ASSERT(file_exists("agent.log.1"));
+	CPPUNIT_ASSERT(!file_exists("agent.log.2"));
+
+	g_logger << LERROR << "12345678901234567890";
+  g_logger << LERROR << "12345678901234567890";
 	CPPUNIT_ASSERT(file_exists("agent.log.2"));
 	CPPUNIT_ASSERT(!file_exists("agent.log.3"));
 
 	g_logger << LERROR << "12345678901234567890";
-	CPPUNIT_ASSERT(file_exists("agent.log.2"));
-	CPPUNIT_ASSERT(!file_exists("agent.log.3"));
-
-	g_logger << LERROR << "12345678901234567890";
+  g_logger << LERROR << "12345678901234567890";
 	CPPUNIT_ASSERT(file_exists("agent.log.3"));
 	CPPUNIT_ASSERT(!file_exists("agent.log.4"));
 
@@ -448,6 +452,11 @@ void ConfigTest::testLogFileRollover()
 	g_logger << LERROR << "12345678901234567890";
 	CPPUNIT_ASSERT(file_exists("agent.log.5"));
 	CPPUNIT_ASSERT(!file_exists("agent.log.6"));
+  
+  g_logger << LERROR << "12345678901234567890";
+  g_logger << LERROR << "12345678901234567890";
+  CPPUNIT_ASSERT(file_exists("agent.log.5"));
+  CPPUNIT_ASSERT(!file_exists("agent.log.6"));
 #endif
 }
 
