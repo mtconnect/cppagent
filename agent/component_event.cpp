@@ -344,6 +344,8 @@ void ComponentEvent::convertValue(const string &value)
       string v;
       if (splitValue(e, v))
         m_dataSet[e] = v;
+      else if (!e.empty())
+        m_dataSet[e] = string("");
     }
   }
 	else if (m_dataItem->conversionRequired())

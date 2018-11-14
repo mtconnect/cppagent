@@ -47,6 +47,7 @@ class DataSetTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testCurrent);
   CPPUNIT_TEST(testSample);
   CPPUNIT_TEST(testCurrentAt);
+  CPPUNIT_TEST(testDeleteKey);
 
   CPPUNIT_TEST_SUITE_END();
     
@@ -69,6 +70,7 @@ protected:
   void testCurrent();
   void testSample();
   void testCurrentAt();
+  void testDeleteKey();
 
 public:
   void setUp();

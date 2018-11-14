@@ -213,7 +213,7 @@ void DataSetTest::testBadData()
   string value("12356");
   auto ce = new ComponentEvent(*m_dataItem1, 2, "time", value);
   
-  CPPUNIT_ASSERT_EQUAL((size_t) 0, ce->getDataSet().size());
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, ce->getDataSet().size());
   
   string value1("  a:2      b3:xxx");
   auto ce2 = new ComponentEvent(*m_dataItem1, 2, "time", value1);
@@ -365,4 +365,28 @@ void DataSetTest::testCurrentAt()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "q:hello_there r:good_bye");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
   }
+}
+
+void DataSetTest::testDeleteKey()
+{
+  string value("a:1 b:2 c:3 d:4");
+  ComponentEventPtr ce(new ComponentEvent(*m_dataItem1, 2, "time", value));
+  m_checkpoint->addComponentEvent(ce);
+  
+  auto cecp = *m_checkpoint->getEventPtr("v1");
+  CPPUNIT_ASSERT_EQUAL((size_t) 4, cecp->getDataSet().size());
+  
+  string value2("c e:6 a:");
+  ComponentEventPtr ce2(new ComponentEvent(*m_dataItem1, 4, "time", value2));
+  m_checkpoint->addComponentEvent(ce2);
+  
+  auto ce3 = *m_checkpoint->getEventPtr("v1");
+  CPPUNIT_ASSERT_EQUAL((size_t) 3, ce3->getDataSet().size());
+  
+  auto map1 = ce3->getDataSet();
+  CPPUNIT_ASSERT_EQUAL((string) "2", map1.at("b"));
+  CPPUNIT_ASSERT_EQUAL((string) "4", map1.at("d"));
+  CPPUNIT_ASSERT_EQUAL((string) "6", map1.at("e"));
+  CPPUNIT_ASSERT(map1.find("c") == map1.end());
+  CPPUNIT_ASSERT(map1.find("a") == map1.end());
 }

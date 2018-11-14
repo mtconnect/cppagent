@@ -143,7 +143,12 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
         
         // For data sets merge the maps together
         for (auto & e : event->getDataSet())
-          set[e.first] = e.second;
+        {
+          if (e.second.empty())
+            set.erase(e.first);
+          else
+            set[e.first] = e.second;
+        }
       }
       else
         (*ptr) = new ComponentEvent(*event);
