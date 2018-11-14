@@ -133,6 +133,7 @@ public:
     if (!m_resetTriggered.empty()) {
       m_hasAttributes = false;
       m_attributes.clear();
+      m_resetTriggered.clear();
     }
   }
 

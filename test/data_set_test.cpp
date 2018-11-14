@@ -195,6 +195,17 @@ void DataSetTest::testReset()
   auto map1 = ce3->getDataSet();
   CPPUNIT_ASSERT_EQUAL((string) "5", map1.at("c"));
   CPPUNIT_ASSERT_EQUAL((string) "6", map1.at("e"));
+  
+  string value3("x:pop y:hop");
+  ComponentEventPtr ce4(new ComponentEvent(*m_dataItem1, 2, "time", value3));
+  m_checkpoint->addComponentEvent(ce4);
+  
+  auto ce5 = *m_checkpoint->getEventPtr("v1");
+  CPPUNIT_ASSERT_EQUAL((size_t) 4, ce5->getDataSet().size());
+  
+  auto map2 = ce5->getDataSet();
+  CPPUNIT_ASSERT_EQUAL((string) "pop", map2.at("x"));
+  CPPUNIT_ASSERT_EQUAL((string) "hop", map2.at("y"));
 }
 
 void DataSetTest::testBadData()
@@ -306,6 +317,8 @@ void DataSetTest::testCurrentAt()
   m_adapter->processData("TIME|vars|c:5");
   m_adapter->processData("TIME|vars|c:8");
   m_adapter->processData("TIME|vars|b:10 a:xxx");
+  m_adapter->processData("TIME|vars|RESET|q:hello_there");
+  m_adapter->processData("TIME|vars|r:good_bye");
 
   m_agentTestHelper.m_path = "/current";
 
@@ -335,7 +348,21 @@ void DataSetTest::testCurrentAt()
   }
 
   {
+    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 4));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "q:hello_there");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "///m:VariableDataSet@resetTriggered",
+                                      "RESET");
+  }
+  
+  {
+    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 5));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "q:hello_there r:good_bye");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
+  }
+  
+  {
     PARSE_XML_RESPONSE;
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:xxx b:10 c:8");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "q:hello_there r:good_bye");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
   }
 }
