@@ -110,7 +110,8 @@ ComponentEvent::ComponentEvent(const ComponentEvent &componentEvent)
     m_value(componentEvent.m_value),
     m_isTimeSeries(componentEvent.m_isTimeSeries),
     m_hasAttributes(false),
-    m_code(componentEvent.m_code)
+    m_code(componentEvent.m_code),
+    m_resetTriggered(componentEvent.m_resetTriggered)
 {
 	if (m_isTimeSeries)
 	{

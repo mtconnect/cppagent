@@ -203,6 +203,15 @@ void DataSetTest::testBadData()
   auto ce = new ComponentEvent(*m_dataItem1, 2, "time", value);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 0, ce->getDataSet().size());
+  
+  string value1("  a:2      b3:xxx");
+  auto ce2 = new ComponentEvent(*m_dataItem1, 2, "time", value1);
+  
+  CPPUNIT_ASSERT_EQUAL((size_t) 2, ce2->getDataSet().size());
+  
+  auto map1 = ce2->getDataSet();
+  CPPUNIT_ASSERT_EQUAL((string) "2", map1.at("a"));
+  CPPUNIT_ASSERT_EQUAL((string) "xxx", map1.at("b3"));
 }
 
 void DataSetTest::testCurrent()
@@ -249,14 +258,84 @@ void DataSetTest::testCurrent()
                                       "RESET");
 
   }
+  
+  m_adapter->processData("TIME|vars|c:6");
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+                                      "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']",
+                                      "c:6 d:10");
+  }
 }
 
 void DataSetTest::testSample()
 {
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(m_adapter);
   
+  m_adapter->processData("TIME|vars|a:1 b:2 c:3");
+  m_adapter->processData("TIME|vars|c:5");
+  m_adapter->processData("TIME|vars|c:8");
+
+  m_agentTestHelper.m_path = "/sample";
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]", "a:1 b:2 c:3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]", "c:5");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]", "c:8");
+  }
+
+  m_agentTestHelper.m_path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:1 b:2 c:8");
+  }
 }
 
 void DataSetTest::testCurrentAt()
 {
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(m_adapter);
   
+  auto seq = m_agent->getSequence();
+  
+  m_adapter->processData("TIME|vars|a:1 b:2 c:3");
+  m_adapter->processData("TIME|vars|c:5");
+  m_adapter->processData("TIME|vars|c:8");
+  m_adapter->processData("TIME|vars|b:10 a:xxx");
+
+  m_agentTestHelper.m_path = "/current";
+
+  {
+    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq - 1));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
+  }
+
+  {
+    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:1 b:2 c:3");
+  }
+  
+  {
+    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 1));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:1 b:2 c:5");
+  }
+
+  {
+    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 2));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:1 b:2 c:8");
+  }
+
+  {
+    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 3));
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:xxx b:10 c:8");
+  }
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:xxx b:10 c:8");
+  }
 }

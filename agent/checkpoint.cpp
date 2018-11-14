@@ -131,21 +131,15 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
     else if (item->isDataSet())
     {
       if (!event->isUnavailable() &&
-          !(*ptr)->isUnavailable())
+          !(*ptr)->isUnavailable() &&
+          event->getResetTriggered().empty())
       {
         // Get the existing data set from the
         DataSet &set = const_cast<DataSet&>((*ptr)->getDataSet());
 
         // Check for reset...
-        if (!event->getResetTriggered().empty())
-        {
-          // Reset the set to the current event.
-          set.clear();
-        }
-        else
-        {
-          
-        }
+        // need to make sure reset triggered is cleared first time
+        (*ptr)->clearResetTriggered();
         
         // For data sets merge the maps together
         for (auto & e : event->getDataSet())

@@ -128,6 +128,13 @@ public:
 		else
 			return false;
 	}
+  
+  void clearResetTriggered() {
+    if (!m_resetTriggered.empty()) {
+      m_hasAttributes = false;
+      m_attributes.clear();
+    }
+  }
 
 protected:
 	// Virtual destructor
