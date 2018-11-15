@@ -22,8 +22,6 @@
 	#include <windows.h>
 #endif
 
-#include "../dlib/dlib/all/source.cpp"
-
 #include "globals.hpp"
 #include <time.h>
 #include <stdio.h>

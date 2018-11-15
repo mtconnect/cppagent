@@ -10,11 +10,6 @@ if(UNIX)
 	endif(CMAKE_SYSTEM_NAME MATCHES Linux)
 endif(UNIX)
 
-if (APPLE)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef -Wno-deprecated-declarations")
-endif(APPLE)
-
-
 set(TEST_SRCS
 	test.cpp
 	adapter_test.cpp
@@ -86,6 +81,8 @@ target_include_directories(agent_test
 
 target_link_libraries(agent_test PRIVATE ${LINUX_LIBRARIES} PRIVATE ${WINDOWS_LIBRARIES} PRIVATE ${GCOV_LINK_FLAGS})
 set_target_properties(agent_test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1)
+
+target_compile_features(agent_test PRIVATE cxx_std_14)
 
 SetVisualStudioWorkingDirectory(agent_test ${CMAKE_SOURCE_DIR}/test)
 

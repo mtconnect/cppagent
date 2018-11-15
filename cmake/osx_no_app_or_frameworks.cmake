@@ -7,3 +7,11 @@ set(CMAKE_FIND_APPBUNDLE NEVER)
 # We will always prefer packages
 #
 set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
+
+# We need to use the CLang C++14 compiler for the agent on OS X since we are using the
+# ms suffix which was added post 11.
+if (APPLE)
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef -Wno-deprecated-declarations -std=c++14")
+endif(APPLE)
+
