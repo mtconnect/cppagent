@@ -15,6 +15,19 @@
 //
 
 
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include <list>
+#include <mutex>
+#include <chrono>
+
+#include "globals.hpp"
+#include <time.h>
+#include <stdio.h>
+
 // Don't include WinSock.h when processing <windows.h>
 #ifdef _WINDOWS
 	#define _WINSOCKAPI_
@@ -22,9 +35,6 @@
 	#include <windows.h>
 #endif
 
-#include "globals.hpp"
-#include <time.h>
-#include <stdio.h>
 #if 0
 	#ifdef _WINDOWS
 		#include <psapi.h>
