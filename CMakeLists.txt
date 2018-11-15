@@ -4,8 +4,12 @@ project(cppagent)
 
 # All of the C++ Agent code, DLib and CppUnit require C++ 11 features to compile.
 # We will define these properties by default for each CMake target to be created.
-set_property(GLOBAL PROPERTY CXX_STANDARD 11)
+set_property(GLOBAL PROPERTY CXX_STANDARD 14)
 set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
+
+# We need to use the CLang C++14 compiler for the agent on OS X since we are using the
+# ms suffix which was added post 11.
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14")
 
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
