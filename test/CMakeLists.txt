@@ -52,6 +52,7 @@ set(AGENT_SRCS
 	../agent/asset.cpp
 	../agent/version.cpp
 	../agent/rolling_file_logger.cpp
+	${DLIB_FIX_SRCS}
 	)
 
 set_property(SOURCE ${AGENT_SRCS} APPEND PROPERTY COMPILE_FLAGS ${GCOV_COMPILE_FLAGS})

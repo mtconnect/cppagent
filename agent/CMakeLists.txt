@@ -47,6 +47,7 @@ set(AGENT_SRCS cppagent.cpp
 	xml_parser.cpp 
 	xml_printer.cpp
 	rolling_file_logger.cpp
+	${DLIB_FIX_SRCS}
 	)
 
 file(GLOB AGENT_HEADERS *.hpp)
