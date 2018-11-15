@@ -35,7 +35,6 @@ include(cmake/DLib.cmake)
 include(cmake/Date.cmake)
 
 # Add our projects
-add_subdirectory(dlib)
 add_subdirectory(agent)
 add_subdirectory(test)
 

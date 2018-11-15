@@ -6,14 +6,19 @@
 #																				#
 #################################################################################
 
-set(DLIB_NO_GUI_SUPPORT true)
-set(DLIB_USE_BLAS false)
-set(DLIB_USE_LAPACK false)
-set(DLIB_USE_CUDA false)
-set(DLIB_LINK_WITH_SQLITE3 false)
-set(DLIB_USE_MKL_FFT false)
-set(DLIB_GIF_SUPPORT false)
-set(DLIB_JPEG_SUPPORT false)
+set(DLIB_NO_GUI_SUPPORT ON CACHE STRING "NO GUI DLIB Suport" FORCE)
+option(DLIB_NO_GUI_SUPPORT true)
+option(DLIB_USE_BLAS false)
+option(DLIB_USE_LAPACK false)
+option(DLIB_USE_CUDA false)
+option(DLIB_LINK_WITH_SQLITE3 false)
+option(DLIB_USE_MKL_FFT false)
+option(DLIB_GIF_SUPPORT false)
+option(DLIB_JPEG_SUPPORT false)
+option(DLIB_PNG_SUPPORT false)
+option(DLIB_USE_MKL_FFT false)
+
+add_subdirectory(dlib)
 
 function(AddDLibSupport projectTarget)
   target_include_directories(${projectTarget} PRIVATE ${CMAKE_SOURCE_DIR}/dlib)
