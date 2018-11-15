@@ -22,7 +22,7 @@
 	#include <windows.h>
 #endif
 
-#include "../lib/dlib/all/source.cpp"
+#include "../dlib/dlib/all/source.cpp"
 
 #include "globals.hpp"
 #include <time.h>

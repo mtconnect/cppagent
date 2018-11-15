@@ -7,7 +7,6 @@
 #################################################################################
 
 function(AddDLibSupport projectTarget)
-	
-	target_include_directories(${projectTarget} PRIVATE ${CMAKE_SOURCE_DIR}/lib)
+	target_include_directories(${projectTarget} PRIVATE ${CMAKE_SOURCE_DIR}/dlib)
 	target_compile_definitions(${projectTarget} PRIVATE DLIB_NO_GUI_SUPPORT)
 endfunction()

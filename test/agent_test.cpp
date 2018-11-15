@@ -760,8 +760,8 @@ void AgentTest::testFileDownload()
 	m_agent->registerFile(uri, "./MTConnectDevices_1.1.xsd");
 
 	// Reqyest the file...
-	dlib::incoming_things incoming("", "", 0, 0);
-	dlib::outgoing_things outgoing;
+	IncomingThings incoming("", "", 0, 0);
+	OutgoingThings outgoing;
 	incoming.request_type = "GET";
 	incoming.path = uri;
 	incoming.queries = m_agentTestHelper.m_queries;
@@ -770,7 +770,7 @@ void AgentTest::testFileDownload()
 
 	outgoing.out = &m_agentTestHelper.m_out;
 
-	m_agentTestHelper.m_result = m_agent->on_request(incoming, outgoing);
+	m_agentTestHelper.m_result = m_agent->httpRequest(incoming, outgoing);
 	CPPUNIT_ASSERT(m_agentTestHelper.m_result.empty());
 	CPPUNIT_ASSERT(m_agentTestHelper.m_out.bad());
 	CPPUNIT_ASSERT(m_agentTestHelper.m_out.str().find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);

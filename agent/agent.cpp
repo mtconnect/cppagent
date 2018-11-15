@@ -349,9 +349,44 @@ void Agent::registerFile(const string &aUri, const string &aPath)
 	}
 }
 
+void Agent::on_connect (
+   std::istream& in,
+   std::ostream& out,
+   const std::string& foreign_ip,
+   const std::string& local_ip,
+   unsigned short foreign_port,
+   unsigned short local_port,
+   dlib::uint64
+   )
+{
+  try
+  {
+    IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
+    OutgoingThings outgoing;
+    
+    parse_http_request(in, incoming, get_max_content_length());
+    read_body(in, incoming);
+    outgoing.out = &out;
+    const std::string& result = httpRequest(incoming, outgoing);
+    if (out.good())
+      write_http_response(out, outgoing, result);
+  }
+  catch (dlib::http_parse_error& e)
+  {
+    g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
+    write_http_response(out, e);
+  }
+  catch (std::exception& e)
+  {
+    g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
+    write_http_response(out, e);
+  }
+}
+
+
 
 // Methods for service
-const string Agent::on_request(const incoming_things &incoming, outgoing_things &outgoing)
+const string Agent::httpRequest(const IncomingThings &incoming, OutgoingThings &outgoing)
 {
 	string result;
 	outgoing.headers["Content-Type"] = "text/xml";
@@ -1121,7 +1156,7 @@ std::string Agent::storeAsset(
 }
 
 
-string Agent::handleFile(const string &uri, outgoing_things& outgoing)
+string Agent::handleFile(const string &uri, OutgoingThings& outgoing)
 {
 	// Get the mime type for the file.
 	bool unknown = true;

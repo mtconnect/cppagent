@@ -14,8 +14,8 @@ using namespace std::chrono;
 xmlDocPtr AgentTestHelper::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
                                     key_value_map &aQueries)
 {
-  incoming_things incoming("", "", 0, 0);
-  outgoing_things outgoing;
+  IncomingThings incoming("", "", 0, 0);
+  OutgoingThings outgoing;
   incoming.request_type = "GET";
   incoming.path = m_path;
   incoming.queries = aQueries;
@@ -24,7 +24,7 @@ xmlDocPtr AgentTestHelper::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
   
   outgoing.out = &m_out;
   
-  m_result = m_agent->on_request(incoming, outgoing);
+  m_result = m_agent->httpRequest(incoming, outgoing);
   
   if (m_result.empty())
   {
@@ -54,8 +54,8 @@ xmlDocPtr AgentTestHelper::responseHelper(CPPUNIT_NS::SourceLine sourceLine,
 xmlDocPtr AgentTestHelper::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
                                        string body, key_value_map &aQueries)
 {
-  incoming_things incoming("", "", 0, 0);
-  outgoing_things outgoing;
+  IncomingThings incoming("", "", 0, 0);
+  OutgoingThings outgoing;
   incoming.request_type = "PUT";
   incoming.path = m_path;
   incoming.queries = aQueries;
@@ -66,7 +66,7 @@ xmlDocPtr AgentTestHelper::putResponseHelper(CPPUNIT_NS::SourceLine sourceLine,
   
   outgoing.out = &m_out;
   
-  m_result = m_agent->on_request(incoming, outgoing);
+  m_result = m_agent->httpRequest(incoming, outgoing);
   
   string message = (string) "No response to request" + m_path;
   
