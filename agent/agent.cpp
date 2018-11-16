@@ -110,7 +110,8 @@ Agent::Agent(
 	// asset changed events if they don't exist
 	for (const auto device  : m_devices)
 	{
-		m_deviceMap[device->getName()] = device;
+		m_deviceNameMap[device->getName()] = device;
+    m_deviceUuidMap[device->getUuid()] = device;
 
 		// Make sure we have two device level data items:
 		// 1. Availability
@@ -206,8 +207,8 @@ Agent::Agent(
 
 const Device * Agent::getDeviceByName(const std::string& name) const
 {
-	auto devPos = m_deviceMap.find(name);
-	if(devPos != m_deviceMap.end())
+	auto devPos = m_deviceNameMap.find(name);
+	if(devPos != m_deviceNameMap.end())
 		return devPos->second;
 
 	return nullptr;
@@ -216,8 +217,8 @@ const Device * Agent::getDeviceByName(const std::string& name) const
 
 Device * Agent::getDeviceByName(const std::string& name)
 {
-	auto devPos = m_deviceMap.find(name);
-	if(devPos != m_deviceMap.end())
+	auto devPos = m_deviceNameMap.find(name);
+	if(devPos != m_deviceNameMap.end())
 		return devPos->second;
 
 	return nullptr;
@@ -226,12 +227,16 @@ Device * Agent::getDeviceByName(const std::string& name)
 
 Device *Agent::findDeviceByUUIDorName(const std::string& idOrName)
 {
-	auto foundPos =  std::find_if(m_devices.begin(), m_devices.end(), [idOrName](Device const *item)
-	{
-		return item->getUuid() == idOrName || item->getName() == idOrName;
-	});
-
-	return foundPos != m_devices.end() ? *foundPos : nullptr;
+  auto di = m_deviceUuidMap.find(idOrName);
+  if (di == m_deviceUuidMap.end()) {
+    di = m_deviceNameMap.find(idOrName);
+    if (di != m_deviceNameMap.end())
+      return di->second;
+  } else {
+    return di->second;
+  }
+  
+  return nullptr;
 }
 
 
@@ -939,7 +944,7 @@ string Agent::handleCall(
 				count,
 				heartbeat);
 		}
-		else if (getDeviceByName(call) && device.empty())
+		else if (findDeviceByUUIDorName(call) && device.empty())
 			return handleProbe(call);
 		else
 			return printError("UNSUPPORTED", "The following path is invalid: " + path);
@@ -964,7 +969,7 @@ string Agent::handlePut(
 	else if (device.empty())
 		device = adapter;
 
-	auto dev = getDeviceByName(device);
+	auto dev = findDeviceByUUIDorName(device);
 	if (!dev)
 	{
 		string message = ((string) "Cannot find device: ") + device;
@@ -1013,7 +1018,7 @@ string Agent::handleProbe(const string &name)
  
 	if (!name.empty())
 	{
-		auto device = getDeviceByName(name);
+		auto device = findDeviceByUUIDorName(name);
 		if (!device)
 			return printError("NO_DEVICE", "Could not find the device '" + name + "'");
 		else
@@ -1580,7 +1585,8 @@ string Agent::devicesAndPath(const string &path, const string &device)
 
 	if (!device.empty())
 	{
-		string prefix = "//Devices/Device[@name=\"" + device + "\"]";
+		string prefix = "//Devices/Device[@name=\"" + device +
+                    "\"or@uuid=\"" + device + "\"]";
 
 		if (!path.empty())
 		{

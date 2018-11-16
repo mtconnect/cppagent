@@ -386,7 +386,8 @@ protected:
 	// Data containers
 	std::vector<Adapter *> m_adapters;
 	std::vector<Device *> m_devices;
-	std::map<std::string, Device *> m_deviceMap;
+	std::map<std::string, Device *> m_deviceNameMap;
+  std::map<std::string, Device *> m_deviceUuidMap;
 	std::map<std::string, DataItem *> m_dataItemMap;
 	std::map<std::string, int> m_assetCounts;
 
