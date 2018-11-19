@@ -82,9 +82,16 @@ Building
 
 Download cmake from [cmake](http://www.cmake.org/cmake/resources/software.html)
 
+Make sure to initialize submodules:
+
+    git submodule init
+    git submodule update
+
 Configure cmake using the `CMakeLists.txt` file in the agent
 directory. This will generate a project file for the target
 platform. See CMake documentation for more information.
+
+
 
 Configuration
 ------
@@ -736,6 +743,10 @@ A simple set of events and samples will look something like this:
 	2009-06-15T00:00:00.000000|power|ON|execution|ACTIVE|line|412|Xact|-1.1761875153|Yact|1766618937
 
 For simple events and samples, the data is pipe delimited key value pairs with multiple pairs on one line. Each line must have at least one key/value on it or else it has no meaning. The agent will discard any lines where the data is malformed. The end must end with a LF (ASCII 10) or CR-LF (ASCII 15 followed by ASCII 10) (UNIX or Windows conventions respectively). The key will map to the data item using the following items: the `id` attribute, the `name` attribute, and the `CDATA` of the `Source` element. If the key does not match it will be rejected and the agent will log the first time it fails.  
+
+If the value itself contains a pipe character `|` the pipe must be escaped using a leading backslash `\`. In addition the entire value has to be wrapped in quotes:
+
+        2009-06-15T00:00:00.000000|description|"Text with \| (pipe) character."
 
 Conditions are a little more complex since there are multiple fields and must appear on one line. The fields are as follows:
 

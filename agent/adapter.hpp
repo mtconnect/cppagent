@@ -100,6 +100,7 @@ public:
 		m_baseOffset = offset; }
 	void setBaseTime(uint64_t offset) {
 		m_baseTime = offset; }
+  static void getEscapedLine(std::istringstream &stream, std::string &store);
 
 	// Inherited method to incoming data from the server
 	void processData(const std::string &data) override;

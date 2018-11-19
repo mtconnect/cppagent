@@ -44,16 +44,16 @@
 
 class AdapterTest : public CppUnit::TestFixture
 {
-	CPPUNIT_TEST_SUITE(AdapterTest);
-	CPPUNIT_TEST(testAdapter);
-	CPPUNIT_TEST_SUITE_END();
-
+  CPPUNIT_TEST_SUITE(AdapterTest);
+  CPPUNIT_TEST(testAdapter);
+  CPPUNIT_TEST(testEscapedLine);
+  CPPUNIT_TEST_SUITE_END();
+  
 public:
 	void setUp();
 	void tearDown();
 
 protected:
-
-protected:
 	void testAdapter();
+  void testEscapedLine();
 };

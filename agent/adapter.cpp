@@ -162,61 +162,109 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
 	return result;
 }
 
-
-//
-// Expected data to parse in SDHR format:
-//   Time|Alarm|Code|NativeCode|Severity|State|Description
-//   Time|Item|Value
-//   Time|Item1|Value1|Item2|Value2...
-//
-// Support for assets:
-//   Time|@ASSET@|id|type|<...>...</...>
-//
-void Adapter::processData(const string &data)
+void Adapter::getEscapedLine(istringstream &stream, string &store)
 {
-	if (m_gatheringAsset)
-	{
-		if (data == m_terminator)
-		{
-			m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time);
-			m_gatheringAsset = false;
-		}
-		else
-			m_body << data << endl;
-
-		return;
-	}
-
-	istringstream toParse(data);
-	string key, value;
-
-	getline(toParse, key, '|');
-	double offset = NAN;
-	auto time = extractTime(key, offset);
-	getline(toParse, key, '|');
-	getline(toParse, value, '|');
-
-	// Data item name has a @, it is an asset special prefix.
-	if (key.find('@') != string::npos)
-	{
-		trim(value);
-		processAsset(toParse, key, value, time);
-	}
-	else
-	{
-		if (processDataItem(toParse, data, key, value, time, offset, true))
-		{
-			// Look for more key->value pairings in the rest of the data
-			while (getline(toParse, key, '|'))
-			{
-				value.clear();
-				getline(toParse, value, '|');
-				processDataItem(toParse, data, key, value, time, offset);
-			}
-		}
-	}
+  store.clear();
+  getline(stream, store, '|');
+  if (!store.empty() && store.front() == '"' && store.back() == '\\')
+  {
+    store.back() = '|';
+    string additionalContent;
+    while (store.back() != '"')
+    {
+      additionalContent.clear();
+      getline(stream, additionalContent, '|');
+      if (additionalContent.empty())
+        break;
+      
+      if (additionalContent.back() != '\\')
+      {
+        store.append(additionalContent);
+        break;
+      }
+      
+      additionalContent.back() = '|';
+      store.append(additionalContent);
+    }
+    
+    if (store.back() == '"')
+    {
+      // Correctly escaped text, removing quotes
+      store = store.substr(1, store.size() - 2);
+    }
+    else
+    {
+      // Faulty escaped text, reverting to first pipe
+      const auto firstPipe = std::find(store.cbegin(), store.cend(), '|');
+      const auto transformedPipesCount = std::count(std::next(firstPipe), store.cend(), '|');
+      auto offset = -1 * (std::distance(firstPipe, store.cend()) + transformedPipesCount);
+      if (stream.eof())
+        offset += 1;
+      stream.seekg(offset, std::ios_base::seekdir::cur);
+      store.erase(firstPipe, store.cend());
+      store.append("\\");
+    }
+  }
 }
 
+/**
+ * Expected data to parse in SDHR format:
+ *   Time|Alarm|Code|NativeCode|Severity|State|Description
+ *   Time|Item|Value
+ *   Time|Item1|Value1|Item2|Value2...
+ * 
+ * Support for assets:
+ *   Time|@ASSET@|id|type|<...>...</...>
+ */
+
+void Adapter::processData(const string& data)
+{
+  if (m_gatheringAsset)
+  {
+    if (data == m_terminator)
+    {
+      m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time);
+      m_gatheringAsset = false;
+    }
+    else
+    {
+      m_body << data << endl;
+    }
+    
+    return;
+  }
+  
+  istringstream toParse(data);
+  string key, value;
+  
+  getline(toParse, key, '|');
+  double offset = NAN;
+  string time = extractTime(key, offset);
+
+  
+  getline(toParse, key, '|');
+  
+  // Data item name has a @, it is an asset special prefix.
+  if (key.find('@') != string::npos)
+  {
+    getline(toParse, value, '|');
+    trim(value);
+    processAsset(toParse, key, value, time);
+  }
+  else
+  {
+    getEscapedLine(toParse, value);
+    if (processDataItem(toParse, data, key, value, time, offset, true))
+    {
+      // Look for more key->value pairings in the rest of the data
+      while (getline(toParse, key, '|'))
+      {
+        getEscapedLine(toParse, value);
+        processDataItem(toParse, data, key, value, time, offset);
+      }
+    }
+  }
+}
 
 bool Adapter::processDataItem(
 	istringstream &toParse,
