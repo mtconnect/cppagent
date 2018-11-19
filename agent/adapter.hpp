@@ -80,6 +80,7 @@ public:
   /* For testing... */
   void setBaseOffset(uint64_t aOffset) { mBaseOffset = aOffset; }
   void setBaseTime(uint64_t aOffset) { mBaseTime = aOffset; }
+  static void getEscapedLine(std::istringstream &stream, std::string &store);
   
   /* Inherited method to incoming data from the server */
   virtual void processData(const std::string& data);

@@ -131,6 +131,51 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
   return result;
 }
 
+void Adapter::getEscapedLine(istringstream &stream, string &store)
+{
+  store.clear();
+  getline(stream, store, '|');
+  if (!store.empty() && store.front() == '"' && store.back() == '\\')
+  {
+    store.back() = '|';
+    string additionalContent;
+    while (store.back() != '"')
+    {
+      additionalContent.clear();
+      getline(stream, additionalContent, '|');
+      if (additionalContent.empty())
+        break;
+
+      if (additionalContent.back() != '\\')
+      {
+        store.append(additionalContent);
+        break;
+      }
+
+      additionalContent.back() = '|';
+      store.append(additionalContent);
+    }
+
+    if (store.back() == '"')
+    {
+      // Correctly escaped text, removing quotes
+      store = store.substr(1, store.size() - 2);
+    }
+    else
+    {
+      // Faulty escaped text, reverting to first pipe
+      const auto firstPipe = std::find(store.cbegin(), store.cend(), '|');
+      const auto transformedPipesCount = std::count(std::next(firstPipe), store.cend(), '|');
+      auto offset = -1 * (std::distance(firstPipe, store.cend()) + transformedPipesCount);
+      if (stream.eof())
+        offset += 1;
+      stream.seekg(offset, std::ios_base::seekdir::cur);
+      store.erase(firstPipe, store.cend());
+      store.append("\\");
+    }
+  }
+}
+
 /**
  * Expected data to parse in SDHR format:
  *   Time|Alarm|Code|NativeCode|Severity|State|Description
@@ -167,23 +212,23 @@ void Adapter::processData(const string& data)
 
   
   getline(toParse, key, '|');
-  getline(toParse, value, '|');
   
   // Data item name has a @, it is an asset special prefix.
   if (key.find('@') != string::npos)
   {
+    getline(toParse, value, '|');
     trim(value);
     processAsset(toParse, key, value, time);
   }
   else
   {
+    getEscapedLine(toParse, value);
     if (processDataItem(toParse, data, key, value, time, offset, true))
     {
       // Look for more key->value pairings in the rest of the data
       while (getline(toParse, key, '|'))
       {
-        value.clear();
-        getline(toParse, value, '|');
+        getEscapedLine(toParse, value);
         processDataItem(toParse, data, key, value, time, offset);
       }
     }
