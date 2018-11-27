@@ -169,7 +169,7 @@ void Adapter::getEscapedLine(istringstream &stream, string &store)
       auto offset = -1 * (std::distance(firstPipe, store.cend()) + transformedPipesCount);
       if (stream.eof())
         offset += 1;
-      stream.seekg(offset, std::ios_base::seekdir::cur);
+      stream.seekg(offset, std::ios_base::cur);
       store.erase(firstPipe, store.cend());
       store.append("\\");
     }
