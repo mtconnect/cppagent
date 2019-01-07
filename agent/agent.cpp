@@ -527,8 +527,16 @@ unsigned int Agent::addToBuffer(
 
 	std::lock_guard<std::mutex> lock(m_sequenceLock);
 
-	auto seqNum = m_sequence++;
+	auto seqNum = m_sequence;
 	auto event = new ComponentEvent(*dataItem, seqNum, time, value);
+  
+  if (dataItem->isDataSet() && !m_latest.dataSetDifference(event))
+  {
+    event->unrefer();
+    return 0;
+  } else {
+    m_sequence++;
+  }
 
 	(*m_slidingBuffer)[seqNum] = event;
 	m_latest.addComponentEvent(event);

@@ -166,7 +166,6 @@ void Component::resolveReferences()
 		reference.m_dataItem = di;
 	}
 
-
 	for (const auto childComponent : m_children)
 		childComponent->resolveReferences();
 }
