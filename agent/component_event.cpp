@@ -121,7 +121,7 @@ ComponentEvent::ComponentEvent(const ComponentEvent &componentEvent)
   else if (componentEvent.isDataSet())
   {
     m_dataSet = componentEvent.m_dataSet;
-    m_sampleCount = componentEvent.m_sampleCount;
+    m_sampleCount = m_dataSet.size();
   }
 }
 
@@ -329,9 +329,11 @@ void ComponentEvent::convertValue(const string &value)
     
     // Check for reset triggered
     auto found = set.find_first_of('|');
-    if (value == "RESET" || found != string::npos)
+    auto trig = set;
+    if (found != string::npos) trig.erase(found);
+    if (trig == "RESET")
     {
-      m_resetTriggered = set.substr(0, found);
+      m_resetTriggered = trig;
       if (found == string::npos)
         set.clear();
       else

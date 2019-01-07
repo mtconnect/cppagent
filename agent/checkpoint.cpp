@@ -135,7 +135,7 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
           event->getResetTriggered().empty())
       {
         // Get the existing data set from the
-        DataSet &set = const_cast<DataSet&>((*ptr)->getDataSet());
+        DataSet set = (*ptr)->getDataSet();
 
         // Check for reset...
         // need to make sure reset triggered is cleared first time
@@ -149,6 +149,8 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
           else
             set[e.first] = e.second;
         }
+        
+        (*ptr)->setDataSet(set);
       }
       else
         (*ptr) = new ComponentEvent(*event);

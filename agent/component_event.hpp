@@ -136,6 +136,12 @@ public:
       m_resetTriggered.clear();
     }
   }
+  
+  void setDataSet(DataSet &aSet) {
+    m_dataSet = aSet;
+    m_hasAttributes = false;
+    m_attributes.clear();
+  }
 
 protected:
 	// Virtual destructor
