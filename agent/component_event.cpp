@@ -329,10 +329,13 @@ void ComponentEvent::convertValue(const string &value)
     
     // Check for reset triggered
     auto found = set.find_first_of('|');
-    if (found != string::npos)
+    if (value == "RESET" || found != string::npos)
     {
       m_resetTriggered = set.substr(0, found);
-      set.erase(0, found + 1);
+      if (found == string::npos)
+        set.clear();
+      else
+        set.erase(0, found + 1);
     }
     
     // split the rest of the line by space

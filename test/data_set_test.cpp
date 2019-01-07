@@ -423,3 +423,36 @@ void DataSetTest::testDeleteKey()
   CPPUNIT_ASSERT(map1.find("c") == map1.end());
   CPPUNIT_ASSERT(map1.find("a") == map1.end());
 }
+
+void DataSetTest::testResetWithJustNoData()
+{
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(m_adapter);
+  
+  m_adapter->processData("TIME|vars|a:1 b:2 c:3");
+  m_adapter->processData("TIME|vars| c:5 ");
+  m_adapter->processData("TIME|vars|c:8");
+  m_adapter->processData("TIME|vars|b:10   a:xxx");
+  m_adapter->processData("TIME|vars|RESET|");
+  m_adapter->processData("TIME|vars|r:good_bye");
+  
+  m_agentTestHelper.m_path = "/sample";
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]", "a:1 b:2 c:3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]@sampleCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]", "c:5");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]@sampleCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]", "c:8");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@sampleCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]", "a:xxx b:10");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@sampleCount", "2");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[6]", "");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[6]@sampleCount", "0");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[7]", "r:good_bye");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[7]@sampleCount", "1");
+  }
+
+}
