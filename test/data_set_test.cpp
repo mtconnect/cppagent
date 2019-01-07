@@ -246,7 +246,8 @@ void DataSetTest::testCurrent()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                       "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']",
                                       "a:1 b:2 c:3");
-  }
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,"//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']@sampleCount", "3");
+}
 
   m_adapter->processData("TIME|vars|c:6");
   
@@ -255,6 +256,7 @@ void DataSetTest::testCurrent()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                       "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']",
                                       "a:1 b:2 c:6");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,"//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']@sampleCount", "3");
   }
 
   m_adapter->processData("TIME|vars|RESET|d:10");
@@ -264,6 +266,7 @@ void DataSetTest::testCurrent()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                       "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']",
                                       "d:10");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,"//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']@sampleCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                       "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']@resetTriggered",
                                       "RESET");
@@ -277,6 +280,7 @@ void DataSetTest::testCurrent()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                       "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']",
                                       "c:6 d:10");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,"//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']@sampleCount", "2");
   }
 }
 
@@ -295,14 +299,18 @@ void DataSetTest::testSample()
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]", "a:1 b:2 c:3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]@sampleCount", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]", "c:5");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]@sampleCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]", "c:8");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@sampleCount", "1");
   }
 
   m_agentTestHelper.m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:1 b:2 c:8");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "3");
   }
   
   m_agentTestHelper.m_path = "/sample";
@@ -312,9 +320,13 @@ void DataSetTest::testSample()
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]", "a:1 b:2 c:3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]@sampleCount", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]", "c:5");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]@sampleCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]", "c:8");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@sampleCount", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]", "b:5 c:");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@sampleCount", "2");
   }
 
   m_agentTestHelper.m_path = "/current";
@@ -322,6 +334,7 @@ void DataSetTest::testSample()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:1 b:5");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "2");
   }
   
 }
