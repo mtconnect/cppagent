@@ -237,7 +237,8 @@ void Checkpoint::filter(std::set<std::string> const &filterSet)
 bool Checkpoint::dataSetDifference(ComponentEvent *event) const
 {
   auto item = event->getDataItem();
-  if (item->isDataSet() && event->getDataSet().size() > 0)
+  if (item->isDataSet() && event->getDataSet().size() > 0 &&
+      event->getResetTriggered().empty() )
   {
     const auto & id = item->getId();
     const auto ptr = m_events.find(id);

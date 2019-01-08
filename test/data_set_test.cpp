@@ -489,4 +489,25 @@ void DataSetTest::testDuplicateCompression()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:1 b:3 c:3 d:4 e:4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "5");
   }
+
+  m_adapter->processData("TIME|vars|RESET|a:1 b:3 c:3 d:4 e:4");
+  
+  m_agentTestHelper.m_path = "/sample";
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]", "a:1 b:3 c:3 d:4 e:4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@sampleCount", "5");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@resetTriggered", "RESET");
+
+  }
+  
+  m_agentTestHelper.m_path = "/current";
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a:1 b:3 c:3 d:4 e:4");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "5");
+  }
+
 }
