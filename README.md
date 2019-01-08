@@ -778,7 +778,7 @@ A new feature in version 1.4 is the ability to announce a reset has been trigger
 	
 ### `DATA_SET` Representation ###
 
-A new feature in version 1.5 is the `DATA_SET` representation which allows for key value pairs to be given. The protocol is similar to time series where each pair is space delimited. The agent automatically removes duplicate values from the stream and allows for addition deletion and resetting of the values. The format is as follows:
+A new feature in version 1.5 is the `DATA_SET` representation which allows for key value pairs to be given. The protocol is similar to time series where each pair is space delimited. The agent automatically removes duplicate values from the stream and allows for addition, deletion and resetting of the values. The format is as follows:
 
 	2014-09-29T23:59:33.460470Z|vars|v1:10 v2:20 v3:30
 
