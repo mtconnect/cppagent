@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 1.4.0.0
+MTConnect C++ Agent Version 1.5.0.0
 --------
 
 The C++ Agent provides the a complete implementation of the HTTP
@@ -775,6 +775,8 @@ All data items follow the formatting requirements in the MTConnect standard for 
 A new feature in version 1.4 is the ability to announce a reset has been triggered. If we have a part count named `pcount` that gets reset daily, the new protocol is as follows:
 
 	2014-09-29T23:59:33.460470Z|pcount|0:DAY
+	
+### `DATA_SET` Representation ###
 
 A new feature in version 1.5 is the `DATA_SET` representation which allows for key value pairs to be given. The protocol is similar to time series where each pair is space delimited. The agent automatically removes duplicate values from the stream and allows for addition deletion and resetting of the values. The format is as follows:
 
