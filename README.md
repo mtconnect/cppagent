@@ -10,6 +10,8 @@ the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
 
+Version 1.5.0.0 added Data Set capabilities and has been updated to use C++ 14.
+
 Version 1.4.0.0 added time period filter constraint, compositions, initial values, and reset triggers.
 
 Version 1.3.0.0 added the filter constraints, references, cutting tool archetypes, and formatting styles.
