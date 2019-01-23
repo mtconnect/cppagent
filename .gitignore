@@ -7,3 +7,4 @@ Release
 *.ncb
 *.user
 test/agent.log*
+build/

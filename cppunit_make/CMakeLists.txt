@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 2.6)
 
 project(cppunit)
 
-set(CPPUNIT_SRC_DIR ../cppunit/cppunit/src/cppunit)
-set(CPPUNIT_INCLUDE_DIRS ../cppunit/cppunit/include)
+set(CPPUNIT_SRC_DIR ../cppunit2/src/cppunit)
+set(CPPUNIT_INCLUDE_DIRS ../cppunit2/include)
 
 file(GLOB internal_headers ${CPPUNIT_SRC_DIR}/A-Za-z_]*.h)
-file(GLOB install_headers ${CPPUNIT_INCLUDE_DIRS}/cppunit/A-Za-z_]/*.h)
+file(GLOB install_headers ${CPPUNIT_INCLUDE_DIRS}/A-Za-z_]/*.h)
 file(GLOB sources ${CPPUNIT_SRC_DIR}/[A-Za-z_]*.cpp)
 list(REMOVE_ITEM sources ${CPPUNIT_SRC_DIR}/UnixDynamicLibraryManager.cpp)
 

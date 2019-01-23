@@ -1,517 +1,562 @@
-/*
- * Copyright Copyright 2012, System Insights, Inc.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
-
+//
+// Copyright Copyright 2012, System Insights, Inc.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
 #include "data_item.hpp"
 #include "device.hpp"
-#include "dlib/logger.h"
 #include "adapter.hpp"
 
 using namespace std;
 
-dlib::logger sLogger("data_item");
 
-/* ComponentEvent public static constants */
+// ComponentEvent public static constants
 const string DataItem::SSimpleUnits[NumSimpleUnits] =
 {
-  "AMPERE",
-  "COUNT",
-  "JOULE",
-  "PASCAL",
-  "PH",
-  "VOLT",
-  "WATT",
-  "OHM",
-  "SOUND_LEVEL",
-  "SIEMENS",
-  "DECIBEL",
-  "INCH",
-  "FOOT",
-  "CENTIMETER",
-  "DECIMETER",
-  "METER",
-  "FAHRENHEIT",
-  "POUND",
-  "GRAM",
-  "RADIAN",
-  "MINUTE",
-  "HOUR",
-  "SECOND",
-  "MILLIMETER",
-  "LITER",
-  "DEGREE",
-  "KILOGRAM",
-  "NEWTON",
-  "CELSIUS",
-  "REVOLUTION",
-  "STATUS",
-  "PERCENT",
-  "NEWTON_MILLIMETER",
-  "HERTZ",
-  "MILLIMETER_3D",
-  "DEGREE_3D"
+	"AMPERE",
+	"COUNT",
+	"JOULE",
+	"PASCAL",
+	"PH",
+	"VOLT",
+	"WATT",
+	"OHM",
+	"SOUND_LEVEL",
+	"SIEMENS",
+	"DECIBEL",
+	"INCH",
+	"FOOT",
+	"CENTIMETER",
+	"DECIMETER",
+	"METER",
+	"FAHRENHEIT",
+	"POUND",
+	"GRAM",
+	"RADIAN",
+	"MINUTE",
+	"HOUR",
+	"SECOND",
+	"MILLIMETER",
+	"LITER",
+	"DEGREE",
+	"KILOGRAM",
+	"NEWTON",
+	"CELSIUS",
+	"REVOLUTION",
+	"STATUS",
+	"PERCENT",
+	"NEWTON_MILLIMETER",
+	"HERTZ",
+	"MILLIMETER_3D",
+	"DEGREE_3D"
 };
 
 
-/* DataItem public methods */
-DataItem::DataItem(std::map<string, string> attributes) 
-  : mRepresentation(VALUE), mHasNativeScale(false), mHasSignificantDigits(false),  
-    mHasConstraints(false), mFilterValue(0.0), mHasMinimumDelta(false), mHasMinimumPeriod(false), mLastSampleValue(NAN),
-    mLastTimeOffset(NAN), mDataSource(NULL), mConversionDetermined(false), mConversionRequired(false), mHasFactor(false)
+// DataItem public methods
+DataItem::DataItem(std::map<string, string> const &attributes) : 
+	m_representation(VALUE),
+	m_hasNativeScale(false),
+	m_hasSignificantDigits(false),
+	m_hasConstraints(false),
+	m_filterValue(0.0),
+	m_hasMinimumDelta(false),
+	m_hasMinimumPeriod(false),
+	m_lastSampleValue(NAN),
+	m_lastTimeOffset(NAN),
+	m_dataSource(nullptr),
+	m_conversionDetermined(false),
+	m_conversionRequired(false),
+	m_hasFactor(false)
 {
-  mId = attributes["id"];
-  mName = attributes["name"];
-  mType = attributes["type"];
-  mIsAlarm = (mType == "ALARM");
-  mIsMessage = (mType == "MESSAGE");
-  mIsAssetChanged = (mType == "ASSET_CHANGED");
-  mIsAssetRemoved = (mType == "ASSET_REMOVED");
-      
+	const auto idPos = attributes.find("id");
+	if(idPos != attributes.end())
+		m_id = idPos->second;
 
-  mCamelType = getCamelType(mType, mPrefix);
-  if (attributes["representation"] == "TIME_SERIES")
-  {
-    mRepresentation = TIME_SERIES;
-    mCamelType += "TimeSeries";
-  } else if (attributes["representation"] == "DISCRETE")
-  {
-    mRepresentation = DISCRETE;
-    mCamelType += "Discrete";    
-  }
-  if (!mPrefix.empty())
-    mPrefixedCamelType = mPrefix + ":" + mCamelType;
-  else
-    mPrefixedCamelType = mCamelType;
-  mThreeD = false;
-  
-  if (!attributes["subType"].empty())
-  {
-    mSubType = attributes["subType"];
-  }
+	const auto namePos = attributes.find("name");
+	if(namePos != attributes.end())
+		m_name = namePos->second;
 
-  if (attributes["category"] == "SAMPLE")
-    mCategory = SAMPLE;
-  else if (attributes["category"] == "CONDITION")
-    mCategory = CONDITION;
-  else if (attributes["category"] == "EVENT")
-    mCategory = EVENT;
-  else
-  {
-    // Raise an invlaid category exception...
-  }
-    
-  if (!attributes["nativeUnits"].empty())
-  {
-    mNativeUnits = attributes["nativeUnits"];
-  }
-  
-  if (!attributes["units"].empty())
-  {
-    mUnits = attributes["units"];
-    if (mNativeUnits.empty())
-      mNativeUnits = mUnits;
-  }
+	const auto typePos = attributes.find("type");
+	if(typePos != attributes.end())
+		m_type = typePos->second;
 
-  if (!attributes["statistic"].empty())
-  {
-    mStatistic = attributes["statistic"];
-  }
+	m_isAlarm = (m_type == "ALARM");
+	m_isMessage = (m_type == "MESSAGE");
+	m_isAssetChanged = (m_type == "ASSET_CHANGED");
+	m_isAssetRemoved = (m_type == "ASSET_REMOVED");
 
-  if (!attributes["sampleRate"].empty())
-  {
-    mSampleRate = attributes["sampleRate"];
-  }
 
-  if (!attributes["nativeScale"].empty())
-  {
-    mNativeScale = atof(attributes["nativeScale"].c_str());
-    mHasNativeScale = true;
-  }
+	m_camelType = getCamelType(m_type, m_prefix);
 
-  if (!attributes["significantDigits"].empty())
-  {
-    mSignificantDigits = atoi(attributes["significantDigits"].c_str());
-    mHasSignificantDigits = true;
-  }
-  
-  if (!attributes["coordinateSystem"].empty())
-  {
-    mCoordinateSystem = attributes["coordinateSystem"];
-  }
-  
-  if (attributes.count("compositionId") > 0 && !attributes["compositionId"].empty())
-    mCompositionId = attributes["compositionId"];
+	const auto repPos = attributes.find("representation");
+	if(repPos != attributes.end())
+	{
+		if (repPos->second == "TIME_SERIES")
+		{
+			m_representation = TIME_SERIES;
+			m_camelType += "TimeSeries";
+		}
+		else if (repPos->second == "DISCRETE")
+		{
+			m_representation = DISCRETE;
+			m_camelType += "Discrete";
+    }
+    else if (repPos->second == "DATA_SET")
+    {
+      m_representation = DATA_SET;
+      m_camelType += "DataSet";
+		}
+	}
 
-  mComponent = NULL;
-  mAttributes = buildAttributes();
+	if (!m_prefix.empty())
+		m_prefixedCamelType = m_prefix + ":" + m_camelType;
+	else
+		m_prefixedCamelType = m_camelType;
+
+	m_threeD = false;
+
+	const auto subTypePos = attributes.find("subType");
+	if(subTypePos != attributes.end())
+		m_subType = subTypePos->second;
+
+	const auto catPos = attributes.find("category");
+	if(catPos != attributes.end())
+	{
+		if (catPos->second == "SAMPLE")
+			m_category = SAMPLE;
+		else if (catPos->second == "CONDITION")
+			m_category = CONDITION;
+		else if (catPos->second == "EVENT")
+			m_category = EVENT;
+		else
+		{
+			// Raise an invlaid category exception...
+		}
+	}
+
+	const auto nativeUnitsPos = attributes.find("nativeUnits");
+	if(nativeUnitsPos != attributes.end())
+		m_nativeUnits = nativeUnitsPos->second;
+
+	const auto unitsPos = attributes.find("units");
+	if(unitsPos != attributes.end())
+	{
+		m_units = unitsPos->second;
+		if (m_nativeUnits.empty())
+			m_nativeUnits = m_units;
+	}
+
+	const auto statisticPos = attributes.find("statistic");
+	if(statisticPos != attributes.end())
+		m_statistic = statisticPos->second;
+
+	const auto sampleRatePos = attributes.find("sampleRate");
+	if(sampleRatePos != attributes.end())
+		m_sampleRate = sampleRatePos->second;
+
+	const auto nativeScalePos = attributes.find("nativeScale");
+	if(nativeScalePos != attributes.end())
+	{
+		m_nativeScale = atof(nativeScalePos->second.c_str());
+		m_hasNativeScale = true;
+	}
+
+	const auto significantDigitsPos = attributes.find("significantDigits");
+	if(significantDigitsPos != attributes.end())
+	{
+		m_significantDigits = atoi(significantDigitsPos->second.c_str());
+		m_hasSignificantDigits = true;
+	}
+
+	const auto coordinateSystemPos = attributes.find("coordinateSystem");
+	if(coordinateSystemPos != attributes.end())
+		m_coordinateSystem = coordinateSystemPos->second;
+
+	const auto compositionIdPos = attributes.find("compositionId");
+	if(compositionIdPos != attributes.end())
+		m_compositionId = compositionIdPos->second;
+
+	m_component = nullptr;
+	m_attributes = buildAttributes();
 }
+
 
 DataItem::~DataItem()
 {
 }
 
-void DataItem::setDataSource(Adapter *aSource)
+
+void DataItem::setDataSource(Adapter *source)
 {
-    if (mDataSource != aSource)
-      mDataSource = aSource;
-    if (!mDataSource->conversionRequired())
-    {
-      mConversionRequired = false;
-      mConversionDetermined = true;
-    }
+	if (m_dataSource != source)
+		m_dataSource = source;
+
+	if (!m_dataSource->conversionRequired())
+	{
+		m_conversionRequired = false;
+		m_conversionDetermined = true;
+	}
 }
+
 
 std::map<string, string> DataItem::buildAttributes() const
 {
-  std::map<string, string> attributes;
-  
-  attributes["id"] = mId;
-  attributes["type"] = mType;
-  
-  if (!mSubType.empty())
-  {
-    attributes["subType"] = mSubType;
-  }
+	std::map<string, string> attributes;
 
-  switch(mCategory)
-  {
-    case SAMPLE:
-      attributes["category"] = "SAMPLE";
-      break;
-      
-    case EVENT:
-      attributes["category"] = "EVENT";
-      break;
+	attributes["id"] = m_id;
+	attributes["type"] = m_type;
 
-    case CONDITION:
-      attributes["category"] = "CONDITION";
-      break;
-  }
+	if (!m_subType.empty())
+		attributes["subType"] = m_subType;
 
-  if (mRepresentation == TIME_SERIES)
-  {
-    attributes["representation"] = "TIME_SERIES";
-  }
+	switch (m_category)
+	{
+	case SAMPLE:
+		attributes["category"] = "SAMPLE";
+		break;
 
-  if (!mStatistic.empty())
-  {
-    attributes["statistic"] = mStatistic;
-  }
+	case EVENT:
+		attributes["category"] = "EVENT";
+		break;
 
-  if (!mSampleRate.empty())
-  {
-    attributes["sampleRate"] = mSampleRate;
-  }
+	case CONDITION:
+		attributes["category"] = "CONDITION";
+		break;
+	}
 
-  if (!mName.empty())
-  {
-    attributes["name"] = mName;
-  }
-  
-  if (!mNativeUnits.empty())
-  {
-    attributes["nativeUnits"] = mNativeUnits;
-  }
-  
-  if (!mUnits.empty())
-  {
-    attributes["units"] = mUnits;
-  }
+	if (m_representation == TIME_SERIES)
+		attributes["representation"] = "TIME_SERIES";
 
-  if (mHasNativeScale)
-  {
-    attributes["nativeScale"] = floatToString(mNativeScale);
-  }
+  if (m_representation == DISCRETE)
+    attributes["representation"] = "DISCRETE";
 
-  if (mHasSignificantDigits)
-  {
-    attributes["significantDigits"] = intToString(mSignificantDigits);
-  }
-  
-  if (!mCoordinateSystem.empty())
-  {
-    attributes["coordinateSystem"] = mCoordinateSystem;
-  }
-  
-  if (!mCompositionId.empty())
-    attributes["compositionId"] = mCompositionId;
-  
-  return attributes;
+  if (m_representation == DATA_SET)
+    attributes["representation"] = "DATA_SET";
+
+	if (!m_statistic.empty())
+		attributes["statistic"] = m_statistic;
+
+	if (!m_sampleRate.empty())
+		attributes["sampleRate"] = m_sampleRate;
+
+	if (!m_name.empty())
+		attributes["name"] = m_name;
+
+	if (!m_nativeUnits.empty())
+		attributes["nativeUnits"] = m_nativeUnits;
+
+	if (!m_units.empty())
+		attributes["units"] = m_units;
+
+	if (m_hasNativeScale)
+		attributes["nativeScale"] = floatToString(m_nativeScale);
+
+	if (m_hasSignificantDigits)
+		attributes["significantDigits"] = intToString(m_significantDigits);
+
+	if (!m_coordinateSystem.empty())
+		attributes["coordinateSystem"] = m_coordinateSystem;
+
+	if (!m_compositionId.empty())
+		attributes["compositionId"] = m_compositionId;
+
+	return attributes;
 }
 
-bool DataItem::hasName(const string& name)
+
+bool DataItem::hasName(const string &name) const
 {
-  return mId == name || mName == name || (!mSource.empty() && mSource == name);
+	return m_id == name || m_name == name || (!m_source.empty() && m_source == name);
 }
 
-string DataItem::getCamelType(const string& aType, string &aPrefix)
+
+string DataItem::getCamelType(const string &type, string &prefix)
 {
-  if (aType.empty())
-  {
-    return "";
-  }
-  else if (aType == "PH") // Exception to the rule.
-  {
-    return "PH";
-  }
-  
-  string camel;
-  size_t colon = aType.find(':');
-  if (colon != string::npos) {
-    aPrefix = aType.substr(0, colon);
-    camel = aType.substr(colon + 1);
-  } else {
-    camel = aType;
-  }
+	if (type.empty())
+		return "";
+	else if (type == "PH") // Exception to the rule.
+		return "PH";
 
-  string::iterator second = camel.begin();
-  second++;
-  transform(second, camel.end(), second, ::tolower);
+	string camel;
+	auto colon = type.find(':');
 
-  string::iterator word = find(second, camel.end(), '_');
-  while (word != camel.end())
-  {
-    camel.erase(word);
-    camel.replace(word, word + 1, 1, ::toupper(*word));
-    word = find(word, camel.end(), '_');
-  }
+	if (colon != string::npos)
+	{
+		prefix = type.substr(0ul, colon);
+		camel = type.substr(colon + 1ul);
+	}
+	else
+		camel = type;
 
-  return camel;
+	auto second = camel.begin();
+	second++;
+	transform(second, camel.end(), second, ::tolower);
+
+	auto word = find(second, camel.end(), '_');
+
+	while (word != camel.end())
+	{
+		camel.erase(word);
+		camel.replace(word, word + 1ul, 1ul, ::toupper(*word));
+		word = find(word, camel.end(), '_');
+	}
+
+	return camel;
 }
+
 
 bool DataItem::conversionRequired()
 {
-  if (!mConversionDetermined)
-  {
-    mConversionDetermined = true;
-    mConversionRequired = !mNativeUnits.empty();
-  }
-  
-  return mConversionRequired;
+	if (!m_conversionDetermined)
+	{
+		m_conversionDetermined = true;
+		m_conversionRequired = !m_nativeUnits.empty();
+	}
+
+	return m_conversionRequired;
 }
 
-float DataItem::convertValue(float aValue)
+
+float DataItem::convertValue(float value)
 {
-  if (!mConversionDetermined)
-    conversionRequired();
-  
-  if (!mConversionRequired) {
-    return aValue;
-  } else if (mHasFactor) {
-    return (aValue + mConversionOffset) * mConversionFactor;
-  } else {
-    computeConversionFactors();
-    return convertValue(aValue);
-  }
+	if (!m_conversionDetermined)
+		conversionRequired();
+
+	if (!m_conversionRequired)
+	{
+		return value;
+	}
+	else if (m_hasFactor)
+	{
+		return (value + m_conversionOffset) * m_conversionFactor;
+	}
+	else
+	{
+		computeConversionFactors();
+		return convertValue(value);
+	}
 }
 
-/* ComponentEvent protected methods */
-string DataItem::convertValue(const string& value)
+
+string DataItem::convertValue(const string &value)
 {
-  // Check if the type is an alarm or if it doesn't have units
-  
-  if (!mConversionRequired)
-  {
-    return value;
-  }
-  else if (mHasFactor)
-  {
-    if (mThreeD)
-    {
-      ostringstream result;
-      string::size_type start = 0;
-      for (int i = 0; i < 3; i++)
-      {
-        string::size_type pos = value.find(" ", start);
-        result << floatToString((atof(value.substr(start, pos).c_str()) + mConversionOffset) * 
-                                mConversionFactor);
-        if (pos != string::npos)
-        {
-          start = value.find_first_not_of(" ", pos);
-          result << " ";
-        }
-      }
-      
-      return result.str();
-    }
-    else
-    {
-      return floatToString((atof(value.c_str()) + mConversionOffset) * 
-                           mConversionFactor);
-    }
-  }
-  else
-  {
-    computeConversionFactors();
-    return convertValue(value);
-  }
+	// Check if the type is an alarm or if it doesn't have units
+
+	if (!m_conversionRequired)
+	{
+		return value;
+	}
+	else if (m_hasFactor)
+	{
+		if (m_threeD)
+		{
+			ostringstream result;
+			string::size_type start = 0ul;
+
+			for (int i = 0; i < 3; i++)
+			{
+				auto pos = value.find(" ", start);
+				result << floatToString((atof(value.substr(start, pos).c_str()) + m_conversionOffset) * m_conversionFactor);
+
+				if (pos != string::npos)
+				{
+					start = value.find_first_not_of(" ", pos);
+					result << " ";
+				}
+			}
+
+			return result.str();
+		}
+		else
+		{
+			return floatToString((atof(value.c_str()) + m_conversionOffset) * m_conversionFactor);
+		}
+	}
+	else
+	{
+		computeConversionFactors();
+		return convertValue(value);
+	}
 }
+
 
 void DataItem::computeConversionFactors()
 {
-  string units = mNativeUnits;
-  string::size_type threeD = units.find("_3D");
-  mConversionOffset = 0.0;
-  string::size_type slashLoc = units.find('/');
-  
-  // Convert units of numerator / denominator (^ power)
-  if (slashLoc == string::npos)
-  {
-    if (threeD != string::npos)
-    {
-      mThreeD = true;
-      units = units.substr(0, threeD);
-    }
-    mConversionFactor = simpleFactor(units);
-    if (mConversionFactor == 1.0)
-    {
-      if (mUnits == units) 
-	mConversionRequired = false;
-      else if (units.substr(0, 4) == "KILO" && units.substr(4) == mUnits)
-	mConversionFactor = 1000.0;
-      else
-	mConversionRequired = false;
-    }
-  }
-  else if (units == "REVOLUTION/MINUTE")
-  {
-    mConversionFactor = 1.0;
-    mConversionRequired = false;
-  }
-  else
-  {
-    string numerator = units.substr(0, slashLoc);
-    string denominator = units.substr(slashLoc+1);
-    
-    string::size_type carotLoc = denominator.find('^');
-    
-    if (numerator == "REVOLUTION" && denominator == "SECOND")
-    {
-      mConversionFactor = 60.0;
-    }
-    else if (carotLoc == string::npos)
-    {
-      mConversionFactor = simpleFactor(numerator) / simpleFactor(denominator);
-    }
-    else
-    {
-      string unit = denominator.substr(0, carotLoc);
-      string power = denominator.substr(carotLoc+1);
-      
-      double div = pow((double) simpleFactor(unit), (double) atof(power.c_str()));
-      mConversionFactor = simpleFactor(numerator) / div;
-    }
-  }
-  
-  if (mHasNativeScale)
-  {
-    mConversionRequired = true;
-    mConversionFactor /= mNativeScale;
-  }
-  
-  mHasFactor = true;
+	string units = m_nativeUnits;
+	auto threeD = units.find("_3D");
+	m_conversionOffset = 0.0;
+	auto slashLoc = units.find('/');
+
+	// Convert units of numerator / denominator (^ power)
+	if (slashLoc == string::npos)
+	{
+		if (threeD != string::npos)
+		{
+			m_threeD = true;
+			units = units.substr(0, threeD);
+		}
+
+		m_conversionFactor = simpleFactor(units);
+
+		if (m_conversionFactor == 1.0)
+		{
+			if (m_units == units)
+				m_conversionRequired = false;
+			else if (units.substr(0ul, 4ul) == "KILO" && units.substr(4) == m_units)
+				m_conversionFactor = 1000.0;
+			else
+				m_conversionRequired = false;
+		}
+	}
+	else if (units == "REVOLUTION/MINUTE")
+	{
+		m_conversionFactor = 1.0;
+		m_conversionRequired = false;
+	}
+	else
+	{
+		auto numerator = units.substr(0, slashLoc);
+		auto denominator = units.substr(slashLoc + 1);
+
+		auto carotLoc = denominator.find('^');
+
+		if (numerator == "REVOLUTION" && denominator == "SECOND")
+			m_conversionFactor = 60.0;
+		else if (carotLoc == string::npos)
+			m_conversionFactor = simpleFactor(numerator) / simpleFactor(denominator);
+		else
+		{
+			auto unit = denominator.substr(0ul, carotLoc);
+			auto power = denominator.substr(carotLoc + 1);
+
+			double div = pow((double) simpleFactor(unit), (double) atof(power.c_str()));
+			m_conversionFactor = simpleFactor(numerator) / div;
+		}
+	}
+
+	if (m_hasNativeScale)
+	{
+		m_conversionRequired = true;
+		m_conversionFactor /= m_nativeScale;
+	}
+
+	m_hasFactor = true;
 }
 
-void DataItem::setConversionFactor(double aFactor, double aOffset)
+
+void DataItem::setConversionFactor(double factor, double offset)
 {
-  mHasFactor = true;
-  mConversionDetermined = true;
-  if (aFactor == 1.0 && aOffset == 0.0)
-    mConversionRequired = false;
-  else {
-    mConversionFactor = aFactor;
-    mConversionOffset = aOffset;
-    mConversionRequired = true;
-  }
+	m_hasFactor = true;
+	m_conversionDetermined = true;
+
+	if (factor == 1.0 && offset == 0.0)
+		m_conversionRequired = false;
+	else
+	{
+		m_conversionFactor = factor;
+		m_conversionOffset = offset;
+		m_conversionRequired = true;
+	}
 }
 
-double DataItem::simpleFactor(const string& units)
+
+double DataItem::simpleFactor(const string &units)
 {
-  switch(getEnumeration(units, SSimpleUnits, NumSimpleUnits))
-  {
-    case INCH:
-      return 25.4;
-    case FOOT:
-      return 304.8;
-    case CENTIMETER:
-      return 10.0;
-    case DECIMETER:
-      return 100.0;
-    case METER:
-      return 1000.f;
-    case FAHRENHEIT:
-      mConversionOffset = -32.0;
-      return 5.0 / 9.0;
-    case POUND:
-      return 0.45359237;
-    case GRAM:
-      return 1 / 1000.0;
-    case RADIAN:
-      return 57.2957795;
-    case MINUTE:
-      return 60.0;
-    case HOUR:
-      return 3600.0;
-    
-    case SECOND:
-    case MILLIMETER:
-    case LITER:
-    case DEGREE:
-    case KILOGRAM:
-    case NEWTON:
-    case CELSIUS:
-    case REVOLUTION:
-    case STATUS:
-    case PERCENT:
-    case NEWTON_MILLIMETER:
-    case HERTZ:
-    case AMPERE:
-    case COUNT:
-    case JOULE:
-    case PASCAL:
-    case PH:
-    case VOLT:
-    case WATT:
-    case OHM:
-    case SOUND_LEVEL:
-    case SIEMENS:
-    case DECIBEL:
+	switch (getEnumeration(units, SSimpleUnits, NumSimpleUnits))
+	{
+	case INCH:
+		return 25.4;
 
-    default:
-      // Already in correct units
-      return 1.0;
-  }
+	case FOOT:
+		return 304.8;
+
+	case CENTIMETER:
+		return 10.0;
+
+	case DECIMETER:
+		return 100.0;
+
+	case METER:
+		return 1000.f;
+
+	case FAHRENHEIT:
+		m_conversionOffset = -32.0;
+		return 5.0 / 9.0;
+
+	case POUND:
+		return 0.45359237;
+
+	case GRAM:
+		return 1 / 1000.0;
+
+	case RADIAN:
+		return 57.2957795;
+
+	case MINUTE:
+		return 60.0;
+
+	case HOUR:
+		return 3600.0;
+
+	case SECOND:
+	case MILLIMETER:
+	case LITER:
+	case DEGREE:
+	case KILOGRAM:
+	case NEWTON:
+	case CELSIUS:
+	case REVOLUTION:
+	case STATUS:
+	case PERCENT:
+	case NEWTON_MILLIMETER:
+	case HERTZ:
+	case AMPERE:
+	case COUNT:
+	case JOULE:
+	case PASCAL:
+	case PH:
+	case VOLT:
+	case WATT:
+	case OHM:
+	case SOUND_LEVEL:
+	case SIEMENS:
+	case DECIBEL:
+
+	default:
+		// Already in correct units
+		return 1.0;
+	}
 }
+
 
 // Sort by: Device, Component, Category, DataItem
-bool DataItem::operator<(DataItem &aOther) 
+bool DataItem::operator<(const DataItem &another) const
 {
-  Device *dev = mComponent->getDevice();
-  if (dev->getId() < aOther.getComponent()->getDevice()->getId())
-    return true;
-  else if (dev->getId() > aOther.getComponent()->getDevice()->getId())
-    return false;
-  else if (mComponent->getId() < aOther.getComponent()->getId())
-    return true;
-  else if (mComponent->getId() > aOther.getComponent()->getId())
-    return false;
-  else if (mCategory < aOther.mCategory)
-    return true;
-  else if (mCategory == aOther.mCategory)
-    return mId < aOther.mId;
-  else
-    return false;
+	auto dev = m_component->getDevice();
+
+	if (dev->getId() < another.getComponent()->getDevice()->getId())
+		return true;
+	else if (dev->getId() > another.getComponent()->getDevice()->getId())
+		return false;
+	else if (m_component->getId() < another.getComponent()->getId())
+		return true;
+	else if (m_component->getId() > another.getComponent()->getId())
+		return false;
+	else if (m_category < another.m_category)
+		return true;
+	else if (m_category == another.m_category)
+		return m_id < another.m_id;
+	else
+		return false;
 }
 
