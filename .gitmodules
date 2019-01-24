@@ -1,5 +1,5 @@
 [submodule "schema"]
-	path = schema
+	path = schemas
 	url = https://github.com/mtconnect/schema.git
 [submodule "libxml2"]
 	path = libxml2
