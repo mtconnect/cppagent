@@ -586,10 +586,23 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 	THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItem"));
 
 	addAttributes(writer, dataItem->getAttributes());
-	const auto &source = dataItem->getSource();
 
-	if (!source.empty())
-		addSimpleElement(writer, "Source", source);
+	if (!dataItem->getSource().empty() ||
+      !dataItem->getSourceDataItemId().empty() ||
+      !dataItem->getSourceComponentId().empty() ||
+      !dataItem->getSourceCompositionId().empty())
+  {
+    map<string,string> attributes;
+
+    if (!dataItem->getSourceDataItemId().empty())
+      attributes["dataItemId"] = dataItem->getSourceDataItemId();
+    if (!dataItem->getSourceComponentId().empty())
+      attributes["componentId"] = dataItem->getSourceComponentId();
+    if (!dataItem->getSourceCompositionId().empty())
+      attributes["compositionId"] = dataItem->getSourceCompositionId();
+
+      addSimpleElement(writer, "Source", dataItem->getSource(), &attributes);
+  }
 
 	if (dataItem->hasConstraints())
 	{

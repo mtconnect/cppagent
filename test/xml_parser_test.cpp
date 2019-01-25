@@ -485,18 +485,24 @@ void XmlParserTest::testReferences()
 	comp->resolveReferences();
 
 	const auto refs = comp->getReferences();
-	const auto &ref = refs.front();
+  const auto &ref = refs[0];
 
 	CPPUNIT_ASSERT_EQUAL((string) "c4", ref.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.m_name);
 
 	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem);
 
-	const auto &ref2 = refs.back();
+	const auto &ref2 = refs[1];
 	CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "door", ref2.m_name);
 
 	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.m_dataItem);
+  
+  const auto &ref3 = refs[2];
+  CPPUNIT_ASSERT_EQUAL((string) "ele", ref3.m_id);
+  CPPUNIT_ASSERT_EQUAL((string) "electric", ref3.m_name);
+  
+  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref3.m_component);
 
 	std::set<string> filter;
 	m_xmlParser->getDataItems(filter, "//BarFeederInterface");
@@ -507,6 +513,33 @@ void XmlParserTest::testReferences()
   CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("bfc"));
   CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("d2"));
   CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("eps"));
+}
+
+void XmlParserTest::testSourceReferences()
+{
+  if(m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
+  
+  try
+  {
+    m_xmlParser = new XmlParser();
+    m_devices = m_xmlParser->parseFile("../samples/reference_example.xml");
+  }
+  catch (exception &)
+  {
+    CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
+  }
+  
+  const auto item = m_devices[0]->getDeviceDataItem("bfc");
+  CPPUNIT_ASSERT(item != nullptr);
+  
+  CPPUNIT_ASSERT_EQUAL(string(""), item->getSource());
+  CPPUNIT_ASSERT_EQUAL(string("mf"), item->getSourceDataItemId());
+  CPPUNIT_ASSERT_EQUAL(string("ele"), item->getSourceComponentId());
+  CPPUNIT_ASSERT_EQUAL(string("xxx"), item->getSourceCompositionId());
 }
 
 

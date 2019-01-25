@@ -760,6 +760,25 @@ void XmlPrinterTest::testReferences()
                                     "ele");
 }
 
+void XmlPrinterTest::testSourceReferences()
+{
+  delete m_config; m_config = nullptr;
+  
+  m_config = new XmlParser();
+  m_devices = m_config->parseFile("../samples/reference_example.xml");
+  
+  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+  
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+                                    "//m:DataItem[@id='bfc']/m:Source@dataItemId",
+                                    "mf");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+                                    "//m:DataItem[@id='bfc']/m:Source@componentId",
+                                    "ele");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+                                    "//m:DataItem[@id='bfc']/m:Source@compositionId",
+                                    "xxx");
+}
 
 void XmlPrinterTest::testStreamsStyle()
 {

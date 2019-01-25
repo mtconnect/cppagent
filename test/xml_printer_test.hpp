@@ -75,6 +75,7 @@ class XmlPrinterTest : public CppUnit::TestFixture
   	CPPUNIT_TEST(testProbeWithFilter13);
 	CPPUNIT_TEST(testProbeWithFilter);
 	CPPUNIT_TEST(testReferences);
+  CPPUNIT_TEST(testSourceReferences);
 	CPPUNIT_TEST(testPrintExtendedCuttingTool);
 	CPPUNIT_TEST(testStreamsStyle);
 	CPPUNIT_TEST(testDevicesStyle);
@@ -135,7 +136,8 @@ protected:
 	void testProbeWithFilter();
 
 	// Reference tests
-	void testReferences();
+  void testReferences();
+  void testSourceReferences();
 
 	// Styles
 	void testStreamsStyle();
