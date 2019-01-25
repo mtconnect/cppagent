@@ -177,7 +177,7 @@ void ComponentTest::testDataItems()
 void ComponentTest::testReferences()
 {
 	string id("a"), name("xxx");
-	Component::Reference ref(id, name);
+  Component::Reference ref(id, name, Component::Reference::DATA_ITEM);
 
 	m_compA->addReference(ref);
 	CPPUNIT_ASSERT_EQUAL((size_t) 1, m_compA->getReferences().size());

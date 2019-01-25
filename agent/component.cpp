@@ -17,6 +17,7 @@
 #include "data_item.hpp"
 #include "device.hpp"
 #include "composition.hpp"
+#include "agent.hpp"
 #include <stdlib.h>
 #include <stdexcept>
 
@@ -37,6 +38,8 @@ const string Component::SComponentSpecs[NumComponentSpecs] =
 	"text",
 	"References",
 	"Reference",
+	"DataItemRef",
+	"ComponentRef",
 	"Compositions",
 	"Composition"
 };
@@ -45,7 +48,7 @@ const string Component::SComponentSpecs[NumComponentSpecs] =
 // Component public methods
 Component::Component(
 	const string &className,
-	const map<string, string> &attributes,
+  const std::map<string, string> &attributes,
 	const string &prefix) :
 	m_assetChanged(nullptr),
 	m_assetRemoved(nullptr)
@@ -116,7 +119,7 @@ std::map<string, string> Component::buildAttributes() const
 }
 
 
-void Component::addDescription(string body, const map<string, string> &attributes)
+void Component::addDescription(string body, const std::map<string, string> &attributes)
 {
 	m_description = attributes;
 
@@ -158,14 +161,30 @@ void Component::resolveReferences()
 
 	for (auto &reference : m_references)
 	{
-		auto di = device->getDeviceDataItem(reference.m_id);
-
-		if (!di)
-			throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " +	reference.m_id);
-
-		reference.m_dataItem = di;
+    if (reference.m_type == Component::Reference::DATA_ITEM) {
+      auto di = device->getDeviceDataItem(reference.m_id);
+      
+      if (!di)
+        throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " +	reference.m_id);
+      
+      reference.m_dataItem = di;
+    } else if (reference.m_type == Component::Reference::COMPONENT) {
+      auto comp = device->getComponentById(reference.m_id);
+      
+      if (!comp)
+        throw runtime_error("Cannot resolve Reference for component " + m_name + " to component " +  reference.m_id);
+      
+      reference.m_component = comp;
+    }
 	}
 
 	for (const auto childComponent : m_children)
 		childComponent->resolveReferences();
+}
+
+void Component::setParent(Component &parent)
+{
+  m_parent = &parent;
+  auto device = getDevice();
+  device->addComponent(this);
 }

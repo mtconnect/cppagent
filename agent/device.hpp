@@ -37,7 +37,17 @@ public:
 	DataItem *getDeviceDataItem(const std::string &name);
 	void addAdapter(Adapter *anAdapter) {
 		m_adapters.push_back(anAdapter); }
-
+  Component *getComponentById(const std::string &aId) {
+    auto comp = m_componentsById.find(aId);
+    if (comp != m_componentsById.end())
+      return comp->second;
+    else
+      return nullptr;
+  }
+  void addComponent(Component *aComponent) {
+    m_componentsById.insert(make_pair(aComponent->getId(), aComponent));
+  }
+  
 	// Return the mapping of Device to data items
 	const std::map<std::string, DataItem *> &getDeviceDataItems() const {
 		return m_deviceDataItemsById;
@@ -55,4 +65,5 @@ protected:
 	std::map<std::string, DataItem *> m_deviceDataItemsByName;
 	std::map<std::string, DataItem *> m_deviceDataItemsById;
 	std::map<std::string, DataItem *> m_deviceDataItemsBySource;
+  std::map<std::string, Component *> m_componentsById;
 };

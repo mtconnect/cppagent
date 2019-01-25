@@ -558,15 +558,22 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 
 		for (const auto &ref : component->getReferences())
 		{
-			THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
-			THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId", BAD_CAST ref.m_id.c_str()));
-
-			if (ref.m_name.length() > 0)
-			{
-				THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST ref.m_name.c_str()));
-			}
-
-			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Reference
+      if (ref.m_type == Component::Reference::DATA_ITEM) {
+        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItemRef"));
+      } else if  (ref.m_type == Component::Reference::COMPONENT) {
+        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentRef"));
+      } else {
+        continue;
+      }
+      
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "idRef", BAD_CAST ref.m_id.c_str()));
+      
+      if (ref.m_name.length() > 0)
+      {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST ref.m_name.c_str()));
+      }
+      
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Reference
 		}
 
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References

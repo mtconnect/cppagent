@@ -132,7 +132,7 @@ void DataItemTest::testHasNameAndSource()
 	CPPUNIT_ASSERT(!m_dataItemB->hasName("DataItemTest2Source"));
 	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", m_dataItemB->getSourceOrName());
 
-	m_dataItemB->addSource("DataItemTest2Source");
+	m_dataItemB->addSource("DataItemTest2Source", "", "", "");
 	CPPUNIT_ASSERT(m_dataItemB->hasName("DataItemTest2Source"));
 	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", m_dataItemB->getSource());
 	CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", m_dataItemB->getSourceOrName());

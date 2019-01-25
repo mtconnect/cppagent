@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <list>
+#include <vector>
 #include <map>
 
 #include "globals.hpp"
@@ -26,21 +27,31 @@
 class DataItem;
 class Device;
 class Composition;
+class Agent;
 
 class Component
 {
 public:
 	struct Reference
 	{
-		Reference(const std::string &id, const std::string &name) :
+    enum ReferenceType {
+      DATA_ITEM,
+      COMPONENT
+    };
+    
+		Reference(const std::string &id, const std::string &name, ReferenceType type) :
+      m_type(type),
 			m_id(id),
 			m_name(name),
-			m_dataItem(nullptr)
+			m_dataItem(nullptr),
+      m_component(nullptr)
 		{}
 
+    ReferenceType m_type;
 		std::string m_id;
 		std::string m_name;
 		DataItem *m_dataItem;
+    Component *m_component;
 	};
 
 	// std::string enumeration for component parts and details
@@ -58,11 +69,13 @@ public:
 		TEXT,
 		REFERENCES,
 		REFERENCE,
+    DATA_ITEM_REF,
+    COMPONENT_REF,
 		COMPOSITIONS,
 		COMPOSITION
 	};
 
-	static const unsigned int NumComponentSpecs = 12;
+	static const unsigned int NumComponentSpecs = 14;
 	static const std::string SComponentSpecs[];
 
 public:
@@ -143,8 +156,7 @@ public:
 	Device *getDevice();
 
 	// Set/Get the component's parent component
-	void setParent(Component &parent) {
-		m_parent = &parent; }
+  void setParent(Component &parent);
 	Component *getParent() const {
 		return m_parent; }
 
@@ -173,7 +185,7 @@ public:
 	// References
 	void addReference(Reference &reference) {
 		m_references.push_back(reference); }
-	const std::list<Reference> &getReferences() const {
+	const std::vector<Reference> &getReferences() const {
 		return m_references; }
 
 	void resolveReferences();
@@ -229,7 +241,7 @@ protected:
 	std::map<std::string, std::string> m_attributes;
 
 	// References
-	std::list<Reference> m_references;
+	std::vector<Reference> m_references;
 };
 
 struct ComponentComp

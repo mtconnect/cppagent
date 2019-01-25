@@ -2373,18 +2373,25 @@ void AgentTest::testReferences()
 	auto comp = item->getComponent();
 
 	const auto refs = comp->getReferences();
-	const auto ref = refs.front();
+	const auto ref = refs[0];
 
 	CPPUNIT_ASSERT_EQUAL((string) "c4", ref.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.m_name);
+  CPPUNIT_ASSERT_EQUAL(Component::Reference::DATA_ITEM, ref.m_type);
 
 	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem);
 
-	const Component::Reference &ref2 = refs.back();
+	const Component::Reference &ref2 = refs[1];
 	CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "door", ref2.m_name);
+  CPPUNIT_ASSERT_EQUAL(Component::Reference::DATA_ITEM, ref2.m_type);
 
-	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.m_dataItem);
+  const Component::Reference &ref3 = refs[3];
+  CPPUNIT_ASSERT_EQUAL((string) "ele", ref3.m_id);
+  CPPUNIT_ASSERT_EQUAL((string) "electric", ref3.m_name);
+  CPPUNIT_ASSERT_EQUAL(Component::Reference::COMPONENT, ref3.m_type);
+
+	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref3.m_component);
 
 	m_agentTestHelper.m_path = "/current";
 	key_value_map query;

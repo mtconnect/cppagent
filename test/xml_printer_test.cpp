@@ -750,11 +750,14 @@ void XmlPrinterTest::testReferences()
 	PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
 
 	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-		"//m:BarFeederInterface/m:References/m:Reference@dataItemId",
+		"//m:BarFeederInterface/m:References/m:DataItemRef@idRef",
 		"c4");
 	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-		"//m:BarFeederInterface/m:References/m:Reference@name",
+		"//m:BarFeederInterface/m:References/m:DataItemRef@name",
 		"chuck");
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+                                    "//m:BarFeederInterface/m:References/m:ComponentRef@idRef",
+                                    "ele");
 }
 
 

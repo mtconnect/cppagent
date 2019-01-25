@@ -214,7 +214,7 @@ void DeviceTest::testGetDataItem()
 	attributes3["id"] = "by_id3";
 	attributes3["name"] = "by_name3";
 	DataItem data3(attributes3);
-	data3.addSource("by_source3");
+	data3.addSource("by_source3", "", "", "");
 	m_devA->addDeviceDataItem(data3);
 
 

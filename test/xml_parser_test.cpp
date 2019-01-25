@@ -501,10 +501,12 @@ void XmlParserTest::testReferences()
 	std::set<string> filter;
 	m_xmlParser->getDataItems(filter, "//BarFeederInterface");
 
-	CPPUNIT_ASSERT_EQUAL((size_t) 3, filter.size());
+	CPPUNIT_ASSERT_EQUAL((size_t) 5, filter.size());
 	CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("mf"));
 	CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("c4"));
-	CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("d2"));
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("bfc"));
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("d2"));
+  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("eps"));
 }
 
 

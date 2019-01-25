@@ -47,15 +47,28 @@
             <DataItem name="door" id="d2" type="DOOR_STATE" category="EVENT" />
           </DataItems>
         </Door>
+	<Systems id="systems">
+	  <Components>
+	    <Electric id="ele">
+	      <DataItems>
+		<DataItem name="power_state" id="eps" type="POWER_STATE" category="EVENT" />
+	      </DataItems>
+	    </Electric>
+	  </Components>
+	</Systems>
         <Interfaces name="interfaces" id="int">
           <Components>
             <BarFeederInterface name="barfeeder" id="bf">
               <DataItems>
                 <DataItem type="MATERIAL_FEED" name="feed" id="mf" category="EVENT" />
+                <DataItem type="SYSTEM" name="fsys" id="bfc" category="CONDITION">
+		  <Source dataItemId="mf" componentId="ele" compositionId="xxx" />
+		</DataItem>
               </DataItems>
               <References>
-                <Reference name="chuck" dataItemId="c4" />
-                <Reference name="door" dataItemId="d2" />
+                <DataItemRef name="chuck" idRef="c4" />
+                <DataItemRef name="door" idRef="d2" />
+                <ComponentRef name="electric" idRef="ele" />
               </References>
             </BarFeederInterface>
           </Components>
