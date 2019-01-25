@@ -1225,7 +1225,7 @@ string Agent::handleFile(const string &uri, OutgoingThings& outgoing)
 		}
 
 		cachedFile.setObject(new CachedFile(fs.st_size), true);
-		auto bytes = read(fd, cachedFile->m_buffer, fs.st_size);
+		auto bytes = read(fd, cachedFile->m_buffer.get(), fs.st_size);
 		close(fd);
 
 		if (bytes < fs.st_size)
@@ -1249,7 +1249,7 @@ string Agent::handleFile(const string &uri, OutgoingThings& outgoing)
 	"Expires: " << getCurrentTime(std::chrono::system_clock::now() + std::chrono::seconds(60*60*24), HUM_READ) << "\r\n"
 	"Content-Type: " << contentType << "\r\n\r\n";
 
-	outgoing.out->write(cachedFile->m_buffer, cachedFile->m_size);
+	outgoing.out->write(cachedFile->m_buffer.get(), cachedFile->m_size);
 	outgoing.out->setstate(ios::badbit);
 
 	return "";

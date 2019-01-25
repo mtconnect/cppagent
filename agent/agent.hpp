@@ -24,6 +24,7 @@
 #include <list>
 #include <mutex>
 #include <chrono>
+#include <memory>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -393,7 +394,7 @@ protected:
 
 	struct CachedFile : public RefCounted 
 	{
-		char * m_buffer;
+		std::unique_ptr<char[]> m_buffer;
 		size_t m_size;
 
 		CachedFile() :
@@ -406,45 +407,43 @@ protected:
 			m_buffer(nullptr),
 			m_size(file.m_size)
 		{
-			m_buffer = (char*)malloc(file.m_size);
-			memcpy(m_buffer, file.m_buffer, file.m_size);
+			m_buffer = std::make_unique<char[]>(file.m_size);
+			memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
 		}
 
 		CachedFile(char *buffer, size_t size) :
 			m_buffer(nullptr),
 			m_size(size)
 		{
-			m_buffer = (char*)malloc(size);
-			memcpy(m_buffer, buffer, size);
+			m_buffer = std::make_unique<char[]>(m_size);
+			memcpy(m_buffer.get(), buffer, size);
 		}
 
 		CachedFile(size_t size) :
 			m_buffer(nullptr),
 			m_size(size)
 		{
-			m_buffer = (char*)malloc(size);
+			m_buffer = std::make_unique<char[]>(m_size);
 		}
 
 		~CachedFile()
 		{
-			free(m_buffer);
+			m_buffer.reset();
 		}
 
 		CachedFile &operator=(const CachedFile &file)
 		{
-			if (m_buffer)
-				free(m_buffer);
-			m_buffer = (char*)malloc(file.m_size);
-			memcpy(m_buffer, file.m_buffer, file.m_size);
+			m_buffer.release();
+			m_buffer = std::make_unique<char[]>(file.m_size);
+			memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
 			m_size = file.m_size;
 			return *this;
 		}
 
 		void allocate(size_t size)
 		{
-			if (m_buffer)
-				free(m_buffer);
-			m_buffer = (char*)malloc(size);
+			m_buffer.release();
+			m_buffer = std::make_unique<char[]>(size);
 			m_size = size;
 		}
 	};
