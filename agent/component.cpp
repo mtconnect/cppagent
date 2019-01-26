@@ -186,5 +186,6 @@ void Component::setParent(Component &parent)
 {
   m_parent = &parent;
   auto device = getDevice();
-  device->addComponent(this);
+  if (device)
+    device->addComponent(this);
 }
