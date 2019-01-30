@@ -17,8 +17,10 @@
 #pragma once
 
 #include <vector>
-#include "dlib/threads.h"
+#include <mutex>
+#include <condition_variable>
 #include "globals.hpp"
+
 
 class ChangeSignaler;
 
@@ -26,7 +28,6 @@ class ChangeObserver
 {
 public:
 	ChangeObserver() :
-		m_signal(m_mutex),
 		m_sequence(UINT64_MAX)
 	{ }
 
@@ -34,22 +35,25 @@ public:
 
 	bool wait(unsigned long timeout) const
 	{
-		dlib::auto_mutex lock(m_mutex);
+		std::unique_lock<std::recursive_mutex> lock(m_mutex);
 
-		if (m_sequence == UINT64_MAX)
-			return m_signal.wait_or_timeout(timeout);
-		else
+		if(m_sequence != UINT64_MAX)
 			return true;
+
+		return m_cv.wait_for(m_mutex, std::chrono::milliseconds{timeout}, [this]()
+		{
+			return m_sequence != UINT64_MAX;
+		});
 	}
 
 	void signal(uint64_t sequence)
 	{
-		dlib::auto_mutex lock(m_mutex);
+		std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
 
 		if (m_sequence > sequence && sequence)
 			m_sequence = sequence;
 
-		m_signal.signal();
+		m_cv.notify_one();
 	}
 
 	uint64_t getSequence() const {
@@ -62,13 +66,14 @@ public:
 
 	void reset()
 	{
-		dlib::auto_mutex lock(m_mutex);
+		std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
 		m_sequence = UINT64_MAX;
 	}
 
 private:
-	dlib::rmutex m_mutex;
-	dlib::rsignaler m_signal;
+	mutable std::recursive_mutex m_mutex;
+	mutable std::condition_variable_any m_cv;
+
 	std::vector<ChangeSignaler *> m_signalers;
 	volatile uint64_t m_sequence;
 
@@ -92,6 +97,6 @@ public:
 
 protected:
 	// Observer Lists
-	dlib::rmutex m_observerMutex;
+	mutable std::recursive_mutex m_observerMutex;
 	std::vector<ChangeObserver *> m_observers;
 };
