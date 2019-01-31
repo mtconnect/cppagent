@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 #include <set>
-#include <dlib/array.h>
 
 
 class Checkpoint
@@ -32,7 +31,7 @@ public:
 	~Checkpoint();
 
 	void addComponentEvent(ComponentEvent *event);
-  bool dataSetDifference(ComponentEvent *event) const;
+	bool dataSetDifference(ComponentEvent *event) const;
 	void copy(Checkpoint const &checkpoint, std::set<std::string> *filterSet = nullptr);
 	void clear();
 	void filter(std::set<std::string> const &filterSet);

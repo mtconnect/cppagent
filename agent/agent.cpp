@@ -23,7 +23,6 @@
 #include <thread>
 #include <dlib/tokenizer.h>
 #include <dlib/misc_api.h>
-#include <dlib/array.h>
 #include <dlib/dir_nav.h>
 #include <dlib/config_reader.h>
 #include <dlib/queue.h>
@@ -111,7 +110,7 @@ Agent::Agent(
 	for (const auto device  : m_devices)
 	{
 		m_deviceNameMap[device->getName()] = device;
-    m_deviceUuidMap[device->getUuid()] = device;
+		m_deviceUuidMap[device->getUuid()] = device;
 
 		// Make sure we have two device level data items:
 		// 1. Availability
@@ -227,16 +226,19 @@ Device * Agent::getDeviceByName(const std::string& name)
 
 Device *Agent::findDeviceByUUIDorName(const std::string& idOrName)
 {
-  auto di = m_deviceUuidMap.find(idOrName);
-  if (di == m_deviceUuidMap.end()) {
-    di = m_deviceNameMap.find(idOrName);
-    if (di != m_deviceNameMap.end())
-      return di->second;
-  } else {
-    return di->second;
-  }
-  
-  return nullptr;
+	auto di = m_deviceUuidMap.find(idOrName);
+	if (di == m_deviceUuidMap.end())
+	{
+		di = m_deviceNameMap.find(idOrName);
+		if (di != m_deviceNameMap.end())
+			return di->second;
+	}
+	else
+	{
+		return di->second;
+	}
+
+	return nullptr;
 }
 
 
@@ -355,37 +357,37 @@ void Agent::registerFile(const string &aUri, const string &aPath)
 }
 
 void Agent::on_connect (
-   std::istream& in,
-   std::ostream& out,
-   const std::string& foreign_ip,
-   const std::string& local_ip,
-   unsigned short foreign_port,
-   unsigned short local_port,
-   dlib::uint64
-   )
+	std::istream& in,
+	std::ostream& out,
+	const std::string& foreign_ip,
+	const std::string& local_ip,
+	unsigned short foreign_port,
+	unsigned short local_port,
+	uint64_t
+	)
 {
-  try
-  {
-    IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
-    OutgoingThings outgoing;
-    
-    parse_http_request(in, incoming, get_max_content_length());
-    read_body(in, incoming);
-    outgoing.out = &out;
-    const std::string& result = httpRequest(incoming, outgoing);
-    if (out.good())
-      write_http_response(out, outgoing, result);
-  }
-  catch (dlib::http_parse_error& e)
-  {
-    g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
-    write_http_response(out, e);
-  }
-  catch (std::exception& e)
-  {
-    g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
-    write_http_response(out, e);
-  }
+	try
+	{
+		IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
+		OutgoingThings outgoing;
+	
+		parse_http_request(in, incoming, get_max_content_length());
+		read_body(in, incoming);
+		outgoing.out = &out;
+		const std::string& result = httpRequest(incoming, outgoing);
+		if (out.good())
+			write_http_response(out, outgoing, result);
+	}
+	catch (dlib::http_parse_error& e)
+	{
+		g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
+		write_http_response(out, e);
+	}
+	catch (std::exception& e)
+	{
+		g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
+		write_http_response(out, e);
+	}
 }
 
 
@@ -530,13 +532,15 @@ unsigned int Agent::addToBuffer(
 	auto seqNum = m_sequence;
 	auto event = new ComponentEvent(*dataItem, seqNum, time, value);
   
-  if (dataItem->isDataSet() && !m_latest.dataSetDifference(event))
-  {
-    event->unrefer();
-    return 0;
-  } else {
-    m_sequence++;
-  }
+	if (dataItem->isDataSet() && !m_latest.dataSetDifference(event))
+	{
+		event->unrefer();
+		return 0;
+	}
+	else
+	{
+		m_sequence++;
+	}
 
 	(*m_slidingBuffer)[seqNum] = event;
 	m_latest.addComponentEvent(event);
@@ -1594,7 +1598,7 @@ string Agent::devicesAndPath(const string &path, const string &device)
 	if (!device.empty())
 	{
 		string prefix = "//Devices/Device[@name=\"" + device +
-                    "\"or@uuid=\"" + device + "\"]";
+					"\"or@uuid=\"" + device + "\"]";
 
 		if (!path.empty())
 		{

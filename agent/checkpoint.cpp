@@ -128,41 +128,41 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 				}
 			}
 		}
-    else if (item->isDataSet())
-    {
-      if (!event->isUnavailable() &&
-          !(*ptr)->isUnavailable() &&
-          event->getResetTriggered().empty())
-      {
-        // Get the existing data set from the existing event
-        DataSet set = (*ptr)->getDataSet();
-        
-        // Check for reset...
-        // need to make sure reset triggered is cleared first time
-        (*ptr)->clearResetTriggered();
-        
-        // For data sets merge the maps together
-        for (auto & e : event->getDataSet())
-        {
-          if (e.second.empty())
-            set.erase(e.first);
-          else
-            set[e.first] = e.second;
-        }
-        
-        // Set the new set to the event
-        (*ptr)->setDataSet(set);
-      }
-      else
-        (*ptr) = new ComponentEvent(*event);
-      
-      assigned = true;
-    }
+	else if (item->isDataSet())
+	{
+		if (!event->isUnavailable() &&
+			!(*ptr)->isUnavailable() &&
+			event->getResetTriggered().empty())
+		{
+			// Get the existing data set from the existing event
+			DataSet set = (*ptr)->getDataSet();
+		
+			// Check for reset...
+			// need to make sure reset triggered is cleared first time
+			(*ptr)->clearResetTriggered();
+		
+			// For data sets merge the maps together
+			for (auto & e : event->getDataSet())
+			{
+				if (e.second.empty())
+					set.erase(e.first);
+				else
+					set[e.first] = e.second;
+			}
+		
+			// Set the new set to the event
+			(*ptr)->setDataSet(set);
+		}
+		else
+			(*ptr) = new ComponentEvent(*event);
+
+		assigned = true;
+	}
 
 		if (!assigned)
 			(*ptr) = event;
 	}
-  else
+	else
 		m_events[id] = new ComponentEventPtr(event);
 
 }
@@ -236,35 +236,39 @@ void Checkpoint::filter(std::set<std::string> const &filterSet)
 
 bool Checkpoint::dataSetDifference(ComponentEvent *event) const
 {
-  auto item = event->getDataItem();
-  if (item->isDataSet() && event->getDataSet().size() > 0 &&
-      event->getResetTriggered().empty() )
-  {
-    const auto & id = item->getId();
-    const auto ptr = m_events.find(id);
-    
-    if (ptr != m_events.end())
-    {
-      const DataSet &set = (*(ptr->second))->getDataSet();
-      DataSet eventSet = event->getDataSet();
-      bool changed = false;
-      
-      for (auto it = eventSet.begin(); it != eventSet.end(); )
-      {
-        const auto v = set.find(it->first);
-        if (v == set.end() || v->second != it->second) {
-          it++;
-        } else {
-          changed = true;
-          eventSet.erase(it++);
-        }
-      }
+	auto item = event->getDataItem();
+	if (item->isDataSet() && event->getDataSet().size() > 0 &&
+		event->getResetTriggered().empty() )
+	{
+		const auto & id = item->getId();
+		const auto ptr = m_events.find(id);
+	
+		if (ptr != m_events.end())
+		{
+			const DataSet &set = (*(ptr->second))->getDataSet();
+			DataSet eventSet = event->getDataSet();
+			bool changed = false;
+	  
+			for (auto it = eventSet.begin(); it != eventSet.end(); )
+			{
+				const auto v = set.find(it->first);
+				if (v == set.end() || v->second != it->second)
+				{
+					it++;
+				}
+				else
+				{
+					changed = true;
+					eventSet.erase(it++);
+				}
+			}
 
-      if (changed) event->setDataSet(eventSet);
-      
-      return !eventSet.empty();
-    }
-  }
+			if (changed)
+				event->setDataSet(eventSet);
 
-  return true;
+			return !eventSet.empty();
+		}
+	}
+
+	return true;
 }

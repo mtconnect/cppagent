@@ -36,18 +36,18 @@ public:
 	RollingFileLogger(
 		std::string filename,
 		int maxBackupIndex = 9,
-		dlib::uint64 maxSize = 10 * 1024 * 1024,
+		uint64_t maxSize = 10ui64 * 1024ui64 * 1024ui64,
 		RollingSchedule schedule = NEVER);
 
 	~RollingFileLogger();
 
 	void write(const char *message);
 
-	dlib::uint64 getMaxSize() const {
+	uint64_t getMaxSize() const {
 		return m_maxSize; }
 
 protected:
-	void rollover(dlib::uint64 size);
+	void rollover(uint64_t size);
 	int getFileAge();
 
 private:
@@ -58,7 +58,7 @@ private:
 	dlib::file m_file;
 
 	int m_maxBackupIndex;
-	dlib::uint64 m_maxSize;
+	uint64_t m_maxSize;
 	RollingSchedule m_schedule;
 
 	int m_fd;

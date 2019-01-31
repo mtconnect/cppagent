@@ -2025,27 +2025,6 @@ void AgentTest::testRelativeParsedTime()
 }
 
 
-namespace CppUnit
-{
-	template<>
-	struct assertion_traits<dlib::uint64>
-	{
-		static bool equal(const dlib::uint64 &x, const dlib::uint64 &y)
-		{
-			return x == y;
-		}
-
-		static std::string toString(const dlib::uint64 &x)
-		{
-			CppUnit::OStringStream ost;
-			ost << x;
-			return ost.str();
-		}
-
-	};
-}
-
-
 void AgentTest::testRelativeParsedTimeDetection()
 {
 	m_agentTestHelper.m_path = "/sample";

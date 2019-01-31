@@ -48,8 +48,8 @@ using namespace dlib;
 typedef std::vector<std::pair<std::string, std::string>> AssetChangeList;
 
 struct OutgoingThings : public dlib::outgoing_things {
-  OutgoingThings() : out(nullptr) {}
-  std::ostream  *out;
+	OutgoingThings() : out(nullptr) {}
+	std::ostream  *out;
 };
 typedef struct dlib::incoming_things IncomingThings;
 
@@ -119,16 +119,16 @@ public:
 	virtual ~Agent();
 
 	// Overridden method that is called per web request – not used
-  // using httpRequest which is called from our own on_connect method.
+	// using httpRequest which is called from our own on_connect method.
 	const std::string on_request (
 		const incoming_things &incoming,
-    outgoing_things &outgoing ) override {
-    throw std::logic_error("Not Implemented");
-    return "";
-  }
-  
-  const std::string httpRequest(const IncomingThings &incoming,
-                                OutgoingThings &outgoing);
+	outgoing_things &outgoing ) override {
+	throw std::logic_error("Not Implemented");
+	return "";
+	}
+
+	const std::string httpRequest(const IncomingThings &incoming,
+								OutgoingThings &outgoing);
 
 	// Add an adapter to the agent
 	Adapter *addAdapter(const std::string &device,
@@ -238,17 +238,17 @@ public:
 	void updateDom(Device *device);
 
 protected:
-  
-  virtual void on_connect (
-     std::istream& in,
-     std::ostream& out,
-     const std::string& foreign_ip,
-     const std::string& local_ip,
-     unsigned short foreign_port,
-     unsigned short local_port,
-     dlib::uint64
-     ) override;
-  
+
+	virtual void on_connect (
+		std::istream& in,
+		std::ostream& out,
+		const std::string& foreign_ip,
+		const std::string& local_ip,
+		unsigned short foreign_port,
+		unsigned short local_port,
+		uint64_t
+		) override;
+
 	// HTTP methods to handle the 3 basic calls
 	std::string handleCall(
 		std::ostream &out,
