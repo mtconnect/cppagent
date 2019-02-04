@@ -106,7 +106,7 @@ class AgentTest : public CppUnit::TestFixture
 	CPPUNIT_TEST(testDynamicCalibration);
 	CPPUNIT_TEST(testInitialTimeSeriesValues);
 	CPPUNIT_TEST(testUUIDChange);
-  	CPPUNIT_TEST(testFilterValues13);
+	CPPUNIT_TEST(testFilterValues13);
 	CPPUNIT_TEST(testFilterValues);
 	CPPUNIT_TEST(testReferences);
 	CPPUNIT_TEST(testDiscrete);
@@ -218,11 +218,6 @@ protected:
 
 	// Streaming tests
 	void testStreamDataObserver();
-
-	static void killThread(void *aArg);
-	static void addThread(void *aArg);
-	static void streamThread(void *aArg);
-
 	void testStreamData();
 
 	// Sequence number tests

@@ -318,7 +318,7 @@ void AgentTest::testAddToBuffer()
 
 	{
 		m_agentTestHelper.m_path = "/sample";
-    	PARSE_XML_RESPONSE_QUERY_KV("from", "36");
+		PARSE_XML_RESPONSE_QUERY_KV("from", "36");
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
 	}
 
@@ -1867,23 +1867,6 @@ void AgentTest::testPutBlockingFrom()
 }
 
 
-void AgentTest::killThread(void *aArg)
-{
-	auto test = (AgentTest *) aArg;
-	this_thread::sleep_for(test->m_delay);
-	test->m_agentTestHelper.m_out.setstate(ios::eofbit);
-}
-
-
-void AgentTest::addThread(void *aArg)
-{
-	auto test = (AgentTest *) aArg;
-	this_thread::sleep_for(test->m_delay);
-	test->m_adapter->processData("TIME|line|204");
-	test->m_agentTestHelper.m_out.setstate(ios::eofbit);
-}
-
-
 void AgentTest::testStreamData()
 {
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -1898,19 +1881,35 @@ void AgentTest::testStreamData()
 	query["from"] = int64ToString(m_agent->getSequence());
 	m_agentTestHelper.m_path = "/LinuxCNC/sample";
 
+
 	// Heartbeat test. Heartbeat should be sent in 200ms. Give
 	// 25ms range.
 	{
 		auto startTime = system_clock::now();
 
-		m_delay = 25ms;
-		dlib::create_new_thread(killThread, this);
-		PARSE_XML_RESPONSE_QUERY(query);
-		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+		auto killThreadLambda = [](AgentTest *test)
+		{
+			this_thread::sleep_for(test->m_delay);
+			test->m_agentTestHelper.m_out.setstate(ios::eofbit);
+		};
 
-		auto delta = system_clock::now() - startTime;
-		CPPUNIT_ASSERT(delta < (heartbeatFreq + 25ms));
-		CPPUNIT_ASSERT(delta > heartbeatFreq);
+		m_delay = 25ms;
+		auto killThread = std::thread{killThreadLambda, this};
+		try
+		{
+			PARSE_XML_RESPONSE_QUERY(query);
+			CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+
+			auto delta = system_clock::now() - startTime;
+			CPPUNIT_ASSERT(delta < (heartbeatFreq + 25ms));
+			CPPUNIT_ASSERT(delta > heartbeatFreq);
+			killThread.join();
+		}
+		catch(...)
+		{
+			killThread.join();
+			throw;
+		}
 	}
 
 	m_agentTestHelper.m_out.clear();
@@ -1922,13 +1921,29 @@ void AgentTest::testStreamData()
 	{
 		auto startTime = system_clock::now();
 
-		m_delay = 10ms;
-		dlib::create_new_thread(addThread, this);
-		PARSE_XML_RESPONSE_QUERY(query);
+		auto AddThreadLambda = [](AgentTest *test)
+		{
+			this_thread::sleep_for(test->m_delay);
+			test->m_adapter->processData("TIME|line|204");
+			test->m_agentTestHelper.m_out.setstate(ios::eofbit);
+		};
 
-		auto delta = system_clock::now() - startTime;
-		CPPUNIT_ASSERT(delta < (minExpectedResponse + 30ms));
-		CPPUNIT_ASSERT(delta > minExpectedResponse);
+		m_delay = 10ms;
+		auto addThread = std::thread{AddThreadLambda, this};
+		try
+		{
+			PARSE_XML_RESPONSE_QUERY(query);
+
+			auto delta = system_clock::now() - startTime;
+			CPPUNIT_ASSERT(delta < (minExpectedResponse + 30ms));
+			CPPUNIT_ASSERT(delta > minExpectedResponse);
+			addThread.join();
+		}
+		catch(...)
+		{
+			addThread.join();
+			throw;
+		}
 	}
 
 }
@@ -1937,17 +1952,6 @@ void AgentTest::testStreamData()
 void AgentTest::testFailWithDuplicateDeviceUUID()
 {
 	CPPUNIT_ASSERT_THROW(new Agent("../samples/dup_uuid.xml", 8, 4, 25ms), std::runtime_error);
-}
-
-
-void AgentTest::streamThread(void *aArg)
-{
-	auto test = (AgentTest *) aArg;
-	this_thread::sleep_for(test->m_delay);
-	test->m_agent->setSequence(test->m_agent->getSequence() + 20ull);
-	test->m_adapter->processData("TIME|line|204");
-	this_thread::sleep_for(120ms);
-	test->m_agentTestHelper.m_out.setstate(ios::eofbit);
 }
 
 
@@ -1967,11 +1971,30 @@ void AgentTest::testStreamDataObserver()
 	// Test to make sure the signal will push the sequence number forward and capture
 	// the new data.
 	{
+		auto streamThreadLambda = [](AgentTest *test)
+		{
+			this_thread::sleep_for(test->m_delay);
+			test->m_agent->setSequence(test->m_agent->getSequence() + 20ui64);
+			test->m_adapter->processData("TIME|line|204");
+			this_thread::sleep_for(120ms);
+			test->m_agentTestHelper.m_out.setstate(ios::eofbit);
+		};
+
 		m_delay = 50ms;
-		auto seq = int64ToString(m_agent->getSequence() + 20ull);
-		dlib::create_new_thread(streamThread, this);
-		PARSE_XML_RESPONSE_QUERY(query);
-		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
+		auto seq = int64ToString(m_agent->getSequence() + 20ui64);
+
+		auto streamThread = std::thread{streamThreadLambda, this};
+		try
+		{
+			PARSE_XML_RESPONSE_QUERY(query);
+			CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
+			streamThread.join();
+		}
+		catch(...)
+		{
+			streamThread.join();
+			throw;
+		}
 	}
 }
 
@@ -2115,8 +2138,8 @@ void AgentTest::testInitialTimeSeriesValues()
 void AgentTest::testFilterValues13()
 {
 	delete m_agent; m_agent= nullptr;
-  m_agent = new Agent("../samples/filter_example_1.3.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
+	m_agent = new Agent("../samples/filter_example_1.3.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent;
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
@@ -2125,7 +2148,7 @@ void AgentTest::testFilterValues13()
 
 	{
 		PARSE_XML_RESPONSE;
-    	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
 	}
 
 	m_adapter->processData("TIME|load|100");
@@ -2164,6 +2187,7 @@ void AgentTest::testFilterValues13()
 	CPPUNIT_ASSERT(item->isFiltered(5.0, NAN));
 	CPPUNIT_ASSERT(!item->isFiltered(20.0, NAN));
 }
+
 
 void AgentTest::testFilterValues()
 {
@@ -2631,8 +2655,8 @@ void AgentTest::testEmptyLastItemFromAdapter()
 		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", "E");
 	}
 
-
 }
+
 
 void AgentTest::testConstantValue()
 {
@@ -2663,41 +2687,43 @@ void AgentTest::testConstantValue()
 	}
 }
 
+
 void AgentTest::testBadDataItem()
 {
-  m_agentTestHelper.m_path = "/sample";
-  
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
-  CPPUNIT_ASSERT(m_adapter);
-  
-  {
-    PARSE_XML_RESPONSE;
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-  }
-  
-  m_adapter->processData("TIME|bad|ignore|dummy|1244|line|204");
-  
-  {
-    PARSE_XML_RESPONSE;
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-  }
+	m_agentTestHelper.m_path = "/sample";
+
+	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+	CPPUNIT_ASSERT(m_adapter);
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+	}
+
+	m_adapter->processData("TIME|bad|ignore|dummy|1244|line|204");
+
+	{
+		PARSE_XML_RESPONSE;
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+		CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+	}
 }
+
 
 void AgentTest::testComposition()
 {
 	m_agentTestHelper.m_path = "/current";
-  
+
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);
-  
+
 	DataItem *motor = m_agent->getDataItemByName("LinuxCNC", "zt1");
 	CPPUNIT_ASSERT(motor);
 
 	DataItem *amp = m_agent->getDataItemByName("LinuxCNC", "zt2");
 	CPPUNIT_ASSERT(amp);
-  
+
 	m_adapter->processData("TIME|zt1|100|zt2|200");
 
 	{
