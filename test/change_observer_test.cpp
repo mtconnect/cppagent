@@ -48,7 +48,7 @@ void ChangeObserverTest::setUp()
 
 void ChangeObserverTest::tearDown()
 {
-	m_signaler.release();
+	m_signaler.reset();
 }
 
 

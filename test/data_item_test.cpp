@@ -49,7 +49,7 @@ void DataItemTest::setUp()
 	attributes1["type"] = "ACCELERATION";
 	attributes1["category"] = "SAMPLE";
 	attributes1["nativeUnits"] = "PERCENT";
-	m_dataItemA = new DataItem(attributes1);
+	m_dataItemA = make_unique<DataItem>(attributes1);
 
 	attributes2["id"] = "3";
 	attributes2["name"] = "DataItemTest2";
@@ -60,21 +60,21 @@ void DataItemTest::setUp()
 	attributes2["nativeScale"] = "1.0";
 	attributes2["significantDigits"] = "1";
 	attributes2["coordinateSystem"] = "testCoordinateSystem";
-	m_dataItemB = new DataItem(attributes2);
+	m_dataItemB = make_unique<DataItem>(attributes2);
 
 	attributes3["id"] = "4";
 	attributes3["name"] = "DataItemTest3";
 	attributes3["type"] = "LOAD";
 	attributes3["category"] = "CONDITION";
-	m_dataItemC = new DataItem(attributes3);
+	m_dataItemC = make_unique<DataItem>(attributes3);
 }
 
 
 void DataItemTest::tearDown()
 {
-	delete m_dataItemA; m_dataItemA = nullptr;
-	delete m_dataItemB; m_dataItemB = nullptr;
-	delete m_dataItemC; m_dataItemC = nullptr;
+	m_dataItemA.reset();
+	m_dataItemB.reset();
+	m_dataItemC.reset();
 }
 
 
@@ -265,10 +265,10 @@ void DataItemTest::testTimeSeries()
 	attributes1["units"] = "MILLIMETER";
 	attributes1["nativeUnits"] = "MILLIMETER";
 	attributes1["representation"] = "TIME_SERIES";
-	auto d = new DataItem(attributes1);
+	auto d = make_unique<DataItem>(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("PositionTimeSeries"), d->getElementName());
-	delete d; d = nullptr;
+	d.reset();
 
 	attributes1.clear();
 	attributes1["id"] = "1";
@@ -278,10 +278,10 @@ void DataItemTest::testTimeSeries()
 	attributes1["units"] = "MILLIMETER";
 	attributes1["nativeUnits"] = "MILLIMETER";
 	attributes1["representation"] = "VALUE";
-	d = new DataItem(attributes1);
+	d = make_unique<DataItem>(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("Position"), d->getElementName());
-	delete d; d = nullptr;
+	d.reset();
 }
 
 
@@ -296,10 +296,10 @@ void DataItemTest::testStatistic()
 	attributes1["units"] = "MILLIMETER";
 	attributes1["nativeUnits"] = "MILLIMETER";
 	attributes1["statistic"] = "AVERAGE";
-	auto d = new DataItem(attributes1);
+	auto d = make_unique<DataItem>(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), d->getStatistic());
-	delete d; d = nullptr;
+	d.reset();
 }
 
 
@@ -316,10 +316,10 @@ void DataItemTest::testSampleRate()
 	attributes1["statistic"] = "AVERAGE";
 	attributes1["representation"] = "TIME_SERIES";
 	attributes1["sampleRate"] = "42000";
-	auto d = new DataItem(attributes1);
+	auto d = make_unique<DataItem>(attributes1);
 
 	CPPUNIT_ASSERT_EQUAL(string("42000"), d->getSampleRate());
-	delete d; d = nullptr;
+	d.reset();
 }
 
 

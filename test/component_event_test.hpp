@@ -35,6 +35,7 @@
 
 #include <map>
 #include <string>
+#include <memory>
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
@@ -65,8 +66,8 @@ public:
 protected:
 	ComponentEvent *m_compEventA;
 	ComponentEvent *m_compEventB;
-	DataItem *m_dataItem1;
-	DataItem *m_dataItem2;
+	std::unique_ptr<DataItem> m_dataItem1;
+	std::unique_ptr<DataItem> m_dataItem2;
 
 protected:
 	void testConstructors();

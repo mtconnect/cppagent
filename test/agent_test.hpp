@@ -41,6 +41,7 @@
 #include <string>
 #include <iosfwd>
 #include <chrono>
+#include <memory>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -134,10 +135,10 @@ class AgentTest : public CppUnit::TestFixture
 	typedef dlib::queue<std::string>::kernel_1a_c queue_type;
 
 protected:
-	Agent *m_agent;
+	std::unique_ptr<Agent> m_agent;
 	Adapter *m_adapter;
-  std::string m_agentId;
-  AgentTestHelper m_agentTestHelper;
+	std::string m_agentId;
+	AgentTestHelper m_agentTestHelper;
 
 	std::chrono::milliseconds m_delay;
 
