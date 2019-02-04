@@ -103,7 +103,9 @@ Agent::Agent(
 	m_maxAssets = maxAssets;
 
 	// Create the checkpoints at a regular frequency
-	m_checkpoints = new Checkpoint[m_checkpointCount];
+	m_checkpoints.reserve(m_checkpointCount);
+	for(auto i = 0; i < m_checkpointCount; i++)
+		m_checkpoints.emplace_back();
 
 	// Add the devices to the device map and create availability and 
 	// asset changed events if they don't exist
@@ -246,7 +248,7 @@ Agent::~Agent()
 {
 	m_slidingBuffer.reset();
 	m_xmlParser.reset();
-	delete[] m_checkpoints; m_checkpoints = nullptr;
+	m_checkpoints.clear();
 }
 
 

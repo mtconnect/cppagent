@@ -379,7 +379,7 @@ protected:
 	// Checkpoints
 	Checkpoint m_latest;
 	Checkpoint m_first;
-	Checkpoint *m_checkpoints;
+	std::vector<Checkpoint> m_checkpoints;
 
 	int m_checkpointFreq;
 	int m_checkpointCount;
