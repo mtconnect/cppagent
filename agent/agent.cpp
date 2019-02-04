@@ -58,7 +58,7 @@ Agent::Agent(
 	try
 	{
 		// Load the configuration for the Agent
-		m_xmlParser = new XmlParser();
+		m_xmlParser = make_unique<XmlParser>();
 		m_devices = m_xmlParser->parseFile(configXmlPath);
 		std::set<std::string> uuids;
 		for (const auto &device : m_devices)
@@ -94,7 +94,7 @@ Agent::Agent(
 	// Sequence number and sliding buffer for data
 	m_sequence = 1ull;
 	m_slidingBufferSize = 1 << bufferSize;
-	m_slidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
+	m_slidingBuffer = make_unique<sliding_buffer_kernel_1<ComponentEventPtr>>();
 	m_slidingBuffer->set_size(bufferSize);
 	m_checkpointFreq = checkpointFreq.count();
 	m_checkpointCount = (m_slidingBufferSize / checkpointFreq.count()) + 1;
@@ -244,8 +244,8 @@ Device *Agent::findDeviceByUUIDorName(const std::string& idOrName)
 
 Agent::~Agent()
 {
-	delete m_slidingBuffer; m_slidingBuffer = nullptr;
-	delete m_xmlParser; m_xmlParser = nullptr;
+	m_slidingBuffer.reset();
+	m_xmlParser.reset();
 	delete[] m_checkpoints; m_checkpoints = nullptr;
 }
 
