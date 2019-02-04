@@ -53,19 +53,18 @@ using namespace std::chrono;
 void AgentTest::setUp()
 {
 	XmlPrinter::setSchemaVersion("1.3");
-	m_agent = nullptr;
-	m_agent = new Agent("../samples/test_config.xml", 8, 4, 25ms);
+	m_agent = make_unique<Agent>("../samples/test_config.xml", 8, 4, 25ms);
 	m_agentId = intToString(getCurrentTimeInSec());
 	m_adapter = nullptr;
 
-  m_agentTestHelper.m_agent = m_agent;
-  m_agentTestHelper.m_queries.clear();
+	m_agentTestHelper.m_agent = m_agent.get();
+	m_agentTestHelper.m_queries.clear();
 }
 
 
 void AgentTest::tearDown()
 {
-  delete m_agent; m_agent = nullptr;
+	m_agent.reset();
 	m_adapter = nullptr;
 }
 
@@ -690,10 +689,9 @@ void AgentTest::testAdapterCommands()
 
 void AgentTest::testAdapterDeviceCommand()
 {
-	delete m_agent; m_agent = nullptr;
-	m_agent = new Agent("../samples/two_devices.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
-  
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/two_devices.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 	m_agentTestHelper.m_path = "/probe";
 
 	auto device1 = m_agent->getDeviceByName("Device1");
@@ -1603,9 +1601,9 @@ void AgentTest::testAssetAdditionOfAssetChanged12()
 	string version = XmlPrinter::getSchemaVersion();
 	XmlPrinter::setSchemaVersion("1.2");
 
-	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 
 	{
 		m_agentTestHelper.m_path = "/probe";
@@ -1623,9 +1621,9 @@ void AgentTest::testAssetAdditionOfAssetRemoved13()
 	string version = XmlPrinter::getSchemaVersion();
 	XmlPrinter::setSchemaVersion("1.3");
 
-	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/min_config.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 
 	{
 		m_agentTestHelper.m_path = "/probe";
@@ -2137,9 +2135,9 @@ void AgentTest::testInitialTimeSeriesValues()
 
 void AgentTest::testFilterValues13()
 {
-	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/filter_example_1.3.xml", 8, 4, 25ms);
-	m_agentTestHelper.m_agent = m_agent;
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/filter_example_1.3.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
@@ -2191,9 +2189,9 @@ void AgentTest::testFilterValues13()
 
 void AgentTest::testFilterValues()
 {
-	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/filter_example.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
@@ -2257,9 +2255,9 @@ void AgentTest::testFilterValues()
 	}
 
 	// Test period filter with ignore timestamps
-	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/filter_example.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	m_adapter->setIgnoreTimestamps(true);
@@ -2292,9 +2290,9 @@ void AgentTest::testFilterValues()
 	}
 
 	// Test period filter with relative time
-	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/filter_example.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	m_adapter->setRelativeTime(true);
@@ -2339,9 +2337,9 @@ void AgentTest::testResetTriggered()
 {
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
-  
+
 	m_agentTestHelper.m_path = "/sample";
-  
+
 	m_adapter->processData("TIME1|pcount|0");
 	m_adapter->processData("TIME2|pcount|1");
 	m_adapter->processData("TIME3|pcount|2");
@@ -2364,9 +2362,9 @@ void AgentTest::testResetTriggered()
 
 void AgentTest::testReferences()
 {
-	delete m_agent; m_agent = nullptr;
-	m_agent = new Agent("../samples/reference_example.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/reference_example.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	CPPUNIT_ASSERT(m_adapter);
@@ -2380,19 +2378,19 @@ void AgentTest::testReferences()
 
 	CPPUNIT_ASSERT_EQUAL((string) "c4", ref.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.m_name);
-  CPPUNIT_ASSERT_EQUAL(Component::Reference::DATA_ITEM, ref.m_type);
+	CPPUNIT_ASSERT_EQUAL(Component::Reference::DATA_ITEM, ref.m_type);
 
 	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.m_dataItem);
 
 	const Component::Reference &ref2 = refs[1];
 	CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.m_id);
 	CPPUNIT_ASSERT_EQUAL((string) "door", ref2.m_name);
-  CPPUNIT_ASSERT_EQUAL(Component::Reference::DATA_ITEM, ref2.m_type);
+	CPPUNIT_ASSERT_EQUAL(Component::Reference::DATA_ITEM, ref2.m_type);
 
-  const Component::Reference &ref3 = refs[2];
-  CPPUNIT_ASSERT_EQUAL((string) "ele", ref3.m_id);
-  CPPUNIT_ASSERT_EQUAL((string) "electric", ref3.m_name);
-  CPPUNIT_ASSERT_EQUAL(Component::Reference::COMPONENT, ref3.m_type);
+	const Component::Reference &ref3 = refs[2];
+	CPPUNIT_ASSERT_EQUAL((string) "ele", ref3.m_id);
+	CPPUNIT_ASSERT_EQUAL((string) "electric", ref3.m_name);
+	CPPUNIT_ASSERT_EQUAL(Component::Reference::COMPONENT, ref3.m_type);
 
 	CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref3.m_component);
 
@@ -2414,9 +2412,9 @@ void AgentTest::testReferences()
 
 void AgentTest::testDiscrete()
 {
-	delete m_agent; m_agent= nullptr;
-	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/discrete_example.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
 
 	m_agentTestHelper.m_path = "/sample";
 
@@ -2466,10 +2464,10 @@ void AgentTest::testDiscrete()
 void AgentTest::testUpcaseValues()
 {
 	m_agentTestHelper.m_path = "/current";
-	delete m_agent; m_agent = nullptr;
-	m_agent = new Agent("../samples/discrete_example.xml", 8, 4, 25ms);
-  m_agentTestHelper.m_agent = m_agent;
-  
+	m_agent.reset();
+	m_agent = make_unique<Agent>("../samples/discrete_example.xml", 8, 4, 25ms);
+	m_agentTestHelper.m_agent = m_agent.get();
+
 	m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
 	m_adapter->setDupCheck(true);
 	CPPUNIT_ASSERT(m_adapter);

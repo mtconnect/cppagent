@@ -34,6 +34,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
@@ -56,12 +57,11 @@ class CheckpointTest : public CppUnit::TestFixture
 	CPPUNIT_TEST_SUITE_END();
 
 protected:
-	Checkpoint *m_checkpoint;
-	Agent *m_agent;
-	Adapter *m_adapter;
+	std::unique_ptr<Checkpoint> m_checkpoint;
+	std::unique_ptr<Agent> m_agent;
 	std::string m_agentId;
-	DataItem *m_dataItem1;
-	DataItem *m_dataItem2;
+	std::unique_ptr<DataItem> m_dataItem1;
+	std::unique_ptr<DataItem> m_dataItem2;
 
 protected:
 	void testAddComponentEvents();

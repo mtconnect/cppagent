@@ -54,13 +54,13 @@ using namespace std::chrono;
 
 void ConfigTest::setUp()
 {
-	m_config = new AgentConfiguration();
+	m_config = make_unique<AgentConfiguration>();
 }
 
 
 void ConfigTest::tearDown()
 {
-	delete m_config; m_config = nullptr;
+	m_config.reset();
 }
 
 
@@ -469,10 +469,10 @@ void ConfigTest::testMaxSize()
 		"}\n");
 	m_config->loadConfig(logger);
 	auto fl = m_config->getLogger();
-	CPPUNIT_ASSERT_EQUAL(150ull, fl->getMaxSize());
-	delete m_config; m_config = nullptr;
+	CPPUNIT_ASSERT_EQUAL(150ui64, fl->getMaxSize());
+	m_config.reset();
 
-	m_config = new AgentConfiguration();
+	m_config = make_unique<AgentConfiguration>();
 	istringstream logger2(
 		"logger_config {"
 		"max_size = 15K\n"
@@ -480,10 +480,10 @@ void ConfigTest::testMaxSize()
 	m_config->loadConfig(logger2);
 
 	fl = m_config->getLogger();
-	CPPUNIT_ASSERT_EQUAL(15ull * 1024ull, fl->getMaxSize());
-	delete m_config; m_config = nullptr;
+	CPPUNIT_ASSERT_EQUAL(15ui64 * 1024ui64, fl->getMaxSize());
+	m_config.reset();
 
-	m_config = new AgentConfiguration();
+	m_config = make_unique<AgentConfiguration>();
 	istringstream logger3(
 		"logger_config {"
 		"max_size = 15M\n"
@@ -491,10 +491,10 @@ void ConfigTest::testMaxSize()
 	m_config->loadConfig(logger3);
 
 	fl = m_config->getLogger();
-	CPPUNIT_ASSERT_EQUAL(15ull * 1024ull * 1024ull, fl->getMaxSize());
-	delete m_config; m_config = nullptr;
+	CPPUNIT_ASSERT_EQUAL(15ui64 * 1024ui64 * 1024ui64, fl->getMaxSize());
+	m_config.reset();
 
-	m_config = new AgentConfiguration();
+	m_config = make_unique<AgentConfiguration>();
 	istringstream logger4(
 		"logger_config {"
 		"max_size = 15G\n"
@@ -502,6 +502,6 @@ void ConfigTest::testMaxSize()
 	m_config->loadConfig(logger4);
 
 	fl = m_config->getLogger();
-	CPPUNIT_ASSERT_EQUAL(15ull * 1024ull * 1024ull * 1024ull, fl->getMaxSize());
+	CPPUNIT_ASSERT_EQUAL(15ui64 * 1024ui64 * 1024ui64 * 1024ui64, fl->getMaxSize());
 
 }
