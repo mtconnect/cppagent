@@ -322,8 +322,8 @@ void XmlParser::getDataItems(
 					// Handle case where we are specifying the data items node...
 					getDataItems(filterSet, "DataItem", n);
 				}
-        else if (!xmlStrcmp(n->name, BAD_CAST "Reference"))
-        {
+				else if (!xmlStrcmp(n->name, BAD_CAST "Reference"))
+				{
 					auto id = xmlGetProp(n, BAD_CAST "dataItemId");
 
 					if (id)
@@ -332,27 +332,27 @@ void XmlParser::getDataItems(
 						xmlFree(id); id = nullptr;
 					}
 				}
-        else if (!xmlStrcmp(n->name, BAD_CAST "DataItemRef"))
-        {
-          auto id = xmlGetProp(n, BAD_CAST "idRef");
-          
-          if (id)
-          {
-            filterSet.insert((const char *) id);
-            xmlFree(id); id = nullptr;
-          }
-        }
-        else if (!xmlStrcmp(n->name, BAD_CAST "ComponentRef"))
-        {
-          auto id = string((const char*) xmlGetProp(n, BAD_CAST "idRef"));
-          getDataItems(filterSet, "//*[@id='" + id + "']");
-        }
+				else if (!xmlStrcmp(n->name, BAD_CAST "DataItemRef"))
+				{
+					auto id = xmlGetProp(n, BAD_CAST "idRef");
+		  
+					if (id)
+					{
+						filterSet.insert((const char *) id);
+						xmlFree(id); id = nullptr;
+					}
+				}
+				else if (!xmlStrcmp(n->name, BAD_CAST "ComponentRef"))
+				{
+					auto id = string((const char*) xmlGetProp(n, BAD_CAST "idRef"));
+					getDataItems(filterSet, "//*[@id='" + id + "']");
+				}
 				else // Find all the data items and references below this node
 				{
 					getDataItems(filterSet, "*//DataItem", n);
 					getDataItems(filterSet, "*//Reference", n);
-          getDataItems(filterSet, "*//DataItemRef", n);
-          getDataItems(filterSet, "*//ComponentRef", n);
+					getDataItems(filterSet, "*//DataItemRef", n);
+					getDataItems(filterSet, "*//ComponentRef", n);
 				}
 			}
 		}
@@ -536,22 +536,25 @@ void XmlParser::loadDataItem(
 			if (!xmlStrcmp(child->name, BAD_CAST "Source"))
 			{
 				auto text = xmlNodeGetContent(child);
-        auto attributes = getAttributes(child);
-        
-        string cdata;
-        if (text != nullptr)
-          cdata = (const char*) text;
+				auto attributes = getAttributes(child);
+		
+				string cdata;
+				if (text != nullptr)
+				  cdata = (const char*) text;
 
-        string dataItemId, componentId, compositionId;
-        auto it = attributes.find("dataItemId");
-        if (it != attributes.end()) dataItemId = it->second;
-        it = attributes.find("componentId");
-        if (it != attributes.end()) componentId = it->second;
-        it = attributes.find("compositionId");
-        if (it != attributes.end()) compositionId = it->second;
+				string dataItemId, componentId, compositionId;
+				auto it = attributes.find("dataItemId");
+				if (it != attributes.end())
+					dataItemId = it->second;
+				it = attributes.find("componentId");
+				if (it != attributes.end())
+					componentId = it->second;
+				it = attributes.find("compositionId");
+				if (it != attributes.end())
+					compositionId = it->second;
 
-        d->addSource(cdata, dataItemId, componentId, compositionId);
-        xmlFree(text); text = nullptr;
+				d->addSource(cdata, dataItemId, componentId, compositionId);
+				xmlFree(text); text = nullptr;
 			}
 			else if (!xmlStrcmp(child->name, BAD_CAST "Constraints"))
 			{
@@ -678,19 +681,24 @@ void XmlParser::handleReference(
 	if (attrs.count("name") > 0)
 		name = attrs["name"];
 
-  if (xmlStrcmp(reference->name, BAD_CAST "Reference") == 0) {
-    Component::Reference ref(attrs["dataItemId"], name,
-                             Component::Reference::DATA_ITEM);
-    parent->addReference(ref);
-  } else if (xmlStrcmp(reference->name, BAD_CAST "DataItemRef") == 0){
-    Component::Reference ref(attrs["idRef"], name,
-                             Component::Reference::DATA_ITEM);
-    parent->addReference(ref);
-  } else if (xmlStrcmp(reference->name, BAD_CAST "ComponentRef") == 0){
-    Component::Reference ref(attrs["idRef"], name,
-                             Component::Reference::COMPONENT);
-    parent->addReference(ref);
-  }
+	if (xmlStrcmp(reference->name, BAD_CAST "Reference") == 0)
+	{
+		Component::Reference ref(attrs["dataItemId"], name,
+									Component::Reference::DATA_ITEM);
+		parent->addReference(ref);
+	}
+	else if (xmlStrcmp(reference->name, BAD_CAST "DataItemRef") == 0)
+	{
+		Component::Reference ref(attrs["idRef"], name,
+									Component::Reference::DATA_ITEM);
+		parent->addReference(ref);
+	}
+	else if (xmlStrcmp(reference->name, BAD_CAST "ComponentRef") == 0)
+	{
+		Component::Reference ref(attrs["idRef"], name,
+									Component::Reference::COMPONENT);
+		parent->addReference(ref);
+	}
 }
 
 

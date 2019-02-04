@@ -62,20 +62,20 @@ std::string &trim(std::string &str);
 
 /// Asserts that two XML strings are equivalent.
 #define CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, path, expected) \
- ::xpathTest(doc, path, expected, CPPUNIT_SOURCELINE() )
+	::xpathTest(doc, path, expected, CPPUNIT_SOURCELINE() )
 
 void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
-               CPPUNIT_NS::SourceLine sourceLine);
+			   CPPUNIT_NS::SourceLine sourceLine);
 
 #define PARSE_XML(expr) \
-  string result = expr;\
-  auto doc = xmlParseMemory(result.c_str(), result.length()); \
-  CPPUNIT_ASSERT(doc);
+	string result = expr;\
+	auto doc = xmlParseMemory(result.c_str(), result.length()); \
+	CPPUNIT_ASSERT(doc);
 
 /// Asserts that two XML strings are equivalent.
 #define CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, path, expected) \
-  ::xpathTestCount(doc, path, expected, CPPUNIT_SOURCELINE() )
+	::xpathTestCount(doc, path, expected, CPPUNIT_SOURCELINE() )
 
 void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
-               CPPUNIT_NS::SourceLine sourceLine);
+			   CPPUNIT_NS::SourceLine sourceLine);
 

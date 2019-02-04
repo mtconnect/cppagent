@@ -757,47 +757,47 @@ void XmlPrinterTest::testReferences()
 		"//m:BarFeederInterface/m:References/m:DataItemRef@name",
 		"chuck");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:BarFeederInterface/m:References/m:ComponentRef@idRef",
-                                    "ele");
+									"//m:BarFeederInterface/m:References/m:ComponentRef@idRef",
+									"ele");
 }
 
 void XmlPrinterTest::testLegacyReferences()
 {
-  XmlPrinter::setSchemaVersion("1.3");
-  delete m_config; m_config = nullptr;
-  
-  m_config = new XmlParser();
-  m_devices = m_config->parseFile("../samples/reference_example.xml");
-  
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
-  
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:BarFeederInterface/m:References/m:Reference@dataItemId",
-                                    "c4");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:BarFeederInterface/m:References/m:Reference@name",
-                                    "chuck");
+	XmlPrinter::setSchemaVersion("1.3");
+	delete m_config; m_config = nullptr;
+
+	m_config = new XmlParser();
+	m_devices = m_config->parseFile("../samples/reference_example.xml");
+
+	PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+									"//m:BarFeederInterface/m:References/m:Reference@dataItemId",
+									"c4");
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+									"//m:BarFeederInterface/m:References/m:Reference@name",
+									"chuck");
 }
 
 
 void XmlPrinterTest::testSourceReferences()
 {
-  delete m_config; m_config = nullptr;
-  
-  m_config = new XmlParser();
-  m_devices = m_config->parseFile("../samples/reference_example.xml");
-  
-  PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
-  
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:DataItem[@id='bfc']/m:Source@dataItemId",
-                                    "mf");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:DataItem[@id='bfc']/m:Source@componentId",
-                                    "ele");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:DataItem[@id='bfc']/m:Source@compositionId",
-                                    "xxx");
+	delete m_config; m_config = nullptr;
+
+	m_config = new XmlParser();
+	m_devices = m_config->parseFile("../samples/reference_example.xml");
+
+	PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+									"//m:DataItem[@id='bfc']/m:Source@dataItemId",
+									"mf");
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+									"//m:DataItem[@id='bfc']/m:Source@componentId",
+									"ele");
+	CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+									"//m:DataItem[@id='bfc']/m:Source@compositionId",
+									"xxx");
 }
 
 void XmlPrinterTest::testStreamsStyle()

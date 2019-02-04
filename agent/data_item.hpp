@@ -46,7 +46,7 @@ public:
 		VALUE,
 		TIME_SERIES,
 		DISCRETE,
-    DATA_SET
+		DATA_SET
 	};
 
 	enum EFilterType
@@ -119,12 +119,12 @@ public:
 		return m_name; }
 	const std::string &getSource() const {
 		return m_source; }
-  const std::string &getSourceDataItemId() const {
-    return m_sourceDataItemId; }
-  const std::string &getSourceComponentId() const {
-    return m_sourceComponentId; }
-  const std::string &getSourceCompositionId() const {
-    return m_sourceCompositionId; }
+	const std::string &getSourceDataItemId() const {
+		return m_sourceDataItemId; }
+	const std::string &getSourceComponentId() const {
+		return m_sourceComponentId; }
+	const std::string &getSourceCompositionId() const {
+		return m_sourceCompositionId; }
 	const std::string &getType() const {
 		return m_type; }
 	const std::string &getElementName() const {
@@ -167,14 +167,15 @@ public:
 
 	// Add a source (extra information) to data item
 	void addSource(const std::string &source,
-                 const std::string &sourceDataItemId,
-                 const std::string &sourceComponentId,
-                 const std::string &sourceCompositionId) {
+				 const std::string &sourceDataItemId,
+				 const std::string &sourceComponentId,
+				 const std::string &sourceCompositionId)
+	{
 		m_source = source;
-    m_sourceDataItemId = sourceDataItemId;
-    m_sourceComponentId = sourceComponentId;
-    m_sourceCompositionId = sourceCompositionId;
-  }
+		m_sourceDataItemId = sourceDataItemId;
+		m_sourceComponentId = sourceComponentId;
+		m_sourceCompositionId = sourceCompositionId;
+	}
 
 	// Returns true if data item is a sample
 	bool isSample() const {
@@ -195,8 +196,8 @@ public:
 		return m_representation == TIME_SERIES; }
 	bool isDiscrete() const {
 		return m_representation == DISCRETE; }
-  bool isDataSet() const {
-    return m_representation == DATA_SET; }
+	bool isDataSet() const {
+		return m_representation == DATA_SET; }
 
 	bool hasResetTrigger() const {
 		return !m_resetTrigger.empty(); }
@@ -380,9 +381,9 @@ protected:
 
 	// Extra source information of data item
 	std::string m_source;
-  std::string m_sourceDataItemId;
-  std::string m_sourceComponentId;
-  std::string m_sourceCompositionId;
+	std::string m_sourceDataItemId;
+	std::string m_sourceComponentId;
+	std::string m_sourceCompositionId;
 
 	// The reset trigger;
 	std::string m_resetTrigger;
@@ -397,7 +398,7 @@ protected:
 	bool m_hasConstraints;
 
 	double m_filterValue;
-  	// Period filter, in seconds
+	// Period filter, in seconds
 	double m_filterPeriod;
 	bool m_hasMinimumDelta;
 	bool m_hasMinimumPeriod;

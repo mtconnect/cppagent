@@ -558,30 +558,39 @@ void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
 
 		for (const auto &ref : component->getReferences())
 		{
-      if (g_schemaVersion >= "1.4") {
-        if (ref.m_type == Component::Reference::DATA_ITEM) {
-          THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItemRef"));
-        } else if  (ref.m_type == Component::Reference::COMPONENT) {
-          THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentRef"));
-        } else {
-          continue;
-        }
-        
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "idRef", BAD_CAST ref.m_id.c_str()));
+			if (g_schemaVersion >= "1.4")
+			{
+				if (ref.m_type == Component::Reference::DATA_ITEM)
+				{
+					THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItemRef"));
+				}
+				else if (ref.m_type == Component::Reference::COMPONENT)
+				{
+					THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentRef"));
+				}
+				else
+				{
+					continue;
+				}
+		
+				THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "idRef", BAD_CAST ref.m_id.c_str()));
+			}
+			else if (ref.m_type == Component::Reference::DATA_ITEM)
+			{
+				THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
+				THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId", BAD_CAST ref.m_id.c_str()));
+			}
+			else
+			{
+				continue;
+			}
 
-      } else if (ref.m_type == Component::Reference::DATA_ITEM) {
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId", BAD_CAST ref.m_id.c_str()));
-      } else {
-        continue;
-      }
-      
-      if (ref.m_name.length() > 0)
-      {
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST ref.m_name.c_str()));
-      }
+			if (ref.m_name.length() > 0)
+			{
+				THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST ref.m_name.c_str()));
+			}
 
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Reference
+			THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Reference
 		}
 
 		THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
@@ -596,21 +605,21 @@ void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
 	addAttributes(writer, dataItem->getAttributes());
 
 	if (!dataItem->getSource().empty() ||
-      !dataItem->getSourceDataItemId().empty() ||
-      !dataItem->getSourceComponentId().empty() ||
-      !dataItem->getSourceCompositionId().empty())
-  {
-    map<string,string> attributes;
+	  !dataItem->getSourceDataItemId().empty() ||
+	  !dataItem->getSourceComponentId().empty() ||
+	  !dataItem->getSourceCompositionId().empty())
+	{
+		map<string,string> attributes;
 
-    if (!dataItem->getSourceDataItemId().empty())
-      attributes["dataItemId"] = dataItem->getSourceDataItemId();
-    if (!dataItem->getSourceComponentId().empty())
-      attributes["componentId"] = dataItem->getSourceComponentId();
-    if (!dataItem->getSourceCompositionId().empty())
-      attributes["compositionId"] = dataItem->getSourceCompositionId();
+		if (!dataItem->getSourceDataItemId().empty())
+			attributes["dataItemId"] = dataItem->getSourceDataItemId();
+		if (!dataItem->getSourceComponentId().empty())
+			attributes["componentId"] = dataItem->getSourceComponentId();
+		if (!dataItem->getSourceCompositionId().empty())
+			attributes["compositionId"] = dataItem->getSourceCompositionId();
 
-      addSimpleElement(writer, "Source", dataItem->getSource(), &attributes);
-  }
+			addSimpleElement(writer, "Source", dataItem->getSource(), &attributes);
+	}
 
 	if (dataItem->hasConstraints())
 	{
@@ -1012,22 +1021,22 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
 		ostr.precision(6);
 		const auto &v = result->getTimeSeries();
 
-    for (auto &e : v)
-      ostr << e << ' ';
+		for (auto &e : v)
+			ostr << e << ' ';
 
 		string str = ostr.str();
 		THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
 	}
-  else if (result->isDataSet() && result->getValue() != "UNAVAILABLE")
-  {
-    ostringstream ostr;
-    const DataSet &set = result->getDataSet();
-    for (auto &e : set)
-      ostr << e.first << ':' << e.second << ' ';
-    
-    string str = ostr.str();
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
-  }
+	else if (result->isDataSet() && result->getValue() != "UNAVAILABLE")
+	{
+		ostringstream ostr;
+		const DataSet &set = result->getDataSet();
+		for (auto &e : set)
+			ostr << e.first << ':' << e.second << ' ';
+
+		string str = ostr.str();
+		THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
+	}
 	else if (!result->getValue().empty())
 	{
 		auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST result->getValue().c_str());

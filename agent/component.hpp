@@ -34,24 +34,24 @@ class Component
 public:
 	struct Reference
 	{
-    enum ReferenceType {
-      DATA_ITEM,
-      COMPONENT
-    };
-    
+		enum ReferenceType {
+			DATA_ITEM,
+			COMPONENT
+		};
+	
 		Reference(const std::string &id, const std::string &name, ReferenceType type) :
-      m_type(type),
+			m_type(type),
 			m_id(id),
 			m_name(name),
 			m_dataItem(nullptr),
-      m_component(nullptr)
+			m_component(nullptr)
 		{}
 
-    ReferenceType m_type;
-		std::string m_id;
-		std::string m_name;
-		DataItem *m_dataItem;
-    Component *m_component;
+		ReferenceType m_type;
+			std::string m_id;
+			std::string m_name;
+			DataItem *m_dataItem;
+		Component *m_component;
 	};
 
 	// std::string enumeration for component parts and details
@@ -69,8 +69,8 @@ public:
 		TEXT,
 		REFERENCES,
 		REFERENCE,
-    DATA_ITEM_REF,
-    COMPONENT_REF,
+		DATA_ITEM_REF,
+		COMPONENT_REF,
 		COMPOSITIONS,
 		COMPOSITION
 	};

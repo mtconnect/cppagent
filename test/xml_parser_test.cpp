@@ -293,7 +293,7 @@ void XmlParserTest::testParseAsset()
 	// Top Level
 	CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->m_values.at("CuttingToolDefinition")->m_value);
 	CPPUNIT_ASSERT_EQUAL((string) "EXPRESS",
-	                     tool->m_values.at("CuttingToolDefinition")->m_properties.at("format"));
+						 tool->m_values.at("CuttingToolDefinition")->m_properties.at("format"));
 	CPPUNIT_ASSERT_EQUAL((string) "Cutting tool ...", tool->getDescription());
 
 	// Status
@@ -517,29 +517,29 @@ void XmlParserTest::testReferences()
 
 void XmlParserTest::testSourceReferences()
 {
-  if(m_xmlParser)
-  {
-    delete m_xmlParser;
-    m_xmlParser = nullptr;
-  }
-  
-  try
-  {
-    m_xmlParser = new XmlParser();
-    m_devices = m_xmlParser->parseFile("../samples/reference_example.xml");
-  }
-  catch (exception &)
-  {
-    CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
-  }
-  
-  const auto item = m_devices[0]->getDeviceDataItem("bfc");
-  CPPUNIT_ASSERT(item != nullptr);
-  
-  CPPUNIT_ASSERT_EQUAL(string(""), item->getSource());
-  CPPUNIT_ASSERT_EQUAL(string("mf"), item->getSourceDataItemId());
-  CPPUNIT_ASSERT_EQUAL(string("ele"), item->getSourceComponentId());
-  CPPUNIT_ASSERT_EQUAL(string("xxx"), item->getSourceCompositionId());
+	if(m_xmlParser)
+	{
+		delete m_xmlParser;
+		m_xmlParser = nullptr;
+	}
+
+	try
+	{
+		m_xmlParser = new XmlParser();
+		m_devices = m_xmlParser->parseFile("../samples/reference_example.xml");
+	}
+	catch (exception &)
+	{
+		CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
+	}
+
+	const auto item = m_devices[0]->getDeviceDataItem("bfc");
+	CPPUNIT_ASSERT(item != nullptr);
+
+	CPPUNIT_ASSERT_EQUAL(string(""), item->getSource());
+	CPPUNIT_ASSERT_EQUAL(string("mf"), item->getSourceDataItemId());
+	CPPUNIT_ASSERT_EQUAL(string("ele"), item->getSourceComponentId());
+	CPPUNIT_ASSERT_EQUAL(string("xxx"), item->getSourceCompositionId());
 }
 
 
