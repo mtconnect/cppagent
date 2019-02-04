@@ -355,7 +355,7 @@ protected:
 	uint64_t m_instanceId;
 
 	// Pointer to the configuration file for node access
-	XmlParser *m_xmlParser;
+	std::unique_ptr<XmlParser> m_xmlParser;
 
 	// For access to the sequence number and sliding buffer, use the mutex
 	std::mutex m_sequenceLock;
@@ -365,7 +365,7 @@ protected:
 	uint64_t m_sequence;
 
 	// The sliding/circular buffer to hold all of the events/sample data
-	dlib::sliding_buffer_kernel_1<ComponentEventPtr> *m_slidingBuffer;
+	std::unique_ptr<dlib::sliding_buffer_kernel_1<ComponentEventPtr>> m_slidingBuffer;
 	unsigned int m_slidingBufferSize;
 
 	// Asset storage, circ buffer stores ids
@@ -388,7 +388,7 @@ protected:
 	std::vector<Adapter *> m_adapters;
 	std::vector<Device *> m_devices;
 	std::map<std::string, Device *> m_deviceNameMap;
-  std::map<std::string, Device *> m_deviceUuidMap;
+	std::map<std::string, Device *> m_deviceUuidMap;
 	std::map<std::string, DataItem *> m_dataItemMap;
 	std::map<std::string, int> m_assetCounts;
 
@@ -433,7 +433,7 @@ protected:
 
 		CachedFile &operator=(const CachedFile &file)
 		{
-			m_buffer.release();
+			m_buffer.reset();
 			m_buffer = std::make_unique<char[]>(file.m_size);
 			memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
 			m_size = file.m_size;
@@ -442,7 +442,7 @@ protected:
 
 		void allocate(size_t size)
 		{
-			m_buffer.release();
+			m_buffer.reset();
 			m_buffer = std::make_unique<char[]>(size);
 			m_size = size;
 		}
