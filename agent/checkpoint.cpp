@@ -23,14 +23,7 @@ Checkpoint::Checkpoint() :
 {
 }
 
-Checkpoint::Checkpoint(const Checkpoint &checkpoint) :
-m_hasFilter(false)
-{
-  copy(checkpoint);
-}
-
-
-Checkpoint::Checkpoint(Checkpoint &checkpoint, std::set<std::string> *filterSet)
+Checkpoint::Checkpoint(const Checkpoint &checkpoint, const std::set<std::string> *filterSet)
 {
 	if (!filterSet && checkpoint.m_hasFilter)
 		filterSet = &checkpoint.m_filter;
@@ -174,7 +167,7 @@ void Checkpoint::addComponentEvent(ComponentEvent *event)
 }
 
 
-void Checkpoint::copy(Checkpoint const &checkpoint, std::set<std::string> *filterSet)
+void Checkpoint::copy(Checkpoint const &checkpoint, const std::set<std::string> *filterSet)
 {
 	clear();
 
