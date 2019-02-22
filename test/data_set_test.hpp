@@ -50,6 +50,7 @@ class DataSetTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDeleteKey);
   CPPUNIT_TEST(testResetWithNoItems);
   CPPUNIT_TEST(testDuplicateCompression);
+  CPPUNIT_TEST(testQuoteDelimeter);
 
   CPPUNIT_TEST_SUITE_END();
     
@@ -75,6 +76,7 @@ protected:
   void testDeleteKey();
   void testResetWithNoItems();
   void testDuplicateCompression();
+  void testQuoteDelimeter();
 
 public:
   void setUp();

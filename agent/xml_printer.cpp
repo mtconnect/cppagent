@@ -1023,7 +1023,7 @@ void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
     ostringstream ostr;
     const DataSet &set = result->getDataSet();
     for (auto &e : set)
-      ostr << e.first << ':' << e.second << ' ';
+      ostr << e.first << '=' << e.second << ' ';
     
     string str = ostr.str();
     THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));

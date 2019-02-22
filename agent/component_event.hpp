@@ -192,6 +192,8 @@ protected:
 protected:
 	// Convert the value to the agent unit standards
 	void convertValue(const std::string &value);
+  
+  void parseDataSet(const std::string &s);
 };
 
 

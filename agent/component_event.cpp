@@ -15,9 +15,11 @@
 //
 #include "component_event.hpp"
 #include <mutex>
+#include <regex>
 
 #include "data_item.hpp"
 #include "dlib/threads.h"
+#include "dlib/logger.h"
 
 #ifdef _WINDOWS
 	#define strcasecmp stricmp
@@ -27,6 +29,7 @@
 
 using namespace std;
 static std::mutex g_attributeMutex;
+static dlib::logger g_logger("component_event");
 
 
 const string ComponentEvent::SLevels[NumLevels] =
@@ -37,16 +40,6 @@ const string ComponentEvent::SLevels[NumLevels] =
 	"Unavailable"
 };
 
-inline static vector<string> split(const string &s, char delim)
-{
-  string elem;
-  istringstream ss(s);
-  std::vector<string> tokens;
-  while (getline(ss, elem, delim))
-    tokens.push_back(elem);
-  
-  return tokens;
-}
 
 inline static bool splitValue(string &key, string &value)
 {
@@ -63,7 +56,6 @@ inline static bool splitValue(string &key, string &value)
     return true;
 	}
 }
-
 
 ComponentEvent::ComponentEvent(
 	DataItem &dataItem,
@@ -277,6 +269,38 @@ void ComponentEvent::normal()
 	}
 }
 
+#define WS_RE "[ \t]*"
+#define KEY_RE "([^ \t=]+)"
+#define DQ_RE "\"[^\"]+\""
+#define SQ_RE "'[^']+'"
+#define CB_RE "\\{[^}]+\\}"
+#define VAL_RE "[^ \t]+"
+
+static regex tokenizer(WS_RE KEY_RE
+                             "(=(" DQ_RE "|"
+                                   SQ_RE "|"
+                                   CB_RE "|"
+                                   VAL_RE ")?)?");
+
+void ComponentEvent::parseDataSet(const string &s)
+{
+  string key, value;
+  smatch m;
+  string rest(s);
+  
+  while (regex_search(rest, m, tokenizer))
+  {
+    if (!m[3].matched) {
+      key = m[1];
+      value.clear();
+    } else {
+      key = m[1];
+      value = m[3];
+    }
+    m_dataSet[key] = value;
+    rest = m.suffix();
+  }
+}
 
 void ComponentEvent::convertValue(const string &value)
 {
@@ -340,18 +364,7 @@ void ComponentEvent::convertValue(const string &value)
         set.erase(0, found + 1);
     }
     
-    // split the rest of the line by space
-    vector<string> items(split(set, ' '));
-    
-    // For each k/v pair, split by ':' and then insert into the data set.
-    for (auto &e : items)
-    {
-      string v;
-      if (splitValue(e, v))
-        m_dataSet[e] = v;
-      else if (!e.empty())
-        m_dataSet[e] = string("");
-    }
+    parseDataSet(set);
   }
 	else if (m_dataItem->conversionRequired())
 		m_value = m_dataItem->convertValue(value);
