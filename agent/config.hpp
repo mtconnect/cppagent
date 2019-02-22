@@ -69,7 +69,7 @@ protected:
 
 	void LoggerHook(const std::string& loggerName,
 					const dlib::log_level& l,
-					const dlib::uint64 threadId,
+					const uint64_t threadId,
 					const char* message);
 
 	void monitorThread();

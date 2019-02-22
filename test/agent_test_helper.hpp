@@ -51,26 +51,26 @@
 
 class AgentTestHelper {
 public:
-  AgentTestHelper()
-    : m_agent(nullptr), m_incomingIp("127.0.0.1")
-  {
-  }
-  
-  Agent *m_agent;
-  std::ostringstream m_out;
+	AgentTestHelper()
+	: m_agent(nullptr), m_incomingIp("127.0.0.1")
+	{
+	}
 
-  std::string m_incomingIp;
-  
-  std::string m_path;
-  dlib::key_value_map m_queries;
-  std::string m_result;
-  dlib::key_value_map m_cookies;
-  dlib::key_value_map_ci m_incomingHeaders;
-  
-  // Helper method to test expected string, given optional query, & run tests
-  xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
-  xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
-                              key_value_map &aQueries);
+	Agent *m_agent;
+	std::ostringstream m_out;
+
+	std::string m_incomingIp;
+
+	std::string m_path;
+	dlib::key_value_map m_queries;
+	std::string m_result;
+	dlib::key_value_map m_cookies;
+	dlib::key_value_map_ci m_incomingHeaders;
+
+	// Helper method to test expected string, given optional query, & run tests
+	xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
+	xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
+								key_value_map &aQueries);
 
 };
 

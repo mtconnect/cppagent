@@ -51,7 +51,7 @@ void ComponentEventTest::setUp()
 	attributes1["name"] = "DataItemTest1";
 	attributes1["type"] = "ALARM";
 	attributes1["category"] = "EVENT";
-	m_dataItem1 = new DataItem(attributes1);
+	m_dataItem1 = make_unique<DataItem>(attributes1);
 
 	attributes2["id"] = "3";
 	attributes2["name"] = "DataItemTest2";
@@ -59,7 +59,7 @@ void ComponentEventTest::setUp()
 	attributes2["nativeUnits"] = "MILLIMETER";
 	attributes2["subType"] = "ACTUAL";
 	attributes2["category"] = "SAMPLE";
-	m_dataItem2 = new DataItem(attributes2);
+	m_dataItem2 = make_unique<DataItem>(attributes2);
 
 	string time("NOW"), value("CODE|NATIVE|CRITICAL|ACTIVE|DESCRIPTION");
 	m_compEventA = new ComponentEvent(*m_dataItem1, 2, time, value);
@@ -74,8 +74,8 @@ void ComponentEventTest::tearDown()
 {
 	m_compEventA->unrefer();
 	m_compEventB->unrefer();
-	delete m_dataItem1; m_dataItem1 = nullptr;
-	delete m_dataItem2; m_dataItem2 = nullptr;
+	m_dataItem1.reset();
+	m_dataItem2.reset();
 }
 
 
@@ -130,8 +130,8 @@ void ComponentEventTest::testGetAttributes()
 
 void ComponentEventTest::testGetters()
 {
-	CPPUNIT_ASSERT_EQUAL(m_dataItem1, m_compEventA->getDataItem());
-	CPPUNIT_ASSERT_EQUAL(m_dataItem2, m_compEventB->getDataItem());
+	CPPUNIT_ASSERT_EQUAL(m_dataItem1.get(), m_compEventA->getDataItem());
+	CPPUNIT_ASSERT_EQUAL(m_dataItem2.get(), m_compEventB->getDataItem());
 
 	CPPUNIT_ASSERT_EQUAL((string) "DESCRIPTION", m_compEventA->getValue());
 	CPPUNIT_ASSERT_EQUAL((string) "1.1231", m_compEventB->getValue());
@@ -315,7 +315,7 @@ void ComponentEventTest::testCondition()
 	attributes1["name"] = "DataItemTest1";
 	attributes1["type"] = "TEMPERATURE";
 	attributes1["category"] = "CONDITION";
-	auto d = new DataItem(attributes1);
+	auto d = make_unique<DataItem>(attributes1);
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "FAULT|4321|1|HIGH|Overtemp"), true);
 
@@ -353,7 +353,7 @@ void ComponentEventTest::testCondition()
 	CPPUNIT_ASSERT_EQUAL((string) "2", attrs2["nativeSeverity"]);
 	CPPUNIT_ASSERT_EQUAL((string) "Fault", event2->getLevelString());
 
-	delete d; d = nullptr;
+	d.reset();
 }
 
 
@@ -366,7 +366,7 @@ void ComponentEventTest::testTimeSeries()
 	attributes1["type"] = "TEMPERATURE";
 	attributes1["category"] = "SAMPLE";
 	attributes1["representation"] = "TIME_SERIES";
-	auto d = new DataItem(attributes1);
+	auto d = make_unique<DataItem>(attributes1);
 
 	CPPUNIT_ASSERT(d->isTimeSeries());
 
@@ -411,7 +411,7 @@ void ComponentEventTest::testTimeSeries()
 		CPPUNIT_ASSERT_EQUAL((float)((i + 1) * 10), values[i]);
 	}
 
-	delete d; d = nullptr;
+	d.reset();
 }
 
 
@@ -424,7 +424,7 @@ void ComponentEventTest::testDuration()
 	attributes1["type"] = "TEMPERATURE";
 	attributes1["category"] = "SAMPLE";
 	attributes1["statistic"] = "AVERAGE";
-	auto d = new DataItem(attributes1);
+	auto d = make_unique<DataItem>(attributes1);
 
 	ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "11.0"), true);
 	const auto &attr_list = event1->getAttributes();
@@ -437,7 +437,7 @@ void ComponentEventTest::testDuration()
 	CPPUNIT_ASSERT_EQUAL((string) "2011-02-18T15:52:41Z", attrs1["timestamp"]);
 	CPPUNIT_ASSERT_EQUAL((string) "200.1232", attrs1["duration"]);
 
-	delete d; d = nullptr;
+	d.reset();
 }
 
 
@@ -449,7 +449,7 @@ void ComponentEventTest::testAssetChanged()
 	attributes1["name"] = "ac";
 	attributes1["type"] = "ASSET_CHANGED";
 	attributes1["category"] = "EVENT";
-	auto d = new DataItem(attributes1);
+	auto d = make_unique<DataItem>(attributes1);
 
 	CPPUNIT_ASSERT(d->isAssetChanged());
 
@@ -463,5 +463,5 @@ void ComponentEventTest::testAssetChanged()
 	CPPUNIT_ASSERT_EQUAL((string) "CuttingTool", attrs1["assetType"]);
 	CPPUNIT_ASSERT_EQUAL((string) "123", event1->getValue());
 
-	delete d; d = nullptr;
+	d.reset();
 }

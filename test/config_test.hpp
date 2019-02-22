@@ -33,6 +33,7 @@
 
 #pragma once
 
+#include <memory>
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -66,7 +67,7 @@ public:
 	void tearDown();
 
 protected:
-	AgentConfiguration *m_config;
+	std::unique_ptr<AgentConfiguration> m_config;
 
 protected:
 	void testBlankConfig();

@@ -24,41 +24,38 @@ using namespace std;
 
 void DataSetTest::setUp()
 {
-  // Create an agent with only 16 slots and 8 data items.
-  m_agent = nullptr;
-  m_checkpoint = nullptr;
-  m_agent = new Agent("../samples/data_set.xml", 4, 4);
-  m_agentId = int64ToString(getCurrentTimeInSec());
-  m_adapter = nullptr;
-  m_checkpoint = new Checkpoint();
-  m_agentTestHelper.m_agent = m_agent;
-  
-  std::map<string, string> attributes;
-  auto device = m_agent->getDeviceByName("LinuxCNC");
-  m_dataItem1 = device->getDeviceDataItem("v1");
+	// Create an agent with only 16 slots and 8 data items.
+	m_checkpoint = nullptr;
+	m_agent = make_unique<Agent>("../samples/data_set.xml", 4, 4);
+	m_agentId = int64ToString(getCurrentTimeInSec());
+	m_adapter = nullptr;
+	m_checkpoint = make_unique<Checkpoint>();
+	m_agentTestHelper.m_agent = m_agent.get();
+
+	std::map<string, string> attributes;
+	auto device = m_agent->getDeviceByName("LinuxCNC");
+	m_dataItem1 = device->getDeviceDataItem("v1");
 }
 
 
 void DataSetTest::tearDown()
 {
-  if (m_agent != nullptr) {
-    delete m_agent; m_agent = nullptr;
-  }
-  if (m_checkpoint != nullptr) {
-    delete m_checkpoint; m_checkpoint = nullptr;
-  }
-  if (m_dataItem1 != nullptr) {
-    delete m_dataItem1; m_dataItem1 = nullptr;
-  }
+	m_agent.reset();
+	m_checkpoint.reset();
+	if(m_dataItem1)
+	{
+		delete m_dataItem1;
+		m_dataItem1 = nullptr;
+	}
 }
 
 void DataSetTest::testDataItem()
 {
-  CPPUNIT_ASSERT(m_dataItem1->isDataSet());
-  auto &attrs = m_dataItem1->getAttributes();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "DATA_SET", attrs.at("representation"));
-  CPPUNIT_ASSERT_EQUAL((string) "VariableDataSet", m_dataItem1->getElementName());
+	CPPUNIT_ASSERT(m_dataItem1->isDataSet());
+	auto &attrs = m_dataItem1->getAttributes();
+
+	CPPUNIT_ASSERT_EQUAL((string) "DATA_SET", attrs.at("representation"));
+	CPPUNIT_ASSERT_EQUAL((string) "VariableDataSet", m_dataItem1->getElementName());
 }
 
 void DataSetTest::testInitialSet()
@@ -509,7 +506,6 @@ void DataSetTest::testDuplicateCompression()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a=1 b=3 c=3 d=4 e=4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "5");
   }
-
 }
 
 void DataSetTest::testQuoteDelimeter()

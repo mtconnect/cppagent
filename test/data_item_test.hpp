@@ -33,6 +33,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -57,9 +59,9 @@ class DataItemTest : public CppUnit::TestFixture
 	CPPUNIT_TEST_SUITE_END();
 
 protected:
-	DataItem *m_dataItemA;
-	DataItem *m_dataItemB;
-	DataItem *m_dataItemC;
+	std::unique_ptr<DataItem> m_dataItemA;
+	std::unique_ptr<DataItem> m_dataItemB;
+	std::unique_ptr<DataItem> m_dataItemC;
 
 protected:
 	void testGetters();

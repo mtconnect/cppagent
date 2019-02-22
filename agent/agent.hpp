@@ -48,8 +48,8 @@ using namespace dlib;
 typedef std::vector<std::pair<std::string, std::string>> AssetChangeList;
 
 struct OutgoingThings : public dlib::outgoing_things {
-  OutgoingThings() : out(nullptr) {}
-  std::ostream  *out;
+	OutgoingThings() : out(nullptr) {}
+	std::ostream  *out;
 };
 typedef struct dlib::incoming_things IncomingThings;
 
@@ -119,16 +119,16 @@ public:
 	virtual ~Agent();
 
 	// Overridden method that is called per web request – not used
-  // using httpRequest which is called from our own on_connect method.
+	// using httpRequest which is called from our own on_connect method.
 	const std::string on_request (
 		const incoming_things &incoming,
-    outgoing_things &outgoing ) override {
-    throw std::logic_error("Not Implemented");
-    return "";
-  }
-  
-  const std::string httpRequest(const IncomingThings &incoming,
-                                OutgoingThings &outgoing);
+	outgoing_things &outgoing ) override {
+	throw std::logic_error("Not Implemented");
+	return "";
+	}
+
+	const std::string httpRequest(const IncomingThings &incoming,
+								OutgoingThings &outgoing);
 
 	// Add an adapter to the agent
 	Adapter *addAdapter(const std::string &device,
@@ -238,17 +238,17 @@ public:
 	void updateDom(Device *device);
 
 protected:
-  
-  virtual void on_connect (
-     std::istream& in,
-     std::ostream& out,
-     const std::string& foreign_ip,
-     const std::string& local_ip,
-     unsigned short foreign_port,
-     unsigned short local_port,
-     dlib::uint64
-     ) override;
-  
+
+	virtual void on_connect (
+		std::istream& in,
+		std::ostream& out,
+		const std::string& foreign_ip,
+		const std::string& local_ip,
+		unsigned short foreign_port,
+		unsigned short local_port,
+		uint64_t
+		) override;
+
 	// HTTP methods to handle the 3 basic calls
 	std::string handleCall(
 		std::ostream &out,
@@ -355,7 +355,7 @@ protected:
 	uint64_t m_instanceId;
 
 	// Pointer to the configuration file for node access
-	XmlParser *m_xmlParser;
+	std::unique_ptr<XmlParser> m_xmlParser;
 
 	// For access to the sequence number and sliding buffer, use the mutex
 	std::mutex m_sequenceLock;
@@ -365,7 +365,7 @@ protected:
 	uint64_t m_sequence;
 
 	// The sliding/circular buffer to hold all of the events/sample data
-	dlib::sliding_buffer_kernel_1<ComponentEventPtr> *m_slidingBuffer;
+	std::unique_ptr<dlib::sliding_buffer_kernel_1<ComponentEventPtr>> m_slidingBuffer;
 	unsigned int m_slidingBufferSize;
 
 	// Asset storage, circ buffer stores ids
@@ -379,7 +379,7 @@ protected:
 	// Checkpoints
 	Checkpoint m_latest;
 	Checkpoint m_first;
-	Checkpoint *m_checkpoints;
+	std::vector<Checkpoint> m_checkpoints;
 
 	int m_checkpointFreq;
 	int m_checkpointCount;
@@ -388,7 +388,7 @@ protected:
 	std::vector<Adapter *> m_adapters;
 	std::vector<Device *> m_devices;
 	std::map<std::string, Device *> m_deviceNameMap;
-  std::map<std::string, Device *> m_deviceUuidMap;
+	std::map<std::string, Device *> m_deviceUuidMap;
 	std::map<std::string, DataItem *> m_dataItemMap;
 	std::map<std::string, int> m_assetCounts;
 
@@ -433,7 +433,7 @@ protected:
 
 		CachedFile &operator=(const CachedFile &file)
 		{
-			m_buffer.release();
+			m_buffer.reset();
 			m_buffer = std::make_unique<char[]>(file.m_size);
 			memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
 			m_size = file.m_size;
@@ -442,7 +442,7 @@ protected:
 
 		void allocate(size_t size)
 		{
-			m_buffer.release();
+			m_buffer.reset();
 			m_buffer = std::make_unique<char[]>(size);
 			m_size = size;
 		}

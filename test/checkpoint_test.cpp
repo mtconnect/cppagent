@@ -43,10 +43,9 @@ void CheckpointTest::setUp()
 	// Create an agent with only 16 slots and 8 data items.
 	m_agent = nullptr;
 	m_checkpoint = nullptr;
-	m_agent = new Agent("../samples/min_config.xml", 4, 4);
+	m_agent = make_unique<Agent>("../samples/min_config.xml", 4, 4);
 	m_agentId = int64ToString(getCurrentTimeInSec());
-	m_adapter = nullptr;
-	m_checkpoint = new Checkpoint();
+	m_checkpoint = make_unique<Checkpoint>();
 
 	std::map<string, string> attributes1, attributes2;
 
@@ -54,7 +53,7 @@ void CheckpointTest::setUp()
 	attributes1["name"] = "DataItemTest1";
 	attributes1["type"] = "LOAD";
 	attributes1["category"] = "CONDITION";
-	m_dataItem1 = new DataItem(attributes1);
+	m_dataItem1 = make_unique<DataItem>(attributes1);
 
 	attributes2["id"] = "3";
 	attributes2["name"] = "DataItemTest2";
@@ -62,16 +61,16 @@ void CheckpointTest::setUp()
 	attributes2["nativeUnits"] = "MILLIMETER";
 	attributes2["subType"] = "ACTUAL";
 	attributes2["category"] = "SAMPLE";
-	m_dataItem2 = new DataItem(attributes2);
+	m_dataItem2 = make_unique<DataItem>(attributes2);
 }
 
 
 void CheckpointTest::tearDown()
 {
-	delete m_agent; m_agent = nullptr;
-	delete m_checkpoint; m_checkpoint = nullptr;
-	delete m_dataItem1; m_dataItem1 = nullptr;
-	delete m_dataItem2; m_dataItem2 = nullptr;
+	m_agent.reset();
+	m_checkpoint.reset();
+	m_dataItem1.reset();
+	m_dataItem2.reset();
 }
 
 
@@ -186,7 +185,7 @@ void CheckpointTest::testGetComponentEvents()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	auto d1 = new DataItem(attributes);
+	auto d1 = make_unique<DataItem>(attributes);
 	filter.insert(d1->getId());
 
 	p = new ComponentEvent(*d1, 2, time, value);
@@ -206,7 +205,7 @@ void CheckpointTest::testGetComponentEvents()
 
 	CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
 
-	delete d1; d1 = nullptr;
+	d1.reset();
 }
 
 
@@ -239,7 +238,7 @@ void CheckpointTest::testFilter()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	auto d1 = new DataItem(attributes);
+	auto d1 = make_unique<DataItem>(attributes);
 
 	p4 = new ComponentEvent(*d1, 2, time, value);
 	m_checkpoint->addComponentEvent(p4);
@@ -255,7 +254,7 @@ void CheckpointTest::testFilter()
 	m_checkpoint->getComponentEvents(list);
 
 	CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
-	delete d1; d1 = nullptr;
+	d1.reset();
 }
 
 
@@ -289,7 +288,7 @@ void CheckpointTest::testCopyAndFilter()
 	attributes["nativeUnits"] = "MILLIMETER";
 	attributes["subType"] = "ACTUAL";
 	attributes["category"] = "SAMPLE";
-	auto d1 = new DataItem(attributes);
+	auto d1 = make_unique<DataItem>(attributes);
 
 	p = new ComponentEvent(*d1, 2, time, value);
 	m_checkpoint->addComponentEvent(p);
@@ -323,7 +322,7 @@ void CheckpointTest::testCopyAndFilter()
 	check.getComponentEvents(list);
 	CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
 
-	delete d1; d1 = nullptr;
+	d1.reset();
 }
 
 

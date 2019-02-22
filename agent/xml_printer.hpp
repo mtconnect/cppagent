@@ -19,7 +19,6 @@
 #include <list>
 #include <string>
 #include <vector>
-#include <dlib/array.h>
 
 #include <libxml/xmlwriter.h>
 

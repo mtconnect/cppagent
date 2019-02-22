@@ -155,7 +155,7 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
 	}
 	else
 	{
-    	anOffset = parseTimeMicro(time) / 1000000;
+		anOffset = parseTimeMicro(time) / 1000000;
 		result = time;
 	}
 
@@ -164,47 +164,47 @@ inline string Adapter::extractTime(const string &time, double &anOffset)
 
 void Adapter::getEscapedLine(istringstream &stream, string &store)
 {
-  store.clear();
-  getline(stream, store, '|');
-  if (!store.empty() && store.front() == '"' && store.back() == '\\')
-  {
-    store.back() = '|';
-    string additionalContent;
-    while (store.back() != '"')
-    {
-      additionalContent.clear();
-      getline(stream, additionalContent, '|');
-      if (additionalContent.empty())
-        break;
-      
-      if (additionalContent.back() != '\\')
-      {
-        store.append(additionalContent);
-        break;
-      }
-      
-      additionalContent.back() = '|';
-      store.append(additionalContent);
-    }
-    
-    if (store.back() == '"')
-    {
-      // Correctly escaped text, removing quotes
-      store = store.substr(1, store.size() - 2);
-    }
-    else
-    {
-      // Faulty escaped text, reverting to first pipe
-      const auto firstPipe = std::find(store.cbegin(), store.cend(), '|');
-      const auto transformedPipesCount = std::count(std::next(firstPipe), store.cend(), '|');
-      auto offset = -1 * (std::distance(firstPipe, store.cend()) + transformedPipesCount);
-      if (stream.eof())
-        offset += 1;
-      stream.seekg(offset, std::ios_base::cur);
-      store.erase(firstPipe, store.cend());
-      store.append("\\");
-    }
-  }
+	store.clear();
+	getline(stream, store, '|');
+	if (!store.empty() && store.front() == '"' && store.back() == '\\')
+	{
+		store.back() = '|';
+		string additionalContent;
+		while (store.back() != '"')
+		{
+			additionalContent.clear();
+			getline(stream, additionalContent, '|');
+			if (additionalContent.empty())
+				break;
+
+			if (additionalContent.back() != '\\')
+			{
+				store.append(additionalContent);
+				break;
+			}
+
+			additionalContent.back() = '|';
+			store.append(additionalContent);
+		}
+	
+		if (store.back() == '"')
+		{
+			// Correctly escaped text, removing quotes
+			store = store.substr(1, store.size() - 2);
+		}
+		else
+		{
+			// Faulty escaped text, reverting to first pipe
+			const auto firstPipe = std::find(store.cbegin(), store.cend(), '|');
+			const auto transformedPipesCount = std::count(std::next(firstPipe), store.cend(), '|');
+			auto offset = -1 * (std::distance(firstPipe, store.cend()) + transformedPipesCount);
+			if (stream.eof())
+				offset += 1;
+			stream.seekg(offset, std::ios_base::cur);
+			store.erase(firstPipe, store.cend());
+			store.append("\\");
+		}
+	}
 }
 
 /**
@@ -219,51 +219,50 @@ void Adapter::getEscapedLine(istringstream &stream, string &store)
 
 void Adapter::processData(const string& data)
 {
-  if (m_gatheringAsset)
-  {
-    if (data == m_terminator)
-    {
-      m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time);
-      m_gatheringAsset = false;
-    }
-    else
-    {
-      m_body << data << endl;
-    }
-    
-    return;
-  }
-  
-  istringstream toParse(data);
-  string key, value;
-  
-  getline(toParse, key, '|');
-  double offset = NAN;
-  string time = extractTime(key, offset);
+	if (m_gatheringAsset)
+	{
+		if (data == m_terminator)
+		{
+			m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time);
+			m_gatheringAsset = false;
+		}
+		else
+		{
+			m_body << data << endl;
+		}
+	
+		return;
+	}
 
-  
-  getline(toParse, key, '|');
-  
-  // Data item name has a @, it is an asset special prefix.
-  if (key.find('@') != string::npos)
-  {
-    getline(toParse, value, '|');
-    trim(value);
-    processAsset(toParse, key, value, time);
-  }
-  else
-  {
-    getEscapedLine(toParse, value);
-    if (processDataItem(toParse, data, key, value, time, offset, true))
-    {
-      // Look for more key->value pairings in the rest of the data
-      while (getline(toParse, key, '|'))
-      {
-        getEscapedLine(toParse, value);
-        processDataItem(toParse, data, key, value, time, offset);
-      }
-    }
-  }
+	istringstream toParse(data);
+	string key, value;
+
+	getline(toParse, key, '|');
+	double offset = NAN;
+	string time = extractTime(key, offset);
+
+	getline(toParse, key, '|');
+
+	// Data item name has a @, it is an asset special prefix.
+	if (key.find('@') != string::npos)
+	{
+		getline(toParse, value, '|');
+		trim(value);
+		processAsset(toParse, key, value, time);
+	}
+	else
+	{
+		getEscapedLine(toParse, value);
+		if (processDataItem(toParse, data, key, value, time, offset, true))
+		{
+			// Look for more key->value pairings in the rest of the data
+			while (getline(toParse, key, '|'))
+			{
+			getEscapedLine(toParse, value);
+			processDataItem(toParse, data, key, value, time, offset);
+			}
+		}
+	}
 }
 
 bool Adapter::processDataItem(
@@ -316,19 +315,19 @@ bool Adapter::processDataItem(
 			string rest, value;
 			if (first &&
 				(dataItem->isCondition() ||
-         dataItem->isAlarm() ||
-         dataItem->isMessage() ||
-         dataItem->isTimeSeries() ||
-         dataItem->isDataSet()) )
+				 dataItem->isAlarm() ||
+				 dataItem->isMessage() ||
+				 dataItem->isTimeSeries() ||
+				 dataItem->isDataSet()) )
 			{
 				getline(toParse, rest);
-        if (rest.size() > 0)
-          value = inputValue + "|" + rest;
-        else
-          value = inputValue;
+				if (rest.size() > 0)
+					value = inputValue + "|" + rest;
+				else
+					value = inputValue;
 				more = false;
 			}
-      else
+			else
 			{
 				if (m_upcaseValue)
 				{

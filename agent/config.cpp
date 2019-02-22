@@ -358,7 +358,7 @@ static std::string timestamp()
 void AgentConfiguration::LoggerHook(
 	const std::string& loggerName,
 	const dlib::log_level& l,
-	const dlib::uint64 threadId,
+	const uint64_t threadId,
 	const char* message)
 {
 	stringstream out;
@@ -593,7 +593,7 @@ void AgentConfiguration::loadConfig(std::istream &file)
 		m_agent->getDevices()[i]->m_preserveUuid = defaultPreserve;
 
 	if (XmlPrinter::getSchemaVersion().empty())
-    XmlPrinter::setSchemaVersion("1.4");
+		XmlPrinter::setSchemaVersion("1.4");
 
 	loadAllowPut(reader);
 	loadAdapters(

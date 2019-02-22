@@ -20,6 +20,7 @@
 #include <string>
 #include <iosfwd>
 #include <chrono>
+#include <memory>
 
 #include "dlib/md5.h"
 #include "dlib/server.h"
@@ -36,7 +37,7 @@
 
 class DataSetTest : public CppUnit::TestFixture
 {
-  CPPUNIT_TEST_SUITE(DataSetTest);
+	CPPUNIT_TEST_SUITE(DataSetTest);
 
   CPPUNIT_TEST(testDataItem);
   CPPUNIT_TEST(testInitialSet);
@@ -52,17 +53,17 @@ class DataSetTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testDuplicateCompression);
   CPPUNIT_TEST(testQuoteDelimeter);
 
-  CPPUNIT_TEST_SUITE_END();
-    
+	CPPUNIT_TEST_SUITE_END();
+
 protected:
-  Checkpoint *m_checkpoint;
-  Agent *m_agent;
-  Adapter *m_adapter;
-  std::string m_agentId;
-  DataItem *m_dataItem1;
-  
-  AgentTestHelper m_agentTestHelper;
-  
+	std::unique_ptr<Checkpoint> m_checkpoint;
+	std::unique_ptr<Agent> m_agent;
+	Adapter *m_adapter;
+	std::string m_agentId;
+	DataItem* m_dataItem1;
+
+	AgentTestHelper m_agentTestHelper;
+
 protected:
   void testDataItem();
   void testInitialSet();
@@ -79,6 +80,6 @@ protected:
   void testQuoteDelimeter();
 
 public:
-  void setUp();
-  void tearDown();
+	void setUp();
+	void tearDown();
 };

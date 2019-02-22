@@ -35,7 +35,7 @@
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
-
+#include <memory>
 #include "change_observer.hpp"
 
 class ChangeObserverTest : public CppUnit::TestFixture
@@ -49,7 +49,7 @@ class ChangeObserverTest : public CppUnit::TestFixture
 	CPPUNIT_TEST_SUITE_END();
 
 protected:
-	ChangeSignaler *m_signaler;
+	std::unique_ptr<ChangeSignaler> m_signaler;
 
 public:
 	void testAddObserver();

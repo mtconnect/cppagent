@@ -161,21 +161,21 @@ void Component::resolveReferences()
 
 	for (auto &reference : m_references)
 	{
-    if (reference.m_type == Component::Reference::DATA_ITEM) {
-      auto di = device->getDeviceDataItem(reference.m_id);
-      
-      if (!di)
-        throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " +	reference.m_id);
-      
-      reference.m_dataItem = di;
-    } else if (reference.m_type == Component::Reference::COMPONENT) {
-      auto comp = device->getComponentById(reference.m_id);
-      
-      if (!comp)
-        throw runtime_error("Cannot resolve Reference for component " + m_name + " to component " +  reference.m_id);
-      
-      reference.m_component = comp;
-    }
+		if (reference.m_type == Component::Reference::DATA_ITEM)
+		{
+			auto di = device->getDeviceDataItem(reference.m_id);
+			if (!di)
+				throw runtime_error("Cannot resolve Reference for component " + m_name + " to data item " +	reference.m_id);
+			reference.m_dataItem = di;
+		}
+		else if (reference.m_type == Component::Reference::COMPONENT)
+		{
+			auto comp = device->getComponentById(reference.m_id);
+			if (!comp)
+				throw runtime_error("Cannot resolve Reference for component " + m_name + " to component " +  reference.m_id);
+
+			reference.m_component = comp;
+		}
 	}
 
 	for (const auto childComponent : m_children)
@@ -184,8 +184,8 @@ void Component::resolveReferences()
 
 void Component::setParent(Component &parent)
 {
-  m_parent = &parent;
-  auto device = getDevice();
-  if (device)
-    device->addComponent(this);
+	m_parent = &parent;
+	auto device = getDevice();
+	if (device)
+		device->addComponent(this);
 }

@@ -23,7 +23,6 @@
 #include <thread>
 #include <dlib/tokenizer.h>
 #include <dlib/misc_api.h>
-#include <dlib/array.h>
 #include <dlib/dir_nav.h>
 #include <dlib/config_reader.h>
 #include <dlib/queue.h>
@@ -59,7 +58,7 @@ Agent::Agent(
 	try
 	{
 		// Load the configuration for the Agent
-		m_xmlParser = new XmlParser();
+		m_xmlParser = make_unique<XmlParser>();
 		m_devices = m_xmlParser->parseFile(configXmlPath);
 		std::set<std::string> uuids;
 		for (const auto &device : m_devices)
@@ -95,7 +94,7 @@ Agent::Agent(
 	// Sequence number and sliding buffer for data
 	m_sequence = 1ull;
 	m_slidingBufferSize = 1 << bufferSize;
-	m_slidingBuffer = new sliding_buffer_kernel_1<ComponentEventPtr>();
+	m_slidingBuffer = make_unique<sliding_buffer_kernel_1<ComponentEventPtr>>();
 	m_slidingBuffer->set_size(bufferSize);
 	m_checkpointFreq = checkpointFreq.count();
 	m_checkpointCount = (m_slidingBufferSize / checkpointFreq.count()) + 1;
@@ -104,14 +103,16 @@ Agent::Agent(
 	m_maxAssets = maxAssets;
 
 	// Create the checkpoints at a regular frequency
-	m_checkpoints = new Checkpoint[m_checkpointCount];
+	m_checkpoints.reserve(m_checkpointCount);
+	for(auto i = 0; i < m_checkpointCount; i++)
+		m_checkpoints.emplace_back();
 
 	// Add the devices to the device map and create availability and 
 	// asset changed events if they don't exist
 	for (const auto device  : m_devices)
 	{
 		m_deviceNameMap[device->getName()] = device;
-    m_deviceUuidMap[device->getUuid()] = device;
+		m_deviceUuidMap[device->getUuid()] = device;
 
 		// Make sure we have two device level data items:
 		// 1. Availability
@@ -227,24 +228,27 @@ Device * Agent::getDeviceByName(const std::string& name)
 
 Device *Agent::findDeviceByUUIDorName(const std::string& idOrName)
 {
-  auto di = m_deviceUuidMap.find(idOrName);
-  if (di == m_deviceUuidMap.end()) {
-    di = m_deviceNameMap.find(idOrName);
-    if (di != m_deviceNameMap.end())
-      return di->second;
-  } else {
-    return di->second;
-  }
-  
-  return nullptr;
+	auto di = m_deviceUuidMap.find(idOrName);
+	if (di == m_deviceUuidMap.end())
+	{
+		di = m_deviceNameMap.find(idOrName);
+		if (di != m_deviceNameMap.end())
+			return di->second;
+	}
+	else
+	{
+		return di->second;
+	}
+
+	return nullptr;
 }
 
 
 Agent::~Agent()
 {
-	delete m_slidingBuffer; m_slidingBuffer = nullptr;
-	delete m_xmlParser; m_xmlParser = nullptr;
-	delete[] m_checkpoints; m_checkpoints = nullptr;
+	m_slidingBuffer.reset();
+	m_xmlParser.reset();
+	m_checkpoints.clear();
 }
 
 
@@ -355,37 +359,37 @@ void Agent::registerFile(const string &aUri, const string &aPath)
 }
 
 void Agent::on_connect (
-   std::istream& in,
-   std::ostream& out,
-   const std::string& foreign_ip,
-   const std::string& local_ip,
-   unsigned short foreign_port,
-   unsigned short local_port,
-   dlib::uint64
-   )
+	std::istream& in,
+	std::ostream& out,
+	const std::string& foreign_ip,
+	const std::string& local_ip,
+	unsigned short foreign_port,
+	unsigned short local_port,
+	uint64_t
+	)
 {
-  try
-  {
-    IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
-    OutgoingThings outgoing;
-    
-    parse_http_request(in, incoming, get_max_content_length());
-    read_body(in, incoming);
-    outgoing.out = &out;
-    const std::string& result = httpRequest(incoming, outgoing);
-    if (out.good())
-      write_http_response(out, outgoing, result);
-  }
-  catch (dlib::http_parse_error& e)
-  {
-    g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
-    write_http_response(out, e);
-  }
-  catch (std::exception& e)
-  {
-    g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
-    write_http_response(out, e);
-  }
+	try
+	{
+		IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
+		OutgoingThings outgoing;
+	
+		parse_http_request(in, incoming, get_max_content_length());
+		read_body(in, incoming);
+		outgoing.out = &out;
+		const std::string& result = httpRequest(incoming, outgoing);
+		if (out.good())
+			write_http_response(out, outgoing, result);
+	}
+	catch (dlib::http_parse_error& e)
+	{
+		g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
+		write_http_response(out, e);
+	}
+	catch (std::exception& e)
+	{
+		g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
+		write_http_response(out, e);
+	}
 }
 
 
@@ -530,13 +534,15 @@ unsigned int Agent::addToBuffer(
 	auto seqNum = m_sequence;
 	auto event = new ComponentEvent(*dataItem, seqNum, time, value);
   
-  if (dataItem->isDataSet() && !m_latest.dataSetDifference(event))
-  {
-    event->unrefer();
-    return 0;
-  } else {
-    m_sequence++;
-  }
+	if (dataItem->isDataSet() && !m_latest.dataSetDifference(event))
+	{
+		event->unrefer();
+		return 0;
+	}
+	else
+	{
+		m_sequence++;
+	}
 
 	(*m_slidingBuffer)[seqNum] = event;
 	m_latest.addComponentEvent(event);
@@ -1594,7 +1600,7 @@ string Agent::devicesAndPath(const string &path, const string &device)
 	if (!device.empty())
 	{
 		string prefix = "//Devices/Device[@name=\"" + device +
-                    "\"or@uuid=\"" + device + "\"]";
+					"\"or@uuid=\"" + device + "\"]";
 
 		if (!path.empty())
 		{

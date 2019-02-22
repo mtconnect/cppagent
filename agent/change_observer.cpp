@@ -15,6 +15,7 @@
 //
 #include "change_observer.hpp"
 #include <algorithm>
+#include <thread>
 
 
 ChangeObserver::~ChangeObserver()
@@ -44,7 +45,7 @@ bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
 // Signaler Management
 ChangeSignaler::~ChangeSignaler()
 {
-	dlib::auto_mutex lock(m_observerMutex);
+	std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
 
 	for(const auto observer : m_observers)
 		observer->removeSignaler(this);
@@ -53,7 +54,8 @@ ChangeSignaler::~ChangeSignaler()
 
 void ChangeSignaler::addObserver(ChangeObserver *observer)
 {
-	dlib::auto_mutex lock(m_observerMutex);
+	std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
+
 	m_observers.push_back(observer);
 	observer->addSignaler(this);
 }
@@ -61,7 +63,7 @@ void ChangeSignaler::addObserver(ChangeObserver *observer)
 
 bool ChangeSignaler::removeObserver(ChangeObserver *observer)
 {
-	dlib::auto_mutex lock(m_observerMutex);
+	std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
 
 	auto newEndPos = std::remove(m_observers.begin(), m_observers.end(), observer);
 	if( newEndPos == m_observers.end() )
@@ -74,7 +76,7 @@ bool ChangeSignaler::removeObserver(ChangeObserver *observer)
 
 bool ChangeSignaler::hasObserver(ChangeObserver *observer) const
 {
-	dlib::auto_mutex lock(m_observerMutex);
+	std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
 
 	auto foundPos = std::find(m_observers.begin(), m_observers.end(), observer);
 	return foundPos != m_observers.end();
@@ -83,7 +85,7 @@ bool ChangeSignaler::hasObserver(ChangeObserver *observer) const
 
 void ChangeSignaler::signalObservers(uint64_t sequence) const
 {
-	dlib::auto_mutex lock(m_observerMutex);
+	std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
 
 	for(const auto observer : m_observers)
 		observer->signal(sequence);

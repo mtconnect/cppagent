@@ -40,20 +40,19 @@ const string ComponentEvent::SLevels[NumLevels] =
 	"Unavailable"
 };
 
-
 inline static bool splitValue(string &key, string &value)
 {
 	auto found = key.find_first_of(':');
 
 	if (found == string::npos)
 	{
-    return false;
+		return false;
 	}
 	else
 	{
-    value = key.substr(found + 1);
-    key.erase(found);
-    return true;
+		value = key.substr(found + 1);
+		key.erase(found);
+		return true;
 	}
 }
 
@@ -83,8 +82,8 @@ ComponentEvent::ComponentEvent(
 		if (splitValue(v, reset))
 		{
 			m_resetTriggered = reset;
-      if (m_dataItem->hasInitialValue())
-        v = m_dataItem->getInitialValue();
+			if (m_dataItem->hasInitialValue())
+				v = m_dataItem->getInitialValue();
 		}
 		convertValue(v);
 	}
@@ -95,26 +94,26 @@ ComponentEvent::ComponentEvent(
 
 ComponentEvent::ComponentEvent(const ComponentEvent &componentEvent)
   : m_dataItem(componentEvent.m_dataItem),
-    m_sequence(componentEvent.m_sequence),
-    m_time(componentEvent.m_time),
-    m_duration(componentEvent.m_duration),
-    m_rest(componentEvent.m_rest),
-    m_value(componentEvent.m_value),
-    m_isTimeSeries(componentEvent.m_isTimeSeries),
-    m_hasAttributes(false),
-    m_code(componentEvent.m_code),
-    m_resetTriggered(componentEvent.m_resetTriggered)
+	m_sequence(componentEvent.m_sequence),
+	m_time(componentEvent.m_time),
+	m_duration(componentEvent.m_duration),
+	m_rest(componentEvent.m_rest),
+	m_value(componentEvent.m_value),
+	m_isTimeSeries(componentEvent.m_isTimeSeries),
+	m_hasAttributes(false),
+	m_code(componentEvent.m_code),
+	m_resetTriggered(componentEvent.m_resetTriggered)
 {
 	if (m_isTimeSeries)
 	{
 		m_timeSeries = componentEvent.m_timeSeries;
 		m_sampleCount = componentEvent.m_sampleCount;
 	}
-  else if (componentEvent.isDataSet())
-  {
-    m_dataSet = componentEvent.m_dataSet;
-    m_sampleCount = m_dataSet.size();
-  }
+	else if (componentEvent.isDataSet())
+	{
+		m_dataSet = componentEvent.m_dataSet;
+		m_sampleCount = m_dataSet.size();
+	}
 }
 
 
@@ -242,11 +241,11 @@ const AttributeList &ComponentEvent::getAttributes()
 			getline(toParse, token, '|');
 			m_attributes.push_back(AttributeItem("state", token));
 		}
-    else if (m_dataItem->isDataSet())
-    {
-      m_attributes.push_back(AttributeItem("sampleCount", intToString(m_dataSet.size())));
-      m_sampleCount = m_dataSet.size();
-    }
+		else if (m_dataItem->isDataSet())
+		{
+			m_attributes.push_back(AttributeItem("sampleCount", intToString(m_dataSet.size())));
+			m_sampleCount = m_dataSet.size();
+		}
 		else if (m_dataItem->isAssetChanged() || m_dataItem->isAssetRemoved())
 			m_attributes.push_back(AttributeItem("assetType", m_rest));
 

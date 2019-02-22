@@ -20,8 +20,6 @@
 #include <vector>
 #include <cmath>
 
-#include <dlib/array.h>
-
 #include "component.hpp"
 #include "globals.hpp"
 #include "data_item.hpp"
@@ -95,19 +93,19 @@ public:
 		return m_isTimeSeries; }
 	int getSampleCount() const {
 		return m_sampleCount; }
-  const DataSet &getDataSet() const {
-    return m_dataSet;
-  }
-  const std::string &getResetTriggered() const {
-    return m_resetTriggered;
-  }
-  bool isDataSet() const {
-    return m_dataItem->isDataSet();
-  }
-  bool isUnavailable() const {
-    return m_value == "UNAVAILABLE";
-  }
-  
+	const DataSet &getDataSet() const {
+		return m_dataSet;
+	}
+	const std::string &getResetTriggered() const {
+		return m_resetTriggered;
+	}
+	bool isDataSet() const {
+		return m_dataItem->isDataSet();
+	}
+	bool isUnavailable() const {
+		return m_value == "UNAVAILABLE";
+	}
+
 	uint64_t getSequence() const {
 		return m_sequence; }
 
@@ -128,20 +126,22 @@ public:
 		else
 			return false;
 	}
-  
-  void clearResetTriggered() {
-    if (!m_resetTriggered.empty()) {
-      m_hasAttributes = false;
-      m_attributes.clear();
-      m_resetTriggered.clear();
-    }
-  }
-  
-  void setDataSet(DataSet &aSet) {
-    m_dataSet = aSet;
-    m_hasAttributes = false;
-    m_attributes.clear();
-  }
+
+	void clearResetTriggered()
+	{
+		if (!m_resetTriggered.empty()) {
+			m_hasAttributes = false;
+			m_attributes.clear();
+			m_resetTriggered.clear();
+		}
+	}
+
+	void setDataSet(DataSet &aSet)
+	{
+		m_dataSet = aSet;
+		m_hasAttributes = false;
+		m_attributes.clear();
+	}
 
 protected:
 	// Virtual destructor
@@ -185,9 +185,9 @@ protected:
 
 	// For back linking of condition
 	ComponentEventPtr m_prev;
-  
-  // For data sets
-  DataSet m_dataSet;
+
+	// For data sets
+	DataSet m_dataSet;
 
 protected:
 	// Convert the value to the agent unit standards
