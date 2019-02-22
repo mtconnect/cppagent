@@ -66,6 +66,7 @@ const string DataItem::SSimpleUnits[NumSimpleUnits] =
 DataItem::DataItem(std::map<string, string> const &attributes) : 
 	m_representation(VALUE),
 	m_hasNativeScale(false),
+  m_allowDups(false),
 	m_hasSignificantDigits(false),
 	m_hasConstraints(false),
 	m_filterValue(0.0),
@@ -89,6 +90,11 @@ DataItem::DataItem(std::map<string, string> const &attributes) :
 	const auto typePos = attributes.find("type");
 	if(typePos != attributes.end())
 		m_type = typePos->second;
+  
+  const auto allowDups = attributes.find("discrete");
+  if(allowDups != attributes.end())
+    m_allowDups = allowDups->second == "true";
+
 
 	m_isAlarm = (m_type == "ALARM");
 	m_isMessage = (m_type == "MESSAGE");
@@ -269,6 +275,9 @@ std::map<string, string> DataItem::buildAttributes() const
 
 	if (!m_compositionId.empty())
 		attributes["compositionId"] = m_compositionId;
+
+  if (m_allowDups)
+    attributes["discrete"] = "true";
 
 	return attributes;
 }

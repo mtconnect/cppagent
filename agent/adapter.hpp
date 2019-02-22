@@ -112,7 +112,7 @@ public:
 
 	bool isDuplicate(DataItem *dataItem, const std::string &value, double timeOffset) const
 	{
-		if (!dataItem->isDiscrete())
+		if (!dataItem->isDiscrete() && !dataItem->allowDups())
 		{
 			if (dataItem->hasMinimumDelta() || dataItem->hasMinimumPeriod())
 				return dataItem->isFiltered(dataItem->convertValue(atof(value.c_str())), timeOffset);

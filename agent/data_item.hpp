@@ -198,7 +198,10 @@ public:
 		return m_representation == DISCRETE; }
 	bool isDataSet() const {
 		return m_representation == DATA_SET; }
-
+  bool allowDups() const {
+    return m_allowDups;
+  }
+  
 	bool hasResetTrigger() const {
 		return !m_resetTrigger.empty(); }
 	const std::string &getResetTrigger() const {
@@ -371,6 +374,7 @@ protected:
 	bool m_isAlarm;
 	bool m_isAssetChanged;
 	bool m_isAssetRemoved;
+  bool m_allowDups;
 
 	// Sig figs of data item
 	unsigned int m_significantDigits;

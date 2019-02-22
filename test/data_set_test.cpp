@@ -288,7 +288,7 @@ void DataSetTest::testSample()
   
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
   m_adapter->processData("TIME|vars|c=5");
-  m_adapter->processData("TIME|vars|c=8");
+  m_adapter->processData("TIME|vars|a=1 c=8");
 
   m_agentTestHelper.m_path = "/sample";
   
@@ -536,4 +536,47 @@ void DataSetTest::testQuoteDelimeter()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "V123={x1.111 2.2222 3.3333} V124={x1.111 2.2222 3.3333} V1754={\"Part 1\" 2.2222 3.3333}");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "3");
   }
+}
+
+void DataSetTest::testSampleWithDiscrete()
+{
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(m_adapter);
+  
+  auto di = m_agent->getDataItemByName("LinuxCNC", "vars2");
+  CPPUNIT_ASSERT_EQUAL(true, di->allowDups());
+  
+  m_adapter->processData("TIME|vars2|a=1 b=2 c=3");
+  m_adapter->processData("TIME|vars2|c=5");
+  m_adapter->processData("TIME|vars2|a=1 c=8");
+  
+  m_agentTestHelper.m_path = "/sample";
+  
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[1]", "UNAVAILABLE");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[2]", "a=1 b=2 c=3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[2]@sampleCount", "3");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[3]", "c=5");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[3]@sampleCount", "1");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[4]", "a=1 c=8");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[4]@sampleCount", "2");
+  }
+  
+}
+
+void DataSetTest::testProbe()
+{
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  CPPUNIT_ASSERT(m_adapter);
+ 
+  m_agentTestHelper.m_path = "/probe";
+
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars']@representation", "DATA_SET");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars2']@representation", "DATA_SET");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars2']@discrete", "true");
+  }
+
 }

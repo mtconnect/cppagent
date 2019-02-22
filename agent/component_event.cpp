@@ -373,8 +373,8 @@ void ComponentEvent::convertValue(const string &value)
     string set = value;
     
     // Check for reset triggered
-    auto found = set.find_first_of('|');
-    auto trig = set;
+    string trig(set);
+    auto found = trig.find_first_of('|');
     if (found != string::npos) trig.erase(found);
     if (trig == "RESET")
     {

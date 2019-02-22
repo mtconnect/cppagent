@@ -24,10 +24,10 @@
         </Axes>
         <Controller name="Controller" id="cont">
           <Components>
-            <Path name="path" id="path">
+            <Path name="path" id="path1">
               <DataItems>
                 <DataItem type="VARIABLE" category="EVENT" id="v1" name="vars" representation="DATA_SET"/>
-                <DataItem type="BLOCK" category="EVENT" id="p1" name="block"/>
+                <DataItem type="BLOCK" discrete="true" category="EVENT" id="v2" name="vars2" representation="DATA_SET"/>
                 <DataItem type="CONTROLLER_MODE" category="EVENT" id="p2" name="mode"/>
                 <DataItem type="LINE" category="EVENT" id="p3" name="line"/>
                 <DataItem type="PROGRAM" category="EVENT" id="p4" name="program"/>

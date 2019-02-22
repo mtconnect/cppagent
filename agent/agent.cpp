@@ -534,7 +534,9 @@ unsigned int Agent::addToBuffer(
 	auto seqNum = m_sequence;
 	auto event = new ComponentEvent(*dataItem, seqNum, time, value);
   
-	if (dataItem->isDataSet() && !m_latest.dataSetDifference(event))
+	if (!dataItem->allowDups() &&
+      dataItem->isDataSet() &&
+      !m_latest.dataSetDifference(event))
 	{
 		event->unrefer();
 		return 0;
