@@ -522,4 +522,11 @@ void DataSetTest::testQuoteDelimeter()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a='1 2 3' b=\"x y z\" c={cats and dogs}");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "3");
   }
+  
+  m_adapter->processData("TIME|vars|b='u v w' c={chickens and horses");
+  {
+    PARSE_XML_RESPONSE;
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a='1 2 3' b='u v w' c={cats and dogs}");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "3");
+  }
 }

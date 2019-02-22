@@ -281,23 +281,45 @@ static regex tokenizer(WS_RE KEY_RE
                                    CB_RE "|"
                                    VAL_RE ")?)?");
 
+// Split the data set entries by space delimiters and account for the
+// use of single and double quotes as well as curly braces
 void ComponentEvent::parseDataSet(const string &s)
 {
-  string key, value;
   smatch m;
   string rest(s);
   
+  // Search for key value pairs. Handle quoted text.
   while (regex_search(rest, m, tokenizer))
   {
+    string key, value;
     if (!m[3].matched) {
       key = m[1];
       value.clear();
     } else {
       key = m[1];
       value = m[3];
+    
+      // Check for invalid termination of string
+      if ((value.front() == '"' && value.back() != '"') ||
+          (value.front() == '\'' && value.back() != '\'') ||
+          (value.front() == '{' && value.back() != '}')) {
+        // consider the rest of the set invalid, issue warning.
+        break;
+      }
     }
+    
+    // Map the value.
     m_dataSet[key] = value;
+    
+    // Parse the rest of the string...
     rest = m.suffix();
+  }
+  
+  // If there is leftover text, the text was invalid.
+  // Warn that it is being discarded
+  if (!rest.empty()) {
+    g_logger << dlib::LWARN << "Cannot parse complete string, malformed data set: '"
+             << rest << "'";
   }
 }
 
