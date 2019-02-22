@@ -233,8 +233,8 @@ public:
 	// Duplicate Checking
 	bool isDuplicate(const std::string &value)
 	{
-		// Do not dupe check for time series.
-		if (m_representation != VALUE)
+		// Do not dup check for time series.
+		if (m_representation != VALUE || m_allowDups)
 			return false;
 		else if (value == m_lastValue)
 			return true;
