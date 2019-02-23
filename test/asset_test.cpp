@@ -33,27 +33,30 @@
 #include "asset_test.hpp"
 
 // Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(AssetTest);
 
 using namespace std;
 
-void AssetTest::setUp()
-{
-	m_asset = nullptr;
-
+namespace mtconnect {
+  namespace test {
+    CPPUNIT_TEST_SUITE_REGISTRATION(AssetTest);
+    
+    void AssetTest::setUp()
+    {
+      m_asset = nullptr;
+      
+    }
+    
+    void AssetTest::tearDown()
+    {
+      if (m_asset)
+      {
+        delete m_asset;
+        m_asset = nullptr;
+      }
+    }
+    
+    void AssetTest::testAsset()
+    {
+    }
+  }
 }
-
-void AssetTest::tearDown()
-{
-	if (m_asset)
-	{
-		delete m_asset;
-		m_asset = nullptr;
-	}
-}
-
-void AssetTest::testAsset()
-{
-}
-
-

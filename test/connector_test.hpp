@@ -43,6 +43,8 @@
 
 #include "connector.hpp"
 
+namespace mtconnect {
+  namespace test {
 // Simple subclass for testing
 class TestConnector : public Connector
 {
@@ -134,5 +136,5 @@ protected:
 	void testIPV6Connection();
 	void testStartHeartbeats();
 };
-
-
+  }
+}

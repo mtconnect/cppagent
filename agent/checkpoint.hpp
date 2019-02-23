@@ -22,37 +22,37 @@
 #include <vector>
 #include <set>
 
-
-class Checkpoint
-{
-public:
-	Checkpoint();
-	Checkpoint(const Checkpoint &checkpoint, const std::set<std::string> *filterSet = nullptr);
-	~Checkpoint();
-
-	void addComponentEvent(ComponentEvent *event);
-	bool dataSetDifference(ComponentEvent *event) const;
-	void copy(Checkpoint const &checkpoint, const std::set<std::string> *filterSet = nullptr);
-	void clear();
-	void filter(std::set<std::string> const &filterSet);
-
-	const std::map<std::string, ComponentEventPtr *> &getEvents() const {
-		return m_events; }
-
-	void getComponentEvents(ComponentEventPtrArray &list,
-		std::set<std::string> const *filterSet = nullptr) const;
-
-	ComponentEventPtr *getEventPtr(const std::string &id)
-	{
-		auto pos = m_events.find(id);
-		if(pos != m_events.end())
-			return pos->second;
-		return nullptr;
-	}
-
-protected:
-	std::map<std::string, ComponentEventPtr *> m_events;
-	std::set<std::string> m_filter;
-	bool m_hasFilter;
-};
-
+namespace mtconnect {
+  class Checkpoint
+  {
+  public:
+    Checkpoint();
+    Checkpoint(const Checkpoint &checkpoint, const std::set<std::string> *filterSet = nullptr);
+    ~Checkpoint();
+    
+    void addComponentEvent(ComponentEvent *event);
+    bool dataSetDifference(ComponentEvent *event) const;
+    void copy(Checkpoint const &checkpoint, const std::set<std::string> *filterSet = nullptr);
+    void clear();
+    void filter(std::set<std::string> const &filterSet);
+    
+    const std::map<std::string, ComponentEventPtr *> &getEvents() const {
+      return m_events; }
+    
+    void getComponentEvents(ComponentEventPtrArray &list,
+                            std::set<std::string> const *filterSet = nullptr) const;
+    
+    ComponentEventPtr *getEventPtr(const std::string &id)
+    {
+      auto pos = m_events.find(id);
+      if(pos != m_events.end())
+        return pos->second;
+      return nullptr;
+    }
+    
+  protected:
+    std::map<std::string, ComponentEventPtr *> m_events;
+    std::set<std::string> m_filter;
+    bool m_hasFilter;
+  };
+}

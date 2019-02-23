@@ -43,53 +43,55 @@
 #include "component_event.hpp"
 #include "data_item.hpp"
 
-class ComponentEventTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(ComponentEventTest);
-	CPPUNIT_TEST(testConstructors);
-	CPPUNIT_TEST(testGetAttributes);
-	CPPUNIT_TEST(testConvertValue);
-	CPPUNIT_TEST(testConvertSimpleUnits);
-	CPPUNIT_TEST(testRefCounts);
-	CPPUNIT_TEST(testStlLists);
-	CPPUNIT_TEST(testEventChaining);
-	CPPUNIT_TEST(testCondition);
-	CPPUNIT_TEST(testTimeSeries);
-	CPPUNIT_TEST(testDuration);
-	CPPUNIT_TEST(testAssetChanged);
-	CPPUNIT_TEST_SUITE_END();
-
-public:
-	void setUp();
-	void tearDown();
-
-protected:
-	ComponentEvent *m_compEventA;
-	ComponentEvent *m_compEventB;
-	std::unique_ptr<DataItem> m_dataItem1;
-	std::unique_ptr<DataItem> m_dataItem2;
-
-protected:
-	void testConstructors();
-	void testGetAttributes();
-	void testGetters();
-	void testConvertValue();
-	void testConvertSimpleUnits();
-	void testRefCounts();
-	void testStlLists();
-	void testEventChaining();
-	void testCondition();
-	void testTimeSeries();
-	void testDuration();
-	void testAssetChanged();
-
-	// Helper to test values
-	void testValueHelper(
-		std::map<std::string, std::string> &attributes,
-		const std::string &nativeUnits,
-		float expected,
-		const std::string &value,
-		CPPUNIT_NS::SourceLine sourceLine
-	);
-};
-
+namespace mtconnect {
+  namespace test {
+    class ComponentEventTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(ComponentEventTest);
+      CPPUNIT_TEST(testConstructors);
+      CPPUNIT_TEST(testGetAttributes);
+      CPPUNIT_TEST(testConvertValue);
+      CPPUNIT_TEST(testConvertSimpleUnits);
+      CPPUNIT_TEST(testRefCounts);
+      CPPUNIT_TEST(testStlLists);
+      CPPUNIT_TEST(testEventChaining);
+      CPPUNIT_TEST(testCondition);
+      CPPUNIT_TEST(testTimeSeries);
+      CPPUNIT_TEST(testDuration);
+      CPPUNIT_TEST(testAssetChanged);
+      CPPUNIT_TEST_SUITE_END();
+      
+    public:
+      void setUp();
+      void tearDown();
+      
+    protected:
+      ComponentEvent *m_compEventA;
+      ComponentEvent *m_compEventB;
+      std::unique_ptr<DataItem> m_dataItem1;
+      std::unique_ptr<DataItem> m_dataItem2;
+      
+    protected:
+      void testConstructors();
+      void testGetAttributes();
+      void testGetters();
+      void testConvertValue();
+      void testConvertSimpleUnits();
+      void testRefCounts();
+      void testStlLists();
+      void testEventChaining();
+      void testCondition();
+      void testTimeSeries();
+      void testDuration();
+      void testAssetChanged();
+      
+      // Helper to test values
+      void testValueHelper(std::map<std::string, std::string> &attributes,
+                           const std::string &nativeUnits,
+                           float expected,
+                           const std::string &value,
+                           CPPUNIT_NS::SourceLine sourceLine
+                           );
+    };
+  }
+}

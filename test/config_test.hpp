@@ -39,55 +39,57 @@
 
 #include "config.hpp"
 
-class ConfigTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(ConfigTest);
-	CPPUNIT_TEST(testBlankConfig);
-	CPPUNIT_TEST(testBufferSize);
-	CPPUNIT_TEST(testDevice);
-	CPPUNIT_TEST(testAdapter);
-	CPPUNIT_TEST(testDefaultPreserveUUID);
-	CPPUNIT_TEST(testDefaultPreserveOverride);
-	CPPUNIT_TEST(testDisablePut);
-	CPPUNIT_TEST(testLimitPut);
-	CPPUNIT_TEST(testLimitPutFromHosts);
-	CPPUNIT_TEST(testNamespaces);
-	CPPUNIT_TEST(testLegacyTimeout);
-	CPPUNIT_TEST(testIgnoreTimestamps);
-	CPPUNIT_TEST(testIgnoreTimestampsOverride);
-	CPPUNIT_TEST(testSpecifyMTCNamespace);
-	CPPUNIT_TEST(testSetSchemaVersion);
-	CPPUNIT_TEST(testSchemaDirectory);
-	CPPUNIT_TEST(testLogFileRollover);
-	CPPUNIT_TEST(testMaxSize);
-	CPPUNIT_TEST_SUITE_END();
-
-public:
-	void setUp();
-	void tearDown();
-
-protected:
-	std::unique_ptr<AgentConfiguration> m_config;
-
-protected:
-	void testBlankConfig();
-	void testBufferSize();
-	void testDevice();
-	void testAdapter();
-	void testDefaultPreserveUUID();
-	void testDefaultPreserveOverride();
-	void testDisablePut();
-	void testLimitPut();
-	void testLimitPutFromHosts();
-	void testNamespaces();
-	void testLegacyTimeout();
-	void testIgnoreTimestamps();
-	void testIgnoreTimestampsOverride();
-	void testSpecifyMTCNamespace();
-	void testSetSchemaVersion();
-	void testSchemaDirectory();
-	void testLogFileRollover();
-	void testMaxSize();
-};
-
-
+namespace mtconnect {
+  namespace test {
+    class ConfigTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(ConfigTest);
+      CPPUNIT_TEST(testBlankConfig);
+      CPPUNIT_TEST(testBufferSize);
+      CPPUNIT_TEST(testDevice);
+      CPPUNIT_TEST(testAdapter);
+      CPPUNIT_TEST(testDefaultPreserveUUID);
+      CPPUNIT_TEST(testDefaultPreserveOverride);
+      CPPUNIT_TEST(testDisablePut);
+      CPPUNIT_TEST(testLimitPut);
+      CPPUNIT_TEST(testLimitPutFromHosts);
+      CPPUNIT_TEST(testNamespaces);
+      CPPUNIT_TEST(testLegacyTimeout);
+      CPPUNIT_TEST(testIgnoreTimestamps);
+      CPPUNIT_TEST(testIgnoreTimestampsOverride);
+      CPPUNIT_TEST(testSpecifyMTCNamespace);
+      CPPUNIT_TEST(testSetSchemaVersion);
+      CPPUNIT_TEST(testSchemaDirectory);
+      CPPUNIT_TEST(testLogFileRollover);
+      CPPUNIT_TEST(testMaxSize);
+      CPPUNIT_TEST_SUITE_END();
+      
+    public:
+      void setUp();
+      void tearDown();
+      
+    protected:
+      std::unique_ptr<AgentConfiguration> m_config;
+      
+    protected:
+      void testBlankConfig();
+      void testBufferSize();
+      void testDevice();
+      void testAdapter();
+      void testDefaultPreserveUUID();
+      void testDefaultPreserveOverride();
+      void testDisablePut();
+      void testLimitPut();
+      void testLimitPutFromHosts();
+      void testNamespaces();
+      void testLegacyTimeout();
+      void testIgnoreTimestamps();
+      void testIgnoreTimestampsOverride();
+      void testSpecifyMTCNamespace();
+      void testSetSchemaVersion();
+      void testSchemaDirectory();
+      void testLogFileRollover();
+      void testMaxSize();
+    };
+  }
+}

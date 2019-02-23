@@ -35,55 +35,59 @@
 #include "test_globals.hpp"
 #include "agent_test_helper.hpp"
 
-class DataSetTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(DataSetTest);
-
-  CPPUNIT_TEST(testDataItem);
-  CPPUNIT_TEST(testInitialSet);
-  CPPUNIT_TEST(testUpdateOneElement);
-  CPPUNIT_TEST(testUpdateMany);
-  CPPUNIT_TEST(testReset);
-  CPPUNIT_TEST(testBadData);
-  CPPUNIT_TEST(testCurrent);
-  CPPUNIT_TEST(testSample);
-  CPPUNIT_TEST(testCurrentAt);
-  CPPUNIT_TEST(testDeleteKey);
-  CPPUNIT_TEST(testResetWithNoItems);
-  CPPUNIT_TEST(testDuplicateCompression);
-  CPPUNIT_TEST(testQuoteDelimeter);
-  CPPUNIT_TEST(testSampleWithDiscrete);
-  CPPUNIT_TEST(testProbe);
-
-	CPPUNIT_TEST_SUITE_END();
-
-protected:
-	std::unique_ptr<Checkpoint> m_checkpoint;
-	std::unique_ptr<Agent> m_agent;
-	Adapter *m_adapter;
-	std::string m_agentId;
-	DataItem* m_dataItem1;
-
-	AgentTestHelper m_agentTestHelper;
-
-protected:
-  void testDataItem();
-  void testInitialSet();
-  void testUpdateOneElement();
-  void testUpdateMany();
-  void testReset();
-  void testBadData();
-  void testCurrent();
-  void testSample();
-  void testCurrentAt();
-  void testDeleteKey();
-  void testResetWithNoItems();
-  void testDuplicateCompression();
-  void testQuoteDelimeter();
-  void testSampleWithDiscrete();
-  void testProbe();
-
-public:
-	void setUp();
-	void tearDown();
-};
+namespace mtconnect {
+  namespace test {
+    class DataSetTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(DataSetTest);
+      
+      CPPUNIT_TEST(testDataItem);
+      CPPUNIT_TEST(testInitialSet);
+      CPPUNIT_TEST(testUpdateOneElement);
+      CPPUNIT_TEST(testUpdateMany);
+      CPPUNIT_TEST(testReset);
+      CPPUNIT_TEST(testBadData);
+      CPPUNIT_TEST(testCurrent);
+      CPPUNIT_TEST(testSample);
+      CPPUNIT_TEST(testCurrentAt);
+      CPPUNIT_TEST(testDeleteKey);
+      CPPUNIT_TEST(testResetWithNoItems);
+      CPPUNIT_TEST(testDuplicateCompression);
+      CPPUNIT_TEST(testQuoteDelimeter);
+      CPPUNIT_TEST(testSampleWithDiscrete);
+      CPPUNIT_TEST(testProbe);
+      
+      CPPUNIT_TEST_SUITE_END();
+      
+    protected:
+      std::unique_ptr<Checkpoint> m_checkpoint;
+      std::unique_ptr<Agent> m_agent;
+      Adapter *m_adapter;
+      std::string m_agentId;
+      DataItem* m_dataItem1;
+      
+      AgentTestHelper m_agentTestHelper;
+      
+    protected:
+      void testDataItem();
+      void testInitialSet();
+      void testUpdateOneElement();
+      void testUpdateMany();
+      void testReset();
+      void testBadData();
+      void testCurrent();
+      void testSample();
+      void testCurrentAt();
+      void testDeleteKey();
+      void testResetWithNoItems();
+      void testDuplicateCompression();
+      void testQuoteDelimeter();
+      void testSampleWithDiscrete();
+      void testProbe();
+      
+    public:
+      void setUp();
+      void tearDown();
+    };
+  }
+}

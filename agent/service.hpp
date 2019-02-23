@@ -17,32 +17,34 @@
 
 #include <string>
 
-class MTConnectService
-{
-public:
-	MTConnectService();
-	virtual int main(int argc, char const *argv[]);
-	virtual void initialize(int argc, char const *argv[]) = 0;
-	virtual void stop() = 0;
-	virtual void start() = 0;
-
-	void setName(std::string const &name) {
-		m_name = name; }
-	std::string const & name() const {
-		return m_name; }
-
-protected:
-	std::string m_name;
-	std::string m_configFile;
-	std::string m_pidFile;
-	bool m_isService;
-	bool m_isDebug;
-
-	void install();
-	void remove();
-
+namespace mtconnect {
+  class MTConnectService
+  {
+  public:
+    MTConnectService();
+    virtual int main(int argc, char const *argv[]);
+    virtual void initialize(int argc, char const *argv[]) = 0;
+    virtual void stop() = 0;
+    virtual void start() = 0;
+    
+    void setName(std::string const &name) {
+      m_name = name; }
+    std::string const & name() const {
+      return m_name; }
+    
+  protected:
+    std::string m_name;
+    std::string m_configFile;
+    std::string m_pidFile;
+    bool m_isService;
+    bool m_isDebug;
+    
+    void install();
+    void remove();
+    
 #ifndef _WINDOWS
-	void daemonize();
+    void daemonize();
 #endif
-
-};
+    
+  };
+}

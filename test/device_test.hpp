@@ -37,33 +37,36 @@
 
 #include "device.hpp"
 
-class DeviceTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(DeviceTest);
-	CPPUNIT_TEST(testGetters);
-	CPPUNIT_TEST(testGetAttributes);
-	CPPUNIT_TEST(testDescription);
-	CPPUNIT_TEST(testRelationships);
-	CPPUNIT_TEST(testDataItems);
-	CPPUNIT_TEST(testDeviceDataItem);
-	CPPUNIT_TEST(testGetDataItem);
-	CPPUNIT_TEST_SUITE_END();
-
-protected:
-	Device *m_devA, *m_devB;
-
-protected:
-	void testGetters();
-	void testGetAttributes();
-	void testDescription();
-	void testRelationships();
-	void testDataItems();
-	void testDeviceDataItem();
-	void testGetDataItem();
-
-public:
-	void setUp();
-	void tearDown();
-};
-
+namespace mtconnect {
+  namespace test {
+    class DeviceTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(DeviceTest);
+      CPPUNIT_TEST(testGetters);
+      CPPUNIT_TEST(testGetAttributes);
+      CPPUNIT_TEST(testDescription);
+      CPPUNIT_TEST(testRelationships);
+      CPPUNIT_TEST(testDataItems);
+      CPPUNIT_TEST(testDeviceDataItem);
+      CPPUNIT_TEST(testGetDataItem);
+      CPPUNIT_TEST_SUITE_END();
+      
+    protected:
+      Device *m_devA, *m_devB;
+      
+    protected:
+      void testGetters();
+      void testGetAttributes();
+      void testDescription();
+      void testRelationships();
+      void testDataItems();
+      void testDeviceDataItem();
+      void testGetDataItem();
+      
+    public:
+      void setUp();
+      void tearDown();
+    };
+  }
+}
 

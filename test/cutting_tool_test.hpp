@@ -38,21 +38,23 @@
 
 #include "cutting_tool.hpp"
 
-class CuttingToolTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(CuttingToolTest);
-	CPPUNIT_TEST(testCuttingTool);
-	CPPUNIT_TEST_SUITE_END();
-
-public:
-	void setUp();
-	void tearDown();
-
-protected:
-	CuttingToolPtr m_tool;
-
-protected:
-	void testCuttingTool();
-};
-
-
+namespace mtconnect {
+  namespace test {
+    class CuttingToolTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(CuttingToolTest);
+      CPPUNIT_TEST(testCuttingTool);
+      CPPUNIT_TEST_SUITE_END();
+      
+    public:
+      void setUp();
+      void tearDown();
+      
+    protected:
+      mtconnect::CuttingToolPtr m_tool;
+      
+    protected:
+      void testCuttingTool();
+    };    
+  }
+}

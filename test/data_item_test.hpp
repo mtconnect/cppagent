@@ -40,46 +40,50 @@
 
 #include "data_item.hpp"
 
-class DataItemTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(DataItemTest);
-	CPPUNIT_TEST(testGetters);
-	CPPUNIT_TEST(testGetAttributes);
-	CPPUNIT_TEST(testHasNameAndSource);
-	CPPUNIT_TEST(testIsSample);
-	CPPUNIT_TEST(testComponent);
-	CPPUNIT_TEST(testGetCamel);
-	CPPUNIT_TEST(testConversion);
-	CPPUNIT_TEST(testCondition);
-	CPPUNIT_TEST(testTimeSeries);
-	CPPUNIT_TEST(testStatistic);
-	CPPUNIT_TEST(testSampleRate);
-	CPPUNIT_TEST(testDuplicates);
-	CPPUNIT_TEST(testFilter);
-	CPPUNIT_TEST_SUITE_END();
-
-protected:
-	std::unique_ptr<DataItem> m_dataItemA;
-	std::unique_ptr<DataItem> m_dataItemB;
-	std::unique_ptr<DataItem> m_dataItemC;
-
-protected:
-	void testGetters();
-	void testGetAttributes();
-	void testHasNameAndSource();
-	void testIsSample();
-	void testComponent();
-	void testGetCamel();
-	void testConversion();
-	void testCondition();
-	void testTimeSeries();
-	void testStatistic();
-	void testSampleRate();
-	void testDuplicates();
-	void testFilter();
-	void testReferences();
-
-public:
-	void setUp();
-	void tearDown();
-};
+namespace mtconnect {
+  namespace test {
+    class DataItemTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(DataItemTest);
+      CPPUNIT_TEST(testGetters);
+      CPPUNIT_TEST(testGetAttributes);
+      CPPUNIT_TEST(testHasNameAndSource);
+      CPPUNIT_TEST(testIsSample);
+      CPPUNIT_TEST(testComponent);
+      CPPUNIT_TEST(testGetCamel);
+      CPPUNIT_TEST(testConversion);
+      CPPUNIT_TEST(testCondition);
+      CPPUNIT_TEST(testTimeSeries);
+      CPPUNIT_TEST(testStatistic);
+      CPPUNIT_TEST(testSampleRate);
+      CPPUNIT_TEST(testDuplicates);
+      CPPUNIT_TEST(testFilter);
+      CPPUNIT_TEST_SUITE_END();
+      
+    protected:
+      std::unique_ptr<DataItem> m_dataItemA;
+      std::unique_ptr<DataItem> m_dataItemB;
+      std::unique_ptr<DataItem> m_dataItemC;
+      
+    protected:
+      void testGetters();
+      void testGetAttributes();
+      void testHasNameAndSource();
+      void testIsSample();
+      void testComponent();
+      void testGetCamel();
+      void testConversion();
+      void testCondition();
+      void testTimeSeries();
+      void testStatistic();
+      void testSampleRate();
+      void testDuplicates();
+      void testFilter();
+      void testReferences();
+      
+    public:
+      void setUp();
+      void tearDown();
+    };
+  }
+}

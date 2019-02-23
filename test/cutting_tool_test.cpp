@@ -32,23 +32,25 @@
 //
 #include "cutting_tool_test.hpp"
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(CuttingToolTest);
 
 using namespace std;
 
-
-void CuttingToolTest::setUp()
-{
-
-}
-
-
-void CuttingToolTest::tearDown()
-{
-}
-
-
-void CuttingToolTest::testCuttingTool()
-{
+namespace mtconnect {
+  namespace test {
+    // Registers the fixture into the 'registry'
+    CPPUNIT_TEST_SUITE_REGISTRATION(CuttingToolTest);
+    
+    void CuttingToolTest::setUp()
+    {
+    }
+    
+    void CuttingToolTest::tearDown()
+    {
+    }
+    
+    
+    void CuttingToolTest::testCuttingTool()
+    {
+    }
+  }
 }

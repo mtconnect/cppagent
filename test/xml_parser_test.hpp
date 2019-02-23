@@ -37,61 +37,64 @@
 
 #include <vector>
 #include "xml_parser.hpp"
-class Device;
 
-
-class XmlParserTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(XmlParserTest);
-	CPPUNIT_TEST(testConstructor);
-	CPPUNIT_TEST(testGetDevices);
-	CPPUNIT_TEST(testCondition);
-	CPPUNIT_TEST(testGetDataItems);
-	CPPUNIT_TEST(testExtendedSchema);
-	CPPUNIT_TEST(testTimeSeries);
-	CPPUNIT_TEST(testGetDataItemsExt);
-	CPPUNIT_TEST(testConfiguration);
-	CPPUNIT_TEST(testParseAsset);
-	CPPUNIT_TEST(testUpdateAsset);
-	CPPUNIT_TEST(testNoNamespace);
-	CPPUNIT_TEST(testFilteredDataItem13);
-	CPPUNIT_TEST(testFilteredDataItem);
-	CPPUNIT_TEST(testReferences);
-	CPPUNIT_TEST(testSourceReferences);
-	CPPUNIT_TEST(testExtendedAsset);
-	CPPUNIT_TEST(testExtendedAssetFragment);
-	CPPUNIT_TEST(testParseOtherAsset);
-	CPPUNIT_TEST(testParseRemovedAsset);
-	CPPUNIT_TEST(testBadAsset);
-	CPPUNIT_TEST_SUITE_END();
-
-protected:
-	XmlParser *m_xmlParser;
-	std::vector<Device *> m_devices;
-
-protected:
-	void testConstructor();
-	void testGetDevices();
-	void testCondition();
-	void testGetDataItems();
-	void testExtendedSchema();
-	void testTimeSeries();
-	void testGetDataItemsExt();
-	void testConfiguration();
-	void testParseAsset();
-	void testUpdateAsset();
-	void testParseOtherAsset();
-	void testParseRemovedAsset();
-	void testNoNamespace();
-  void testFilteredDataItem13();
-	void testFilteredDataItem();
-  void testReferences();
-  void testSourceReferences();
-	void testExtendedAsset();
-	void testExtendedAssetFragment();
-	void testBadAsset();
-
-public:
-	void setUp();
-	void tearDown();
-};
+namespace mtconnect {
+  class Device;
+  namespace test {
+    class XmlParserTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(XmlParserTest);
+      CPPUNIT_TEST(testConstructor);
+      CPPUNIT_TEST(testGetDevices);
+      CPPUNIT_TEST(testCondition);
+      CPPUNIT_TEST(testGetDataItems);
+      CPPUNIT_TEST(testExtendedSchema);
+      CPPUNIT_TEST(testTimeSeries);
+      CPPUNIT_TEST(testGetDataItemsExt);
+      CPPUNIT_TEST(testConfiguration);
+      CPPUNIT_TEST(testParseAsset);
+      CPPUNIT_TEST(testUpdateAsset);
+      CPPUNIT_TEST(testNoNamespace);
+      CPPUNIT_TEST(testFilteredDataItem13);
+      CPPUNIT_TEST(testFilteredDataItem);
+      CPPUNIT_TEST(testReferences);
+      CPPUNIT_TEST(testSourceReferences);
+      CPPUNIT_TEST(testExtendedAsset);
+      CPPUNIT_TEST(testExtendedAssetFragment);
+      CPPUNIT_TEST(testParseOtherAsset);
+      CPPUNIT_TEST(testParseRemovedAsset);
+      CPPUNIT_TEST(testBadAsset);
+      CPPUNIT_TEST_SUITE_END();
+      
+    protected:
+      XmlParser *m_xmlParser;
+      std::vector<Device *> m_devices;
+      
+    protected:
+      void testConstructor();
+      void testGetDevices();
+      void testCondition();
+      void testGetDataItems();
+      void testExtendedSchema();
+      void testTimeSeries();
+      void testGetDataItemsExt();
+      void testConfiguration();
+      void testParseAsset();
+      void testUpdateAsset();
+      void testParseOtherAsset();
+      void testParseRemovedAsset();
+      void testNoNamespace();
+      void testFilteredDataItem13();
+      void testFilteredDataItem();
+      void testReferences();
+      void testSourceReferences();
+      void testExtendedAsset();
+      void testExtendedAssetFragment();
+      void testBadAsset();
+      
+    public:
+      void setUp();
+      void tearDown();
+    };
+  }
+}

@@ -44,37 +44,39 @@
 #include "agent.hpp"
 #include "test_globals.hpp"
 
-class CheckpointTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(CheckpointTest);
-	CPPUNIT_TEST(testAddComponentEvents);
-	CPPUNIT_TEST(testCopy);
-	CPPUNIT_TEST(testGetComponentEvents);
-	CPPUNIT_TEST(testFilter);
-	CPPUNIT_TEST(testCopyAndFilter);
-	CPPUNIT_TEST(testConditionChaining);
-	CPPUNIT_TEST(testLastConditionNormal);
-	CPPUNIT_TEST_SUITE_END();
-
-protected:
-	std::unique_ptr<Checkpoint> m_checkpoint;
-	std::unique_ptr<Agent> m_agent;
-	std::string m_agentId;
-	std::unique_ptr<DataItem> m_dataItem1;
-	std::unique_ptr<DataItem> m_dataItem2;
-
-protected:
-	void testAddComponentEvents();
-	void testCopy();
-	void testGetComponentEvents();
-	void testFilter();
-	void testCopyAndFilter();
-	void testConditionChaining();
-	void testLastConditionNormal();
-
-public:
-	void setUp();
-	void tearDown();
-};
-
-
+namespace mtconnect {
+  namespace test {
+    class CheckpointTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(CheckpointTest);
+      CPPUNIT_TEST(testAddComponentEvents);
+      CPPUNIT_TEST(testCopy);
+      CPPUNIT_TEST(testGetComponentEvents);
+      CPPUNIT_TEST(testFilter);
+      CPPUNIT_TEST(testCopyAndFilter);
+      CPPUNIT_TEST(testConditionChaining);
+      CPPUNIT_TEST(testLastConditionNormal);
+      CPPUNIT_TEST_SUITE_END();
+      
+    protected:
+      std::unique_ptr<Checkpoint> m_checkpoint;
+      std::unique_ptr<Agent> m_agent;
+      std::string m_agentId;
+      std::unique_ptr<DataItem> m_dataItem1;
+      std::unique_ptr<DataItem> m_dataItem2;
+      
+    protected:
+      void testAddComponentEvents();
+      void testCopy();
+      void testGetComponentEvents();
+      void testFilter();
+      void testCopyAndFilter();
+      void testConditionChaining();
+      void testLastConditionNormal();
+      
+    public:
+      void setUp();
+      void tearDown();
+    };
+  }
+}

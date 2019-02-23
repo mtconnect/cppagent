@@ -21,85 +21,87 @@
 #include <vector>
 #include <map>
 
-class CuttingTool;
-typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
-
-class CuttingToolValue;
-typedef RefCountedPtr<CuttingToolValue> CuttingToolValuePtr;
-
-class CuttingItem;
-typedef RefCountedPtr<CuttingItem> CuttingItemPtr;
-
-
-class CuttingToolValue : public RefCounted
-{
-public:
-	CuttingToolValue(const std::string &aKey, const std::string &aValue) :
-		m_key(aKey),
-		m_value(aValue)
-	{
-	}
-
-	CuttingToolValue()
-	{
-	}
-
-	CuttingToolValue(const CuttingToolValue &another) :
-		m_properties(another.m_properties),
-		m_key(another.m_key),
-		m_value(another.m_value)
-	{
-	}
-
-	virtual ~CuttingToolValue();
-
-public:
-	std::map<std::string, std::string> m_properties;
-	std::string m_key;
-	std::string m_value;
-};
-
-
-class CuttingItem : public RefCounted
-{
-public:
-	virtual ~CuttingItem();
-
-public:
-	std::map<std::string, std::string> m_identity;
-	std::map<std::string, CuttingToolValuePtr> m_values;
-	std::map<std::string, CuttingToolValuePtr> m_measurements;
-	std::vector<CuttingToolValuePtr> m_lives;
-};
-
-
-class CuttingTool : public Asset
-{
-public:
-	CuttingTool(
-		const std::string &assetId,
-		const std::string &type,
-		const std::string &content,
-		bool removed = false)
-		:
-		Asset(assetId, type, content, removed)
-	{
-	}
-	~CuttingTool();
-
-	void addIdentity(const std::string &key, const std::string &value) override;
-	void addValue(const CuttingToolValuePtr value);
-	void updateValue(const std::string &key, const std::string &value);
-
-	std::string &getContent() override;
-	void changed() override {
-		m_content.clear(); }
-
-public:
-	std::vector<std::string> m_status;
-	std::map<std::string, CuttingToolValuePtr> m_values;
-	std::map<std::string, CuttingToolValuePtr> m_measurements;
-	std::string m_itemCount;
-	std::vector<CuttingItemPtr> m_items;
-	std::vector<CuttingToolValuePtr> m_lives;
-};
+namespace mtconnect {
+  class CuttingTool;
+  typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
+  
+  class CuttingToolValue;
+  typedef RefCountedPtr<CuttingToolValue> CuttingToolValuePtr;
+  
+  class CuttingItem;
+  typedef RefCountedPtr<CuttingItem> CuttingItemPtr;
+  
+  
+  class CuttingToolValue : public RefCounted
+  {
+  public:
+    CuttingToolValue(const std::string &aKey, const std::string &aValue) :
+    m_key(aKey),
+    m_value(aValue)
+    {
+    }
+    
+    CuttingToolValue()
+    {
+    }
+    
+    CuttingToolValue(const CuttingToolValue &another) :
+    m_properties(another.m_properties),
+    m_key(another.m_key),
+    m_value(another.m_value)
+    {
+    }
+    
+    virtual ~CuttingToolValue();
+    
+  public:
+    std::map<std::string, std::string> m_properties;
+    std::string m_key;
+    std::string m_value;
+  };
+  
+  
+  class CuttingItem : public RefCounted
+  {
+  public:
+    virtual ~CuttingItem();
+    
+  public:
+    std::map<std::string, std::string> m_identity;
+    std::map<std::string, CuttingToolValuePtr> m_values;
+    std::map<std::string, CuttingToolValuePtr> m_measurements;
+    std::vector<CuttingToolValuePtr> m_lives;
+  };
+  
+  
+  class CuttingTool : public Asset
+  {
+  public:
+    CuttingTool(
+                const std::string &assetId,
+                const std::string &type,
+                const std::string &content,
+                bool removed = false)
+    :
+    Asset(assetId, type, content, removed)
+    {
+    }
+    ~CuttingTool();
+    
+    void addIdentity(const std::string &key, const std::string &value) override;
+    void addValue(const CuttingToolValuePtr value);
+    void updateValue(const std::string &key, const std::string &value);
+    
+    std::string &getContent() override;
+    void changed() override {
+      m_content.clear(); }
+    
+  public:
+    std::vector<std::string> m_status;
+    std::map<std::string, CuttingToolValuePtr> m_values;
+    std::map<std::string, CuttingToolValuePtr> m_measurements;
+    std::string m_itemCount;
+    std::vector<CuttingItemPtr> m_items;
+    std::vector<CuttingToolValuePtr> m_lives;
+  };
+}

@@ -49,47 +49,50 @@
 #include "agent.hpp"
 #include "test_globals.hpp"
 
-class AgentTestHelper {
-public:
-	AgentTestHelper()
-	: m_agent(nullptr), m_incomingIp("127.0.0.1")
-	{
-	}
-
-	Agent *m_agent;
-	std::ostringstream m_out;
-
-	std::string m_incomingIp;
-
-	std::string m_path;
-	dlib::key_value_map m_queries;
-	std::string m_result;
-	dlib::key_value_map m_cookies;
-	dlib::key_value_map_ci m_incomingHeaders;
-
-	// Helper method to test expected string, given optional query, & run tests
-	xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
-	xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
-								key_value_map &aQueries);
-
-};
-
+namespace mtconnect {
+  namespace test {
+    class AgentTestHelper {
+    public:
+      AgentTestHelper()
+      : m_agent(nullptr), m_incomingIp("127.0.0.1")
+      {
+      }
+      
+      Agent *m_agent;
+      std::ostringstream m_out;
+      
+      std::string m_incomingIp;
+      
+      std::string m_path;
+      dlib::key_value_map m_queries;
+      std::string m_result;
+      dlib::key_value_map m_cookies;
+      dlib::key_value_map_ci m_incomingHeaders;
+      
+      // Helper method to test expected string, given optional query, & run tests
+      xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
+      xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
+                                  key_value_map &aQueries);
+      
+    };
+    
 #define PARSE_XML_RESPONSE \
 xmlDocPtr doc = m_agentTestHelper.responseHelper(CPPUNIT_SOURCELINE(), m_agentTestHelper.m_queries); \
 CPPUNIT_ASSERT(doc)
-
+    
 #define PARSE_XML_RESPONSE_QUERY_KV(key, value) \
 m_agentTestHelper.m_queries[key] = value; \
 xmlDocPtr doc = m_agentTestHelper.responseHelper(CPPUNIT_SOURCELINE(), m_agentTestHelper.m_queries); \
 m_agentTestHelper.m_queries.clear(); \
 CPPUNIT_ASSERT(doc)
-
+    
 #define PARSE_XML_RESPONSE_QUERY(queries) \
 xmlDocPtr doc = m_agentTestHelper.responseHelper(CPPUNIT_SOURCELINE(), queries); \
 CPPUNIT_ASSERT(doc)
-
+    
 #define PARSE_XML_RESPONSE_PUT(body, queries) \
 xmlDocPtr doc = m_agentTestHelper.putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
 CPPUNIT_ASSERT(doc)
-
+  }
+}
 

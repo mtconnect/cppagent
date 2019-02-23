@@ -37,42 +37,44 @@
 
 #include "globals.hpp"
 
-class GlobalsTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(GlobalsTest);
-	CPPUNIT_TEST(testIntToString);
-	CPPUNIT_TEST(testFloatToString);
-	CPPUNIT_TEST(testToUpperCase);
-	CPPUNIT_TEST(testIsNonNegativeInteger);
-	CPPUNIT_TEST(testTime);
-	CPPUNIT_TEST(testIllegalCharacters);
-	CPPUNIT_TEST(testGetEnumerations);
-	CPPUNIT_TEST(testGetCurrentTime);
-	CPPUNIT_TEST(testGetCurrentTime2);
-	CPPUNIT_TEST(testParseTimeMicro);
-	CPPUNIT_TEST(testAddNamespace);
-	CPPUNIT_TEST(testParseTimeMilli);
-	CPPUNIT_TEST(testInt64ToString);
-	CPPUNIT_TEST_SUITE_END();
-
-protected:
-	void testIntToString();
-	void testFloatToString();
-	void testToUpperCase();
-	void testIsNonNegativeInteger();
-	void testTime();
-	void testIllegalCharacters();
-	void testGetEnumerations();
-	void testGetCurrentTime();
-	void testGetCurrentTime2();
-	void testParseTimeMicro();
-	void testAddNamespace();
-	void testParseTimeMilli();
-	void testInt64ToString();
-
-public:
-	void setUp();
-	void tearDown();
-};
-
-
+namespace mtconnect {
+  namespace test {
+    class GlobalsTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(GlobalsTest);
+      CPPUNIT_TEST(testIntToString);
+      CPPUNIT_TEST(testFloatToString);
+      CPPUNIT_TEST(testToUpperCase);
+      CPPUNIT_TEST(testIsNonNegativeInteger);
+      CPPUNIT_TEST(testTime);
+      CPPUNIT_TEST(testIllegalCharacters);
+      CPPUNIT_TEST(testGetEnumerations);
+      CPPUNIT_TEST(testGetCurrentTime);
+      CPPUNIT_TEST(testGetCurrentTime2);
+      CPPUNIT_TEST(testParseTimeMicro);
+      CPPUNIT_TEST(testAddNamespace);
+      CPPUNIT_TEST(testParseTimeMilli);
+      CPPUNIT_TEST(testInt64ToString);
+      CPPUNIT_TEST_SUITE_END();
+      
+    protected:
+      void testIntToString();
+      void testFloatToString();
+      void testToUpperCase();
+      void testIsNonNegativeInteger();
+      void testTime();
+      void testIllegalCharacters();
+      void testGetEnumerations();
+      void testGetCurrentTime();
+      void testGetCurrentTime2();
+      void testParseTimeMicro();
+      void testAddNamespace();
+      void testParseTimeMilli();
+      void testInt64ToString();
+      
+    public:
+      void setUp();
+      void tearDown();
+    };
+  }
+}

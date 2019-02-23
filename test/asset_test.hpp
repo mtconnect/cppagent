@@ -38,20 +38,23 @@
 
 #include "asset.hpp"
 
-class AssetTest : public CppUnit::TestFixture
-{
-	CPPUNIT_TEST_SUITE(AssetTest);
-	CPPUNIT_TEST(testAsset);
-	CPPUNIT_TEST_SUITE_END();
-
-public:
-	void setUp();
-	void tearDown();
-
-protected:
-	Asset *m_asset;
-
-protected:
-	void testAsset();
-};
-
+namespace mtconnect {
+  namespace test {
+    class AssetTest : public CppUnit::TestFixture
+    {
+      CPPUNIT_TEST_SUITE(AssetTest);
+      CPPUNIT_TEST(testAsset);
+      CPPUNIT_TEST_SUITE_END();
+      
+    public:
+      void setUp();
+      void tearDown();
+      
+    protected:
+      Asset *m_asset;
+      
+    protected:
+      void testAsset();
+    };
+  }
+}
