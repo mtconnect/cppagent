@@ -1,5 +1,6 @@
 //
-// Copyright Copyright 2012, System Insights, Inc.
+// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -13,6 +14,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
+
 #include "agent.hpp"
 #include "dlib/logger.h"
 #include <sys/stat.h>
@@ -108,7 +110,7 @@ namespace mtconnect {
     for(auto i = 0; i < m_checkpointCount; i++)
       m_checkpoints.emplace_back();
     
-    // Add the devices to the device map and create availability and 
+    // Add the devices to the device map and create availability and
     // asset changed events if they don't exist
     for (const auto device  : m_devices)
     {
@@ -137,7 +139,7 @@ namespace mtconnect {
       char c;
       stringstream ss(XmlPrinter::getSchemaVersion());
       ss >> major >> c >> minor;
-      if ( !device->getAssetChanged() && 
+      if ( !device->getAssetChanged() &&
           (major > 1 || (major == 1 && minor >= 2)) )
       {
         // Create asset change data item and add it to the device.
@@ -171,7 +173,7 @@ namespace mtconnect {
     m_xmlParser->loadDocument(
                               XmlPrinter::printProbe(
                                                      m_instanceId,
-                                                     m_slidingBufferSize, 
+                                                     m_slidingBufferSize,
                                                      m_maxAssets,
                                                      m_assets.size(),
                                                      m_sequence,
@@ -1014,7 +1016,7 @@ namespace mtconnect {
       
       for (const auto & kv : queries)
       {
-        if (kv.first != "time") 
+        if (kv.first != "time")
         {
           auto di = dev->getDeviceDataItem(kv.first);
           if (di)
@@ -1102,7 +1104,7 @@ namespace mtconnect {
   {
     using namespace dlib;
     std::vector<AssetPtr> assets;
-    if (!list.empty()) 
+    if (!list.empty())
     {
       std::lock_guard<std::mutex> lock(m_assetLock);
       istringstream str(list);
@@ -1325,7 +1327,7 @@ namespace mtconnect {
           content = fetchCurrentData(filterSet, NO_START);
         else
         {
-          // Check if we're falling too far behind. If we are, generate an 
+          // Check if we're falling too far behind. If we are, generate an
           // MTConnectError and return.
           if (start < getFirstSequence())
           {
@@ -1334,9 +1336,9 @@ namespace mtconnect {
           }
           else
           {
-            // end and endOfBuffer are set during the fetch sample data while the 
-            // mutex is held. This removed the race to check if we are at the end of 
-            // the bufffer and setting the next start to the last sequence number 
+            // end and endOfBuffer are set during the fetch sample data while the
+            // mutex is held. This removed the race to check if we are at the end of
+            // the bufffer and setting the next start to the last sequence number
             // sent.
             content = fetchSampleData(filterSet, start, count, end, endOfBuffer, &observer);
           }
@@ -1361,15 +1363,15 @@ namespace mtconnect {
         out << chunk << "\r\n";
         out.flush();
         
-        // Wait for up to frequency ms for something to arrive... Don't wait if 
-        // we are not at the end of the buffer. Just put the next set after aInterval 
+        // Wait for up to frequency ms for something to arrive... Don't wait if
+        // we are not at the end of the buffer. Just put the next set after aInterval
         // has elapsed. Check also if in the intervening time between the last fetch
         // and now. If so, we just spin through and wait the next interval.
         
         // Even if we are at the end of the buffer, or within range. If we are filtering,
         // we will need to make sure we are not spinning when there are no valid events
-        // to be reported. we will waste cycles spinning on the end of the buffer when 
-        // we should be in a heartbeat wait as well. 
+        // to be reported. we will waste cycles spinning on the end of the buffer when
+        // we should be in a heartbeat wait as well.
         if (!endOfBuffer)
         {
           // If we're not at the end of the buffer, move to the end of the previous set and
