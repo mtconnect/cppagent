@@ -69,7 +69,7 @@ namespace mtconnect {
   DataItem::DataItem(std::map<string, string> const &attributes) : 
   m_representation(VALUE),
   m_hasNativeScale(false),
-  m_allowDups(false),
+  m_isDiscrete(false),
   m_hasSignificantDigits(false),
   m_hasConstraints(false),
   m_filterValue(0.0),
@@ -96,7 +96,7 @@ namespace mtconnect {
     
     const auto allowDups = attributes.find("discrete");
     if(allowDups != attributes.end())
-      m_allowDups = allowDups->second == "true";
+      m_isDiscrete = allowDups->second == "true";
     
     
     m_isAlarm = (m_type == "ALARM");
@@ -279,7 +279,7 @@ namespace mtconnect {
     if (!m_compositionId.empty())
       attributes["compositionId"] = m_compositionId;
     
-    if (m_allowDups)
+    if (m_isDiscrete)
       attributes["discrete"] = "true";
     
     return attributes;

@@ -196,12 +196,15 @@ namespace mtconnect {
       return m_isAssetRemoved; }
     bool isTimeSeries() const {
       return m_representation == TIME_SERIES; }
-    bool isDiscrete() const {
+    bool isDiscreteRep() const {
       return m_representation == DISCRETE; }
     bool isDataSet() const {
       return m_representation == DATA_SET; }
+    bool isDiscrete() const {
+      return m_isDiscrete;
+    }
     bool allowDups() const {
-      return m_allowDups;
+      return isDiscrete() || isDiscreteRep();
     }
     
     bool hasResetTrigger() const {
@@ -236,7 +239,7 @@ namespace mtconnect {
     bool isDuplicate(const std::string &value)
     {
       // Do not dup check for time series.
-      if (m_representation != VALUE || m_allowDups)
+      if (m_representation != VALUE || m_isDiscrete)
         return false;
       else if (value == m_lastValue)
         return true;
@@ -376,7 +379,7 @@ namespace mtconnect {
     bool m_isAlarm;
     bool m_isAssetChanged;
     bool m_isAssetRemoved;
-    bool m_allowDups;
+    bool m_isDiscrete;
     
     // Sig figs of data item
     unsigned int m_significantDigits;

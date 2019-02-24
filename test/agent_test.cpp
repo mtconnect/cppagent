@@ -2410,7 +2410,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
       
       auto msg = m_agent->getDataItemByName("LinuxCNC", "message");
       CPPUNIT_ASSERT(msg);
-      CPPUNIT_ASSERT_EQUAL(true, msg->isDiscrete());
+      CPPUNIT_ASSERT_EQUAL(true, msg->isDiscreteRep());
       
       // Validate we are dup checking.
       {

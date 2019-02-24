@@ -548,7 +548,7 @@ namespace mtconnect {
       CPPUNIT_ASSERT(m_adapter);
       
       auto di = m_agent->getDataItemByName("LinuxCNC", "vars2");
-      CPPUNIT_ASSERT_EQUAL(true, di->allowDups());
+      CPPUNIT_ASSERT_EQUAL(true, di->isDiscrete());
       
       m_adapter->processData("TIME|vars2|a=1 b=2 c=3");
       m_adapter->processData("TIME|vars2|c=5");
