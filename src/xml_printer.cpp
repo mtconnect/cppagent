@@ -43,7 +43,7 @@ namespace mtconnect {
   static map<string, SchemaNamespace> g_streamsNamespaces;
   static map<string, SchemaNamespace> g_errorNamespaces;
   static map<string, SchemaNamespace> g_assetsNamespaces;
-  static string g_schemaVersion("1.4");
+  static string g_schemaVersion("1.5");
   static string g_streamsStyle;
   static string g_devicesStyle;
   static string g_errorStyle;

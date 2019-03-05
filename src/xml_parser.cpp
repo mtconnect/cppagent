@@ -240,13 +240,6 @@ namespace mtconnect {
     }
   }
   
-  
-  void XmlParser::updateDevice(Device *device)
-  {
-    // Update the dom for this device...
-  }
-  
-  
   void XmlParser::getDataItems(
                                set<string> &filterSet,
                                const string &inputPath,

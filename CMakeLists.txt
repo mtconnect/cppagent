@@ -35,7 +35,7 @@ include(cmake/DLib.cmake)
 include(cmake/Date.cmake)
 
 # Add our projects
-add_subdirectory(agent)
+add_subdirectory(src agent)
 add_subdirectory(test)
 
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.

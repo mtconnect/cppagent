@@ -479,7 +479,6 @@ namespace mtconnect {
         string value = data.substr(index + 1);
         trim(value);
         
-        bool updateDom = true;
         if (key == "uuid" && !m_device->m_preserveUuid)
           m_device->setUuid(value);
         else if (key == "manufacturer")
@@ -519,11 +518,7 @@ namespace mtconnect {
         else
         {
           g_logger << LWARN << "Unknown command '" << data << "' for device '" << m_deviceName;
-          updateDom = false;
         }
-        
-        if (updateDom)
-          m_agent->updateDom(m_device);
       }
     }
   }

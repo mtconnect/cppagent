@@ -1704,10 +1704,4 @@ namespace mtconnect {
     auto dev = getDeviceByName(deviceName);
     return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
   }
-  
-  
-  void Agent::updateDom(Device *device)
-  {
-    m_xmlParser->updateDevice(device);
-  }
 }

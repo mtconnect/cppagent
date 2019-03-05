@@ -236,9 +236,6 @@ namespace mtconnect {
     // Handle probe calls
     std::string handleProbe(const std::string &device);
     
-    // Update DOM when key changes
-    void updateDom(Device *device);
-    
   protected:
     
     virtual void on_connect (

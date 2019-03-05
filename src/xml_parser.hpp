@@ -42,10 +42,7 @@ namespace mtconnect {
     
     // Just loads the document, assumed it has already been parsed before.
     void loadDocument(const std::string &aDoc);
-    
-    // Update the dom for this device
-    void updateDevice(Device *aDevice);
-    
+        
     // Get std::list of data items in path
     void getDataItems(
                       std::set<std::string> &filterSet,

@@ -33,31 +33,31 @@ set(TEST_SRCS
 	)
 
 set(AGENT_SRCS
-	../agent/adapter.cpp
-	../agent/agent.cpp
-	../agent/checkpoint.cpp
-	../agent/component.cpp
-	../agent/component_event.cpp
-	../agent/change_observer.cpp
-	../agent/connector.cpp
-	../agent/cutting_tool.cpp
-	../agent/data_item.cpp
-	../agent/device.cpp
-	../agent/globals.cpp
-	../agent/options.cpp
-	../agent/xml_parser.cpp
-	../agent/xml_printer.cpp
-	../agent/config.cpp
-	../agent/service.cpp
-	../agent/asset.cpp
-	../agent/version.cpp
-	../agent/rolling_file_logger.cpp
+	../src/adapter.cpp
+	../src/agent.cpp
+	../src/checkpoint.cpp
+	../src/component.cpp
+	../src/component_event.cpp
+	../src/change_observer.cpp
+	../src/connector.cpp
+	../src/cutting_tool.cpp
+	../src/data_item.cpp
+	../src/device.cpp
+	../src/globals.cpp
+	../src/options.cpp
+	../src/xml_parser.cpp
+	../src/xml_printer.cpp
+	../src/config.cpp
+	../src/service.cpp
+	../src/asset.cpp
+	../src/version.cpp
+	../src/rolling_file_logger.cpp
 	${DLIB_FIX_SRCS}
 	)
 
 set_property(SOURCE ${AGENT_SRCS} APPEND PROPERTY COMPILE_FLAGS ${GCOV_COMPILE_FLAGS})
 
-file(GLOB TEST_HEADERS *.hpp ../agent/*.hpp)
+file(GLOB TEST_HEADERS *.hpp ../src/*.hpp)
 
 # Allow better viewing and grouping of files in Visual Studio by defining source groups
 source_group("Headers Files" FILES ${TEST_HEADERS})
@@ -76,7 +76,7 @@ AddDLibSupport(agent_test)
 AddDateSupport(agent_test)
 
 target_include_directories(agent_test
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../agent
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src
 	PRIVATE .
 	)
 
