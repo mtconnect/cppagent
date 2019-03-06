@@ -1583,14 +1583,8 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     
     void AgentTest::testAssetAdditionOfAssetChanged12()
     {
-      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(m_agent->getPrinter("xml"));
-      CPPUNIT_ASSERT(printer != nullptr);
-      
-      string version = printer->getSchemaVersion();
-      printer->setSchemaVersion("1.2");
-      
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, "1.5", 25ms);
+      m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, "1.2", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       {
@@ -1598,22 +1592,14 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
         PARSE_XML_RESPONSE;
         CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
         CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
-      }
-      
-      printer->setSchemaVersion(version);
+      }      
     }
     
     
     void AgentTest::testAssetAdditionOfAssetRemoved13()
     {
-      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(m_agent->getPrinter("xml"));
-      CPPUNIT_ASSERT(printer != nullptr);
-
-      string version = printer->getSchemaVersion();
-      printer->setSchemaVersion("1.3");
-      
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, "1.5", 25ms);
+      m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, "1.3", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       {
@@ -1621,9 +1607,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
         PARSE_XML_RESPONSE;
         CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
         CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
-      }
-      
-      printer->setSchemaVersion(version);
+      }      
     }
     
     
