@@ -46,6 +46,7 @@ set(AGENT_SRCS cppagent.cpp
 	version.cpp
 	xml_parser.cpp 
 	xml_printer.cpp
+	json_printer.cpp
 	rolling_file_logger.cpp
 	${DLIB_FIX_SRCS}
 	)
@@ -75,6 +76,7 @@ AddMsvcXPSupport(agent)
 AddLibXML2Support(agent)
 AddDLibSupport(agent)
 AddDateSupport(agent)
+AddJsonSupport(agent)
 
 target_include_directories(agent
   PRIVATE ${PROJECT_BINARY_DIR}/agent

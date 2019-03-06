@@ -67,8 +67,11 @@ namespace mtconnect {
                             const unsigned int assetCount,
                             std::vector<AssetPtr> const &assets) const override;
     
-    std::string printCuttingTool(CuttingToolPtr const tool) const override;
+    virtual std::string printCuttingTool(CuttingToolPtr const tool) const override;
     
+    virtual std::string mimeType() const override {
+      return "application/xml";
+    }    
     
     void addDevicesNamespace(
                              const std::string &urn,

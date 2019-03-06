@@ -35,7 +35,7 @@ namespace mtconnect {
       incoming.cookies = m_cookies;
       incoming.headers = m_incomingHeaders;
       
-      outgoing.out = &m_out;
+      outgoing.m_out = &m_out;
       
       m_result = m_agent->httpRequest(incoming, outgoing);
       
@@ -79,7 +79,7 @@ namespace mtconnect {
       incoming.body = body;
       incoming.foreign_ip = m_incomingIp;
       
-      outgoing.out = &m_out;
+      outgoing.m_out = &m_out;
       
       m_result = m_agent->httpRequest(incoming, outgoing);
       

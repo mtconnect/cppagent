@@ -31,6 +31,9 @@
 #include <functional>
 #include <algorithm>
 
+#include "xml_printer.hpp"
+#include "json_printer.hpp"
+
 using namespace std;
 
 namespace mtconnect {
@@ -52,6 +55,7 @@ namespace mtconnect {
   {
     m_mimeTypes["xsl"] = "text/xsl";
     m_mimeTypes["xml"] = "text/xml";
+    m_mimeTypes["json"] = "application/json";
     m_mimeTypes["css"] = "text/css";
     m_mimeTypes["xsd"] = "text/xml";
     m_mimeTypes["jpg"] = "image/jpeg";
@@ -62,6 +66,9 @@ namespace mtconnect {
     // Create the XmlPrinter
     XmlPrinter *xmlPrinter = new XmlPrinter(version);
     m_printers["xml"].reset(xmlPrinter);
+
+    JsonPrinter *jsonPrinter = new JsonPrinter(version);
+    m_printers["json"].reset(jsonPrinter);
 
     try
     {
@@ -385,10 +392,11 @@ namespace mtconnect {
       
       parse_http_request(in, incoming, get_max_content_length());
       read_body(in, incoming);
-      outgoing.out = &out;
+      outgoing.m_out = &out;
       const std::string& result = httpRequest(incoming, outgoing);
-      if (out.good())
+      if (out.good()) {
         write_http_response(out, outgoing, result);
+      }
     }
     catch (dlib::http_parse_error& e)
     {
@@ -403,12 +411,45 @@ namespace mtconnect {
   }
   
   
+  const Printer *Agent::printerForAccepts(const std::string &accepts) const
+  {
+    const Printer *printer = nullptr;
+    
+    stringstream list(accepts);
+    string s;
+    while (printer == nullptr && getline(list, s, ',')) {
+      for (const auto &p : m_printers) {
+        string format = "/" + p.first;
+        if (s.find(format) == s.length() - format.length())
+        {
+          printer = p.second.get();
+          break;
+        }
+      }
+    }
+    
+    return printer;
+  }
+
   
   // Methods for service
   const string Agent::httpRequest(const IncomingThings &incoming, OutgoingThings &outgoing)
   {
     string result;
-    outgoing.headers["Content-Type"] = "text/xml";
+    
+    const Printer *printer = nullptr;
+    auto accepts = incoming.headers.find("Accept");
+    if (accepts != incoming.headers.end()) {
+      printer = printerForAccepts(accepts->second);
+    }
+    
+    // If there are no specified accepts that match,
+    // default to XML
+    if (printer == nullptr)
+      printer = m_printers["xml"].get();
+
+    outgoing.m_printer = printer;
+    outgoing.headers["Content-Type"] = printer->mimeType();
     
     try
     {
@@ -421,7 +462,7 @@ namespace mtconnect {
             !m_putAllowedHosts.empty() &&
             !m_putAllowedHosts.count(incoming.foreign_ip))
         {
-          return printError("UNSUPPORTED",
+          return printError(printer, "UNSUPPORTED",
                             "HTTP PUT is not allowed from " + incoming.foreign_ip);
         }
         
@@ -429,7 +470,7 @@ namespace mtconnect {
             incoming.request_type != "PUT" &&
             incoming.request_type != "POST")
         {
-          return printError("UNSUPPORTED",
+          return printError(printer, "UNSUPPORTED",
                             "Only the HTTP GET and PUT requests are supported");
         }
       }
@@ -437,7 +478,7 @@ namespace mtconnect {
       {
         if (incoming.request_type != "GET")
         {
-          return printError("UNSUPPORTED",
+          return printError(printer, "UNSUPPORTED",
                             "Only the HTTP GET request is supported");
         }
       }
@@ -465,9 +506,9 @@ namespace mtconnect {
           list = path.substr(loc1 + 1);
         
         if (incoming.request_type == "GET")
-          result = handleAssets(*outgoing.out, incoming.queries, list);
+          result = handleAssets(printer, *outgoing.m_out, incoming.queries, list);
         else
-          result = storeAsset(*outgoing.out, incoming.queries, list, incoming.body);
+          result = storeAsset(*outgoing.m_out, incoming.queries, list, incoming.body);
       }
       else
       {
@@ -485,7 +526,7 @@ namespace mtconnect {
           else
           {
             // Path is too long
-            return printError("UNSUPPORTED", "The following path is invalid: " + path);
+            return printError(printer, "UNSUPPORTED", "The following path is invalid: " + path);
           }
         }
         else
@@ -495,14 +536,14 @@ namespace mtconnect {
         }
         
         if (incoming.request_type == "GET")
-          result = handleCall(*outgoing.out, path, incoming.queries, call, device);
+          result = handleCall(printer, *outgoing.m_out, path, incoming.queries, call, device);
         else
-          result = handlePut(*outgoing.out, path, incoming.queries, call, device);
+          result = handlePut(printer, *outgoing.m_out, path, incoming.queries, call, device);
       }
     }
     catch (exception &e)
     {
-      printError("SERVER_EXCEPTION", (string) e.what());
+      printError(printer, "SERVER_EXCEPTION", (string) e.what());
     }
     
     return result;
@@ -904,6 +945,7 @@ namespace mtconnect {
   
   // Agent protected methods
   string Agent::handleCall(
+                           const Printer *printer,
                            ostream& out,
                            const string& path,
                            const key_value_map& queries,
@@ -930,9 +972,10 @@ namespace mtconnect {
         auto heartbeat = std::chrono::milliseconds{checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
         
         if (freq != NO_FREQ && at != NO_START)
-          return printError("INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
+          return printError(printer, "INVALID_REQUEST", "You cannot specify both the at and frequency arguments to a current request");
         
         return handleStream(
+                            printer,
                             out,
                             devicesAndPath(path, deviceName),
                             true,
@@ -942,7 +985,7 @@ namespace mtconnect {
                             heartbeat);
       }
       else if (call == "probe" || call.empty())
-        return handleProbe(deviceName);
+        return handleProbe(printer, deviceName);
       else if (call == "sample")
       {
         string path = queries[(string) "path"];
@@ -962,6 +1005,7 @@ namespace mtconnect {
         auto heartbeat = std::chrono::milliseconds{checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
         
         return handleStream(
+                            printer,
                             out,
                             devicesAndPath(path, deviceName),
                             false,
@@ -971,18 +1015,19 @@ namespace mtconnect {
                             heartbeat);
       }
       else if (findDeviceByUUIDorName(call) && device.empty())
-        return handleProbe(call);
+        return handleProbe(printer, call);
       else
-        return printError("UNSUPPORTED", "The following path is invalid: " + path);
+        return printError(printer, "UNSUPPORTED", "The following path is invalid: " + path);
     }
     catch (ParameterError &aError)
     {
-      return printError(aError.m_code, aError.m_message);
+      return printError(printer, aError.m_code, aError.m_message);
     }
   }
   
   
   string Agent::handlePut(
+                          const Printer *printer,
                           ostream &out,
                           const string &path,
                           const key_value_map &queries,
@@ -991,7 +1036,7 @@ namespace mtconnect {
   {
     string device = deviceName;
     if (device.empty() && adapter.empty())
-      return printError("UNSUPPORTED", "Device must be specified for PUT");
+      return printError(printer, "UNSUPPORTED", "Device must be specified for PUT");
     else if (device.empty())
       device = adapter;
     
@@ -999,7 +1044,7 @@ namespace mtconnect {
     if (!dev)
     {
       string message = ((string) "Cannot find device: ") + device;
-      return printError("UNSUPPORTED", message);
+      return printError(printer, "UNSUPPORTED", message);
     }
     
     // First check if this is an adapter put or a data put...
@@ -1038,7 +1083,7 @@ namespace mtconnect {
   }
   
   
-  string Agent::handleProbe(const string &name)
+  string Agent::handleProbe(const Printer *printer, const string &name)
   {
     std::vector<Device *> deviceList;
     
@@ -1046,15 +1091,12 @@ namespace mtconnect {
     {
       auto device = findDeviceByUUIDorName(name);
       if (!device)
-        return printError("NO_DEVICE", "Could not find the device '" + name + "'");
+        return printError(printer, "NO_DEVICE", "Could not find the device '" + name + "'");
       else
         deviceList.push_back(device);
     }
     else
       deviceList = m_devices;
-    
-    // TODO: Resolve mime type and pass through printer
-    Printer *printer = m_printers["xml"].get();
     
     return printer->printProbe(
                                   m_instanceId,
@@ -1068,6 +1110,7 @@ namespace mtconnect {
   
   
   string Agent::handleStream(
+                             const Printer *printer,
                              ostream &out,
                              const string &path,
                              bool current,
@@ -1083,16 +1126,16 @@ namespace mtconnect {
     }
     catch (exception& e)
     {
-      return printError("INVALID_XPATH", e.what());
+      return printError(printer, "INVALID_XPATH", e.what());
     }
     
     if (filter.empty())
-      return printError("INVALID_XPATH", "The path could not be parsed. Invalid syntax: " + path);
+      return printError(printer, "INVALID_XPATH", "The path could not be parsed. Invalid syntax: " + path);
     
     // Check if there is a frequency to stream data or not
     if (frequency != (unsigned)NO_FREQ )
     {
-      streamData(out, filter, current, frequency, start, count, heartbeat);
+      streamData(printer, out, filter, current, frequency, start, count, heartbeat);
       return "";
     }
     else
@@ -1100,23 +1143,21 @@ namespace mtconnect {
       uint64_t end;
       bool endOfBuffer;
       if (current)
-        return fetchCurrentData(filter, start);
+        return fetchCurrentData(printer, filter, start);
       else
-        return fetchSampleData(filter, start, count, end, endOfBuffer);
+        return fetchSampleData(printer, filter, start, count, end, endOfBuffer);
     }
   }
   
   
   std::string Agent::handleAssets(
+                                  const Printer *printer,
                                   std::ostream& aOut,
                                   const key_value_map& queries,
                                   const std::string& list )
   {
     using namespace dlib;
     std::vector<AssetPtr> assets;
-    
-    // TODO: Resolve mime type and pass through printer
-    Printer *printer = m_printers["xml"].get();
     
     if (!list.empty())
     {
@@ -1265,7 +1306,7 @@ namespace mtconnect {
       
     }
     
-    (*outgoing.out) << "HTTP/1.1 200 OK\r\n"
+    (*outgoing.m_out) << "HTTP/1.1 200 OK\r\n"
     "Date: " << getCurrentTime(HUM_READ) << "\r\n"
     "Server: MTConnectAgent\r\n"
     "Connection: close\r\n"
@@ -1273,14 +1314,15 @@ namespace mtconnect {
     "Expires: " << getCurrentTime(std::chrono::system_clock::now() + std::chrono::seconds(60*60*24), HUM_READ) << "\r\n"
     "Content-Type: " << contentType << "\r\n\r\n";
     
-    outgoing.out->write(cachedFile->m_buffer.get(), cachedFile->m_size);
-    outgoing.out->setstate(ios::badbit);
+    outgoing.m_out->write(cachedFile->m_buffer.get(), cachedFile->m_size);
+    outgoing.m_out->setstate(ios::badbit);
     
     return "";
   }
   
   
   void Agent::streamData(
+                         const Printer *printer,
                          ostream& out,
                          std::set<string> &filterSet,
                          bool current,
@@ -1337,7 +1379,7 @@ namespace mtconnect {
         uint64_t end(0ull);
         bool endOfBuffer = true;
         if (current)
-          content = fetchCurrentData(filterSet, NO_START);
+          content = fetchCurrentData(printer, filterSet, NO_START);
         else
         {
           // Check if we're falling too far behind. If we are, generate an
@@ -1353,7 +1395,7 @@ namespace mtconnect {
             // mutex is held. This removed the race to check if we are at the end of
             // the bufffer and setting the next start to the last sequence number
             // sent.
-            content = fetchSampleData(filterSet, start, count, end, endOfBuffer, &observer);
+            content = fetchSampleData(printer, filterSet, start, count, end, endOfBuffer, &observer);
           }
           
           if (m_logStreamData)
@@ -1455,7 +1497,7 @@ namespace mtconnect {
       if (out.good())
       {
         ostringstream str;
-        string content = printError(aError.m_code, aError.m_message);
+        string content = printError(printer, aError.m_code, aError.m_message);
         str << "--" << boundary << "\r\n"
         "Content-type: text/xml\r\n"
         "Content-length: " << content.length() << "\r\n\r\n"
@@ -1474,7 +1516,7 @@ namespace mtconnect {
       if (out.good())
       {
         ostringstream str;
-        string content = printError("INTERNAL_ERROR", "Unknown error occurred during streaming");
+        string content = printError(printer, "INTERNAL_ERROR", "Unknown error occurred during streaming");
         str << "--" << boundary << "\r\n"
         "Content-type: text/xml\r\n"
         "Content-length: " << content.length() << "\r\n\r\n"
@@ -1493,7 +1535,7 @@ namespace mtconnect {
   }
   
   
-  string Agent::fetchCurrentData(std::set<string> &filterSet, uint64_t at)
+  string Agent::fetchCurrentData(const Printer *printer, std::set<string> &filterSet, uint64_t at)
   {
     ComponentEventPtrArray events;
     uint64_t firstSeq, seq;
@@ -1539,20 +1581,17 @@ namespace mtconnect {
       }
     }
     
-    // TODO: Resolve mime type and pass through printer
-    Printer *printer = m_printers["xml"].get();
-    
-
     return printer->printSample(
-                                   m_instanceId,
-                                   m_slidingBufferSize,
-                                   seq, firstSeq,
-                                   m_sequence - 1,
-                                   events);
+                                m_instanceId,
+                                m_slidingBufferSize,
+                                seq, firstSeq,
+                                m_sequence - 1,
+                                events);
   }
   
   
   string Agent::fetchSampleData(
+                                const Printer *printer,
                                 std::set<string> &filterSet,
                                 uint64_t start,
                                 unsigned int count,
@@ -1593,9 +1632,6 @@ namespace mtconnect {
         observer->reset();
     }
     
-    // TODO: Resolve mime type and pass through printer
-    Printer *printer = m_printers["xml"].get();
-    
     return printer->printSample(
                                    m_instanceId,
                                    m_slidingBufferSize,
@@ -1606,11 +1642,9 @@ namespace mtconnect {
   }
   
   
-  string Agent::printError(const string &errorCode, const string &text)
+  string Agent::printError(const Printer *printer, const string &errorCode, const string &text)
   {
     g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
-    // TODO: Resolve mime type and pass through printer
-    Printer *printer = m_printers["xml"].get();
     return printer->printError(
                                   m_instanceId,
                                   m_slidingBufferSize,

@@ -33,6 +33,7 @@ include(cmake/LibXML2.cmake)
 include(cmake/CppUnit.cmake)
 include(cmake/DLib.cmake)
 include(cmake/Date.cmake)
+include(cmake/json.cmake)
 
 # Add our projects
 add_subdirectory(src agent)

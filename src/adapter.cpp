@@ -460,7 +460,8 @@ namespace mtconnect {
     // This will override the settings in the device from the xml
     if (data == "* PROBE")
     {
-      string response = m_agent->handleProbe(m_deviceName);
+      const Printer *printer = m_agent->getPrinter("xml");
+      string response = m_agent->handleProbe(printer, m_deviceName);
       string probe = "* PROBE LENGTH=";
       probe.append(intToString(response.length()));
       probe.append("\n");

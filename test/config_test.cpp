@@ -26,6 +26,8 @@ using namespace date;
 #include "agent.hpp"
 #include "adapter.hpp"
 #include "rolling_file_logger.hpp"
+#include "xml_printer.hpp"
+
 #include <dlib/dir_nav.h>
 
 static dlib::logger g_logger("config_test");

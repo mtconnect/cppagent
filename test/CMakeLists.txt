@@ -47,6 +47,7 @@ set(AGENT_SRCS
 	../src/options.cpp
 	../src/xml_parser.cpp
 	../src/xml_printer.cpp
+	../src/json_printer.cpp
 	../src/config.cpp
 	../src/service.cpp
 	../src/asset.cpp
@@ -74,13 +75,15 @@ AddLibXML2Support(agent_test)
 AddCppUnitSupport(agent_test)
 AddDLibSupport(agent_test)
 AddDateSupport(agent_test)
+AddJsonSupport(agent_test)
 
 target_include_directories(agent_test
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src
-	PRIVATE .
-	)
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src
+  PRIVATE .
+  )
 
 target_link_libraries(agent_test PRIVATE ${LINUX_LIBRARIES} PRIVATE ${WINDOWS_LIBRARIES} PRIVATE ${GCOV_LINK_FLAGS})
+
 set_target_properties(agent_test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1)
 
 target_compile_features(agent_test PRIVATE cxx_std_14)

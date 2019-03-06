@@ -34,7 +34,6 @@
 #include "adapter.hpp"
 #include "globals.hpp"
 #include "xml_parser.hpp"
-#include "xml_printer.hpp"
 #include "checkpoint.hpp"
 #include "service.hpp"
 #include "asset.hpp"
@@ -50,8 +49,9 @@ namespace mtconnect {
   typedef std::vector<std::pair<std::string, std::string>> AssetChangeList;
   
   struct OutgoingThings : public dlib::outgoing_things {
-    OutgoingThings() : out(nullptr) {}
-    std::ostream  *out;
+    OutgoingThings() : m_out(nullptr), m_printer(nullptr) {}
+    std::ostream  *m_out;
+    const Printer *m_printer;
   };
   typedef struct dlib::incoming_things IncomingThings;
   
@@ -235,7 +235,7 @@ namespace mtconnect {
       m_logStreamData = log; }
     
     // Handle probe calls
-    std::string handleProbe(const std::string &device);
+    std::string handleProbe(const Printer *printer, const std::string &device);
     
     // Get the printer for a type
     Printer *getPrinter(const std::string &aType) { return m_printers[aType].get(); }
@@ -254,6 +254,7 @@ namespace mtconnect {
     
     // HTTP methods to handle the 3 basic calls
     std::string handleCall(
+                           const Printer *printer,
                            std::ostream &out,
                            const std::string &path,
                            const key_value_map &queries,
@@ -262,6 +263,7 @@ namespace mtconnect {
     
     // HTTP methods to handle the 3 basic calls
     std::string handlePut(
+                          const Printer *printer,
                           std::ostream &out,
                           const std::string &path,
                           const key_value_map &queries,
@@ -270,6 +272,7 @@ namespace mtconnect {
     
     // Handle stream calls, which includes both current and sample
     std::string handleStream(
+                             const Printer *printer,
                              std::ostream &out,
                              const std::string &path,
                              bool current,
@@ -280,6 +283,7 @@ namespace mtconnect {
     
     // Asset related methods
     std::string handleAssets(
+                             const Printer *printer,
                              std::ostream &out,
                              const key_value_map &queries,
                              const std::string &list);
@@ -292,6 +296,7 @@ namespace mtconnect {
     
     // Stream the data to the user
     void streamData(
+                    const Printer *printer,
                     std::ostream &out,
                     std::set<std::string> &filterSet,
                     bool current,
@@ -301,8 +306,9 @@ namespace mtconnect {
                     std::chrono::milliseconds heartbeat = std::chrono::milliseconds{10000});
     
     // Fetch the current/sample data and return the XML in a std::string
-    std::string fetchCurrentData(std::set<std::string> &filterSet, uint64_t at);
+    std::string fetchCurrentData(const Printer *printer, std::set<std::string> &filterSet, uint64_t at);
     std::string fetchSampleData(
+                                const Printer *printer,
                                 std::set<std::string> &filterSet,
                                 uint64_t start,
                                 unsigned int count,
@@ -311,7 +317,8 @@ namespace mtconnect {
                                 ChangeObserver *observer = nullptr);
     
     // Output an XML Error
-    std::string printError(const std::string &errorCode, const std::string &text);
+    std::string printError(const Printer *printer, const std::string &errorCode,
+                           const std::string &text);
     
     // Handle the device/path parameters for the xpath search
     std::string devicesAndPath(
@@ -352,6 +359,8 @@ namespace mtconnect {
         return diPos->second;
       return nullptr;
     }
+    
+    const Printer *printerForAccepts(const std::string &accepts) const;
     
   protected:
     // Unique id based on the time of creation

@@ -16,6 +16,8 @@
 //
 
 #include "agent_test.hpp"
+#include "xml_printer.hpp"
+
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -751,7 +753,7 @@ namespace mtconnect {
       incoming.cookies = m_agentTestHelper.m_cookies;
       incoming.headers = m_agentTestHelper.m_incomingHeaders;
       
-      outgoing.out = &m_agentTestHelper.m_out;
+      outgoing.m_out = &m_agentTestHelper.m_out;
       
       m_agentTestHelper.m_result = m_agent->httpRequest(incoming, outgoing);
       CPPUNIT_ASSERT(m_agentTestHelper.m_result.empty());
