@@ -15,12 +15,17 @@
 //    limitations under the License.
 //
 
-#include "xml_printer.hpp"
-#include "composition.hpp"
+#include <set>
+#include <libxml/xmlwriter.h>
 #include "dlib/sockets.h"
 #include "dlib/logger.h"
 #include "version.h"
-#include <set>
+
+#include "xml_printer.hpp"
+#include "composition.hpp"
+#include "device.hpp"
+#include "cutting_tool.hpp"
+
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr) \
@@ -32,85 +37,14 @@ using namespace std;
 
 namespace mtconnect {
   static dlib::logger g_logger("xml.printer");
+    
   
-  struct SchemaNamespace
+  XmlPrinter::XmlPrinter(const string version)
+    : m_schemaVersion(version)
   {
-    string mUrn;
-    string mSchemaLocation;
-  };
-  
-  static map<string, SchemaNamespace> g_devicesNamespaces;
-  static map<string, SchemaNamespace> g_streamsNamespaces;
-  static map<string, SchemaNamespace> g_errorNamespaces;
-  static map<string, SchemaNamespace> g_assetsNamespaces;
-  static string g_schemaVersion("1.5");
-  static string g_streamsStyle;
-  static string g_devicesStyle;
-  static string g_errorStyle;
-  static string g_assetsStyle;
-  
-  enum EDocumentType
-  {
-    eERROR,
-    eSTREAMS,
-    eDEVICES,
-    eASSETS
-  };
-  
-  
-  namespace XmlPrinter
-  {
-    
-    // Initiate all documents
-    void initXmlDoc(
-                    xmlTextWriterPtr writer,
-                    EDocumentType docType,
-                    const unsigned int instanceId,
-                    const unsigned int bufferSize,
-                    const unsigned int assetBufferSize,
-                    const unsigned int assetCount,
-                    const uint64_t nextSeq,
-                    const uint64_t firstSeq = 0,
-                    const uint64_t lastSeq = 0,
-                    const map<string, int> *counts = nullptr);
-    
-    // Helper to print individual components and details
-    void printProbeHelper(xmlTextWriterPtr writer, Component *component);
-    void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem);
-    
-    
-    // Add attributes to an xml element
-    void addDeviceStream(xmlTextWriterPtr writer, const Device *device);
-    void addComponentStream(xmlTextWriterPtr writer, const Component *component);
-    void addCategory(xmlTextWriterPtr writer, DataItem::ECategory category);
-    void addSimpleElement(
-                          xmlTextWriterPtr writer,
-                          const std::string &element,
-                          const std::string &body,
-                          const std::map<std::string, std::string> *attributes = nullptr);
-    
-    void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> &attributes);
-    void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes);
-    
-    void addEvent(xmlTextWriterPtr writer, ComponentEvent *result);
-    
-    // Asset printing
-    void printCuttingToolValue(
-                               xmlTextWriterPtr writer,
-                               CuttingToolPtr tool,
-                               const char *value,
-                               std::set<string> *remaining = nullptr);
-    void printCuttingToolValue(
-                               xmlTextWriterPtr writer,
-                               CuttingItemPtr item,
-                               const char *value,
-                               std::set<string> *remaining = nullptr);
-    void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value);
-    void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item);
-    void printAssetNode(xmlTextWriterPtr writer, Asset *asset);
-    
-  };
-  
+    if (m_schemaVersion.empty())
+      m_schemaVersion = "1.5";
+  }
   
   void XmlPrinter::addDevicesNamespace(
                                        const std::string &urn,
@@ -122,20 +56,20 @@ namespace mtconnect {
     item.second.mSchemaLocation = location;
     item.first = prefix;
     
-    g_devicesNamespaces.insert(item);
+    m_devicesNamespaces.insert(item);
   }
   
   
   void XmlPrinter::clearDevicesNamespaces()
   {
-    g_devicesNamespaces.clear();
+    m_devicesNamespaces.clear();
   }
   
   
   string XmlPrinter::getDevicesUrn(const std::string &prefix)
   {
-    auto ns = g_devicesNamespaces.find(prefix);
-    if (ns != g_devicesNamespaces.end())
+    auto ns = m_devicesNamespaces.find(prefix);
+    if (ns != m_devicesNamespaces.end())
       return ns->second.mUrn;
     else
       return "";
@@ -144,8 +78,8 @@ namespace mtconnect {
   
   string XmlPrinter::getDevicesLocation(const std::string &prefix)
   {
-    auto ns = g_devicesNamespaces.find(prefix);
-    if (ns != g_devicesNamespaces.end())
+    auto ns = m_devicesNamespaces.find(prefix);
+    if (ns != m_devicesNamespaces.end())
       return ns->second.mSchemaLocation;
     else
       return "";
@@ -162,20 +96,20 @@ namespace mtconnect {
     item.second.mSchemaLocation = location;
     item.first = prefix;
     
-    g_errorNamespaces.insert(item);
+    m_errorNamespaces.insert(item);
   }
   
   
   void XmlPrinter::clearErrorNamespaces()
   {
-    g_errorNamespaces.clear();
+    m_errorNamespaces.clear();
   }
   
   
   string XmlPrinter::getErrorUrn(const std::string &prefix)
   {
-    auto ns = g_errorNamespaces.find(prefix);
-    if (ns != g_errorNamespaces.end())
+    auto ns = m_errorNamespaces.find(prefix);
+    if (ns != m_errorNamespaces.end())
       return ns->second.mUrn;
     else
       return "";
@@ -184,8 +118,8 @@ namespace mtconnect {
   
   string XmlPrinter::getErrorLocation(const std::string &prefix)
   {
-    auto ns = g_errorNamespaces.find(prefix);
-    if (ns != g_errorNamespaces.end())
+    auto ns = m_errorNamespaces.find(prefix);
+    if (ns != m_errorNamespaces.end())
       return ns->second.mSchemaLocation;
     else
       return "";
@@ -202,32 +136,32 @@ namespace mtconnect {
     item.second.mSchemaLocation = location;
     item.first = prefix;
     
-    g_streamsNamespaces.insert(item);
+    m_streamsNamespaces.insert(item);
   }
   
   
   void XmlPrinter::clearStreamsNamespaces()
   {
-    g_streamsNamespaces.clear();
+    m_streamsNamespaces.clear();
   }
   
   
   void XmlPrinter::setSchemaVersion(const std::string &version)
   {
-    g_schemaVersion = version;
+    m_schemaVersion = version;
   }
   
   
   const std::string &XmlPrinter::getSchemaVersion()
   {
-    return g_schemaVersion;
+    return m_schemaVersion;
   }
   
   
   string XmlPrinter::getStreamsUrn(const std::string &prefix)
   {
-    auto ns = g_streamsNamespaces.find(prefix);
-    if (ns != g_streamsNamespaces.end())
+    auto ns = m_streamsNamespaces.find(prefix);
+    if (ns != m_streamsNamespaces.end())
       return ns->second.mUrn;
     else
       return "";
@@ -236,8 +170,8 @@ namespace mtconnect {
   
   string XmlPrinter::getStreamsLocation(const std::string &prefix)
   {
-    auto ns = g_streamsNamespaces.find(prefix);
-    if (ns != g_streamsNamespaces.end())
+    auto ns = m_streamsNamespaces.find(prefix);
+    if (ns != m_streamsNamespaces.end())
       return ns->second.mSchemaLocation;
     else
       return "";
@@ -254,20 +188,20 @@ namespace mtconnect {
     item.second.mSchemaLocation = location;
     item.first = prefix;
     
-    g_assetsNamespaces.insert(item);
+    m_assetsNamespaces.insert(item);
   }
   
   
   void XmlPrinter::clearAssetsNamespaces()
   {
-    g_assetsNamespaces.clear();
+    m_assetsNamespaces.clear();
   }
   
   
   string XmlPrinter::getAssetsUrn(const std::string &prefix)
   {
-    auto ns = g_assetsNamespaces.find(prefix);
-    if (ns != g_assetsNamespaces.end())
+    auto ns = m_assetsNamespaces.find(prefix);
+    if (ns != m_assetsNamespaces.end())
       return ns->second.mUrn;
     else
       return "";
@@ -276,8 +210,8 @@ namespace mtconnect {
   
   string XmlPrinter::getAssetsLocation(const std::string &prefix)
   {
-    auto ns = g_assetsNamespaces.find(prefix);
-    if (ns != g_assetsNamespaces.end())
+    auto ns = m_assetsNamespaces.find(prefix);
+    if (ns != m_assetsNamespaces.end())
       return ns->second.mSchemaLocation;
     else
       return "";
@@ -286,25 +220,25 @@ namespace mtconnect {
   
   void XmlPrinter::setStreamStyle(const std::string &style)
   {
-    g_streamsStyle = style;
+    m_streamsStyle = style;
   }
   
   
   void XmlPrinter::setDevicesStyle(const std::string &style)
   {
-    g_devicesStyle = style;
+    m_devicesStyle = style;
   }
   
   
   void XmlPrinter::setErrorStyle(const std::string &style)
   {
-    g_errorStyle = style;
+    m_errorStyle = style;
   }
   
   
   void XmlPrinter::setAssetsStyle(const std::string &style)
   {
-    g_assetsStyle = style;
+    m_assetsStyle = style;
   }
   
   
@@ -313,7 +247,7 @@ namespace mtconnect {
                                 const unsigned int bufferSize,
                                 const uint64_t nextSeq,
                                 const string &errorCode,
-                                const string &errorText )
+                                const string &errorText ) const
   {
     xmlTextWriterPtr writer = nullptr;
     xmlBufferPtr buf = nullptr;
@@ -399,7 +333,7 @@ namespace mtconnect {
                                 const unsigned int assetBufferSize,
                                 const unsigned int assetCount,
                                 const vector<Device *> &deviceList,
-                                const std::map<std::string, int> *count )
+                                const std::map<std::string, int> *count ) const
   {
     xmlTextWriterPtr writer = nullptr;
     xmlBufferPtr buf = nullptr;
@@ -478,7 +412,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)
+  void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)  const
   {
     addAttributes(writer, component->getAttributes());
     
@@ -518,8 +452,8 @@ namespace mtconnect {
         xmlChar *name = nullptr;
         if (!child->getPrefix().empty())
         {
-          const auto ns = g_devicesNamespaces.find(child->getPrefix());
-          if (ns != g_devicesNamespaces.end())
+          const auto ns = m_devicesNamespaces.find(child->getPrefix());
+          if (ns != m_devicesNamespaces.end())
             name = BAD_CAST child->getPrefixedClass().c_str();
         }
         
@@ -560,7 +494,7 @@ namespace mtconnect {
       
       for (const auto &ref : component->getReferences())
       {
-        if (g_schemaVersion >= "1.4")
+        if (m_schemaVersion >= "1.4")
         {
           if (ref.m_type == Component::Reference::DATA_ITEM)
           {
@@ -600,7 +534,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)
+  void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)  const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItem"));
     
@@ -692,7 +626,7 @@ namespace mtconnect {
                                  const uint64_t nextSeq,
                                  const uint64_t firstSeq,
                                  const uint64_t lastSeq,
-                                 ComponentEventPtrArray &results )
+                                 ComponentEventPtrArray &results )  const
   {
     xmlTextWriterPtr writer(nullptr);
     xmlBufferPtr buf(nullptr);
@@ -837,7 +771,7 @@ namespace mtconnect {
                                  const unsigned int instanceId,
                                  const unsigned int bufferSize,
                                  const unsigned int assetCount,
-                                 std::vector<AssetPtr> const &assets)
+                                 std::vector<AssetPtr> const &assets)  const
   {
     xmlTextWriterPtr writer = nullptr;
     xmlBufferPtr buf = nullptr;
@@ -858,12 +792,12 @@ namespace mtconnect {
       {
         if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
         {
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent().c_str()));
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent(this).c_str()));
         }
         else
         {
           printAssetNode(writer, asset);
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent().c_str()));
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent(this).c_str()));
           THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
         }
       }
@@ -912,7 +846,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset)
+  void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset)  const
   {
     // TODO: Check if cutting tool or archetype - should be in type
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST asset->getType().c_str()));
@@ -948,7 +882,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, const Device *device)
+  void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, const Device *device)  const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DeviceStream"));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
@@ -958,7 +892,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, const Component *component)
+  void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, const Component *component)  const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentStream"));
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "component",
@@ -970,7 +904,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::addCategory(xmlTextWriterPtr writer, DataItem::ECategory category)
+  void XmlPrinter::addCategory(xmlTextWriterPtr writer, DataItem::ECategory category)  const
   {
     switch (category)
     {
@@ -990,7 +924,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)
+  void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)  const
   {
     auto dataItem = result->getDataItem();
     
@@ -1004,8 +938,8 @@ namespace mtconnect {
       
       if (!dataItem->getPrefix().empty())
       {
-        auto ns = g_streamsNamespaces.find(dataItem->getPrefix());
-        if (ns != g_streamsNamespaces.end())
+        auto ns = m_streamsNamespaces.find(dataItem->getPrefix());
+        if (ns != m_streamsNamespaces.end())
           element = BAD_CAST dataItem->getPrefixedElementName().c_str();
       }
       
@@ -1050,7 +984,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const std::map<string, string> &attributes)
+  void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const std::map<string, string> &attributes)  const
   {
     for (const auto &attr : attributes)
     {
@@ -1060,7 +994,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes)
+  void XmlPrinter::addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes) const
   {
     for (const auto & attr : attributes)
     {
@@ -1080,38 +1014,38 @@ namespace mtconnect {
                               const uint64_t nextSeq,
                               const uint64_t firstSeq,
                               const uint64_t lastSeq,
-                              const map<string, int> *count )
+                              const map<string, int> *count ) const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, nullptr, "UTF-8", nullptr));
     
     // TODO: Cache the locations and header attributes.
     // Write the root element
     string xmlType, style;
-    map<string, SchemaNamespace> *namespaces;
+    const map<string, SchemaNamespace> *namespaces;
     
     switch (aType)
     {
       case eERROR:
-        namespaces = &g_errorNamespaces;
-        style = g_errorStyle;
+        namespaces = &m_errorNamespaces;
+        style = m_errorStyle;
         xmlType = "Error";
         break;
         
       case eSTREAMS:
-        namespaces = &g_streamsNamespaces;
-        style = g_streamsStyle;
+        namespaces = &m_streamsNamespaces;
+        style = m_streamsStyle;
         xmlType = "Streams";
         break;
         
       case eDEVICES:
-        namespaces = &g_devicesNamespaces;
-        style = g_devicesStyle;
+        namespaces = &m_devicesNamespaces;
+        style = m_devicesStyle;
         xmlType = "Devices";
         break;
         
       case eASSETS:
-        namespaces = &g_assetsNamespaces;
-        style = g_assetsStyle;
+        namespaces = &m_assetsNamespaces;
+        style = m_assetsStyle;
         xmlType = "Assets";
         break;
     }
@@ -1124,7 +1058,7 @@ namespace mtconnect {
     }
     
     string rootName = "MTConnect" + xmlType;
-    string xmlns = "urn:mtconnect.org:" + rootName + ":" + g_schemaVersion;
+    string xmlns = "urn:mtconnect.org:" + rootName + ":" + m_schemaVersion;
     string location;
     
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST rootName.c_str()));
@@ -1172,7 +1106,7 @@ namespace mtconnect {
     if (location.empty() && !mtcLocation.empty())
       location = mtcLocation;
     else if (location.empty())
-      location = xmlns + " http://schemas.mtconnect.org/schemas/" + rootName + "_" + g_schemaVersion + ".xsd";
+      location = xmlns + " http://schemas.mtconnect.org/schemas/" + rootName + "_" + m_schemaVersion + ".xsd";
     
     
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
@@ -1254,7 +1188,7 @@ namespace mtconnect {
                                     xmlTextWriterPtr writer,
                                     const string &element,
                                     const string &body,
-                                    const map<string, string> *attributes)
+                                    const map<string, string> *attributes) const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST element.c_str()));
     
@@ -1273,7 +1207,7 @@ namespace mtconnect {
   
   
   // Cutting tools
-  void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value)
+  void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value) const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST value->m_key.c_str()));
     
@@ -1293,7 +1227,7 @@ namespace mtconnect {
                                          xmlTextWriterPtr writer,
                                          CuttingToolPtr tool,
                                          const char *value,
-                                         std::set<string> *remaining)
+                                         std::set<string> *remaining) const
   {
     if (tool->m_values.count(value) > 0)
     {
@@ -1310,7 +1244,7 @@ namespace mtconnect {
                                          xmlTextWriterPtr writer,
                                          CuttingItemPtr item,
                                          const char *value,
-                                         std::set<string> *remaining)
+                                         std::set<string> *remaining) const
   {
     if (item->m_values.count(value) > 0)
     {
@@ -1323,7 +1257,7 @@ namespace mtconnect {
   }
   
   
-  void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item)
+  void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item) const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingItem"));
     
@@ -1366,7 +1300,7 @@ namespace mtconnect {
   }
   
   
-  string XmlPrinter::printCuttingTool(CuttingToolPtr const tool)
+  string XmlPrinter::printCuttingTool(CuttingToolPtr const tool) const
   {
     
     xmlTextWriterPtr writer = nullptr;

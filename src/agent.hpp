@@ -115,6 +115,7 @@ namespace mtconnect {
           const std::string &configXmlPath,
           int bufferSize,
           int maxAssets,
+          const std::string &version,
           std::chrono::milliseconds checkpointFreq = std::chrono::milliseconds{1000});
     
     // Virtual destructor
@@ -236,6 +237,9 @@ namespace mtconnect {
     // Handle probe calls
     std::string handleProbe(const std::string &device);
     
+    // Get the printer for a type
+    Printer *getPrinter(const std::string &aType) { return m_printers[aType].get(); }
+    
   protected:
     
     virtual void on_connect (
@@ -355,6 +359,7 @@ namespace mtconnect {
     
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;
+    std::map<std::string,std::unique_ptr<Printer>> m_printers;
     
     // For access to the sequence number and sliding buffer, use the mutex
     std::mutex m_sequenceLock;

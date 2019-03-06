@@ -578,14 +578,13 @@ namespace mtconnect {
     m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
     
     // Check for schema version
-    string schemaVersion = get_with_default(reader, "SchemaVersion", "");
-    if (!schemaVersion.empty())
-      XmlPrinter::setSchemaVersion(schemaVersion);
-    
+    string schemaVersion = get_with_default(reader, "SchemaVersion", "");    
     g_logger << LINFO << "Starting agent on port " << port;
     
     if (!m_agent)
-      m_agent = new Agent(m_devicesFile, bufferSize, maxAssets, checkpointFrequency);
+      m_agent = new Agent(m_devicesFile, bufferSize, maxAssets,
+                          schemaVersion, checkpointFrequency);
+    XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter*>(m_agent->getPrinter("xml"));
     
     m_agent->set_listening_port(port);
     m_agent->set_listening_ip(serverIp);
@@ -593,10 +592,7 @@ namespace mtconnect {
     
     for (size_t i = 0; i < m_agent->getDevices().size(); i++)
       m_agent->getDevices()[i]->m_preserveUuid = defaultPreserve;
-    
-    if (XmlPrinter::getSchemaVersion().empty())
-      XmlPrinter::setSchemaVersion("1.4");
-    
+        
     loadAllowPut(reader);
     loadAdapters(
                  reader,
@@ -612,15 +608,15 @@ namespace mtconnect {
     loadFiles(reader);
     
     // Load namespaces, allow for local file system serving as well.
-    loadNamespace(reader, "DevicesNamespaces", &XmlPrinter::addDevicesNamespace);
-    loadNamespace(reader, "StreamsNamespaces", &XmlPrinter::addStreamsNamespace);
-    loadNamespace(reader, "AssetsNamespaces", &XmlPrinter::addAssetsNamespace);
-    loadNamespace(reader, "ErrorNamespaces", &XmlPrinter::addErrorNamespace);
+    loadNamespace(reader, "DevicesNamespaces", xmlPrinter,  &XmlPrinter::addDevicesNamespace);
+    loadNamespace(reader, "StreamsNamespaces", xmlPrinter,  &XmlPrinter::addStreamsNamespace);
+    loadNamespace(reader, "AssetsNamespaces", xmlPrinter,  &XmlPrinter::addAssetsNamespace);
+    loadNamespace(reader, "ErrorNamespaces", xmlPrinter,  &XmlPrinter::addErrorNamespace);
     
-    loadStyle(reader, "DevicesStyle", &XmlPrinter::setDevicesStyle);
-    loadStyle(reader, "StreamsStyle", &XmlPrinter::setStreamStyle);
-    loadStyle(reader, "AssetsStyle", &XmlPrinter::setAssetsStyle);
-    loadStyle(reader, "ErrorStyle", &XmlPrinter::setErrorStyle);
+    loadStyle(reader, "DevicesStyle", xmlPrinter,  &XmlPrinter::setDevicesStyle);
+    loadStyle(reader, "StreamsStyle", xmlPrinter, &XmlPrinter::setStreamStyle);
+    loadStyle(reader, "AssetsStyle", xmlPrinter, &XmlPrinter::setAssetsStyle);
+    loadStyle(reader, "ErrorStyle", xmlPrinter, &XmlPrinter::setErrorStyle);
     
     loadTypes(reader);
   }
@@ -768,7 +764,8 @@ namespace mtconnect {
   void AgentConfiguration::loadNamespace(
                                          dlib::config_reader::kernel_1a &reader,
                                          const char *namespaceType,
-                                         NamespaceFunction *callback)
+                                         XmlPrinter *xmlPrinter,
+                                         NamespaceFunction callback)
   {
     // Load namespaces, allow for local file system serving as well.
     if (reader.is_block_defined(namespaceType))
@@ -791,7 +788,7 @@ namespace mtconnect {
             location = ns["Location"];
           if (ns.is_key_defined("Urn"))
             urn = ns["Urn"];
-          (*callback)(urn, location, block);
+          (xmlPrinter->*callback)(urn, location, block);
           if (ns.is_key_defined("Path") && !location.empty())
             m_agent->registerFile(location, ns["Path"]);
         }
@@ -820,7 +817,7 @@ namespace mtconnect {
   }
   
   
-  void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName, StyleFunction *styleFunction)
+  void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName, XmlPrinter *xmlPrinter, StyleFunction styleFunction)
   {
     if (reader.is_block_defined(styleName))
     {
@@ -830,7 +827,7 @@ namespace mtconnect {
       else
       {
         string location = doc["Location"];
-        styleFunction(location);
+        (xmlPrinter->*styleFunction)(location);
         if (doc.is_key_defined("Path"))
           m_agent->registerFile(location, doc["Path"]);
       }

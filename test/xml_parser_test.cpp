@@ -17,6 +17,7 @@
 
 #include "xml_parser_test.hpp"
 #include "test_globals.hpp"
+#include "xml_printer.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
@@ -34,8 +35,9 @@ namespace mtconnect {
       
       try
       {
+        std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
         m_xmlParser = new XmlParser();
-        m_devices = m_xmlParser->parseFile("../samples/test_config.xml");
+        m_devices = m_xmlParser->parseFile("../samples/test_config.xml", printer.get());
       }
       catch (exception &)
       {
@@ -62,11 +64,12 @@ namespace mtconnect {
         m_xmlParser = nullptr;
       }
       
+      std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
       m_xmlParser = new XmlParser();
-      CPPUNIT_ASSERT_THROW(m_xmlParser->parseFile("../samples/badPath.xml"), std::runtime_error);
+      CPPUNIT_ASSERT_THROW(m_xmlParser->parseFile("../samples/badPath.xml", printer.get()), std::runtime_error);
       delete m_xmlParser; m_xmlParser = nullptr;
       m_xmlParser = new XmlParser();
-      CPPUNIT_ASSERT_NO_THROW(m_xmlParser->parseFile("../samples/test_config.xml"));
+      CPPUNIT_ASSERT_NO_THROW(m_xmlParser->parseFile("../samples/test_config.xml", printer.get()));
     }
     
     
@@ -163,8 +166,9 @@ namespace mtconnect {
       // For the rest we will check with the extended schema
       try
       {
+        std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
         m_xmlParser = new XmlParser();
-        m_xmlParser->parseFile("../samples/extension.xml");
+        m_xmlParser->parseFile("../samples/extension.xml", printer.get());
       }
       catch (exception &)
       {
@@ -191,8 +195,9 @@ namespace mtconnect {
       
       try
       {
+        std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
         m_xmlParser = new XmlParser();
-        m_devices = m_xmlParser->parseFile("../samples/extension.xml");
+        m_devices = m_xmlParser->parseFile("../samples/extension.xml", printer.get());
       }
       catch (exception &)
       {
@@ -314,13 +319,14 @@ namespace mtconnect {
     {
       string document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
       "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
+      std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
       AssetPtr asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
       
       CPPUNIT_ASSERT(asset.getObject());
       CPPUNIT_ASSERT_EQUAL((string) "XXX123", asset->getAssetId());
       CPPUNIT_ASSERT_EQUAL((string) "2014-04-14T01:22:33.123", asset->getTimestamp());
       CPPUNIT_ASSERT_EQUAL((string) "XXX", asset->getDeviceUuid());
-      CPPUNIT_ASSERT_EQUAL((string) "Data", asset->getContent());
+      CPPUNIT_ASSERT_EQUAL((string) "Data", asset->getContent(printer.get()));
       CPPUNIT_ASSERT_EQUAL(false, asset->isRemoved());
       
       document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
@@ -393,8 +399,9 @@ namespace mtconnect {
         m_xmlParser = nullptr;
       }
       
+      unique_ptr<XmlPrinter> printer(new XmlPrinter());
       m_xmlParser = new XmlParser();
-      CPPUNIT_ASSERT_NO_THROW(m_xmlParser->parseFile("../samples/NoNamespace.xml"));
+      CPPUNIT_ASSERT_NO_THROW(m_xmlParser->parseFile("../samples/NoNamespace.xml", printer.get()));
     }
     
     void XmlParserTest::testFilteredDataItem13()
@@ -402,8 +409,9 @@ namespace mtconnect {
       delete m_xmlParser; m_xmlParser = nullptr;
       try
       {
+        unique_ptr<XmlPrinter> printer(new XmlPrinter());
         m_xmlParser = new XmlParser();
-        m_devices = m_xmlParser->parseFile("../samples/filter_example_1.3.xml");
+        m_devices = m_xmlParser->parseFile("../samples/filter_example_1.3.xml", printer.get());
       }
       catch (exception &)
       {
@@ -427,8 +435,9 @@ namespace mtconnect {
       
       try
       {
+        unique_ptr<XmlPrinter> printer(new XmlPrinter());
         m_xmlParser = new XmlParser();
-        m_devices = m_xmlParser->parseFile("../samples/filter_example.xml");
+        m_devices = m_xmlParser->parseFile("../samples/filter_example.xml", printer.get());
       }
       catch (exception &)
       {
@@ -456,8 +465,9 @@ namespace mtconnect {
       
       try
       {
+        unique_ptr<XmlPrinter> printer(new XmlPrinter());
         m_xmlParser = new XmlParser();
-        m_devices = m_xmlParser->parseFile("../samples/reference_example.xml");
+        m_devices = m_xmlParser->parseFile("../samples/reference_example.xml", printer.get());
       }
       catch (exception &)
       {
@@ -511,8 +521,9 @@ namespace mtconnect {
       
       try
       {
+        unique_ptr<XmlPrinter> printer(new XmlPrinter());
         m_xmlParser = new XmlParser();
-        m_devices = m_xmlParser->parseFile("../samples/reference_example.xml");
+        m_devices = m_xmlParser->parseFile("../samples/reference_example.xml", printer.get());
       }
       catch (exception &)
       {

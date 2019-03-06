@@ -28,20 +28,22 @@ namespace mtconnect {
     void XmlPrinterTest::setUp()
     {
       m_config = new XmlParser();
-      XmlPrinter::setSchemaVersion("");
-      m_devices = m_config->parseFile("../samples/test_config.xml");
+      m_printer = new XmlPrinter();
+      m_printer->setSchemaVersion("");
+      m_devices = m_config->parseFile("../samples/test_config.xml", m_printer);
     }
     
     
     void XmlPrinterTest::tearDown()
     {
       delete m_config; m_config = nullptr;
+      delete m_printer; m_printer = nullptr;
     }
     
     
     void XmlPrinterTest::testPrintError()
     {
-      PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+      PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
@@ -52,7 +54,7 @@ namespace mtconnect {
     
     void XmlPrinterTest::testPrintProbe()
     {
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
@@ -107,7 +109,7 @@ namespace mtconnect {
     
     void XmlPrinterTest::testPrintDataItemElements()
     {
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='y1']/m:Filters/m:Filter[1]@type",
                                         "MINIMUM_DELTA");
@@ -144,7 +146,7 @@ namespace mtconnect {
       
       ComponentEventPtrArray list;
       checkpoint.getComponentEvents(list);
-      PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+      PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "//m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact']", "0");
@@ -186,33 +188,33 @@ namespace mtconnect {
     void XmlPrinterTest::testChangeDevicesNamespace()
     {
       // Devices
-      XmlPrinter::clearDevicesNamespaces();
+      m_printer->clearDevicesNamespaces();
       
       {
-        PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+        PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectDevices@schemaLocation",
                                           "urn:mtconnect.org:MTConnectDevices:1.2 http://schemas.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
       }
       
       {
-        XmlPrinter::addDevicesNamespace("urn:machine.com:MachineDevices:1.3",
+        m_printer->addDevicesNamespace("urn:machine.com:MachineDevices:1.3",
                                         "http://www.machine.com/schemas/MachineDevices_1.3.xsd",
                                         "e");
         
-        PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+        PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
         
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectDevices@schemaLocation",
                                           "urn:machine.com:MachineDevices:1.3 http://www.machine.com/schemas/MachineDevices_1.3.xsd");
         
-        XmlPrinter::clearDevicesNamespaces();
+        m_printer->clearDevicesNamespaces();
       }
       
       {
         XmlParser ext;
-        std::vector<Device *> extdevs = ext.parseFile("../samples/extension.xml");
-        PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, extdevs));
+        std::vector<Device *> extdevs = ext.parseFile("../samples/extension.xml", m_printer);
+        PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, extdevs));
         
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectDevices@schemaLocation",
@@ -223,13 +225,13 @@ namespace mtconnect {
                                           "pump");
       }
       
-      XmlPrinter::clearDevicesNamespaces();
+      m_printer->clearDevicesNamespaces();
     }
     
     
     void XmlPrinterTest::testChangeStreamsNamespace()
     {
-      XmlPrinter::clearStreamsNamespaces();
+      m_printer->clearStreamsNamespaces();
       
       Checkpoint checkpoint;
       addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
@@ -241,37 +243,37 @@ namespace mtconnect {
         ComponentEventPtrArray list;
         checkpoint.getComponentEvents(list);
         
-        PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+        PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
         
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectStreams@schemaLocation",
                                           "urn:mtconnect.org:MTConnectStreams:1.2 http://schemas.mtconnect.org/schemas/MTConnectStreams_1.2.xsd");
       }
       
-      XmlPrinter::clearStreamsNamespaces();
+      m_printer->clearStreamsNamespaces();
       
       {
         
-        XmlPrinter::addStreamsNamespace("urn:machine.com:MachineStreams:1.3",
+        m_printer->addStreamsNamespace("urn:machine.com:MachineStreams:1.3",
                                         "http://www.machine.com/schemas/MachineStreams_1.3.xsd",
                                         "e");
         
         ComponentEventPtrArray list;
         checkpoint.getComponentEvents(list);
-        PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+        PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
         
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectStreams@schemaLocation",
                                           "urn:machine.com:MachineStreams:1.3 http://www.machine.com/schemas/MachineStreams_1.3.xsd");
       }
       
-      XmlPrinter::clearStreamsNamespaces();
+      m_printer->clearStreamsNamespaces();
       
       {
         XmlParser ext;
-        m_devices = ext.parseFile("../samples/extension.xml");
+        m_devices = ext.parseFile("../samples/extension.xml", m_printer);
         
-        XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
+        m_printer->addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
                                         "ExtensionDevices_1.3.xsd",
                                         "x");
         
@@ -281,18 +283,18 @@ namespace mtconnect {
         ComponentEventPtrArray list;
         checkpoint2.getComponentEvents(list);
         
-        PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+        PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
         
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//x:Flow", "100");
       }
       
-      XmlPrinter::clearStreamsNamespaces();
+      m_printer->clearStreamsNamespaces();
       
       {
         XmlParser ext;
-        m_devices = ext.parseFile("../samples/extension.xml");
+        m_devices = ext.parseFile("../samples/extension.xml", m_printer);
         
-        XmlPrinter::addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
+        m_printer->addStreamsNamespace("urn:example.com:ExampleDevices:1.3",
                                         "ExtensionDevices_1.3.xsd",
                                         "x");
         
@@ -302,14 +304,14 @@ namespace mtconnect {
         ComponentEventPtrArray list;
         checkpoint2.getComponentEvents(list);
         
-        PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+        PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
         
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//x:Flow", "100");
       }
       
       
-      XmlPrinter::clearStreamsNamespaces();
-      XmlPrinter::clearDevicesNamespaces();
+      m_printer->clearStreamsNamespaces();
+      m_printer->clearDevicesNamespaces();
       
     }
     
@@ -319,18 +321,18 @@ namespace mtconnect {
       // Error
       
       {
-        PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+        PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectError@schemaLocation",
                                           "urn:mtconnect.org:MTConnectError:1.2 http://schemas.mtconnect.org/schemas/MTConnectError_1.2.xsd");
       }
       
       {
-        XmlPrinter::addErrorNamespace("urn:machine.com:MachineError:1.3",
+        m_printer->addErrorNamespace("urn:machine.com:MachineError:1.3",
                                       "http://www.machine.com/schemas/MachineError_1.3.xsd",
                                       "e");
         
-        PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+        PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
         
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectError@schemaLocation",
@@ -369,7 +371,7 @@ namespace mtconnect {
       ptr = newEvent("block", 11351726, "x-1.149250 y1.048981");
       events.push_back(ptr);
       
-      PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
+      PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "/m:MTConnectStreams/m:Streams/m:DeviceStream/m:ComponentStream[@name='X']/m:Samples/m:Position[@name='Xact'][1]",
@@ -432,7 +434,7 @@ namespace mtconnect {
       
       ComponentEventPtrArray list;
       checkpoint.getComponentEvents(list);
-      PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+      PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "//m:ComponentStream[@name='C']/m:Condition/m:Warning",
@@ -481,7 +483,7 @@ namespace mtconnect {
       
       ComponentEventPtrArray list;
       checkpoint.getComponentEvents(list);
-      PARSE_XML(XmlPrinter::printSample(123, 131072, (((uint64_t)1) << 48) + 3,
+      PARSE_XML(m_printer->printSample(123, 131072, (((uint64_t)1) << 48) + 3,
                                         (((uint64_t)1) << 48) + 1, (((uint64_t)1) << 48) + 1024, list));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
@@ -520,7 +522,7 @@ namespace mtconnect {
       
       device = m_devices.front();
       
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
       
       // Check Description
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "Some_Crazy_Uuid");
@@ -532,7 +534,7 @@ namespace mtconnect {
     
     void XmlPrinterTest::testStatisticAndTimeSeriesProbe()
     {
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xact']@statistic", "AVERAGE");
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xts']@representation", "TIME_SERIES");
@@ -548,7 +550,7 @@ namespace mtconnect {
         ptr = newEvent("Xts", 10843512, "6|||1.1 2.2 3.3 4.4 5.5 6.6 ");
         events.push_back(ptr);
         
-        PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
+        PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate",
                                           0);
@@ -564,7 +566,7 @@ namespace mtconnect {
         ptr = newEvent("Xts", 10843512, "6|46200|1.1 2.2 3.3 4.4 5.5 6.6 ");
         events.push_back(ptr);
         
-        PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
+        PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate",
                                           "46200");
@@ -583,7 +585,7 @@ namespace mtconnect {
       ComponentEventPtrArray events;
       ComponentEventPtr ptr = newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? ");
       events.push_back(ptr);
-      PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
+      PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]"
                                         , "OVER TRAVEL : +Z?");
@@ -595,7 +597,7 @@ namespace mtconnect {
       ComponentEventPtrArray events;
       ComponentEventPtr ptr = newEvent("zlc", 10843512, "fault|500|||A duck > a foul & < cat '");
       events.push_back(ptr);
-      PARSE_XML(XmlPrinter::printSample(123, 131072, 10974584, 10843512, 10123800, events));
+      PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]"
                                         , "A duck > a foul & < cat '");
@@ -611,7 +613,7 @@ namespace mtconnect {
       assets.push_back(asset);
       
       {
-        PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+        PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@instanceId", "123");
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@assetCount", "2");
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@assetBufferSize", "4");
@@ -626,7 +628,7 @@ namespace mtconnect {
       map<string, int> counts;
       counts["CuttingTool"] = 10;
       
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices, &counts));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices, &counts));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount", "10");
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount@assetType", "CuttingTool");
@@ -635,7 +637,7 @@ namespace mtconnect {
     
     void XmlPrinterTest::testConfiguration()
     {
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "//m:Power/m:Configuration/m:SensorConfiguration/m:CalibrationDate",
@@ -653,48 +655,48 @@ namespace mtconnect {
     void XmlPrinterTest::testChangeVersion()
     {
       // Devices
-      XmlPrinter::clearDevicesNamespaces();
+      m_printer->clearDevicesNamespaces();
       
       {
-        PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+        PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectDevices@schemaLocation",
                                           "urn:mtconnect.org:MTConnectDevices:1.2 http://schemas.mtconnect.org/schemas/MTConnectDevices_1.2.xsd");
       }
       
-      XmlPrinter::setSchemaVersion("1.4");
+      m_printer->setSchemaVersion("1.4");
       
       {
-        PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+        PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectDevices@schemaLocation",
                                           "urn:mtconnect.org:MTConnectDevices:1.4 http://schemas.mtconnect.org/schemas/MTConnectDevices_1.4.xsd");
       }
       
-      XmlPrinter::setSchemaVersion("1.3");
+      m_printer->setSchemaVersion("1.3");
     }
     
     
     void XmlPrinterTest::testChangeMTCLocation()
     {
-      XmlPrinter::clearDevicesNamespaces();
+      m_printer->clearDevicesNamespaces();
       
-      XmlPrinter::setSchemaVersion("1.3");
+      m_printer->setSchemaVersion("1.3");
       
-      XmlPrinter::addDevicesNamespace("urn:mtconnect.org:MTConnectDevices:1.3",
+      m_printer->addDevicesNamespace("urn:mtconnect.org:MTConnectDevices:1.3",
                                       "/schemas/MTConnectDevices_1.3.xsd",
                                       "m");
       
       
       {
-        PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+        PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                           "/m:MTConnectDevices@schemaLocation",
                                           "urn:mtconnect.org:MTConnectDevices:1.3 /schemas/MTConnectDevices_1.3.xsd");
       }
       
-      XmlPrinter::clearDevicesNamespaces();
-      XmlPrinter::setSchemaVersion("1.3");
+      m_printer->clearDevicesNamespaces();
+      m_printer->setSchemaVersion("1.3");
     }
     
     void XmlPrinterTest::testProbeWithFilter13()
@@ -702,9 +704,9 @@ namespace mtconnect {
       delete m_config;
       
       m_config = new XmlParser();
-      m_devices = m_config->parseFile("../samples/filter_example_1.3.xml");
+      m_devices = m_config->parseFile("../samples/filter_example_1.3.xml", m_printer);
       
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter", "5");
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter@type", "MINIMUM_DELTA");
@@ -715,9 +717,9 @@ namespace mtconnect {
       delete m_config; m_config = nullptr;
       
       m_config = new XmlParser();
-      m_devices = m_config->parseFile("../samples/filter_example.xml");
+      m_devices = m_config->parseFile("../samples/filter_example.xml", m_printer);
       
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter", "5");
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter@type", "MINIMUM_DELTA");
@@ -728,13 +730,13 @@ namespace mtconnect {
     
     void XmlPrinterTest::testReferences()
     {
-      XmlPrinter::setSchemaVersion("1.4");
+      m_printer->setSchemaVersion("1.4");
       delete m_config; m_config = nullptr;
       
       m_config = new XmlParser();
-      m_devices = m_config->parseFile("../samples/reference_example.xml");
+      m_devices = m_config->parseFile("../samples/reference_example.xml", m_printer);
       
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "//m:BarFeederInterface/m:References/m:DataItemRef@idRef",
@@ -749,13 +751,13 @@ namespace mtconnect {
     
     void XmlPrinterTest::testLegacyReferences()
     {
-      XmlPrinter::setSchemaVersion("1.3");
+      m_printer->setSchemaVersion("1.3");
       delete m_config; m_config = nullptr;
       
       m_config = new XmlParser();
-      m_devices = m_config->parseFile("../samples/reference_example.xml");
+      m_devices = m_config->parseFile("../samples/reference_example.xml", m_printer);
       
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "//m:BarFeederInterface/m:References/m:Reference@dataItemId",
@@ -771,9 +773,9 @@ namespace mtconnect {
       delete m_config; m_config = nullptr;
       
       m_config = new XmlParser();
-      m_devices = m_config->parseFile("../samples/reference_example.xml");
+      m_devices = m_config->parseFile("../samples/reference_example.xml", m_printer);
       
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1024, 10, 1, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
       
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                         "//m:DataItem[@id='bfc']/m:Source@dataItemId",
@@ -788,7 +790,7 @@ namespace mtconnect {
     
     void XmlPrinterTest::testStreamsStyle()
     {
-      XmlPrinter::setStreamStyle("/styles/Streams.xsl");
+      m_printer->setStreamStyle("/styles/Streams.xsl");
       Checkpoint checkpoint;
       addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
       addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
@@ -797,63 +799,63 @@ namespace mtconnect {
       
       ComponentEventPtrArray list;
       checkpoint.getComponentEvents(list);
-      PARSE_XML(XmlPrinter::printSample(123, 131072, 10254805, 10123733, 10123800, list));
+      PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
       
       xmlNodePtr pi = doc->children;
       CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char *) pi->name));
       CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Streams.xsl\""),
                            string((const char *) pi->content));
       
-      XmlPrinter::setStreamStyle("");
+      m_printer->setStreamStyle("");
     }
     
     
     void XmlPrinterTest::testDevicesStyle()
     {
-      XmlPrinter::setDevicesStyle("/styles/Devices.xsl");
+      m_printer->setDevicesStyle("/styles/Devices.xsl");
       
-      PARSE_XML(XmlPrinter::printProbe(123, 9999, 1, 1024, 10, m_devices));
+      PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
       
       xmlNodePtr pi = doc->children;
       CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char *) pi->name));
       CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Devices.xsl\""),
                            string((const char *) pi->content));
       
-      XmlPrinter::setDevicesStyle("");
+      m_printer->setDevicesStyle("");
     }
     
     
     void XmlPrinterTest::testErrorStyle()
     {
-      XmlPrinter::setErrorStyle("/styles/Error.xsl");
+      m_printer->setErrorStyle("/styles/Error.xsl");
       
-      PARSE_XML(XmlPrinter::printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+      PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
       
       xmlNodePtr pi = doc->children;
       CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char *) pi->name));
       CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Error.xsl\""),
                            string((const char *) pi->content));
       
-      XmlPrinter::setErrorStyle("");
+      m_printer->setErrorStyle("");
     }
     
     
     void XmlPrinterTest::testAssetsStyle()
     {
-      XmlPrinter::setAssetsStyle("/styles/Assets.xsl");
+      m_printer->setAssetsStyle("/styles/Assets.xsl");
       
       vector<AssetPtr> assets;
       Asset asset((string) "123", (string) "TEST", (string) "HELLO");
       assets.push_back(asset);
       
-      PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+      PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
       
       xmlNodePtr pi = doc->children;
       CPPUNIT_ASSERT_EQUAL(string("xml-stylesheet"), string((const char *) pi->name));
       CPPUNIT_ASSERT_EQUAL(string("type=\"text/xsl\" href=\"/styles/Assets.xsl\""),
                            string((const char *) pi->content));
       
-      XmlPrinter::setAssetsStyle("");
+      m_printer->setAssetsStyle("");
     }
     
     
@@ -907,7 +909,7 @@ namespace mtconnect {
       assets.push_back(asset);
       
       {
-        PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+        PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@toolId", "KSSP300R4SD43L240");
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@removed", nullptr);
       }
@@ -926,7 +928,7 @@ namespace mtconnect {
       assets.push_back(asset);
       
       {
-        PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+        PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@removed", "true");
       }
     }
@@ -935,7 +937,7 @@ namespace mtconnect {
     // CuttingTool tests
     void XmlPrinterTest::testPrintExtendedCuttingTool()
     {
-      XmlPrinter::addAssetsNamespace("urn:Example.com:Assets:1.3",
+      m_printer->addAssetsNamespace("urn:Example.com:Assets:1.3",
                                      "/schemas/MTConnectAssets_1.3.xsd",
                                      "x");
       
@@ -947,11 +949,11 @@ namespace mtconnect {
       assets.push_back(asset);
       
       {
-        PARSE_XML(XmlPrinter::printAssets(123, 4, 2, assets));
+        PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//x:Color", "BLUE");
       }
       
-      XmlPrinter::clearAssetsNamespaces();
+      m_printer->clearAssetsNamespaces();
     }
   }
 }

@@ -30,7 +30,7 @@ namespace mtconnect {
       // Create an agent with only 16 slots and 8 data items.
       m_agent = nullptr;
       m_checkpoint = nullptr;
-      m_agent = make_unique<Agent>("../samples/min_config.xml", 4, 4);
+      m_agent = make_unique<Agent>("../samples/min_config.xml", 4, 4, "1.5");
       m_agentId = int64ToString(getCurrentTimeInSec());
       m_checkpoint = make_unique<Checkpoint>();
       

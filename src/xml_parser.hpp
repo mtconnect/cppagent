@@ -29,6 +29,8 @@
 #include "cutting_tool.hpp"
 
 namespace mtconnect {
+  class XmlPrinter;
+  
   class XmlParser
   {
   public:
@@ -38,7 +40,7 @@ namespace mtconnect {
     virtual ~XmlParser();
     
     // Parses a file and returns a list of devices
-    std::vector<Device *> parseFile(const std::string &aPath);
+    std::vector<Device *> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
     
     // Just loads the document, assumed it has already been parsed before.
     void loadDocument(const std::string &aDoc);

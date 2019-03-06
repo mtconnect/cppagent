@@ -20,6 +20,7 @@
 #include <string>
 #include <map>
 #include "ref_counted.hpp"
+#include "printer.hpp"
 
 namespace mtconnect {
   class Asset;
@@ -63,7 +64,7 @@ namespace mtconnect {
     
     const std::string &getAssetId() const {
       return m_assetId; }
-    virtual std::string &getContent() {
+    virtual std::string &getContent(const Printer *aPrinter) {
       return m_content; }
     const std::string &getType() const {
       return m_type; }

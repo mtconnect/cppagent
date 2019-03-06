@@ -16,7 +16,7 @@
 //
 
 #include "cutting_tool.hpp"
-#include "xml_printer.hpp"
+#include "printer.hpp"
 
 #include <sstream>
 
@@ -144,7 +144,7 @@ namespace mtconnect {
   }
   
   
-  std::string &CuttingTool::getContent()
+  std::string &CuttingTool::getContent(const Printer *aPrinter)
   {
     if (m_content.empty())
     {
@@ -154,7 +154,7 @@ namespace mtconnect {
       else if(serialNumberPos->second.empty())
         Asset::addIdentity("serialNumber", m_assetId);
       
-      m_content = XmlPrinter::printCuttingTool(this);
+      m_content = aPrinter->printCuttingTool(this);
     }
     
     return m_content;

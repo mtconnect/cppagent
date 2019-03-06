@@ -45,6 +45,7 @@ namespace mtconnect {
                const string& configXmlPath,
                int bufferSize,
                int maxAssets,
+               const std::string &version,
                std::chrono::milliseconds checkpointFreq) :
   m_putEnabled(false),
   m_logStreamData(false)
@@ -57,12 +58,16 @@ namespace mtconnect {
     m_mimeTypes["jpeg"] = "image/jpeg";
     m_mimeTypes["png"] = "image/png";
     m_mimeTypes["ico"] = "image/x-icon";
-    
+
+    // Create the XmlPrinter
+    XmlPrinter *xmlPrinter = new XmlPrinter(version);
+    m_printers["xml"].reset(xmlPrinter);
+
     try
     {
       // Load the configuration for the Agent
       m_xmlParser = make_unique<XmlParser>();
-      m_devices = m_xmlParser->parseFile(configXmlPath);
+      m_devices = m_xmlParser->parseFile(configXmlPath, xmlPrinter);
       std::set<std::string> uuids;
       for (const auto &device : m_devices)
       {
@@ -137,7 +142,7 @@ namespace mtconnect {
       
       int major, minor;
       char c;
-      stringstream ss(XmlPrinter::getSchemaVersion());
+      stringstream ss(xmlPrinter->getSchemaVersion());
       ss >> major >> c >> minor;
       if ( !device->getAssetChanged() &&
           (major > 1 || (major == 1 && minor >= 2)) )
@@ -171,7 +176,7 @@ namespace mtconnect {
     
     // Reload the document for path resolution
     m_xmlParser->loadDocument(
-                              XmlPrinter::printProbe(
+                              xmlPrinter->printProbe(
                                                      m_instanceId,
                                                      m_slidingBufferSize,
                                                      m_maxAssets,
@@ -304,6 +309,8 @@ namespace mtconnect {
       files.reset();
       string baseUri = aUri;
       
+      XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
+      
       if (*baseUri.rbegin() != '/')
         baseUri.append(1, '/');
       
@@ -317,29 +324,29 @@ namespace mtconnect {
         // Check if the file name maps to a standard MTConnect schema file.
         if (!name.find("MTConnect") &&
             name.substr(name.length() - 4u, 4u) == ".xsd" &&
-            XmlPrinter::getSchemaVersion() == name.substr(name.length() - 7u, 3u) )
+            xmlPrinter->getSchemaVersion() == name.substr(name.length() - 7u, 3u) )
         {
           string version = name.substr(name.length() - 7u, 3u);
           
           if (name.substr(9u, 5u) == "Error")
           {
-            string urn = "urn:mtconnect.org:MTConnectError:" + XmlPrinter::getSchemaVersion();
-            XmlPrinter::addErrorNamespace(urn, uri, "m");
+            string urn = "urn:mtconnect.org:MTConnectError:" + xmlPrinter->getSchemaVersion();
+            xmlPrinter->addErrorNamespace(urn, uri, "m");
           }
           else if (name.substr(9u, 7u) == "Devices")
           {
-            string urn = "urn:mtconnect.org:MTConnectDevices:" + XmlPrinter::getSchemaVersion();
-            XmlPrinter::addDevicesNamespace(urn, uri, "m");
+            string urn = "urn:mtconnect.org:MTConnectDevices:" + xmlPrinter->getSchemaVersion();
+            xmlPrinter->addDevicesNamespace(urn, uri, "m");
           }
           else if (name.substr(9u, 6u) == "Assets")
           {
-            string urn = "urn:mtconnect.org:MTConnectAssets:" + XmlPrinter::getSchemaVersion();
-            XmlPrinter::addAssetsNamespace(urn, uri, "m");
+            string urn = "urn:mtconnect.org:MTConnectAssets:" + xmlPrinter->getSchemaVersion();
+            xmlPrinter->addAssetsNamespace(urn, uri, "m");
           }
           else if (name.substr(9u, 7u) == "Streams")
           {
-            string urn = "urn:mtconnect.org:MTConnectStreams:" + XmlPrinter::getSchemaVersion();
-            XmlPrinter::addStreamsNamespace(urn, uri, "m");
+            string urn = "urn:mtconnect.org:MTConnectStreams:" + xmlPrinter->getSchemaVersion();
+            xmlPrinter->addStreamsNamespace(urn, uri, "m");
           }
         }
       }
@@ -1046,7 +1053,10 @@ namespace mtconnect {
     else
       deviceList = m_devices;
     
-    return XmlPrinter::printProbe(
+    // TODO: Resolve mime type and pass through printer
+    Printer *printer = m_printers["xml"].get();
+    
+    return printer->printProbe(
                                   m_instanceId,
                                   m_slidingBufferSize,
                                   m_sequence,
@@ -1104,6 +1114,10 @@ namespace mtconnect {
   {
     using namespace dlib;
     std::vector<AssetPtr> assets;
+    
+    // TODO: Resolve mime type and pass through printer
+    Printer *printer = m_printers["xml"].get();
+    
     if (!list.empty())
     {
       std::lock_guard<std::mutex> lock(m_assetLock);
@@ -1115,7 +1129,6 @@ namespace mtconnect {
                                tok.lowercase_letters() + tok.uppercase_letters() +
                                tok.numbers() + "_.@$%&^:+-_=");
       
-      
       int type;
       string token;
       for (tok.get_token(type, token); type != tok.END_OF_FILE; tok.get_token(type, token))
@@ -1124,7 +1137,7 @@ namespace mtconnect {
         {
           AssetPtr ptr = m_assetMap[token];
           if (!ptr.getObject())
-            return XmlPrinter::printError(m_instanceId, 0, 0, "ASSET_NOT_FOUND", (string)"Could not find asset: " + token);
+            return printer->printError(m_instanceId, 0, 0, "ASSET_NOT_FOUND", (string)"Could not find asset: " + token);
           assets.push_back(ptr);
         }
       }
@@ -1149,7 +1162,7 @@ namespace mtconnect {
       }
     }
     
-    return XmlPrinter::printAssets(m_instanceId, m_maxAssets, m_assets.size(), assets);
+    return printer->printAssets(m_instanceId, m_maxAssets, m_assets.size(), assets);
   }
   
   
@@ -1526,7 +1539,11 @@ namespace mtconnect {
       }
     }
     
-    return XmlPrinter::printSample(
+    // TODO: Resolve mime type and pass through printer
+    Printer *printer = m_printers["xml"].get();
+    
+
+    return printer->printSample(
                                    m_instanceId,
                                    m_slidingBufferSize,
                                    seq, firstSeq,
@@ -1576,7 +1593,10 @@ namespace mtconnect {
         observer->reset();
     }
     
-    return XmlPrinter::printSample(
+    // TODO: Resolve mime type and pass through printer
+    Printer *printer = m_printers["xml"].get();
+    
+    return printer->printSample(
                                    m_instanceId,
                                    m_slidingBufferSize,
                                    end,
@@ -1589,7 +1609,9 @@ namespace mtconnect {
   string Agent::printError(const string &errorCode, const string &text)
   {
     g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
-    return XmlPrinter::printError(
+    // TODO: Resolve mime type and pass through printer
+    Printer *printer = m_printers["xml"].get();
+    return printer->printError(
                                   m_instanceId,
                                   m_slidingBufferSize,
                                   m_sequence,

@@ -64,7 +64,7 @@ namespace mtconnect {
   }
   
   
-  std::vector<Device *> XmlParser::parseFile(const std::string &filePath)
+  std::vector<Device *> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
   {
     if (m_doc)
     {
@@ -96,7 +96,7 @@ namespace mtconnect {
         THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
         
         // Get schema version from Devices.xml
-        if (XmlPrinter::getSchemaVersion().empty())
+        if (aPrinter->getSchemaVersion().empty())
         {
           string ns((const char *)root->ns->href);
           
@@ -107,7 +107,7 @@ namespace mtconnect {
             if (last != string::npos)
             {
               string version = ns.substr(last + 1);
-              XmlPrinter::setSchemaVersion(version);
+              aPrinter->setSchemaVersion(version);
             }
           }
         }
@@ -135,7 +135,7 @@ namespace mtconnect {
           if (ns->prefix)
             prefix = (const char *) ns->prefix;
           
-          XmlPrinter::addDevicesNamespace(locationUrn, uri, prefix);
+          aPrinter->addDevicesNamespace(locationUrn, uri, prefix);
         }
       }
       
@@ -155,7 +155,7 @@ namespace mtconnect {
           {
             string urn = (const char *) ns->href;
             string prefix = (const char *) ns->prefix;
-            XmlPrinter::addDevicesNamespace(urn, "", prefix);
+            aPrinter->addDevicesNamespace(urn, "", prefix);
           }
           
           ns = ns->next;

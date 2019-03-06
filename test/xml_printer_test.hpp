@@ -75,6 +75,7 @@ namespace mtconnect {
       
     protected:
       mtconnect::XmlParser *m_config;
+      mtconnect::XmlPrinter *m_printer;
       std::vector<mtconnect::Device *> m_devices;
       
     protected:

@@ -38,8 +38,7 @@ namespace mtconnect {
 
     void AgentTest::setUp()
     {
-      XmlPrinter::setSchemaVersion("1.3");
-      m_agent = make_unique<Agent>("../samples/test_config.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/test_config.xml", 8, 4, "1.3", 25ms);
       m_agentId = intToString(getCurrentTimeInSec());
       m_adapter = nullptr;
       
@@ -57,8 +56,8 @@ namespace mtconnect {
     
     void AgentTest::testConstructor()
     {
-      CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17, 8), std::runtime_error);
-      CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 17, 8));
+      CPPUNIT_ASSERT_THROW(Agent("../samples/badPath.xml", 17, 8, "1.5"), std::runtime_error);
+      CPPUNIT_ASSERT_NO_THROW(Agent("../samples/test_config.xml", 17, 8, "1.5"));
     }
     
     
@@ -676,7 +675,7 @@ namespace mtconnect {
     void AgentTest::testAdapterDeviceCommand()
     {
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/two_devices.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/two_devices.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       m_agentTestHelper.m_path = "/probe";
       
@@ -1584,11 +1583,14 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     
     void AgentTest::testAssetAdditionOfAssetChanged12()
     {
-      string version = XmlPrinter::getSchemaVersion();
-      XmlPrinter::setSchemaVersion("1.2");
+      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(m_agent->getPrinter("xml"));
+      CPPUNIT_ASSERT(printer != nullptr);
+      
+      string version = printer->getSchemaVersion();
+      printer->setSchemaVersion("1.2");
       
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       {
@@ -1598,17 +1600,20 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
         CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
       }
       
-      XmlPrinter::setSchemaVersion(version);
+      printer->setSchemaVersion(version);
     }
     
     
     void AgentTest::testAssetAdditionOfAssetRemoved13()
     {
-      string version = XmlPrinter::getSchemaVersion();
-      XmlPrinter::setSchemaVersion("1.3");
+      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(m_agent->getPrinter("xml"));
+      CPPUNIT_ASSERT(printer != nullptr);
+
+      string version = printer->getSchemaVersion();
+      printer->setSchemaVersion("1.3");
       
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/min_config.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       {
@@ -1618,7 +1623,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
         CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
       }
       
-      XmlPrinter::setSchemaVersion(version);
+      printer->setSchemaVersion(version);
     }
     
     
@@ -1643,8 +1648,11 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     
     void AgentTest::testAssetWithSimpleCuttingItems()
     {
-      XmlPrinter::clearAssetsNamespaces();
-      XmlPrinter::addAssetsNamespace("urn:machine.com:MachineAssets:1.3",
+      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(m_agent->getPrinter("xml"));
+      CPPUNIT_ASSERT(printer != nullptr);
+
+      printer->clearAssetsNamespaces();
+      printer->addAssetsNamespace("urn:machine.com:MachineAssets:1.3",
                                      "http://www.machine.com/schemas/MachineAssets_1.3.xsd",
                                      "x");
       
@@ -1675,7 +1683,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
         CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@limit", "0");
       }
       
-      XmlPrinter::clearAssetsNamespaces();
+      printer->clearAssetsNamespaces();
     }
     
     
@@ -1935,7 +1943,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     
     void AgentTest::testFailWithDuplicateDeviceUUID()
     {
-      CPPUNIT_ASSERT_THROW(new Agent("../samples/dup_uuid.xml", 8, 4, 25ms), std::runtime_error);
+      CPPUNIT_ASSERT_THROW(new Agent("../samples/dup_uuid.xml", 8, 4, "1.5", 25ms), std::runtime_error);
     }
     
     
@@ -2122,7 +2130,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     void AgentTest::testFilterValues13()
     {
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/filter_example_1.3.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/filter_example_1.3.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2176,7 +2184,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     void AgentTest::testFilterValues()
     {
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2242,7 +2250,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
       
       // Test period filter with ignore timestamps
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2277,7 +2285,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
       
       // Test period filter with relative time
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/filter_example.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2349,7 +2357,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     void AgentTest::testReferences()
     {
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/reference_example.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/reference_example.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2399,7 +2407,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     void AgentTest::testDiscrete()
     {
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/discrete_example.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/discrete_example.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       m_agentTestHelper.m_path = "/sample";
@@ -2451,7 +2459,7 @@ R"ASSET(2018-02-19T22:54:03.1749Z|@ASSET@|M8010N9172N:1.2|CuttingTool|--multilin
     {
       m_agentTestHelper.m_path = "/current";
       m_agent.reset();
-      m_agent = make_unique<Agent>("../samples/discrete_example.xml", 8, 4, 25ms);
+      m_agent = make_unique<Agent>("../samples/discrete_example.xml", 8, 4, "1.5", 25ms);
       m_agentTestHelper.m_agent = m_agent.get();
       
       m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);

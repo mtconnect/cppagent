@@ -27,9 +27,10 @@ namespace mtconnect {
   class Device;
   class log_level;
   class RollingFileLogger;
+  class XmlPrinter;
   
-  typedef void (NamespaceFunction)(const std::string &urn, const std::string &location, const std::string &prefix);
-  typedef void (StyleFunction)(const std::string &location);
+  typedef void (XmlPrinter::* NamespaceFunction)(const std::string &urn, const std::string &location, const std::string &prefix);
+  typedef void (XmlPrinter::* StyleFunction)(const std::string &location);
   
   class AgentConfiguration : public MTConnectService
   {
@@ -64,10 +65,10 @@ namespace mtconnect {
                       bool upcaseValue);
     void loadAllowPut(dlib::config_reader::kernel_1a &reader);
     void loadNamespace(dlib::config_reader::kernel_1a &reader,
-                       const char *namespaceType,
-                       NamespaceFunction *callback);
+                       const char *namespaceType, XmlPrinter *printer,
+                       NamespaceFunction callback);
     void loadFiles(dlib::config_reader::kernel_1a &reader);
-    void loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName, StyleFunction *styleFunction);
+    void loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName, XmlPrinter *printer, StyleFunction styleFunction);
     void loadTypes(dlib::config_reader::kernel_1a &reader);
     
     void LoggerHook(const std::string& loggerName,

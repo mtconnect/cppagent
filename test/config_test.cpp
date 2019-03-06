@@ -209,7 +209,12 @@ namespace mtconnect {
                             "}\n");
       
       m_config->loadConfig(streams);
-      auto path = XmlPrinter::getStreamsUrn("x");
+      auto agent = const_cast<Agent*>(m_config->getAgent());
+      CPPUNIT_ASSERT(agent);
+      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(agent->getPrinter("xml"));
+      CPPUNIT_ASSERT(printer != nullptr);
+      
+      auto path = printer->getStreamsUrn("x");
       CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleStreams:1.2", path);
       
       istringstream devices(
@@ -222,7 +227,7 @@ namespace mtconnect {
                             "}\n");
       
       m_config->loadConfig(devices);
-      path = XmlPrinter::getDevicesUrn("y");
+      path = printer->getDevicesUrn("y");
       CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleDevices:1.2", path);
       
       
@@ -236,7 +241,7 @@ namespace mtconnect {
                            "}\n");
       
       m_config->loadConfig(assets);
-      path = XmlPrinter::getAssetsUrn("z");
+      path = printer->getAssetsUrn("z");
       CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleAssets:1.2", path);
       
       istringstream errors(
@@ -249,13 +254,13 @@ namespace mtconnect {
                            "}\n");
       
       m_config->loadConfig(errors);
-      path = XmlPrinter::getErrorUrn("a");
+      path = printer->getErrorUrn("a");
       CPPUNIT_ASSERT_EQUAL((string) "urn:example.com:ExampleErrors:1.2", path);
       
-      XmlPrinter::clearDevicesNamespaces();
-      XmlPrinter::clearErrorNamespaces();
-      XmlPrinter::clearStreamsNamespaces();
-      XmlPrinter::clearAssetsNamespaces();
+      printer->clearDevicesNamespaces();
+      printer->clearErrorNamespaces();
+      printer->clearStreamsNamespaces();
+      printer->clearAssetsNamespaces();
     }
     
     
@@ -323,24 +328,33 @@ namespace mtconnect {
                             "}\n");
       
       m_config->loadConfig(streams);
-      auto path = XmlPrinter::getStreamsUrn("m");
+      auto agent = const_cast<Agent*>(m_config->getAgent());
+      CPPUNIT_ASSERT(agent);
+      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(agent->getPrinter("xml"));
+      CPPUNIT_ASSERT(printer != nullptr);
+
+      auto path = printer->getStreamsUrn("m");
       CPPUNIT_ASSERT_EQUAL((string) "", path);
-      auto location = XmlPrinter::getStreamsLocation("m");
+      auto location = printer->getStreamsLocation("m");
       CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectStreams_1.2.xsd", location);
       
-      XmlPrinter::clearStreamsNamespaces();
+      printer->clearStreamsNamespaces();
     }
-    
     
     void ConfigTest::testSetSchemaVersion()
     {
       istringstream streams("SchemaVersion = 1.4\n");
       
       m_config->loadConfig(streams);
-      auto version = XmlPrinter::getSchemaVersion();
+      auto agent = const_cast<Agent*>(m_config->getAgent());
+      CPPUNIT_ASSERT(agent);
+      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(agent->getPrinter("xml"));
+      CPPUNIT_ASSERT(printer != nullptr);
+
+      auto version = printer->getSchemaVersion();
       CPPUNIT_ASSERT_EQUAL((string) "1.4", version);
       
-      XmlPrinter::setSchemaVersion("1.3");
+      printer->setSchemaVersion("1.3");
     }
     
     
@@ -356,30 +370,35 @@ namespace mtconnect {
                             "}\n");
       
       m_config->loadConfig(schemas);
-      auto path = XmlPrinter::getStreamsUrn("m");
+      auto agent = const_cast<Agent*>(m_config->getAgent());
+      CPPUNIT_ASSERT(agent);
+      XmlPrinter *printer = dynamic_cast<XmlPrinter*>(agent->getPrinter("xml"));
+      CPPUNIT_ASSERT(printer != nullptr);
+      
+      auto path = printer->getStreamsUrn("m");
       CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectStreams:1.3", path);
-      auto location = XmlPrinter::getStreamsLocation("m");
+      auto location = printer->getStreamsLocation("m");
       CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectStreams_1.3.xsd", location);
       
-      path = XmlPrinter::getDevicesUrn("m");
+      path = printer->getDevicesUrn("m");
       CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectDevices:1.3", path);
-      location = XmlPrinter::getDevicesLocation("m");
+      location = printer->getDevicesLocation("m");
       CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectDevices_1.3.xsd", location);
       
-      path = XmlPrinter::getAssetsUrn("m");
+      path = printer->getAssetsUrn("m");
       CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectAssets:1.3", path);
-      location = XmlPrinter::getAssetsLocation("m");
+      location = printer->getAssetsLocation("m");
       CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectAssets_1.3.xsd", location);
       
-      path = XmlPrinter::getErrorUrn("m");
+      path = printer->getErrorUrn("m");
       CPPUNIT_ASSERT_EQUAL((string) "urn:mtconnect.org:MTConnectError:1.3", path);
-      location = XmlPrinter::getErrorLocation("m");
+      location = printer->getErrorLocation("m");
       CPPUNIT_ASSERT_EQUAL((string) "/schemas/MTConnectError_1.3.xsd", location);
       
-      XmlPrinter::clearDevicesNamespaces();
-      XmlPrinter::clearErrorNamespaces();
-      XmlPrinter::clearStreamsNamespaces();
-      XmlPrinter::clearAssetsNamespaces();
+      printer->clearDevicesNamespaces();
+      printer->clearErrorNamespaces();
+      printer->clearStreamsNamespaces();
+      printer->clearAssetsNamespaces();
     }
     
     

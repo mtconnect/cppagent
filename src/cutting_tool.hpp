@@ -22,6 +22,7 @@
 #include <map>
 
 namespace mtconnect {
+  class Printer;
   class CuttingTool;
   typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
   
@@ -92,7 +93,7 @@ namespace mtconnect {
     void addValue(const CuttingToolValuePtr value);
     void updateValue(const std::string &key, const std::string &value);
     
-    std::string &getContent() override;
+    std::string &getContent(const Printer *aPrinter) override;
     void changed() override {
       m_content.clear(); }
     
