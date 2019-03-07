@@ -18,11 +18,100 @@
 #include "json_printer.hpp"
 #include <nlohmann/json.hpp>
 #include <sstream>
+#include "dlib/sockets.h"
+#include "device.hpp"
 
 using namespace std;
 using json = nlohmann::json;
 
 namespace mtconnect {
+  const string &JsonPrinter::hostname() const
+  {
+    if (m_hostname.empty())
+    {
+      string name;
+      if (dlib::get_local_hostname(name))
+        name = "localhost";
+      // Breaking the rules, this is a one off
+      const_cast<JsonPrinter*>(this)->m_hostname = name;
+    }
+    
+    return m_hostname;
+  }
+  
+  inline std::string print(json &doc, bool pretty)
+  {
+    stringstream buffer;
+    if (pretty)
+      buffer << std::setw(2);
+    buffer << doc;
+    if (pretty)
+      buffer << "\n";
+    return buffer.str();
+  }
+  
+  static inline void addAttributes(json &doc, const map<string,string> &attrs)
+  {
+    for (const auto &attr : attrs)
+      doc[string("@") + attr.first] = attr.second;
+  }
+  
+  static inline void addText(json &doc, const std::string &text)
+  {
+    if (!text.empty()) doc["#text"] = text;
+  }
+
+  
+  inline json header(
+                     const string &version,
+                     const string &hostname,
+                     const unsigned int instanceId,
+                     const unsigned int bufferSize)
+  {
+    json doc = json::object(
+      { 
+        { "@version", version},
+        { "@creationTime", getCurrentTime(GMT) },
+        { "@testIndicator", false },
+        { "@instanceId", instanceId },
+        { "@bufferSize", bufferSize },
+        { "@sender", hostname }
+      });
+    return doc;
+  }
+  
+  inline json probeAssetHeader(const string &version,
+                          const string &hostname,
+                          const unsigned int instanceId,
+                          const unsigned int bufferSize,
+                          const unsigned int assetBufferSize,
+                          const unsigned int assetCount)
+  {
+    json doc = header(version, hostname,
+                      instanceId, bufferSize);
+    doc["@assetBufferSize"] = assetBufferSize;
+    doc["@assetCount"] = assetCount;
+    
+    return doc;
+  }
+
+  inline json streamHeader(const string &version,
+                           const string &hostname,
+                           const unsigned int instanceId,
+                           const unsigned int bufferSize,
+                           const uint64_t nextSequence,
+                           const uint64_t lastSequence,
+                           const uint64_t firstSequence)
+  {
+    json doc = header(version, hostname,
+                      instanceId, bufferSize);
+    doc["@nextSequence"] = nextSequence;
+    doc["@lastSequence"] = lastSequence;
+    doc["@firstSequence"] = firstSequence;
+    return doc;
+  }
+
+  
   std::string JsonPrinter::printError(
                                  const unsigned int instanceId,
                                  const unsigned int bufferSize,
@@ -31,11 +120,41 @@ namespace mtconnect {
                                  const std::string &errorText
                                  )  const
   {
-    json doc = {"MTConnectError", ""};
+    json doc = json::object({ { "MTConnectError", {
+      { "Header",
+        header(m_version, hostname(), instanceId, bufferSize) },
+      { "Errors" ,
+        {
+          { "Error",
+            {
+              { "@errorCode", errorCode },
+              { "#text", errorText }
+            }
+          }
+        }
+      } } }
+    });
     
-    stringstream buffer;
-    buffer << std::setw(4) << doc << '\n';
-    return buffer.str();
+    return print(doc, m_pretty);
+  }
+  
+  
+  static json printComponent(Component *component)
+  {
+    json desc = json::object();
+    addAttributes(desc, component->getDescription());
+    addText(desc, component->getDescriptionBody());
+    
+    json comp = json::object({ {
+      "Description", desc
+    }});
+    addAttributes(comp, component->getAttributes());
+
+    json doc = json::object({ {
+      component->getName(), comp
+    }});
+    
+    return doc;
   }
   
   std::string JsonPrinter::printProbe(
@@ -47,10 +166,18 @@ namespace mtconnect {
                                  const std::vector<Device *> &devices,
                                  const std::map<std::string, int> *count)  const
   {
-    json doc = {"MTConnectDevices", ""};
-    stringstream buffer;
-    buffer << std::setw(4) << doc << '\n';
-    return buffer.str();
+    json devicesDoc = json::array();
+    for (const auto device : devices)
+      devicesDoc.push_back(printComponent(device));
+    
+    json doc = json::object({ { "MTConnectDevices", {
+      { "Header",
+        probeAssetHeader(m_version, hostname(), instanceId,
+                         bufferSize, assetBufferSize, assetCount) },
+      { "Devices", devicesDoc }
+    } } });
+
+    return print(doc, m_pretty);
   }
   
   std::string JsonPrinter::printSample(
@@ -63,9 +190,7 @@ namespace mtconnect {
                                   ) const
   {
     json doc = {"MTConnectStreams", ""};
-    stringstream buffer;
-    buffer << std::setw(4) << doc << '\n';
-    return buffer.str();
+    return print(doc, m_pretty);
   }
   
   std::string JsonPrinter::printAssets(
@@ -75,17 +200,13 @@ namespace mtconnect {
                                   std::vector<AssetPtr> const &assets) const
   {
     json doc = {"MTConnectAssets", ""};
-    stringstream buffer;
-    buffer << std::setw(4) << doc << '\n';
-    return buffer.str();
+    return print(doc, m_pretty);
   }
   
   std::string JsonPrinter::printCuttingTool(CuttingToolPtr const tool) const
   {
     json doc = {"CuttingTool", ""};
-    stringstream buffer;
-    buffer << std::setw(4) << doc << '\n';
-    return buffer.str();
+    return print(doc, m_pretty);
   }
 }
 

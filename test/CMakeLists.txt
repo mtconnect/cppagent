@@ -10,65 +10,32 @@ if(UNIX)
 	endif(CMAKE_SYSTEM_NAME MATCHES Linux)
 endif(UNIX)
 
-set(TEST_SRCS
-	test.cpp
-	adapter_test.cpp
-	agent_test.cpp
-	agent_test_helper.cpp
-	checkpoint_test.cpp
-	config_test.cpp
-	component_test.cpp
-	component_event_test.cpp
-	connector_test.cpp
-	data_item_test.cpp
-	data_set_test.cpp
-	device_test.cpp
-	globals_test.cpp
-	xml_parser_test.cpp
-	test_globals.cpp
-	xml_printer_test.cpp
-	asset_test.cpp
-	change_observer_test.cpp
-	cutting_tool_test.cpp
-	)
+file(GLOB TEST_SRCS *.cpp)
+file(GLOB TEST_HEADERS *.hpp)
 
-set(AGENT_SRCS
-	../src/adapter.cpp
-	../src/agent.cpp
-	../src/checkpoint.cpp
-	../src/component.cpp
-	../src/component_event.cpp
-	../src/change_observer.cpp
-	../src/connector.cpp
-	../src/cutting_tool.cpp
-	../src/data_item.cpp
-	../src/device.cpp
-	../src/globals.cpp
-	../src/options.cpp
-	../src/xml_parser.cpp
-	../src/xml_printer.cpp
-	../src/json_printer.cpp
-	../src/config.cpp
-	../src/service.cpp
-	../src/asset.cpp
-	../src/version.cpp
-	../src/rolling_file_logger.cpp
-	${DLIB_FIX_SRCS}
-	)
+set(AGENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+      
+file(GLOB AGENT_SRCS ${AGENT_DIR}/*.cpp)
+file(GLOB AGENT_HEADERS ${AGENT_DIR}/*.hpp)
+
+list(REMOVE_ITEM AGENT_SRCS ${AGENT_DIR}/cppagent.cpp)
 
 set_property(SOURCE ${AGENT_SRCS} APPEND PROPERTY COMPILE_FLAGS ${GCOV_COMPILE_FLAGS})
 
-file(GLOB TEST_HEADERS *.hpp ../src/*.hpp)
-
 # Allow better viewing and grouping of files in Visual Studio by defining source groups
+source_group("Agent Source Files" FILES ${AGENT_SRCS})
+source_group("Agent Header Files" FILES ${AGENT_HEADERS})
 source_group("Headers Files" FILES ${TEST_HEADERS})
-source_group("Source Files" FILES ${TEST_SRCS} ${AGENT_SRCS})
+source_group("Source Files" FILES ${TEST_SRCS})
 source_group("Resource Files" FILES ${RESOURCE_FILE})
+source_group("Dlib Source Files" FILES ${DLIB_FIX_SRCS})
 
 add_executable(agent_test
-	${AGENT_SRCS}
-	${TEST_SRCS}
-	${TEST_HEADERS})
+  ${AGENT_SRCS}
+  ${DLIB_FIX_SRCS}
+  ${AGENT_HEADERS}
+  ${TEST_SRCS}
+  ${TEST_HEADERS})
 
 AddMsvcXPSupport(agent_test)
 AddLibXML2Support(agent_test)
@@ -78,7 +45,7 @@ AddDateSupport(agent_test)
 AddJsonSupport(agent_test)
 
 target_include_directories(agent_test
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src
+  PRIVATE ${AGENT_DIR}
   PRIVATE .
   )
 

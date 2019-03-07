@@ -25,8 +25,8 @@ namespace mtconnect {
   class JsonPrinter : public Printer
   {
   public:
-    JsonPrinter(const std::string version = "")
-    : m_version(version) {}
+    JsonPrinter(const std::string version = "", bool pretty = false)
+    : m_version(version), m_pretty(pretty) {}
     virtual ~JsonPrinter() {}
     
     virtual std::string printError(
@@ -68,7 +68,11 @@ namespace mtconnect {
     }
     
   protected:
+    const std::string &hostname() const;
+    
     std::string m_version;
+    std::string m_hostname;
+    bool m_pretty;
   };
 }
 

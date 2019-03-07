@@ -27,30 +27,9 @@ if(UNIX)
   endif(CMAKE_SYSTEM_NAME MATCHES Linux)
 endif(UNIX)
 
-set(AGENT_SRCS cppagent.cpp 
-	adapter.cpp
-	asset.cpp
-	agent.cpp 
-	checkpoint.cpp
-	component.cpp 
-	component_event.cpp 
-	change_observer.cpp
-	connector.cpp
-	cutting_tool.cpp
-	data_item.cpp 
-	device.cpp 
-	globals.cpp 
-	options.cpp
-	service.cpp
-	config.cpp
-	version.cpp
-	xml_parser.cpp 
-	xml_printer.cpp
-	json_printer.cpp
-	rolling_file_logger.cpp
-	${DLIB_FIX_SRCS}
-	)
+source_group("Source Files" FILES ${AGENT_SRCS})
 
+file(GLOB AGENT_SRCS *.cpp)
 file(GLOB AGENT_HEADERS *.hpp)
 
 # configure a header file to pass some of the CMake settings
@@ -65,12 +44,14 @@ configure_file(
 # Allow better viewing and grouping of files in Visual Studio by defining source groups
 source_group("Headers Files" FILES ${AGENT_HEADERS})
 source_group("Source Files" FILES ${AGENT_SRCS})
+source_group("Dlib Source Files" FILES ${DLIB_FIX_SRCS})
 source_group("Resource Files" FILES ${RESOURCE_FILE})
 
 add_executable(agent
-	${AGENT_SRCS}
-	${AGENT_HEADERS}
-	${RESOURCE_FILE})
+  ${AGENT_SRCS}
+  ${DLIB_FIX_SRCS}
+  ${AGENT_HEADERS}
+  ${RESOURCE_FILE})
 
 AddMsvcXPSupport(agent)
 AddLibXML2Support(agent)

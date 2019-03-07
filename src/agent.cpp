@@ -410,25 +410,26 @@ namespace mtconnect {
     }
   }
   
+  static inline bool endsWith(const string &str, const string &ending)
+  {
+    return (str.length() >= ending.length() &&
+            str.compare(str.length() - ending.length(),
+                        ending.length(), ending) == 0);
+  }
+  
   
   const Printer *Agent::printerForAccepts(const std::string &accepts) const
   {
-    const Printer *printer = nullptr;
-    
     stringstream list(accepts);
-    string s;
-    while (printer == nullptr && getline(list, s, ',')) {
+    string accept;
+    while (getline(list, accept, ',')) {
       for (const auto &p : m_printers) {
-        string format = "/" + p.first;
-        if (s.find(format) == s.length() - format.length())
-        {
-          printer = p.second.get();
-          break;
-        }
+        if (endsWith(accept, string("/") + p.first))
+          return p.second.get();
       }
     }
     
-    return printer;
+    return nullptr;
   }
 
   
@@ -446,7 +447,7 @@ namespace mtconnect {
     // If there are no specified accepts that match,
     // default to XML
     if (printer == nullptr)
-      printer = m_printers["xml"].get();
+      printer = getPrinter("xml");
 
     outgoing.m_printer = printer;
     outgoing.headers["Content-Type"] = printer->mimeType();
