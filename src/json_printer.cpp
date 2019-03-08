@@ -138,6 +138,15 @@ namespace mtconnect {
     return print(doc, m_pretty);
   }
   
+  static inline json printDataItem(DataItem *item)
+  {
+    json obj = json::object();
+    addAttributes(obj, item->getAttributes());
+    json dataItem = json::object({ { "DataItem", obj } });
+    
+    return dataItem;
+  }
+  
   
   static json printComponent(Component *component)
   {
@@ -145,14 +154,33 @@ namespace mtconnect {
     addAttributes(desc, component->getDescription());
     addText(desc, component->getDescriptionBody());
     
-    json comp = json::object({ {
-      "Description", desc
-    }});
+    json comp = json::object({ { "Description", desc } });
     addAttributes(comp, component->getAttributes());
+    
+    // Add data items
+    if (component->getDataItems().size() > 0) {
+      json items = json::array();
+      for (auto &item : component->getDataItems())
+        items.push_back(printDataItem(item));
 
-    json doc = json::object({ {
-      component->getClass(), comp
-    }});
+      comp["DataItems"] = items;
+    }
+    
+    // Add sub-components
+    if (component->getChildren().size() > 0) {
+      json components = json::array();
+      for (auto &sub : component->getChildren())
+        components.push_back(printComponent(sub));
+      comp["Components"] = components;
+    }
+    
+    // Add compositions
+    
+    // Add references
+    
+    // Add configuration
+    
+    json doc = json::object({ { component->getClass(), comp } });
     
     return doc;
   }

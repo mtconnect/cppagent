@@ -43,11 +43,15 @@ namespace mtconnect {
     {
       CPPUNIT_TEST_SUITE(JsonPrinterProbeTest);
       CPPUNIT_TEST(testDeviceRootAndDescription);
+      CPPUNIT_TEST(testTopLevelDataItems);
+      CPPUNIT_TEST(testSubComponents);
       CPPUNIT_TEST_SUITE_END();
       
     public:
       void testDeviceRootAndDescription();
-      
+      void testTopLevelDataItems();
+      void testSubComponents();
+
       void setUp();
       void tearDown();
 
@@ -63,10 +67,11 @@ namespace mtconnect {
 
     void JsonPrinterProbeTest::setUp()
     {
-      m_config.reset(new XmlParser());
       m_xmlPrinter.reset(new XmlPrinter("1.5"));
-      m_devices = m_config->parseFile("../samples/test_config.xml", m_xmlPrinter.get());
       m_printer.reset(new JsonPrinter("1.5", true));
+      
+      m_config.reset(new XmlParser());
+      m_devices = m_config->parseFile("../samples/test_config.xml", m_xmlPrinter.get());
     }
 
     void JsonPrinterProbeTest::tearDown()
@@ -74,12 +79,12 @@ namespace mtconnect {
       m_config.reset();
       m_xmlPrinter.reset();
       m_printer.reset();
+      m_devices.clear();
     }
     
     void JsonPrinterProbeTest::testDeviceRootAndDescription()
     {
       auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
-      cout << "\n" << doc;
       auto jdoc = json::parse(doc);
       auto it = jdoc.begin();
       CPPUNIT_ASSERT_EQUAL(string("MTConnectDevices"), it.key());
@@ -102,6 +107,48 @@ namespace mtconnect {
       CPPUNIT_ASSERT_EQUAL(string("NIST"), device.at("/Description/@manufacturer"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("1122"), device.at("/Description/@serialNumber"_json_pointer).get<string>());
     }
+    
+    void JsonPrinterProbeTest::testTopLevelDataItems()
+    {
+      auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      auto jdoc = json::parse(doc);
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer).begin();
+      auto device = devices->begin().value();
+      
+      auto dataItems = device.at("/DataItems"_json_pointer);
+      CPPUNIT_ASSERT(dataItems.is_array());
+      CPPUNIT_ASSERT_EQUAL(2ul, dataItems.size());
+      
+      // Alarm event
+      auto alarm = dataItems.at(0);
+      CPPUNIT_ASSERT_EQUAL(string("ALARM"), alarm.at("/DataItem/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("EVENT"), alarm.at("/DataItem/@category"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("a"), alarm.at("/DataItem/@id"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("alarm"), alarm.at("/DataItem/@name"_json_pointer).get<string>());
+      
+      // Availability event
+      auto avail = dataItems.at(1);
+      CPPUNIT_ASSERT_EQUAL(string("AVAILABILITY"), avail.at("/DataItem/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("EVENT"), avail.at("/DataItem/@category"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("avail"), avail.at("/DataItem/@id"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("avail"), avail.at("/DataItem/@name"_json_pointer).get<string>());
+
+    }
+    
+    void JsonPrinterProbeTest::testSubComponents()
+    {
+      auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      cout << "\n" << doc << endl;
+      auto jdoc = json::parse(doc);
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer).begin();
+      auto device = devices->begin().value();
+
+      auto components = device.at("/Components"_json_pointer);
+      CPPUNIT_ASSERT(components.is_array());
+      CPPUNIT_ASSERT_EQUAL(3ul, components.size());
+
+    }
+
   }
 }
 
