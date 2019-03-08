@@ -20,6 +20,7 @@
 #include <sstream>
 #include "dlib/sockets.h"
 #include "device.hpp"
+#include "composition.hpp"
 
 using namespace std;
 using json = nlohmann::json;
@@ -56,9 +57,22 @@ namespace mtconnect {
       doc[string("@") + attr.first] = attr.second;
   }
   
+  static inline void add(json &doc, const char *key, const string &value)
+  {
+    if (!value.empty())
+      doc[key] = value;
+  }
+  
+  static inline void addDouble(json &doc, const char *key, const string &value)
+  {
+    if (!value.empty())
+      doc[key] = atof(value.c_str());
+  }
+
+  
   static inline void addText(json &doc, const std::string &text)
   {
-    if (!text.empty()) doc["#text"] = text;
+    add(doc, "#text", text);
   }
 
   
@@ -138,47 +152,122 @@ namespace mtconnect {
     return print(doc, m_pretty);
   }
   
-  static inline json printDataItem(DataItem *item)
+  static inline json toJson(DataItem *item)
   {
     json obj = json::object();
     addAttributes(obj, item->getAttributes());
-    json dataItem = json::object({ { "DataItem", obj } });
     
+    // Data Item Source
+    json source = json::object();
+    add(source, "#text", item->getSource());
+    add(source, "@dataItemId", item->getSourceDataItemId());
+    add(source, "@componentId", item->getSourceComponentId());
+    add(source, "@compositionId", item->getSourceCompositionId());
+
+    if (source.begin() != source.end())
+      obj["Source"] = source;
+    
+    // Data Item Constraints
+    if (item->hasConstraints()) {
+      json constraints = json::object();
+      addDouble(constraints, "Maximum", item->getMaximum());
+      addDouble(constraints, "Minimum", item->getMinimum());
+      
+      if (item->getConstrainedValues().size() > 0) {
+        json values(item->getConstrainedValues());
+        constraints["Value"] = values;
+      }
+      
+      obj["Constraints"] = constraints;
+    }
+    
+    if (item->hasMinimumDelta() or item->hasMinimumPeriod()) {
+      json filters = json::array();
+      if (item->hasMinimumDelta())
+        filters.push_back(json::object({
+          { "Filter", {
+            { "#text", item->getFilterValue() },
+            { "@type", "MINIMUM_DELTA" }
+          }}}));
+      if (item->hasMinimumPeriod())
+        filters.push_back(json::object({
+          { "Filter", {
+            { "#text", item->getFilterPeriod() },
+            { "@type", "PERIOD" }
+          }}}));
+      obj["Filters"] = filters;
+    }
+
+    json dataItem = json::object({ { "DataItem", obj } });
+
     return dataItem;
   }
   
+  static inline json toJson(Composition *composition)
+  {
+    json obj = json::object();
+    
+    addAttributes(obj, composition->getAttributes());
+    if (composition->getDescription() != nullptr) {
+      json desc = json::object();
+      addAttributes(desc, composition->getDescription()->getAttributes());
+      addText(desc, composition->getDescription()->getBody());
+      obj["Description"] = desc;
+    }
+    
+    return obj;
+  }
   
-  static json printComponent(Component *component)
+  static inline json jsonReference(const Component::Reference &reference)
+  {
+    json ref = json::object({ {
+      "@idRef", reference.m_id
+    } });
+    add(ref, "@name", reference.m_name);
+    return ref;
+  }
+  
+  static inline json toJson(const Component::Reference &reference)
+  {
+    json obj;
+    if (reference.m_type == reference.DATA_ITEM)
+      obj["DataItemRef"] = jsonReference(reference);
+    else if (reference.m_type == reference.COMPONENT)
+      obj["ComponentRef"] = jsonReference(reference);
+
+    return obj;
+  }
+  
+  template<class T>
+  void toJson(json &parent, const string &collection, T &list)
+  {
+    if (list.size() > 0) {
+      json items = json::array();
+      for (auto &item : list)
+        items.push_back(toJson(item));
+      
+      parent[collection] = items;
+    }
+  }
+  
+  static json toJson(Component *component)
   {
     json desc = json::object();
     addAttributes(desc, component->getDescription());
     addText(desc, component->getDescriptionBody());
     
-    json comp = json::object({ { "Description", desc } });
+    json comp = json::object();
     addAttributes(comp, component->getAttributes());
     
-    // Add data items
-    if (component->getDataItems().size() > 0) {
-      json items = json::array();
-      for (auto &item : component->getDataItems())
-        items.push_back(printDataItem(item));
-
-      comp["DataItems"] = items;
-    }
+    if (desc.begin() != desc.end())
+      comp["Description"] = desc;
     
-    // Add sub-components
-    if (component->getChildren().size() > 0) {
-      json components = json::array();
-      for (auto &sub : component->getChildren())
-        components.push_back(printComponent(sub));
-      comp["Components"] = components;
-    }
+    toJson(comp, "DataItems", component->getDataItems());
+    toJson(comp, "Components", component->getChildren());
+    toJson(comp, "Compositions", component->getCompositions());
+    toJson(comp, "References", component->getReferences());
     
-    // Add compositions
-    
-    // Add references
-    
-    // Add configuration
+    // TODO: Add configuration
     
     json doc = json::object({ { component->getClass(), comp } });
     
@@ -196,7 +285,7 @@ namespace mtconnect {
   {
     json devicesDoc = json::array();
     for (const auto device : devices)
-      devicesDoc.push_back(printComponent(device));
+      devicesDoc.push_back(toJson(device));
     
     json doc = json::object({ { "MTConnectDevices", {
       { "Header",

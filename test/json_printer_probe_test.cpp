@@ -93,12 +93,9 @@ namespace mtconnect {
       CPPUNIT_ASSERT_EQUAL(1024, jdoc.at("/MTConnectDevices/Header/@assetBufferSize"_json_pointer).get<int32_t>());
       CPPUNIT_ASSERT_EQUAL(10, jdoc.at("/MTConnectDevices/Header/@assetCount"_json_pointer).get<int32_t>());
 
-      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer).begin();
-      auto first = devices->begin();
-      
-      CPPUNIT_ASSERT_EQUAL(string("Device"), first.key());
-      
-      auto device = first.value();
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+      auto device = devices.at(0).at("/Device"_json_pointer);
+
       CPPUNIT_ASSERT_EQUAL(string("d"), device.at("/@id"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("LinuxCNC"), device.at("/@name"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("000"), device.at("/@uuid"_json_pointer).get<string>());
@@ -111,9 +108,10 @@ namespace mtconnect {
     void JsonPrinterProbeTest::testTopLevelDataItems()
     {
       auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      //cout << "\n" << doc << endl;
       auto jdoc = json::parse(doc);
-      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer).begin();
-      auto device = devices->begin().value();
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+      auto device = devices.at(0).at("/Device"_json_pointer);
       
       auto dataItems = device.at("/DataItems"_json_pointer);
       CPPUNIT_ASSERT(dataItems.is_array());
@@ -140,12 +138,44 @@ namespace mtconnect {
       auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
       cout << "\n" << doc << endl;
       auto jdoc = json::parse(doc);
-      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer).begin();
-      auto device = devices->begin().value();
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+      auto device = devices.at(0).at("/Device"_json_pointer);
 
       auto components = device.at("/Components"_json_pointer);
       CPPUNIT_ASSERT(components.is_array());
       CPPUNIT_ASSERT_EQUAL(3ul, components.size());
+
+      auto axes = components.at(0);
+      CPPUNIT_ASSERT(axes.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("Axes"), axes.begin().key());
+      CPPUNIT_ASSERT_EQUAL(string("axes"), axes.at("/Axes/@id"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("Axes"), axes.at("/Axes/@name"_json_pointer).get<string>());
+
+      auto subAxes = axes.at("/Axes/Components"_json_pointer);
+      CPPUNIT_ASSERT(subAxes.is_array());
+      CPPUNIT_ASSERT_EQUAL(4ul, subAxes.size());
+      
+      auto rotary = subAxes.at(0);
+      CPPUNIT_ASSERT(rotary.is_object());
+      auto rc = rotary.at("/Rotary"_json_pointer);
+      CPPUNIT_ASSERT(rc.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("C"), rc.at("/@name"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("c"), rc.at("/@id"_json_pointer).get<string>());
+      
+      auto dataItems = rc.at("/DataItems"_json_pointer);
+      CPPUNIT_ASSERT(dataItems.is_array());
+      
+      auto ss = dataItems.at(0).at("/DataItem"_json_pointer);
+      CPPUNIT_ASSERT(ss.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("SPINDLE_SPEED"), ss.at("/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("REVOLUTION/MINUTE"), ss.at("/@units"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("REVOLUTION/MINUTE"), ss.at("/@nativeUnits"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("ACTUAL"), ss.at("/@subType"_json_pointer).get<string>());
+      
+      auto source = ss.at("/Source"_json_pointer);
+      CPPUNIT_ASSERT(source.is_object());
+      
+      CPPUNIT_ASSERT_EQUAL(string("spindle_speed"), ss.at("/Source/#text"_json_pointer).get<string>());
 
     }
 
