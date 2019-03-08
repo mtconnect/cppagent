@@ -151,7 +151,7 @@ namespace mtconnect {
     addAttributes(comp, component->getAttributes());
 
     json doc = json::object({ {
-      component->getName(), comp
+      component->getClass(), comp
     }});
     
     return doc;
