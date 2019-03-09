@@ -26,6 +26,26 @@ using namespace std;
 using json = nlohmann::json;
 
 namespace mtconnect {
+  static inline std::string ltrim(std::string s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+      return !std::isspace(ch);
+    }));
+    return s;
+  }
+  
+  // trim from end (in place)
+  static inline std::string rtrim(std::string s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+      return !std::isspace(ch);
+    }).base(), s.end());
+    return s;
+  }
+  
+  // trim from both ends (in place)
+  static inline std::string trim(std::string s) {
+    return rtrim(ltrim(s));
+  }
+  
   const string &JsonPrinter::hostname() const
   {
     if (m_hostname.empty())
@@ -72,7 +92,7 @@ namespace mtconnect {
   
   static inline void addText(json &doc, const std::string &text)
   {
-    add(doc, "#text", text);
+    add(doc, "#text", trim(text));
   }
 
   
@@ -142,7 +162,7 @@ namespace mtconnect {
           { "Error",
             {
               { "@errorCode", errorCode },
-              { "#text", errorText }
+              { "#text", trim(errorText) }
             }
           }
         }
@@ -159,7 +179,7 @@ namespace mtconnect {
     
     // Data Item Source
     json source = json::object();
-    add(source, "#text", item->getSource());
+    addText(source, item->getSource());
     add(source, "@dataItemId", item->getSourceDataItemId());
     add(source, "@componentId", item->getSourceComponentId());
     add(source, "@compositionId", item->getSourceCompositionId());
@@ -215,7 +235,9 @@ namespace mtconnect {
       obj["Description"] = desc;
     }
     
-    return obj;
+    json comp = json::object({ { "Composition", obj } });
+    
+    return comp;
   }
   
   static inline json jsonReference(const Component::Reference &reference)
