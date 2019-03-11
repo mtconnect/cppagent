@@ -36,7 +36,7 @@ before_build:
     cmake --version
     cmake ../cppagent_dev -G %generator%
 build:
-  project: c:\projects\cppagent_dev\build
+  project: c:\projects\build
   verbosity: minimal
   parallel: true
 
