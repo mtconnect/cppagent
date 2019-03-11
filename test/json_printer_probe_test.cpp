@@ -115,7 +115,7 @@ namespace mtconnect {
       
       auto dataItems = device.at("/DataItems"_json_pointer);
       CPPUNIT_ASSERT(dataItems.is_array());
-      CPPUNIT_ASSERT_EQUAL(2ul, dataItems.size());
+      CPPUNIT_ASSERT_EQUAL(2ul, static_cast<unsigned long>(dataItems.size()));
       
       // Alarm event
       auto alarm = dataItems.at(0);
@@ -143,7 +143,7 @@ namespace mtconnect {
 
       auto components = device.at("/Components"_json_pointer);
       CPPUNIT_ASSERT(components.is_array());
-      CPPUNIT_ASSERT_EQUAL(3ul, components.size());
+      CPPUNIT_ASSERT_EQUAL(3ul, static_cast<unsigned long>(components.size()));
 
       auto axes = components.at(0);
       CPPUNIT_ASSERT(axes.is_object());
@@ -153,7 +153,7 @@ namespace mtconnect {
 
       auto subAxes = axes.at("/Axes/Components"_json_pointer);
       CPPUNIT_ASSERT(subAxes.is_array());
-      CPPUNIT_ASSERT_EQUAL(4ul, subAxes.size());
+      CPPUNIT_ASSERT_EQUAL(4ul, static_cast<unsigned long>(subAxes.size()));
       
       auto rotary = subAxes.at(0);
       CPPUNIT_ASSERT(rotary.is_object());

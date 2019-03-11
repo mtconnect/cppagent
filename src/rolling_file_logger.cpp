@@ -15,15 +15,21 @@
 //    limitations under the License.
 //
 
+#include "globals.hpp"
 #include "rolling_file_logger.hpp"
-#include <stdio.h>
+#include <cstdio>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <ostream>
 
 using namespace dlib;
 using namespace std;
+
+#ifndef _WINDOWS
+#define _open ::open
+#define _close ::close
+#define _write ::write
+#endif
 
 namespace mtconnect {
   RollingFileLogger::RollingFileLogger(
@@ -37,7 +43,7 @@ namespace mtconnect {
   m_schedule(schedule),
   m_fd(0)
   {
-    m_fd = ::open(filename.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
+    m_fd = open(filename.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
     
     if (m_fd < 0)
     {
@@ -54,7 +60,7 @@ namespace mtconnect {
   
   RollingFileLogger::~RollingFileLogger()
   {
-    ::close(m_fd);
+    close(m_fd);
   }
   
   
@@ -98,7 +104,7 @@ namespace mtconnect {
         rollover(size);
     }
     
-    ::write(m_fd, message, len);
+    _write(m_fd, message, len);
   }
   
   
@@ -124,7 +130,7 @@ namespace mtconnect {
     }
     
     // Close the current file
-    ::close(m_fd);
+    _close(m_fd);
     
     // Remove the last file
     std::string name = m_file.full_name() + "." + intToString(m_maxBackupIndex);
@@ -148,7 +154,7 @@ namespace mtconnect {
     ::rename(m_file.full_name().c_str(), name.c_str());
     
     // Open new log file
-    m_fd = ::open(m_file.full_name().c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
+    m_fd = _open(m_file.full_name().c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
     
     if (m_fd < 0)
     {
