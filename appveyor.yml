@@ -32,7 +32,7 @@ init:
     if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
 - sh: sudo apt-get update
-- sh: sudo --yes apt-get install libxml2
+- sh: sudo apt-get --yes install libxml2
     
 
 environment:
