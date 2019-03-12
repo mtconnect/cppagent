@@ -11,10 +11,12 @@ configuration:
 #- Release
 platform:
 - x86
-environment:
-  matrix:
-  - arch: Win32
-  # - arch: #does not work, Release|x64 not a valid target
+
+#environment:
+#  matrix:
+#  - arch: Win32
+#  - arch: #does not work, Release|x64 not a valid target
+
 matrix:
   fast_finish: true
 
