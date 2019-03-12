@@ -32,10 +32,6 @@ init:
     if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
 
-environment:
-  MS_BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}\build'
-  LINUX_BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}/build'
-
 before_build:
 - cmd: |-
     git submodule init
@@ -59,19 +55,19 @@ build:
 
 build_script:
 - cmd: |-
-    cd %MS_BUILD_DIRECTORY%
+    cd %APPVEYOR_BUILD_FOLDER%\build
     cmake --build . --config Debug --target agent_test -- %MSBUILD_FLAGS%
 - sh: |-
-    cd ${LINUX_BUILD_DIRECTORY}
+    cd ${APPVEYOR_BUILD_FOLDER}/build
     cmake --build . --config Debug --target agent_test    
 
 test_script:
 - cmd: |-
     cd %APPVEYOR_BUILD_FOLDER%\test
-    %MS_BUILD_DIRECTORY%\test\Debug\agent_test.exe
+    %APPVEYOR_BUILD_FOLDER%\build\test\Debug\agent_test.exe
 - sh: |-
     cd ${APPVEYOR_BUILD_FOLDER}/test
-    ${LINUX_BUILD_DIRECTORY}/test/agent_test
+    ${APPVEYOR_BUILD_FOLDER}/build/test/agent_test
 
   
 only_commits:
