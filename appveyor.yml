@@ -50,7 +50,7 @@ build:
 build_script:
 - cmd: |-
     cd %BUILD_DIRECTORY%
-    cmake --build . --config Debug -- %MSBUILD_FLAGS%
+    cmake --build . --config Debug --target agent_test -- %MSBUILD_FLAGS%
 
   
 test_script:
