@@ -6,8 +6,6 @@ clone_folder: c:\projects\cppagent_dev
 image:
 - Visual Studio 2017
 
-clone_folder: c:\projects\cppagent_dev
-
 configuration:
 - Debug
 #- Release
