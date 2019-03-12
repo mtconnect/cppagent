@@ -45,7 +45,7 @@ build:
   parallel: true
 
 build_script:
-- cmake --build build --config Debug -- %MSBUILD_FLAGS%
+- cmake --build . --config Debug -- %MSBUILD_FLAGS%
 
   
 test_script:
