@@ -5,9 +5,12 @@ branches:
 clone_folder: c:\projects\cppagent_dev
 image:
 - Visual Studio 2017
+
+clone_folder: c:\projects\cppagent_dev
+
 configuration:
-- Release
 - Debug
+#- Release
 platform:
 - x86
 environment:
@@ -24,8 +27,6 @@ init:
 - echo %arch%
 - echo %APPVEYOR_BUILD_WORKER_IMAGE%
 - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
-- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" ( set generator="Visual Studio 14 2015%arch%" )
-- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2013" ( set generator="Visual Studio 12 2013%arch%" )
 - echo %generator%
 
 before_build:
@@ -37,11 +38,18 @@ before_build:
     cd build
     cmake --version
     cmake ../cppagent_dev -G %generator%
+
 build:
   project: c:\projects\build
   verbosity: minimal
   parallel: true
 
+test_script:
+- cmd: |-
+    cd test
+    ..\build\test\Debug\agent_text
+
+  
 only_commits:
   files:
     - CMakeLists.txt
