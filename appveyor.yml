@@ -50,7 +50,7 @@ build_script:
   
 test_script:
 - cmd: |-
-    cd test
+    cd ..\cppagent_dev\test
     ..\build\test\Debug\agent_text
 
   
