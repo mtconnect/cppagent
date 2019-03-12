@@ -33,11 +33,8 @@ init:
     echo %generator%
 
 environment:
-  matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      BUILD_DIRECTORY: c:\projects\build
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}/../build'
+  MS_BUILD_DIRECTORY: c:\projects\build
+  LINUX_BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}/../build'
 
 before_build:
 - cmd: |-
@@ -65,19 +62,19 @@ build:
 
 build_script:
 - cmd: |-
-    cd %BUILD_DIRECTORY%
+    cd %MS_BUILD_DIRECTORY%
     cmake --build . --config Debug --target agent_test -- %MSBUILD_FLAGS%
 - sh: |-
-    cd ${BUILD_DIRECTORY}
+    cd ${LINUX_BUILD_DIRECTORY}
     cmake --build . --config Debug --target agent_test    
 
 test_script:
 - cmd: |-
     cd %APPVEYOR_BUILD_FOLDER%\test
-    %BUILD_DIRECTORY%\test\Debug\agent_test.exe
+    %MS_BUILD_DIRECTORY%\test\Debug\agent_test.exe
 - sh: |-
     cd ${APPVEYOR_BUILD_FOLDER}/test
-    ${BUILD_DIRECTORY}/test/agent_test
+    ${LINUX_BUILD_DIRECTORY}/test/agent_test
 
   
 only_commits:
