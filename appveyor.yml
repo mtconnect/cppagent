@@ -12,7 +12,7 @@ platform:
 - x86
 environment:
   matrix:
-  - arch: Win64
+  - arch: Win32
   # - arch: #does not work, Release|x64 not a valid target
 matrix:
   fast_finish: true
@@ -30,6 +30,8 @@ init:
 
 before_build:
 - cmd: |-
+    git submodule init
+    git submodule update
     cd ..
     mkdir build
     cd build
