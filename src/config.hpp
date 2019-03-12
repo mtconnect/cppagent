@@ -73,7 +73,7 @@ namespace mtconnect {
     
     void LoggerHook(const std::string& loggerName,
                     const dlib::log_level& l,
-                    const uint64_t threadId,
+                    const dlib::uint64 threadId,
                     const char* message);
     
     void monitorThread();

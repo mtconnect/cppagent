@@ -382,7 +382,7 @@ namespace mtconnect {
                           const std::string& local_ip,
                           unsigned short foreign_port,
                           unsigned short local_port,
-                          uint64_t
+                          uint64
                           )
   {
     try

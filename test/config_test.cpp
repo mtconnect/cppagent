@@ -37,6 +37,11 @@ using namespace std::chrono;
 
 namespace mtconnect {
   namespace test {
+    constexpr uint64_t operator "" _u64(unsigned long long v)
+    {
+      return static_cast<uint64_t>(v);
+    }
+    
     // Registers the fixture into the 'registry'
     CPPUNIT_TEST_SUITE_REGISTRATION(ConfigTest);
     
@@ -477,7 +482,7 @@ namespace mtconnect {
                            "}\n");
       m_config->loadConfig(logger);
       auto fl = m_config->getLogger();
-      CPPUNIT_ASSERT_EQUAL(150ull, fl->getMaxSize());
+      CPPUNIT_ASSERT_EQUAL(150_u64, fl->getMaxSize());
       m_config.reset();
       
       m_config = make_unique<AgentConfiguration>();
@@ -488,7 +493,7 @@ namespace mtconnect {
       m_config->loadConfig(logger2);
       
       fl = m_config->getLogger();
-      CPPUNIT_ASSERT_EQUAL(15ull * 1024ull, fl->getMaxSize());
+      CPPUNIT_ASSERT_EQUAL(15_u64 * 1024_u64, fl->getMaxSize());
       m_config.reset();
       
       m_config = make_unique<AgentConfiguration>();
@@ -499,7 +504,7 @@ namespace mtconnect {
       m_config->loadConfig(logger3);
       
       fl = m_config->getLogger();
-      CPPUNIT_ASSERT_EQUAL(15ull * 1024ull * 1024ull, fl->getMaxSize());
+      CPPUNIT_ASSERT_EQUAL(15_u64 * 1024_u64 * 1024_u64, fl->getMaxSize());
       m_config.reset();
       
       m_config = make_unique<AgentConfiguration>();
@@ -510,7 +515,7 @@ namespace mtconnect {
       m_config->loadConfig(logger4);
       
       fl = m_config->getLogger();
-      CPPUNIT_ASSERT_EQUAL(15ull * 1024ull * 1024ull * 1024ull, fl->getMaxSize());
+      CPPUNIT_ASSERT_EQUAL(15_u64 * 1024_u64 * 1024_u64 * 1024_u64, fl->getMaxSize());
       
     }
   }
