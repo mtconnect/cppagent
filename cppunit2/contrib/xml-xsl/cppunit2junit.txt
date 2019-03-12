@@ -1,0 +1,60 @@
+ A simple XSLT file to transform cppunit XmlOutputer
+result file, to the same format that the apache Ant
+junit task produce:
+<target name="test">
+<junit printsummary="no" forkmode="once"
+fork="true">
+<formatter type="xml"/>
+...
+
+This format allows to manage result file with the Ant
+junitreport task.
+example usage inside a ant task:
+
+task similar to the junit task:
+<target name = "test.cxx">
+<!-- assume that the exe take a '-xml
+filename', and exit with code error 1 if failed -->
+<exec dir = "${dev.build}/bin"
+executable = "${dev.build}/bin/test.exe"
+failonerror = "true"
+failifexecutionfails = "true"
+resultproperty = "test.ret" >
+<arg line = "-xml
+${dev.build}/test/data/temp-cxx-results.xml" />
+</exec>
+<condition property = "test.failed">
+<equals arg1="${test.ret}" arg2="1"/>
+</condition>
+<!-- transform the cppunit xml file to junit
+xml file -->
+<xslt
+in="${dev.build}/test/data/temp-cxx-results.xml"
+
+out="${dev.build}/test/data/TEST-cxx-results.xml"
+
+style="${dev.lib}/cxx/cppunit/cppunit2junit.xsl"/>
+
+<fail if="test.failed">
+Unit tests failed. For error messages, check
+the log files in
+${dev.build}/test/data or run "ant test-reports"
+to generate reports at
+${test.dir}/reports.</fail>
+</target>
+
+task that use generated xml result, to produce html report:
+<target name="test-reports" description="Generate
+test reports from data collected after a running test">
+<mkdir dir="${dev.build}/test/reports"/>
+<junitreport todir="${dev.build}/test">
+<fileset dir="${dev.build}/test/data">
+<include name="TEST-*.xml"/>
+</fileset>
+<report format="frames"
+todir="${dev.build}/test/reports"/>
+</junitreport>
+</target>
+
+BARBOSA Norbert - patch #1112053
+http://sourceforge.net/tracker/index.php?func=detail&aid=1112053&group_id=11795&atid=311795

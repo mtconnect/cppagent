@@ -1,0 +1,8 @@
+# Files taken from autoconf-archive-2011-12-21.
+#
+# Exceptions internal code:
+#    bb_enable_doxygen.m4
+#    ac_cxx_string_compare_string_first.m4
+#    ax_cxx_have_isfinite.m4
+#    ac_dll.m4
+#    ac_cxx_have_strstream.m4

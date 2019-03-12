@@ -1,0 +1,31 @@
+CppUnit's coding guidelines for portability:
+--------------------------------------------
+
+- don't explicitly declare CppUnit namespace, instead use macro
+  CPPUNIT_NS_BEGIN and CPPUNIT_NS_END.
+
+- don't explicitly use 'CppUnit' to refer to class in CppUnit namespace,
+  instead use macro CPPUNIT_NS which expands to either 'CppUnit' or 
+  nothing depending on the configuration.
+
+- don't use the 'using directive', always use full qualification. For STL,
+  always use std::.
+
+- don't use the mutable keyword, instead do a const cast.
+
+- don't use default parameter value in template function. Not supported
+  by all compiler (on OS/390 for instance).
+
+As such, usage of those features should always be optional.
+
+CppUnit's version control system management
+--------------------------------------------
+
+- only commit patches that are known to build; other commits might just be reverted
+  to allow bisecting
+
+- work in feature branches until your feature is ready to merge, if the feature
+  may break the build ask for review on the libreoffice developer mailing list
+
+- new features and patches without bug report only in master
+  and not in stable branches
