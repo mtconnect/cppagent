@@ -31,6 +31,8 @@ init:
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
+- sh: apt-get install libxml2
+    
 
 environment:
   MS_BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}\build'
