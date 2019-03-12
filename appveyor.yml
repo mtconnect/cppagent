@@ -44,6 +44,10 @@ build:
   verbosity: minimal
   parallel: true
 
+build_script:
+- cmake --build build --config Debug -- %MSBUILD_FLAGS%
+
+  
 test_script:
 - cmd: |-
     cd test
