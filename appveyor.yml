@@ -33,30 +33,28 @@ init:
     echo %generator%
 
 environment:
-  MS_BUILD_DIRECTORY: c:\projects\build
-  LINUX_BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}/../build'
+  MS_BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}\build'
+  LINUX_BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}/build'
 
 before_build:
 - cmd: |-
     git submodule init
     git submodule update
-    cd ..
     mkdir build
     cd build
     cmake --version
-    cmake ../cppagent_dev -G %generator%
+    cmake .. -G %generator%
 - sh: |-
     git submodule init
     git submodule update
-    cd ..
     mkdir build
     cd build
     cmake --version
-    cmake ../cppagent_dev
+    cmake ..
     
 
 build:
-  project: '{BUILD_DIRECTORY}'
+  project: '{APPVEYOR_BUILD_FOLDER}/build'
   verbosity: minimal
   parallel: true
 
