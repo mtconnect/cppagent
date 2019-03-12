@@ -56,7 +56,7 @@ build_script:
 test_script:
 - cmd: |-
     cd %APPVEYOR_BUILD_FOLDER%\test
-    %BUILD_DIRECTORY%\test\Debug\agent_text
+    %BUILD_DIRECTORY%\test\Debug\agent_test.exe
 
   
 only_commits:
