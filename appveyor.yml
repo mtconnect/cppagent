@@ -2,14 +2,15 @@ version: '{build}'
 branches:
   only:
   - master
-clone_folder: c:\projects\cppagent_dev
+# clone_folder: c:\projects\cppagent_dev
 image:
-#- Visual Studio 2017
 - Ubuntu
+- Visual Studio 2017
 
 configuration:
 - Debug
 #- Release
+
 platform:
 - x86
 
