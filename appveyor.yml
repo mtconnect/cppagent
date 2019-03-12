@@ -31,7 +31,8 @@ init:
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
-- sh: apt-get install libxml2
+- sh: sudo apt-get update
+- sh: sudo --yes apt-get install libxml2
     
 
 environment:
@@ -46,13 +47,12 @@ before_build:
     cd build
     cmake --version
     cmake .. -G %generator%
-- sh: |-
-    git submodule init
-    git submodule update
-    mkdir build
-    cd build
-    cmake --version
-    cmake ..
+- sh: git submodule init
+- sh: git submodule update
+- sh: mkdir build
+- sh: cd build
+- sh: cmake --version
+- sh: cmake ..
     
 
 build:
