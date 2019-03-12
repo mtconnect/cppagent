@@ -4,7 +4,7 @@ branches:
   - master
 # clone_folder: c:\projects\cppagent_dev
 image:
-- Ubuntu
+- Ubuntu1804
 - Visual Studio 2017
 
 configuration:
@@ -32,7 +32,7 @@ init:
     if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
 - sh: sudo apt-get update
-- sh: sudo apt-get --yes install build-essential cmake libxml2-dev libcppunit-dev
+- sh: sudo apt-get --yes install build-essential libxml2-dev libcppunit-dev
 
 before_build:
 - cmd: |-
