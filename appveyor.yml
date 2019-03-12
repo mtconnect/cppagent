@@ -4,7 +4,7 @@ branches:
   - master
 # clone_folder: c:\projects\cppagent_dev
 image:
-- Ubuntu
+#- Ubuntu
 - Visual Studio 2017
 
 configuration:
@@ -31,9 +31,6 @@ init:
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
-- sh: sudo apt-get update
-- sh: sudo apt-get --yes install libxml2
-    
 
 environment:
   MS_BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}\build'
