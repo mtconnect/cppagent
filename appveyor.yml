@@ -4,7 +4,7 @@ branches:
   - master
 # clone_folder: c:\projects\cppagent_dev
 image:
-#- Ubuntu
+- Ubuntu
 - Visual Studio 2017
 
 configuration:
