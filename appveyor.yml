@@ -4,7 +4,8 @@ branches:
   - master
 clone_folder: c:\projects\cppagent_dev
 image:
-- Visual Studio 2017
+#- Visual Studio 2017
+- Ubuntu
 
 configuration:
 - Debug
@@ -22,15 +23,20 @@ matrix:
 
 # skip unsupported combinations
 init:
-- set arch=
-- if "%arch%"=="Win64" ( set arch= Win64)
-- echo %arch%
-- echo %APPVEYOR_BUILD_WORKER_IMAGE%
-- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
-- echo %generator%
+- cmd: |-
+    set arch=
+    if "%arch%"=="Win64" ( set arch= Win64)
+    echo %arch%
+    echo %APPVEYOR_BUILD_WORKER_IMAGE%
+    if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
+    echo %generator%
 
 environment:
-  BUILD_DIRECTORY: c:\projects\build
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      BUILD_DIRECTORY: c:\projects\build
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      BUILD_DIRECTORY: '{APPVEYOR_BUILD_FOLDER}/../build'
 
 before_build:
 - cmd: |-
@@ -41,6 +47,15 @@ before_build:
     cd build
     cmake --version
     cmake ../cppagent_dev -G %generator%
+- sh: |-
+    git submodule init
+    git submodule update
+    cd ..
+    mkdir build
+    cd build
+    cmake --version
+    cmake ../cppagent_dev
+    
 
 build:
   project: '{BUILD_DIRECTORY}'
@@ -51,12 +66,17 @@ build_script:
 - cmd: |-
     cd %BUILD_DIRECTORY%
     cmake --build . --config Debug --target agent_test -- %MSBUILD_FLAGS%
+- sh: |-
+    cd ${BUILD_DIRECTORY}
+    cmake --build . --config Debug --target agent_test    
 
-  
 test_script:
 - cmd: |-
     cd %APPVEYOR_BUILD_FOLDER%\test
     %BUILD_DIRECTORY%\test\Debug\agent_test.exe
+- sh: |-
+    cd ${APPVEYOR_BUILD_FOLDER}/test
+    ${BUILD_DIRECTORY}/test/agent_test
 
   
 only_commits:
