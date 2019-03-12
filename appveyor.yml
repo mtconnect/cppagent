@@ -30,7 +30,7 @@ init:
 - echo %generator%
 
 environment:
-- BUILD_DIRECTORY: c:\projects\build
+  BUILD_DIRECTORY: c:\projects\build
 
 before_build:
 - cmd: |-
