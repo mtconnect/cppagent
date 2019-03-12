@@ -50,7 +50,7 @@ build_script:
   
 test_script:
 - cmd: |-
-    cd ..\cppagent_dev\test
+    cd %APPVEYOR_BUILD_FOLDER%\test
     ..\build\test\Debug\agent_text
 
   
