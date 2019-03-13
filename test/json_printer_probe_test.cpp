@@ -50,12 +50,22 @@ namespace mtconnect {
       CPPUNIT_TEST(testDeviceRootAndDescription);
       CPPUNIT_TEST(testTopLevelDataItems);
       CPPUNIT_TEST(testSubComponents);
+      CPPUNIT_TEST(testDataItemConstraints);
+      CPPUNIT_TEST(testDataItemSource);
+      CPPUNIT_TEST(testInitialValue);
+      CPPUNIT_TEST(testDataItemFilters);
+      CPPUNIT_TEST(testComposition);
       CPPUNIT_TEST_SUITE_END();
       
     public:
       void testDeviceRootAndDescription();
       void testTopLevelDataItems();
       void testSubComponents();
+      void testDataItemConstraints();
+      void testDataItemSource();
+      void testInitialValue();
+      void testDataItemFilters();
+      void testComposition();
 
       void setUp();
       void tearDown();
@@ -171,14 +181,76 @@ namespace mtconnect {
       
       auto dataItems = rc.at("/DataItems"_json_pointer);
       CPPUNIT_ASSERT(dataItems.is_array());
-      
+      CPPUNIT_ASSERT_EQUAL(3_S, dataItems.size());
+
       auto ss = dataItems.at(0).at("/DataItem"_json_pointer);
       CPPUNIT_ASSERT(ss.is_object());
       CPPUNIT_ASSERT_EQUAL(string("POSITION"), ss.at("/@type"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("MILLIMETER"), ss.at("/@units"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("ACTUAL"), ss.at("/@subType"_json_pointer).get<string>());
     }
+    
+    void JsonPrinterProbeTest::testDataItemConstraints()
+    {
+      auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      //cout << "\n" << doc << endl;
+      auto jdoc = json::parse(doc);
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+      auto rotary = devices.at(0).at("/Device/Components/0/Axes/Components/1/Rotary"_json_pointer);
+      CPPUNIT_ASSERT(rotary.is_object());
+      
+      CPPUNIT_ASSERT_EQUAL(string("zf476090"), rotary.at("/@id"_json_pointer).get<string>());
+      
+      auto di = rotary.at("/DataItems/0/DataItem"_json_pointer);
+      CPPUNIT_ASSERT(di.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("ROTARY_MODE"), di.at("/@type"_json_pointer).get<string>());
 
+      auto constraint = di.at("/Constraints/Value"_json_pointer);
+      CPPUNIT_ASSERT(constraint.is_array());
+      CPPUNIT_ASSERT_EQUAL(string("SPINDLE"), constraint.at(0).get<string>());
+      
+      auto rv = rotary.at("/DataItems/2/DataItem"_json_pointer);
+      CPPUNIT_ASSERT(rv.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("ROTARY_VELOCITY"), rv.at("/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("ACTUAL"), rv.at("/@subType"_json_pointer).get<string>());
+      auto min = rv.at("/Constraints/Minimum"_json_pointer);
+      CPPUNIT_ASSERT(min.is_number());
+      CPPUNIT_ASSERT_EQUAL(0.0, min.get<double>());
+      auto max = rv.at("/Constraints/Maximum"_json_pointer);
+      CPPUNIT_ASSERT(max.is_number());
+      CPPUNIT_ASSERT_EQUAL(7000.0, max.get<double>());
+    }
+    
+    void JsonPrinterProbeTest::testDataItemSource()
+    {
+      auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      //cout << "\n" << doc << endl;
+      auto jdoc = json::parse(doc);
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+      auto rotary = devices.at(0).at("/Device/Components/0/Axes/Components/1/Rotary"_json_pointer);
+      CPPUNIT_ASSERT(rotary.is_object());
+
+      auto amp = rotary.at("/DataItems/5/DataItem"_json_pointer);
+      CPPUNIT_ASSERT(amp.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("AMPERAGE"), amp.at("/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("CONDITION"), amp.at("/@category"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("taa7a0f0"), amp.at("/Source/@dataItemId"_json_pointer).get<string>());
+    }
+    
+    void JsonPrinterProbeTest::testInitialValue()
+    {
+      
+    }
+    
+    void JsonPrinterProbeTest::testDataItemFilters()
+    {
+      
+    }
+    
+    void JsonPrinterProbeTest::testComposition()
+    {
+      
+    }
   }
 }
 
