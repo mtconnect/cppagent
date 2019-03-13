@@ -79,3 +79,6 @@ only_commits:
     - src/
     - test/
     - cmake/
+    - dlib_fix/
+    - cppunit_make/
+    - libxml2_make/

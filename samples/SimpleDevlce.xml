@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns="urn:mtconnect.org:MTConnectDevices:1.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.4 schema/MTConnectDevices_1.4.xsd">
+  <Header version="1.4.0" creationTime="2018-10-28T12:33:12Z" instanceId="12345" sender="localhost" bufferSize="1024" assetBufferSize="1024" assetCount="0"/>
+  <Devices>
+    <Device id="x872a3490" uuid="872a3490-bd2d-0136-3eb0-0c85909298d9" name="SimpleCnc">
+      <Description manufacturer="MTConnectInstitute" model="Simple" serialNumber="12">
+				This is a simple CNC example
+			</Description>
+      <DataItems>
+        <DataItem id="d5b078a0" name="avail" type="AVAILABILITY" category="EVENT"/>
+        <DataItem id="e4a300e0" type="ASSET_CHANGED" category="EVENT"/>
+        <DataItem id="f2df7550" type="ASSET_REMOVED" category="EVENT"/>
+      </DataItems>
+      <Components>
+        <Axes id="a62a1050">
+          <Components>
+            <Linear id="e373fec0" name="X1" nativeName="X">
+              <DataItems>
+                <DataItem id="dcbc0570" name="Xpos" type="POSITION" subType="ACTUAL" category="SAMPLE" units="MILLIMETER"/>
+                <DataItem id="f646f730" type="LOAD" name="Xload" category="SAMPLE" units="PERCENT"/>
+                <DataItem id="e086dd60" type="POSITION" category="CONDITION" name="Xtravel"/>
+              </DataItems>
+            </Linear>
+            <Rotary id="zf476090" name="C" nativeName="S">
+              <DataItems>
+                <DataItem id="bbe3f010" type="ROTARY_MODE" category="EVENT">
+                  <Constraints>
+                    <Value>SPINDLE</Value>
+                  </Constraints>
+                </DataItem>
+                <DataItem id="ac6b69c0" type="ROTARY_VELOCITY" subType="PROGRAMMED" category="SAMPLE" units="REVOLUTION/MINUTE" name="Sspeed_prg"/>
+                <DataItem id="vee9c2d0" type="ROTARY_VELOCITY" subType="ACTUAL" category="SAMPLE" units="REVOLUTION/MINUTE" name="Sspeed_act">
+                  <Constraints>
+                    <Minimum>0</Minimum>
+                    <Maximum>7000</Maximum>
+                  </Constraints>
+                </DataItem>
+                <DataItem id="r1841b70" type="LOAD" category="SAMPLE" units="PERCENT" name="Sload"/>
+                <DataItem id="taa7a0f0" type="AMPERAGE" category="SAMPLE" units="AMPERE" compositionId="b7792870"/>
+                <DataItem id="afb596b0" type="AMPERAGE" category="CONDITION" compositionId="b7792870" name="Soverload">
+                  <Source dataItemId="taa7a0f0"/>
+                </DataItem>
+              </DataItems>
+              <Compositions>
+                <Composition id="b7792870" type="MOTOR"/>
+              </Compositions>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="p5add360">
+          <DataItems>
+            <DataItem id="x7ca94e0" type="EMERGENCY_STOP" category="EVENT" name="estop"/>
+            <DataItem id="m17f1750" type="MESSAGE" category="EVENT"/>
+          </DataItems>
+          <Components>
+            <Path id="a4a7bdf0" name="P1">
+              <DataItems>
+                <DataItem id="if36ff60" type="CONTROLLER_MODE" category="EVENT"/>
+                <DataItem id="a01c7f30" type="EXECUTION" category="EVENT"/>
+                <DataItem id="k8dd9030" type="PROGRAM" category="EVENT"/>
+                <DataItem id="r63f9b10" type="CONTROLLER_MODE_OVERRIDE" subType="OPTIONAL_STOP" category="EVENT"/>
+                <DataItem id="a557d330" type="LOGIC_PROGRAM" category="CONDITION"/>
+                <DataItem id="a5b23650" type="MOTION_PROGRAM" category="CONDITION"/>
+                <DataItem id="bbafe670" type="LINE" category="EVENT"/>
+                <DataItem id="d2e9e4a0" type="PART_COUNT" category="EVENT">
+                  <InitialValue>1</InitialValue>
+                </DataItem>
+                <DataItem id="r186cd60" type="PATH_POSITION" category="SAMPLE" units="MILLIMETER_3D"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+        <Systems id="if618500">
+          <Components>
+            <Electric id="afb91ba0">
+              <DataItems>
+                <DataItem id="x52ca7e0" name="ptemp" type="TEMPERATURE" category="SAMPLE" units="CELSIUS">
+                  <Filters>
+                    <Filter type="PERIOD">60</Filter>
+                  </Filters>
+                </DataItem>
+                <DataItem id="r1e58cf0" name="pvolt" type="VOLTAGE" category="SAMPLE" units="VOLT">
+                  <Filters>
+                    <Filter type="MINIMUM_DELTA">10</Filter>
+                  </Filters>
+                </DataItem>
+                <DataItem id="tc9edc70" name="pampts" type="VOLT_AMPERE" category="SAMPLE" units="VOLT_AMPERE" representation="TIME_SERIES" sampleRate="100"/>
+                <DataItem id="e25c1130" name="pamp" type="AMPERAGE" category="SAMPLE" units="AMPERE"/>
+                <DataItem id="qb9212c0" type="AMPERAGE" category="SAMPLE" units="AMPERE" statistic="AVERAGE">
+                  <ResetTrigger>ACTION_COMPLETE</ResetTrigger>
+                </DataItem>
+                <DataItem id="o63fcd30" name="ppfact" type="POWER_FACTOR" category="SAMPLE" units="PERCENT"/>
+                <DataItem id="b4bb7110" type="AMPERAGE" category="CONDITION" name="poverload">
+                  <Source dataItemId="e25c1130"/>
+                </DataItem>
+                <DataItem id="c82e32f0" type="TEMPERATURE" category="CONDITION" name="povertemp">
+                  <Source dataItemId="x52ca7e0"/>
+                </DataItem>
+              </DataItems>
+              <Components>
+                <Sensor id="q9abfaf0">
+                  <Configuration>
+                    <SensorConfiguration>
+                      <FirmwareVersion>23</FirmwareVersion>
+                      <CalibrationDate>2018-08-12</CalibrationDate>
+                      <Channels>
+                        <Channel number="1">
+                          <Description>Temperature Probe</Description>
+                          <CalibrationDate>2018-09-11</CalibrationDate>
+                        </Channel>
+                      </Channels>
+                    </SensorConfiguration>
+                  </Configuration>
+                </Sensor>
+              </Components>
+            </Electric>
+            <Coolant id="x5ef9730" name="low">
+              <DataItems>
+                <DataItem id="r25176b0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="low_main_level" compositionId="t59d1170"/>
+                <DataItem id="obc97840" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="low_main_level" compositionId="a7973930"/>
+              </DataItems>
+              <Compositions>
+                <Composition id="t59d1170" type="TANK" name="main"/>
+                <Composition id="a7973930" type="TANK" name="reserve"/>
+              </Compositions>
+            </Coolant>
+            <Coolant id="b36e0070" name="high">
+              <DataItems>
+                <DataItem id="q94f81e0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="high_main_level" compositionId="a59bd5b0"/>
+                <DataItem id="wf2848e0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="high_main_level" compositionId="aa373750"/>
+              </DataItems>
+              <Compositions>
+                <Composition id="a59bd5b0" type="TANK" name="main"/>
+                <Composition id="aa373750" type="TANK" name="reserve"/>
+              </Compositions>
+            </Coolant>
+          </Components>
+        </Systems>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>

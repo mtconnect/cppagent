@@ -76,7 +76,7 @@ namespace mtconnect {
       m_printer.reset(new JsonPrinter("1.5", true));
       
       m_config.reset(new XmlParser());
-      m_devices = m_config->parseFile("../samples/test_config.xml", m_xmlPrinter.get());
+      m_devices = m_config->parseFile("../samples/SimpleDevlce.xml", m_xmlPrinter.get());
     }
 
     void JsonPrinterProbeTest::tearDown()
@@ -101,13 +101,13 @@ namespace mtconnect {
       auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
       auto device = devices.at(0).at("/Device"_json_pointer);
 
-      CPPUNIT_ASSERT_EQUAL(string("d"), device.at("/@id"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("LinuxCNC"), device.at("/@name"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("000"), device.at("/@uuid"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("x872a3490"), device.at("/@id"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("SimpleCnc"), device.at("/@name"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("872a3490-bd2d-0136-3eb0-0c85909298d9"), device.at("/@uuid"_json_pointer).get<string>());
       
-      CPPUNIT_ASSERT_EQUAL(string("Linux CNC Device"), device.at("/Description/#text"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("NIST"), device.at("/Description/@manufacturer"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("1122"), device.at("/Description/@serialNumber"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("This is a simple CNC example"), device.at("/Description/#text"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("MTConnectInstitute"), device.at("/Description/@manufacturer"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("12"), device.at("/Description/@serialNumber"_json_pointer).get<string>());
     }
     
     void JsonPrinterProbeTest::testTopLevelDataItems()
@@ -120,28 +120,30 @@ namespace mtconnect {
       
       auto dataItems = device.at("/DataItems"_json_pointer);
       CPPUNIT_ASSERT(dataItems.is_array());
-      CPPUNIT_ASSERT_EQUAL(2_S, dataItems.size());
+      CPPUNIT_ASSERT_EQUAL(3_S, dataItems.size());
       
       // Alarm event
-      auto alarm = dataItems.at(0);
-      CPPUNIT_ASSERT_EQUAL(string("ALARM"), alarm.at("/DataItem/@type"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("EVENT"), alarm.at("/DataItem/@category"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("a"), alarm.at("/DataItem/@id"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("alarm"), alarm.at("/DataItem/@name"_json_pointer).get<string>());
-      
-      // Availability event
-      auto avail = dataItems.at(1);
+      auto avail = dataItems.at(0);
       CPPUNIT_ASSERT_EQUAL(string("AVAILABILITY"), avail.at("/DataItem/@type"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("EVENT"), avail.at("/DataItem/@category"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("avail"), avail.at("/DataItem/@id"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("d5b078a0"), avail.at("/DataItem/@id"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("avail"), avail.at("/DataItem/@name"_json_pointer).get<string>());
+      
+      // Availability event
+      auto change = dataItems.at(1);
+      CPPUNIT_ASSERT_EQUAL(string("ASSET_CHANGED"), change.at("/DataItem/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("EVENT"), change.at("/DataItem/@category"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("e4a300e0"), change.at("/DataItem/@id"_json_pointer).get<string>());
 
+      auto remove = dataItems.at(2);
+      CPPUNIT_ASSERT_EQUAL(string("ASSET_REMOVED"), remove.at("/DataItem/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("EVENT"), remove.at("/DataItem/@category"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("f2df7550"), remove.at("/DataItem/@id"_json_pointer).get<string>());
     }
     
     void JsonPrinterProbeTest::testSubComponents()
     {
       auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
-      cout << "\n" << doc << endl;
       auto jdoc = json::parse(doc);
       auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
       auto device = devices.at(0).at("/Device"_json_pointer);
@@ -153,35 +155,28 @@ namespace mtconnect {
       auto axes = components.at(0);
       CPPUNIT_ASSERT(axes.is_object());
       CPPUNIT_ASSERT_EQUAL(string("Axes"), axes.begin().key());
-      CPPUNIT_ASSERT_EQUAL(string("axes"), axes.at("/Axes/@id"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("Axes"), axes.at("/Axes/@name"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("a62a1050"), axes.at("/Axes/@id"_json_pointer).get<string>());
 
       auto subAxes = axes.at("/Axes/Components"_json_pointer);
       CPPUNIT_ASSERT(subAxes.is_array());
-      CPPUNIT_ASSERT_EQUAL(4_S, subAxes.size());
+      CPPUNIT_ASSERT_EQUAL(2_S, subAxes.size());
       
       auto rotary = subAxes.at(0);
       CPPUNIT_ASSERT(rotary.is_object());
-      auto rc = rotary.at("/Rotary"_json_pointer);
+      auto rc = rotary.at("/Linear"_json_pointer);
       CPPUNIT_ASSERT(rc.is_object());
-      CPPUNIT_ASSERT_EQUAL(string("C"), rc.at("/@name"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("c"), rc.at("/@id"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("X1"), rc.at("/@name"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("X"), rc.at("/@nativeName"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("e373fec0"), rc.at("/@id"_json_pointer).get<string>());
       
       auto dataItems = rc.at("/DataItems"_json_pointer);
       CPPUNIT_ASSERT(dataItems.is_array());
       
       auto ss = dataItems.at(0).at("/DataItem"_json_pointer);
       CPPUNIT_ASSERT(ss.is_object());
-      CPPUNIT_ASSERT_EQUAL(string("SPINDLE_SPEED"), ss.at("/@type"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("REVOLUTION/MINUTE"), ss.at("/@units"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("REVOLUTION/MINUTE"), ss.at("/@nativeUnits"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("POSITION"), ss.at("/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("MILLIMETER"), ss.at("/@units"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("ACTUAL"), ss.at("/@subType"_json_pointer).get<string>());
-      
-      auto source = ss.at("/Source"_json_pointer);
-      CPPUNIT_ASSERT(source.is_object());
-      
-      CPPUNIT_ASSERT_EQUAL(string("spindle_speed"), ss.at("/Source/#text"_json_pointer).get<string>());
-
     }
 
   }
