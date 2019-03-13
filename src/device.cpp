@@ -25,10 +25,13 @@ namespace mtconnect {
   static dlib::logger g_logger("device");
   
   Device::Device(const std::map<std::string, std::string> &attributes) : 
-  Component("Device", attributes),
-  m_preserveUuid(false),
-  m_availabilityAdded(false),
-  m_iso841Class(-1)
+    Component("Device", attributes),
+    m_preserveUuid(false),
+    m_availabilityAdded(false),
+    m_iso841Class(-1),
+    m_availability(nullptr),
+    m_assetChanged(nullptr),
+    m_assetRemoved(nullptr)
   {
     const auto isoPos = attributes.find("iso841Class");
     if (isoPos != attributes.end())
@@ -61,6 +64,18 @@ namespace mtconnect {
       m_deviceDataItemsById[dataItem.getId()] = &dataItem;
   }
   
+  void Device::addDataItem(DataItem &dataItem) 
+  {
+    Component::addDataItem(dataItem);
+    
+    if (dataItem.getType() == "AVAILABILITY")
+      m_availability = &dataItem;
+    else if (dataItem.getType() == "ASSET_CHANGED")
+      m_assetChanged = &dataItem;
+    else if (dataItem.getType() == "ASSET_REMOVED")
+      m_assetRemoved = &dataItem;
+  }
+
   
   DataItem *Device::getDeviceDataItem(const std::string &name)
   {

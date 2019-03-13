@@ -136,16 +136,7 @@ namespace mtconnect {
       m_nativeName = nativeName;
       reBuildAttributes();
     }
-    
-    // Cached data items
-    DataItem *getAvailability() const {
-      return m_availability; }
-    DataItem *getAssetChanged() const {
-      return m_assetChanged; }
-    DataItem *getAssetRemoved() const {
-      return m_assetRemoved; }
-    
-    
+        
     // Add/get description specifications using an attribute map 
     void addDescription(std::string body, const std::map<std::string, std::string> &attributes);
     const std::map<std::string, std::string> &getDescription() const {
@@ -175,7 +166,7 @@ namespace mtconnect {
       return m_compositions; }
     
     // Add to/get the component's std::list of data items
-    void addDataItem(DataItem &dataItem);
+    virtual void addDataItem(DataItem &dataItem);
     const std::list<DataItem *> &getDataItems() const {
       return m_dataItems; }
     
@@ -226,9 +217,6 @@ namespace mtconnect {
     // Pointer to the parent component
     Component *m_parent;
     Device *m_device;
-    DataItem *m_availability;
-    DataItem *m_assetChanged;
-    DataItem *m_assetRemoved;
     
     // Each component keeps track of it's children in a std::list
     std::list<Component *> m_children;

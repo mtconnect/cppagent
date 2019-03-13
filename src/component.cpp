@@ -52,9 +52,7 @@ namespace mtconnect {
   Component::Component(
                        const string &className,
                        const std::map<string, string> &attributes,
-                       const string &prefix) :
-  m_assetChanged(nullptr),
-  m_assetRemoved(nullptr)
+                       const string &prefix)
   {
     const auto idPos = attributes.find("id");
     if(idPos != attributes.end())
@@ -87,8 +85,6 @@ namespace mtconnect {
     
     m_parent = nullptr;
     m_device = nullptr;
-    m_availability = nullptr;
-    m_assetChanged = nullptr;
     m_class = className;
     m_prefix = prefix;
     m_prefixedClass = prefix + ":" + className;
@@ -147,13 +143,6 @@ namespace mtconnect {
   
   void Component::addDataItem(DataItem &dataItem)
   {
-    if (dataItem.getType() == "AVAILABILITY")
-      m_availability = &dataItem;
-    else if (dataItem.getType() == "ASSET_CHANGED")
-      m_assetChanged = &dataItem;
-    else if (dataItem.getType() == "ASSET_REMOVED")
-      m_assetRemoved = &dataItem;
-    
     m_dataItems.push_back(&dataItem);
   }
   

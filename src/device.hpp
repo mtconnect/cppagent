@@ -55,13 +55,27 @@ namespace mtconnect {
       return m_deviceDataItemsById;
     }
     
+    virtual void addDataItem(DataItem &dataItem) override;
+    
     std::vector<Adapter *> m_adapters;
     bool m_preserveUuid;
     bool m_availabilityAdded;
     
+    // Cached data items
+    DataItem *getAvailability() const {
+      return m_availability; }
+    DataItem *getAssetChanged() const {
+      return m_assetChanged; }
+    DataItem *getAssetRemoved() const {
+      return m_assetRemoved; }
+    
   protected:
     // The iso841Class of the device
     unsigned int m_iso841Class;
+    
+    DataItem *m_availability;
+    DataItem *m_assetChanged;
+    DataItem *m_assetRemoved;
     
     // Mapping of device names to data items
     std::map<std::string, DataItem *> m_deviceDataItemsByName;
