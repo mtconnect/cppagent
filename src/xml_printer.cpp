@@ -1247,16 +1247,9 @@ namespace mtconnect {
   void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item) const
   {
     AutoElement ele(writer, "CuttingItem");
+    addAttributes(writer, item->m_identity);
     
-    for (const auto pair : item->m_identity)
-    {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                      BAD_CAST pair.first.c_str(),
-                                                      BAD_CAST pair.second.c_str()));
-    }
-    
-    set<string> remaining;
-    
+    set<string> remaining;    
     for (const auto &value : item->m_values)
       remaining.insert(value.first);
     
