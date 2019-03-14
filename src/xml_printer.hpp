@@ -149,9 +149,6 @@ namespace mtconnect {
     
     
     // Add attributes to an xml element
-    void addDeviceStream(xmlTextWriterPtr writer, const Device *device)  const;
-    void addComponentStream(xmlTextWriterPtr writer, const Component *component) const;
-    void addCategory(xmlTextWriterPtr writer, DataItem::ECategory category)  const;
     void addSimpleElement(
                           xmlTextWriterPtr writer,
                           const std::string &element,

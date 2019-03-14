@@ -274,24 +274,47 @@ namespace mtconnect {
   class AutoElement
   {
   public:
-    AutoElement(xmlTextWriterPtr writer, const char *name)
+    AutoElement(xmlTextWriterPtr writer)
     : m_writer(writer)
+    { }
+    AutoElement(xmlTextWriterPtr writer, const char *name,
+                const string &key = "")
+    : m_writer(writer), m_name(name), m_key(key)
     {
       openElement(writer, name);
     }
-    AutoElement(xmlTextWriterPtr writer, const string &name)
-    : m_writer(writer)
+    AutoElement(xmlTextWriterPtr writer, const string &name,
+                const string &key = "")
+    : m_writer(writer), m_name(name), m_key(key)
     {
       openElement(writer, name.c_str());
     }
-
+    bool reset(const string &name, const string &key = "") {
+      if (name != m_name || m_key != key) {
+        if (!m_name.empty())
+          closeElement(m_writer);
+        if (!name.empty())
+          openElement(m_writer, name.c_str());
+        m_name = name;
+        m_key = key;
+        return true;
+      } else {
+        return false;
+      }
+    }
     ~AutoElement()
     {
-      closeElement(m_writer);
+      if (!m_name.empty())
+        closeElement(m_writer);
     }
     
+    const string &key() const { return m_key; }
+    const string &name() const { return m_name; }
+
   protected:
     xmlTextWriterPtr m_writer;
+    string m_name;
+    string m_key;
   };
   
   string XmlPrinter::printError(
@@ -664,7 +687,7 @@ namespace mtconnect {
                                  const uint64_t nextSeq,
                                  const uint64_t firstSeq,
                                  const uint64_t lastSeq,
-                                 ComponentEventPtrArray &results )  const
+                                 ComponentEventPtrArray &observations )  const
   {
     xmlTextWriterPtr writer(nullptr);
     xmlBufferPtr buf(nullptr);
@@ -688,80 +711,53 @@ namespace mtconnect {
                  firstSeq,
                  lastSeq);
       
-      openElement(writer, "Streams");
+      AutoElement streams(writer, "Streams");
       
       // Sort the vector by category.
-      if (results.size() > 1)
-        dlib::qsort_array<ComponentEventPtrArray, EventComparer>(results, 0ul, results.size() - 1ul,
-                                                                 EventCompare);
-      
-      // TODO: Clean up this code, make it simpler.
-      Device *lastDevice = nullptr;
-      Component *lastComponent = nullptr;
-      int lastCategory = -1;
-      
-      for (auto i = 0ul; i < results.size(); i++)
+      if (observations.size() > 0)
       {
-        auto result = results[i];
-        const auto dataItem = result->getDataItem();
-        const auto component = dataItem->getComponent();
-        const auto device = component->getDevice();
-        
-        if (device != lastDevice)
+        dlib::qsort_array<ComponentEventPtrArray,
+          EventComparer>(observations, 0ul, observations.size() - 1ul,
+                         EventCompare);
+      
+        AutoElement deviceElement(writer);
         {
-          if (lastDevice)
-            closeElement(writer); // DeviceStream
-          
-          lastDevice = device;
-          
-          if (lastComponent)
-            closeElement(writer); // ComponentStream
-          
-          lastComponent = nullptr;
-          
-          if (lastCategory != -1)
-            closeElement(writer); // Category
-          
-          lastCategory = -1;
-          addDeviceStream(writer, device);
+          AutoElement componentStreamElement(writer);
+          {
+            AutoElement categoryElement(writer);
+            
+            for (auto &observation : observations)
+            {
+              const auto dataItem = observation->getDataItem();
+              const auto component = dataItem->getComponent();
+              const auto device = component->getDevice();
+              
+              if (deviceElement.key() != device->getId()) {
+                componentStreamElement.reset("");
+                categoryElement.reset("");
+                
+                deviceElement.reset("DeviceStream", device->getId());
+                addAttribute(writer, "name", device->getName());
+                addAttribute(writer, "uuid", device->getUuid());
+              }
+              
+              if (componentStreamElement.key() != component->getId()) {
+                categoryElement.reset("");
+                componentStreamElement.reset("ComponentStream", component->getId());
+                addAttribute(writer, "component", component->getClass());
+                addAttribute(writer, "name", component->getName());
+                addAttribute(writer, "componentId", component->getId());
+              }
+              
+              categoryElement.reset(dataItem->getCategoryText());
+              
+              addEvent(writer, observation);
+            }
+          }
         }
-        
-        if (component != lastComponent)
-        {
-          if (lastComponent)
-            closeElement(writer); // ComponentStream
-          
-          lastComponent = component;
-          
-          if (lastCategory != -1)
-            closeElement(writer);  // Category
-          
-          lastCategory = -1;
-          addComponentStream(writer, component);
-        }
-        
-        if (lastCategory != dataItem->getCategory())
-        {
-          if (lastCategory != -1)
-            closeElement(writer); // Category
-          
-          lastCategory = dataItem->getCategory();
-          addCategory(writer, dataItem->getCategory());
-        }
-        
-        addEvent(writer, result);
       }
       
-      if (lastCategory != -1)
-        closeElement(writer); // Category
-      
-      if (lastDevice)
-        closeElement(writer);  // DeviceStream
-      
-      if (lastComponent)
-        closeElement(writer);  // ComponentStream
-      
-      closeElement(writer);  // Streams
+      streams.reset("");
       closeElement(writer);  // MTConnectStreams
       THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
       
@@ -908,44 +904,6 @@ namespace mtconnect {
       addSimpleElement(writer, "Description", body);
     }
   }
-  
-  
-  void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, const Device *device)  const
-  {
-    openElement(writer, "DeviceStream");
-    addAttribute(writer, "name", device->getName());
-    addAttribute(writer, "uuid", device->getUuid());
-  }
-  
-  
-  void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, const Component *component)  const
-  {
-    openElement(writer, "ComponentStream");
-    addAttribute(writer, "component", component->getClass());
-    addAttribute(writer, "name", component->getName());
-    addAttribute(writer, "componentId", component->getId());
-  }
-  
-  
-  void XmlPrinter::addCategory(xmlTextWriterPtr writer, DataItem::ECategory category)  const
-  {
-    switch (category)
-    {
-      case DataItem::SAMPLE:
-        openElement(writer, "Samples");
-        break;
-        
-      case DataItem::EVENT:
-        openElement(writer, "Events");
-        break;
-        
-      case DataItem::CONDITION:
-        openElement(writer, "Condition");
-        break;
-    }
-    
-  }
-  
   
   void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)  const
   {
@@ -1249,7 +1207,7 @@ namespace mtconnect {
     AutoElement ele(writer, "CuttingItem");
     addAttributes(writer, item->m_identity);
     
-    set<string> remaining;    
+    set<string> remaining;
     for (const auto &value : item->m_values)
       remaining.insert(value.first);
     

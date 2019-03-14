@@ -287,6 +287,24 @@ namespace mtconnect {
     bool operator==(DataItem &another) const {
       return m_id == another.m_id; }
     
+    const char *getCategoryText() const {
+      switch (m_category)
+      {
+        case DataItem::SAMPLE:
+          return "Samples";
+          
+        case DataItem::EVENT:
+          return "Events";
+          
+        case DataItem::CONDITION:
+          return "Condition";
+          
+        default:
+          return "Undefined";
+      }
+    }
+
+    
   protected:
     double simpleFactor(const std::string &units);
     std::map<std::string, std::string> buildAttributes() const;
