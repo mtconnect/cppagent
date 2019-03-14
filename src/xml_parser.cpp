@@ -19,6 +19,7 @@
 #include "xml_printer.hpp"
 #include "cutting_tool.hpp"
 #include "composition.hpp"
+#include "sensor_configuration.hpp"
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
@@ -57,9 +58,93 @@ namespace mtconnect {
     g_logger << dlib::LERROR << "XML: " << buffer;
   }
   
+  static inline std::string getCDATA(xmlNodePtr node)
+  {
+    auto text = xmlNodeGetContent(node);
+    string res;
+    if (text) {
+      res = (const char*) text;
+      xmlFree(text);
+    }
+    return res;
+  }
   
-  XmlParser::XmlParser() :
-  m_doc(nullptr)
+  static inline std::string getAttribute(xmlNodePtr node, const char *name)
+  {
+    auto value = xmlGetProp(node, BAD_CAST name);
+    string res;
+    if (value) {
+      res = (const char*) value;
+      xmlFree(value);
+    }
+    return res;
+  }
+  
+  static inline std::string getRawContent(xmlNodePtr node)
+  {
+    string res;
+    xmlBufferPtr buf;
+    THROW_IF_XML2_NULL(buf = xmlBufferCreate());
+    auto count = xmlNodeDump(buf, node->doc, node, 0, 0);
+    if (count > 0) {
+      res = ((const char*) buf->content);
+    }
+    xmlBufferFree(buf);
+    return res;
+  }
+  
+  // Put all of the attributes of an element into a map
+  static inline std::map<string, string> getAttributes(const xmlNodePtr node)
+  {
+    std::map<string, string> toReturn;
+    
+    for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
+    {
+      if (attr->type == XML_ATTRIBUTE_NODE)
+        toReturn[(const char *) attr->name] = (const char *) attr->children->content;
+    }
+    
+    return toReturn;
+  }
+  
+  
+  XmlParser::XmlParser()
+  : m_doc(nullptr),
+    m_handlers({
+      {"Components", [this](xmlNodePtr n, Component* p, Device* d){
+        handleChildren(n, p, d);
+      } },
+      {"DataItems", [this](xmlNodePtr n, Component* p,Device* d){
+        handleChildren(n, p, d);
+      } },
+      {"References", [this](xmlNodePtr n, Component* p,Device* d){
+        handleChildren(n, p, d);
+      } },
+      {"Compositions", [this](xmlNodePtr n, Component* p,Device* d){
+        handleChildren(n, p, d);
+      } },
+      {"DataItem", [this](xmlNodePtr n, Component* p,Device* d){
+        loadDataItem(n, p, d);
+      } },
+      {"Reference", [this](xmlNodePtr n, Component* p,Device* d){
+        handleReference(n, p, d);
+      } },
+      {"DataItemRef", [this](xmlNodePtr n, Component* p,Device* d){
+        handleReference(n, p, d);
+      } },
+      {"ComponentRef", [this](xmlNodePtr n, Component* p,Device* d){
+        handleReference(n, p, d);
+      } },
+      {"Composition", [this](xmlNodePtr n, Component* p,Device* d){
+        handleComposition(n, p);
+      } },
+      {"Description", [](xmlNodePtr n, Component* p,Device* d){
+        p->addDescription(getCDATA(n), getAttributes(n));
+      } },
+      {"Configuration", [this](xmlNodePtr n, Component* p,Device* d){
+        handleConfiguration(n, p);
+      } }
+    })
   {
   }
   
@@ -116,23 +201,22 @@ namespace mtconnect {
       // Add additional namespaces to the printer if they are referenced
       // here.
       string locationUrn;
-      auto location = (const char *) xmlGetProp(root, BAD_CAST "schemaLocation");
+      auto location = getAttribute(root, "schemaLocation");
       
-      if (location && strncmp(location, "urn:mtconnect.org:MTConnectDevices", 34u))
+      if (location.substr(0, 34) != "urn:mtconnect.org:MTConnectDevices")
       {
-        string loc = location;
-        auto pos = loc.find(' ');
+        auto pos = location.find(' ');
         
         if (pos != string::npos)
         {
-          locationUrn = loc.substr(0, pos);
-          auto uri = loc.substr(pos + 1);
+          locationUrn = location.substr(0, pos);
+          auto uri = location.substr(pos + 1);
           
           // Try to find the prefix for this urn...
           auto ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
           string prefix;
           
-          if (ns->prefix)
+          if (ns && ns->prefix)
             prefix = (const char *) ns->prefix;
           
           aPrinter->addDevicesNamespace(locationUrn, uri, prefix);
@@ -174,7 +258,7 @@ namespace mtconnect {
       
       // Collect the Devices...
       for (int i = 0; i != nodeset->nodeNr; ++i)
-        deviceList.push_back(static_cast<Device *>(handleComponent(nodeset->nodeTab[i])));
+        deviceList.push_back(static_cast<Device *>(handleNode(nodeset->nodeTab[i])));
       
       xmlXPathFreeObject(devices);
       xmlXPathFreeContext(xpathCtx);
@@ -306,13 +390,7 @@ namespace mtconnect {
           
           if (!xmlStrcmp(n->name, BAD_CAST "DataItem"))
           {
-            auto id = xmlGetProp(n, BAD_CAST "id");
-            
-            if (id)
-            {
-              filterSet.insert((const char *) id);
-              xmlFree(id); id = nullptr;
-            }
+            filterSet.insert(getAttribute(n, "id"));
           }
           else if (!xmlStrcmp(n->name, BAD_CAST "DataItems"))
           {
@@ -321,27 +399,19 @@ namespace mtconnect {
           }
           else if (!xmlStrcmp(n->name, BAD_CAST "Reference"))
           {
-            auto id = xmlGetProp(n, BAD_CAST "dataItemId");
-            
-            if (id)
-            {
-              filterSet.insert((const char *) id);
-              xmlFree(id); id = nullptr;
-            }
+            auto id = getAttribute(n, "dataItemId");
+            if (!id.empty())
+              filterSet.insert(id);
           }
           else if (!xmlStrcmp(n->name, BAD_CAST "DataItemRef"))
           {
-            auto id = xmlGetProp(n, BAD_CAST "idRef");
-            
-            if (id)
-            {
-              filterSet.insert((const char *) id);
-              xmlFree(id); id = nullptr;
-            }
+            auto id = getAttribute(n, "idRef");
+            if (!id.empty())
+              filterSet.insert(id);
           }
           else if (!xmlStrcmp(n->name, BAD_CAST "ComponentRef"))
           {
-            auto id = string((const char*) xmlGetProp(n, BAD_CAST "idRef"));
+            auto id = getAttribute(n, "idRef");
             getDataItems(filterSet, "//*[@id='" + id + "']");
           }
           else // Find all the data items and references below this node
@@ -370,148 +440,75 @@ namespace mtconnect {
   }
   
   
-  Component *XmlParser::handleComponent(
-                                        xmlNodePtr component,
+  Component *XmlParser::handleNode(
+                                        xmlNodePtr node,
                                         Component *parent,
                                         Device *device
                                         )
   {
-    Component *toReturn = nullptr;
-    Component::EComponentSpecs spec =
-    (Component::EComponentSpecs) getEnumeration(
-                                                (const char *) component->name,
-                                                Component::SComponentSpecs,
-                                                Component::NumComponentSpecs
-                                                );
+    string name((const char *) node->name);
+    auto lambda = m_handlers.find(name);
+    if (lambda != m_handlers.end()) {
+      // Parts of components
+      (lambda->second)(node, parent, device);
+      return nullptr;
+    } else {
+      // Node is a component
+      Component *component = nullptr;
+      component = loadComponent(node, name);
+      
+      // Top level, then must be a device
+      if (device == nullptr)
+        device = dynamic_cast<Device*>(component);
     
-    string name;
-    
-    switch (spec)
-    {
-      case Component::DEVICE:
-        name = (const char *) component->name;
-        toReturn = device = (Device *) loadComponent(component, spec, name);
-        break;
-        
-      case Component::COMPONENTS:
-      case Component::DATA_ITEMS:
-      case Component::REFERENCES:
-      case Component::COMPOSITIONS:
-        handleChildren(component, parent, device);
-        break;
-        
-      case Component::DATA_ITEM:
-        loadDataItem(component, parent, device);
-        break;
-        
-      case Component::TEXT:
-        break;
-        
-      case Component::REFERENCE:
-      case Component::DATA_ITEM_REF:
-      case Component::COMPONENT_REF:
-        handleReference(component, parent, device);
-        break;
-        
-      case Component::COMPOSITION:
-        handleComposition(component, parent);
-        break;
-        
-      default:
-        // Assume component
-        name = (const char *) component->name;
-        toReturn = loadComponent(component, spec, name);
-        break;
-    }
-    
-    // Construct relationships
-    if (toReturn && parent)
-    {
-      parent->addChild(*toReturn);
-      toReturn->setParent(*parent);
-    }
-    
-    // Check if there are children
-    if (toReturn && component->children)
-    {
-      for (xmlNodePtr child = component->children; child; child = child->next)
+      // Construct relationships
+      if (component && parent)
       {
-        if (child->type != XML_ELEMENT_NODE)
-          continue;
-        
-        if (!xmlStrcmp(child->name, BAD_CAST "Description"))
-        {
-          auto text = xmlNodeGetContent(child);
-          
-          if (text)
-          {
-            toReturn->addDescription((string)(const char *) text, getAttributes(child));
-            xmlFree(text); text = nullptr;
-          }
-          
-        }
-        else if (!xmlStrcmp(child->name, BAD_CAST "Configuration"))
-        {
-          xmlNodePtr config = child->children;
-          xmlBufferPtr buf;
-          THROW_IF_XML2_NULL(buf = xmlBufferCreate());
-          auto count = xmlNodeDump(buf, config->doc, config, 0, 0);
-          
-          if (count > 0)
-            toReturn->setConfiguration((string)(const char *) buf->content);
-          
-          xmlBufferFree(buf);
-        }
-        else
-          handleComponent(child, toReturn, device);
+        parent->addChild(*component);
+        component->setParent(*parent);
       }
+      
+      // Recurse for children
+      if (component && node->children)
+      {
+        for (xmlNodePtr child = node->children; child; child = child->next)
+        {
+          if (child->type != XML_ELEMENT_NODE)
+            continue;
+          
+          handleNode(child, component, device);
+        }
+      }
+      
+      return component;
     }
-    
-    return toReturn;
   }
   
   
   Component *XmlParser::loadComponent(
                                       xmlNodePtr node,
-                                      Component::EComponentSpecs spec,
-                                      string &name
+                                      const string &name
                                       )
   {
     auto attributes = getAttributes(node);
-    
-    switch (spec)
+    if (name == "Device")
     {
-      case Component::DEVICE:
-        return new Device(attributes);
-        
-      default:
-        string prefix;
-        
-        if (node->ns &&
-            node->ns->prefix &&
-            strncmp((const char *) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
-        {
+      return new Device(attributes);
+    }
+    else
+    {
+      string prefix;
+      
+      if (node->ns &&
+          node->ns->prefix &&
+          strncmp((const char *) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
+      {
           prefix = (const char *) node->ns->prefix;
-        }
-        
-        return new Component(name, attributes, prefix);
+      }
+      
+      return new Component(name, attributes, prefix);
     }
   }
-  
-  
-  std::map<string, string> XmlParser::getAttributes(const xmlNodePtr node)
-  {
-    std::map<string, string> toReturn;
-    
-    for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
-    {
-      if (attr->type == XML_ATTRIBUTE_NODE)
-        toReturn[(const char *) attr->name] = (const char *) attr->children->content;
-    }
-    
-    return toReturn;
-  }
-  
   
   void XmlParser::loadDataItem(
                                xmlNodePtr dataItem,
@@ -532,12 +529,8 @@ namespace mtconnect {
         
         if (!xmlStrcmp(child->name, BAD_CAST "Source"))
         {
-          auto text = xmlNodeGetContent(child);
+          auto cdata = getCDATA(child);
           auto attributes = getAttributes(child);
-          
-          string cdata;
-          if (text != nullptr)
-            cdata = (const char*) text;
           
           string dataItemId, componentId, compositionId;
           auto it = attributes.find("dataItemId");
@@ -551,7 +544,6 @@ namespace mtconnect {
             compositionId = it->second;
           
           d->addSource(cdata, dataItemId, componentId, compositionId);
-          xmlFree(text); text = nullptr;
         }
         else if (!xmlStrcmp(child->name, BAD_CAST "Constraints"))
         {
@@ -560,21 +552,18 @@ namespace mtconnect {
             if (constraint->type != XML_ELEMENT_NODE)
               continue;
             
-            auto text = xmlNodeGetContent(constraint);
+            auto text = getCDATA(constraint);
             
-            if (!text)
-              continue;
-            
-            if (!xmlStrcmp(constraint->name, BAD_CAST "Value"))
-              d->addConstrainedValue((const char *) text);
-            else if (!xmlStrcmp(constraint->name, BAD_CAST "Minimum"))
-              d->setMinimum((const char *) text);
-            else if (!xmlStrcmp(constraint->name, BAD_CAST "Maximum"))
-              d->setMaximum((const char *) text);
-            else if (!xmlStrcmp(constraint->name, BAD_CAST "Filter"))
-              d->setMinmumDelta(strtod((const char *) text, nullptr));
-            
-            xmlFree(text); text = nullptr;
+            if (!text.empty()) {
+              if (!xmlStrcmp(constraint->name, BAD_CAST "Value"))
+                d->addConstrainedValue(text);
+              else if (!xmlStrcmp(constraint->name, BAD_CAST "Minimum"))
+                d->setMinimum(text);
+              else if (!xmlStrcmp(constraint->name, BAD_CAST "Maximum"))
+                d->setMaximum(text);
+              else if (!xmlStrcmp(constraint->name, BAD_CAST "Filter"))
+                d->setMinmumDelta(strtod(text.c_str(), nullptr));
+            }
           }
         }
         else if (!xmlStrcmp(child->name, BAD_CAST "Filters"))
@@ -586,36 +575,28 @@ namespace mtconnect {
             
             if (!xmlStrcmp(filter->name, BAD_CAST "Filter"))
             {
-              xmlChar *text = xmlNodeGetContent(filter);
-              xmlChar *type = xmlGetProp(filter, BAD_CAST "type");
+              auto text = getCDATA(filter);
+              auto type = getAttribute(filter, "type");
               
-              if (type)
+              if (!type.empty())
               {
-                if (!xmlStrcmp(type, BAD_CAST "PERIOD"))
-                  d->setMinmumPeriod(strtod((const char *) text, nullptr));
+                if (type == "PERIOD")
+                  d->setMinmumPeriod(strtod(text.c_str(), nullptr));
                 else
-                  d->setMinmumDelta(strtod((const char *) text, nullptr));
-                
-                xmlFree(type); type = nullptr;
+                  d->setMinmumDelta(strtod(text.c_str(), nullptr));
               }
               else
-                d->setMinmumDelta(strtod((const char *) text, nullptr));
-              
-              xmlFree(text); text = nullptr;
+                d->setMinmumDelta(strtod(text.c_str(), nullptr));
             }
           }
         }
         else if (!xmlStrcmp(child->name, BAD_CAST "InitialValue"))
         {
-          auto text = xmlNodeGetContent(child);
-          d->setInitialValue(string((const char *)text));
-          xmlFree(text); text = nullptr;
+          d->setInitialValue(getCDATA(child));
         }
         else if (!xmlStrcmp(child->name, BAD_CAST "ResetTrigger"))
         {
-          auto text = xmlNodeGetContent(child);
-          d->setResetTrigger(string((const char *)text));
-          xmlFree(text); text = nullptr;
+          d->setResetTrigger(getCDATA(child));
         }
       }
     }
@@ -634,15 +615,7 @@ namespace mtconnect {
     {
       if (!xmlStrcmp(child->name, BAD_CAST "Description"))
       {
-        auto text = xmlNodeGetContent(child);
-        string body;
-        
-        if (text)
-        {
-          body = string(static_cast<const char *>(static_cast<void *>(text)));
-          xmlFree(text); text = nullptr;
-        }
-        
+        auto body = getCDATA(child);
         Composition::Description *desc = new Composition::Description(body, getAttributes(child));
         comp->setDescription(desc);
       }
@@ -662,7 +635,7 @@ namespace mtconnect {
       if (child->type != XML_ELEMENT_NODE)
         continue;
       
-      handleComponent(child, parent, device);
+      handleNode(child, parent, device);
     }
   }
   
@@ -698,7 +671,71 @@ namespace mtconnect {
     }
   }
   
-  
+  void XmlParser::handleConfiguration(
+                           xmlNodePtr node,
+                           Component *parent,
+                           Device *device)
+  {
+    // Get the first node
+    xmlNodePtr config = node->children;
+    if (xmlStrcmp(config->name, BAD_CAST "SensorConfiguration") == 0) {
+      // Decode sensor configuration
+      string firmware, date, nextDate, initials;
+      vector<xmlNodePtr> rest;
+      xmlNodePtr channels = nullptr;
+      for (xmlNodePtr child = config->children; child; child = child->next)
+      {
+        string name((const char*) child->name);
+        if (name == "FirmwareVersion")
+          firmware = getCDATA(child);
+        else if (name == "CalibrationDate")
+          date = getCDATA(child);
+        else if (name == "CalibrationInitials")
+          initials = getCDATA(child);
+        else if (name == "Channels")
+          channels = child;
+        else
+          rest.push_back(child);
+      }
+      
+      string restText;
+      for (auto &text : rest)
+        restText.append(getRawContent(text));
+      
+      auto sensor = new SensorConfiguration(firmware, date, nextDate,
+                                            initials, restText);
+      
+      if (channels)
+      {
+        for (xmlNodePtr channel = channels->children; channel; channel = channel->next)
+        {
+          string name((const char*) channel->name);
+          auto attributes = getAttributes(channel);
+          string description, date, nextDate, initials;
+
+          for (xmlNodePtr child = channel->children; child; child = child->next)
+          {
+            string name((const char*) child->name);
+            if (name == "Description")
+              description = getCDATA(child);
+            else if (name == "CalibrationDate")
+              date = getCDATA(child);
+            else if (name == "CalibrationInitials")
+              initials = getCDATA(child);
+          }
+          SensorConfiguration::Channel chl(date, nextDate, initials, attributes);
+          chl.setDescription(description);
+          sensor->addChannel(chl);
+        }
+      }
+      parent->setConfiguration(sensor);
+    } else {
+      // Unknown configuration
+      auto ext = new ExtendedComponentConfiguration(getRawContent(config));
+      parent->setConfiguration(ext);
+    }
+  }
+
   AssetPtr XmlParser::parseAsset(
                                  const std::string &assetId,
                                  const std::string &type,
@@ -850,13 +887,7 @@ namespace mtconnect {
     
     if (!node->children)
     {
-      auto text = xmlNodeGetContent(node);
-      
-      if (text)
-      {
-        value->m_value = (char *) text;
-        xmlFree(text); text = nullptr;
-      }
+      value->m_value = getCDATA(node);      
     }
     else
     {
@@ -957,13 +988,9 @@ namespace mtconnect {
         {
           if (!xmlStrcmp(status->name, BAD_CAST "Status"))
           {
-            xmlChar *text = xmlNodeGetContent(status);
-            
-            if (text)
-            {
-              tool->m_status.push_back((const char *) text);
-              xmlFree(text); text = nullptr;
-            }
+            auto text = getCDATA(status);            
+            if (!text.empty())
+              tool->m_status.push_back(text);
           }
         }
       }
@@ -1043,18 +1070,11 @@ namespace mtconnect {
           }
           else if (!xmlStrcmp(child->name, BAD_CAST "Description"))
           {
-            auto text = xmlNodeGetContent(child);
-            
-            if (text)
-            {
-              tool->setDescription((const char *) text);
-              xmlFree(text); text = nullptr;
-            }
+            tool->setDescription(getCDATA(child));
           }
           else if (!xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition"))
           {
             auto text = xmlNodeGetContent(child);
-            
             if (text)
             {
               tool->addValue(parseCuttingToolNode(child, doc));
@@ -1068,7 +1088,6 @@ namespace mtconnect {
           else if (xmlStrcmp(child->name, BAD_CAST "text"))
           {
             auto text = xmlNodeGetContent(child);
-            
             if (text)
             {
               tool->addValue(parseCuttingToolNode(child, doc));

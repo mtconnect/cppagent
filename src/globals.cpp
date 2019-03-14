@@ -193,19 +193,6 @@ namespace mtconnect {
     }
   }
   
-  
-  int getEnumeration(const string &name, const string *array, unsigned int size)
-  {
-    for (auto i = 0u; i < size; i++)
-    {
-      if (name == array[i])
-        return i;
-    }
-    
-    return ENUM_MISS;
-  }
-  
-  
   uint64_t parseTimeMicro(const std::string &aTime)
   {
     struct tm timeinfo;

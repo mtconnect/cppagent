@@ -25,7 +25,7 @@
 #include "composition.hpp"
 #include "device.hpp"
 #include "cutting_tool.hpp"
-
+#include "sensor_configuration.hpp"
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr) \
@@ -241,6 +241,25 @@ namespace mtconnect {
     m_assetsStyle = style;
   }
   
+  static inline void printRawContent(xmlTextWriterPtr writer, const char *element,
+                          const std::string &text)
+  {
+    if (!text.empty())
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST element));
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST text.c_str()));
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+    }
+  }
+  
+  inline void addAttribute(xmlTextWriterPtr writer, const char *key,
+                           const std::string &value)
+  {
+    if (!value.empty())
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST key,
+                                                    BAD_CAST value.c_str()));
+
+  }
   
   string XmlPrinter::printError(
                                 const unsigned int instanceId,
@@ -270,11 +289,11 @@ namespace mtconnect {
                  nextSeq,
                  nextSeq - 1);
       
-      
       THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Errors"));
       THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Error"));
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "errorCode",
-                                                      BAD_CAST errorCode.c_str()));
+
+      addAttribute(writer, "errorCode", errorCode);
+
       auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST errorText.c_str());
       THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
       xmlFree(text); text = nullptr;
@@ -411,6 +430,39 @@ namespace mtconnect {
     return ret;
   }
   
+  void XmlPrinter::printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration* sensor) const
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "SensorConfiguration"));
+    addSimpleElement(writer, "FirmwareVersion", sensor->getFirmwareVersion());
+      
+    auto &cal = sensor->getCalibration();
+    addSimpleElement(writer, "FirmwareVersion", sensor->getFirmwareVersion());
+    addSimpleElement(writer, "CalibrationDate", cal.m_date);
+    addSimpleElement(writer, "NextCalibrationDate", cal.m_nextDate);
+    addSimpleElement(writer, "CalibrationInitials", cal.m_initials);
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST sensor->getRest().c_str()));
+
+    if (sensor->getChannels().size() > 0)
+    {
+      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Channels"));
+
+      for (const auto &channel : sensor->getChannels())
+      {
+        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Channel"));
+        addAttributes(writer, channel.getAttributes());
+        auto &cal = channel.getCalibration();
+        addSimpleElement(writer, "Description", channel.getDescription());
+        addSimpleElement(writer, "CalibrationDate", cal.m_date);
+        addSimpleElement(writer, "NextCalibrationDate", cal.m_nextDate);
+        addSimpleElement(writer, "CalibrationInitials", cal.m_initials);
+        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Channel
+      }
+      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Channels
+    }
+    
+    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // SensorConfiguration
+  }
   
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)  const
   {
@@ -420,12 +472,22 @@ namespace mtconnect {
     const auto &body = component->getDescriptionBody();
     
     if (desc.size() > 0 || !body.empty())
-      addSimpleElement(writer, "Description", body, &desc);
+      addSimpleElement(writer, "Description", body, desc);
     
-    if (!component->getConfiguration().empty())
+    if (component->getConfiguration())
     {
       THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Configuration"));
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST component->getConfiguration().c_str()));
+
+      auto configuration = component->getConfiguration();
+      if (typeid(*configuration) == typeid(ExtendedComponentConfiguration))
+      {
+        auto ext = static_cast<const ExtendedComponentConfiguration*>(configuration);
+        printRawContent(writer, "Configuration", ext->getContent());
+      } else if (typeid(*configuration) == typeid(SensorConfiguration)) {
+        auto sensor = static_cast<const SensorConfiguration*>(configuration);
+        printSensorConfiguration(writer, sensor);
+      }
+      
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Configuration
     }
     
@@ -480,7 +542,7 @@ namespace mtconnect {
         const Composition::Description *desc = comp->getDescription();
         
         if (desc)
-          addSimpleElement(writer, "Description", desc->getBody(), &desc->getAttributes());
+          addSimpleElement(writer, "Description", desc->getBody(), desc->getAttributes());
         
         THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Composition
       }
@@ -498,35 +560,17 @@ namespace mtconnect {
         {
           if (ref.m_type == Component::Reference::DATA_ITEM)
           {
-            THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItemRef"));
+            addSimpleElement(writer, "DataItemRef", "", { { "idRef", ref.m_id }, { "name", ref.m_name } });
           }
           else if (ref.m_type == Component::Reference::COMPONENT)
           {
-            THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentRef"));
+            addSimpleElement(writer, "ComponentRef", "", { { "idRef", ref.m_id }, { "name", ref.m_name } });
           }
-          else
-          {
-            continue;
-          }
-          
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "idRef", BAD_CAST ref.m_id.c_str()));
         }
         else if (ref.m_type == Component::Reference::DATA_ITEM)
         {
-          THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Reference"));
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "dataItemId", BAD_CAST ref.m_id.c_str()));
+          addSimpleElement(writer, "Reference", "", { { "dataItemId", ref.m_id }, { "name", ref.m_name } });
         }
-        else
-        {
-          continue;
-        }
-        
-        if (ref.m_name.length() > 0)
-        {
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST ref.m_name.c_str()));
-        }
-        
-        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Reference
       }
       
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // References
@@ -545,16 +589,11 @@ namespace mtconnect {
         !dataItem->getSourceComponentId().empty() ||
         !dataItem->getSourceCompositionId().empty())
     {
-      map<string,string> attributes;
-      
-      if (!dataItem->getSourceDataItemId().empty())
-        attributes["dataItemId"] = dataItem->getSourceDataItemId();
-      if (!dataItem->getSourceComponentId().empty())
-        attributes["componentId"] = dataItem->getSourceComponentId();
-      if (!dataItem->getSourceCompositionId().empty())
-        attributes["compositionId"] = dataItem->getSourceCompositionId();
-      
-      addSimpleElement(writer, "Source", dataItem->getSource(), &attributes);
+      addSimpleElement(writer, "Source", dataItem->getSource(), {
+        { "dataItemId", dataItem->getSourceDataItemId() },
+        { "componentId", dataItem->getSourceComponentId() },
+        { "compositionId", dataItem->getSourceCompositionId() }
+      });
     }
     
     if (dataItem->hasConstraints())
@@ -586,8 +625,7 @@ namespace mtconnect {
       {
         map<string, string> attributes;
         auto value = floatToString(dataItem->getFilterValue());
-        attributes["type"] = "MINIMUM_DELTA";
-        addSimpleElement(writer, "Filter", value, &attributes);
+        addSimpleElement(writer, "Filter", value, { { "type", "MINIMUM_DELTA" } });
       }
       
       if (dataItem->hasMinimumPeriod())
@@ -595,7 +633,7 @@ namespace mtconnect {
         map<string, string> attributes;
         auto value = floatToString(dataItem->getFilterPeriod());
         attributes["type"] = "PERIOD";
-        addSimpleElement(writer, "Filter", value, &attributes);
+        addSimpleElement(writer, "Filter", value, { { "type", "PERIOD" } });
       }
       
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Filters
@@ -854,30 +892,20 @@ namespace mtconnect {
     addAttributes(writer, asset->getIdentity());
     
     // Add the timestamp and device uuid fields.
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "timestamp",
-                                                    BAD_CAST asset->getTimestamp().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "deviceUuid",
-                                                    BAD_CAST asset->getDeviceUuid().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "assetId",
-                                                    BAD_CAST asset->getAssetId().c_str()));
+    addAttribute(writer, "timestamp", asset->getTimestamp());
+    addAttribute(writer, "deviceUuid", asset->getDeviceUuid());
+    addAttribute(writer, "assetId", asset->getAssetId());
     
     if (asset->isRemoved())
-    {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                      BAD_CAST "removed",
-                                                      BAD_CAST "true"));
-    }
+      addAttribute(writer, "removed", "true");
     
     if (!asset->getArchetype().empty())
-      addSimpleElement(writer, "AssetArchetypeRef", "", &asset->getArchetype());
+      addSimpleElement(writer, "AssetArchetypeRef", "", asset->getArchetype());
     
     if (!asset->getDescription().empty())
     {
       const auto &body = asset->getDescription();
-      addSimpleElement(writer, "Description", body, nullptr);
+      addSimpleElement(writer, "Description", body);
     }
   }
   
@@ -885,22 +913,17 @@ namespace mtconnect {
   void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, const Device *device)  const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DeviceStream"));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
-                                                    BAD_CAST device->getName().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "uuid",
-                                                    BAD_CAST device->getUuid().c_str()));
+    addAttribute(writer, "name", device->getName());
+    addAttribute(writer, "uuid", device->getUuid());
   }
   
   
   void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, const Component *component)  const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentStream"));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "component",
-                                                    BAD_CAST component->getClass().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name",
-                                                    BAD_CAST component->getName().c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "componentId",
-                                                    BAD_CAST component->getId().c_str()));
+    addAttribute(writer, "component", component->getClass());
+    addAttribute(writer, "name", component->getName());
+    addAttribute(writer, "componentId", component->getId());
   }
   
   
@@ -988,8 +1011,11 @@ namespace mtconnect {
   {
     for (const auto &attr : attributes)
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
+      if (!attr.second.empty()) {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
+                                                        BAD_CAST attr.first.c_str(),
                                                       BAD_CAST attr.second.c_str()));
+      }
     }
   }
   
@@ -998,8 +1024,10 @@ namespace mtconnect {
   {
     for (const auto & attr : attributes)
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first,
-                                                      BAD_CAST attr.second.c_str()));
+      if (!attr.second.empty()) {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first,
+                                                        BAD_CAST attr.second.c_str()));
+      }
     }
   }
   
@@ -1144,7 +1172,7 @@ namespace mtconnect {
                                                       BAD_CAST int64ToString(assetCount).c_str()));
     }
     
-    if (aType == eDEVICES || aType == eERROR)
+    if (aType == eDEVICES || aType == eERROR || aType == eSTREAMS)
     {
       THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize",
                                                       BAD_CAST intToString(bufferSize).c_str()));
@@ -1153,8 +1181,6 @@ namespace mtconnect {
     if (aType == eSTREAMS)
     {
       // Add additional attribtues for streams
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize",
-                                                      BAD_CAST intToString(bufferSize).c_str()));
       THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "nextSequence",
                                                       BAD_CAST int64ToString(nextSeq).c_str()));
       THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST  "firstSequence",
@@ -1169,12 +1195,9 @@ namespace mtconnect {
       
       for (const auto &pair : *count)
       {
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCount"));
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetType",
-                                                        BAD_CAST pair.first.c_str()));
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer,
-                                                     BAD_CAST int64ToString(pair.second).c_str()));
-        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+        addSimpleElement(writer, "AssetCount", intToString(pair.second),
+                         { { "assetType", pair.first } });
+        
       }
       
       THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
@@ -1188,12 +1211,12 @@ namespace mtconnect {
                                     xmlTextWriterPtr writer,
                                     const string &element,
                                     const string &body,
-                                    const map<string, string> *attributes) const
+                                    const map<string, string> &attributes) const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST element.c_str()));
     
-    if (attributes && attributes->size() > 0)
-      addAttributes(writer, *attributes);
+    if (attributes.size() > 0)
+      addAttributes(writer, attributes);
     
     if (!body.empty())
     {
@@ -1211,12 +1234,7 @@ namespace mtconnect {
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST value->m_key.c_str()));
     
-    for (const auto prop : value->m_properties)
-    {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                      BAD_CAST prop.first.c_str(),
-                                                      BAD_CAST prop.second.c_str()));
-    }
+    addAttributes(writer, value->m_properties);
     
     THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST value->m_value.c_str()));
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
@@ -1379,8 +1397,7 @@ namespace mtconnect {
       if (tool->m_items.size() > 0)
       {
         THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingItems"));
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "count",
-                                                        BAD_CAST tool->m_itemCount.c_str()));
+        addAttribute(writer, "count", tool->m_itemCount);
         
         for (const auto &item : tool->m_items)
           printCuttingToolItem(writer, item);

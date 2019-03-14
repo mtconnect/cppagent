@@ -24,6 +24,7 @@
 #include <map>
 
 #include "globals.hpp"
+#include "component_configuration.hpp"
 
 namespace mtconnect {
   class DataItem;
@@ -55,31 +56,7 @@ namespace mtconnect {
       DataItem *m_dataItem;
       Component *m_component;
     };
-    
-    // std::string enumeration for component parts and details
-    enum EComponentSpecs
-    {
-      // Component parts
-      DEVICE,
-      // Component details
-      COMPONENTS,
-      DATA_ITEM,
-      DATA_ITEMS,
-      CONFIGURATION,
-      DESCRIPTION,
-      SOURCE,
-      TEXT,
-      REFERENCES,
-      REFERENCE,
-      DATA_ITEM_REF,
-      COMPONENT_REF,
-      COMPOSITIONS,
-      COMPOSITION
-    };
-    
-    static const unsigned int NumComponentSpecs = 14;
-    static const std::string SComponentSpecs[];
-    
+        
   public:
     // Take in a class name & mapping of attributes
     Component(
@@ -114,8 +91,8 @@ namespace mtconnect {
       return m_descriptionBody; }
     const std::string &getPrefix() const {
       return m_prefix; }
-    const std::string &getConfiguration() const {
-      return m_configuration; }
+    const ComponentConfiguration *getConfiguration() const {
+      return m_configuration.get(); }
     
     // Setter methods
     void setUuid(const std::string &uuid)
@@ -142,8 +119,9 @@ namespace mtconnect {
     const std::map<std::string, std::string> &getDescription() const {
       return m_description; }
     
-    void setConfiguration(const std::string &configuration) {
-      m_configuration = configuration; }
+    void setConfiguration(ComponentConfiguration *configuration) {
+      m_configuration.reset(configuration);
+    }
     
     // Get the device that any component is associated with 
     Device *getDevice();
@@ -211,7 +189,7 @@ namespace mtconnect {
     // Description of itself
     std::map<std::string, std::string> m_description;
     std::string m_descriptionBody;
-    std::string m_configuration;
+    std::unique_ptr<ComponentConfiguration> m_configuration;
     
     // Component relationships
     // Pointer to the parent component

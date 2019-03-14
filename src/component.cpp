@@ -26,28 +26,6 @@
 using namespace std;
 
 namespace mtconnect {
-  // Component static constants
-  const string Component::SComponentSpecs[NumComponentSpecs] =
-  {
-    // Component parts
-    "Device",
-    // Component details
-    "Components",
-    "DataItem",
-    "DataItems",
-    "Configuration",
-    "Description",
-    "Source",
-    "text",
-    "References",
-    "Reference",
-    "DataItemRef",
-    "ComponentRef",
-    "Compositions",
-    "Composition"
-  };
-  
-  
   // Component public methods
   Component::Component(
                        const string &className,

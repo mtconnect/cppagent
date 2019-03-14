@@ -28,6 +28,7 @@ extern "C" {
 
 namespace mtconnect {
   class DataItem;
+  class SensorConfiguration;
   
   class XmlPrinter : public Printer
   {
@@ -155,7 +156,7 @@ namespace mtconnect {
                           xmlTextWriterPtr writer,
                           const std::string &element,
                           const std::string &body,
-                          const std::map<std::string, std::string> *attributes = nullptr)  const;
+                          const std::map<std::string, std::string> &attributes = {})  const;
     
     void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> &attributes)  const;
     void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes)  const;
@@ -176,6 +177,8 @@ namespace mtconnect {
     void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value)  const;
     void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item)  const;
     void printAssetNode(xmlTextWriterPtr writer, Asset *asset)  const;
+    
+    void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration* sensor) const;
     
   protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;

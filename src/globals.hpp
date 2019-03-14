@@ -119,13 +119,6 @@ namespace mtconnect {
   // Replace illegal XML characters with the correct corresponding characters
   void replaceIllegalCharacters(std::string &data);
   
-  // Return enumeration values according to a string name and array
-  int getEnumeration(
-                     const std::string &name,
-                     const std::string *array,
-                     unsigned int size
-                     );
-  
   std::string addNamespace(const std::string aPath, const std::string aPrefix);
   
   bool isMTConnectUrn(const char *aUrn);

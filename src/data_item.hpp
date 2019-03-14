@@ -58,51 +58,6 @@ namespace mtconnect {
       FILTER_NONE
     };
     
-    
-    // Enumeration for the simple units for simple conversions
-    enum ESimpleUnits
-    {
-      AMPERE,
-      COUNT,
-      JOULE,
-      PASCAL,
-      PH,
-      VOLT,
-      WATT,
-      OHM,
-      SOUND_LEVEL,
-      SIEMENS,
-      DECIBEL,
-      INCH,
-      FOOT,
-      CENTIMETER,
-      DECIMETER,
-      METER,
-      FAHRENHEIT,
-      POUND,
-      GRAM,
-      RADIAN,
-      MINUTE,
-      HOUR,
-      SECOND,
-      MILLIMETER,
-      LITER,
-      DEGREE,
-      KILOGRAM,
-      NEWTON,
-      CELSIUS,
-      REVOLUTION,
-      STATUS,
-      PERCENT,
-      NEWTON_MILLIMETER,
-      HERTZ,
-      MILLIMETER_3D,
-      DEGREE_3D
-    };
-    
-    static const unsigned int NumSimpleUnits = 36;
-    static const std::string SSimpleUnits[];
-    
   public:
     // Construct a data item with appropriate attributes mapping
     DataItem(std::map<std::string, std::string> const &attributes);

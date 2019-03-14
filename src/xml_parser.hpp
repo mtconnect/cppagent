@@ -62,24 +62,16 @@ namespace mtconnect {
     void updateAsset(AssetPtr assetPtr, const std::string &type, const std::string &content);
     
   protected:
-    // LibXML XML Doc
-    xmlDocPtr m_doc;
-    
-  protected:
     // Main method to process the nodes and return the objects
-    Component *handleComponent(
-                               xmlNodePtr component,
+    Component *handleNode(
+                               xmlNodePtr node,
                                Component *parent = nullptr,
                                Device *device = nullptr);
     
     // Helper to handle/return each component of the device
     Component *loadComponent(
                              xmlNodePtr node,
-                             Component::EComponentSpecs spec,
-                             std::string &name);
-    
-    // Put all of the attributes of an element into a map
-    std::map<std::string, std::string> getAttributes(const xmlNodePtr element);
+                             const std::string &name);
     
     // Load the data items
     void loadDataItem(xmlNodePtr dataItems, Component *component, Device *device);
@@ -96,10 +88,15 @@ namespace mtconnect {
     
     // Perform loading of references and set up relationships
     void handleReference(
-                         xmlNodePtr components,
+                         xmlNodePtr reference,
                          Component *parent = nullptr,
                          Device *device = nullptr);
     
+    void handleConfiguration(
+                             xmlNodePtr component,
+                             Component *parent = nullptr,
+                             Device *device = nullptr);
+
     // Asset Parser
     AssetPtr handleAsset(
                          xmlNodePtr asset,
@@ -113,5 +110,10 @@ namespace mtconnect {
     static CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr node, xmlDocPtr doc);
     static void parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDocPtr doc);
     static CuttingItemPtr parseCuttingItem(xmlNodePtr node, xmlDocPtr doc);
+    
+  protected:
+    // LibXML XML Doc
+    xmlDocPtr m_doc;
+    std::map<std::string,std::function<void(xmlNodePtr,Component*,Device*)>> m_handlers;
   };
 }

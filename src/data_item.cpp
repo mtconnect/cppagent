@@ -19,52 +19,27 @@
 #include "data_item.hpp"
 #include "device.hpp"
 #include "adapter.hpp"
+#include <map>
+#include <string>
 
 using namespace std;
 
 namespace mtconnect {
   // ComponentEvent public static constants
-  const string DataItem::SSimpleUnits[NumSimpleUnits] =
-  {
-    "AMPERE",
-    "COUNT",
-    "JOULE",
-    "PASCAL",
-    "PH",
-    "VOLT",
-    "WATT",
-    "OHM",
-    "SOUND_LEVEL",
-    "SIEMENS",
-    "DECIBEL",
-    "INCH",
-    "FOOT",
-    "CENTIMETER",
-    "DECIMETER",
-    "METER",
-    "FAHRENHEIT",
-    "POUND",
-    "GRAM",
-    "RADIAN",
-    "MINUTE",
-    "HOUR",
-    "SECOND",
-    "MILLIMETER",
-    "LITER",
-    "DEGREE",
-    "KILOGRAM",
-    "NEWTON",
-    "CELSIUS",
-    "REVOLUTION",
-    "STATUS",
-    "PERCENT",
-    "NEWTON_MILLIMETER",
-    "HERTZ",
-    "MILLIMETER_3D",
-    "DEGREE_3D"
+  std::map<string, double> sUnitsConversion {
+    { "INCH", 25.4 },
+    { "FOOT", 304.8 },
+    { "CENTIMETER", 10.0 },
+    { "DECIMETER", 100.0 },
+    { "METER", 1000.0 },
+    { "FAHRENHEIT", (5.0 / 9.0) },
+    { "POUND", 0.45359237 },
+    { "GRAM", 1 / 1000.0 },
+    { "RADIAN", 57.2957795 },
+    { "MINUTE", 60.0 },
+    { "HOUR", 3600.0 }
   };
-  
-  
+
   // DataItem public methods
   DataItem::DataItem(std::map<string, string> const &attributes) : 
   m_representation(VALUE),
@@ -484,70 +459,14 @@ namespace mtconnect {
   
   double DataItem::simpleFactor(const string &units)
   {
-    switch (getEnumeration(units, SSimpleUnits, NumSimpleUnits))
+    auto conv = sUnitsConversion.find(units);
+    if (conv == sUnitsConversion.end())
     {
-      case INCH:
-        return 25.4;
-        
-      case FOOT:
-        return 304.8;
-        
-      case CENTIMETER:
-        return 10.0;
-        
-      case DECIMETER:
-        return 100.0;
-        
-      case METER:
-        return 1000.f;
-        
-      case FAHRENHEIT:
-        m_conversionOffset = -32.0;
-        return 5.0 / 9.0;
-        
-      case POUND:
-        return 0.45359237;
-        
-      case GRAM:
-        return 1 / 1000.0;
-        
-      case RADIAN:
-        return 57.2957795;
-        
-      case MINUTE:
-        return 60.0;
-        
-      case HOUR:
-        return 3600.0;
-        
-      case SECOND:
-      case MILLIMETER:
-      case LITER:
-      case DEGREE:
-      case KILOGRAM:
-      case NEWTON:
-      case CELSIUS:
-      case REVOLUTION:
-      case STATUS:
-      case PERCENT:
-      case NEWTON_MILLIMETER:
-      case HERTZ:
-      case AMPERE:
-      case COUNT:
-      case JOULE:
-      case PASCAL:
-      case PH:
-      case VOLT:
-      case WATT:
-      case OHM:
-      case SOUND_LEVEL:
-      case SIEMENS:
-      case DECIBEL:
-        
-      default:
-        // Already in correct units
-        return 1.0;
+      return 1.0;
+    } else if (conv->first == "FAHRENHEIT") {
+      m_conversionOffset = -32.0;
     }
+    return conv->second;
   }
   
   

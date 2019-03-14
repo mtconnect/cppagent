@@ -264,7 +264,7 @@ namespace mtconnect {
       }
       
       CPPUNIT_ASSERT(power);
-      CPPUNIT_ASSERT(!power->getConfiguration().empty());
+      CPPUNIT_ASSERT(power->getConfiguration());
     }
     
     

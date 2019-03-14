@@ -121,35 +121,7 @@ namespace mtconnect {
       replaceIllegalCharacters(before3);
       CPPUNIT_ASSERT_EQUAL(before3, after3);
     }
-    
-    
-    void GlobalsTest::testGetEnumerations()
-    {
-      unsigned int size = 7;
-      const string week[] =
-      {
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      };
-      
-      CPPUNIT_ASSERT_EQUAL(0, getEnumeration("Sunday", week, size));
-      CPPUNIT_ASSERT_EQUAL(1, getEnumeration("Monday", week, size));
-      CPPUNIT_ASSERT_EQUAL(2, getEnumeration("Tuesday", week, size));
-      CPPUNIT_ASSERT_EQUAL(3, getEnumeration("Wednesday", week, size));
-      CPPUNIT_ASSERT_EQUAL(4, getEnumeration("Thursday", week, size));
-      CPPUNIT_ASSERT_EQUAL(5, getEnumeration("Friday", week, size));
-      CPPUNIT_ASSERT_EQUAL(6, getEnumeration("Saturday", week, size));
-      
-      CPPUNIT_ASSERT_EQUAL(ENUM_MISS, getEnumeration("Notaday", week, size));
-      CPPUNIT_ASSERT_EQUAL(ENUM_MISS, getEnumeration("SUNDAY", week, size));
-    }
-    
-    
+        
     void GlobalsTest::testGetCurrentTime()
     {
       auto gmt = getCurrentTime(GMT);

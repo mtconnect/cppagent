@@ -38,8 +38,6 @@
 #include "service.hpp"
 #include "asset.hpp"
 
-using namespace dlib;
-
 namespace mtconnect {
   class Adapter;
   class ComponentEvent;
@@ -55,7 +53,7 @@ namespace mtconnect {
   };
   typedef struct dlib::incoming_things IncomingThings;
   
-  class Agent : public server_http
+  class Agent : public dlib::server_http
   {
     class ParameterError
     {
@@ -124,8 +122,8 @@ namespace mtconnect {
     // Overridden method that is called per web request – not used
     // using httpRequest which is called from our own on_connect method.
     const std::string on_request (
-                                  const incoming_things &incoming,
-                                  outgoing_things &outgoing ) override {
+                                  const dlib::incoming_things &incoming,
+                                  dlib::outgoing_things &outgoing ) override {
       throw std::logic_error("Not Implemented");
       return "";
     }
@@ -249,7 +247,7 @@ namespace mtconnect {
                              const std::string& local_ip,
                              unsigned short foreign_port,
                              unsigned short local_port,
-                             uint64
+                             dlib::uint64
                              ) override;
 
     // HTTP methods to handle the 3 basic calls
@@ -257,7 +255,7 @@ namespace mtconnect {
                            const Printer *printer,
                            std::ostream &out,
                            const std::string &path,
-                           const key_value_map &queries,
+                           const dlib::key_value_map &queries,
                            const std::string &call,
                            const std::string &device);
     
@@ -266,7 +264,7 @@ namespace mtconnect {
                           const Printer *printer,
                           std::ostream &out,
                           const std::string &path,
-                          const key_value_map &queries,
+                          const dlib::key_value_map &queries,
                           const std::string &call,
                           const std::string &device);
     
@@ -285,12 +283,12 @@ namespace mtconnect {
     std::string handleAssets(
                              const Printer *printer,
                              std::ostream &out,
-                             const key_value_map &queries,
+                             const dlib::key_value_map &queries,
                              const std::string &list);
     
     std::string storeAsset(
                            std::ostream &out,
-                           const key_value_map &queries,
+                           const dlib::key_value_map &queries,
                            const std::string &asset,
                            const std::string &body);
     
@@ -333,7 +331,7 @@ namespace mtconnect {
     
     // Perform a check on parameter and return a value or a code
     int checkAndGetParam(
-                         const key_value_map &queries,
+                         const dlib::key_value_map &queries,
                          const std::string &param,
                          const int defaultValue,
                          const int minValue = NO_VALUE32,
@@ -343,7 +341,7 @@ namespace mtconnect {
     
     // Perform a check on parameter and return a value or a code
     uint64_t checkAndGetParam64(
-                                const key_value_map &queries,
+                                const dlib::key_value_map &queries,
                                 const std::string &param,
                                 const uint64_t defaultValue,
                                 const uint64_t minValue = NO_VALUE64,
