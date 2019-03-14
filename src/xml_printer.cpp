@@ -252,7 +252,7 @@ namespace mtconnect {
     }
   }
   
-  inline void addAttribute(xmlTextWriterPtr writer, const char *key,
+  static inline void addAttribute(xmlTextWriterPtr writer, const char *key,
                            const std::string &value)
   {
     if (!value.empty())
@@ -261,12 +261,12 @@ namespace mtconnect {
 
   }
   
-  inline void openElement(xmlTextWriterPtr writer, const char *name)
+  static inline void openElement(xmlTextWriterPtr writer, const char *name)
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST name));
   }
   
-  inline void closeElement(xmlTextWriterPtr writer)
+  static inline void closeElement(xmlTextWriterPtr writer)
   {
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
   }
@@ -414,8 +414,7 @@ namespace mtconnect {
       
       for (const auto dev : deviceList)
       {
-        AutoElement ele1(writer, "Device");
-        printProbeHelper(writer, dev);
+        printProbeHelper(writer, dev, "Device");
       }
       
       closeElement(writer); // Devices
@@ -492,8 +491,9 @@ namespace mtconnect {
     }
   }
   
-  void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component)  const
+  void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component, const char *name)  const
   {
+    AutoElement ele(writer, name);
     addAttributes(writer, component->getAttributes());
     
     const auto &desc = component->getDescription();
@@ -534,20 +534,18 @@ namespace mtconnect {
 
       for (const auto &child : children)
       {
-        xmlChar *name = nullptr;
+        const char *name = nullptr;
         if (!child->getPrefix().empty())
         {
           const auto ns = m_devicesNamespaces.find(child->getPrefix());
           if (ns != m_devicesNamespaces.end())
-            name = BAD_CAST child->getPrefixedClass().c_str();
+            name = child->getPrefixedClass().c_str();
         }
         
         if (!name)
-          name = BAD_CAST child->getClass().c_str();
+          name = child->getClass().c_str();
         
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, name));
-        
-        printProbeHelper(writer, child);
+        printProbeHelper(writer, child, name);
       }
     }
     
@@ -595,8 +593,8 @@ namespace mtconnect {
   
   void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem)  const
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DataItem"));
-    
+    AutoElement ele(writer, "DataItem");
+
     addAttributes(writer, dataItem->getAttributes());
     
     if (!dataItem->getSource().empty() ||
@@ -613,7 +611,7 @@ namespace mtconnect {
     
     if (dataItem->hasConstraints())
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Constraints"));
+      AutoElement ele(writer, "Constraints");
       
       auto s = dataItem->getMaximum();
       
@@ -628,8 +626,6 @@ namespace mtconnect {
       const auto &values = dataItem->getConstrainedValues();
       for (const auto &value : values)
         addSimpleElement(writer, "Value", value);
-      
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Constraints
     }
     
     if (dataItem->hasMinimumDelta() || dataItem->hasMinimumPeriod())
@@ -656,8 +652,6 @@ namespace mtconnect {
     
     if (dataItem->hasResetTrigger())
       addSimpleElement(writer, "ResetTrigger", dataItem->getResetTrigger());
-    
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DataItem
   }
   
   
@@ -700,7 +694,7 @@ namespace mtconnect {
                  firstSeq,
                  lastSeq);
       
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Streams"));
+      openElement(writer, "Streams");
       
       // Sort the vector by category.
       if (results.size() > 1)
@@ -721,17 +715,17 @@ namespace mtconnect {
         if (device != lastDevice)
         {
           if (lastDevice)
-            THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DeviceStream
+            closeElement(writer); // DeviceStream
           
           lastDevice = device;
           
           if (lastComponent)
-            THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
+            closeElement(writer); // ComponentStream
           
           lastComponent = nullptr;
           
           if (lastCategory != -1)
-            THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
+            closeElement(writer); // Category
           
           lastCategory = -1;
           addDeviceStream(writer, device);
@@ -740,12 +734,12 @@ namespace mtconnect {
         if (component != lastComponent)
         {
           if (lastComponent)
-            THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
+            closeElement(writer); // ComponentStream
           
           lastComponent = component;
           
           if (lastCategory != -1)
-            THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
+            closeElement(writer);  // Category
           
           lastCategory = -1;
           addComponentStream(writer, component);
@@ -754,7 +748,7 @@ namespace mtconnect {
         if (lastCategory != dataItem->getCategory())
         {
           if (lastCategory != -1)
-            THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
+            closeElement(writer); // Category
           
           lastCategory = dataItem->getCategory();
           addCategory(writer, dataItem->getCategory());
@@ -764,16 +758,16 @@ namespace mtconnect {
       }
       
       if (lastCategory != -1)
-        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Category
+        closeElement(writer); // Category
       
       if (lastDevice)
-        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // DeviceStream
+        closeElement(writer);  // DeviceStream
       
       if (lastComponent)
-        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // ComponentStream
+        closeElement(writer);  // ComponentStream
       
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Streams
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectStreams
+      closeElement(writer);  // Streams
+      closeElement(writer);  // MTConnectStreams
       THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
       
       xmlFreeTextWriter(writer); writer = nullptr;
@@ -836,24 +830,26 @@ namespace mtconnect {
       
       initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull);
       
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Assets"));
-      
-      for (const auto asset : assets)
       {
-        if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
+        AutoElement ele(writer, "Assets");
+      
+        for (const auto asset : assets)
         {
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent(this).c_str()));
-        }
-        else
-        {
-          printAssetNode(writer, asset);
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent(this).c_str()));
-          THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+          if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
+          {
+            THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer,
+                                  BAD_CAST asset->getContent(this).c_str()));
+          }
+          else
+          {
+            AutoElement ele(writer, asset->getType());
+            printAssetNode(writer, asset);
+            THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer,
+                                  BAD_CAST asset->getContent(this).c_str()));
+          }
         }
       }
-      
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Assets
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // MTConnectAssets
+      closeElement(writer); // MTConnectAssets
       
       xmlFreeTextWriter(writer); writer = nullptr;
       ret = (string)((char *) buf->content);
@@ -898,9 +894,6 @@ namespace mtconnect {
   
   void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset)  const
   {
-    // TODO: Check if cutting tool or archetype - should be in type
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST asset->getType().c_str()));
-    
     addAttributes(writer, asset->getIdentity());
     
     // Add the timestamp and device uuid fields.
@@ -924,7 +917,7 @@ namespace mtconnect {
   
   void XmlPrinter::addDeviceStream(xmlTextWriterPtr writer, const Device *device)  const
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "DeviceStream"));
+    openElement(writer, "DeviceStream");
     addAttribute(writer, "name", device->getName());
     addAttribute(writer, "uuid", device->getUuid());
   }
@@ -932,7 +925,7 @@ namespace mtconnect {
   
   void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, const Component *component)  const
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentStream"));
+    openElement(writer, "ComponentStream");
     addAttribute(writer, "component", component->getClass());
     addAttribute(writer, "name", component->getName());
     addAttribute(writer, "componentId", component->getId());
@@ -944,15 +937,15 @@ namespace mtconnect {
     switch (category)
     {
       case DataItem::SAMPLE:
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Samples"));
+        openElement(writer, "Samples");
         break;
         
       case DataItem::EVENT:
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Events"));
+        openElement(writer, "Events");
         break;
         
       case DataItem::CONDITION:
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Condition"));
+        openElement(writer, "Condition");
         break;
     }
     
@@ -962,28 +955,26 @@ namespace mtconnect {
   void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)  const
   {
     auto dataItem = result->getDataItem();
+    string name;
     
     if (dataItem->isCondition())
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST result->getLevelString().c_str()));
+      name = result->getLevelString();
     }
     else
     {
-      xmlChar *element = nullptr;
-      
       if (!dataItem->getPrefix().empty())
       {
         auto ns = m_streamsNamespaces.find(dataItem->getPrefix());
         if (ns != m_streamsNamespaces.end())
-          element = BAD_CAST dataItem->getPrefixedElementName().c_str();
+          name = dataItem->getPrefixedElementName();
       }
       
-      if (!element)
-        element = BAD_CAST dataItem->getElementName().c_str();
-      
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, element));
+      if (name.empty())
+        name = dataItem->getElementName();
     }
     
+    AutoElement ele(writer, name);
     addAttributes(writer, result->getAttributes());
     
     if (result->isTimeSeries() && result->getValue() != "UNAVAILABLE")
@@ -1014,8 +1005,6 @@ namespace mtconnect {
       THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
       xmlFree(text); text = nullptr;
     }
-    
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer)); // Streams
   }
   
   
@@ -1223,7 +1212,8 @@ namespace mtconnect {
                                     xmlTextWriterPtr writer,
                                     const string &element,
                                     const string &body,
-                                    const map<string, string> &attributes) const
+                                    const map<string, string> &attributes,
+                                    bool raw) const
   {
     AutoElement ele(writer, element);
     
@@ -1232,9 +1222,14 @@ namespace mtconnect {
     
     if (!body.empty())
     {
-      auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
+      xmlChar *text = nullptr;
+      if (!raw)
+        text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
+      else
+        text = BAD_CAST body.c_str();
       THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-      xmlFree(text); text = nullptr;
+      if (!raw)
+        xmlFree(text);
     }
   }
   
@@ -1242,12 +1237,7 @@ namespace mtconnect {
   // Cutting tools
   void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value) const
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST value->m_key.c_str()));
-    
-    addAttributes(writer, value->m_properties);
-    
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST value->m_value.c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+    addSimpleElement(writer, value->m_key, value->m_value, value->m_properties, true);
   }
   
   
@@ -1287,7 +1277,7 @@ namespace mtconnect {
   
   void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item) const
   {
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingItem"));
+    AutoElement ele(writer, "CuttingItem");
     
     for (const auto pair : item->m_identity)
     {
@@ -1315,16 +1305,11 @@ namespace mtconnect {
     // Print Measurements
     if (item->m_measurements.size() > 0)
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Measurements"));
-      
+      AutoElement ele(writer, "Measurements");
+
       for (const auto &meas : item->m_measurements)
         printCuttingToolValue(writer, meas.second);
-      
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
     }
-    
-    // CuttingItem
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
   }
   
   
@@ -1342,84 +1327,71 @@ namespace mtconnect {
       THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
       THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
       
-      printAssetNode(writer, tool);
-      
-      set<string> remaining;
-      
-      for (const auto &value : tool->m_values)
       {
-        if (value.first != "Description")
-          remaining.insert(value.first);
-      }
+        AutoElement ele(writer, tool->getType());
+        printAssetNode(writer, tool);
       
-      // Check for cutting tool definition
-      printCuttingToolValue(writer, tool, "CuttingToolDefinition", &remaining);
-      
-      // Print the cutting tool life cycle.
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingToolLifeCycle"));
-      
-      // Status...
-      if (tool->m_status.size() > 0)
-      {
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CutterStatus"));
+        set<string> remaining;
         
-        for (const auto &status : tool->m_status)
+        for (const auto &value : tool->m_values)
         {
-          THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Status"));
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST status.c_str()));
-          THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+          if (value.first != "Description")
+            remaining.insert(value.first);
         }
         
-        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
+        // Check for cutting tool definition
+        printCuttingToolValue(writer, tool, "CuttingToolDefinition", &remaining);
+        
+        // Print the cutting tool life cycle.
+        {
+          AutoElement life(writer, "CuttingToolLifeCycle");
+        
+          // Status...
+          if (tool->m_status.size() > 0)
+          {
+            AutoElement stat(writer, "CutterStatus");
+            for (const auto &status : tool->m_status)
+              addSimpleElement(writer, "Status", status);
+          }
+          
+          // Other values
+          printCuttingToolValue(writer, tool, "ReconditionCount", &remaining);
+          
+          // Tool life
+          for (const auto &life : tool->m_lives)
+            printCuttingToolValue(writer, life);
+          
+          // Remaining items
+          printCuttingToolValue(writer, tool, "ProgramToolGroup", &remaining);
+          printCuttingToolValue(writer, tool, "ProgramToolNumber", &remaining);
+          printCuttingToolValue(writer, tool, "Location", &remaining);
+          printCuttingToolValue(writer, tool, "ProcessSpindleSpeed", &remaining);
+          printCuttingToolValue(writer, tool, "ProcessFeedRate", &remaining);
+          printCuttingToolValue(writer, tool, "ConnectionCodeMachineSide", &remaining);
+          
+          // Print extended items...
+          for (const auto &prop : remaining)
+            printCuttingToolValue(writer, tool, prop.c_str());
+          
+          // Print Measurements
+          if (tool->m_measurements.size() > 0)
+          {
+            AutoElement mes(writer, "Measurements");
+            for (const auto &meas : tool->m_measurements)
+              printCuttingToolValue(writer, meas.second);
+          }
+          
+          // Print Cutting Items
+          if (tool->m_items.size() > 0)
+          {
+            AutoElement mes(writer, "CuttingItems");
+            addAttribute(writer, "count", tool->m_itemCount);
+            
+            for (const auto &item : tool->m_items)
+              printCuttingToolItem(writer, item);
+          }
+        }
       }
-      
-      // Other values
-      printCuttingToolValue(writer, tool, "ReconditionCount", &remaining);
-      
-      // Tool life
-      for (const auto &life : tool->m_lives)
-        printCuttingToolValue(writer, life);
-      
-      // Remaining items
-      printCuttingToolValue(writer, tool, "ProgramToolGroup", &remaining);
-      printCuttingToolValue(writer, tool, "ProgramToolNumber", &remaining);
-      printCuttingToolValue(writer, tool, "Location", &remaining);
-      printCuttingToolValue(writer, tool, "ProcessSpindleSpeed", &remaining);
-      printCuttingToolValue(writer, tool, "ProcessFeedRate", &remaining);
-      printCuttingToolValue(writer, tool, "ConnectionCodeMachineSide", &remaining);
-      
-      // Print extended items...
-      for (const auto &prop : remaining)
-        printCuttingToolValue(writer, tool, prop.c_str());
-      
-      // Print Measurements
-      if (tool->m_measurements.size() > 0)
-      {
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Measurements"));
-        
-        for (const auto &meas : tool->m_measurements)
-          printCuttingToolValue(writer, meas.second);
-        
-        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
-      }
-      
-      // Print Cutting Items
-      if (tool->m_items.size() > 0)
-      {
-        THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "CuttingItems"));
-        addAttribute(writer, "count", tool->m_itemCount);
-        
-        for (const auto &item : tool->m_items)
-          printCuttingToolItem(writer, item);
-        
-        THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
-      }
-      
-      // CuttingToolLifeCycle
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
-      
-      // CuttingTool
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
       
       xmlFreeTextWriter(writer); writer = nullptr;
       ret = (string)((char *) buf->content);

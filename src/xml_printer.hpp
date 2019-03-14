@@ -144,7 +144,7 @@ namespace mtconnect {
                     const std::map<std::string, int> *counts = nullptr) const;
     
     // Helper to print individual components and details
-    void printProbeHelper(xmlTextWriterPtr writer, Component *component)  const;
+    void printProbeHelper(xmlTextWriterPtr writer, Component *component, const char *name)  const;
     void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem) const;
     
     
@@ -156,7 +156,8 @@ namespace mtconnect {
                           xmlTextWriterPtr writer,
                           const std::string &element,
                           const std::string &body,
-                          const std::map<std::string, std::string> &attributes = {})  const;
+                          const std::map<std::string, std::string> &attributes = {},
+                          bool raw = false)  const;
     
     void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> &attributes)  const;
     void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes)  const;
