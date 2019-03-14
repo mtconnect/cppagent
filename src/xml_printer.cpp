@@ -322,17 +322,11 @@ namespace mtconnect {
                  nextSeq,
                  nextSeq - 1);
       
-      openElement(writer, "Errors");
-      openElement(writer, "Error");
-
-      addAttribute(writer, "errorCode", errorCode);
-
-      auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST errorText.c_str());
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-      xmlFree(text); text = nullptr;
-
-      closeElement(writer); // Error
-      closeElement(writer); // Errors
+      {
+        AutoElement e1(writer, "Errors");
+        addSimpleElement(writer, "Error", errorText,
+          {{ "errorCode", errorCode }});
+      }
       closeElement(writer); // MTConnectError
       THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
       
@@ -701,6 +695,7 @@ namespace mtconnect {
         dlib::qsort_array<ComponentEventPtrArray, EventComparer>(results, 0ul, results.size() - 1ul,
                                                                  EventCompare);
       
+      // TODO: Clean up this code, make it simpler.
       Device *lastDevice = nullptr;
       Component *lastComponent = nullptr;
       int lastCategory = -1;
