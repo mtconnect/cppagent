@@ -1090,20 +1090,14 @@ namespace mtconnect {
     string xmlns = "urn:mtconnect.org:" + rootName + ":" + m_schemaVersion;
     string location;
     
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST rootName.c_str()));
+    openElement(writer, rootName.c_str());
     
     // Always make the default namespace and the m: namespace MTConnect default.
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "xmlns:m",
-                                                    BAD_CAST xmlns.c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "xmlns",
-                                                    BAD_CAST xmlns.c_str()));
+    addAttribute(writer, "xmlns:m", xmlns);
+    addAttribute(writer, "xmlns", xmlns);
     
     // Alwats add the xsi namespace
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "xmlns:xsi",
-                                                    BAD_CAST "http://www.w3.org/2001/XMLSchema-instance"));
+    addAttribute(writer, "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
     
     string mtcLocation;
     
@@ -1114,9 +1108,7 @@ namespace mtconnect {
       if (ns.first != "m")
       {
         string attr = "xmlns:" + ns.first;
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                        BAD_CAST attr.c_str(),
-                                                        BAD_CAST ns.second.mUrn.c_str()));
+        addAttribute(writer, attr.c_str(), ns.second.mUrn);
         
         if (location.empty() && !ns.second.mSchemaLocation.empty())
         {
@@ -1137,62 +1129,48 @@ namespace mtconnect {
     else if (location.empty())
       location = xmlns + " http://schemas.mtconnect.org/schemas/" + rootName + "_" + m_schemaVersion + ".xsd";
     
-    
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                                    BAD_CAST "xsi:schemaLocation",
-                                                    BAD_CAST location.c_str()));
-    
+    addAttribute(writer, "xsi:schemaLocation", location);
     
     // Create the header
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "Header"));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "creationTime",
-                                                    BAD_CAST getCurrentTime(GMT).c_str()));
+    AutoElement header(writer, "Header");
+    
+    addAttribute(writer, "creationTime", getCurrentTime(GMT));
     
     static std::string sHostname;
-    
     if (sHostname.empty())
     {
       if (dlib::get_local_hostname(sHostname))
         sHostname = "localhost";
     }
+    addAttribute(writer, "instanceId", intToString(instanceId));
     
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "sender",
-                                                    BAD_CAST sHostname.c_str()));
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "instanceId",
-                                                    BAD_CAST intToString(instanceId).c_str()));
     char version[32] = {0};
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
             AGENT_VERSION_BUILD);
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST version));
+    addAttribute(writer, "version", version);
     
     if (aType == eASSETS || aType == eDEVICES)
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetBufferSize",
-                                                      BAD_CAST intToString(assetBufferSize).c_str()));
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "assetCount",
-                                                      BAD_CAST int64ToString(assetCount).c_str()));
+      addAttribute(writer, "assetBufferSize", intToString(assetBufferSize));
+      addAttribute(writer, "assetCount", intToString(assetCount));
     }
     
     if (aType == eDEVICES || aType == eERROR || aType == eSTREAMS)
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "bufferSize",
-                                                      BAD_CAST intToString(bufferSize).c_str()));
+      addAttribute(writer, "bufferSize", intToString(bufferSize));
     }
     
     if (aType == eSTREAMS)
     {
       // Add additional attribtues for streams
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "nextSequence",
-                                                      BAD_CAST int64ToString(nextSeq).c_str()));
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST  "firstSequence",
-                                                      BAD_CAST int64ToString(firstSeq).c_str()));
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "lastSequence",
-                                                      BAD_CAST int64ToString(lastSeq).c_str()));
+      addAttribute(writer, "nextSequence", int64ToString(nextSeq));
+      addAttribute(writer, "firstSequence", int64ToString(firstSeq));
+      addAttribute(writer, "lastSequence", int64ToString(lastSeq));
     }
     
     if (aType == eDEVICES && count && count->size() > 0)
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "AssetCounts"));
+      AutoElement ele(writer, "AssetCounts");
       
       for (const auto &pair : *count)
       {
@@ -1200,11 +1178,7 @@ namespace mtconnect {
                          { { "assetType", pair.first } });
         
       }
-      
-      THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
     }
-    
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
   }
   
   
