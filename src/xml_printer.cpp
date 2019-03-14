@@ -733,8 +733,8 @@ namespace mtconnect {
               const auto device = component->getDevice();
               
               if (deviceElement.key() != device->getId()) {
-                componentStreamElement.reset("");
                 categoryElement.reset("");
+                componentStreamElement.reset("");
                 
                 deviceElement.reset("DeviceStream", device->getId());
                 addAttribute(writer, "name", device->getName());
@@ -743,6 +743,7 @@ namespace mtconnect {
               
               if (componentStreamElement.key() != component->getId()) {
                 categoryElement.reset("");
+                
                 componentStreamElement.reset("ComponentStream", component->getId());
                 addAttribute(writer, "component", component->getClass());
                 addAttribute(writer, "name", component->getName());
@@ -823,20 +824,20 @@ namespace mtconnect {
       
       {
         AutoElement ele(writer, "Assets");
-      
+        
         for (const auto asset : assets)
         {
           if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
           {
             THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer,
-                                  BAD_CAST asset->getContent(this).c_str()));
+                                                      BAD_CAST asset->getContent(this).c_str()));
           }
           else
           {
             AutoElement ele(writer, asset->getType());
             printAssetNode(writer, asset);
             THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer,
-                                  BAD_CAST asset->getContent(this).c_str()));
+                                                      BAD_CAST asset->getContent(this).c_str()));
           }
         }
       }
