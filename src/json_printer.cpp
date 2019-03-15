@@ -21,6 +21,7 @@
 #include "dlib/sockets.h"
 #include "device.hpp"
 #include "composition.hpp"
+#include "sensor_configuration.hpp"
 
 using namespace std;
 using json = nlohmann::json;
@@ -261,14 +262,62 @@ namespace mtconnect {
   }
   
   template<class T>
-  void toJson(json &parent, const string &collection, T &list)
+  inline void toJson(json &parent, const string &collection, T &list)
   {
+    json obj;
     if (list.size() > 0) {
       json items = json::array();
       for (auto &item : list)
         items.push_back(toJson(item));
       
       parent[collection] = items;
+    }
+  }
+  
+  inline void toJson(json &parent, const SensorConfiguration::Calibration &cal)
+  {
+    if (!cal.m_date.empty())
+      parent["CalibrationDate"] = cal.m_date;
+    if (!cal.m_nextDate.empty())
+      parent["NextCalibrationDate"] = cal.m_nextDate;
+    if (!cal.m_initials.empty())
+      parent["CalibrationInitials"] = cal.m_initials;
+  }
+  
+  inline void toJson(json &parent, const ComponentConfiguration *config)
+  {
+    if (typeid(*config) == typeid(SensorConfiguration))
+    {
+      auto obj = static_cast<const SensorConfiguration*>(config);
+      json sensor = json::object();
+      if (!obj->getFirmwareVersion().empty())
+        sensor["FirmwareVersion"] = obj->getFirmwareVersion();
+      auto &cal = obj->getCalibration();
+      toJson(sensor, cal);
+      
+      if (obj->getChannels().size() > 0) {
+        json channels = json::array();
+        
+        for (auto &channel : obj->getChannels()) {
+          json chan = json::object();
+          addAttributes(chan, channel.getAttributes());
+          
+          if (!channel.getDescription().empty())
+            chan["Description"] = channel.getDescription();
+          
+          auto &cal = channel.getCalibration();
+          toJson(chan, cal);
+          
+          json chanObj = json::object({ { "Channel", chan } });
+          channels.push_back(chanObj);
+        }
+        
+        sensor["Channels"] = channels;
+      }
+      parent["Configuration"] = json::object({ { "SensorConfiguration", sensor } });
+    } else if (typeid(*config) == typeid(ExtendedComponentConfiguration)) {
+      auto obj = static_cast<const ExtendedComponentConfiguration*>(config);
+      parent["Configuration"] = obj->getContent();
     }
   }
   
@@ -284,12 +333,12 @@ namespace mtconnect {
     if (desc.begin() != desc.end())
       comp["Description"] = desc;
     
+    if (component->getConfiguration())
+      toJson(comp, component->getConfiguration());
     toJson(comp, "DataItems", component->getDataItems());
     toJson(comp, "Components", component->getChildren());
     toJson(comp, "Compositions", component->getCompositions());
     toJson(comp, "References", component->getReferences());
-    
-    // TODO: Add configuration
     
     json doc = json::object({ { component->getClass(), comp } });
     

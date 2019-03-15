@@ -55,6 +55,7 @@ namespace mtconnect {
       CPPUNIT_TEST(testInitialValue);
       CPPUNIT_TEST(testDataItemFilters);
       CPPUNIT_TEST(testComposition);
+      CPPUNIT_TEST(testConfiguration);
       CPPUNIT_TEST_SUITE_END();
       
     public:
@@ -66,6 +67,7 @@ namespace mtconnect {
       void testInitialValue();
       void testDataItemFilters();
       void testComposition();
+      void testConfiguration();
 
       void setUp();
       void tearDown();
@@ -251,6 +253,26 @@ namespace mtconnect {
     {
       
     }
+    
+    void JsonPrinterProbeTest::testConfiguration()
+    {
+      auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      auto jdoc = json::parse(doc);
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+      auto sensorObj = devices.at(0).at("/Device/Components/2/Systems/Components/0/Electric/Components/0"_json_pointer);
+      CPPUNIT_ASSERT(sensorObj.is_object());
+      auto sensor = sensorObj["Sensor"];
+      CPPUNIT_ASSERT(sensor.is_object());
+      
+      auto config = sensor.at("/Configuration/SensorConfiguration"_json_pointer);
+      
+      CPPUNIT_ASSERT_EQUAL(string("23"), config.at("/FirmwareVersion"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("2018-08-12"), config.at("/CalibrationDate"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("1"), config.at("/Channels/0/Channel/@number"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("Temperature Probe"), config.at("/Channels/0/Channel/Description"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("2018-09-11"), config.at("/Channels/0/Channel/CalibrationDate"_json_pointer).get<string>());
+    }
+
   }
 }
 
