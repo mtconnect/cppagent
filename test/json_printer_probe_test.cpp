@@ -251,7 +251,22 @@ namespace mtconnect {
     
     void JsonPrinterProbeTest::testComposition()
     {
+      auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      auto jdoc = json::parse(doc);
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
       
+      auto coolant = devices.at(0).at("/Device/Components/2/Systems/Components/1/Coolant"_json_pointer);
+      CPPUNIT_ASSERT(coolant.is_object());
+      
+      auto comp1 = coolant.at("/Compositions/0/Composition"_json_pointer);
+      CPPUNIT_ASSERT_EQUAL(string("main"), comp1.at("/@name"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("TANK"), comp1.at("/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("t59d1170"), comp1.at("/@id"_json_pointer).get<string>());
+      
+      auto comp2 = coolant.at("/Compositions/1/Composition"_json_pointer);
+      CPPUNIT_ASSERT_EQUAL(string("reserve"), comp2.at("/@name"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("TANK"), comp2.at("/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(string("a7973930"), comp2.at("/@id"_json_pointer).get<string>());
     }
     
     void JsonPrinterProbeTest::testConfiguration()
