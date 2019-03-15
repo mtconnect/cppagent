@@ -43,6 +43,20 @@ namespace mtconnect {
     { 
       return static_cast<nlohmann::json::size_type>(v);
     }
+    
+    static inline json find(json &array, const char *path, const char *value)
+    {
+      CPPUNIT_ASSERT(array.is_array());
+      nlohmann::json::json_pointer pointer(path);
+      json res;
+      for (auto &item : array) {
+        if (item.at(pointer).get<string>() == value) {
+          res = item;
+          break;
+        }
+      }
+      return res;
+    }
 
     class JsonPrinterProbeTest : public CppUnit::TestFixture
     {
@@ -195,7 +209,6 @@ namespace mtconnect {
     void JsonPrinterProbeTest::testDataItemConstraints()
     {
       auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
-      //cout << "\n" << doc << endl;
       auto jdoc = json::parse(doc);
       auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
       auto rotary = devices.at(0).at("/Device/Components/0/Axes/Components/1/Rotary"_json_pointer);
@@ -241,12 +254,44 @@ namespace mtconnect {
     
     void JsonPrinterProbeTest::testInitialValue()
     {
+      auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      auto jdoc = json::parse(doc);
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+      auto path = devices.at(0).at("/Device/Components/1/Controller/Components/0/Path"_json_pointer);
+      auto items = path.at("/DataItems"_json_pointer);
+      CPPUNIT_ASSERT(items.is_array());
       
+      json count = find(items, "/DataItem/@id", "d2e9e4a0");
+      CPPUNIT_ASSERT(count.is_object());
+      CPPUNIT_ASSERT_EQUAL(1.0, count.at("/DataItem/InitialValue"_json_pointer).get<double>());
     }
     
     void JsonPrinterProbeTest::testDataItemFilters()
     {
+      auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+      auto jdoc = json::parse(doc);
+      auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+
+      auto electric = devices.at(0).at("/Device/Components/2/Systems/Components/0/Electric"_json_pointer);
+      CPPUNIT_ASSERT(electric.is_object());
       
+      auto temp = electric.at("/DataItems/0"_json_pointer);
+      CPPUNIT_ASSERT(temp.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("x52ca7e0"), temp.at("/DataItem/@id"_json_pointer).get<string>());
+      
+      auto filter = temp.at("/DataItem/Filters/0"_json_pointer);
+      CPPUNIT_ASSERT(filter.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("PERIOD"), filter.at("/Filter/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(60.0, filter.at("/Filter/#text"_json_pointer).get<double>());
+
+      auto volt = electric.at("/DataItems/1"_json_pointer);
+      CPPUNIT_ASSERT(volt.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("r1e58cf0"), volt.at("/DataItem/@id"_json_pointer).get<string>());
+
+      auto filter2 = volt.at("/DataItem/Filters/0"_json_pointer);
+      CPPUNIT_ASSERT(filter2.is_object());
+      CPPUNIT_ASSERT_EQUAL(string("MINIMUM_DELTA"), filter2.at("/Filter/@type"_json_pointer).get<string>());
+      CPPUNIT_ASSERT_EQUAL(10.0, filter2.at("/Filter/#text"_json_pointer).get<double>());
     }
     
     void JsonPrinterProbeTest::testComposition()
@@ -287,7 +332,6 @@ namespace mtconnect {
       CPPUNIT_ASSERT_EQUAL(string("Temperature Probe"), config.at("/Channels/0/Channel/Description"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("2018-09-11"), config.at("/Channels/0/Channel/CalibrationDate"_json_pointer).get<string>());
     }
-
   }
 }
 

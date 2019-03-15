@@ -18,6 +18,8 @@
 #include "json_printer.hpp"
 #include <nlohmann/json.hpp>
 #include <sstream>
+#include <cstdlib>
+
 #include "dlib/sockets.h"
 #include "device.hpp"
 #include "composition.hpp"
@@ -218,6 +220,12 @@ namespace mtconnect {
           }}}));
       obj["Filters"] = filters;
     }
+    
+    if (item->hasInitialValue()) {
+      char *ep;
+      obj["InitialValue"] = strtod(item->getInitialValue().c_str(), &ep);
+    }
+
 
     json dataItem = json::object({ { "DataItem", obj } });
 
