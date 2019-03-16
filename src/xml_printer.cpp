@@ -671,16 +671,6 @@ namespace mtconnect {
       addSimpleElement(writer, "ResetTrigger", dataItem->getResetTrigger());
   }
   
-  
-  typedef bool (*EventComparer)(ComponentEventPtr &aE1, ComponentEventPtr &aE2);
-  
-  
-  static bool EventCompare(ComponentEventPtr &aE1, ComponentEventPtr &aE2)
-  {
-    return aE1 < aE2;
-  }
-  
-  
   string XmlPrinter::printSample(
                                  const unsigned int instanceId,
                                  const unsigned int bufferSize,
@@ -728,9 +718,9 @@ namespace mtconnect {
             
             for (auto &observation : observations)
             {
-              const auto dataItem = observation->getDataItem();
-              const auto component = dataItem->getComponent();
-              const auto device = component->getDevice();
+              const auto &dataItem = observation->getDataItem();
+              const auto &component = dataItem->getComponent();
+              const auto &device = component->getDevice();
               
               if (deviceElement.key() != device->getId()) {
                 categoryElement.reset("");

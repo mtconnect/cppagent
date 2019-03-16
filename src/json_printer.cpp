@@ -79,6 +79,13 @@ namespace mtconnect {
     for (const auto &attr : attrs)
       doc[string("@") + attr.first] = attr.second;
   }
+
+  static inline void addAttributes(json &doc, const AttributeList &attrs)
+  {
+    for (const auto &attr : attrs)
+      doc[string("@") + attr.first] = attr.second;
+  }
+
   
   static inline void add(json &doc, const char *key, const string &value)
   {
@@ -131,14 +138,14 @@ namespace mtconnect {
     
     return doc;
   }
-
+  
   inline json streamHeader(const string &version,
                            const string &hostname,
                            const unsigned int instanceId,
                            const unsigned int bufferSize,
                            const uint64_t nextSequence,
-                           const uint64_t lastSequence,
-                           const uint64_t firstSequence)
+                           const uint64_t firstSequence,
+                           const uint64_t lastSequence)
   {
     json doc = header(version, hostname,
                       instanceId, bufferSize);
@@ -376,16 +383,249 @@ namespace mtconnect {
     return print(doc, m_pretty);
   }
   
+  inline json toJson(const ComponentEventPtr &observation)
+  {
+    auto dataItem = observation->getDataItem();
+    string name;
+    
+    if (dataItem->isCondition())
+    {
+      name = observation->getLevelString();
+    }
+    else
+    {
+      if (!dataItem->getPrefix().empty())
+      {
+        name = dataItem->getPrefixedElementName();
+      }
+      
+      if (name.empty())
+        name = dataItem->getElementName();
+    }
+    
+    json value;
+    
+    if (observation->isTimeSeries() && observation->getValue() != "UNAVAILABLE")
+    {
+      ostringstream ostr;
+      ostr.precision(6);
+      const auto &v = observation->getTimeSeries();
+      
+      value = json::array();
+      
+      for (auto &e : v)
+        value.push_back(e);
+    }
+    else if (observation->isDataSet() && observation->getValue() != "UNAVAILABLE")
+    {
+      value = json::object();
+      
+      const DataSet &set = observation->getDataSet();
+      for (auto &e : set)
+        value[e.first] = e.second;
+    }
+    else if (!observation->getValue().empty())
+    {
+      char *ep;
+      if (dataItem->getCategory() == DataItem::SAMPLE)
+        value = strtod(observation->getValue().c_str(), &ep);
+      else
+        value = observation->getValue();
+    }
+
+    json obj = json::object();
+    addAttributes(obj, observation->getAttributes());
+    
+    obj["#text"] = value;
+    
+    return json::object({ { name, obj } });
+  }
+  
+  class CategoryRef {
+  public:
+    CategoryRef(const char *cat) : m_category(cat) {}
+    CategoryRef(const CategoryRef &other)
+    : m_category(other.m_category), m_events(other.m_events) {}
+    
+    bool addObservation(const ComponentEventPtr &observation) {
+      m_events.push_back(observation);
+      return true;
+    }
+    
+    bool isCategory(const char *cat) {
+      return m_category == cat;
+    }
+    
+    pair<string,json> toJson() {
+      pair<string,json> ret;
+      if (!m_category.empty()) {
+        json items = json::array();
+        for (auto &event : m_events)
+          items.push_back(::mtconnect::toJson(event));
+        
+        ret = make_pair(m_category, items);
+      }
+      return ret;
+    }
+    
+  protected:
+    string m_category;
+    vector<ComponentEventPtr> m_events;
+  };
+  
+  class ComponentRef {
+  public:
+    ComponentRef(const Component *component) : m_component(component), m_categoryRef(nullptr) {}
+    ComponentRef(const ComponentRef &other)
+    : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)  {}
+    
+    bool isComponent(const Component *component) {
+      return m_component == component;
+    }
+    
+    bool addObservation(const ComponentEventPtr &observation,
+                        const Component *component, const DataItem *dataItem)
+    {
+      if (m_component == component)
+      {
+        auto cat = dataItem->getCategoryText();
+        if (m_categoryRef == nullptr || !m_categoryRef->isCategory(cat))
+        {
+          m_categories.emplace_back(cat);
+          m_categoryRef = &m_categories.back();
+        }
+        
+        if (m_categoryRef != nullptr)
+          return m_categoryRef->addObservation(observation);
+      }
+      return false;
+    }
+    
+    json toJson() {
+      json ret;
+      if (m_component != nullptr && !m_categories.empty()) {
+        json obj = json::object({
+          { "@component", m_component->getClass() },
+          { "@componentId", m_component->getId() }
+        });
+        
+        if (!m_component->getName().empty())
+          obj["name"] = m_component->getName();
+        
+        for (auto &cat : m_categories) {
+          auto c = cat.toJson();
+          if (!c.first.empty())
+            obj[c.first] = c.second;
+        }
+        
+        ret = json::object({ { "ComponentStream", obj } });
+      }
+      return ret;
+    }
+  protected:
+    const Component *m_component;
+    vector<CategoryRef> m_categories;
+    CategoryRef *m_categoryRef;
+  };
+  
+  class DeviceRef {
+  public:
+    DeviceRef(const Device *device) : m_device(device), m_componentRef(nullptr) {}
+    DeviceRef(const DeviceRef &other)
+    : m_device(other.m_device), m_components(other.m_components) {}
+    
+    bool isDevice(const Device *device) {
+      return device == m_device;
+    }
+    
+    bool addObservation(const ComponentEventPtr &observation, const Device *device,
+                        const Component *component, const DataItem *dataItem)
+    {
+      if (m_device == device)
+      {
+        if (m_componentRef == nullptr || !m_componentRef->isComponent(component))
+        {
+          m_components.emplace_back(component);
+          m_componentRef = &m_components.back();
+        }
+        
+        if (m_componentRef != nullptr)
+          return m_componentRef->addObservation(observation, component, dataItem);
+      }
+      return false;
+    }
+    
+    json toJson() {
+      json ret;
+      if (m_device != nullptr && !m_components.empty())
+      {
+        json obj = json::object({
+          { "@name", m_device->getName() },
+          { "@uuid", m_device->getUuid() }
+        });
+        json items = json::array();
+        for (auto &comp : m_components)
+          items.push_back(comp.toJson());
+        obj["ComponentStreams"] = items;
+        ret = json::object({{ "DeviceStream", obj }});
+      }
+      return ret;
+    }
+    
+  protected:
+    const Device *m_device;
+    vector<ComponentRef> m_components;
+    ComponentRef *m_componentRef;
+  };
+
   std::string JsonPrinter::printSample(
                                   const unsigned int instanceId,
                                   const unsigned int bufferSize,
                                   const uint64_t nextSeq,
                                   const uint64_t firstSeq,
                                   const uint64_t lastSeq,
-                                  ComponentEventPtrArray &results
+                                  ComponentEventPtrArray &observations
                                   ) const
   {
-    json doc = {"MTConnectStreams", ""};
+    json streams = json::array();
+    
+    if (observations.size() > 0)
+    {
+      dlib::qsort_array<ComponentEventPtrArray,
+      EventComparer>(observations, 0ul, observations.size() - 1ul,
+                     EventCompare);
+      
+      vector<DeviceRef> devices;
+      DeviceRef *deviceRef = nullptr;
+      
+      for (auto &observation : observations)
+      {
+        const auto dataItem = observation->getDataItem();
+        const auto component = dataItem->getComponent();
+        const auto device = component->getDevice();
+        
+        if (deviceRef == nullptr || !deviceRef->isDevice(device))
+        {
+          devices.emplace_back(device);
+          deviceRef = &devices.back();
+        }
+        
+        deviceRef->addObservation(observation, device, component, dataItem);
+      }
+      
+      for (auto &ref : devices)
+        streams.push_back(ref.toJson());
+    }
+    
+    json doc = json::object({ { "MTConnectStreams", {
+      { "Header",
+        streamHeader(m_version, hostname(), instanceId,
+                         bufferSize, nextSeq, firstSeq, lastSeq) },
+      { "Streams", streams }
+    } } });
+    
+    return print(doc, m_pretty);
+
     return print(doc, m_pretty);
   }
   

@@ -32,8 +32,8 @@
 #include "checkpoint.hpp"
 
 #include "test_globals.hpp"
+#include "json_helper.hpp"
 
-using json = nlohmann::json;
 using namespace std;
 
 namespace mtconnect {

@@ -211,4 +211,10 @@ namespace mtconnect {
   {
     m_prev = event;
   }
+  
+  typedef bool (*EventComparer)(ComponentEventPtr &aE1, ComponentEventPtr &aE2);
+  inline bool EventCompare(ComponentEventPtr &aE1, ComponentEventPtr &aE2)
+  {
+    return aE1 < aE2;
+  }
 }

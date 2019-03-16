@@ -33,31 +33,12 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "test_globals.hpp"
+#include "json_helper.hpp"
 
-using json = nlohmann::json;
 using namespace std;
 
 namespace mtconnect {
   namespace test {
-    constexpr nlohmann::json::size_type operator "" _S(unsigned long long v)
-    { 
-      return static_cast<nlohmann::json::size_type>(v);
-    }
-    
-    static inline json find(json &array, const char *path, const char *value)
-    {
-      CPPUNIT_ASSERT(array.is_array());
-      nlohmann::json::json_pointer pointer(path);
-      json res;
-      for (auto &item : array) {
-        if (item.at(pointer).get<string>() == value) {
-          res = item;
-          break;
-        }
-      }
-      return res;
-    }
-
     class JsonPrinterProbeTest : public CppUnit::TestFixture
     {
       CPPUNIT_TEST_SUITE(JsonPrinterProbeTest);
