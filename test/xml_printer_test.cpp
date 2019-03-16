@@ -519,9 +519,7 @@ namespace mtconnect {
       device->setSerialNumber(v);
       v = "99999999";
       device->setStation(v);
-      
-      device = m_devices.front();
-      
+            
       PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
       
       // Check Description

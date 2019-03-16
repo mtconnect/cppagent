@@ -115,9 +115,9 @@ namespace mtconnect {
       CPPUNIT_ASSERT_EQUAL(string("MTConnectStreams"), it.key());
       CPPUNIT_ASSERT_EQUAL(123, jdoc.at("/MTConnectStreams/Header/@instanceId"_json_pointer).get<int32_t>());
       CPPUNIT_ASSERT_EQUAL(131072, jdoc.at("/MTConnectStreams/Header/@bufferSize"_json_pointer).get<int32_t>());
-      CPPUNIT_ASSERT_EQUAL(10254805ull, jdoc.at("/MTConnectStreams/Header/@nextSequence"_json_pointer).get<uint64_t>());
-      CPPUNIT_ASSERT_EQUAL(10123733ull, jdoc.at("/MTConnectStreams/Header/@firstSequence"_json_pointer).get<uint64_t>());
-      CPPUNIT_ASSERT_EQUAL(10123800ull, jdoc.at("/MTConnectStreams/Header/@lastSequence"_json_pointer).get<uint64_t>());
+      CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), jdoc.at("/MTConnectStreams/Header/@nextSequence"_json_pointer).get<uint64_t>());
+      CPPUNIT_ASSERT_EQUAL(uint64_t(10123733), jdoc.at("/MTConnectStreams/Header/@firstSequence"_json_pointer).get<uint64_t>());
+      CPPUNIT_ASSERT_EQUAL(uint64_t(10123800), jdoc.at("/MTConnectStreams/Header/@lastSequence"_json_pointer).get<uint64_t>());
     }
     
     void JsonPrinterStreamTest::testDeviceStream()
