@@ -256,7 +256,7 @@ namespace mtconnect {
       CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
       
       m_connector->sendCommand("Hello There;");
-      
+      this_thread::sleep_for(200ms);
       auto len = m_serverSocket->read(buf, 1023, 1000);
       CPPUNIT_ASSERT_EQUAL(15L, len);
       buf[15] = '\0';
