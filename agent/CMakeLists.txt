@@ -6,12 +6,14 @@ set (AGENT_VERSION_PATCH 0)
 set (AGENT_VERSION_BUILD 8)
 set (AGENT_VERSION_RC "RC8")
 
+set(AGENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
+
 if(WIN32)
   # Version info
   string(TIMESTAMP AGENT_VERSION_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
   set(RESOURCE_FILE "${PROJECT_BINARY_DIR}/agent/version.rc")
   configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/version.rc.in
+    ${AGENT_SOURCE_DIR}/version.rc.in
     ${RESOURCE_FILE} )
   
   set(WINDOWS_LIBRARIES shlwapi)
@@ -30,16 +32,6 @@ endif(UNIX)
 source_group("Source Files" FILES ${AGENT_SRCS})
 
 file(GLOB AGENT_SRCS *.cpp)
-file(GLOB AGENT_HEADERS *.hpp)
-
-# configure a header file to pass some of the CMake settings
-# to the source code
-add_custom_target(UPDATE_VERSION ALL
-	  COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/version.cpp")
-
-configure_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/version.h.in"
-	"${PROJECT_BINARY_DIR}/agent/version.h" )
 
 # Allow better viewing and grouping of files in Visual Studio by defining source groups
 source_group("Headers Files" FILES ${AGENT_HEADERS})
@@ -59,11 +51,11 @@ AddDLibSupport(agent)
 AddDateSupport(agent)
 AddJsonSupport(agent)
 
-target_include_directories(agent
+target_include_directories(agent PRIVATE ${AGENT_SOURCE_DIR}
   PRIVATE ${PROJECT_BINARY_DIR}/agent
   )
 
-target_link_libraries(agent PRIVATE ${LINUX_LIBRARIES} PRIVATE ${WINDOWS_LIBRARIES})
+target_link_libraries(agent PRIVATE agent_lib PRIVATE ${LINUX_LIBRARIES} PRIVATE ${WINDOWS_LIBRARIES})
 
 if (MSVC)
   add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}" "/DLIBXML_STATIC")

@@ -49,6 +49,11 @@ target_include_directories(agent_test
   PRIVATE .
   )
 
+#set(USE_CUTI_FRONT_END FALSE)#Hardcode our choice of frontend
+#cuti_creates_test_target(agent_test agent ${TEST_SRCS})
+#target_compile_definitions(agent_test PRIVATE CUTI_CPPUNIT_COMPATABILITY)
+
+
 target_link_libraries(agent_test PRIVATE ${LINUX_LIBRARIES} PRIVATE ${WINDOWS_LIBRARIES} PRIVATE ${GCOV_LINK_FLAGS})
 
 set_target_properties(agent_test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1)

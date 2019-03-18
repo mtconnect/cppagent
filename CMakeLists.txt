@@ -36,7 +36,9 @@ include(cmake/Date.cmake)
 include(cmake/json.cmake)
 
 # Add our projects
-add_subdirectory(src agent)
+add_subdirectory(agent_lib)
+add_subdirectory(agent)
+add_subdirectory(CUTI ${CMAKE_BINARY_DIR}/cuti)
 add_subdirectory(test)
 
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
