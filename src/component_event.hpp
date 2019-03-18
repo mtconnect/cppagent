@@ -109,7 +109,11 @@ namespace mtconnect {
     
     uint64_t getSequence() const {
       return m_sequence; }
-    
+
+    const std::string &getDuration() const {
+      return m_duration;
+    }
+        
     ComponentEvent *getFirst();
     ComponentEvent *getPrev() {
       return m_prev; }

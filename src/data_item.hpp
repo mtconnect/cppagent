@@ -161,6 +161,9 @@ namespace mtconnect {
     bool allowDups() const {
       return isDiscrete() || isDiscreteRep();
     }
+    bool is3D() const {
+      return m_threeD;
+    }
     
     bool hasResetTrigger() const {
       return !m_resetTrigger.empty(); }

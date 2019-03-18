@@ -106,7 +106,10 @@ namespace mtconnect {
       CPPUNIT_ASSERT_EQUAL(10, jdoc.at("/MTConnectDevices/Header/@assetCount"_json_pointer).get<int32_t>());
 
       auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+      CPPUNIT_ASSERT_EQUAL(2_S, devices.size());
+      
       auto device = devices.at(0).at("/Device"_json_pointer);
+      auto device2 = devices.at(1).at("/Device"_json_pointer);
 
       CPPUNIT_ASSERT_EQUAL(string("x872a3490"), device.at("/@id"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("SimpleCnc"), device.at("/@name"_json_pointer).get<string>());
@@ -115,6 +118,8 @@ namespace mtconnect {
       CPPUNIT_ASSERT_EQUAL(string("This is a simple CNC example"), device.at("/Description/#text"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("MTConnectInstitute"), device.at("/Description/@manufacturer"_json_pointer).get<string>());
       CPPUNIT_ASSERT_EQUAL(string("12"), device.at("/Description/@serialNumber"_json_pointer).get<string>());
+
+      CPPUNIT_ASSERT_EQUAL(string("This is another simple CNC example"), device2.at("/Description/#text"_json_pointer).get<string>());
     }
     
     void JsonPrinterProbeTest::testTopLevelDataItems()

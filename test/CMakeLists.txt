@@ -25,8 +25,8 @@ set_property(SOURCE ${AGENT_SRCS} APPEND PROPERTY COMPILE_FLAGS ${GCOV_COMPILE_F
 # Allow better viewing and grouping of files in Visual Studio by defining source groups
 source_group("Agent Source Files" FILES ${AGENT_SRCS})
 source_group("Agent Header Files" FILES ${AGENT_HEADERS})
-source_group("Headers Files" FILES ${TEST_HEADERS})
-source_group("Source Files" FILES ${TEST_SRCS})
+source_group("Test Headers Files" FILES ${TEST_HEADERS})
+source_group("Test Source Files" FILES ${TEST_SRCS})
 source_group("Resource Files" FILES ${RESOURCE_FILE})
 source_group("Dlib Source Files" FILES ${DLIB_FIX_SRCS})
 

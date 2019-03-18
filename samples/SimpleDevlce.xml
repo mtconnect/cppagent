@@ -55,7 +55,7 @@
           <Components>
             <Path id="a4a7bdf0" name="P1">
               <DataItems>
-                <DataItem id="if36ff60" type="CONTROLLER_MODE" category="EVENT"/>
+                <DataItem id="if36ff60" name="mode" type="CONTROLLER_MODE" category="EVENT"/>
                 <DataItem id="a01c7f30" type="EXECUTION" category="EVENT"/>
                 <DataItem id="k8dd9030" type="PROGRAM" category="EVENT"/>
                 <DataItem id="r63f9b10" type="CONTROLLER_MODE_OVERRIDE" subType="OPTIONAL_STOP" category="EVENT"/>
@@ -137,6 +137,16 @@
           </Components>
         </Systems>
       </Components>
+    </Device>
+    <Device id="a5faf480" uuid="f2db97b0-2bd1-0137-91ba-2a0081597801" name="SampleDevice2">
+      <Description manufacturer="MTConnectInstitute" model="Simple" serialNumber="12">
+	This is another simple CNC example
+      </Description>
+      <DataItems>
+        <DataItem id="z2143c50" name="avail" type="AVAILABILITY" category="EVENT"/>
+        <DataItem id="yef53bc0" type="ASSET_CHANGED" category="EVENT"/>
+        <DataItem id="p5c01a20" type="ASSET_REMOVED" category="EVENT"/>
+      </DataItems>
     </Device>
   </Devices>
 </MTConnectDevices>

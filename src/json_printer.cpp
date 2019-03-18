@@ -426,16 +426,46 @@ namespace mtconnect {
     }
     else if (!observation->getValue().empty())
     {
-      char *ep;
-      if (dataItem->getCategory() == DataItem::SAMPLE)
-        value = strtod(observation->getValue().c_str(), &ep);
-      else
+      if (dataItem->getCategory() == DataItem::SAMPLE) {
+        if (dataItem->is3D()) {
+          value = json::array();
+          stringstream s(observation->getValue());
+          int i;
+          for (i = 0; s && i < 3; i++) {
+            double v;
+            s >> v;
+            value.push_back(v);
+          }
+          if (i < 3)
+          {
+            for (; i < 3; i++)
+              value.push_back(0.0);
+          }
+        }
+        else
+        {
+          char *ep;
+          value = strtod(observation->getValue().c_str(), &ep);
+        }
+      } else {
         value = observation->getValue();
+      }
     }
 
     json obj = json::object();
-    addAttributes(obj, observation->getAttributes());
-    
+    for (const auto &attr : observation->getAttributes())
+    {
+      if (strcmp(attr.first, "sequence") == 0) {
+        obj["@sequence"] = observation->getSequence();
+      } else if (strcmp(attr.first, "sampleCount") == 0 or
+               strcmp(attr.first, "sampleRate") == 0 or
+               strcmp(attr.first, "duration") == 0) {
+        char *ep;
+        obj[string("@") + attr.first] = strtod(observation->getValue().c_str(), &ep);
+      } else {
+        obj[string("@") + attr.first] = attr.second;
+      }
+    }
     obj["#text"] = value;
     
     return json::object({ { name, obj } });
@@ -510,7 +540,7 @@ namespace mtconnect {
         });
         
         if (!m_component->getName().empty())
-          obj["name"] = m_component->getName();
+          obj["@name"] = m_component->getName();
         
         for (auto &cat : m_categories) {
           auto c = cat.toJson();
