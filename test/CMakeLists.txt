@@ -17,7 +17,9 @@ file(GLOB TEST_HEADERS *.hpp)
 
 set(APPVEYOR OFF CACHE STRING "Set for AppVeyor builds")
 
-set(TEST_SRCS json_printer_error_test.cpp json_printer_probe_test.cpp)
+set(TEST_SRCS json_printer_error_test.cpp json_printer_probe_test.cpp adapter_test.cpp
+  change_observer_test.cpp checkpoint_test.cpp component_event_test.cpp
+  component_test.cpp config_test.cpp connector_test.cpp)
 
 set(AGENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
       
@@ -25,8 +27,6 @@ file(GLOB AGENT_SRCS ${AGENT_DIR}/*.cpp)
 file(GLOB AGENT_HEADERS ${AGENT_DIR}/*.hpp)
 
 list(REMOVE_ITEM TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp)
-
-#set_property(SOURCE ${AGENT_SRCS} APPEND PROPERTY COMPILE_FLAGS ${GCOV_COMPILE_FLAGS})
 
 # Allow better viewing and grouping of files in Visual Studio by defining source groups
 source_group("Agent Source Files" FILES ${AGENT_SRCS})
