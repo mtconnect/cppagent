@@ -17,10 +17,11 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include <vector>
 #include <mutex>
 #include <condition_variable>
-#include "globals.hpp"
 
 namespace mtconnect {
   class ChangeSignaler;

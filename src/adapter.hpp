@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -28,7 +30,6 @@
 
 #include "agent.hpp"
 #include "connector.hpp"
-#include "globals.hpp"
 #include "data_item.hpp"
 
 using namespace dlib;

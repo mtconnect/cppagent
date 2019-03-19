@@ -17,13 +17,14 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include <sstream>
 #include <string>
 #include <list>
 #include <vector>
 #include <map>
 
-#include "globals.hpp"
 #include "component_configuration.hpp"
 
 namespace mtconnect {

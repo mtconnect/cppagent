@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "globals.hpp"
 #include <string>
 
 namespace mtconnect {

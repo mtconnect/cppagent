@@ -26,7 +26,7 @@
 
 #include "globals.hpp"
 
-#ifndef __MACH__
+#if !defined(__MACH__) or defined(CUTI_NO_INTEGRATION)
 #define XCTestCase void
 #endif
 

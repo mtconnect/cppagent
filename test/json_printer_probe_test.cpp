@@ -16,6 +16,7 @@
 //
 
 #include "Cuti.h"
+#include "globals.hpp"
 
 #include <string>
 #include <fstream>

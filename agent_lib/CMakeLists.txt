@@ -49,6 +49,8 @@ target_include_directories(agent_lib
   PRIVATE ${PROJECT_BINARY_DIR}/agent_lib
   )
 
+target_compile_definitions(agent_lib PRIVATE NOMINMAX)
+
 if (MSVC)
   add_definitions("/DWINVER=${WINVER}" "/D_WIN32_WINNT=${WINVER}" "/DLIBXML_STATIC")
 endif()  

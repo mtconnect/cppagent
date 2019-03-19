@@ -41,7 +41,7 @@ before_build:
     mkdir build
     cd build
     cmake --version
-    cmake .. -G %generator%
+    cmake .. -DAPPVEYOR=ON -G %generator%
 - sh: git submodule init
 - sh: git submodule update
 - sh: mkdir build

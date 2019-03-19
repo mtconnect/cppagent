@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include "component_event.hpp"
 #include <map>
 #include <string>

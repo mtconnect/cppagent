@@ -17,8 +17,11 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include <string>
 #include <map>
+
 #include "ref_counted.hpp"
 #include "printer.hpp"
 

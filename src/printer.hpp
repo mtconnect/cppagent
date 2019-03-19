@@ -1,12 +1,12 @@
 
 #pragma once
 
+#include "globals.hpp"
 #include <map>
 #include <list>
 #include <string>
 #include <vector>
 
-#include "globals.hpp"
 #include "component_event.hpp"
 
 namespace mtconnect {

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include "service.hpp"
 #include <string>
 #include <chrono>

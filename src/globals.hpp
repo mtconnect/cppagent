@@ -27,6 +27,9 @@
 #ifndef UINT64_MAX
 #define UINT64_MAX 0xFFFFFFFFFFFFFFFFull
 #endif
+#ifndef NOMINMAX
+#define NOMINMAX 1
+#endif
 
 #include <ctime>
 #include <string>

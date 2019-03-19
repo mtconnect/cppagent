@@ -16,13 +16,14 @@
 //
 
 #pragma once
+
+#include "globals.hpp"
+
 #include <mutex>
 #include <chrono>
 
 #include "dlib/sockets.h"
 #include "dlib/server.h"
-
-#include "globals.hpp"
 
 #define HEARTBEAT_FREQ 60000
 

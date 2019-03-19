@@ -16,6 +16,7 @@
 //
 
 #include "Cuti.h"
+#include "globals.hpp"
 
 #include <string>
 #include <fstream>
@@ -23,12 +24,10 @@
 #include <iostream>
 
 #include <nlohmann/json.hpp>
-
 #include "component_event.hpp"
 #include "data_item.hpp"
 #include "device.hpp"
 #include "json_printer.hpp"
-#include "globals.hpp"
 #include "checkpoint.hpp"
 
 #include "json_helper.hpp"

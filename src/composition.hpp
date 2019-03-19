@@ -17,13 +17,13 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include <sstream>
 #include <string>
 #include <list>
 #include <map>
 #include <memory>
-
-#include "globals.hpp"
 
 namespace mtconnect {
   class Composition

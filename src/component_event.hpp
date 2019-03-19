@@ -17,12 +17,13 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include <string>
 #include <vector>
 #include <cmath>
 
 #include "component.hpp"
-#include "globals.hpp"
 #include "data_item.hpp"
 #include "ref_counted.hpp"
 

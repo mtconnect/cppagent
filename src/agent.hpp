@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -32,7 +34,6 @@
 #include "dlib/sliding_buffer.h"
 
 #include "adapter.hpp"
-#include "globals.hpp"
 #include "xml_parser.hpp"
 #include "checkpoint.hpp"
 #include "service.hpp"

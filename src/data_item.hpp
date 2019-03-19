@@ -16,13 +16,13 @@
 //
 
 #pragma once
+#include "globals.hpp"
 
 #include <map>
 
 #include "dlib/threads.h"
 
 #include "component.hpp"
-#include "globals.hpp"
 #include "change_observer.hpp"
 
 #ifdef PASCAL

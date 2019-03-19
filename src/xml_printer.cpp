@@ -15,13 +15,13 @@
 //    limitations under the License.
 //
 
+#include "xml_printer.hpp"
 #include <set>
 #include <libxml/xmlwriter.h>
 #include "dlib/sockets.h"
 #include "dlib/logger.h"
 #include "version.h"
 
-#include "xml_printer.hpp"
 #include "composition.hpp"
 #include "device.hpp"
 #include "cutting_tool.hpp"

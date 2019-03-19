@@ -16,6 +16,7 @@
 //
 
 #pragma once
+#include "globals.hpp"
 
 #include <list>
 #include <string>

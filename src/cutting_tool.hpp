@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "globals.hpp"
+
 #include "asset.hpp"
 #include <vector>
 #include <map>
