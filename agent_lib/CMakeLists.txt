@@ -8,20 +8,6 @@ set (AGENT_VERSION_RC "RC8")
 
 set(AGENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
-if(WIN32)
-  # Version info
-  string(TIMESTAMP AGENT_VERSION_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
-  set(RESOURCE_FILE "${PROJECT_BINARY_DIR}/agent/version.rc")
-  configure_file(
-    ${AGENT_SOURCE_DIR}/version.rc.in
-    ${RESOURCE_FILE} )
-  
-  set(WINDOWS_LIBRARIES shlwapi)
-  
-else()
-  set(RESOURCE_FILE "")
-endif()
-
 if(UNIX)
   execute_process(COMMAND uname OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
   if(CMAKE_SYSTEM_NAME MATCHES Linux)
@@ -47,13 +33,11 @@ configure_file(
 source_group("Headers Files" FILES ${AGENT_HEADERS})
 source_group("Source Files" FILES ${AGENT_SRCS})
 source_group("Dlib Source Files" FILES ${DLIB_FIX_SRCS})
-source_group("Resource Files" FILES ${RESOURCE_FILE})
 
 add_library(agent_lib
   ${AGENT_SRCS}
   ${DLIB_FIX_SRCS}
-  ${AGENT_HEADERS}
-  ${RESOURCE_FILE})
+  ${AGENT_HEADERS})
 
 AddMsvcXPSupport(agent_lib)
 AddLibXML2Support(agent_lib)

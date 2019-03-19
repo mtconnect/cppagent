@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#include "Cuti.h"
+
 #include <libxml/tree.h>
 #include <libxml/xpathInternals.h>
 #include "test_globals.hpp"
@@ -80,7 +82,7 @@ namespace mtconnect {
     
     
     void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
-                   CPPUNIT_NS::SourceLine sourceLine)
+                   const std::string file, int line)
     {
       xmlNodePtr root = xmlDocGetRootElement(doc);
       
@@ -119,9 +121,10 @@ namespace mtconnect {
       
       if (!obj || !obj->nodesetval || obj->nodesetval->nodeNr == 0)
       {
-        CPPUNIT_NS::OStringStream message;
-        message << "Xpath " << xpath << " did not match any nodes in XML document";
-        CPPUNIT_NS::Asserter::fail(message.str(), sourceLine);
+        stringstream message;
+        message << file << "(" << line << "): " <<
+          "Xpath " << xpath << " did not match any nodes in XML document";
+        CPPUNIT_FAIL(message.str());
         
         if (obj)
           xmlXPathFreeObject(obj);
@@ -236,7 +239,7 @@ namespace mtconnect {
     
     
     void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
-                        CPPUNIT_NS::SourceLine sourceLine)
+                        const std::string file, int line)
     
     {
       xmlNodePtr root = xmlDocGetRootElement(doc);

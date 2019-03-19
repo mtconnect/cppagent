@@ -20,51 +20,53 @@
 #include <sstream>
 #include <fstream>
 #include <string>
-#include <cppunit/TestFixture.h>
-#include <cppunit/extensions/HelperMacros.h>
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 
 #include "globals.hpp"
 
-namespace mtconnect {
-  namespace test {
-    // Retrieve a sample file, open it, and return it as a string
-    std::string getFile(std::string fileLoc);
-    
-    // Fill the error
-    void fillErrorText(std::string &errorXml, const std::string &text);
-    
-    // Search the xml and insert a value into an attribute (attribute="")
-    void fillAttribute(
-                       std::string &xmlString,
-                       const std::string &attribute,
-                       const std::string &value
-                       );
-    
-    // Trim white space from string
-    std::string &trim(std::string &str);
-    
-    
-    /// Asserts that two XML strings are equivalent.
+#ifndef __MACH__
+#define XCTestCase void
+#endif
+
+#define STRINGIZE(s) #s
+#define TO_STRING(s) STRINGIZE(s)
+#define PROJECT_ROOT_DIR TO_STRING(PROJECT_ROOT)
+
+// Retrieve a sample file, open it, and return it as a string
+std::string getFile(std::string fileLoc);
+
+// Fill the error
+void fillErrorText(std::string &errorXml, const std::string &text);
+
+// Search the xml and insert a value into an attribute (attribute="")
+void fillAttribute(
+                   std::string &xmlString,
+                   const std::string &attribute,
+                   const std::string &value
+                   );
+
+// Trim white space from string
+std::string &trim(std::string &str);
+
+
+/// Asserts that two XML strings are equivalent.
 #define CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, path, expected) \
-  xpathTest(doc, path, expected, CPPUNIT_SOURCELINE() )
-    
-    void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
-                   CPPUNIT_NS::SourceLine sourceLine);
-    
+xpathTest(doc, path, expected, __FILE__, __LINE__, self)
+
+void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
+               const std::string file, int line, XCTestCase *self = nullptr);
+
 #define PARSE_XML(expr) \
 string result = expr;\
 auto doc = xmlParseMemory(result.c_str(), result.length()); \
 CPPUNIT_ASSERT(doc);
-    
-    /// Asserts that two XML strings are equivalent.
+
+/// Asserts that two XML strings are equivalent.
 #define CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, path, expected) \
-  xpathTestCount(doc, path, expected, CPPUNIT_SOURCELINE() )
-    
-    void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
-                        CPPUNIT_NS::SourceLine sourceLine);
-    
-  }
-}
+xpathTestCount(doc, path, expected, __FILE__, __LINE__, self)
+
+void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
+                    const std::string file, int line, XCTestCase *self = nullptr);
+

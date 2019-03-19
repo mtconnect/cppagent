@@ -15,13 +15,13 @@
 //    limitations under the License.
 //
 
+#include "Cuti.h"
+
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
-#include <cppunit/TestFixture.h>
-#include <cppunit/extensions/HelperMacros.h>
 #include <nlohmann/json.hpp>
 
 #include "component_event.hpp"
@@ -31,58 +31,50 @@
 #include "globals.hpp"
 #include "checkpoint.hpp"
 
-#include "test_globals.hpp"
 #include "json_helper.hpp"
 
 using namespace std;
+using namespace mtconnect;
+using json = nlohmann::json;
 
-namespace mtconnect {
-  namespace test {
-    class JsonPrinterErrorTest : public CppUnit::TestFixture
-    {
-      CPPUNIT_TEST_SUITE(JsonPrinterErrorTest);
-      CPPUNIT_TEST(testPrintError);
-      CPPUNIT_TEST_SUITE_END();
-      
-    public:
-      void testPrintError();
-      
-      void setUp();
-      void tearDown();
-
-    protected:
-      std::unique_ptr<JsonPrinter> m_printer;
-    };
-
-    CPPUNIT_TEST_SUITE_REGISTRATION(JsonPrinterErrorTest);
-
-    void JsonPrinterErrorTest::setUp()
-    {
-      m_printer.reset(new JsonPrinter("1.5", true));
-    }
-
-    void JsonPrinterErrorTest::tearDown()
-    {
-      m_printer.reset();
-    }
-    
-    void JsonPrinterErrorTest::testPrintError()
-    {
-      auto doc = m_printer->printError(12345u, 1024u, 56u,
-                                        "BAD_BAD", "Never do that again");
-      //cout << doc << endl;
-      auto jdoc = json::parse(doc);
-      auto it = jdoc.begin();
-      CPPUNIT_ASSERT_EQUAL(string("MTConnectError"), it.key());
-      CPPUNIT_ASSERT_EQUAL(12345, jdoc.at("/MTConnectError/Header/@instanceId"_json_pointer).get<int32_t>());
-      CPPUNIT_ASSERT_EQUAL(1024, jdoc.at("/MTConnectError/Header/@bufferSize"_json_pointer).get<int32_t>());
-      CPPUNIT_ASSERT_EQUAL(false, jdoc.at("/MTConnectError/Header/@testIndicator"_json_pointer).get<bool>());
-      
-      CPPUNIT_ASSERT_EQUAL(string("BAD_BAD"), jdoc.at("/MTConnectError/Errors/Error/@errorCode"_json_pointer).get<string>());
-      CPPUNIT_ASSERT_EQUAL(string("Never do that again"), jdoc.at("/MTConnectError/Errors/Error/#text"_json_pointer).get<string>());
-
-    }
+TEST_CLASS(JsonPrinterErrorTest)
+{
+public:
+  void testPrintError();
+  
+  SET_UP();
+  TEAR_DOWN() {
+    m_printer.reset();
   }
+  
+protected:
+  std::unique_ptr<JsonPrinter> m_printer;
+
+  CPPUNIT_TEST_SUITE(JsonPrinterErrorTest);
+  CPPUNIT_TEST(testPrintError);
+  CPPUNIT_TEST_SUITE_END();  
+};
+
+CPPUNIT_TEST_SUITE_REGISTRATION(JsonPrinterErrorTest);
+
+void JsonPrinterErrorTest::setUp()
+{
+  m_printer.reset(new JsonPrinter("1.5", true));
 }
 
-      
+void JsonPrinterErrorTest::testPrintError()
+{
+  auto doc = m_printer->printError(12345u, 1024u, 56u,
+                                   "BAD_BAD", "Never do that again");
+  //cout << doc << endl;
+  auto jdoc = json::parse(doc);
+  auto it = jdoc.begin();
+  CPPUNIT_ASSERT_EQUAL(string("MTConnectError"), it.key());
+  CPPUNIT_ASSERT_EQUAL(12345, jdoc.at("/MTConnectError/Header/@instanceId"_json_pointer).get<int32_t>());
+  CPPUNIT_ASSERT_EQUAL(1024, jdoc.at("/MTConnectError/Header/@bufferSize"_json_pointer).get<int32_t>());
+  CPPUNIT_ASSERT_EQUAL(false, jdoc.at("/MTConnectError/Header/@testIndicator"_json_pointer).get<bool>());
+  
+  CPPUNIT_ASSERT_EQUAL(string("BAD_BAD"), jdoc.at("/MTConnectError/Errors/Error/@errorCode"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("Never do that again"), jdoc.at("/MTConnectError/Errors/Error/#text"_json_pointer).get<string>());
+  
+}
