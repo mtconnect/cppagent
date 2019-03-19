@@ -18,6 +18,7 @@
 #include "Cuti.h"
 #include "data_item.hpp"
 #include "component_event.hpp"
+#include "test_globals.hpp"
 
 #include <list>
 
@@ -246,14 +247,11 @@ void ComponentEventTest::testValueHelper(
   message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected <<
             " and actual "
           << event->getValue() << " differ (" << diff << ") by more than 0.001";
-  
-#ifdef CUTI_NO_INTEGRATION
-  CPPUNIT_NS::Asserter::failIf(diff > 0.001,
-                               message.str(),
-                               CPPUNIT_NS::SourceLine(file, line));
+#ifdef __MACH__
+  failIf(diff > 0.001, message.str(), __FILE__, __LINE__,
+         self);
 #else
-  message << " -- " << file << "(" << line << ")";
-  CPPUNIT_ASSERT_MESSAGE(message.str(), diff <= 0.001);
+  failIf(diff > 0.001, message.str(), __FILE__, __LINE__);
 #endif
 }
 

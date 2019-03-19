@@ -22,62 +22,52 @@
 #include <iosfwd>
 #include <chrono>
 
-#include "dlib/md5.h"
-#include "dlib/server.h"
-#include "dlib/sliding_buffer.h"
-
-
-#include <cppunit/TestFixture.h>
-#include <cppunit/extensions/HelperMacros.h>
-
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "test_globals.hpp"
 
-namespace mtconnect {
-  namespace test {
-    class AgentTestHelper {
-    public:
-      AgentTestHelper()
-      : m_agent(nullptr), m_incomingIp("127.0.0.1")
-      {
-      }
-      
-      Agent *m_agent;
-      std::ostringstream m_out;
-      
-      std::string m_incomingIp;
-      
-      std::string m_path;
-      dlib::key_value_map m_queries;
-      std::string m_result;
-      dlib::key_value_map m_cookies;
-      dlib::key_value_map_ci m_incomingHeaders;
-      
-      // Helper method to test expected string, given optional query, & run tests
-      xmlDocPtr responseHelper(CPPUNIT_NS::SourceLine sourceLine, key_value_map &aQueries);
-      xmlDocPtr putResponseHelper(CPPUNIT_NS::SourceLine sourceLine, std::string body,
-                                  key_value_map &aQueries);
-      
-    };
-    
+namespace mtconnect { class Agent; }
+
+class AgentTestHelper {
+public:
+  AgentTestHelper()
+  : m_agent(nullptr), m_incomingIp("127.0.0.1")
+  {
+  }
+  
+  XCTestCase *self;
+  mtconnect::Agent *m_agent;
+  std::ostringstream m_out;
+  
+  std::string m_incomingIp;
+  
+  std::string m_path;
+  dlib::key_value_map m_queries;
+  std::string m_result;
+  dlib::key_value_map m_cookies;
+  dlib::key_value_map_ci m_incomingHeaders;
+  
+  // Helper method to test expected string, given optional query, & run tests
+  xmlDocPtr responseHelper(const char *file, int line, key_value_map &aQueries);
+  xmlDocPtr putResponseHelper(const char *file, int line, std::string body,
+                              key_value_map &aQueries);
+};
+
 #define PARSE_XML_RESPONSE \
-xmlDocPtr doc = m_agentTestHelper.responseHelper(CPPUNIT_SOURCELINE(), m_agentTestHelper.m_queries); \
+xmlDocPtr doc = m_agentTestHelper.responseHelper(__FILE__, __LINE__, m_agentTestHelper.m_queries); \
 CPPUNIT_ASSERT(doc)
-    
+
 #define PARSE_XML_RESPONSE_QUERY_KV(key, value) \
 m_agentTestHelper.m_queries[key] = value; \
-xmlDocPtr doc = m_agentTestHelper.responseHelper(CPPUNIT_SOURCELINE(), m_agentTestHelper.m_queries); \
+xmlDocPtr doc = m_agentTestHelper.responseHelper(__FILE__, __LINE__, m_agentTestHelper.m_queries); \
 m_agentTestHelper.m_queries.clear(); \
 CPPUNIT_ASSERT(doc)
-    
+
 #define PARSE_XML_RESPONSE_QUERY(queries) \
-xmlDocPtr doc = m_agentTestHelper.responseHelper(CPPUNIT_SOURCELINE(), queries); \
+xmlDocPtr doc = m_agentTestHelper.responseHelper(__FILE__, __LINE__, queries); \
 CPPUNIT_ASSERT(doc)
-    
+
 #define PARSE_XML_RESPONSE_PUT(body, queries) \
-xmlDocPtr doc = m_agentTestHelper.putResponseHelper(CPPUNIT_SOURCELINE(), body, queries); \
+xmlDocPtr doc = m_agentTestHelper.putResponseHelper(__FILE__, __LINE__, body, queries); \
 CPPUNIT_ASSERT(doc)
-  }
-}
 

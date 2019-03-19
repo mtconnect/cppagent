@@ -56,7 +56,7 @@ std::string &trim(std::string &str);
 xpathTest(doc, path, expected, __FILE__, __LINE__, self)
 
 void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
-               const std::string file, int line, XCTestCase *self = nullptr);
+               const std::string &file, int line, XCTestCase *self = nullptr);
 
 #define PARSE_XML(expr) \
 string result = expr;\
@@ -68,5 +68,16 @@ CPPUNIT_ASSERT(doc);
 xpathTestCount(doc, path, expected, __FILE__, __LINE__, self)
 
 void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
-                    const std::string file, int line, XCTestCase *self = nullptr);
+                    const std::string &file, int line, XCTestCase *self = nullptr);
 
+void failIf(bool condition, const std::string &message,
+            const std::string &file, int line, XCTestCase *self = nullptr);
+
+void failNotEqualIf(bool condition,
+                    const std::string &expected,
+                    const std::string &actual,
+                    const std::string &message,
+                    const std::string &file, int line, XCTestCase *self = nullptr);
+
+void assertIf(bool condition, const std::string &message,
+              const std::string &file, int line, XCTestCase *self = nullptr);
