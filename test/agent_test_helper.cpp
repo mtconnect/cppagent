@@ -95,7 +95,7 @@ xmlDocPtr AgentTestHelper::putResponseHelper(
 #ifndef CUTI_NO_INTEGRATION
   stringstream msg;
   msg << message << " -- " << file << "(" << line << ")";
-  CPPUNIT_ASSERT_MESSAGE(msg.str(), outgoing.http_return != 200);
+  CPPUNIT_ASSERT_MESSAGE(msg.str(), outgoing.http_return == 200);
 #else
   CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, CPPUNIT_NS::SourceLine(file, line));
 #endif

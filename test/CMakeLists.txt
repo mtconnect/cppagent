@@ -12,15 +12,10 @@ if(UNIX)
 	endif(CMAKE_SYSTEM_NAME MATCHES Linux)
 endif(UNIX)
 
-#file(GLOB TEST_SRCS *.cpp)
-file(GLOB TEST_HEADERS *.hpp)
-
 set(APPVEYOR OFF CACHE STRING "Set for AppVeyor builds")
 
-set(TEST_SRCS json_printer_error_test.cpp json_printer_probe_test.cpp adapter_test.cpp
-  change_observer_test.cpp checkpoint_test.cpp component_event_test.cpp
-  component_test.cpp config_test.cpp connector_test.cpp data_item_test.cpp
-  data_set_test.cpp agent_test_helper.cpp test_globals.cpp)
+file(GLOB TEST_SRCS *.cpp)
+file(GLOB TEST_HEADERS *.hpp)
 
 list(REMOVE_ITEM TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test.cpp)
 

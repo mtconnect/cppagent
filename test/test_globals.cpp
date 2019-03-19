@@ -240,7 +240,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath,
 
 
 void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
-                    const std::string file, int line, XCTestCase *self = nullptr)
+                    const std::string &file, int line, XCTestCase *self)
 
 {
   xmlNodePtr root = xmlDocGetRootElement(doc);
