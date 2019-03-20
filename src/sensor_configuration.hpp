@@ -29,9 +29,11 @@ namespace mtconnect {
       Calibration(const std::string &date, const std::string &nextDate,
                   const std::string &initials)
       : m_date(date), m_nextDate(nextDate), m_initials(initials) {}
-      Calibration() {}
       Calibration(const Calibration &other)
       : m_date(other.m_date), m_nextDate(other.m_nextDate), m_initials(other.m_initials) {}
+      Calibration() {}
+      ~Calibration() {}
+      
       std::string m_date;
       std::string m_nextDate;
       std::string m_initials;

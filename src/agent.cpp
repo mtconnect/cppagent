@@ -265,6 +265,10 @@ namespace mtconnect {
     m_slidingBuffer.reset();
     m_xmlParser.reset();
     m_checkpoints.clear();
+    
+    for (auto &i : m_devices) delete i;
+    m_devices.clear();
+    m_assets.clear();
   }
   
   

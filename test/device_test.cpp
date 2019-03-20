@@ -145,33 +145,34 @@ void DeviceTest::testRelationships()
 {
   // Test get/set parents
   map<string, string> dummy;
-  mtconnect::Component linear("Linear", dummy);
+  mtconnect::Component *linear = new mtconnect::Component("Linear", dummy);
   
   auto devPointer = dynamic_cast<mtconnect::Component *>(m_devA);
   CPPUNIT_ASSERT(devPointer);
   
-  linear.setParent(*m_devA);
-  CPPUNIT_ASSERT(devPointer == linear.getParent());
+  linear->setParent(*m_devA);
+  CPPUNIT_ASSERT(devPointer == linear->getParent());
   
-  mtconnect::Component controller("Controller", dummy);
-  controller.setParent(*m_devA);
-  CPPUNIT_ASSERT(devPointer == controller.getParent());
+  mtconnect::Component *controller = new mtconnect::Component("Controller", dummy);
+  controller->setParent(*m_devA);
+  CPPUNIT_ASSERT(devPointer == controller->getParent());
   
   // Test get device
   CPPUNIT_ASSERT(m_devA == m_devA->getDevice());
-  CPPUNIT_ASSERT(m_devA == linear.getDevice());
-  CPPUNIT_ASSERT(m_devA == controller.getDevice());
+  CPPUNIT_ASSERT(m_devA == linear->getDevice());
+  CPPUNIT_ASSERT(m_devA == controller->getDevice());
   
   // Test add/get children
   CPPUNIT_ASSERT(m_devA->getChildren().empty());
   
-  mtconnect::Component axes("Axes", dummy), thermostat("Thermostat", dummy);
-  m_devA->addChild(axes);
-  m_devA->addChild(thermostat);
+  mtconnect::Component *axes = new mtconnect::Component("Axes", dummy),
+        *thermostat = new mtconnect::Component("Thermostat", dummy);
+  m_devA->addChild(*axes);
+  m_devA->addChild(*thermostat);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_devA->getChildren().size());
-  CPPUNIT_ASSERT(&axes == m_devA->getChildren().front());
-  CPPUNIT_ASSERT(&thermostat == m_devA->getChildren().back());
+  CPPUNIT_ASSERT(axes == m_devA->getChildren().front());
+  CPPUNIT_ASSERT(thermostat == m_devA->getChildren().back());
 }
 
 
@@ -181,13 +182,14 @@ void DeviceTest::testDataItems()
   
   map<string, string> dummy;
   
-  DataItem data1(dummy), data2(dummy);
-  m_devA->addDataItem(data1);
-  m_devA->addDataItem(data2);
+  DataItem *data1 = new DataItem(dummy),
+           *data2 = new DataItem(dummy);
+  m_devA->addDataItem(*data1);
+  m_devA->addDataItem(*data2);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_devA->getDataItems().size());
-  CPPUNIT_ASSERT(&data1 == m_devA->getDataItems().front());
-  CPPUNIT_ASSERT(&data2 == m_devA->getDataItems().back());
+  CPPUNIT_ASSERT(data1 == m_devA->getDataItems().front());
+  CPPUNIT_ASSERT(data2 == m_devA->getDataItems().back());
 }
 
 

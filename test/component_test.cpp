@@ -74,8 +74,12 @@ void ComponentTest::setUp()
 
 void ComponentTest::tearDown()
 {
-  delete m_compA; m_compA = nullptr;
-  delete m_compB; m_compB = nullptr;
+  if (m_compA != nullptr) {
+    delete m_compA; m_compA = nullptr;
+  }
+  if (m_compB != nullptr) {
+    delete m_compB; m_compB = nullptr;
+  }
 }
 
 
@@ -143,33 +147,40 @@ void ComponentTest::testRelationships()
 {
   // Test get/set parents
   map<string, string> dummy;
-  mtconnect::Component linear("Linear", dummy);
+  mtconnect::Component *linear =
+    new mtconnect::Component("Linear", dummy);
   
-  m_compA->setParent(linear);
-  CPPUNIT_ASSERT(&linear == m_compA->getParent());
+  m_compA->setParent(*linear);
+  CPPUNIT_ASSERT(linear == m_compA->getParent());
   
-  Device device(dummy);
-  auto devPointer = dynamic_cast<mtconnect::Component *>(&device);
+  Device *device = new Device(dummy);
+  auto devPointer = dynamic_cast<mtconnect::Component *>(device);
   
   CPPUNIT_ASSERT(devPointer);
-  linear.setParent(*devPointer);
-  CPPUNIT_ASSERT(devPointer == linear.getParent());
+  linear->setParent(*devPointer);
+  CPPUNIT_ASSERT(devPointer == linear->getParent());
   
   // Test get device
-  CPPUNIT_ASSERT(&device == m_compA->getDevice());
-  CPPUNIT_ASSERT(&device == linear.getDevice());
-  CPPUNIT_ASSERT(&device == device.getDevice());
+  CPPUNIT_ASSERT(device == m_compA->getDevice());
+  CPPUNIT_ASSERT(device == linear->getDevice());
+  CPPUNIT_ASSERT(device == device->getDevice());
   
   // Test add/get children
   CPPUNIT_ASSERT(m_compA->getChildren().empty());
   
-  mtconnect::Component axes("Axes", dummy), thermostat("Thermostat", dummy);
-  m_compA->addChild(axes);
-  m_compA->addChild(thermostat);
+  mtconnect::Component *axes = new mtconnect::Component("Axes", dummy),
+           *thermostat = new mtconnect::Component("Thermostat", dummy);
+  m_compA->addChild(*axes);
+  m_compA->addChild(*thermostat);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_compA->getChildren().size());
-  CPPUNIT_ASSERT(&axes == m_compA->getChildren().front());
-  CPPUNIT_ASSERT(&thermostat == m_compA->getChildren().back());
+  CPPUNIT_ASSERT(axes == m_compA->getChildren().front());
+  CPPUNIT_ASSERT(thermostat == m_compA->getChildren().back());
+  
+  delete device;
+  
+  m_compA = nullptr;
+  m_compB = nullptr;
 }
 
 
@@ -179,13 +190,14 @@ void ComponentTest::testDataItems()
   
   map<string, string> dummy;
   
-  DataItem data1(dummy), data2(dummy);
-  m_compA->addDataItem(data1);
-  m_compA->addDataItem(data2);
+  DataItem *data1 = new DataItem(dummy),
+           *data2 = new DataItem(dummy);
+  m_compA->addDataItem(*data1);
+  m_compA->addDataItem(*data2);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_compA->getDataItems().size());
-  CPPUNIT_ASSERT(&data1 == m_compA->getDataItems().front());
-  CPPUNIT_ASSERT(&data2 == m_compA->getDataItems().back());
+  CPPUNIT_ASSERT(data1 == m_compA->getDataItems().front());
+  CPPUNIT_ASSERT(data2 == m_compA->getDataItems().back());
 }
 
 

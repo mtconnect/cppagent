@@ -72,6 +72,12 @@ namespace mtconnect {
   
   Component::~Component()
   {
+    for (auto &i : m_children) delete i;
+    m_children.clear();
+    for (auto &i : m_dataItems) delete i;
+    m_dataItems.clear();
+    for (auto &i : m_compositions) delete i;
+    m_compositions.clear();
   }
   
   
@@ -148,7 +154,7 @@ namespace mtconnect {
       }
     }
     
-    for (const auto childComponent : m_children)
+    for (const auto &childComponent : m_children)
       childComponent->resolveReferences();
   }
   

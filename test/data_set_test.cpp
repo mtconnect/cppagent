@@ -110,11 +110,6 @@ void DataSetTest::tearDown()
   m_agent.reset();
   m_checkpoint.reset();
   m_agentTestHelper.reset();
-  if(m_dataItem1)
-  {
-    delete m_dataItem1;
-    m_dataItem1 = nullptr;
-  }
 }
 
 void DataSetTest::testDataItem()
