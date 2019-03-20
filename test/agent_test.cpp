@@ -50,7 +50,7 @@ protected:
   std::unique_ptr<Agent> m_agent;
   Adapter *m_adapter;
   std::string m_agentId;
-  AgentTestHelper m_agentTestHelper;
+  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   
   std::chrono::milliseconds m_delay;
   
@@ -259,10 +259,11 @@ void AgentTest::setUp()
   m_agentId = intToString(getCurrentTimeInSec());
   m_adapter = nullptr;
   
-  m_agentTestHelper.m_agent = m_agent.get();
-  m_agentTestHelper.m_queries.clear();
+  m_agentTestHelper = make_unique<AgentTestHelper>();
+  m_agentTestHelper->m_agent = m_agent.get();
+  m_agentTestHelper->m_queries.clear();
 #ifdef __MACH__
-  m_agentTestHelper.self = self;
+  m_agentTestHelper->self = self;
 #endif
 }
 
@@ -271,6 +272,7 @@ void AgentTest::tearDown()
 {
   m_agent.reset();
   m_adapter = nullptr;
+  m_agentTestHelper.reset();
 }
 
 
@@ -286,25 +288,25 @@ void AgentTest::testBadPath()
   auto pathError = getFile(PROJECT_ROOT_DIR "/samples/test_error.xml");
   
   {
-    m_agentTestHelper.m_path = "/bad_path";
+    m_agentTestHelper->m_path = "/bad_path";
     PARSE_XML_RESPONSE;
-    string message = (string) "The following path is invalid: " + m_agentTestHelper.m_path;
+    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_path;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
   
   {
-    m_agentTestHelper.m_path = "/bad/path/";
+    m_agentTestHelper->m_path = "/bad/path/";
     PARSE_XML_RESPONSE;
-    string message = (string) "The following path is invalid: " + m_agentTestHelper.m_path;
+    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_path;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
   
   {
-    m_agentTestHelper.m_path = "/LinuxCNC/current/blah";
+    m_agentTestHelper->m_path = "/LinuxCNC/current/blah";
     PARSE_XML_RESPONSE;
-    string message = (string) "The following path is invalid: " + m_agentTestHelper.m_path;
+    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_path;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
@@ -313,7 +315,7 @@ void AgentTest::testBadPath()
 
 void AgentTest::testBadXPath()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   key_value_map query;
   
   {
@@ -345,7 +347,7 @@ void AgentTest::testBadXPath()
 
 void AgentTest::testBadCount()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   key_value_map query;
   
   {
@@ -383,7 +385,7 @@ void AgentTest::testBadCount()
 
 void AgentTest::testBadFreq()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   key_value_map query;
   
   {
@@ -413,7 +415,7 @@ void AgentTest::testBadFreq()
 void AgentTest::testGoodPath()
 {
   {
-    m_agentTestHelper.m_path = "/current?path=//Power";
+    m_agentTestHelper->m_path = "/current?path=//Power";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Power']//m:PowerState",
                                       "UNAVAILABLE");
@@ -425,7 +427,7 @@ void AgentTest::testGoodPath()
 
 void AgentTest::testXPath()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   key_value_map query;
   
   {
@@ -445,19 +447,19 @@ void AgentTest::testXPath()
 void AgentTest::testProbe()
 {
   {
-    m_agentTestHelper.m_path = "/probe";
+    m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
   }
   
   {
-    m_agentTestHelper.m_path = "/";
+    m_agentTestHelper->m_path = "/";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
   }
   
   {
-    m_agentTestHelper.m_path = "/LinuxCNC";
+    m_agentTestHelper->m_path = "/LinuxCNC";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
   }
@@ -467,7 +469,7 @@ void AgentTest::testProbe()
 void AgentTest::testEmptyStream()
 {
   {
-    m_agentTestHelper.m_path = "/current";
+    m_agentTestHelper->m_path = "/current";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
@@ -480,7 +482,7 @@ void AgentTest::testEmptyStream()
   }
   
   {
-    m_agentTestHelper.m_path = "/sample";
+    m_agentTestHelper->m_path = "/sample";
     char line[80] = {0};
     sprintf(line, "%d", (int) m_agent->getSequence());
     PARSE_XML_RESPONSE_QUERY_KV("from", line);
@@ -492,7 +494,7 @@ void AgentTest::testEmptyStream()
 void AgentTest::testBadDevices()
 {
   {
-    m_agentTestHelper.m_path = "/LinuxCN/probe";
+    m_agentTestHelper->m_path = "/LinuxCN/probe";
     PARSE_XML_RESPONSE;
     string message = (string) "Could not find the device 'LinuxCN'";
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "NO_DEVICE");
@@ -521,7 +523,7 @@ void AgentTest::testAddToBuffer()
   CPPUNIT_ASSERT(!event1);
   
   {
-    m_agentTestHelper.m_path = "/sample";
+    m_agentTestHelper->m_path = "/sample";
     PARSE_XML_RESPONSE_QUERY_KV("from", "36");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
   }
@@ -534,13 +536,13 @@ void AgentTest::testAddToBuffer()
   CPPUNIT_ASSERT_EQUAL(2, (int) event2->refCount());
   
   {
-    m_agentTestHelper.m_path = "/current";
+    m_agentTestHelper->m_path = "/current";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "ON");
   }
   
   {
-    m_agentTestHelper.m_path = "/sample";
+    m_agentTestHelper->m_path = "/sample";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState[1]", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState[2]", "ON");
@@ -550,7 +552,7 @@ void AgentTest::testAddToBuffer()
 
 void AgentTest::testAdapter()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -583,7 +585,7 @@ void AgentTest::testAdapter()
 
 void AgentTest::testCurrentAt()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   string key("at"), value;
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -650,7 +652,7 @@ void AgentTest::testCurrentAt()
 
 void AgentTest::testCurrentAt64()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   string key("at"), value;
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -683,7 +685,7 @@ void AgentTest::testCurrentAt64()
 
 void AgentTest::testCurrentAtOutOfRange()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   string key("at"), value;
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -723,7 +725,7 @@ void AgentTest::testCurrentAtOutOfRange()
 
 void AgentTest::testSampleAtNextSeq()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   string key("from"), value;
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -772,7 +774,7 @@ void AgentTest::testSequenceNumberRollover()
     m_adapter->processData(line);
     
     {
-      m_agentTestHelper.m_path = "/current";
+      m_agentTestHelper->m_path = "/current";
       PARSE_XML_RESPONSE;
       CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence",
                                         int64ToString(seq + i).c_str());
@@ -781,7 +783,7 @@ void AgentTest::testSequenceNumberRollover()
     }
     
     {
-      m_agentTestHelper.m_path = "/sample";
+      m_agentTestHelper->m_path = "/sample";
       kvm["from"] = int64ToString(seq);
       kvm["count"] = "128";
       
@@ -798,7 +800,7 @@ void AgentTest::testSequenceNumberRollover()
     
     for (int j = 0; j <= i; j++)
     {
-      m_agentTestHelper.m_path = "/sample";
+      m_agentTestHelper->m_path = "/sample";
       kvm["from"] = int64ToString(seq + j);
       kvm["count"] = "1";
       
@@ -835,7 +837,7 @@ void AgentTest::testSampleCount()
   }
   
   {
-    m_agentTestHelper.m_path = "/sample";
+    m_agentTestHelper->m_path = "/sample";
     kvm["path"] = "//DataItem[@name='Xact']";
     kvm["from"] = int64ToString(seq);
     kvm["count"] = "10";
@@ -859,7 +861,7 @@ void AgentTest::testSampleCount()
 
 void AgentTest::testAdapterCommands()
 {
-  m_agentTestHelper.m_path = "/probe";
+  m_agentTestHelper->m_path = "/probe";
   
   auto device = m_agent->getDeviceByName("LinuxCNC");
   CPPUNIT_ASSERT(device);
@@ -896,8 +898,8 @@ void AgentTest::testAdapterDeviceCommand()
 {
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/two_devices.xml", 8, 4, "1.5", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
-  m_agentTestHelper.m_path = "/probe";
+  m_agentTestHelper->m_agent = m_agent.get();
+  m_agentTestHelper->m_path = "/probe";
   
   auto device1 = m_agent->getDeviceByName("Device1");
   CPPUNIT_ASSERT(device1);
@@ -924,7 +926,7 @@ void AgentTest::testAdapterDeviceCommand()
 
 void AgentTest::testUUIDChange()
 {
-  m_agentTestHelper.m_path = "/probe";
+  m_agentTestHelper->m_path = "/probe";
   
   auto device = m_agent->getDeviceByName("LinuxCNC");
   CPPUNIT_ASSERT(device);
@@ -946,7 +948,7 @@ void AgentTest::testUUIDChange()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
   
-  m_agentTestHelper.m_path = "/current?path=//Device[@uuid=\"MK-1234\"]";
+  m_agentTestHelper->m_path = "/current?path=//Device[@uuid=\"MK-1234\"]";
   {
     // TODO: Fix and make sure dom is updated so this xpath will parse correctly.
     //PARSE_XML_RESPONSE_QUERY_KV("path", "//Device[@uuid=\"MK-1234\"]");
@@ -967,26 +969,26 @@ void AgentTest::testFileDownload()
   OutgoingThings outgoing;
   incoming.request_type = "GET";
   incoming.path = uri;
-  incoming.queries = m_agentTestHelper.m_queries;
-  incoming.cookies = m_agentTestHelper.m_cookies;
-  incoming.headers = m_agentTestHelper.m_incomingHeaders;
+  incoming.queries = m_agentTestHelper->m_queries;
+  incoming.cookies = m_agentTestHelper->m_cookies;
+  incoming.headers = m_agentTestHelper->m_incomingHeaders;
   
-  outgoing.m_out = &m_agentTestHelper.m_out;
+  outgoing.m_out = &m_agentTestHelper->m_out;
   
-  m_agentTestHelper.m_result = m_agent->httpRequest(incoming, outgoing);
-  CPPUNIT_ASSERT(m_agentTestHelper.m_result.empty());
-  CPPUNIT_ASSERT(m_agentTestHelper.m_out.bad());
-  CPPUNIT_ASSERT(m_agentTestHelper.m_out.str().find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
+  m_agentTestHelper->m_result = m_agent->httpRequest(incoming, outgoing);
+  CPPUNIT_ASSERT(m_agentTestHelper->m_result.empty());
+  CPPUNIT_ASSERT(m_agentTestHelper->m_out.bad());
+  CPPUNIT_ASSERT(m_agentTestHelper->m_out.str().find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
 }
 
 
 void AgentTest::testFailedFileDownload()
 {
-  m_agentTestHelper.m_path = "/schemas/MTConnectDevices_1.1.xsd";
-  string error = "The following path is invalid: " + m_agentTestHelper.m_path;
+  m_agentTestHelper->m_path = "/schemas/MTConnectDevices_1.1.xsd";
+  string error = "The following path is invalid: " + m_agentTestHelper->m_path;
   
   // Register a file with the agent.
-  m_agent->registerFile(m_agentTestHelper.m_path, "./BadFileName.xsd");
+  m_agent->registerFile(m_agentTestHelper->m_path, "./BadFileName.xsd");
   
   {
     PARSE_XML_RESPONSE;
@@ -999,7 +1001,7 @@ void AgentTest::testFailedFileDownload()
 
 void AgentTest::testDuplicateCheck()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -1032,7 +1034,7 @@ void AgentTest::testDuplicateCheck()
 
 void AgentTest::testDuplicateCheckAfterDisconnect()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -1076,7 +1078,7 @@ void AgentTest::testDuplicateCheckAfterDisconnect()
 
 void AgentTest::testAutoAvailable()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -1122,7 +1124,7 @@ void AgentTest::testAutoAvailable()
 
 void AgentTest::testMultipleDisconnect()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -1192,7 +1194,7 @@ void AgentTest::testMultipleDisconnect()
 
 void AgentTest::testIgnoreTimestamps()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -1220,7 +1222,7 @@ void AgentTest::testIgnoreTimestamps()
 void AgentTest::testAssetStorage()
 {
   m_agent->enablePut();
-  m_agentTestHelper.m_path = "/asset/123";
+  m_agentTestHelper->m_path = "/asset/123";
   string body = "<Part>TEST</Part>";
   key_value_map queries;
   
@@ -1243,7 +1245,7 @@ void AgentTest::testAssetStorage()
   }
   
   // The device should generate an asset changed event as well.
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -1256,7 +1258,7 @@ void AgentTest::testAssetStorage()
 void AgentTest::testAssetBuffer()
 {
   m_agent->enablePut();
-  m_agentTestHelper.m_path = "/asset/1";
+  m_agentTestHelper->m_path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
   key_value_map queries;
   
@@ -1285,7 +1287,7 @@ void AgentTest::testAssetBuffer()
     CPPUNIT_ASSERT_EQUAL(1, m_agent->getAssetCount("Part"));
   }
   
-  m_agentTestHelper.m_path = "/asset/2";
+  m_agentTestHelper->m_path = "/asset/2";
   body = "<Part>TEST 2</Part>";
   
   {
@@ -1300,7 +1302,7 @@ void AgentTest::testAssetBuffer()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
   }
   
-  m_agentTestHelper.m_path = "/asset/3";
+  m_agentTestHelper->m_path = "/asset/3";
   body = "<Part>TEST 3</Part>";
   
   {
@@ -1315,7 +1317,7 @@ void AgentTest::testAssetBuffer()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 3");
   }
   
-  m_agentTestHelper.m_path = "/asset/4";
+  m_agentTestHelper->m_path = "/asset/4";
   body = "<Part>TEST 4</Part>";
   
   {
@@ -1331,7 +1333,7 @@ void AgentTest::testAssetBuffer()
   }
   
   // Test multiple asset get
-  m_agentTestHelper.m_path = "/assets";
+  m_agentTestHelper->m_path = "/assets";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
@@ -1342,7 +1344,7 @@ void AgentTest::testAssetBuffer()
   }
   
   // Test multiple asset get with filter
-  m_agentTestHelper.m_path = "/assets";
+  m_agentTestHelper->m_path = "/assets";
   {
     PARSE_XML_RESPONSE_QUERY(queries);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
@@ -1362,7 +1364,7 @@ void AgentTest::testAssetBuffer()
   
   queries.erase("count");
   
-  m_agentTestHelper.m_path = "/asset/5";
+  m_agentTestHelper->m_path = "/asset/5";
   body = "<Part>TEST 5</Part>";
   
   {
@@ -1377,7 +1379,7 @@ void AgentTest::testAssetBuffer()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 5");
   }
   
-  m_agentTestHelper.m_path = "/asset/1";
+  m_agentTestHelper->m_path = "/asset/1";
   
   {
     PARSE_XML_RESPONSE;
@@ -1387,7 +1389,7 @@ void AgentTest::testAssetBuffer()
                                       "Could not find asset: 1");
   }
   
-  m_agentTestHelper.m_path = "/asset/3";
+  m_agentTestHelper->m_path = "/asset/3";
   body = "<Part>TEST 6</Part>";
   
   {
@@ -1402,7 +1404,7 @@ void AgentTest::testAssetBuffer()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 6");
   }
   
-  m_agentTestHelper.m_path = "/asset/2";
+  m_agentTestHelper->m_path = "/asset/2";
   
   {
     PARSE_XML_RESPONSE;
@@ -1410,7 +1412,7 @@ void AgentTest::testAssetBuffer()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
   }
   
-  m_agentTestHelper.m_path = "/asset/2";
+  m_agentTestHelper->m_path = "/asset/2";
   body = "<Part>TEST 7</Part>";
   
   {
@@ -1419,7 +1421,7 @@ void AgentTest::testAssetBuffer()
     CPPUNIT_ASSERT_EQUAL(4, m_agent->getAssetCount("Part"));
   }
   
-  m_agentTestHelper.m_path = "/asset/6";
+  m_agentTestHelper->m_path = "/asset/6";
   body = "<Part>TEST 8</Part>";
   
   {
@@ -1435,7 +1437,7 @@ void AgentTest::testAssetBuffer()
   }
   
   // Now since two and three have been modified, asset 4 should be removed.
-  m_agentTestHelper.m_path = "/asset/4";
+  m_agentTestHelper->m_path = "/asset/4";
   
   {
     PARSE_XML_RESPONSE;
@@ -1449,7 +1451,7 @@ void AgentTest::testAssetBuffer()
 
 void AgentTest::testAssetError()
 {
-  m_agentTestHelper.m_path = "/asset/123";
+  m_agentTestHelper->m_path = "/asset/123";
   
   {
     PARSE_XML_RESPONSE;
@@ -1469,7 +1471,7 @@ void AgentTest::testAdapterAddAsset()
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, m_agent->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/asset/111";
+  m_agentTestHelper->m_path = "/asset/111";
   
   {
     PARSE_XML_RESPONSE;
@@ -1494,7 +1496,7 @@ void AgentTest::testMultiLineAsset()
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, m_agent->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/asset/111";
+  m_agentTestHelper->m_path = "/asset/111";
   
   {
     PARSE_XML_RESPONSE;
@@ -1507,7 +1509,7 @@ void AgentTest::testMultiLineAsset()
   }
   
   // Make sure we can still add a line and we are out of multiline mode...
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   m_adapter->processData("TIME|line|204");
   
   {
@@ -1597,26 +1599,26 @@ void AgentTest::testBadAsset()
 void AgentTest::testAssetProbe()
 {
   m_agent->enablePut();
-  m_agentTestHelper.m_path = "/asset/1";
+  m_agentTestHelper->m_path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
   key_value_map queries;
   
   queries["device"] = "LinuxCNC";
   queries["type"] = "Part";
   
-  m_agentTestHelper.m_path = "/asset/1";
+  m_agentTestHelper->m_path = "/asset/1";
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
   }
-  m_agentTestHelper.m_path = "/asset/2";
+  m_agentTestHelper->m_path = "/asset/2";
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNIT_ASSERT_EQUAL((unsigned int) 2, m_agent->getAssetCount());
   }
   
   {
-    m_agentTestHelper.m_path = "/probe";
+    m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount@assetType", "Part");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount", "2");
@@ -1627,7 +1629,7 @@ void AgentTest::testAssetProbe()
 void AgentTest::testAssetRemoval()
 {
   m_agent->enablePut();
-  m_agentTestHelper.m_path = "/asset/1";
+  m_agentTestHelper->m_path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
   key_value_map queries;
   
@@ -1656,7 +1658,7 @@ void AgentTest::testAssetRemoval()
     CPPUNIT_ASSERT_EQUAL(1, m_agent->getAssetCount("Part"));
   }
   
-  m_agentTestHelper.m_path = "/asset/2";
+  m_agentTestHelper->m_path = "/asset/2";
   body = "<Part>TEST 2</Part>";
   
   {
@@ -1671,7 +1673,7 @@ void AgentTest::testAssetRemoval()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
   }
   
-  m_agentTestHelper.m_path = "/asset/3";
+  m_agentTestHelper->m_path = "/asset/3";
   body = "<Part>TEST 3</Part>";
   
   {
@@ -1687,7 +1689,7 @@ void AgentTest::testAssetRemoval()
   }
   
   
-  m_agentTestHelper.m_path = "/asset/2";
+  m_agentTestHelper->m_path = "/asset/2";
   body = "<Part removed='true'>TEST 2</Part>";
   
   {
@@ -1696,14 +1698,14 @@ void AgentTest::testAssetRemoval()
     CPPUNIT_ASSERT_EQUAL(3, m_agent->getAssetCount("Part"));
   }
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "2");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
   }
   
-  m_agentTestHelper.m_path = "/assets";
+  m_agentTestHelper->m_path = "/assets";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
@@ -1712,7 +1714,7 @@ void AgentTest::testAssetRemoval()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
   }
   
-  m_agentTestHelper.m_queries["removed"] = "true";
+  m_agentTestHelper->m_queries["removed"] = "true";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
@@ -1742,7 +1744,7 @@ void AgentTest::testAssetRemovalByAdapter()
   m_adapter->processData("TIME|@ASSET@|113|Part|<Part>TEST 3</Part>");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 3, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "113");
@@ -1752,14 +1754,14 @@ void AgentTest::testAssetRemovalByAdapter()
   m_adapter->processData("TIME|@REMOVE_ASSET@|112\r");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 3, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "112");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
   }
   
-  m_agentTestHelper.m_path = "/assets";
+  m_agentTestHelper->m_path = "/assets";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
@@ -1770,7 +1772,7 @@ void AgentTest::testAssetRemovalByAdapter()
   
   // TODO: When asset is removed and the content is literal, it will
   // not regenerate the attributes for the asset.
-  m_agentTestHelper.m_queries["removed"] = "true";
+  m_agentTestHelper->m_queries["removed"] = "true";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
@@ -1785,7 +1787,7 @@ void AgentTest::testAssetRemovalByAdapter()
 void AgentTest::testAssetStorageWithoutType()
 {
   m_agent->enablePut();
-  m_agentTestHelper.m_path = "/asset/123";
+  m_agentTestHelper->m_path = "/asset/123";
   string body = "<Part>TEST</Part>";
   key_value_map queries;
   
@@ -1805,10 +1807,10 @@ void AgentTest::testAssetAdditionOfAssetChanged12()
 {
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.2", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
   {
-    m_agentTestHelper.m_path = "/probe";
+    m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
@@ -1820,10 +1822,10 @@ void AgentTest::testAssetAdditionOfAssetRemoved13()
 {
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.3", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
   {
-    m_agentTestHelper.m_path = "/probe";
+    m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
@@ -1839,7 +1841,7 @@ void AgentTest::testAssetPrependId()
   CPPUNIT_ASSERT_EQUAL((unsigned int) 4, m_agent->getMaxAssets());
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/asset/0001";
+  m_agentTestHelper->m_path = "/asset/0001";
   
   {
     PARSE_XML_RESPONSE;
@@ -1867,7 +1869,7 @@ void AgentTest::testAssetWithSimpleCuttingItems()
   m_adapter->parseBuffer("--multiline--AAAA\n");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/asset/XXX.200";
+  m_agentTestHelper->m_path = "/asset/XXX.200";
   
   {
     PARSE_XML_RESPONSE;
@@ -1900,7 +1902,7 @@ void AgentTest::testRemoveLastAssetChanged()
   m_adapter->processData("TIME|@ASSET@|111|Part|<Part>TEST 1</Part>");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "111");
@@ -1910,7 +1912,7 @@ void AgentTest::testRemoveLastAssetChanged()
   m_adapter->processData("TIME|@REMOVE_ASSET@|111");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "111");
@@ -1937,7 +1939,7 @@ void AgentTest::testRemoveAllAssets()
   m_adapter->processData("TIME|@ASSET@|113|Part|<Part>TEST 3</Part>");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 3, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "113");
@@ -1947,7 +1949,7 @@ void AgentTest::testRemoveAllAssets()
   m_adapter->processData("TIME|@REMOVE_ALL_ASSETS@|Part");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 3, m_agent->getAssetCount());
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "111");
@@ -1956,7 +1958,7 @@ void AgentTest::testRemoveAllAssets()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
   }
   
-  m_agentTestHelper.m_path = "/assets";
+  m_agentTestHelper->m_path = "/assets";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 0);
@@ -1965,7 +1967,7 @@ void AgentTest::testRemoveAllAssets()
   
   // TODO: When asset is removed and the content is literal, it will
   // not regenerate the attributes for the asset.
-  m_agentTestHelper.m_queries["removed"] = "true";
+  m_agentTestHelper->m_queries["removed"] = "true";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
@@ -1986,13 +1988,13 @@ void AgentTest::testPut()
   queries["time"] = "TIME";
   queries["line"] = "205";
   queries["power"] = "ON";
-  m_agentTestHelper.m_path = "/LinuxCNC";
+  m_agentTestHelper->m_path = "/LinuxCNC";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
   }
   
-  m_agentTestHelper.m_path = "/LinuxCNC/current";
+  m_agentTestHelper->m_path = "/LinuxCNC/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -2012,7 +2014,7 @@ void AgentTest::testPutBlocking()
   queries["time"] = "TIME";
   queries["line"] = "205";
   queries["power"] = "ON";
-  m_agentTestHelper.m_path = "/LinuxCNC";
+  m_agentTestHelper->m_path = "/LinuxCNC";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
@@ -2032,14 +2034,14 @@ void AgentTest::testPutBlockingFrom()
   
   queries["time"] = "TIME";
   queries["line"] = "205";
-  m_agentTestHelper.m_path = "/LinuxCNC";
+  m_agentTestHelper->m_path = "/LinuxCNC";
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT is not allowed from 127.0.0.1");
   }
   
-  m_agentTestHelper.m_path = "/LinuxCNC/current";
+  m_agentTestHelper->m_path = "/LinuxCNC/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -2047,14 +2049,14 @@ void AgentTest::testPutBlockingFrom()
   }
   
   // Retry request after adding ip address
-  m_agentTestHelper.m_path = "/LinuxCNC";
+  m_agentTestHelper->m_path = "/LinuxCNC";
   m_agent->allowPutFrom("127.0.0.1");
   
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
   }
   
-  m_agentTestHelper.m_path = "/LinuxCNC/current";
+  m_agentTestHelper->m_path = "/LinuxCNC/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -2075,7 +2077,7 @@ void AgentTest::testStreamData()
   query["interval"] = "50";
   query["heartbeat"] = to_string(heartbeatFreq.count()).c_str();
   query["from"] = int64ToString(m_agent->getSequence());
-  m_agentTestHelper.m_path = "/LinuxCNC/sample";
+  m_agentTestHelper->m_path = "/LinuxCNC/sample";
   
   
   // Heartbeat test. Heartbeat should be sent in 200ms. Give
@@ -2086,10 +2088,10 @@ void AgentTest::testStreamData()
     auto killThreadLambda = [](AgentTest *test)
     {
       this_thread::sleep_for(test->m_delay);
-      test->m_agentTestHelper.m_out.setstate(ios::eofbit);
+      test->m_agentTestHelper->m_out.setstate(ios::eofbit);
     };
     
-    m_delay = 25ms;
+    m_delay = 20ms;
     auto killThread = std::thread{killThreadLambda, this};
     try
     {
@@ -2108,8 +2110,8 @@ void AgentTest::testStreamData()
     }
   }
   
-  m_agentTestHelper.m_out.clear();
-  m_agentTestHelper.m_out.str("");
+  m_agentTestHelper->m_out.clear();
+  m_agentTestHelper->m_out.str("");
   
   // Set some data and make sure we get data within 40ms.
   // Again, allow for some slop.
@@ -2121,7 +2123,7 @@ void AgentTest::testStreamData()
     {
       this_thread::sleep_for(test->m_delay);
       test->m_adapter->processData("TIME|line|204");
-      test->m_agentTestHelper.m_out.setstate(ios::eofbit);
+      test->m_agentTestHelper->m_out.setstate(ios::eofbit);
     };
     
     m_delay = 10ms;
@@ -2162,7 +2164,7 @@ void AgentTest::testStreamDataObserver()
   query["heartbeat"] = "1000";
   query["count"] = "10";
   query["from"] = int64ToString(m_agent->getSequence());
-  m_agentTestHelper.m_path = "/LinuxCNC/sample";
+  m_agentTestHelper->m_path = "/LinuxCNC/sample";
   
   // Test to make sure the signal will push the sequence number forward and capture
   // the new data.
@@ -2173,7 +2175,7 @@ void AgentTest::testStreamDataObserver()
       test->m_agent->setSequence(test->m_agent->getSequence() + 20ull);
       test->m_adapter->processData("TIME|line|204");
       this_thread::sleep_for(120ms);
-      test->m_agentTestHelper.m_out.setstate(ios::eofbit);
+      test->m_agentTestHelper->m_out.setstate(ios::eofbit);
     };
     
     m_delay = 50ms;
@@ -2198,7 +2200,7 @@ void AgentTest::testStreamDataObserver()
 void AgentTest::testRelativeTime()
 {
   {
-    m_agentTestHelper.m_path = "/sample";
+    m_agentTestHelper->m_path = "/sample";
     
     m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
     CPPUNIT_ASSERT(m_adapter);
@@ -2222,7 +2224,7 @@ void AgentTest::testRelativeTime()
 void AgentTest::testRelativeParsedTime()
 {
   {
-    m_agentTestHelper.m_path = "/sample";
+    m_agentTestHelper->m_path = "/sample";
     
     m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
     CPPUNIT_ASSERT(m_adapter);
@@ -2246,7 +2248,7 @@ void AgentTest::testRelativeParsedTime()
 
 void AgentTest::testRelativeParsedTimeDetection()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -2263,7 +2265,7 @@ void AgentTest::testRelativeParsedTimeDetection()
 
 void AgentTest::testRelativeOffsetDetection()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -2302,7 +2304,7 @@ void AgentTest::testDynamicCalibration()
   m_adapter->processData("TIME|Yact|200|Zact|600");
   m_adapter->processData("TIME|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 5118 5117 5117 5119 5119 5118 5118 5118 5118 5118");
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -2320,7 +2322,7 @@ void AgentTest::testInitialTimeSeriesValues()
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -2335,12 +2337,12 @@ void AgentTest::testFilterValues13()
 {
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", 8, 4, "1.5", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -2389,12 +2391,12 @@ void AgentTest::testFilterValues()
 {
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -2455,13 +2457,13 @@ void AgentTest::testFilterValues()
   // Test period filter with ignore timestamps
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   m_adapter->setIgnoreTimestamps(true);
   CPPUNIT_ASSERT(m_adapter);
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -2490,13 +2492,13 @@ void AgentTest::testFilterValues()
   // Test period filter with relative time
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   m_adapter->setRelativeTime(true);
   CPPUNIT_ASSERT(m_adapter);
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -2536,7 +2538,7 @@ void AgentTest::testResetTriggered()
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter->processData("TIME1|pcount|0");
   m_adapter->processData("TIME2|pcount|1");
@@ -2562,7 +2564,7 @@ void AgentTest::testReferences()
 {
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/reference_example.xml", 8, 4, "1.5", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -2592,7 +2594,7 @@ void AgentTest::testReferences()
   
   CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref3.m_component);
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   key_value_map query;
   query["path"] = "//BarFeederInterface";
   
@@ -2612,9 +2614,9 @@ void AgentTest::testDiscrete()
 {
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   m_adapter->setDupCheck(true);
@@ -2661,10 +2663,10 @@ void AgentTest::testDiscrete()
 
 void AgentTest::testUpcaseValues()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25ms);
-  m_agentTestHelper.m_agent = m_agent.get();
+  m_agentTestHelper->m_agent = m_agent.get();
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   m_adapter->setDupCheck(true);
@@ -2690,7 +2692,7 @@ void AgentTest::testUpcaseValues()
 
 void AgentTest::testConditionSequence()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   m_adapter->setDupCheck(true);
@@ -2787,7 +2789,7 @@ void AgentTest::testConditionSequence()
 
 void AgentTest::testEmptyLastItemFromAdapter()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   m_adapter->setDupCheck(true);
@@ -2856,7 +2858,7 @@ void AgentTest::testEmptyLastItemFromAdapter()
 
 void AgentTest::testConstantValue()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   
@@ -2886,7 +2888,7 @@ void AgentTest::testConstantValue()
 
 void AgentTest::testBadDataItem()
 {
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -2908,7 +2910,7 @@ void AgentTest::testBadDataItem()
 
 void AgentTest::testComposition()
 {
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   m_adapter->setDupCheck(true);

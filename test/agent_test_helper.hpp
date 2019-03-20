@@ -54,20 +54,20 @@ public:
 };
 
 #define PARSE_XML_RESPONSE \
-xmlDocPtr doc = m_agentTestHelper.responseHelper(__FILE__, __LINE__, m_agentTestHelper.m_queries); \
+xmlDocPtr doc = m_agentTestHelper->responseHelper(__FILE__, __LINE__, m_agentTestHelper->m_queries); \
 CPPUNIT_ASSERT(doc)
 
 #define PARSE_XML_RESPONSE_QUERY_KV(key, value) \
-m_agentTestHelper.m_queries[key] = value; \
-xmlDocPtr doc = m_agentTestHelper.responseHelper(__FILE__, __LINE__, m_agentTestHelper.m_queries); \
-m_agentTestHelper.m_queries.clear(); \
+m_agentTestHelper->m_queries[key] = value; \
+xmlDocPtr doc = m_agentTestHelper->responseHelper(__FILE__, __LINE__, m_agentTestHelper->m_queries); \
+m_agentTestHelper->m_queries.clear(); \
 CPPUNIT_ASSERT(doc)
 
 #define PARSE_XML_RESPONSE_QUERY(queries) \
-xmlDocPtr doc = m_agentTestHelper.responseHelper(__FILE__, __LINE__, queries); \
+xmlDocPtr doc = m_agentTestHelper->responseHelper(__FILE__, __LINE__, queries); \
 CPPUNIT_ASSERT(doc)
 
 #define PARSE_XML_RESPONSE_PUT(body, queries) \
-xmlDocPtr doc = m_agentTestHelper.putResponseHelper(__FILE__, __LINE__, body, queries); \
+xmlDocPtr doc = m_agentTestHelper->putResponseHelper(__FILE__, __LINE__, body, queries); \
 CPPUNIT_ASSERT(doc)
 

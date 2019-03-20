@@ -36,7 +36,7 @@ protected:
   std::string m_agentId;
   DataItem* m_dataItem1;
   
-  AgentTestHelper m_agentTestHelper;
+  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   
 public:
   void testDataItem();
@@ -92,9 +92,11 @@ void DataSetTest::setUp()
   m_agentId = int64ToString(getCurrentTimeInSec());
   m_adapter = nullptr;
   m_checkpoint = make_unique<Checkpoint>();
-  m_agentTestHelper.m_agent = m_agent.get();
+  
+  m_agentTestHelper = make_unique<AgentTestHelper>();
+  m_agentTestHelper->m_agent = m_agent.get();
 #ifdef __MACH__
-  m_agentTestHelper.self = self;
+  m_agentTestHelper->self = self;
 #endif
   
   std::map<string, string> attributes;
@@ -107,6 +109,7 @@ void DataSetTest::tearDown()
 {
   m_agent.reset();
   m_checkpoint.reset();
+  m_agentTestHelper.reset();
   if(m_dataItem1)
   {
     delete m_dataItem1;
@@ -292,7 +295,7 @@ void DataSetTest::testCurrent()
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -355,7 +358,7 @@ void DataSetTest::testSample()
   m_adapter->processData("TIME|vars|c=5");
   m_adapter->processData("TIME|vars|a=1 c=8");
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -368,14 +371,14 @@ void DataSetTest::testSample()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@sampleCount", "1");
   }
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "a=1 b=2 c=8");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sampleCount", "3");
   }
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   m_adapter->processData("TIME|vars|c b=5");
   
   {
@@ -391,7 +394,7 @@ void DataSetTest::testSample()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@sampleCount", "2");
   }
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -415,7 +418,7 @@ void DataSetTest::testCurrentAt()
   m_adapter->processData("TIME|vars|RESET|q=hello_there");
   m_adapter->processData("TIME|vars|r=good_bye");
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq - 1));
@@ -498,7 +501,7 @@ void DataSetTest::testResetWithNoItems()
   m_adapter->processData("TIME|vars|RESET|");
   m_adapter->processData("TIME|vars|r=good_bye");
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -531,7 +534,7 @@ void DataSetTest::testDuplicateCompression()
   m_adapter->processData("TIME|vars|b=2 d=4 c=3");
   m_adapter->processData("TIME|vars|b=3 e=4");
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -544,7 +547,7 @@ void DataSetTest::testDuplicateCompression()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@sampleCount", "2");
   }
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -554,7 +557,7 @@ void DataSetTest::testDuplicateCompression()
   
   m_adapter->processData("TIME|vars|RESET|a=1 b=3 c=3 d=4 e=4");
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -564,7 +567,7 @@ void DataSetTest::testDuplicateCompression()
     
   }
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -580,7 +583,7 @@ void DataSetTest::testQuoteDelimeter()
   
   m_adapter->processData("TIME|vars|a='1 2 3' b=\"x y z\" c={cats and dogs}");
   
-  m_agentTestHelper.m_path = "/current";
+  m_agentTestHelper->m_path = "/current";
   
   {
     PARSE_XML_RESPONSE;
@@ -615,7 +618,7 @@ void DataSetTest::testSampleWithDiscrete()
   m_adapter->processData("TIME|vars2|c=5");
   m_adapter->processData("TIME|vars2|a=1 c=8");
   
-  m_agentTestHelper.m_path = "/sample";
+  m_agentTestHelper->m_path = "/sample";
   
   {
     PARSE_XML_RESPONSE;
@@ -635,7 +638,7 @@ void DataSetTest::testProbe()
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
   
-  m_agentTestHelper.m_path = "/probe";
+  m_agentTestHelper->m_path = "/probe";
   
   {
     PARSE_XML_RESPONSE;

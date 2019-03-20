@@ -55,7 +55,6 @@ AddJsonSupport(agent_test)
 target_include_directories(agent_test
   PRIVATE ${AGENT_DIR}
   PRIVATE .
-  PRIVATE 
   )
 
 target_include_directories(agent_test PRIVATE ../CUTI/include)  
