@@ -356,7 +356,7 @@ void ConnectorTest::testSendCommand()
 
 void ConnectorTest::testIPV6Connection()
 {
-#if !defined(WIN32) || (NTDDI_VERSION >= NTDDI_VISTA)
+#if !defined(WIN32)
   m_connector.reset();
   
   CPPUNIT_ASSERT(!create_listener(m_server, 0, "::1"));
