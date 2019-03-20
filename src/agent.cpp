@@ -49,9 +49,10 @@ namespace mtconnect {
                int bufferSize,
                int maxAssets,
                const std::string &version,
-               std::chrono::milliseconds checkpointFreq) :
+               std::chrono::milliseconds checkpointFreq,
+               bool pretty) :
   m_putEnabled(false),
-  m_logStreamData(false)
+  m_logStreamData(false), m_pretty(pretty)
   {
     m_mimeTypes["xsl"] = "text/xsl";
     m_mimeTypes["xml"] = "text/xml";
@@ -64,10 +65,10 @@ namespace mtconnect {
     m_mimeTypes["ico"] = "image/x-icon";
 
     // Create the XmlPrinter
-    XmlPrinter *xmlPrinter = new XmlPrinter(version);
+    XmlPrinter *xmlPrinter = new XmlPrinter(version, m_pretty);
     m_printers["xml"].reset(xmlPrinter);
 
-    JsonPrinter *jsonPrinter = new JsonPrinter(version);
+    JsonPrinter *jsonPrinter = new JsonPrinter(version, m_pretty);
     m_printers["json"].reset(jsonPrinter);
 
     try

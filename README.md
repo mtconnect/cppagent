@@ -605,6 +605,10 @@ Configuration Parameters
 
     *Default*: 15
 
+* `Pretty` - Pretty print the output with indententation
+
+    *Default*: false
+
 
 ### Adapter configuration items ###
 

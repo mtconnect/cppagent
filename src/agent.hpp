@@ -115,7 +115,8 @@ namespace mtconnect {
           int bufferSize,
           int maxAssets,
           const std::string &version,
-          std::chrono::milliseconds checkpointFreq = std::chrono::milliseconds{1000});
+          std::chrono::milliseconds checkpointFreq = std::chrono::milliseconds{1000},
+          bool pretty = false);
     
     // Virtual destructor
     virtual ~Agent();
@@ -471,5 +472,6 @@ namespace mtconnect {
     
     // For debugging
     bool m_logStreamData;
+    bool m_pretty;
   };
 }

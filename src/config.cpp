@@ -519,6 +519,7 @@ namespace mtconnect {
     auto upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
     m_monitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
     m_minimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
+    m_pretty = get_bool_with_default(reader, "Pretty", false);
     
     m_pidFile = get_with_default(reader, "PidFile", "agent.pid");
     std::vector<string> devices_files;
@@ -583,7 +584,8 @@ namespace mtconnect {
     
     if (!m_agent)
       m_agent = new Agent(m_devicesFile, bufferSize, maxAssets,
-                          schemaVersion, checkpointFrequency);
+                          schemaVersion, checkpointFrequency,
+                          m_pretty);
     XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter*>(m_agent->getPrinter("xml"));
     
     m_agent->set_listening_port(port);

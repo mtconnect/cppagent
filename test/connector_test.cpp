@@ -356,6 +356,7 @@ void ConnectorTest::testSendCommand()
 
 void ConnectorTest::testIPV6Connection()
 {
+  // TODO: Need to port to Windows > VISTA
 #if !defined(WIN32)
   m_connector.reset();
   

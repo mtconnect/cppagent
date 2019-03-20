@@ -39,8 +39,9 @@ namespace mtconnect {
   static dlib::logger g_logger("xml.printer");
     
   
-  XmlPrinter::XmlPrinter(const string version)
-    : m_schemaVersion(version)
+  XmlPrinter::XmlPrinter(const string version,
+                         bool pretty)
+    : Printer(pretty), m_schemaVersion(version)
   {
     if (m_schemaVersion.empty())
       m_schemaVersion = "1.5";
@@ -332,8 +333,10 @@ namespace mtconnect {
     {
       THROW_IF_XML2_NULL(buf = xmlBufferCreate());
       THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      if (m_pretty) {
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      }
       
       initXmlDoc(
                  writer,
@@ -412,8 +415,10 @@ namespace mtconnect {
     {
       THROW_IF_XML2_NULL(buf = xmlBufferCreate());
       THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      if (m_pretty) {
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      }
       
       initXmlDoc(
                  writer,
@@ -687,8 +692,10 @@ namespace mtconnect {
     {
       THROW_IF_XML2_NULL(buf = xmlBufferCreate());
       THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      if (m_pretty) {
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      }
       
       initXmlDoc(
                  writer,
@@ -807,8 +814,10 @@ namespace mtconnect {
     {
       THROW_IF_XML2_NULL(buf = xmlBufferCreate());
       THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      if (m_pretty) {
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      }
       
       initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull);
       
@@ -1235,8 +1244,10 @@ namespace mtconnect {
     {
       THROW_IF_XML2_NULL(buf = xmlBufferCreate());
       THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-      THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      if (m_pretty) {
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
+      }
       
       {
         AutoElement ele(writer, tool->getType());

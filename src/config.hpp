@@ -88,5 +88,6 @@ namespace mtconnect {
     std::string m_devicesFile;
     bool m_restart;
     std::string m_exePath;
+    bool m_pretty;
   };
 }

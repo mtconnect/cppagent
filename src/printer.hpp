@@ -19,7 +19,7 @@ namespace mtconnect {
   class Printer
   {
   public:
-    Printer() {}
+    Printer(bool pretty = false) : m_pretty(pretty) {}
     virtual ~Printer() {}
     
     virtual std::string printError(
@@ -57,5 +57,8 @@ namespace mtconnect {
     virtual std::string printCuttingTool(CuttingToolPtr const tool)  const = 0;
     
     virtual std::string mimeType() const = 0;
+    
+  protected:
+    bool m_pretty;
   };
 }

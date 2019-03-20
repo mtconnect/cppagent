@@ -82,3 +82,4 @@ only_commits:
     - dlib_fix/
     - cppunit_make/
     - libxml2_make/
+    - agent/

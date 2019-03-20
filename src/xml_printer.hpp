@@ -33,7 +33,8 @@ namespace mtconnect {
   class XmlPrinter : public Printer
   {
   public:
-    XmlPrinter(const std::string version = "");
+    XmlPrinter(const std::string version = "",
+               bool pretty = false);
     virtual ~XmlPrinter() {}
     
     virtual std::string printError(
