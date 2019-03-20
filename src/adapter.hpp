@@ -76,7 +76,7 @@ namespace mtconnect {
     
     void setRelativeTime(bool flag) {
       m_relativeTime = flag; }
-    bool getrelativeTime() const {
+    bool getRelativeTime() const {
       return m_relativeTime; }
     
     void setConversionRequired(bool flag) {

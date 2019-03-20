@@ -29,6 +29,7 @@ extern "C" {
 namespace mtconnect {
   class DataItem;
   class SensorConfiguration;
+  class XmlWriter;
   
   class XmlPrinter : public Printer
   {

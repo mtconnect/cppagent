@@ -37,6 +37,45 @@ using namespace std;
 
 namespace mtconnect {
   static dlib::logger g_logger("xml.printer");
+  
+  class XmlWriter {
+  public:
+    XmlWriter(bool pretty) : m_writer(nullptr), m_buf(nullptr)
+    {
+      THROW_IF_XML2_NULL(m_buf = xmlBufferCreate());
+      THROW_IF_XML2_NULL(m_writer = xmlNewTextWriterMemory(m_buf, 0));
+      if (pretty) {
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(m_writer, 1));
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(m_writer, BAD_CAST "  "));
+      }
+    }
+    
+    ~XmlWriter()
+    {
+      if (m_writer != nullptr) {
+        xmlFreeTextWriter(m_writer); m_writer = nullptr;
+      }
+      if (m_buf != nullptr) {
+        xmlBufferFree(m_buf); m_buf = nullptr;
+      }
+    }
+    
+    operator xmlTextWriterPtr () {
+      return m_writer;
+    }
+
+    string getContent() {
+      if (m_writer != nullptr) {
+        THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(m_writer));
+        xmlFreeTextWriter(m_writer); m_writer = nullptr;
+      }
+      return string((char *) m_buf->content);
+    }
+    
+  protected:
+    xmlTextWriterPtr m_writer;
+    xmlBufferPtr m_buf;
+  };
     
   
   XmlPrinter::XmlPrinter(const string version,
@@ -325,19 +364,12 @@ namespace mtconnect {
                                 const string &errorCode,
                                 const string &errorText ) const
   {
-    xmlTextWriterPtr writer = nullptr;
-    xmlBufferPtr buf = nullptr;
     string ret;
     
     try
     {
-      THROW_IF_XML2_NULL(buf = xmlBufferCreate());
-      THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      if (m_pretty) {
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
-      }
-      
+      XmlWriter writer(m_pretty);
+
       initXmlDoc(
                  writer,
                  eERROR,
@@ -354,43 +386,16 @@ namespace mtconnect {
           {{ "errorCode", errorCode }});
       }
       closeElement(writer); // MTConnectError
-      THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
       
       // Cleanup
-      xmlFreeTextWriter(writer); writer = nullptr;
-      ret = (string)((char *) buf->content);
-      xmlBufferFree(buf); buf = nullptr;
+      ret = writer.getContent();
     }
     catch (string error)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printError: " << error;
     }
     catch (...)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printError: unknown error";
     }
     
@@ -407,19 +412,12 @@ namespace mtconnect {
                                 const vector<Device *> &deviceList,
                                 const std::map<std::string, int> *count ) const
   {
-    xmlTextWriterPtr writer = nullptr;
-    xmlBufferPtr buf = nullptr;
     string ret;
     
     try
     {
-      THROW_IF_XML2_NULL(buf = xmlBufferCreate());
-      THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      if (m_pretty) {
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
-      }
-      
+      XmlWriter writer(m_pretty);
+
       initXmlDoc(
                  writer,
                  eDEVICES,
@@ -432,51 +430,21 @@ namespace mtconnect {
                  nextSeq - 1,
                  count);
       
-      openElement(writer,"Devices");
-      
-      for (const auto dev : deviceList)
       {
-        printProbeHelper(writer, dev, "Device");
+        AutoElement devices(writer,"Devices");
+        for (const auto dev : deviceList)
+          printProbeHelper(writer, dev, "Device");
       }
-      
-      closeElement(writer); // Devices
       closeElement(writer); // MTConnectDevices
-      THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
       
-      xmlFreeTextWriter(writer); writer = nullptr;
-      ret = (string)((char *) buf->content);
-      xmlBufferFree(buf); buf = nullptr;
+      ret = writer.getContent();
     }
     catch (string error)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printProbe: " << error;
     }
     catch (...)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printProbe: unknown error";
     }
     
@@ -684,19 +652,12 @@ namespace mtconnect {
                                  const uint64_t lastSeq,
                                  ComponentEventPtrArray &observations )  const
   {
-    xmlTextWriterPtr writer(nullptr);
-    xmlBufferPtr buf(nullptr);
     string ret;
     
     try
     {
-      THROW_IF_XML2_NULL(buf = xmlBufferCreate());
-      THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      if (m_pretty) {
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
-      }
-      
+      XmlWriter writer(m_pretty);
+
       initXmlDoc(
                  writer,
                  eSTREAMS,
@@ -757,42 +718,15 @@ namespace mtconnect {
       
       streams.reset("");
       closeElement(writer);  // MTConnectStreams
-      THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(writer));
       
-      xmlFreeTextWriter(writer); writer = nullptr;
-      ret = (string)((char *) buf->content);
-      xmlBufferFree(buf); buf = nullptr;
+      ret = writer.getContent();
     }
     catch (string error)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printProbe: " << error;
     }
     catch (...)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printProbe: unknown error";
     }
     
@@ -806,19 +740,11 @@ namespace mtconnect {
                                  const unsigned int assetCount,
                                  std::vector<AssetPtr> const &assets)  const
   {
-    xmlTextWriterPtr writer = nullptr;
-    xmlBufferPtr buf = nullptr;
     string ret;
     
     try
     {
-      THROW_IF_XML2_NULL(buf = xmlBufferCreate());
-      THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      if (m_pretty) {
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
-      }
-      
+      XmlWriter writer(m_pretty);
       initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull);
       
       {
@@ -842,40 +768,14 @@ namespace mtconnect {
       }
       closeElement(writer); // MTConnectAssets
       
-      xmlFreeTextWriter(writer); writer = nullptr;
-      ret = (string)((char *) buf->content);
-      xmlBufferFree(buf); buf = nullptr;
+      ret = writer.getContent();
     }
     catch (string error)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printProbe: " << error;
     }
     catch (...)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printProbe: unknown error";
     }
     
@@ -1235,19 +1135,11 @@ namespace mtconnect {
   
   string XmlPrinter::printCuttingTool(CuttingToolPtr const tool) const
   {
-    
-    xmlTextWriterPtr writer = nullptr;
-    xmlBufferPtr buf = nullptr;
     string ret;
     
     try
     {
-      THROW_IF_XML2_NULL(buf = xmlBufferCreate());
-      THROW_IF_XML2_NULL(writer = xmlNewTextWriterMemory(buf, 0));
-      if (m_pretty) {
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(writer, 1));
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(writer, BAD_CAST "  "));
-      }
+      XmlWriter writer(m_pretty);
       
       {
         AutoElement ele(writer, tool->getType());
@@ -1315,40 +1207,14 @@ namespace mtconnect {
         }
       }
       
-      xmlFreeTextWriter(writer); writer = nullptr;
-      ret = (string)((char *) buf->content);
-      xmlBufferFree(buf); buf = nullptr;
+      ret = writer.getContent();
     }
     catch (string error)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printCuttingTool: " << error;
     }
     catch (...)
     {
-      if (buf)
-      {
-        xmlBufferFree(buf);
-        buf = nullptr;
-      }
-      
-      if (writer)
-      {
-        xmlFreeTextWriter(writer);
-        writer = nullptr;
-      }
-      
       g_logger << dlib::LERROR << "printCuttingTool: unknown error";
     }
     
