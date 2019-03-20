@@ -26,7 +26,7 @@
 
 #include "globals.hpp"
 
-#if !defined(__MACH__) or defined(CUTI_NO_INTEGRATION)
+#if !defined(__MACH__) || defined(CUTI_NO_INTEGRATION)
 #define XCTestCase void
 #endif
 
@@ -50,10 +50,14 @@ void fillAttribute(
 // Trim white space from string
 std::string &trim(std::string &str);
 
-
+#ifdef __MACH__
 /// Asserts that two XML strings are equivalent.
 #define CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, path, expected) \
 xpathTest(doc, path, expected, __FILE__, __LINE__, self)
+#else
+#define CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, path, expected) \
+xpathTest(doc, path, expected, __FILE__, __LINE__)
+#endif
 
 void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
                const std::string &file, int line, XCTestCase *self = nullptr);
@@ -63,9 +67,14 @@ string result = expr;\
 auto doc = xmlParseMemory(result.c_str(), result.length()); \
 CPPUNIT_ASSERT(doc);
 
+#ifdef __MACH__
 /// Asserts that two XML strings are equivalent.
 #define CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, path, expected) \
 xpathTestCount(doc, path, expected, __FILE__, __LINE__, self)
+#else
+#define CPPUNITTEST_ASSERT_XML_PATH_COUNT(doc, path, expected) \
+xpathTestCount(doc, path, expected, __FILE__, __LINE__)
+#endif
 
 void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected,
                     const std::string &file, int line, XCTestCase *self = nullptr);

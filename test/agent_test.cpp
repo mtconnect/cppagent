@@ -261,7 +261,9 @@ void AgentTest::setUp()
   
   m_agentTestHelper.m_agent = m_agent.get();
   m_agentTestHelper.m_queries.clear();
+#ifdef __MACH__
   m_agentTestHelper.self = self;
+#endif
 }
 
 
@@ -904,19 +906,19 @@ void AgentTest::testAdapterDeviceCommand()
   
   m_adapter = m_agent->addAdapter("*", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
-  CPPUNIT_ASSERT_EQUAL(static_cast<Device *>(nullptr), m_adapter->getDevice());
+  CPPUNIT_ASSERT(nullptr == m_adapter->getDevice());
   
   m_adapter->parseBuffer("* device: device-2\n");
-  CPPUNIT_ASSERT_EQUAL(device2, m_adapter->getDevice());
+  CPPUNIT_ASSERT(device2 == m_adapter->getDevice());
   
   m_adapter->parseBuffer("* device: device-1\n");
-  CPPUNIT_ASSERT_EQUAL(device1, m_adapter->getDevice());
+  CPPUNIT_ASSERT(device1 == m_adapter->getDevice());
   
   m_adapter->parseBuffer("* device: Device2\n");
-  CPPUNIT_ASSERT_EQUAL(device2, m_adapter->getDevice());
+  CPPUNIT_ASSERT(device2 == m_adapter->getDevice());
   
   m_adapter->parseBuffer("* device: Device1\n");
-  CPPUNIT_ASSERT_EQUAL(device1, m_adapter->getDevice());
+  CPPUNIT_ASSERT(device1 == m_adapter->getDevice());
 }
 
 

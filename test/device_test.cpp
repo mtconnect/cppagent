@@ -151,16 +151,16 @@ void DeviceTest::testRelationships()
   CPPUNIT_ASSERT(devPointer);
   
   linear.setParent(*m_devA);
-  CPPUNIT_ASSERT_EQUAL(devPointer, linear.getParent());
+  CPPUNIT_ASSERT(devPointer == linear.getParent());
   
   mtconnect::Component controller("Controller", dummy);
   controller.setParent(*m_devA);
-  CPPUNIT_ASSERT_EQUAL(devPointer, controller.getParent());
+  CPPUNIT_ASSERT(devPointer == controller.getParent());
   
   // Test get device
-  CPPUNIT_ASSERT_EQUAL(m_devA, m_devA->getDevice());
-  CPPUNIT_ASSERT_EQUAL(m_devA, linear.getDevice());
-  CPPUNIT_ASSERT_EQUAL(m_devA, controller.getDevice());
+  CPPUNIT_ASSERT(m_devA == m_devA->getDevice());
+  CPPUNIT_ASSERT(m_devA == linear.getDevice());
+  CPPUNIT_ASSERT(m_devA == controller.getDevice());
   
   // Test add/get children
   CPPUNIT_ASSERT(m_devA->getChildren().empty());
@@ -170,8 +170,8 @@ void DeviceTest::testRelationships()
   m_devA->addChild(thermostat);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_devA->getChildren().size());
-  CPPUNIT_ASSERT_EQUAL(&axes, m_devA->getChildren().front());
-  CPPUNIT_ASSERT_EQUAL(&thermostat, m_devA->getChildren().back());
+  CPPUNIT_ASSERT(&axes == m_devA->getChildren().front());
+  CPPUNIT_ASSERT(&thermostat == m_devA->getChildren().back());
 }
 
 
@@ -186,8 +186,8 @@ void DeviceTest::testDataItems()
   m_devA->addDataItem(data2);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_devA->getDataItems().size());
-  CPPUNIT_ASSERT_EQUAL(&data1, m_devA->getDataItems().front());
-  CPPUNIT_ASSERT_EQUAL(&data2, m_devA->getDataItems().back());
+  CPPUNIT_ASSERT(&data1 == m_devA->getDataItems().front());
+  CPPUNIT_ASSERT(&data2 == m_devA->getDataItems().back());
 }
 
 
@@ -208,8 +208,8 @@ void DeviceTest::testDeviceDataItem()
   m_devA->addDeviceDataItem(data2);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_devA->getDeviceDataItems().size());
-  CPPUNIT_ASSERT_EQUAL(&data1, m_devA->getDeviceDataItem("DataItemTest1"));
-  CPPUNIT_ASSERT_EQUAL(&data2, m_devA->getDeviceDataItem("DataItemTest2"));
+  CPPUNIT_ASSERT(&data1 == m_devA->getDeviceDataItem("DataItemTest1"));
+  CPPUNIT_ASSERT(&data2 == m_devA->getDeviceDataItem("DataItemTest2"));
 }
 
 
@@ -234,15 +234,15 @@ void DeviceTest::testGetDataItem()
   m_devA->addDeviceDataItem(data3);
   
   
-  CPPUNIT_ASSERT_EQUAL(&data1, m_devA->getDeviceDataItem("by_id"));
-  CPPUNIT_ASSERT_EQUAL((DataItem *)nullptr, m_devA->getDeviceDataItem("by_name"));
-  CPPUNIT_ASSERT_EQUAL((DataItem *)nullptr, m_devA->getDeviceDataItem("by_source"));
+  CPPUNIT_ASSERT(&data1 == m_devA->getDeviceDataItem("by_id"));
+  CPPUNIT_ASSERT((DataItem *)nullptr == m_devA->getDeviceDataItem("by_name"));
+  CPPUNIT_ASSERT((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source"));
   
-  CPPUNIT_ASSERT_EQUAL(&data2, m_devA->getDeviceDataItem("by_id2"));
-  CPPUNIT_ASSERT_EQUAL(&data2, m_devA->getDeviceDataItem("by_name2"));
-  CPPUNIT_ASSERT_EQUAL((DataItem *)nullptr, m_devA->getDeviceDataItem("by_source2"));
+  CPPUNIT_ASSERT(&data2 == m_devA->getDeviceDataItem("by_id2"));
+  CPPUNIT_ASSERT(&data2 == m_devA->getDeviceDataItem("by_name2"));
+  CPPUNIT_ASSERT((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source2"));
   
-  CPPUNIT_ASSERT_EQUAL(&data3, m_devA->getDeviceDataItem("by_id3"));
-  CPPUNIT_ASSERT_EQUAL(&data3, m_devA->getDeviceDataItem("by_name3"));
-  CPPUNIT_ASSERT_EQUAL(&data3, m_devA->getDeviceDataItem("by_source3"));
+  CPPUNIT_ASSERT(&data3 == m_devA->getDeviceDataItem("by_id3"));
+  CPPUNIT_ASSERT(&data3 == m_devA->getDeviceDataItem("by_name3"));
+  CPPUNIT_ASSERT(&data3 == m_devA->getDeviceDataItem("by_source3"));
 }

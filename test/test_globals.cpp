@@ -320,8 +320,8 @@ void failIf(bool condition, const std::string &message,
   CPPUNIT_ASSERT_MESSAGE(msg.str(), !condition);
 #else
   CPPUNIT_NS::Asserter::failIf(condition,
-                               CPPUNIT_NS::SourceLine(file, line),
-                               message);
+                               message,
+                               CPPUNIT_NS::SourceLine(file, line));
 #endif
 }
 
@@ -356,7 +356,7 @@ void assertIf(bool condition, const std::string &message,
   CPPUNIT_ASSERT_MESSAGE(msg.str(), condition);
 #else
   CPPUNIT_NS::Asserter::failIf(!condition,
-                               CPPUNIT_NS::SourceLine(file, line),
-                               message);
+                               message,
+                               CPPUNIT_NS::SourceLine(file, line));
 #endif
 }

@@ -116,13 +116,13 @@ void CheckpointTest::testAddComponentEvents()
   p2->unrefer();
   
   m_checkpoint->addComponentEvent(p2);
-  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
+  CPPUNIT_ASSERT(p1.getObject() == p2->getPrev());
   
   p3 = new ComponentEvent(*m_dataItem1, 2, time, normal);
   p3->unrefer();
   
   m_checkpoint->addComponentEvent(p3);
-  CPPUNIT_ASSERT_EQUAL((void *) 0, (void *) p3->getPrev());
+  CPPUNIT_ASSERT(nullptr ==  p3->getPrev());
   CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
   CPPUNIT_ASSERT_EQUAL(1, (int) p2->refCount());
   
@@ -130,7 +130,7 @@ void CheckpointTest::testAddComponentEvents()
   p4->unrefer();
   
   m_checkpoint->addComponentEvent(p4);
-  CPPUNIT_ASSERT_EQUAL((void *) 0, (void *) p4->getPrev());
+  CPPUNIT_ASSERT(nullptr == p4->getPrev());
   CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
   
   // Test non condition
@@ -145,7 +145,7 @@ void CheckpointTest::testAddComponentEvents()
   m_checkpoint->addComponentEvent(p4);
   CPPUNIT_ASSERT_EQUAL(2, (int) p4->refCount());
   
-  CPPUNIT_ASSERT_EQUAL((void *) 0, (void *) p4->getPrev());
+  CPPUNIT_ASSERT(nullptr ==  p4->getPrev());
   CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
 }
 
@@ -166,7 +166,7 @@ void CheckpointTest::testCopy()
   p2 = new ComponentEvent(*m_dataItem1, 2, time, warning2);
   p2->unrefer();
   m_checkpoint->addComponentEvent(p2);
-  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
+  CPPUNIT_ASSERT(p1.getObject() == p2->getPrev());
   CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
   
   auto copy = new Checkpoint(*m_checkpoint);
@@ -378,7 +378,7 @@ void CheckpointTest::testConditionChaining()
   p2->unrefer();
   
   m_checkpoint->addComponentEvent(p2);
-  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
+  CPPUNIT_ASSERT(p1.getObject() == p2->getPrev());
   
   m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
@@ -388,9 +388,9 @@ void CheckpointTest::testConditionChaining()
   p3->unrefer();
   
   m_checkpoint->addComponentEvent(p3);
-  CPPUNIT_ASSERT_EQUAL(p2.getObject(), p3->getPrev());
-  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent *) 0, p1->getPrev());
+  CPPUNIT_ASSERT(p2.getObject() == p3->getPrev());
+  CPPUNIT_ASSERT(p1.getObject() == p2->getPrev());
+  CPPUNIT_ASSERT(nullptr == p1->getPrev());
   
   m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
@@ -414,7 +414,7 @@ void CheckpointTest::testConditionChaining()
   CPPUNIT_ASSERT_EQUAL(1, (int) p4->getPrev()->refCount());
   CPPUNIT_ASSERT_EQUAL(p1->getCode(), p4->getPrev()->getPrev()->getCode());
   CPPUNIT_ASSERT_EQUAL(1, (int) p4->getPrev()->getPrev()->refCount());
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent *) 0, p4->getPrev()->getPrev()->getPrev());
+  CPPUNIT_ASSERT(nullptr == p4->getPrev()->getPrev()->getPrev());
   
   m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
@@ -425,7 +425,7 @@ void CheckpointTest::testConditionChaining()
   p5->unrefer();
   
   m_checkpoint->addComponentEvent(p5);
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent *) 0, p5->getPrev());
+  CPPUNIT_ASSERT(nullptr == p5->getPrev());
   
   // Check cleanup
   ComponentEventPtr *p7 = m_checkpoint->getEvents().at(std::string("1"));
@@ -435,7 +435,7 @@ void CheckpointTest::testConditionChaining()
   CPPUNIT_ASSERT(p5.getObject() != (*p7).getObject());
   CPPUNIT_ASSERT_EQUAL(std::string("CODE3"), (*p7)->getCode());
   CPPUNIT_ASSERT_EQUAL(std::string("CODE1"), (*p7)->getPrev()->getCode());
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent *) 0, (*p7)->getPrev()->getPrev());
+  CPPUNIT_ASSERT(nullptr == (*p7)->getPrev()->getPrev());
   
   m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
@@ -446,7 +446,7 @@ void CheckpointTest::testConditionChaining()
   p6->unrefer();
   
   m_checkpoint->addComponentEvent(p6);
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent *) 0, p6->getPrev());
+  CPPUNIT_ASSERT(nullptr == p6->getPrev());
   
   m_checkpoint->getComponentEvents(list);
   CPPUNIT_ASSERT_EQUAL(1, (int) list.size());

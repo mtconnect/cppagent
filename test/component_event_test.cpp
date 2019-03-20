@@ -29,8 +29,8 @@ using namespace mtconnect;
 TEST_CLASS(ComponentEventTest)
 {
 public:
-  void setUp();
-  void tearDown();
+  SET_UP();
+  TEAR_DOWN();
   
   void testConstructors();
   void testGetAttributes();
@@ -126,8 +126,8 @@ void ComponentEventTest::testConstructors()
   CPPUNIT_ASSERT(m_compEventA != ce);
   
   // But the values should be the same
-  CPPUNIT_ASSERT_EQUAL(m_compEventA->getDataItem(), ce->getDataItem());
-  CPPUNIT_ASSERT_EQUAL(m_compEventA->getValue(), ce->getValue());
+  CPPUNIT_ASSERT(m_compEventA->getDataItem() == ce->getDataItem());
+  CPPUNIT_ASSERT(m_compEventA->getValue() == ce->getValue());
   
   ce->unrefer();
 }
@@ -169,8 +169,8 @@ void ComponentEventTest::testGetAttributes()
 
 void ComponentEventTest::testGetters()
 {
-  CPPUNIT_ASSERT_EQUAL(m_dataItem1.get(), m_compEventA->getDataItem());
-  CPPUNIT_ASSERT_EQUAL(m_dataItem2.get(), m_compEventB->getDataItem());
+  CPPUNIT_ASSERT(m_dataItem1.get() == m_compEventA->getDataItem());
+  CPPUNIT_ASSERT(m_dataItem2.get() == m_compEventB->getDataItem());
   
   CPPUNIT_ASSERT_EQUAL((string) "DESCRIPTION", m_compEventA->getValue());
   CPPUNIT_ASSERT_EQUAL((string) "1.1231", m_compEventB->getValue());
@@ -323,13 +323,13 @@ void ComponentEventTest::testEventChaining()
   ComponentEventPtr event2(new ComponentEvent(*m_dataItem1, 123, time, value), true);
   ComponentEventPtr event3(new ComponentEvent(*m_dataItem1, 123, time, value), true);
   
-  CPPUNIT_ASSERT_EQUAL(event1.getObject(), event1->getFirst());
+  CPPUNIT_ASSERT(event1.getObject() == event1->getFirst());
   
   event1->appendTo(event2);
-  CPPUNIT_ASSERT_EQUAL(event1->getFirst(), event2.getObject());
+  CPPUNIT_ASSERT(event1->getFirst() == event2.getObject());
   
   event2->appendTo(event3);
-  CPPUNIT_ASSERT_EQUAL(event1->getFirst(), event3.getObject());
+  CPPUNIT_ASSERT(event1->getFirst() == event3.getObject());
   
   CPPUNIT_ASSERT_EQUAL(1, (int) event1->refCount());
   CPPUNIT_ASSERT_EQUAL(2, (int) event2->refCount());
@@ -338,14 +338,14 @@ void ComponentEventTest::testEventChaining()
   std::list<ComponentEventPtr> list;
   event1->getList(list);
   CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
-  CPPUNIT_ASSERT_EQUAL(list.front().getObject(), event3.getObject());
-  CPPUNIT_ASSERT_EQUAL(list.back().getObject(), event1.getObject());
+  CPPUNIT_ASSERT(list.front().getObject() == event3.getObject());
+  CPPUNIT_ASSERT(list.back().getObject() == event1.getObject());
   
   std::list<ComponentEventPtr> list2;
   event2->getList(list2);
   CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
-  CPPUNIT_ASSERT_EQUAL(list2.front().getObject(), event3.getObject());
-  CPPUNIT_ASSERT_EQUAL(list2.back().getObject(), event2.getObject());
+  CPPUNIT_ASSERT(list2.front().getObject() == event3.getObject());
+  CPPUNIT_ASSERT(list2.back().getObject() == event2.getObject());
 }
 
 

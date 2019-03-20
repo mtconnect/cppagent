@@ -146,19 +146,19 @@ void ComponentTest::testRelationships()
   mtconnect::Component linear("Linear", dummy);
   
   m_compA->setParent(linear);
-  CPPUNIT_ASSERT_EQUAL(&linear, m_compA->getParent());
+  CPPUNIT_ASSERT(&linear == m_compA->getParent());
   
   Device device(dummy);
   auto devPointer = dynamic_cast<mtconnect::Component *>(&device);
   
   CPPUNIT_ASSERT(devPointer);
   linear.setParent(*devPointer);
-  CPPUNIT_ASSERT_EQUAL(devPointer, linear.getParent());
+  CPPUNIT_ASSERT(devPointer == linear.getParent());
   
   // Test get device
-  CPPUNIT_ASSERT_EQUAL(&device, m_compA->getDevice());
-  CPPUNIT_ASSERT_EQUAL(&device, linear.getDevice());
-  CPPUNIT_ASSERT_EQUAL(&device, device.getDevice());
+  CPPUNIT_ASSERT(&device == m_compA->getDevice());
+  CPPUNIT_ASSERT(&device == linear.getDevice());
+  CPPUNIT_ASSERT(&device == device.getDevice());
   
   // Test add/get children
   CPPUNIT_ASSERT(m_compA->getChildren().empty());
@@ -168,8 +168,8 @@ void ComponentTest::testRelationships()
   m_compA->addChild(thermostat);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_compA->getChildren().size());
-  CPPUNIT_ASSERT_EQUAL(&axes, m_compA->getChildren().front());
-  CPPUNIT_ASSERT_EQUAL(&thermostat, m_compA->getChildren().back());
+  CPPUNIT_ASSERT(&axes == m_compA->getChildren().front());
+  CPPUNIT_ASSERT(&thermostat == m_compA->getChildren().back());
 }
 
 
@@ -184,8 +184,8 @@ void ComponentTest::testDataItems()
   m_compA->addDataItem(data2);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, m_compA->getDataItems().size());
-  CPPUNIT_ASSERT_EQUAL(&data1, m_compA->getDataItems().front());
-  CPPUNIT_ASSERT_EQUAL(&data2, m_compA->getDataItems().back());
+  CPPUNIT_ASSERT(&data1 == m_compA->getDataItems().front());
+  CPPUNIT_ASSERT(&data2 == m_compA->getDataItems().back());
 }
 
 

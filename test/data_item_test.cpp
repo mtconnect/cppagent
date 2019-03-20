@@ -186,7 +186,7 @@ void DataItemTest::testComponent()
   mtconnect::Component axes("Axes", attributes1);
   m_dataItemA->setComponent(axes);
   
-  CPPUNIT_ASSERT_EQUAL(&axes, m_dataItemA->getComponent());
+  CPPUNIT_ASSERT(&axes == m_dataItemA->getComponent());
 }
 
 

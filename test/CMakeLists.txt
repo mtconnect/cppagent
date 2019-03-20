@@ -1,7 +1,10 @@
 set(CMAKE_BUILD_TYPE DEBUG) # Specify the build type on single-configuration generators such as Ninja and Makefile
 
-add_subdirectory(../CUTI ${CMAKE_BINARY_DIR}/cuti)
+if(NOT APPVEYOR AND (WIN32 OR APPLE))
+  add_subdirectory(../CUTI ${CMAKE_BINARY_DIR}/cuti)
+endif(NOT APPVEYOR AND (WIN32 OR APPLE))
 
+  
 if(WIN32)
   set(WINDOWS_LIBRARIES shlwapi)
 endif(WIN32)
@@ -26,18 +29,16 @@ file(GLOB AGENT_HEADERS ${AGENT_DIR}/*.hpp)
 
 
 # Allow better viewing and grouping of files in Visual Studio by defining source groups
-source_group("Agent Source Files" FILES ${AGENT_SRCS})
-source_group("Agent Header Files" FILES ${AGENT_HEADERS})
 source_group("Test Headers Files" FILES ${TEST_HEADERS})
 source_group("Test Source Files" FILES ${TEST_SRCS})
 source_group("Resource Files" FILES ${RESOURCE_FILE})
 source_group("Dlib Source Files" FILES ${DLIB_FIX_SRCS})
 
 if(NOT APPVEYOR AND (WIN32 OR APPLE))
-  cuti_creates_test_target(agent_test agent_lib ${TEST_SRCS} ${TEST_HEADERS})
+  cuti_creates_test_target(agent_test agent_lib ${TEST_SRCS} ${TEST_HEADERS} ${DLIB_FIX_SRCS})
   target_compile_definitions(agent_test  PRIVATE CUTI_CPPUNIT_COMPATABILITY)
 else(NOT APPVEYOR AND (WIN32 OR APPLE))
-  add_executable(agent_test ${TEST_SRCS} test.cpp ${TEST_HEADERS} )
+  add_executable(agent_test ${TEST_SRCS} test.cpp ${TEST_HEADERS} ${DLIB_FIX_SRCS})
   target_compile_definitions(agent_test  PRIVATE CUTI_NO_INTEGRATION )
   target_link_libraries(agent_test PRIVATE agent_lib)
   AddCppUnitSupport(agent_test)
