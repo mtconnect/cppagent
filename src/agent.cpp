@@ -429,7 +429,7 @@ namespace mtconnect {
     string accept;
     while (getline(list, accept, ',')) {
       for (const auto &p : m_printers) {
-        if (endsWith(accept, string("/") + p.first))
+        if (endsWith(accept, p.first))
           return p.second.get();
       }
     }
