@@ -325,8 +325,8 @@ void JsonPrinterStreamTest::testTimeSeries()
   CPPUNIT_ASSERT_EQUAL(string("pampts"), amps.at("/VoltAmpereTimeSeries/@name"_json_pointer).get<string>());
   CPPUNIT_ASSERT_EQUAL(string("TIME"), amps.at("/VoltAmpereTimeSeries/@timestamp"_json_pointer).get<string>());
   CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), amps.at("/VoltAmpereTimeSeries/@sequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(10, amps.at("/VoltAmpereTimeSeries/@sampleCount"_json_pointer).get<double>());
-  CPPUNIT_ASSERT_EQUAL(100, amps.at("/VoltAmpereTimeSeries/@sampleRate"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(10.0, amps.at("/VoltAmpereTimeSeries/@sampleCount"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(100.0, amps.at("/VoltAmpereTimeSeries/@sampleRate"_json_pointer).get<double>());
   
   auto value = amps.at("/VoltAmpereTimeSeries/Value"_json_pointer);
   CPPUNIT_ASSERT(value.is_array());
