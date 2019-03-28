@@ -344,13 +344,11 @@ void ConnectorTest::testSendCommand()
   CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 1000));
   buf[7] = '\0';
   CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
-  
+  this_thread::sleep_for(200ms);
+
+  CPPUNIT_ASSERT(m_connector->isConnected());
   m_connector->sendCommand("Hello There;");
-  long len, times = 3;
-  do {
-    this_thread::sleep_for(200ms);
-    len = m_serverSocket->read(buf, 1023, 1000);
-  } while (len == dlib::TIMEOUT && times-- > 0);
+  auto len = m_serverSocket->read(buf, 1023, 1000);
   
   CPPUNIT_ASSERT_EQUAL(15L, len);
   buf[15] = '\0';
