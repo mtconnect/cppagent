@@ -216,13 +216,13 @@ namespace mtconnect {
       if (item->hasMinimumDelta())
         filters.push_back(json::object({
           { "Filter", {
-            { "#text", item->getFilterValue() },
+            { "Value", item->getFilterValue() },
             { "@type", "MINIMUM_DELTA" }
           }}}));
       if (item->hasMinimumPeriod())
         filters.push_back(json::object({
           { "Filter", {
-            { "#text", item->getFilterPeriod() },
+            { "Value", item->getFilterPeriod() },
             { "@type", "PERIOD" }
           }}}));
       obj["Filters"] = filters;
@@ -461,12 +461,12 @@ namespace mtconnect {
                strcmp(attr.first, "sampleRate") == 0 or
                strcmp(attr.first, "duration") == 0) {
         char *ep;
-        obj[string("@") + attr.first] = strtod(observation->getValue().c_str(), &ep);
+        obj[string("@") + attr.first] = strtod(attr.second.c_str(), &ep);
       } else {
         obj[string("@") + attr.first] = attr.second;
       }
     }
-    obj["#text"] = value;
+    obj["Value"] = value;
     
     return json::object({ { name, obj } });
   }

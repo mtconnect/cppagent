@@ -50,7 +50,7 @@ public:
   void testConditionDataItem();
   void testTimeSeries();
   void testAssetChanged();
-  void testReset();
+  void testResetTrigger();
   void testStatistic();
   void testUnavailability();
 
@@ -74,13 +74,16 @@ public:
     
     return new ComponentEvent(*d, sequence, time, value);
   }
-  ComponentEvent *addEventToCheckpoint(Checkpoint &checkpoint, const char *name, uint64_t sequence,
+  
+  ComponentEvent *addEventToCheckpoint(Checkpoint &checkpoint,
+                                       const char *name, uint64_t sequence,
                                        string value)
   {
-    ComponentEvent *event = newEvent(name, sequence, value);
+    auto event = newEvent(name, sequence, value);
     checkpoint.addComponentEvent(event);
     return event;
   }
+  
   
 protected:
   std::unique_ptr<JsonPrinter> m_printer;
@@ -98,7 +101,7 @@ protected:
   CPPUNIT_TEST(testConditionDataItem);
   CPPUNIT_TEST(testTimeSeries);
   CPPUNIT_TEST(testAssetChanged);
-  CPPUNIT_TEST(testReset);
+  CPPUNIT_TEST(testResetTrigger);
   CPPUNIT_TEST(testStatistic);
   CPPUNIT_TEST(testUnavailability);
   CPPUNIT_TEST_SUITE_END();
@@ -242,7 +245,7 @@ void JsonPrinterStreamTest::testSampleAndEventDataItem()
   auto mode = events.at(0);
   CPPUNIT_ASSERT(mode.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("AUTOMATIC"), mode.at("/ControllerMode/#text"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("AUTOMATIC"), mode.at("/ControllerMode/Value"_json_pointer).get<string>());
   CPPUNIT_ASSERT_EQUAL(string("if36ff60"), mode.at("/ControllerMode/@dataItemId"_json_pointer).get<string>());
   CPPUNIT_ASSERT_EQUAL(string("mode"), mode.at("/ControllerMode/@name"_json_pointer).get<string>());
   CPPUNIT_ASSERT_EQUAL(string("TIME"), mode.at("/ControllerMode/@timestamp"_json_pointer).get<string>());
@@ -252,19 +255,111 @@ void JsonPrinterStreamTest::testSampleAndEventDataItem()
   CPPUNIT_ASSERT(samples.is_array());
   auto pos = samples.at(0);
   
-  CPPUNIT_ASSERT_EQUAL(3_S, pos.at("/PathPosition/#text"_json_pointer).size());
+  CPPUNIT_ASSERT_EQUAL(3_S, pos.at("/PathPosition/Value"_json_pointer).size());
   
-  CPPUNIT_ASSERT_EQUAL(10.0, pos.at("/PathPosition/#text/0"_json_pointer).get<double>());
-  CPPUNIT_ASSERT_EQUAL(20.0, pos.at("/PathPosition/#text/1"_json_pointer).get<double>());
-  CPPUNIT_ASSERT_EQUAL(30.0, pos.at("/PathPosition/#text/2"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(10.0, pos.at("/PathPosition/Value/0"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(20.0, pos.at("/PathPosition/Value/1"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(30.0, pos.at("/PathPosition/Value/2"_json_pointer).get<double>());
   CPPUNIT_ASSERT_EQUAL(string("r186cd60"), pos.at("/PathPosition/@dataItemId"_json_pointer).get<string>());
   CPPUNIT_ASSERT_EQUAL(string("TIME"), pos.at("/PathPosition/@timestamp"_json_pointer).get<string>());
   CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), pos.at("/PathPosition/@sequence"_json_pointer).get<uint64_t>());
 }
 
-void JsonPrinterStreamTest::testConditionDataItem() {}
-void JsonPrinterStreamTest::testTimeSeries() {}
-void JsonPrinterStreamTest::testAssetChanged() {}
-void JsonPrinterStreamTest::testReset() {}
-void JsonPrinterStreamTest::testStatistic() {}
-void JsonPrinterStreamTest::testUnavailability() {}
+void JsonPrinterStreamTest::testConditionDataItem()
+{
+  Checkpoint checkpoint;
+  addEventToCheckpoint(checkpoint, "a5b23650", 10254804, "fault|syn|ack|HIGH|Syntax error"); // Motion Program Condition
+  ComponentEventPtrArray list;
+  checkpoint.getComponentEvents(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
+  
+  auto jdoc = json::parse(doc);
+  auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
+  CPPUNIT_ASSERT_EQUAL(1_S, streams.size());
+  
+  auto stream = streams.at("/0/ComponentStream"_json_pointer);
+  CPPUNIT_ASSERT(stream.is_object());
+
+  CPPUNIT_ASSERT_EQUAL(string("a4a7bdf0"), stream.at("/@componentId"_json_pointer).get<string>());
+  
+  auto conds = stream.at("/Condition"_json_pointer);
+  CPPUNIT_ASSERT(conds.is_array());
+  CPPUNIT_ASSERT_EQUAL(1_S, conds.size());
+  auto motion = conds.at(0);
+  CPPUNIT_ASSERT(motion.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("a5b23650"), motion.at("/Fault/@dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("motion"), motion.at("/Fault/@name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), motion.at("/Fault/@timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), motion.at("/Fault/@sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("HIGH"), motion.at("/Fault/@qualifier"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("ack"), motion.at("/Fault/@nativeSeverity"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("syn"), motion.at("/Fault/@nativeCode"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("Syntax error"), motion.at("/Fault/Value"_json_pointer).get<string>());
+}
+
+void JsonPrinterStreamTest::testTimeSeries()
+{
+  Checkpoint checkpoint;
+  addEventToCheckpoint(checkpoint, "tc9edc70", 10254804, "10|100|1.0 2.0 3 4 5.0 6 7 8.8 9.0 10.2"); // Volt Ampere Time Series
+  ComponentEventPtrArray list;
+  checkpoint.getComponentEvents(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
+  
+  auto jdoc = json::parse(doc);
+  auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
+  CPPUNIT_ASSERT_EQUAL(1_S, streams.size());
+  
+  auto stream = streams.at("/0/ComponentStream"_json_pointer);
+  CPPUNIT_ASSERT(stream.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("afb91ba0"), stream.at("/@componentId"_json_pointer).get<string>());
+  
+  auto samples = stream.at("/Samples"_json_pointer);
+  CPPUNIT_ASSERT(samples.is_array());
+  CPPUNIT_ASSERT_EQUAL(1_S, samples.size());
+  auto amps = samples.at(0);
+  CPPUNIT_ASSERT(amps.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("tc9edc70"), amps.at("/VoltAmpereTimeSeries/@dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("pampts"), amps.at("/VoltAmpereTimeSeries/@name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), amps.at("/VoltAmpereTimeSeries/@timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), amps.at("/VoltAmpereTimeSeries/@sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(10, amps.at("/VoltAmpereTimeSeries/@sampleCount"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(100, amps.at("/VoltAmpereTimeSeries/@sampleRate"_json_pointer).get<double>());
+  
+  auto value = amps.at("/VoltAmpereTimeSeries/Value"_json_pointer);
+  CPPUNIT_ASSERT(value.is_array());
+  CPPUNIT_ASSERT_EQUAL(10_S, value.size());
+  
+  CPPUNIT_ASSERT_EQUAL(1.0, value[0].get<double>());
+  CPPUNIT_ASSERT_EQUAL(2.0, value[1].get<double>());
+  CPPUNIT_ASSERT_EQUAL(3.0, value[2].get<double>());
+  CPPUNIT_ASSERT_EQUAL(4.0, value[3].get<double>());
+  CPPUNIT_ASSERT_EQUAL(5.0, value[4].get<double>());
+  CPPUNIT_ASSERT_EQUAL(6.0, value[5].get<double>());
+  CPPUNIT_ASSERT_EQUAL(7.0, value[6].get<double>());
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(8.8, value[7].get<double>(), 0.0001);
+  CPPUNIT_ASSERT_EQUAL(9.0, value[8].get<double>());
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(10.2, value[9].get<double>(), 0.0001);
+}
+
+void JsonPrinterStreamTest::testAssetChanged()
+{
+  
+}
+
+void JsonPrinterStreamTest::testResetTrigger()
+{
+  
+}
+
+void JsonPrinterStreamTest::testStatistic()
+{
+  
+}
+
+void JsonPrinterStreamTest::testUnavailability()
+{
+  
+}

@@ -271,7 +271,7 @@ void JsonPrinterProbeTest::testDataItemFilters()
   auto filter = temp.at("/DataItem/Filters/0"_json_pointer);
   CPPUNIT_ASSERT(filter.is_object());
   CPPUNIT_ASSERT_EQUAL(string("PERIOD"), filter.at("/Filter/@type"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(60.0, filter.at("/Filter/#text"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(60.0, filter.at("/Filter/Value"_json_pointer).get<double>());
   
   auto volt = electric.at("/DataItems/1"_json_pointer);
   CPPUNIT_ASSERT(volt.is_object());
@@ -280,7 +280,7 @@ void JsonPrinterProbeTest::testDataItemFilters()
   auto filter2 = volt.at("/DataItem/Filters/0"_json_pointer);
   CPPUNIT_ASSERT(filter2.is_object());
   CPPUNIT_ASSERT_EQUAL(string("MINIMUM_DELTA"), filter2.at("/Filter/@type"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(10.0, filter2.at("/Filter/#text"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(10.0, filter2.at("/Filter/Value"_json_pointer).get<double>());
 }
 
 void JsonPrinterProbeTest::testComposition()

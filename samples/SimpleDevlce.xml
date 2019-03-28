@@ -60,7 +60,7 @@
                 <DataItem id="k8dd9030" type="PROGRAM" category="EVENT"/>
                 <DataItem id="r63f9b10" type="CONTROLLER_MODE_OVERRIDE" subType="OPTIONAL_STOP" category="EVENT"/>
                 <DataItem id="a557d330" type="LOGIC_PROGRAM" category="CONDITION"/>
-                <DataItem id="a5b23650" type="MOTION_PROGRAM" category="CONDITION"/>
+                <DataItem id="a5b23650" type="MOTION_PROGRAM" category="CONDITION" name="motion"/>
                 <DataItem id="bbafe670" type="LINE" category="EVENT"/>
                 <DataItem id="d2e9e4a0" type="PART_COUNT" category="EVENT">
                   <InitialValue>1</InitialValue>
