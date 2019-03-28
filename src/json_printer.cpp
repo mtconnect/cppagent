@@ -118,9 +118,10 @@ namespace mtconnect {
         { "@creationTime", getCurrentTime(GMT) },
         { "@testIndicator", false },
         { "@instanceId", instanceId },
-        { "@bufferSize", bufferSize },
         { "@sender", hostname }
       });
+    if (bufferSize > 0)
+      doc["@bufferSize"] = bufferSize;
     return doc;
   }
   
@@ -660,18 +661,29 @@ namespace mtconnect {
   }
   
   std::string JsonPrinter::printAssets(
-                                  const unsigned int anInstanceId,
+                                  const unsigned int instanceId,
                                   const unsigned int bufferSize,
                                   const unsigned int assetCount,
                                   std::vector<AssetPtr> const &assets) const
   {
-    json doc = {"MTConnectAssets", ""};
+    json assetDoc = json::array();
+    //for (const auto asset : assets)
+    //  assetDoc.push_back(toJson(asset));
+    
+    json doc = json::object({ { "MTConnectAssets", {
+      { "Header",
+        probeAssetHeader(m_version, hostname(), instanceId,
+                         0, bufferSize, assetCount) },
+      { "Assets", assetDoc }
+    } } });
+    
     return print(doc, m_pretty);
   }
   
   std::string JsonPrinter::printCuttingTool(CuttingToolPtr const tool) const
   {
     json doc = {"CuttingTool", ""};
+    // json doc = toJson(tool);
     return print(doc, m_pretty);
   }
 }
