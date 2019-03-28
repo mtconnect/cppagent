@@ -51,7 +51,7 @@ public:
   void testTimeSeries();
   void testAssetChanged();
   void testResetTrigger();
-  void testStatistic();
+  void testMessage();
   void testUnavailability();
 
   SET_UP();
@@ -65,9 +65,8 @@ public:
     return nullptr;
   }
   
-  ComponentEvent *newEvent(const char *name,uint64_t sequence,string value)
+  ComponentEvent *newObservaton(const char *name,uint64_t sequence,string value, string time = "TIME")
   {
-    string time("TIME");
     // Make sure the data item is there
     const auto d = getDataItem(name);
     CPPUNIT_ASSERT_MESSAGE((string) "Could not find data item " + name, d);
@@ -75,11 +74,11 @@ public:
     return new ComponentEvent(*d, sequence, time, value);
   }
   
-  ComponentEvent *addEventToCheckpoint(Checkpoint &checkpoint,
+  ComponentEvent *addObservationToCheckpoint(Checkpoint &checkpoint,
                                        const char *name, uint64_t sequence,
-                                       string value)
+                                       string value, string time = "TIME")
   {
-    auto event = newEvent(name, sequence, value);
+    auto event = newObservaton(name, sequence, value, time);
     checkpoint.addComponentEvent(event);
     return event;
   }
@@ -102,7 +101,7 @@ protected:
   CPPUNIT_TEST(testTimeSeries);
   CPPUNIT_TEST(testAssetChanged);
   CPPUNIT_TEST(testResetTrigger);
-  CPPUNIT_TEST(testStatistic);
+  CPPUNIT_TEST(testMessage);
   CPPUNIT_TEST(testUnavailability);
   CPPUNIT_TEST_SUITE_END();
 };
@@ -143,7 +142,7 @@ void JsonPrinterStreamTest::testStreamHeader()
 void JsonPrinterStreamTest::testDeviceStream()
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xpos", 10254804, "100");
+  addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
@@ -160,7 +159,7 @@ void JsonPrinterStreamTest::testDeviceStream()
 void JsonPrinterStreamTest::testComponentStream()
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xpos", 10254804, "100");
+  addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
@@ -177,8 +176,8 @@ void JsonPrinterStreamTest::testComponentStream()
 void JsonPrinterStreamTest::testComponentStreamTwoComponents()
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xpos", 10254804, "100");
-  addEventToCheckpoint(checkpoint, "Sspeed_act", 10254805, "500");
+  addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
+  addObservationToCheckpoint(checkpoint, "Sspeed_act", 10254805, "500");
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
@@ -201,8 +200,8 @@ void JsonPrinterStreamTest::testComponentStreamTwoComponents()
 void JsonPrinterStreamTest::testTwoDevices()
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xpos", 10254804, "100");
-  addEventToCheckpoint(checkpoint, "z2143c50", 10254805, "AVAILABLE");
+  addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
+  addObservationToCheckpoint(checkpoint, "z2143c50", 10254805, "AVAILABLE");
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
@@ -225,8 +224,8 @@ void JsonPrinterStreamTest::testTwoDevices()
 void JsonPrinterStreamTest::testSampleAndEventDataItem()
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "if36ff60", 10254804, "AUTOMATIC"); // Controller Mode
-  addEventToCheckpoint(checkpoint, "r186cd60", 10254805, "10 20 30"); // Path Position
+  addObservationToCheckpoint(checkpoint, "if36ff60", 10254804, "AUTOMATIC"); // Controller Mode
+  addObservationToCheckpoint(checkpoint, "r186cd60", 10254805, "10 20 30"); // Path Position
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
@@ -268,7 +267,7 @@ void JsonPrinterStreamTest::testSampleAndEventDataItem()
 void JsonPrinterStreamTest::testConditionDataItem()
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "a5b23650", 10254804, "fault|syn|ack|HIGH|Syntax error"); // Motion Program Condition
+  addObservationToCheckpoint(checkpoint, "a5b23650", 10254804, "fault|syn|ack|HIGH|Syntax error"); // Motion Program Condition
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
@@ -301,7 +300,7 @@ void JsonPrinterStreamTest::testConditionDataItem()
 void JsonPrinterStreamTest::testTimeSeries()
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "tc9edc70", 10254804, "10|100|1.0 2.0 3 4 5.0 6 7 8.8 9.0 10.2"); // Volt Ampere Time Series
+  addObservationToCheckpoint(checkpoint, "tc9edc70", 10254804, "10|100|1.0 2.0 3 4 5.0 6 7 8.8 9.0 10.2"); // Volt Ampere Time Series
   ComponentEventPtrArray list;
   checkpoint.getComponentEvents(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
@@ -346,20 +345,149 @@ void JsonPrinterStreamTest::testTimeSeries()
 
 void JsonPrinterStreamTest::testAssetChanged()
 {
+  Checkpoint checkpoint;
+  addObservationToCheckpoint(checkpoint, "e4a300e0", 10254804, "CuttingTool|31d416a0-33c7"); // asset changed
+  addObservationToCheckpoint(checkpoint, "f2df7550", 10254805, "QIF|400477d0-33c7"); // asset removed
+  ComponentEventPtrArray list;
+  checkpoint.getComponentEvents(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
+  auto jdoc = json::parse(doc);
+  auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
+  CPPUNIT_ASSERT_EQUAL(1_S, streams.size());
+  
+  auto stream = streams.at("/0/ComponentStream"_json_pointer);
+  CPPUNIT_ASSERT(stream.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("x872a3490"), stream.at("/@componentId"_json_pointer).get<string>());
+  
+  auto events = stream.at("/Events"_json_pointer);
+  CPPUNIT_ASSERT(events.is_array());
+  CPPUNIT_ASSERT_EQUAL(2_S, events.size());
+
+  auto changed = events.at(0);
+  CPPUNIT_ASSERT(changed.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("e4a300e0"), changed.at("/AssetChanged/@dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), changed.at("/AssetChanged/@timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), changed.at("/AssetChanged/@sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("CuttingTool"), changed.at("/AssetChanged/@assetType"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("31d416a0-33c7"), changed.at("/AssetChanged/Value"_json_pointer).get<string>());
+
+  auto removed = events.at(1);
+  CPPUNIT_ASSERT(removed.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("f2df7550"), removed.at("/AssetRemoved/@dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), removed.at("/AssetRemoved/@timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), removed.at("/AssetRemoved/@sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("QIF"), removed.at("/AssetRemoved/@assetType"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("400477d0-33c7"), removed.at("/AssetRemoved/Value"_json_pointer).get<string>());
+
 }
 
 void JsonPrinterStreamTest::testResetTrigger()
 {
+  Checkpoint checkpoint;
+  addObservationToCheckpoint(checkpoint, "qb9212c0", 10254804, "10.0:ACTION_COMPLETE", "TIME@100.0"); // Amperage
+  ComponentEventPtrArray list;
+  checkpoint.getComponentEvents(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
+  auto jdoc = json::parse(doc);
+  auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
+  CPPUNIT_ASSERT_EQUAL(1_S, streams.size());
+  
+  auto stream = streams.at("/0/ComponentStream"_json_pointer);
+  CPPUNIT_ASSERT(stream.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("afb91ba0"), stream.at("/@componentId"_json_pointer).get<string>());
+  
+  auto samples = stream.at("/Samples"_json_pointer);
+  CPPUNIT_ASSERT(samples.is_array());
+  CPPUNIT_ASSERT_EQUAL(1_S, samples.size());
+  auto amp = samples.at(0);
+  CPPUNIT_ASSERT(amp.is_object());
+  cout << amp.dump(2) << endl;
+  
+  CPPUNIT_ASSERT_EQUAL(string("qb9212c0"), amp.at("/Amperage/@dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), amp.at("/Amperage/@timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), amp.at("/Amperage/@sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("ACTION_COMPLETE"), amp.at("/Amperage/@resetTriggered"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), amp.at("/Amperage/@statistic"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(100.0, amp.at("/Amperage/@duration"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(10.0, amp.at("/Amperage/Value"_json_pointer).get<double>());
+
 }
 
-void JsonPrinterStreamTest::testStatistic()
+void JsonPrinterStreamTest::testMessage()
 {
+  Checkpoint checkpoint;
+  addObservationToCheckpoint(checkpoint, "m17f1750", 10254804, "XXXX|XXX is on the roof"); // asset changed
+  ComponentEventPtrArray list;
+  checkpoint.getComponentEvents(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
+  auto jdoc = json::parse(doc);
+  auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
+  CPPUNIT_ASSERT_EQUAL(1_S, streams.size());
+  
+  auto stream = streams.at("/0/ComponentStream"_json_pointer);
+  CPPUNIT_ASSERT(stream.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("p5add360"), stream.at("/@componentId"_json_pointer).get<string>());
+  
+  auto events = stream.at("/Events"_json_pointer);
+  CPPUNIT_ASSERT(events.is_array());
+  CPPUNIT_ASSERT_EQUAL(1_S, events.size());
+  
+  auto message = events.at(0);
+  CPPUNIT_ASSERT(message.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("m17f1750"), message.at("/Message/@dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), message.at("/Message/@timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), message.at("/Message/@sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("XXXX"), message.at("/Message/@nativeCode"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("XXX is on the roof"), message.at("/Message/Value"_json_pointer).get<string>());
+
 }
 
 void JsonPrinterStreamTest::testUnavailability()
 {
+  Checkpoint checkpoint;
+  addObservationToCheckpoint(checkpoint, "m17f1750", 10254804, "|UNAVAILABLE"); // asset changed
+  addObservationToCheckpoint(checkpoint, "a5b23650", 10254804, "unavailable||||"); // Motion Program Condition
+  ComponentEventPtrArray list;
+  checkpoint.getComponentEvents(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
+  auto jdoc = json::parse(doc);
+  auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
+  CPPUNIT_ASSERT_EQUAL(2_S, streams.size());
+  
+  auto stream = streams.at("/1/ComponentStream"_json_pointer);
+  CPPUNIT_ASSERT(stream.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("p5add360"), stream.at("/@componentId"_json_pointer).get<string>());
+  
+  auto events = stream.at("/Events"_json_pointer);
+  CPPUNIT_ASSERT(events.is_array());
+  CPPUNIT_ASSERT_EQUAL(1_S, events.size());
+  auto message = events.at(0);
+  CPPUNIT_ASSERT(message.is_object());
+
+  CPPUNIT_ASSERT_EQUAL(string("UNAVAILABLE"), message.at("/Message/Value"_json_pointer).get<string>());
+  
+  stream = streams.at("/0/ComponentStream"_json_pointer);
+  CPPUNIT_ASSERT(stream.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("a4a7bdf0"), stream.at("/@componentId"_json_pointer).get<string>());
+  
+  auto conds = stream.at("/Condition"_json_pointer);
+  CPPUNIT_ASSERT(conds.is_array());
+  CPPUNIT_ASSERT_EQUAL(1_S, conds.size());
+  auto motion = conds.at(0);
+  CPPUNIT_ASSERT(motion.is_object());
+  
+  CPPUNIT_ASSERT_EQUAL(string("a5b23650"), motion.at("/Unavailable/@dataItemId"_json_pointer).get<string>());
+
 }
