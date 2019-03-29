@@ -739,7 +739,7 @@ void XmlPrinterTest::testPrintAsset()
 {
   // Add the xml to the agent...
   vector<AssetPtr> assets;
-  Asset asset((string) "123", (string) "TEST", (string) "HELLO");
+  AssetPtr asset(new Asset((string) "123", (string) "TEST", (string) "HELLO"));
   assets.push_back(asset);
   
   {
@@ -975,8 +975,9 @@ void XmlPrinterTest::testAssetsStyle()
   m_printer->setAssetsStyle("/styles/Assets.xsl");
   
   vector<AssetPtr> assets;
-  Asset asset((string) "123", (string) "TEST", (string) "HELLO");
+  AssetPtr asset = new Asset((string) "123", (string) "TEST", (string) "HELLO");
   assets.push_back(asset);
+  asset->unrefer();
   
   PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
   

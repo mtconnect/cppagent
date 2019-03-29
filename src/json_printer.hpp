@@ -64,7 +64,7 @@ namespace mtconnect {
     virtual std::string printCuttingTool(CuttingToolPtr const tool) const override;
     
     virtual std::string mimeType() const override {
-      return "application/json";
+      return "application/mtconnect+json";
     }
     
   protected:

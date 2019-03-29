@@ -73,7 +73,7 @@ namespace mtconnect {
     virtual std::string printCuttingTool(CuttingToolPtr const tool) const override;
     
     virtual std::string mimeType() const override {
-      return "application/xml";
+      return "application/mtconnect+xml";
     }    
     
     void addDevicesNamespace(

@@ -20,7 +20,7 @@ option(DLIB_USE_MKL_FFT false)
 
 add_subdirectory(dlib)
 
-file(GLOB DLIB_FIX_SRCS "${CMAKE_SOURCE_DIR}/dlib_fix/sockets/*.cpp")
+file(GLOB DLIB_FIX_SRCS "${CMAKE_SOURCE_DIR}/dlib_fix/sockets/*.cpp" "${CMAKE_SOURCE_DIR}/dlib_fix/tokenizer/*.cpp")
 
 function(AddDLibSupport projectTarget)
   target_include_directories(${projectTarget} PRIVATE "${CMAKE_SOURCE_DIR}/dlib_fix" "${CMAKE_SOURCE_DIR}/dlib")
