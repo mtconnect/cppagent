@@ -8,8 +8,8 @@
 			<CuttingToolLifeCycle>
 				<CutterStatus><Status>NEW</Status></CutterStatus>
 				<ToolLife type="PART_COUNT" countDirection="DOWN" maximum="300">200</ToolLife>
-				<ProgramSpindleSpeed maximum="13300" nominal="605">10000</ProgramSpindleSpeed>
-				<ProgramFeedRate>222</ProgramFeedRate>
+				<ProcessSpindleSpeed maximum="13300" nominal="605">10000</ProcessSpindleSpeed>
+				<ProcessFeedRate>222</ProcessFeedRate>
 				<ConnectionCodeMachineSide>CV50</ConnectionCodeMachineSide>
 				<Measurements>
 					<BodyDiameterMax code="BDX">73.25</BodyDiameterMax>

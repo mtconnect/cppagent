@@ -19,6 +19,7 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <cstdlib>
+#include <set>
 
 #include "dlib/sockets.h"
 #include "device.hpp"
@@ -683,15 +684,132 @@ namespace mtconnect {
     }
   }
 
-  inline static void addIdentity(json &obj, CuttingTool *tool)
+  inline static void addCuttingToolIdentity(json &obj, const AssetKeys &identity)
   {
-    auto &identity = tool->getIdentity();
     for (auto &key : identity) {
       if (key.first == "manufacturers") {
         obj["@manufacturers"] = split(key.second);
       } else
         obj[string("@") + key.first] = key.second;
     }
+  }
+  
+  static set<string> IntegerKeys = {
+    "negativeOverlap", "positiveOverlap", "Location",
+    "maximumCount", "ReconditionCount", "significantDigits",
+    "ToolLife"
+  };
+  
+  static set<string> DoubleKeys = {
+    "maximum", "minimum", "nominal",
+    "ProcessSpindleSpeed", "ProcessFeedRate",
+    "Measurement"
+  };
+  
+  inline static void addValue(json &obj, const string &key, const string &value,
+                              bool attr)
+  {
+    string name = attr ? "@" + key : "Value";
+    if (IntegerKeys.count(key) > 0)
+      obj[name] = atoi(value.c_str());
+    else if (DoubleKeys.count(key) > 0) {
+      char *ep;
+      obj[name] = strtod(value.c_str(), &ep);
+    } else {
+      obj[name] = value;
+    }
+  }
+  
+  inline static json toJson(CuttingToolValuePtr &value,
+                            const std::string &kind = "")
+  {
+    json obj = json::object();
+    string type = kind.empty() ? value->m_key : kind;
+    for (auto &p : value->m_properties)
+      addValue(obj, p.first, p.second, true);
+    if (!value->m_value.empty())
+      addValue(obj, type, value->m_value, false);
+    return obj;
+  }
+  
+  inline static json toJson(CuttingItemPtr &item)
+  {
+    json obj = json::object();
+    
+    addCuttingToolIdentity(obj, item->m_identity);
+    
+    for (auto &prop : item->m_values)
+      obj[prop.first] = toJson(prop.second);
+    
+    if (!item->m_lives.empty())
+    {
+      json lives = json::array();
+      for (auto &s : item->m_lives) {
+        lives.push_back(toJson(s));
+      }
+      obj["ItemLife"] = lives;
+    }
+    
+    if (!item->m_measurements.empty())
+    {
+      json measurements = json::array();
+      for (auto &m : item->m_measurements) {
+        measurements.push_back(json::object({
+          { m.first, toJson(m.second, "Measurement") }
+        }));
+      }
+      
+      obj["Measurements"] = measurements;
+    }
+    
+    return json::object({ { "CuttingItem", obj } });
+  }
+  
+  inline static json toJson(CuttingTool *tool)
+  {
+    json obj = json::object();
+    if (!tool->m_status.empty())
+    {
+      json status = json::array();
+      for (auto &s : tool->m_status)
+        status.push_back(s);
+      obj["CutterStatus"] = status;
+    }
+    
+    if (!tool->m_lives.empty())
+    {
+      json lives = json::array();
+      for (auto &s : tool->m_lives) {
+        lives.push_back(toJson(s));
+      }
+      obj["ToolLife"] = lives;
+    }
+
+    for (auto &prop : tool->m_values)
+      obj[prop.first] = toJson(prop.second);
+    
+    if (!tool->m_measurements.empty())
+    {
+      json measurements = json::array();
+      for (auto &m : tool->m_measurements) {
+        measurements.push_back(json::object({
+          { m.first, toJson(m.second, "Measurement") }
+        }));
+      }
+      
+      obj["Measurements"] = measurements;
+    }
+    
+    if (!tool->m_items.empty())
+    {
+      json items = json::array();
+      for (auto &item : tool->m_items)
+        items.push_back(toJson(item));
+      
+      obj["CuttingItems"] = items;
+    }
+    
+    return obj;
   }
 
   inline static json toJson(AssetPtr asset)
@@ -701,7 +819,6 @@ namespace mtconnect {
       { "@timestamp", asset->getTimestamp() }
      });
     
-    
     if (!asset->getDeviceUuid().empty())
       obj["@deviceUuid"] = asset->getDeviceUuid();
     
@@ -709,10 +826,13 @@ namespace mtconnect {
         asset->getType() == "CuttingToolArchetype")
     {
       CuttingTool *tool = dynamic_cast<CuttingTool*>(asset.getObject());
-      addIdentity(obj, tool);
+      addCuttingToolIdentity(obj, tool->getIdentity());
       obj["Description"] = tool->getDescription();
+      
+      obj["CuttingToolLifeCycle"] = toJson(tool);
     } else {
       addIdentity(obj, asset.getObject());
+      obj["#text"] = asset->getContent(nullptr);
     }
     
     json doc = json::object({
@@ -744,9 +864,8 @@ namespace mtconnect {
   
   std::string JsonPrinter::printCuttingTool(CuttingToolPtr const tool) const
   {
-    json doc = {"CuttingTool", ""};
-    // json doc = toJson(tool);
-    return print(doc, m_pretty);
+    AssetPtr asset(tool);
+    return toJson(asset);
   }
 }
 
