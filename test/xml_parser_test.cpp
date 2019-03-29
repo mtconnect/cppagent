@@ -348,9 +348,9 @@ void XmlParserTest::testParseAsset()
   CPPUNIT_ASSERT_EQUAL((string) "NEW", tool->m_status[0]);
   
   // Values
-  CPPUNIT_ASSERT_EQUAL((string) "10000", tool->m_values.at("ProgramSpindleSpeed")->m_value);
-  CPPUNIT_ASSERT_EQUAL((string) "222", tool->m_values.at("ProgramFeedRate")->m_value);
-  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->m_values.at("ProgramFeedRate")->refCount());
+  CPPUNIT_ASSERT_EQUAL((string) "10000", tool->m_values.at("ProcessSpindleSpeed")->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "222", tool->m_values.at("ProcessFeedRate")->m_value);
+  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->m_values.at("ProcessFeedRate")->refCount());
   
   // Measurements
   CPPUNIT_ASSERT_EQUAL((string) "73.25", tool->m_measurements.at("BodyDiameterMax")->m_value);

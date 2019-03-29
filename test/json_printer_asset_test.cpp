@@ -111,7 +111,6 @@ public:
     CPPUNIT_ASSERT_EQUAL(1_S, assets.size());
     
     auto cuttingTool = assets.at(0);
-    cout << cuttingTool.dump(2) << endl;
     auto lifeCycle = cuttingTool.at("/CuttingTool/CuttingToolLifeCycle"_json_pointer);
     CPPUNIT_ASSERT(lifeCycle.is_object());
     
