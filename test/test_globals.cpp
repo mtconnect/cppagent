@@ -25,9 +25,10 @@
 using namespace std;
 using namespace mtconnect;
 
-string getFile(string fileLoc)
+string getFile(string file)
 {
-  ifstream ifs(fileLoc.c_str());
+  string path = string(PROJECT_ROOT_DIR "/test/resources/") + file;
+  ifstream ifs(path.c_str());
   stringstream stream;
   stream << ifs.rdbuf();
   return stream.str();

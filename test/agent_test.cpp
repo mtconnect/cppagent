@@ -1865,7 +1865,7 @@ void AgentTest::testAssetWithSimpleCuttingItems()
   testAddAdapter();
   
   m_adapter->parseBuffer("TIME|@ASSET@|XXX.200|CuttingTool|--multiline--AAAA\n");
-  m_adapter->parseBuffer((getFile(PROJECT_ROOT_DIR "/test/asset5.xml") + "\n").c_str());
+  m_adapter->parseBuffer((getFile("asset5.xml") + "\n").c_str());
   m_adapter->parseBuffer("--multiline--AAAA\n");
   CPPUNIT_ASSERT_EQUAL((unsigned int) 1, m_agent->getAssetCount());
   

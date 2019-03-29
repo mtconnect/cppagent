@@ -34,6 +34,9 @@ namespace mtconnect {
       m_name = name; }
     std::string const & name() const {
       return m_name; }
+    void setDebug(bool debug) {
+      m_isDebug = debug;
+    }
     
   protected:
     std::string m_name;

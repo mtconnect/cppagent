@@ -78,7 +78,7 @@ public:
   
   void testCuttingTool()
   {
-    auto xml = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+    auto xml = getFile("asset1.xml");
     AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
     vector<AssetPtr> assetList = { asset };
     auto doc = m_printer->printAssets(123, 1024, 10, assetList);
@@ -100,7 +100,7 @@ public:
   
   void testCuttingToolLifeCycle()
   {
-    auto xml = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+    auto xml = getFile("asset1.xml");
     AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
     vector<AssetPtr> assetList = { asset };
     auto doc = m_printer->printAssets(123, 1024, 10, assetList);
@@ -138,7 +138,7 @@ public:
   
   void testCuttingMeasurements()
   {
-    auto xml = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+    auto xml = getFile("asset1.xml");
     AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
     vector<AssetPtr> assetList = { asset };
     auto doc = m_printer->printAssets(123, 1024, 10, assetList);
@@ -167,7 +167,7 @@ public:
   
   void testCuttingItem()
   {
-    auto xml = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+    auto xml = getFile("asset1.xml");
     AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
     vector<AssetPtr> assetList = { asset };
     auto doc = m_printer->printAssets(123, 1024, 10, assetList);

@@ -1031,7 +1031,7 @@ ComponentEvent *XmlPrinterTest::addEventToCheckpoint(
 // CuttingTool tests
 void XmlPrinterTest::testPrintCuttingTool()
 {
-  auto document = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+  auto document = getFile("asset1.xml");
   auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *) asset.getObject();
   
@@ -1049,7 +1049,7 @@ void XmlPrinterTest::testPrintCuttingTool()
 
 void XmlPrinterTest::testPrintRemovedCuttingTool()
 {
-  auto document = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+  auto document = getFile("asset1.xml");
   auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
   asset->setRemoved(true);
   CuttingToolPtr tool = (CuttingTool *) asset.getObject();
@@ -1072,7 +1072,7 @@ void XmlPrinterTest::testPrintExtendedCuttingTool()
                                 "/schemas/MTConnectAssets_1.3.xsd",
                                 "x");
   
-  auto document = getFile(PROJECT_ROOT_DIR "/test/ext_asset.xml");
+  auto document = getFile("ext_asset.xml");
   auto asset = m_config->parseAsset("B732A08500HP.1", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *) asset.getObject();
   

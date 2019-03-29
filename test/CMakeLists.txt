@@ -44,7 +44,8 @@ else(NOT APPVEYOR AND (WIN32 OR APPLE))
   AddCppUnitSupport(agent_test)
 endif(NOT APPVEYOR AND (WIN32 OR APPLE))
 
-target_compile_definitions(agent_test  PRIVATE "PROJECT_ROOT=${CMAKE_SOURCE_DIR}" PRIVATE NOMINMAX)
+target_compile_definitions(agent_test  PRIVATE "PROJECT_ROOT=${CMAKE_SOURCE_DIR}"
+                           PRIVATE NOMINMAX PRIVATE "TEST_BIN_ROOT=$<TARGET_FILE_DIR:agent_test>")
 
 AddMsvcXPSupport(agent_test)
 AddLibXML2Support(agent_test)
@@ -65,4 +66,10 @@ set_target_properties(agent_test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1
 
 target_compile_features(agent_test PRIVATE cxx_std_14)
 
+add_custom_command(
+  TARGET agent_test POST_BUILD 
+  COMMAND "${CMAKE_COMMAND}" -E copy
+  ${CMAKE_CURRENT_SOURCE_DIR}/probe.xml
+  $<TARGET_FILE_DIR:agent_test>/probe.xml
+  COMMENT "Copying to output directory")
 

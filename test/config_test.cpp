@@ -123,7 +123,7 @@ void ConfigTest::tearDown()
 
 void ConfigTest::testBlankConfig()
 {
-  chdir(PROJECT_ROOT_DIR "/test");
+  chdir(TEST_BIN_ROOT_DIR);
   istringstream str("");
   m_config->loadConfig(str);
   
@@ -135,7 +135,7 @@ void ConfigTest::testBlankConfig()
 
 void ConfigTest::testBufferSize()
 {
-  chdir(PROJECT_ROOT_DIR "/test");
+  chdir(TEST_BIN_ROOT_DIR);
   istringstream str("BufferSize = 4\n");
   m_config->loadConfig(str);
   
@@ -271,7 +271,7 @@ void ConfigTest::testLimitPutFromHosts()
 
 void ConfigTest::testNamespaces()
 {
-  chdir(PROJECT_ROOT_DIR "/test");
+  chdir(TEST_BIN_ROOT_DIR);
   istringstream streams(
                         "StreamsNamespaces {\n"
                         "x {\n"
@@ -392,7 +392,7 @@ void ConfigTest::testIgnoreTimestampsOverride()
 
 void ConfigTest::testSpecifyMTCNamespace()
 {
-  chdir(PROJECT_ROOT_DIR "/test");
+  chdir(TEST_BIN_ROOT_DIR);
   istringstream streams(
                         "StreamsNamespaces {\n"
                         "m {\n"
@@ -417,7 +417,7 @@ void ConfigTest::testSpecifyMTCNamespace()
 
 void ConfigTest::testSetSchemaVersion()
 {
-  chdir(PROJECT_ROOT_DIR "/test");
+  chdir(TEST_BIN_ROOT_DIR);
   istringstream streams("SchemaVersion = 1.4\n");
   
   m_config->loadConfig(streams);
@@ -443,8 +443,12 @@ void ConfigTest::testSchemaDirectory()
                         "Location = /schemas\n"
                         "Path = ../schemas\n"
                         "}\n"
+                        "}\n"
+                        "logger_config {\n"
+                        "output = cout\n"
                         "}\n");
-  
+
+  m_config->setDebug(true);
   m_config->loadConfig(schemas);
   auto agent = const_cast<Agent*>(m_config->getAgent());
   CPPUNIT_ASSERT(agent);
@@ -480,7 +484,7 @@ void ConfigTest::testSchemaDirectory()
 
 void ConfigTest::testLogFileRollover()
 {
-  chdir(PROJECT_ROOT_DIR "/test");
+  chdir(TEST_BIN_ROOT_DIR);
   // This test/rollover is fragile on Windows due to file caching.
   // Whilst the agent uses standard C runtime file functions
   // this can not easily be worked around. Better to disable the test.
@@ -546,7 +550,7 @@ void ConfigTest::testLogFileRollover()
 
 void ConfigTest::testMaxSize()
 {
-  chdir(PROJECT_ROOT_DIR "/test");
+  chdir(TEST_BIN_ROOT_DIR);
   istringstream logger(
                        "logger_config {"
                        "max_size = 150\n"

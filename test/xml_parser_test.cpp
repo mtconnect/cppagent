@@ -327,7 +327,7 @@ void XmlParserTest::testConfiguration()
 
 void XmlParserTest::testParseAsset()
 {
-  auto document = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+  auto document = getFile("asset1.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *) asset.getObject();
   
@@ -397,7 +397,7 @@ void XmlParserTest::testParseOtherAsset()
 
 void XmlParserTest::testParseRemovedAsset()
 {
-  auto document = getFile(PROJECT_ROOT_DIR "/test/asset3.xml");
+  auto document = getFile("asset3.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *) asset.getObject();
   
@@ -407,7 +407,7 @@ void XmlParserTest::testParseRemovedAsset()
 
 void XmlParserTest::testUpdateAsset()
 {
-  auto document = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+  auto document = getFile("asset1.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *) asset.getObject();
   
@@ -599,7 +599,7 @@ void XmlParserTest::testSourceReferences()
 
 void XmlParserTest::testExtendedAsset()
 {
-  auto document = getFile(PROJECT_ROOT_DIR "/test/ext_asset.xml");
+  auto document = getFile("ext_asset.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *) asset.getObject();
   
@@ -610,7 +610,7 @@ void XmlParserTest::testExtendedAsset()
 
 void XmlParserTest::testExtendedAssetFragment()
 {
-  auto document = getFile(PROJECT_ROOT_DIR "/test/ext_asset_2.xml");
+  auto document = getFile("ext_asset_2.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *) asset.getObject();
   
