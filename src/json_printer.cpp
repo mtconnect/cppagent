@@ -660,6 +660,68 @@ namespace mtconnect {
     return print(doc, m_pretty);
   }
   
+  inline static json split(const string &v, const char s = ',')
+  {
+    json array = json::array();
+    stringstream ss(v);
+    while (ss.good())
+    {
+      string ele;
+      getline(ss, ele, s);
+      if (!ele.empty())
+        array.push_back(ele);
+    }
+           
+    return array;
+  }
+  
+  inline static void addIdentity(json &obj, Asset *asset)
+  {
+    auto &identity = asset->getIdentity();
+    for (auto &key : identity) {
+      obj[string("@") + key.first] = key.second;
+    }
+  }
+
+  inline static void addIdentity(json &obj, CuttingTool *tool)
+  {
+    auto &identity = tool->getIdentity();
+    for (auto &key : identity) {
+      if (key.first == "manufacturers") {
+        obj["@manufacturers"] = split(key.second);
+      } else
+        obj[string("@") + key.first] = key.second;
+    }
+  }
+
+  inline static json toJson(AssetPtr asset)
+  {
+    json obj = json::object({
+      { "@assetId", asset->getAssetId() },
+      { "@timestamp", asset->getTimestamp() }
+     });
+    
+    
+    if (!asset->getDeviceUuid().empty())
+      obj["@deviceUuid"] = asset->getDeviceUuid();
+    
+    if (asset->getType() == "CuttingTool" ||
+        asset->getType() == "CuttingToolArchetype")
+    {
+      CuttingTool *tool = dynamic_cast<CuttingTool*>(asset.getObject());
+      addIdentity(obj, tool);
+      obj["Description"] = tool->getDescription();
+    } else {
+      addIdentity(obj, asset.getObject());
+    }
+    
+    json doc = json::object({
+      { asset->getType(), obj }
+    });
+    
+    return doc;
+  }
+  
   std::string JsonPrinter::printAssets(
                                   const unsigned int instanceId,
                                   const unsigned int bufferSize,
@@ -667,8 +729,8 @@ namespace mtconnect {
                                   std::vector<AssetPtr> const &assets) const
   {
     json assetDoc = json::array();
-    //for (const auto asset : assets)
-    //  assetDoc.push_back(toJson(asset));
+    for (const auto asset : assets)
+      assetDoc.push_back(toJson(asset));
     
     json doc = json::object({ { "MTConnectAssets", {
       { "Header",

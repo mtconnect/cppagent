@@ -54,12 +54,13 @@ public:
   SET_UP()
   {
     m_printer.reset(new JsonPrinter("1.5", true));
-
+    m_parser.reset(new XmlParser());
   }
   
   TEAR_DOWN()
   {
     m_printer.reset();
+    m_parser.reset();
   }
   
   void testAssetHeader()
@@ -75,22 +76,46 @@ public:
     CPPUNIT_ASSERT_EQUAL(10, jdoc.at("/MTConnectAssets/Header/@assetCount"_json_pointer).get<int32_t>());
   }
   
-  void testCuttingTool() {}
-  void testCuttingToolArchitype() {}
+  void testCuttingTool()
+  {
+    auto xml = getFile(PROJECT_ROOT_DIR "/test/asset1.xml");
+    AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
+    vector<AssetPtr> assetList = { asset };
+    auto doc = m_printer->printAssets(123, 1024, 10, assetList);
+    auto jdoc = json::parse(doc);
+    
+
+    auto assets = jdoc.at("/MTConnectAssets/Assets"_json_pointer);
+    CPPUNIT_ASSERT(assets.is_array());
+    CPPUNIT_ASSERT_EQUAL(1_S, assets.size());
+    
+    auto cuttingTool = assets.at(0);
+    cout << cuttingTool.dump(2) << endl;
+    CPPUNIT_ASSERT_EQUAL(string("1"), cuttingTool.at("/CuttingTool/@serialNumber"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL(string("KSSP300R4SD43L240"), cuttingTool.at("/CuttingTool/@toolId"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL(string("KSSP300R4SD43L240.1"), cuttingTool.at("/CuttingTool/@assetId"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL(string("2011-05-11T13:55:22"), cuttingTool.at("/CuttingTool/@timestamp"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL(string("KMT"), cuttingTool.at("/CuttingTool/@manufacturers/0"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL(string("Parlec"), cuttingTool.at("/CuttingTool/@manufacturers/1"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL(string("Cutting tool ..."), cuttingTool.at("/CuttingTool/Description"_json_pointer).get<string>());
+  }
+  
   void testCuttingToolLifeCycle() {}
   void testCuttingItem() {}
+  void testCuttingToolArchitype() {}
   void testUnknownAssetType() {}
 
 protected:
   std::unique_ptr<JsonPrinter> m_printer;
+  std::unique_ptr<XmlParser> m_parser;
 
 public:
   CPPUNIT_TEST_SUITE(JsonPrinterAssetTest);
   CPPUNIT_TEST(testAssetHeader);
   CPPUNIT_TEST(testCuttingTool);
-  CPPUNIT_TEST(testCuttingToolArchitype);
   CPPUNIT_TEST(testCuttingToolLifeCycle);
   CPPUNIT_TEST(testCuttingItem);
+  CPPUNIT_TEST(testCuttingToolArchitype);
   CPPUNIT_TEST(testUnknownAssetType);
   CPPUNIT_TEST_SUITE_END();
 };
