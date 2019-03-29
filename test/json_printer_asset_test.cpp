@@ -153,12 +153,12 @@ public:
     
     auto diameter = measurements.at(0);
     CPPUNIT_ASSERT(diameter.is_object());
-    CPPUNIT_ASSERT_EQUAL("BDX", diameter.at("/BodyDiameterMax/@code"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL("BDX"_S, diameter.at("/BodyDiameterMax/@code"_json_pointer).get<string>());
     CPPUNIT_ASSERT_EQUAL(73.25, diameter.at("/BodyDiameterMax/Value"_json_pointer).get<double>());
 
     auto length = measurements.at(1);
     CPPUNIT_ASSERT(length.is_object());
-    CPPUNIT_ASSERT_EQUAL("LF", length.at("/BodyLengthMax/@code"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL("LF"_S, length.at("/BodyLengthMax/@code"_json_pointer).get<string>());
     CPPUNIT_ASSERT_EQUAL(120.65, length.at("/BodyLengthMax/@nominal"_json_pointer).get<double>());
     CPPUNIT_ASSERT_EQUAL(120.404, length.at("/BodyLengthMax/@minimum"_json_pointer).get<double>());
     CPPUNIT_ASSERT_EQUAL(120.904, length.at("/BodyLengthMax/@maximum"_json_pointer).get<double>());
@@ -182,7 +182,7 @@ public:
     auto item = items.at(0);
     CPPUNIT_ASSERT(item.is_object());
     
-    CPPUNIT_ASSERT_EQUAL("1-4", item.at("/CuttingItem/@indices"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL("1-4"_S, item.at("/CuttingItem/@indices"_json_pointer).get<string>());
     CPPUNIT_ASSERT_EQUAL(string("SDET43PDER8GB"), item.at("/CuttingItem/@itemId"_json_pointer).get<string>());
     CPPUNIT_ASSERT_EQUAL(string("KC725M"), item.at("/CuttingItem/@grade"_json_pointer).get<string>());
     CPPUNIT_ASSERT_EQUAL(string("KMT"), item.at("/CuttingItem/@manufacturers/0"_json_pointer).get<string>());
@@ -192,13 +192,20 @@ public:
     CPPUNIT_ASSERT(measurements.is_array());
     CPPUNIT_ASSERT_EQUAL(4_S, measurements.size());
     
-    CPPUNIT_ASSERT_EQUAL("RE", measurements.at("/0/CornerRadius/@code"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL("RE"_S, measurements.at("/0/CornerRadius/@code"_json_pointer).get<string>());
     CPPUNIT_ASSERT_EQUAL(0.8, measurements.at("/0/CornerRadius/@nominal"_json_pointer).get<double>());
     CPPUNIT_ASSERT_EQUAL(0.8, measurements.at("/0/CornerRadius/Value"_json_pointer).get<double>());
   }
   
-  void testCuttingToolArchitype() {}
-  void testUnknownAssetType() {}
+  void testCuttingToolArchitype()
+  {
+    
+  }
+  
+  void testUnknownAssetType()
+  {
+    
+  }
 
 protected:
   std::unique_ptr<JsonPrinter> m_printer;
