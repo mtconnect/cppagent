@@ -199,12 +199,40 @@ public:
   
   void testCuttingToolArchitype()
   {
+    auto xml = getFile("cutting_tool_archetype.xml");
+    AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240", "CuttingToolArchetype", xml);
+    vector<AssetPtr> assetList = { asset };
+    auto doc = m_printer->printAssets(123, 1024, 10, assetList);
+    auto jdoc = json::parse(doc);
     
+    auto tool = jdoc.at("/MTConnectAssets/Assets/0/"
+                         "CuttingToolArchetype"_json_pointer);
+    CPPUNIT_ASSERT(tool.is_object());
+    auto def = tool.at("/CuttingToolDefinition"_json_pointer);
+    CPPUNIT_ASSERT(def.is_object());
+    CPPUNIT_ASSERT_EQUAL("EXPRESS"_S, def.at("/@format"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL(string("Some Express..."), def.at("/#text"_json_pointer).get<string>());
   }
   
   void testUnknownAssetType()
   {
+    AssetPtr asset(new Asset("BLAH", "Bar", "Some Random Stuff"));
+    asset->setTimestamp("2001-12-17T09:30:47Z");
+    asset->setDeviceUuid("7800f530-34a9");
     
+    vector<AssetPtr> assetList = { asset };
+    auto doc = m_printer->printAssets(123, 1024, 10, assetList);
+    auto jdoc = json::parse(doc);
+
+    cout << jdoc.dump(2) << endl;
+    auto bar = jdoc.at("/MTConnectAssets/Assets/0/"
+                        "Bar"_json_pointer);
+    CPPUNIT_ASSERT(bar.is_object());
+    CPPUNIT_ASSERT_EQUAL("BLAH"_S, bar.at("/@assetId"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL("2001-12-17T09:30:47Z"_S, bar.at("/@timestamp"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL("7800f530-34a9"_S, bar.at("/@deviceUuid"_json_pointer).get<string>());
+    CPPUNIT_ASSERT_EQUAL("Some Random Stuff"_S, bar.at("/#text"_json_pointer).get<string>());
+
   }
 
 protected:

@@ -785,8 +785,10 @@ namespace mtconnect {
       obj["ToolLife"] = lives;
     }
 
-    for (auto &prop : tool->m_values)
-      obj[prop.first] = toJson(prop.second);
+    for (auto &prop : tool->m_values) {
+      if (prop.first != "CuttingToolDefinition")
+        obj[prop.first] = toJson(prop.second);
+    }
     
     if (!tool->m_measurements.empty())
     {
@@ -828,8 +830,17 @@ namespace mtconnect {
       CuttingTool *tool = dynamic_cast<CuttingTool*>(asset.getObject());
       addCuttingToolIdentity(obj, tool->getIdentity());
       obj["Description"] = tool->getDescription();
-      
-      obj["CuttingToolLifeCycle"] = toJson(tool);
+
+      if (tool->m_values.count("CuttingToolDefinition") > 0) {
+        auto &def = tool->m_values["CuttingToolDefinition"];
+        obj["CuttingToolDefinition"] = json::object({
+          { "@format", def->m_properties["format"] },
+          { "#text", def->m_value }
+        });
+      }
+      auto life = toJson(tool);
+      if (!life.empty())
+        obj["CuttingToolLifeCycle"] = toJson(tool);
     } else {
       addIdentity(obj, asset.getObject());
       obj["#text"] = asset->getContent(nullptr);
