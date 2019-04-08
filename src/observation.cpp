@@ -127,10 +127,9 @@ namespace mtconnect {
   
   const AttributeList &Observation::getAttributes()
   {
+    lock_guard<std::mutex> lock(g_attributeMutex);
     if (!m_hasAttributes)
-    {
-      lock_guard<std::mutex> lock(g_attributeMutex);
-      
+    {      
       m_attributes.push_back(AttributeItem("dataItemId", m_dataItem->getId()));
       m_attributes.push_back(AttributeItem("timestamp", m_time));
       
