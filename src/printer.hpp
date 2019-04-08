@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "component_event.hpp"
+#include "observation.hpp"
 
 namespace mtconnect {
   class Device;
@@ -45,7 +45,7 @@ namespace mtconnect {
                                     const uint64_t nextSeq,
                                     const uint64_t firstSeq,
                                     const uint64_t lastSeq,
-                                    ComponentEventPtrArray &results
+                                    ObservationPtrArray &results
                                     ) const = 0;
     
     virtual std::string printAssets(

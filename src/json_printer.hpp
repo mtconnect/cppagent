@@ -52,7 +52,7 @@ namespace mtconnect {
                                     const uint64_t nextSeq,
                                     const uint64_t firstSeq,
                                     const uint64_t lastSeq,
-                                    ComponentEventPtrArray &results
+                                    ObservationPtrArray &results
                                     ) const override;
     
     virtual std::string printAssets(

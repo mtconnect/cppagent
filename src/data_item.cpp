@@ -25,7 +25,7 @@
 using namespace std;
 
 namespace mtconnect {
-  // ComponentEvent public static constants
+  // Observation public static constants
   std::map<string, double> sUnitsConversion {
     { "INCH", 25.4 },
     { "FOOT", 304.8 },

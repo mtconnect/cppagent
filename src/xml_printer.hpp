@@ -61,7 +61,7 @@ namespace mtconnect {
                             const uint64_t nextSeq,
                             const uint64_t firstSeq,
                             const uint64_t lastSeq,
-                            ComponentEventPtrArray &results
+                            ObservationPtrArray &results
                             ) const override;
     
     virtual std::string printAssets(
@@ -161,7 +161,7 @@ namespace mtconnect {
     void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> &attributes)  const;
     void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes)  const;
     
-    void addEvent(xmlTextWriterPtr writer, ComponentEvent *result)  const;
+    void addEvent(xmlTextWriterPtr writer, Observation *result)  const;
     
     // Asset printing
     void printCuttingToolValue(

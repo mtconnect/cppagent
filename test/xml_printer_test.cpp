@@ -17,7 +17,7 @@
 
 #include "Cuti.h"
 
-#include "component_event.hpp"
+#include "observation.hpp"
 #include "data_item.hpp"
 #include "device.hpp"
 #include "xml_parser.hpp"
@@ -103,14 +103,14 @@ protected:
   mtconnect::DataItem *getDataItem(const char *name);
   
   // Construct a component event and set it as the data item's latest event
-  mtconnect::ComponentEvent *addEventToCheckpoint(
+  mtconnect::Observation *addEventToCheckpoint(
                                                   mtconnect::Checkpoint &checkpoint,
                                                   const char *name,
                                                   uint64_t sequence,
                                                   std::string value
                                                   );
   
-  mtconnect::ComponentEvent *newEvent(
+  mtconnect::Observation *newEvent(
                                       const char *name,
                                       uint64_t sequence,
                                       std::string value
@@ -276,8 +276,8 @@ void XmlPrinterTest::testPrintCurrent()
   addEventToCheckpoint(checkpoint, "execution", 10254795, "READY");
   addEventToCheckpoint(checkpoint, "power", 1, "ON");
   
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
@@ -372,8 +372,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
   
   // Streams
   {
-    ComponentEventPtrArray list;
-    checkpoint.getComponentEvents(list);
+    ObservationPtrArray list;
+    checkpoint.getObservations(list);
     
     PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
     
@@ -390,8 +390,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
                                    "http://www.machine.com/schemas/MachineStreams_1.3.xsd",
                                    "e");
     
-    ComponentEventPtrArray list;
-    checkpoint.getComponentEvents(list);
+    ObservationPtrArray list;
+    checkpoint.getObservations(list);
     PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
     
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
@@ -412,8 +412,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     Checkpoint checkpoint2;
     addEventToCheckpoint(checkpoint2, "flow", 10254804, "100");
     
-    ComponentEventPtrArray list;
-    checkpoint2.getComponentEvents(list);
+    ObservationPtrArray list;
+    checkpoint2.getObservations(list);
     
     PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
     
@@ -433,8 +433,8 @@ void XmlPrinterTest::testChangeStreamsNamespace()
     Checkpoint checkpoint2;
     addEventToCheckpoint(checkpoint2, "flow", 10254804, "100");
     
-    ComponentEventPtrArray list;
-    checkpoint2.getComponentEvents(list);
+    ObservationPtrArray list;
+    checkpoint2.getObservations(list);
     
     PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
     
@@ -475,9 +475,9 @@ void XmlPrinterTest::testChangeErrorNamespace()
 
 void XmlPrinterTest::testPrintSample()
 {
-  ComponentEventPtrArray events;
+  ObservationPtrArray events;
   
-  ComponentEventPtr ptr;
+  ObservationPtr ptr;
   ptr = newEvent("Xact", 10843512, "0.553472");
   events.push_back(ptr);
   ptr = newEvent("Xcom", 10843514, "0.551123");
@@ -564,8 +564,8 @@ void XmlPrinterTest::testCondition()
   addEventToCheckpoint(checkpoint, "cmp", 18, "NORMAL||||");
   addEventToCheckpoint(checkpoint, "lp", 18, "FAULT|LOGIC|2||PLC Error");
   
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
   
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
@@ -613,8 +613,8 @@ void XmlPrinterTest::testVeryLargeSequence()
   addEventToCheckpoint(checkpoint, "Xact", (((uint64_t)1) << 48) + 1, "0");
   addEventToCheckpoint(checkpoint, "Xcom", (((uint64_t) 1) << 48) + 3, "123");
   
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, (((uint64_t)1) << 48) + 3,
                                    (((uint64_t)1) << 48) + 1, (((uint64_t)1) << 48) + 1024, list));
   
@@ -674,9 +674,9 @@ void XmlPrinterTest::testStatisticAndTimeSeriesProbe()
 
 void XmlPrinterTest::testTimeSeries()
 {
-  ComponentEventPtr ptr;
+  ObservationPtr ptr;
   {
-    ComponentEventPtrArray events;
+    ObservationPtrArray events;
     ptr = newEvent("Xts", 10843512, "6|||1.1 2.2 3.3 4.4 5.5 6.6 ");
     events.push_back(ptr);
     
@@ -692,7 +692,7 @@ void XmlPrinterTest::testTimeSeries()
                                       "1.1 2.2 3.3 4.4 5.5 6.6");
   }
   {
-    ComponentEventPtrArray events;
+    ObservationPtrArray events;
     ptr = newEvent("Xts", 10843512, "6|46200|1.1 2.2 3.3 4.4 5.5 6.6 ");
     events.push_back(ptr);
     
@@ -712,8 +712,8 @@ void XmlPrinterTest::testTimeSeries()
 
 void XmlPrinterTest::testNonPrintableCharacters()
 {
-  ComponentEventPtrArray events;
-  ComponentEventPtr ptr = newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? ");
+  ObservationPtrArray events;
+  ObservationPtr ptr = newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? ");
   events.push_back(ptr);
   PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
@@ -724,8 +724,8 @@ void XmlPrinterTest::testNonPrintableCharacters()
 
 void XmlPrinterTest::testEscapedXMLCharacters()
 {
-  ComponentEventPtrArray events;
-  ComponentEventPtr ptr = newEvent("zlc", 10843512, "fault|500|||A duck > a foul & < cat '");
+  ObservationPtrArray events;
+  ObservationPtr ptr = newEvent("zlc", 10843512, "fault|500|||A duck > a foul & < cat '");
   events.push_back(ptr);
   PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
@@ -927,8 +927,8 @@ void XmlPrinterTest::testStreamsStyle()
   addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
   addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100");
   
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
   
   xmlNodePtr pi = doc->children;
@@ -999,7 +999,7 @@ DataItem *XmlPrinterTest::getDataItem(const char *name)
 }
 
 
-ComponentEvent *XmlPrinterTest::newEvent(
+Observation *XmlPrinterTest::newEvent(
                                          const char *name,
                                          uint64_t sequence,
                                          string value
@@ -1011,19 +1011,19 @@ ComponentEvent *XmlPrinterTest::newEvent(
   const auto d = getDataItem(name);
   CPPUNIT_ASSERT_MESSAGE((string) "Could not find data item " + name, d);
   
-  return new ComponentEvent(*d, sequence, time, value);
+  return new Observation(*d, sequence, time, value);
 }
 
 
-ComponentEvent *XmlPrinterTest::addEventToCheckpoint(
+Observation *XmlPrinterTest::addEventToCheckpoint(
                                                      Checkpoint &checkpoint,
                                                      const char *name,
                                                      uint64_t sequence,
                                                      string value
                                                      )
 {
-  ComponentEvent *event = newEvent(name, sequence, value);
-  checkpoint.addComponentEvent(event);
+  Observation *event = newEvent(name, sequence, value);
+  checkpoint.addObservation(event);
   return event;
 }
 

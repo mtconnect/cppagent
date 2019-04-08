@@ -41,7 +41,7 @@
 
 namespace mtconnect {
   class Adapter;
-  class ComponentEvent;
+  class Observation;
   class DataItem;
   class Device;
   
@@ -177,7 +177,7 @@ namespace mtconnect {
     
     DataItem *getDataItemByName(const std::string &deviceName, const std::string &dataItemName );
     
-    ComponentEvent *getFromBuffer(uint64_t seq) const {
+    Observation *getFromBuffer(uint64_t seq) const {
       return (*m_slidingBuffer)[seq]; }
     uint64_t getSequence() const {
       return m_sequence; }
@@ -378,7 +378,7 @@ namespace mtconnect {
     uint64_t m_sequence;
     
     // The sliding/circular buffer to hold all of the events/sample data
-    std::unique_ptr<dlib::sliding_buffer_kernel_1<ComponentEventPtr>> m_slidingBuffer;
+    std::unique_ptr<dlib::sliding_buffer_kernel_1<ObservationPtr>> m_slidingBuffer;
     unsigned int m_slidingBufferSize;
     
     // Asset storage, circ buffer stores ids

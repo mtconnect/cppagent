@@ -19,7 +19,7 @@
 
 #include "globals.hpp"
 
-#include "component_event.hpp"
+#include "observation.hpp"
 #include <map>
 #include <string>
 #include <vector>
@@ -33,19 +33,19 @@ namespace mtconnect {
     Checkpoint(const Checkpoint &checkpoint, const std::set<std::string> *filterSet = nullptr);
     ~Checkpoint();
     
-    void addComponentEvent(ComponentEvent *event);
-    bool dataSetDifference(ComponentEvent *event) const;
+    void addObservation(Observation *event);
+    bool dataSetDifference(Observation *event) const;
     void copy(Checkpoint const &checkpoint, const std::set<std::string> *filterSet = nullptr);
     void clear();
     void filter(std::set<std::string> const &filterSet);
     
-    const std::map<std::string, ComponentEventPtr *> &getEvents() const {
+    const std::map<std::string, ObservationPtr *> &getEvents() const {
       return m_events; }
     
-    void getComponentEvents(ComponentEventPtrArray &list,
+    void getObservations(ObservationPtrArray &list,
                             std::set<std::string> const *filterSet = nullptr) const;
     
-    ComponentEventPtr *getEventPtr(const std::string &id)
+    ObservationPtr *getEventPtr(const std::string &id)
     {
       auto pos = m_events.find(id);
       if(pos != m_events.end())
@@ -54,7 +54,7 @@ namespace mtconnect {
     }
     
   protected:
-    std::map<std::string, ComponentEventPtr *> m_events;
+    std::map<std::string, ObservationPtr *> m_events;
     std::set<std::string> m_filter;
     bool m_hasFilter;
   };

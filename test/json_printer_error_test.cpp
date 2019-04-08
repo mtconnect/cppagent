@@ -24,7 +24,7 @@
 #include <iostream>
 
 #include <nlohmann/json.hpp>
-#include "component_event.hpp"
+#include "observation.hpp"
 #include "data_item.hpp"
 #include "device.hpp"
 #include "json_printer.hpp"

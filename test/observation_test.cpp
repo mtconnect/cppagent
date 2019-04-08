@@ -17,7 +17,7 @@
 
 #include "Cuti.h"
 #include "data_item.hpp"
-#include "component_event.hpp"
+#include "observation.hpp"
 #include "test_globals.hpp"
 
 #include <list>
@@ -26,7 +26,7 @@
 using namespace std;
 using namespace mtconnect;
 
-TEST_CLASS(ComponentEventTest)
+TEST_CLASS(ObservationTest)
 {
 public:
   SET_UP();
@@ -46,8 +46,8 @@ public:
   void testAssetChanged();
   
 protected:
-  ComponentEvent *m_compEventA;
-  ComponentEvent *m_compEventB;
+  Observation *m_compEventA;
+  Observation *m_compEventB;
   std::unique_ptr<DataItem> m_dataItem1;
   std::unique_ptr<DataItem> m_dataItem2;
   
@@ -60,7 +60,7 @@ protected:
                        const char *file, int line
                        );
   
-  CPPUNIT_TEST_SUITE(ComponentEventTest);
+  CPPUNIT_TEST_SUITE(ObservationTest);
   CPPUNIT_TEST(testConstructors);
   CPPUNIT_TEST(testGetAttributes);
   CPPUNIT_TEST(testConvertValue);
@@ -76,13 +76,13 @@ protected:
 };
 
 // Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(ComponentEventTest);
+CPPUNIT_TEST_SUITE_REGISTRATION(ObservationTest);
 
 #define TEST_VALUE(attributes, nativeUnits, expected, value) \
 testValueHelper(attributes, nativeUnits, expected, value, __FILE__, __LINE__)
 
 
-void ComponentEventTest::setUp()
+void ObservationTest::setUp()
 {
   std::map<string, string> attributes1, attributes2;
   
@@ -101,15 +101,15 @@ void ComponentEventTest::setUp()
   m_dataItem2 = make_unique<DataItem>(attributes2);
   
   string time("NOW"), value("CODE|NATIVE|CRITICAL|ACTIVE|DESCRIPTION");
-  m_compEventA = new ComponentEvent(*m_dataItem1, 2, time, value);
+  m_compEventA = new Observation(*m_dataItem1, 2, time, value);
   
   time = "LATER";
   value = "1.1231";
-  m_compEventB = new ComponentEvent(*m_dataItem2, 4, time, value);
+  m_compEventB = new Observation(*m_dataItem2, 4, time, value);
 }
 
 
-void ComponentEventTest::tearDown()
+void ObservationTest::tearDown()
 {
   m_compEventA->unrefer();
   m_compEventB->unrefer();
@@ -118,9 +118,9 @@ void ComponentEventTest::tearDown()
 }
 
 
-void ComponentEventTest::testConstructors()
+void ObservationTest::testConstructors()
 {
-  auto ce = new ComponentEvent(*m_compEventA);
+  auto ce = new Observation(*m_compEventA);
   
   // Copy constructor allocates different objects, so it has different addresses
   CPPUNIT_ASSERT(m_compEventA != ce);
@@ -133,7 +133,7 @@ void ComponentEventTest::testConstructors()
 }
 
 
-void ComponentEventTest::testGetAttributes()
+void ObservationTest::testGetAttributes()
 {
   const auto &attr_list1 = m_compEventA->getAttributes();
   map<string, string> attributes1;
@@ -167,7 +167,7 @@ void ComponentEventTest::testGetAttributes()
 }
 
 
-void ComponentEventTest::testGetters()
+void ObservationTest::testGetters()
 {
   CPPUNIT_ASSERT(m_dataItem1.get() == m_compEventA->getDataItem());
   CPPUNIT_ASSERT(m_dataItem2.get() == m_compEventB->getDataItem());
@@ -177,7 +177,7 @@ void ComponentEventTest::testGetters()
 }
 
 
-void ComponentEventTest::testConvertValue()
+void ObservationTest::testConvertValue()
 {
   std::map<string, string> attributes;
   attributes["id"] = "1";
@@ -199,7 +199,7 @@ void ComponentEventTest::testConvertValue()
 }
 
 
-void ComponentEventTest::testConvertSimpleUnits()
+void ObservationTest::testConvertSimpleUnits()
 {
   std::map<string, string> attributes;
   attributes["id"] = "1";
@@ -226,7 +226,7 @@ void ComponentEventTest::testConvertSimpleUnits()
 }
 
 
-void ComponentEventTest::testValueHelper(
+void ObservationTest::testValueHelper(
                                          std::map<string, string> &attributes,
                                          const string &nativeUnits,
                                          float expected,
@@ -239,7 +239,7 @@ void ComponentEventTest::testValueHelper(
   attributes["nativeUnits"] = nativeUnits;
   DataItem dataItem(attributes);
   
-  ComponentEventPtr event(new ComponentEvent(dataItem, 123, time, value), true);
+  ObservationPtr event(new Observation(dataItem, 123, time, value), true);
   
   
   stringstream message;
@@ -256,10 +256,10 @@ void ComponentEventTest::testValueHelper(
 }
 
 
-void ComponentEventTest::testRefCounts()
+void ObservationTest::testRefCounts()
 {
   string time("NOW"), value("111");
-  auto event = new ComponentEvent(*m_dataItem1, 123, time, value);
+  auto event = new Observation(*m_dataItem1, 123, time, value);
   
   CPPUNIT_ASSERT(event->refCount() == 1);
   
@@ -276,7 +276,7 @@ void ComponentEventTest::testRefCounts()
   CPPUNIT_ASSERT(event->refCount() == 1);
   
   {
-    ComponentEventPtr prt(event);
+    ObservationPtr prt(event);
     CPPUNIT_ASSERT(event->refCount() == 2);
   }
   
@@ -284,13 +284,13 @@ void ComponentEventTest::testRefCounts()
   event->referTo();
   CPPUNIT_ASSERT(event->refCount() == 2);
   {
-    ComponentEventPtr prt(event, true);
+    ObservationPtr prt(event, true);
     CPPUNIT_ASSERT(event->refCount() == 2);
   }
   CPPUNIT_ASSERT(event->refCount() == 1);
   
   {
-    ComponentEventPtr prt;
+    ObservationPtr prt;
     prt = event;
     CPPUNIT_ASSERT(prt->refCount() == 2);
   }
@@ -298,30 +298,30 @@ void ComponentEventTest::testRefCounts()
 }
 
 
-void ComponentEventTest::testStlLists()
+void ObservationTest::testStlLists()
 {
-  std::vector<ComponentEventPtr> vector;
+  std::vector<ObservationPtr> vector;
   
   string time("NOW"), value("111");
-  auto event = new ComponentEvent(*m_dataItem1, 123, time, value);
+  auto event = new Observation(*m_dataItem1, 123, time, value);
   
   CPPUNIT_ASSERT_EQUAL(1, (int) event->refCount());
   vector.push_back(event);
   CPPUNIT_ASSERT_EQUAL(2, (int) event->refCount());
   
-  std::list<ComponentEventPtr> list;
+  std::list<ObservationPtr> list;
   list.push_back(event);
   CPPUNIT_ASSERT_EQUAL(3, (int) event->refCount());
   
 }
 
 
-void ComponentEventTest::testEventChaining()
+void ObservationTest::testEventChaining()
 {
   string time("NOW"), value("111");
-  ComponentEventPtr event1(new ComponentEvent(*m_dataItem1, 123, time, value), true);
-  ComponentEventPtr event2(new ComponentEvent(*m_dataItem1, 123, time, value), true);
-  ComponentEventPtr event3(new ComponentEvent(*m_dataItem1, 123, time, value), true);
+  ObservationPtr event1(new Observation(*m_dataItem1, 123, time, value), true);
+  ObservationPtr event2(new Observation(*m_dataItem1, 123, time, value), true);
+  ObservationPtr event3(new Observation(*m_dataItem1, 123, time, value), true);
   
   CPPUNIT_ASSERT(event1.getObject() == event1->getFirst());
   
@@ -335,13 +335,13 @@ void ComponentEventTest::testEventChaining()
   CPPUNIT_ASSERT_EQUAL(2, (int) event2->refCount());
   CPPUNIT_ASSERT_EQUAL(2, (int) event3->refCount());
   
-  std::list<ComponentEventPtr> list;
+  std::list<ObservationPtr> list;
   event1->getList(list);
   CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
   CPPUNIT_ASSERT(list.front().getObject() == event3.getObject());
   CPPUNIT_ASSERT(list.back().getObject() == event1.getObject());
   
-  std::list<ComponentEventPtr> list2;
+  std::list<ObservationPtr> list2;
   event2->getList(list2);
   CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
   CPPUNIT_ASSERT(list2.front().getObject() == event3.getObject());
@@ -349,7 +349,7 @@ void ComponentEventTest::testEventChaining()
 }
 
 
-void ComponentEventTest::testCondition()
+void ObservationTest::testCondition()
 {
   string time("NOW");
   std::map<string, string> attributes1;
@@ -359,9 +359,9 @@ void ComponentEventTest::testCondition()
   attributes1["category"] = "CONDITION";
   auto d = make_unique<DataItem>(attributes1);
   
-  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "FAULT|4321|1|HIGH|Overtemp"), true);
+  ObservationPtr event1(new Observation(*d, 123, time, (string) "FAULT|4321|1|HIGH|Overtemp"), true);
   
-  CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event1->getLevel());
+  CPPUNIT_ASSERT_EQUAL(Observation::FAULT, event1->getLevel());
   CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event1->getValue());
   
   const auto &attr_list1 = event1->getAttributes();
@@ -377,9 +377,9 @@ void ComponentEventTest::testCondition()
   CPPUNIT_ASSERT_EQUAL((string) "1", attrs1["nativeSeverity"]);
   CPPUNIT_ASSERT_EQUAL((string) "Fault", event1->getLevelString());
   
-  ComponentEventPtr event2(new ComponentEvent(*d, 123, time, (string) "fault|4322|2|LOW|Overtemp"), true);
+  ObservationPtr event2(new Observation(*d, 123, time, (string) "fault|4322|2|LOW|Overtemp"), true);
   
-  CPPUNIT_ASSERT_EQUAL(ComponentEvent::FAULT, event2->getLevel());
+  CPPUNIT_ASSERT_EQUAL(Observation::FAULT, event2->getLevel());
   CPPUNIT_ASSERT_EQUAL((string) "Overtemp", event2->getValue());
   
   const auto &attr_list2 = event2->getAttributes();
@@ -399,7 +399,7 @@ void ComponentEventTest::testCondition()
 }
 
 
-void ComponentEventTest::testTimeSeries()
+void ObservationTest::testTimeSeries()
 {
   string time("NOW");
   std::map<string, string> attributes1;
@@ -412,7 +412,7 @@ void ComponentEventTest::testTimeSeries()
   
   CPPUNIT_ASSERT(d->isTimeSeries());
   
-  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "6||1 2 3 4 5 6 "), true);
+  ObservationPtr event1(new Observation(*d, 123, time, (string) "6||1 2 3 4 5 6 "), true);
   const auto &attr_list1 = event1->getAttributes();
   map<string, string> attrs1;
   
@@ -433,7 +433,7 @@ void ComponentEventTest::testTimeSeries()
   CPPUNIT_ASSERT_EQUAL(0, (int) attrs1.count("sampleRate"));
   
   
-  ComponentEventPtr event2(new ComponentEvent(*d, 123, time,
+  ObservationPtr event2(new Observation(*d, 123, time,
                                               (string) "7|42000|10 20 30 40 50 60 70 "), true);
   const auto &attr_list2 = event2->getAttributes();
   map<string, string> attrs2;
@@ -457,7 +457,7 @@ void ComponentEventTest::testTimeSeries()
 }
 
 
-void ComponentEventTest::testDuration()
+void ObservationTest::testDuration()
 {
   string time("2011-02-18T15:52:41Z@200.1232");
   std::map<string, string> attributes1;
@@ -468,7 +468,7 @@ void ComponentEventTest::testDuration()
   attributes1["statistic"] = "AVERAGE";
   auto d = make_unique<DataItem>(attributes1);
   
-  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "11.0"), true);
+  ObservationPtr event1(new Observation(*d, 123, time, (string) "11.0"), true);
   const auto &attr_list = event1->getAttributes();
   map<string, string> attrs1;
   
@@ -483,7 +483,7 @@ void ComponentEventTest::testDuration()
 }
 
 
-void ComponentEventTest::testAssetChanged()
+void ObservationTest::testAssetChanged()
 {
   string time("2011-02-18T15:52:41Z@200.1232");
   std::map<string, string> attributes1;
@@ -495,7 +495,7 @@ void ComponentEventTest::testAssetChanged()
   
   CPPUNIT_ASSERT(d->isAssetChanged());
   
-  ComponentEventPtr event1(new ComponentEvent(*d, 123, time, (string) "CuttingTool|123"), true);
+  ObservationPtr event1(new Observation(*d, 123, time, (string) "CuttingTool|123"), true);
   const auto &attr_list = event1->getAttributes();
   map<string, string> attrs1;
   

@@ -124,7 +124,7 @@ void DataSetTest::testDataItem()
 void DataSetTest::testInitialSet()
 {
   string value("a=1 b=2 c=3 d=4");
-  auto ce = new ComponentEvent(*m_dataItem1, 2, "time", value);
+  auto ce = new Observation(*m_dataItem1, 2, "time", value);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 4, ce->getDataSet().size());
   auto &al = ce->getAttributes();
@@ -141,7 +141,7 @@ void DataSetTest::testInitialSet()
   CPPUNIT_ASSERT_EQUAL((string) "3", map1.at("c"));
   CPPUNIT_ASSERT_EQUAL((string) "4", map1.at("d"));
   
-  m_checkpoint->addComponentEvent(ce);
+  m_checkpoint->addObservation(ce);
   auto c2 = *m_checkpoint->getEventPtr("v1");
   auto al2 = c2->getAttributes();
   
@@ -163,15 +163,15 @@ void DataSetTest::testInitialSet()
 void DataSetTest::testUpdateOneElement()
 {
   string value("a=1 b=2 c=3 d=4");
-  ComponentEventPtr ce(new ComponentEvent(*m_dataItem1, 2, "time", value));
-  m_checkpoint->addComponentEvent(ce);
+  ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
+  m_checkpoint->addObservation(ce);
   
   auto cecp = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 4, cecp->getDataSet().size());
   
   string value2("c=5");
-  ComponentEventPtr ce2(new ComponentEvent(*m_dataItem1, 2, "time", value2));
-  m_checkpoint->addComponentEvent(ce2);
+  ObservationPtr ce2(new Observation(*m_dataItem1, 2, "time", value2));
+  m_checkpoint->addObservation(ce2);
   
   auto ce3 = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 4, ce3->getDataSet().size());
@@ -183,8 +183,8 @@ void DataSetTest::testUpdateOneElement()
   CPPUNIT_ASSERT_EQUAL((string) "4", map1.at("d"));
   
   string value3("e=6");
-  ComponentEventPtr ce4(new ComponentEvent(*m_dataItem1, 2, "time", value3));
-  m_checkpoint->addComponentEvent(ce4);
+  ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
+  m_checkpoint->addObservation(ce4);
   
   auto ce5 = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 5, ce5->getDataSet().size());
@@ -200,15 +200,15 @@ void DataSetTest::testUpdateOneElement()
 void DataSetTest::testUpdateMany()
 {
   string value("a=1 b=2 c=3 d=4");
-  ComponentEventPtr ce(new ComponentEvent(*m_dataItem1, 2, "time", value));
-  m_checkpoint->addComponentEvent(ce);
+  ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
+  m_checkpoint->addObservation(ce);
   
   auto cecp = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 4, cecp->getDataSet().size());
   
   string value2("c=5 e=6");
-  ComponentEventPtr ce2(new ComponentEvent(*m_dataItem1, 2, "time", value2));
-  m_checkpoint->addComponentEvent(ce2);
+  ObservationPtr ce2(new Observation(*m_dataItem1, 2, "time", value2));
+  m_checkpoint->addObservation(ce2);
   
   auto ce3 = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 5, ce3->getDataSet().size());
@@ -221,8 +221,8 @@ void DataSetTest::testUpdateMany()
   CPPUNIT_ASSERT_EQUAL((string) "6", map1.at("e"));
   
   string value3("e=7 a=8 f=9");
-  ComponentEventPtr ce4(new ComponentEvent(*m_dataItem1, 2, "time", value3));
-  m_checkpoint->addComponentEvent(ce4);
+  ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
+  m_checkpoint->addObservation(ce4);
   
   auto ce5 = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 6, ce5->getDataSet().size());
@@ -239,15 +239,15 @@ void DataSetTest::testUpdateMany()
 void DataSetTest::testReset()
 {
   string value("a=1 b=2 c=3 d=4");
-  ComponentEventPtr ce(new ComponentEvent(*m_dataItem1, 2, "time", value));
-  m_checkpoint->addComponentEvent(ce);
+  ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
+  m_checkpoint->addObservation(ce);
   
   auto cecp = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 4, cecp->getDataSet().size());
   
   string value2("RESET|c=5 e=6");
-  ComponentEventPtr ce2(new ComponentEvent(*m_dataItem1, 2, "time", value2));
-  m_checkpoint->addComponentEvent(ce2);
+  ObservationPtr ce2(new Observation(*m_dataItem1, 2, "time", value2));
+  m_checkpoint->addObservation(ce2);
   
   auto ce3 = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 2, ce3->getDataSet().size());
@@ -257,8 +257,8 @@ void DataSetTest::testReset()
   CPPUNIT_ASSERT_EQUAL((string) "6", map1.at("e"));
   
   string value3("x=pop y=hop");
-  ComponentEventPtr ce4(new ComponentEvent(*m_dataItem1, 2, "time", value3));
-  m_checkpoint->addComponentEvent(ce4);
+  ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
+  m_checkpoint->addObservation(ce4);
   
   auto ce5 = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 4, ce5->getDataSet().size());
@@ -271,12 +271,12 @@ void DataSetTest::testReset()
 void DataSetTest::testBadData()
 {
   string value("12356");
-  auto ce = new ComponentEvent(*m_dataItem1, 2, "time", value);
+  auto ce = new Observation(*m_dataItem1, 2, "time", value);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 1, ce->getDataSet().size());
   
   string value1("  a=2      b3=xxx");
-  auto ce2 = new ComponentEvent(*m_dataItem1, 2, "time", value1);
+  auto ce2 = new Observation(*m_dataItem1, 2, "time", value1);
   
   CPPUNIT_ASSERT_EQUAL((size_t) 2, ce2->getDataSet().size());
   
@@ -463,15 +463,15 @@ void DataSetTest::testCurrentAt()
 void DataSetTest::testDeleteKey()
 {
   string value("a=1 b=2 c=3 d=4");
-  ComponentEventPtr ce(new ComponentEvent(*m_dataItem1, 2, "time", value));
-  m_checkpoint->addComponentEvent(ce);
+  ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
+  m_checkpoint->addObservation(ce);
   
   auto cecp = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 4, cecp->getDataSet().size());
   
   string value2("c e=6 a=");
-  ComponentEventPtr ce2(new ComponentEvent(*m_dataItem1, 4, "time", value2));
-  m_checkpoint->addComponentEvent(ce2);
+  ObservationPtr ce2(new Observation(*m_dataItem1, 4, "time", value2));
+  m_checkpoint->addObservation(ce2);
   
   auto ce3 = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 3, ce3->getDataSet().size());

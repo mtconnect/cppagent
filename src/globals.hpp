@@ -129,6 +129,15 @@ namespace mtconnect {
   // Get memory size of process in k
   long getMemorySize();
   
+  // Ends with
+  inline bool endsWith(const std::string &str, const std::string &ending)
+  {
+    return (str.length() >= ending.length() &&
+            str.compare(str.length() - ending.length(),
+                        ending.length(), ending) == 0);
+  }
+  
+
 #ifdef _WINDOWS
 #include <io.h>
   typedef long volatile AtomicInt;

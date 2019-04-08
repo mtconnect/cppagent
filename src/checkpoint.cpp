@@ -52,7 +52,7 @@ namespace mtconnect {
   }
   
   
-  void Checkpoint::addComponentEvent(ComponentEvent *event)
+  void Checkpoint::addObservation(Observation *event)
   {
     if (m_hasFilter && !m_filter.count(event->getDataItem()->getId()))
     {
@@ -71,10 +71,10 @@ namespace mtconnect {
       {
         // Chain event only if it is normal or unavailable and the
         // previous condition was not normal or unavailable
-        if ((*ptr)->getLevel() != ComponentEvent::NORMAL &&
-            event->getLevel() != ComponentEvent::NORMAL &&
-            (*ptr)->getLevel() != ComponentEvent::UNAVAILABLE &&
-            event->getLevel() != ComponentEvent::UNAVAILABLE )
+        if ((*ptr)->getLevel() != Observation::NORMAL &&
+            event->getLevel() != Observation::NORMAL &&
+            (*ptr)->getLevel() != Observation::UNAVAILABLE &&
+            event->getLevel() != Observation::UNAVAILABLE )
         {
           // Check to see if the native code matches an existing
           // active condition
@@ -94,7 +94,7 @@ namespace mtconnect {
           if (ptr->getObject())
             event->appendTo(*ptr);
         }
-        else  if (event->getLevel() == ComponentEvent::NORMAL)
+        else  if (event->getLevel() == Observation::NORMAL)
         {
           // Check for a normal that clears an active condition by code
           if (event->getCode()[0] != '\0')
@@ -113,7 +113,7 @@ namespace mtconnect {
               {
                 // Need to put a normal event in with no code since this
                 // is the last one.
-                n = new ComponentEvent(*event);
+                n = new Observation(*event);
                 n->normal();
                 (*ptr) = n;
                 n->unrefer();
@@ -156,7 +156,7 @@ namespace mtconnect {
           (*ptr)->setDataSet(set);
         }
         else
-          (*ptr) = new ComponentEvent(*event);
+          (*ptr) = new Observation(*event);
         
         assigned = true;
       }
@@ -165,7 +165,7 @@ namespace mtconnect {
         (*ptr) = event;
     }
     else
-      m_events[id] = new ComponentEventPtr(event);
+      m_events[id] = new ObservationPtr(event);
     
   }
   
@@ -185,12 +185,12 @@ namespace mtconnect {
     for (const auto &event : checkpoint.m_events)
     {
       if (!filterSet || filterSet->count(event.first) > 0)
-        m_events[event.first] = new ComponentEventPtr(event.second->getObject());
+        m_events[event.first] = new ObservationPtr(event.second->getObject());
     }
   }
   
   
-  void Checkpoint::getComponentEvents(ComponentEventPtrArray &list, std::set<string> const *filterSet) const
+  void Checkpoint::getObservations(ObservationPtrArray &list, std::set<string> const *filterSet) const
   {
     for (const auto &event : m_events)
     {
@@ -236,7 +236,7 @@ namespace mtconnect {
     }
   }
   
-  bool Checkpoint::dataSetDifference(ComponentEvent *event) const
+  bool Checkpoint::dataSetDifference(Observation *event) const
   {
     auto item = event->getDataItem();
     if (item->isDataSet() && event->getDataSet().size() > 0 &&

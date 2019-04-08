@@ -385,7 +385,7 @@ namespace mtconnect {
     return print(doc, m_pretty);
   }
   
-  inline json toJson(const ComponentEventPtr &observation)
+  inline json toJson(const ObservationPtr &observation)
   {
     auto dataItem = observation->getDataItem();
     string name;
@@ -479,7 +479,7 @@ namespace mtconnect {
     CategoryRef(const CategoryRef &other)
     : m_category(other.m_category), m_events(other.m_events) {}
     
-    bool addObservation(const ComponentEventPtr &observation) {
+    bool addObservation(const ObservationPtr &observation) {
       m_events.push_back(observation);
       return true;
     }
@@ -502,7 +502,7 @@ namespace mtconnect {
     
   protected:
     string m_category;
-    vector<ComponentEventPtr> m_events;
+    vector<ObservationPtr> m_events;
   };
   
   class ComponentRef {
@@ -515,7 +515,7 @@ namespace mtconnect {
       return m_component == component;
     }
     
-    bool addObservation(const ComponentEventPtr &observation,
+    bool addObservation(const ObservationPtr &observation,
                         const Component *component, const DataItem *dataItem)
     {
       if (m_component == component)
@@ -570,7 +570,7 @@ namespace mtconnect {
       return device == m_device;
     }
     
-    bool addObservation(const ComponentEventPtr &observation, const Device *device,
+    bool addObservation(const ObservationPtr &observation, const Device *device,
                         const Component *component, const DataItem *dataItem)
     {
       if (m_device == device)
@@ -616,16 +616,16 @@ namespace mtconnect {
                                   const uint64_t nextSeq,
                                   const uint64_t firstSeq,
                                   const uint64_t lastSeq,
-                                  ComponentEventPtrArray &observations
+                                  ObservationPtrArray &observations
                                   ) const
   {
     json streams = json::array();
     
     if (observations.size() > 0)
     {
-      dlib::qsort_array<ComponentEventPtrArray,
-      EventComparer>(observations, 0ul, observations.size() - 1ul,
-                     EventCompare);
+      dlib::qsort_array<ObservationPtrArray,
+      ObservationComparer>(observations, 0ul, observations.size() - 1ul,
+                     ObservationCompare);
       
       vector<DeviceRef> devices;
       DeviceRef *deviceRef = nullptr;

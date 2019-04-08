@@ -32,13 +32,13 @@ namespace mtconnect {
   typedef std::pair<const char *, std::string> AttributeItem;
   typedef std::vector<AttributeItem> AttributeList;
   
-  class ComponentEvent;
-  typedef RefCountedPtr<ComponentEvent> ComponentEventPtr;
-  typedef dlib::array<ComponentEventPtr> ComponentEventPtrArray;
+  class Observation;
+  typedef RefCountedPtr<Observation> ObservationPtr;
+  typedef dlib::array<ObservationPtr> ObservationPtrArray;
   typedef std::map<std::string,std::string> DataSet;
   
   
-  class ComponentEvent : public RefCounted
+  class Observation : public RefCounted
   {
     
   public:
@@ -55,7 +55,7 @@ namespace mtconnect {
     
   public:
     // Initialize with the data item reference, sequence number, time and value
-    ComponentEvent(
+    Observation(
                    DataItem &dataItem,
                    uint64_t sequence,
                    const std::string &time,
@@ -63,10 +63,10 @@ namespace mtconnect {
                    );
     
     // Copy constructor
-    ComponentEvent(const ComponentEvent &componentEvent);
+    Observation(const Observation &observation);
     
-    ComponentEvent *deepCopy();
-    ComponentEvent *deepCopyAndRemove(ComponentEvent *old);
+    Observation *deepCopy();
+    Observation *deepCopyAndRemove(Observation *old);
     
     // Extract the component event data into a map
     const AttributeList &getAttributes();
@@ -115,15 +115,15 @@ namespace mtconnect {
       return m_duration;
     }
         
-    ComponentEvent *getFirst();
-    ComponentEvent *getPrev() {
+    Observation *getFirst();
+    Observation *getPrev() {
       return m_prev; }
-    void getList(std::list<ComponentEventPtr> &list);
-    void appendTo(ComponentEvent *event);
-    ComponentEvent *find(const std::string &nativeCode);
-    bool replace(ComponentEvent *oldComponent, ComponentEvent *newComponent);
+    void getList(std::list<ObservationPtr> &list);
+    void appendTo(Observation *event);
+    Observation *find(const std::string &nativeCode);
+    bool replace(Observation *oldObservation, Observation *newObservation);
     
-    bool operator<(ComponentEvent &another) const
+    bool operator<(Observation &another) const
     {
       if ((*m_dataItem) < (*another.m_dataItem))
         return true;
@@ -151,7 +151,7 @@ namespace mtconnect {
     
   protected:
     // Virtual destructor
-    virtual ~ComponentEvent();
+    virtual ~Observation();
     
   protected:
     // Holds the data item from the device
@@ -190,7 +190,7 @@ namespace mtconnect {
     std::string m_resetTriggered;
     
     // For back linking of condition
-    ComponentEventPtr m_prev;
+    ObservationPtr m_prev;
     
     // For data sets
     DataSet m_dataSet;
@@ -203,7 +203,7 @@ namespace mtconnect {
   };
   
   
-  inline ComponentEvent::ELevel ComponentEvent::getLevel()
+  inline Observation::ELevel Observation::getLevel()
   {
     if (!m_hasAttributes)
       getAttributes();
@@ -212,13 +212,13 @@ namespace mtconnect {
   }
   
   
-  inline void ComponentEvent::appendTo(ComponentEvent *event)
+  inline void Observation::appendTo(Observation *event)
   {
     m_prev = event;
   }
   
-  typedef bool (*EventComparer)(ComponentEventPtr &aE1, ComponentEventPtr &aE2);
-  inline bool EventCompare(ComponentEventPtr &aE1, ComponentEventPtr &aE2)
+  typedef bool (*ObservationComparer)(ObservationPtr &aE1, ObservationPtr &aE2);
+  inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2)
   {
     return aE1 < aE2;
   }

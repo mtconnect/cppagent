@@ -110,7 +110,7 @@ namespace mtconnect {
     // Sequence number and sliding buffer for data
     m_sequence = 1ull;
     m_slidingBufferSize = 1 << bufferSize;
-    m_slidingBuffer = make_unique<sliding_buffer_kernel_1<ComponentEventPtr>>();
+    m_slidingBuffer = make_unique<sliding_buffer_kernel_1<ObservationPtr>>();
     m_slidingBuffer->set_size(bufferSize);
     m_checkpointFreq = checkpointFreq.count();
     m_checkpointCount = (m_slidingBufferSize / checkpointFreq.count()) + 1;
@@ -414,15 +414,7 @@ namespace mtconnect {
       write_http_response(out, e);
     }
   }
-  
-  static inline bool endsWith(const string &str, const string &ending)
-  {
-    return (str.length() >= ending.length() &&
-            str.compare(str.length() - ending.length(),
-                        ending.length(), ending) == 0);
-  }
-  
-  
+    
   const Printer *Agent::printerForAccepts(const std::string &accepts) const
   {
     stringstream list(accepts);
@@ -589,7 +581,7 @@ namespace mtconnect {
     std::lock_guard<std::mutex> lock(m_sequenceLock);
     
     auto seqNum = m_sequence;
-    auto event = new ComponentEvent(*dataItem, seqNum, time, value);
+    auto event = new Observation(*dataItem, seqNum, time, value);
     
     if (!dataItem->allowDups() &&
         dataItem->isDataSet() &&
@@ -604,12 +596,12 @@ namespace mtconnect {
     }
     
     (*m_slidingBuffer)[seqNum] = event;
-    m_latest.addComponentEvent(event);
+    m_latest.addObservation(event);
     event->unrefer();
     
     // Special case for the first event in the series to prime the first checkpoint.
     if (seqNum == 1)
-      m_first.addComponentEvent(event);
+      m_first.addObservation(event);
     
     // Checkpoint management
     int index = m_slidingBuffer->get_element_id(seqNum);
@@ -625,7 +617,7 @@ namespace mtconnect {
     if ((*m_slidingBuffer)[m_sequence])
     {
       // Keep the last checkpoint up to date with the last.
-      m_first.addComponentEvent((*m_slidingBuffer)[m_sequence]);
+      m_first.addObservation((*m_slidingBuffer)[m_sequence]);
     }
     
     dataItem->signalObservers(seqNum);
@@ -904,7 +896,7 @@ namespace mtconnect {
             const string *value = nullptr;
             if (dataItem->isCondition())
             {
-              if ((*ptr)->getLevel() != ComponentEvent::UNAVAILABLE)
+              if ((*ptr)->getLevel() != Observation::UNAVAILABLE)
                 value = &g_conditionUnavailable;
             }
             else if (dataItem->hasConstraints())
@@ -1414,9 +1406,9 @@ namespace mtconnect {
         content.append("\r\n");
         out.setf(ios::dec, ios::basefield);
         str << "--" << boundary << "\r\n"
-        "Content-type: text/xml\r\n"
-        "Content-length: " << content.length() << "\r\n\r\n"
-        << content;
+          "Content-type: text/xml\r\n"
+          "Content-length: " << content.length() << "\r\n\r\n"
+          << content;
         
         string chunk = str.str();
         out.setf(ios::hex, ios::basefield);
@@ -1543,14 +1535,14 @@ namespace mtconnect {
   
   string Agent::fetchCurrentData(const Printer *printer, std::set<string> &filterSet, uint64_t at)
   {
-    ComponentEventPtrArray events;
+    ObservationPtrArray events;
     uint64_t firstSeq, seq;
     {
       std::lock_guard<std::mutex> lock(m_sequenceLock);
       firstSeq = getFirstSequence();
       seq = m_sequence;
       if (at == NO_START)
-        m_latest.getComponentEvents(events, &filterSet);
+        m_latest.getObservations(events, &filterSet);
       else
       {
         long pos = (long) m_slidingBuffer->get_element_id(at);
@@ -1581,9 +1573,9 @@ namespace mtconnect {
         
         // Roll forward from the checkpoint.
         for (; index <= (unsigned long) pos; index++)
-          check.addComponentEvent(((*m_slidingBuffer)[(unsigned long)index]).getObject());
+          check.addObservation(((*m_slidingBuffer)[(unsigned long)index]).getObject());
         
-        check.getComponentEvents(events);
+        check.getObservations(events);
       }
     }
     
@@ -1605,7 +1597,7 @@ namespace mtconnect {
                                 bool &endOfBuffer,
                                 ChangeObserver *observer)
   {
-    ComponentEventPtrArray results;
+    ObservationPtrArray results;
     uint64_t firstSeq;
     {
       std::lock_guard<std::mutex> lock(m_sequenceLock);
@@ -1623,7 +1615,7 @@ namespace mtconnect {
         const string &dataId = (*m_slidingBuffer)[i]->getDataItem()->getId();
         if (filterSet.count(dataId) > 0)
         {
-          ComponentEventPtr event = (*m_slidingBuffer)[i];
+          ObservationPtr event = (*m_slidingBuffer)[i];
           results.push_back(event);
         }
       }

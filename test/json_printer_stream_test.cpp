@@ -23,7 +23,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "component_event.hpp"
+#include "observation.hpp"
 #include "data_item.hpp"
 #include "device.hpp"
 #include "json_printer.hpp"
@@ -65,21 +65,21 @@ public:
     return nullptr;
   }
   
-  ComponentEvent *newObservaton(const char *name,uint64_t sequence,string value, string time = "TIME")
+  Observation *newObservaton(const char *name,uint64_t sequence,string value, string time = "TIME")
   {
     // Make sure the data item is there
     const auto d = getDataItem(name);
     CPPUNIT_ASSERT_MESSAGE((string) "Could not find data item " + name, d);
     
-    return new ComponentEvent(*d, sequence, time, value);
+    return new Observation(*d, sequence, time, value);
   }
   
-  ComponentEvent *addObservationToCheckpoint(Checkpoint &checkpoint,
+  Observation *addObservationToCheckpoint(Checkpoint &checkpoint,
                                        const char *name, uint64_t sequence,
                                        string value, string time = "TIME")
   {
     auto event = newObservaton(name, sequence, value, time);
-    checkpoint.addComponentEvent(event);
+    checkpoint.addObservation(event);
     return event;
   }
   
@@ -126,8 +126,8 @@ void JsonPrinterStreamTest::tearDown()
 void JsonPrinterStreamTest::testStreamHeader()
 {
   Checkpoint checkpoint;
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
@@ -143,8 +143,8 @@ void JsonPrinterStreamTest::testDeviceStream()
 {
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   //cout << "\n" << doc << endl;
   
@@ -160,8 +160,8 @@ void JsonPrinterStreamTest::testComponentStream()
 {
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -178,8 +178,8 @@ void JsonPrinterStreamTest::testComponentStreamTwoComponents()
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
   addObservationToCheckpoint(checkpoint, "Sspeed_act", 10254805, "500");
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -202,8 +202,8 @@ void JsonPrinterStreamTest::testTwoDevices()
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
   addObservationToCheckpoint(checkpoint, "z2143c50", 10254805, "AVAILABLE");
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -226,8 +226,8 @@ void JsonPrinterStreamTest::testSampleAndEventDataItem()
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "if36ff60", 10254804, "AUTOMATIC"); // Controller Mode
   addObservationToCheckpoint(checkpoint, "r186cd60", 10254805, "10 20 30"); // Path Position
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -268,8 +268,8 @@ void JsonPrinterStreamTest::testConditionDataItem()
 {
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "a5b23650", 10254804, "fault|syn|ack|HIGH|Syntax error"); // Motion Program Condition
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -301,8 +301,8 @@ void JsonPrinterStreamTest::testTimeSeries()
 {
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "tc9edc70", 10254804, "10|100|1.0 2.0 3 4 5.0 6 7 8.8 9.0 10.2"); // Volt Ampere Time Series
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -348,8 +348,8 @@ void JsonPrinterStreamTest::testAssetChanged()
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "e4a300e0", 10254804, "CuttingTool|31d416a0-33c7"); // asset changed
   addObservationToCheckpoint(checkpoint, "f2df7550", 10254805, "QIF|400477d0-33c7"); // asset removed
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -389,8 +389,8 @@ void JsonPrinterStreamTest::testResetTrigger()
 {
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "qb9212c0", 10254804, "10.0:ACTION_COMPLETE", "TIME@100.0"); // Amperage
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -423,8 +423,8 @@ void JsonPrinterStreamTest::testMessage()
 {
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "m17f1750", 10254804, "XXXX|XXX is on the roof"); // asset changed
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);
@@ -456,8 +456,8 @@ void JsonPrinterStreamTest::testUnavailability()
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "m17f1750", 10254804, "|UNAVAILABLE"); // asset changed
   addObservationToCheckpoint(checkpoint, "a5b23650", 10254804, "unavailable||||"); // Motion Program Condition
-  ComponentEventPtrArray list;
-  checkpoint.getComponentEvents(list);
+  ObservationPtrArray list;
+  checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   
   auto jdoc = json::parse(doc);

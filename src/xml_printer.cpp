@@ -69,7 +69,7 @@ namespace mtconnect {
         THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(m_writer));
         xmlFreeTextWriter(m_writer); m_writer = nullptr;
       }
-      return string((char *) m_buf->content);
+      return string((char *) m_buf->content, m_buf->size);
     }
     
   protected:
@@ -650,7 +650,7 @@ namespace mtconnect {
                                  const uint64_t nextSeq,
                                  const uint64_t firstSeq,
                                  const uint64_t lastSeq,
-                                 ComponentEventPtrArray &observations )  const
+                                 ObservationPtrArray &observations )  const
   {
     string ret;
     
@@ -674,9 +674,9 @@ namespace mtconnect {
       // Sort the vector by category.
       if (observations.size() > 0)
       {
-        dlib::qsort_array<ComponentEventPtrArray,
-          EventComparer>(observations, 0ul, observations.size() - 1ul,
-                         EventCompare);
+        dlib::qsort_array<ObservationPtrArray,
+          ObservationComparer>(observations, 0ul, observations.size() - 1ul,
+                         ObservationCompare);
       
         AutoElement deviceElement(writer);
         {
@@ -723,11 +723,11 @@ namespace mtconnect {
     }
     catch (string error)
     {
-      g_logger << dlib::LERROR << "printProbe: " << error;
+      g_logger << dlib::LERROR << "printSample: " << error;
     }
     catch (...)
     {
-      g_logger << dlib::LERROR << "printProbe: unknown error";
+      g_logger << dlib::LERROR << "printSample: unknown error";
     }
     
     return ret;
@@ -772,11 +772,11 @@ namespace mtconnect {
     }
     catch (string error)
     {
-      g_logger << dlib::LERROR << "printProbe: " << error;
+      g_logger << dlib::LERROR << "printAssets: " << error;
     }
     catch (...)
     {
-      g_logger << dlib::LERROR << "printProbe: unknown error";
+      g_logger << dlib::LERROR << "printAssets: unknown error";
     }
     
     return ret;
@@ -805,7 +805,7 @@ namespace mtconnect {
     }
   }
   
-  void XmlPrinter::addEvent(xmlTextWriterPtr writer, ComponentEvent *result)  const
+  void XmlPrinter::addEvent(xmlTextWriterPtr writer, Observation *result)  const
   {
     auto dataItem = result->getDataItem();
     string name;

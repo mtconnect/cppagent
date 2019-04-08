@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "component_event.hpp"
+#include "observation.hpp"
 #include <mutex>
 #include <regex>
 
@@ -33,9 +33,9 @@ using namespace std;
 
 namespace mtconnect {
   static std::mutex g_attributeMutex;
-  static dlib::logger g_logger("component_event");
+  static dlib::logger g_logger("Observation");
   
-  const string ComponentEvent::SLevels[NumLevels] =
+  const string Observation::SLevels[NumLevels] =
   {
     "Normal",
     "Warning",
@@ -59,11 +59,11 @@ namespace mtconnect {
     }
   }
   
-  ComponentEvent::ComponentEvent(
-                                 DataItem &dataItem,
-                                 uint64_t sequence,
-                                 const string &time,
-                                 const string &value) :
+  Observation::Observation(
+                           DataItem &dataItem,
+                           uint64_t sequence,
+                           const string &time,
+                           const string &value) :
   m_hasAttributes(false)
   {
     m_dataItem = &dataItem;
@@ -95,37 +95,37 @@ namespace mtconnect {
   }
   
   
-  ComponentEvent::ComponentEvent(const ComponentEvent &componentEvent)
-  : m_dataItem(componentEvent.m_dataItem),
-  m_sequence(componentEvent.m_sequence),
-  m_time(componentEvent.m_time),
-  m_duration(componentEvent.m_duration),
-  m_rest(componentEvent.m_rest),
-  m_value(componentEvent.m_value),
-  m_isTimeSeries(componentEvent.m_isTimeSeries),
+  Observation::Observation(const Observation &observation)
+  : m_dataItem(observation.m_dataItem),
+  m_sequence(observation.m_sequence),
+  m_time(observation.m_time),
+  m_duration(observation.m_duration),
+  m_rest(observation.m_rest),
+  m_value(observation.m_value),
+  m_isTimeSeries(observation.m_isTimeSeries),
   m_hasAttributes(false),
-  m_code(componentEvent.m_code),
-  m_resetTriggered(componentEvent.m_resetTriggered)
+  m_code(observation.m_code),
+  m_resetTriggered(observation.m_resetTriggered)
   {
     if (m_isTimeSeries)
     {
-      m_timeSeries = componentEvent.m_timeSeries;
-      m_sampleCount = componentEvent.m_sampleCount;
+      m_timeSeries = observation.m_timeSeries;
+      m_sampleCount = observation.m_sampleCount;
     }
-    else if (componentEvent.isDataSet())
+    else if (observation.isDataSet())
     {
-      m_dataSet = componentEvent.m_dataSet;
+      m_dataSet = observation.m_dataSet;
       m_sampleCount = m_dataSet.size();
     }
   }
   
   
-  ComponentEvent::~ComponentEvent()
+  Observation::~Observation()
   {
   }
   
   
-  const AttributeList &ComponentEvent::getAttributes()
+  const AttributeList &Observation::getAttributes()
   {
     if (!m_hasAttributes)
     {
@@ -259,7 +259,7 @@ namespace mtconnect {
   }
   
   
-  void ComponentEvent::normal()
+  void Observation::normal()
   {
     if (m_dataItem->isCondition())
     {
@@ -286,7 +286,7 @@ namespace mtconnect {
   
   // Split the data set entries by space delimiters and account for the
   // use of single and double quotes as well as curly braces
-  void ComponentEvent::parseDataSet(const string &s)
+  void Observation::parseDataSet(const string &s)
   {
     smatch m;
     string rest(s);
@@ -326,7 +326,7 @@ namespace mtconnect {
     }
   }
   
-  void ComponentEvent::convertValue(const string &value)
+  void Observation::convertValue(const string &value)
   {
     // Check if the type is an alarm or if it doesn't have units
     if (value == "UNAVAILABLE")
@@ -397,7 +397,7 @@ namespace mtconnect {
   }
   
   
-  ComponentEvent *ComponentEvent::getFirst()
+  Observation *Observation::getFirst()
   {
     if (m_prev.getObject())
       return m_prev->getFirst();
@@ -406,7 +406,7 @@ namespace mtconnect {
   }
   
   
-  void ComponentEvent::getList(std::list<ComponentEventPtr> &list)
+  void Observation::getList(std::list<ObservationPtr> &list)
   {
     if (m_prev.getObject())
       m_prev->getList(list);
@@ -415,7 +415,7 @@ namespace mtconnect {
   }
   
   
-  ComponentEvent *ComponentEvent::find(const std::string &code)
+  Observation *Observation::find(const std::string &code)
   {
     if (m_code == code)
       return this;
@@ -427,28 +427,28 @@ namespace mtconnect {
   }
   
   
-  bool ComponentEvent::replace(ComponentEvent *oldEvent,
-                               ComponentEvent *newEvent)
+  bool Observation::replace(Observation *oldObservation,
+                               Observation *newObservation)
   {
     auto obj = m_prev.getObject();
     
     if (!obj)
       return false;
     
-    if (obj == oldEvent)
+    if (obj == oldObservation)
     {
-      newEvent->m_prev = oldEvent->m_prev;
-      m_prev = newEvent;
+      newObservation->m_prev = oldObservation->m_prev;
+      m_prev = newObservation;
       return true;
     }
     
-    return m_prev->replace(oldEvent, newEvent);
+    return m_prev->replace(oldObservation, newObservation);
   }
   
   
-  ComponentEvent *ComponentEvent::deepCopy()
+  Observation *Observation::deepCopy()
   {
-    auto n = new ComponentEvent(*this);
+    auto n = new Observation(*this);
     
     if (m_prev.getObject())
     {
@@ -459,7 +459,7 @@ namespace mtconnect {
     return n;
   }
   
-  ComponentEvent *ComponentEvent::deepCopyAndRemove(ComponentEvent *old)
+  Observation *Observation::deepCopyAndRemove(Observation *old)
   {
     if (this == old)
     {
@@ -469,7 +469,7 @@ namespace mtconnect {
         return nullptr;
     }
     
-    auto n = new ComponentEvent(*this);
+    auto n = new Observation(*this);
     
     if (m_prev.getObject())
     {
