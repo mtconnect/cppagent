@@ -69,7 +69,7 @@ namespace mtconnect {
         THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(m_writer));
         xmlFreeTextWriter(m_writer); m_writer = nullptr;
       }
-      return string((char *) m_buf->content, m_buf->size);
+      return string((char *) m_buf->content, m_buf->use);
     }
     
   protected:
@@ -844,13 +844,12 @@ namespace mtconnect {
     }
     else if (result->isDataSet() && result->getValue() != "UNAVAILABLE")
     {
-      ostringstream ostr;
       const DataSet &set = result->getDataSet();
-      for (auto &e : set)
-        ostr << e.first << '=' << e.second << ' ';
+      for (auto &e : set) {
+        addSimpleElement(writer, "Entry", e.second,
+                         {{ "key", e.first }});
+      }
       
-      string str = ostr.str();
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
     }
     else if (!result->getValue().empty())
     {

@@ -272,9 +272,9 @@ namespace mtconnect {
   
 #define WS_RE "[ \t]*"
 #define KEY_RE "([^ \t=]+)"
-#define DQ_RE "\"[^\"]+\""
-#define SQ_RE "'[^']+'"
-#define CB_RE "\\{[^}]+\\}"
+#define DQ_RE "\"([^\\\"]+(\\\\\")?)+\""
+#define SQ_RE "'([^\\\']+(\\\\')?)+'"
+#define CB_RE "\\{([^\\}\\\\]+(\\\\\\})?)+\\}"
 #define VAL_RE "[^ \t]+"
   
   static regex tokenizer(WS_RE KEY_RE
@@ -299,15 +299,34 @@ namespace mtconnect {
         value.clear();
       } else {
         key = m[1];
-        value = m[3];
+        string v = m[3];
         
         // Check for invalid termination of string
-        if ((value.front() == '"' && value.back() != '"') ||
-            (value.front() == '\'' && value.back() != '\'') ||
-            (value.front() == '{' && value.back() != '}')) {
+        if ((v.front() == '"' && v.back() != '"') ||
+            (v.front() == '\'' && v.back() != '\'') ||
+            (v.front() == '{' && v.back() != '}')) {
           // consider the rest of the set invalid, issue warning.
           break;
         }
+        
+        if (v.front() == '"' || v.front() == '\'' ||
+            v.front() == '{')
+          value = v.substr(1, v.size() - 2);
+        else
+          value = v;
+        
+        // character remove escape
+        
+        size_t pos = 0;
+        do
+        {
+          pos = value.find('\\', pos);
+          if (pos != string::npos)
+          {
+            value.erase(pos, 1);
+            pos++;
+          }
+        } while (pos != string::npos && pos < value.size());
       }
       
       // Map the value.
