@@ -132,16 +132,15 @@ namespace mtconnect {
       }
       else if (item->isDataSet())
       {
+        ObservationPtr old(*ptr);
+        (*ptr) = new Observation(*event);
+
         if (!event->isUnavailable() &&
-            !(*ptr)->isUnavailable() &&
+            !old->isUnavailable() &&
             event->getResetTriggered().empty())
         {
           // Get the existing data set from the existing event
-          DataSet set = (*ptr)->getDataSet();
-          
-          // Check for reset...
-          // need to make sure reset triggered is cleared first time
-          (*ptr)->clearResetTriggered();
+          DataSet set = old->getDataSet();
           
           // For data sets merge the maps together
           for (auto & e : event->getDataSet())
@@ -155,8 +154,6 @@ namespace mtconnect {
           // Set the new set to the event
           (*ptr)->setDataSet(set);
         }
-        else
-          (*ptr) = new Observation(*event);
         
         assigned = true;
       }

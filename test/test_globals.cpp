@@ -227,7 +227,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath,
                    expected,
                    actual,
                    message,
-                   file, line);
+                   file, line, self);
   }
   else
   {
@@ -235,7 +235,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath,
     failNotEqualIf(actual == expected,
                    expected,
                    actual,
-                   message, file, line);
+                   message, file, line, self);
   }
 }
 

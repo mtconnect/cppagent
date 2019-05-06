@@ -272,16 +272,17 @@ namespace mtconnect {
   
 #define WS_RE "[ \t]*"
 #define KEY_RE "([^ \t=]+)"
-#define DQ_RE "\"([^\\\"]+(\\\\\")?)+\""
-#define SQ_RE "'([^\\\']+(\\\\')?)+'"
+#define DQ_RE "\"([^\\\\\"]+(\\\\\")?)+\""
+#define SQ_RE "'([^\\\\']+(\\\\')?)+'"
 #define CB_RE "\\{([^\\}\\\\]+(\\\\\\})?)+\\}"
 #define VAL_RE "[^ \t]+"
   
-  static regex tokenizer(WS_RE KEY_RE
-                         "(=(" DQ_RE "|"
-                         SQ_RE "|"
-                         CB_RE "|"
-                         VAL_RE ")?)?");
+  static const char *reg = WS_RE KEY_RE
+                            "(=(" DQ_RE "|"
+                            SQ_RE "|"
+                            CB_RE "|"
+                            VAL_RE ")?)?";
+  static regex tokenizer(reg);
   
   // Split the data set entries by space delimiters and account for the
   // use of single and double quotes as well as curly braces
@@ -290,52 +291,59 @@ namespace mtconnect {
     smatch m;
     string rest(s);
     
-    // Search for key value pairs. Handle quoted text.
-    while (regex_search(rest, m, tokenizer))
-    {
-      string key, value;
-      if (!m[3].matched) {
-        key = m[1];
-        value.clear();
-      } else {
-        key = m[1];
-        string v = m[3];
-        
-        // Check for invalid termination of string
-        if ((v.front() == '"' && v.back() != '"') ||
-            (v.front() == '\'' && v.back() != '\'') ||
-            (v.front() == '{' && v.back() != '}')) {
-          // consider the rest of the set invalid, issue warning.
-          break;
+    try {
+      // Search for key value pairs. Handle quoted text.
+      while (regex_search(rest, m, tokenizer))
+      {
+        string key, value;
+        if (!m[3].matched) {
+          key = m[1];
+          value.clear();
+        } else {
+          key = m[1];
+          string v = m[3];
+          
+          // Check for invalid termination of string
+          if ((v.front() == '"' && v.back() != '"') ||
+              (v.front() == '\'' && v.back() != '\'') ||
+              (v.front() == '{' && v.back() != '}')) {
+            // consider the rest of the set invalid, issue warning.
+            break;
+          }
+          
+          if (v.front() == '"' || v.front() == '\'' ||
+              v.front() == '{')
+            value = v.substr(1, v.size() - 2);
+          else
+            value = v;
+          
+          // character remove escape
+          
+          size_t pos = 0;
+          do
+          {
+            pos = value.find('\\', pos);
+            if (pos != string::npos)
+            {
+              value.erase(pos, 1);
+              pos++;
+            }
+          } while (pos != string::npos && pos < value.size());
         }
         
-        if (v.front() == '"' || v.front() == '\'' ||
-            v.front() == '{')
-          value = v.substr(1, v.size() - 2);
-        else
-          value = v;
+        // Map the value.
+        m_dataSet[key] = value;
         
-        // character remove escape
-        
-        size_t pos = 0;
-        do
-        {
-          pos = value.find('\\', pos);
-          if (pos != string::npos)
-          {
-            value.erase(pos, 1);
-            pos++;
-          }
-        } while (pos != string::npos && pos < value.size());
+        // Parse the rest of the string...
+        rest = m.suffix();
       }
-      
-      // Map the value.
-      m_dataSet[key] = value;
-      
-      // Parse the rest of the string...
-      rest = m.suffix();
     }
     
+    catch (regex_error &e)
+    {
+      g_logger << dlib::LWARN << "Error parsing \"" << rest << "\", \nReason: " << e.what();
+    }
+      
     // If there is leftover text, the text was invalid.
     // Warn that it is being discarded
     if (!rest.empty()) {

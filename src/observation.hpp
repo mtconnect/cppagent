@@ -110,6 +110,10 @@ namespace mtconnect {
     
     uint64_t getSequence() const {
       return m_sequence; }
+    
+    void copySequence(const Observation *other) {
+      m_sequence = other->m_sequence;
+    }
 
     const std::string &getDuration() const {
       return m_duration;
