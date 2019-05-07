@@ -994,6 +994,7 @@ namespace mtconnect {
       if (dlib::get_local_hostname(sHostname))
         sHostname = "localhost";
     }
+    addAttribute(writer, "sender", sHostname);
     addAttribute(writer, "instanceId", intToString(instanceId));
     
     char version[32] = {0};
