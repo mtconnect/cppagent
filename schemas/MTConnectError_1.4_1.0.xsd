@@ -1,0 +1,805 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+Copyright (c) 2008-2010, AMT – The Association For Manufacturing Technology (“AMT”)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the AMT nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
+BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
+AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
+RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
+(COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
+WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
+LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
+MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+
+LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
+PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
+OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
+CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
+WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
+THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
+SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
+-->
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectError:1.4' xmlns:mt='urn:mtconnect.org:MTConnectError:1.4' targetNamespace='urn:mtconnect.org:MTConnectError:1.4' elementFormDefault='qualified' attributeFormDefault='unqualified'>
+  <xs:element name='MTConnectError' type='MTConnectErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        The root node for MTConnect
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='SenderType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sender of the message
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='CreationTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The date and time the document was created
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='SequenceType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sequence number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='18446744073709551615'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='TestIndicatorType'>
+    <xs:annotation>
+      <xs:documentation>
+        A debugging flag for testing.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:boolean'/>
+  </xs:simpleType>
+  <xs:simpleType name='InstanceIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The instance number of the agent, used for fault tolerance
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='18446744073709551615'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='BufferSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The size of the agents buffer
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='TimestampType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time the sample was reported
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='OccurrenceTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time a sample occurred
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='VersionType'>
+    <xs:annotation>
+      <xs:documentation>
+        A version number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='NameType'>
+    <xs:annotation>
+      <xs:documentation>
+        A short name for any element
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='UuidType'>
+    <xs:annotation>
+      <xs:documentation>
+        A universally unique id that uniquely identifies the element for
+        it&apos;s entire life
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='SerialNumberAttrType'>
+    <xs:annotation>
+      <xs:documentation>
+        A serial number for a piece of equipment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ItemSourceType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement source
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='RateType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sample rate in milliseconds per sample
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='ComponentIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The id of the component (maps to the id from probe)
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:ID'/>
+  </xs:simpleType>
+  <xs:simpleType name='IDType'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:ID'/>
+  </xs:simpleType>
+  <xs:simpleType name='SignificantDigitsValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number significant digits
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='CompositionIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The item&apos;s reference to the Device model composition
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The unique id of the asset
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetAttrType'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset type
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetBufferSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The maximum number of assets
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='AssetCountAttrType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of assets
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='0'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DescriptionTextType'>
+    <xs:annotation>
+      <xs:documentation>
+        A description
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatsExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item statistics types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemEnumTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The types of measurements available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACCELERATION'/>
+      <xs:enumeration value='ACCUMULATED_TIME'/>
+      <xs:enumeration value='ANGULAR_ACCELERATION'/>
+      <xs:enumeration value='ANGULAR_VELOCITY'/>
+      <xs:enumeration value='AMPERAGE'/>
+      <xs:enumeration value='ANGLE'/>
+      <xs:enumeration value='AXIS_FEEDRATE'/>
+      <xs:enumeration value='CLOCK_TIME'/>
+      <xs:enumeration value='CONCENTRATION'/>
+      <xs:enumeration value='CONDUCTIVITY'/>
+      <xs:enumeration value='DISPLACEMENT'/>
+      <xs:enumeration value='ELECTRICAL_ENERGY'/>
+      <xs:enumeration value='EQUIPMENT_TIMER'/>
+      <xs:enumeration value='FILL_LEVEL'/>
+      <xs:enumeration value='FLOW'/>
+      <xs:enumeration value='FREQUENCY'/>
+      <xs:enumeration value='LENGTH'/>
+      <xs:enumeration value='LINEAR_FORCE'/>
+      <xs:enumeration value='LOAD'/>
+      <xs:enumeration value='MASS'/>
+      <xs:enumeration value='PATH_FEEDRATE'/>
+      <xs:enumeration value='PATH_POSITION'/>
+      <xs:enumeration value='PH'/>
+      <xs:enumeration value='POSITION'/>
+      <xs:enumeration value='POWER_FACTOR'/>
+      <xs:enumeration value='PRESSURE'/>
+      <xs:enumeration value='PROCESS_TIMER'/>
+      <xs:enumeration value='RESISTANCE'/>
+      <xs:enumeration value='ROTARY_VELOCITY'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='SPINDLE_SPEED'/>
+      <xs:enumeration value='STRAIN'/>
+      <xs:enumeration value='TEMPERATURE'/>
+      <xs:enumeration value='TENSION'/>
+      <xs:enumeration value='TILT'/>
+      <xs:enumeration value='TORQUE'/>
+      <xs:enumeration value='VELOCITY'/>
+      <xs:enumeration value='VISCOSITY'/>
+      <xs:enumeration value='VOLTAGE'/>
+      <xs:enumeration value='VOLT_AMPERE'/>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
+      <xs:enumeration value='WATTAGE'/>
+      <xs:enumeration value='ACTIVE_AXES'/>
+      <xs:enumeration value='ACTUATOR_STATE'/>
+      <xs:enumeration value='ALARM'/>
+      <xs:enumeration value='AVAILABILITY'/>
+      <xs:enumeration value='AXIS_COUPLING'/>
+      <xs:enumeration value='AXIS_FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='AXIS_INTERLOCK'/>
+      <xs:enumeration value='AXIS_STATE'/>
+      <xs:enumeration value='BLOCK'/>
+      <xs:enumeration value='BLOCK_COUNT'/>
+      <xs:enumeration value='CHUCK_STATE'/>
+      <xs:enumeration value='CODE'/>
+      <xs:enumeration value='COMPOSITION_STATE'/>
+      <xs:enumeration value='CONTROLLER_MODE'/>
+      <xs:enumeration value='CONTROLLER_MODE_OVERRIDE'/>
+      <xs:enumeration value='COUPLED_AXES'/>
+      <xs:enumeration value='DIRECTION'/>
+      <xs:enumeration value='DOOR_STATE'/>
+      <xs:enumeration value='DRY_RUN'/>
+      <xs:enumeration value='EMERGENCY_STOP'/>
+      <xs:enumeration value='EQUIPMENT_MODE'/>
+      <xs:enumeration value='EXECUTION'/>
+      <xs:enumeration value='FUNCTIONAL_MODE'/>
+      <xs:enumeration value='HARDNESS'/>
+      <xs:enumeration value='LEVEL'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='LINE_LABEL'/>
+      <xs:enumeration value='LINE_NUMBER'/>
+      <xs:enumeration value='MATERIAL'/>
+      <xs:enumeration value='MESSAGE'/>
+      <xs:enumeration value='OPERATOR_ID'/>
+      <xs:enumeration value='PALLET_ID'/>
+      <xs:enumeration value='PART_ASSET_ID'/>
+      <xs:enumeration value='PART_COUNT'/>
+      <xs:enumeration value='PART_ID'/>
+      <xs:enumeration value='PART_NUMBER'/>
+      <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='PATH_MODE'/>
+      <xs:enumeration value='POWER_STATE'/>
+      <xs:enumeration value='POWER_STATUS'/>
+      <xs:enumeration value='PROGRAM'/>
+      <xs:enumeration value='PROGRAM_COMMENT'/>
+      <xs:enumeration value='PROGRAM_EDIT'/>
+      <xs:enumeration value='PROGRAM_EDIT_NAME'/>
+      <xs:enumeration value='PROGRAM_HEADER'/>
+      <xs:enumeration value='ROTARY_MODE'/>
+      <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
+      <xs:enumeration value='SERIAL_NUMBER'/>
+      <xs:enumeration value='SPINDLE_INTERLOCK'/>
+      <xs:enumeration value='TOOL_ASSET_ID'/>
+      <xs:enumeration value='TOOL_ID'/>
+      <xs:enumeration value='TOOL_NUMBER'/>
+      <xs:enumeration value='TOOL_OFFSET'/>
+      <xs:enumeration value='USER'/>
+      <xs:enumeration value='WIRE'/>
+      <xs:enumeration value='WORKHOLDING_ID'/>
+      <xs:enumeration value='WORK_OFFSET'/>
+      <xs:enumeration value='ACTUATOR'/>
+      <xs:enumeration value='CHUCK_INTERLOCK'/>
+      <xs:enumeration value='COMMUNICATIONS'/>
+      <xs:enumeration value='DATA_RANGE'/>
+      <xs:enumeration value='END_OF_BAR'/>
+      <xs:enumeration value='HARDWARE'/>
+      <xs:enumeration value='INTERFACE_STATE'/>
+      <xs:enumeration value='LOGIC_PROGRAM'/>
+      <xs:enumeration value='MOTION_PROGRAM'/>
+      <xs:enumeration value='SYSTEM'/>
+      <xs:enumeration value='ASSET_CHANGED'/>
+      <xs:enumeration value='ASSET_REMOVED'/>
+      <xs:enumeration value='AUXILIARY_END_OF_BAR'/>
+      <xs:enumeration value='CLOSE_CHUCK'/>
+      <xs:enumeration value='CLOSE_DOOR'/>
+      <xs:enumeration value='INTERFACE_STATE'/>
+      <xs:enumeration value='MACHINE_AXIS_LOCK'/>
+      <xs:enumeration value='MANUAL_CHUCK_UNCLAMP_INTERLOCK'/>
+      <xs:enumeration value='MATERIAL_CHANGE'/>
+      <xs:enumeration value='MATERIAL_FEED'/>
+      <xs:enumeration value='MATERIAL_LOAD'/>
+      <xs:enumeration value='MATERIAL_RETRACT'/>
+      <xs:enumeration value='MATERIAL_UNLOAD'/>
+      <xs:enumeration value='OPEN_CHUCK'/>
+      <xs:enumeration value='OPEN_DOOR'/>
+      <xs:enumeration value='PART_CHANGE'/>
+      <xs:enumeration value='RESET'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The types of measurements available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemEnumTypeEnum DataItemExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemSubEnumTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The sub-types for a measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ABSOLUTE'/>
+      <xs:enumeration value='ACTUAL'/>
+      <xs:enumeration value='ACTION'/>
+      <xs:enumeration value='ALL'/>
+      <xs:enumeration value='ALTERNATING'/>
+      <xs:enumeration value='AUXILIARY'/>
+      <xs:enumeration value='A_SCALE'/>
+      <xs:enumeration value='BAD'/>
+      <xs:enumeration value='BRINELL'/>
+      <xs:enumeration value='B_SCALE'/>
+      <xs:enumeration value='COMMANDED'/>
+      <xs:enumeration value='CONTROL'/>
+      <xs:enumeration value='C_SCALE'/>
+      <xs:enumeration value='DELAY'/>
+      <xs:enumeration value='DIRECT'/>
+      <xs:enumeration value='DRY_RUN'/>
+      <xs:enumeration value='DYNAMIC'/>
+      <xs:enumeration value='D_SCALE'/>
+      <xs:enumeration value='FIXTURE'/>
+      <xs:enumeration value='GOOD'/>
+      <xs:enumeration value='JOG'/>
+      <xs:enumeration value='INCREMENTAL'/>
+      <xs:enumeration value='KINETIC'/>
+      <xs:enumeration value='LATERAL'/>
+      <xs:enumeration value='LEEB'/>
+      <xs:enumeration value='LENGTH'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='LINEAR'/>
+      <xs:enumeration value='LOADED'/>
+      <xs:enumeration value='MACHINE_AXIS_LOCK'/>
+      <xs:enumeration value='MAINTENANCE'/>
+      <xs:enumeration value='MANUAL_UNCLAMP'/>
+      <xs:enumeration value='MAXIMUM'/>
+      <xs:enumeration value='MINIMUM'/>
+      <xs:enumeration value='MOHS'/>
+      <xs:enumeration value='MOLE'/>
+      <xs:enumeration value='MOTION'/>
+      <xs:enumeration value='NO_SCALE'/>
+      <xs:enumeration value='OPERATOR'/>
+      <xs:enumeration value='OPERATING'/>
+      <xs:enumeration value='OPTIONAL_STOP'/>
+      <xs:enumeration value='TOOL_CHANGE_STOP'/>
+      <xs:enumeration value='OVERRIDE'/>
+      <xs:enumeration value='PRIMARY'/>
+      <xs:enumeration value='PROBE'/>
+      <xs:enumeration value='PROGRAMMED'/>
+      <xs:enumeration value='POWERED'/>
+      <xs:enumeration value='PROCESS'/>
+      <xs:enumeration value='RADIAL'/>
+      <xs:enumeration value='RAPID'/>
+      <xs:enumeration value='RELATIVE'/>
+      <xs:enumeration value='REMAINING'/>
+      <xs:enumeration value='REQUEST'/>
+      <xs:enumeration value='RESPONSE'/>
+      <xs:enumeration value='ROCKWELL'/>
+      <xs:enumeration value='ROTARY'/>
+      <xs:enumeration value='SET_UP'/>
+      <xs:enumeration value='SHORE'/>
+      <xs:enumeration value='SINGLE_BLOCK'/>
+      <xs:enumeration value='STANDARD'/>
+      <xs:enumeration value='SWITCHED'/>
+      <xs:enumeration value='TARGET'/>
+      <xs:enumeration value='TOOL'/>
+      <xs:enumeration value='USABLE'/>
+      <xs:enumeration value='VERTICAL'/>
+      <xs:enumeration value='VICKERS'/>
+      <xs:enumeration value='VOLUME'/>
+      <xs:enumeration value='WORKING'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemSubEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sub-types for a measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemSubEnumTypeEnum DataItemExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatisticsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        Statistical operations on data
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='AVERAGE'/>
+      <xs:enumeration value='KURTOSIS'/>
+      <xs:enumeration value='MAXIMUM'/>
+      <xs:enumeration value='MEDIAN'/>
+      <xs:enumeration value='MODE'/>
+      <xs:enumeration value='MINIMUM'/>
+      <xs:enumeration value='RANGE'/>
+      <xs:enumeration value='ROOT_MEAN_SQUARE'/>
+      <xs:enumeration value='STANDARD_DEVIATION'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatisticsType'>
+    <xs:annotation>
+      <xs:documentation>
+        Statistical operations on data
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemStatisticsTypeEnum DataItemStatsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='x:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='AMPERE'/>
+      <xs:enumeration value='CELSIUS'/>
+      <xs:enumeration value='COUNT'/>
+      <xs:enumeration value='DECIBEL'/>
+      <xs:enumeration value='DEGREE'/>
+      <xs:enumeration value='DEGREE/SECOND'/>
+      <xs:enumeration value='DEGREE/SECOND^2'/>
+      <xs:enumeration value='HERTZ'/>
+      <xs:enumeration value='JOULE'/>
+      <xs:enumeration value='KILOGRAM'/>
+      <xs:enumeration value='LITER'/>
+      <xs:enumeration value='LITER/SECOND'/>
+      <xs:enumeration value='MICRO_RADIAN'/>
+      <xs:enumeration value='MILLIMETER'/>
+      <xs:enumeration value='MILLIMETER/SECOND'/>
+      <xs:enumeration value='MILLIMETER/SECOND^2'/>
+      <xs:enumeration value='MILLIMETER_3D'/>
+      <xs:enumeration value='NEWTON'/>
+      <xs:enumeration value='NEWTON_METER'/>
+      <xs:enumeration value='OHM'/>
+      <xs:enumeration value='PASCAL'/>
+      <xs:enumeration value='PASCAL_SECOND'/>
+      <xs:enumeration value='PERCENT'/>
+      <xs:enumeration value='PH'/>
+      <xs:enumeration value='REVOLUTION/MINUTE'/>
+      <xs:enumeration value='SECOND'/>
+      <xs:enumeration value='SIEMENS/METER'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='VOLT_AMPERE'/>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='WATT_SECOND'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='UnitsTypeEnum UnitsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='NativeUnitsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported for the source equipment that can be converted into
+        MTC Units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='AMPERE'/>
+      <xs:enumeration value='CELSIUS'/>
+      <xs:enumeration value='COUNT'/>
+      <xs:enumeration value='DECIBEL'/>
+      <xs:enumeration value='DEGREE'/>
+      <xs:enumeration value='DEGREE/SECOND'/>
+      <xs:enumeration value='DEGREE/SECOND^2'/>
+      <xs:enumeration value='HERTZ'/>
+      <xs:enumeration value='JOULE'/>
+      <xs:enumeration value='KILOGRAM'/>
+      <xs:enumeration value='LITER'/>
+      <xs:enumeration value='LITER/SECOND'/>
+      <xs:enumeration value='MICRO_RADIAN'/>
+      <xs:enumeration value='MILLIMETER'/>
+      <xs:enumeration value='MILLIMETER/SECOND'/>
+      <xs:enumeration value='MILLIMETER/SECOND^2'/>
+      <xs:enumeration value='MILLIMETER_3D'/>
+      <xs:enumeration value='NEWTON'/>
+      <xs:enumeration value='NEWTON_METER'/>
+      <xs:enumeration value='OHM'/>
+      <xs:enumeration value='PASCAL'/>
+      <xs:enumeration value='PASCAL_SECOND'/>
+      <xs:enumeration value='PERCENT'/>
+      <xs:enumeration value='PH'/>
+      <xs:enumeration value='REVOLUTION/MINUTE'/>
+      <xs:enumeration value='SECOND'/>
+      <xs:enumeration value='SIEMENS/METER'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='VOLT_AMPERE'/>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='CENTIPOISE'/>
+      <xs:enumeration value='DEGREE/MINUTE'/>
+      <xs:enumeration value='FAHRENHEIT'/>
+      <xs:enumeration value='FOOT'/>
+      <xs:enumeration value='FOOT/MINUTE'/>
+      <xs:enumeration value='FOOT/SECOND'/>
+      <xs:enumeration value='FOOT/SECOND^2'/>
+      <xs:enumeration value='FOOT_3D'/>
+      <xs:enumeration value='GALLON/MINUTE'/>
+      <xs:enumeration value='INCH'/>
+      <xs:enumeration value='INCH/MINUTE'/>
+      <xs:enumeration value='INCH/SECOND'/>
+      <xs:enumeration value='INCH/SECOND^2'/>
+      <xs:enumeration value='INCH_3D'/>
+      <xs:enumeration value='KILOWATT'/>
+      <xs:enumeration value='KILOWATT_HOUR'/>
+      <xs:enumeration value='MILLIMETER/MINUTE'/>
+      <xs:enumeration value='OTHER'/>
+      <xs:enumeration value='POUND'/>
+      <xs:enumeration value='POUND/INCH^2'/>
+      <xs:enumeration value='RADIAN'/>
+      <xs:enumeration value='RADIAN/MINUTE'/>
+      <xs:enumeration value='RADIAN/SECOND'/>
+      <xs:enumeration value='RADIAN/SECOND^2'/>
+      <xs:enumeration value='REVOLUTION/SECOND'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='NativeUnitsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported for the source equipment that can be converted into
+        MTC Units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='NativeUnitsTypeEnum UnitsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='CoordinateSystemType'>
+    <xs:annotation>
+      <xs:documentation>
+        The coordinate system to be used for the position
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='MACHINE'/>
+      <xs:enumeration value='WORK'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemResetValueExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for reset types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemResetValueTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The reset intervals
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTION_COMPLETE'/>
+      <xs:enumeration value='ANNUAL'/>
+      <xs:enumeration value='DAY'/>
+      <xs:enumeration value='LIFE'/>
+      <xs:enumeration value='MAINTENANCE'/>
+      <xs:enumeration value='MANUAL'/>
+      <xs:enumeration value='MONTH'/>
+      <xs:enumeration value='POWER_ON'/>
+      <xs:enumeration value='SHIFT'/>
+      <xs:enumeration value='WEEK'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemResetValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The reset intervals
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemResetValueTypeEnum DataItemResetValueExtType'/>
+  </xs:simpleType>
+  <xs:complexType name='HeaderType'>
+    <xs:annotation>
+      <xs:documentation>
+        Message header for protocol information
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='xs:string'>
+        <xs:attribute name='version' type='VersionType' use='required'/>
+        <xs:attribute name='creationTime' type='CreationTimeType' use='required'/>
+        <xs:attribute name='testIndicator' type='TestIndicatorType' use='optional'/>
+        <xs:attribute name='instanceId' type='InstanceIdType' use='required'/>
+        <xs:attribute name='sender' type='SenderType' use='required'/>
+        <xs:attribute name='bufferSize' type='BufferSizeType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='MTConnectErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        The root node for MTConnect
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Header' type='HeaderType'>
+        <xs:annotation>
+          <xs:documentation>
+            Protocol dependent information
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:choice minOccurs='1'>
+        <xs:element name='Error' type='ErrorType'>
+          <xs:annotation>
+            <xs:documentation>
+              Only for backward compatibility with 1.0
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name='Errors' type='ErrorsType'>
+          <xs:annotation>
+            <xs:documentation>
+              A collection of errors
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='ErrorsType'>
+    <xs:annotation>
+      <xs:documentation>
+        A collection of errors
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Error' type='ErrorType' minOccurs='1' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            An error result
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name='ErrorDescriptionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The text description of the error
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ErrorCodeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The error code
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='UNAUTHORIZED'/>
+      <xs:enumeration value='NO_DEVICE'/>
+      <xs:enumeration value='OUT_OF_RANGE'/>
+      <xs:enumeration value='TOO_MANY'/>
+      <xs:enumeration value='INVALID_URI'/>
+      <xs:enumeration value='INVALID_REQUEST'/>
+      <xs:enumeration value='INTERNAL_ERROR'/>
+      <xs:enumeration value='INVALID_PATH'/>
+      <xs:enumeration value='UNSUPPORTED'/>
+      <xs:enumeration value='ASSET_NOT_FOUND'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='ErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        An error description
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ErrorDescriptionType'>
+        <xs:attribute name='errorCode' type='ErrorCodeType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+</xs:schema>

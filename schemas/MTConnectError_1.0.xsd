@@ -1,0 +1,269 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xs:schema targetNamespace='urn:mtconnect.com:MTConnectError:1.0' elementFormDefault='qualified' attributeFormDefault='unqualified' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:mt='urn:mtconnect.com:MTConnectError:1.0' xmlns='urn:mtconnect.com:MTConnectError:1.0'>
+  <xs:element name='MTConnectError' type='MTConnectErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        The root node for MTConnect
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='SenderType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sender of the message
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='CreationTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The date and time the document was created
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='SequenceType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sequence number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='TestIndicatorType'>
+    <xs:annotation>
+      <xs:documentation>
+        A debugging flag for testing.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:boolean'/>
+  </xs:simpleType>
+  <xs:simpleType name='InstanceIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The instance number of the agent, used for fault tolerance
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='BufferSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The size of the agents buffer
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='VersionType'>
+    <xs:annotation>
+      <xs:documentation>
+        A version number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='NameType'>
+    <xs:annotation>
+      <xs:documentation>
+        A short name for any element
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='UuidType'>
+    <xs:annotation>
+      <xs:documentation>
+        A universally unique id that uniquely identifies the element for
+        it&apos;s entire life
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='SerialNumberType'>
+    <xs:annotation>
+      <xs:documentation>
+        A serial number for a piece of equipment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ItemSourceType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement source
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='RateType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sample rate in milliseconds per sample
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='PathType'>
+    <xs:annotation>
+      <xs:documentation>
+        An XML path
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='IDType'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:ID'/>
+  </xs:simpleType>
+  <xs:simpleType name='DescriptionTextType'>
+    <xs:annotation>
+      <xs:documentation>
+        A description
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The types of measurements available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACCELERATION'/>
+      <xs:enumeration value='ALARM'/>
+      <xs:enumeration value='AMPERAGE'/>
+      <xs:enumeration value='ANGLE'/>
+      <xs:enumeration value='ANGULAR_ACCELERATION'/>
+      <xs:enumeration value='ANGULAR_VELOCITY'/>
+      <xs:enumeration value='BLOCK'/>
+      <xs:enumeration value='CODE'/>
+      <xs:enumeration value='DISPLACEMENT'/>
+      <xs:enumeration value='DIRECTION'/>
+      <xs:enumeration value='EXECUTION'/>
+      <xs:enumeration value='FREQUENCY'/>
+      <xs:enumeration value='PATH_FEEDRATE'/>
+      <xs:enumeration value='AXIS_FEEDRATE'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='CONTROLLER_MODE'/>
+      <xs:enumeration value='LOAD'/>
+      <xs:enumeration value='OTHER'/>
+      <xs:enumeration value='POSITION'/>
+      <xs:enumeration value='POWER_STATUS'/>
+      <xs:enumeration value='PRESSURE'/>
+      <xs:enumeration value='PROGRAM'/>
+      <xs:enumeration value='SPINDLE_SPEED'/>
+      <xs:enumeration value='STATUS'/>
+      <xs:enumeration value='TEMPERATURE'/>
+      <xs:enumeration value='TORQUE'/>
+      <xs:enumeration value='VELOCITY'/>
+      <xs:enumeration value='VIBRATION'/>
+      <xs:enumeration value='VOLTAGE'/>
+      <xs:enumeration value='WATTS'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemSubEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sub-types for a measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTUAL'/>
+      <xs:enumeration value='COMMANDED'/>
+      <xs:enumeration value='DISTANCE'/>
+      <xs:enumeration value='MAXIMUM'/>
+      <xs:enumeration value='MAX_OVERRIDE'/>
+      <xs:enumeration value='MINIMUM'/>
+      <xs:enumeration value='OTHER'/>
+      <xs:enumeration value='OVERRIDE'/>
+      <xs:enumeration value='TARGET'/>
+      <xs:enumeration value='GOOD'/>
+      <xs:enumeration value='BAD'/>
+      <xs:enumeration value='ALL'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='HeaderType'>
+    <xs:annotation>
+      <xs:documentation>
+        Message header for protocol information
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='xs:string'>
+        <xs:attribute name='version' type='VersionType' use='required'/>
+        <xs:attribute name='creationTime' type='CreationTimeType' use='required'/>
+        <xs:attribute name='testIndicator' type='TestIndicatorType' use='optional'/>
+        <xs:attribute name='instanceId' type='InstanceIdType' use='required'/>
+        <xs:attribute name='sender' type='SenderType' use='required'/>
+        <xs:attribute name='bufferSize' type='BufferSizeType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='MTConnectErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        The root node for MTConnect
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Header' type='HeaderType'>
+        <xs:annotation>
+          <xs:documentation>
+            Protocol dependent information
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Error' type='ErrorType'>
+        <xs:annotation>
+          <xs:documentation>
+            An error result
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name='ErrorDescriptionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The text description of the error
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ErrorCodeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The error code
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='UNAUTHORIZED'/>
+      <xs:enumeration value='NO_DEVICE'/>
+      <xs:enumeration value='OUT_OF_RANGE'/>
+      <xs:enumeration value='TOO_MANY'/>
+      <xs:enumeration value='INVALID_URI'/>
+      <xs:enumeration value='INVALID_REQUEST'/>
+      <xs:enumeration value='INTERNAL_ERROR'/>
+      <xs:enumeration value='INVALID_PATH'/>
+      <xs:enumeration value='UNSUPPORTED'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='ErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        An error description
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ErrorDescriptionType'>
+        <xs:attribute name='errorCode' type='ErrorCodeType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+</xs:schema>

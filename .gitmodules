@@ -1,6 +1,3 @@
-[submodule "schema"]
-	path = schemas
-	url = https://github.com/mtconnect/schema.git
 [submodule "libxml2"]
 	path = libxml2
 	url = https://git.gnome.org/browse/libxml2

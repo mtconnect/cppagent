@@ -1,0 +1,1854 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+Copyright (c) 2008-2010, AMT – The Association For Manufacturing Technology (“AMT”)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the AMT nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
+BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
+AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
+RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
+(COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
+WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
+LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
+MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+
+LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
+PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
+OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
+CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
+WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
+THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
+SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
+-->
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectAssets:1.2' xmlns:mt='urn:mtconnect.org:MTConnectAssets:1.2' targetNamespace='urn:mtconnect.org:MTConnectAssets:1.2' elementFormDefault='qualified' attributeFormDefault='unqualified'>
+  <xs:element name='MTConnectAssets' type='MTConnectAssetsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The root node for MTConnect
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='SenderType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sender of the message
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='CreationTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The date and time the document was created
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='SequenceType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sequence number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='18446744073709551615'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='TestIndicatorType'>
+    <xs:annotation>
+      <xs:documentation>
+        A debugging flag for testing.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:boolean'/>
+  </xs:simpleType>
+  <xs:simpleType name='InstanceIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The instance number of the agent, used for fault tolerance
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='18446744073709551615'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='BufferSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The size of the agents buffer
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='TimestampType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time the sample was reported
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='OccurrenceTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time a sample occurred
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='VersionType'>
+    <xs:annotation>
+      <xs:documentation>
+        A version number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='NameType'>
+    <xs:annotation>
+      <xs:documentation>
+        A short name for any element
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='UuidType'>
+    <xs:annotation>
+      <xs:documentation>
+        A universally unique id that uniquely identifies the element for
+        it&apos;s entire life
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='SerialNumberType'>
+    <xs:annotation>
+      <xs:documentation>
+        A serial number for a piece of equipment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ItemSourceType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement source
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='RateType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sample rate in milliseconds per sample
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='ComponentIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The id of the component (maps to the id from probe)
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:ID'/>
+  </xs:simpleType>
+  <xs:simpleType name='IDType'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:ID'/>
+  </xs:simpleType>
+  <xs:simpleType name='SignificantDigitsValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number significant digits
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The unique id of the asset
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetAttrType'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset type
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetBufferSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The maximum number of assets
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='AssetCountAttrType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of assets
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='0'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DescriptionTextType'>
+    <xs:annotation>
+      <xs:documentation>
+        A description
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatsExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item statistics types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemEnumTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The types of measurements available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACCELERATION'/>
+      <xs:enumeration value='ACTIVE_AXES'/>
+      <xs:enumeration value='ALARM'/>
+      <xs:enumeration value='AMPERAGE'/>
+      <xs:enumeration value='ANGLE'/>
+      <xs:enumeration value='ANGULAR_ACCELERATION'/>
+      <xs:enumeration value='ANGULAR_VELOCITY'/>
+      <xs:enumeration value='AVAILABILITY'/>
+      <xs:enumeration value='AXIS_FEEDRATE'/>
+      <xs:enumeration value='BLOCK'/>
+      <xs:enumeration value='CODE'/>
+      <xs:enumeration value='DIRECTION'/>
+      <xs:enumeration value='DOOR_STATE'/>
+      <xs:enumeration value='EMERGENCY_STOP'/>
+      <xs:enumeration value='EXECUTION'/>
+      <xs:enumeration value='FREQUENCY'/>
+      <xs:enumeration value='PART_COUNT'/>
+      <xs:enumeration value='PART_ID'/>
+      <xs:enumeration value='PATH_FEEDRATE'/>
+      <xs:enumeration value='PATH_POSITION'/>
+      <xs:enumeration value='PATH_MODE'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='CONTROLLER_MODE'/>
+      <xs:enumeration value='LOAD'/>
+      <xs:enumeration value='MESSAGE'/>
+      <xs:enumeration value='POSITION'/>
+      <xs:enumeration value='POWER_STATUS'/>
+      <xs:enumeration value='POWER_STATE'/>
+      <xs:enumeration value='PRESSURE'/>
+      <xs:enumeration value='RESET'/>
+      <xs:enumeration value='PROGRAM'/>
+      <xs:enumeration value='ROTARY_MODE'/>
+      <xs:enumeration value='COUPLED_AXES'/>
+      <xs:enumeration value='AXIS_COUPLING'/>
+      <xs:enumeration value='SPINDLE_SPEED'/>
+      <xs:enumeration value='TEMPERATURE'/>
+      <xs:enumeration value='TORQUE'/>
+      <xs:enumeration value='TOOL_ASSET_ID'/>
+      <xs:enumeration value='TOOL_ID'/>
+      <xs:enumeration value='TOOL_NUMBER'/>
+      <xs:enumeration value='VELOCITY'/>
+      <xs:enumeration value='VIBRATION'/>
+      <xs:enumeration value='VOLTAGE'/>
+      <xs:enumeration value='WATTAGE'/>
+      <xs:enumeration value='WORKHOLDING_ID'/>
+      <xs:enumeration value='ACCUMULATED_TIME'/>
+      <xs:enumeration value='ACTUATOR_STATE'/>
+      <xs:enumeration value='ASSET_CHANGED'/>
+      <xs:enumeration value='CONCENTRATION'/>
+      <xs:enumeration value='CONDUCTIVITY'/>
+      <xs:enumeration value='DISPLACEMENT'/>
+      <xs:enumeration value='ELECTRICAL_POWER'/>
+      <xs:enumeration value='FILL_LEVEL'/>
+      <xs:enumeration value='FLOW'/>
+      <xs:enumeration value='LINEAR_FORCE'/>
+      <xs:enumeration value='MASS'/>
+      <xs:enumeration value='PH'/>
+      <xs:enumeration value='POWER_FACTOR'/>
+      <xs:enumeration value='RESISTANCE'/>
+      <xs:enumeration value='ROTARY_VELOCITY'/>
+      <xs:enumeration value='SOUND_PRESSURE'/>
+      <xs:enumeration value='STRAIN'/>
+      <xs:enumeration value='TILT'/>
+      <xs:enumeration value='VOLT_AMPERE'/>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
+      <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='VISCOSITY'/>
+      <xs:enumeration value='COMMUNICATIONS'/>
+      <xs:enumeration value='LOGIC_PROGRAM'/>
+      <xs:enumeration value='MOTION_PROGRAM'/>
+      <xs:enumeration value='HARDWARE'/>
+      <xs:enumeration value='SYSTEM'/>
+      <xs:enumeration value='LEVEL'/>
+      <xs:enumeration value='ACTUATOR'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The types of measurements available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemEnumTypeEnum DataItemExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemSubEnumTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The sub-types for a measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTUAL'/>
+      <xs:enumeration value='COMMANDED'/>
+      <xs:enumeration value='MAXIMUM'/>
+      <xs:enumeration value='MINIMUM'/>
+      <xs:enumeration value='OTHER'/>
+      <xs:enumeration value='OVERRIDE'/>
+      <xs:enumeration value='PROBE'/>
+      <xs:enumeration value='TARGET'/>
+      <xs:enumeration value='GOOD'/>
+      <xs:enumeration value='BAD'/>
+      <xs:enumeration value='ALL'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='CONTROL'/>
+      <xs:enumeration value='ALTERNATING'/>
+      <xs:enumeration value='DIRECT'/>
+      <xs:enumeration value='WEIGHT'/>
+      <xs:enumeration value='VOLUME'/>
+      <xs:enumeration value='MOLE'/>
+      <xs:enumeration value='KINETIC'/>
+      <xs:enumeration value='DYNAMIC'/>
+      <xs:enumeration value='NO_SCALE'/>
+      <xs:enumeration value='A_SCALE'/>
+      <xs:enumeration value='B_SCALE'/>
+      <xs:enumeration value='C_SCALE'/>
+      <xs:enumeration value='D_SCALE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemSubEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sub-types for a measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemSubEnumTypeEnum DataItemExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatisticsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        Statistical operations on data
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='MINIMUM'/>
+      <xs:enumeration value='MAXIMUM'/>
+      <xs:enumeration value='AVERAGE'/>
+      <xs:enumeration value='STANDARD_DEVIATION'/>
+      <xs:enumeration value='ROOT_MEAN_SQUARE'/>
+      <xs:enumeration value='MEAN'/>
+      <xs:enumeration value='MODE'/>
+      <xs:enumeration value='RANGE'/>
+      <xs:enumeration value='KURTOSIS'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatisticsType'>
+    <xs:annotation>
+      <xs:documentation>
+        Statistical operations on data
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemStatisticsTypeEnum DataItemStatsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='x:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='AMPERE'/>
+      <xs:enumeration value='CELSIUS'/>
+      <xs:enumeration value='COUNT'/>
+      <xs:enumeration value='DEGREE'/>
+      <xs:enumeration value='DEGREE/SECOND'/>
+      <xs:enumeration value='DEGREE/SECOND^2'/>
+      <xs:enumeration value='HERTZ'/>
+      <xs:enumeration value='JOULE'/>
+      <xs:enumeration value='KILOGRAM'/>
+      <xs:enumeration value='LITER'/>
+      <xs:enumeration value='LITER/SECOND'/>
+      <xs:enumeration value='MILLIMETER'/>
+      <xs:enumeration value='MILLIMETER/SECOND'/>
+      <xs:enumeration value='MILLIMETER/SECOND^2'/>
+      <xs:enumeration value='MILLIMETER_3D'/>
+      <xs:enumeration value='NEWTON'/>
+      <xs:enumeration value='NEWTON_METER'/>
+      <xs:enumeration value='PASCAL'/>
+      <xs:enumeration value='PERCENT'/>
+      <xs:enumeration value='PH'/>
+      <xs:enumeration value='REVOLUTION/MINUTE'/>
+      <xs:enumeration value='SECOND'/>
+      <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='OHM'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='SIEMENS/METER'/>
+      <xs:enumeration value='MICRO_RADIAN'/>
+      <xs:enumeration value='PASCAL_SECOND'/>
+      <xs:enumeration value='VOLT_AMPERE'/>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
+      <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='DECIBEL'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='UnitsTypeEnum UnitsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='NativeUnitsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported for the source equipment that can be converted into
+        MTC Units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='AMPERE'/>
+      <xs:enumeration value='CELSIUS'/>
+      <xs:enumeration value='COUNT'/>
+      <xs:enumeration value='DEGREE'/>
+      <xs:enumeration value='DEGREE/SECOND'/>
+      <xs:enumeration value='DEGREE/SECOND^2'/>
+      <xs:enumeration value='HERTZ'/>
+      <xs:enumeration value='JOULE'/>
+      <xs:enumeration value='KILOGRAM'/>
+      <xs:enumeration value='LITER'/>
+      <xs:enumeration value='LITER/SECOND'/>
+      <xs:enumeration value='MILLIMETER'/>
+      <xs:enumeration value='MILLIMETER/SECOND'/>
+      <xs:enumeration value='MILLIMETER/SECOND^2'/>
+      <xs:enumeration value='MILLIMETER_3D'/>
+      <xs:enumeration value='NEWTON'/>
+      <xs:enumeration value='NEWTON_METER'/>
+      <xs:enumeration value='PASCAL'/>
+      <xs:enumeration value='PERCENT'/>
+      <xs:enumeration value='PH'/>
+      <xs:enumeration value='REVOLUTION/MINUTE'/>
+      <xs:enumeration value='SECOND'/>
+      <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='OHM'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='SIEMENS/METER'/>
+      <xs:enumeration value='MICRO_RADIAN'/>
+      <xs:enumeration value='PASCAL_SECOND'/>
+      <xs:enumeration value='VOLT_AMPERE'/>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
+      <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='DECIBEL'/>
+      <xs:enumeration value='CENTIPOISE'/>
+      <xs:enumeration value='DEGREE/MINUTE'/>
+      <xs:enumeration value='FAHRENHEIT'/>
+      <xs:enumeration value='FOOT'/>
+      <xs:enumeration value='FOOT/MINUTE'/>
+      <xs:enumeration value='FOOT/SECOND'/>
+      <xs:enumeration value='FOOT/SECOND^2'/>
+      <xs:enumeration value='FOOT_3D'/>
+      <xs:enumeration value='GALLON/MINUTE'/>
+      <xs:enumeration value='INCH'/>
+      <xs:enumeration value='INCH/MINUTE'/>
+      <xs:enumeration value='INCH/SECOND'/>
+      <xs:enumeration value='INCH/SECOND^2'/>
+      <xs:enumeration value='INCH_3D'/>
+      <xs:enumeration value='KILOWATT'/>
+      <xs:enumeration value='KILOWATT_HOUR'/>
+      <xs:enumeration value='MILLIMETER/MINUTE'/>
+      <xs:enumeration value='OTHER'/>
+      <xs:enumeration value='POUND'/>
+      <xs:enumeration value='POUND/INCH^2'/>
+      <xs:enumeration value='RADIAN'/>
+      <xs:enumeration value='RADIAN/MINUTE'/>
+      <xs:enumeration value='RADIAN/SECOND'/>
+      <xs:enumeration value='RADIAN/SECOND^2'/>
+      <xs:enumeration value='REVOLUTION/SECOND'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='NativeUnitsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported for the source equipment that can be converted into
+        MTC Units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='NativeUnitsTypeEnum UnitsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='CoordinateSystemType'>
+    <xs:annotation>
+      <xs:documentation>
+        The coordinate system to be used for the position
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='MACHINE'/>
+      <xs:enumeration value='WORK'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='HeaderType'>
+    <xs:annotation>
+      <xs:documentation>
+        Message header for protocol information
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='xs:string'>
+        <xs:attribute name='version' type='VersionType' use='required'/>
+        <xs:attribute name='creationTime' type='CreationTimeType' use='required'/>
+        <xs:attribute name='testIndicator' type='TestIndicatorType' use='optional'/>
+        <xs:attribute name='instanceId' type='InstanceIdType' use='required'/>
+        <xs:attribute name='sender' type='SenderType' use='required'/>
+        <xs:attribute name='assetBufferSize' type='AssetBufferSizeType' use='required'/>
+        <xs:attribute name='assetCount' type='AssetCountAttrType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='MTConnectAssetsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The root node for MTConnect
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Header' type='HeaderType'>
+        <xs:annotation>
+          <xs:documentation>
+            Protocol dependent information
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Assets' type='AssetsType'>
+        <xs:annotation>
+          <xs:documentation>
+            The assets
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name='LocationValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The tool location
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='ProgramToolNumberType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number referenced in the program for this tool
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='ReconditionCountValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of times the cutter has been reconditioned
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='ConnectionCodeMachineSideType'>
+    <xs:annotation>
+      <xs:documentation>
+        The code for the connection to the machine
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ProgramToolGroupType'>
+    <xs:annotation>
+      <xs:documentation>
+        The tool group associated with the tool
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='LocationSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of location units required to hold this tool
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='ToolIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of the tool type
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='EdgeCountType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of cutting edges
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='OverlapType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of additional locations taken by a tool
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='ToolLifeValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The life of the tool in time, wear, or parts
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='ItemIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier for the insert
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='IndexRangeType'>
+    <xs:annotation>
+      <xs:documentation>
+        A single or range of indexes. A range can be a comma separated set of
+        individual elements as in &quot;1,2,3,4&quot;, or as a inclusive range
+        of values as in &quot;1-10&quot; or multiple ranges &quot;1-4,6-10&quot;
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='(\d+|\d+-\d+)(,(\d+|\d+-\d+))*'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='MeasurementValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A measurement value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='MinimumType'>
+    <xs:annotation>
+      <xs:documentation>
+        A minimum value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='MaximumType'>
+    <xs:annotation>
+      <xs:documentation>
+        A maximum value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='NominalType'>
+    <xs:annotation>
+      <xs:documentation>
+        A nominal value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='SpeedType'>
+    <xs:annotation>
+      <xs:documentation>
+        A speed in RPM or mm/s
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='GradeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The material for a cutting item
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='MaximumCountType'>
+    <xs:annotation>
+      <xs:documentation>
+        A maximum count value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='CodeType'>
+    <xs:annotation>
+      <xs:documentation>
+        A application specific code
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ManufacturersType'>
+    <xs:annotation>
+      <xs:documentation>
+        A comman delimited list of manufactures
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='DefinitionFormatType'>
+    <xs:annotation>
+      <xs:documentation>
+        The format of the definition
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='EXPRESS'/>
+      <xs:enumeration value='XML'/>
+      <xs:enumeration value='TEXT'/>
+      <xs:enumeration value='UNDEFINED'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='CutterStatusValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The state of the tool. These can be combined to define the complete
+        cutting tool state
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='NEW'/>
+      <xs:enumeration value='AVAILABLE'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+      <xs:enumeration value='ALLOCATED'/>
+      <xs:enumeration value='UNALLOCATED'/>
+      <xs:enumeration value='MEASURED'/>
+      <xs:enumeration value='NOT_REGISTERED'/>
+      <xs:enumeration value='RECONDITIONED'/>
+      <xs:enumeration value='USED'/>
+      <xs:enumeration value='EXPIRED'/>
+      <xs:enumeration value='TAGGED_OUT'/>
+      <xs:enumeration value='BROKEN'/>
+      <xs:enumeration value='UNKNOWN'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='ToolLifeDirectionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The direction of tool life count
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='UP'/>
+      <xs:enumeration value='DOWN'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='ToolLifeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The direction of tool life count
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='MINUTES'/>
+      <xs:enumeration value='PART_COUNT'/>
+      <xs:enumeration value='WEAR'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='LocationsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The type of tool location
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='POT'/>
+      <xs:enumeration value='STATION'/>
+      <xs:enumeration value='CRIB'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='AssetDescriptionType' mixed='true'>
+    <xs:annotation>
+      <xs:documentation>
+        The description of an asset, can be freeform text or elemenrts
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:any processContents='lax' minOccurs='0' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            Any elements
+          </xs:documentation>
+        </xs:annotation>
+      </xs:any>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='CuttingToolDefinitionType' mixed='true'>
+    <xs:annotation>
+      <xs:documentation>
+        The description of an asset, can be freeform text or elemenrts
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:any processContents='lax' minOccurs='0' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            Any elements
+          </xs:documentation>
+        </xs:annotation>
+      </xs:any>
+    </xs:sequence>
+    <xs:attribute name='format' type='DefinitionFormatType' use='optional'/>
+  </xs:complexType>
+  <xs:complexType name='AssetsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The collection of mobile assets
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs='0' maxOccurs='unbounded'>
+      <xs:element ref='Asset'/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name='AssetType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract mobile asset
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Description' type='AssetDescriptionType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The description of the asset (freeform)
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name='assetId' type='AssetIdType' use='required'/>
+    <xs:attribute name='serialNumber' type='SerialNumberType' use='required'/>
+    <xs:attribute name='manufacturers' type='ManufacturersType' use='optional'/>
+    <xs:attribute name='timestamp' type='TimestampType' use='required'/>
+    <xs:attribute name='deviceUuid' type='UuidType' use='optional'/>
+  </xs:complexType>
+  <xs:element abstract='true' name='Asset' type='AssetType'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract mobile asset
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingToolType'>
+    <xs:annotation>
+      <xs:documentation>
+        A cutting tool
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='AssetType'>
+        <xs:sequence>
+          <xs:choice minOccurs='1'>
+            <xs:sequence minOccurs='1'>
+              <xs:element name='CuttingToolDefinition' type='CuttingToolDefinitionType'>
+                <xs:annotation>
+                  <xs:documentation>
+                    Description of tool
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name='CuttingToolLifeCycle' type='CuttingToolLifeCycleType' minOccurs='0' maxOccurs='1'>
+                <xs:annotation>
+                  <xs:documentation>
+                    the tool lifecycle
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
+            </xs:sequence>
+            <xs:element name='CuttingToolLifeCycle' type='CuttingToolLifeCycleType'>
+              <xs:annotation>
+                <xs:documentation>
+                  the tool lifecycle
+                </xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:choice>
+        </xs:sequence>
+        <xs:attribute name='toolId' type='ToolIdType' use='required'/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='CuttingTool' type='CuttingToolType' substitutionGroup='Asset'>
+    <xs:annotation>
+      <xs:documentation>
+        A cutting tool
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CutterStatusType'>
+    <xs:annotation>
+      <xs:documentation>
+        The set of applicatable status for this cutting tool
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Status' type='CutterStatusValueType' minOccurs='1' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            The status of the cutting tool
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='LocationType'>
+    <xs:annotation>
+      <xs:documentation>
+        The location of the tool in the tool changer (pot) or the station of the
+        tool
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='LocationValueType'>
+        <xs:attribute name='type' type='LocationsType' use='required'/>
+        <xs:attribute name='negativeOverlap' type='OverlapType' use='required'/>
+        <xs:attribute name='positiveOverlap' type='OverlapType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='ReconditionCountType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of times this tool has been reconditioned
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ReconditionCountValueType'>
+        <xs:attribute name='maximumCount' type='MaximumCountType' use='optional'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='ProcessSpindleSpeedType'>
+    <xs:annotation>
+      <xs:documentation>
+        The spindle speed properties of this tool
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='SpeedType'>
+        <xs:attribute name='maximum' type='MaximumType' use='optional'/>
+        <xs:attribute name='minimum' type='MinimumType' use='optional'/>
+        <xs:attribute name='nominal' type='NominalType' use='optional'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='ProcessFeedRateType'>
+    <xs:annotation>
+      <xs:documentation>
+        The feed rate properties of this tool in MILLIMETERS/SECOND
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='SpeedType'>
+        <xs:attribute name='maximum' type='MaximumType' use='optional'/>
+        <xs:attribute name='minimum' type='MinimumType' use='optional'/>
+        <xs:attribute name='nominal' type='NominalType' use='optional'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='MeasurementType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract type for edge measurements
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='MeasurementValueType'>
+        <xs:attribute name='significantDigits' type='SignificantDigitsValueType' use='optional'/>
+        <xs:attribute name='units' type='UnitsType' use='optional'/>
+        <xs:attribute name='nativeUnits' type='NativeUnitsType' use='optional'/>
+        <xs:attribute name='code' type='CodeType' use='optional'/>
+        <xs:attribute name='maximum' type='MeasurementValueType' use='optional'/>
+        <xs:attribute name='minimum' type='MeasurementValueType' use='optional'/>
+        <xs:attribute name='nominal' type='MeasurementValueType' use='optional'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element abstract='true' name='Measurement' type='MeasurementType'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract type for edge measurements
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CommonMeasurementType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        Measurements for both the assembly and the cutting item
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='MeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element abstract='true' name='CommonMeasurement' type='CommonMeasurementType' substitutionGroup='Measurement'>
+    <xs:annotation>
+      <xs:documentation>
+        Measurements for both the assembly and the cutting item
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AssemblyMeasurementType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        Measurements for the assembly
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='MeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element abstract='true' name='AssemblyMeasurement' type='AssemblyMeasurementType' substitutionGroup='Measurement'>
+    <xs:annotation>
+      <xs:documentation>
+        Measurements for the assembly
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingItemMeasurementType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        Measurements for the cutting item
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='MeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element abstract='true' name='CuttingItemMeasurement' type='CuttingItemMeasurementType' substitutionGroup='Measurement'>
+    <xs:annotation>
+      <xs:documentation>
+        Measurements for the cutting item
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AssemblyMeasurementsType'>
+    <xs:annotation>
+      <xs:documentation>
+        A collection of assembly measurements
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs='1' maxOccurs='unbounded'>
+      <xs:element ref='CommonMeasurement'/>
+      <xs:element ref='AssemblyMeasurement'/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name='ProtrudingLengthType'>
+    <xs:annotation>
+      <xs:documentation>
+        dimension from the yz-plane to the furthest point of the tool item or
+        adaptive item measured in the -X direction
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProtrudingLength' type='ProtrudingLengthType' substitutionGroup='CommonMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        dimension from the yz-plane to the furthest point of the tool item or
+        adaptive item measured in the -X direction
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='WeightType'>
+    <xs:annotation>
+      <xs:documentation>
+        WT: The weight measured in grams
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Weight' type='WeightType' substitutionGroup='CommonMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        WT: The weight measured in grams
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='FunctionalLengthType'>
+    <xs:annotation>
+      <xs:documentation>
+        LF: The furthest distance from the gauge plane.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='FunctionalLength' type='FunctionalLengthType' substitutionGroup='CommonMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        LF: The furthest distance from the gauge plane.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='BodyDiameterMaxType'>
+    <xs:annotation>
+      <xs:documentation>
+        BDX: The largest diameter of the body of a tool item
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='BodyDiameterMax' type='BodyDiameterMaxType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        BDX: The largest diameter of the body of a tool item
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='BodyLengthMaxType'>
+    <xs:annotation>
+      <xs:documentation>
+        LBX: The distance measured along the X axis from that point of the item
+        closest to the workpiece, including the cutting item for a tool item but
+        excluding a protuding locking mechanism for an adaptive item, to either
+        the front of the flange on a flanged body or the beginning of the
+        connection interface feature on the machine side for cylindrical or
+        prismatic shanks
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='BodyLengthMax' type='BodyLengthMaxType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        LBX: The distance measured along the X axis from that point of the item
+        closest to the workpiece, including the cutting item for a tool item but
+        excluding a protuding locking mechanism for an adaptive item, to either
+        the front of the flange on a flanged body or the beginning of the
+        connection interface feature on the machine side for cylindrical or
+        prismatic shanks
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingDiameterMaxType'>
+    <xs:annotation>
+      <xs:documentation>
+        DC: The maximum diameter of a circle on which the defined point Pk of
+        each of the master inserts is located on a tool item. The normal of the
+        machined peripheral surface points towards the axis of the cutting tool.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CuttingDiameterMax' type='CuttingDiameterMaxType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        DC: The maximum diameter of a circle on which the defined point Pk of
+        each of the master inserts is located on a tool item. The normal of the
+        machined peripheral surface points towards the axis of the cutting tool.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='FlangeDiameterMaxType'>
+    <xs:annotation>
+      <xs:documentation>
+        The maxumum dimension between two parallel tangents on the outside edge
+        of a flange
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='FlangeDiameterMax' type='FlangeDiameterMaxType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        The maxumum dimension between two parallel tangents on the outside edge
+        of a flange
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepthOfCutMaxType'>
+    <xs:annotation>
+      <xs:documentation>
+        APMX: The maximum engagement of the cutting edge or edges with the
+        workpiece measured perpendicular to the feed motion.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepthOfCutMax' type='DepthOfCutMaxType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        APMX: The maximum engagement of the cutting edge or edges with the
+        workpiece measured perpendicular to the feed motion.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='OverallToolLengthType'>
+    <xs:annotation>
+      <xs:documentation>
+        OAL: largest length dimension of the tool item including the master
+        insert where applicable
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='OverallToolLength' type='OverallToolLengthType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        OAL: largest length dimension of the tool item including the master
+        insert where applicable
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ShankDiameterType'>
+    <xs:annotation>
+      <xs:documentation>
+        DMM: dimension of the diameter of a cylindrical portion of a tool item
+        or an adaptive item that can participate in a connection
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ShankDiameter' type='ShankDiameterType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        DMM: dimension of the diameter of a cylindrical portion of a tool item
+        or an adaptive item that can participate in a connection
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ShankHeightType'>
+    <xs:annotation>
+      <xs:documentation>
+        H: dimension of the height of a shank
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ShankHeight' type='ShankHeightType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        H: dimension of the height of a shank
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ShankLengthType'>
+    <xs:annotation>
+      <xs:documentation>
+        LS: dimension of the length of a shank
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ShankLength' type='ShankLengthType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        LS: dimension of the length of a shank
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='UsableLengthMaxType'>
+    <xs:annotation>
+      <xs:documentation>
+        The maximum length of a cutting tool that can be used in a particular
+        cutting operation including the non-cutting portions of the tool.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssemblyMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='UsableLengthMax' type='UsableLengthMaxType' substitutionGroup='AssemblyMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        The maximum length of a cutting tool that can be used in a particular
+        cutting operation including the non-cutting portions of the tool.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingToolLifeCycleType'>
+    <xs:annotation>
+      <xs:documentation>
+        A defintion of a cutting tool application and life cycle
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='CutterStatus' type='CutterStatusType' minOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The state of the tool assembly
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='ReconditionCount' type='ReconditionCountType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The number of times the cutter has been reconditioned
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='ToolLife' type='LifeType' minOccurs='0' maxOccurs='3'>
+        <xs:annotation>
+          <xs:documentation>
+            The life of the cutting tool assembly
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='ProgramToolGroup' type='ProgramToolGroupType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The number used to identify this tool in the program
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='ProgramToolNumber' type='ProgramToolNumberType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The number used to identify this tool in the program
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Location' type='LocationType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The pocket location
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='ProcessSpindleSpeed' type='ProcessSpindleSpeedType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The tools constrained process target spindle speed
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='ProcessFeedRate' type='ProcessFeedRateType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The tools constrained process target feed rate
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='ConnectionCodeMachineSide' type='ConnectionCodeMachineSideType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            CCMS: identifier for the cabability to connect any component of the
+            cutting tool together, except assembly items, on the machine side
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Measurements' type='AssemblyMeasurementsType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            A set of measurements associated with the cutting tool
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='CuttingItems' type='CuttingItemsType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            An optional list of edges for this assembly
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='LifeType'>
+    <xs:annotation>
+      <xs:documentation>
+        Abstract cutter life
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ToolLifeValueType'>
+        <xs:attribute name='type' type='ToolLifeType' use='required'/>
+        <xs:attribute name='countDirection' type='ToolLifeDirectionType' use='required'/>
+        <xs:attribute name='warning' type='ToolLifeValueType' use='optional'/>
+        <xs:attribute name='limit' type='ToolLifeValueType' use='required'/>
+        <xs:attribute name='initial' type='ToolLifeValueType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='CuttingItemMeasurementsType'>
+    <xs:annotation>
+      <xs:documentation>
+        A collection of assembly measurements
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs='1' maxOccurs='unbounded'>
+      <xs:element ref='CommonMeasurement'/>
+      <xs:element ref='CuttingItemMeasurement'/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name='CuttingDiameterType'>
+    <xs:annotation>
+      <xs:documentation>
+        diameter of a circle on which the defined point Pk of each of the master
+        inserts is located on a tool item. The normal of the machined peripheral
+        surface points towards the axis of the cutting tool.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CuttingDiameter' type='CuttingDiameterType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        diameter of a circle on which the defined point Pk of each of the master
+        inserts is located on a tool item. The normal of the machined peripheral
+        surface points towards the axis of the cutting tool.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CornerRadiusType'>
+    <xs:annotation>
+      <xs:documentation>
+        nominal radius of a rounded corner measured in the XY-plane
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CornerRadius' type='CornerRadiusType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        nominal radius of a rounded corner measured in the XY-plane
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingEdgeLengthType'>
+    <xs:annotation>
+      <xs:documentation>
+        theoretical length of the cutting edge of a cutting item over sharp
+        corners
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CuttingEdgeLength' type='CuttingEdgeLengthType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        theoretical length of the cutting edge of a cutting item over sharp
+        corners
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingHeightType'>
+    <xs:annotation>
+      <xs:documentation>
+        theoretical length of the cutting edge of a cutting item over sharp
+        corners
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CuttingHeight' type='CuttingHeightType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        theoretical length of the cutting edge of a cutting item over sharp
+        corners
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingReferencePoiintType'>
+    <xs:annotation>
+      <xs:documentation>
+        the theoretical sharp point of the cutting tool from which the major
+        functional dimensions are taken
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CuttingReferencePoiint' type='CuttingReferencePoiintType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        the theoretical sharp point of the cutting tool from which the major
+        functional dimensions are taken
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='FlangeDiameterType'>
+    <xs:annotation>
+      <xs:documentation>
+        dimension between two parallel tangents on the outside edge of a flange
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='FlangeDiameter' type='FlangeDiameterType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        dimension between two parallel tangents on the outside edge of a flange
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='FunctionalWidthType'>
+    <xs:annotation>
+      <xs:documentation>
+        distance between the cutting reference point and the rear backing
+        surface of a turning tool or the axis of a boring bar
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='FunctionalWidth' type='FunctionalWidthType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        distance between the cutting reference point and the rear backing
+        surface of a turning tool or the axis of a boring bar
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='InclinationAngleType'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between the tool rake plane and a plane parallel to the xy-plane
+        measured in the tool cutting edge plane
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='InclinationAngle' type='InclinationAngleType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between the tool rake plane and a plane parallel to the xy-plane
+        measured in the tool cutting edge plane
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='IncribedCircleDiameterType'>
+    <xs:annotation>
+      <xs:documentation>
+        diameter of a circle to which all edges of a equilateral and round
+        regular insert are tangental
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='IncribedCircleDiameter' type='IncribedCircleDiameterType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        diameter of a circle to which all edges of a equilateral and round
+        regular insert are tangental
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PointAngleType'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between the major cutting edge and the same cutting edge rotated
+        by 180 degrees about the tool axis
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PointAngle' type='PointAngleType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between the major cutting edge and the same cutting edge rotated
+        by 180 degrees about the tool axis
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='StepDiameterLengthType'>
+    <xs:annotation>
+      <xs:documentation>
+        length of a portion of a cutting tool that is related to the
+        corresponding cutting diameter. The length is measured from the point
+        &quot;PK&quot; of the corresponging diameter to the next projected point
+        where the diameter starts to change
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='StepDiameterLength' type='StepDiameterLengthType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        length of a portion of a cutting tool that is related to the
+        corresponding cutting diameter. The length is measured from the point
+        &quot;PK&quot; of the corresponging diameter to the next projected point
+        where the diameter starts to change
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='StepIncludedAngleType'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between a major edge on a step of a stepped tool and the same
+        cutting edge rotated 180 degrees about ist tool axis
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='StepIncludedAngle' type='StepIncludedAngleType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between a major edge on a step of a stepped tool and the same
+        cutting edge rotated 180 degrees about ist tool axis
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ToolCuttingEdgeAngleType'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between the tool cutting edge plane and the tool feed plane
+        measured in a plane parallel the xy-plane
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ToolCuttingEdgeAngle' type='ToolCuttingEdgeAngleType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between the tool cutting edge plane and the tool feed plane
+        measured in a plane parallel the xy-plane
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ToolLeadAngleType'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between the tool cutting edge plane and a plane perpendicular to
+        the tool feed plane measured in a plane parallel the xy-plane
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ToolLeadAngle' type='ToolLeadAngleType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        angle between the tool cutting edge plane and a plane perpendicular to
+        the tool feed plane measured in a plane parallel the xy-plane
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='WiperEdgeLengthType'>
+    <xs:annotation>
+      <xs:documentation>
+        measure of the length of a wiper edge of a cutting item
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CuttingItemMeasurementType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='WiperEdgeLength' type='WiperEdgeLengthType' substitutionGroup='CuttingItemMeasurement'>
+    <xs:annotation>
+      <xs:documentation>
+        measure of the length of a wiper edge of a cutting item
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ToolOrientationType'>
+    <xs:annotation>
+      <xs:documentation>
+        The orientation as expressed in degrees of the cutting item to the
+        workpiece for this process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='xs:string'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='DriveAngleType'>
+    <xs:annotation>
+      <xs:documentation>
+        Angle between the driving mechanism locator on a tool item and the main
+        cutting edge.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='xs:string'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name='LocusType'>
+    <xs:annotation>
+      <xs:documentation>
+        The location of the cutting item - not yet restricted.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:complexType name='CuttingItemsType'>
+    <xs:annotation>
+      <xs:documentation>
+        A list of edge
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='CuttingItem' type='CuttingItemType' minOccurs='1' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            An edge
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name='count' type='EdgeCountType' use='required'/>
+  </xs:complexType>
+  <xs:complexType name='CuttingItemType'>
+    <xs:annotation>
+      <xs:documentation>
+        An edge into a tool assembly
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Description' type='AssetDescriptionType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The description of the cutting item
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Locus' type='LocusType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The cutting item&apos;s location on the cutting tool
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='ItemLife' type='LifeType' minOccurs='0' maxOccurs='3'>
+        <xs:annotation>
+          <xs:documentation>
+            The life of an edge
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Measurements' type='CuttingItemMeasurementsType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            A set of measurements associated with the cutting tool
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name='indices' type='IndexRangeType' use='required'/>
+    <xs:attribute name='itemId' type='ItemIdType' use='optional'/>
+    <xs:attribute name='grade' type='GradeType' use='optional'/>
+    <xs:attribute name='manufacturers' type='ManufacturersType' use='optional'/>
+  </xs:complexType>
+</xs:schema>
