@@ -83,6 +83,9 @@ public:
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION(DataSetTest);
 
+inline DataSetEntry operator "" _E(const char *c, std::size_t) {
+  return DataSetEntry(c);
+}
 
 void DataSetTest::setUp()
 {
@@ -136,10 +139,11 @@ void DataSetTest::testInitialSet()
   CPPUNIT_ASSERT_EQUAL((string) "4", attrs.at("sampleCount"));
   
   auto map1 = ce->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "1", map1.at("a"));
-  CPPUNIT_ASSERT_EQUAL((string) "2", map1.at("b"));
-  CPPUNIT_ASSERT_EQUAL((string) "3", map1.at("c"));
-  CPPUNIT_ASSERT_EQUAL((string) "4", map1.at("d"));
+  
+  CPPUNIT_ASSERT_EQUAL((string) "1", map1.find("a"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "2", map1.find("b"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "3", map1.find("c"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "4", map1.find("d"_E)->m_value);
   
   m_checkpoint->addObservation(ce);
   auto c2 = *m_checkpoint->getEventPtr("v1");
@@ -152,10 +156,10 @@ void DataSetTest::testInitialSet()
   CPPUNIT_ASSERT_EQUAL((string) "4", attrs.at("sampleCount"));
   
   auto map2 = c2->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "1", map2.at("a"));
-  CPPUNIT_ASSERT_EQUAL((string) "2", map2.at("b"));
-  CPPUNIT_ASSERT_EQUAL((string) "3", map2.at("c"));
-  CPPUNIT_ASSERT_EQUAL((string) "4", map2.at("d"));
+  CPPUNIT_ASSERT_EQUAL((string) "1", map2.find("a"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "2", map2.find("b"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "3", map2.find("c"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "4", map2.find("d"_E)->m_value);
   
   ce->unrefer();
 }
@@ -177,10 +181,10 @@ void DataSetTest::testUpdateOneElement()
   CPPUNIT_ASSERT_EQUAL((size_t) 4, ce3->getDataSet().size());
   
   auto map1 = ce3->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "1", map1.at("a"));
-  CPPUNIT_ASSERT_EQUAL((string) "2", map1.at("b"));
-  CPPUNIT_ASSERT_EQUAL((string) "5", map1.at("c"));
-  CPPUNIT_ASSERT_EQUAL((string) "4", map1.at("d"));
+  CPPUNIT_ASSERT_EQUAL((string) "1", map1.find("a"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "2", map1.find("b"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "5", map1.find("c"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "4", map1.find("d"_E)->m_value);
   
   string value3("e=6");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -190,11 +194,11 @@ void DataSetTest::testUpdateOneElement()
   CPPUNIT_ASSERT_EQUAL((size_t) 5, ce5->getDataSet().size());
   
   auto map2 = ce5->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "1", map2.at("a"));
-  CPPUNIT_ASSERT_EQUAL((string) "2", map2.at("b"));
-  CPPUNIT_ASSERT_EQUAL((string) "5", map2.at("c"));
-  CPPUNIT_ASSERT_EQUAL((string) "4", map2.at("d"));
-  CPPUNIT_ASSERT_EQUAL((string) "6", map2.at("e"));
+  CPPUNIT_ASSERT_EQUAL((string) "1", map2.find("a"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "2", map2.find("b"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "5", map2.find("c"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "4", map2.find("d"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "6", map2.find("e"_E)->m_value);
 }
 
 void DataSetTest::testUpdateMany()
@@ -214,11 +218,11 @@ void DataSetTest::testUpdateMany()
   CPPUNIT_ASSERT_EQUAL((size_t) 5, ce3->getDataSet().size());
   
   auto map1 = ce3->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "1", map1.at("a"));
-  CPPUNIT_ASSERT_EQUAL((string) "2", map1.at("b"));
-  CPPUNIT_ASSERT_EQUAL((string) "5", map1.at("c"));
-  CPPUNIT_ASSERT_EQUAL((string) "4", map1.at("d"));
-  CPPUNIT_ASSERT_EQUAL((string) "6", map1.at("e"));
+  CPPUNIT_ASSERT_EQUAL((string) "1", map1.find("a"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "2", map1.find("b"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "5", map1.find("c"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "4", map1.find("d"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "6", map1.find("e"_E)->m_value);
   
   string value3("e=7 a=8 f=9");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -228,12 +232,12 @@ void DataSetTest::testUpdateMany()
   CPPUNIT_ASSERT_EQUAL((size_t) 6, ce5->getDataSet().size());
   
   auto map2 = ce5->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "8", map2.at("a"));
-  CPPUNIT_ASSERT_EQUAL((string) "2", map2.at("b"));
-  CPPUNIT_ASSERT_EQUAL((string) "5", map2.at("c"));
-  CPPUNIT_ASSERT_EQUAL((string) "4", map2.at("d"));
-  CPPUNIT_ASSERT_EQUAL((string) "7", map2.at("e"));
-  CPPUNIT_ASSERT_EQUAL((string) "9", map2.at("f"));
+  CPPUNIT_ASSERT_EQUAL((string) "8", map2.find("a"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "2", map2.find("b"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "5", map2.find("c"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "4", map2.find("d"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "7", map2.find("e"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "9", map2.find("f"_E)->m_value);
 }
 
 void DataSetTest::testReset()
@@ -253,8 +257,8 @@ void DataSetTest::testReset()
   CPPUNIT_ASSERT_EQUAL((size_t) 2, ce3->getDataSet().size());
   
   auto map1 = ce3->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "5", map1.at("c"));
-  CPPUNIT_ASSERT_EQUAL((string) "6", map1.at("e"));
+  CPPUNIT_ASSERT_EQUAL((string) "5", map1.find("c"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "6", map1.find("e"_E)->m_value);
   
   string value3("x=pop y=hop");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -264,8 +268,8 @@ void DataSetTest::testReset()
   CPPUNIT_ASSERT_EQUAL((size_t) 4, ce5->getDataSet().size());
   
   auto map2 = ce5->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "pop", map2.at("x"));
-  CPPUNIT_ASSERT_EQUAL((string) "hop", map2.at("y"));
+  CPPUNIT_ASSERT_EQUAL((string) "pop", map2.find("x"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "hop", map2.find("y"_E)->m_value);
 }
 
 void DataSetTest::testBadData()
@@ -281,8 +285,8 @@ void DataSetTest::testBadData()
   CPPUNIT_ASSERT_EQUAL((size_t) 2, ce2->getDataSet().size());
   
   auto map1 = ce2->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "2", map1.at("a"));
-  CPPUNIT_ASSERT_EQUAL((string) "xxx", map1.at("b3"));
+  CPPUNIT_ASSERT_EQUAL((string) "2", map1.find("a"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "xxx", map1.find("b3"_E)->m_value);
 }
 
 #define ASSETT_DATA_SET_ENTRY(doc, var, key, expected) \
@@ -399,6 +403,9 @@ void DataSetTest::testSample()
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@sampleCount", "1");
     ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "b", "5");
     ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "c", "");
+ 
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]/m:Entry[@key='c']@removed", nullptr);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]/m:Entry[@key='c']@removed", "true");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@sampleCount", "2");
   }
   
@@ -499,19 +506,24 @@ void DataSetTest::testDeleteKey()
   auto cecp = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 4, cecp->getDataSet().size());
   
-  string value2("c e=6 a=");
+  string value2("c e=6 a");
   ObservationPtr ce2(new Observation(*m_dataItem1, 4, "time", value2));
   m_checkpoint->addObservation(ce2);
+  
+  
   
   auto ce3 = *m_checkpoint->getEventPtr("v1");
   CPPUNIT_ASSERT_EQUAL((size_t) 3, ce3->getDataSet().size());
   
+  auto &ds = ce2->getDataSet();
+  CPPUNIT_ASSERT(ds.find("a"_E)->m_removed);
+
   auto map1 = ce3->getDataSet();
-  CPPUNIT_ASSERT_EQUAL((string) "2", map1.at("b"));
-  CPPUNIT_ASSERT_EQUAL((string) "4", map1.at("d"));
-  CPPUNIT_ASSERT_EQUAL((string) "6", map1.at("e"));
-  CPPUNIT_ASSERT(map1.find("c") == map1.end());
-  CPPUNIT_ASSERT(map1.find("a") == map1.end());
+  CPPUNIT_ASSERT_EQUAL((string) "2", map1.find("b"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "4", map1.find("d"_E)->m_value);
+  CPPUNIT_ASSERT_EQUAL((string) "6", map1.find("e"_E)->m_value);
+  CPPUNIT_ASSERT(map1.find("c"_E) == map1.end());
+  CPPUNIT_ASSERT(map1.find("a"_E) == map1.end());
 }
 
 void DataSetTest::testResetWithNoItems()

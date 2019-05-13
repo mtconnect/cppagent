@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <set>
 
 #include "component.hpp"
 #include "data_item.hpp"
@@ -35,8 +36,37 @@ namespace mtconnect {
   class Observation;
   typedef RefCountedPtr<Observation> ObservationPtr;
   typedef dlib::array<ObservationPtr> ObservationPtrArray;
-  typedef std::map<std::string,std::string> DataSet;
   
+  struct DataSetEntry {
+    DataSetEntry(const std::string &key,
+                 const std::string &value,
+                 bool removed = false)
+    : m_key(key), m_value(value), m_removed(removed) {}
+    DataSetEntry(const std::string &key)
+    : m_key(key), m_value(""), m_removed(false) { }
+
+    DataSetEntry(const DataSetEntry &other)
+    : m_key(other.m_key), m_value(other.m_value), m_removed(other.m_removed) {}
+    
+    std::string m_key;
+    std::string m_value;
+    bool m_removed;
+    
+    bool operator ==(const DataSetEntry &other)  const {
+      return m_key == other.m_key;
+    }
+    bool operator <(const DataSetEntry &other)  const  {
+      return m_key < other.m_key;
+    }
+    
+    bool same(const DataSetEntry &other) const {
+      return m_key == other.m_key and m_value == other.m_value and
+        m_removed == other.m_removed;
+    }
+  };
+  
+  
+  typedef std::set<DataSetEntry> DataSet;
   
   class Observation : public RefCounted
   {
@@ -226,4 +256,6 @@ namespace mtconnect {
   {
     return aE1 < aE2;
   }
+  
+
 }

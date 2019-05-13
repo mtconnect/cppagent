@@ -80,13 +80,6 @@ namespace mtconnect {
     for (const auto &attr : attrs)
       doc[string("@") + attr.first] = attr.second;
   }
-
-  static inline void addAttributes(json &doc, const AttributeList &attrs)
-  {
-    for (const auto &attr : attrs)
-      doc[string("@") + attr.first] = attr.second;
-  }
-
   
   static inline void add(json &doc, const char *key, const string &value)
   {
@@ -423,8 +416,13 @@ namespace mtconnect {
       value = json::object();
       
       const DataSet &set = observation->getDataSet();
-      for (auto &e : set)
-        value[e.first] = e.second;
+      for (auto &e : set) {
+        if (e.m_removed) {
+          value[e.m_key] = json::object({ { "removed", true } });
+        } else {
+          value[e.m_key] = e.m_value;
+        }
+      }
     }
     else if (!observation->getValue().empty())
     {

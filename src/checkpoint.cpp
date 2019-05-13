@@ -145,10 +145,11 @@ namespace mtconnect {
           // For data sets merge the maps together
           for (auto & e : event->getDataSet())
           {
-            if (e.second.empty())
-              set.erase(e.first);
-            else
-              set[e.first] = e.second;
+            const auto &old = set.find(e);
+            if (old != set.end())
+              set.erase(old);
+            if (!e.m_removed)
+              set.insert(e);
           }
           
           // Set the new set to the event
@@ -250,8 +251,8 @@ namespace mtconnect {
         
         for (auto it = eventSet.begin(); it != eventSet.end(); )
         {
-          const auto v = set.find(it->first);
-          if (v == set.end() || v->second != it->second)
+          const auto v = set.find(*it);
+          if (v == set.end() || !v->same(*it))
           {
             it++;
           }

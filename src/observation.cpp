@@ -34,7 +34,7 @@ using namespace std;
 namespace mtconnect {
   static std::mutex g_attributeMutex;
   static dlib::logger g_logger("Observation");
-  
+
   const string Observation::SLevels[NumLevels] =
   {
     "Normal",
@@ -296,9 +296,13 @@ namespace mtconnect {
       while (regex_search(rest, m, tokenizer))
       {
         string key, value;
+        bool removed = false;
         if (!m[3].matched) {
           key = m[1];
-          value.clear();
+          if (!m[2].matched)
+            removed = true;
+          else
+            value.clear();
         } else {
           key = m[1];
           string v = m[3];
@@ -332,7 +336,7 @@ namespace mtconnect {
         }
         
         // Map the value.
-        m_dataSet[key] = value;
+        m_dataSet.emplace(key, value, removed);
         
         // Parse the rest of the string...
         rest = m.suffix();

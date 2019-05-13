@@ -846,8 +846,12 @@ namespace mtconnect {
     {
       const DataSet &set = result->getDataSet();
       for (auto &e : set) {
-        addSimpleElement(writer, "Entry", e.second,
-                         {{ "key", e.first }});
+        map<string,string> attrs = {{ "key", e.m_key }};
+        if (e.m_removed) {
+          attrs["removed"] = "true";
+        }
+        addSimpleElement(writer, "Entry", e.m_value,
+                         attrs);
       }
       
     }
