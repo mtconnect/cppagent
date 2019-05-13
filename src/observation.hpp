@@ -60,7 +60,7 @@ namespace mtconnect {
     }
     
     bool same(const DataSetEntry &other) const {
-      return m_key == other.m_key and m_value == other.m_value and
+      return m_key == other.m_key && m_value == other.m_value &&
         m_removed == other.m_removed;
     }
   };
