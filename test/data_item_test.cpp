@@ -46,8 +46,8 @@ public:
   void testFilter();
   void testReferences();
   
-  void setUp();
-  void tearDown();
+  SET_UP();
+  TEAR_DOWN();
   
   CPPUNIT_TEST_SUITE(DataItemTest);
   CPPUNIT_TEST(testGetters);
