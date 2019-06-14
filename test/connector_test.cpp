@@ -152,8 +152,9 @@ void ConnectorTest::testConnection()
 {
   CPPUNIT_ASSERT(m_connector->m_disconnected);
   start();
-  
-  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+
+  auto res = m_server->accept(m_serverSocket);
+  CPPUNIT_ASSERT_EQUAL(0, res);
   this_thread::sleep_for(100ms);
   CPPUNIT_ASSERT(m_serverSocket.get());
   CPPUNIT_ASSERT(!m_connector->m_disconnected);
@@ -165,7 +166,8 @@ void ConnectorTest::testDataCapture()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  auto res = m_server->accept(m_serverSocket);
+  CPPUNIT_ASSERT_EQUAL(0, res);
   CPPUNIT_ASSERT(m_serverSocket.get());
   
   string command("Hello Connector\n");
@@ -183,7 +185,8 @@ void ConnectorTest::testDisconnect()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  auto res = m_server->accept(m_serverSocket);
+  CPPUNIT_ASSERT_EQUAL(0, res);
   this_thread::sleep_for(1000ms);
   CPPUNIT_ASSERT(m_serverSocket.get());
   CPPUNIT_ASSERT(!m_connector->m_disconnected);
@@ -198,7 +201,8 @@ void ConnectorTest::testProtocolCommand()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  auto res = m_server->accept(m_serverSocket);
+  CPPUNIT_ASSERT_EQUAL(0, res);
   CPPUNIT_ASSERT(m_serverSocket.get());
   
   const auto cmd = "* Hello Connector\n";
@@ -215,18 +219,21 @@ void ConnectorTest::testHeartbeat()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  auto res = m_server->accept(m_serverSocket);
+  CPPUNIT_ASSERT_EQUAL(0, res);
   CPPUNIT_ASSERT(m_serverSocket.get());
   
   // Receive initial heartbeat request "* PING\n"
   char buf[1024] = {0};
-  CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
+  auto numRead = m_serverSocket->read(buf, 1023, 5000);
+  CPPUNIT_ASSERT_EQUAL(7L, numRead);
   buf[7] = '\0';
   CPPUNIT_ASSERT(strcmp(buf, "* PING\n") == 0);
   
   // Respond to the heartbeat of 1 second
   const auto pong = "* PONG 1000\n";
-  CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
+  auto written = (size_t)m_serverSocket->write(pong, strlen(pong));
+  CPPUNIT_ASSERT_EQUAL(strlen(pong), written);
   this_thread::sleep_for(1000ms);
   
   CPPUNIT_ASSERT(m_connector->heartbeats());
@@ -256,7 +263,8 @@ void ConnectorTest::testHeartbeatPong()
     
     // Respond to the heartbeat of 1 second
     const auto pong = "* PONG 1000\n";
-    CPPUNIT_ASSERT_EQUAL(strlen(pong), (size_t) m_serverSocket->write(pong, strlen(pong)));
+    auto written = (size_t)m_serverSocket->write(pong, strlen(pong));
+    CPPUNIT_ASSERT_EQUAL(strlen(pong), written);
     this_thread::sleep_for(10ms);
     
     CPPUNIT_ASSERT(!m_connector->m_disconnected);
@@ -278,17 +286,20 @@ void ConnectorTest::testLegacyTimeout()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  auto res = m_server->accept(m_serverSocket);
+  CPPUNIT_ASSERT_EQUAL(0, res);
   CPPUNIT_ASSERT(m_serverSocket.get());
   
   char buf[1024] = {0};
-  CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 5000));
+  auto numRead = m_serverSocket->read(buf, 1023, 5000);
+  CPPUNIT_ASSERT_EQUAL(7L, numRead);
   buf[7] = '\0';
   CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
   
   // Write some data...
   const auto cmd = "* Hello Connector\n";
-  CPPUNIT_ASSERT_EQUAL(strlen(cmd), (size_t) m_serverSocket->write(cmd, strlen(cmd)));
+  auto written = (size_t)m_serverSocket->write(cmd, strlen(cmd));
+  CPPUNIT_ASSERT_EQUAL(strlen(cmd), written);
   
   // No pings, but timeout after 5 seconds of silence
   this_thread::sleep_for(11000ms);
@@ -336,20 +347,22 @@ void ConnectorTest::testSendCommand()
   // Start the accept thread
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  auto res = m_server->accept(m_serverSocket);
+  CPPUNIT_ASSERT_EQUAL(0, res);
   CPPUNIT_ASSERT(m_serverSocket.get());
   
   // Receive initial heartbeat request "* PING\n"
   char buf[1024];
-  CPPUNIT_ASSERT_EQUAL(7L, m_serverSocket->read(buf, 1023, 1000));
+  auto numRead = m_serverSocket->read(buf, 1023, 1000);
+  CPPUNIT_ASSERT_EQUAL(7L, numRead);
   buf[7] = '\0';
   CPPUNIT_ASSERT(!strcmp(buf, "* PING\n"));
   this_thread::sleep_for(200ms);
 
   CPPUNIT_ASSERT(m_connector->isConnected());
   m_connector->sendCommand("Hello There;");
+
   auto len = m_serverSocket->read(buf, 1023, 1000);
-  
   CPPUNIT_ASSERT_EQUAL(15L, len);
   buf[15] = '\0';
   CPPUNIT_ASSERT(!strcmp(buf, "* Hello There;\n"));
@@ -370,7 +383,8 @@ void ConnectorTest::testIPV6Connection()
   CPPUNIT_ASSERT(m_connector->m_disconnected);
   start();
   
-  CPPUNIT_ASSERT_EQUAL(0, m_server->accept(m_serverSocket));
+  auto res = m_server->accept(m_serverSocket);
+  CPPUNIT_ASSERT_EQUAL(0, res);
   this_thread::sleep_for(100ms);
   CPPUNIT_ASSERT(m_serverSocket.get());
   CPPUNIT_ASSERT(!m_connector->m_disconnected);
