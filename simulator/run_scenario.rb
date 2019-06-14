@@ -39,7 +39,7 @@ OptionParser.new do |opts|
     fast = v
   end
   
-  opts.on('-s', '--server [server]', OptionParser::String, 'Server IP port to bind to (default: 0.0.0.0)') do |v|
+  opts.on('-s', '--server [server]', String, 'Server IP port to bind to (default: 0.0.0.0)') do |v|
     server = v
   end
   
