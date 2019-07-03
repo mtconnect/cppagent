@@ -789,37 +789,39 @@ To specify the duration of the static, indicate it with an `@` sign after the ti
 
 A new feature in version 1.5 is the `DATA_SET` representation which allows for key value pairs to be given. The protocol is similar to time series where each pair is space delimited. The agent automatically removes duplicate values from the stream and allows for addition, deletion and resetting of the values. The format is as follows:
 
-	2014-09-29T23:59:33.460470Z|vars|v1:10 v2:20 v3:30
+	2014-09-29T23:59:33.460470Z|vars|v1=10 v2=20 v3=30
 
 This will create a set of three values. To remove a value
 
-	2014-09-29T23:59:33.460470Z|vars|v2 v3:
+	2014-09-29T23:59:33.460470Z|vars|v2 v3=
 
-This will remove v2 and v3. If text after the colon `:` is empty or the `:` is not given, the value is deleted. To remove all the values, use `RESET` as follows:
+This will remove v2 and v3. If text after the equal `=` is empty or the `=` is not given, the value is deleted. To clear the set, specify a `resetTriggered` value such as `MANUAL` or `DAY` by preceeding it with a colon `:` at the beginning of the line.
 
-	2014-09-29T23:59:33.460470Z|vars|RESET
+	2014-09-29T23:59:33.460470Z|vars|:MANUAL
 
 This will remove all the values from the current set. The set can also be reset to a specific set of values:
 
-	2014-09-29T23:59:33.460470Z|vars|RESET|v5:1 v6:2
+	2014-09-29T23:59:33.460470Z|vars|:MANUAL v5=1 v6=2
 
 This will remove all the old values from the set and set the current set. Values will accumulate when addition pairs are given as in:
 
-	2014-09-29T23:59:33.460470Z|vars|v8:1 v9:2 v5:10
+	2014-09-29T23:59:33.460470Z|vars|v8=1 v9=2 v5=10
 
-This will add values for v8 and v9 and update the value for v5 to 10. If the values are duplcated they will be removed from the stream unless `RESET` is given:
+This will add values for v8 and v9 and update the value for v5 to 10. If the values are duplcated they will be removed from the stream unless a `resetTriggered` value is given.
 
-	2014-09-29T23:59:33.460470Z|vars|v8:1 v9:2 v5:10
+	2014-09-29T23:59:33.460470Z|vars|v8=1 v9=2 v5=0
 
 Will be detected as a duplicate with respect to the previous values and will be removed. If a partial update is given and the other values are duplicates, then will be stripped:
 
-	2014-09-29T23:59:33.460470Z|vars|v8:1 v9:3 v5:10
+	2014-09-29T23:59:33.460470Z|vars|v8=1 v9=3 v5=10
 
 Will be effectively the same as specifying:
 
-	2014-09-29T23:59:33.460470Z|vars|v9:2
+	2014-09-29T23:59:33.460470Z|vars|v9=2
 
 And the streams will only have the one value when a sample is request is made at that point in the stream.
+
+When the `discrete` flag is set to `true` in the data item, all change tracking is ignored and each set is treated as if it is new.
 
 Assets
 -----

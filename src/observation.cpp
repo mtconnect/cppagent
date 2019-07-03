@@ -245,7 +245,7 @@ namespace mtconnect {
       }
       else if (m_dataItem->isDataSet())
       {
-        m_attributes.push_back(AttributeItem("sampleCount", intToString(m_dataSet.size())));
+        m_attributes.push_back(AttributeItem("count", intToString(m_dataSet.size())));
         m_sampleCount = m_dataSet.size();
       }
       else if (m_dataItem->isAssetChanged() || m_dataItem->isAssetRemoved())
@@ -406,16 +406,20 @@ namespace mtconnect {
       string set = value;
       
       // Check for reset triggered
-      string trig(set);
-      auto found = trig.find_first_of('|');
-      if (found != string::npos) trig.erase(found);
-      if (trig == "RESET")
+      if (set[0] == ':')
       {
-        m_resetTriggered = trig;
-        if (found == string::npos)
-          set.clear();
-        else
-          set.erase(0, found + 1);
+        auto found = set.find_first_of(' ');
+        string trig(set);
+        if (found != string::npos) trig.erase(found);
+        trig.erase(0, 1);
+        if (!trig.empty())
+        {
+          m_resetTriggered = trig;
+          if (found != string::npos)
+            set.erase(0, found + 1);
+          else
+            set.clear();
+        }
       }
       
       parseDataSet(set);

@@ -319,10 +319,10 @@ namespace mtconnect {
             (dataItem->isCondition() ||
              dataItem->isAlarm() ||
              dataItem->isMessage() ||
-             dataItem->isTimeSeries() ||
-             dataItem->isDataSet()) )
+             dataItem->isTimeSeries()))
         {
           getline(toParse, rest);
+          value = inputValue + "|" + rest;
           if (rest.size() > 0)
             value = inputValue + "|" + rest;
           else
@@ -331,7 +331,7 @@ namespace mtconnect {
         }
         else
         {
-          if (m_upcaseValue)
+          if (m_upcaseValue && !dataItem->isDataSet())
           {
             value.resize(inputValue.length());
             transform(inputValue.begin(), inputValue.end(), value.begin(), ::toupper);
