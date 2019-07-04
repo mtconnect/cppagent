@@ -14,7 +14,7 @@ Build Dependencies
     $ sudo apt-get -y install git build-essential cmake libxml2-dev libcppunit-dev ruby curl
 
 
-Download from github
+Clone from github
 -----
 
 	$ mkdir agent; cd agent
