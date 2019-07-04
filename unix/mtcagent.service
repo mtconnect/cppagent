@@ -5,7 +5,7 @@ Requires/After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/etc/mtconnect/bin
-ExecStart=/etc/mtconnect/bin/agent run /etc/mtconnect/bin/agent.cfg
+ExecStart=/usr/local/bin/agent run /etc/mtconnect/bin/agent.cfg
 User=mtconnect
 Group=mtconnect
 Restart=always

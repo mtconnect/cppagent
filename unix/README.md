@@ -32,6 +32,10 @@ Buiid the agent
 
 The agent is now in the `agent` directory.
 
+Install the agent to /usr/local/bin:
+
+    $ sudo make install 
+
 Optional Tests
 -----
 
@@ -42,6 +46,7 @@ If you want to run the tests, do the following:
 
 
 > Note: make will by default build both targets
+
     $ make 
 	
 
@@ -52,10 +57,16 @@ Create a user for the mtconnect service to run under
 
     $ sudo useradd -r -s /bin/false mtconnect
 
+Make a logging directory:
+
+    $ sudo mkdir /var/log/mtconnect
+    $ sudo chown mtconnect:mtconnect /var/log/mtconnect
+
 Create a directory for the agent
 
-    $ sudo mkdir -p /etc/mtconnect/bin 
-    $ sudo cp agent/agent ../src/agent.cfg /etc/mtconnect/bin/
+    $ sudo mkdir -p /etc/mtconnect/cfg 
+    $ sudo cp ../unix/agent.cfg /etc/mtconnect/cfg/
+	$ sudo cp agent/agent /usr/local/bin/
     $ sudo cp -r ../styles ../schemas ../simulator /etc/mtconnect/
     $ sudo chown -R mtconnect:mtconnect /etc/mtconnect
 
