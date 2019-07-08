@@ -790,8 +790,12 @@ void XmlPrinter::addComponentStream(xmlTextWriterPtr writer, Component *componen
   THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST "ComponentStream"));
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "component", 
                                                   BAD_CAST component->getClass().c_str()));
-  THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", 
+  if (!component->getName().empty()) 
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "name", 
                                                   BAD_CAST component->getName().c_str()));
+  }
+  
   THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST "componentId", 
                                                   BAD_CAST component->getId().c_str()));
 }
