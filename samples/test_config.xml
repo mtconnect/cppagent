@@ -82,7 +82,7 @@
             <DataItem type="LOGIC_PROGRAM" category="CONDITION" id="lp" />
           </DataItems>
           <Components>
-            <Path name="path" id="path">
+            <Path id="path">
               <DataItems>
                 <DataItem type="BLOCK" category="EVENT" id="p1" name="block"/>
                 <DataItem type="CONTROLLER_MODE" category="EVENT" id="p2" name="mode"/>

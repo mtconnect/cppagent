@@ -473,9 +473,11 @@ void AgentTest::testEmptyStream()
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "UNAVAILABLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                      "//m:ComponentStream[@name='path']/m:Condition/m:Unavailable", 0);
+                                      "//m:ComponentStream[@componentId='path']@name", 0);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                      "//m:ComponentStream[@name='path']/m:Condition/m:Unavailable@qualifier",
+                                      "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable", 0);
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
+                                      "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier",
                                       0);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode", "SPINDLE");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ToolGroup", "UNAVAILABLE");
