@@ -517,6 +517,8 @@ namespace mtconnect {
     auto ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
     auto conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
     auto upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
+    auto filterDuplicates = get_bool_with_default(reader, "FilterDuplicates", false);
+
     m_monitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
     m_minimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
     m_pretty = get_bool_with_default(reader, "Pretty", false);
@@ -603,7 +605,8 @@ namespace mtconnect {
                  reconnectInterval,
                  ignoreTimestamps,
                  conversionRequired,
-                 upcaseValue);
+                 upcaseValue,
+                 filterDuplicates);
     
     // Files served by the Agent... allows schema files to be served by
     // agent.
@@ -631,7 +634,8 @@ namespace mtconnect {
                                         std::chrono::milliseconds reconnectInterval,
                                         bool ignoreTimestamps,
                                         bool conversionRequired,
-                                        bool upcaseValue)
+                                        bool upcaseValue,
+                                        bool filterDuplicates)
   {
     Device *device;
     if (reader.is_block_defined("Adapters"))
@@ -690,7 +694,7 @@ namespace mtconnect {
         if (adapter.is_key_defined("SerialNumber"))
           device->setSerialNumber(adapter["SerialNumber"]);
         
-        adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", adp->isDupChecking()));
+        adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", filterDuplicates));
         adp->setAutoAvailable(get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
         adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", ignoreTimestamps ||
                                                        adp->isIgnoringTimestamps()));

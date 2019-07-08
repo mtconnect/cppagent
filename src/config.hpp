@@ -64,7 +64,8 @@ namespace mtconnect {
                       std::chrono::milliseconds reconnectInterval,
                       bool ignoreTimestamps,
                       bool conversionRequired,
-                      bool upcaseValue);
+                      bool upcaseValue,
+                      bool filterDuplicates);
     void loadAllowPut(dlib::config_reader::kernel_1a &reader);
     void loadNamespace(dlib::config_reader::kernel_1a &reader,
                        const char *namespaceType, XmlPrinter *printer,

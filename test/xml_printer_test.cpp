@@ -297,19 +297,19 @@ void XmlPrinterTest::testPrintCurrent()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                     "//m:ComponentStream[@name='Z']/m:Samples/m:Position[@name='Zcom']", "0.0003");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:ComponentStream[@name='path']/m:Events/m:Block",
+                                    "//m:ComponentStream[@componentId='path']/m:Events/m:Block",
                                     "x-0.132010 y-0.158143");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:ComponentStream[@name='path']/m:Events/m:Execution",
+                                    "//m:ComponentStream[@componentId='path']/m:Events/m:Execution",
                                     "READY");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:ComponentStream[@name='path']/m:Events/m:ControllerMode",
+                                    "//m:ComponentStream[@componentId='path']/m:Events/m:ControllerMode",
                                     "AUTOMATIC");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:ComponentStream[@name='path']/m:Events/m:Line",
+                                    "//m:ComponentStream[@componentId='path']/m:Events/m:Line",
                                     "0");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:ComponentStream[@name='path']/m:Events/m:Program",
+                                    "//m:ComponentStream[@componentId='path']/m:Events/m:Program",
                                     "/home/mtconnect/simulator/spiral.ngc");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                     "//m:ComponentStream[@name='power']/m:Events/m:PowerState",
@@ -535,9 +535,9 @@ void XmlPrinterTest::testPrintSample()
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                     "//m:ComponentStream[@name='Y']/m:Samples/m:Position[@name='Ycom'][2]",
                                     "-0.894742");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Line",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']/m:Events/m:Line",
                                     "229");
-  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='path']/m:Events/m:Block",
+  CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']/m:Events/m:Block",
                                     "x-1.149250 y1.048981");
 }
 
@@ -584,13 +584,13 @@ void XmlPrinterTest::testCondition()
                                     "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeSeverity",
                                     "1");
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:ComponentStream[@name='path']/m:Condition/m:Normal",
+                                    "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal",
                                     0);
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:ComponentStream[@name='path']/m:Condition/m:Normal@qualifier",
+                                    "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal@qualifier",
                                     0);
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
-                                    "//m:ComponentStream[@name='path']/m:Condition/m:Normal@nativeCode",
+                                    "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal@nativeCode",
                                     0);
   CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
                                     "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeCode",
