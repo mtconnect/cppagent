@@ -52,7 +52,7 @@ public:
   void testResetWithNoItems();
   void testDuplicateCompression();
   void testQuoteDelimeter();
-  void testSampleWithDiscrete();
+  void testDiscrete();
   void testProbe();
 
   SET_UP();
@@ -73,7 +73,7 @@ public:
   CPPUNIT_TEST(testResetWithNoItems);
   CPPUNIT_TEST(testDuplicateCompression);
   CPPUNIT_TEST(testQuoteDelimeter);
-  CPPUNIT_TEST(testSampleWithDiscrete);
+  CPPUNIT_TEST(testDiscrete);
   CPPUNIT_TEST(testProbe);
   
   CPPUNIT_TEST_SUITE_END();
@@ -289,7 +289,7 @@ void DataSetTest::testBadData()
   CPPUNIT_ASSERT_EQUAL((string) "xxx", map1.find("b3"_E)->m_value);
 }
 
-#define ASSETT_DATA_SET_ENTRY(doc, var, key, expected) \
+#define ASSERT_DATA_SET_ENTRY(doc, var, key, expected) \
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:" \
                var "/m:Entry[@key='" key "']", expected)
 
@@ -311,9 +311,9 @@ void DataSetTest::testCurrent()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,"//m:DeviceStream//m:VariableDataSet"
                                       "[@dataItemId='v1']@count", "3");
   }
@@ -322,9 +322,9 @@ void DataSetTest::testCurrent()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "6");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "6");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,"//m:DeviceStream//m:VariableDataSet"
                                       "[@dataItemId='v1']@count", "3");
   }
@@ -333,7 +333,7 @@ void DataSetTest::testCurrent()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "d", "10");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "d", "10");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,"//m:DeviceStream//m:VariableDataSet"
                                       "[@dataItemId='v1']@count", "1");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,
@@ -347,8 +347,8 @@ void DataSetTest::testCurrent()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "6");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "d", "10");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "6");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "d", "10");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc,"//m:DeviceStream//m:VariableDataSet"
                                       "[@dataItemId='v1']@count", "2");
   }
@@ -368,22 +368,22 @@ void DataSetTest::testSample()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]@count", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[3]", "c", "5");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[3]", "c", "5");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]@count", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "c", "8");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "c", "8");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@count", "1");
   }
   
   m_agentTestHelper->m_path = "/current";
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "3");
   }
   
@@ -393,16 +393,16 @@ void DataSetTest::testSample()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]@count", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[3]", "c", "5");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[3]", "c", "5");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]@count", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "c", "8");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "c", "8");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@count", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "b", "5");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "c", "");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "b", "5");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "c", "");
  
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]/m:Entry[@key='c']@removed", nullptr);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]/m:Entry[@key='c']@removed", "true");
@@ -413,8 +413,8 @@ void DataSetTest::testSample()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "5");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "5");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "2");
   }
   
@@ -443,39 +443,39 @@ void DataSetTest::testCurrentAt()
   
   {
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq));
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq).c_str());
   }
   
   {
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 1));
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "5");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "5");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 1).c_str());
   }
   
   {
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 2));
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 2).c_str());
   }
   
   {
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 3));
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "xxx");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "10");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "xxx");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "10");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 3).c_str());
   }
   
   {
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 4));
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "///m:VariableDataSet@resetTriggered",
                                       "MANUAL");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 4).c_str());
@@ -483,16 +483,16 @@ void DataSetTest::testCurrentAt()
   
   {
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 5));
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 5).c_str());
   }
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
   }
 }
@@ -543,21 +543,21 @@ void DataSetTest::testResetWithNoItems()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]@count", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[3]", "c", "5");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[3]", "c", "5");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]@count", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "c", "8");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "c", "8");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@count", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "a", "xxx");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "b", "10");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "a", "xxx");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "b", "10");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@count", "2");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[6]", "");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[6]@count", "0");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[6]@resetTriggered", "MANUAL");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[7]", "r", "good_bye");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[7]", "r", "good_bye");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[7]@count", "1");
   }
   
@@ -580,14 +580,14 @@ void DataSetTest::testDuplicateCompression()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[2]@count", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[3]", "d", "4");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[3]", "d", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[3]@count", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "b", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "e", "4");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "b", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[4]", "e", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@count", "2");
   }
   
@@ -595,11 +595,11 @@ void DataSetTest::testDuplicateCompression()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "d", "4");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "e", "4");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "d", "4");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "e", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "5");
   }
   
@@ -609,11 +609,11 @@ void DataSetTest::testDuplicateCompression()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "b", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "c", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "d", "4");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "e", "4");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "b", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "d", "4");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "e", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@count", "5");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@resetTriggered", "MANUAL");
     
@@ -623,11 +623,11 @@ void DataSetTest::testDuplicateCompression()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "d", "4");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "e", "4");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "d", "4");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "e", "4");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "5");
   }
 }
@@ -643,18 +643,18 @@ void DataSetTest::testQuoteDelimeter()
   
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1 2 3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "x y z");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "cats and dogs");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1 2 3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "x y z");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "cats and dogs");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "3");
   }
   
   m_adapter->processData("TIME|vars|b='u v w' c={chickens and horses");
   {
     PARSE_XML_RESPONSE;
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1 2 3");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "u v w");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "cats and dogs");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1 2 3");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "u v w");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "cats and dogs");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "3");
   }
   
@@ -662,14 +662,14 @@ void DataSetTest::testQuoteDelimeter()
   {
     PARSE_XML_RESPONSE;
     
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "V123", "x1.111 2.2222 3.3333");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "V124", "x1.111 2.2222 3.3333");
-    ASSETT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "V1754", "\"Part 1\" 2.2222 3.3333");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "V123", "x1.111 2.2222 3.3333");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "V124", "x1.111 2.2222 3.3333");
+    ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "V1754", "\"Part 1\" 2.2222 3.3333");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "3");
   }
 }
 
-void DataSetTest::testSampleWithDiscrete()
+void DataSetTest::testDiscrete()
 {
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   CPPUNIT_ASSERT(m_adapter);
@@ -686,17 +686,26 @@ void DataSetTest::testSampleWithDiscrete()
   {
     PARSE_XML_RESPONSE;
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[1]", "UNAVAILABLE");
-    ASSETT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "b", "2");
-    ASSETT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "c", "3");
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "c", "3");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[2]@count", "3");
-    ASSETT_DATA_SET_ENTRY(doc, "BlockDataSet[3]", "c", "5");
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[3]", "c", "5");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[3]@count", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "BlockDataSet[4]", "a", "1");
-    ASSETT_DATA_SET_ENTRY(doc, "BlockDataSet[4]", "c", "8");
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[4]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[4]", "c", "8");
     CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[4]@count", "2");
   }
-  
+
+  m_agentTestHelper->m_path = "/current";
+
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[1]", "a", "1");
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[1]", "b", "2");
+    ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[1]", "c", "8");
+    CPPUNITTEST_ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[1]@count", "3");
+  }
 }
 
 void DataSetTest::testProbe()
