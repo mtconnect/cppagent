@@ -233,54 +233,94 @@ namespace mtconnect {
   }
   
   
+#ifdef _WINDOWS
+  static time_t GetFileModificationTime(const string &file)
+  {
+    FILETIME createTime, accessTime, writeTime = { 0, 0 };
+    auto handle = CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+      g_logger << LWARN << "Could not find file: " << file;
+      return 0;
+    }
+    if (!GetFileTime(handle, &createTime, &accessTime, &writeTime))
+    {
+      g_logger << LWARN << "GetFileTime failed for: " << file;
+      writeTime = { 0, 0 };
+    }
+    CloseHandle(handle);
+    
+    uint64_t windowsFileTime = (writeTime.dwLowDateTime | uint64_t(writeTime.dwHighDateTime) << 32);
+    
+    return windowsFileTime / 10000000ull - 11644473600ull;
+  }
+#else
+  static time_t GetFileModificationTime(const string& file)
+  {
+    struct stat buf = { 0 };
+    if (stat(file.c_str(), &buf) != 0)
+    {
+      g_logger << LWARN << "Cannot stat file (" << errno << "): " << file;
+      perror("Cannot stat file");
+      return 0;
+    }
+    
+    return buf.st_mtime;
+  }
+#endif
+
   void AgentConfiguration::monitorThread()
   {
-    struct stat devices_at_start = {0}, cfg_at_start = {0};
-    
-    if (stat(m_configFile.c_str(), &cfg_at_start))
-      g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
-    if (stat(m_devicesFile.c_str(), &devices_at_start))
-      g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
-    
+    time_t devices_at_start = 0, cfg_at_start = 0;
+
     g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile <<
     ", will warm start if they change.";
+    
+    if ((cfg_at_start = GetFileModificationTime(m_configFile)) == 0) {
+      g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
+      return;
+    }
+    if ((devices_at_start = GetFileModificationTime(m_devicesFile)) == 0) {
+      g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
+      return;
+    }
+        
+    g_logger << LTRACE << "Configuration start time: " << cfg_at_start;
+    g_logger << LTRACE << "Device start time: " << devices_at_start;
+    
     
     bool changed = false;
     
     // Check every 10 seconds
-    do
-    {
-      this_thread::sleep_for(10s);
+    do {
+      dlib::sleep(10000);
       
-      struct stat devices = {0}, cfg = {0};
+      time_t devices = 0, cfg = 0;
       bool check = true;
       
-      if (stat(m_configFile.c_str(), &cfg))
-      {
+      if ((cfg = GetFileModificationTime(m_configFile)) == 0) {
         g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", retrying in 10 seconds";
         check = false;
       }
       
-      if (stat(m_devicesFile.c_str(), &devices))
-      {
+      if ((devices = GetFileModificationTime(m_devicesFile)) == 0) {
         g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", retrying in 10 seconds";
         check = false;
       }
       
+      g_logger << LTRACE << "Configuration times: " << cfg_at_start << " -- " << cfg;
+      g_logger << LTRACE << "Device times: " << devices_at_start << " -- " << devices;
+      
+      
       // Check if the files have changed.
-      if (check &&
-          (cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime) )
-      {
-        auto now = time(nullptr);
-        g_logger << LWARN <<
-        "Dected change in configuarion files. Will reload when youngest file is at least " <<
-        m_minimumConfigReloadAge
-        << " seconds old";
-        g_logger << LWARN << "    Devices.xml file modified " << (now - devices.st_mtime) << " seconds ago";
-        g_logger << LWARN << "    ...cfg file modified " << (now - cfg.st_mtime) << " seconds ago";
+      if (check && (cfg_at_start != cfg || devices_at_start != devices)) {
+        time_t now = time(NULL);
+        g_logger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least " << m_minimumConfigReloadAge
+        <<" seconds old";
+        g_logger << LWARN << "    Devices.xml file modified " << (now - devices) << " seconds ago";
+        g_logger << LWARN << "    ...cfg file modified " << (now - cfg) << " seconds ago";
         
-        changed = (now - cfg.st_mtime) > m_minimumConfigReloadAge &&
-        (now - devices.st_mtime) > m_minimumConfigReloadAge;
+        changed = (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
       }
     } while (!changed && m_agent->is_running());
     
@@ -413,6 +453,17 @@ namespace mtconnect {
     {
       set_all_logging_output_streams(cout);
       set_all_logging_levels(LDEBUG);
+      
+      if (reader.is_block_defined("logger_config"))
+      {
+        const config_reader::kernel_1a& cr = reader.block("logger_config");
+        
+        if (cr.is_key_defined("logging_level")) {
+          auto level = string_to_log_level(cr["logging_level"]);
+          if (level.priority < LDEBUG.priority)
+            set_all_logging_levels(level);
+        }
+      }
     }
     else
     {
