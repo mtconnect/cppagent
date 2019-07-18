@@ -172,46 +172,100 @@ AgentConfiguration::~AgentConfiguration()
   set_all_logging_output_streams(cout);
 }
 
+#ifdef _WINDOWS
+static time_t GetFileModificationTime(const string &file)
+{
+  FILETIME createTime, accessTime, writeTime = { 0, 0 };
+
+  auto handle = CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+  if (handle == INVALID_HANDLE_VALUE)
+  {
+    sLogger << LWARN << "Could not find file: " << file;
+    return 0;
+  }
+  if (!GetFileTime(handle, &createTime, &accessTime, &writeTime))
+  {
+    sLogger << LWARN << "GetFileTime failed for: " << file;
+    writeTime = { 0, 0 };
+  }
+  CloseHandle(handle);
+
+  uint64_t windowsFileTime = (writeTime.dwLowDateTime | uint64_t(writeTime.dwHighDateTime) << 32);
+
+  return windowsFileTime / 10000000ull - 11644473600ull;
+}
+#else
+static time_t GetFileModificationTime(const string& file)
+{
+  struct stat buf = { 0 };
+  if (stat(file.c_str(), &buf) != 0)
+  {
+    sLogger << LWARN << "Cannot stat file (" << errno << "): " << file;
+    perror("Cannot stat file");
+    return 0;
+  }
+
+  return buf.st_mtime;
+}
+#endif
+
 void AgentConfiguration::monitorThread()
 {
-  struct stat devices_at_start, cfg_at_start;
-  
-  if (stat(mConfigFile.c_str(), &cfg_at_start) != 0)
-    sLogger << LWARN << "Cannot stat config file: " << mConfigFile << ", exiting monitor";
-  if (stat(mDevicesFile.c_str(), &devices_at_start) != 0)
-    sLogger << LWARN << "Cannot stat devices file: " << mDevicesFile << ", exiting monitor";
-  
+  time_t devices_at_start = 0, cfg_at_start = 0;
+
   sLogger << LDEBUG << "Monitoring files: " << mConfigFile << " and " << mDevicesFile <<
     ", will warm start if they change.";
+
+  if ((cfg_at_start = GetFileModificationTime(mConfigFile)) == 0) {
+	  sLogger << LWARN << "Cannot stat config file: " << mConfigFile << ", exiting monitor";
+    return;
+  }
+  if ((devices_at_start = GetFileModificationTime(mDevicesFile)) == 0) {
+    sLogger << LWARN << "Cannot stat devices file: " << mDevicesFile << ", exiting monitor";
+    return;
+  }
+
+  if (cfg_at_start == 0 && devices_at_start == 0) {
+    sLogger << LWARN << "Could not get times for either file, exiting monitor";
+    return;
+  }
   
+  sLogger << LTRACE << "Configuration start time: " << cfg_at_start;
+  sLogger << LTRACE << "Device start time: " << devices_at_start;
+
+
   bool changed = false;
   
   // Check every 10 seconds
   do {
     dlib::sleep(10000);
     
-    struct stat devices, cfg;
+    time_t devices = 0, cfg = 0;
     bool check = true;
     
-    if (stat(mConfigFile.c_str(), &cfg) != 0) {
+    if ((cfg = GetFileModificationTime(mConfigFile)) == 0) {
       sLogger << LWARN << "Cannot stat config file: " << mConfigFile << ", retrying in 10 seconds";
       check = false;
     }
 
-    if (stat(mDevicesFile.c_str(), &devices) != 0) {
+    if ((devices = GetFileModificationTime(mDevicesFile)) == 0) {
       sLogger << LWARN << "Cannot stat devices file: " << mDevicesFile << ", retrying in 10 seconds";
       check = false;
     }
-    
+
+	  sLogger << LTRACE << "Configuration times: " << cfg_at_start << " -- " << cfg;
+	  sLogger << LTRACE << "Device times: " << devices_at_start << " -- " << devices;
+
+
     // Check if the files have changed.
-    if (check && (cfg_at_start.st_mtime != cfg.st_mtime || devices_at_start.st_mtime != devices.st_mtime)) {
+    if (check && (cfg_at_start != cfg || devices_at_start != devices)) {
       time_t now = time(NULL);
       sLogger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least " << mMinimumConfigReloadAge
                        <<" seconds old";
-      sLogger << LWARN << "    Devices.xml file modified " << (now - devices.st_mtime) << " seconds ago";
-      sLogger << LWARN << "    ...cfg file modified " << (now - cfg.st_mtime) << " seconds ago";
+      sLogger << LWARN << "    Devices.xml file modified " << (now - devices) << " seconds ago";
+      sLogger << LWARN << "    ...cfg file modified " << (now - cfg) << " seconds ago";
       
-      changed = (now - cfg.st_mtime) > mMinimumConfigReloadAge && (now - devices.st_mtime) > mMinimumConfigReloadAge;
+      changed = (now - cfg) > mMinimumConfigReloadAge && (now - devices) > mMinimumConfigReloadAge;
     }
   } while (!changed && mAgent->is_running());
 
@@ -352,6 +406,17 @@ void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &aReader
   if (mIsDebug) {
     set_all_logging_output_streams(cout);
     set_all_logging_levels(LDEBUG);
+
+	if (aReader.is_block_defined("logger_config"))
+	{
+		const config_reader::kernel_1a& cr = aReader.block("logger_config");
+
+		if (cr.is_key_defined("logging_level")) {
+			auto level = string_to_log_level(cr["logging_level"]);
+			if (level.priority < LDEBUG.priority)
+			set_all_logging_levels(level);
+		}
+	}
   }
   else
   {
