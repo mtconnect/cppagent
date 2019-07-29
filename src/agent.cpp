@@ -1406,7 +1406,7 @@ namespace mtconnect {
         content.append("\r\n");
         out.setf(ios::dec, ios::basefield);
         str << "--" << boundary << "\r\n"
-          "Content-type: text/xml\r\n"
+          "Content-type: " << printer->mimeType() << "\r\n"
           "Content-length: " << content.length() << "\r\n\r\n"
           << content;
         
@@ -1497,7 +1497,7 @@ namespace mtconnect {
         ostringstream str;
         string content = printError(printer, aError.m_code, aError.m_message);
         str << "--" << boundary << "\r\n"
-        "Content-type: text/xml\r\n"
+        "Content-type: " << printer->mimeType() << "\r\n"
         "Content-length: " << content.length() << "\r\n\r\n"
         << content;
         
@@ -1516,7 +1516,7 @@ namespace mtconnect {
         ostringstream str;
         string content = printError(printer, "INTERNAL_ERROR", "Unknown error occurred during streaming");
         str << "--" << boundary << "\r\n"
-        "Content-type: text/xml\r\n"
+        "Content-type: " << printer->mimeType() << "\r\n"
         "Content-length: " << content.length() << "\r\n\r\n"
         << content;
         
