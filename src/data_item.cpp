@@ -39,9 +39,9 @@ namespace mtconnect {
     { "MINUTE", 60.0 },
     { "HOUR", 3600.0 }
   };
-
+  
   // DataItem public methods
-  DataItem::DataItem(std::map<string, string> const &attributes) : 
+  DataItem::DataItem(std::map<string, string> const &attributes) :
   m_representation(VALUE),
   m_hasNativeScale(false),
   m_isDiscrete(false),
@@ -419,6 +419,9 @@ namespace mtconnect {
       
       if (numerator == "REVOLUTION" && denominator == "SECOND")
         m_conversionFactor = 60.0;
+      else if (numerator == "POUND" && denominator == "INCH^2" && m_units == "PASCAL") {
+        m_conversionFactor = 6894.76;
+      }
       else if (carotLoc == string::npos)
         m_conversionFactor = simpleFactor(numerator) / simpleFactor(denominator);
       else
