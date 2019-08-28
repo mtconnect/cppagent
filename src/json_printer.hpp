@@ -25,8 +25,8 @@ namespace mtconnect {
   class JsonPrinter : public Printer
   {
   public:
-    JsonPrinter(const std::string version = "", bool pretty = false)
-    : Printer(pretty), m_version(version) {}
+    JsonPrinter(const std::string version = "",
+                bool pretty = false);
     virtual ~JsonPrinter() {}
     
     virtual std::string printError(
@@ -64,12 +64,12 @@ namespace mtconnect {
     virtual std::string printCuttingTool(CuttingToolPtr const tool) const override;
     
     virtual std::string mimeType() const override {
-      return "application/mtconnect+json";
+      return "application/json";
     }
     
   protected:
     const std::string &hostname() const;
-    
+    std::string m_schemaVersion;
     std::string m_version;
     std::string m_hostname;
   };

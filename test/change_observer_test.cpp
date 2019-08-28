@@ -28,17 +28,17 @@ TEST_CLASS(ChangeObserverTest)
 {
 protected:
   std::unique_ptr<ChangeSignaler> m_signaler;
-  
+
 public:
   void testAddObserver();
   void testSignalObserver();
   void testCleanup();
   void testChangeSequence();
   void testChangeSequence2();
-  
+
   SET_UP();
   TEAR_DOWN();
-  
+
   CPPUNIT_TEST_SUITE(ChangeObserverTest);
   CPPUNIT_TEST(testAddObserver);
   CPPUNIT_TEST(testSignalObserver);
@@ -56,43 +56,38 @@ void ChangeObserverTest::setUp()
   m_signaler = make_unique<ChangeSignaler>();
 }
 
-
 void ChangeObserverTest::tearDown()
 {
   m_signaler.reset();
 }
 
-
 void ChangeObserverTest::testAddObserver()
 {
   ChangeObserver changeObserver;
-  
+
   CPPUNIT_ASSERT(!m_signaler->hasObserver(&changeObserver));
   m_signaler->addObserver(&changeObserver);
   CPPUNIT_ASSERT(m_signaler->hasObserver(&changeObserver));
 }
 
-
 void ChangeObserverTest::testSignalObserver()
 {
   ChangeObserver changeObserver;
-  
+
   auto const expectedExeTime = 500ms;
   auto const expectedSeq = uint64_t{100};
-  auto threadLambda = [&expectedExeTime, &expectedSeq](ChangeSignaler* changeSignaler)
-  {
+  auto threadLambda = [&expectedExeTime, &expectedSeq](ChangeSignaler *changeSignaler) {
     this_thread::sleep_for(expectedExeTime);
     changeSignaler->signalObservers(expectedSeq);
   };
-  
-  
+
   m_signaler->addObserver(&changeObserver);
   CPPUNIT_ASSERT(!changeObserver.wasSignaled());
   auto workerThread = thread{threadLambda, m_signaler.get()};
-  
+
   auto startTime = chrono::system_clock::now();
   CPPUNIT_ASSERT(changeObserver.wait((expectedExeTime * 2).count())); // Wait to be signalled within twice expected time
-  
+
   // The worker thread was put to sleep for 500 milli-seconds before signalling
   // observers, so at very least the duration should be greater than 500 milli-seconds.
   // The observer should also have received the sequence number 100
@@ -104,12 +99,12 @@ void ChangeObserverTest::testSignalObserver()
     CPPUNIT_ASSERT(changeObserver.wasSignaled());
     workerThread.join();
   }
-  catch(...)
+  catch (...)
   {
     workerThread.join();
     throw;
   }
-  
+
   // Run the same test again but only wait for a shorter period than the
   // thread will take to execute. The observer should not be signalled
   // and the call should fail.
@@ -119,47 +114,44 @@ void ChangeObserverTest::testSignalObserver()
   try
   {
     auto waitResult = changeObserver.wait((expectedExeTime / 2).count()); // Only wait a maximum of 1/2 the expected time
-    
+
     // We can be spuriously woken up, so check that the work was not finished
-    if(waitResult && !changeObserver.wasSignaled())
+    if (waitResult && !changeObserver.wasSignaled())
       waitResult = false;
-    
+
     CPPUNIT_ASSERT(!waitResult);
     CPPUNIT_ASSERT(!changeObserver.wasSignaled());
     workerThread2.join();
   }
-  catch(...)
+  catch (...)
   {
     workerThread2.join();
     throw;
   }
 }
 
-
 void ChangeObserverTest::testCleanup()
 {
   ChangeObserver *changeObserver = nullptr;
-  
+
   {
     changeObserver = new ChangeObserver;
     m_signaler->addObserver(changeObserver);
     CPPUNIT_ASSERT(m_signaler->hasObserver(changeObserver));
     delete changeObserver; // Not setting to nullptr so we can test observer was removed
   }
-  
+
   CPPUNIT_ASSERT(!m_signaler->hasObserver(changeObserver));
 }
-
 
 void ChangeObserverTest::testChangeSequence()
 {
   ChangeObserver changeObserver;
-  
+
   m_signaler->addObserver(&changeObserver);
   CPPUNIT_ASSERT(!changeObserver.wasSignaled());
-  
-  auto threadLambda = [](ChangeSignaler* changeSignaler)
-  {
+
+  auto threadLambda = [](ChangeSignaler *changeSignaler) {
     changeSignaler->signalObservers(uint64_t{100});
     changeSignaler->signalObservers(uint64_t{200});
     changeSignaler->signalObservers(uint64_t{300});
@@ -169,28 +161,26 @@ void ChangeObserverTest::testChangeSequence()
   {
     CPPUNIT_ASSERT(changeObserver.wait(2000));
     CPPUNIT_ASSERT(changeObserver.wasSignaled());
-    
+
     CPPUNIT_ASSERT_EQUAL(uint64_t{100}, changeObserver.getSequence());
-    
+
     // Wait for things to clean up...
     workerThread.join();
   }
-  catch(...)
+  catch (...)
   {
     workerThread.join();
     throw;
   }
 }
 
-
 void ChangeObserverTest::testChangeSequence2()
 {
   ChangeObserver changeObserver;
-  
+
   m_signaler->addObserver(&changeObserver);
-  
-  auto threadLambda = [](ChangeSignaler* changeSignaler)
-  {
+
+  auto threadLambda = [](ChangeSignaler *changeSignaler) {
     changeSignaler->signalObservers(uint64_t{100});
     changeSignaler->signalObservers(uint64_t{200});
     changeSignaler->signalObservers(uint64_t{300});
@@ -203,11 +193,11 @@ void ChangeObserverTest::testChangeSequence2()
     CPPUNIT_ASSERT(changeObserver.wasSignaled());
     this_thread::sleep_for(50ms);
     CPPUNIT_ASSERT_EQUAL(uint64_t{30}, changeObserver.getSequence());
-    
+
     // Wait for things to clean up...
     workerThread.join();
   }
-  catch(...)
+  catch (...)
   {
     workerThread.join();
     throw;

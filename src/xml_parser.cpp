@@ -272,7 +272,7 @@ namespace mtconnect {
         xmlXPathFreeContext(xpathCtx);
       
       g_logger << dlib::LFATAL << "Cannot parse XML file: " << e;
-      throw e;
+      throw;
     }
     catch (...)
     {
@@ -320,7 +320,7 @@ namespace mtconnect {
     catch (string e)
     {
       g_logger << dlib::LFATAL << "Cannot parse XML document: " << e;
-      throw e;
+      throw;
     }
   }
   

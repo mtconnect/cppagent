@@ -25,11 +25,23 @@
 #include "device.hpp"
 #include "composition.hpp"
 #include "sensor_configuration.hpp"
+#include "version.h"
 
 using namespace std;
 using json = nlohmann::json;
 
 namespace mtconnect {
+  
+  JsonPrinter::JsonPrinter(const string version,
+                           bool pretty)
+  : Printer(pretty), m_schemaVersion(version)
+  {
+    char appVersion[32] = {0};
+    std::sprintf(appVersion, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
+            AGENT_VERSION_BUILD);
+    m_version = appVersion;
+  }
+  
   static inline std::string ltrim(std::string s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
       return !std::isspace(ch);
@@ -104,7 +116,8 @@ namespace mtconnect {
                      const string &version,
                      const string &hostname,
                      const unsigned int instanceId,
-                     const unsigned int bufferSize)
+                     const unsigned int bufferSize,
+                     const string &schemaVersion)
   {
     json doc = json::object(
       { 
@@ -112,7 +125,8 @@ namespace mtconnect {
         { "creationTime", getCurrentTime(GMT) },
         { "testIndicator", false },
         { "instanceId", instanceId },
-        { "sender", hostname }
+        { "sender", hostname },
+        { "schemaVersion", schemaVersion }
       });
     if (bufferSize > 0)
       doc["bufferSize"] = bufferSize;
@@ -124,10 +138,11 @@ namespace mtconnect {
                           const unsigned int instanceId,
                           const unsigned int bufferSize,
                           const unsigned int assetBufferSize,
-                          const unsigned int assetCount)
+                          const unsigned int assetCount,
+                          const string &schemaVersion)
   {
     json doc = header(version, hostname,
-                      instanceId, bufferSize);
+                      instanceId, bufferSize, schemaVersion);
     doc["assetBufferSize"] = assetBufferSize;
     doc["assetCount"] = assetCount;
     
@@ -140,10 +155,11 @@ namespace mtconnect {
                            const unsigned int bufferSize,
                            const uint64_t nextSequence,
                            const uint64_t firstSequence,
-                           const uint64_t lastSequence)
+                           const uint64_t lastSequence,
+                           const string &schemaVersion)
   {
     json doc = header(version, hostname,
-                      instanceId, bufferSize);
+                      instanceId, bufferSize, schemaVersion);
     doc["nextSequence"] = nextSequence;
     doc["lastSequence"] = lastSequence;
     doc["firstSequence"] = firstSequence;
@@ -161,7 +177,7 @@ namespace mtconnect {
   {
     json doc = json::object({ { "MTConnectError", {
       { "Header",
-        header(m_version, hostname(), instanceId, bufferSize) },
+        header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion) },
       { "Errors" ,
         {
           { "Error",
@@ -371,7 +387,7 @@ namespace mtconnect {
     json doc = json::object({ { "MTConnectDevices", {
       { "Header",
         probeAssetHeader(m_version, hostname(), instanceId,
-                         bufferSize, assetBufferSize, assetCount) },
+                         bufferSize, assetBufferSize, assetCount, m_schemaVersion) },
       { "Devices", devicesDoc }
     } } });
 
@@ -650,7 +666,7 @@ namespace mtconnect {
     json doc = json::object({ { "MTConnectStreams", {
       { "Header",
         streamHeader(m_version, hostname(), instanceId,
-                         bufferSize, nextSeq, firstSeq, lastSeq) },
+                         bufferSize, nextSeq, firstSeq, lastSeq, m_schemaVersion) },
       { "Streams", streams }
     } } });
     
@@ -864,7 +880,7 @@ namespace mtconnect {
     json doc = json::object({ { "MTConnectAssets", {
       { "Header",
         probeAssetHeader(m_version, hostname(), instanceId,
-                         0, bufferSize, assetCount) },
+                         0, bufferSize, assetCount, m_schemaVersion) },
       { "Assets", assetDoc }
     } } });
     
