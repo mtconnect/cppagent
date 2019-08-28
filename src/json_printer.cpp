@@ -78,7 +78,7 @@ namespace mtconnect {
   static inline void addAttributes(json &doc, const map<string,string> &attrs)
   {
     for (const auto &attr : attrs)
-      doc[string("@") + attr.first] = attr.second;
+      doc[attr.first] = attr.second;
   }
   
   static inline void add(json &doc, const char *key, const string &value)
@@ -96,7 +96,7 @@ namespace mtconnect {
   
   static inline void addText(json &doc, const std::string &text)
   {
-    add(doc, "#text", trim(text));
+    add(doc, "text", trim(text));
   }
 
   
@@ -108,14 +108,14 @@ namespace mtconnect {
   {
     json doc = json::object(
       { 
-        { "@version", version},
-        { "@creationTime", getCurrentTime(GMT) },
-        { "@testIndicator", false },
-        { "@instanceId", instanceId },
-        { "@sender", hostname }
+        { "version", version},
+        { "creationTime", getCurrentTime(GMT) },
+        { "testIndicator", false },
+        { "instanceId", instanceId },
+        { "sender", hostname }
       });
     if (bufferSize > 0)
-      doc["@bufferSize"] = bufferSize;
+      doc["bufferSize"] = bufferSize;
     return doc;
   }
   
@@ -128,8 +128,8 @@ namespace mtconnect {
   {
     json doc = header(version, hostname,
                       instanceId, bufferSize);
-    doc["@assetBufferSize"] = assetBufferSize;
-    doc["@assetCount"] = assetCount;
+    doc["assetBufferSize"] = assetBufferSize;
+    doc["assetCount"] = assetCount;
     
     return doc;
   }
@@ -144,9 +144,9 @@ namespace mtconnect {
   {
     json doc = header(version, hostname,
                       instanceId, bufferSize);
-    doc["@nextSequence"] = nextSequence;
-    doc["@lastSequence"] = lastSequence;
-    doc["@firstSequence"] = firstSequence;
+    doc["nextSequence"] = nextSequence;
+    doc["lastSequence"] = lastSequence;
+    doc["firstSequence"] = firstSequence;
     return doc;
   }
 
@@ -166,8 +166,8 @@ namespace mtconnect {
         {
           { "Error",
             {
-              { "@errorCode", errorCode },
-              { "#text", trim(errorText) }
+              { "errorCode", errorCode },
+              { "text", trim(errorText) }
             }
           }
         }
@@ -185,9 +185,9 @@ namespace mtconnect {
     // Data Item Source
     json source = json::object();
     addText(source, item->getSource());
-    add(source, "@dataItemId", item->getSourceDataItemId());
-    add(source, "@componentId", item->getSourceComponentId());
-    add(source, "@compositionId", item->getSourceCompositionId());
+    add(source, "dataItemId", item->getSourceDataItemId());
+    add(source, "componentId", item->getSourceComponentId());
+    add(source, "compositionId", item->getSourceCompositionId());
 
     if (source.begin() != source.end())
       obj["Source"] = source;
@@ -200,7 +200,7 @@ namespace mtconnect {
       
       if (item->getConstrainedValues().size() > 0) {
         json values(item->getConstrainedValues());
-        constraints["Value"] = values;
+        constraints["value"] = values;
       }
       
       obj["Constraints"] = constraints;
@@ -211,14 +211,14 @@ namespace mtconnect {
       if (item->hasMinimumDelta())
         filters.push_back(json::object({
           { "Filter", {
-            { "Value", item->getFilterValue() },
-            { "@type", "MINIMUM_DELTA" }
+            { "value", item->getFilterValue() },
+            { "type", "MINIMUM_DELTA" }
           }}}));
       if (item->hasMinimumPeriod())
         filters.push_back(json::object({
           { "Filter", {
-            { "Value", item->getFilterPeriod() },
-            { "@type", "PERIOD" }
+            { "value", item->getFilterPeriod() },
+            { "type", "PERIOD" }
           }}}));
       obj["Filters"] = filters;
     }
@@ -254,9 +254,9 @@ namespace mtconnect {
   static inline json jsonReference(const Component::Reference &reference)
   {
     json ref = json::object({ {
-      "@idRef", reference.m_id
+      "idRef", reference.m_id
     } });
-    add(ref, "@name", reference.m_name);
+    add(ref, "name", reference.m_name);
     return ref;
   }
   
@@ -456,17 +456,17 @@ namespace mtconnect {
     for (const auto &attr : observation->getAttributes())
     {
       if (strcmp(attr.first, "sequence") == 0) {
-        obj["@sequence"] = observation->getSequence();
+        obj["sequence"] = observation->getSequence();
       } else if (strcmp(attr.first, "sampleCount") == 0 or
                strcmp(attr.first, "sampleRate") == 0 or
                strcmp(attr.first, "duration") == 0) {
         char *ep;
-        obj[string("@") + attr.first] = strtod(attr.second.c_str(), &ep);
+        obj[attr.first] = strtod(attr.second.c_str(), &ep);
       } else {
-        obj[string("@") + attr.first] = attr.second;
+        obj[attr.first] = attr.second;
       }
     }
-    obj["Value"] = value;
+    obj["value"] = value;
     
     return json::object({ { name, obj } });
   }
@@ -535,12 +535,12 @@ namespace mtconnect {
       json ret;
       if (m_component != nullptr && !m_categories.empty()) {
         json obj = json::object({
-          { "@component", m_component->getClass() },
-          { "@componentId", m_component->getId() }
+          { "component", m_component->getClass() },
+          { "componentId", m_component->getId() }
         });
         
         if (!m_component->getName().empty())
-          obj["@name"] = m_component->getName();
+          obj["name"] = m_component->getName();
         
         for (auto &cat : m_categories) {
           auto c = cat.toJson();
@@ -590,8 +590,8 @@ namespace mtconnect {
       if (m_device != nullptr && !m_components.empty())
       {
         json obj = json::object({
-          { "@name", m_device->getName() },
-          { "@uuid", m_device->getUuid() }
+          { "name", m_device->getName() },
+          { "uuid", m_device->getUuid() }
         });
         json items = json::array();
         for (auto &comp : m_components)
@@ -678,7 +678,7 @@ namespace mtconnect {
   {
     auto &identity = asset->getIdentity();
     for (auto &key : identity) {
-      obj[string("@") + key.first] = key.second;
+      obj[key.first] = key.second;
     }
   }
 
@@ -686,9 +686,9 @@ namespace mtconnect {
   {
     for (auto &key : identity) {
       if (key.first == "manufacturers") {
-        obj["@manufacturers"] = split(key.second);
+        obj["manufacturers"] = split(key.second);
       } else
-        obj[string("@") + key.first] = key.second;
+        obj[key.first] = key.second;
     }
   }
   
@@ -707,7 +707,7 @@ namespace mtconnect {
   inline static void addValue(json &obj, const string &key, const string &value,
                               bool attr)
   {
-    string name = attr ? "@" + key : "Value";
+    string name = attr ? key : "value";
     if (IntegerKeys.count(key) > 0)
       obj[name] = atoi(value.c_str());
     else if (DoubleKeys.count(key) > 0) {
@@ -815,12 +815,12 @@ namespace mtconnect {
   inline static json toJson(AssetPtr asset)
   {
     json obj = json::object({
-      { "@assetId", asset->getAssetId() },
-      { "@timestamp", asset->getTimestamp() }
+      { "assetId", asset->getAssetId() },
+      { "timestamp", asset->getTimestamp() }
      });
     
     if (!asset->getDeviceUuid().empty())
-      obj["@deviceUuid"] = asset->getDeviceUuid();
+      obj["deviceUuid"] = asset->getDeviceUuid();
     
     if (asset->getType() == "CuttingTool" ||
         asset->getType() == "CuttingToolArchetype")
@@ -832,8 +832,8 @@ namespace mtconnect {
       if (tool->m_values.count("CuttingToolDefinition") > 0) {
         auto &def = tool->m_values["CuttingToolDefinition"];
         obj["CuttingToolDefinition"] = json::object({
-          { "@format", def->m_properties["format"] },
-          { "#text", def->m_value }
+          { "format", def->m_properties["format"] },
+          { "text", def->m_value }
         });
       }
       auto life = toJson(tool);
@@ -841,7 +841,7 @@ namespace mtconnect {
         obj["CuttingToolLifeCycle"] = toJson(tool);
     } else {
       addIdentity(obj, asset.getObject());
-      obj["#text"] = asset->getContent(nullptr);
+      obj["text"] = asset->getContent(nullptr);
     }
     
     json doc = json::object({

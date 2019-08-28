@@ -132,11 +132,11 @@ void JsonPrinterStreamTest::testStreamHeader()
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
   CPPUNIT_ASSERT_EQUAL(string("MTConnectStreams"), it.key());
-  CPPUNIT_ASSERT_EQUAL(123, jdoc.at("/MTConnectStreams/Header/@instanceId"_json_pointer).get<int32_t>());
-  CPPUNIT_ASSERT_EQUAL(131072, jdoc.at("/MTConnectStreams/Header/@bufferSize"_json_pointer).get<int32_t>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), jdoc.at("/MTConnectStreams/Header/@nextSequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10123733), jdoc.at("/MTConnectStreams/Header/@firstSequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10123800), jdoc.at("/MTConnectStreams/Header/@lastSequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(123, jdoc.at("/MTConnectStreams/Header/instanceId"_json_pointer).get<int32_t>());
+  CPPUNIT_ASSERT_EQUAL(131072, jdoc.at("/MTConnectStreams/Header/bufferSize"_json_pointer).get<int32_t>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), jdoc.at("/MTConnectStreams/Header/nextSequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10123733), jdoc.at("/MTConnectStreams/Header/firstSequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10123800), jdoc.at("/MTConnectStreams/Header/lastSequence"_json_pointer).get<uint64_t>());
 }
 
 void JsonPrinterStreamTest::testDeviceStream()
@@ -152,8 +152,8 @@ void JsonPrinterStreamTest::testDeviceStream()
   json stream = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("SimpleCnc"), stream.at("/@name"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("872a3490-bd2d-0136-3eb0-0c85909298d9"), stream.at("/@uuid"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("SimpleCnc"), stream.at("/name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("872a3490-bd2d-0136-3eb0-0c85909298d9"), stream.at("/uuid"_json_pointer).get<string>());
 }
 
 void JsonPrinterStreamTest::testComponentStream()
@@ -168,9 +168,9 @@ void JsonPrinterStreamTest::testComponentStream()
   json stream = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("Linear"), stream.at("/@component"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("X1"), stream.at("/@name"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("e373fec0"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("Linear"), stream.at("/component"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("X1"), stream.at("/name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("e373fec0"), stream.at("/componentId"_json_pointer).get<string>());
 }
 
 void JsonPrinterStreamTest::testComponentStreamTwoComponents()
@@ -188,13 +188,13 @@ void JsonPrinterStreamTest::testComponentStreamTwoComponents()
   
   json stream1 = streams.at("/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream1.is_object());
-  CPPUNIT_ASSERT_EQUAL(string("Linear"), stream1.at("/@component"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("e373fec0"), stream1.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("Linear"), stream1.at("/component"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("e373fec0"), stream1.at("/componentId"_json_pointer).get<string>());
   
   json stream2 = streams.at("/1/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream2.is_object());
-  CPPUNIT_ASSERT_EQUAL(string("Rotary"), stream2.at("/@component"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("zf476090"), stream2.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("Rotary"), stream2.at("/component"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("zf476090"), stream2.at("/componentId"_json_pointer).get<string>());
 }
 
 void JsonPrinterStreamTest::testTwoDevices()
@@ -212,13 +212,13 @@ void JsonPrinterStreamTest::testTwoDevices()
   
   json stream1 = streams.at("/1/DeviceStream"_json_pointer);
   CPPUNIT_ASSERT(stream1.is_object());
-  CPPUNIT_ASSERT_EQUAL(string("SimpleCnc"), stream1.at("/@name"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("872a3490-bd2d-0136-3eb0-0c85909298d9"), stream1.at("/@uuid"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("SimpleCnc"), stream1.at("/name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("872a3490-bd2d-0136-3eb0-0c85909298d9"), stream1.at("/uuid"_json_pointer).get<string>());
   
   json stream2 = streams.at("/0/DeviceStream"_json_pointer);
   CPPUNIT_ASSERT(stream2.is_object());
-  CPPUNIT_ASSERT_EQUAL(string("SampleDevice2"), stream2.at("/@name"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("f2db97b0-2bd1-0137-91ba-2a0081597801"), stream2.at("/@uuid"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("SampleDevice2"), stream2.at("/name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("f2db97b0-2bd1-0137-91ba-2a0081597801"), stream2.at("/uuid"_json_pointer).get<string>());
 }
 
 void JsonPrinterStreamTest::testSampleAndEventDataItem()
@@ -237,31 +237,31 @@ void JsonPrinterStreamTest::testSampleAndEventDataItem()
   auto stream = streams.at("/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("a4a7bdf0"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("a4a7bdf0"), stream.at("/componentId"_json_pointer).get<string>());
   
   auto events = stream.at("/Events"_json_pointer);
   CPPUNIT_ASSERT(events.is_array());
   auto mode = events.at(0);
   CPPUNIT_ASSERT(mode.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("AUTOMATIC"), mode.at("/ControllerMode/Value"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("if36ff60"), mode.at("/ControllerMode/@dataItemId"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("mode"), mode.at("/ControllerMode/@name"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("TIME"), mode.at("/ControllerMode/@timestamp"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), mode.at("/ControllerMode/@sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("AUTOMATIC"), mode.at("/ControllerMode/value"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("if36ff60"), mode.at("/ControllerMode/dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("mode"), mode.at("/ControllerMode/name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), mode.at("/ControllerMode/timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), mode.at("/ControllerMode/sequence"_json_pointer).get<uint64_t>());
   
   auto samples = stream.at("/Samples"_json_pointer);
   CPPUNIT_ASSERT(samples.is_array());
   auto pos = samples.at(0);
   
-  CPPUNIT_ASSERT_EQUAL(3_S, pos.at("/PathPosition/Value"_json_pointer).size());
+  CPPUNIT_ASSERT_EQUAL(3_S, pos.at("/PathPosition/value"_json_pointer).size());
   
-  CPPUNIT_ASSERT_EQUAL(10.0, pos.at("/PathPosition/Value/0"_json_pointer).get<double>());
-  CPPUNIT_ASSERT_EQUAL(20.0, pos.at("/PathPosition/Value/1"_json_pointer).get<double>());
-  CPPUNIT_ASSERT_EQUAL(30.0, pos.at("/PathPosition/Value/2"_json_pointer).get<double>());
-  CPPUNIT_ASSERT_EQUAL(string("r186cd60"), pos.at("/PathPosition/@dataItemId"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("TIME"), pos.at("/PathPosition/@timestamp"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), pos.at("/PathPosition/@sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(10.0, pos.at("/PathPosition/value/0"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(20.0, pos.at("/PathPosition/value/1"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(30.0, pos.at("/PathPosition/value/2"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(string("r186cd60"), pos.at("/PathPosition/dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), pos.at("/PathPosition/timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), pos.at("/PathPosition/sequence"_json_pointer).get<uint64_t>());
 }
 
 void JsonPrinterStreamTest::testConditionDataItem()
@@ -279,7 +279,7 @@ void JsonPrinterStreamTest::testConditionDataItem()
   auto stream = streams.at("/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
 
-  CPPUNIT_ASSERT_EQUAL(string("a4a7bdf0"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("a4a7bdf0"), stream.at("/componentId"_json_pointer).get<string>());
   
   auto conds = stream.at("/Condition"_json_pointer);
   CPPUNIT_ASSERT(conds.is_array());
@@ -287,14 +287,14 @@ void JsonPrinterStreamTest::testConditionDataItem()
   auto motion = conds.at(0);
   CPPUNIT_ASSERT(motion.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("a5b23650"), motion.at("/Fault/@dataItemId"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("motion"), motion.at("/Fault/@name"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("TIME"), motion.at("/Fault/@timestamp"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), motion.at("/Fault/@sequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(string("HIGH"), motion.at("/Fault/@qualifier"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("ack"), motion.at("/Fault/@nativeSeverity"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("syn"), motion.at("/Fault/@nativeCode"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("Syntax error"), motion.at("/Fault/Value"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("a5b23650"), motion.at("/Fault/dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("motion"), motion.at("/Fault/name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), motion.at("/Fault/timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), motion.at("/Fault/sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("HIGH"), motion.at("/Fault/qualifier"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("ack"), motion.at("/Fault/nativeSeverity"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("syn"), motion.at("/Fault/nativeCode"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("Syntax error"), motion.at("/Fault/value"_json_pointer).get<string>());
 }
 
 void JsonPrinterStreamTest::testTimeSeries()
@@ -312,7 +312,7 @@ void JsonPrinterStreamTest::testTimeSeries()
   auto stream = streams.at("/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("afb91ba0"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("afb91ba0"), stream.at("/componentId"_json_pointer).get<string>());
   
   auto samples = stream.at("/Samples"_json_pointer);
   CPPUNIT_ASSERT(samples.is_array());
@@ -320,14 +320,14 @@ void JsonPrinterStreamTest::testTimeSeries()
   auto amps = samples.at(0);
   CPPUNIT_ASSERT(amps.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("tc9edc70"), amps.at("/VoltAmpereTimeSeries/@dataItemId"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("pampts"), amps.at("/VoltAmpereTimeSeries/@name"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("TIME"), amps.at("/VoltAmpereTimeSeries/@timestamp"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), amps.at("/VoltAmpereTimeSeries/@sequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(10.0, amps.at("/VoltAmpereTimeSeries/@sampleCount"_json_pointer).get<double>());
-  CPPUNIT_ASSERT_EQUAL(100.0, amps.at("/VoltAmpereTimeSeries/@sampleRate"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(string("tc9edc70"), amps.at("/VoltAmpereTimeSeries/dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("pampts"), amps.at("/VoltAmpereTimeSeries/name"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), amps.at("/VoltAmpereTimeSeries/timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), amps.at("/VoltAmpereTimeSeries/sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(10.0, amps.at("/VoltAmpereTimeSeries/sampleCount"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(100.0, amps.at("/VoltAmpereTimeSeries/sampleRate"_json_pointer).get<double>());
   
-  auto value = amps.at("/VoltAmpereTimeSeries/Value"_json_pointer);
+  auto value = amps.at("/VoltAmpereTimeSeries/value"_json_pointer);
   CPPUNIT_ASSERT(value.is_array());
   CPPUNIT_ASSERT_EQUAL(10_S, value.size());
   
@@ -359,7 +359,7 @@ void JsonPrinterStreamTest::testAssetChanged()
   auto stream = streams.at("/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("x872a3490"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("x872a3490"), stream.at("/componentId"_json_pointer).get<string>());
   
   auto events = stream.at("/Events"_json_pointer);
   CPPUNIT_ASSERT(events.is_array());
@@ -368,20 +368,20 @@ void JsonPrinterStreamTest::testAssetChanged()
   auto changed = events.at(0);
   CPPUNIT_ASSERT(changed.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("e4a300e0"), changed.at("/AssetChanged/@dataItemId"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("TIME"), changed.at("/AssetChanged/@timestamp"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), changed.at("/AssetChanged/@sequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(string("CuttingTool"), changed.at("/AssetChanged/@assetType"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("31d416a0-33c7"), changed.at("/AssetChanged/Value"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("e4a300e0"), changed.at("/AssetChanged/dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), changed.at("/AssetChanged/timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), changed.at("/AssetChanged/sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("CuttingTool"), changed.at("/AssetChanged/assetType"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("31d416a0-33c7"), changed.at("/AssetChanged/value"_json_pointer).get<string>());
 
   auto removed = events.at(1);
   CPPUNIT_ASSERT(removed.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("f2df7550"), removed.at("/AssetRemoved/@dataItemId"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("TIME"), removed.at("/AssetRemoved/@timestamp"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), removed.at("/AssetRemoved/@sequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(string("QIF"), removed.at("/AssetRemoved/@assetType"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("400477d0-33c7"), removed.at("/AssetRemoved/Value"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("f2df7550"), removed.at("/AssetRemoved/dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), removed.at("/AssetRemoved/timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254805), removed.at("/AssetRemoved/sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("QIF"), removed.at("/AssetRemoved/assetType"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("400477d0-33c7"), removed.at("/AssetRemoved/value"_json_pointer).get<string>());
 
 }
 
@@ -400,7 +400,7 @@ void JsonPrinterStreamTest::testResetTrigger()
   auto stream = streams.at("/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("afb91ba0"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("afb91ba0"), stream.at("/componentId"_json_pointer).get<string>());
   
   auto samples = stream.at("/Samples"_json_pointer);
   CPPUNIT_ASSERT(samples.is_array());
@@ -409,13 +409,13 @@ void JsonPrinterStreamTest::testResetTrigger()
   CPPUNIT_ASSERT(amp.is_object());
   cout << amp.dump(2) << endl;
   
-  CPPUNIT_ASSERT_EQUAL(string("qb9212c0"), amp.at("/Amperage/@dataItemId"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("TIME"), amp.at("/Amperage/@timestamp"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), amp.at("/Amperage/@sequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(string("ACTION_COMPLETE"), amp.at("/Amperage/@resetTriggered"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), amp.at("/Amperage/@statistic"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(100.0, amp.at("/Amperage/@duration"_json_pointer).get<double>());
-  CPPUNIT_ASSERT_EQUAL(10.0, amp.at("/Amperage/Value"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(string("qb9212c0"), amp.at("/Amperage/dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), amp.at("/Amperage/timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), amp.at("/Amperage/sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("ACTION_COMPLETE"), amp.at("/Amperage/resetTriggered"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), amp.at("/Amperage/statistic"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(100.0, amp.at("/Amperage/duration"_json_pointer).get<double>());
+  CPPUNIT_ASSERT_EQUAL(10.0, amp.at("/Amperage/value"_json_pointer).get<double>());
 
 }
 
@@ -434,7 +434,7 @@ void JsonPrinterStreamTest::testMessage()
   auto stream = streams.at("/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("p5add360"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("p5add360"), stream.at("/componentId"_json_pointer).get<string>());
   
   auto events = stream.at("/Events"_json_pointer);
   CPPUNIT_ASSERT(events.is_array());
@@ -443,11 +443,11 @@ void JsonPrinterStreamTest::testMessage()
   auto message = events.at(0);
   CPPUNIT_ASSERT(message.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("m17f1750"), message.at("/Message/@dataItemId"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("TIME"), message.at("/Message/@timestamp"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), message.at("/Message/@sequence"_json_pointer).get<uint64_t>());
-  CPPUNIT_ASSERT_EQUAL(string("XXXX"), message.at("/Message/@nativeCode"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("XXX is on the roof"), message.at("/Message/Value"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("m17f1750"), message.at("/Message/dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("TIME"), message.at("/Message/timestamp"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(uint64_t(10254804), message.at("/Message/sequence"_json_pointer).get<uint64_t>());
+  CPPUNIT_ASSERT_EQUAL(string("XXXX"), message.at("/Message/nativeCode"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("XXX is on the roof"), message.at("/Message/value"_json_pointer).get<string>());
 
 }
 
@@ -467,7 +467,7 @@ void JsonPrinterStreamTest::testUnavailability()
   auto stream = streams.at("/1/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("p5add360"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("p5add360"), stream.at("/componentId"_json_pointer).get<string>());
   
   auto events = stream.at("/Events"_json_pointer);
   CPPUNIT_ASSERT(events.is_array());
@@ -475,12 +475,12 @@ void JsonPrinterStreamTest::testUnavailability()
   auto message = events.at(0);
   CPPUNIT_ASSERT(message.is_object());
 
-  CPPUNIT_ASSERT_EQUAL(string("UNAVAILABLE"), message.at("/Message/Value"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("UNAVAILABLE"), message.at("/Message/value"_json_pointer).get<string>());
   
   stream = streams.at("/0/ComponentStream"_json_pointer);
   CPPUNIT_ASSERT(stream.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("a4a7bdf0"), stream.at("/@componentId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("a4a7bdf0"), stream.at("/componentId"_json_pointer).get<string>());
   
   auto conds = stream.at("/Condition"_json_pointer);
   CPPUNIT_ASSERT(conds.is_array());
@@ -488,6 +488,6 @@ void JsonPrinterStreamTest::testUnavailability()
   auto motion = conds.at(0);
   CPPUNIT_ASSERT(motion.is_object());
   
-  CPPUNIT_ASSERT_EQUAL(string("a5b23650"), motion.at("/Unavailable/@dataItemId"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("a5b23650"), motion.at("/Unavailable/dataItemId"_json_pointer).get<string>());
 
 }

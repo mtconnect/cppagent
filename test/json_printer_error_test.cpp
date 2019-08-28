@@ -69,11 +69,11 @@ void JsonPrinterErrorTest::testPrintError()
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
   CPPUNIT_ASSERT_EQUAL(string("MTConnectError"), it.key());
-  CPPUNIT_ASSERT_EQUAL(12345, jdoc.at("/MTConnectError/Header/@instanceId"_json_pointer).get<int32_t>());
-  CPPUNIT_ASSERT_EQUAL(1024, jdoc.at("/MTConnectError/Header/@bufferSize"_json_pointer).get<int32_t>());
-  CPPUNIT_ASSERT_EQUAL(false, jdoc.at("/MTConnectError/Header/@testIndicator"_json_pointer).get<bool>());
+  CPPUNIT_ASSERT_EQUAL(12345, jdoc.at("/MTConnectError/Header/instanceId"_json_pointer).get<int32_t>());
+  CPPUNIT_ASSERT_EQUAL(1024, jdoc.at("/MTConnectError/Header/bufferSize"_json_pointer).get<int32_t>());
+  CPPUNIT_ASSERT_EQUAL(false, jdoc.at("/MTConnectError/Header/testIndicator"_json_pointer).get<bool>());
   
-  CPPUNIT_ASSERT_EQUAL(string("BAD_BAD"), jdoc.at("/MTConnectError/Errors/Error/@errorCode"_json_pointer).get<string>());
-  CPPUNIT_ASSERT_EQUAL(string("Never do that again"), jdoc.at("/MTConnectError/Errors/Error/#text"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("BAD_BAD"), jdoc.at("/MTConnectError/Errors/Error/errorCode"_json_pointer).get<string>());
+  CPPUNIT_ASSERT_EQUAL(string("Never do that again"), jdoc.at("/MTConnectError/Errors/Error/text"_json_pointer).get<string>());
   
 }
