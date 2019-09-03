@@ -1,3 +1,10 @@
+# The version number.
+set (AGENT_VERSION_MAJOR 1)
+set (AGENT_VERSION_MINOR 5)
+set (AGENT_VERSION_PATCH 0)
+set (AGENT_VERSION_BUILD 12)
+set (AGENT_VERSION_RC "RC12")
+
 cmake_minimum_required(VERSION 3.7 FATAL_ERROR) #This minimum version is to support Visual Studio 2017 and C++ feature checking
 
 project(cppagent)
