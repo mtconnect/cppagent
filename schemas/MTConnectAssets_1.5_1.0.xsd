@@ -36,7 +36,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='MTConnectAssets' type='MTConnectAssetsType'>
     <xs:annotation>
       <xs:documentation>
-        An XML response document
+        It is the root XML element of an mtconnectassets response document.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -202,6 +202,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:float'/>
   </xs:simpleType>
+  <xs:simpleType name='RemovedType'>
+    <xs:annotation>
+      <xs:documentation>
+        A flag indicating the item has been removed
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:boolean'/>
+  </xs:simpleType>
   <xs:simpleType name='AssetIdType'>
     <xs:annotation>
       <xs:documentation>
@@ -210,7 +218,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:string'/>
   </xs:simpleType>
-  <xs:simpleType name='AssetAttrType'>
+  <xs:simpleType name='AssetAttrTypeType'>
     <xs:annotation>
       <xs:documentation>
         An asset type
@@ -966,7 +974,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='PROGRAM_COMMENT'>
         <xs:annotation>
           <xs:documentation>
-            A comment or non-executable statement in the control program.The
+            A comment or non-executable statement in the control program. The
             valid data value must be a text string.
           </xs:documentation>
         </xs:annotation>
@@ -1238,6 +1246,197 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='VOLUME_SPATIAL'>
+        <xs:annotation>
+          <xs:documentation>
+            The geometric volume of an object or container.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLUME_FLUID'>
+        <xs:annotation>
+          <xs:documentation>
+            The fluid volume of an object or container.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CAPACITY_SPATIAL'>
+        <xs:annotation>
+          <xs:documentation>
+            The geometric capacity of an object or container.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CAPACITY_FLUID'>
+        <xs:annotation>
+          <xs:documentation>
+            The fluid capacity of an object or container.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DENSITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The volumetric mass of a material per unit volume of that material.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_VOLUME'>
+        <xs:annotation>
+          <xs:documentation>
+            The spatial volume of material to be deposited in an additive
+            manufacturing process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_RATE_VOLUMETRIC'>
+        <xs:annotation>
+          <xs:documentation>
+            The rate at which a spatial volume of material is deposited in an
+            additive manufacturing process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_ACCELERATION_VOLUMETRIC'>
+        <xs:annotation>
+          <xs:documentation>
+            The rate of change in spatial volume of material deposited in an
+            additive manufacturing process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_MASS'>
+        <xs:annotation>
+          <xs:documentation>
+            The mass of the material deposited in an additive manufacturing
+            process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_DENSITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The density of the material deposited in an additive manufacturing
+            process per unit of volume.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROCESS_TIME'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date associated with an activity or event. processtime
+            event MUST be reported in ISO 8601 format.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DATE_CODE'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date code associated with a material or other physical
+            item. datecode event MUST be reported in ISO 8601 format.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MATERIAL_LAYER'>
+        <xs:annotation>
+          <xs:documentation>
+            Identifies the layers of material applied to a part or product as
+            part of an additive manufacturing process. The valid data value MUST
+            be an integer.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WAIT_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the reason that execution event is reporting a
+            value of wait. The valid data value MUST be poweringup,
+            poweringdown, partload, partunload, toolload, toolunload,
+            materialload event, materialunload event, secondaryprocess, pausing,
+            or resuming.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PART_DETECT'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication designating whether a part or work piece has been
+            detected or is present. The valid data value MUST be present or
+            notpresent.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEVICE_UUID'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier of another piece of equipment that is temporarily
+            associated with a component of this piece of equipment to perform a
+            particular function. The valid data value MUST be a NMTOKEN XML
+            type.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUTTING_SPEED'>
+        <xs:annotation>
+          <xs:documentation>
+             The speed difference (relative velocity) between the cutting
+            mechanism and the surface of the workpiece it is operating on.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PATH_FEEDRATE_PER_REVOLUTION'>
+        <xs:annotation>
+          <xs:documentation>
+            The feedrate for the axes, or a single axis.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_NEST_LEVEL'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the nesting level within a control program that is
+            associated with the code or instructions that is currently being
+            executed. If an Initial Value is not defined, the nesting level
+            associated with the highest or initial nesting level of the program
+            MUST default to zero (0). The value reported for programnestlevel
+            event MUST be an integer.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_LOCATION_TYPE'>
+        <xs:annotation>
+          <xs:documentation>
+            Defines whether the logic or motion program defined by program event
+            is being executed from the local memory of the controller or from an
+            outside source. The valid data value MUST be local or external.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_LOCATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The Uniform Resource Identifier (URI) for the source file associated
+            with program event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL_GROUP'>
+        <xs:annotation>
+          <xs:documentation>
+            An identifier for the tool group associated with a specific tool.
+            Commonly used to designate spare tools.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VARIABLE'>
+        <xs:annotation>
+          <xs:documentation>
+             A data value whose meaning may change over time due to changes in
+            the opertion of a piece of equipment or the process being executed
+            on that piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='VARIABLE'>
         <xs:annotation>
           <xs:documentation>
@@ -1430,9 +1629,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             An indication of the operating state of a mechanism represented by a
-            composition type component.The operating state indicates whether the
-            composition element is activated or disabled. The valid data value
-            must be active value or inactive value.
+            composition type component. The operating state indicates whether
+            the composition element is activated or disabled. The valid data
+            value must be active value or inactive value.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1463,8 +1662,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             An indication of the activation state of a mechanism represented by
-            a composition type component.The activation state indicates whether
-            the composition element is activated or not.The valid data value
+            a composition type component. The activation state indicates whether
+            the composition element is activated or not. The valid data value
             must be on value or off value.
           </xs:documentation>
         </xs:annotation>
@@ -1509,13 +1708,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           <xs:documentation>
             A setting or operator selection that changes the behavior of the
             controller on a piece of equipment. The valid data value must be on
-            value or off value.The program execution is stopped after a specific
-            program block is executed when optionalstop subtype is on value. In
-            the case of a G-Code program, a program block event containing a M01
-            code designates the command for an optionalstop subtype. execution
-            event must change to OPTIONAL_STOP after a program block specifying
-            an optional stop is executed and the optionalstop subtype selection
-            is on value.
+            value or off value. The program execution is stopped after a
+            specific program block is executed when optionalstop subtype is on
+            value. In the case of a G-Code program, a program block event
+            containing a M01 code designates the command for an optionalstop
+            subtype. execution event must change to optionalstop subtype after a
+            program block specifying an optional stop is executed and the
+            optionalstop subtype selection is on value.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1555,7 +1754,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             The rotational direction of a rotary motion using the right hand
-            rule convention.The valid data value must be clockwise value or
+            rule convention. The valid data value must be clockwise value or
             counterclockwise value.
           </xs:documentation>
         </xs:annotation>
@@ -1760,6 +1959,71 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CONSUMED'>
+        <xs:annotation>
+          <xs:documentation>
+            The amount of bulk material consumed from an object or container
+            during a manufacturing process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='START'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date associated with the beginning of an activity or
+            event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TARGET_COMPLETION'>
+        <xs:annotation>
+          <xs:documentation>
+            The projected time and date associated with the end or completion of
+            an activity or event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MANUFACTURE'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date code relating to the production of a material or
+            other physical item.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='EXPIRATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date code relating to the expiration or end of useful
+            life for a material or other physical item.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FIRST_USE'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date code relating the first use of a material or other
+            physical item.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SCHEDULE'>
+        <xs:annotation>
+          <xs:documentation>
+            The identity of a control program that is used to specify the order
+            of execution of other programs.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MAIN'>
+        <xs:annotation>
+          <xs:documentation>
+            The identity of the primary logic or motion program currently being
+            executed. It is the starting nest level in a call structure and may
+            contain calls to sub programs.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
@@ -1788,8 +2052,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='KURTOSIS'>
         <xs:annotation>
           <xs:documentation>
-            A measure of the peakedness of a probability distribution; i.e., the
-            shape of the distribution curve.
+            A measure of the &quot;peakedness&quot; of a probability
+            distribution; i.e., the shape of the distribution curve.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -2101,6 +2365,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/REVOLUTION'>
+        <xs:annotation>
+          <xs:documentation>
+            Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='UnitsType'>
@@ -2343,6 +2614,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Measurement of volume of a fluid
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/REVOLUTION'>
+        <xs:annotation>
+          <xs:documentation>
+            Millimeters per revolution.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -2755,7 +3033,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='MTConnectAssetsType'>
     <xs:annotation>
       <xs:documentation>
-        An XML response document
+        It is the root XML element of an mtconnectassets response document.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -2788,14 +3066,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:anyURI'/>
   </xs:simpleType>
-  <xs:simpleType name='RemovedType'>
-    <xs:annotation>
-      <xs:documentation>
-        A flag indicating the item has been removed
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:boolean'/>
-  </xs:simpleType>
   <xs:complexType name='AssetDescriptionType' mixed='true'>
     <xs:annotation>
       <xs:documentation>
@@ -2806,7 +3076,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:any processContents='lax' minOccurs='0' maxOccurs='unbounded'>
         <xs:annotation>
           <xs:documentation>
-            Any elements
+            A placeholder for an XML element.
           </xs:documentation>
         </xs:annotation>
       </xs:any>
@@ -3016,7 +3286,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:enumeration value='DISCRETE'>
+      <xs:enumeration value='DISCRETE (normalfont DEPRECATED in Version 1.5)'>
         <xs:annotation>
           <xs:documentation>
             A data entity where each discrete occurrence of the data may have
@@ -3035,6 +3305,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             The measured value of the sample data.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DATA_SET'>
+        <xs:annotation>
+          <xs:documentation>
+            The reported value(s) are represented as a set of key-value pair.
+            Each reported value in the data set MUST have a unique key. 
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -3264,7 +3542,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:attribute name='discrete' type='DiscreteType' use='optional' default='false'>
       <xs:annotation>
         <xs:documentation>
-          If this is a discrete event
+          An indication signifying whether each value reported for the data
+          entity is significant and whether duplicate values are to be
+          suppressed. The value defined MUST be either true removed or false
+          removed - an XML boolean type. true removed indicates that each update
+          to the data entity&apos;s value is significant and duplicate values
+          MUSTNOT be suppressed. false removed indicates that duplicated values
+          MUST be suppressed. If a value is not defined for discrete, the
+          default value MUST be false removed.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -3441,9 +3726,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='StreamsType'>
     <xs:annotation>
       <xs:documentation>
-        The first, or highest, level XML container element in an mtconnectstream
-        response Document provided by an agent in response to a sample
-        httprequest or current httprequest HTTP request.
+        The first, or highest, level XML container element in an
+        mtconnectstreams response Document provided by an agent in response to a
+        sample httprequest or current httprequest HTTP request.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -3451,7 +3736,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             An XML container element provided in the streams container in the
-            mtconnectstream document.
+            mtconnectstreams document.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -3461,7 +3746,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         An XML container element provided in the streams container in the
-        mtconnectstream document.
+        mtconnectstreams document.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -3469,7 +3754,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             An XML container type element that organizes data returned from an
-            agent in response to a current or sample HTTP request.
+            agent in response to a current httprequest or sample httprequest
+            HTTP request.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -3493,7 +3779,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         An XML container type element that organizes data returned from an agent
-        in response to a current or sample HTTP request.
+        in response to a current httprequest or sample httprequest HTTP request.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -3501,8 +3787,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             An XML container type element that organizes the data reported in
-            the mtconnectstream document for dataitem elements defined in the
-            mtconnectdevice document with a category attribute of sample
+            the mtconnectstreams document for dataitem elements defined in the
+            mtconnectdevices document with a category attribute of sample
             category.
           </xs:documentation>
         </xs:annotation>
@@ -3511,8 +3797,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             An XML container type element that organizes the data reported in
-            the mtconnectstream document for dataitem elements defined in the
-            mtconnectdevice document with a category attribute of event
+            the mtconnectstreams document for dataitem elements defined in the
+            mtconnectdevices document with a category attribute of event
             category.
           </xs:documentation>
         </xs:annotation>
@@ -3521,8 +3807,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             An XML container type element that organizes the data reported in
-            the mtconnectstream document for dataitem elements defined in the
-            mtconnectdevice document with a category attribute of condition
+            the mtconnectstreams document for dataitem elements defined in the
+            mtconnectdevices document with a category attribute of condition
             category.
           </xs:documentation>
         </xs:annotation>
@@ -3573,8 +3859,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         An XML container type element that organizes the data reported in the
-        mtconnectstream document for dataitem elements defined in the
-        mtconnectdevice document with a category attribute of sample category.
+        mtconnectstreams document for dataitem elements defined in the
+        mtconnectdevices document with a category attribute of sample category.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -3585,8 +3871,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         An XML container type element that organizes the data reported in the
-        mtconnectstream document for dataitem elements defined in the
-        mtconnectdevice document with a category attribute of event category.
+        mtconnectstreams document for dataitem elements defined in the
+        mtconnectdevices document with a category attribute of event category.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -3597,8 +3883,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         An XML container type element that organizes the data reported in the
-        mtconnectstream document for dataitem elements defined in the
-        mtconnectdevice document with a category attribute of condition
+        mtconnectstreams document for dataitem elements defined in the
+        mtconnectdevices document with a category attribute of condition
         category.
       </xs:documentation>
     </xs:annotation>
@@ -3719,7 +4005,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:documentation>
         An XML element which provides the information and data reported from a
         piece of equipment for those dataitem elements defined with a category
-        attribute of event category in the mtconnectdevice document.
+        attribute of event category in the mtconnectdevices document.
       </xs:documentation>
     </xs:annotation>
     <xs:attributeGroup ref='ObservationType'/>
@@ -3731,9 +4017,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           value has been reset and what has caused that reset to occur.
           resetTriggered is an optional attribute. resettriggered MUST only be
           provided for the specific occurrence of a data entity reported in the
-          mtconnectstream document when the reset occurred and MUSTNOT be
+          mtconnectstreams document when the reset occurred and MUSTNOT be
           provided for any other occurrence of the data entity reported in a
-          mtconnectstream document.
+          mtconnectstreams document.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -3743,7 +4029,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:documentation>
         An XML element which provides the information and data reported from a
         piece of equipment for those dataitem elements defined with a category
-        attribute of event category in the mtconnectdevice document.
+        attribute of event category in the mtconnectdevices document.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -4791,7 +5077,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='OPTIONAL_STOP'>
         <xs:annotation>
           <xs:documentation>
-            The controller’s program has been intentionally stopped
+            The controllers program has been intentionally stopped
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -4806,7 +5092,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='PROGRAM_COMPLETED'>
         <xs:annotation>
           <xs:documentation>
-            The execution of the controller’s program has been stopped by a
+            The execution of the controllers program has been stopped by a
             command from within the program.
           </xs:documentation>
         </xs:annotation>
@@ -5359,7 +5645,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='ProgramCommentType'>
     <xs:annotation>
       <xs:documentation>
-        A comment or non-executable statement in the control program.The valid
+        A comment or non-executable statement in the control program. The valid
         data value must be a text string.
       </xs:documentation>
     </xs:annotation>
@@ -5370,7 +5656,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='ProgramComment' type='ProgramCommentType' substitutionGroup='StringEvent'>
     <xs:annotation>
       <xs:documentation>
-        A comment or non-executable statement in the control program.The valid
+        A comment or non-executable statement in the control program. The valid
         data value must be a text string.
       </xs:documentation>
     </xs:annotation>
@@ -6002,6 +6288,237 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='ProcessTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time and date associated with an activity or event. processtime
+        event MUST be reported in ISO 8601 format.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProcessTime' type='ProcessTimeType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        The time and date associated with an activity or event. processtime
+        event MUST be reported in ISO 8601 format.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DateCodeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time and date code associated with a material or other physical
+        item. datecode event MUST be reported in ISO 8601 format.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DateCode' type='DateCodeType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        The time and date code associated with a material or other physical
+        item. datecode event MUST be reported in ISO 8601 format.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='MaterialLayerType'>
+    <xs:annotation>
+      <xs:documentation>
+        Identifies the layers of material applied to a part or product as part
+        of an additive manufacturing process. The valid data value MUST be an
+        integer.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='MaterialLayer' type='MaterialLayerType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        Identifies the layers of material applied to a part or product as part
+        of an additive manufacturing process. The valid data value MUST be an
+        integer.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='WaitStateType'>
+    <xs:annotation>
+      <xs:documentation>
+        An indication of the reason that execution event is reporting a value of
+        wait. The valid data value MUST be poweringup, poweringdown, partload,
+        partunload, toolload, toolunload, materialload event, materialunload
+        event, secondaryprocess, pausing, or resuming.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='WaitState' type='WaitStateType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        An indication of the reason that execution event is reporting a value of
+        wait. The valid data value MUST be poweringup, poweringdown, partload,
+        partunload, toolload, toolunload, materialload event, materialunload
+        event, secondaryprocess, pausing, or resuming.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PartDetectType'>
+    <xs:annotation>
+      <xs:documentation>
+        An indication designating whether a part or work piece has been detected
+        or is present. The valid data value MUST be present or notpresent.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PartDetect' type='PartDetectType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        An indication designating whether a part or work piece has been detected
+        or is present. The valid data value MUST be present or notpresent.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DeviceUuidType'>
+    <xs:annotation>
+      <xs:documentation>
+        The piece of equipments UUID that supplied this data. This is an
+        optional element references to the UUID attribute given in the device
+        element. This can be any series of numbers and letters as defined by the
+        XML type nmtoken.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DeviceUuid' type='DeviceUuidType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        The piece of equipments UUID that supplied this data. This is an
+        optional element references to the UUID attribute given in the device
+        element. This can be any series of numbers and letters as defined by the
+        XML type nmtoken.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ProgramNestLevelType'>
+    <xs:annotation>
+      <xs:documentation>
+        An indication of the nesting level within a control program that is
+        associated with the code or instructions that is currently being
+        executed. If an Initial Value is not defined, the nesting level
+        associated with the highest or initial nesting level of the program MUST
+        default to zero (0). The value reported for programnestlevel event MUST
+        be an integer.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProgramNestLevel' type='ProgramNestLevelType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        An indication of the nesting level within a control program that is
+        associated with the code or instructions that is currently being
+        executed. If an Initial Value is not defined, the nesting level
+        associated with the highest or initial nesting level of the program MUST
+        default to zero (0). The value reported for programnestlevel event MUST
+        be an integer.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ProgramLocationTypeType'>
+    <xs:annotation>
+      <xs:documentation>
+        Defines whether the logic or motion program defined by program event is
+        being executed from the local memory of the controller or from an
+        outside source. The valid data value MUST be local or external.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProgramLocationType' type='ProgramLocationTypeType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        Defines whether the logic or motion program defined by program event is
+        being executed from the local memory of the controller or from an
+        outside source. The valid data value MUST be local or external.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ProgramLocationType'>
+    <xs:annotation>
+      <xs:documentation>
+        The Uniform Resource Identifier (URI) for the source file associated
+        with program event.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProgramLocation' type='ProgramLocationType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        The Uniform Resource Identifier (URI) for the source file associated
+        with program event.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ToolGroupType'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier for the tool group associated with a specific tool.
+        Commonly used to designate spare tools.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ToolGroup' type='ToolGroupType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier for the tool group associated with a specific tool.
+        Commonly used to designate spare tools.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VariableType'>
+    <xs:annotation>
+      <xs:documentation>
+         A data value whose meaning may change over time due to changes in the
+        opertion of a piece of equipment or the process being executed on that
+        piece of equipment.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Variable' type='VariableType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+         A data value whose meaning may change over time due to changes in the
+        opertion of a piece of equipment or the process being executed on that
+        piece of equipment.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='PartCountDiscreteType'>
     <xs:annotation>
       <xs:documentation>
@@ -6170,7 +6687,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:documentation>
         An XML element that provides the information and data reported from a
         piece of equipment for those dataitem elements defined with a category
-        attribute of sample category in the mtconnectdevice document. 
+        attribute of sample category in the mtconnectdevices document. 
       </xs:documentation>
     </xs:annotation>
     <xs:attributeGroup ref='ObservationType'/>
@@ -6190,9 +6707,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           value has been reset and what has caused that reset to occur.
           resetTriggered is an optional attribute. resettriggered MUST only be
           provided for the specific occurrence of a data entity reported in the
-          mtconnectstream document when the reset occurred and MUSTNOT be
+          mtconnectstreams document when the reset occurred and MUSTNOT be
           provided for any other occurrence of the data entity reported in a
-          mtconnectstream document.
+          mtconnectstreams document.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -6217,7 +6734,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:documentation>
         An XML element that provides the information and data reported from a
         piece of equipment for those dataitem elements defined with a category
-        attribute of sample category in the mtconnectdevice document. 
+        attribute of sample category in the mtconnectdevices document. 
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -6267,9 +6784,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         It is an abstract type element and will be replaced in the
-        mtconnectstream document by the element name derived from the type
+        mtconnectstreams document by the element name derived from the type
         attribute defined for the associated dataitem element defined in the
-        mtconnectdevice document
+        mtconnectdevices document
       </xs:documentation>
     </xs:annotation>
     <xs:complexContent>
@@ -6278,8 +6795,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           <xs:annotation>
             <xs:documentation>
               The number of readings reported in the data returned for the
-              dataitem element defined in the mtconnectdevice document that this
-              sample element represents.
+              dataitem element defined in the mtconnectdevices document that
+              this sample element represents.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -6290,9 +6807,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         It is an abstract type element and will be replaced in the
-        mtconnectstream document by the element name derived from the type
+        mtconnectstreams document by the element name derived from the type
         attribute defined for the associated dataitem element defined in the
-        mtconnectdevice document
+        mtconnectdevices document
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -7900,6 +8417,438 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='VolumeSpatialType'>
+    <xs:annotation>
+      <xs:documentation>
+        The geometric volume of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VolumeSpatial' type='VolumeSpatialType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The geometric volume of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VolumeSpatialTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The geometric volume of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VolumeSpatialTimeSeries' type='VolumeSpatialTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The geometric volume of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VolumeFluidType'>
+    <xs:annotation>
+      <xs:documentation>
+        The fluid volume of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VolumeFluid' type='VolumeFluidType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The fluid volume of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VolumeFluidTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The fluid volume of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VolumeFluidTimeSeries' type='VolumeFluidTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The fluid volume of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CapacitySpatialType'>
+    <xs:annotation>
+      <xs:documentation>
+        The geometric capacity of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CapacitySpatial' type='CapacitySpatialType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The geometric capacity of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CapacitySpatialTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The geometric capacity of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CapacitySpatialTimeSeries' type='CapacitySpatialTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The geometric capacity of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CapacityFluidType'>
+    <xs:annotation>
+      <xs:documentation>
+        The fluid capacity of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CapacityFluid' type='CapacityFluidType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The fluid capacity of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CapacityFluidTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The fluid capacity of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CapacityFluidTimeSeries' type='CapacityFluidTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The fluid capacity of an object or container.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DensityType'>
+    <xs:annotation>
+      <xs:documentation>
+        The volumetric mass of a material per unit volume of that material.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Density' type='DensityType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The volumetric mass of a material per unit volume of that material.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DensityTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The volumetric mass of a material per unit volume of that
+        material.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DensityTimeSeries' type='DensityTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The volumetric mass of a material per unit volume of that
+        material.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionVolumeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The spatial volume of material to be deposited in an additive
+        manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionVolume' type='DepositionVolumeType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The spatial volume of material to be deposited in an additive
+        manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionVolumeTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The spatial volume of material to be deposited in an
+        additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionVolumeTimeSeries' type='DepositionVolumeTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The spatial volume of material to be deposited in an
+        additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionRateVolumetricType'>
+    <xs:annotation>
+      <xs:documentation>
+        The rate at which a spatial volume of material is deposited in an
+        additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionRateVolumetric' type='DepositionRateVolumetricType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The rate at which a spatial volume of material is deposited in an
+        additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionRateVolumetricTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The rate at which a spatial volume of material is
+        deposited in an additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionRateVolumetricTimeSeries' type='DepositionRateVolumetricTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The rate at which a spatial volume of material is
+        deposited in an additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionAccelerationVolumetricType'>
+    <xs:annotation>
+      <xs:documentation>
+        The rate of change in spatial volume of material deposited in an
+        additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionAccelerationVolumetric' type='DepositionAccelerationVolumetricType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The rate of change in spatial volume of material deposited in an
+        additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionAccelerationVolumetricTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The rate of change in spatial volume of material
+        deposited in an additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionAccelerationVolumetricTimeSeries' type='DepositionAccelerationVolumetricTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The rate of change in spatial volume of material
+        deposited in an additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionMassType'>
+    <xs:annotation>
+      <xs:documentation>
+        The mass of the material deposited in an additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionMass' type='DepositionMassType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The mass of the material deposited in an additive manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionMassTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The mass of the material deposited in an additive
+        manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionMassTimeSeries' type='DepositionMassTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The mass of the material deposited in an additive
+        manufacturing process.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionDensityType'>
+    <xs:annotation>
+      <xs:documentation>
+        The density of the material deposited in an additive manufacturing
+        process per unit of volume.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionDensity' type='DepositionDensityType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The density of the material deposited in an additive manufacturing
+        process per unit of volume.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DepositionDensityTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The density of the material deposited in an additive
+        manufacturing process per unit of volume.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DepositionDensityTimeSeries' type='DepositionDensityTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The density of the material deposited in an additive
+        manufacturing process per unit of volume.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingSpeedType'>
+    <xs:annotation>
+      <xs:documentation>
+         The speed difference (relative velocity) between the cutting mechanism
+        and the surface of the workpiece it is operating on.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CuttingSpeed' type='CuttingSpeedType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+         The speed difference (relative velocity) between the cutting mechanism
+        and the surface of the workpiece it is operating on.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CuttingSpeedTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The speed difference (relative velocity) between the
+        cutting mechanism and the surface of the workpiece it is operating on.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CuttingSpeedTimeSeries' type='CuttingSpeedTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The speed difference (relative velocity) between the
+        cutting mechanism and the surface of the workpiece it is operating on.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PathFeedratePerRevolutionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The feedrate for the axes, or a single axis.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PathFeedratePerRevolution' type='PathFeedratePerRevolutionType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The feedrate for the axes, or a single axis.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PathFeedratePerRevolutionTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The feedrate for the axes, or a single axis.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PathFeedratePerRevolutionTimeSeries' type='PathFeedratePerRevolutionTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The feedrate for the axes, or a single axis.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:simpleType name='ConditionDescriptionType'>
     <xs:annotation>
       <xs:documentation>
@@ -7945,7 +8894,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:documentation>
         An XML element which provides the information and data reported from a
         piece of equipment for those dataitem elements defined with a category
-        attribute of condition category in the mtconnectdevice document.
+        attribute of condition category in the mtconnectdevices document.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -8000,7 +8949,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:documentation>
         An XML element which provides the information and data reported from a
         piece of equipment for those dataitem elements defined with a category
-        attribute of condition category in the mtconnectdevice document.
+        attribute of condition category in the mtconnectdevices document.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -8425,7 +9374,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
-  <xs:simpleType name='ToolLifeType'>
+  <xs:simpleType name='ToolLifeTypeType'>
     <xs:annotation>
       <xs:documentation>
         The direction of tool life count
@@ -8455,7 +9404,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
-  <xs:simpleType name='LocationsType'>
+  <xs:simpleType name='LocationsTypeType'>
     <xs:annotation>
       <xs:documentation>
         The type of tool location
@@ -8516,7 +9465,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:any processContents='lax' minOccurs='0' maxOccurs='unbounded'>
         <xs:annotation>
           <xs:documentation>
-            Any elements
+            A placeholder for an XML element.
           </xs:documentation>
         </xs:annotation>
       </xs:any>
@@ -8876,7 +9825,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='LocationValueType'>
-        <xs:attribute name='type' type='LocationsType' use='required'>
+        <xs:attribute name='type' type='LocationsTypeType' use='required'>
           <xs:annotation>
             <xs:documentation>
               The type of either a structural element or a dataitem being
@@ -9391,7 +10340,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='ToolLifeValueType'>
-        <xs:attribute name='type' type='ToolLifeType' use='required'>
+        <xs:attribute name='type' type='ToolLifeTypeType' use='required'>
           <xs:annotation>
             <xs:documentation>
               The type of either a structural element or a dataitem being
@@ -9414,14 +10363,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name='limit' type='ToolLifeValueType' use='required'>
+        <xs:attribute name='limit' type='ToolLifeValueType' use='optional'>
           <xs:annotation>
             <xs:documentation>
               The end of life limit for this tool.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name='initial' type='ToolLifeValueType' use='required'>
+        <xs:attribute name='initial' type='ToolLifeValueType' use='optional'>
           <xs:annotation>
             <xs:documentation>
               The initial life of the tool when it is new.
