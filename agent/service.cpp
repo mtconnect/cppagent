@@ -720,8 +720,11 @@ int MTConnectService::main(int argc, const char *argv[])
     } else if (strcasecmp( argv[1], "debug") == 0) {
       mIsDebug = true;
       initialize(argc - 2, argv + 2);
-    } else {
+    } else if (strcasecmp(argv[1], "run") == 0) {
       initialize(argc - 2, argv + 2);
+    } else {
+      // Started without [help|daemonize|debug|run] thus assume argv[1] is the config file.
+      initialize(argc - 1, argv + 1);
     }
   } else {
     initialize(argc - 2, argv + 2);
