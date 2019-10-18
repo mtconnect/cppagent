@@ -36,6 +36,10 @@
 #define stat(P, B) (PathFileExists((const char*) P) ? 0 : -1)
 #endif
 
+#ifdef _WINDOWS
+#include <fileapi.h>
+#endif
+
 #ifdef MACOSX
 #include <mach-o/dyld.h>
 #endif
@@ -152,8 +156,7 @@ void AgentConfiguration::initialize(int aArgc, const char *aArgv[])
       }
     }
     
-    ifstream file(mConfigFile.c_str());
-    loadConfig(file);
+    loadConfig(mConfigFile);
   }
   catch (std::exception & e)
   {
@@ -491,7 +494,33 @@ inline static void trim(std::string &str)
     str.erase(index + 1);
 }
 
-void AgentConfiguration::loadConfig(std::istream &aFile)
+void AgentConfiguration::loadConfig(const std::string &aConfigFile)
+{
+  std::string configFileFolder;
+  char pathSep = '/';
+#if _WINDOWS
+  char absolutePath[MAX_PATH];
+  if (GetFullPathName(aConfigFile.c_str(), MAX_PATH, absolutePath, NULL) > 0) {
+      configFileFolder = std::string(absolutePath);
+  }
+  pathSep = '\\';
+#else
+  if (char *absolutePath = realpath(aConfigFile.c_str(), NULL)) {
+    configFileFolder = std::string(absolutePath);
+    free(absolutePath);
+  }
+#endif
+  const size_t found = configFileFolder.rfind(pathSep);
+  if (found != std::string::npos)
+  {
+    configFileFolder.erase(found + 1);
+  }
+
+  ifstream file(aConfigFile.c_str());
+  loadConfig(file, configFileFolder);
+}
+
+void AgentConfiguration::loadConfig(std::istream &aFile, const std::string& aConfigFileFolder)
 {
   // Now get our configuration
   config_reader::kernel_1a reader(aFile);
@@ -510,6 +539,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   bool ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
   bool conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
   bool upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
+  const bool pathRelativeToConfigFile = get_bool_with_default(reader, "PathRelativeToConfigFile", false);
   mMonitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
   mMinimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
   
@@ -517,6 +547,8 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   std::vector<string> devices_files;
   if (reader.is_key_defined("Devices")) {
     string fileName = reader["Devices"];
+    if (pathRelativeToConfigFile && !aConfigFileFolder.empty() && fileName.size() > 0 && fileName[0] != '/' && fileName[0] != '\\' && (fileName.size() < 2 || fileName[1] != ':'))
+      devices_files.push_back(aConfigFileFolder + fileName);
     devices_files.push_back(fileName);
     if (!mExePath.empty() && fileName[0] != '/' && fileName[0] != '\\' && fileName[1] != ':')
       devices_files.push_back(mExePath + reader["Devices"]);
@@ -579,21 +611,23 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   loadAllowPut(reader);
   loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,
                conversionRequired, upcaseValue);
-  
+
+  const std::string relativePathBase = pathRelativeToConfigFile ? aConfigFileFolder : std::string();
+
   // Files served by the Agent... allows schema files to be served by
   // agent.
-  loadFiles(reader);
+  loadFiles(reader, relativePathBase);
   
   // Load namespaces, allow for local file system serving as well.
-  loadNamespace(reader, "DevicesNamespaces", &XmlPrinter::addDevicesNamespace);
-  loadNamespace(reader, "StreamsNamespaces", &XmlPrinter::addStreamsNamespace);
-  loadNamespace(reader, "AssetsNamespaces", &XmlPrinter::addAssetsNamespace);
-  loadNamespace(reader, "ErrorNamespaces", &XmlPrinter::addErrorNamespace);
+  loadNamespace(reader, "DevicesNamespaces", &XmlPrinter::addDevicesNamespace, relativePathBase);
+  loadNamespace(reader, "StreamsNamespaces", &XmlPrinter::addStreamsNamespace, relativePathBase);
+  loadNamespace(reader, "AssetsNamespaces", &XmlPrinter::addAssetsNamespace, relativePathBase);
+  loadNamespace(reader, "ErrorNamespaces", &XmlPrinter::addErrorNamespace, relativePathBase);
   
-  loadStyle(reader, "DevicesStyle", &XmlPrinter::setDevicesStyle);
-  loadStyle(reader, "StreamsStyle", &XmlPrinter::setStreamStyle);
-  loadStyle(reader, "AssetsStyle", &XmlPrinter::setAssetsStyle);
-  loadStyle(reader, "ErrorStyle", &XmlPrinter::setErrorStyle);
+  loadStyle(reader, "DevicesStyle", &XmlPrinter::setDevicesStyle, relativePathBase);
+  loadStyle(reader, "StreamsStyle", &XmlPrinter::setStreamStyle, relativePathBase);
+  loadStyle(reader, "AssetsStyle", &XmlPrinter::setAssetsStyle, relativePathBase);
+  loadStyle(reader, "ErrorStyle", &XmlPrinter::setErrorStyle, relativePathBase);
   
   loadTypes(reader);
 }
@@ -725,7 +759,8 @@ void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &aReader)
 
 void AgentConfiguration::loadNamespace(dlib::config_reader::kernel_1a &aReader,
                                        const char *aNamespaceType,
-                                       NamespaceFunction *aCallback)
+                                       NamespaceFunction *aCallback,
+                                       const std::string& aRelativePathBase)
 {
   // Load namespaces, allow for local file system serving as well.
   if (aReader.is_block_defined(aNamespaceType)) {
@@ -747,14 +782,18 @@ void AgentConfiguration::loadNamespace(dlib::config_reader::kernel_1a &aReader,
         if (ns.is_key_defined("Urn"))
           urn = ns["Urn"];        
         (*aCallback)(urn, location, *block);
-        if (ns.is_key_defined("Path") && !location.empty())
-          mAgent->registerFile(location, ns["Path"]);        
+        if (ns.is_key_defined("Path") && !location.empty()) {
+          std::string path = ns["Path"];
+          if (!aRelativePathBase.empty() && path.size() > 0 && path[0] != '/' && path[0] != '\\' && (path.size() < 2 || path[1] != ':'))
+            path.insert(0, aRelativePathBase);
+          mAgent->registerFile(location, path);
+        }
       }
     }
   }
 }
 
-void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader)
+void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader, const std::string& aRelativePathBase)
 {
   if (aReader.is_block_defined("Files")) {
     const config_reader::kernel_1a &files = aReader.block("Files");
@@ -769,13 +808,16 @@ void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &aReader)
       {
         sLogger << LERROR << "Name space must have a Location (uri) or Directory and Path: " << *block;
       } else {
-        mAgent->registerFile(file["Location"], file["Path"]);
+        std::string path = file["Path"];
+        if (!aRelativePathBase.empty() && path.size() > 0 && path[0] != '/' && path[0] != '\\' && (path.size() < 2 || path[1] != ':'))
+            path.insert(0, aRelativePathBase);
+        mAgent->registerFile(file["Location"], path);
       }
     }
   }
 }
 
-void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc, StyleFunction *aFunction)
+void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc, StyleFunction *aFunction, const std::string& aRelativePathBase)
 {
   if (aReader.is_block_defined(aDoc)) {
     const config_reader::kernel_1a &doc = aReader.block(aDoc);
@@ -784,8 +826,12 @@ void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &aReader, cons
     } else {
       string location = doc["Location"];
       aFunction(location);
-      if (doc.is_key_defined("Path"))
-        mAgent->registerFile(location, doc["Path"]);
+      if (doc.is_key_defined("Path")) {
+        std::string path = doc["Path"];
+        if (!aRelativePathBase.empty() && path.size() > 0 && path[0] != '/' && path[0] != '\\' && (path.size() < 2 || path[1] != ':'))
+          path.insert(0, aRelativePathBase);
+        mAgent->registerFile(location, path);
+      }
     }
   }
 }

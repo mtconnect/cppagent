@@ -63,6 +63,7 @@ class ConfigTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testSchemaDirectory);
   CPPUNIT_TEST(testLogFileRollover);
   CPPUNIT_TEST(testMaxSize);
+  CPPUNIT_TEST(testConfigFileRelativePaths);
   CPPUNIT_TEST_SUITE_END();
   
 public:
@@ -91,6 +92,7 @@ protected:
   void testSchemaDirectory();
   void testLogFileRollover();
   void testMaxSize();
+  void testConfigFileRelativePaths();
 };
 
 #endif

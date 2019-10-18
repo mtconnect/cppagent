@@ -189,6 +189,9 @@ public:
   
   // Update DOM when key changes
   void updateDom(Device *aDevice);
+
+  // Exposed for unit tests
+  bool isFile(const std::string& aUri) { return mFileMap.count(aUri) > 0; }
   
 protected:
   /* HTTP methods to handle the 3 basic calls */
@@ -251,8 +254,6 @@ protected:
   /* Get a file */
   std::string handleFile(const std::string& aUri, outgoing_things& aOutgoing);
 
-  bool isFile(const std::string& aUri) { return mFileMap.count(aUri) > 0; }
-  
   /* Perform a check on parameter and return a value or a code */
   int checkAndGetParam(
     const key_value_map& queries,

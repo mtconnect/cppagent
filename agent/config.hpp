@@ -24,7 +24,8 @@ public:
   virtual void initialize(int aArgc, const char *aArgv[]);
 
   void configureLogger(dlib::config_reader::kernel_1a &aReader);
-  void loadConfig(std::istream &aFile);
+  void loadConfig(const std::string& aConfigFile);
+  void loadConfig(std::istream &aFile, const std::string& aConfigFileFolder = std::string());
 
   void setAgent(Agent *aAgent) { mAgent = aAgent; }
   Agent *getAgent() { return mAgent; }
@@ -37,11 +38,12 @@ protected:
                     int aLegacyTimeout, int aReconnectInterval, bool aIgnoreTimestamps,
                     bool aConversionRequired, bool aUpcaseValue);
   void loadAllowPut(dlib::config_reader::kernel_1a &aReader);
-  void loadNamespace(dlib::config_reader::kernel_1a &aReader, 
-                     const char *aNamespaceType, 
-                     NamespaceFunction *aCallback);
-  void loadFiles(dlib::config_reader::kernel_1a &aReader);
-  void loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc, StyleFunction *aFunction);
+  void loadNamespace(dlib::config_reader::kernel_1a &aReader,
+                     const char *aNamespaceType,
+                     NamespaceFunction *aCallback,
+                     const std::string& aRelativePathBase);
+  void loadFiles(dlib::config_reader::kernel_1a &aReader, const std::string& aRelativePathBase);
+  void loadStyle(dlib::config_reader::kernel_1a &aReader, const char *aDoc, StyleFunction *aFunction, const std::string& aRelativePathBase);
   void loadTypes(dlib::config_reader::kernel_1a &aReader);
   
   void LoggerHook(const std::string& aLoggerName,
