@@ -114,7 +114,7 @@ AgentConfiguration::AgentConfiguration() :
       mExePath.erase(found + 1);
     }
     
-    cout << "Configuration search path: current directory and " << mExePath;
+    cout << "Configuration search path: current directory and " << mExePath << endl;
   } else {
     mExePath = "";
   }
