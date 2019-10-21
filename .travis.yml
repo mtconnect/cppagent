@@ -1,0 +1,38 @@
+language: cpp
+dist: trusty
+sudo: required
+
+branches:
+  only:
+    - travis
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: COMPILER=g++-4.8 CCOMPILER=gcc-4.8 CMAKE_BUILD_TYPE=Release
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: [g++-4.8, gcc-4.8, libcppunit-dev, libxml2-dev]
+
+    - os: linux
+      compiler: gcc
+      env: COMPILER=g++-6 CCOMPILER=gcc-6 CMAKE_BUILD_TYPE=Release
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: [g++-6, gcc-6, libcppunit-dev, libxml2-dev]
+
+    - os: linux
+      compiler: gcc
+      env: COMPILER=g++-7 CCOMPILER=gcc-7 CMAKE_BUILD_TYPE=Release
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: [g++-7, gcc-7, libcppunit-dev, libxml2-dev]
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_COMPILER=$COMPILER -DCMAKE_C_COMPILER=$CCOMPILER .. && make
