@@ -747,7 +747,7 @@ namespace mtconnect {
     }
     else
     {
-      initialize(argc - 2, argv + 2);
+      initialize(0, argv);
     }
     
     start();
