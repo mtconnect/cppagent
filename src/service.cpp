@@ -740,9 +740,13 @@ namespace mtconnect {
         m_isDebug = true;
         initialize(argc - 2, argv + 2);
       }
-      else
+      else if (!strcasecmp(argv[1], "run"))
       {
         initialize(argc - 2, argv + 2);
+      }
+      else
+      {
+        initialize(argc - 1, argv + 1);
       }
     }
     else
