@@ -330,7 +330,7 @@ namespace mtconnect {
     RegCloseKey(mtc);
     
     // Fully qualify the configuration file name.
-    if (m_configFile[0] != '/' && m_configFile[0] != '\\' && m_configFile[1] != ':')
+    if (!m_configFile.empty() && m_configFile[0] != '/' && m_configFile[0] != '\\' && m_configFile[1] != ':')
     {
       // Relative file name
       char path[MAX_PATH] = {0};

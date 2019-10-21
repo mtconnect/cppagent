@@ -164,7 +164,7 @@ namespace mtconnect {
       if (found != std::string::npos)
         m_exePath.erase(found + 1);
       
-      cout << "Configuration search path: current directory and " << m_exePath;
+      cout << "Configuration search path: current directory and " << m_exePath << endl;
     }
     else
       m_exePath = "";
@@ -583,6 +583,7 @@ namespace mtconnect {
       devices_files.push_back(fileName);
       
       if (!m_exePath.empty() &&
+          !fileName.empty() &&
           fileName[0] != '/' &&
           fileName[0] != '\\' &&
           fileName[1] != ':')
