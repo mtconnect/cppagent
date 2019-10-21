@@ -123,6 +123,7 @@ void ConfigTest::tearDown()
 
 void ConfigTest::testBlankConfig()
 {
+  char *d =TEST_BIN_ROOT_DIR;
   chdir(TEST_BIN_ROOT_DIR);
   istringstream str("");
   m_config->loadConfig(str);

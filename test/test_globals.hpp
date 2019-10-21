@@ -34,7 +34,7 @@
 #define TO_STRING(s) STRINGIZE(s)
 #define PROJECT_ROOT_DIR TO_STRING(PROJECT_ROOT)
 
-#define TEST_BIN_ROOT_DIR TO_STRING(TEST_BIN_ROOT)
+#define TEST_BIN_ROOT_DIR TO_STRING(TEST_BIN_ROOT) "/../Resources"
 
 // Retrieve a sample file, open it, and return it as a string
 std::string getFile(std::string fileLoc);

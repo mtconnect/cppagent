@@ -70,6 +70,6 @@ add_custom_command(
   TARGET agent_test POST_BUILD 
   COMMAND "${CMAKE_COMMAND}" -E copy
   ${CMAKE_CURRENT_SOURCE_DIR}/probe.xml
-  $<TARGET_FILE_DIR:agent_test>/probe.xml
+  $<TARGET_FILE_DIR:agent_test>/../Resources/probe.xml
   COMMENT "Copying to output directory")
 
