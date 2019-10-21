@@ -724,7 +724,7 @@ int MTConnectService::main(int argc, const char *argv[])
       initialize(argc - 2, argv + 2);
     }
   } else {
-    initialize(argc - 2, argv + 2);
+    initialize(0, argv);
   }
   
   start();
