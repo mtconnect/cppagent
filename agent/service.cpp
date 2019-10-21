@@ -311,7 +311,7 @@ void MTConnectService::install()
   RegCloseKey(mtc);
 
   // Fully qualify the configuration file name.
-  if (mConfigFile[0] != '/' && mConfigFile[0] != '\\' && mConfigFile[1] != ':')
+  if (!mConfigFile.empty() && mConfigFile[0] != '/' && mConfigFile[0] != '\\' && (mConfigFile.size() < 2 || mConfigFile[1] != ':'))
   {
     // Relative file name
     char path[MAX_PATH];

@@ -518,7 +518,7 @@ void AgentConfiguration::loadConfig(std::istream &aFile)
   if (reader.is_key_defined("Devices")) {
     string fileName = reader["Devices"];
     devices_files.push_back(fileName);
-    if (!mExePath.empty() && fileName[0] != '/' && fileName[0] != '\\' && fileName[1] != ':')
+    if (!mExePath.empty() && !fileName.empty() && fileName[0] != '/' && fileName[0] != '\\' && (fileName.size() < 2 || fileName[1] != ':'))
       devices_files.push_back(mExePath + reader["Devices"]);
   }
   
