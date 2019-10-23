@@ -18,8 +18,6 @@ if(UNIX)
   endif()
 endif()
 
-source_group("Source Files" FILES ${AGENT_SRCS})
-
 file(GLOB AGENT_SRCS *.cpp)
 
 # Allow better viewing and grouping of files in Visual Studio by defining source groups

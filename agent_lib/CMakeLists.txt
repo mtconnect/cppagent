@@ -7,8 +7,6 @@ if(UNIX)
   endif()
 endif()
 
-source_group("Source Files" FILES ${AGENT_SRCS})
-
 file(GLOB AGENT_SRCS "${AGENT_SOURCE_DIR}/*.cpp")
 file(GLOB AGENT_HEADERS "${AGENT_SOURCE_DIR}/*.hpp")
 
