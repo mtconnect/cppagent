@@ -446,3 +446,27 @@ void ConfigTest::testMaxSize()
   CPPUNIT_ASSERT_EQUAL(15 * 1024 * 1024 * 1024, fl->getMaxSize());
 
 }
+
+void ConfigTest::testConfigFileRelativePaths()
+{
+  dlib::file config(CPPUNIT_SOURCELINE().fileName() + "/../data/relative_path_to_config/agent.cfg");
+  mConfig->loadConfig(config.full_name());
+
+  Agent *agent = mConfig->getAgent();
+  CPPUNIT_ASSERT(agent);
+  const std::vector<Device *> devices = agent->getDevices();
+  CPPUNIT_ASSERT(devices.size() > 0);
+  Device *device = agent->getDevices()[0];
+
+  // Test config "Devices"
+  CPPUNIT_ASSERT_EQUAL(std::string("LinuxCNC"), device->getName());
+
+  // Test config "Files -> Path"
+  CPPUNIT_ASSERT(agent->isFile("/files/Readme.md"));
+
+  // Test config "fooNamespaces -> Path", here StreamsNamespaces
+  CPPUNIT_ASSERT(agent->isFile("/schemas/MTConnectStreams_1.4.xsd"));
+
+  // Test config "fooStyle -> Path", here StreamsStyle
+  CPPUNIT_ASSERT(agent->isFile("/styles/Streams.xsl"));
+}

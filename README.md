@@ -603,6 +603,10 @@ Configuration Parameters
 
     *Default*: 15
 
+* `PathRelativeToConfigFile` - If set to true, relative paths in the configuration item `Device` and `Path` are resolved relative to the current configuration file.
+
+    *Default*: false
+
 
 ### Adapter configuration items ###
 
