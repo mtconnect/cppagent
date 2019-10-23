@@ -1,11 +1,12 @@
 # The version number.
-set (AGENT_VERSION_MAJOR 1)
-set (AGENT_VERSION_MINOR 5)
-set (AGENT_VERSION_PATCH 0)
-set (AGENT_VERSION_BUILD 12)
-set (AGENT_VERSION_RC "RC12")
+set(AGENT_VERSION_MAJOR 1)
+set(AGENT_VERSION_MINOR 5)
+set(AGENT_VERSION_PATCH 0)
+set(AGENT_VERSION_BUILD 12)
+set(AGENT_VERSION_RC "RC12")
 
-cmake_minimum_required(VERSION 3.7 FATAL_ERROR) #This minimum version is to support Visual Studio 2017 and C++ feature checking
+# This minimum version is to support Visual Studio 2017 and C++ feature checking
+cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
 
 project(cppagent)
 
@@ -18,13 +19,14 @@ set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
 if(DEFINED CMAKE_BUILD_TYPE)
-  set_property( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES} )
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
 endif()
 
 # Add our './cmake' sub-folder to the lists searched when calling functions
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
-# Setup compiler options for Windows, OSX, Linux (each file guards against usage on an inappropriate platform)
+# Setup compiler options for Windows, OSX, Linux (each file guards against usage on an inappropriate
+# platform)
 if(MSVC)
   # Default winver to Vista and Later
   set(WINVER "0x0600" CACHE STRING "Windows Target Version: 0x0400 - 95 & NT 4.0, 0x0500 - 2000, 0x0501 - XP, 0x0600 - Vista, 0x0601 - 7, 0x0602 - 8")
@@ -50,5 +52,3 @@ add_subdirectory(test)
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
 # We will set this to the agent_test project.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT agent_test)
-
-
