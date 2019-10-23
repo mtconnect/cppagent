@@ -10,7 +10,7 @@
 #  - v120 (Normal Visual Studio 2013)
 #  - v140 (Normal Visual Studio 2015)
 #  - v141 (Normal isual Studio 2017)
-set(CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET} CACHE string "Use to target a toolset not available in the CMake GUI list of options, e.g. 'v141_xp'" FORCE)
+set(CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET} CACHE STRING "Use to target a toolset not available in the CMake GUI list of options, e.g. 'v141_xp'" FORCE)
 
 ####################################################################################################
 #                                                                                                  #
