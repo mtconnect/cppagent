@@ -6,7 +6,7 @@ set(AGENT_VERSION_BUILD 12)
 set(AGENT_VERSION_RC "RC12")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking
-cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 project(cppagent)
 
