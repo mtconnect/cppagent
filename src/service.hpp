@@ -47,7 +47,8 @@ namespace mtconnect {
     
     void install();
     void remove();
-    
+    static bool isElevated();
+
 #ifndef _WINDOWS
     void daemonize();
 #endif

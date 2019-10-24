@@ -180,7 +180,38 @@ namespace mtconnect {
     
     return 0;
   }
-  
+
+  bool MTConnectService::isElevated()
+  {
+    // Only applicable to Windows Vista and later
+    OSVERSIONINFO osver = { sizeof(osver) };
+    if (GetVersionExA(&osver) && osver.dwMajorVersion < 6ul)
+      return true;
+
+    HANDLE token = nullptr;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    {
+      std::cerr << "OpenProcessToken failed (" << GetLastError() << ")" << std::endl;
+      g_logger << dlib::LERROR << "OpenProcessToken (" << GetLastError() << ")";
+      return false;
+    }
+
+    DWORD size = 0ul;
+    TOKEN_ELEVATION tokenInformation;
+    if (!GetTokenInformation(
+          token,
+          TokenElevation,
+          &tokenInformation,
+          sizeof(TOKEN_ELEVATION),
+          &size))
+    {
+      return false;
+    }
+
+    CloseHandle(token); token = nullptr;
+    return tokenInformation.TokenIsElevated > 0;
+  }
+
   void MTConnectService::install()
   {
     char path[MAX_PATH] = {0};
@@ -190,40 +221,24 @@ namespace mtconnect {
       std::cerr << "Cannot install service GetModuleFileName failed (" << GetLastError() << ")" << std::endl;
       return;
     }
-    
-    OSVERSIONINFO osver = { sizeof(osver) };
-    if (GetVersionExA(&osver) && osver.dwMajorVersion >= 6ul)
+
+    if(!isElevated())
     {
-      HANDLE token = nullptr;
-      if(!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
-      {
-        std::cerr << "OpenProcessToken failed (" << GetLastError() << ")" << std::endl;
-        g_logger << dlib::LERROR << "OpenProcessToken (" << GetLastError() << ")";
-      }
-      
-      DWORD size = 0;
-      BOOL isElevated = FALSE;
-      TOKEN_ELEVATION tokenInformation;
-      if (GetTokenInformation(
-                              token,
-                              TokenElevation,
-                              &tokenInformation,
-                              sizeof(TOKEN_ELEVATION),
-                              &size))
-      {
-        isElevated = (BOOL)tokenInformation.TokenIsElevated;
-      }
-      
-      CloseHandle(token); token = nullptr;
-      
-      if (!isElevated)
-      {
-        g_logger << dlib::LERROR << "Process must have elevated permissions to run";
-        std::cerr << "Process must have elevated permissions to run" << std::endl;
-        return;
-      }
+      g_logger << dlib::LERROR << "Process must have elevated permissions to run";
+      std::cerr << "Process must have elevated permissions to run" << std::endl;
+      return;
     }
-    
+
+    // Fully qualify the configuration file name.
+    if (!m_configFile.empty() && m_configFile[0] != '/' && m_configFile[0] != '\\' && m_configFile[1] != ':')
+    {
+      // Relative file name
+      char curDir[MAX_PATH] = { 0 };
+      GetCurrentDirectoryA(MAX_PATH, curDir);
+      m_configFile = ((std::string) curDir) + "\\" + m_configFile;
+    }
+
+
     // Get a handle to the SCM database.
     auto manager = OpenSCManagerA(
                                   nullptr,				// local computer
@@ -245,7 +260,7 @@ namespace mtconnect {
                                 SERVICE_NO_CHANGE,	// service type: no change
                                 SERVICE_NO_CHANGE,	// service start type
                                 SERVICE_NO_CHANGE,	// error control: no change
-                                path,				// binary path: no change
+                                path,				// binary path (updated if nescessary)
                                 nullptr,			// load order group: no change
                                 nullptr,			// tag ID: no change
                                 nullptr,			// dependencies: no change
@@ -253,8 +268,9 @@ namespace mtconnect {
                                 nullptr,			// password: no change
                                 nullptr) )			// display name: no change
       {
-        g_logger << dlib::LERROR << "OpenService failed (" << GetLastError() << ")";
-        std::cerr << "OpenService failed (" << GetLastError() << ")" << std::endl;
+        g_logger << dlib::LERROR << "ChangeServiceConfig failed (" << GetLastError() << ")";
+        std::cerr << "ChangeServiceConfig failed (" << GetLastError() << ")" << std::endl;
+        CloseServiceHandle(service);
         CloseServiceHandle(manager);
         return;
       }
@@ -285,10 +301,22 @@ namespace mtconnect {
         return;
       }
     }
-    
+
+    // Build a description string for the service to make it easy to identify an instance
+    // by it build version and the configuration file path (if not empty)
+    std::string description = GetAgentVersion();
+    if (!m_configFile.empty())
+    {
+      description.append(" - ");
+      description.append(m_configFile);
+    }
+    SERVICE_DESCRIPTIONA serviceDescription = { 0 };
+    serviceDescription.lpDescription = const_cast<char*>(description.c_str());
+    ChangeServiceConfig2A(service, SERVICE_CONFIG_DESCRIPTION, &serviceDescription);
+
     CloseServiceHandle(service); service = nullptr;
     CloseServiceHandle(manager); manager = nullptr;
-    
+
     HKEY software = nullptr;
     auto res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
     if (res != ERROR_SUCCESS)
@@ -297,7 +325,7 @@ namespace mtconnect {
       std::cerr <<  "Could not open software key (" << res << ")" << std::endl;
       return;
     }
-    
+
     HKEY mtc = nullptr;
     res = RegOpenKeyA(software, "MTConnect", &mtc);
     if (res != ERROR_SUCCESS)
@@ -312,7 +340,7 @@ namespace mtconnect {
       }
     }
     RegCloseKey(software);
-    
+
     // Create Service Key
     HKEY agent = nullptr;
     res = RegOpenKeyA(mtc, m_name.c_str(), &agent);
@@ -328,32 +356,30 @@ namespace mtconnect {
       }
     }
     RegCloseKey(mtc);
-    
-    // Fully qualify the configuration file name.
-    if (!m_configFile.empty() && m_configFile[0] != '/' && m_configFile[0] != '\\' && m_configFile[1] != ':')
-    {
-      // Relative file name
-      char path[MAX_PATH] = {0};
-      GetCurrentDirectoryA(MAX_PATH, path);
-      m_configFile = ((std::string) path) + "\\" + m_configFile;
-    }
-    
+
     RegSetValueExA(agent, "ConfigurationFile", 0ul, REG_SZ, (const BYTE*)m_configFile.c_str(),
                    m_configFile.size() + 1);
     RegCloseKey(agent);
-    
+
     g_logger << dlib::LINFO << "Service installed successfully.";
   }
-  
+
   void MTConnectService::remove()
   {
+    if (!isElevated())
+    {
+      g_logger << dlib::LERROR << "Process must have elevated permissions to run";
+      std::cerr << "Process must have elevated permissions to run" << std::endl;
+      return;
+    }
+
     auto manager = OpenSCManagerA(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
     if (!manager)
     {
       g_logger << dlib::LERROR << "Could not open Service Control Manager";
       return;
     }
-    
+
     auto service = ::OpenService(manager, m_name.c_str(), SERVICE_ALL_ACCESS);
     CloseServiceHandle(manager); manager = nullptr;
     if (!service)
@@ -361,7 +387,7 @@ namespace mtconnect {
       g_logger << dlib::LERROR << "Could not open Service " << m_name;
       return;
     }
-    
+
     // Check if service is running, if it is, stop the service.
     SERVICE_STATUS status;
     if (QueryServiceStatus(service, &status) && status.dwCurrentState != SERVICE_STOPPED)
@@ -372,16 +398,16 @@ namespace mtconnect {
       else
         g_logger << dlib::LINFO << "Successfully stopped service " << m_name;
     }
-    
+
     if(!::DeleteService(service))
       g_logger << dlib::LERROR << "Could delete service " << m_name;
     else
       g_logger << dlib::LINFO << "Successfully removed service " << m_name;
-    
+
     ::CloseServiceHandle(service);
   }
-  
-  
+
+
   //
   // Purpose:
   //   Entry point for the service

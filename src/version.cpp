@@ -16,10 +16,23 @@
 //
 #include "version.h"
 #include <stdio.h>
+#include <sstream>
 
 void PrintMTConnectAgentVersion()
 {
-	printf("MTConnect Agent Version %d.%d.%d.%d%s - built on " __TIMESTAMP__ "\n",
-	   AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
-	   AGENT_VERSION_BUILD, AGENT_VERSION_RC);
+	printf("%s - built on " __TIMESTAMP__ "\n",
+		GetAgentVersion().c_str());
+}
+
+std::string GetAgentVersion()
+{
+	std::stringstream verStream;
+	verStream << "MTConnect Agent Version "
+		<< AGENT_VERSION_MAJOR << "."
+		<< AGENT_VERSION_MINOR << "."
+		<< AGENT_VERSION_PATCH << "."
+		<< AGENT_VERSION_BUILD;
+	if(strlen(AGENT_VERSION_RC))
+		verStream << " (" << AGENT_VERSION_RC << ")";
+	return verStream.str();
 }
