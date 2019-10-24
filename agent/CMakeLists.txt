@@ -11,11 +11,8 @@ else()
   set(RESOURCE_FILE "")
 endif()
 
-if(UNIX)
-  execute_process(COMMAND uname OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
-  if(CMAKE_SYSTEM_NAME MATCHES Linux)
-    set(LINUX_LIBRARIES pthread)
-  endif()
+if(UNIX AND NOT APPLE)
+  set(LINUX_LIBRARIES pthread)
 endif()
 
 file(GLOB AGENT_SRCS *.cpp)
