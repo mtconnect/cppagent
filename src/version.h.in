@@ -1,11 +1,11 @@
 #include <string>
 
 // the configured options and settings for MTConnect Agent
-constexpr int AGENT_VERSION_MAJOR = @AGENT_VERSION_MAJOR@;
-constexpr int AGENT_VERSION_MINOR = @AGENT_VERSION_MINOR@;
-constexpr int AGENT_VERSION_PATCH = @AGENT_VERSION_PATCH@;
-constexpr int AGENT_VERSION_BUILD = @AGENT_VERSION_BUILD@;
-constexpr char* AGENT_VERSION_RC = "@AGENT_VERSION_RC@";
+const int AGENT_VERSION_MAJOR = @AGENT_VERSION_MAJOR@;
+const int AGENT_VERSION_MINOR = @AGENT_VERSION_MINOR@;
+const int AGENT_VERSION_PATCH = @AGENT_VERSION_PATCH@;
+const int AGENT_VERSION_BUILD = @AGENT_VERSION_BUILD@;
+const char* AGENT_VERSION_RC = "@AGENT_VERSION_RC@";
 
 extern void PrintMTConnectAgentVersion();
 extern std::string GetAgentVersion();
