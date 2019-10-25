@@ -230,7 +230,7 @@ namespace mtconnect {
     }
 
     // Fully qualify the configuration file name.
-    if (!m_configFile.empty() && m_configFile[0] != '/' && m_configFile[0] != '\\' && m_configFile[1] != ':')
+    if (!m_configFile.empty() && m_configFile[0] != '/' && m_configFile[0] != '\\' && (m_configFile.size() == 1 || m_configFile[1] != ':'))
     {
       // Relative file name
       char curDir[MAX_PATH] = { 0 };
