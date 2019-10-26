@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 project(cppagent)
 
-# All of the C++ Agent code, DLib and CppUnit require C++ 14 features to compile.
+# All of the C++ Agent code, DLib require C++ 14 features to compile.
 # We will define these properties by default for each CMake target to be created.
 set_property(GLOBAL PROPERTY CXX_STANDARD 14)
 set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
@@ -57,7 +57,6 @@ include(cmake/osx_no_app_or_frameworks.cmake)
 
 # Add our dependency projects
 include(cmake/LibXML2.cmake)
-include(cmake/CppUnit.cmake)
 include(cmake/DLib.cmake)
 include(cmake/Date.cmake)
 include(cmake/json.cmake)
