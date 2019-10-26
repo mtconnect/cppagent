@@ -26,7 +26,9 @@ AddDLibSupport(agent_lib)
 AddDateSupport(agent_lib)
 AddJsonSupport(agent_lib)
 
-target_include_directories(agent_lib PRIVATE "${PROJECT_BINARY_DIR}/agent_lib")
+target_include_directories(agent_lib
+  PRIVATE "${PROJECT_BINARY_DIR}/agent_lib"
+  PUBLIC  "${CMAKE_CURRENT_LIST_DIR}/../src")
 
 target_compile_definitions(agent_lib PRIVATE NOMINMAX)
 
