@@ -10,6 +10,3 @@
 [submodule "json"]
 	path = json
 	url = https://github.com/nlohmann/json.git
-[submodule "CUTI"]
-	path = CUTI
-	url = https://github.com/k-brac/CUTI.git
