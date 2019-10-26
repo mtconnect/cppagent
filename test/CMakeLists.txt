@@ -1,6 +1,3 @@
-# Specify the build type on single-configuration generators such as Ninja and Makefile
-set(CMAKE_BUILD_TYPE DEBUG)
-
 if(NOT APPVEYOR AND (WIN32 OR APPLE))
   add_subdirectory(../CUTI "${CMAKE_BINARY_DIR}/cuti")
 endif()

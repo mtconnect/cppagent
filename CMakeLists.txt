@@ -6,7 +6,7 @@ set(AGENT_VERSION_BUILD 12)
 set(AGENT_VERSION_RC "RC12")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking
-cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 project(cppagent)
 
@@ -17,10 +17,28 @@ set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
 
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
+# The first type will be used as the default build type if the user does not specify one.
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
-if(DEFINED CMAKE_BUILD_TYPE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
+if(NOT CMAKE_BUILD_TYPE)
+  list(GET CMAKE_CONFIGURATION_TYPES 0 _default_build_type)
+  message(STATUS "Setting build type to '${_default_build_type}'.")
+  set(CMAKE_BUILD_TYPE "${_default_build_type}" CACHE STRING "Choose the type of build." FORCE)
+else()
+  # Check if CMAKE_BUILD_TYPE is valid otherwise fail.
+  set(_uppercase_configuration_types)
+  foreach(type ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER "${type}" _uppercase_type)
+    list(APPEND _uppercase_configuration_types ${_uppercase_type})
+  endforeach()
+  string(TOUPPER "${CMAKE_BUILD_TYPE}" _uppercase_build_type)
+
+  list(FIND _uppercase_configuration_types "${_uppercase_build_type}" _is_valid_type)
+  if(${_is_valid_type} EQUAL -1)
+    message(FATAL_ERROR "'${CMAKE_BUILD_TYPE}' is not a valid build type for MTConnect Adapter. "
+      "Valid build types are '${CMAKE_CONFIGURATION_TYPES}'.")
+  endif()
 endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
 
 # Add our './cmake' sub-folder to the lists searched when calling functions
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
