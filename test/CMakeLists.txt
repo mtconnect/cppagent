@@ -25,5 +25,6 @@ macro(add_agent_test AGENT_TEST_NAME)
   add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
 endmacro()
 
+add_agent_test(adapter)
 add_agent_test(config)
 add_agent_test(change_observer)
