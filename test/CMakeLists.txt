@@ -31,6 +31,7 @@ add_agent_test(change_observer)
 add_agent_test(checkpoint)
 add_agent_test(component)
 add_agent_test(connector)
+add_agent_test(data_item)
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
