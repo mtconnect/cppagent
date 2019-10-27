@@ -26,3 +26,4 @@ macro(add_agent_test AGENT_TEST_NAME)
 endmacro()
 
 add_agent_test(config)
+add_agent_test(change_observer)
