@@ -31,3 +31,11 @@ add_agent_test(change_observer)
 add_agent_test(checkpoint)
 add_agent_test(component)
 add_agent_test(connector)
+
+# TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
+add_custom_command(
+  TARGET adapter_test POST_BUILD
+  COMMAND "${CMAKE_COMMAND}" -E copy
+  "${CMAKE_CURRENT_SOURCE_DIR}/probe.xml"
+  "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
+  COMMENT "Copying to output directory")
