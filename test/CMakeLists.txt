@@ -39,6 +39,7 @@ add_agent_test(component FALSE)
 add_agent_test(connector FALSE)
 add_agent_test(data_item FALSE)
 add_agent_test(data_set TRUE)
+add_agent_test(device FALSE)
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
