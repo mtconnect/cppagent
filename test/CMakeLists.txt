@@ -22,7 +22,8 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
     PUBLIC  "${CMAKE_CURRENT_LIST_DIR}/../date/include"
             "${CMAKE_CURRENT_LIST_DIR}/../dlib"
             "${CMAKE_CURRENT_LIST_DIR}/../libxml2/include"
-            "${CMAKE_CURRENT_LIST_DIR}/../libxml2_make/include")
+            "${CMAKE_CURRENT_LIST_DIR}/../libxml2_make/include"
+            "${CMAKE_CURRENT_LIST_DIR}/../json/include")
 
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\"" NOMINMAX
@@ -41,6 +42,7 @@ add_agent_test(data_item FALSE)
 add_agent_test(data_set TRUE)
 add_agent_test(device FALSE)
 add_agent_test(globals FALSE)
+add_agent_test(json_printer_asset TRUE)
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
