@@ -5,9 +5,14 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../googletest" "googletest")
 
 # Define test cases
-macro(add_agent_test AGENT_TEST_NAME)
-  add_executable(${AGENT_TEST_NAME}_test ${AGENT_TEST_NAME}_test.cpp
-    "${CMAKE_CURRENT_LIST_DIR}/../googletest/googletest/src/gtest_main.cc")
+macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
+  set(_sources)
+  list(APPEND _sources ${AGENT_TEST_NAME}_test.cpp)
+  list(APPEND _sources "${CMAKE_CURRENT_LIST_DIR}/../googletest/googletest/src/gtest_main.cc")
+  if(${ADD_TEST_HELPER})
+    list(APPEND _sources test_globals.cpp agent_test_helper.cpp)
+  endif()
+  add_executable(${AGENT_TEST_NAME}_test ${_sources})
   target_link_libraries(${AGENT_TEST_NAME}_test agent_lib gtest)
   target_include_directories(${AGENT_TEST_NAME}_test
     PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../googletest/googletest/include")
@@ -25,13 +30,14 @@ macro(add_agent_test AGENT_TEST_NAME)
   add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
 endmacro()
 
-add_agent_test(adapter)
-add_agent_test(config)
-add_agent_test(change_observer)
-add_agent_test(checkpoint)
-add_agent_test(component)
-add_agent_test(connector)
-add_agent_test(data_item)
+add_agent_test(adapter FALSE)
+add_agent_test(config FALSE)
+add_agent_test(change_observer FALSE)
+add_agent_test(checkpoint FALSE)
+add_agent_test(component FALSE)
+add_agent_test(connector FALSE)
+add_agent_test(data_item FALSE)
+add_agent_test(data_set TRUE)
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
