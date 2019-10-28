@@ -44,6 +44,7 @@ add_agent_test(device FALSE)
 add_agent_test(globals FALSE)
 add_agent_test(json_printer_asset TRUE)
 add_agent_test(json_printer_error TRUE)
+add_agent_test(json_printer_probe TRUE)
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
