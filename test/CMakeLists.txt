@@ -48,6 +48,7 @@ add_agent_test(json_printer_probe TRUE)
 add_agent_test(json_printer_stream TRUE)
 add_agent_test(observation TRUE)
 add_agent_test(xml_parser TRUE)
+add_agent_test(xml_printer TRUE)
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
