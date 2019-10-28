@@ -30,6 +30,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
   add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
 endmacro()
 
+add_agent_test(agent TRUE)
 add_agent_test(adapter FALSE)
 add_agent_test(config FALSE)
 add_agent_test(change_observer FALSE)
