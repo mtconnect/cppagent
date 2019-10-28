@@ -32,7 +32,7 @@ init:
     if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
 - sh: sudo apt-get update
-- sh: sudo apt-get --yes install libxml2-dev libcppunit-dev
+- sh: sudo apt-get --yes install libxml2-dev
 
 before_build:
 - cmd: |-
@@ -41,7 +41,7 @@ before_build:
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAPPVEYOR=ON -G %generator%
+    cmake .. -DAPPVEYOR=ON -DAGENT_ENABLE_UNITTESTS=OFF -G %generator%
 - sh: git submodule init
 - sh: git submodule update
 - sh: mkdir build
@@ -58,18 +58,14 @@ build:
 build_script:
 - cmd: |-
     cd %APPVEYOR_BUILD_FOLDER%\build
-    cmake --build . --config Debug --target agent_test -- %MSBUILD_FLAGS%
+    cmake --build . --config Debug --target ALL_BUILD -- %MSBUILD_FLAGS%
 - sh: |-
     cd ${APPVEYOR_BUILD_FOLDER}/build
-    cmake --build . --config Debug --target agent_test    
+    cmake --build . --config Debug --target all -- -j 4
 
 test_script:
-- cmd: |-
-    cd %APPVEYOR_BUILD_FOLDER%\test
-    %APPVEYOR_BUILD_FOLDER%\build\test\Debug\agent_test.exe
-- sh: |-
-    cd ${APPVEYOR_BUILD_FOLDER}/test
-    ${APPVEYOR_BUILD_FOLDER}/build/test/agent_test
+- cmd: ctest
+- sh: ctest
 
   
 only_commits:
