@@ -22,8 +22,8 @@
 #include <map>
 #include <string>
 
-#include "adapter.hpp"
-#include "agent.hpp"
+#include <dlib/server.h>
+
 #include "test_globals.hpp"
 
 namespace mtconnect {
@@ -46,8 +46,8 @@ class AgentTestHelper {
   dlib::key_value_map_ci m_incomingHeaders;
 
   // Helper method to test expected string, given optional query, & run tests
-  void responseHelper(const char *file, int line, key_value_map &aQueries, xmlDocPtr *doc);
-  void putResponseHelper(const char *file, int line, std::string body, key_value_map &aQueries,
+  void responseHelper(const char *file, int line, dlib::key_value_map &aQueries, xmlDocPtr *doc);
+  void putResponseHelper(const char *file, int line, std::string body, dlib::key_value_map &aQueries,
                          xmlDocPtr *doc);
 };
 

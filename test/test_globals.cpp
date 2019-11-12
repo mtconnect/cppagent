@@ -24,7 +24,15 @@
 #include <iostream>
 
 using namespace std;
-using namespace mtconnect;
+
+namespace {
+template<typename T>
+std::string toString(T value) {
+  std::ostringstream stm;
+  stm << value;
+  return stm.str();
+}
+}
 
 string getFile(string file) {
   string path = string(PROJECT_ROOT_DIR "/test/resources/") + file;
@@ -224,7 +232,7 @@ void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected, const std::s
   string message = (string) "Incorrect count of elements for path " + xpath;
 
   int actual = obj->nodesetval->nodeNr;
-  failNotEqualIf(actual != expected, intToString(expected), intToString(actual), message, file,
+  failNotEqualIf(actual != expected, toString(expected), toString(actual), message, file,
                  line);
 }
 

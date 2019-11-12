@@ -41,7 +41,7 @@ before_build:
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAPPVEYOR=ON -DAGENT_ENABLE_UNITTESTS=OFF -G %generator%
+    cmake .. -DAPPVEYOR=ON -DAGENT_ENABLE_UNITTESTS=ON -G %generator%
 - sh: git submodule init
 - sh: git submodule update
 - sh: mkdir build
@@ -64,7 +64,7 @@ build_script:
     cmake --build . --config Debug --target all -- -j 4
 
 test_script:
-- cmd: ctest
+- cmd: ctest -C Debug
 - sh: ctest
 
   

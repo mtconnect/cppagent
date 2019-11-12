@@ -24,8 +24,6 @@
 #include <sstream>
 #include <string>
 
-#include "globals.hpp"
-
 // Retrieve a sample file, open it, and return it as a string
 std::string getFile(std::string fileLoc);
 
