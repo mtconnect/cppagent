@@ -17,7 +17,7 @@
 
 #include "test_globals.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <libxml/tree.h>
 #include <libxml/xpathInternals.h>

@@ -18,7 +18,7 @@
 #include "service.hpp"
 #include <string.h>
 #include <fstream>
-#include "dlib/logger.h"
+#include <dlib/logger.h>
 #include "version.h"
 
 #ifdef _WINDOWS

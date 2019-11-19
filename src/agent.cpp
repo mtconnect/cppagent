@@ -16,7 +16,7 @@
 //
 
 #include "agent.hpp"
-#include "dlib/logger.h"
+#include <dlib/logger.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sstream>

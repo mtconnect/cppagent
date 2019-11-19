@@ -24,7 +24,7 @@
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
-#include "dlib/logger.h"
+#include <dlib/logger.h>
 #include <stdexcept>
 
 #if _MSC_VER >= 1900

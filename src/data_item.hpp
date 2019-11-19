@@ -20,7 +20,7 @@
 
 #include <map>
 
-#include "dlib/threads.h"
+#include <dlib/threads.h>
 
 #include "component.hpp"
 #include "change_observer.hpp"

@@ -17,7 +17,7 @@
 
 #include "agent_test_helper.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "agent.hpp"
 

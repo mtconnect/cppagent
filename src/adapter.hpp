@@ -25,8 +25,8 @@
 #include <set>
 #include <chrono>
 
-#include "dlib/sockets.h"
-#include "dlib/threads.h"
+#include <dlib/sockets.h>
+#include <dlib/threads.h>
 
 #include "agent.hpp"
 #include "connector.hpp"

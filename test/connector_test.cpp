@@ -18,7 +18,7 @@
 namespace date {};
 using namespace date;
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
 #include <chrono>

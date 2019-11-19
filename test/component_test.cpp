@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "component.hpp"
 #include "device.hpp"

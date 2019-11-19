@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <stdio.h>
 #include "adapter.hpp"

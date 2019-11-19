@@ -22,7 +22,7 @@
 #include "service.hpp"
 #include <string>
 #include <chrono>
-#include "dlib/logger.h"
+#include <dlib/logger.h>
 
 namespace mtconnect {
   class Agent;

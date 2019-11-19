@@ -24,14 +24,14 @@
 //    limitations under the License.
 //
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "checkpoint.hpp"
 #include "cutting_tool.hpp"

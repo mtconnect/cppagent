@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "globals.hpp"
 
@@ -28,7 +28,7 @@
 #include "data_item.hpp"
 #include "device.hpp"
 #include "json_printer.hpp"
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 #include "observation.hpp"
 
 #include "json_helper.hpp"

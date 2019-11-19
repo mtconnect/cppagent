@@ -20,8 +20,8 @@
 #include <regex>
 
 #include "data_item.hpp"
-#include "dlib/threads.h"
-#include "dlib/logger.h"
+#include <dlib/threads.h>
+#include <dlib/logger.h>
 
 #ifdef _WINDOWS
 #define strcasecmp stricmp

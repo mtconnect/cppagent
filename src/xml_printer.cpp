@@ -18,8 +18,8 @@
 #include "xml_printer.hpp"
 #include <set>
 #include <libxml/xmlwriter.h>
-#include "dlib/sockets.h"
-#include "dlib/logger.h"
+#include <dlib/sockets.h>
+#include <dlib/logger.h>
 #include "version.h"
 
 #include "composition.hpp"

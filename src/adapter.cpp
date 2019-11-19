@@ -18,7 +18,7 @@
 #define __STDC_LIMIT_MACROS 1
 #include "adapter.hpp"
 #include "device.hpp"
-#include "dlib/logger.h"
+#include <dlib/logger.h>
 #include <algorithm>
 #include <chrono>
 #include <thread>

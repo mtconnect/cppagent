@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <set>
 
-#include "dlib/sockets.h"
+#include <dlib/sockets.h>
 #include "device.hpp"
 #include "composition.hpp"
 #include "sensor_configuration.hpp"
