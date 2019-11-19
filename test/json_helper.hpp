@@ -1,3 +1,5 @@
+#include <nlohmann/json.hpp>
+
 constexpr inline nlohmann::json::size_type operator"" _S(unsigned long long v) {
   return static_cast<nlohmann::json::size_type>(v);
 }
