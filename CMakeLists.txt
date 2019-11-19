@@ -8,9 +8,11 @@ set(AGENT_VERSION_RC "RC12")
 # This minimum version is to support Visual Studio 2017 and C++ feature checking
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
+option(AGENT_ENABLE_UNITTESTS "Enables the agent's unit tests" ON)
+
 project(cppagent)
 
-# All of the C++ Agent code, DLib and CppUnit require C++ 14 features to compile.
+# All of the C++ Agent code, DLib require C++ 14 features to compile.
 # We will define these properties by default for each CMake target to be created.
 set_property(GLOBAL PROPERTY CXX_STANDARD 14)
 set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
@@ -57,7 +59,6 @@ include(cmake/osx_no_app_or_frameworks.cmake)
 
 # Add our dependency projects
 include(cmake/LibXML2.cmake)
-include(cmake/CppUnit.cmake)
 include(cmake/DLib.cmake)
 include(cmake/Date.cmake)
 include(cmake/json.cmake)
@@ -65,7 +66,10 @@ include(cmake/json.cmake)
 # Add our projects
 add_subdirectory(agent_lib)
 add_subdirectory(agent)
-add_subdirectory(test)
+if(AGENT_ENABLE_UNITTESTS)
+  enable_testing()
+  add_subdirectory(test)
+endif()
 
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
 # We will set this to the agent_test project.

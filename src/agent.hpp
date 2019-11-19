@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "globals.hpp"
-
 #include <sstream>
 #include <string>
 #include <vector>

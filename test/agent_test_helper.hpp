@@ -17,57 +17,58 @@
 
 #pragma once
 
+#include <chrono>
+#include <iosfwd>
 #include <map>
 #include <string>
-#include <iosfwd>
-#include <chrono>
 
-#include "adapter.hpp"
-#include "agent.hpp"
+#include <dlib/server.h>
+
 #include "test_globals.hpp"
 
-namespace mtconnect { class Agent; }
+namespace mtconnect {
+class Agent;
+}
 
 class AgentTestHelper {
-public:
-  AgentTestHelper()
-  : m_agent(nullptr), m_incomingIp("127.0.0.1")
-  {
-  }
-  
-  XCTestCase *self;
+ public:
+  AgentTestHelper() : m_agent(nullptr), m_incomingIp("127.0.0.1") {}
+
   mtconnect::Agent *m_agent;
   std::ostringstream m_out;
-  
+
   std::string m_incomingIp;
-  
+
   std::string m_path;
   dlib::key_value_map m_queries;
   std::string m_result;
   dlib::key_value_map m_cookies;
   dlib::key_value_map_ci m_incomingHeaders;
-  
+
   // Helper method to test expected string, given optional query, & run tests
-  xmlDocPtr responseHelper(const char *file, int line, key_value_map &aQueries);
-  xmlDocPtr putResponseHelper(const char *file, int line, std::string body,
-                              key_value_map &aQueries);
+  void responseHelper(const char *file, int line, dlib::key_value_map &aQueries, xmlDocPtr *doc);
+  void putResponseHelper(const char *file, int line, std::string body, dlib::key_value_map &aQueries,
+                         xmlDocPtr *doc);
 };
 
-#define PARSE_XML_RESPONSE \
-xmlDocPtr doc = m_agentTestHelper->responseHelper(__FILE__, __LINE__, m_agentTestHelper->m_queries); \
-CPPUNIT_ASSERT(doc)
+#define PARSE_XML_RESPONSE                                                                   \
+  xmlDocPtr doc = nullptr;                                                                   \
+  m_agentTestHelper->responseHelper(__FILE__, __LINE__, m_agentTestHelper->m_queries, &doc); \
+  ASSERT_TRUE(doc)
 
-#define PARSE_XML_RESPONSE_QUERY_KV(key, value) \
-m_agentTestHelper->m_queries[key] = value; \
-xmlDocPtr doc = m_agentTestHelper->responseHelper(__FILE__, __LINE__, m_agentTestHelper->m_queries); \
-m_agentTestHelper->m_queries.clear(); \
-CPPUNIT_ASSERT(doc)
+#define PARSE_XML_RESPONSE_QUERY_KV(key, value)                                              \
+  m_agentTestHelper->m_queries[key] = value;                                                 \
+  xmlDocPtr doc = nullptr;                                                                   \
+  m_agentTestHelper->responseHelper(__FILE__, __LINE__, m_agentTestHelper->m_queries, &doc); \
+  m_agentTestHelper->m_queries.clear();                                                      \
+  ASSERT_TRUE(doc)
 
-#define PARSE_XML_RESPONSE_QUERY(queries) \
-xmlDocPtr doc = m_agentTestHelper->responseHelper(__FILE__, __LINE__, queries); \
-CPPUNIT_ASSERT(doc)
+#define PARSE_XML_RESPONSE_QUERY(queries)                               \
+  xmlDocPtr doc = nullptr;                                              \
+  m_agentTestHelper->responseHelper(__FILE__, __LINE__, queries, &doc); \
+  ASSERT_TRUE(doc)
 
-#define PARSE_XML_RESPONSE_PUT(body, queries) \
-xmlDocPtr doc = m_agentTestHelper->putResponseHelper(__FILE__, __LINE__, body, queries); \
-CPPUNIT_ASSERT(doc)
-
+#define PARSE_XML_RESPONSE_PUT(body, queries)                                    \
+  xmlDocPtr doc = nullptr;                                                       \
+  m_agentTestHelper->putResponseHelper(__FILE__, __LINE__, body, queries, &doc); \
+  ASSERT_TRUE(doc)

@@ -15,19 +15,20 @@
 //    limitations under the License.
 //
 
-#include "Cuti.h"
-#include <stdio.h>
 #include "agent_test_helper.hpp"
+
+#include "gtest/gtest.h"
+
 #include "agent.hpp"
+
+#include <stdio.h>
 
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 
-xmlDocPtr AgentTestHelper::responseHelper(
-                                          const char *file, int line,
-                                          key_value_map &aQueries)
-{
+void AgentTestHelper::responseHelper(const char *file, int line, key_value_map &aQueries,
+                                     xmlDocPtr *doc) {
   IncomingThings incoming("", "", 0, 0);
   OutgoingThings outgoing;
   incoming.request_type = "GET";
@@ -35,47 +36,34 @@ xmlDocPtr AgentTestHelper::responseHelper(
   incoming.queries = aQueries;
   incoming.cookies = m_cookies;
   incoming.headers = m_incomingHeaders;
-  
+
   outgoing.m_out = &m_out;
-  
+
   m_result = m_agent->httpRequest(incoming, outgoing);
-  
-  if (m_result.empty())
-  {
+
+  if (m_result.empty()) {
     m_result = m_out.str();
     auto pos = m_result.rfind("\n--");
-    if (pos != string::npos)
-    {
+    if (pos != string::npos) {
       pos = m_result.find('<', pos);
-      if (pos != string::npos)
-        m_result.erase(0, pos);
+      if (pos != string::npos) m_result.erase(0, pos);
     }
   }
-  
+
   string message = (string) "No response to request" + m_path + " with: ";
-  
+
   key_value_map::iterator iter;
-  
+
   for (iter = aQueries.begin(); iter != aQueries.end(); ++iter)
     message += iter->first + "=" + iter->second + ",";
-  
-#ifndef CUTI_NO_INTEGRATION
-  stringstream msg;
-  msg << message << " -- " << file << "(" << line << ")";
-  CPPUNIT_ASSERT_MESSAGE(msg.str(), outgoing.http_return == 200);
-#else
-  CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, CPPUNIT_NS::SourceLine(file, line));
-#endif
-  
-  return xmlParseMemory(m_result.c_str(), m_result.length());
+
+  ASSERT_EQ(outgoing.http_return, 200) << message << " -- " << file << "(" << line << ")";
+
+  *doc = xmlParseMemory(m_result.c_str(), m_result.length());
 }
 
-
-xmlDocPtr AgentTestHelper::putResponseHelper(
-                                             const char *file, int line,
-                                             string body,
-                                             key_value_map &aQueries)
-{
+void AgentTestHelper::putResponseHelper(const char *file, int line, string body,
+                                        key_value_map &aQueries, xmlDocPtr *doc) {
   IncomingThings incoming("", "", 0, 0);
   OutgoingThings outgoing;
   incoming.request_type = "PUT";
@@ -85,20 +73,14 @@ xmlDocPtr AgentTestHelper::putResponseHelper(
   incoming.headers = m_incomingHeaders;
   incoming.body = body;
   incoming.foreign_ip = m_incomingIp;
-  
+
   outgoing.m_out = &m_out;
-  
+
   m_result = m_agent->httpRequest(incoming, outgoing);
-  
+
   string message = (string) "No response to request" + m_path;
-  
-#ifndef CUTI_NO_INTEGRATION
-  stringstream msg;
-  msg << message << " -- " << file << "(" << line << ")";
-  CPPUNIT_ASSERT_MESSAGE(msg.str(), outgoing.http_return == 200);
-#else
-  CPPUNIT_NS::Asserter::failIf(outgoing.http_return != 200, message, CPPUNIT_NS::SourceLine(file, line));
-#endif
-  
-  return xmlParseMemory(m_result.c_str(), m_result.length());
+
+  ASSERT_EQ(outgoing.http_return, 200) << message << " -- " << file << "(" << line << ")";
+
+  *doc = xmlParseMemory(m_result.c_str(), m_result.length());
 }

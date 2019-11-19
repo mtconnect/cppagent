@@ -15,236 +15,192 @@
 //    limitations under the License.
 //
 
-#include "Cuti.h"
+#include "gtest/gtest.h"
+
 #include "device.hpp"
 
 using namespace std;
 using namespace mtconnect;
 
+class DeviceTest : public testing::Test {
+ protected:
+  void SetUp() override {
+    std::map<string, string> attributes1;
+    attributes1["id"] = "1";
+    attributes1["name"] = "DeviceTest1";
+    attributes1["uuid"] = "UnivUniqId1";
+    attributes1["iso841Class"] = "4";
+    m_devA = new Device(attributes1);
 
-TEST_CLASS(DeviceTest)
-{
-protected:
+    std::map<string, string> attributes2;
+    attributes2["id"] = "3";
+    attributes2["name"] = "DeviceTest2";
+    attributes2["uuid"] = "UnivUniqId2";
+    attributes2["sampleRate"] = "123.4";
+    attributes2["iso841Class"] = "6";
+    m_devB = new Device(attributes2);
+  }
+
+  void TearDown() override {
+    delete m_devA;
+    m_devA = nullptr;
+    delete m_devB;
+    m_devB = nullptr;
+  }
+
   Device *m_devA, *m_devB;
-  
-public:
-  void testGetters();
-  void testGetAttributes();
-  void testDescription();
-  void testRelationships();
-  void testDataItems();
-  void testDeviceDataItem();
-  void testGetDataItem();
-  
-  SET_UP();
-  TEAR_DOWN();
-  
-  CPPUNIT_TEST_SUITE(DeviceTest);
-  CPPUNIT_TEST(testGetters);
-  CPPUNIT_TEST(testGetAttributes);
-  CPPUNIT_TEST(testDescription);
-  CPPUNIT_TEST(testRelationships);
-  CPPUNIT_TEST(testDataItems);
-  CPPUNIT_TEST(testDeviceDataItem);
-  CPPUNIT_TEST(testGetDataItem);
-  CPPUNIT_TEST_SUITE_END();
 };
 
+TEST_F(DeviceTest, Getters) {
+  ASSERT_EQ((string) "Device", m_devA->getClass());
+  ASSERT_EQ((string) "1", m_devA->getId());
+  ASSERT_EQ((string) "DeviceTest1", m_devA->getName());
+  ASSERT_EQ((string) "UnivUniqId1", m_devA->getUuid());
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(DeviceTest);
-
-void DeviceTest::setUp()
-{
-  std::map<string, string> attributes1;
-  attributes1["id"] = "1";
-  attributes1["name"] = "DeviceTest1";
-  attributes1["uuid"] = "UnivUniqId1";
-  attributes1["iso841Class"] = "4";
-  m_devA = new Device(attributes1);
-  
-  std::map<string, string> attributes2;
-  attributes2["id"] = "3";
-  attributes2["name"] = "DeviceTest2";
-  attributes2["uuid"] = "UnivUniqId2";
-  attributes2["sampleRate"] = "123.4";
-  attributes2["iso841Class"] = "6";
-  m_devB = new Device(attributes2);
+  ASSERT_EQ((string) "Device", m_devB->getClass());
+  ASSERT_EQ((string) "3", m_devB->getId());
+  ASSERT_EQ((string) "DeviceTest2", m_devB->getName());
+  ASSERT_EQ((string) "UnivUniqId2", m_devB->getUuid());
 }
 
-
-void DeviceTest::tearDown()
-{
-  delete m_devA; m_devA = nullptr;
-  delete m_devB; m_devB = nullptr;
-}
-
-
-void DeviceTest::testGetters()
-{
-  CPPUNIT_ASSERT_EQUAL((string) "Device", m_devA->getClass());
-  CPPUNIT_ASSERT_EQUAL((string) "1", m_devA->getId());
-  CPPUNIT_ASSERT_EQUAL((string) "DeviceTest1", m_devA->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", m_devA->getUuid());
-  
-  CPPUNIT_ASSERT_EQUAL((string) "Device", m_devB->getClass());
-  CPPUNIT_ASSERT_EQUAL((string) "3", m_devB->getId());
-  CPPUNIT_ASSERT_EQUAL((string) "DeviceTest2", m_devB->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", m_devB->getUuid());
-}
-
-
-void DeviceTest::testGetAttributes()
-{
+TEST_F(DeviceTest, GetAttributes) {
   const auto &attributes1 = m_devA->getAttributes();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "1", attributes1.at("id"));
-  CPPUNIT_ASSERT_EQUAL((string) "DeviceTest1", attributes1.at("name"));
-  CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId1", attributes1.at("uuid"));
-  CPPUNIT_ASSERT(attributes1.find("sampleRate") == attributes1.end());
-  CPPUNIT_ASSERT_EQUAL((string) "4", attributes1.at("iso841Class"));
-  
+
+  ASSERT_EQ((string) "1", attributes1.at("id"));
+  ASSERT_EQ((string) "DeviceTest1", attributes1.at("name"));
+  ASSERT_EQ((string) "UnivUniqId1", attributes1.at("uuid"));
+  ASSERT_TRUE(attributes1.find("sampleRate") == attributes1.end());
+  ASSERT_EQ((string) "4", attributes1.at("iso841Class"));
+
   const auto &attributes2 = m_devB->getAttributes();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "3", attributes2.at("id"));
-  CPPUNIT_ASSERT_EQUAL((string) "DeviceTest2", attributes2.at("name"));
-  CPPUNIT_ASSERT_EQUAL((string) "UnivUniqId2", attributes2.at("uuid"));
-  CPPUNIT_ASSERT_EQUAL((string) "123.4", attributes2.at("sampleInterval"));
-  CPPUNIT_ASSERT_EQUAL((string) "6", attributes2.at("iso841Class"));
+
+  ASSERT_EQ((string) "3", attributes2.at("id"));
+  ASSERT_EQ((string) "DeviceTest2", attributes2.at("name"));
+  ASSERT_EQ((string) "UnivUniqId2", attributes2.at("uuid"));
+  ASSERT_EQ((string) "123.4", attributes2.at("sampleInterval"));
+  ASSERT_EQ((string) "6", attributes2.at("iso841Class"));
 }
 
-
-void DeviceTest::testDescription()
-{
+TEST_F(DeviceTest, Description) {
   map<string, string> attributes;
   attributes["manufacturer"] = "MANUFACTURER";
   attributes["serialNumber"] = "SERIAL_NUMBER";
-  
+
   m_devA->addDescription((string) "Machine 1", attributes);
   auto description1 = m_devA->getDescription();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description1["manufacturer"]);
-  CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description1["serialNumber"]);
-  CPPUNIT_ASSERT(description1["station"].empty());
-  
-  CPPUNIT_ASSERT_EQUAL((string) "Machine 1", m_devA->getDescriptionBody());
-  
+
+  ASSERT_EQ((string) "MANUFACTURER", description1["manufacturer"]);
+  ASSERT_EQ((string) "SERIAL_NUMBER", description1["serialNumber"]);
+  ASSERT_TRUE(description1["station"].empty());
+
+  ASSERT_EQ((string) "Machine 1", m_devA->getDescriptionBody());
+
   attributes["station"] = "STATION";
   m_devB->addDescription((string) "Machine 2", attributes);
   auto description2 = m_devB->getDescription();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "MANUFACTURER", description2["manufacturer"]);
-  CPPUNIT_ASSERT_EQUAL((string) "SERIAL_NUMBER", description2["serialNumber"]);
-  CPPUNIT_ASSERT_EQUAL((string) "STATION", description2["station"]);
-  
-  CPPUNIT_ASSERT_EQUAL((string) "Machine 2", m_devB->getDescriptionBody());
+
+  ASSERT_EQ((string) "MANUFACTURER", description2["manufacturer"]);
+  ASSERT_EQ((string) "SERIAL_NUMBER", description2["serialNumber"]);
+  ASSERT_EQ((string) "STATION", description2["station"]);
+
+  ASSERT_EQ((string) "Machine 2", m_devB->getDescriptionBody());
 }
 
-
-void DeviceTest::testRelationships()
-{
+TEST_F(DeviceTest, Relationships) {
   // Test get/set parents
   map<string, string> dummy;
   mtconnect::Component *linear = new mtconnect::Component("Linear", dummy);
-  
+
   auto devPointer = dynamic_cast<mtconnect::Component *>(m_devA);
-  CPPUNIT_ASSERT(devPointer);
-  
+  ASSERT_TRUE(devPointer);
+
   linear->setParent(*m_devA);
-  CPPUNIT_ASSERT(devPointer == linear->getParent());
-  
+  ASSERT_TRUE(devPointer == linear->getParent());
+
   mtconnect::Component *controller = new mtconnect::Component("Controller", dummy);
   controller->setParent(*m_devA);
-  CPPUNIT_ASSERT(devPointer == controller->getParent());
-  
+  ASSERT_TRUE(devPointer == controller->getParent());
+
   // Test get device
-  CPPUNIT_ASSERT(m_devA == m_devA->getDevice());
-  CPPUNIT_ASSERT(m_devA == linear->getDevice());
-  CPPUNIT_ASSERT(m_devA == controller->getDevice());
-  
+  ASSERT_TRUE(m_devA == m_devA->getDevice());
+  ASSERT_TRUE(m_devA == linear->getDevice());
+  ASSERT_TRUE(m_devA == controller->getDevice());
+
   // Test add/get children
-  CPPUNIT_ASSERT(m_devA->getChildren().empty());
-  
+  ASSERT_TRUE(m_devA->getChildren().empty());
+
   mtconnect::Component *axes = new mtconnect::Component("Axes", dummy),
-        *thermostat = new mtconnect::Component("Thermostat", dummy);
+                       *thermostat = new mtconnect::Component("Thermostat", dummy);
   m_devA->addChild(*axes);
   m_devA->addChild(*thermostat);
-  
-  CPPUNIT_ASSERT_EQUAL((size_t) 2, m_devA->getChildren().size());
-  CPPUNIT_ASSERT(axes == m_devA->getChildren().front());
-  CPPUNIT_ASSERT(thermostat == m_devA->getChildren().back());
+
+  ASSERT_EQ((size_t)2, m_devA->getChildren().size());
+  ASSERT_TRUE(axes == m_devA->getChildren().front());
+  ASSERT_TRUE(thermostat == m_devA->getChildren().back());
 }
 
+TEST_F(DeviceTest, DataItems) {
+  ASSERT_TRUE(m_devA->getDataItems().empty());
 
-void DeviceTest::testDataItems()
-{
-  CPPUNIT_ASSERT(m_devA->getDataItems().empty());
-  
   map<string, string> dummy;
-  
-  DataItem *data1 = new DataItem(dummy),
-           *data2 = new DataItem(dummy);
+
+  DataItem *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
   m_devA->addDataItem(*data1);
   m_devA->addDataItem(*data2);
-  
-  CPPUNIT_ASSERT_EQUAL((size_t) 2, m_devA->getDataItems().size());
-  CPPUNIT_ASSERT(data1 == m_devA->getDataItems().front());
-  CPPUNIT_ASSERT(data2 == m_devA->getDataItems().back());
+
+  ASSERT_EQ((size_t)2, m_devA->getDataItems().size());
+  ASSERT_TRUE(data1 == m_devA->getDataItems().front());
+  ASSERT_TRUE(data2 == m_devA->getDataItems().back());
 }
 
+TEST_F(DeviceTest, DeviceDataItem) {
+  ASSERT_TRUE(m_devA->getDeviceDataItems().empty());
+  ASSERT_TRUE(!m_devA->getDeviceDataItem("DataItemTest1"));
+  ASSERT_TRUE(!m_devA->getDeviceDataItem("DataItemTest2"));
 
-void DeviceTest::testDeviceDataItem()
-{
-  CPPUNIT_ASSERT(m_devA->getDeviceDataItems().empty());
-  CPPUNIT_ASSERT(!m_devA->getDeviceDataItem("DataItemTest1"));
-  CPPUNIT_ASSERT(!m_devA->getDeviceDataItem("DataItemTest2"));
-  
   map<string, string> attributes;
   attributes["id"] = "DataItemTest1";
-  
+
   DataItem data1(attributes);
   m_devA->addDeviceDataItem(data1);
-  
+
   attributes["id"] = "DataItemTest2";
   DataItem data2(attributes);
   m_devA->addDeviceDataItem(data2);
-  
-  CPPUNIT_ASSERT_EQUAL((size_t) 2, m_devA->getDeviceDataItems().size());
-  CPPUNIT_ASSERT(&data1 == m_devA->getDeviceDataItem("DataItemTest1"));
-  CPPUNIT_ASSERT(&data2 == m_devA->getDeviceDataItem("DataItemTest2"));
+
+  ASSERT_EQ((size_t)2, m_devA->getDeviceDataItems().size());
+  ASSERT_TRUE(&data1 == m_devA->getDeviceDataItem("DataItemTest1"));
+  ASSERT_TRUE(&data2 == m_devA->getDeviceDataItem("DataItemTest2"));
 }
 
-
-void DeviceTest::testGetDataItem()
-{
+TEST_F(DeviceTest, GetDataItem) {
   map<string, string> attributes;
   attributes["id"] = "by_id";
   DataItem data1(attributes);
   m_devA->addDeviceDataItem(data1);
-  
+
   map<string, string> attributes2;
   attributes2["id"] = "by_id2";
   attributes2["name"] = "by_name2";
   DataItem data2(attributes2);
   m_devA->addDeviceDataItem(data2);
-  
+
   map<string, string> attributes3;
   attributes3["id"] = "by_id3";
   attributes3["name"] = "by_name3";
   DataItem data3(attributes3);
   data3.addSource("by_source3", "", "", "");
   m_devA->addDeviceDataItem(data3);
-  
-  
-  CPPUNIT_ASSERT(&data1 == m_devA->getDeviceDataItem("by_id"));
-  CPPUNIT_ASSERT((DataItem *)nullptr == m_devA->getDeviceDataItem("by_name"));
-  CPPUNIT_ASSERT((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source"));
-  
-  CPPUNIT_ASSERT(&data2 == m_devA->getDeviceDataItem("by_id2"));
-  CPPUNIT_ASSERT(&data2 == m_devA->getDeviceDataItem("by_name2"));
-  CPPUNIT_ASSERT((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source2"));
-  
-  CPPUNIT_ASSERT(&data3 == m_devA->getDeviceDataItem("by_id3"));
-  CPPUNIT_ASSERT(&data3 == m_devA->getDeviceDataItem("by_name3"));
-  CPPUNIT_ASSERT(&data3 == m_devA->getDeviceDataItem("by_source3"));
+
+  ASSERT_TRUE(&data1 == m_devA->getDeviceDataItem("by_id"));
+  ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_name"));
+  ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source"));
+
+  ASSERT_TRUE(&data2 == m_devA->getDeviceDataItem("by_id2"));
+  ASSERT_TRUE(&data2 == m_devA->getDeviceDataItem("by_name2"));
+  ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source2"));
+
+  ASSERT_TRUE(&data3 == m_devA->getDeviceDataItem("by_id3"));
+  ASSERT_TRUE(&data3 == m_devA->getDeviceDataItem("by_name3"));
+  ASSERT_TRUE(&data3 == m_devA->getDeviceDataItem("by_source3"));
 }

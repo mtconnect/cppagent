@@ -1,67 +1,59 @@
-if(NOT APPVEYOR AND (WIN32 OR APPLE))
-  add_subdirectory(../CUTI "${CMAKE_BINARY_DIR}/cuti")
-endif()
+# Include googletest
+set(BUILD_GMOCK "ON")
+set(INSTALL_GTEST "OFF")
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../googletest" "googletest")
 
-  
-if(WIN32)
-  set(WINDOWS_LIBRARIES shlwapi)
-elseif(UNIX)
-  execute_process(COMMAND uname OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
-  if(CMAKE_SYSTEM_NAME MATCHES Linux)
-    set(LINUX_LIBRARIES pthread)
+# Define test cases
+macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
+  set(_sources)
+  list(APPEND _sources ${AGENT_TEST_NAME}_test.cpp)
+  list(APPEND _sources "${CMAKE_CURRENT_LIST_DIR}/../googletest/googletest/src/gtest_main.cc")
+  if(${ADD_TEST_HELPER})
+    list(APPEND _sources test_globals.cpp agent_test_helper.cpp)
   endif()
-endif()
+  add_executable(${AGENT_TEST_NAME}_test ${_sources})
+  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib gtest)
+  target_include_directories(${AGENT_TEST_NAME}_test
+    PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../googletest/googletest/include")
 
-set(APPVEYOR OFF CACHE STRING "Set for AppVeyor builds")
+  # TODO Move include directories for dlib, libxml and date to the respective libraries.
+  target_include_directories(agent_lib
+    PUBLIC  "${CMAKE_CURRENT_LIST_DIR}/../date/include"
+            "${CMAKE_CURRENT_LIST_DIR}/../dlib"
+            "${CMAKE_CURRENT_LIST_DIR}/../libxml2/include"
+            "${CMAKE_CURRENT_LIST_DIR}/../libxml2_make/include"
+            "${CMAKE_CURRENT_LIST_DIR}/../json/include")
 
-file(GLOB TEST_SRCS *.cpp)
-file(GLOB TEST_HEADERS *.hpp)
+  target_compile_definitions(${AGENT_TEST_NAME}_test
+    PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\"" NOMINMAX
+    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:${AGENT_TEST_NAME}_test>/../Resources\"")
+  add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
+endmacro()
 
-list(REMOVE_ITEM TEST_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/test.cpp")
+add_agent_test(agent TRUE)
+add_agent_test(adapter FALSE)
+add_agent_test(config FALSE)
+add_agent_test(change_observer FALSE)
+add_agent_test(checkpoint FALSE)
+add_agent_test(component FALSE)
+add_agent_test(connector FALSE)
+add_agent_test(data_item FALSE)
+add_agent_test(data_set TRUE)
+add_agent_test(device FALSE)
+add_agent_test(globals FALSE)
+add_agent_test(json_printer_asset TRUE)
+add_agent_test(json_printer_error TRUE)
+add_agent_test(json_printer_probe TRUE)
+add_agent_test(json_printer_stream TRUE)
+add_agent_test(observation TRUE)
+add_agent_test(xml_parser TRUE)
+add_agent_test(xml_printer TRUE)
 
-set(AGENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
-      
-file(GLOB AGENT_SRCS "${AGENT_DIR}/*.cpp")
-file(GLOB AGENT_HEADERS "${AGENT_DIR}/*.hpp")
-
-
-# Allow better viewing and grouping of files in Visual Studio by defining source groups
-source_group("Test Headers Files" FILES ${TEST_HEADERS})
-source_group("Test Source Files" FILES ${TEST_SRCS})
-source_group("Resource Files" FILES ${RESOURCE_FILE})
-source_group("Dlib Source Files" FILES ${DLIB_FIX_SRCS})
-
-if(NOT APPVEYOR AND (WIN32 OR APPLE))
-  cuti_creates_test_target(agent_test agent_lib ${TEST_SRCS} ${TEST_HEADERS} ${DLIB_FIX_SRCS})
-  target_compile_definitions(agent_test  PRIVATE CUTI_CPPUNIT_COMPATABILITY)
-else()
-  add_executable(agent_test ${TEST_SRCS} test.cpp ${TEST_HEADERS} ${DLIB_FIX_SRCS})
-  target_compile_definitions(agent_test  PRIVATE CUTI_NO_INTEGRATION)
-  target_link_libraries(agent_test PRIVATE agent_lib)
-  AddCppUnitSupport(agent_test)
-endif()
-
-target_compile_definitions(agent_test PRIVATE "PROJECT_ROOT=${CMAKE_SOURCE_DIR}"
-    NOMINMAX "TEST_BIN_ROOT=$<TARGET_FILE_DIR:agent_test>")
-
-AddMsvcXPSupport(agent_test)
-AddLibXML2Support(agent_test)
-AddDLibSupport(agent_test)
-AddDateSupport(agent_test)
-AddJsonSupport(agent_test)
-
-target_include_directories(agent_test PRIVATE "${AGENT_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
-    "../CUTI/include")
-  
-target_link_libraries(agent_test PRIVATE ${LINUX_LIBRARIES} ${WINDOWS_LIBRARIES} ${GCOV_LINK_FLAGS})
-
-set_target_properties(agent_test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD_RELEASE 1)
-
-target_compile_features(agent_test PRIVATE cxx_std_14)
-
+# TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
-  TARGET agent_test POST_BUILD 
+  TARGET adapter_test POST_BUILD
   COMMAND "${CMAKE_COMMAND}" -E copy
   "${CMAKE_CURRENT_SOURCE_DIR}/probe.xml"
-  "$<TARGET_FILE_DIR:agent_test>/../Resources/probe.xml"
+  "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
   COMMENT "Copying to output directory")
