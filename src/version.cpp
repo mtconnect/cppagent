@@ -15,27 +15,22 @@
 //    limitations under the License.
 //
 #include "version.h"
-#include <stdio.h>
-#include <sstream>
-#include <string.h>
 
+#include <sstream>
+#include <stdio.h>
+#include <string.h>
 
 std::string GetAgentVersion()
 {
   std::stringstream verStream;
-  verStream << "MTConnect Agent Version "
-    << AGENT_VERSION_MAJOR << "."
-    << AGENT_VERSION_MINOR << "."
-    << AGENT_VERSION_PATCH << "."
-    << AGENT_VERSION_BUILD;
-  if(strlen(AGENT_VERSION_RC))
+  verStream << "MTConnect Agent Version " << AGENT_VERSION_MAJOR << "." << AGENT_VERSION_MINOR
+            << "." << AGENT_VERSION_PATCH << "." << AGENT_VERSION_BUILD;
+  if (strlen(AGENT_VERSION_RC))
     verStream << " (" << AGENT_VERSION_RC << ")";
   return verStream.str();
 }
 
 void PrintMTConnectAgentVersion()
 {
-	printf("%s - built on " __TIMESTAMP__ "\n",
-		GetAgentVersion().c_str());
+  printf("%s - built on " __TIMESTAMP__ "\n", GetAgentVersion().c_str());
 }
-

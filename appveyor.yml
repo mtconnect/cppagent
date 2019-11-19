@@ -64,7 +64,7 @@ build_script:
     cmake --build . --config Debug --target all -- -j 4
 
 test_script:
-- cmd: ctest -C Debug
+- cmd: ctest -C Debug --output-on-failure
 - sh: ctest
 
   

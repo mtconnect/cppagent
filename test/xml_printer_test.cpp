@@ -15,7 +15,9 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "asset.hpp"
 #include "checkpoint.hpp"
@@ -23,24 +25,26 @@
 #include "device.hpp"
 #include "globals.hpp"
 #include "observation.hpp"
+#include "test_globals.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
-
-#include "test_globals.hpp"
 
 using namespace std;
 using namespace mtconnect;
 
-class XmlPrinterTest : public testing::Test {
+class XmlPrinterTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     m_config = new XmlParser();
     m_printer = new XmlPrinter();
     m_printer->setSchemaVersion("");
     m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", m_printer);
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     delete m_config;
     m_config = nullptr;
     delete m_printer;
@@ -58,7 +62,8 @@ class XmlPrinterTest : public testing::Test {
   mtconnect::Observation *newEvent(const char *name, uint64_t sequence, std::string value);
 };
 
-TEST_F(XmlPrinterTest, PrintError) {
+TEST_F(XmlPrinterTest, PrintError)
+{
   PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
 
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
@@ -67,7 +72,8 @@ TEST_F(XmlPrinterTest, PrintError) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "ERROR TEXT!");
 }
 
-TEST_F(XmlPrinterTest, PrintProbe) {
+TEST_F(XmlPrinterTest, PrintProbe)
+{
   PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
 
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
@@ -128,7 +134,8 @@ TEST_F(XmlPrinterTest, PrintProbe) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:Composition[@id='zamp']@type", "AMPLIFIER");
 }
 
-TEST_F(XmlPrinterTest, PrintDataItemElements) {
+TEST_F(XmlPrinterTest, PrintDataItemElements)
+{
   PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
 
   ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='y1']/m:Filters/m:Filter[1]@type", "MINIMUM_DELTA");
@@ -143,7 +150,8 @@ TEST_F(XmlPrinterTest, PrintDataItemElements) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='pcountrem']/m:ResetTrigger", "SHIFT");
 }
 
-TEST_F(XmlPrinterTest, PrintCurrent) {
+TEST_F(XmlPrinterTest, PrintCurrent)
+{
   Checkpoint checkpoint;
   addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
   addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
@@ -192,7 +200,8 @@ TEST_F(XmlPrinterTest, PrintCurrent) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='power']/m:Events/m:PowerState", "ON");
 }
 
-TEST_F(XmlPrinterTest, ChangeDevicesNamespace) {
+TEST_F(XmlPrinterTest, ChangeDevicesNamespace)
+{
   // Devices
   m_printer->clearDevicesNamespaces();
 
@@ -232,7 +241,8 @@ TEST_F(XmlPrinterTest, ChangeDevicesNamespace) {
   m_printer->clearDevicesNamespaces();
 }
 
-TEST_F(XmlPrinterTest, ChangeStreamsNamespace) {
+TEST_F(XmlPrinterTest, ChangeStreamsNamespace)
+{
   m_printer->clearStreamsNamespaces();
 
   Checkpoint checkpoint;
@@ -312,7 +322,8 @@ TEST_F(XmlPrinterTest, ChangeStreamsNamespace) {
   m_printer->clearDevicesNamespaces();
 }
 
-TEST_F(XmlPrinterTest, ChangeErrorNamespace) {
+TEST_F(XmlPrinterTest, ChangeErrorNamespace)
+{
   // Error
 
   {
@@ -335,7 +346,8 @@ TEST_F(XmlPrinterTest, ChangeErrorNamespace) {
   }
 }
 
-TEST_F(XmlPrinterTest, PrintSample) {
+TEST_F(XmlPrinterTest, PrintSample)
+{
   ObservationPtrArray events;
 
   ObservationPtr ptr;
@@ -394,7 +406,8 @@ TEST_F(XmlPrinterTest, PrintSample) {
                         "x-1.149250 y1.048981");
 }
 
-TEST_F(XmlPrinterTest, Condition) {
+TEST_F(XmlPrinterTest, Condition)
+{
   Checkpoint checkpoint;
   addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
   addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
@@ -443,7 +456,8 @@ TEST_F(XmlPrinterTest, Condition) {
       doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeSeverity", "2");
 }
 
-TEST_F(XmlPrinterTest, VeryLargeSequence) {
+TEST_F(XmlPrinterTest, VeryLargeSequence)
+{
   Checkpoint checkpoint;
   addEventToCheckpoint(checkpoint, "Xact", (((uint64_t)1) << 48) + 1, "0");
   addEventToCheckpoint(checkpoint, "Xcom", (((uint64_t)1) << 48) + 3, "123");
@@ -470,7 +484,8 @@ TEST_F(XmlPrinterTest, VeryLargeSequence) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@lastSequence", "281474976711680");
 }
 
-TEST_F(XmlPrinterTest, ChangeDeviceAttributes) {
+TEST_F(XmlPrinterTest, ChangeDeviceAttributes)
+{
   auto device = m_devices.front();
 
   string v = "Some_Crazy_Uuid";
@@ -491,7 +506,8 @@ TEST_F(XmlPrinterTest, ChangeDeviceAttributes) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "99999999");
 }
 
-TEST_F(XmlPrinterTest, StatisticAndTimeSeriesProbe) {
+TEST_F(XmlPrinterTest, StatisticAndTimeSeriesProbe)
+{
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
   ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xact']@statistic", "AVERAGE");
@@ -499,7 +515,8 @@ TEST_F(XmlPrinterTest, StatisticAndTimeSeriesProbe) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='Xts']@sampleRate", "46000");
 }
 
-TEST_F(XmlPrinterTest, TimeSeries) {
+TEST_F(XmlPrinterTest, TimeSeries)
+{
   ObservationPtr ptr;
   {
     ObservationPtrArray events;
@@ -530,7 +547,8 @@ TEST_F(XmlPrinterTest, TimeSeries) {
   }
 }
 
-TEST_F(XmlPrinterTest, NonPrintableCharacters) {
+TEST_F(XmlPrinterTest, NonPrintableCharacters)
+{
   ObservationPtrArray events;
   ObservationPtr ptr = newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? ");
   events.push_back(ptr);
@@ -539,7 +557,8 @@ TEST_F(XmlPrinterTest, NonPrintableCharacters) {
                         "OVER TRAVEL : +Z?");
 }
 
-TEST_F(XmlPrinterTest, EscapedXMLCharacters) {
+TEST_F(XmlPrinterTest, EscapedXMLCharacters)
+{
   ObservationPtrArray events;
   ObservationPtr ptr = newEvent("zlc", 10843512, "fault|500|||A duck > a foul & < cat '");
   events.push_back(ptr);
@@ -548,7 +567,8 @@ TEST_F(XmlPrinterTest, EscapedXMLCharacters) {
                         "A duck > a foul & < cat '");
 }
 
-TEST_F(XmlPrinterTest, PrintAsset) {
+TEST_F(XmlPrinterTest, PrintAsset)
+{
   // Add the xml to the agent...
   vector<AssetPtr> assets;
   AssetPtr asset(new Asset((string) "123", (string) "TEST", (string) "HELLO"));
@@ -563,7 +583,8 @@ TEST_F(XmlPrinterTest, PrintAsset) {
   }
 }
 
-TEST_F(XmlPrinterTest, PrintAssetProbe) {
+TEST_F(XmlPrinterTest, PrintAssetProbe)
+{
   // Add the xml to the agent...
   map<string, int> counts;
   counts["CuttingTool"] = 10;
@@ -574,7 +595,8 @@ TEST_F(XmlPrinterTest, PrintAssetProbe) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCounts/m:AssetCount@assetType", "CuttingTool");
 }
 
-TEST_F(XmlPrinterTest, Configuration) {
+TEST_F(XmlPrinterTest, Configuration)
+{
   PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
 
   ASSERT_XML_PATH_EQUAL(doc, "//m:Power/m:Configuration/m:SensorConfiguration/m:CalibrationDate",
@@ -585,7 +607,8 @@ TEST_F(XmlPrinterTest, Configuration) {
 }
 
 // Schema tests
-TEST_F(XmlPrinterTest, ChangeVersion) {
+TEST_F(XmlPrinterTest, ChangeVersion)
+{
   // Devices
   m_printer->clearDevicesNamespaces();
 
@@ -610,7 +633,8 @@ TEST_F(XmlPrinterTest, ChangeVersion) {
   m_printer->setSchemaVersion("1.3");
 }
 
-TEST_F(XmlPrinterTest, ChangeMTCLocation) {
+TEST_F(XmlPrinterTest, ChangeMTCLocation)
+{
   m_printer->clearDevicesNamespaces();
 
   m_printer->setSchemaVersion("1.3");
@@ -629,7 +653,8 @@ TEST_F(XmlPrinterTest, ChangeMTCLocation) {
   m_printer->setSchemaVersion("1.3");
 }
 
-TEST_F(XmlPrinterTest, ProbeWithFilter13) {
+TEST_F(XmlPrinterTest, ProbeWithFilter13)
+{
   delete m_config;
 
   m_config = new XmlParser();
@@ -641,7 +666,8 @@ TEST_F(XmlPrinterTest, ProbeWithFilter13) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter@type", "MINIMUM_DELTA");
 }
 
-TEST_F(XmlPrinterTest, ProbeWithFilter) {
+TEST_F(XmlPrinterTest, ProbeWithFilter)
+{
   delete m_config;
   m_config = nullptr;
 
@@ -656,7 +682,8 @@ TEST_F(XmlPrinterTest, ProbeWithFilter) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='pos']/m:Filters/m:Filter@type", "PERIOD");
 }
 
-TEST_F(XmlPrinterTest, References) {
+TEST_F(XmlPrinterTest, References)
+{
   m_printer->setSchemaVersion("1.4");
   delete m_config;
   m_config = nullptr;
@@ -671,7 +698,8 @@ TEST_F(XmlPrinterTest, References) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:ComponentRef@idRef", "ele");
 }
 
-TEST_F(XmlPrinterTest, LegacyReferences) {
+TEST_F(XmlPrinterTest, LegacyReferences)
+{
   m_printer->setSchemaVersion("1.3");
   delete m_config;
   m_config = nullptr;
@@ -685,7 +713,8 @@ TEST_F(XmlPrinterTest, LegacyReferences) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@name", "chuck");
 }
 
-TEST_F(XmlPrinterTest, SourceReferences) {
+TEST_F(XmlPrinterTest, SourceReferences)
+{
   delete m_config;
   m_config = nullptr;
 
@@ -699,7 +728,8 @@ TEST_F(XmlPrinterTest, SourceReferences) {
   ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='bfc']/m:Source@compositionId", "xxx");
 }
 
-TEST_F(XmlPrinterTest, StreamsStyle) {
+TEST_F(XmlPrinterTest, StreamsStyle)
+{
   m_printer->setStreamStyle("/styles/Streams.xsl");
   Checkpoint checkpoint;
   addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
@@ -719,7 +749,8 @@ TEST_F(XmlPrinterTest, StreamsStyle) {
   m_printer->setStreamStyle("");
 }
 
-TEST_F(XmlPrinterTest, DevicesStyle) {
+TEST_F(XmlPrinterTest, DevicesStyle)
+{
   m_printer->setDevicesStyle("/styles/Devices.xsl");
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
@@ -732,7 +763,8 @@ TEST_F(XmlPrinterTest, DevicesStyle) {
   m_printer->setDevicesStyle("");
 }
 
-TEST_F(XmlPrinterTest, ErrorStyle) {
+TEST_F(XmlPrinterTest, ErrorStyle)
+{
   m_printer->setErrorStyle("/styles/Error.xsl");
 
   PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
@@ -745,7 +777,8 @@ TEST_F(XmlPrinterTest, ErrorStyle) {
   m_printer->setErrorStyle("");
 }
 
-TEST_F(XmlPrinterTest, AssetsStyle) {
+TEST_F(XmlPrinterTest, AssetsStyle)
+{
   m_printer->setAssetsStyle("/styles/Assets.xsl");
 
   vector<AssetPtr> assets;
@@ -763,7 +796,8 @@ TEST_F(XmlPrinterTest, AssetsStyle) {
   m_printer->setAssetsStyle("");
 }
 
-Observation *XmlPrinterTest::newEvent(const char *name, uint64_t sequence, string value) {
+Observation *XmlPrinterTest::newEvent(const char *name, uint64_t sequence, string value)
+{
   string time("TIME");
 
   // Make sure the data item is there
@@ -776,14 +810,16 @@ Observation *XmlPrinterTest::newEvent(const char *name, uint64_t sequence, strin
 }
 
 Observation *XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
-                                                  uint64_t sequence, string value) {
+                                                  uint64_t sequence, string value)
+{
   Observation *event = newEvent(name, sequence, value);
   checkpoint.addObservation(event);
   return event;
 }
 
 // CuttingTool tests
-TEST_F(XmlPrinterTest, PrintCuttingTool) {
+TEST_F(XmlPrinterTest, PrintCuttingTool)
+{
   auto document = getFile("asset1.xml");
   auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
@@ -798,7 +834,8 @@ TEST_F(XmlPrinterTest, PrintCuttingTool) {
   }
 }
 
-TEST_F(XmlPrinterTest, PrintRemovedCuttingTool) {
+TEST_F(XmlPrinterTest, PrintRemovedCuttingTool)
+{
   auto document = getFile("asset1.xml");
   auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
   asset->setRemoved(true);
@@ -814,7 +851,8 @@ TEST_F(XmlPrinterTest, PrintRemovedCuttingTool) {
 }
 
 // CuttingTool tests
-TEST_F(XmlPrinterTest, PrintExtendedCuttingTool) {
+TEST_F(XmlPrinterTest, PrintExtendedCuttingTool)
+{
   m_printer->addAssetsNamespace("urn:Example.com:Assets:1.3", "/schemas/MTConnectAssets_1.3.xsd",
                                 "x");
 

@@ -15,36 +15,42 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include "checkpoint.hpp"
+#include "data_item.hpp"
+#include "device.hpp"
 #include "globals.hpp"
+#include "json_helper.hpp"
+#include "json_printer.hpp"
+#include "observation.hpp"
+
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "checkpoint.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
-#include "json_printer.hpp"
-#include <nlohmann/json.hpp>
-#include "observation.hpp"
-
-#include "json_helper.hpp"
-
 using namespace std;
 using namespace mtconnect;
 using json = nlohmann::json;
 
-class JsonPrinterErrorTest : public testing::Test {
+class JsonPrinterErrorTest : public testing::Test
+{
  protected:
-  void SetUp() override { m_printer.reset(new JsonPrinter("1.5", true)); }
+  void SetUp() override
+  {
+    m_printer.reset(new JsonPrinter("1.5", true));
+  }
 
   std::unique_ptr<JsonPrinter> m_printer;
 };
 
-TEST_F(JsonPrinterErrorTest, PrintError) {
+TEST_F(JsonPrinterErrorTest, PrintError)
+{
   auto doc = m_printer->printError(12345u, 1024u, 56u, "BAD_BAD", "Never do that again");
   // cout << doc << endl;
   auto jdoc = json::parse(doc);

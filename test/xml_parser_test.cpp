@@ -15,35 +15,45 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
 #include "test_globals.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+
 using namespace std;
 using namespace mtconnect;
 
-class XmlParserTest : public testing::Test {
+class XmlParserTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     m_xmlParser = nullptr;
 
-    try {
+    try
+    {
       std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
       m_xmlParser = new XmlParser();
       m_devices =
           m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get());
-    } catch (exception &) {
+    }
+    catch (exception &)
+    {
       FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << " /samples/test_config.xml";
     }
   }
 
-  void TearDown() override {
-    if (m_xmlParser) {
+  void TearDown() override
+  {
+    if (m_xmlParser)
+    {
       delete m_xmlParser;
       m_xmlParser = nullptr;
     }
@@ -53,8 +63,10 @@ class XmlParserTest : public testing::Test {
   std::vector<Device *> m_devices;
 };
 
-TEST_F(XmlParserTest, Constructor) {
-  if (m_xmlParser) {
+TEST_F(XmlParserTest, Constructor)
+{
+  if (m_xmlParser)
+  {
     delete m_xmlParser;
     m_xmlParser = nullptr;
   }
@@ -70,7 +82,8 @@ TEST_F(XmlParserTest, Constructor) {
       m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()));
 }
 
-TEST_F(XmlParserTest, GetDevices) {
+TEST_F(XmlParserTest, GetDevices)
+{
   ASSERT_EQ((size_t)1, m_devices.size());
 
   const auto device = m_devices.front();
@@ -81,21 +94,26 @@ TEST_F(XmlParserTest, GetDevices) {
   vector<DataItem *> dataItems;
   const auto &dataItemsMap = device->getDeviceDataItems();
 
-  for (auto const &mapItem : dataItemsMap) dataItems.push_back(mapItem.second);
+  for (auto const &mapItem : dataItemsMap)
+    dataItems.push_back(mapItem.second);
 
   bool hasExec = false, hasZcom = false;
 
-  for (auto const &dataItem : dataItems) {
-    if (dataItem->getId() == "p5" && dataItem->getName() == "execution") hasExec = true;
+  for (auto const &dataItem : dataItems)
+  {
+    if (dataItem->getId() == "p5" && dataItem->getName() == "execution")
+      hasExec = true;
 
-    if (dataItem->getId() == "z2" && dataItem->getName() == "Zcom") hasZcom = true;
+    if (dataItem->getId() == "z2" && dataItem->getName() == "Zcom")
+      hasZcom = true;
   }
 
   ASSERT_TRUE(hasExec);
   ASSERT_TRUE(hasZcom);
 }
 
-TEST_F(XmlParserTest, Condition) {
+TEST_F(XmlParserTest, Condition)
+{
   ASSERT_EQ((size_t)1, m_devices.size());
 
   const auto device = m_devices.front();
@@ -108,7 +126,8 @@ TEST_F(XmlParserTest, Condition) {
   ASSERT_TRUE(item->isCondition());
 }
 
-TEST_F(XmlParserTest, GetDataItems) {
+TEST_F(XmlParserTest, GetDataItems)
+{
   std::set<string> filter;
 
   m_xmlParser->getDataItems(filter, "//Linear");
@@ -140,20 +159,25 @@ TEST_F(XmlParserTest, GetDataItems) {
   ASSERT_EQ(5, (int)filter.size());
 }
 
-TEST_F(XmlParserTest, GetDataItemsExt) {
+TEST_F(XmlParserTest, GetDataItemsExt)
+{
   std::set<string> filter;
 
-  if (m_xmlParser) {
+  if (m_xmlParser)
+  {
     delete m_xmlParser;
     m_xmlParser = nullptr;
   }
 
   // For the rest we will check with the extended schema
-  try {
+  try
+  {
     std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
     m_xmlParser = new XmlParser();
     m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", printer.get());
-  } catch (exception &) {
+  }
+  catch (exception &)
+  {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/extension.xml";
   }
 
@@ -166,17 +190,22 @@ TEST_F(XmlParserTest, GetDataItemsExt) {
   ASSERT_EQ(1, (int)filter.size());
 }
 
-TEST_F(XmlParserTest, ExtendedSchema) {
-  if (m_xmlParser) {
+TEST_F(XmlParserTest, ExtendedSchema)
+{
+  if (m_xmlParser)
+  {
     delete m_xmlParser;
     m_xmlParser = nullptr;
   }
 
-  try {
+  try
+  {
     std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
     m_xmlParser = new XmlParser();
     m_devices = m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", printer.get());
-  } catch (exception &) {
+  }
+  catch (exception &)
+  {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/extension.xml";
   }
 
@@ -198,7 +227,8 @@ TEST_F(XmlParserTest, ExtendedSchema) {
   ASSERT_EQ((string) "x", item->getPrefix());
 }
 
-TEST_F(XmlParserTest, TimeSeries) {
+TEST_F(XmlParserTest, TimeSeries)
+{
   const auto dev = m_devices[0];
   ASSERT_TRUE(dev);
 
@@ -221,22 +251,26 @@ TEST_F(XmlParserTest, TimeSeries) {
   ASSERT_EQ(string("TIME_SERIES"), attrs2.at("representation"));
 }
 
-TEST_F(XmlParserTest, Configuration) {
+TEST_F(XmlParserTest, Configuration)
+{
   const auto dev = m_devices[0];
   ASSERT_TRUE(dev);
 
   mtconnect::Component *power = nullptr;
   const auto &children = dev->getChildren();
 
-  for (auto const &iter : children) {
-    if (iter->getName() == "power") power = iter;
+  for (auto const &iter : children)
+  {
+    if (iter->getName() == "power")
+      power = iter;
   }
 
   ASSERT_TRUE(power);
   ASSERT_TRUE(power->getConfiguration());
 }
 
-TEST_F(XmlParserTest, ParseAsset) {
+TEST_F(XmlParserTest, ParseAsset)
+{
   auto document = getFile("asset1.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
@@ -281,7 +315,8 @@ TEST_F(XmlParserTest, ParseAsset) {
   ASSERT_EQ((unsigned int)1, item->m_measurements.at("CuttingEdgeLength")->refCount());
 }
 
-TEST_F(XmlParserTest, ParseOtherAsset) {
+TEST_F(XmlParserTest, ParseOtherAsset)
+{
   string document =
       "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
       "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
@@ -304,7 +339,8 @@ TEST_F(XmlParserTest, ParseOtherAsset) {
   ASSERT_EQ(true, asset->isRemoved());
 }
 
-TEST_F(XmlParserTest, ParseRemovedAsset) {
+TEST_F(XmlParserTest, ParseRemovedAsset)
+{
   auto document = getFile("asset3.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
@@ -312,7 +348,8 @@ TEST_F(XmlParserTest, ParseRemovedAsset) {
   ASSERT_EQ(true, tool->isRemoved());
 }
 
-TEST_F(XmlParserTest, UpdateAsset) {
+TEST_F(XmlParserTest, UpdateAsset)
+{
   auto document = getFile("asset1.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
@@ -347,15 +384,18 @@ TEST_F(XmlParserTest, UpdateAsset) {
   ASSERT_EQ((string) "14.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
 }
 
-TEST_F(XmlParserTest, BadAsset) {
+TEST_F(XmlParserTest, BadAsset)
+{
   auto xml = getFile("asset4.xml");
 
   auto asset = m_xmlParser->parseAsset("XXX", "CuttingTool", xml);
   ASSERT_TRUE(!asset);
 }
 
-TEST_F(XmlParserTest, NoNamespace) {
-  if (m_xmlParser) {
+TEST_F(XmlParserTest, NoNamespace)
+{
+  if (m_xmlParser)
+  {
     delete m_xmlParser;
     m_xmlParser = nullptr;
   }
@@ -366,15 +406,19 @@ TEST_F(XmlParserTest, NoNamespace) {
       m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/NoNamespace.xml", printer.get()));
 }
 
-TEST_F(XmlParserTest, FilteredDataItem13) {
+TEST_F(XmlParserTest, FilteredDataItem13)
+{
   delete m_xmlParser;
   m_xmlParser = nullptr;
-  try {
+  try
+  {
     unique_ptr<XmlPrinter> printer(new XmlPrinter());
     m_xmlParser = new XmlParser();
     m_devices =
         m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", printer.get());
-  } catch (exception &) {
+  }
+  catch (exception &)
+  {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
            << "/samples/filter_example_1.3.xml";
   }
@@ -386,18 +430,23 @@ TEST_F(XmlParserTest, FilteredDataItem13) {
   ASSERT_TRUE(di->hasMinimumDelta());
 }
 
-TEST_F(XmlParserTest, FilteredDataItem) {
-  if (m_xmlParser) {
+TEST_F(XmlParserTest, FilteredDataItem)
+{
+  if (m_xmlParser)
+  {
     delete m_xmlParser;
     m_xmlParser = nullptr;
   }
 
-  try {
+  try
+  {
     unique_ptr<XmlPrinter> printer(new XmlPrinter());
     m_xmlParser = new XmlParser();
     m_devices =
         m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/filter_example.xml", printer.get());
-  } catch (exception &) {
+  }
+  catch (exception &)
+  {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/filter_example.xml";
   }
 
@@ -411,18 +460,23 @@ TEST_F(XmlParserTest, FilteredDataItem) {
   ASSERT_TRUE(di->hasMinimumPeriod());
 }
 
-TEST_F(XmlParserTest, References) {
-  if (m_xmlParser) {
+TEST_F(XmlParserTest, References)
+{
+  if (m_xmlParser)
+  {
     delete m_xmlParser;
     m_xmlParser = nullptr;
   }
 
-  try {
+  try
+  {
     unique_ptr<XmlPrinter> printer(new XmlPrinter());
     m_xmlParser = new XmlParser();
     m_devices =
         m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/reference_example.xml", printer.get());
-  } catch (exception &) {
+  }
+  catch (exception &)
+  {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/reference_example.xml";
   }
 
@@ -463,18 +517,23 @@ TEST_F(XmlParserTest, References) {
   ASSERT_EQ((size_t)1, filter.count("eps"));
 }
 
-TEST_F(XmlParserTest, SourceReferences) {
-  if (m_xmlParser) {
+TEST_F(XmlParserTest, SourceReferences)
+{
+  if (m_xmlParser)
+  {
     delete m_xmlParser;
     m_xmlParser = nullptr;
   }
 
-  try {
+  try
+  {
     unique_ptr<XmlPrinter> printer(new XmlPrinter());
     m_xmlParser = new XmlParser();
     m_devices =
         m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/reference_example.xml", printer.get());
-  } catch (exception &) {
+  }
+  catch (exception &)
+  {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/reference_example.xml";
   }
 
@@ -487,7 +546,8 @@ TEST_F(XmlParserTest, SourceReferences) {
   ASSERT_EQ(string("xxx"), item->getSourceCompositionId());
 }
 
-TEST_F(XmlParserTest, ExtendedAsset) {
+TEST_F(XmlParserTest, ExtendedAsset)
+{
   auto document = getFile("ext_asset.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
@@ -495,7 +555,8 @@ TEST_F(XmlParserTest, ExtendedAsset) {
   ASSERT_EQ(((size_t)1), tool->m_values.count("x:Color"));
 }
 
-TEST_F(XmlParserTest, ExtendedAssetFragment) {
+TEST_F(XmlParserTest, ExtendedAssetFragment)
+{
   auto document = getFile("ext_asset_2.xml");
   AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();

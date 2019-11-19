@@ -18,70 +18,73 @@
 #pragma once
 
 #include "globals.hpp"
-
 #include "service.hpp"
-#include <string>
-#include <chrono>
+
 #include <dlib/logger.h>
 
-namespace mtconnect {
+#include <chrono>
+#include <string>
+
+namespace mtconnect
+{
   class Agent;
   class Device;
   class log_level;
   class RollingFileLogger;
   class XmlPrinter;
-  
-  typedef void (XmlPrinter::* NamespaceFunction)(const std::string &urn, const std::string &location, const std::string &prefix);
-  typedef void (XmlPrinter::* StyleFunction)(const std::string &location);
-  
+
+  typedef void (XmlPrinter::*NamespaceFunction)(const std::string &urn, const std::string &location,
+                                                const std::string &prefix);
+  typedef void (XmlPrinter::*StyleFunction)(const std::string &location);
+
   class AgentConfiguration : public MTConnectService
   {
-  public:
+   public:
     AgentConfiguration();
     virtual ~AgentConfiguration();
-    
+
     // For MTConnectService
     void stop() override;
     void start() override;
     void initialize(int argc, const char *argv[]) override;
-    
+
     void configureLogger(dlib::config_reader::kernel_1a &reader);
     void loadConfig(std::istream &file);
-    
-    void setAgent(Agent *agent) {
-      m_agent = agent; }
-    const Agent * getAgent() const {
-      return m_agent; }
-    
-    const RollingFileLogger *getLogger() const {
-      return m_loggerFile; }
-    
-  protected:
+
+    void setAgent(Agent *agent)
+    {
+      m_agent = agent;
+    }
+    const Agent *getAgent() const
+    {
+      return m_agent;
+    }
+
+    const RollingFileLogger *getLogger() const
+    {
+      return m_loggerFile;
+    }
+
+   protected:
     Device *defaultDevice();
-    void loadAdapters(dlib::config_reader::kernel_1a &reader,
-                      bool defaultPreserve,
+    void loadAdapters(dlib::config_reader::kernel_1a &reader, bool defaultPreserve,
                       std::chrono::seconds legacyTimeout,
-                      std::chrono::milliseconds reconnectInterval,
-                      bool ignoreTimestamps,
-                      bool conversionRequired,
-                      bool upcaseValue,
-                      bool filterDuplicates);
+                      std::chrono::milliseconds reconnectInterval, bool ignoreTimestamps,
+                      bool conversionRequired, bool upcaseValue, bool filterDuplicates);
     void loadAllowPut(dlib::config_reader::kernel_1a &reader);
-    void loadNamespace(dlib::config_reader::kernel_1a &reader,
-                       const char *namespaceType, XmlPrinter *printer,
-                       NamespaceFunction callback);
+    void loadNamespace(dlib::config_reader::kernel_1a &reader, const char *namespaceType,
+                       XmlPrinter *printer, NamespaceFunction callback);
     void loadFiles(dlib::config_reader::kernel_1a &reader);
-    void loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName, XmlPrinter *printer, StyleFunction styleFunction);
+    void loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName,
+                   XmlPrinter *printer, StyleFunction styleFunction);
     void loadTypes(dlib::config_reader::kernel_1a &reader);
-    
-    void LoggerHook(const std::string& loggerName,
-                    const dlib::log_level& l,
-                    const dlib::uint64 threadId,
-                    const char* message);
-    
+
+    void LoggerHook(const std::string &loggerName, const dlib::log_level &l,
+                    const dlib::uint64 threadId, const char *message);
+
     void monitorThread();
-    
-  protected:
+
+   protected:
     Agent *m_agent;
     RollingFileLogger *m_loggerFile;
     bool m_monitorFiles;
@@ -91,4 +94,4 @@ namespace mtconnect {
     std::string m_exePath;
     bool m_pretty;
   };
-}
+}  // namespace mtconnect

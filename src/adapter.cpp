@@ -17,50 +17,50 @@
 
 #define __STDC_LIMIT_MACROS 1
 #include "adapter.hpp"
+
 #include "device.hpp"
+
 #include <dlib/logger.h>
+
 #include <algorithm>
 #include <chrono>
 #include <thread>
 
 using namespace std;
 
-namespace mtconnect {
+namespace mtconnect
+{
   static dlib::logger g_logger("input.adapter");
-  
+
   // Adapter public methods
-  Adapter::Adapter(const string &device,
-                   const string &server,
-                   const unsigned int port,
-                   std::chrono::seconds legacyTimeout) :
-  Connector(server, port, legacyTimeout),
-  m_agent(nullptr),
-  m_device(nullptr),
-  m_deviceName(device),
-  m_running(true),
-  m_dupCheck(false),
-  m_autoAvailable(false),
-  m_ignoreTimestamps(false),
-  m_relativeTime(false),
-  m_conversionRequired(true),
-  m_upcaseValue(true),
-  m_baseTime(0ull),
-  m_baseOffset(0ull),
-  m_parseTime(false),
-  m_gatheringAsset(false),
-  m_assetDevice(nullptr),
-  m_reconnectInterval{10000ms}
+  Adapter::Adapter(const string &device, const string &server, const unsigned int port,
+                   std::chrono::seconds legacyTimeout)
+      : Connector(server, port, legacyTimeout),
+        m_agent(nullptr),
+        m_device(nullptr),
+        m_deviceName(device),
+        m_running(true),
+        m_dupCheck(false),
+        m_autoAvailable(false),
+        m_ignoreTimestamps(false),
+        m_relativeTime(false),
+        m_conversionRequired(true),
+        m_upcaseValue(true),
+        m_baseTime(0ull),
+        m_baseOffset(0ull),
+        m_parseTime(false),
+        m_gatheringAsset(false),
+        m_assetDevice(nullptr),
+        m_reconnectInterval{10000ms}
   {
   }
-  
-  
+
   Adapter::~Adapter()
   {
     if (m_running)
       stop();
   }
-  
-  
+
   void Adapter::stop()
   {
     // Will stop threaded object gracefully Adapter::thread()
@@ -68,8 +68,7 @@ namespace mtconnect {
     close();
     wait();
   }
-  
-  
+
   void Adapter::setAgent(Agent &agent)
   {
     m_agent = &agent;
@@ -80,8 +79,7 @@ namespace mtconnect {
       m_allDevices.push_back(m_device);
     }
   }
-  
-  
+
   void Adapter::addDevice(string &device)
   {
     auto dev = m_agent->getDeviceByName(device);
@@ -91,8 +89,7 @@ namespace mtconnect {
       dev->addAdapter(this);
     }
   }
-  
-  
+
   inline static bool splitKey(string &key, string &dev)
   {
     auto found = key.find_first_of(':');
@@ -105,8 +102,7 @@ namespace mtconnect {
       return true;
     }
   }
-  
-  
+
   inline static void trim(std::string &str)
   {
     auto index = str.find_first_not_of(" \r\t");
@@ -116,8 +112,7 @@ namespace mtconnect {
     if (index != string::npos)
       str.erase(index + 1);
   }
-  
-  
+
   inline string Adapter::extractTime(const string &time, double &anOffset)
   {
     // Check how to handle time. If the time is relative, then we need to compute the first
@@ -126,11 +121,11 @@ namespace mtconnect {
     if (m_relativeTime)
     {
       uint64_t offset;
-      
+
       if (!m_baseTime)
       {
         m_baseTime = getCurrentTimeInMicros();
-        
+
         if (time.find('T') != string::npos)
         {
           m_parseTime = true;
@@ -138,14 +133,14 @@ namespace mtconnect {
         }
         else
           m_baseOffset = (uint64_t)(atof(time.c_str()) * 1000.0);
-        
+
         offset = 0;
       }
       else if (m_parseTime)
         offset = parseTimeMicro(time) - m_baseOffset;
       else
         offset = ((uint64_t)(atof(time.c_str()) * 1000.0)) - m_baseOffset;
-      
+
       // convert microseconds to seconds
       anOffset = offset / 1000000;
       result = getRelativeTimeString(m_baseTime + offset);
@@ -160,10 +155,10 @@ namespace mtconnect {
       anOffset = parseTimeMicro(time) / 1000000;
       result = time;
     }
-    
+
     return result;
   }
-  
+
   void Adapter::getEscapedLine(istringstream &stream, string &store)
   {
     store.clear();
@@ -178,17 +173,17 @@ namespace mtconnect {
         getline(stream, additionalContent, '|');
         if (additionalContent.empty())
           break;
-        
+
         if (additionalContent.back() != '\\')
         {
           store.append(additionalContent);
           break;
         }
-        
+
         additionalContent.back() = '|';
         store.append(additionalContent);
       }
-      
+
       if (store.back() == '"')
       {
         // Correctly escaped text, removing quotes
@@ -208,18 +203,18 @@ namespace mtconnect {
       }
     }
   }
-  
+
   /**
    * Expected data to parse in SDHR format:
    *   Time|Alarm|Code|NativeCode|Severity|State|Description
    *   Time|Item|Value
    *   Time|Item1|Value1|Item2|Value2...
-   * 
+   *
    * Support for assets:
    *   Time|@ASSET@|id|type|<...>...</...>
    */
-  
-  void Adapter::processData(const string& data)
+
+  void Adapter::processData(const string &data)
   {
     if (m_gatheringAsset)
     {
@@ -232,19 +227,19 @@ namespace mtconnect {
       {
         m_body << data << endl;
       }
-      
+
       return;
     }
-    
+
     istringstream toParse(data);
     string key, value;
-    
+
     getline(toParse, key, '|');
     double offset = NAN;
     string time = extractTime(key, offset);
-    
+
     getline(toParse, key, '|');
-    
+
     // Data item name has a @, it is an asset special prefix.
     if (key.find('@') != string::npos)
     {
@@ -266,21 +261,16 @@ namespace mtconnect {
       }
     }
   }
-  
-  bool Adapter::processDataItem(
-                                istringstream &toParse,
-                                const string &line,
-                                const string &inputKey,
-                                const string &inputValue,
-                                const string &time,
-                                double anOffset,
+
+  bool Adapter::processDataItem(istringstream &toParse, const string &line, const string &inputKey,
+                                const string &inputValue, const string &time, double anOffset,
                                 bool first)
   {
     string dev, key = inputKey;
     Device *device(nullptr);
     DataItem *dataItem(nullptr);
     bool more = true;
-    
+
     if (splitKey(key, dev))
       device = m_agent->getDeviceByName(dev);
     else
@@ -288,19 +278,19 @@ namespace mtconnect {
       dev = m_deviceName;
       device = m_device;
     }
-    
+
     if (device)
     {
       dataItem = device->getDeviceDataItem(key);
-      
+
       if (!dataItem)
       {
         if (m_logOnce.count(key) > 0)
-          g_logger << LTRACE <<  "(" << device->getName() << ") Could not find data item: " << key;
+          g_logger << LTRACE << "(" << device->getName() << ") Could not find data item: " << key;
         else
         {
-          g_logger << LWARN << "(" << device->getName() << ") Could not find data item: " << key <<
-          " from line '" << line << "'";
+          g_logger << LWARN << "(" << device->getName() << ") Could not find data item: " << key
+                   << " from line '" << line << "'";
           m_logOnce.insert(key);
         }
       }
@@ -308,18 +298,16 @@ namespace mtconnect {
       {
         if (!m_logOnce.count(key))
         {
-          g_logger << LDEBUG << "(" << device->getName() << ") Ignoring value for: " << key << ", constant value";
+          g_logger << LDEBUG << "(" << device->getName() << ") Ignoring value for: " << key
+                   << ", constant value";
           m_logOnce.insert(key);
         }
       }
       else
       {
         string rest, value;
-        if (first &&
-            (dataItem->isCondition() ||
-             dataItem->isAlarm() ||
-             dataItem->isMessage() ||
-             dataItem->isTimeSeries()))
+        if (first && (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage() ||
+                      dataItem->isTimeSeries()))
         {
           getline(toParse, rest);
           value = inputValue + "|" + rest;
@@ -339,19 +327,19 @@ namespace mtconnect {
           else
             value = inputValue;
         }
-        
+
         dataItem->setDataSource(this);
-        
+
         trim(value);
         string check = value;
-        
+
         if (dataItem->hasResetTrigger())
         {
           auto found = value.find_first_of(':');
           if (found != string::npos)
             check.erase(found);
         }
-        
+
         if (!isDuplicate(dataItem, check, anOffset))
           m_agent->addToBuffer(dataItem, value, time);
         else if (m_dupCheck)
@@ -363,15 +351,11 @@ namespace mtconnect {
       g_logger << LDEBUG << "Could not find device: " << dev;
       // Continue on processing the rest of the fields. Assume key/value pairs...
     }
-    
+
     return more;
   }
-  
-  
-  void Adapter::processAsset(
-                             istringstream &toParse,
-                             const string &inputKey,
-                             const string &value,
+
+  void Adapter::processAsset(istringstream &toParse, const string &inputKey, const string &value,
                              const string &time)
   {
     Device *device(nullptr);
@@ -380,22 +364,22 @@ namespace mtconnect {
       device = m_agent->getDeviceByName(dev);
     else
       device = m_device;
-    
+
     string assetId;
     if (value[0] == '@')
       assetId = device->getUuid() + value.substr(1);
     else
       assetId = value;
-    
+
     if (key == "@ASSET@")
     {
       string type, rest;
       getline(toParse, type, '|');
       getline(toParse, rest);
-      
+
       // Chck for an update and parse key value pairs. If only a type
       // is presented, then assume the remainder is a complete doc.
-      
+
       // if the rest of the line begins with --multiline--... then
       // set multiline and accumulate until a completed document is found
       if (rest.find("--multiline--") != rest.npos)
@@ -421,7 +405,7 @@ namespace mtconnect {
       {
         do
         {
-          pair<string,string> kv("xml", assetKey);
+          pair<string, string> kv("xml", assetKey);
           list.push_back(kv);
         } while (getline(toParse, assetKey, '|'));
       }
@@ -429,33 +413,30 @@ namespace mtconnect {
       {
         while (getline(toParse, assetValue, '|'))
         {
-          pair<string,string> kv(assetKey, assetValue);
+          pair<string, string> kv(assetKey, assetValue);
           list.push_back(kv);
-          
+
           if (!getline(toParse, assetKey, '|'))
             break;
         }
       }
-      
+
       m_agent->updateAsset(device, assetId, list, time);
     }
     else if (key == "@REMOVE_ASSET@")
       m_agent->removeAsset(device, assetId, time);
     else if (key == "@REMOVE_ALL_ASSETS@")
       m_agent->removeAllAssets(device, value, time);
-    
   }
-  
-  
+
   static inline bool is_true(const string &aValue)
   {
-    return(aValue == "yes" || aValue == "true" || aValue == "1");
+    return (aValue == "yes" || aValue == "true" || aValue == "1");
   }
-  
-  
+
   void Adapter::protocolCommand(const std::string &data)
   {
-    // Handle initial push of settings for uuid, serial number and manufacturer. 
+    // Handle initial push of settings for uuid, serial number and manufacturer.
     // This will override the settings in the device from the xml
     if (data == "* PROBE")
     {
@@ -478,7 +459,7 @@ namespace mtconnect {
         trim(key);
         string value = data.substr(index + 1);
         trim(value);
-        
+
         if (key == "uuid" && !m_device->m_preserveUuid)
           m_device->setUuid(value);
         else if (key == "manufacturer")
@@ -506,13 +487,14 @@ namespace mtconnect {
           {
             m_device = device;
             g_logger << LINFO << "Device name given by the adapter " << value
-            << ", has been assigned to cfg " << m_deviceName;
+                     << ", has been assigned to cfg " << m_deviceName;
             m_deviceName = value;
           }
           else
           {
             g_logger << LERROR << "Cannot find device for device command: " << value;
-            throw std::invalid_argument(string("Cannot find device for device name or uuid: ") + value);
+            throw std::invalid_argument(string("Cannot find device for device name or uuid: ") +
+                                        value);
           }
         }
         else
@@ -522,16 +504,14 @@ namespace mtconnect {
       }
     }
   }
-  
-  
+
   void Adapter::parseCalibration(const std::string &aLine)
   {
     istringstream toParse(aLine);
-    
+
     // Look for name|factor|offset triples
     string name, factor, offset;
-    while (getline(toParse, name, '|') &&
-           getline(toParse, factor, '|') &&
+    while (getline(toParse, name, '|') && getline(toParse, factor, '|') &&
            getline(toParse, offset, '|'))
     {
       // Convert to a floating point number
@@ -546,21 +526,18 @@ namespace mtconnect {
       }
     }
   }
-  
-  
+
   void Adapter::disconnected()
   {
     m_baseTime = 0;
     m_agent->disconnected(this, m_allDevices);
   }
-  
-  
+
   void Adapter::connected()
   {
     m_agent->connected(this, m_allDevices);
   }
-  
-  
+
   // Adapter private methods
   void Adapter::thread()
   {
@@ -570,35 +547,37 @@ namespace mtconnect {
       {
         // Start the connection to the socket
         connect();
-        
+
         // make sure we're closed...
         close();
       }
       catch (std::invalid_argument &err)
       {
-        g_logger << LERROR << "Adapter for " << m_deviceName << "'s thread threw an argument error, stopping adapter: "
-        << err.what();
+        g_logger << LERROR << "Adapter for " << m_deviceName
+                 << "'s thread threw an argument error, stopping adapter: " << err.what();
         stop();
       }
       catch (std::exception &err)
       {
-        g_logger << LERROR << "Adapter for " << m_deviceName << "'s thread threw an exceotion, stopping adapter: "
-        << err.what();
+        g_logger << LERROR << "Adapter for " << m_deviceName
+                 << "'s thread threw an exceotion, stopping adapter: " << err.what();
         stop();
       }
       catch (...)
       {
-        g_logger << LERROR << "Thread for adapter " << m_deviceName << "'s thread threw an unhandled exception, stopping adapter";
+        g_logger << LERROR << "Thread for adapter " << m_deviceName
+                 << "'s thread threw an unhandled exception, stopping adapter";
         stop();
       }
-      
+
       if (!m_running)
         break;
-      
+
       // Try to reconnect every 10 seconds
-      g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval.count() << " milliseconds";
+      g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval.count()
+               << " milliseconds";
       this_thread::sleep_for(m_reconnectInterval);
     }
     g_logger << LINFO << "Adapter thread stopped";
   }
-}
+}  // namespace mtconnect

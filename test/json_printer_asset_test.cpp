@@ -24,14 +24,9 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-
-#include <nlohmann/json.hpp>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "checkpoint.hpp"
 #include "cutting_tool.hpp"
@@ -45,18 +40,28 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 
+#include <nlohmann/json.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 
-class JsonPrinterAssetTest : public testing::Test {
+class JsonPrinterAssetTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     m_printer.reset(new JsonPrinter("1.5", true));
     m_parser.reset(new XmlParser());
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_printer.reset();
     m_parser.reset();
   }
@@ -65,7 +70,8 @@ class JsonPrinterAssetTest : public testing::Test {
   std::unique_ptr<XmlParser> m_parser;
 };
 
-TEST_F(JsonPrinterAssetTest, AssetHeader) {
+TEST_F(JsonPrinterAssetTest, AssetHeader)
+{
   std::vector<AssetPtr> assets;
   auto doc = m_printer->printAssets(123, 1024, 10, assets);
   auto jdoc = json::parse(doc);
@@ -77,7 +83,8 @@ TEST_F(JsonPrinterAssetTest, AssetHeader) {
   ASSERT_EQ(10, jdoc.at("/MTConnectAssets/Header/assetCount"_json_pointer).get<int32_t>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingTool) {
+TEST_F(JsonPrinterAssetTest, CuttingTool)
+{
   auto xml = getFile("asset1.xml");
   AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
   vector<AssetPtr> assetList = {asset};
@@ -104,7 +111,8 @@ TEST_F(JsonPrinterAssetTest, CuttingTool) {
             cuttingTool.at("/CuttingTool/Description"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle) {
+TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
+{
   auto xml = getFile("asset1.xml");
   AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
   vector<AssetPtr> assetList = {asset};
@@ -141,7 +149,8 @@ TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle) {
   ASSERT_EQ(222.0, feed.at("/value"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingMeasurements) {
+TEST_F(JsonPrinterAssetTest, CuttingMeasurements)
+{
   auto xml = getFile("asset1.xml");
   AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
   vector<AssetPtr> assetList = {asset};
@@ -170,7 +179,8 @@ TEST_F(JsonPrinterAssetTest, CuttingMeasurements) {
   ASSERT_EQ(120.65, length.at("/BodyLengthMax/value"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingItem) {
+TEST_F(JsonPrinterAssetTest, CuttingItem)
+{
   auto xml = getFile("asset1.xml");
   AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", xml);
   vector<AssetPtr> assetList = {asset};
@@ -203,7 +213,8 @@ TEST_F(JsonPrinterAssetTest, CuttingItem) {
   ASSERT_EQ(0.8, measurements.at("/0/CornerRadius/value"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingToolArchitype) {
+TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
+{
   auto xml = getFile("cutting_tool_archetype.xml");
   AssetPtr asset = m_parser->parseAsset("KSSP300R4SD43L240", "CuttingToolArchetype", xml);
   vector<AssetPtr> assetList = {asset};
@@ -220,7 +231,8 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype) {
   ASSERT_EQ(string("Some Express..."), def.at("/text"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterAssetTest, UnknownAssetType) {
+TEST_F(JsonPrinterAssetTest, UnknownAssetType)
+{
   AssetPtr asset(new Asset("BLAH", "Bar", "Some Random Stuff"));
   asset->setTimestamp("2001-12-17T09:30:47Z");
   asset->setDeviceUuid("7800f530-34a9");

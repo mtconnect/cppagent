@@ -16,29 +16,23 @@
 //
 
 #include "asset.hpp"
+
 #include <map>
 
 using namespace std;
 
-namespace mtconnect {
-  Asset::Asset(
-               const std::string &asssetId,
-               const std::string &type,
-               const std::string &content,
-               const bool removed) : 
-  m_assetId(asssetId),
-  m_content(content),
-  m_type(type),
-  m_removed(removed)
+namespace mtconnect
+{
+  Asset::Asset(const std::string &asssetId, const std::string &type, const std::string &content,
+               const bool removed)
+      : m_assetId(asssetId), m_content(content), m_type(type), m_removed(removed)
   {
   }
-  
-  
+
   Asset::~Asset()
   {
   }
-  
-  
+
   void Asset::addIdentity(const std::string &key, const std::string &value)
   {
     if (key == "deviceUuid")
@@ -52,4 +46,4 @@ namespace mtconnect {
     else
       m_identity[key] = value;
   }
-}
+}  // namespace mtconnect

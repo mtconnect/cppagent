@@ -17,107 +17,90 @@
 
 #pragma once
 
+#include "cutting_tool.hpp"
 #include "globals.hpp"
 #include "printer.hpp"
-#include "cutting_tool.hpp"
 
-extern "C" {
+extern "C"
+{
   typedef struct _xmlTextWriter xmlTextWriter;
   typedef xmlTextWriter *xmlTextWriterPtr;
 }
 
-namespace mtconnect {
+namespace mtconnect
+{
   class DataItem;
   class SensorConfiguration;
   class XmlWriter;
-  
+
   class XmlPrinter : public Printer
   {
-  public:
-    XmlPrinter(const std::string version = "",
-               bool pretty = false);
-    virtual ~XmlPrinter() {}
-    
-    virtual std::string printError(
-                           const unsigned int instanceId,
-                           const unsigned int bufferSize,
-                           const uint64_t nextSeq,
-                           const std::string &errorCode,
-                           const std::string &errorText
-                           )  const override;
-    
+   public:
+    XmlPrinter(const std::string version = "", bool pretty = false);
+    virtual ~XmlPrinter()
+    {
+    }
+
+    virtual std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
+                                   const uint64_t nextSeq, const std::string &errorCode,
+                                   const std::string &errorText) const override;
+
     virtual std::string printProbe(
-                           const unsigned int instanceId,
-                           const unsigned int bufferSize,
-                           const uint64_t nextSeq,
-                           const unsigned int assetBufferSize,
-                           const unsigned int assetCount,
-                           const std::vector<Device *> &devices,
-                           const std::map<std::string, int> *count = nullptr)  const override;
-    
-    virtual std::string printSample(
-                            const unsigned int instanceId,
-                            const unsigned int bufferSize,
-                            const uint64_t nextSeq,
-                            const uint64_t firstSeq,
-                            const uint64_t lastSeq,
-                            ObservationPtrArray &results
-                            ) const override;
-    
-    virtual std::string printAssets(
-                            const unsigned int anInstanceId,
-                            const unsigned int bufferSize,
-                            const unsigned int assetCount,
-                            std::vector<AssetPtr> const &assets) const override;
-    
+        const unsigned int instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
+        const unsigned int assetBufferSize, const unsigned int assetCount,
+        const std::vector<Device *> &devices,
+        const std::map<std::string, int> *count = nullptr) const override;
+
+    virtual std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
+                                    const uint64_t nextSeq, const uint64_t firstSeq,
+                                    const uint64_t lastSeq,
+                                    ObservationPtrArray &results) const override;
+
+    virtual std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
+                                    const unsigned int assetCount,
+                                    std::vector<AssetPtr> const &assets) const override;
+
     virtual std::string printCuttingTool(CuttingToolPtr const tool) const override;
-    
-    virtual std::string mimeType() const override {
+
+    virtual std::string mimeType() const override
+    {
       return "text/xml";
-    }    
-    
-    void addDevicesNamespace(
-                             const std::string &urn,
-                             const std::string &location,
+    }
+
+    void addDevicesNamespace(const std::string &urn, const std::string &location,
                              const std::string &prefix);
-    void addErrorNamespace(
-                           const std::string &urn,
-                           const std::string &location,
+    void addErrorNamespace(const std::string &urn, const std::string &location,
                            const std::string &prefix);
-    void addStreamsNamespace(
-                             const std::string &urn,
-                             const std::string &location,
+    void addStreamsNamespace(const std::string &urn, const std::string &location,
                              const std::string &prefix);
-    void addAssetsNamespace(
-                            const std::string &urn,
-                            const std::string &location,
+    void addAssetsNamespace(const std::string &urn, const std::string &location,
                             const std::string &prefix);
-    
+
     void setSchemaVersion(const std::string &version);
     const std::string &getSchemaVersion();
-    
+
     void setDevicesStyle(const std::string &style);
     void setStreamStyle(const std::string &style);
     void setAssetsStyle(const std::string &style);
     void setErrorStyle(const std::string &style);
-    
+
     // For testing
     void clearDevicesNamespaces();
     void clearErrorNamespaces();
     void clearStreamsNamespaces();
     void clearAssetsNamespaces();
-    
+
     std::string getDevicesUrn(const std::string &prefix);
     std::string getErrorUrn(const std::string &prefix);
     std::string getStreamsUrn(const std::string &prefix);
     std::string getAssetsUrn(const std::string &prefix);
-    
+
     std::string getDevicesLocation(const std::string &prefix);
     std::string getErrorLocation(const std::string &prefix);
     std::string getStreamsLocation(const std::string &prefix);
     std::string getAssetsLocation(const std::string &prefix);
-    
-  protected:
+
+   protected:
     enum EDocumentType
     {
       eERROR,
@@ -131,56 +114,42 @@ namespace mtconnect {
       std::string mUrn;
       std::string mSchemaLocation;
     };
-    
+
     // Initiate all documents
-    void initXmlDoc(
-                    xmlTextWriterPtr writer,
-                    EDocumentType docType,
-                    const unsigned int instanceId,
-                    const unsigned int bufferSize,
-                    const unsigned int assetBufferSize,
-                    const unsigned int assetCount,
-                    const uint64_t nextSeq,
-                    const uint64_t firstSeq = 0,
-                    const uint64_t lastSeq = 0,
+    void initXmlDoc(xmlTextWriterPtr writer, EDocumentType docType, const unsigned int instanceId,
+                    const unsigned int bufferSize, const unsigned int assetBufferSize,
+                    const unsigned int assetCount, const uint64_t nextSeq,
+                    const uint64_t firstSeq = 0, const uint64_t lastSeq = 0,
                     const std::map<std::string, int> *counts = nullptr) const;
-    
+
     // Helper to print individual components and details
-    void printProbeHelper(xmlTextWriterPtr writer, Component *component, const char *name)  const;
+    void printProbeHelper(xmlTextWriterPtr writer, Component *component, const char *name) const;
     void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem) const;
-    
-    
+
     // Add attributes to an xml element
-    void addSimpleElement(
-                          xmlTextWriterPtr writer,
-                          const std::string &element,
+    void addSimpleElement(xmlTextWriterPtr writer, const std::string &element,
                           const std::string &body,
                           const std::map<std::string, std::string> &attributes = {},
-                          bool raw = false)  const;
-    
-    void addAttributes(xmlTextWriterPtr writer, const std::map<std::string, std::string> &attributes)  const;
-    void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes)  const;
-    
-    void addEvent(xmlTextWriterPtr writer, Observation *result)  const;
-    
+                          bool raw = false) const;
+
+    void addAttributes(xmlTextWriterPtr writer,
+                       const std::map<std::string, std::string> &attributes) const;
+    void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes) const;
+
+    void addEvent(xmlTextWriterPtr writer, Observation *result) const;
+
     // Asset printing
-    void printCuttingToolValue(
-                               xmlTextWriterPtr writer,
-                               CuttingToolPtr tool,
-                               const char *value,
-                               std::set<std::string> *remaining = nullptr)  const;
-    void printCuttingToolValue(
-                               xmlTextWriterPtr writer,
-                               CuttingItemPtr item,
-                               const char *value,
+    void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr tool, const char *value,
                                std::set<std::string> *remaining = nullptr) const;
-    void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value)  const;
-    void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item)  const;
-    void printAssetNode(xmlTextWriterPtr writer, Asset *asset)  const;
-    
-    void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration* sensor) const;
-    
-  protected:
+    void printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr item, const char *value,
+                               std::set<std::string> *remaining = nullptr) const;
+    void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value) const;
+    void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item) const;
+    void printAssetNode(xmlTextWriterPtr writer, Asset *asset) const;
+
+    void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration *sensor) const;
+
+   protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;
     std::map<std::string, SchemaNamespace> m_streamsNamespaces;
     std::map<std::string, SchemaNamespace> m_errorNamespaces;
@@ -191,4 +160,4 @@ namespace mtconnect {
     std::string m_errorStyle;
     std::string m_assetsStyle;
   };
-}
+}  // namespace mtconnect

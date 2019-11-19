@@ -19,25 +19,38 @@
 
 #include "globals.hpp"
 
-#include <string>
 #include <map>
+#include <string>
 
-namespace mtconnect {
-
-  class ComponentConfiguration {
-  public:
-    ComponentConfiguration() { }
-    virtual ~ComponentConfiguration() { }    
+namespace mtconnect
+{
+  class ComponentConfiguration
+  {
+   public:
+    ComponentConfiguration()
+    {
+    }
+    virtual ~ComponentConfiguration()
+    {
+    }
   };
-  
-  class ExtendedComponentConfiguration : public ComponentConfiguration {
-  public:
-    ExtendedComponentConfiguration(const std::string &content)
-    : m_content(content) { }
-    virtual ~ExtendedComponentConfiguration() { }
-    
-    const std::string &getContent() const { return m_content; }
-  protected:
+
+  class ExtendedComponentConfiguration : public ComponentConfiguration
+  {
+   public:
+    ExtendedComponentConfiguration(const std::string &content) : m_content(content)
+    {
+    }
+    virtual ~ExtendedComponentConfiguration()
+    {
+    }
+
+    const std::string &getContent() const
+    {
+      return m_content;
+    }
+
+   protected:
     std::string m_content;
   };
-}
+}  // namespace mtconnect

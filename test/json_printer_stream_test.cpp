@@ -15,14 +15,9 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-
-#include <nlohmann/json.hpp>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "checkpoint.hpp"
 #include "data_item.hpp"
@@ -35,13 +30,22 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 
+#include <nlohmann/json.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 
-class JsonPrinterStreamTest : public testing::Test {
+class JsonPrinterStreamTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     m_xmlPrinter.reset(new XmlPrinter("1.5"));
     m_printer.reset(new JsonPrinter("1.5", true));
     m_config.reset(new XmlParser());
@@ -49,22 +53,27 @@ class JsonPrinterStreamTest : public testing::Test {
         m_config->parseFile(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", m_xmlPrinter.get());
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_config.reset();
     m_xmlPrinter.reset();
     m_printer.reset();
   }
 
-  DataItem *getDataItem(const char *name) {
-    for (auto &device : m_devices) {
+  DataItem *getDataItem(const char *name)
+  {
+    for (auto &device : m_devices)
+    {
       auto di = device->getDeviceDataItem(name);
-      if (di) return di;
+      if (di)
+        return di;
     }
     return nullptr;
   }
 
   void addObservationToCheckpoint(Checkpoint &checkpoint, const char *name, uint64_t sequence,
-                                  string value, string time = "TIME") {
+                                  string value, string time = "TIME")
+  {
     const auto d = getDataItem(name);
     ASSERT_TRUE(d) << "Could not find data item " << name;
     auto event = new Observation(*d, sequence, time, value);
@@ -78,7 +87,8 @@ class JsonPrinterStreamTest : public testing::Test {
   std::vector<Device *> m_devices;
 };
 
-TEST_F(JsonPrinterStreamTest, StreamHeader) {
+TEST_F(JsonPrinterStreamTest, StreamHeader)
+{
   Checkpoint checkpoint;
   ObservationPtrArray list;
   checkpoint.getObservations(list);
@@ -96,7 +106,8 @@ TEST_F(JsonPrinterStreamTest, StreamHeader) {
             jdoc.at("/MTConnectStreams/Header/lastSequence"_json_pointer).get<uint64_t>());
 }
 
-TEST_F(JsonPrinterStreamTest, DeviceStream) {
+TEST_F(JsonPrinterStreamTest, DeviceStream)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
   ObservationPtrArray list;
@@ -113,7 +124,8 @@ TEST_F(JsonPrinterStreamTest, DeviceStream) {
             stream.at("/uuid"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterStreamTest, ComponentStream) {
+TEST_F(JsonPrinterStreamTest, ComponentStream)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
   ObservationPtrArray list;
@@ -130,7 +142,8 @@ TEST_F(JsonPrinterStreamTest, ComponentStream) {
   ASSERT_EQ(string("e373fec0"), stream.at("/componentId"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterStreamTest, ComponentStreamTwoComponents) {
+TEST_F(JsonPrinterStreamTest, ComponentStreamTwoComponents)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
   addObservationToCheckpoint(checkpoint, "Sspeed_act", 10254805, "500");
@@ -153,7 +166,8 @@ TEST_F(JsonPrinterStreamTest, ComponentStreamTwoComponents) {
   ASSERT_EQ(string("zf476090"), stream2.at("/componentId"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterStreamTest, TwoDevices) {
+TEST_F(JsonPrinterStreamTest, TwoDevices)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, "100");
   addObservationToCheckpoint(checkpoint, "z2143c50", 10254805, "AVAILABLE");
@@ -178,7 +192,8 @@ TEST_F(JsonPrinterStreamTest, TwoDevices) {
             stream2.at("/uuid"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem) {
+TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "if36ff60", 10254804, "AUTOMATIC");  // Controller Mode
   addObservationToCheckpoint(checkpoint, "r186cd60", 10254805, "10 20 30");   // Path Position
@@ -220,7 +235,8 @@ TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem) {
   ASSERT_EQ(uint64_t(10254805), pos.at("/PathPosition/sequence"_json_pointer).get<uint64_t>());
 }
 
-TEST_F(JsonPrinterStreamTest, ConditionDataItem) {
+TEST_F(JsonPrinterStreamTest, ConditionDataItem)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "a5b23650", 10254804,
                              "fault|syn|ack|HIGH|Syntax error");  // Motion Program Condition
@@ -253,7 +269,8 @@ TEST_F(JsonPrinterStreamTest, ConditionDataItem) {
   ASSERT_EQ(string("Syntax error"), motion.at("/Fault/value"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterStreamTest, TimeSeries) {
+TEST_F(JsonPrinterStreamTest, TimeSeries)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "tc9edc70", 10254804,
                              "10|100|1.0 2.0 3 4 5.0 6 7 8.8 9.0 10.2");  // Volt Ampere Time Series
@@ -301,7 +318,8 @@ TEST_F(JsonPrinterStreamTest, TimeSeries) {
   ASSERT_NEAR(10.2, value[9].get<double>(), 0.0001);
 }
 
-TEST_F(JsonPrinterStreamTest, AssetChanged) {
+TEST_F(JsonPrinterStreamTest, AssetChanged)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "e4a300e0", 10254804,
                              "CuttingTool|31d416a0-33c7");  // asset changed
@@ -344,7 +362,8 @@ TEST_F(JsonPrinterStreamTest, AssetChanged) {
   ASSERT_EQ(string("400477d0-33c7"), removed.at("/AssetRemoved/value"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterStreamTest, ResetTrigger) {
+TEST_F(JsonPrinterStreamTest, ResetTrigger)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "qb9212c0", 10254804, "10.0:ACTION_COMPLETE",
                              "TIME@100.0");  // Amperage
@@ -378,7 +397,8 @@ TEST_F(JsonPrinterStreamTest, ResetTrigger) {
   ASSERT_EQ(10.0, amp.at("/Amperage/value"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterStreamTest, Message) {
+TEST_F(JsonPrinterStreamTest, Message)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "m17f1750", 10254804,
                              "XXXX|XXX is on the roof");  // asset changed
@@ -409,7 +429,8 @@ TEST_F(JsonPrinterStreamTest, Message) {
   ASSERT_EQ(string("XXX is on the roof"), message.at("/Message/value"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterStreamTest, Unavailability) {
+TEST_F(JsonPrinterStreamTest, Unavailability)
+{
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "m17f1750", 10254804, "|UNAVAILABLE");  // asset changed
   addObservationToCheckpoint(checkpoint, "a5b23650", 10254804,

@@ -15,11 +15,12 @@
 //    limitations under the License.
 //
 
-#include "agent_test_helper.hpp"
-
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "agent.hpp"
+#include "agent_test_helper.hpp"
 
 #include <stdio.h>
 
@@ -28,7 +29,8 @@ using namespace std::chrono;
 using namespace mtconnect;
 
 void AgentTestHelper::responseHelper(const char *file, int line, key_value_map &aQueries,
-                                     xmlDocPtr *doc) {
+                                     xmlDocPtr *doc)
+{
   IncomingThings incoming("", "", 0, 0);
   OutgoingThings outgoing;
   incoming.request_type = "GET";
@@ -41,12 +43,15 @@ void AgentTestHelper::responseHelper(const char *file, int line, key_value_map &
 
   m_result = m_agent->httpRequest(incoming, outgoing);
 
-  if (m_result.empty()) {
+  if (m_result.empty())
+  {
     m_result = m_out.str();
     auto pos = m_result.rfind("\n--");
-    if (pos != string::npos) {
+    if (pos != string::npos)
+    {
       pos = m_result.find('<', pos);
-      if (pos != string::npos) m_result.erase(0, pos);
+      if (pos != string::npos)
+        m_result.erase(0, pos);
     }
   }
 
@@ -63,7 +68,8 @@ void AgentTestHelper::responseHelper(const char *file, int line, key_value_map &
 }
 
 void AgentTestHelper::putResponseHelper(const char *file, int line, string body,
-                                        key_value_map &aQueries, xmlDocPtr *doc) {
+                                        key_value_map &aQueries, xmlDocPtr *doc)
+{
   IncomingThings incoming("", "", 0, 0);
   OutgoingThings outgoing;
   incoming.request_type = "PUT";

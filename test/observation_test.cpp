@@ -15,7 +15,9 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "data_item.hpp"
 #include "observation.hpp"
@@ -26,9 +28,11 @@
 using namespace std;
 using namespace mtconnect;
 
-class ObservationTest : public testing::Test {
+class ObservationTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     std::map<string, string> attributes1, attributes2;
 
     attributes1["id"] = "1";
@@ -53,7 +57,8 @@ class ObservationTest : public testing::Test {
     m_compEventB = new Observation(*m_dataItem2, 4, time, value);
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_compEventA->unrefer();
     m_compEventB->unrefer();
     m_dataItem1.reset();
@@ -74,7 +79,8 @@ class ObservationTest : public testing::Test {
 #define TEST_VALUE(attributes, nativeUnits, expected, value) \
   testValueHelper(attributes, nativeUnits, expected, value, __FILE__, __LINE__)
 
-TEST_F(ObservationTest, Constructors) {
+TEST_F(ObservationTest, Constructors)
+{
   auto ce = new Observation(*m_compEventA);
 
   // Copy constructor allocates different objects, so it has different addresses
@@ -87,11 +93,13 @@ TEST_F(ObservationTest, Constructors) {
   ce->unrefer();
 }
 
-TEST_F(ObservationTest, GetAttributes) {
+TEST_F(ObservationTest, GetAttributes)
+{
   const auto &attr_list1 = m_compEventA->getAttributes();
   map<string, string> attributes1;
 
-  for (const auto &attr : attr_list1) attributes1[attr.first] = attr.second;
+  for (const auto &attr : attr_list1)
+    attributes1[attr.first] = attr.second;
 
   ASSERT_EQ((string) "1", attributes1["dataItemId"]);
   ASSERT_EQ((string) "NOW", attributes1["timestamp"]);
@@ -108,7 +116,8 @@ TEST_F(ObservationTest, GetAttributes) {
   const auto &attr_list2 = m_compEventB->getAttributes();
   map<string, string> attributes2;
 
-  for (const auto &attr : attr_list2) attributes2[attr.first] = attr.second;
+  for (const auto &attr : attr_list2)
+    attributes2[attr.first] = attr.second;
 
   ASSERT_EQ((string) "3", attributes2["dataItemId"]);
   ASSERT_EQ((string) "LATER", attributes2["timestamp"]);
@@ -117,7 +126,8 @@ TEST_F(ObservationTest, GetAttributes) {
   ASSERT_EQ((string) "4", attributes2["sequence"]);
 }
 
-TEST_F(ObservationTest, Getters) {
+TEST_F(ObservationTest, Getters)
+{
   ASSERT_TRUE(m_dataItem1.get() == m_compEventA->getDataItem());
   ASSERT_TRUE(m_dataItem2.get() == m_compEventB->getDataItem());
 
@@ -125,7 +135,8 @@ TEST_F(ObservationTest, Getters) {
   ASSERT_EQ((string) "1.1231", m_compEventB->getValue());
 }
 
-TEST_F(ObservationTest, ConvertValue) {
+TEST_F(ObservationTest, ConvertValue)
+{
   std::map<string, string> attributes;
   attributes["id"] = "1";
   attributes["name"] = "DataItemTest1";
@@ -143,7 +154,8 @@ TEST_F(ObservationTest, ConvertValue) {
   TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), value);
 }
 
-TEST_F(ObservationTest, ConvertSimpleUnits) {
+TEST_F(ObservationTest, ConvertSimpleUnits)
+{
   std::map<string, string> attributes;
   attributes["id"] = "1";
   attributes["name"] = "DataItemTest";
@@ -169,7 +181,8 @@ TEST_F(ObservationTest, ConvertSimpleUnits) {
 
 void ObservationTest::testValueHelper(std::map<string, string> &attributes,
                                       const string &nativeUnits, float expected,
-                                      const string &value, const char *file, int line) {
+                                      const string &value, const char *file, int line)
+{
   string time("NOW");
 
   attributes["nativeUnits"] = nativeUnits;
@@ -185,7 +198,8 @@ void ObservationTest::testValueHelper(std::map<string, string> &attributes,
   failIf(diff > 0.001, message.str(), __FILE__, __LINE__);
 }
 
-TEST_F(ObservationTest, RefCounts) {
+TEST_F(ObservationTest, RefCounts)
+{
   string time("NOW"), value("111");
   auto event = new Observation(*m_dataItem1, 123, time, value);
 
@@ -225,7 +239,8 @@ TEST_F(ObservationTest, RefCounts) {
   ASSERT_TRUE(event->refCount() == 1);
 }
 
-TEST_F(ObservationTest, StlLists) {
+TEST_F(ObservationTest, StlLists)
+{
   std::vector<ObservationPtr> vector;
 
   string time("NOW"), value("111");
@@ -240,7 +255,8 @@ TEST_F(ObservationTest, StlLists) {
   ASSERT_EQ(3, (int)event->refCount());
 }
 
-TEST_F(ObservationTest, EventChaining) {
+TEST_F(ObservationTest, EventChaining)
+{
   string time("NOW"), value("111");
   ObservationPtr event1(new Observation(*m_dataItem1, 123, time, value), true);
   ObservationPtr event2(new Observation(*m_dataItem1, 123, time, value), true);
@@ -271,7 +287,8 @@ TEST_F(ObservationTest, EventChaining) {
   ASSERT_TRUE(list2.back().getObject() == event2.getObject());
 }
 
-TEST_F(ObservationTest, Condition) {
+TEST_F(ObservationTest, Condition)
+{
   string time("NOW");
   std::map<string, string> attributes1;
   attributes1["id"] = "1";
@@ -289,7 +306,8 @@ TEST_F(ObservationTest, Condition) {
   const auto &attr_list1 = event1->getAttributes();
   map<string, string> attrs1;
 
-  for (const auto &attr : attr_list1) attrs1[attr.first] = attr.second;
+  for (const auto &attr : attr_list1)
+    attrs1[attr.first] = attr.second;
 
   ASSERT_EQ((string) "TEMPERATURE", attrs1["type"]);
   ASSERT_EQ((string) "123", attrs1["sequence"]);
@@ -306,7 +324,8 @@ TEST_F(ObservationTest, Condition) {
   const auto &attr_list2 = event2->getAttributes();
   map<string, string> attrs2;
 
-  for (const auto &attr : attr_list2) attrs2[attr.first] = attr.second;
+  for (const auto &attr : attr_list2)
+    attrs2[attr.first] = attr.second;
 
   ASSERT_EQ((string) "TEMPERATURE", attrs2["type"]);
   ASSERT_EQ((string) "123", attrs2["sequence"]);
@@ -318,7 +337,8 @@ TEST_F(ObservationTest, Condition) {
   d.reset();
 }
 
-TEST_F(ObservationTest, TimeSeries) {
+TEST_F(ObservationTest, TimeSeries)
+{
   string time("NOW");
   std::map<string, string> attributes1;
   attributes1["id"] = "1";
@@ -334,14 +354,16 @@ TEST_F(ObservationTest, TimeSeries) {
   const auto &attr_list1 = event1->getAttributes();
   map<string, string> attrs1;
 
-  for (const auto &attr : attr_list1) attrs1[attr.first] = attr.second;
+  for (const auto &attr : attr_list1)
+    attrs1[attr.first] = attr.second;
 
   ASSERT_TRUE(event1->isTimeSeries());
 
   ASSERT_EQ(6, event1->getSampleCount());
   auto values = event1->getTimeSeries();
 
-  for (auto i = 0; i < event1->getSampleCount(); i++) {
+  for (auto i = 0; i < event1->getSampleCount(); i++)
+  {
     ASSERT_EQ((float)(i + 1), values[i]);
   }
 
@@ -353,7 +375,8 @@ TEST_F(ObservationTest, TimeSeries) {
   const auto &attr_list2 = event2->getAttributes();
   map<string, string> attrs2;
 
-  for (const auto &attr : attr_list2) attrs2[attr.first] = attr.second;
+  for (const auto &attr : attr_list2)
+    attrs2[attr.first] = attr.second;
 
   ASSERT_TRUE(event2->isTimeSeries());
 
@@ -362,14 +385,16 @@ TEST_F(ObservationTest, TimeSeries) {
   ASSERT_EQ((string) "42000", attrs2["sampleRate"]);
   values = event2->getTimeSeries();
 
-  for (auto i = 0; i < event1->getSampleCount(); i++) {
+  for (auto i = 0; i < event1->getSampleCount(); i++)
+  {
     ASSERT_EQ((float)((i + 1) * 10), values[i]);
   }
 
   d.reset();
 }
 
-TEST_F(ObservationTest, Duration) {
+TEST_F(ObservationTest, Duration)
+{
   string time("2011-02-18T15:52:41Z@200.1232");
   std::map<string, string> attributes1;
   attributes1["id"] = "1";
@@ -383,7 +408,8 @@ TEST_F(ObservationTest, Duration) {
   const auto &attr_list = event1->getAttributes();
   map<string, string> attrs1;
 
-  for (const auto &attr : attr_list) attrs1[attr.first] = attr.second;
+  for (const auto &attr : attr_list)
+    attrs1[attr.first] = attr.second;
 
   ASSERT_EQ((string) "AVERAGE", attrs1["statistic"]);
   ASSERT_EQ((string) "2011-02-18T15:52:41Z", attrs1["timestamp"]);
@@ -392,7 +418,8 @@ TEST_F(ObservationTest, Duration) {
   d.reset();
 }
 
-TEST_F(ObservationTest, AssetChanged) {
+TEST_F(ObservationTest, AssetChanged)
+{
   string time("2011-02-18T15:52:41Z@200.1232");
   std::map<string, string> attributes1;
   attributes1["id"] = "1";
@@ -407,7 +434,8 @@ TEST_F(ObservationTest, AssetChanged) {
   const auto &attr_list = event1->getAttributes();
   map<string, string> attrs1;
 
-  for (const auto &attr : attr_list) attrs1[attr.first] = attr.second;
+  for (const auto &attr : attr_list)
+    attrs1[attr.first] = attr.second;
 
   ASSERT_EQ((string) "CuttingTool", attrs1["assetType"]);
   ASSERT_EQ((string) "123", event1->getValue());

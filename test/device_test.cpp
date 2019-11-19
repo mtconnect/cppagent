@@ -15,16 +15,19 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "device.hpp"
-
 using namespace std;
 using namespace mtconnect;
 
-class DeviceTest : public testing::Test {
+class DeviceTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     std::map<string, string> attributes1;
     attributes1["id"] = "1";
     attributes1["name"] = "DeviceTest1";
@@ -41,7 +44,8 @@ class DeviceTest : public testing::Test {
     m_devB = new Device(attributes2);
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     delete m_devA;
     m_devA = nullptr;
     delete m_devB;
@@ -51,7 +55,8 @@ class DeviceTest : public testing::Test {
   Device *m_devA, *m_devB;
 };
 
-TEST_F(DeviceTest, Getters) {
+TEST_F(DeviceTest, Getters)
+{
   ASSERT_EQ((string) "Device", m_devA->getClass());
   ASSERT_EQ((string) "1", m_devA->getId());
   ASSERT_EQ((string) "DeviceTest1", m_devA->getName());
@@ -63,7 +68,8 @@ TEST_F(DeviceTest, Getters) {
   ASSERT_EQ((string) "UnivUniqId2", m_devB->getUuid());
 }
 
-TEST_F(DeviceTest, GetAttributes) {
+TEST_F(DeviceTest, GetAttributes)
+{
   const auto &attributes1 = m_devA->getAttributes();
 
   ASSERT_EQ((string) "1", attributes1.at("id"));
@@ -81,7 +87,8 @@ TEST_F(DeviceTest, GetAttributes) {
   ASSERT_EQ((string) "6", attributes2.at("iso841Class"));
 }
 
-TEST_F(DeviceTest, Description) {
+TEST_F(DeviceTest, Description)
+{
   map<string, string> attributes;
   attributes["manufacturer"] = "MANUFACTURER";
   attributes["serialNumber"] = "SERIAL_NUMBER";
@@ -106,7 +113,8 @@ TEST_F(DeviceTest, Description) {
   ASSERT_EQ((string) "Machine 2", m_devB->getDescriptionBody());
 }
 
-TEST_F(DeviceTest, Relationships) {
+TEST_F(DeviceTest, Relationships)
+{
   // Test get/set parents
   map<string, string> dummy;
   mtconnect::Component *linear = new mtconnect::Component("Linear", dummy);
@@ -139,7 +147,8 @@ TEST_F(DeviceTest, Relationships) {
   ASSERT_TRUE(thermostat == m_devA->getChildren().back());
 }
 
-TEST_F(DeviceTest, DataItems) {
+TEST_F(DeviceTest, DataItems)
+{
   ASSERT_TRUE(m_devA->getDataItems().empty());
 
   map<string, string> dummy;
@@ -153,7 +162,8 @@ TEST_F(DeviceTest, DataItems) {
   ASSERT_TRUE(data2 == m_devA->getDataItems().back());
 }
 
-TEST_F(DeviceTest, DeviceDataItem) {
+TEST_F(DeviceTest, DeviceDataItem)
+{
   ASSERT_TRUE(m_devA->getDeviceDataItems().empty());
   ASSERT_TRUE(!m_devA->getDeviceDataItem("DataItemTest1"));
   ASSERT_TRUE(!m_devA->getDeviceDataItem("DataItemTest2"));
@@ -173,7 +183,8 @@ TEST_F(DeviceTest, DeviceDataItem) {
   ASSERT_TRUE(&data2 == m_devA->getDeviceDataItem("DataItemTest2"));
 }
 
-TEST_F(DeviceTest, GetDataItem) {
+TEST_F(DeviceTest, GetDataItem)
+{
   map<string, string> attributes;
   attributes["id"] = "by_id";
   DataItem data1(attributes);

@@ -17,61 +17,50 @@
 
 #pragma once
 
+#include "cutting_tool.hpp"
 #include "globals.hpp"
 #include "printer.hpp"
-#include "cutting_tool.hpp"
 
-namespace mtconnect {
+namespace mtconnect
+{
   class JsonPrinter : public Printer
   {
-  public:
-    JsonPrinter(const std::string version = "",
-                bool pretty = false);
-    virtual ~JsonPrinter() {}
-    
-    virtual std::string printError(
-                                   const unsigned int instanceId,
-                                   const unsigned int bufferSize,
-                                   const uint64_t nextSeq,
-                                   const std::string &errorCode,
-                                   const std::string &errorText
-                                   )  const override;
-    
+   public:
+    JsonPrinter(const std::string version = "", bool pretty = false);
+    virtual ~JsonPrinter()
+    {
+    }
+
+    virtual std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
+                                   const uint64_t nextSeq, const std::string &errorCode,
+                                   const std::string &errorText) const override;
+
     virtual std::string printProbe(
-                                   const unsigned int instanceId,
-                                   const unsigned int bufferSize,
-                                   const uint64_t nextSeq,
-                                   const unsigned int assetBufferSize,
-                                   const unsigned int assetCount,
-                                   const std::vector<Device *> &devices,
-                                   const std::map<std::string, int> *count = nullptr)  const override;
-    
-    virtual std::string printSample(
-                                    const unsigned int instanceId,
-                                    const unsigned int bufferSize,
-                                    const uint64_t nextSeq,
-                                    const uint64_t firstSeq,
+        const unsigned int instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
+        const unsigned int assetBufferSize, const unsigned int assetCount,
+        const std::vector<Device *> &devices,
+        const std::map<std::string, int> *count = nullptr) const override;
+
+    virtual std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
+                                    const uint64_t nextSeq, const uint64_t firstSeq,
                                     const uint64_t lastSeq,
-                                    ObservationPtrArray &results
-                                    ) const override;
-    
-    virtual std::string printAssets(
-                                    const unsigned int anInstanceId,
-                                    const unsigned int bufferSize,
+                                    ObservationPtrArray &results) const override;
+
+    virtual std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                                     const unsigned int assetCount,
                                     std::vector<AssetPtr> const &assets) const override;
-    
+
     virtual std::string printCuttingTool(CuttingToolPtr const tool) const override;
-    
-    virtual std::string mimeType() const override {
+
+    virtual std::string mimeType() const override
+    {
       return "application/json";
     }
-    
-  protected:
+
+   protected:
     const std::string &hostname() const;
     std::string m_schemaVersion;
     std::string m_version;
     std::string m_hostname;
   };
-}
-
+}  // namespace mtconnect

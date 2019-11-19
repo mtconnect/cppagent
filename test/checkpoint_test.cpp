@@ -15,7 +15,9 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "adapter.hpp"
 #include "agent.hpp"
@@ -24,9 +26,11 @@
 using namespace std;
 using namespace mtconnect;
 
-class CheckpointTest : public testing::Test {
+class CheckpointTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     // Create an agent with only 16 slots and 8 data items.
     m_agent = nullptr;
     m_checkpoint = nullptr;
@@ -51,7 +55,8 @@ class CheckpointTest : public testing::Test {
     m_dataItem2 = make_unique<DataItem>(attributes2);
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_agent.reset();
     m_checkpoint.reset();
     m_dataItem1.reset();
@@ -65,7 +70,8 @@ class CheckpointTest : public testing::Test {
   std::unique_ptr<DataItem> m_dataItem2;
 };
 
-TEST_F(CheckpointTest, AddObservations) {
+TEST_F(CheckpointTest, AddObservations)
+{
   ObservationPtr p1, p2, p3, p4, p5, p6;
   string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
       warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||"), unavailable("UNAVAILABLE|||");
@@ -114,7 +120,8 @@ TEST_F(CheckpointTest, AddObservations) {
   ASSERT_EQ(1, (int)p3->refCount());
 }
 
-TEST_F(CheckpointTest, Copy) {
+TEST_F(CheckpointTest, Copy)
+{
   ObservationPtr p1, p2, p3, p4, p5, p6;
   string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
       warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
@@ -138,7 +145,8 @@ TEST_F(CheckpointTest, Copy) {
   ASSERT_EQ(2, (int)p2->refCount());
 }
 
-TEST_F(CheckpointTest, GetObservations) {
+TEST_F(CheckpointTest, GetObservations)
+{
   ObservationPtr p;
   string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
       warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
@@ -188,7 +196,8 @@ TEST_F(CheckpointTest, GetObservations) {
   d1.reset();
 }
 
-TEST_F(CheckpointTest, Filter) {
+TEST_F(CheckpointTest, Filter)
+{
   ObservationPtr p1, p2, p3, p4;
   string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
       warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
@@ -233,7 +242,8 @@ TEST_F(CheckpointTest, Filter) {
   d1.reset();
 }
 
-TEST_F(CheckpointTest, CopyAndFilter) {
+TEST_F(CheckpointTest, CopyAndFilter)
+{
   ObservationPtr p;
   string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
       warning2("WARNING|CODE2|HIGH|Over..."), warning3("WARNING|CODE3|HIGH|Over..."),
@@ -297,7 +307,8 @@ TEST_F(CheckpointTest, CopyAndFilter) {
   d1.reset();
 }
 
-TEST_F(CheckpointTest, ConditionChaining) {
+TEST_F(CheckpointTest, ConditionChaining)
+{
   ObservationPtr p1, p2, p3, p4, p5, p6;
   string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
       warning2("WARNING|CODE2|HIGH|Over..."), fault2("FAULT|CODE2|HIGH|Over..."),
@@ -395,7 +406,8 @@ TEST_F(CheckpointTest, ConditionChaining) {
   list.clear();
 }
 
-TEST_F(CheckpointTest, LastConditionNormal) {
+TEST_F(CheckpointTest, LastConditionNormal)
+{
   ObservationPtr p1, p2, p3;
 
   string time("NOW"), fault1("FAULT|CODE1|HIGH|Over..."), normal1("NORMAL|CODE1||");

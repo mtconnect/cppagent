@@ -15,26 +15,32 @@
 //    limitations under the License.
 //
 
-#include "test_globals.hpp"
-
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
+
+#include "test_globals.hpp"
 
 #include <libxml/tree.h>
 #include <libxml/xpathInternals.h>
+
 #include <iostream>
 
 using namespace std;
 
-namespace {
-template<typename T>
-std::string toString(T value) {
-  std::ostringstream stm;
-  stm << value;
-  return stm.str();
-}
-}
+namespace
+{
+  template <typename T>
+  std::string toString(T value)
+  {
+    std::ostringstream stm;
+    stm << value;
+    return stm.str();
+  }
+}  // namespace
 
-string getFile(string file) {
+string getFile(string file)
+{
   string path = string(PROJECT_ROOT_DIR "/test/resources/") + file;
   ifstream ifs(path.c_str());
   stringstream stream;
@@ -42,18 +48,21 @@ string getFile(string file) {
   return stream.str();
 }
 
-void fillErrorText(string &errorXml, const string &text) {
+void fillErrorText(string &errorXml, const string &text)
+{
   size_t pos = errorXml.find("</Error>");
 
   // Error in case </Error> was not found
-  if (pos == string::npos) {
+  if (pos == string::npos)
+  {
     return;
   }
 
   // Trim everything between >....</Error>
   size_t gT = pos;
 
-  while (errorXml[gT - 1] != '>') {
+  while (errorXml[gT - 1] != '>')
+  {
     gT--;
   }
 
@@ -64,12 +73,16 @@ void fillErrorText(string &errorXml, const string &text) {
   errorXml.insert(pos, text);
 }
 
-void fillAttribute(string &xmlString, const string &attribute, const string &value) {
+void fillAttribute(string &xmlString, const string &attribute, const string &value)
+{
   size_t pos = xmlString.find(attribute + "=\"\"");
 
-  if (pos == string::npos) {
+  if (pos == string::npos)
+  {
     return;
-  } else {
+  }
+  else
+  {
     pos += attribute.length() + 2;
   }
 
@@ -77,14 +90,17 @@ void fillAttribute(string &xmlString, const string &attribute, const string &val
 }
 
 void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std::string &file,
-               int line) {
+               int line)
+{
   xmlNodePtr root = xmlDocGetRootElement(doc);
 
   string path(xpath), attribute;
   size_t pos = path.find_first_of('@');
 
-  while (pos != string::npos && attribute.empty()) {
-    if (xpath[pos - 1] != '[') {
+  while (pos != string::npos && attribute.empty())
+  {
+    if (xpath[pos - 1] != '[')
+    {
       attribute = path.substr(pos + 1);
       path = path.substr(0, pos);
     }
@@ -96,24 +112,29 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
 
   bool any = false;
 
-  for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next) {
-    if (ns->prefix) {
+  for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next)
+  {
+    if (ns->prefix)
+    {
       xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href);
       any = true;
     }
   }
 
-  if (!any) xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href);
+  if (!any)
+    xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href);
 
   xmlXPathObjectPtr obj = xmlXPathEvalExpression(BAD_CAST path.c_str(), xpathCtx);
 
-  if (!obj || !obj->nodesetval || obj->nodesetval->nodeNr == 0) {
+  if (!obj || !obj->nodesetval || obj->nodesetval->nodeNr == 0)
+  {
     stringstream message;
     message << file << "(" << line << "): "
             << "Xpath " << xpath << " did not match any nodes in XML document";
     FAIL() << message.str();
 
-    if (obj) xmlXPathFreeObject(obj);
+    if (obj)
+      xmlXPathFreeObject(obj);
 
     xmlXPathFreeContext(xpathCtx);
     return;
@@ -122,26 +143,35 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
   // Special case when no children are expected
   xmlNodePtr first = obj->nodesetval->nodeTab[0];
 
-  if (expected == 0) {
+  if (expected == 0)
+  {
     bool has_content = false;
     stringstream message;
 
-    if (attribute.empty()) {
+    if (attribute.empty())
+    {
       message << "Xpath " << xpath << " was not supposed to have any children.";
 
-      for (xmlNodePtr child = first->children; !has_content && child; child = child->next) {
-        if (child->type == XML_ELEMENT_NODE) {
+      for (xmlNodePtr child = first->children; !has_content && child; child = child->next)
+      {
+        if (child->type == XML_ELEMENT_NODE)
+        {
           has_content = true;
-        } else if (child->type == XML_TEXT_NODE) {
+        }
+        else if (child->type == XML_TEXT_NODE)
+        {
           string res = (const char *)child->content;
           has_content = !trim(res).empty();
         }
       }
-    } else {
+    }
+    else
+    {
       message << "Xpath " << xpath << " was not supposed to have an attribute.";
       xmlChar *text = xmlGetProp(first, BAD_CAST attribute.c_str());
 
-      if (text) {
+      if (text)
+      {
         message << "Value was: " << text;
         has_content = true;
         xmlFree(text);
@@ -158,15 +188,20 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
   string actual;
   xmlChar *text = nullptr;
 
-  switch (first->type) {
+  switch (first->type)
+  {
     case XML_ELEMENT_NODE:
-      if (attribute.empty()) {
+      if (attribute.empty())
+      {
         text = xmlNodeGetContent(first);
-      } else if (first->properties) {
+      }
+      else if (first->properties)
+      {
         text = xmlGetProp(first, BAD_CAST attribute.c_str());
       }
 
-      if (text) {
+      if (text)
+      {
         actual = (const char *)text;
         xmlFree(text);
       }
@@ -189,9 +224,12 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
 
   string message = (string) "Incorrect value for path " + xpath;
 
-  if (expected[0] != '!') {
+  if (expected[0] != '!')
+  {
     failNotEqualIf(actual != expected, expected, actual, message, file, line);
-  } else {
+  }
+  else
+  {
     expected += 1;
     failNotEqualIf(actual == expected, expected, actual, message, file, line);
   }
@@ -207,23 +245,28 @@ void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected, const std::s
 
   bool any = false;
 
-  for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next) {
-    if (ns->prefix) {
+  for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next)
+  {
+    if (ns->prefix)
+    {
       xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href);
       any = true;
     }
   }
 
-  if (!any) xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href);
+  if (!any)
+    xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href);
 
   xmlXPathObjectPtr obj = xmlXPathEvalExpression(BAD_CAST xpath, xpathCtx);
 
-  if (!obj || !obj->nodesetval) {
+  if (!obj || !obj->nodesetval)
+  {
     stringstream message;
     message << "Xpath " << xpath << " did not match any nodes in XML document";
     failIf(true, message.str(), file, line);
 
-    if (obj) xmlXPathFreeObject(obj);
+    if (obj)
+      xmlXPathFreeObject(obj);
 
     xmlXPathFreeContext(xpathCtx);
     return;
@@ -232,11 +275,11 @@ void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected, const std::s
   string message = (string) "Incorrect count of elements for path " + xpath;
 
   int actual = obj->nodesetval->nodeNr;
-  failNotEqualIf(actual != expected, toString(expected), toString(actual), message, file,
-                 line);
+  failNotEqualIf(actual != expected, toString(expected), toString(actual), message, file, line);
 }
 
-string &trim(string &str) {
+string &trim(string &str)
+{
   char const *delims = " \t\r\n";
 
   // trim leading whitespace
@@ -247,27 +290,32 @@ string &trim(string &str) {
   else if (not_white > 0)
     str.erase(0, not_white);
 
-  if (not_white != string::npos) {
+  if (not_white != string::npos)
+  {
     // trim trailing whitespace
     not_white = str.find_last_not_of(delims);
 
-    if (not_white < (str.length() - 1)) str.erase(not_white + 1);
+    if (not_white < (str.length() - 1))
+      str.erase(not_white + 1);
   }
 
   return str;
 }
 
-void failIf(bool condition, const std::string &message, const std::string &file, int line) {
+void failIf(bool condition, const std::string &message, const std::string &file, int line)
+{
   ASSERT_FALSE(condition) << file << "(" << line << "): Failed " << message;
 }
 
 void failNotEqualIf(bool condition, const std::string &expected, const std::string &actual,
-                    const std::string &message, const std::string &file, int line) {
+                    const std::string &message, const std::string &file, int line)
+{
   ASSERT_FALSE(condition) << file << "(" << line << "): Failed not equal " << message << "\n"
                           << "  Expected: " << expected << "\n"
                           << "  Actual: " << actual;
 }
 
-void assertIf(bool condition, const std::string &message, const std::string &file, int line) {
+void assertIf(bool condition, const std::string &message, const std::string &file, int line)
+{
   ASSERT_TRUE(condition) << file << "(" << line << "): Failed " << message;
 }

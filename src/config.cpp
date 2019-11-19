@@ -16,29 +16,33 @@
 //
 
 #include "config.hpp"
+
 #include "agent.hpp"
-#include "options.hpp"
 #include "device.hpp"
+#include "options.hpp"
+#include "rolling_file_logger.hpp"
 #include "xml_printer.hpp"
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <vector>
-#include <chrono>
-#include <thread>
+#include <sys/stat.h>
+
+#include <date/date.h>
+
 #include <dlib/config_reader.h>
 #include <dlib/logger.h>
-#include <stdexcept>
+
 #include <algorithm>
-#include <sys/stat.h>
-#include "rolling_file_logger.hpp"
-#include <date/date.h>
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <thread>
+#include <vector>
 
 // If Windows XP
 #if defined(_WINDOWS)
 #if WINVER < 0x0600
 #include "shlwapi.h"
-#define stat(P, B) (PathFileExists((const char*) P) ? 0 : -1)
+#define stat(P, B) (PathFileExists((const char *)P) ? 0 : -1)
 #endif
 #endif
 
@@ -49,24 +53,20 @@
 using namespace std;
 using namespace dlib;
 
-namespace mtconnect {
+namespace mtconnect
+{
   static logger g_logger("init.config");
-  
-  static inline const char *get_with_default(
-                                             const config_reader::kernel_1a &reader, 
-                                             const char *key,
-                                             const char *defaultValue)
+
+  static inline const char *get_with_default(const config_reader::kernel_1a &reader,
+                                             const char *key, const char *defaultValue)
   {
     if (reader.is_key_defined(key))
       return reader[key].c_str();
     else
       return defaultValue;
   }
-  
-  
-  static inline int get_with_default(
-                                     const config_reader::kernel_1a &reader, 
-                                     const char *key,
+
+  static inline int get_with_default(const config_reader::kernel_1a &reader, const char *key,
                                      int defaultValue)
   {
     if (reader.is_key_defined(key))
@@ -74,47 +74,37 @@ namespace mtconnect {
     else
       return defaultValue;
   }
-  
-  
-  static inline std::chrono::milliseconds get_with_default(
-                                                           const config_reader::kernel_1a &reader, 
+
+  static inline std::chrono::milliseconds get_with_default(const config_reader::kernel_1a &reader,
                                                            const char *key,
                                                            std::chrono::milliseconds defaultValue)
   {
     if (reader.is_key_defined(key))
-      return std::chrono::milliseconds{ atoi(reader[key].c_str()) };
+      return std::chrono::milliseconds{atoi(reader[key].c_str())};
     else
       return defaultValue;
   }
-  
-  
-  static inline std::chrono::seconds get_with_default(
-                                                      const config_reader::kernel_1a &reader, 
+
+  static inline std::chrono::seconds get_with_default(const config_reader::kernel_1a &reader,
                                                       const char *key,
                                                       std::chrono::seconds defaultValue)
   {
     if (reader.is_key_defined(key))
-      return std::chrono::seconds{ atoi(reader[key].c_str()) };
+      return std::chrono::seconds{atoi(reader[key].c_str())};
     else
       return defaultValue;
   }
-  
-  
-  static inline const string &get_with_default(
-                                               const config_reader::kernel_1a &reader, 
-                                               const char *key,
-                                               const string &defaultValue)
+
+  static inline const string &get_with_default(const config_reader::kernel_1a &reader,
+                                               const char *key, const string &defaultValue)
   {
     if (reader.is_key_defined(key))
       return reader[key];
     else
       return defaultValue;
   }
-  
-  
-  static inline bool get_bool_with_default(
-                                           const config_reader::kernel_1a &reader, 
-                                           const char *key,
+
+  static inline bool get_bool_with_default(const config_reader::kernel_1a &reader, const char *key,
                                            bool defaultValue)
   {
     if (reader.is_key_defined(key))
@@ -122,19 +112,18 @@ namespace mtconnect {
     else
       return defaultValue;
   }
-  
-  
-  AgentConfiguration::AgentConfiguration() :
-  m_agent(nullptr),
-  m_loggerFile(nullptr),
-  m_monitorFiles(false),
-  m_minimumConfigReloadAge(15),
-  m_restart(false),
-  m_exePath("")
+
+  AgentConfiguration::AgentConfiguration()
+      : m_agent(nullptr),
+        m_loggerFile(nullptr),
+        m_monitorFiles(false),
+        m_minimumConfigReloadAge(15),
+        m_restart(false),
+        m_exePath("")
   {
     bool success = false;
     char pathSep = '/';
-    
+
 #if _WINDOWS
     char path[MAX_PATH];
     pathSep = '\\';
@@ -154,57 +143,58 @@ namespace mtconnect {
 #endif
 #endif
 #endif
-    
-    
+
     if (success)
     {
       m_exePath = path;
       size_t found = m_exePath.rfind(pathSep);
-      
+
       if (found != std::string::npos)
         m_exePath.erase(found + 1);
-      
+
       cout << "Configuration search path: current directory and " << m_exePath << endl;
     }
     else
       m_exePath = "";
   }
-  
+
   void AgentConfiguration::initialize(int argc, const char *argv[])
   {
     MTConnectService::initialize(argc, argv);
-    
+
     const char *configFile = "agent.cfg";
-    
+
     OptionsList optionList;
     optionList.append(new Option(0, configFile, "The configuration file", "file", false));
-    optionList.parse(argc, (const char**) argv);
-    
+    optionList.parse(argc, (const char **)argv);
+
     m_configFile = configFile;
-    
+
     try
     {
       struct stat buf = {0};
-      
+
       // Check first if the file is in the current working directory...
       if (stat(m_configFile.c_str(), &buf))
       {
         if (!m_exePath.empty())
         {
-          g_logger << LINFO << "Cannot find " << m_configFile << " in current directory, searching exe path: "
-          << m_exePath;
-          cerr << "Cannot find " << m_configFile << " in current directory, searching exe path: " <<
-          m_exePath << endl;
+          g_logger << LINFO << "Cannot find " << m_configFile
+                   << " in current directory, searching exe path: " << m_exePath;
+          cerr << "Cannot find " << m_configFile
+               << " in current directory, searching exe path: " << m_exePath << endl;
           m_configFile = m_exePath + m_configFile;
         }
         else
         {
-          g_logger << LFATAL << "Agent failed to load: Cannot find configuration file: '" << m_configFile;
-          cerr << "Agent failed to load: Cannot find configuration file: '" << m_configFile << std::endl;
+          g_logger << LFATAL << "Agent failed to load: Cannot find configuration file: '"
+                   << m_configFile;
+          cerr << "Agent failed to load: Cannot find configuration file: '" << m_configFile
+               << std::endl;
           optionList.usage();
         }
       }
-      
+
       ifstream file(m_configFile.c_str());
       loadConfig(file);
     }
@@ -215,8 +205,7 @@ namespace mtconnect {
       optionList.usage();
     }
   }
-  
-  
+
   AgentConfiguration::~AgentConfiguration()
   {
     if (m_agent)
@@ -231,13 +220,13 @@ namespace mtconnect {
     }
     set_all_logging_output_streams(cout);
   }
-  
-  
+
 #ifdef _WINDOWS
   static time_t GetFileModificationTime(const string &file)
   {
-    FILETIME createTime, accessTime, writeTime = { 0, 0 };
-    auto handle = CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    FILETIME createTime, accessTime, writeTime = {0, 0};
+    auto handle =
+        CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (handle == INVALID_HANDLE_VALUE)
     {
       g_logger << LWARN << "Could not find file: " << file;
@@ -246,25 +235,25 @@ namespace mtconnect {
     if (!GetFileTime(handle, &createTime, &accessTime, &writeTime))
     {
       g_logger << LWARN << "GetFileTime failed for: " << file;
-      writeTime = { 0, 0 };
+      writeTime = {0, 0};
     }
     CloseHandle(handle);
-    
+
     uint64_t windowsFileTime = (writeTime.dwLowDateTime | uint64_t(writeTime.dwHighDateTime) << 32);
-    
+
     return windowsFileTime / 10000000ull - 11644473600ull;
   }
 #else
-  static time_t GetFileModificationTime(const string& file)
+  static time_t GetFileModificationTime(const string &file)
   {
-    struct stat buf = { 0 };
+    struct stat buf = {0};
     if (stat(file.c_str(), &buf) != 0)
     {
       g_logger << LWARN << "Cannot stat file (" << errno << "): " << file;
       perror("Cannot stat file");
       return 0;
     }
-    
+
     return buf.st_mtime;
   }
 #endif
@@ -273,83 +262,92 @@ namespace mtconnect {
   {
     time_t devices_at_start = 0, cfg_at_start = 0;
 
-    g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile <<
-    ", will warm start if they change.";
-    
-    if ((cfg_at_start = GetFileModificationTime(m_configFile)) == 0) {
+    g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile
+             << ", will warm start if they change.";
+
+    if ((cfg_at_start = GetFileModificationTime(m_configFile)) == 0)
+    {
       g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
       return;
     }
-    if ((devices_at_start = GetFileModificationTime(m_devicesFile)) == 0) {
+    if ((devices_at_start = GetFileModificationTime(m_devicesFile)) == 0)
+    {
       g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
       return;
     }
-        
+
     g_logger << LTRACE << "Configuration start time: " << cfg_at_start;
     g_logger << LTRACE << "Device start time: " << devices_at_start;
-    
-    
+
     bool changed = false;
-    
+
     // Check every 10 seconds
-    do {
+    do
+    {
       dlib::sleep(10000);
-      
+
       time_t devices = 0, cfg = 0;
       bool check = true;
-      
-      if ((cfg = GetFileModificationTime(m_configFile)) == 0) {
-        g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", retrying in 10 seconds";
+
+      if ((cfg = GetFileModificationTime(m_configFile)) == 0)
+      {
+        g_logger << LWARN << "Cannot stat config file: " << m_configFile
+                 << ", retrying in 10 seconds";
         check = false;
       }
-      
-      if ((devices = GetFileModificationTime(m_devicesFile)) == 0) {
-        g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", retrying in 10 seconds";
+
+      if ((devices = GetFileModificationTime(m_devicesFile)) == 0)
+      {
+        g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile
+                 << ", retrying in 10 seconds";
         check = false;
       }
-      
+
       g_logger << LTRACE << "Configuration times: " << cfg_at_start << " -- " << cfg;
       g_logger << LTRACE << "Device times: " << devices_at_start << " -- " << devices;
-      
-      
+
       // Check if the files have changed.
-      if (check && (cfg_at_start != cfg || devices_at_start != devices)) {
+      if (check && (cfg_at_start != cfg || devices_at_start != devices))
+      {
         time_t now = time(NULL);
-        g_logger << LWARN << "Dected change in configuarion files. Will reload when youngest file is at least " << m_minimumConfigReloadAge
-        <<" seconds old";
+        g_logger
+            << LWARN
+            << "Dected change in configuarion files. Will reload when youngest file is at least "
+            << m_minimumConfigReloadAge << " seconds old";
         g_logger << LWARN << "    Devices.xml file modified " << (now - devices) << " seconds ago";
         g_logger << LWARN << "    ...cfg file modified " << (now - cfg) << " seconds ago";
-        
-        changed = (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
+
+        changed =
+            (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
       }
     } while (!changed && m_agent->is_running());
-    
+
     // Restart agent if changed...
     // stop agent and signal to warm start
     if (m_agent->is_running() && changed)
     {
-      g_logger << LWARN << "Monitor thread has detected change in configuration files, restarting agent.";
-      
+      g_logger << LWARN
+               << "Monitor thread has detected change in configuration files, restarting agent.";
+
       m_restart = true;
       m_agent->clear();
       delete m_agent;
       m_agent = nullptr;
-      
+
       g_logger << LWARN << "Monitor agent has completed shutdown, reinitializing agent.";
-      
+
       // Re initialize
-      const char *argv[] = { m_configFile.c_str() };
+      const char *argv[] = {m_configFile.c_str()};
       initialize(1, argv);
     }
-    
+
     g_logger << LDEBUG << "Monitor thread is exiting";
   }
-  
-  
+
   void AgentConfiguration::start()
   {
     unique_ptr<dlib::thread_function> mon;
-    
+
     do
     {
       m_restart = false;
@@ -359,9 +357,9 @@ namespace mtconnect {
         g_logger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
         mon.reset(new dlib::thread_function(make_mfp(*this, &AgentConfiguration::monitorThread)));
       }
-      
+
       m_agent->start();
-      
+
       if (m_restart && m_monitorFiles)
       {
         // Will destruct and wait to re-initialize.
@@ -371,14 +369,12 @@ namespace mtconnect {
       }
     } while (m_restart);
   }
-  
-  
+
   void AgentConfiguration::stop()
   {
     m_agent->clear();
   }
-  
-  
+
   Device *AgentConfiguration::defaultDevice()
   {
     const auto &devices = m_agent->getDevices();
@@ -387,24 +383,19 @@ namespace mtconnect {
     else
       return nullptr;
   }
-  
-  
+
   static std::string timestamp()
   {
-    return date::format(
-                        "%Y-%m-%dT%H:%M:%SZ",
+    return date::format("%Y-%m-%dT%H:%M:%SZ",
                         date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
   }
-  
-  
-  void AgentConfiguration::LoggerHook(
-                                      const std::string& loggerName,
-                                      const dlib::log_level& l,
-                                      const dlib::uint64 threadId,
-                                      const char* message)
+
+  void AgentConfiguration::LoggerHook(const std::string &loggerName, const dlib::log_level &l,
+                                      const dlib::uint64 threadId, const char *message)
   {
     stringstream out;
-    out << timestamp() << ": " << l.name << " [" << threadId << "] " << loggerName << ": " << message;
+    out << timestamp() << ": " << l.name << " [" << threadId << "] " << loggerName << ": "
+        << message;
 #ifdef WIN32
     out << "\r\n";
 #else
@@ -415,9 +406,8 @@ namespace mtconnect {
     else
       cout << out.str();
   }
-  
-  
-  static dlib::log_level string_to_log_level (const std::string& level)
+
+  static dlib::log_level string_to_log_level(const std::string &level)
   {
     using namespace std;
     if (level == "LALL" || level == "ALL" || level == "all")
@@ -436,11 +426,10 @@ namespace mtconnect {
       return LERROR;
     else if (level == "LFATAL" || level == "FATAL" || level == "fatal")
       return LFATAL;
-    
+
     return LINFO;
   }
-  
-  
+
   void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
   {
     if (m_loggerFile)
@@ -448,17 +437,18 @@ namespace mtconnect {
       delete m_loggerFile;
       m_loggerFile = nullptr;
     }
-    
+
     if (m_isDebug)
     {
       set_all_logging_output_streams(cout);
       set_all_logging_levels(LDEBUG);
-      
+
       if (reader.is_block_defined("logger_config"))
       {
-        const config_reader::kernel_1a& cr = reader.block("logger_config");
-        
-        if (cr.is_key_defined("logging_level")) {
+        const config_reader::kernel_1a &cr = reader.block("logger_config");
+
+        if (cr.is_key_defined("logging_level"))
+        {
           auto level = string_to_log_level(cr["logging_level"]);
           if (level.priority < LDEBUG.priority)
             set_all_logging_levels(level);
@@ -469,18 +459,18 @@ namespace mtconnect {
     {
       string name("agent.log");
       auto sched = RollingFileLogger::NEVER;
-      uint64 maxSize = 10ull * 1024ull * 1024ull; // 10MB
+      uint64 maxSize = 10ull * 1024ull * 1024ull;  // 10MB
       int maxIndex = 9;
-      
+
       if (reader.is_block_defined("logger_config"))
       {
         const auto &cr = reader.block("logger_config");
-        
+
         if (cr.is_key_defined("logging_level"))
           set_all_logging_levels(string_to_log_level(cr["logging_level"]));
         else
           set_all_logging_levels(LINFO);
-        
+
         if (cr.is_key_defined("output"))
         {
           string output = cr["output"];
@@ -501,13 +491,13 @@ namespace mtconnect {
               name = one;
           }
         }
-        
+
         string maxSizeStr = get_with_default(cr, "max_size", "10M");
         stringstream ss(maxSizeStr);
         char mag = '\0';
         ss >> maxSize >> mag;
-        
-        switch(mag)
+
+        switch (mag)
         {
           case 'G':
           case 'g':
@@ -523,7 +513,7 @@ namespace mtconnect {
           case '\0':
             break;
         }
-        
+
         maxIndex = get_with_default(cr, "max_index", maxIndex);
         string schedCfg = get_with_default(cr, "schedule", "NEVER");
         if (schedCfg == "DAILY")
@@ -531,13 +521,12 @@ namespace mtconnect {
         else if (schedCfg == "WEEKLY")
           sched = RollingFileLogger::WEEKLY;
       }
-      
+
       m_loggerFile = new RollingFileLogger(name, maxIndex, maxSize, sched);
       set_all_logging_output_hooks<AgentConfiguration>(*this, &AgentConfiguration::LoggerHook);
     }
   }
-  
-  
+
   inline static void trim(std::string &str)
   {
     auto index = str.find_first_not_of(" \r\t");
@@ -547,16 +536,15 @@ namespace mtconnect {
     if (index != string::npos)
       str.erase(index + 1);
   }
-  
-  
+
   void AgentConfiguration::loadConfig(std::istream &file)
   {
     // Now get our configuration
     config_reader::kernel_1a reader(file);
-    
+
     if (!m_loggerFile)
       configureLogger(reader);
-    
+
     auto defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
     auto port = get_with_default(reader, "Port", 5000);
     string serverIp = get_with_default(reader, "ServerIp", "");
@@ -573,121 +561,106 @@ namespace mtconnect {
     m_monitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
     m_minimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
     m_pretty = get_bool_with_default(reader, "Pretty", false);
-    
+
     m_pidFile = get_with_default(reader, "PidFile", "agent.pid");
     std::vector<string> devices_files;
-    
+
     if (reader.is_key_defined("Devices"))
     {
       auto fileName = reader["Devices"];
       devices_files.push_back(fileName);
-      
-      if (!m_exePath.empty() &&
-          !fileName.empty() &&
-          fileName[0] != '/' &&
-          fileName[0] != '\\' &&
+
+      if (!m_exePath.empty() && !fileName.empty() && fileName[0] != '/' && fileName[0] != '\\' &&
           fileName[1] != ':')
       {
         devices_files.push_back(m_exePath + reader["Devices"]);
       }
     }
-    
+
     devices_files.push_back("Devices.xml");
-    
+
     if (!m_exePath.empty())
       devices_files.push_back(m_exePath + "Devices.xml");
-    
+
     devices_files.push_back("probe.xml");
-    
+
     if (!m_exePath.empty())
       devices_files.push_back(m_exePath + "probe.xml");
-    
+
     m_devicesFile.clear();
-    
+
     for (const auto &probe : devices_files)
     {
       struct stat buf = {0};
       g_logger << LDEBUG << "Checking for Devices XML configuration file: " << probe;
       auto res = stat(probe.c_str(), &buf);
       g_logger << LDEBUG << "  Stat returned: " << res;
-      
+
       if (!res)
       {
         m_devicesFile = probe;
         break;
       }
-      
+
       g_logger << LDEBUG << "Could not find file: " << probe;
       cout << "Could not locate file: " << probe << endl;
     }
-    
+
     if (m_devicesFile.empty())
     {
       throw runtime_error(((string) "Please make sure the configuration "
-                           "file probe.xml or Devices.xml is in the current "
-                           "directory or specify the correct file "
-                           "in the configuration file " + m_configFile +
-                           " using Devices = <file>").c_str());
+                                    "file probe.xml or Devices.xml is in the current "
+                                    "directory or specify the correct file "
+                                    "in the configuration file " +
+                           m_configFile + " using Devices = <file>")
+                              .c_str());
     }
-    
+
     m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
-    
+
     // Check for schema version
-    string schemaVersion = get_with_default(reader, "SchemaVersion", "");    
+    string schemaVersion = get_with_default(reader, "SchemaVersion", "");
     g_logger << LINFO << "Starting agent on port " << port;
-    
+
     if (!m_agent)
-      m_agent = new Agent(m_devicesFile, bufferSize, maxAssets,
-                          schemaVersion, checkpointFrequency,
+      m_agent = new Agent(m_devicesFile, bufferSize, maxAssets, schemaVersion, checkpointFrequency,
                           m_pretty);
-    XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter*>(m_agent->getPrinter("xml"));
-    
+    XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
+
     m_agent->set_listening_port(port);
     m_agent->set_listening_ip(serverIp);
     m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
-    
+
     for (size_t i = 0; i < m_agent->getDevices().size(); i++)
       m_agent->getDevices()[i]->m_preserveUuid = defaultPreserve;
-        
+
     loadAllowPut(reader);
-    loadAdapters(
-                 reader,
-                 defaultPreserve,
-                 legacyTimeout,
-                 reconnectInterval,
-                 ignoreTimestamps,
-                 conversionRequired,
-                 upcaseValue,
-                 filterDuplicates);
-    
+    loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,
+                 conversionRequired, upcaseValue, filterDuplicates);
+
     // Files served by the Agent... allows schema files to be served by
     // agent.
     loadFiles(reader);
-    
+
     // Load namespaces, allow for local file system serving as well.
-    loadNamespace(reader, "DevicesNamespaces", xmlPrinter,  &XmlPrinter::addDevicesNamespace);
-    loadNamespace(reader, "StreamsNamespaces", xmlPrinter,  &XmlPrinter::addStreamsNamespace);
-    loadNamespace(reader, "AssetsNamespaces", xmlPrinter,  &XmlPrinter::addAssetsNamespace);
-    loadNamespace(reader, "ErrorNamespaces", xmlPrinter,  &XmlPrinter::addErrorNamespace);
-    
-    loadStyle(reader, "DevicesStyle", xmlPrinter,  &XmlPrinter::setDevicesStyle);
+    loadNamespace(reader, "DevicesNamespaces", xmlPrinter, &XmlPrinter::addDevicesNamespace);
+    loadNamespace(reader, "StreamsNamespaces", xmlPrinter, &XmlPrinter::addStreamsNamespace);
+    loadNamespace(reader, "AssetsNamespaces", xmlPrinter, &XmlPrinter::addAssetsNamespace);
+    loadNamespace(reader, "ErrorNamespaces", xmlPrinter, &XmlPrinter::addErrorNamespace);
+
+    loadStyle(reader, "DevicesStyle", xmlPrinter, &XmlPrinter::setDevicesStyle);
     loadStyle(reader, "StreamsStyle", xmlPrinter, &XmlPrinter::setStreamStyle);
     loadStyle(reader, "AssetsStyle", xmlPrinter, &XmlPrinter::setAssetsStyle);
     loadStyle(reader, "ErrorStyle", xmlPrinter, &XmlPrinter::setErrorStyle);
-    
+
     loadTypes(reader);
   }
-  
-  
-  void AgentConfiguration::loadAdapters(
-                                        dlib::config_reader::kernel_1a &reader,
-                                        bool defaultPreserve,
-                                        std::chrono::seconds legacyTimeout,
+
+  void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &reader,
+                                        bool defaultPreserve, std::chrono::seconds legacyTimeout,
                                         std::chrono::milliseconds reconnectInterval,
-                                        bool ignoreTimestamps,
-                                        bool conversionRequired,
-                                        bool upcaseValue,
-                                        bool filterDuplicates)
+                                        bool ignoreTimestamps, bool conversionRequired,
+                                        bool upcaseValue, bool filterDuplicates)
   {
     Device *device;
     if (reader.is_block_defined("Adapters"))
@@ -695,7 +668,7 @@ namespace mtconnect {
       const auto &adapters = reader.block("Adapters");
       std::vector<string> blocks;
       adapters.get_blocks(blocks);
-      
+
       for (const auto &block : blocks)
       {
         const auto &adapter = adapters.block(block);
@@ -704,9 +677,9 @@ namespace mtconnect {
           deviceName = adapter["Device"].c_str();
         else
           deviceName = block;
-        
+
         device = m_agent->getDeviceByName(deviceName);
-        
+
         if (!device)
         {
           g_logger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
@@ -721,21 +694,15 @@ namespace mtconnect {
         {
           g_logger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
         }
-        
-        const string host = get_with_default(adapter, "Host", (string)"localhost");
+
+        const string host = get_with_default(adapter, "Host", (string) "localhost");
         auto port = get_with_default(adapter, "Port", 7878);
-        
-        
-        g_logger << LINFO << "Adding adapter for " << deviceName << " on "
-        << host << ":" << port;
-        auto adp = m_agent->addAdapter(
-                                       deviceName,
-                                       host,
-                                       port,
-                                       false,
-                                       get_with_default(adapter, "LegacyTimeout", legacyTimeout) );
+
+        g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
+        auto adp = m_agent->addAdapter(deviceName, host, port, false,
+                                       get_with_default(adapter, "LegacyTimeout", legacyTimeout));
         device->m_preserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
-        
+
         // Add additional device information
         if (adapter.is_key_defined("UUID"))
           device->setUuid(adapter["UUID"]);
@@ -745,17 +712,20 @@ namespace mtconnect {
           device->setStation(adapter["Station"]);
         if (adapter.is_key_defined("SerialNumber"))
           device->setSerialNumber(adapter["SerialNumber"]);
-        
+
         adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", filterDuplicates));
-        adp->setAutoAvailable(get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
-        adp->setIgnoreTimestamps(get_bool_with_default(adapter, "IgnoreTimestamps", ignoreTimestamps ||
-                                                       adp->isIgnoringTimestamps()));
-        adp->setConversionRequired(get_bool_with_default(adapter, "ConversionRequired", conversionRequired));
+        adp->setAutoAvailable(
+            get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
+        adp->setIgnoreTimestamps(get_bool_with_default(
+            adapter, "IgnoreTimestamps", ignoreTimestamps || adp->isIgnoringTimestamps()));
+        adp->setConversionRequired(
+            get_bool_with_default(adapter, "ConversionRequired", conversionRequired));
         adp->setRealTime(get_bool_with_default(adapter, "RealTime", false));
         adp->setRelativeTime(get_bool_with_default(adapter, "RelativeTime", false));
-        adp->setReconnectInterval(get_with_default(adapter, "ReconnectInterval", reconnectInterval));
+        adp->setReconnectInterval(
+            get_with_default(adapter, "ReconnectInterval", reconnectInterval));
         adp->setUpcaseValue(get_bool_with_default(adapter, "UpcaseDataItemValue", upcaseValue));
-        
+
         if (adapter.is_key_defined("AdditionalDevices"))
         {
           istringstream devices(adapter["AdditionalDevices"]);
@@ -768,7 +738,7 @@ namespace mtconnect {
             index = name.find_last_not_of(" \r\t");
             if (index != string::npos)
               name.erase(index + 1);
-            
+
             adp->addDevice(name);
           }
         }
@@ -776,7 +746,8 @@ namespace mtconnect {
     }
     else if ((device = defaultDevice()))
     {
-      g_logger << LINFO << "Adding default adapter for " << device->getName() << " on localhost:7878";
+      g_logger << LINFO << "Adding default adapter for " << device->getName()
+               << " on localhost:7878";
       auto adp = m_agent->addAdapter(device->getName(), "localhost", 7878, false, legacyTimeout);
       adp->setIgnoreTimestamps(ignoreTimestamps || adp->isIgnoringTimestamps());
       adp->setReconnectInterval(reconnectInterval);
@@ -787,13 +758,12 @@ namespace mtconnect {
       throw runtime_error("Adapters must be defined if more than one device is present");
     }
   }
-  
-  
+
   void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &reader)
   {
     auto putEnabled = get_bool_with_default(reader, "AllowPut", false);
     m_agent->enablePut(putEnabled);
-    
+
     string putHosts = get_with_default(reader, "AllowPutFrom", "");
     if (!putHosts.empty())
     {
@@ -817,12 +787,9 @@ namespace mtconnect {
       } while (!toParse.eof());
     }
   }
-  
-  
-  void AgentConfiguration::loadNamespace(
-                                         dlib::config_reader::kernel_1a &reader,
-                                         const char *namespaceType,
-                                         XmlPrinter *xmlPrinter,
+
+  void AgentConfiguration::loadNamespace(dlib::config_reader::kernel_1a &reader,
+                                         const char *namespaceType, XmlPrinter *xmlPrinter,
                                          NamespaceFunction callback)
   {
     // Load namespaces, allow for local file system serving as well.
@@ -831,7 +798,7 @@ namespace mtconnect {
       const auto &namespaces = reader.block(namespaceType);
       std::vector<string> blocks;
       namespaces.get_blocks(blocks);
-      
+
       for (const auto &block : blocks)
       {
         const auto &ns = namespaces.block(block);
@@ -853,8 +820,7 @@ namespace mtconnect {
       }
     }
   }
-  
-  
+
   void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &reader)
   {
     if (reader.is_block_defined("Files"))
@@ -862,20 +828,21 @@ namespace mtconnect {
       const auto &files = reader.block("Files");
       std::vector<string> blocks;
       files.get_blocks(blocks);
-      
+
       for (const auto &block : blocks)
       {
         const auto &file = files.block(block);
         if (!file.is_key_defined("Location") || !file.is_key_defined("Path"))
-          g_logger << LERROR << "Name space must have a Location (uri) or Directory and Path: " << block;
+          g_logger << LERROR
+                   << "Name space must have a Location (uri) or Directory and Path: " << block;
         else
           m_agent->registerFile(file["Location"], file["Path"]);
       }
     }
   }
-  
-  
-  void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName, XmlPrinter *xmlPrinter, StyleFunction styleFunction)
+
+  void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName,
+                                     XmlPrinter *xmlPrinter, StyleFunction styleFunction)
   {
     if (reader.is_block_defined(styleName))
     {
@@ -891,8 +858,7 @@ namespace mtconnect {
       }
     }
   }
-  
-  
+
   void AgentConfiguration::loadTypes(dlib::config_reader::kernel_1a &reader)
   {
     if (reader.is_block_defined("MimeTypes"))
@@ -900,9 +866,9 @@ namespace mtconnect {
       const auto &types = reader.block("MimeTypes");
       std::vector<string> keys;
       types.get_keys(keys);
-      
+
       for (const auto &key : keys)
         m_agent->addMimeType(key, types[key]);
     }
   }
-}
+}  // namespace mtconnect

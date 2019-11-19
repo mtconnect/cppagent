@@ -17,61 +17,64 @@
 
 #pragma once
 
-#include "globals.hpp"
-
-#include <string>
-#include <vector>
-#include <cmath>
-#include <set>
-
 #include "component.hpp"
 #include "data_item.hpp"
+#include "globals.hpp"
 #include "ref_counted.hpp"
 
+#include <cmath>
+#include <set>
+#include <string>
+#include <vector>
 
-namespace mtconnect {
+namespace mtconnect
+{
   typedef std::pair<const char *, std::string> AttributeItem;
   typedef std::vector<AttributeItem> AttributeList;
-  
+
   class Observation;
   typedef RefCountedPtr<Observation> ObservationPtr;
   typedef dlib::array<ObservationPtr> ObservationPtrArray;
-  
-  struct DataSetEntry {
-    DataSetEntry(const std::string &key,
-                 const std::string &value,
-                 bool removed = false)
-    : m_key(key), m_value(value), m_removed(removed) {}
-    DataSetEntry(const std::string &key)
-    : m_key(key), m_value(""), m_removed(false) { }
+
+  struct DataSetEntry
+  {
+    DataSetEntry(const std::string &key, const std::string &value, bool removed = false)
+        : m_key(key), m_value(value), m_removed(removed)
+    {
+    }
+    DataSetEntry(const std::string &key) : m_key(key), m_value(""), m_removed(false)
+    {
+    }
 
     DataSetEntry(const DataSetEntry &other)
-    : m_key(other.m_key), m_value(other.m_value), m_removed(other.m_removed) {}
-    
+        : m_key(other.m_key), m_value(other.m_value), m_removed(other.m_removed)
+    {
+    }
+
     std::string m_key;
     std::string m_value;
     bool m_removed;
-    
-    bool operator ==(const DataSetEntry &other)  const {
+
+    bool operator==(const DataSetEntry &other) const
+    {
       return m_key == other.m_key;
     }
-    bool operator <(const DataSetEntry &other)  const  {
+    bool operator<(const DataSetEntry &other) const
+    {
       return m_key < other.m_key;
     }
-    
-    bool same(const DataSetEntry &other) const {
-      return m_key == other.m_key && m_value == other.m_value &&
-        m_removed == other.m_removed;
+
+    bool same(const DataSetEntry &other) const
+    {
+      return m_key == other.m_key && m_value == other.m_value && m_removed == other.m_removed;
     }
   };
-  
-  
+
   typedef std::set<DataSetEntry> DataSet;
-  
+
   class Observation : public RefCounted
   {
-    
-  public:
+   public:
     enum ELevel
     {
       NORMAL,
@@ -79,84 +82,102 @@ namespace mtconnect {
       FAULT,
       UNAVAILABLE
     };
-    
+
     static const unsigned int NumLevels = 4;
     static const std::string SLevels[];
-    
-  public:
+
+   public:
     // Initialize with the data item reference, sequence number, time and value
-    Observation(
-                   DataItem &dataItem,
-                   uint64_t sequence,
-                   const std::string &time,
-                   const std::string &value
-                   );
-    
+    Observation(DataItem &dataItem, uint64_t sequence, const std::string &time,
+                const std::string &value);
+
     // Copy constructor
     Observation(const Observation &observation);
-    
+
     Observation *deepCopy();
     Observation *deepCopyAndRemove(Observation *old);
-    
+
     // Extract the component event data into a map
     const AttributeList &getAttributes();
-    
+
     // Get the data item associated with this event
-    DataItem *getDataItem() const {
-      return m_dataItem; }
-    
+    DataItem *getDataItem() const
+    {
+      return m_dataItem;
+    }
+
     // Get the value
-    const std::string &getValue() const {
-      return m_value; }
+    const std::string &getValue() const
+    {
+      return m_value;
+    }
     ELevel getLevel();
-    const std::string &getLevelString() {
-      return SLevels[getLevel()]; }
+    const std::string &getLevelString()
+    {
+      return SLevels[getLevel()];
+    }
     const std::string &getCode()
     {
       getAttributes();
       return m_code;
     }
     void normal();
-    
+
     // Time series info...
-    const std::vector<float> &getTimeSeries() const {
-      return m_timeSeries; }
-    bool isTimeSeries() const {
-      return m_isTimeSeries; }
-    int getSampleCount() const {
-      return m_sampleCount; }
-    const DataSet &getDataSet() const {
+    const std::vector<float> &getTimeSeries() const
+    {
+      return m_timeSeries;
+    }
+    bool isTimeSeries() const
+    {
+      return m_isTimeSeries;
+    }
+    int getSampleCount() const
+    {
+      return m_sampleCount;
+    }
+    const DataSet &getDataSet() const
+    {
       return m_dataSet;
     }
-    const std::string &getResetTriggered() const {
+    const std::string &getResetTriggered() const
+    {
       return m_resetTriggered;
     }
-    bool isDataSet() const {
+    bool isDataSet() const
+    {
       return m_dataItem->isDataSet();
     }
-    bool isUnavailable() const {
+    bool isUnavailable() const
+    {
       return m_value == "UNAVAILABLE";
     }
-    
-    uint64_t getSequence() const {
-      return m_sequence; }
-    
-    void copySequence(const Observation *other) {
+
+    uint64_t getSequence() const
+    {
+      return m_sequence;
+    }
+
+    void copySequence(const Observation *other)
+    {
       m_sequence = other->m_sequence;
     }
 
-    const std::string &getDuration() const {
+    const std::string &getDuration() const
+    {
       return m_duration;
     }
-        
+
     Observation *getFirst();
-    Observation *getPrev() {
-      return m_prev; }
+    Observation *getPrev()
+    {
+      return m_prev;
+    }
     void getList(std::list<ObservationPtr> &list);
     void appendTo(Observation *event);
     Observation *find(const std::string &nativeCode);
     bool replace(Observation *oldObservation, Observation *newObservation);
-    
+
     bool operator<(Observation &another) const
     {
       if ((*m_dataItem) < (*another.m_dataItem))
@@ -166,96 +187,94 @@ namespace mtconnect {
       else
         return false;
     }
-    
+
     void clearResetTriggered()
     {
-      if (!m_resetTriggered.empty()) {
+      if (!m_resetTriggered.empty())
+      {
         m_hasAttributes = false;
         m_attributes.clear();
         m_resetTriggered.clear();
       }
     }
-    
+
     void setDataSet(DataSet &aSet)
     {
       m_dataSet = aSet;
       m_hasAttributes = false;
       m_attributes.clear();
     }
-    
-  protected:
+
+   protected:
     // Virtual destructor
     virtual ~Observation();
-    
-  protected:
+
+   protected:
     // Holds the data item from the device
     DataItem *m_dataItem;
-    
+
     // Sequence number of the event
     uint64_t m_sequence;
     std::string m_sequenceStr;
-    
+
     // Timestamp of the event's occurence
     std::string m_time;
     std::string m_duration;
-    
+
     // Hold the alarm data:  CODE|NATIVECODE|SEVERITY|STATE
     // or the Conditon data: LEVEL|NATIVE_CODE|NATIVE_SEVERITY|QUALIFIER
     // or the message data:  NATIVE_CODE
     // or the time series data
     std::string m_rest;
     ELevel m_level;
-    
+
     // The value of the event, either as a float or a string
     std::string m_value;
     bool m_isFloat;
     bool m_isTimeSeries;
     std::vector<float> m_timeSeries;
     int m_sampleCount;
-    
+
     // The attributes, created on demand
     bool m_hasAttributes;
     AttributeList m_attributes;
-    
+
     // For condition tracking
     std::string m_code;
-    
+
     // For reset triggered.
     std::string m_resetTriggered;
-    
+
     // For back linking of condition
     ObservationPtr m_prev;
-    
+
     // For data sets
     DataSet m_dataSet;
-    
-  protected:
+
+   protected:
     // Convert the value to the agent unit standards
     void convertValue(const std::string &value);
-    
+
     void parseDataSet(const std::string &s);
   };
-  
-  
+
   inline Observation::ELevel Observation::getLevel()
   {
     if (!m_hasAttributes)
       getAttributes();
-    
+
     return m_level;
   }
-  
-  
+
   inline void Observation::appendTo(Observation *event)
   {
     m_prev = event;
   }
-  
+
   typedef bool (*ObservationComparer)(ObservationPtr &aE1, ObservationPtr &aE2);
   inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2)
   {
     return aE1 < aE2;
   }
-  
 
-}
+}  // namespace mtconnect

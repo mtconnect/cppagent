@@ -15,16 +15,9 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
-
-#include "globals.hpp"
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-
-#include <nlohmann/json.hpp>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "checkpoint.hpp"
 #include "data_item.hpp"
@@ -33,18 +26,26 @@
 #include "json_helper.hpp"
 #include "json_printer.hpp"
 #include "observation.hpp"
+#include "test_globals.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 
-#include "test_globals.hpp"
+#include <nlohmann/json.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 using namespace std;
 using namespace mtconnect;
 using json = nlohmann::json;
 
-class JsonPrinterProbeTest : public testing::Test {
+class JsonPrinterProbeTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     m_xmlPrinter.reset(new XmlPrinter("1.5"));
     m_printer.reset(new JsonPrinter("1.5", true));
 
@@ -53,7 +54,8 @@ class JsonPrinterProbeTest : public testing::Test {
         m_config->parseFile(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", m_xmlPrinter.get());
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_config.reset();
     m_xmlPrinter.reset();
     m_printer.reset();
@@ -67,7 +69,8 @@ class JsonPrinterProbeTest : public testing::Test {
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
 };
 
-TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription) {
+TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
@@ -98,7 +101,8 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription) {
             device2.at("/Description/text"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterProbeTest, TopLevelDataItems) {
+TEST_F(JsonPrinterProbeTest, TopLevelDataItems)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   // cout << "\n" << doc << endl;
   auto jdoc = json::parse(doc);
@@ -128,7 +132,8 @@ TEST_F(JsonPrinterProbeTest, TopLevelDataItems) {
   ASSERT_EQ(string("f2df7550"), remove.at("/DataItem/id"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterProbeTest, SubComponents) {
+TEST_F(JsonPrinterProbeTest, SubComponents)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
@@ -166,7 +171,8 @@ TEST_F(JsonPrinterProbeTest, SubComponents) {
   ASSERT_EQ(string("ACTUAL"), ss.at("/subType"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterProbeTest, DataItemConstraints) {
+TEST_F(JsonPrinterProbeTest, DataItemConstraints)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
@@ -195,7 +201,8 @@ TEST_F(JsonPrinterProbeTest, DataItemConstraints) {
   ASSERT_EQ(7000.0, max.get<double>());
 }
 
-TEST_F(JsonPrinterProbeTest, DataItemSource) {
+TEST_F(JsonPrinterProbeTest, DataItemSource)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   // cout << "\n" << doc << endl;
   auto jdoc = json::parse(doc);
@@ -210,7 +217,8 @@ TEST_F(JsonPrinterProbeTest, DataItemSource) {
   ASSERT_EQ(string("taa7a0f0"), amp.at("/Source/dataItemId"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterProbeTest, InitialValue) {
+TEST_F(JsonPrinterProbeTest, InitialValue)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
@@ -223,7 +231,8 @@ TEST_F(JsonPrinterProbeTest, InitialValue) {
   ASSERT_EQ(1.0, count.at("/DataItem/InitialValue"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterProbeTest, DataItemFilters) {
+TEST_F(JsonPrinterProbeTest, DataItemFilters)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
@@ -251,7 +260,8 @@ TEST_F(JsonPrinterProbeTest, DataItemFilters) {
   ASSERT_EQ(10.0, filter2.at("/Filter/value"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterProbeTest, Composition) {
+TEST_F(JsonPrinterProbeTest, Composition)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
@@ -270,7 +280,8 @@ TEST_F(JsonPrinterProbeTest, Composition) {
   ASSERT_EQ(string("a7973930"), comp2.at("/id"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterProbeTest, Configuration) {
+TEST_F(JsonPrinterProbeTest, Configuration)
+{
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);

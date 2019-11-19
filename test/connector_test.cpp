@@ -15,42 +15,73 @@
 //    limitations under the License.
 //
 
-namespace date {};
+// Ensure that gtest is the first header otherwise Windows raises an error
+#include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
+
+namespace date
+{
+};
 using namespace date;
 
-#include <gtest/gtest.h>
+#include "connector.hpp"
 
 #include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
+
 #include <chrono>
 #include <sstream>
 #include <thread>
-#include "connector.hpp"
 
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 
-class TestConnector : public Connector {
+class TestConnector : public Connector
+{
  public:
   TestConnector(const std::string &server, unsigned int port,
                 std::chrono::seconds legacyTimeout = std::chrono::seconds{5})
-      : Connector(server, port, legacyTimeout), m_disconnected(false) {}
+      : Connector(server, port, legacyTimeout), m_disconnected(false)
+  {
+  }
 
-  void processData(const std::string &data) override {
+  void processData(const std::string &data) override
+  {
     m_data = data;
     m_list.push_back(m_data);
   }
 
-  void protocolCommand(const std::string &data) override { m_command = data; }
+  void protocolCommand(const std::string &data) override
+  {
+    m_command = data;
+  }
 
-  void disconnected() override { m_disconnected = true; }
-  void connected() override { m_disconnected = false; }
-  bool heartbeats() { return m_heartbeats; }
+  void disconnected() override
+  {
+    m_disconnected = true;
+  }
+  void connected() override
+  {
+    m_disconnected = false;
+  }
+  bool heartbeats()
+  {
+    return m_heartbeats;
+  }
 
-  void pushData(const char *data) { parseBuffer(data); }
+  void pushData(const char *data)
+  {
+    parseBuffer(data);
+  }
 
-  void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
-  void resetHeartbeats() { m_heartbeats = false; }
+  void startHeartbeats(std::string &aString)
+  {
+    Connector::startHeartbeats(aString);
+  }
+  void resetHeartbeats()
+  {
+    m_heartbeats = false;
+  }
 
  public:
   std::vector<std::string> m_list;
@@ -59,16 +90,19 @@ class TestConnector : public Connector {
   bool m_disconnected;
 };
 
-class ConnectorTest : public testing::Test, public dlib::threaded_object {
+class ConnectorTest : public testing::Test, public dlib::threaded_object
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     ASSERT_TRUE(!create_listener(m_server, 0, "127.0.0.1"));
     m_port = m_server->get_listening_port();
     m_connector.reset(new TestConnector("127.0.0.1", m_port));
     m_connector->m_disconnected = true;
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_server.reset();
     m_serverSocket.reset();
     stop();
@@ -76,7 +110,10 @@ class ConnectorTest : public testing::Test, public dlib::threaded_object {
     m_connector.reset();
   }
 
-  void thread() override { m_connector->connect(); }
+  void thread() override
+  {
+    m_connector->connect();
+  }
 
   dlib::scoped_ptr<dlib::listener> m_server;
   dlib::scoped_ptr<dlib::connection> m_serverSocket;
@@ -84,7 +121,8 @@ class ConnectorTest : public testing::Test, public dlib::threaded_object {
   unsigned short m_port;
 };
 
-TEST_F(ConnectorTest, Connection) {
+TEST_F(ConnectorTest, Connection)
+{
   ASSERT_TRUE(m_connector->m_disconnected);
   start();
 
@@ -95,7 +133,8 @@ TEST_F(ConnectorTest, Connection) {
   ASSERT_TRUE(!m_connector->m_disconnected);
 }
 
-TEST_F(ConnectorTest, DataCapture) {
+TEST_F(ConnectorTest, DataCapture)
+{
   // Start the accept thread
   start();
 
@@ -111,7 +150,8 @@ TEST_F(ConnectorTest, DataCapture) {
   ASSERT_EQ(command.substr(0, command.length() - 1), m_connector->m_data);
 }
 
-TEST_F(ConnectorTest, Disconnect) {
+TEST_F(ConnectorTest, Disconnect)
+{
   // Start the accept thread
   start();
 
@@ -125,7 +165,8 @@ TEST_F(ConnectorTest, Disconnect) {
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
-TEST_F(ConnectorTest, ProtocolCommand) {
+TEST_F(ConnectorTest, ProtocolCommand)
+{
   // Start the accept thread
   start();
 
@@ -141,7 +182,8 @@ TEST_F(ConnectorTest, ProtocolCommand) {
   ASSERT_TRUE(strncmp(cmd, m_connector->m_command.c_str(), strlen(cmd) - 1) == 0);
 }
 
-TEST_F(ConnectorTest, Heartbeat) {
+TEST_F(ConnectorTest, Heartbeat)
+{
   // Start the accept thread
   start();
 
@@ -166,7 +208,8 @@ TEST_F(ConnectorTest, Heartbeat) {
   ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
 }
 
-TEST_F(ConnectorTest, HeartbeatPong) {
+TEST_F(ConnectorTest, HeartbeatPong)
+{
   // TODO Copy&Paste from Heartbeat
   // Start the accept thread
   start();
@@ -195,7 +238,8 @@ TEST_F(ConnectorTest, HeartbeatPong) {
   auto last_heartbeat = system_clock::now();
 
   // Test to make sure we can send and receive 5 heartbeats
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 5; i++)
+  {
     // Receive initial heartbeat request "* PING\n"
 
     char buf[1024] = {0};
@@ -217,7 +261,8 @@ TEST_F(ConnectorTest, HeartbeatPong) {
   }
 }
 
-TEST_F(ConnectorTest, HeartbeatTimeout) {
+TEST_F(ConnectorTest, HeartbeatTimeout)
+{
   // TODO Copy&Paste from Heartbeat
   // Start the accept thread
   start();
@@ -248,7 +293,8 @@ TEST_F(ConnectorTest, HeartbeatTimeout) {
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
-TEST_F(ConnectorTest, LegacyTimeout) {
+TEST_F(ConnectorTest, LegacyTimeout)
+{
   // Start the accept thread
   start();
 
@@ -273,7 +319,8 @@ TEST_F(ConnectorTest, LegacyTimeout) {
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
-TEST_F(ConnectorTest, ParseBuffer) {
+TEST_F(ConnectorTest, ParseBuffer)
+{
   // Test data fragmentation
   m_connector->pushData("Hello");
   ASSERT_EQ((string) "", m_connector->m_data);
@@ -292,7 +339,8 @@ TEST_F(ConnectorTest, ParseBuffer) {
   ASSERT_EQ((string) "And Again", m_connector->m_data);
 }
 
-TEST_F(ConnectorTest, ParseBufferFraming) {
+TEST_F(ConnectorTest, ParseBufferFraming)
+{
   m_connector->m_list.clear();
   m_connector->pushData("first\nseco");
   m_connector->pushData("nd\nthird\nfourth\nfifth");
@@ -303,7 +351,8 @@ TEST_F(ConnectorTest, ParseBufferFraming) {
   ASSERT_EQ((string) "fourth", m_connector->m_list[3]);
 }
 
-TEST_F(ConnectorTest, SendCommand) {
+TEST_F(ConnectorTest, SendCommand)
+{
   // Start the accept thread
   start();
 
@@ -328,7 +377,8 @@ TEST_F(ConnectorTest, SendCommand) {
   ASSERT_TRUE(!strcmp(buf, "* Hello There;\n"));
 }
 
-TEST_F(ConnectorTest, IPV6Connection) {
+TEST_F(ConnectorTest, IPV6Connection)
+{
 // TODO: Need to port to Windows > VISTA
 #if !defined(WIN32)
   m_connector.reset();
@@ -349,7 +399,8 @@ TEST_F(ConnectorTest, IPV6Connection) {
 #endif
 }
 
-TEST_F(ConnectorTest, StartHeartbeats) {
+TEST_F(ConnectorTest, StartHeartbeats)
+{
   ASSERT_TRUE(!m_connector->heartbeats());
 
   string line = "* PONG ";

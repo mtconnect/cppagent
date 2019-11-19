@@ -17,91 +17,119 @@
 
 #pragma once
 
-#include "globals.hpp"
-#include <vector>
 #include "component_configuration.hpp"
+#include "globals.hpp"
 
-namespace mtconnect {
-  
-  class SensorConfiguration : public ComponentConfiguration {
-  public:
-    struct Calibration {
-      Calibration(const std::string &date, const std::string &nextDate,
-                  const std::string &initials)
-      : m_date(date), m_nextDate(nextDate), m_initials(initials) {}
+#include <vector>
+
+namespace mtconnect
+{
+  class SensorConfiguration : public ComponentConfiguration
+  {
+   public:
+    struct Calibration
+    {
+      Calibration(const std::string &date, const std::string &nextDate, const std::string &initials)
+          : m_date(date), m_nextDate(nextDate), m_initials(initials)
+      {
+      }
       Calibration(const Calibration &other)
-      : m_date(other.m_date), m_nextDate(other.m_nextDate), m_initials(other.m_initials) {}
-      Calibration() {}
-      ~Calibration() {}
-      
+          : m_date(other.m_date), m_nextDate(other.m_nextDate), m_initials(other.m_initials)
+      {
+      }
+      Calibration()
+      {
+      }
+      ~Calibration()
+      {
+      }
+
       std::string m_date;
       std::string m_nextDate;
       std::string m_initials;
     };
-    
-    class Channel {
-    public:
-      Channel(
-              const std::string &calibrationDate,
-              const std::string &nextCalibrationDate,
-              const std::string &initials,
-              const std::map<std::string,std::string> &attrs)
-      : m_attributes(attrs),
-        m_calibration(calibrationDate, nextCalibrationDate, initials)
-      { }
+
+    class Channel
+    {
+     public:
+      Channel(const std::string &calibrationDate, const std::string &nextCalibrationDate,
+              const std::string &initials, const std::map<std::string, std::string> &attrs)
+          : m_attributes(attrs), m_calibration(calibrationDate, nextCalibrationDate, initials)
+      {
+      }
       Channel(const Channel &other)
-      : m_attributes(other.m_attributes), m_description(other.m_description),
-        m_calibration(other.m_calibration)
-      { }
-      ~Channel() {}
-      
-      void setDescription(const std::string &desc) {
+          : m_attributes(other.m_attributes),
+            m_description(other.m_description),
+            m_calibration(other.m_calibration)
+      {
+      }
+      ~Channel()
+      {
+      }
+
+      void setDescription(const std::string &desc)
+      {
         m_description = desc;
       }
-      const std::string &getDescription() const {
+      const std::string &getDescription() const
+      {
         return m_description;
       }
-      const std::map<std::string, std::string> &getAttributes() const {
+      const std::map<std::string, std::string> &getAttributes() const
+      {
         return m_attributes;
       }
-      const Calibration &getCalibration() const { return m_calibration; }
-    protected:
+      const Calibration &getCalibration() const
+      {
+        return m_calibration;
+      }
+
+     protected:
       std::map<std::string, std::string> m_attributes;
       std::string m_description;
       Calibration m_calibration;
     };
-   
+
     // Sensor Configuration begins here
-  public:
-    SensorConfiguration(
-                        const std::string &firmwareVer,
-                        const std::string &calibrationDate,
-                        const std::string &nextCalibrationDate,
-                        const std::string &initials,
+   public:
+    SensorConfiguration(const std::string &firmwareVer, const std::string &calibrationDate,
+                        const std::string &nextCalibrationDate, const std::string &initials,
                         const std::string &rest)
-    : m_firmwareVersion(firmwareVer),
-      m_calibration(calibrationDate, nextCalibrationDate, initials),
-      m_rest(rest)
+        : m_firmwareVersion(firmwareVer),
+          m_calibration(calibrationDate, nextCalibrationDate, initials),
+          m_rest(rest)
     {
     }
-    virtual ~SensorConfiguration() {}
-    
+    virtual ~SensorConfiguration()
+    {
+    }
+
     void addChannel(const Channel &channel)
     {
       m_channels.push_back(channel);
     }
-    
-    const std::vector<Channel> &getChannels() const {
+
+    const std::vector<Channel> &getChannels() const
+    {
       return m_channels;
     }
-    const Calibration &getCalibration() const { return m_calibration; }
-    const std::string &getRest() const { return m_rest; }
-    const std::string &getFirmwareVersion() const { return m_firmwareVersion; }
-    
-  protected:
+    const Calibration &getCalibration() const
+    {
+      return m_calibration;
+    }
+    const std::string &getRest() const
+    {
+      return m_rest;
+    }
+    const std::string &getFirmwareVersion() const
+    {
+      return m_firmwareVersion;
+    }
+
+   protected:
     std::string m_firmwareVersion;
     Calibration m_calibration;
     std::string m_rest;
     std::vector<Channel> m_channels;
   };
-}
+}  // namespace mtconnect

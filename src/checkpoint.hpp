@@ -18,44 +18,47 @@
 #pragma once
 
 #include "globals.hpp"
-
 #include "observation.hpp"
+
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
-namespace mtconnect {
+namespace mtconnect
+{
   class Checkpoint
   {
-  public:
+   public:
     Checkpoint();
     Checkpoint(const Checkpoint &checkpoint, const std::set<std::string> *filterSet = nullptr);
     ~Checkpoint();
-    
+
     void addObservation(Observation *event);
     bool dataSetDifference(Observation *event) const;
     void copy(Checkpoint const &checkpoint, const std::set<std::string> *filterSet = nullptr);
     void clear();
     void filter(std::set<std::string> const &filterSet);
-    
-    const std::map<std::string, ObservationPtr *> &getEvents() const {
-      return m_events; }
-    
+
+    const std::map<std::string, ObservationPtr *> &getEvents() const
+    {
+      return m_events;
+    }
+
     void getObservations(ObservationPtrArray &list,
-                            std::set<std::string> const *filterSet = nullptr) const;
-    
+                         std::set<std::string> const *filterSet = nullptr) const;
+
     ObservationPtr *getEventPtr(const std::string &id)
     {
       auto pos = m_events.find(id);
-      if(pos != m_events.end())
+      if (pos != m_events.end())
         return pos->second;
       return nullptr;
     }
-    
-  protected:
+
+   protected:
     std::map<std::string, ObservationPtr *> m_events;
     std::set<std::string> m_filter;
     bool m_hasFilter;
   };
-}
+}  // namespace mtconnect

@@ -15,7 +15,9 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "component.hpp"
 #include "device.hpp"
@@ -23,9 +25,11 @@
 using namespace std;
 using namespace mtconnect;
 
-class ComponentTest : public testing::Test {
+class ComponentTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     std::map<string, string> attributes1;
     attributes1["id"] = "1";
     attributes1["name"] = "ComponentTest1";
@@ -41,12 +45,15 @@ class ComponentTest : public testing::Test {
     m_compB = new mtconnect::Component("Controller", attributes2);
   }
 
-  void TearDown() override {
-    if (m_compA != nullptr) {
+  void TearDown() override
+  {
+    if (m_compA != nullptr)
+    {
       delete m_compA;
       m_compA = nullptr;
     }
-    if (m_compB != nullptr) {
+    if (m_compB != nullptr)
+    {
       delete m_compB;
       m_compB = nullptr;
     }
@@ -56,7 +63,8 @@ class ComponentTest : public testing::Test {
   mtconnect::Component *m_compB;
 };
 
-TEST_F(ComponentTest, Getters) {
+TEST_F(ComponentTest, Getters)
+{
   ASSERT_EQ((string) "Axes", m_compA->getClass());
   ASSERT_EQ((string) "1", m_compA->getId());
   ASSERT_EQ((string) "ComponentTest1", m_compA->getName());
@@ -70,7 +78,8 @@ TEST_F(ComponentTest, Getters) {
   ASSERT_TRUE(m_compB->getNativeName().empty());
 }
 
-TEST_F(ComponentTest, GetAttributes) {
+TEST_F(ComponentTest, GetAttributes)
+{
   const auto &attributes1 = m_compA->getAttributes();
 
   ASSERT_EQ((string) "1", attributes1.at("id"));
@@ -86,7 +95,8 @@ TEST_F(ComponentTest, GetAttributes) {
   ASSERT_EQ((string) "123.4", attributes2.at("sampleInterval"));
 }
 
-TEST_F(ComponentTest, Description) {
+TEST_F(ComponentTest, Description)
+{
   map<string, string> attributes;
   attributes["manufacturer"] = "MANUFACTURER";
   attributes["serialNumber"] = "SERIAL_NUMBER";
@@ -109,7 +119,8 @@ TEST_F(ComponentTest, Description) {
   ASSERT_TRUE(m_compB->getDescriptionBody().empty());
 }
 
-TEST_F(ComponentTest, Relationships) {
+TEST_F(ComponentTest, Relationships)
+{
   // Test get/set parents
   map<string, string> dummy;
   mtconnect::Component *linear = new mtconnect::Component("Linear", dummy);
@@ -147,7 +158,8 @@ TEST_F(ComponentTest, Relationships) {
   m_compB = nullptr;
 }
 
-TEST_F(ComponentTest, DataItems) {
+TEST_F(ComponentTest, DataItems)
+{
   ASSERT_TRUE(m_compA->getDataItems().empty());
 
   map<string, string> dummy;
@@ -161,7 +173,8 @@ TEST_F(ComponentTest, DataItems) {
   ASSERT_TRUE(data2 == m_compA->getDataItems().back());
 }
 
-TEST_F(ComponentTest, References) {
+TEST_F(ComponentTest, References)
+{
   string id("a"), name("xxx");
   mtconnect::Component::Reference ref(id, name, mtconnect::Component::Reference::DATA_ITEM);
 

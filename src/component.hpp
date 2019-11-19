@@ -17,202 +17,250 @@
 
 #pragma once
 
+#include "component_configuration.hpp"
 #include "globals.hpp"
 
+#include <list>
+#include <map>
 #include <sstream>
 #include <string>
-#include <list>
 #include <vector>
-#include <map>
 
-#include "component_configuration.hpp"
-
-namespace mtconnect {
+namespace mtconnect
+{
   class DataItem;
   class Device;
   class Composition;
   class Agent;
-  
+
   class Component
   {
-  public:
+   public:
     struct Reference
     {
-      enum ReferenceType {
+      enum ReferenceType
+      {
         DATA_ITEM,
         COMPONENT
       };
-      
-      Reference(const std::string &id, const std::string &name, ReferenceType type) :
-      m_type(type),
-      m_id(id),
-      m_name(name),
-      m_dataItem(nullptr),
-      m_component(nullptr)
-      {}
-      
+
+      Reference(const std::string &id, const std::string &name, ReferenceType type)
+          : m_type(type), m_id(id), m_name(name), m_dataItem(nullptr), m_component(nullptr)
+      {
+      }
+
       ReferenceType m_type;
       std::string m_id;
       std::string m_name;
       DataItem *m_dataItem;
       Component *m_component;
     };
-        
-  public:
+
+   public:
     // Take in a class name & mapping of attributes
-    Component(
-              const std::string &className,
-              const std::map<std::string, std::string> &attributes,
-              const std::string &prefix = ""
-              );
-    
+    Component(const std::string &className, const std::map<std::string, std::string> &attributes,
+              const std::string &prefix = "");
+
     // Virtual destructor
     virtual ~Component();
-    
+
     // Return a map of attributes of all the component specs
-    const std::map<std::string, std::string> &getAttributes() {
-      return m_attributes; }
-    
+    const std::map<std::string, std::string> &getAttributes()
+    {
+      return m_attributes;
+    }
+
     // Return what part of the component it is
-    const std::string &getClass() const {
-      return m_class; }
-    const std::string &getPrefixedClass() const {
-      return m_prefixedClass; }
-    
+    const std::string &getClass() const
+    {
+      return m_class;
+    }
+    const std::string &getPrefixedClass() const
+    {
+      return m_prefixedClass;
+    }
+
     // Getter methods for the component ID/Name
-    const std::string &getId() const {
-      return m_id; }
-    const std::string &getName() const {
-      return m_name; }
-    const std::string &getNativeName() const {
-      return m_nativeName; }
-    const std::string &getUuid() const {
-      return m_uuid; }
-    const std::string &getDescriptionBody() const {
-      return m_descriptionBody; }
-    const std::string &getPrefix() const {
-      return m_prefix; }
-    const ComponentConfiguration *getConfiguration() const {
-      return m_configuration.get(); }
-    
+    const std::string &getId() const
+    {
+      return m_id;
+    }
+    const std::string &getName() const
+    {
+      return m_name;
+    }
+    const std::string &getNativeName() const
+    {
+      return m_nativeName;
+    }
+    const std::string &getUuid() const
+    {
+      return m_uuid;
+    }
+    const std::string &getDescriptionBody() const
+    {
+      return m_descriptionBody;
+    }
+    const std::string &getPrefix() const
+    {
+      return m_prefix;
+    }
+    const ComponentConfiguration *getConfiguration() const
+    {
+      return m_configuration.get();
+    }
+
     // Setter methods
     void setUuid(const std::string &uuid)
     {
       m_uuid = uuid;
       reBuildAttributes();
     }
-    void setManufacturer(const std::string &manufacturer) {
-      m_description["manufacturer"] = manufacturer; }
-    void setSerialNumber(const std::string &serialNumber) {
-      m_description["serialNumber"] = serialNumber; }
-    void setStation(const std::string &station) {
-      m_description["station"] = station; }
-    void setDescription(const std::string &description) {
-      m_descriptionBody = description; }
+    void setManufacturer(const std::string &manufacturer)
+    {
+      m_description["manufacturer"] = manufacturer;
+    }
+    void setSerialNumber(const std::string &serialNumber)
+    {
+      m_description["serialNumber"] = serialNumber;
+    }
+    void setStation(const std::string &station)
+    {
+      m_description["station"] = station;
+    }
+    void setDescription(const std::string &description)
+    {
+      m_descriptionBody = description;
+    }
     void setNativeName(const std::string &nativeName)
     {
       m_nativeName = nativeName;
       reBuildAttributes();
     }
-        
-    // Add/get description specifications using an attribute map 
+
+    // Add/get description specifications using an attribute map
     void addDescription(std::string body, const std::map<std::string, std::string> &attributes);
-    const std::map<std::string, std::string> &getDescription() const {
-      return m_description; }
-    
-    void setConfiguration(ComponentConfiguration *configuration) {
+    const std::map<std::string, std::string> &getDescription() const
+    {
+      return m_description;
+    }
+
+    void setConfiguration(ComponentConfiguration *configuration)
+    {
       m_configuration.reset(configuration);
     }
-    
-    // Get the device that any component is associated with 
+
+    // Get the device that any component is associated with
     Device *getDevice();
-    
+
     // Set/Get the component's parent component
     void setParent(Component &parent);
-    Component *getParent() const {
-      return m_parent; }
-    
+    Component *getParent() const
+    {
+      return m_parent;
+    }
+
     // Add to/get the component's std::list of children
-    void addChild(Component &child) {
-      m_children.push_back(&child); }
-    std::list<Component *> &getChildren() {
-      return m_children; }
-    
+    void addChild(Component &child)
+    {
+      m_children.push_back(&child);
+    }
+    std::list<Component *> &getChildren()
+    {
+      return m_children;
+    }
+
     // Add and get composition...
-    void addComposition(Composition *composition) {
-      m_compositions.push_back(composition); }
-    std::list<Composition *> &getCompositions() {
-      return m_compositions; }
-    
+    void addComposition(Composition *composition)
+    {
+      m_compositions.push_back(composition);
+    }
+    std::list<Composition *> &getCompositions()
+    {
+      return m_compositions;
+    }
+
     // Add to/get the component's std::list of data items
     virtual void addDataItem(DataItem &dataItem);
-    const std::list<DataItem *> &getDataItems() const {
-      return m_dataItems; }
-    
-    bool operator<(const Component &comp) const {
-      return m_id < comp.getId(); }
-    bool operator==(const Component &comp) const {
-      return m_id == comp.getId(); }
-    
+    const std::list<DataItem *> &getDataItems() const
+    {
+      return m_dataItems;
+    }
+
+    bool operator<(const Component &comp) const
+    {
+      return m_id < comp.getId();
+    }
+    bool operator==(const Component &comp) const
+    {
+      return m_id == comp.getId();
+    }
+
     // References
-    void addReference(Reference &reference) {
-      m_references.push_back(reference); }
-    const std::vector<Reference> &getReferences() const {
-      return m_references; }
-    
+    void addReference(Reference &reference)
+    {
+      m_references.push_back(reference);
+    }
+    const std::vector<Reference> &getReferences() const
+    {
+      return m_references;
+    }
+
     void resolveReferences();
-    
-  protected:
+
+   protected:
     // Return a map of attributes of all the component specs
     std::map<std::string, std::string> buildAttributes() const;
-    void reBuildAttributes() {
-      m_attributes = buildAttributes(); }
-    
-  protected:
+    void reBuildAttributes()
+    {
+      m_attributes = buildAttributes();
+    }
+
+   protected:
     // Unique ID for each component
     std::string m_id;
-    
+
     // Name for itself
     std::string m_name;
     std::string m_nativeName;
-    
+
     // The class
     std::string m_class;
     std::string m_prefix;
     std::string m_prefixedClass;
-    
+
     // Universal unique identifier
     std::string m_uuid;
-    
+
     // If receiving data, a sample rate is needed
     float m_sampleInterval;
-    
+
     // Description of itself
     std::map<std::string, std::string> m_description;
     std::string m_descriptionBody;
     std::unique_ptr<ComponentConfiguration> m_configuration;
-    
+
     // Component relationships
     // Pointer to the parent component
     Component *m_parent;
     Device *m_device;
-    
+
     // Each component keeps track of it's children in a std::list
     std::list<Component *> m_children;
-    
+
     // Keep Track of all the data items associated with this component
     std::list<DataItem *> m_dataItems;
-    
+
     // List of all the compositions
     std::list<Composition *> m_compositions;
-    
+
     // The set of attribtues
     std::map<std::string, std::string> m_attributes;
-    
+
     // References
     std::vector<Reference> m_references;
   };
-  
+
   struct ComponentComp
   {
     bool operator()(const Component *lhs, const Component *rhs) const
@@ -220,4 +268,4 @@ namespace mtconnect {
       return *lhs < *rhs;
     }
   };
-}
+}  // namespace mtconnect

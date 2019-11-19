@@ -18,24 +18,24 @@
 #pragma once
 
 #include "globals.hpp"
-
-#include <string>
-#include <map>
-
-#include "ref_counted.hpp"
 #include "printer.hpp"
+#include "ref_counted.hpp"
 
-namespace mtconnect {
+#include <map>
+#include <string>
+
+namespace mtconnect
+{
   class Asset;
   typedef RefCountedPtr<Asset> AssetPtr;
-  
+
   // An association of the index type to the value.
   typedef std::map<std::string, std::string> AssetKeys;
   typedef std::map<std::string, std::string> XmlAttributes;
-  
+
   class Asset : public RefCounted
   {
-  protected:
+   protected:
     std::string m_assetId;
     std::string m_content;
     std::string m_type;
@@ -43,13 +43,12 @@ namespace mtconnect {
     std::string m_timestamp;
     std::string m_description;
     XmlAttributes m_archetype;
-    
-    bool        m_removed;
-    AssetKeys   m_keys;
-    AssetKeys   m_identity;
-    
-  public:
-    
+
+    bool m_removed;
+    AssetKeys m_keys;
+    AssetKeys m_identity;
+
+   public:
     Asset(const Asset &another)
     {
       m_assetId = another.m_assetId;
@@ -57,56 +56,89 @@ namespace mtconnect {
       m_type = another.m_type;
       m_removed = another.m_removed;
     }
-    
-    Asset(const std::string &assetId,
-          const std::string &type,
-          const std::string &content,
+
+    Asset(const std::string &assetId, const std::string &type, const std::string &content,
           const bool removed = false);
-    
+
     virtual ~Asset();
-    
-    const std::string &getAssetId() const {
-      return m_assetId; }
-    virtual std::string &getContent(const Printer *aPrinter) {
-      return m_content; }
-    const std::string &getType() const {
-      return m_type; }
-    AssetKeys &getKeys() {
-      return m_keys; }
-    const std::string &getDeviceUuid() const {
-      return m_deviceUuid; }
-    const std::string &getTimestamp() const {
-      return m_timestamp; }
-    const std::string &getDescription() const {
-      return m_description; }
-    const XmlAttributes &getArchetype() const {
-      return m_archetype; }
-    bool isRemoved() const {
-      return m_removed; }
-    
-    const AssetKeys &getIdentity() const {
-      return m_identity; }
-    
-    bool operator==(const Asset &another) const {
+
+    const std::string &getAssetId() const
+    {
+      return m_assetId;
+    }
+    virtual std::string &getContent(const Printer *aPrinter)
+    {
+      return m_content;
+    }
+    const std::string &getType() const
+    {
+      return m_type;
+    }
+    AssetKeys &getKeys()
+    {
+      return m_keys;
+    }
+    const std::string &getDeviceUuid() const
+    {
+      return m_deviceUuid;
+    }
+    const std::string &getTimestamp() const
+    {
+      return m_timestamp;
+    }
+    const std::string &getDescription() const
+    {
+      return m_description;
+    }
+    const XmlAttributes &getArchetype() const
+    {
+      return m_archetype;
+    }
+    bool isRemoved() const
+    {
+      return m_removed;
+    }
+
+    const AssetKeys &getIdentity() const
+    {
+      return m_identity;
+    }
+
+    bool operator==(const Asset &another) const
+    {
       return m_assetId == another.m_assetId;
     }
-    
-    void setAssetId(const std::string &id) {
-      m_assetId = id; }
-    void setDeviceUuid(const std::string &uuid) {
-      m_deviceUuid = uuid; }
-    void setTimestamp(const std::string &timestamp) {
-      m_timestamp = timestamp; }
-    void setRemoved(bool removed) {
-      m_removed = removed; }
-    void setDescription(const std::string &desc) {
-      m_description = desc; }
-    void setArchetype(const XmlAttributes &arch) {
-      m_archetype = arch; }
-    
-    virtual void changed() { }
+
+    void setAssetId(const std::string &id)
+    {
+      m_assetId = id;
+    }
+    void setDeviceUuid(const std::string &uuid)
+    {
+      m_deviceUuid = uuid;
+    }
+    void setTimestamp(const std::string &timestamp)
+    {
+      m_timestamp = timestamp;
+    }
+    void setRemoved(bool removed)
+    {
+      m_removed = removed;
+    }
+    void setDescription(const std::string &desc)
+    {
+      m_description = desc;
+    }
+    void setArchetype(const XmlAttributes &arch)
+    {
+      m_archetype = arch;
+    }
+
+    virtual void changed()
+    {
+    }
     virtual void addIdentity(const std::string &key, const std::string &value);
   };
-  
+
   typedef std::map<std::string, AssetPtr> AssetIndex;
-}
+}  // namespace mtconnect

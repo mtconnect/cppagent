@@ -15,19 +15,24 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include <stdio.h>
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 
+#include <stdio.h>
+
 using namespace std;
 using namespace mtconnect;
 
-class DataSetTest : public testing::Test {
+class DataSetTest : public testing::Test
+{
  protected:
-  void SetUp() override {  // Create an agent with only 16 slots and 8 data items.
+  void SetUp() override
+  {  // Create an agent with only 16 slots and 8 data items.
     m_checkpoint = nullptr;
     m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/data_set.xml", 4, 4, "1.5");
     m_agentId = int64ToString(getCurrentTimeInSec());
@@ -42,7 +47,8 @@ class DataSetTest : public testing::Test {
     m_dataItem1 = device->getDeviceDataItem("v1");
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_agent.reset();
     m_checkpoint.reset();
     m_agentTestHelper.reset();
@@ -57,9 +63,13 @@ class DataSetTest : public testing::Test {
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline DataSetEntry operator"" _E(const char *c, std::size_t)
+{
+  return DataSetEntry(c);
+}
 
-TEST_F(DataSetTest, DataItem) {
+TEST_F(DataSetTest, DataItem)
+{
   ASSERT_TRUE(m_dataItem1->isDataSet());
   auto &attrs = m_dataItem1->getAttributes();
 
@@ -67,7 +77,8 @@ TEST_F(DataSetTest, DataItem) {
   ASSERT_EQ((string) "VariableDataSet", m_dataItem1->getElementName());
 }
 
-TEST_F(DataSetTest, InitialSet) {
+TEST_F(DataSetTest, InitialSet)
+{
   string value("a=1 b=2 c=3 d=4");
   auto ce = new Observation(*m_dataItem1, 2, "time", value);
 
@@ -75,7 +86,8 @@ TEST_F(DataSetTest, InitialSet) {
   auto &al = ce->getAttributes();
   std::map<string, string> attrs;
 
-  for (const auto &attr : al) attrs[attr.first] = attr.second;
+  for (const auto &attr : al)
+    attrs[attr.first] = attr.second;
 
   ASSERT_EQ((string) "4", attrs.at("count"));
 
@@ -91,7 +103,8 @@ TEST_F(DataSetTest, InitialSet) {
   auto al2 = c2->getAttributes();
 
   attrs.clear();
-  for (const auto &attr : al2) attrs[attr.first] = attr.second;
+  for (const auto &attr : al2)
+    attrs[attr.first] = attr.second;
 
   ASSERT_EQ((string) "4", attrs.at("count"));
 
@@ -104,7 +117,8 @@ TEST_F(DataSetTest, InitialSet) {
   ce->unrefer();
 }
 
-TEST_F(DataSetTest, UpdateOneElement) {
+TEST_F(DataSetTest, UpdateOneElement)
+{
   string value("a=1 b=2 c=3 d=4");
   ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
   m_checkpoint->addObservation(ce);
@@ -140,7 +154,8 @@ TEST_F(DataSetTest, UpdateOneElement) {
   ASSERT_EQ((string) "6", map2.find("e"_E)->m_value);
 }
 
-TEST_F(DataSetTest, UpdateMany) {
+TEST_F(DataSetTest, UpdateMany)
+{
   string value("a=1 b=2 c=3 d=4");
   ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
   m_checkpoint->addObservation(ce);
@@ -178,7 +193,8 @@ TEST_F(DataSetTest, UpdateMany) {
   ASSERT_EQ((string) "9", map2.find("f"_E)->m_value);
 }
 
-TEST_F(DataSetTest, Reset) {
+TEST_F(DataSetTest, Reset)
+{
   string value("a=1 b=2 c=3 d=4");
   ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
   m_checkpoint->addObservation(ce);
@@ -209,7 +225,8 @@ TEST_F(DataSetTest, Reset) {
   ASSERT_EQ((string) "hop", map2.find("y"_E)->m_value);
 }
 
-TEST_F(DataSetTest, BadData) {
+TEST_F(DataSetTest, BadData)
+{
   string value("12356");
   auto ce = new Observation(*m_dataItem1, 2, "time", value);
 
@@ -228,7 +245,8 @@ TEST_F(DataSetTest, BadData) {
 #define ASSERT_DATA_SET_ENTRY(doc, var, key, expected) \
   ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']", expected)
 
-TEST_F(DataSetTest, Current) {
+TEST_F(DataSetTest, Current)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -294,7 +312,8 @@ TEST_F(DataSetTest, Current) {
   }
 }
 
-TEST_F(DataSetTest, Sample) {
+TEST_F(DataSetTest, Sample)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -358,7 +377,8 @@ TEST_F(DataSetTest, Sample) {
   }
 }
 
-TEST_F(DataSetTest, CurrentAt) {
+TEST_F(DataSetTest, CurrentAt)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -433,7 +453,8 @@ TEST_F(DataSetTest, CurrentAt) {
   }
 }
 
-TEST_F(DataSetTest, DeleteKey) {
+TEST_F(DataSetTest, DeleteKey)
+{
   string value("a=1 b=2 c=3 d=4");
   ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
   m_checkpoint->addObservation(ce);
@@ -459,7 +480,8 @@ TEST_F(DataSetTest, DeleteKey) {
   ASSERT_TRUE(map1.find("a"_E) == map1.end());
 }
 
-TEST_F(DataSetTest, ResetWithNoItems) {
+TEST_F(DataSetTest, ResetWithNoItems)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -494,7 +516,8 @@ TEST_F(DataSetTest, ResetWithNoItems) {
   }
 }
 
-TEST_F(DataSetTest, DuplicateCompression) {
+TEST_F(DataSetTest, DuplicateCompression)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -561,7 +584,8 @@ TEST_F(DataSetTest, DuplicateCompression) {
   }
 }
 
-TEST_F(DataSetTest, QuoteDelimeter) {
+TEST_F(DataSetTest, QuoteDelimeter)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -599,7 +623,8 @@ TEST_F(DataSetTest, QuoteDelimeter) {
   }
 }
 
-TEST_F(DataSetTest, Discrete) {
+TEST_F(DataSetTest, Discrete)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -637,7 +662,8 @@ TEST_F(DataSetTest, Discrete) {
   }
 }
 
-TEST_F(DataSetTest, Probe) {
+TEST_F(DataSetTest, Probe)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 

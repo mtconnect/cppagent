@@ -16,10 +16,11 @@
 //
 
 #include "agent.hpp"
-#include "fcntl.h"
-#include "sys/stat.h"
-#include "string.h"
 #include "config.hpp"
+#include "fcntl.h"
+#include "string.h"
+#include "sys/stat.h"
+
 #include "dlib/config_reader.h"
 
 using namespace std;
@@ -32,16 +33,15 @@ using namespace mtconnect;
 static logger g_logger("main");
 
 #ifdef _WINDOWS
-	#define strncasecmp strnicmp
+#define strncasecmp strnicmp
 #endif
 
 int main(int aArgc, const char *aArgv[])
 {
-	AgentConfiguration config;
+  AgentConfiguration config;
 
-	int ret = config.main(aArgc, aArgv);
-	fclose(stdin);
+  int ret = config.main(aArgc, aArgv);
+  fclose(stdin);
 
-	return ret;
+  return ret;
 }
-

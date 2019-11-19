@@ -16,22 +16,24 @@
 //
 
 #include "device.hpp"
+
 #include <dlib/logger.h>
 #include <dlib/misc_api.h>
 
 using namespace std;
 
-namespace mtconnect {
+namespace mtconnect
+{
   static dlib::logger g_logger("device");
-  
-  Device::Device(const std::map<std::string, std::string> &attributes) : 
-    Component("Device", attributes),
-    m_preserveUuid(false),
-    m_availabilityAdded(false),
-    m_iso841Class(-1),
-    m_availability(nullptr),
-    m_assetChanged(nullptr),
-    m_assetRemoved(nullptr)
+
+  Device::Device(const std::map<std::string, std::string> &attributes)
+      : Component("Device", attributes),
+        m_preserveUuid(false),
+        m_availabilityAdded(false),
+        m_iso841Class(-1),
+        m_availability(nullptr),
+        m_assetChanged(nullptr),
+        m_assetRemoved(nullptr)
   {
     const auto isoPos = attributes.find("iso841Class");
     if (isoPos != attributes.end())
@@ -40,34 +42,32 @@ namespace mtconnect {
       m_attributes["iso841Class"] = isoPos->second;
     }
   }
-  
-  
+
   Device::~Device()
   {
   }
-  
-  
+
   void Device::addDeviceDataItem(DataItem &dataItem)
   {
     if (!dataItem.getSource().empty())
       m_deviceDataItemsBySource[dataItem.getSource()] = &dataItem;
-    
+
     if (!dataItem.getName().empty())
       m_deviceDataItemsByName[dataItem.getName()] = &dataItem;
-    
-    if(m_deviceDataItemsById.find(dataItem.getId()) != m_deviceDataItemsById.end())
+
+    if (m_deviceDataItemsById.find(dataItem.getId()) != m_deviceDataItemsById.end())
     {
       g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem.getId() << " for device "
-      << m_name << ", skipping";
+               << m_name << ", skipping";
     }
     else
       m_deviceDataItemsById[dataItem.getId()] = &dataItem;
   }
-  
-  void Device::addDataItem(DataItem &dataItem) 
+
+  void Device::addDataItem(DataItem &dataItem)
   {
     Component::addDataItem(dataItem);
-    
+
     if (dataItem.getType() == "AVAILABILITY")
       m_availability = &dataItem;
     else if (dataItem.getType() == "ASSET_CHANGED")
@@ -76,21 +76,20 @@ namespace mtconnect {
       m_assetRemoved = &dataItem;
   }
 
-  
   DataItem *Device::getDeviceDataItem(const std::string &name)
   {
     const auto sourcePos = m_deviceDataItemsBySource.find(name);
-    if(sourcePos != m_deviceDataItemsBySource.end())
+    if (sourcePos != m_deviceDataItemsBySource.end())
       return sourcePos->second;
-    
+
     const auto namePos = m_deviceDataItemsByName.find(name);
-    if(namePos != m_deviceDataItemsByName.end())
+    if (namePos != m_deviceDataItemsByName.end())
       return namePos->second;
-    
+
     const auto &idPos = m_deviceDataItemsById.find(name);
-    if(idPos != m_deviceDataItemsById.end())
+    if (idPos != m_deviceDataItemsById.end())
       return idPos->second;
-    
+
     return nullptr;
   }
-}
+}  // namespace mtconnect

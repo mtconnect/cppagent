@@ -15,21 +15,23 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
-
-#include "xml_printer.hpp"
-
-#include <dlib/server.h>
-#include <chrono>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <thread>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "test_globals.hpp"
+#include "xml_printer.hpp"
+
+#include <dlib/server.h>
+
+#include <chrono>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <thread>
 
 #if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;
@@ -40,13 +42,15 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 
-class AgentTest : public testing::Test {
+class AgentTest : public testing::Test
+{
  public:
   typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
   typedef dlib::queue<std::string>::kernel_1a_c queue_type;
 
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25ms);
     m_agentId = intToString(getCurrentTimeInSec());
     m_adapter = nullptr;
@@ -56,13 +60,15 @@ class AgentTest : public testing::Test {
     m_agentTestHelper->m_queries.clear();
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_agent.reset();
     m_adapter = nullptr;
     m_agentTestHelper.reset();
   }
 
-  void addAdapter() {
+  void addAdapter()
+  {
     ASSERT_FALSE(m_adapter);
     m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
     ASSERT_TRUE(m_adapter);
@@ -77,12 +83,14 @@ class AgentTest : public testing::Test {
   std::chrono::milliseconds m_delay;
 };
 
-TEST_F(AgentTest, Constructor) {
+TEST_F(AgentTest, Constructor)
+{
   ASSERT_THROW(Agent(PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.5"), std::runtime_error);
   ASSERT_NO_THROW(Agent(PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.5"));
 }
 
-TEST_F(AgentTest, BadPath) {
+TEST_F(AgentTest, BadPath)
+{
   auto pathError = getFile(PROJECT_ROOT_DIR "/samples/test_error.xml");
 
   {
@@ -110,7 +118,8 @@ TEST_F(AgentTest, BadPath) {
   }
 }
 
-TEST_F(AgentTest, BadXPath) {
+TEST_F(AgentTest, BadXPath)
+{
   m_agentTestHelper->m_path = "/current";
   key_value_map query;
 
@@ -140,7 +149,8 @@ TEST_F(AgentTest, BadXPath) {
   }
 }
 
-TEST_F(AgentTest, BadCount) {
+TEST_F(AgentTest, BadCount)
+{
   m_agentTestHelper->m_path = "/sample";
   key_value_map query;
 
@@ -175,7 +185,8 @@ TEST_F(AgentTest, BadCount) {
   }
 }
 
-TEST_F(AgentTest, BadFreq) {
+TEST_F(AgentTest, BadFreq)
+{
   m_agentTestHelper->m_path = "/sample";
   key_value_map query;
 
@@ -202,7 +213,8 @@ TEST_F(AgentTest, BadFreq) {
   }
 }
 
-TEST_F(AgentTest, GoodPath) {
+TEST_F(AgentTest, GoodPath)
+{
   {
     m_agentTestHelper->m_path = "/current?path=//Power";
     PARSE_XML_RESPONSE;
@@ -212,7 +224,8 @@ TEST_F(AgentTest, GoodPath) {
   }
 }
 
-TEST_F(AgentTest, XPath) {
+TEST_F(AgentTest, XPath)
+{
   m_agentTestHelper->m_path = "/current";
   key_value_map query;
 
@@ -227,7 +240,8 @@ TEST_F(AgentTest, XPath) {
   }
 }
 
-TEST_F(AgentTest, Probe) {
+TEST_F(AgentTest, Probe)
+{
   {
     m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
@@ -247,7 +261,8 @@ TEST_F(AgentTest, Probe) {
   }
 }
 
-TEST_F(AgentTest, EmptyStream) {
+TEST_F(AgentTest, EmptyStream)
+{
   {
     m_agentTestHelper->m_path = "/current";
     PARSE_XML_RESPONSE;
@@ -270,7 +285,8 @@ TEST_F(AgentTest, EmptyStream) {
   }
 }
 
-TEST_F(AgentTest, BadDevices) {
+TEST_F(AgentTest, BadDevices)
+{
   {
     m_agentTestHelper->m_path = "/LinuxCN/probe";
     PARSE_XML_RESPONSE;
@@ -280,9 +296,13 @@ TEST_F(AgentTest, BadDevices) {
   }
 }
 
-TEST_F(AgentTest, AddAdapter) { addAdapter(); }
+TEST_F(AgentTest, AddAdapter)
+{
+  addAdapter();
+}
 
-TEST_F(AgentTest, AddToBuffer) {
+TEST_F(AgentTest, AddToBuffer)
+{
   string device("LinuxCNC"), key("badKey"), value("ON");
   auto di1 = m_agent->getDataItemByName(device, key);
   ASSERT_FALSE(di1);
@@ -319,7 +339,8 @@ TEST_F(AgentTest, AddToBuffer) {
   }
 }
 
-TEST_F(AgentTest, Adapter) {
+TEST_F(AgentTest, Adapter)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -350,7 +371,8 @@ TEST_F(AgentTest, Adapter) {
   }
 }
 
-TEST_F(AgentTest, CurrentAt) {
+TEST_F(AgentTest, CurrentAt)
+{
   m_agentTestHelper->m_path = "/current";
   string key("at"), value;
 
@@ -362,13 +384,15 @@ TEST_F(AgentTest, CurrentAt) {
   char line[80] = {0};
 
   // Add many events
-  for (int i = 1; i <= 100; i++) {
+  for (int i = 1; i <= 100; i++)
+  {
     sprintf(line, "TIME|line|%d", i);
     m_adapter->processData(line);
   }
 
   // Check each current at all the positions.
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 100; i++)
+  {
     value = intToString(i + seq);
     sprintf(line, "%d", i + 1);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
@@ -377,13 +401,15 @@ TEST_F(AgentTest, CurrentAt) {
 
   // Test buffer wrapping
   // Add a large many events
-  for (int i = 101; i <= 301; i++) {
+  for (int i = 101; i <= 301; i++)
+  {
     sprintf(line, "TIME|line|%d", i);
     m_adapter->processData(line);
   }
 
   // Check each current at all the positions.
-  for (int i = 100; i < 301; i++) {
+  for (int i = 100; i < 301; i++)
+  {
     value = intToString(i + seq);
     sprintf(line, "%d", i + 1);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
@@ -391,7 +417,8 @@ TEST_F(AgentTest, CurrentAt) {
   }
 
   // Check the first couple of items in the list
-  for (int j = 0; j < 10; j++) {
+  for (int j = 0; j < 10; j++)
+  {
     int i = m_agent->getSequence() - m_agent->getBufferSize() - seq + j;
     value = intToString(i + seq);
     sprintf(line, "%d", i + 1);
@@ -410,7 +437,8 @@ TEST_F(AgentTest, CurrentAt) {
   }
 }
 
-TEST_F(AgentTest, CurrentAt64) {
+TEST_F(AgentTest, CurrentAt64)
+{
   m_agentTestHelper->m_path = "/current";
   string key("at"), value;
 
@@ -425,13 +453,15 @@ TEST_F(AgentTest, CurrentAt64) {
   m_agent->setSequence(start);
 
   // Add many events
-  for (uint64_t i = 1; i <= 500; i++) {
+  for (uint64_t i = 1; i <= 500; i++)
+  {
     sprintf(line, "TIME|line|%d", (int)i);
     m_adapter->processData(line);
   }
 
   // Check each current at all the positions.
-  for (uint64_t i = start + 300; i < start + 500; i++) {
+  for (uint64_t i = start + 300; i < start + 500; i++)
+  {
     value = int64ToString(i);
     sprintf(line, "%d", (int)(i - start) + 1);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
@@ -439,7 +469,8 @@ TEST_F(AgentTest, CurrentAt64) {
   }
 }
 
-TEST_F(AgentTest, CurrentAtOutOfRange) {
+TEST_F(AgentTest, CurrentAtOutOfRange)
+{
   m_agentTestHelper->m_path = "/current";
   string key("at"), value;
 
@@ -450,7 +481,8 @@ TEST_F(AgentTest, CurrentAtOutOfRange) {
   char line[80] = {0};
 
   // Add many events
-  for (int i = 1; i <= 200; i++) {
+  for (int i = 1; i <= 200; i++)
+  {
     sprintf(line, "TIME|line|%d", i);
     m_adapter->processData(line);
   }
@@ -476,7 +508,8 @@ TEST_F(AgentTest, CurrentAtOutOfRange) {
   }
 }
 
-TEST_F(AgentTest, SampleAtNextSeq) {
+TEST_F(AgentTest, SampleAtNextSeq)
+{
   m_agentTestHelper->m_path = "/sample";
   string key("from"), value;
 
@@ -487,7 +520,8 @@ TEST_F(AgentTest, SampleAtNextSeq) {
   char line[80] = {0};
 
   // Add many events
-  for (int i = 1; i <= 300; i++) {
+  for (int i = 1; i <= 300; i++)
+  {
     sprintf(line, "TIME|line|%d", i);
     m_adapter->processData(line);
   }
@@ -501,7 +535,8 @@ TEST_F(AgentTest, SampleAtNextSeq) {
   }
 }
 
-TEST_F(AgentTest, SequenceNumberRollover) {
+TEST_F(AgentTest, SequenceNumberRollover)
+{
 #ifndef WIN32
   key_value_map kvm;
 
@@ -517,7 +552,8 @@ TEST_F(AgentTest, SequenceNumberRollover) {
   char line[80] = {0};
 
   // Add many events
-  for (int i = 0; i < 128; i++) {
+  for (int i = 0; i < 128; i++)
+  {
     sprintf(line, "TIME|line|%d", i);
     m_adapter->processData(line);
 
@@ -537,13 +573,15 @@ TEST_F(AgentTest, SequenceNumberRollover) {
       PARSE_XML_RESPONSE_QUERY(kvm);
       ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq + i + 1).c_str());
 
-      for (int j = 0; j <= i; j++) {
+      for (int j = 0; j <= i; j++)
+      {
         sprintf(line, "//m:DeviceStream//m:Line[%d]@sequence", j + 1);
         ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j).c_str());
       }
     }
 
-    for (int j = 0; j <= i; j++) {
+    for (int j = 0; j <= i; j++)
+    {
       m_agentTestHelper->m_path = "/sample";
       kvm["from"] = int64ToString(seq + j);
       kvm["count"] = "1";
@@ -559,7 +597,8 @@ TEST_F(AgentTest, SequenceNumberRollover) {
 #endif
 }
 
-TEST_F(AgentTest, SampleCount) {
+TEST_F(AgentTest, SampleCount)
+{
   key_value_map kvm;
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -571,7 +610,8 @@ TEST_F(AgentTest, SampleCount) {
   char line[80] = {0};
 
   // Add many events
-  for (int i = 0; i < 128; i++) {
+  for (int i = 0; i < 128; i++)
+  {
     sprintf(line, "TIME|line|%d|Xact|%d", i, i);
     m_adapter->processData(line);
   }
@@ -588,14 +628,16 @@ TEST_F(AgentTest, SampleCount) {
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
 
     // Make sure we got 10 lines
-    for (int j = 0; j < 10; j++) {
+    for (int j = 0; j < 10; j++)
+    {
       sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
       ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j * 2 + 1).c_str());
     }
   }
 }
 
-TEST_F(AgentTest, AdapterCommands) {
+TEST_F(AgentTest, AdapterCommands)
+{
   m_agentTestHelper->m_path = "/probe";
 
   auto device = m_agent->getDeviceByName("LinuxCNC");
@@ -627,7 +669,8 @@ TEST_F(AgentTest, AdapterCommands) {
   }
 }
 
-TEST_F(AgentTest, AdapterDeviceCommand) {
+TEST_F(AgentTest, AdapterDeviceCommand)
+{
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/two_devices.xml", 8, 4, "1.5", 25ms);
   m_agentTestHelper->m_agent = m_agent.get();
@@ -655,7 +698,8 @@ TEST_F(AgentTest, AdapterDeviceCommand) {
   ASSERT_TRUE(device1 == m_adapter->getDevice());
 }
 
-TEST_F(AgentTest, UUIDChange) {
+TEST_F(AgentTest, UUIDChange)
+{
   m_agentTestHelper->m_path = "/probe";
 
   auto device = m_agent->getDeviceByName("LinuxCNC");
@@ -686,7 +730,8 @@ TEST_F(AgentTest, UUIDChange) {
   }
 }
 
-TEST_F(AgentTest, FileDownload) {
+TEST_F(AgentTest, FileDownload)
+{
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
   // Register a file with the agent.
@@ -710,7 +755,8 @@ TEST_F(AgentTest, FileDownload) {
               string::npos);
 }
 
-TEST_F(AgentTest, FailedFileDownload) {
+TEST_F(AgentTest, FailedFileDownload)
+{
   m_agentTestHelper->m_path = "/schemas/MTConnectDevices_1.1.xsd";
   string error = "The following path is invalid: " + m_agentTestHelper->m_path;
 
@@ -724,7 +770,8 @@ TEST_F(AgentTest, FailedFileDownload) {
   }
 }
 
-TEST_F(AgentTest, DuplicateCheck) {
+TEST_F(AgentTest, DuplicateCheck)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -755,7 +802,8 @@ TEST_F(AgentTest, DuplicateCheck) {
   }
 }
 
-TEST_F(AgentTest, DuplicateCheckAfterDisconnect) {
+TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -797,7 +845,8 @@ TEST_F(AgentTest, DuplicateCheckAfterDisconnect) {
   }
 }
 
-TEST_F(AgentTest, AutoAvailable) {
+TEST_F(AgentTest, AutoAvailable)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -840,7 +889,8 @@ TEST_F(AgentTest, AutoAvailable) {
   }
 }
 
-TEST_F(AgentTest, MultipleDisconnect) {
+TEST_F(AgentTest, MultipleDisconnect)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -907,7 +957,8 @@ TEST_F(AgentTest, MultipleDisconnect) {
   }
 }
 
-TEST_F(AgentTest, IgnoreTimestamps) {
+TEST_F(AgentTest, IgnoreTimestamps)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -932,7 +983,8 @@ TEST_F(AgentTest, IgnoreTimestamps) {
   }
 }
 
-TEST_F(AgentTest, AssetStorage) {
+TEST_F(AgentTest, AssetStorage)
+{
   m_agent->enablePut();
   m_agentTestHelper->m_path = "/asset/123";
   string body = "<Part>TEST</Part>";
@@ -966,7 +1018,8 @@ TEST_F(AgentTest, AssetStorage) {
   }
 }
 
-TEST_F(AgentTest, AssetBuffer) {
+TEST_F(AgentTest, AssetBuffer)
+{
   m_agent->enablePut();
   m_agentTestHelper->m_path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
@@ -1154,7 +1207,8 @@ TEST_F(AgentTest, AssetBuffer) {
   }
 }
 
-TEST_F(AgentTest, AssetError) {
+TEST_F(AgentTest, AssetError)
+{
   m_agentTestHelper->m_path = "/asset/123";
 
   {
@@ -1164,7 +1218,8 @@ TEST_F(AgentTest, AssetError) {
   }
 }
 
-TEST_F(AgentTest, AdapterAddAsset) {
+TEST_F(AgentTest, AdapterAddAsset)
+{
   addAdapter();
 
   m_adapter->processData("TIME|@ASSET@|111|Part|<Part>TEST 1</Part>");
@@ -1180,7 +1235,8 @@ TEST_F(AgentTest, AdapterAddAsset) {
   }
 }
 
-TEST_F(AgentTest, MultiLineAsset) {
+TEST_F(AgentTest, MultiLineAsset)
+{
   addAdapter();
 
   m_adapter->parseBuffer("TIME|@ASSET@|111|Part|--multiline--AAAA\n");
@@ -1217,7 +1273,8 @@ TEST_F(AgentTest, MultiLineAsset) {
   }
 }
 
-TEST_F(AgentTest, AssetRefCounts) {
+TEST_F(AgentTest, AssetRefCounts)
+{
   addAdapter();
 
   const auto assets = m_agent->getAssets();
@@ -1281,7 +1338,8 @@ TEST_F(AgentTest, AssetRefCounts) {
   ASSERT_EQ((unsigned int)1, second.getObject()->refCount());
 }
 
-TEST_F(AgentTest, BadAsset) {
+TEST_F(AgentTest, BadAsset)
+{
   addAdapter();
 
   m_adapter->parseBuffer("TIME|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
@@ -1290,7 +1348,8 @@ TEST_F(AgentTest, BadAsset) {
   ASSERT_EQ((unsigned int)0, m_agent->getAssetCount());
 }
 
-TEST_F(AgentTest, AssetProbe) {
+TEST_F(AgentTest, AssetProbe)
+{
   m_agent->enablePut();
   m_agentTestHelper->m_path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
@@ -1318,7 +1377,8 @@ TEST_F(AgentTest, AssetProbe) {
   }
 }
 
-TEST_F(AgentTest, AssetRemoval) {
+TEST_F(AgentTest, AssetRemoval)
+{
   m_agent->enablePut();
   m_agentTestHelper->m_path = "/asset/1";
   string body = "<Part>TEST 1</Part>";
@@ -1416,7 +1476,8 @@ TEST_F(AgentTest, AssetRemoval) {
   }
 }
 
-TEST_F(AgentTest, AssetRemovalByAdapter) {
+TEST_F(AgentTest, AssetRemovalByAdapter)
+{
   addAdapter();
 
   ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
@@ -1469,7 +1530,8 @@ TEST_F(AgentTest, AssetRemovalByAdapter) {
   }
 }
 
-TEST_F(AgentTest, AssetStorageWithoutType) {
+TEST_F(AgentTest, AssetStorageWithoutType)
+{
   m_agent->enablePut();
   m_agentTestHelper->m_path = "/asset/123";
   string body = "<Part>TEST</Part>";
@@ -1486,7 +1548,8 @@ TEST_F(AgentTest, AssetStorageWithoutType) {
   }
 }
 
-TEST_F(AgentTest, AssetAdditionOfAssetChanged12) {
+TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
+{
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.2", 25ms);
   m_agentTestHelper->m_agent = m_agent.get();
@@ -1499,7 +1562,8 @@ TEST_F(AgentTest, AssetAdditionOfAssetChanged12) {
   }
 }
 
-TEST_F(AgentTest, AssetAdditionOfAssetRemoved13) {
+TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
+{
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.3", 25ms);
   m_agentTestHelper->m_agent = m_agent.get();
@@ -1512,7 +1576,8 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved13) {
   }
 }
 
-TEST_F(AgentTest, AssetPrependId) {
+TEST_F(AgentTest, AssetPrependId)
+{
   addAdapter();
 
   m_adapter->processData("TIME|@ASSET@|@1|Part|<Part>TEST 1</Part>");
@@ -1529,7 +1594,8 @@ TEST_F(AgentTest, AssetPrependId) {
   }
 }
 
-TEST_F(AgentTest, AssetWithSimpleCuttingItems) {
+TEST_F(AgentTest, AssetWithSimpleCuttingItems)
+{
   XmlPrinter *printer = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
   ASSERT_TRUE(printer != nullptr);
 
@@ -1568,7 +1634,8 @@ TEST_F(AgentTest, AssetWithSimpleCuttingItems) {
   printer->clearAssetsNamespaces();
 }
 
-TEST_F(AgentTest, RemoveLastAssetChanged) {
+TEST_F(AgentTest, RemoveLastAssetChanged)
+{
   addAdapter();
 
   ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
@@ -1596,7 +1663,8 @@ TEST_F(AgentTest, RemoveLastAssetChanged) {
   }
 }
 
-TEST_F(AgentTest, RemoveAllAssets) {
+TEST_F(AgentTest, RemoveAllAssets)
+{
   addAdapter();
 
   ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
@@ -1649,7 +1717,8 @@ TEST_F(AgentTest, RemoveAllAssets) {
   }
 }
 
-TEST_F(AgentTest, Put) {
+TEST_F(AgentTest, Put)
+{
   key_value_map queries;
   string body;
   m_agent->enablePut();
@@ -1659,7 +1728,9 @@ TEST_F(AgentTest, Put) {
   queries["power"] = "ON";
   m_agentTestHelper->m_path = "/LinuxCNC";
 
-  { PARSE_XML_RESPONSE_PUT(body, queries); }
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+  }
 
   m_agentTestHelper->m_path = "/LinuxCNC/current";
 
@@ -1672,7 +1743,8 @@ TEST_F(AgentTest, Put) {
 }
 
 // Test diabling of HTTP PUT or POST
-TEST_F(AgentTest, PutBlocking) {
+TEST_F(AgentTest, PutBlocking)
+{
   key_value_map queries;
   string body;
 
@@ -1688,7 +1760,8 @@ TEST_F(AgentTest, PutBlocking) {
 }
 
 // Test diabling of HTTP PUT or POST
-TEST_F(AgentTest, PutBlockingFrom) {
+TEST_F(AgentTest, PutBlockingFrom)
+{
   key_value_map queries;
   string body;
   m_agent->enablePut();
@@ -1715,7 +1788,9 @@ TEST_F(AgentTest, PutBlockingFrom) {
   m_agentTestHelper->m_path = "/LinuxCNC";
   m_agent->allowPutFrom("127.0.0.1");
 
-  { PARSE_XML_RESPONSE_PUT(body, queries); }
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+  }
 
   m_agentTestHelper->m_path = "/LinuxCNC/current";
 
@@ -1725,7 +1800,8 @@ TEST_F(AgentTest, PutBlockingFrom) {
   }
 }
 
-TEST_F(AgentTest, StreamData) {
+TEST_F(AgentTest, StreamData)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -1750,7 +1826,8 @@ TEST_F(AgentTest, StreamData) {
 
     m_delay = 20ms;
     auto killThread = std::thread{killThreadLambda, this};
-    try {
+    try
+    {
       PARSE_XML_RESPONSE_QUERY(query);
       ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
 
@@ -1758,7 +1835,9 @@ TEST_F(AgentTest, StreamData) {
       ASSERT_TRUE(delta < (heartbeatFreq + 25ms));
       ASSERT_TRUE(delta > heartbeatFreq);
       killThread.join();
-    } catch (...) {
+    }
+    catch (...)
+    {
       killThread.join();
       throw;
     }
@@ -1781,26 +1860,31 @@ TEST_F(AgentTest, StreamData) {
 
     m_delay = 10ms;
     auto addThread = std::thread{AddThreadLambda, this};
-    try {
+    try
+    {
       PARSE_XML_RESPONSE_QUERY(query);
 
       auto delta = system_clock::now() - startTime;
       ASSERT_TRUE(delta < (minExpectedResponse + 30ms));
       ASSERT_TRUE(delta > minExpectedResponse);
       addThread.join();
-    } catch (...) {
+    }
+    catch (...)
+    {
       addThread.join();
       throw;
     }
   }
 }
 
-TEST_F(AgentTest, FailWithDuplicateDeviceUUID) {
+TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
+{
   ASSERT_THROW(new Agent(PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25ms),
                std::runtime_error);
 }
 
-TEST_F(AgentTest, StreamDataObserver) {
+TEST_F(AgentTest, StreamDataObserver)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -1827,18 +1911,22 @@ TEST_F(AgentTest, StreamDataObserver) {
     auto seq = int64ToString(m_agent->getSequence() + 20ull);
 
     auto streamThread = std::thread{streamThreadLambda, this};
-    try {
+    try
+    {
       PARSE_XML_RESPONSE_QUERY(query);
       ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
       streamThread.join();
-    } catch (...) {
+    }
+    catch (...)
+    {
       streamThread.join();
       throw;
     }
   }
 }
 
-TEST_F(AgentTest, RelativeTime) {
+TEST_F(AgentTest, RelativeTime)
+{
   {
     m_agentTestHelper->m_path = "/sample";
 
@@ -1861,7 +1949,8 @@ TEST_F(AgentTest, RelativeTime) {
   }
 }
 
-TEST_F(AgentTest, RelativeParsedTime) {
+TEST_F(AgentTest, RelativeParsedTime)
+{
   {
     m_agentTestHelper->m_path = "/sample";
 
@@ -1885,7 +1974,8 @@ TEST_F(AgentTest, RelativeParsedTime) {
   }
 }
 
-TEST_F(AgentTest, RelativeParsedTimeDetection) {
+TEST_F(AgentTest, RelativeParsedTimeDetection)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -1900,7 +1990,8 @@ TEST_F(AgentTest, RelativeParsedTimeDetection) {
   ASSERT_EQ((uint64_t)1354165286555666LL, m_adapter->getBaseOffset());
 }
 
-TEST_F(AgentTest, RelativeOffsetDetection) {
+TEST_F(AgentTest, RelativeOffsetDetection)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -1915,7 +2006,8 @@ TEST_F(AgentTest, RelativeOffsetDetection) {
   ASSERT_EQ((uint64_t)1234556000LL, m_adapter->getBaseOffset());
 }
 
-TEST_F(AgentTest, DynamicCalibration) {
+TEST_F(AgentTest, DynamicCalibration)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -1953,7 +2045,8 @@ TEST_F(AgentTest, DynamicCalibration) {
   }
 }
 
-TEST_F(AgentTest, InitialTimeSeriesValues) {
+TEST_F(AgentTest, InitialTimeSeriesValues)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -1966,7 +2059,8 @@ TEST_F(AgentTest, InitialTimeSeriesValues) {
   }
 }
 
-TEST_F(AgentTest, FilterValues13) {
+TEST_F(AgentTest, FilterValues13)
+{
   m_agent.reset();
   m_agent =
       make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", 8, 4, "1.5", 25ms);
@@ -2019,7 +2113,8 @@ TEST_F(AgentTest, FilterValues13) {
   ASSERT_FALSE(item->isFiltered(20.0, NAN));
 }
 
-TEST_F(AgentTest, FilterValues) {
+TEST_F(AgentTest, FilterValues)
+{
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
   m_agentTestHelper->m_agent = m_agent.get();
@@ -2163,7 +2258,8 @@ TEST_F(AgentTest, FilterValues) {
   ASSERT_FALSE(item->isFiltered(20.0, NAN));
 }
 
-TEST_F(AgentTest, ResetTriggered) {
+TEST_F(AgentTest, ResetTriggered)
+{
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
   ASSERT_TRUE(m_adapter);
 
@@ -2188,7 +2284,8 @@ TEST_F(AgentTest, ResetTriggered) {
   }
 }
 
-TEST_F(AgentTest, References) {
+TEST_F(AgentTest, References)
+{
   m_agent.reset();
   m_agent =
       make_unique<Agent>(PROJECT_ROOT_DIR "/samples/reference_example.xml", 8, 4, "1.5", 25ms);
@@ -2239,7 +2336,8 @@ TEST_F(AgentTest, References) {
   }
 }
 
-TEST_F(AgentTest, Discrete) {
+TEST_F(AgentTest, Discrete)
+{
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25ms);
   m_agentTestHelper->m_agent = m_agent.get();
@@ -2286,7 +2384,8 @@ TEST_F(AgentTest, Discrete) {
   }
 }
 
-TEST_F(AgentTest, UpcaseValues) {
+TEST_F(AgentTest, UpcaseValues)
+{
   m_agentTestHelper->m_path = "/current";
   m_agent.reset();
   m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25ms);
@@ -2313,7 +2412,8 @@ TEST_F(AgentTest, UpcaseValues) {
   }
 }
 
-TEST_F(AgentTest, ConditionSequence) {
+TEST_F(AgentTest, ConditionSequence)
+{
   m_agentTestHelper->m_path = "/current";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2492,7 +2592,8 @@ TEST_F(AgentTest, ConditionSequence) {
   }
 }
 
-TEST_F(AgentTest, EmptyLastItemFromAdapter) {
+TEST_F(AgentTest, EmptyLastItemFromAdapter)
+{
   m_agentTestHelper->m_path = "/current";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2555,7 +2656,8 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter) {
   }
 }
 
-TEST_F(AgentTest, ConstantValue) {
+TEST_F(AgentTest, ConstantValue)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2583,7 +2685,8 @@ TEST_F(AgentTest, ConstantValue) {
   }
 }
 
-TEST_F(AgentTest, BadDataItem) {
+TEST_F(AgentTest, BadDataItem)
+{
   m_agentTestHelper->m_path = "/sample";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2603,7 +2706,8 @@ TEST_F(AgentTest, BadDataItem) {
   }
 }
 
-TEST_F(AgentTest, Composition) {
+TEST_F(AgentTest, Composition)
+{
   m_agentTestHelper->m_path = "/current";
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);

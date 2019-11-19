@@ -17,22 +17,26 @@
 
 #pragma once
 
+#include "test_globals.hpp"
+
+#include <dlib/server.h>
+
 #include <chrono>
 #include <iosfwd>
 #include <map>
 #include <string>
 
-#include <dlib/server.h>
-
-#include "test_globals.hpp"
-
-namespace mtconnect {
-class Agent;
+namespace mtconnect
+{
+  class Agent;
 }
 
-class AgentTestHelper {
+class AgentTestHelper
+{
  public:
-  AgentTestHelper() : m_agent(nullptr), m_incomingIp("127.0.0.1") {}
+  AgentTestHelper() : m_agent(nullptr), m_incomingIp("127.0.0.1")
+  {
+  }
 
   mtconnect::Agent *m_agent;
   std::ostringstream m_out;
@@ -47,8 +51,8 @@ class AgentTestHelper {
 
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line, dlib::key_value_map &aQueries, xmlDocPtr *doc);
-  void putResponseHelper(const char *file, int line, std::string body, dlib::key_value_map &aQueries,
-                         xmlDocPtr *doc);
+  void putResponseHelper(const char *file, int line, std::string body,
+                         dlib::key_value_map &aQueries, xmlDocPtr *doc);
 };
 
 #define PARSE_XML_RESPONSE                                                                   \

@@ -31,16 +31,15 @@
 #define NOMINMAX 1
 #endif
 
+#include <date/date.h>
+
+#include <chrono>
 #include <ctime>
-#include <string>
+#include <fstream>
+#include <limits>
 #include <map>
 #include <sstream>
-#include <fstream>
 #include <string>
-#include <limits>
-#include <chrono>
-
-#include <date/date.h>
 
 #ifdef _WINDOWS
 #define ISNAN(x) _isnan(x)
@@ -56,10 +55,11 @@ typedef unsigned __int64 uint64_t;
 #else
 #define O_BINARY 0
 #define ISNAN(x) std::isnan(x)
-#include <stdint.h>
 #include <sys/resource.h>
-#include <unistd.h>
+
 #include <memory>
+#include <stdint.h>
+#include <unistd.h>
 #endif
 
 //####### CONSTANTS #######
@@ -74,10 +74,11 @@ const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 const unsigned int DEFAULT_MAX_ASSETS = 1024;
 
-namespace mtconnect {
+namespace mtconnect
+{
   // Message for when enumerations do not exist in an array/enumeration
   const int ENUM_MISS = -1;
-  
+
   // Time format
   enum TimeFormat
   {
@@ -86,57 +87,55 @@ namespace mtconnect {
     GMT_UV_SEC,
     LOCAL
   };
-  
+
   //####### METHODS #######
   std::string int64ToString(uint64_t i);
-  
+
   std::string intToString(unsigned int i);
-  
+
   // Convert a float to string
   std::string floatToString(double f);
-  
+
   // Convert a string to the same string with all upper case letters
   std::string toUpperCase(std::string &text);
-  
+
   // Check if each char in a string is a positive integer
   bool isNonNegativeInteger(const std::string &s);
-  
-  
+
   // Get a specified time formatted
-  std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint, TimeFormat format);
-  
+  std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint,
+                             TimeFormat format);
+
   // Get the current time formatted
   std::string getCurrentTime(TimeFormat format);
-  
+
   // time_t to the ms
   uint64_t getCurrentTimeInMicros();
-  
+
   // Get the relative time from using an uint64 offset in ms to time_t as a web time
   std::string getRelativeTimeString(uint64_t aTime);
-  
+
   // Get the current time in number of seconds as an integer
   uint64_t getCurrentTimeInSec();
-  
+
   uint64_t parseTimeMicro(const std::string &aTime);
-  
+
   // Replace illegal XML characters with the correct corresponding characters
   void replaceIllegalCharacters(std::string &data);
-  
+
   std::string addNamespace(const std::string aPath, const std::string aPrefix);
-  
+
   bool isMTConnectUrn(const char *aUrn);
-  
+
   // Get memory size of process in k
   long getMemorySize();
-  
+
   // Ends with
   inline bool endsWith(const std::string &str, const std::string &ending)
   {
     return (str.length() >= ending.length() &&
-            str.compare(str.length() - ending.length(),
-                        ending.length(), ending) == 0);
+            str.compare(str.length() - ending.length(), ending.length(), ending) == 0);
   }
-  
 
 #ifdef _WINDOWS
 #include <io.h>
@@ -149,4 +148,4 @@ namespace mtconnect {
   typedef int AtomicInt;
 #endif
 #endif
-}
+}  // namespace mtconnect

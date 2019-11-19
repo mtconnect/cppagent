@@ -16,72 +16,83 @@
 //
 
 #pragma once
+#include "component.hpp"
+#include "data_item.hpp"
 #include "globals.hpp"
 
 #include <map>
 
-#include "component.hpp"
-#include "data_item.hpp"
-
-namespace mtconnect {
+namespace mtconnect
+{
   class Component;
   class Adapter;
-  
+
   class Device : public Component
   {
-  public:
+   public:
     // Constructor that sets variables from an attribute map
     Device(const std::map<std::string, std::string> &attributes);
-    
+
     ~Device();
-    
+
     // Add/get items to/from the device name to data item mapping
     void addDeviceDataItem(DataItem &dataItem);
     DataItem *getDeviceDataItem(const std::string &name);
-    void addAdapter(Adapter *anAdapter) {
-      m_adapters.push_back(anAdapter); }
-    Component *getComponentById(const std::string &aId) {
+    void addAdapter(Adapter *anAdapter)
+    {
+      m_adapters.push_back(anAdapter);
+    }
+    Component *getComponentById(const std::string &aId)
+    {
       auto comp = m_componentsById.find(aId);
       if (comp != m_componentsById.end())
         return comp->second;
       else
         return nullptr;
     }
-    void addComponent(Component *aComponent) {
+    void addComponent(Component *aComponent)
+    {
       m_componentsById.insert(make_pair(aComponent->getId(), aComponent));
     }
-    
+
     // Return the mapping of Device to data items
-    const std::map<std::string, DataItem *> &getDeviceDataItems() const {
+    const std::map<std::string, DataItem *> &getDeviceDataItems() const
+    {
       return m_deviceDataItemsById;
     }
-    
+
     virtual void addDataItem(DataItem &dataItem) override;
-    
+
     std::vector<Adapter *> m_adapters;
     bool m_preserveUuid;
     bool m_availabilityAdded;
-    
+
     // Cached data items
-    DataItem *getAvailability() const {
-      return m_availability; }
-    DataItem *getAssetChanged() const {
-      return m_assetChanged; }
-    DataItem *getAssetRemoved() const {
-      return m_assetRemoved; }
-    
-  protected:
+    DataItem *getAvailability() const
+    {
+      return m_availability;
+    }
+    DataItem *getAssetChanged() const
+    {
+      return m_assetChanged;
+    }
+    DataItem *getAssetRemoved() const
+    {
+      return m_assetRemoved;
+    }
+
+   protected:
     // The iso841Class of the device
     unsigned int m_iso841Class;
-    
+
     DataItem *m_availability;
     DataItem *m_assetChanged;
     DataItem *m_assetRemoved;
-    
+
     // Mapping of device names to data items
     std::map<std::string, DataItem *> m_deviceDataItemsByName;
     std::map<std::string, DataItem *> m_deviceDataItemsById;
     std::map<std::string, DataItem *> m_deviceDataItemsBySource;
     std::map<std::string, Component *> m_componentsById;
   };
-}
+}  // namespace mtconnect

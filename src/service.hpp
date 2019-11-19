@@ -18,33 +18,40 @@
 #pragma once
 
 #include "globals.hpp"
+
 #include <string>
 
-namespace mtconnect {
+namespace mtconnect
+{
   class MTConnectService
   {
-  public:
+   public:
     MTConnectService();
     virtual int main(int argc, char const *argv[]);
     virtual void initialize(int argc, char const *argv[]) = 0;
     virtual void stop() = 0;
     virtual void start() = 0;
-    
-    void setName(std::string const &name) {
-      m_name = name; }
-    std::string const & name() const {
-      return m_name; }
-    void setDebug(bool debug) {
+
+    void setName(std::string const &name)
+    {
+      m_name = name;
+    }
+    std::string const &name() const
+    {
+      return m_name;
+    }
+    void setDebug(bool debug)
+    {
       m_isDebug = debug;
     }
-    
-  protected:
+
+   protected:
     std::string m_name;
     std::string m_configFile;
     std::string m_pidFile;
     bool m_isService;
     bool m_isDebug;
-    
+
     void install();
     void remove();
     static bool isElevated();
@@ -52,6 +59,5 @@ namespace mtconnect {
 #ifndef _WINDOWS
     void daemonize();
 #endif
-    
   };
-}
+}  // namespace mtconnect

@@ -15,18 +15,23 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include <dlib/misc_api.h>
 #include "adapter.hpp"
 #include "data_item.hpp"
+
+#include <dlib/misc_api.h>
 
 using namespace std;
 using namespace mtconnect;
 
-class DataItemTest : public testing::Test {
+class DataItemTest : public testing::Test
+{
  protected:
-  void SetUp() override {
+  void SetUp() override
+  {
     std::map<string, string> attributes1, attributes2, attributes3;
 
     attributes1["id"] = "1";
@@ -54,7 +59,8 @@ class DataItemTest : public testing::Test {
     m_dataItemC = make_unique<DataItem>(attributes3);
   }
 
-  void TearDown() override {
+  void TearDown() override
+  {
     m_dataItemA.reset();
     m_dataItemB.reset();
     m_dataItemC.reset();
@@ -65,7 +71,8 @@ class DataItemTest : public testing::Test {
   std::unique_ptr<DataItem> m_dataItemC;
 };
 
-TEST_F(DataItemTest, Getters) {
+TEST_F(DataItemTest, Getters)
+{
   ASSERT_EQ((string) "1", m_dataItemA->getId());
   ASSERT_EQ((string) "DataItemTest1", m_dataItemA->getName());
   ASSERT_EQ((string) "ACCELERATION", m_dataItemA->getType());
@@ -83,7 +90,8 @@ TEST_F(DataItemTest, Getters) {
   ASSERT_EQ(1.0f, m_dataItemB->getNativeScale());
 }
 
-TEST_F(DataItemTest, GetAttributes) {
+TEST_F(DataItemTest, GetAttributes)
+{
   const auto &attributes1 = m_dataItemA->getAttributes();
   ASSERT_EQ((string) "1", attributes1.at("id"));
   ASSERT_EQ((string) "DataItemTest1", attributes1.at("name"));
@@ -103,7 +111,8 @@ TEST_F(DataItemTest, GetAttributes) {
   ASSERT_EQ((string) "testCoordinateSystem", attributes2.at("coordinateSystem"));
 }
 
-TEST_F(DataItemTest, HasNameAndSource) {
+TEST_F(DataItemTest, HasNameAndSource)
+{
   ASSERT_TRUE(m_dataItemA->hasName("DataItemTest1"));
   ASSERT_TRUE(m_dataItemB->hasName("DataItemTest2"));
 
@@ -119,12 +128,14 @@ TEST_F(DataItemTest, HasNameAndSource) {
   ASSERT_EQ((string) "DataItemTest2Source", m_dataItemB->getSourceOrName());
 }
 
-TEST_F(DataItemTest, IsSample) {
+TEST_F(DataItemTest, IsSample)
+{
   ASSERT_TRUE(m_dataItemA->isSample());
   ASSERT_TRUE(!m_dataItemB->isSample());
 }
 
-TEST_F(DataItemTest, Component) {
+TEST_F(DataItemTest, Component)
+{
   std::map<string, string> attributes1;
   attributes1["id"] = "3";
   attributes1["name"] = "AxesTestA";
@@ -137,7 +148,8 @@ TEST_F(DataItemTest, Component) {
   ASSERT_TRUE(&axes == m_dataItemA->getComponent());
 }
 
-TEST_F(DataItemTest, GetCamel) {
+TEST_F(DataItemTest, GetCamel)
+{
   string prefix;
   ASSERT_TRUE(DataItem::getCamelType("", prefix).empty());
   ASSERT_EQ((string) "Camels", DataItem::getCamelType("CAMELS", prefix));
@@ -153,7 +165,8 @@ TEST_F(DataItemTest, GetCamel) {
   ASSERT_EQ((string) "x", prefix);
 }
 
-TEST_F(DataItemTest, Conversion) {
+TEST_F(DataItemTest, Conversion)
+{
   std::map<string, string> attributes1;
   attributes1["id"] = "p";
   attributes1["name"] = "position";
@@ -219,9 +232,13 @@ TEST_F(DataItemTest, Conversion) {
   ASSERT_EQ((string) "0.13", item5.convertValue("0.13"));
 }
 
-TEST_F(DataItemTest, Condition) { ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory()); }
+TEST_F(DataItemTest, Condition)
+{
+  ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory());
+}
 
-TEST_F(DataItemTest, TimeSeries) {
+TEST_F(DataItemTest, TimeSeries)
+{
   std::map<string, string> attributes1;
 
   attributes1["id"] = "1";
@@ -250,7 +267,8 @@ TEST_F(DataItemTest, TimeSeries) {
   d.reset();
 }
 
-TEST_F(DataItemTest, Statistic) {
+TEST_F(DataItemTest, Statistic)
+{
   std::map<string, string> attributes1;
 
   attributes1["id"] = "1";
@@ -266,7 +284,8 @@ TEST_F(DataItemTest, Statistic) {
   d.reset();
 }
 
-TEST_F(DataItemTest, SampleRate) {
+TEST_F(DataItemTest, SampleRate)
+{
   std::map<string, string> attributes1;
 
   attributes1["id"] = "1";
@@ -284,13 +303,15 @@ TEST_F(DataItemTest, SampleRate) {
   d.reset();
 }
 
-TEST_F(DataItemTest, Duplicates) {
+TEST_F(DataItemTest, Duplicates)
+{
   ASSERT_TRUE(!m_dataItemA->isDuplicate("FOO"));
   ASSERT_TRUE(m_dataItemA->isDuplicate("FOO"));
   ASSERT_TRUE(!m_dataItemA->isDuplicate("FOO2"));
 }
 
-TEST_F(DataItemTest, Filter) {
+TEST_F(DataItemTest, Filter)
+{
   m_dataItemA->setMinmumDelta(5.0);
 
   ASSERT_TRUE(!m_dataItemA->isFiltered(5.0, 0.0));

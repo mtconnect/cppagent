@@ -15,7 +15,9 @@
 //    limitations under the License.
 //
 
+// Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "adapter.hpp"
 
@@ -24,7 +26,8 @@
 #include <string>
 #include <vector>
 
-TEST(AdapterTest, EscapedLine) {
+TEST(AdapterTest, EscapedLine)
+{
   std::map<std::string, std::vector<std::string>> data;
   // correctly escaped
   data["\"a\\|b\""] = {"a|b"};
@@ -74,10 +77,12 @@ TEST(AdapterTest, EscapedLine) {
   data["y|\"a\\|z"] = {"y", "\"a\\", "z"};
   data["y|\"a\\|\"z"] = {"y", "\"a\\", "\"z"};
 
-  for (auto it = data.begin(); it != data.end(); ++it) {
+  for (auto it = data.begin(); it != data.end(); ++it)
+  {
     std::string value;
     std::istringstream toParse(it->first);
-    for (const std::string &expected : it->second) {
+    for (const std::string &expected : it->second)
+    {
       mtconnect::Adapter::getEscapedLine(toParse, value);
       ASSERT_EQ(expected, value);
     }
