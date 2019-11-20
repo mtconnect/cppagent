@@ -29,6 +29,8 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\"" NOMINMAX
     "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:${AGENT_TEST_NAME}_test>/../Resources\"")
   add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
+
+  target_clangformat_setup(${AGENT_TEST_NAME}_test)
 endmacro()
 
 add_agent_test(agent TRUE)
@@ -57,3 +59,4 @@ add_custom_command(
   "${CMAKE_CURRENT_SOURCE_DIR}/probe.xml"
   "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
   COMMENT "Copying to output directory")
+

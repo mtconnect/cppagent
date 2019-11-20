@@ -39,3 +39,5 @@ endif()
 add_dependencies(agent_lib UPDATE_VERSION)
 
 target_compile_features(agent_lib PRIVATE cxx_std_14)
+
+target_clangformat_setup(agent_lib)

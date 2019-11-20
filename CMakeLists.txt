@@ -56,6 +56,7 @@ include(cmake/msvc_xp_support.cmake)
 include(cmake/msvc_use_static_runtime.cmake)
 include(cmake/vs_set_working_directory.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
+include(cmake/ClangFormat.cmake)
 
 # Add our dependency projects
 include(cmake/LibXML2.cmake)
