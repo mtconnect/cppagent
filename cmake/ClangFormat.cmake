@@ -14,7 +14,8 @@ function(clangformat_setup target)
       set(CLANGFORMAT_EXECUTABLE ${clangformat_executable_tmp})
       unset(clangformat_executable_tmp)
     else()
-      message(FATAL_ERROR "ClangFormat: ${CLANGFORMAT_EXECUTABLE} not found! Aborting")
+      set(CLANGFORMAT_EXECUTABLE "NotFound")
+      message(WARNING "ClangFormat: ${CLANGFORMAT_EXECUTABLE} not found! Aborting")
     endif()
   endif()
 
@@ -25,20 +26,22 @@ function(clangformat_setup target)
     endif()
   endforeach()
 
-  add_custom_target(${target}_clangformat
-    COMMAND
-      ${CLANGFORMAT_EXECUTABLE}
-      -style=file
-      -i
-      ${clangformat_sources}
-    COMMENT
-      "Formating with ${CLANGFORMAT_EXECUTABLE} ..."
-  )
-
-  if(TARGET clangformat)
-    add_dependencies(clangformat ${target}_clangformat)
-  else()
-    add_custom_target(clangformat DEPENDS ${target}_clangformat)
+  if(NOT ("${CLANGFORMAT_EXECUTABLE}" STREQUAL "NotFound"))
+    add_custom_target(${target}_clangformat
+        COMMAND
+        ${CLANGFORMAT_EXECUTABLE}
+        -style=file
+        -i
+        ${clangformat_sources}
+	COMMENT
+	"Formating with ${CLANGFORMAT_EXECUTABLE} ..."
+      )
+    
+    if(TARGET clangformat)
+      add_dependencies(clangformat ${target}_clangformat)
+    else()
+      add_custom_target(clangformat DEPENDS ${target}_clangformat)
+    endif()
   endif()
 endfunction()
 
