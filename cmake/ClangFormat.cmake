@@ -15,7 +15,7 @@ function(clangformat_setup target)
       unset(clangformat_executable_tmp)
     else()
       set(CLANGFORMAT_EXECUTABLE "NotFound")
-      message(WARNING "ClangFormat: ${CLANGFORMAT_EXECUTABLE} not found! Aborting")
+      message(INFO "ClangFormat executable not found, skipping code format targets.")
     endif()
   endif()
 
