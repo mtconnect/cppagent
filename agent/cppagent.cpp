@@ -18,7 +18,7 @@
 #include "agent.hpp"
 #include "config.hpp"
 #include "fcntl.h"
-#include "string.h"
+#include <cstring>
 #include "sys/stat.h"
 
 #include "dlib/config_reader.h"

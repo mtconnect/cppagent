@@ -23,7 +23,7 @@
 #include "device.hpp"
 
 #include <stdexcept>
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace std;
 

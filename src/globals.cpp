@@ -18,15 +18,15 @@
 #include "globals.hpp"
 
 #include <chrono>
+#include <cstdio>
+#include <cstring>
 #include <list>
 #include <map>
 #include <mutex>
 #include <set>
 #include <sstream>
-#include <stdio.h>
-#include <string.h>
 #include <string>
-#include <time.h>
+#include <ctime>
 #include <vector>
 
 // Don't include WinSock.h when processing <windows.h>

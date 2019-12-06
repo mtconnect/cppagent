@@ -21,7 +21,7 @@
 #define __STDC_LIMIT_MACROS 1
 #endif
 #if _MSC_VER > 1500
-#include <stdint.h>
+#include <cstdint>
 #else
 #endif
 #ifndef UINT64_MAX
@@ -58,7 +58,7 @@ typedef unsigned __int64 uint64_t;
 #include <sys/resource.h>
 
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 #include <unistd.h>
 #endif
 

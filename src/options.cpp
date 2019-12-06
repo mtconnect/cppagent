@@ -21,11 +21,11 @@
 
 #include <sys/stat.h>
 
-#include <ctype.h>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstring>
 
 using namespace std;
 

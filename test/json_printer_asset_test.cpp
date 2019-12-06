@@ -5,7 +5,7 @@
 //  Created by William Sobel on 3/28/19.
 //
 
-#include <stdio.h>
+#include <cstdio>
 
 //
 // Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
