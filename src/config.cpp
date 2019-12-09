@@ -33,6 +33,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <thread>
@@ -355,7 +356,8 @@ namespace mtconnect
       {
         // Start the file monitor to check for changes to cfg or devices.
         g_logger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
-        mon.reset(new dlib::thread_function(make_mfp(*this, &AgentConfiguration::monitorThread)));
+        mon = std::make_unique<dlib::thread_function>(
+            make_mfp(*this, &AgentConfiguration::monitorThread));
       }
 
       m_agent->start();

@@ -126,7 +126,8 @@ namespace mtconnect
           m_hasAttributes(false)
     {
       if (another.m_description.get())
-        m_description.reset(new Description(*another.m_description.get()));
+        m_description =
+            std::make_unique<Description>(*another.m_description.get());
     }
 
     Composition(const std::map<std::string, std::string> &attributes) : m_hasAttributes(false)

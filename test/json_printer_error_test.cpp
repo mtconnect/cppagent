@@ -28,6 +28,7 @@
 #include "observation.hpp"
 
 #include <nlohmann/json.hpp>
+#include <memory>
 
 #include <fstream>
 #include <iostream>
@@ -43,7 +44,7 @@ class JsonPrinterErrorTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_printer.reset(new JsonPrinter("1.5", true));
+    m_printer = std::make_unique<JsonPrinter>("1.5", true);
   }
 
   std::unique_ptr<JsonPrinter> m_printer;

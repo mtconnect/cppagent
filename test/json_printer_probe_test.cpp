@@ -31,6 +31,7 @@
 #include "xml_printer.hpp"
 
 #include <nlohmann/json.hpp>
+#include <memory>
 
 #include <fstream>
 #include <iostream>
@@ -46,10 +47,10 @@ class JsonPrinterProbeTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_xmlPrinter.reset(new XmlPrinter("1.5"));
-    m_printer.reset(new JsonPrinter("1.5", true));
+    m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
+    m_printer = std::make_unique<JsonPrinter>("1.5", true);
 
-    m_config.reset(new XmlParser());
+    m_config = std::make_unique<XmlParser>();
     m_devices =
         m_config->parseFile(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", m_xmlPrinter.get());
   }

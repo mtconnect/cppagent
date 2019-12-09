@@ -41,6 +41,7 @@
 #include "xml_printer.hpp"
 
 #include <nlohmann/json.hpp>
+#include <memory>
 
 #include <fstream>
 #include <iostream>
@@ -56,8 +57,8 @@ class JsonPrinterAssetTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_printer.reset(new JsonPrinter("1.5", true));
-    m_parser.reset(new XmlParser());
+    m_printer = std::make_unique<JsonPrinter>("1.5", true);
+    m_parser = std::make_unique<XmlParser>();
   }
 
   void TearDown() override
