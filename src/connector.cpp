@@ -20,6 +20,7 @@
 #include <dlib/logger.h>
 
 #include <chrono>
+#include <utility>
 
 using namespace std;
 using namespace std::chrono;
@@ -29,8 +30,8 @@ namespace mtconnect
   static dlib::logger g_logger("input.connector");
 
   // Connector public methods
-  Connector::Connector(const string &server, unsigned int port, seconds legacyTimeout)
-      : m_server(server),
+  Connector::Connector(string server, unsigned int port, seconds legacyTimeout)
+      : m_server(std::move(server)),
         m_port(port),
         m_localPort(0),
         m_connected(false),

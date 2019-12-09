@@ -24,6 +24,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 
 namespace mtconnect
 {
@@ -33,14 +34,13 @@ namespace mtconnect
     class Description
     {
      public:
-      Description(const std::string &body, const std::string &manufacturer,
-                  const std::string &model, const std::string &serialNumber,
-                  const std::string &station)
-          : m_body(body),
-            m_manufacturer(manufacturer),
-            m_model(model),
-            m_serialNumber(serialNumber),
-            m_station(station),
+      Description(std::string body, std::string manufacturer, std::string model,
+                  std::string serialNumber, std::string station)
+          : m_body(std::move(body)),
+            m_manufacturer(std::move(manufacturer)),
+            m_model(std::move(model)),
+            m_serialNumber(std::move(serialNumber)),
+            m_station(std::move(station)),
             m_hasAttributes(false)
       {
       }
@@ -55,8 +55,8 @@ namespace mtconnect
       {
       }
 
-      Description(const std::string &body, const std::map<std::string, std::string> &attributes)
-          : m_body(body), m_hasAttributes(false)
+      Description(std::string body, const std::map<std::string, std::string> &attributes)
+          : m_body(std::move(body)), m_hasAttributes(false)
       {
         if (attributes.count("manufacturer") > 0)
           m_manufacturer = attributes.at("manufacturer");
@@ -112,9 +112,12 @@ namespace mtconnect
     };
 
    public:
-    Composition(const std::string &aId, const std::string &aType, const std::string &aName,
-                const std::string &aUuid)
-        : m_id(aId), m_uuid(aUuid), m_name(aName), m_type(aType), m_hasAttributes(false)
+    Composition(std::string aId, std::string aType, std::string aName, std::string aUuid)
+        : m_id(std::move(aId)),
+          m_uuid(std::move(aUuid)),
+          m_name(std::move(aName)),
+          m_type(std::move(aType)),
+          m_hasAttributes(false)
     {
     }
 
@@ -126,8 +129,7 @@ namespace mtconnect
           m_hasAttributes(false)
     {
       if (another.m_description.get())
-        m_description =
-            std::make_unique<Description>(*another.m_description.get());
+        m_description = std::make_unique<Description>(*another.m_description.get());
     }
 
     Composition(const std::map<std::string, std::string> &attributes) : m_hasAttributes(false)

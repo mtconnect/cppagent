@@ -21,6 +21,7 @@
 #include "globals.hpp"
 
 #include <map>
+#include <utility>
 #include <vector>
 
 namespace mtconnect
@@ -38,8 +39,8 @@ namespace mtconnect
   class CuttingToolValue : public RefCounted
   {
    public:
-    CuttingToolValue(const std::string &aKey, const std::string &aValue)
-        : m_key(aKey), m_value(aValue)
+    CuttingToolValue(std::string aKey, std::string aValue)
+        : m_key(std::move(aKey)), m_value(std::move(aValue))
     {
     }
 

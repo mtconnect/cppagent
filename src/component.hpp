@@ -24,6 +24,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace mtconnect
@@ -44,8 +45,12 @@ namespace mtconnect
         COMPONENT
       };
 
-      Reference(const std::string &id, const std::string &name, ReferenceType type)
-          : m_type(type), m_id(id), m_name(name), m_dataItem(nullptr), m_component(nullptr)
+      Reference(std::string id, std::string name, ReferenceType type)
+          : m_type(type),
+            m_id(std::move(id)),
+            m_name(std::move(name)),
+            m_dataItem(nullptr),
+            m_component(nullptr)
       {
       }
 

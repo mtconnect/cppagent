@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#include <utility>
 
 using namespace std;
 
@@ -33,12 +34,12 @@ namespace mtconnect
   static dlib::logger g_logger("input.adapter");
 
   // Adapter public methods
-  Adapter::Adapter(const string &device, const string &server, const unsigned int port,
+  Adapter::Adapter(string device, const string &server, const unsigned int port,
                    std::chrono::seconds legacyTimeout)
       : Connector(server, port, legacyTimeout),
         m_agent(nullptr),
         m_device(nullptr),
-        m_deviceName(device),
+        m_deviceName(std::move(device)),
         m_running(true),
         m_dupCheck(false),
         m_autoAvailable(false),

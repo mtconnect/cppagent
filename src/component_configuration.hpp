@@ -21,6 +21,7 @@
 
 #include <map>
 #include <string>
+#include <utility>
 
 namespace mtconnect
 {
@@ -38,7 +39,7 @@ namespace mtconnect
   class ExtendedComponentConfiguration : public ComponentConfiguration
   {
    public:
-    ExtendedComponentConfiguration(const std::string &content) : m_content(content)
+    ExtendedComponentConfiguration(std::string content) : m_content(std::move(content))
     {
     }
     virtual ~ExtendedComponentConfiguration()

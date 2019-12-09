@@ -42,7 +42,7 @@ namespace mtconnect
   {
    public:
     // Associate adapter with a device & connect to the server & port
-    Adapter(const std::string &device, const std::string &server, const unsigned int port,
+    Adapter(std::string device, const std::string &server, const unsigned int port,
             std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
 
     // Virtual destructor

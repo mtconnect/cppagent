@@ -57,7 +57,7 @@ namespace mtconnect
       m_removed = another.m_removed;
     }
 
-    Asset(const std::string &assetId, const std::string &type, const std::string &content,
+    Asset(std::string assetId, std::string type, std::string content,
           const bool removed = false);
 
     virtual ~Asset();

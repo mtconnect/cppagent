@@ -18,14 +18,17 @@
 #include "asset.hpp"
 
 #include <map>
+#include <utility>
 
 using namespace std;
 
 namespace mtconnect
 {
-  Asset::Asset(const std::string &asssetId, const std::string &type, const std::string &content,
-               const bool removed)
-      : m_assetId(asssetId), m_content(content), m_type(type), m_removed(removed)
+  Asset::Asset(std::string asssetId, std::string type, std::string content, const bool removed)
+      : m_assetId(std::move(asssetId)),
+        m_content(std::move(content)),
+        m_type(std::move(type)),
+        m_removed(removed)
   {
   }
 

@@ -29,6 +29,7 @@
 #include <libxml/xmlwriter.h>
 
 #include <set>
+#include <utility>
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr)                                           \
@@ -305,13 +306,13 @@ namespace mtconnect
     AutoElement(xmlTextWriterPtr writer) : m_writer(writer)
     {
     }
-    AutoElement(xmlTextWriterPtr writer, const char *name, const string &key = "")
-        : m_writer(writer), m_name(name), m_key(key)
+    AutoElement(xmlTextWriterPtr writer, const char *name, string key = "")
+        : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name);
     }
-    AutoElement(xmlTextWriterPtr writer, const string &name, const string &key = "")
-        : m_writer(writer), m_name(name), m_key(key)
+    AutoElement(xmlTextWriterPtr writer, const string &name, string key = "")
+        : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name.c_str());
     }
