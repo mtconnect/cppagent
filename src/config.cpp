@@ -631,8 +631,8 @@ namespace mtconnect
     m_agent->set_listening_ip(serverIp);
     m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
 
-    for (size_t i = 0; i < m_agent->getDevices().size(); i++)
-      m_agent->getDevices()[i]->m_preserveUuid = defaultPreserve;
+    for (auto device : m_agent->getDevices())
+      device->m_preserveUuid = defaultPreserve;
 
     loadAllowPut(reader);
     loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,

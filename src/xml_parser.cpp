@@ -1077,11 +1077,11 @@ namespace mtconnect
       {
         auto item = parseCuttingItem(root, document);
 
-        for (size_t i = 0; i < ptr->m_items.size(); i++)
+        for (auto &i : ptr->m_items)
         {
-          if (item->m_identity["indices"] == ptr->m_items[i]->m_identity["indices"])
+          if (item->m_identity["indices"] == i->m_identity["indices"])
           {
-            ptr->m_items[i] = item;
+            i = item;
             break;
           }
         }
