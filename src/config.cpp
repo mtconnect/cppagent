@@ -487,7 +487,7 @@ namespace mtconnect
             sin >> one;
             sin >> two;
             sin >> three;
-            if (one == "file" && !three.size())
+            if (one == "file" && three.empty())
               name = two;
             else
               name = one;

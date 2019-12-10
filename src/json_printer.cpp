@@ -184,7 +184,7 @@ namespace mtconnect
       addDouble(constraints, "Maximum", item->getMaximum());
       addDouble(constraints, "Minimum", item->getMinimum());
 
-      if (item->getConstrainedValues().size() > 0)
+      if (!item->getConstrainedValues().empty())
       {
         json values(item->getConstrainedValues());
         constraints["value"] = values;
@@ -256,7 +256,7 @@ namespace mtconnect
   inline void toJson(json &parent, const string &collection, T &list)
   {
     json obj;
-    if (list.size() > 0)
+    if (!list.empty())
     {
       json items = json::array();
       for (auto &item : list)
@@ -287,7 +287,7 @@ namespace mtconnect
       auto &cal = obj->getCalibration();
       toJson(sensor, cal);
 
-      if (obj->getChannels().size() > 0)
+      if (!obj->getChannels().empty())
       {
         json channels = json::array();
 

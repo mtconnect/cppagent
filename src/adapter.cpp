@@ -312,7 +312,7 @@ namespace mtconnect
         {
           getline(toParse, rest);
           value = inputValue + "|" + rest;
-          if (rest.size() > 0)
+          if (!rest.empty())
             value = inputValue + "|" + rest;
           else
             value = inputValue;
