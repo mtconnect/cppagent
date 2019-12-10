@@ -59,7 +59,7 @@ class XmlParserTest : public testing::Test
     }
   }
 
-  XmlParser *m_xmlParser;
+  XmlParser *m_xmlParser{nullptr};
   std::vector<Device *> m_devices;
 };
 

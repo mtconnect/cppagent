@@ -119,7 +119,7 @@ class ConnectorTest : public testing::Test, public dlib::threaded_object
   dlib::scoped_ptr<dlib::listener> m_server;
   dlib::scoped_ptr<dlib::connection> m_serverSocket;
   dlib::scoped_ptr<TestConnector> m_connector;
-  unsigned short m_port;
+  unsigned short m_port{0};
 };
 
 TEST_F(ConnectorTest, Connection)

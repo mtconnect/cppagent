@@ -65,8 +65,8 @@ class ObservationTest : public testing::Test
     m_dataItem2.reset();
   }
 
-  Observation *m_compEventA;
-  Observation *m_compEventB;
+  Observation *m_compEventA{nullptr};
+  Observation *m_compEventB{nullptr};
   std::unique_ptr<DataItem> m_dataItem1;
   std::unique_ptr<DataItem> m_dataItem2;
 

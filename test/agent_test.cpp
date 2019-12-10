@@ -76,11 +76,11 @@ class AgentTest : public testing::Test
 
  public:
   std::unique_ptr<Agent> m_agent;
-  Adapter *m_adapter;
+  Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
-  std::chrono::milliseconds m_delay;
+  std::chrono::milliseconds m_delay{};
 };
 
 TEST_F(AgentTest, Constructor)

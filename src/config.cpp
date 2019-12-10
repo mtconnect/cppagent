@@ -120,7 +120,8 @@ namespace mtconnect
         m_monitorFiles(false),
         m_minimumConfigReloadAge(15),
         m_restart(false),
-        m_exePath("")
+        m_exePath(""),
+        m_pretty(false)
   {
     bool success = false;
     char pathSep = '/';

@@ -51,8 +51,8 @@ class XmlPrinterTest : public testing::Test
     m_printer = nullptr;
   }
 
-  mtconnect::XmlParser *m_config;
-  mtconnect::XmlPrinter *m_printer;
+  mtconnect::XmlParser *m_config{nullptr};
+  mtconnect::XmlPrinter *m_printer{nullptr};
   std::vector<mtconnect::Device *> m_devices;
 
   // Construct a component event and set it as the data item's latest event

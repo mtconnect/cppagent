@@ -58,7 +58,7 @@ namespace mtconnect
 
   Observation::Observation(DataItem &dataItem, uint64_t sequence, const string &time,
                            const string &value)
-      : m_hasAttributes(false)
+      : m_level(ELevel::NORMAL), m_isFloat(false), m_sampleCount(0), m_hasAttributes(false)
   {
     m_dataItem = &dataItem;
     m_isTimeSeries = m_dataItem->isTimeSeries();
@@ -94,7 +94,9 @@ namespace mtconnect
         m_time(observation.m_time),
         m_duration(observation.m_duration),
         m_rest(observation.m_rest),
+        m_level(ELevel::NORMAL),
         m_value(observation.m_value),
+        m_isFloat(false),
         m_isTimeSeries(observation.m_isTimeSeries),
         m_hasAttributes(false),
         m_code(observation.m_code),
