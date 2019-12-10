@@ -197,10 +197,10 @@ namespace mtconnect
     {
       json filters = json::array();
       if (item->hasMinimumDelta())
-        filters.push_back(json::object(
+        filters.emplace_back(json::object(
             {{"Filter", {{"value", item->getFilterValue()}, {"type", "MINIMUM_DELTA"}}}}));
       if (item->hasMinimumPeriod())
-        filters.push_back(
+        filters.emplace_back(
             json::object({{"Filter", {{"value", item->getFilterPeriod()}, {"type", "PERIOD"}}}}));
       obj["Filters"] = filters;
     }
@@ -260,7 +260,7 @@ namespace mtconnect
     {
       json items = json::array();
       for (auto &item : list)
-        items.push_back(toJson(item));
+        items.emplace_back(toJson(item));
 
       parent[collection] = items;
     }
@@ -303,7 +303,7 @@ namespace mtconnect
           toJson(chan, cal);
 
           json chanObj = json::object({{"Channel", chan}});
-          channels.push_back(chanObj);
+          channels.emplace_back(chanObj);
         }
 
         sensor["Channels"] = channels;
@@ -349,7 +349,7 @@ namespace mtconnect
   {
     json devicesDoc = json::array();
     for (const auto device : devices)
-      devicesDoc.push_back(toJson(device));
+      devicesDoc.emplace_back(toJson(device));
 
     json doc =
         json::object({{"MTConnectDevices",
@@ -391,7 +391,7 @@ namespace mtconnect
       value = json::array();
 
       for (auto &e : v)
-        value.push_back(e);
+        value.emplace_back(e);
     }
     else if (observation->isDataSet() && observation->getValue() != "UNAVAILABLE")
     {
@@ -423,12 +423,12 @@ namespace mtconnect
           {
             double v;
             s >> v;
-            value.push_back(v);
+            value.emplace_back(v);
           }
           if (i < 3)
           {
             for (; i < 3; i++)
-              value.push_back(0.0);
+              value.emplace_back(0.0);
           }
         }
         else
@@ -478,7 +478,7 @@ namespace mtconnect
 
     bool addObservation(const ObservationPtr &observation)
     {
-      m_events.push_back(observation);
+      m_events.emplace_back(observation);
       return true;
     }
 
@@ -494,7 +494,7 @@ namespace mtconnect
       {
         json items = json::array();
         for (auto &event : m_events)
-          items.push_back(::mtconnect::toJson(event));
+          items.emplace_back(::mtconnect::toJson(event));
 
         ret = make_pair(m_category, items);
       }
@@ -609,7 +609,7 @@ namespace mtconnect
         json obj = json::object({{"name", m_device->getName()}, {"uuid", m_device->getUuid()}});
         json items = json::array();
         for (auto &comp : m_components)
-          items.push_back(comp.toJson());
+          items.emplace_back(comp.toJson());
         obj["ComponentStreams"] = items;
         ret = json::object({{"DeviceStream", obj}});
       }
@@ -653,7 +653,7 @@ namespace mtconnect
       }
 
       for (auto &ref : devices)
-        streams.push_back(ref.toJson());
+        streams.emplace_back(ref.toJson());
     }
 
     json doc =
@@ -676,7 +676,7 @@ namespace mtconnect
       string ele;
       getline(ss, ele, s);
       if (!ele.empty())
-        array.push_back(ele);
+        array.emplace_back(ele);
     }
 
     return array;
@@ -752,7 +752,7 @@ namespace mtconnect
       json lives = json::array();
       for (auto &s : item->m_lives)
       {
-        lives.push_back(toJson(s));
+        lives.emplace_back(toJson(s));
       }
       obj["ItemLife"] = lives;
     }
@@ -762,7 +762,7 @@ namespace mtconnect
       json measurements = json::array();
       for (auto &m : item->m_measurements)
       {
-        measurements.push_back(json::object({{m.first, toJson(m.second, "Measurement")}}));
+        measurements.emplace_back(json::object({{m.first, toJson(m.second, "Measurement")}}));
       }
 
       obj["Measurements"] = measurements;
@@ -778,7 +778,7 @@ namespace mtconnect
     {
       json status = json::array();
       for (auto &s : tool->m_status)
-        status.push_back(s);
+        status.emplace_back(s);
       obj["CutterStatus"] = status;
     }
 
@@ -787,7 +787,7 @@ namespace mtconnect
       json lives = json::array();
       for (auto &s : tool->m_lives)
       {
-        lives.push_back(toJson(s));
+        lives.emplace_back(toJson(s));
       }
       obj["ToolLife"] = lives;
     }
@@ -803,7 +803,7 @@ namespace mtconnect
       json measurements = json::array();
       for (auto &m : tool->m_measurements)
       {
-        measurements.push_back(json::object({{m.first, toJson(m.second, "Measurement")}}));
+        measurements.emplace_back(json::object({{m.first, toJson(m.second, "Measurement")}}));
       }
 
       obj["Measurements"] = measurements;
@@ -813,7 +813,7 @@ namespace mtconnect
     {
       json items = json::array();
       for (auto &item : tool->m_items)
-        items.push_back(toJson(item));
+        items.emplace_back(toJson(item));
 
       obj["CuttingItems"] = items;
     }
@@ -862,7 +862,7 @@ namespace mtconnect
   {
     json assetDoc = json::array();
     for (const auto asset : assets)
-      assetDoc.push_back(toJson(asset));
+      assetDoc.emplace_back(toJson(asset));
 
     json doc =
         json::object({{"MTConnectAssets",

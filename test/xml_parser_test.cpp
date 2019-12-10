@@ -95,7 +95,7 @@ TEST_F(XmlParserTest, GetDevices)
   const auto &dataItemsMap = device->getDeviceDataItems();
 
   for (auto const &mapItem : dataItemsMap)
-    dataItems.push_back(mapItem.second);
+    dataItems.emplace_back(mapItem.second);
 
   bool hasExec = false, hasZcom = false;
 

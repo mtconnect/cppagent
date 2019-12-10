@@ -854,7 +854,7 @@ TEST_F(AgentTest, AutoAvailable)
   m_adapter->setAutoAvailable(true);
   auto d = m_agent->getDevices()[0];
   std::vector<Device *> devices;
-  devices.push_back(d);
+  devices.emplace_back(d);
 
   {
     PARSE_XML_RESPONSE;
@@ -897,7 +897,7 @@ TEST_F(AgentTest, MultipleDisconnect)
   ASSERT_TRUE(m_adapter);
   auto d = m_agent->getDevices()[0];
   std::vector<Device *> devices;
-  devices.push_back(d);
+  devices.emplace_back(d);
 
   {
     PARSE_XML_RESPONSE;

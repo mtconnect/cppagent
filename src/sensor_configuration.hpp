@@ -111,7 +111,7 @@ namespace mtconnect
 
     void addChannel(const Channel &channel)
     {
-      m_channels.push_back(channel);
+      m_channels.emplace_back(channel);
     }
 
     const std::vector<Channel> &getChannels() const

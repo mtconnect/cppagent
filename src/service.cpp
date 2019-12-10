@@ -55,10 +55,10 @@ namespace mtconnect
 #include <dlib/threads.h>
 
 #include <cctype>
-#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <strsafe.h>
 #include <windows.h>
 
@@ -642,8 +642,8 @@ namespace mtconnect
 #include "fcntl.h"
 #include "sys/stat.h"
 
-#include <iostream>
 #include <csignal>
+#include <iostream>
 
 namespace mtconnect
 {

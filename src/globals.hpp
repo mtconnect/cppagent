@@ -57,8 +57,8 @@ typedef unsigned __int64 uint64_t;
 #define ISNAN(x) std::isnan(x)
 #include <sys/resource.h>
 
-#include <memory>
 #include <cstdint>
+#include <memory>
 #include <unistd.h>
 #endif
 

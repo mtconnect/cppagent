@@ -570,24 +570,24 @@ namespace mtconnect
     if (reader.is_key_defined("Devices"))
     {
       auto fileName = reader["Devices"];
-      devices_files.push_back(fileName);
+      devices_files.emplace_back(fileName);
 
       if (!m_exePath.empty() && !fileName.empty() && fileName[0] != '/' && fileName[0] != '\\' &&
           fileName[1] != ':')
       {
-        devices_files.push_back(m_exePath + reader["Devices"]);
+        devices_files.emplace_back(m_exePath + reader["Devices"]);
       }
     }
 
-    devices_files.push_back("Devices.xml");
+    devices_files.emplace_back("Devices.xml");
 
     if (!m_exePath.empty())
-      devices_files.push_back(m_exePath + "Devices.xml");
+      devices_files.emplace_back(m_exePath + "Devices.xml");
 
-    devices_files.push_back("probe.xml");
+    devices_files.emplace_back("probe.xml");
 
     if (!m_exePath.empty())
-      devices_files.push_back(m_exePath + "probe.xml");
+      devices_files.emplace_back(m_exePath + "probe.xml");
 
     m_devicesFile.clear();
 

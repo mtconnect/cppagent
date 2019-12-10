@@ -49,7 +49,7 @@ class TestConnector : public Connector
   void processData(const std::string &data) override
   {
     m_data = data;
-    m_list.push_back(m_data);
+    m_list.emplace_back(m_data);
   }
 
   void protocolCommand(const std::string &data) override

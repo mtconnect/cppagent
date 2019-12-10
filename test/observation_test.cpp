@@ -247,11 +247,11 @@ TEST_F(ObservationTest, StlLists)
   auto event = new Observation(*m_dataItem1, 123, time, value);
 
   ASSERT_EQ(1, (int)event->refCount());
-  vector.push_back(event);
+  vector.emplace_back(event);
   ASSERT_EQ(2, (int)event->refCount());
 
   std::list<ObservationPtr> list;
-  list.push_back(event);
+  list.emplace_back(event);
   ASSERT_EQ(3, (int)event->refCount());
 }
 

@@ -22,8 +22,8 @@
 #include "data_item.hpp"
 #include "device.hpp"
 
-#include <stdexcept>
 #include <cstdlib>
+#include <stdexcept>
 
 using namespace std;
 
@@ -125,7 +125,7 @@ namespace mtconnect
 
   void Component::addDataItem(DataItem &dataItem)
   {
-    m_dataItems.push_back(&dataItem);
+    m_dataItems.emplace_back(&dataItem);
   }
 
   void Component::resolveReferences()
