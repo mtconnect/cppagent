@@ -1,0 +1,19 @@
+[Unit]
+Description=MTConnect Agent
+Requires/After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/etc/mtconnect/bin
+ExecStart=/usr/local/bin/agent run /etc/mtconnect/bin/agent.cfg
+User=mtconnect
+Group=mtconnect
+Restart=always
+RestartSec=2
+StartLimitInterval=90s
+StartLimitBurst=3
+StandardOutput=journal
+LimitCORE=10
+
+[Install]
+WantedBy=default.target

@@ -58,7 +58,8 @@ end
 File.open(ARGV[1], 'w') do |out|
   dest = URI.parse(ARGV[0])
   client = Net::HTTP.new(dest.host, dest.port)
-
+  client.use_ssl = dest.scheme == 'https'
+  
   path = dest.path
   path += '/' unless path[-1] == ?/
   rootPath = path.dup

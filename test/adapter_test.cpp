@@ -1,67 +1,34 @@
-/*
-* Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above copyright
-*       notice, this list of conditions and the following disclaimer in the
-*       documentation and/or other materials provided with the distribution.
-*     * Neither the name of the AMT nor the
-*       names of its contributors may be used to endorse or promote products
-*       derived from this software without specific prior written permission.
-*
-* DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
-* BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
-* AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
-* RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
-* (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
-* WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
-* LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
-* MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+//
+// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
 
-* LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
-* PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
-* OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
-* CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
-* WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
-* THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
-* SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
-
-#include "adapter_test.hpp"
+// Ensure that gtest is the first header otherwise Windows raises an error
+#include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "adapter.hpp"
 
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
 
-
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(AdapterTest);
-
-using namespace std;
-
-/* ComponentTest public methods */
-void AdapterTest::setUp()
+TEST(AdapterTest, EscapedLine)
 {
-}
-
-void AdapterTest::tearDown()
-{
-}
-
-/* ComponentTest protected methods */
-void AdapterTest::testAdapter()
-{
-}
-
-void AdapterTest::testEscapedLine()
-{
-  std::map<std::string, std::vector<std::string> > data;
+  std::map<std::string, std::vector<std::string>> data;
   // correctly escaped
   data["\"a\\|b\""] = {"a|b"};
   data["\"a\\|b\"|z"] = {"a|b", "z"};
@@ -110,14 +77,14 @@ void AdapterTest::testEscapedLine()
   data["y|\"a\\|z"] = {"y", "\"a\\", "z"};
   data["y|\"a\\|\"z"] = {"y", "\"a\\", "\"z"};
 
-  for (auto it = data.begin(); it != data.end(); ++it)
+  for (const auto &test : data)
   {
     std::string value;
-    std::istringstream toParse(it->first);
-    for (const std::string &expected : it->second)
+    std::istringstream toParse(test.first);
+    for (const std::string &expected : test.second)
     {
-      Adapter::getEscapedLine(toParse, value);
-      CPPUNIT_ASSERT_EQUAL_MESSAGE("Source  : " + it->first, expected, value);
+      mtconnect::Adapter::getEscapedLine(toParse, value);
+      ASSERT_EQ(expected, value);
     }
   }
 }

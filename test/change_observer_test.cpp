@@ -1,144 +1,185 @@
-/*
-* Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above copyright
-*       notice, this list of conditions and the following disclaimer in the
-*       documentation and/or other materials provided with the distribution.
-*     * Neither the name of the AMT nor the
-*       names of its contributors may be used to endorse or promote products
-*       derived from this software without specific prior written permission.
-*
-* DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
-* BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
-* AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
-* RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
-* (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
-* WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
-* LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
-* MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+//
+// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
 
-* LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
-* PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
-* OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
-* CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
-* WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
-* THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
-* SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
+// Ensure that gtest is the first header otherwise Windows raises an error
+#include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "change_observer_test.hpp"
-#include <dlib/misc_api.h>
+#include "change_observer.hpp"
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(ChangeObserverTest);
+#include <chrono>
+#include <thread>
 
-using namespace std;
-
-void ChangeObserverTest::setUp()
+namespace
 {
-  mSignaler = new ChangeSignaler;
-}
-
-void ChangeObserverTest::tearDown()
-{
-  delete mSignaler;
-}
-
-void ChangeObserverTest::testAddObserver()
-{
-  ChangeObserver obj;
-  
-  CPPUNIT_ASSERT(!mSignaler->hasObserver(&obj));
-  mSignaler->addObserver(&obj);
-  CPPUNIT_ASSERT(mSignaler->hasObserver(&obj));
-}
-
-static void signaler(void *aObj)
-{
-  ChangeSignaler *s = (ChangeSignaler*) aObj;
-  dlib::sleep(1000);
-  s->signalObservers(100);
-}
-
-void ChangeObserverTest::testSignalObserver()
-{
-  ChangeObserver obj;
-  
-  mSignaler->addObserver(&obj);
-  dlib::create_new_thread(signaler, mSignaler);
-  CPPUNIT_ASSERT(obj.wait(2000));
-  obj.reset();
-  
-  dlib::create_new_thread(signaler, mSignaler);
-  CPPUNIT_ASSERT(!obj.wait(500)); 
-  
-  // Wait for things to clean up...
-  dlib::sleep(1000);
-}
-
-void ChangeObserverTest::testCleanup()
-{
-  ChangeObserver *obj;
-
+  class ChangeObserverTest : public testing::Test
   {
-    obj = new ChangeObserver;
-    mSignaler->addObserver(obj);
-    CPPUNIT_ASSERT(mSignaler->hasObserver(obj));
-    delete obj;
+   protected:
+    void SetUp() override
+    {
+      m_signaler = std::make_unique<mtconnect::ChangeSignaler>();
+    }
+
+    void TearDown() override
+    {
+      m_signaler.reset();
+    }
+
+    std::unique_ptr<mtconnect::ChangeSignaler> m_signaler;
+  };
+
+  TEST_F(ChangeObserverTest, AddObserver)
+  {
+    mtconnect::ChangeObserver changeObserver;
+
+    ASSERT_FALSE(m_signaler->hasObserver(&changeObserver));
+    m_signaler->addObserver(&changeObserver);
+    ASSERT_TRUE(m_signaler->hasObserver(&changeObserver));
   }
-  
-  CPPUNIT_ASSERT(!mSignaler->hasObserver(obj));
-}
 
-static void signaler2(void *aObj)
-{
-  ChangeSignaler *s = (ChangeSignaler*) aObj;
-  s->signalObservers(100);
-  s->signalObservers(200);
-  s->signalObservers(300);
-}
+  TEST_F(ChangeObserverTest, SignalObserver)
+  {
+    using namespace std::chrono_literals;
+    mtconnect::ChangeObserver changeObserver;
 
-void ChangeObserverTest::testChangeSequence()
-{
-  ChangeObserver obj;
-  
-  mSignaler->addObserver(&obj);
-  CPPUNIT_ASSERT(!obj.wasSignaled());
-  dlib::create_new_thread(signaler2, mSignaler);
-  CPPUNIT_ASSERT(obj.wait(2000));
-  CPPUNIT_ASSERT(obj.wasSignaled());
-  
-  CPPUNIT_ASSERT_EQUAL((uint64_t) 100ull, obj.getSequence());
-  
-  // Wait for things to clean up...
-  dlib::sleep(1000);
-}
+    auto const expectedExeTime = 500ms;
+    auto const expectedSeq = uint64_t{100};
+    auto threadLambda = [&expectedExeTime,
+                         &expectedSeq](mtconnect::ChangeSignaler *changeSignaler) {
+      std::this_thread::sleep_for(expectedExeTime);
+      changeSignaler->signalObservers(expectedSeq);
+    };
 
-static void signaler3(void *aObj)
-{
-  ChangeSignaler *s = (ChangeSignaler*) aObj;
-  s->signalObservers(100);
-  s->signalObservers(200);
-  s->signalObservers(300);
-  s->signalObservers(30);
-}
+    m_signaler->addObserver(&changeObserver);
+    ASSERT_FALSE(changeObserver.wasSignaled());
+    auto workerThread = std::thread{threadLambda, m_signaler.get()};
 
-void ChangeObserverTest::testChangeSequence2()
-{
-  ChangeObserver obj;
-  
-  mSignaler->addObserver(&obj);
-  dlib::create_new_thread(signaler3, mSignaler);
-  CPPUNIT_ASSERT(obj.wait(2000));
-  dlib::sleep(500);
+    auto startTime = std::chrono::system_clock::now();
+    ASSERT_TRUE(changeObserver.wait(
+        (expectedExeTime * 2).count()));  // Wait to be signalled within twice expected time
 
-  CPPUNIT_ASSERT_EQUAL((uint64_t) 30ull, obj.getSequence());
-  
-  // Wait for things to clean up...
-  dlib::sleep(1000);
-}
+    // The worker thread was put to sleep for 500 milli-seconds before signalling
+    // observers, so at very least the duration should be greater than 500 milli-seconds.
+    // The observer should also have received the sequence number 100
+    auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - startTime);
+    workerThread.join();
+    ASSERT_LE(expectedExeTime.count(), durationMs.count());
+    ASSERT_EQ(expectedSeq, changeObserver.getSequence());
+    ASSERT_TRUE(changeObserver.wasSignaled());
+
+    // Run the same test again but only wait for a shorter period than the
+    // thread will take to execute. The observer should not be signalled
+    // and the call should fail.
+    changeObserver.reset();
+    ASSERT_FALSE(changeObserver.wasSignaled());
+    auto workerThread2 = std::thread{threadLambda, m_signaler.get()};
+    try
+    {
+      auto waitResult = changeObserver.wait(
+          (expectedExeTime / 2).count());  // Only wait a maximum of 1 / 2 the expected time
+
+      // We can be spuriously woken up, so check that the work was not finished
+      if (waitResult && !changeObserver.wasSignaled())
+        waitResult = false;
+
+      ASSERT_FALSE(waitResult);
+      ASSERT_FALSE(changeObserver.wasSignaled());
+      workerThread2.join();
+    }
+    catch (...)
+    {
+      workerThread2.join();
+      throw;
+    }
+  }
+
+  TEST_F(ChangeObserverTest, Cleanup)
+  {
+    mtconnect::ChangeObserver *changeObserver = nullptr;
+
+    {
+      changeObserver = new mtconnect::ChangeObserver;
+      m_signaler->addObserver(changeObserver);
+      ASSERT_TRUE(m_signaler->hasObserver(changeObserver));
+      delete changeObserver;  // Not setting to nullptr so we can test observer was removed
+    }
+
+    ASSERT_FALSE(m_signaler->hasObserver(changeObserver));
+  }
+
+  TEST_F(ChangeObserverTest, ChangeSequence)
+  {
+    mtconnect::ChangeObserver changeObserver;
+
+    m_signaler->addObserver(&changeObserver);
+    ASSERT_FALSE(changeObserver.wasSignaled());
+
+    auto threadLambda = [](mtconnect::ChangeSignaler *changeSignaler) {
+      changeSignaler->signalObservers(uint64_t{100});
+      changeSignaler->signalObservers(uint64_t{200});
+      changeSignaler->signalObservers(uint64_t{300});
+    };
+    auto workerThread = std::thread{threadLambda, m_signaler.get()};
+    try
+    {
+      ASSERT_TRUE(changeObserver.wait(2000));
+      ASSERT_TRUE(changeObserver.wasSignaled());
+
+      ASSERT_EQ(uint64_t{100}, changeObserver.getSequence());
+
+      // Wait for things to clean up...
+      workerThread.join();
+    }
+    catch (...)
+    {
+      workerThread.join();
+      throw;
+    }
+  }
+
+  TEST_F(ChangeObserverTest, ChangeSequence2)
+  {
+    using namespace std::chrono_literals;
+    mtconnect::ChangeObserver changeObserver;
+
+    m_signaler->addObserver(&changeObserver);
+
+    auto threadLambda = [](mtconnect::ChangeSignaler *changeSignaler) {
+      changeSignaler->signalObservers(uint64_t{100});
+      changeSignaler->signalObservers(uint64_t{200});
+      changeSignaler->signalObservers(uint64_t{300});
+      changeSignaler->signalObservers(uint64_t{30});
+    };
+    auto workerThread = std::thread{threadLambda, m_signaler.get()};
+    try
+    {
+      ASSERT_TRUE(changeObserver.wait(2000));
+      ASSERT_TRUE(changeObserver.wasSignaled());
+      std::this_thread::sleep_for(50ms);
+      ASSERT_EQ(uint64_t{30}, changeObserver.getSequence());
+
+      // Wait for things to clean up...
+      workerThread.join();
+    }
+    catch (...)
+    {
+      workerThread.join();
+      throw;
+    }
+  }
+}  // namespace

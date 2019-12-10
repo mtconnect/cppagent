@@ -1,177 +1,171 @@
-/*
-* Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above copyright
-*       notice, this list of conditions and the following disclaimer in the
-*       documentation and/or other materials provided with the distribution.
-*     * Neither the name of the AMT nor the
-*       names of its contributors may be used to endorse or promote products
-*       derived from this software without specific prior written permission.
-*
-* DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
-* BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
-* AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
-* RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
-* (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
-* WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
-* LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
-* MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+//
+// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
 
-* LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
-* PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
-* OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
-* CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
-* WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
-* THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
-* SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
+// Ensure that gtest is the first header otherwise Windows raises an error
+#include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "data_item_test.hpp"
-#include <dlib/misc_api.h>
 #include "adapter.hpp"
+#include "data_item.hpp"
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(DataItemTest);
+#include <dlib/misc_api.h>
 
 using namespace std;
+using namespace mtconnect;
 
-void DataItemTest::setUp()
+class DataItemTest : public testing::Test
 {
-  std::map<string, string> attributes1, attributes2, attributes3;
-  
-  attributes1["id"] = "1";
-  attributes1["name"] = "DataItemTest1";
-  attributes1["type"] = "ACCELERATION";
-  attributes1["category"] = "SAMPLE";
-  attributes1["nativeUnits"] = "PERCENT";
-  a = new DataItem(attributes1);
-  
-  attributes2["id"] = "3";
-  attributes2["name"] = "DataItemTest2";
-  attributes2["type"] = "ACCELERATION";
-  attributes2["subType"] = "ACTUAL";
-  attributes2["category"] = "EVENT";
-  attributes2["units"] = "REVOLUTION/MINUTE";
-  attributes2["nativeScale"] = "1.0";
-  attributes2["significantDigits"] = "1";
-  attributes2["coordinateSystem"] = "testCoordinateSystem";
-  b = new DataItem(attributes2);
+ protected:
+  void SetUp() override
+  {
+    std::map<string, string> attributes1, attributes2, attributes3;
 
-  attributes3["id"] = "4";
-  attributes3["name"] = "DataItemTest3";
-  attributes3["type"] = "LOAD";
-  attributes3["category"] = "CONDITION";
-  c = new DataItem(attributes3);
+    attributes1["id"] = "1";
+    attributes1["name"] = "DataItemTest1";
+    attributes1["type"] = "ACCELERATION";
+    attributes1["category"] = "SAMPLE";
+    attributes1["nativeUnits"] = "PERCENT";
+    m_dataItemA = make_unique<DataItem>(attributes1);
+
+    attributes2["id"] = "3";
+    attributes2["name"] = "DataItemTest2";
+    attributes2["type"] = "ACCELERATION";
+    attributes2["subType"] = "ACTUAL";
+    attributes2["category"] = "EVENT";
+    attributes2["units"] = "REVOLUTION/MINUTE";
+    attributes2["nativeScale"] = "1.0";
+    attributes2["significantDigits"] = "1";
+    attributes2["coordinateSystem"] = "testCoordinateSystem";
+    m_dataItemB = make_unique<DataItem>(attributes2);
+
+    attributes3["id"] = "4";
+    attributes3["name"] = "DataItemTest3";
+    attributes3["type"] = "LOAD";
+    attributes3["category"] = "CONDITION";
+    m_dataItemC = make_unique<DataItem>(attributes3);
+  }
+
+  void TearDown() override
+  {
+    m_dataItemA.reset();
+    m_dataItemB.reset();
+    m_dataItemC.reset();
+  }
+
+  std::unique_ptr<DataItem> m_dataItemA;
+  std::unique_ptr<DataItem> m_dataItemB;
+  std::unique_ptr<DataItem> m_dataItemC;
+};
+
+TEST_F(DataItemTest, Getters)
+{
+  ASSERT_EQ((string) "1", m_dataItemA->getId());
+  ASSERT_EQ((string) "DataItemTest1", m_dataItemA->getName());
+  ASSERT_EQ((string) "ACCELERATION", m_dataItemA->getType());
+  ASSERT_EQ((string) "Acceleration", m_dataItemA->getElementName());
+  ASSERT_EQ((string) "PERCENT", m_dataItemA->getNativeUnits());
+  ASSERT_TRUE(m_dataItemA->getSubType().empty());
+  ASSERT_TRUE(!m_dataItemA->hasNativeScale());
+
+  ASSERT_EQ((string) "3", m_dataItemB->getId());
+  ASSERT_EQ((string) "DataItemTest2", m_dataItemB->getName());
+  ASSERT_EQ((string) "ACCELERATION", m_dataItemB->getType());
+  ASSERT_EQ((string) "Acceleration", m_dataItemB->getElementName());
+  ASSERT_EQ((string) "ACTUAL", m_dataItemB->getSubType());
+  ASSERT_EQ(m_dataItemB->getNativeUnits(), m_dataItemB->getUnits());
+  ASSERT_EQ(1.0f, m_dataItemB->getNativeScale());
 }
 
-void DataItemTest::tearDown()
+TEST_F(DataItemTest, GetAttributes)
 {
-  delete a;
-  delete b;
-  delete c;
+  const auto &attributes1 = m_dataItemA->getAttributes();
+  ASSERT_EQ((string) "1", attributes1.at("id"));
+  ASSERT_EQ((string) "DataItemTest1", attributes1.at("name"));
+  ASSERT_EQ((string) "ACCELERATION", attributes1.at("type"));
+  ASSERT_TRUE(attributes1.find("subType") == attributes1.end());
+  ASSERT_EQ((string) "PERCENT", attributes1.at("nativeUnits"));
+  ASSERT_TRUE(attributes1.find("getNativeScale") == attributes1.end());
+  ASSERT_TRUE(attributes1.find("coordinateSystem") == attributes1.end());
+
+  const auto &attributes2 = m_dataItemB->getAttributes();
+  ASSERT_EQ((string) "3", attributes2.at("id"));
+  ASSERT_EQ((string) "DataItemTest2", attributes2.at("name"));
+  ASSERT_EQ((string) "ACCELERATION", attributes2.at("type"));
+  ASSERT_EQ((string) "ACTUAL", attributes2.at("subType"));
+  ASSERT_EQ(attributes2.at("nativeUnits"), attributes2.at("units"));
+  ASSERT_EQ((string) "1", attributes2.at("nativeScale"));
+  ASSERT_EQ((string) "testCoordinateSystem", attributes2.at("coordinateSystem"));
 }
 
-void DataItemTest::testGetters()
+TEST_F(DataItemTest, HasNameAndSource)
 {
-  CPPUNIT_ASSERT_EQUAL((string) "1", a->getId());
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", a->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", a->getType());
-  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", a->getElementName());
-  CPPUNIT_ASSERT_EQUAL((string) "PERCENT", a->getNativeUnits());
-  CPPUNIT_ASSERT(a->getSubType().empty());
-  CPPUNIT_ASSERT(!a->hasNativeScale());
-  
-  CPPUNIT_ASSERT_EQUAL((string) "3", b->getId());
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", b->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", b->getType());
-  CPPUNIT_ASSERT_EQUAL((string) "Acceleration", b->getElementName());
-  CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", b->getSubType());
-  CPPUNIT_ASSERT_EQUAL(b->getNativeUnits(), b->getUnits());
-  CPPUNIT_ASSERT_EQUAL(1.0f, b->getNativeScale());
+  ASSERT_TRUE(m_dataItemA->hasName("DataItemTest1"));
+  ASSERT_TRUE(m_dataItemB->hasName("DataItemTest2"));
+
+  ASSERT_TRUE(m_dataItemA->getSource().empty());
+  ASSERT_TRUE(m_dataItemB->getSource().empty());
+
+  ASSERT_TRUE(!m_dataItemB->hasName("DataItemTest2Source"));
+  ASSERT_EQ((string) "DataItemTest2", m_dataItemB->getSourceOrName());
+
+  m_dataItemB->addSource("DataItemTest2Source", "", "", "");
+  ASSERT_TRUE(m_dataItemB->hasName("DataItemTest2Source"));
+  ASSERT_EQ((string) "DataItemTest2Source", m_dataItemB->getSource());
+  ASSERT_EQ((string) "DataItemTest2Source", m_dataItemB->getSourceOrName());
 }
 
-void DataItemTest::testGetAttributes()
+TEST_F(DataItemTest, IsSample)
 {
-  std::map<string, string> &attributes1 = *a->getAttributes();
-  CPPUNIT_ASSERT_EQUAL((string) "1", attributes1["id"]);
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest1", attributes1["name"]);
-  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes1["type"]);
-  CPPUNIT_ASSERT(attributes1["subType"].empty());
-  CPPUNIT_ASSERT_EQUAL((string) "PERCENT", attributes1["nativeUnits"]);
-  CPPUNIT_ASSERT(attributes1["getNativeScale"].empty());
-  CPPUNIT_ASSERT(attributes1["coordinateSystem"].empty());
-  
-  std::map<string, string> &attributes2 = *b->getAttributes();
-  CPPUNIT_ASSERT_EQUAL((string) "3", attributes2["id"]);
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", attributes2["name"]);
-  CPPUNIT_ASSERT_EQUAL((string) "ACCELERATION", attributes2["type"]);
-  CPPUNIT_ASSERT_EQUAL((string) "ACTUAL", attributes2["subType"]);
-  CPPUNIT_ASSERT_EQUAL(attributes2["nativeUnits"], attributes2["units"]);
-  CPPUNIT_ASSERT_EQUAL((string) "1", attributes2["nativeScale"]);
-  CPPUNIT_ASSERT_EQUAL((string) "testCoordinateSystem",
-    attributes2["coordinateSystem"]);
+  ASSERT_TRUE(m_dataItemA->isSample());
+  ASSERT_TRUE(!m_dataItemB->isSample());
 }
 
-void DataItemTest::testHasNameAndSource()
-{
-  CPPUNIT_ASSERT(a->hasName("DataItemTest1"));
-  CPPUNIT_ASSERT(b->hasName("DataItemTest2"));
-  
-  CPPUNIT_ASSERT(a->getSource().empty());
-  CPPUNIT_ASSERT(b->getSource().empty());
-  
-  CPPUNIT_ASSERT(!b->hasName("DataItemTest2Source"));
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2", b->getSourceOrName());
-  
-  b->addSource("DataItemTest2Source");
-  CPPUNIT_ASSERT(b->hasName("DataItemTest2Source"));
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", b->getSource());
-  CPPUNIT_ASSERT_EQUAL((string) "DataItemTest2Source", b->getSourceOrName());
-}
-
-void DataItemTest::testIsSample()
-{
-  CPPUNIT_ASSERT(a->isSample());
-  CPPUNIT_ASSERT(!b->isSample());
-}
-
-void DataItemTest::testComponent()
+TEST_F(DataItemTest, Component)
 {
   std::map<string, string> attributes1;
   attributes1["id"] = "3";
   attributes1["name"] = "AxesTestA";
   attributes1["uuid"] = "UniversalUniqueIdA";
   attributes1["sampleRate"] = "100.11";
-  
-  Component axes ("Axes", attributes1);
-  a->setComponent(axes);
-  
-  CPPUNIT_ASSERT_EQUAL(&axes, a->getComponent());
+
+  mtconnect::Component axes("Axes", attributes1);
+  m_dataItemA->setComponent(axes);
+
+  ASSERT_TRUE(&axes == m_dataItemA->getComponent());
 }
 
-void DataItemTest::testGetCamel()
+TEST_F(DataItemTest, GetCamel)
 {
   string prefix;
-  CPPUNIT_ASSERT(DataItem::getCamelType("", prefix).empty());
-  CPPUNIT_ASSERT_EQUAL((string) "Camels", DataItem::getCamelType("CAMELS", prefix));
-  CPPUNIT_ASSERT(prefix.empty());
-  
-  // Test the one exception to the rules...
-  CPPUNIT_ASSERT_EQUAL((string) "PH", DataItem::getCamelType("PH", prefix));
+  ASSERT_TRUE(DataItem::getCamelType("", prefix).empty());
+  ASSERT_EQ((string) "Camels", DataItem::getCamelType("CAMELS", prefix));
+  ASSERT_TRUE(prefix.empty());
 
-  CPPUNIT_ASSERT_EQUAL((string) "CamelCase", DataItem::getCamelType("CAMEL_CASE", prefix));
-  CPPUNIT_ASSERT_EQUAL((string) "ABCc", DataItem::getCamelType("A_B_CC", prefix));
+  // Test the one exception to the rules...
+  ASSERT_EQ((string) "PH", DataItem::getCamelType("PH", prefix));
+
+  ASSERT_EQ((string) "CamelCase", DataItem::getCamelType("CAMEL_CASE", prefix));
+  ASSERT_EQ((string) "ABCc", DataItem::getCamelType("A_B_CC", prefix));
   prefix.clear();
-  CPPUNIT_ASSERT_EQUAL((string) "CamelCase", DataItem::getCamelType("x:CAMEL_CASE", prefix));
-  CPPUNIT_ASSERT_EQUAL((string) "x", prefix);
+  ASSERT_EQ((string) "CamelCase", DataItem::getCamelType("x:CAMEL_CASE", prefix));
+  ASSERT_EQ((string) "x", prefix);
 }
 
-void DataItemTest::testConversion()
+TEST_F(DataItemTest, Conversion)
 {
   std::map<string, string> attributes1;
   attributes1["id"] = "p";
@@ -183,9 +177,9 @@ void DataItemTest::testConversion()
   attributes1["coordinateSystem"] = "testCoordinateSystem";
   DataItem item1(attributes1);
   item1.conversionRequired();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "25.4 50.8 76.2", item1.convertValue("1 2 3"));
-  CPPUNIT_ASSERT_EQUAL((string) "25.4 50.8 76.2", item1.convertValue("1  2  3"));
+
+  ASSERT_EQ((string) "25.4 50.8 76.2", item1.convertValue("1 2 3"));
+  ASSERT_EQ((string) "25.4 50.8 76.2", item1.convertValue("1  2  3"));
 
   std::map<string, string> attributes2;
   attributes2["id"] = "p";
@@ -197,9 +191,9 @@ void DataItemTest::testConversion()
   attributes2["coordinateSystem"] = "testCoordinateSystem";
   DataItem item2(attributes2);
   item2.conversionRequired();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "57.29578 114.5916 171.8873", item2.convertValue("1 2 3"));
-  
+
+  ASSERT_EQ((string) "57.29578 114.5916 171.8873", item2.convertValue("1 2 3"));
+
   std::map<string, string> attributes3;
   attributes3["id"] = "p";
   attributes3["name"] = "position";
@@ -211,9 +205,9 @@ void DataItemTest::testConversion()
   attributes3["coordinateSystem"] = "testScale";
   DataItem item3(attributes3);
   item3.conversionRequired();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "1.3", item3.convertValue("13"));
-  
+
+  ASSERT_EQ((string) "1.3", item3.convertValue("13"));
+
   std::map<string, string> attributes4;
   attributes4["id"] = "p";
   attributes4["name"] = "position";
@@ -224,30 +218,29 @@ void DataItemTest::testConversion()
   attributes4["coordinateSystem"] = "testScale";
   DataItem item4(attributes4);
   item4.conversionRequired();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "130", item4.convertValue("0.13"));
-  
+
+  ASSERT_EQ((string) "130", item4.convertValue("0.13"));
+
   DataItem item5(attributes4);
-  
-  Adapter a("", "", 0);
-  a.setConversionRequired(false);
-  
-  item5.setDataSource(&a);
-  CPPUNIT_ASSERT(!item5.conversionRequired());
-  
-  CPPUNIT_ASSERT_EQUAL((string) "0.13", item5.convertValue("0.13"));
 
+  Adapter adapter("", "", 0);
+  adapter.setConversionRequired(false);
+
+  item5.setDataSource(&adapter);
+  ASSERT_TRUE(!item5.conversionRequired());
+
+  ASSERT_EQ((string) "0.13", item5.convertValue("0.13"));
 }
 
-void DataItemTest::testCondition()
+TEST_F(DataItemTest, Condition)
 {
-  CPPUNIT_ASSERT_EQUAL(DataItem::CONDITION, c->getCategory());
+  ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory());
 }
 
-void DataItemTest::testTimeSeries()
+TEST_F(DataItemTest, TimeSeries)
 {
   std::map<string, string> attributes1;
-  
+
   attributes1["id"] = "1";
   attributes1["name"] = "DataItemTest1";
   attributes1["type"] = "POSITION";
@@ -255,10 +248,10 @@ void DataItemTest::testTimeSeries()
   attributes1["units"] = "MILLIMETER";
   attributes1["nativeUnits"] = "MILLIMETER";
   attributes1["representation"] = "TIME_SERIES";
-  DataItem *d = new DataItem(attributes1);
+  auto d = make_unique<DataItem>(attributes1);
 
-  CPPUNIT_ASSERT_EQUAL(string("PositionTimeSeries"), d->getElementName());
-  delete d;
+  ASSERT_EQ(string("PositionTimeSeries"), d->getElementName());
+  d.reset();
 
   attributes1.clear();
   attributes1["id"] = "1";
@@ -268,16 +261,16 @@ void DataItemTest::testTimeSeries()
   attributes1["units"] = "MILLIMETER";
   attributes1["nativeUnits"] = "MILLIMETER";
   attributes1["representation"] = "VALUE";
-  d = new DataItem(attributes1);
+  d = make_unique<DataItem>(attributes1);
 
-  CPPUNIT_ASSERT_EQUAL(string("Position"), d->getElementName());
-  delete d;
+  ASSERT_EQ(string("Position"), d->getElementName());
+  d.reset();
 }
 
-void DataItemTest::testStatistic()
+TEST_F(DataItemTest, Statistic)
 {
   std::map<string, string> attributes1;
-  
+
   attributes1["id"] = "1";
   attributes1["name"] = "DataItemTest1";
   attributes1["type"] = "POSITION";
@@ -285,16 +278,16 @@ void DataItemTest::testStatistic()
   attributes1["units"] = "MILLIMETER";
   attributes1["nativeUnits"] = "MILLIMETER";
   attributes1["statistic"] = "AVERAGE";
-  DataItem *d = new DataItem(attributes1);
+  auto d = make_unique<DataItem>(attributes1);
 
-  CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), d->getStatistic());
-  delete d;
+  ASSERT_EQ(string("AVERAGE"), d->getStatistic());
+  d.reset();
 }
 
-void DataItemTest::testSampleRate()
+TEST_F(DataItemTest, SampleRate)
 {
   std::map<string, string> attributes1;
-  
+
   attributes1["id"] = "1";
   attributes1["name"] = "DataItemTest1";
   attributes1["type"] = "POSITION";
@@ -304,37 +297,36 @@ void DataItemTest::testSampleRate()
   attributes1["statistic"] = "AVERAGE";
   attributes1["representation"] = "TIME_SERIES";
   attributes1["sampleRate"] = "42000";
-  DataItem *d = new DataItem(attributes1);
+  auto d = make_unique<DataItem>(attributes1);
 
-  CPPUNIT_ASSERT_EQUAL(string("42000"), d->getSampleRate());
-  delete d;
+  ASSERT_EQ(string("42000"), d->getSampleRate());
+  d.reset();
 }
 
-void DataItemTest::testDuplicates()
+TEST_F(DataItemTest, Duplicates)
 {
-  CPPUNIT_ASSERT(!a->isDuplicate("FOO"));
-  CPPUNIT_ASSERT(a->isDuplicate("FOO"));
-  CPPUNIT_ASSERT(!a->isDuplicate("FOO2"));
+  ASSERT_TRUE(!m_dataItemA->isDuplicate("FOO"));
+  ASSERT_TRUE(m_dataItemA->isDuplicate("FOO"));
+  ASSERT_TRUE(!m_dataItemA->isDuplicate("FOO2"));
 }
 
-void DataItemTest::testFilter()
+TEST_F(DataItemTest, Filter)
 {
-  a->setMinmumDelta(5.0);
-  
-  CPPUNIT_ASSERT(!a->isFiltered(5.0, 0.0));
-  CPPUNIT_ASSERT(a->isFiltered(6.0, 0.0));
-  CPPUNIT_ASSERT(!a->isFiltered(10.1, 0.0));
-  CPPUNIT_ASSERT(a->isFiltered(6.0, 0.0));
-  CPPUNIT_ASSERT(!a->isFiltered(5.0, 0.0));
-  
+  m_dataItemA->setMinmumDelta(5.0);
+
+  ASSERT_TRUE(!m_dataItemA->isFiltered(5.0, 0.0));
+  ASSERT_TRUE(m_dataItemA->isFiltered(6.0, 0.0));
+  ASSERT_TRUE(!m_dataItemA->isFiltered(10.1, 0.0));
+  ASSERT_TRUE(m_dataItemA->isFiltered(6.0, 0.0));
+  ASSERT_TRUE(!m_dataItemA->isFiltered(5.0, 0.0));
+
   // Test period
-  a->setMinmumDelta(1.0);
-  a->setMinmumPeriod(1.0);
-  
-  CPPUNIT_ASSERT(!a->isFiltered(1.0, 0.0));
-  CPPUNIT_ASSERT(a->isFiltered(3.0, 0.1));
-  CPPUNIT_ASSERT(!a->isFiltered(5, 1.1));
-  CPPUNIT_ASSERT(a->isFiltered(7.0, 2.0));
-  CPPUNIT_ASSERT(!a->isFiltered(9.0, 2.2));
-  
+  m_dataItemA->setMinmumDelta(1.0);
+  m_dataItemA->setMinmumPeriod(1.0);
+
+  ASSERT_TRUE(!m_dataItemA->isFiltered(1.0, 0.0));
+  ASSERT_TRUE(m_dataItemA->isFiltered(3.0, 0.1));
+  ASSERT_TRUE(!m_dataItemA->isFiltered(5, 1.1));
+  ASSERT_TRUE(m_dataItemA->isFiltered(7.0, 2.0));
+  ASSERT_TRUE(!m_dataItemA->isFiltered(9.0, 2.2));
 }

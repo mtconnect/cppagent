@@ -1,482 +1,565 @@
-/*
-* Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above copyright
-*       notice, this list of conditions and the following disclaimer in the
-*       documentation and/or other materials provided with the distribution.
-*     * Neither the name of the AMT nor the
-*       names of its contributors may be used to endorse or promote products
-*       derived from this software without specific prior written permission.
-*
-* DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
-* BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
-* AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
-* RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
-* (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
-* WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
-* LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
-* MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+//
+// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
 
-* LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
-* PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
-* OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
-* CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
-* WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
-* THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
-* SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
+// Ensure that gtest is the first header otherwise Windows raises an error
+#include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "xml_parser_test.hpp"
 #include "test_globals.hpp"
-#include <stdexcept>
-#include <iostream>
-#include <fstream>
+#include "xml_parser.hpp"
+#include "xml_printer.hpp"
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(XmlParserTest);
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
 
 using namespace std;
+using namespace mtconnect;
 
-void XmlParserTest::setUp()
+class XmlParserTest : public testing::Test
 {
-  a = NULL;
-  try
+ protected:
+  void SetUp() override
   {
-    a = new XmlParser();
-    mDevices = a->parseFile("../samples/test_config.xml");
+    m_xmlParser = nullptr;
+
+    try
+    {
+      std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
+      m_xmlParser = new XmlParser();
+      m_devices =
+          m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get());
+    }
+    catch (exception &)
+    {
+      FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << " /samples/test_config.xml";
+    }
   }
-  catch (exception & e)
+
+  void TearDown() override
   {
-    CPPUNIT_FAIL("Could not locate test xml: ../samples/test_config.xml");
+    if (m_xmlParser)
+    {
+      delete m_xmlParser;
+      m_xmlParser = nullptr;
+    }
   }
+
+  XmlParser *m_xmlParser{nullptr};
+  std::vector<Device *> m_devices;
+};
+
+TEST_F(XmlParserTest, Constructor)
+{
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
+
+  std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
+  m_xmlParser = new XmlParser();
+  ASSERT_THROW(m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/badPath.xml", printer.get()),
+               std::runtime_error);
+  delete m_xmlParser;
+  m_xmlParser = nullptr;
+  m_xmlParser = new XmlParser();
+  ASSERT_NO_THROW(
+      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()));
 }
 
-void XmlParserTest::tearDown()
+TEST_F(XmlParserTest, GetDevices)
 {
-  if (a != NULL)
-    delete a;
-}
+  ASSERT_EQ((size_t)1, m_devices.size());
 
-void XmlParserTest::testConstructor()
-{
-  a = new XmlParser();
-  CPPUNIT_ASSERT_THROW(a->parseFile("../samples/badPath.xml"), std::runtime_error);
-  delete a;
-  a = new XmlParser();
-  CPPUNIT_ASSERT_NO_THROW(a->parseFile("../samples/test_config.xml"));
-}
+  const auto device = m_devices.front();
 
-void XmlParserTest::testGetDevices()
-{
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, mDevices.size());
-
-  Device *device = mDevices.front();
-  
   // Check for Description
-  CPPUNIT_ASSERT_EQUAL((string) "Linux CNC Device", device->getDescriptionBody());
-  
-  vector<DataItem*> dataItems;
-  std::map<string, DataItem *> dataItemsMap = device->getDeviceDataItems();  
-  std::map<string, DataItem *>::iterator iter;
-  for (iter = dataItemsMap.begin(); iter != dataItemsMap.end(); iter++)
-  {
-    dataItems.push_back(iter->second);
-  }
-    
+  ASSERT_EQ((string) "Linux CNC Device", device->getDescriptionBody());
+
+  vector<DataItem *> dataItems;
+  const auto &dataItemsMap = device->getDeviceDataItems();
+
+  for (auto const &mapItem : dataItemsMap)
+    dataItems.emplace_back(mapItem.second);
+
   bool hasExec = false, hasZcom = false;
-  
-  vector<DataItem *>::iterator dataItem;
-  for (dataItem = dataItems.begin(); dataItem != dataItems.end(); dataItem++)
+
+  for (auto const &dataItem : dataItems)
   {
-    if ((*dataItem)->getId() == "p5" && (*dataItem)->getName() == "execution")
-    {
+    if (dataItem->getId() == "p5" && dataItem->getName() == "execution")
       hasExec = true;
-    }
-    
-    if ((*dataItem)->getId() == "z2" && (*dataItem)->getName() == "Zcom")
-    {
+
+    if (dataItem->getId() == "z2" && dataItem->getName() == "Zcom")
       hasZcom = true;
-    }
   }
-  
-  CPPUNIT_ASSERT(hasExec);
-  CPPUNIT_ASSERT(hasZcom);
+
+  ASSERT_TRUE(hasExec);
+  ASSERT_TRUE(hasZcom);
 }
 
-void XmlParserTest::testCondition()
+TEST_F(XmlParserTest, Condition)
 {
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, mDevices.size());
-  
-  Device *device = mDevices.front();
-  list<DataItem*> dataItems;
-  std::map<string, DataItem *> dataItemsMap = device->getDeviceDataItems();  
-  
-  DataItem *item = dataItemsMap["clc"];
-  CPPUNIT_ASSERT(item);
-  
-  CPPUNIT_ASSERT_EQUAL((string) "clc", item->getId());
-  CPPUNIT_ASSERT(item->isCondition());
+  ASSERT_EQ((size_t)1, m_devices.size());
+
+  const auto device = m_devices.front();
+  auto dataItemsMap = device->getDeviceDataItems();
+
+  const auto item = dataItemsMap.at("clc");
+  ASSERT_TRUE(item);
+
+  ASSERT_EQ((string) "clc", item->getId());
+  ASSERT_TRUE(item->isCondition());
 }
 
-void XmlParserTest::testGetDataItems()
-{
-  std::set<string> filter;
-  
-  a->getDataItems(filter, "//Linear");
-  CPPUNIT_ASSERT_EQUAL(13, (int) filter.size());
-
-  filter.clear();
-  a->getDataItems(filter, "//Linear//DataItem[@category='CONDITION']");
-  CPPUNIT_ASSERT_EQUAL(3, (int) filter.size());
-
-  filter.clear();
-  a->getDataItems(filter, "//Controller/electric/*");
-  CPPUNIT_ASSERT_EQUAL(0, (int) filter.size());
-  
-  filter.clear();
-  a->getDataItems(filter, "//Device/DataItems");
-  CPPUNIT_ASSERT_EQUAL(2, (int) filter.size());  
-  
-  filter.clear();
-  a->getDataItems(filter, "//Device/DataItems/");
-  CPPUNIT_ASSERT_EQUAL(0, (int) filter.size());  
-  
-  filter.clear();
-  a->getDataItems(filter, "//Rotary[@name=\"C\"]//DataItem[@type=\"LOAD\"]");
-  CPPUNIT_ASSERT_EQUAL(2, (int) filter.size());    
-
-  filter.clear();
-  a->getDataItems(filter, "//Rotary[@name=\"C\"]//DataItem[@category=\"CONDITION\" or @category=\"SAMPLE\"]");
-  CPPUNIT_ASSERT_EQUAL(5, (int) filter.size());
-}
-
-void XmlParserTest::testGetDataItemsExt()
+TEST_F(XmlParserTest, GetDataItems)
 {
   std::set<string> filter;
+
+  m_xmlParser->getDataItems(filter, "//Linear");
+  ASSERT_EQ(13, (int)filter.size());
+
+  filter.clear();
+  m_xmlParser->getDataItems(filter, "//Linear//DataItem[@category='CONDITION']");
+  ASSERT_EQ(3, (int)filter.size());
+
+  filter.clear();
+  m_xmlParser->getDataItems(filter, "//Controller/electric/*");
+  ASSERT_EQ(0, (int)filter.size());
+
+  filter.clear();
+  m_xmlParser->getDataItems(filter, "//Device/DataItems");
+  ASSERT_EQ(2, (int)filter.size());
+
+  filter.clear();
+  m_xmlParser->getDataItems(filter, "//Device/DataItems/");
+  ASSERT_EQ(0, (int)filter.size());
+
+  filter.clear();
+  m_xmlParser->getDataItems(filter, "//Rotary[@name=\"C\"]//DataItem[@type=\"LOAD\"]");
+  ASSERT_EQ(2, (int)filter.size());
+
+  filter.clear();
+  m_xmlParser->getDataItems(
+      filter, "//Rotary[@name=\"C\"]//DataItem[@category=\"CONDITION\" or @category=\"SAMPLE\"]");
+  ASSERT_EQ(5, (int)filter.size());
+}
+
+TEST_F(XmlParserTest, GetDataItemsExt)
+{
+  std::set<string> filter;
+
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
 
   // For the rest we will check with the extended schema
   try
   {
-    a = new XmlParser();
-    a->parseFile("../samples/extension.xml");
+    std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
+    m_xmlParser = new XmlParser();
+    m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", printer.get());
   }
-  catch (exception & e)
+  catch (exception &)
   {
-    CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/extension.xml";
   }
-  
-  filter.clear();
-  a->getDataItems(filter, "//Device//Pump");
-  CPPUNIT_ASSERT_EQUAL(0, (int) filter.size());
 
   filter.clear();
-  a->getDataItems(filter, "//Device//x:Pump");
-  CPPUNIT_ASSERT_EQUAL(1, (int) filter.size());
+  m_xmlParser->getDataItems(filter, "//Device//Pump");
+  ASSERT_EQ(0, (int)filter.size());
 
+  filter.clear();
+  m_xmlParser->getDataItems(filter, "//Device//x:Pump");
+  ASSERT_EQ(1, (int)filter.size());
 }
 
-void XmlParserTest::testExtendedSchema()
+TEST_F(XmlParserTest, ExtendedSchema)
 {
-  delete a; a = NULL;
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
+
   try
   {
-    a = new XmlParser();
-    mDevices = a->parseFile("../samples/extension.xml");
+    std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
+    m_xmlParser = new XmlParser();
+    m_devices = m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", printer.get());
   }
-  catch (exception & e)
+  catch (exception &)
   {
-    CPPUNIT_FAIL("Could not locate test xml: ../samples/extension.xml");
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/extension.xml";
   }
-  
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, mDevices.size());
-  
-  Device *device = mDevices.front();
-  
+
+  ASSERT_EQ((size_t)1, m_devices.size());
+
+  const auto device = m_devices.front();
+
   // Check for Description
-  CPPUNIT_ASSERT_EQUAL((string) "Extended Schema.", device->getDescriptionBody());
-  
-  Component *pump = device->getChildren().front();
-  CPPUNIT_ASSERT_EQUAL((string) "pump", pump->getName());
-  CPPUNIT_ASSERT_EQUAL((string) "Pump", pump->getClass());
-  CPPUNIT_ASSERT_EQUAL((string) "x", pump->getPrefix());
-  
+  ASSERT_EQ((string) "Extended Schema.", device->getDescriptionBody());
+
+  mtconnect::Component *pump = device->getChildren().front();
+  ASSERT_EQ((string) "pump", pump->getName());
+  ASSERT_EQ((string) "Pump", pump->getClass());
+  ASSERT_EQ((string) "x", pump->getPrefix());
+
   DataItem *item = pump->getDataItems().front();
-  CPPUNIT_ASSERT_EQUAL((string) "x:FLOW", item->getType());
-  CPPUNIT_ASSERT_EQUAL((string) "Flow", item->getElementName());
-  CPPUNIT_ASSERT_EQUAL((string) "x", item->getPrefix());
+  ASSERT_EQ((string) "x:FLOW", item->getType());
+  ASSERT_EQ((string) "Flow", item->getElementName());
+  ASSERT_EQ((string) "x", item->getPrefix());
 }
 
-void XmlParserTest::testTimeSeries()
+TEST_F(XmlParserTest, TimeSeries)
 {
-  Device *dev = mDevices[0];
-  CPPUNIT_ASSERT(dev != NULL);
-  
-  DataItem *item = dev->getDeviceDataItem("Xact");
-  CPPUNIT_ASSERT(item != NULL);
-  
-  item->getAttributes();
-  CPPUNIT_ASSERT_EQUAL((string)"AVERAGE", item->getStatistic());
-  
-  std::map<std::string, std::string> *attrs = item->getAttributes();
-  CPPUNIT_ASSERT_EQUAL(string("AVERAGE"), (*attrs)["statistic"]);
+  const auto dev = m_devices[0];
+  ASSERT_TRUE(dev);
 
-  
+  auto item = dev->getDeviceDataItem("Xact");
+  ASSERT_TRUE(item);
+
+  item->getAttributes();
+  ASSERT_EQ((string) "AVERAGE", item->getStatistic());
+
+  const auto &attrs1 = item->getAttributes();
+  ASSERT_EQ(string("AVERAGE"), attrs1.at("statistic"));
+
   item = dev->getDeviceDataItem("Xts");
-  CPPUNIT_ASSERT(item != NULL);
+  ASSERT_TRUE(item);
   item->getAttributes();
-  CPPUNIT_ASSERT(item->isTimeSeries());  
-  CPPUNIT_ASSERT_EQUAL(DataItem::TIME_SERIES, item->getRepresentation());
-  
-  attrs = item->getAttributes();
-  CPPUNIT_ASSERT_EQUAL(string("TIME_SERIES"), (*attrs)["representation"]);
+  ASSERT_TRUE(item->isTimeSeries());
+  ASSERT_EQ(DataItem::TIME_SERIES, item->getRepresentation());
+
+  const auto &attrs2 = item->getAttributes();
+  ASSERT_EQ(string("TIME_SERIES"), attrs2.at("representation"));
 }
 
-void XmlParserTest::testConfiguration()
+TEST_F(XmlParserTest, Configuration)
 {
-  Device *dev = mDevices[0];
-  CPPUNIT_ASSERT(dev != NULL);
+  const auto dev = m_devices[0];
+  ASSERT_TRUE(dev);
 
-  Component *power = NULL;
-  std::list<Component *> &children = dev->getChildren();
-  std::list<Component *>::iterator iter;
-  for (iter = children.begin(); power == NULL && iter != children.end(); ++iter)
+  mtconnect::Component *power = nullptr;
+  const auto &children = dev->getChildren();
+
+  for (auto const &iter : children)
   {
-    if ((*iter)->getName() == "power")
-      power = *iter;
+    if (iter->getName() == "power")
+      power = iter;
   }
-  
-  CPPUNIT_ASSERT(!power->getConfiguration().empty());
+
+  ASSERT_TRUE(power);
+  ASSERT_TRUE(power->getConfiguration());
 }
 
-void XmlParserTest::testParseAsset()
+TEST_F(XmlParserTest, ParseAsset)
 {
-  string document = getFile("asset1.xml");
-  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240", tool->getIdentity()["toolId"]);
-  CPPUNIT_ASSERT_EQUAL((string) "KSSP300R4SD43L240.1", tool->getAssetId());
-  CPPUNIT_ASSERT_EQUAL((string) "1", tool->getIdentity()["serialNumber"]);
-  CPPUNIT_ASSERT_EQUAL((string) "KMT,Parlec", tool->getIdentity()["manufacturers"]);
-  CPPUNIT_ASSERT_EQUAL((string) "2011-05-11T13:55:22", tool->getTimestamp());
-  CPPUNIT_ASSERT_EQUAL(false, tool->isRemoved());
-  
+  auto document = getFile("asset1.xml");
+  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
+
+  ASSERT_EQ((string) "KSSP300R4SD43L240", tool->getIdentity().at("toolId"));
+  ASSERT_EQ((string) "KSSP300R4SD43L240.1", tool->getAssetId());
+  ASSERT_EQ((string) "1", tool->getIdentity().at("serialNumber"));
+  ASSERT_EQ((string) "KMT,Parlec", tool->getIdentity().at("manufacturers"));
+  ASSERT_EQ((string) "2011-05-11T13:55:22", tool->getTimestamp());
+  ASSERT_EQ(false, tool->isRemoved());
+
   // Top Level
-  CPPUNIT_ASSERT_EQUAL((string) "ISO 13399...", tool->mValues["CuttingToolDefinition"]->mValue);
-  CPPUNIT_ASSERT_EQUAL((string) "EXPRESS", tool->mValues["CuttingToolDefinition"]->mProperties["format"]);
-  CPPUNIT_ASSERT_EQUAL((string) "Cutting tool ...", tool->getDescription());
-  
+  ASSERT_EQ((string) "ISO 13399...", tool->m_values.at("CuttingToolDefinition")->m_value);
+  ASSERT_EQ((string) "EXPRESS",
+            tool->m_values.at("CuttingToolDefinition")->m_properties.at("format"));
+  ASSERT_EQ((string) "Cutting tool ...", tool->getDescription());
+
   // Status
-  CPPUNIT_ASSERT_EQUAL((string) "NEW", tool->mStatus[0]);
-  
+  ASSERT_EQ((string) "NEW", tool->m_status[0]);
+
   // Values
-  CPPUNIT_ASSERT_EQUAL((string) "10000", tool->mValues["ProgramSpindleSpeed"]->mValue);
-  CPPUNIT_ASSERT_EQUAL((string) "222", tool->mValues["ProgramFeedRate"]->mValue);
-  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->mValues["ProgramFeedRate"]->refCount());
-  
+  ASSERT_EQ((string) "10000", tool->m_values.at("ProcessSpindleSpeed")->m_value);
+  ASSERT_EQ((string) "222", tool->m_values.at("ProcessFeedRate")->m_value);
+  ASSERT_EQ((unsigned int)1, tool->m_values.at("ProcessFeedRate")->refCount());
+
   // Measurements
-  CPPUNIT_ASSERT_EQUAL((string) "73.25", tool->mMeasurements["BodyDiameterMax"]->mValue);
-  CPPUNIT_ASSERT_EQUAL((string) "76.2", tool->mMeasurements["CuttingDiameterMax"]->mValue);
-  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, tool->mMeasurements["BodyDiameterMax"]->refCount());
-  
+  ASSERT_EQ((string) "73.25", tool->m_measurements.at("BodyDiameterMax")->m_value);
+  ASSERT_EQ((string) "76.2", tool->m_measurements.at("CuttingDiameterMax")->m_value);
+  ASSERT_EQ((unsigned int)1, tool->m_measurements.at("BodyDiameterMax")->refCount());
+
   // Items
-  CPPUNIT_ASSERT_EQUAL((string) "24", tool->mItemCount);
-  
+  ASSERT_EQ((string) "24", tool->m_itemCount);
+
   // Item
-  CPPUNIT_ASSERT_EQUAL((size_t) 6, tool->mItems.size());
-  CuttingItemPtr item = tool->mItems[0];
-  CPPUNIT_ASSERT_EQUAL((unsigned int) 2, item->refCount());
-  
-  CPPUNIT_ASSERT_EQUAL((string) "SDET43PDER8GB", item->mIdentity["itemId"]);
-  CPPUNIT_ASSERT_EQUAL((string) "FLANGE: 1-4, ROW: 1", item->mValues["Locus"]->mValue);
-  CPPUNIT_ASSERT_EQUAL((string) "12.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
-  CPPUNIT_ASSERT_EQUAL((unsigned int) 1, item->mMeasurements["CuttingEdgeLength"]->refCount());
+  ASSERT_EQ((size_t)6, tool->m_items.size());
+  CuttingItemPtr item = tool->m_items[0];
+  ASSERT_EQ((unsigned int)2, item->refCount());
+
+  ASSERT_EQ((string) "SDET43PDER8GB", item->m_identity.at("itemId"));
+  ASSERT_EQ((string) "FLANGE: 1-4, ROW: 1", item->m_values.at("Locus")->m_value);
+  ASSERT_EQ((string) "12.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
+  ASSERT_EQ((unsigned int)1, item->m_measurements.at("CuttingEdgeLength")->refCount());
 }
 
-void XmlParserTest::testParseOtherAsset()
+TEST_F(XmlParserTest, ParseOtherAsset)
 {
-  string document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
-                    "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
-  AssetPtr asset = a->parseAsset("XXX", "Workpiece", document);
+  string document =
+      "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
+      "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
+  std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
+  AssetPtr asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
 
-  CPPUNIT_ASSERT(asset.getObject() != NULL);
-  CPPUNIT_ASSERT_EQUAL((string) "XXX123", asset->getAssetId());
-  CPPUNIT_ASSERT_EQUAL((string) "2014-04-14T01:22:33.123", asset->getTimestamp());
-  CPPUNIT_ASSERT_EQUAL((string) "XXX", asset->getDeviceUuid());
-  CPPUNIT_ASSERT_EQUAL((string) "Data", asset->getContent());
-  CPPUNIT_ASSERT_EQUAL(false, asset->isRemoved());
+  ASSERT_TRUE(asset.getObject());
+  ASSERT_EQ((string) "XXX123", asset->getAssetId());
+  ASSERT_EQ((string) "2014-04-14T01:22:33.123", asset->getTimestamp());
+  ASSERT_EQ((string) "XXX", asset->getDeviceUuid());
+  ASSERT_EQ((string) "Data", asset->getContent(printer.get()));
+  ASSERT_EQ(false, asset->isRemoved());
 
-  document = "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
-             "serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
-  asset = a->parseAsset("XXX", "Workpiece", document);
-  
-  CPPUNIT_ASSERT(asset.getObject() != NULL);
-  CPPUNIT_ASSERT_EQUAL(true, asset->isRemoved());
+  document =
+      "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
+      "serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
+  asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
+
+  ASSERT_TRUE(asset.getObject());
+  ASSERT_EQ(true, asset->isRemoved());
 }
 
-void XmlParserTest::testParseRemovedAsset()
+TEST_F(XmlParserTest, ParseRemovedAsset)
 {
-  string document = getFile("asset3.xml");
-  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
-  
-  CPPUNIT_ASSERT_EQUAL(true, tool->isRemoved());
+  auto document = getFile("asset3.xml");
+  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
+
+  ASSERT_EQ(true, tool->isRemoved());
 }
 
-void XmlParserTest::testUpdateAsset()
+TEST_F(XmlParserTest, UpdateAsset)
 {
-  string document = getFile("asset1.xml");
-  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
+  auto document = getFile("asset1.xml");
+  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
 
-  string replacement = "<CuttingDiameterMax code=\"DC\" nominal=\"76.2\" maximum=\"76.213\" minimum=\"76.187\">10.123</CuttingDiameterMax>";
-  a->updateAsset(asset, "CuttingTool", replacement);
+  string replacement =
+      "<CuttingDiameterMax code=\"DC\" nominal=\"76.2\" maximum=\"76.213\" "
+      "minimum=\"76.187\">10.123</CuttingDiameterMax>";
+  m_xmlParser->updateAsset(asset, "CuttingTool", replacement);
 
-  CuttingItemPtr item = tool->mItems[0];
-  CPPUNIT_ASSERT_EQUAL((string) "10.123", tool->mMeasurements["CuttingDiameterMax"]->mValue);
-  
+  CuttingItemPtr item = tool->m_items[0];
+  ASSERT_EQ((string) "10.123", tool->m_measurements.at("CuttingDiameterMax")->m_value);
+
   // Test cutting item replacement
-  CPPUNIT_ASSERT_EQUAL((string) "12.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
+  ASSERT_EQ((string) "12.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
 
-  replacement = "<CuttingItem indices=\"1-4\" itemId=\"SDET43PDER8GB\" manufacturers=\"KMT\" grade=\"KC725M\">"
-                "<Locus>FLANGE: 1-4, ROW: 1</Locus>"
-                "<Measurements>"
-                "<CuttingEdgeLength code=\"L\" nominal=\"12.7\" minimum=\"12.675\" maximum=\"12.725\">14.7</CuttingEdgeLength>"
-                "<WiperEdgeLength code=\"BS\" nominal=\"2.56\">2.56</WiperEdgeLength>"
-                "<IncribedCircleDiameter code=\"IC\" nominal=\"12.7\">12.7</IncribedCircleDiameter>"
-                "<CornerRadius code=\"RE\" nominal=\"0.8\">0.8</CornerRadius>"
-                "</Measurements>"
-                "</CuttingItem>";
-  
-  a->updateAsset(asset, "CuttingTool", replacement);
+  replacement =
+      "<CuttingItem indices=\"1-4\" itemId=\"SDET43PDER8GB\" manufacturers=\"KMT\" "
+      "grade=\"KC725M\">"
+      "<Locus>FLANGE: 1-4, ROW: 1</Locus>"
+      "<Measurements>"
+      "<CuttingEdgeLength code=\"L\" nominal=\"12.7\" minimum=\"12.675\" "
+      "maximum=\"12.725\">14.7</CuttingEdgeLength>"
+      "<WiperEdgeLength code=\"BS\" nominal=\"2.56\">2.56</WiperEdgeLength>"
+      "<IncribedCircleDiameter code=\"IC\" nominal=\"12.7\">12.7</IncribedCircleDiameter>"
+      "<CornerRadius code=\"RE\" nominal=\"0.8\">0.8</CornerRadius>"
+      "</Measurements>"
+      "</CuttingItem>";
 
-  item = tool->mItems[0];
-  CPPUNIT_ASSERT_EQUAL((string) "14.7", item->mMeasurements["CuttingEdgeLength"]->mValue);
+  m_xmlParser->updateAsset(asset, "CuttingTool", replacement);
+
+  item = tool->m_items[0];
+  ASSERT_EQ((string) "14.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
 }
 
-void XmlParserTest::testBadAsset()
+TEST_F(XmlParserTest, BadAsset)
 {
-  string xml = getFile("asset4.xml");
-  
-  Asset* asset = a->parseAsset("XXX", "CuttingTool", xml);
-  CPPUNIT_ASSERT(asset == NULL);
+  auto xml = getFile("asset4.xml");
+
+  auto asset = m_xmlParser->parseAsset("XXX", "CuttingTool", xml);
+  ASSERT_TRUE(!asset);
 }
 
-void XmlParserTest::testNoNamespace()
+TEST_F(XmlParserTest, NoNamespace)
 {
-  a = new XmlParser();
-  CPPUNIT_ASSERT_NO_THROW(a->parseFile("../samples/NoNamespace.xml"));
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
+
+  unique_ptr<XmlPrinter> printer(new XmlPrinter());
+  m_xmlParser = new XmlParser();
+  ASSERT_NO_THROW(
+      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/NoNamespace.xml", printer.get()));
 }
 
-void XmlParserTest::testFilteredDataItem13()
+TEST_F(XmlParserTest, FilteredDataItem13)
 {
-  delete a; a = NULL;
+  delete m_xmlParser;
+  m_xmlParser = nullptr;
   try
   {
-    a = new XmlParser();
-    mDevices = a->parseFile("../samples/filter_example_1.3.xml");
+    unique_ptr<XmlPrinter> printer(new XmlPrinter());
+    m_xmlParser = new XmlParser();
+    m_devices =
+        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", printer.get());
   }
-  catch (exception & e)
+  catch (exception &)
   {
-    CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example_1.3.xml");
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
+           << "/samples/filter_example_1.3.xml";
   }
-  
-  Device *dev = mDevices[0];
+
+  Device *dev = m_devices[0];
   DataItem *di = dev->getDeviceDataItem("c1");
-  
-  CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
-  CPPUNIT_ASSERT(di->hasMinimumDelta());
+
+  ASSERT_EQ(di->getFilterValue(), 5.0);
+  ASSERT_TRUE(di->hasMinimumDelta());
 }
 
-void XmlParserTest::testFilteredDataItem()
+TEST_F(XmlParserTest, FilteredDataItem)
 {
-	delete a; a = NULL;
-	try
-	{
-		a = new XmlParser();
-		mDevices = a->parseFile("../samples/filter_example.xml");
-	}
-	catch (exception & e)
-	{
-		CPPUNIT_FAIL("Could not locate test xml: ../samples/filter_example.xml");
-	}
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
 
-	Device *dev = mDevices[0];
-	DataItem *di = dev->getDeviceDataItem("c1");
-
-	CPPUNIT_ASSERT_EQUAL(di->getFilterValue(), 5.0);
-	CPPUNIT_ASSERT(di->hasMinimumDelta());
-
-	di = dev->getDeviceDataItem("c2");
-
-	CPPUNIT_ASSERT_EQUAL(di->getFilterPeriod(), 10.0);
-	CPPUNIT_ASSERT(di->hasMinimumPeriod());
-}
-
-void XmlParserTest::testReferences()
-{
-  delete a; a = NULL;
   try
   {
-    a = new XmlParser();
-    mDevices = a->parseFile("../samples/reference_example.xml");
+    unique_ptr<XmlPrinter> printer(new XmlPrinter());
+    m_xmlParser = new XmlParser();
+    m_devices =
+        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/filter_example.xml", printer.get());
   }
-  catch (exception & e)
+  catch (exception &)
   {
-    CPPUNIT_FAIL("Could not locate test xml: ../samples/reference_example.xml");
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/filter_example.xml";
   }
-  
+
+  auto di = m_devices[0]->getDeviceDataItem("c1");
+
+  ASSERT_EQ(di->getFilterValue(), 5.0);
+  ASSERT_TRUE(di->hasMinimumDelta());
+  di = m_devices[0]->getDeviceDataItem("c2");
+
+  ASSERT_EQ(di->getFilterPeriod(), 10.0);
+  ASSERT_TRUE(di->hasMinimumPeriod());
+}
+
+TEST_F(XmlParserTest, References)
+{
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
+
+  try
+  {
+    unique_ptr<XmlPrinter> printer(new XmlPrinter());
+    m_xmlParser = new XmlParser();
+    m_devices =
+        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/reference_example.xml", printer.get());
+  }
+  catch (exception &)
+  {
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/reference_example.xml";
+  }
+
   string id = "mf";
-  Device *dev = mDevices[0];
-  DataItem *item = dev->getDeviceDataItem(id);
-  Component *comp = item->getComponent();
+  const auto item = m_devices[0]->getDeviceDataItem(id);
+  const auto comp = item->getComponent();
 
   comp->resolveReferences();
 
-  const list<Component::Reference> refs = comp->getReferences();
-  const Component::Reference &ref = refs.front();
-  
-  CPPUNIT_ASSERT_EQUAL((string) "c4", ref.mId);
-  CPPUNIT_ASSERT_EQUAL((string) "chuck", ref.mName);
-  
-  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref.mDataItem != NULL);
-  
-  const Component::Reference &ref2 = refs.back();
-  CPPUNIT_ASSERT_EQUAL((string) "d2", ref2.mId);
-  CPPUNIT_ASSERT_EQUAL((string) "door", ref2.mName);
-  
-  CPPUNIT_ASSERT_MESSAGE("DataItem was not resolved", ref2.mDataItem != NULL);
-  
+  const auto refs = comp->getReferences();
+  const auto &ref = refs[0];
+
+  ASSERT_EQ((string) "c4", ref.m_id);
+  ASSERT_EQ((string) "chuck", ref.m_name);
+
+  ASSERT_TRUE(ref.m_dataItem) << "DataItem was not resolved.";
+
+  const auto &ref2 = refs[1];
+  ASSERT_EQ((string) "d2", ref2.m_id);
+  ASSERT_EQ((string) "door", ref2.m_name);
+
+  ASSERT_TRUE(ref2.m_dataItem) << "DataItem was not resolved.";
+
+  const auto &ref3 = refs[2];
+  ASSERT_EQ((string) "ele", ref3.m_id);
+  ASSERT_EQ((string) "electric", ref3.m_name);
+
+  ASSERT_TRUE(ref3.m_component) << "DataItem was not resolved.";
+
   std::set<string> filter;
-  a->getDataItems(filter, "//BarFeederInterface");
-  
-  CPPUNIT_ASSERT_EQUAL((size_t) 3, filter.size());
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("mf"));
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("c4"));
-  CPPUNIT_ASSERT_EQUAL((size_t) 1, filter.count("d2"));
+  m_xmlParser->getDataItems(filter, "//BarFeederInterface");
+
+  ASSERT_EQ((size_t)5, filter.size());
+  ASSERT_EQ((size_t)1, filter.count("mf"));
+  ASSERT_EQ((size_t)1, filter.count("c4"));
+  ASSERT_EQ((size_t)1, filter.count("bfc"));
+  ASSERT_EQ((size_t)1, filter.count("d2"));
+  ASSERT_EQ((size_t)1, filter.count("eps"));
 }
 
-void XmlParserTest::testExtendedAsset()
+TEST_F(XmlParserTest, SourceReferences)
 {
-  string document = getFile("ext_asset.xml");
-  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
-  
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
 
-  CPPUNIT_ASSERT_EQUAL(((size_t) 1), tool->mValues.count("x:Color"));
+  try
+  {
+    unique_ptr<XmlPrinter> printer(new XmlPrinter());
+    m_xmlParser = new XmlParser();
+    m_devices =
+        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/reference_example.xml", printer.get());
+  }
+  catch (exception &)
+  {
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/reference_example.xml";
+  }
+
+  const auto item = m_devices[0]->getDeviceDataItem("bfc");
+  ASSERT_TRUE(item != nullptr);
+
+  ASSERT_EQ(string(""), item->getSource());
+  ASSERT_EQ(string("mf"), item->getSourceDataItemId());
+  ASSERT_EQ(string("ele"), item->getSourceComponentId());
+  ASSERT_EQ(string("xxx"), item->getSourceCompositionId());
 }
 
-void XmlParserTest::testExtendedAssetFragment()
+TEST_F(XmlParserTest, ExtendedAsset)
 {
-  string document = getFile("ext_asset_2.xml");
-  AssetPtr asset = a->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool*) asset.getObject();
-  
-  
-  CPPUNIT_ASSERT_EQUAL(((size_t) 1), tool->mValues.count("x:Color"));
+  auto document = getFile("ext_asset.xml");
+  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
+
+  ASSERT_EQ(((size_t)1), tool->m_values.count("x:Color"));
+}
+
+TEST_F(XmlParserTest, ExtendedAssetFragment)
+{
+  auto document = getFile("ext_asset_2.xml");
+  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
+  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
+
+  ASSERT_EQ(((size_t)1), tool->m_values.count("x:Color"));
 }

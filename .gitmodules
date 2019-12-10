@@ -1,9 +1,16 @@
 [submodule "libxml2"]
 	path = libxml2
 	url = https://git.gnome.org/browse/libxml2
-[submodule "cppunit"]
-	path = cppunit
-	url = https://github.com/openlvc/cppunit.git
-[submodule "schema"]
-	path = schemas
-	url = https://github.com/mtconnect/schema.git
+[submodule "date"]
+	path = date
+	url = https://github.com/HowardHinnant/date.git
+[submodule "dlib"]
+	path = dlib
+	url = https://github.com/davisking/dlib.git
+[submodule "json"]
+	path = json
+	url = https://github.com/nlohmann/json.git
+[submodule "googletest"]
+	path = googletest
+	url = https://github.com/google/googletest.git
+	branch = v1.10.x

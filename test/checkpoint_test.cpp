@@ -1,211 +1,171 @@
-/*
- * Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the AMT nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
- * DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
- * BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
- * AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
- * RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
- * (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
- * WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
- * LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
- * MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- * LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
- * PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
- * OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
- * CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
- * WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
- * THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
- * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
- */
+//
+// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
 
-/*
- * Copyright (c) 2008, AMT – The Association For Manufacturing Technology (“AMT”)
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the AMT nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- *
- * DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
- * BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
- * AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
- * RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
- * (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
- * WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
- * LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
- * MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
- 
- * LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
- * PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
- * OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
- * CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
- * WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
- * THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
- * SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
- */
+// Ensure that gtest is the first header otherwise Windows raises an error
+#include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "checkpoint_test.hpp"
-
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION(CheckpointTest);
+#include "adapter.hpp"
+#include "agent.hpp"
+#include "checkpoint.hpp"
 
 using namespace std;
+using namespace mtconnect;
 
-void CheckpointTest::setUp()
+class CheckpointTest : public testing::Test
 {
-  // Create an agent with only 16 slots and 8 data items.
-  mAgent = NULL;
-  mCheckpoint = NULL;
-  mAgent = new Agent("../samples/min_config.xml", 4, 4);
-  mAgentId = intToString(getCurrentTimeInSec());
-  mAdapter = NULL;
-  mCheckpoint = new Checkpoint();
-  
-  std::map<string, string> attributes1, attributes2;
-  
-  attributes1["id"] = "1";
-  attributes1["name"] = "DataItemTest1";
-  attributes1["type"] = "LOAD";
-  attributes1["category"] = "CONDITION";
-  mDataItem1 = new DataItem(attributes1);
-  
-  attributes2["id"] = "3";
-  attributes2["name"] = "DataItemTest2";
-  attributes2["type"] = "POSITION";
-  attributes2["nativeUnits"] = "MILLIMETER";
-  attributes2["subType"] = "ACTUAL";
-  attributes2["category"] = "SAMPLE";
-  mDataItem2 = new DataItem(attributes2);
-}
+ protected:
+  void SetUp() override
+  {
+    // Create an agent with only 16 slots and 8 data items.
+    m_agent = nullptr;
+    m_checkpoint = nullptr;
+    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 4, 4, "1.5");
+    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_checkpoint = make_unique<Checkpoint>();
 
-void CheckpointTest::tearDown()
-{
-  delete mAgent;
-  delete mCheckpoint;
-}
+    std::map<string, string> attributes1, attributes2;
 
-void CheckpointTest::testAddComponentEvents()
+    attributes1["id"] = "1";
+    attributes1["name"] = "DataItemTest1";
+    attributes1["type"] = "LOAD";
+    attributes1["category"] = "CONDITION";
+    m_dataItem1 = make_unique<DataItem>(attributes1);
+
+    attributes2["id"] = "3";
+    attributes2["name"] = "DataItemTest2";
+    attributes2["type"] = "POSITION";
+    attributes2["nativeUnits"] = "MILLIMETER";
+    attributes2["subType"] = "ACTUAL";
+    attributes2["category"] = "SAMPLE";
+    m_dataItem2 = make_unique<DataItem>(attributes2);
+  }
+
+  void TearDown() override
+  {
+    m_agent.reset();
+    m_checkpoint.reset();
+    m_dataItem1.reset();
+    m_dataItem2.reset();
+  }
+
+  std::unique_ptr<Checkpoint> m_checkpoint;
+  std::unique_ptr<Agent> m_agent;
+  std::string m_agentId;
+  std::unique_ptr<DataItem> m_dataItem1;
+  std::unique_ptr<DataItem> m_dataItem2;
+};
+
+TEST_F(CheckpointTest, AddObservations)
 {
-  ComponentEventPtr p1, p2, p3, p4, p5, p6;
-  string time("NOW"), value("123"),
-    warning1("WARNING|CODE1|HIGH|Over..."),
-    warning2("WARNING|CODE2|HIGH|Over..."),
-    normal("NORMAL|||"),
-    unavailable("UNAVAILABLE|||");
-  
-  p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
+  ObservationPtr p1, p2, p3, p4, p5, p6;
+  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
+      warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||"), unavailable("UNAVAILABLE|||");
+
+  p1 = new Observation(*m_dataItem1, 2, time, warning1);
   p1->unrefer();
-  
-  CPPUNIT_ASSERT_EQUAL(1, (int) p1->refCount());
-  mCheckpoint->addComponentEvent(p1);
-  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
-  
-  p2 = new ComponentEvent(*mDataItem1, 2, time, warning2);
+
+  ASSERT_EQ(1, (int)p1->refCount());
+  m_checkpoint->addObservation(p1);
+  ASSERT_EQ(2, (int)p1->refCount());
+
+  p2 = new Observation(*m_dataItem1, 2, time, warning2);
   p2->unrefer();
 
-  mCheckpoint->addComponentEvent(p2);
-  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
+  m_checkpoint->addObservation(p2);
+  ASSERT_TRUE(p1.getObject() == p2->getPrev());
 
-  p3 = new ComponentEvent(*mDataItem1, 2, time, normal);
+  p3 = new Observation(*m_dataItem1, 2, time, normal);
   p3->unrefer();
 
-  mCheckpoint->addComponentEvent(p3);
-  CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p3->getPrev());
-  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
-  CPPUNIT_ASSERT_EQUAL(1, (int) p2->refCount());
+  m_checkpoint->addObservation(p3);
+  ASSERT_TRUE(nullptr == p3->getPrev());
+  ASSERT_EQ(2, (int)p1->refCount());
+  ASSERT_EQ(1, (int)p2->refCount());
 
-  p4 = new ComponentEvent(*mDataItem1, 2, time, warning1);
+  p4 = new Observation(*m_dataItem1, 2, time, warning1);
   p4->unrefer();
 
-  mCheckpoint->addComponentEvent(p4);
-  CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p4->getPrev());
-  CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
+  m_checkpoint->addObservation(p4);
+  ASSERT_TRUE(nullptr == p4->getPrev());
+  ASSERT_EQ(1, (int)p3->refCount());
 
   // Test non condition
-  p3 = new ComponentEvent(*mDataItem2, 2, time, value);
+  p3 = new Observation(*m_dataItem2, 2, time, value);
   p3->unrefer();
-  mCheckpoint->addComponentEvent(p3);
-  CPPUNIT_ASSERT_EQUAL(2, (int) p3->refCount());
-  
-  p4 = new ComponentEvent(*mDataItem2, 2, time, value);
+  m_checkpoint->addObservation(p3);
+  ASSERT_EQ(2, (int)p3->refCount());
+
+  p4 = new Observation(*m_dataItem2, 2, time, value);
   p4->unrefer();
 
-  mCheckpoint->addComponentEvent(p4);
-  CPPUNIT_ASSERT_EQUAL(2, (int) p4->refCount());
-  
-  CPPUNIT_ASSERT_EQUAL((void*) 0, (void*) p4->getPrev());
-  CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
+  m_checkpoint->addObservation(p4);
+  ASSERT_EQ(2, (int)p4->refCount());
+
+  ASSERT_TRUE(nullptr == p4->getPrev());
+  ASSERT_EQ(1, (int)p3->refCount());
 }
 
-void CheckpointTest::testCopy()
+TEST_F(CheckpointTest, Copy)
 {
-  ComponentEventPtr p1, p2, p3, p4, p5, p6;
-  string time("NOW"), value("123"),
-    warning1("WARNING|CODE1|HIGH|Over..."),
-    warning2("WARNING|CODE2|HIGH|Over..."),
-    normal("NORMAL|||");
-  
-  p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
-  p1->unrefer();
-  mCheckpoint->addComponentEvent(p1);
-  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
-  
-  p2 = new ComponentEvent(*mDataItem1, 2, time, warning2);
-  p2->unrefer();
-  mCheckpoint->addComponentEvent(p2);
-  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
-  CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
+  ObservationPtr p1, p2, p3, p4, p5, p6;
+  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
+      warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
 
-  Checkpoint *copy = new Checkpoint(*mCheckpoint);
-  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
-  CPPUNIT_ASSERT_EQUAL(3, (int) p2->refCount());
+  p1 = new Observation(*m_dataItem1, 2, time, warning1);
+  p1->unrefer();
+  m_checkpoint->addObservation(p1);
+  ASSERT_EQ(2, (int)p1->refCount());
+
+  p2 = new Observation(*m_dataItem1, 2, time, warning2);
+  p2->unrefer();
+  m_checkpoint->addObservation(p2);
+  ASSERT_TRUE(p1.getObject() == p2->getPrev());
+  ASSERT_EQ(2, (int)p2->refCount());
+
+  auto copy = new Checkpoint(*m_checkpoint);
+  ASSERT_EQ(2, (int)p1->refCount());
+  ASSERT_EQ(3, (int)p2->refCount());
   delete copy;
-  CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
+  copy = nullptr;
+  ASSERT_EQ(2, (int)p2->refCount());
 }
 
-void CheckpointTest::testGetComponentEvents()
+TEST_F(CheckpointTest, GetObservations)
 {
-  ComponentEventPtr p;
-  string time("NOW"), value("123"),
-    warning1("WARNING|CODE1|HIGH|Over..."),
-    warning2("WARNING|CODE2|HIGH|Over..."),
-    normal("NORMAL|||");
+  ObservationPtr p;
+  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
+      warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
-  
-  p = new ComponentEvent(*mDataItem1, 2, time, warning1);
-  mCheckpoint->addComponentEvent(p);
-  p->unrefer();
-  
-  p = new ComponentEvent(*mDataItem1, 2, time, warning2);
-  mCheckpoint->addComponentEvent(p);
+  filter.insert(m_dataItem1->getId());
+
+  p = new Observation(*m_dataItem1, 2, time, warning1);
+  m_checkpoint->addObservation(p);
   p->unrefer();
 
-  filter.insert(mDataItem2->getId());
-  p = new ComponentEvent(*mDataItem2, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  p = new Observation(*m_dataItem1, 2, time, warning2);
+  m_checkpoint->addObservation(p);
   p->unrefer();
-  
+
+  filter.insert(m_dataItem2->getId());
+  p = new Observation(*m_dataItem2, 2, time, value);
+  m_checkpoint->addObservation(p);
+  p->unrefer();
+
   std::map<string, string> attributes;
   attributes["id"] = "4";
   attributes["name"] = "DataItemTest2";
@@ -213,51 +173,49 @@ void CheckpointTest::testGetComponentEvents()
   attributes["nativeUnits"] = "MILLIMETER";
   attributes["subType"] = "ACTUAL";
   attributes["category"] = "SAMPLE";
-  DataItem *d1 = new DataItem(attributes);
+  auto d1 = make_unique<DataItem>(attributes);
   filter.insert(d1->getId());
-  
-  p = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+
+  p = new Observation(*d1, 2, time, value);
+  m_checkpoint->addObservation(p);
   p->unrefer();
 
-  ComponentEventPtrArray list;
-  mCheckpoint->getComponentEvents(list, &filter);
+  ObservationPtrArray list;
+  m_checkpoint->getObservations(list, &filter);
 
-  CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
-  
+  ASSERT_EQ(4, (int)list.size());
+
   std::set<string> filter2;
-  filter2.insert(mDataItem1->getId());
+  filter2.insert(m_dataItem1->getId());
 
-  ComponentEventPtrArray list2;
-  mCheckpoint->getComponentEvents(list2, &filter2);
+  ObservationPtrArray list2;
+  m_checkpoint->getObservations(list2, &filter2);
 
-  CPPUNIT_ASSERT_EQUAL(2, (int) list2.size());
-  
-  delete d1;
+  ASSERT_EQ(2, (int)list2.size());
+
+  d1.reset();
 }
 
-void CheckpointTest::testFilter()
+TEST_F(CheckpointTest, Filter)
 {
-  ComponentEventPtr p1, p2, p3, p4;
-  string time("NOW"), value("123"),
-    warning1("WARNING|CODE1|HIGH|Over..."),
-    warning2("WARNING|CODE2|HIGH|Over..."),
-    normal("NORMAL|||");
+  ObservationPtr p1, p2, p3, p4;
+  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
+      warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
-  
-  p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
-  mCheckpoint->addComponentEvent(p1);
+  filter.insert(m_dataItem1->getId());
+
+  p1 = new Observation(*m_dataItem1, 2, time, warning1);
+  m_checkpoint->addObservation(p1);
   p1->unrefer();
-  
-  p2 = new ComponentEvent(*mDataItem1, 2, time, warning2);
-  mCheckpoint->addComponentEvent(p2);
+
+  p2 = new Observation(*m_dataItem1, 2, time, warning2);
+  m_checkpoint->addObservation(p2);
   p2->unrefer();
 
-  p3 = new ComponentEvent(*mDataItem2, 2, time, value);
-  mCheckpoint->addComponentEvent(p3);
+  p3 = new Observation(*m_dataItem2, 2, time, value);
+  m_checkpoint->addObservation(p3);
   p3->unrefer();
-  
+
   std::map<string, string> attributes;
   attributes["id"] = "4";
   attributes["name"] = "DataItemTest2";
@@ -265,47 +223,46 @@ void CheckpointTest::testFilter()
   attributes["nativeUnits"] = "MILLIMETER";
   attributes["subType"] = "ACTUAL";
   attributes["category"] = "SAMPLE";
-  DataItem *d1 = new DataItem(attributes);
-  
-  p4 = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p4);
+  auto d1 = make_unique<DataItem>(attributes);
+
+  p4 = new Observation(*d1, 2, time, value);
+  m_checkpoint->addObservation(p4);
   p4->unrefer();
 
-  ComponentEventPtrArray list;
-  mCheckpoint->getComponentEvents(list);
+  ObservationPtrArray list;
+  m_checkpoint->getObservations(list);
 
-  CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
+  ASSERT_EQ(4, (int)list.size());
   list.clear();
-  
-  mCheckpoint->filter(filter);
-  mCheckpoint->getComponentEvents(list);
 
-  CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
+  m_checkpoint->filter(filter);
+  m_checkpoint->getObservations(list);
+
+  ASSERT_EQ(2, (int)list.size());
+  d1.reset();
 }
 
-void CheckpointTest::testCopyAndFilter()
+TEST_F(CheckpointTest, CopyAndFilter)
 {
-  ComponentEventPtr p;
-  string time("NOW"), value("123"),
-    warning1("WARNING|CODE1|HIGH|Over..."),
-    warning2("WARNING|CODE2|HIGH|Over..."),
-    warning3("WARNING|CODE3|HIGH|Over..."),
-    normal("NORMAL|||");
+  ObservationPtr p;
+  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
+      warning2("WARNING|CODE2|HIGH|Over..."), warning3("WARNING|CODE3|HIGH|Over..."),
+      normal("NORMAL|||");
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
-  
-  p = new ComponentEvent(*mDataItem1, 2, time, warning1);
-  mCheckpoint->addComponentEvent(p);
-  p->unrefer();
-  
-  p = new ComponentEvent(*mDataItem1, 2, time, warning2);
-  mCheckpoint->addComponentEvent(p);
+  filter.insert(m_dataItem1->getId());
+
+  p = new Observation(*m_dataItem1, 2, time, warning1);
+  m_checkpoint->addObservation(p);
   p->unrefer();
 
-  p = new ComponentEvent(*mDataItem2, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  p = new Observation(*m_dataItem1, 2, time, warning2);
+  m_checkpoint->addObservation(p);
   p->unrefer();
-  
+
+  p = new Observation(*m_dataItem2, 2, time, value);
+  m_checkpoint->addObservation(p);
+  p->unrefer();
+
   std::map<string, string> attributes;
   attributes["id"] = "4";
   attributes["name"] = "DataItemTest2";
@@ -313,176 +270,168 @@ void CheckpointTest::testCopyAndFilter()
   attributes["nativeUnits"] = "MILLIMETER";
   attributes["subType"] = "ACTUAL";
   attributes["category"] = "SAMPLE";
-  DataItem *d1 = new DataItem(attributes);
-  
-  p = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  auto d1 = make_unique<DataItem>(attributes);
+
+  p = new Observation(*d1, 2, time, value);
+  m_checkpoint->addObservation(p);
   p->unrefer();
 
-  ComponentEventPtrArray list;
-  mCheckpoint->getComponentEvents(list);
+  ObservationPtrArray list;
+  m_checkpoint->getObservations(list);
 
-  CPPUNIT_ASSERT_EQUAL(4, (int) list.size());
+  ASSERT_EQ(4, (int)list.size());
   list.clear();
 
-  Checkpoint check(*mCheckpoint, &filter);
-  check.getComponentEvents(list);
-  
-  CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
+  Checkpoint check(*m_checkpoint, &filter);
+  check.getObservations(list);
+
+  ASSERT_EQ(2, (int)list.size());
   list.clear();
 
-  p = new ComponentEvent(*mDataItem1, 2, time, warning3);
-  check.addComponentEvent(p);
+  p = new Observation(*m_dataItem1, 2, time, warning3);
+  check.addObservation(p);
   p->unrefer();
 
-  check.getComponentEvents(list);
-  
-  CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
+  check.getObservations(list);
+
+  ASSERT_EQ(3, (int)list.size());
   list.clear();
 
-  p = new ComponentEvent(*d1, 2, time, value);
-  mCheckpoint->addComponentEvent(p);
+  p = new Observation(*d1, 2, time, value);
+  m_checkpoint->addObservation(p);
   p->unrefer();
 
-  check.getComponentEvents(list);
-  CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
+  check.getObservations(list);
+  ASSERT_EQ(3, (int)list.size());
+
+  d1.reset();
 }
 
-void CheckpointTest::testConditionChaining()
+TEST_F(CheckpointTest, ConditionChaining)
 {
-  ComponentEventPtr p1, p2, p3, p4, p5, p6;
-  string time("NOW"),
-    value("123"),
-    warning1("WARNING|CODE1|HIGH|Over..."),
-    warning2("WARNING|CODE2|HIGH|Over..."),
-    fault2("FAULT|CODE2|HIGH|Over..."),
-    warning3("WARNING|CODE3|HIGH|Over..."),
-    normal("NORMAL|||"),
-    normal1("NORMAL|CODE1||"),
-    normal2("NORMAL|CODE2||"),
-    unavailable("UNAVAILABLE|||");
+  ObservationPtr p1, p2, p3, p4, p5, p6;
+  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
+      warning2("WARNING|CODE2|HIGH|Over..."), fault2("FAULT|CODE2|HIGH|Over..."),
+      warning3("WARNING|CODE3|HIGH|Over..."), normal("NORMAL|||"), normal1("NORMAL|CODE1||"),
+      normal2("NORMAL|CODE2||"), unavailable("UNAVAILABLE|||");
 
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
-  ComponentEventPtrArray list;
-  
-  p1 = new ComponentEvent(*mDataItem1, 2, time, warning1);
+  filter.insert(m_dataItem1->getId());
+  ObservationPtrArray list;
+
+  p1 = new Observation(*m_dataItem1, 2, time, warning1);
   p1->unrefer();
-  mCheckpoint->addComponentEvent(p1);
-  
-  mCheckpoint->getComponentEvents(list);
-  CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
+  m_checkpoint->addObservation(p1);
+
+  m_checkpoint->getObservations(list);
+  ASSERT_EQ(1, (int)list.size());
   list.clear();
-  
-  p2 = new ComponentEvent(*mDataItem1, 2, time, warning2);
+
+  p2 = new Observation(*m_dataItem1, 2, time, warning2);
   p2->unrefer();
 
-  mCheckpoint->addComponentEvent(p2);
-  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
+  m_checkpoint->addObservation(p2);
+  ASSERT_TRUE(p1.getObject() == p2->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
-  CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
+  m_checkpoint->getObservations(list);
+  ASSERT_EQ(2, (int)list.size());
   list.clear();
-  
-  p3 = new ComponentEvent(*mDataItem1, 2, time, warning3);
+
+  p3 = new Observation(*m_dataItem1, 2, time, warning3);
   p3->unrefer();
 
-  mCheckpoint->addComponentEvent(p3);
-  CPPUNIT_ASSERT_EQUAL(p2.getObject(), p3->getPrev());
-  CPPUNIT_ASSERT_EQUAL(p1.getObject(), p2->getPrev());
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, p1->getPrev());
+  m_checkpoint->addObservation(p3);
+  ASSERT_TRUE(p2.getObject() == p3->getPrev());
+  ASSERT_TRUE(p1.getObject() == p2->getPrev());
+  ASSERT_TRUE(nullptr == p1->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
-  CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
+  m_checkpoint->getObservations(list);
+  ASSERT_EQ(3, (int)list.size());
   list.clear();
-  
+
   // Replace Warning on CODE 2 with a fault
-  p4 = new ComponentEvent(*mDataItem1, 2, time, fault2);
+  p4 = new Observation(*m_dataItem1, 2, time, fault2);
   p4->unrefer();
 
-  mCheckpoint->addComponentEvent(p4);
-  CPPUNIT_ASSERT_EQUAL(2, (int) p4->refCount());
-  CPPUNIT_ASSERT_EQUAL(1, (int) p3->refCount());
-  CPPUNIT_ASSERT_EQUAL(2, (int) p2->refCount());
-  CPPUNIT_ASSERT_EQUAL(2, (int) p1->refCount());
-  
+  m_checkpoint->addObservation(p4);
+  ASSERT_EQ(2, (int)p4->refCount());
+  ASSERT_EQ(1, (int)p3->refCount());
+  ASSERT_EQ(2, (int)p2->refCount());
+  ASSERT_EQ(2, (int)p1->refCount());
+
   // Should have been deep copyied
-  CPPUNIT_ASSERT(p3.getObject() != p4->getPrev());
+  ASSERT_TRUE(p3.getObject() != p4->getPrev());
 
   // Codes should still match
-  CPPUNIT_ASSERT_EQUAL(p3->getCode(), p4->getPrev()->getCode());
-  CPPUNIT_ASSERT_EQUAL(1, (int) p4->getPrev()->refCount());
-  CPPUNIT_ASSERT_EQUAL(p1->getCode(), p4->getPrev()->getPrev()->getCode());
-  CPPUNIT_ASSERT_EQUAL(1, (int) p4->getPrev()->getPrev()->refCount());
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, p4->getPrev()->getPrev()->getPrev());
+  ASSERT_EQ(p3->getCode(), p4->getPrev()->getCode());
+  ASSERT_EQ(1, (int)p4->getPrev()->refCount());
+  ASSERT_EQ(p1->getCode(), p4->getPrev()->getPrev()->getCode());
+  ASSERT_EQ(1, (int)p4->getPrev()->getPrev()->refCount());
+  ASSERT_TRUE(nullptr == p4->getPrev()->getPrev()->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
-  CPPUNIT_ASSERT_EQUAL(3, (int) list.size());
+  m_checkpoint->getObservations(list);
+  ASSERT_EQ(3, (int)list.size());
   list.clear();
-  
+
   // Clear Code 2
-  p5 = new ComponentEvent(*mDataItem1, 2, time, normal2);
+  p5 = new Observation(*m_dataItem1, 2, time, normal2);
   p5->unrefer();
-  
-  mCheckpoint->addComponentEvent(p5);
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, p5->getPrev());
+
+  m_checkpoint->addObservation(p5);
+  ASSERT_TRUE(nullptr == p5->getPrev());
 
   // Check cleanup
-  ComponentEventPtr *p7 = mCheckpoint->getEvents()[std::string("1")];
-  CPPUNIT_ASSERT_EQUAL(1, (int) (*p7)->refCount());
-  
-  CPPUNIT_ASSERT(p7 != NULL);
-  CPPUNIT_ASSERT(p5.getObject() != (*p7).getObject());
-  CPPUNIT_ASSERT_EQUAL(std::string("CODE3"), (*p7)->getCode());
-  CPPUNIT_ASSERT_EQUAL(std::string("CODE1"), (*p7)->getPrev()->getCode());
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, (*p7)->getPrev()->getPrev());
+  ObservationPtr *p7 = m_checkpoint->getEvents().at(std::string("1"));
+  ASSERT_EQ(1, (int)(*p7)->refCount());
 
-  mCheckpoint->getComponentEvents(list);
-  CPPUNIT_ASSERT_EQUAL(2, (int) list.size());
+  ASSERT_TRUE(p7);
+  ASSERT_TRUE(p5.getObject() != (*p7).getObject());
+  ASSERT_EQ(std::string("CODE3"), (*p7)->getCode());
+  ASSERT_EQ(std::string("CODE1"), (*p7)->getPrev()->getCode());
+  ASSERT_TRUE(nullptr == (*p7)->getPrev()->getPrev());
+
+  m_checkpoint->getObservations(list);
+  ASSERT_EQ(2, (int)list.size());
   list.clear();
 
   // Clear all
-  p6 = new ComponentEvent(*mDataItem1, 2, time, normal);
+  p6 = new Observation(*m_dataItem1, 2, time, normal);
   p6->unrefer();
 
-  mCheckpoint->addComponentEvent(p6);
-  CPPUNIT_ASSERT_EQUAL((ComponentEvent*) 0, p6->getPrev());
+  m_checkpoint->addObservation(p6);
+  ASSERT_TRUE(nullptr == p6->getPrev());
 
-  mCheckpoint->getComponentEvents(list);
-  CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
+  m_checkpoint->getObservations(list);
+  ASSERT_EQ(1, (int)list.size());
   list.clear();
 }
 
-void CheckpointTest::testLastConditionNormal()
+TEST_F(CheckpointTest, LastConditionNormal)
 {
-  ComponentEventPtr p1, p2, p3;
+  ObservationPtr p1, p2, p3;
 
-  string time("NOW"),
-    fault1("FAULT|CODE1|HIGH|Over..."),
-    normal1("NORMAL|CODE1||");
+  string time("NOW"), fault1("FAULT|CODE1|HIGH|Over..."), normal1("NORMAL|CODE1||");
 
   std::set<string> filter;
-  filter.insert(mDataItem1->getId());
-  ComponentEventPtrArray list;
-  
-  
-  p1 = new ComponentEvent(*mDataItem1, 2, time, fault1);
-  p1->unrefer();
-  mCheckpoint->addComponentEvent(p1);
-  
-  mCheckpoint->getComponentEvents(list);
-  CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
-  list.clear();
-  
-  p2 = new ComponentEvent(*mDataItem1, 2, time, normal1);
-  p2->unrefer();
-  mCheckpoint->addComponentEvent(p2);
+  filter.insert(m_dataItem1->getId());
+  ObservationPtrArray list;
 
-  mCheckpoint->getComponentEvents(list, &filter);
-  CPPUNIT_ASSERT_EQUAL(1, (int) list.size());
+  p1 = new Observation(*m_dataItem1, 2, time, fault1);
+  p1->unrefer();
+  m_checkpoint->addObservation(p1);
+
+  m_checkpoint->getObservations(list);
+  ASSERT_EQ(1, (int)list.size());
+  list.clear();
+
+  p2 = new Observation(*m_dataItem1, 2, time, normal1);
+  p2->unrefer();
+  m_checkpoint->addObservation(p2);
+
+  m_checkpoint->getObservations(list, &filter);
+  ASSERT_EQ(1, (int)list.size());
 
   p3 = list[0];
-  CPPUNIT_ASSERT_EQUAL(ComponentEvent::NORMAL, p3->getLevel());
-  CPPUNIT_ASSERT_EQUAL(string(""), p3->getCode());
+  ASSERT_EQ(Observation::NORMAL, p3->getLevel());
+  ASSERT_EQ(string(""), p3->getCode());
 }
-

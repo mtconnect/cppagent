@@ -1,0 +1,81 @@
+version: '{build}'
+branches:
+  only:
+  - master
+# clone_folder: c:\projects\cppagent_dev
+image:
+- Ubuntu1804
+- Visual Studio 2017
+
+configuration:
+- Debug
+#- Release
+
+platform:
+- x86
+
+#environment:
+#  matrix:
+#  - arch: Win32
+#  - arch: #does not work, Release|x64 not a valid target
+
+matrix:
+  fast_finish: true
+
+# skip unsupported combinations
+init:
+- cmd: |-
+    set arch=
+    if "%arch%"=="Win64" ( set arch= Win64)
+    echo %arch%
+    echo %APPVEYOR_BUILD_WORKER_IMAGE%
+    if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
+    echo %generator%
+- sh: sudo apt-get update
+- sh: sudo apt-get --yes install libxml2-dev
+
+before_build:
+- cmd: |-
+    git submodule init
+    git submodule update
+    mkdir build
+    cd build
+    cmake --version
+    cmake .. -DAPPVEYOR=ON -DAGENT_ENABLE_UNITTESTS=ON -G %generator%
+- sh: git submodule init
+- sh: git submodule update
+- sh: mkdir build
+- sh: cd build
+- sh: cmake --version
+- sh: cmake ..
+    
+
+build:
+  project: '{APPVEYOR_BUILD_FOLDER}/build'
+  verbosity: minimal
+  parallel: true
+
+build_script:
+- cmd: |-
+    cd %APPVEYOR_BUILD_FOLDER%\build
+    cmake --build . --config Debug --target ALL_BUILD -- %MSBUILD_FLAGS%
+- sh: |-
+    cd ${APPVEYOR_BUILD_FOLDER}/build
+    cmake --build . --config Debug --target all -- -j 4
+
+test_script:
+- cmd: ctest -C Debug --output-on-failure
+- sh: ctest
+
+  
+only_commits:
+  files:
+    - CMakeLists.txt
+    - appveyor.yml
+    - src/
+    - test/
+    - cmake/
+    - dlib_fix/
+    - cppunit_make/
+    - libxml2_make/
+    - agent/

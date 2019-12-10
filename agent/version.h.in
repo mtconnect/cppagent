@@ -1,8 +1,0 @@
-// the configured options and settings for MTConnect Agent
-#define AGENT_VERSION_MAJOR @AGENT_VERSION_MAJOR@
-#define AGENT_VERSION_MINOR @AGENT_VERSION_MINOR@
-#define AGENT_VERSION_PATCH @AGENT_VERSION_PATCH@
-#define AGENT_VERSION_BUILD @AGENT_VERSION_BUILD@
-#define AGENT_VERSION_RC    "@AGENT_VERSION_RC@"
-
-extern void PrintMTConnectAgentVersion();

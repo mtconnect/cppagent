@@ -1,0 +1,19 @@
+[Unit]
+Description=MTConnect Adapter Simulator
+Requires/After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/etc/mtconnect/simulator
+ExecStart=/usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l /etc/mtconnect/simulator/VMC-3Axis-Log.txt
+User=mtconnect
+Group=mtconnect
+Restart=always
+RestartSec=2
+StartLimitInterval=90s
+StartLimitBurst=3
+StandardOutput=journal
+LimitCORE=10
+
+[Install]
+WantedBy=default.target

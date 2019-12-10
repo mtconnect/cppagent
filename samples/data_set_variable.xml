@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.5">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.5"/>
+  <Devices>
+    <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
+      <Description manufacturer="NIST" serialNumber=""/>
+      <DataItems>
+	<DataItem type="AVAILABILITY" name="avail" category="EVENT" id="avail" />
+      </DataItems>
+      <Components>
+        <Axes name="Axes" id="axes">
+          <Components>
+            <Rotary name="C" id="c">
+              <DataItems>
+                <DataItem type="ROTARY_VELOCITY" category="SAMPLE" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE" id="c1" subType="ACTUAL" name="Sspeed">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+                <DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c2">
+                  <Constraints><Value>SPINDLE</Value></Constraints>
+                </DataItem>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller name="Controller" id="cont">
+          <Components>
+            <Path name="path" id="path1">
+              <DataItems>
+                <DataItem type="VARIABLE" category="EVENT" id="v1" name="vars" representation="DATA_SET"/>
+                <DataItem type="BLOCK" discrete="true" category="EVENT" id="v3" name="vars2" />
+                <DataItem type="CONTROLLER_MODE" category="EVENT" id="p2" name="mode"/>
+                <DataItem type="LINE" category="EVENT" id="p3" name="line"/>
+                <DataItem type="PROGRAM" category="EVENT" id="p4" name="program"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+        <Power name="power" id="power">
+          <DataItems>
+            <DataItem type="POWER_STATUS" category="EVENT" id="pw1" name="power"/>
+          </DataItems>
+        </Power>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>

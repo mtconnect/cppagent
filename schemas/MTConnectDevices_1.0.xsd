@@ -1,0 +1,703 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xs:schema targetNamespace='urn:mtconnect.com:MTConnectDevices:1.0' elementFormDefault='qualified' attributeFormDefault='unqualified' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:mt='urn:mtconnect.com:MTConnectDevices:1.0' xmlns='urn:mtconnect.com:MTConnectDevices:1.0'>
+  <xs:element name='MTConnectDevices' type='MTConnectDevicesType'>
+    <xs:annotation>
+      <xs:documentation>
+        The root node for MTConnect
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='SenderType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sender of the message
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='CreationTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The date and time the document was created
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='SequenceType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sequence number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='TestIndicatorType'>
+    <xs:annotation>
+      <xs:documentation>
+        A debugging flag for testing.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:boolean'/>
+  </xs:simpleType>
+  <xs:simpleType name='InstanceIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The instance number of the agent, used for fault tolerance
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='BufferSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The size of the agents buffer
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='VersionType'>
+    <xs:annotation>
+      <xs:documentation>
+        A version number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='NameType'>
+    <xs:annotation>
+      <xs:documentation>
+        A short name for any element
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='UuidType'>
+    <xs:annotation>
+      <xs:documentation>
+        A universally unique id that uniquely identifies the element for
+        it&apos;s entire life
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='SerialNumberType'>
+    <xs:annotation>
+      <xs:documentation>
+        A serial number for a piece of equipment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ItemSourceType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement source
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='RateType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sample rate in milliseconds per sample
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='PathType'>
+    <xs:annotation>
+      <xs:documentation>
+        An XML path
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='IDType'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:ID'/>
+  </xs:simpleType>
+  <xs:simpleType name='DescriptionTextType'>
+    <xs:annotation>
+      <xs:documentation>
+        A description
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The types of measurements available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACCELERATION'/>
+      <xs:enumeration value='ALARM'/>
+      <xs:enumeration value='AMPERAGE'/>
+      <xs:enumeration value='ANGLE'/>
+      <xs:enumeration value='ANGULAR_ACCELERATION'/>
+      <xs:enumeration value='ANGULAR_VELOCITY'/>
+      <xs:enumeration value='BLOCK'/>
+      <xs:enumeration value='CODE'/>
+      <xs:enumeration value='DISPLACEMENT'/>
+      <xs:enumeration value='DIRECTION'/>
+      <xs:enumeration value='EXECUTION'/>
+      <xs:enumeration value='FREQUENCY'/>
+      <xs:enumeration value='PATH_FEEDRATE'/>
+      <xs:enumeration value='AXIS_FEEDRATE'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='CONTROLLER_MODE'/>
+      <xs:enumeration value='LOAD'/>
+      <xs:enumeration value='OTHER'/>
+      <xs:enumeration value='POSITION'/>
+      <xs:enumeration value='POWER_STATUS'/>
+      <xs:enumeration value='PRESSURE'/>
+      <xs:enumeration value='PROGRAM'/>
+      <xs:enumeration value='SPINDLE_SPEED'/>
+      <xs:enumeration value='STATUS'/>
+      <xs:enumeration value='TEMPERATURE'/>
+      <xs:enumeration value='TORQUE'/>
+      <xs:enumeration value='VELOCITY'/>
+      <xs:enumeration value='VIBRATION'/>
+      <xs:enumeration value='VOLTAGE'/>
+      <xs:enumeration value='WATTS'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemSubEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sub-types for a measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTUAL'/>
+      <xs:enumeration value='COMMANDED'/>
+      <xs:enumeration value='DISTANCE'/>
+      <xs:enumeration value='MAXIMUM'/>
+      <xs:enumeration value='MAX_OVERRIDE'/>
+      <xs:enumeration value='MINIMUM'/>
+      <xs:enumeration value='OTHER'/>
+      <xs:enumeration value='OVERRIDE'/>
+      <xs:enumeration value='TARGET'/>
+      <xs:enumeration value='GOOD'/>
+      <xs:enumeration value='BAD'/>
+      <xs:enumeration value='ALL'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='HeaderType'>
+    <xs:annotation>
+      <xs:documentation>
+        Message header for protocol information
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='xs:string'>
+        <xs:attribute name='version' type='VersionType' use='required'/>
+        <xs:attribute name='creationTime' type='CreationTimeType' use='required'/>
+        <xs:attribute name='testIndicator' type='TestIndicatorType' use='optional'/>
+        <xs:attribute name='instanceId' type='InstanceIdType' use='required'/>
+        <xs:attribute name='sender' type='SenderType' use='required'/>
+        <xs:attribute name='bufferSize' type='BufferSizeType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='MTConnectDevicesType'>
+    <xs:annotation>
+      <xs:documentation>
+        The root node for MTConnect
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Header' type='HeaderType'>
+        <xs:annotation>
+          <xs:documentation>
+            Protocol dependent information
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Devices' type='DevicesType'>
+        <xs:annotation>
+          <xs:documentation>
+            The equipment
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name='StationType'>
+    <xs:annotation>
+      <xs:documentation>
+        The station id for this device
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='Iso841ClassType'>
+    <xs:annotation>
+      <xs:documentation>
+        The ISO 841 classification for the device
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:complexType name='DevicesType'>
+    <xs:annotation>
+      <xs:documentation>
+        The top level components
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Device' maxOccurs='unbounded' minOccurs='1' type='DeviceType'>
+        <xs:annotation>
+          <xs:documentation>
+            A piece of equipment
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='ComponentType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract component type. This is a placeholder for all components
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Description' maxOccurs='1' minOccurs='0' type='ComponentDescriptionType'>
+        <xs:annotation>
+          <xs:documentation>
+            The descriptive information about this component
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='DataItems' maxOccurs='1' minOccurs='0' type='DataItemsType'>
+        <xs:annotation>
+          <xs:documentation>
+            The component&apos;s Data Items
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Components' maxOccurs='1' minOccurs='0' type='ComponentsType'>
+        <xs:annotation>
+          <xs:documentation>
+            The sub components
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name='id' type='IDType' use='required'/>
+    <xs:attribute name='name' type='NameType' use='required'/>
+    <xs:attribute name='sampleRate' type='SampleRateType' use='optional'/>
+  </xs:complexType>
+  <xs:element name='Component' abstract='true' type='ComponentType'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract component type. This is a placeholder for all components
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ComponentDescriptionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The descriptive information for this component. This can be manufacturer
+        specific
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='DescriptionTextType'>
+        <xs:attribute name='manufacturer' type='NameType' use='optional'/>
+        <xs:attribute name='serialNumber' type='SerialNumberType' use='optional'/>
+        <xs:attribute name='station' type='StationType' use='optional'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='CommonComponentType'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract component that has an optional uuid
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='ComponentType'>
+        <xs:attribute name='uuid' type='UuidType' use='optional'/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='CommonComponent' substitutionGroup='Component' type='CommonComponentType'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract component that has an optional uuid
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ComponentsType'>
+    <xs:annotation>
+      <xs:documentation>
+        A list of generic components
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element maxOccurs='unbounded' minOccurs='1' ref='Component'/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='DeviceType'>
+    <xs:annotation>
+      <xs:documentation>
+        The top level component managed by the agent
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='ComponentType'>
+        <xs:attribute name='iso841Class' type='Iso841ClassType' use='required'/>
+        <xs:attribute name='uuid' type='UuidType' use='required'/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Device' substitutionGroup='Component' type='DeviceType'>
+    <xs:annotation>
+      <xs:documentation>
+        The top level component managed by the agent
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ControllerType'>
+    <xs:annotation>
+      <xs:documentation>
+        A controller
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Controller' substitutionGroup='CommonComponent' type='ControllerType'>
+    <xs:annotation>
+      <xs:documentation>
+        A controller
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PowerType'>
+    <xs:annotation>
+      <xs:documentation>
+        A power measuring component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Power' substitutionGroup='CommonComponent' type='PowerType'>
+    <xs:annotation>
+      <xs:documentation>
+        A power measuring component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='SensorType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sensor, this is not abstract to allow for easy extensibility.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Sensor' substitutionGroup='CommonComponent' type='SensorType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sensor, this is not abstract to allow for easy extensibility.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ThermostatType'>
+    <xs:annotation>
+      <xs:documentation>
+        A thermostate
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='SensorType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Thermostat' substitutionGroup='Sensor' type='ThermostatType'>
+    <xs:annotation>
+      <xs:documentation>
+        A thermostate
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VibrationType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sensor for reading the vibration from a component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='SensorType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Vibration' substitutionGroup='Sensor' type='VibrationType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sensor for reading the vibration from a component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AxesType'>
+    <xs:annotation>
+      <xs:documentation>
+        The machines axes. There are currently four types of axes available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Axes' substitutionGroup='CommonComponent' type='AxesType'>
+    <xs:annotation>
+      <xs:documentation>
+        The machines axes. There are currently four types of axes available
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AxisType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        A abstract machine axis
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Axis' abstract='true' substitutionGroup='CommonComponent' type='AxisType'>
+    <xs:annotation>
+      <xs:documentation>
+        A abstract machine axis
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='LinearType'>
+    <xs:annotation>
+      <xs:documentation>
+        A linear axis
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='AxisType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Linear' substitutionGroup='Axis' type='LinearType'>
+    <xs:annotation>
+      <xs:documentation>
+        A linear axis
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='RotaryType'>
+    <xs:annotation>
+      <xs:documentation>
+        A rotary axis that moves in a rotational manor
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='AxisType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Rotary' substitutionGroup='Axis' type='RotaryType'>
+    <xs:annotation>
+      <xs:documentation>
+        A rotary axis that moves in a rotational manor
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='SpindleType'>
+    <xs:annotation>
+      <xs:documentation>
+        A spindle axis that spins
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='AxisType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Spindle' substitutionGroup='Axis' type='SpindleType'>
+    <xs:annotation>
+      <xs:documentation>
+        A spindle axis that spins
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='SampleRateType'>
+    <xs:annotation>
+      <xs:documentation>
+        The rate a measurement is sampled
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='CategoryType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement sampling type
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='EVENT'/>
+      <xs:enumeration value='SAMPLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='NativeScaleType'>
+    <xs:annotation>
+      <xs:documentation>
+        The multiplier for the native value. Conversion divides by this value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='STATUS'/>
+      <xs:enumeration value='MILLIMETER'/>
+      <xs:enumeration value='DEGREE'/>
+      <xs:enumeration value='MILLIMETER/SECOND'/>
+      <xs:enumeration value='DEGREE/SECOND'/>
+      <xs:enumeration value='MILLIMETER/SECOND^2'/>
+      <xs:enumeration value='DEGREE/SECOND^2'/>
+      <xs:enumeration value='LITER'/>
+      <xs:enumeration value='KILOGRAM'/>
+      <xs:enumeration value='NEWTON'/>
+      <xs:enumeration value='CELSIUS'/>
+      <xs:enumeration value='REVOLUTION/MINUTE'/>
+      <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='AMPERE'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='PART_COUNT'/>
+      <xs:enumeration value='PASCAL'/>
+      <xs:enumeration value='PERCENT'/>
+      <xs:enumeration value='NEWTON_METER'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='NativeUnitsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The units supported for the source equipment that can be converted into
+        MTC Units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='STATUS'/>
+      <xs:enumeration value='MILLIMETER'/>
+      <xs:enumeration value='DEGREE'/>
+      <xs:enumeration value='MILLIMETER/SECOND'/>
+      <xs:enumeration value='DEGREE/SECOND'/>
+      <xs:enumeration value='MILLIMETER/SECOND^2'/>
+      <xs:enumeration value='DEGREE/SECOND^2'/>
+      <xs:enumeration value='LITER'/>
+      <xs:enumeration value='KILOGRAM'/>
+      <xs:enumeration value='NEWTON'/>
+      <xs:enumeration value='CELSIUS'/>
+      <xs:enumeration value='REVOLUTION/MINUTE'/>
+      <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='AMPERE'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='PART_COUNT'/>
+      <xs:enumeration value='PASCAL'/>
+      <xs:enumeration value='PERCENT'/>
+      <xs:enumeration value='NEWTON_METER'/>
+      <xs:enumeration value='INCH'/>
+      <xs:enumeration value='INCH/MINUTE'/>
+      <xs:enumeration value='INCH/SECOND'/>
+      <xs:enumeration value='INCH/SECOND^2'/>
+      <xs:enumeration value='FOOT'/>
+      <xs:enumeration value='FOOT/MINUTE'/>
+      <xs:enumeration value='FOOT/SECOND'/>
+      <xs:enumeration value='FOOT/SECOND^2'/>
+      <xs:enumeration value='POUND'/>
+      <xs:enumeration value='FAHRENHEIT'/>
+      <xs:enumeration value='RADIAN'/>
+      <xs:enumeration value='RADIAN/SECOND'/>
+      <xs:enumeration value='RADIAN/SECOND^2'/>
+      <xs:enumeration value='RADIAN/MINUTE'/>
+      <xs:enumeration value='MILLIMETER/MINUTE'/>
+      <xs:enumeration value='DEGREE/MINUTE'/>
+      <xs:enumeration value='REVOLUTION/SECOND'/>
+      <xs:enumeration value='OTHER'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='CoordinateSystemType'>
+    <xs:annotation>
+      <xs:documentation>
+        The coordinate system to be used for the position
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='MACHINE'/>
+      <xs:enumeration value='WORK'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='DataItemsType'>
+    <xs:annotation>
+      <xs:documentation>
+        A generic list of measurements for all axis
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='DataItem' maxOccurs='unbounded' minOccurs='1' type='DataItemType'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement for this component
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='DataItemType'>
+    <xs:annotation>
+      <xs:documentation>
+        A abstract measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Source' maxOccurs='1' minOccurs='0' type='SourceType'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement&apos;s source. This is the native machine identifier
+            for this measurement. The source will be used to identify the
+            correct incoming value with the measurement.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name='name' type='NameType' use='required'/>
+    <xs:attribute name='id' type='IDType' use='required'/>
+    <xs:attribute name='type' type='DataItemEnumType' use='required'/>
+    <xs:attribute name='subType' type='DataItemSubEnumType' use='optional'/>
+    <xs:attribute name='units' type='UnitsType' use='optional'/>
+    <xs:attribute name='nativeUnits' type='NativeUnitsType' use='optional'/>
+    <xs:attribute name='nativeScale' type='NativeScaleType' use='optional'/>
+    <xs:attribute name='category' type='CategoryType' use='required'/>
+    <xs:attribute name='coordinateSystem' type='CoordinateSystemType' use='optional'/>
+  </xs:complexType>
+  <xs:complexType name='SourceType'>
+    <xs:annotation>
+      <xs:documentation>
+        A native data source
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ItemSourceType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+</xs:schema>

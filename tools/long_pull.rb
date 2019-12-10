@@ -13,6 +13,7 @@ class LongPull
     @http.request_get(uri) do |res|
       content_type, = res.get_fields('content-type')
       if content_type !~ /boundary=([^;]+)/
+        puts res.body
         raise "No boundry: #{res.body}"
       end
       

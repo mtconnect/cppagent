@@ -1,0 +1,9 @@
+<MTConnectAssets xmlns:mt="urn:mtconnect.org:MTConnectAssets:1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectAssets:1.5 ../MTConnectAssets_1.5.xsd" xmlns="urn:mtconnect.org:MTConnectAssets:1.5" >
+  <Header version="NMTOKEN" creationTime="2001-12-17T09:30:47Z" instanceId="1" sender="localhost" assetBufferSize="1" assetCount="1"/>
+  <Assets>
+    <CuttingToolArchetype assetId="KSSP300R4SD43L240" timestamp="2001-12-17T09:30:47Z" deviceUuid="7800f530-34a9">
+      <Description>Cutting tool ...</Description>
+      <CuttingToolDefinition format="EXPRESS">Some Express...</CuttingToolDefinition>
+      </CuttingToolArchetype> 
+    </Assets>
+</MTConnectAssets>
