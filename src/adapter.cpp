@@ -77,7 +77,7 @@ namespace mtconnect
     if (m_device)
     {
       m_device->addAdapter(this);
-      m_allDevices.push_back(m_device);
+      m_allDevices.emplace_back(m_device);
     }
   }
 
@@ -86,7 +86,7 @@ namespace mtconnect
     auto dev = m_agent->getDeviceByName(device);
     if (dev)
     {
-      m_allDevices.push_back(dev);
+      m_allDevices.emplace_back(dev);
       dev->addAdapter(this);
     }
   }
@@ -312,7 +312,7 @@ namespace mtconnect
         {
           getline(toParse, rest);
           value = inputValue + "|" + rest;
-          if (rest.size() > 0)
+          if (!rest.empty())
             value = inputValue + "|" + rest;
           else
             value = inputValue;
@@ -407,7 +407,7 @@ namespace mtconnect
         do
         {
           pair<string, string> kv("xml", assetKey);
-          list.push_back(kv);
+          list.emplace_back(kv);
         } while (getline(toParse, assetKey, '|'));
       }
       else
@@ -415,7 +415,7 @@ namespace mtconnect
         while (getline(toParse, assetValue, '|'))
         {
           pair<string, string> kv(assetKey, assetValue);
-          list.push_back(kv);
+          list.emplace_back(kv);
 
           if (!getline(toParse, assetKey, '|'))
             break;

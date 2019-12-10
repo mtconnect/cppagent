@@ -17,8 +17,8 @@
 #include "version.h"
 
 #include <cstdio>
-#include <sstream>
 #include <cstring>
+#include <sstream>
 
 std::string GetAgentVersion()
 {

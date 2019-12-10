@@ -57,11 +57,11 @@ namespace mtconnect
     {
       return m_object;
     }
-    T *operator->()const
+    T *operator->() const
     {
       return m_object;
     }
-    operator T *()const
+    operator T *() const
     {
       return m_object;
     }

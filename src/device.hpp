@@ -40,7 +40,7 @@ namespace mtconnect
     DataItem *getDeviceDataItem(const std::string &name);
     void addAdapter(Adapter *anAdapter)
     {
-      m_adapters.push_back(anAdapter);
+      m_adapters.emplace_back(anAdapter);
     }
     Component *getComponentById(const std::string &aId)
     {

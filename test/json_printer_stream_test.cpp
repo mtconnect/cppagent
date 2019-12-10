@@ -31,10 +31,10 @@
 #include "xml_printer.hpp"
 
 #include <nlohmann/json.hpp>
-#include <memory>
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 

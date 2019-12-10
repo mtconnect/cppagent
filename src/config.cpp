@@ -120,7 +120,8 @@ namespace mtconnect
         m_monitorFiles(false),
         m_minimumConfigReloadAge(15),
         m_restart(false),
-        m_exePath("")
+        m_exePath(""),
+        m_pretty(false)
   {
     bool success = false;
     char pathSep = '/';
@@ -487,7 +488,7 @@ namespace mtconnect
             sin >> one;
             sin >> two;
             sin >> three;
-            if (one == "file" && !three.size())
+            if (one == "file" && three.empty())
               name = two;
             else
               name = one;
@@ -570,24 +571,24 @@ namespace mtconnect
     if (reader.is_key_defined("Devices"))
     {
       auto fileName = reader["Devices"];
-      devices_files.push_back(fileName);
+      devices_files.emplace_back(fileName);
 
       if (!m_exePath.empty() && !fileName.empty() && fileName[0] != '/' && fileName[0] != '\\' &&
           fileName[1] != ':')
       {
-        devices_files.push_back(m_exePath + reader["Devices"]);
+        devices_files.emplace_back(m_exePath + reader["Devices"]);
       }
     }
 
-    devices_files.push_back("Devices.xml");
+    devices_files.emplace_back("Devices.xml");
 
     if (!m_exePath.empty())
-      devices_files.push_back(m_exePath + "Devices.xml");
+      devices_files.emplace_back(m_exePath + "Devices.xml");
 
-    devices_files.push_back("probe.xml");
+    devices_files.emplace_back("probe.xml");
 
     if (!m_exePath.empty())
-      devices_files.push_back(m_exePath + "probe.xml");
+      devices_files.emplace_back(m_exePath + "probe.xml");
 
     m_devicesFile.clear();
 
@@ -676,7 +677,7 @@ namespace mtconnect
         const auto &adapter = adapters.block(block);
         string deviceName;
         if (adapter.is_key_defined("Device"))
-          deviceName = adapter["Device"].c_str();
+          deviceName = adapter["Device"];
         else
           deviceName = block;
 

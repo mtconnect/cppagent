@@ -437,7 +437,7 @@ namespace mtconnect
 
     THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST sensor->getRest().c_str()));
 
-    if (sensor->getChannels().size() > 0)
+    if (!sensor->getChannels().empty())
     {
       AutoElement channelsEle(writer, "Channels");
       for (const auto &channel : sensor->getChannels())
@@ -462,7 +462,7 @@ namespace mtconnect
     const auto &desc = component->getDescription();
     const auto &body = component->getDescriptionBody();
 
-    if (desc.size() > 0 || !body.empty())
+    if (!desc.empty() || !body.empty())
       addSimpleElement(writer, "Description", body, desc);
 
     if (component->getConfiguration())
@@ -483,7 +483,7 @@ namespace mtconnect
 
     auto datum = component->getDataItems();
 
-    if (datum.size() > 0)
+    if (!datum.empty())
     {
       AutoElement ele(writer, "DataItems");
 
@@ -493,7 +493,7 @@ namespace mtconnect
 
     const auto children = component->getChildren();
 
-    if (children.size() > 0)
+    if (!children.empty())
     {
       AutoElement ele(writer, "Components");
 
@@ -514,7 +514,7 @@ namespace mtconnect
       }
     }
 
-    if (component->getCompositions().size() > 0)
+    if (!component->getCompositions().empty())
     {
       AutoElement ele(writer, "Compositions");
 
@@ -530,7 +530,7 @@ namespace mtconnect
       }
     }
 
-    if (component->getReferences().size() > 0)
+    if (!component->getReferences().empty())
     {
       AutoElement ele(writer, "References");
 
@@ -978,7 +978,7 @@ namespace mtconnect
       addAttribute(writer, "lastSequence", int64ToString(lastSeq));
     }
 
-    if (aType == eDEVICES && count && count->size() > 0)
+    if (aType == eDEVICES && count && !count->empty())
     {
       AutoElement ele(writer, "AssetCounts");
 
@@ -996,7 +996,7 @@ namespace mtconnect
   {
     AutoElement ele(writer, element);
 
-    if (attributes.size() > 0)
+    if (!attributes.empty())
       addAttributes(writer, attributes);
 
     if (!body.empty())
@@ -1064,7 +1064,7 @@ namespace mtconnect
       printCuttingToolValue(writer, item, prop.c_str());
 
     // Print Measurements
-    if (item->m_measurements.size() > 0)
+    if (!item->m_measurements.empty())
     {
       AutoElement ele(writer, "Measurements");
 
@@ -1101,7 +1101,7 @@ namespace mtconnect
           AutoElement life(writer, "CuttingToolLifeCycle");
 
           // Status...
-          if (tool->m_status.size() > 0)
+          if (!tool->m_status.empty())
           {
             AutoElement stat(writer, "CutterStatus");
             for (const auto &status : tool->m_status)
@@ -1128,7 +1128,7 @@ namespace mtconnect
             printCuttingToolValue(writer, tool, prop.c_str());
 
           // Print Measurements
-          if (tool->m_measurements.size() > 0)
+          if (!tool->m_measurements.empty())
           {
             AutoElement mes(writer, "Measurements");
             for (const auto &meas : tool->m_measurements)
@@ -1136,7 +1136,7 @@ namespace mtconnect
           }
 
           // Print Cutting Items
-          if (tool->m_items.size() > 0)
+          if (!tool->m_items.empty())
           {
             AutoElement mes(writer, "CuttingItems");
             addAttribute(writer, "count", tool->m_itemCount);

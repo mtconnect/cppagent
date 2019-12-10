@@ -59,8 +59,8 @@ class ComponentTest : public testing::Test
     }
   }
 
-  mtconnect::Component *m_compA;
-  mtconnect::Component *m_compB;
+  mtconnect::Component *m_compA{nullptr};
+  mtconnect::Component *m_compB{nullptr};
 };
 
 TEST_F(ComponentTest, Getters)

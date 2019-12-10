@@ -64,7 +64,7 @@ namespace mtconnect
 
   int RollingFileLogger::getFileAge()
   {
-    struct stat buffer;
+    struct stat buffer{};
 
     int res = ::stat(m_file.full_name().c_str(), &buffer);
 

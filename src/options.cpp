@@ -207,7 +207,7 @@ namespace mtconnect
         break;
 
       case eBoolean:
-        *(boolPtr_) = (*aCp == 'Y' || *aCp == 'T') ? true : false;
+        *(boolPtr_) = *aCp == 'Y' || *aCp == 'T';
         break;
 
       case eCharacter:
@@ -218,7 +218,7 @@ namespace mtconnect
         if (expand_)
           expandFiles(aCp);
         else
-          list_->push_back(aCp);
+          list_->emplace_back(aCp);
 
         break;
 
@@ -260,7 +260,7 @@ namespace mtconnect
 #endif
     }
     else
-      list_->push_back(fileName);
+      list_->emplace_back(fileName);
   }
 
   bool Option::operator<(const Option &another) const
@@ -308,7 +308,7 @@ namespace mtconnect
     int i = 0;
 
     while (optionList[i])
-      push_back(*optionList[i++]);
+      emplace_back(*optionList[i++]);
   }
 
   OptionsList::~OptionsList()
@@ -317,7 +317,7 @@ namespace mtconnect
 
   void OptionsList::addOption(Option &option)
   {
-    push_back(option);
+    emplace_back(option);
   }
 
   int OptionsList::parse(int &argc, const char **argv)

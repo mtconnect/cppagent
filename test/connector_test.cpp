@@ -49,7 +49,7 @@ class TestConnector : public Connector
   void processData(const std::string &data) override
   {
     m_data = data;
-    m_list.push_back(m_data);
+    m_list.emplace_back(m_data);
   }
 
   void protocolCommand(const std::string &data) override
@@ -119,7 +119,7 @@ class ConnectorTest : public testing::Test, public dlib::threaded_object
   dlib::scoped_ptr<dlib::listener> m_server;
   dlib::scoped_ptr<dlib::connection> m_serverSocket;
   dlib::scoped_ptr<TestConnector> m_connector;
-  unsigned short m_port;
+  unsigned short m_port{0};
 };
 
 TEST_F(ConnectorTest, Connection)

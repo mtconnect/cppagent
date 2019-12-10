@@ -112,7 +112,7 @@ namespace mtconnect
 
         while (getline(stream, val, ','))
         {
-          m_status.push_back(val);
+          m_status.emplace_back(val);
         }
       }
       else

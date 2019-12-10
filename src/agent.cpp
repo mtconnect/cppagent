@@ -466,7 +466,7 @@ namespace mtconnect
       if (isFile(path))
         return handleFile(path, outgoing);
 
-      string::size_type loc1 = path.find("/", 1);
+      string::size_type loc1 = path.find('/', 1);
       string::size_type end = (path[path.length() - 1] == '/') ? path.length() - 1 : string::npos;
 
       string first = path.substr(1, loc1 - 1);
@@ -489,7 +489,7 @@ namespace mtconnect
         if (loc1 < end)
         {
           // Look for another '/'
-          string::size_type loc2 = path.find("/", loc1 + 1);
+          string::size_type loc2 = path.find('/', loc1 + 1);
 
           if (loc2 == end)
           {
@@ -527,7 +527,7 @@ namespace mtconnect
   {
     auto adapter = new Adapter(deviceName, host, port, legacyTimeout);
     adapter->setAgent(*this);
-    m_adapters.push_back(adapter);
+    m_adapters.emplace_back(adapter);
 
     const auto dev = getDeviceByName(deviceName);
     if (dev && dev->m_availabilityAdded)
@@ -675,7 +675,7 @@ namespace mtconnect
       if (!ptr->isRemoved())
       {
         AssetPtr &newPtr = m_assetMap[id];
-        m_assets.push_back(&newPtr);
+        m_assets.emplace_back(&newPtr);
       }
 
       // Add secondary keys
@@ -736,7 +736,7 @@ namespace mtconnect
 
       // Move it to the front of the queue
       m_assets.remove(&asset);
-      m_assets.push_back(&asset);
+      m_assets.emplace_back(&asset);
 
       tool->setTimestamp(time);
       tool->setDeviceUuid(device->getUuid());
@@ -1016,7 +1016,7 @@ namespace mtconnect
       if (!device)
         return printError(printer, "NO_DEVICE", "Could not find the device '" + name + "'");
       else
-        deviceList.push_back(device);
+        deviceList.emplace_back(device);
     }
     else
       deviceList = m_devices;
@@ -1086,7 +1086,7 @@ namespace mtconnect
           if (!ptr.getObject())
             return printer->printError(m_instanceId, 0, 0, "ASSET_NOT_FOUND",
                                        (string) "Could not find asset: " + token);
-          assets.push_back(ptr);
+          assets.emplace_back(ptr);
         }
       }
     }
@@ -1104,7 +1104,7 @@ namespace mtconnect
       {
         if ((type.empty() || type == (**iter)->getType()) && (removed || !(**iter)->isRemoved()))
         {
-          assets.push_back(**iter);
+          assets.emplace_back(**iter);
         }
       }
     }
@@ -1532,10 +1532,7 @@ namespace mtconnect
       }
 
       end = i;
-      if (i >= m_sequence)
-        endOfBuffer = true;
-      else
-        endOfBuffer = false;
+      endOfBuffer = i >= m_sequence;
 
       if (observer)
         observer->reset();
@@ -1553,7 +1550,7 @@ namespace mtconnect
 
   string Agent::devicesAndPath(const string &path, const string &device)
   {
-    string dataPath = "";
+    string dataPath;
 
     if (!device.empty())
     {

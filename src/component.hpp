@@ -168,7 +168,7 @@ namespace mtconnect
     // Add to/get the component's std::list of children
     void addChild(Component &child)
     {
-      m_children.push_back(&child);
+      m_children.emplace_back(&child);
     }
     std::list<Component *> &getChildren()
     {
@@ -178,7 +178,7 @@ namespace mtconnect
     // Add and get composition...
     void addComposition(Composition *composition)
     {
-      m_compositions.push_back(composition);
+      m_compositions.emplace_back(composition);
     }
     std::list<Composition *> &getCompositions()
     {
@@ -204,7 +204,7 @@ namespace mtconnect
     // References
     void addReference(Reference &reference)
     {
-      m_references.push_back(reference);
+      m_references.emplace_back(reference);
     }
     const std::vector<Reference> &getReferences() const
     {
