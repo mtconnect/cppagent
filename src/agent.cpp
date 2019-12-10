@@ -1553,7 +1553,7 @@ namespace mtconnect
 
   string Agent::devicesAndPath(const string &path, const string &device)
   {
-    string dataPath = "";
+    string dataPath;
 
     if (!device.empty())
     {

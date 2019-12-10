@@ -676,7 +676,7 @@ namespace mtconnect
         const auto &adapter = adapters.block(block);
         string deviceName;
         if (adapter.is_key_defined("Device"))
-          deviceName = adapter["Device"].c_str();
+          deviceName = adapter["Device"];
         else
           deviceName = block;
 

@@ -128,8 +128,8 @@ namespace mtconnect
           m_type(another.m_type),
           m_hasAttributes(false)
     {
-      if (another.m_description.get())
-        m_description = std::make_unique<Description>(*another.m_description.get());
+      if (another.m_description)
+        m_description = std::make_unique<Description>(*another.m_description);
     }
 
     Composition(const std::map<std::string, std::string> &attributes) : m_hasAttributes(false)

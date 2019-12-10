@@ -251,7 +251,7 @@ namespace mtconnect
     if (newLine != string::npos)
     {
       // If the '\n' is not at the end of the buffer, then save the overflow
-      string overflow = "";
+      string overflow;
 
       if (newLine != m_buffer.length() - 1)
       {

@@ -1810,7 +1810,7 @@ TEST_F(AgentTest, StreamData)
   // Start a thread...
   key_value_map query;
   query["interval"] = "50";
-  query["heartbeat"] = to_string(heartbeatFreq.count()).c_str();
+  query["heartbeat"] = to_string(heartbeatFreq.count());
   query["from"] = int64ToString(m_agent->getSequence());
   m_agentTestHelper->m_path = "/LinuxCNC/sample";
 
