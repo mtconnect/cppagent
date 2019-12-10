@@ -207,7 +207,7 @@ namespace mtconnect
         break;
 
       case eBoolean:
-        *(boolPtr_) = (*aCp == 'Y' || *aCp == 'T') ? true : false;
+        *(boolPtr_) = *aCp == 'Y' || *aCp == 'T';
         break;
 
       case eCharacter:

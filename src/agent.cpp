@@ -1532,10 +1532,7 @@ namespace mtconnect
       }
 
       end = i;
-      if (i >= m_sequence)
-        endOfBuffer = true;
-      else
-        endOfBuffer = false;
+      endOfBuffer = i >= m_sequence;
 
       if (observer)
         observer->reset();
