@@ -466,7 +466,7 @@ namespace mtconnect
       if (isFile(path))
         return handleFile(path, outgoing);
 
-      string::size_type loc1 = path.find("/", 1);
+      string::size_type loc1 = path.find('/', 1);
       string::size_type end = (path[path.length() - 1] == '/') ? path.length() - 1 : string::npos;
 
       string first = path.substr(1, loc1 - 1);
@@ -489,7 +489,7 @@ namespace mtconnect
         if (loc1 < end)
         {
           // Look for another '/'
-          string::size_type loc2 = path.find("/", loc1 + 1);
+          string::size_type loc2 = path.find('/', loc1 + 1);
 
           if (loc2 == end)
           {

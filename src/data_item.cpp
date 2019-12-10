@@ -337,13 +337,13 @@ namespace mtconnect
 
         for (int i = 0; i < 3; i++)
         {
-          auto pos = value.find(" ", start);
+          auto pos = value.find(' ', start);
           result << floatToString((atof(value.substr(start, pos).c_str()) + m_conversionOffset) *
                                   m_conversionFactor);
 
           if (pos != string::npos)
           {
-            start = value.find_first_not_of(" ", pos);
+            start = value.find_first_not_of(' ', pos);
             result << " ";
           }
         }
