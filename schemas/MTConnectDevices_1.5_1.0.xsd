@@ -2365,6 +2365,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLILITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milliliter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER/REVOLUTION'>
         <xs:annotation>
           <xs:documentation>
@@ -2617,6 +2659,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLILITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milliliter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER/REVOLUTION'>
         <xs:annotation>
           <xs:documentation>
@@ -2826,6 +2910,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Rotational velocity in revolution per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of time in minutes
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -4128,8 +4219,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         endeffector is an XML container that represents the information for
-        those functions that form the last link segment of a robot. It is the
-        part of the robot that interacts with the manufacturing process.
+        those functions that form the last link segment of a piece of equipment.
+        It is the part of a piece of equipment that interacts with the
+        manufacturing process.
       </xs:documentation>
     </xs:annotation>
     <xs:complexContent>
@@ -4140,8 +4232,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         endeffector is an XML container that represents the information for
-        those functions that form the last link segment of a robot. It is the
-        part of the robot that interacts with the manufacturing process.
+        those functions that form the last link segment of a piece of equipment.
+        It is the part of a piece of equipment that interacts with the
+        manufacturing process.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -5051,14 +5144,18 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:attribute name='href' type='xlink:hrefType' use='optional'>
           <xs:annotation>
             <xs:documentation>
-              Reference to the url of the related device
+              A URI identifying the agent that is publishing information for the
+              associated piece of equipment. href MUST also include the UUID for
+              that specific piece of equipment.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute ref='xlink:type' use='optional' fixed='locator'>
           <xs:annotation>
             <xs:documentation>
-              Type of href fixed value locator
+              The XLink type attribute MUST have a fixed value of locator as
+              defined in W3C XLink 1.1 https://www.w3.org/TR/xlink11/ section
+              5.4 Locator Attribute (href).
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>

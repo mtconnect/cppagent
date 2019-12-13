@@ -2364,6 +2364,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLILITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milliliter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER/REVOLUTION'>
         <xs:annotation>
           <xs:documentation>
@@ -2616,6 +2658,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLILITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milliliter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER/REVOLUTION'>
         <xs:annotation>
           <xs:documentation>
@@ -2825,6 +2909,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Rotational velocity in revolution per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of time in minutes
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -7568,10 +7659,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='FloatEventType'/>
+      <xs:extension base='StringEventType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='ToolOffset' type='ToolOffsetType' substitutionGroup='FloatEvent'>
+  <xs:element name='ToolOffset' type='ToolOffsetType' substitutionGroup='StringEvent'>
     <xs:annotation>
       <xs:documentation>
         A reference to the tool offset variables applied to the active cutting
@@ -7625,10 +7716,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='FloatEventType'/>
+      <xs:extension base='StringEventType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='WorkOffset' type='WorkOffsetType' substitutionGroup='FloatEvent'>
+  <xs:element name='WorkOffset' type='WorkOffsetType' substitutionGroup='StringEvent'>
     <xs:annotation>
       <xs:documentation>
         A reference to the offset variables for a work piece or part associated
@@ -7664,7 +7755,15 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='StringEventType'/>
+      <xs:extension base='StringEventType'>
+        <xs:attribute name='assetType' type='AssetAttrTypeType' use='optional'>
+          <xs:annotation>
+            <xs:documentation>
+              The type of asset that was updated.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
   <xs:element name='AssetChanged' type='AssetChangedType' substitutionGroup='StringEvent'>
@@ -7687,7 +7786,15 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='StringEventType'/>
+      <xs:extension base='StringEventType'>
+        <xs:attribute name='assetType' type='AssetAttrTypeType' use='optional'>
+          <xs:annotation>
+            <xs:documentation>
+              The type of asset that was updated.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
   <xs:element name='AssetRemoved' type='AssetRemovedType' substitutionGroup='StringEvent'>
@@ -8250,7 +8357,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='EntryType' abstract='true' mixed='true'>
     <xs:annotation>
       <xs:documentation>
-        A XML element representing a key-value pair published as part of a data
+        An XML element representing a key-value pair published as part of a data
         set.
       </xs:documentation>
     </xs:annotation>
@@ -8273,7 +8380,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element abstract='true' name='Entry' type='EntryType'>
     <xs:annotation>
       <xs:documentation>
-        A XML element representing a key-value pair published as part of a data
+        An XML element representing a key-value pair published as part of a data
         set.
       </xs:documentation>
     </xs:annotation>
@@ -8317,8 +8424,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           <xs:element name='Entry' type='VariableEntryType' minOccurs='0' maxOccurs='unbounded'>
             <xs:annotation>
               <xs:documentation>
-                A XML element representing a key-value pair published as part of
-                a data set.
+                An XML element representing a key-value pair published as part
+                of a data set.
               </xs:documentation>
             </xs:annotation>
           </xs:element>
