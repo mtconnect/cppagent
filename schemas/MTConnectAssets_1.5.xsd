@@ -21,7 +21,7 @@ RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
 (COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
 WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
 LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
-MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
 LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
 PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
@@ -312,7 +312,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             A mechanism for moving or controlling a mechanical part of a piece
             of equipment. It takes energy usually provided by air, electric
             current, or liquid and converts the energy into some kind of motion.
-            
+
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -588,7 +588,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='TILT'>
         <xs:annotation>
           <xs:documentation>
-            The measurement of angular displacement. 
+            The measurement of angular displacement.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -923,7 +923,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             An identifier of a part or product moving through the manufacturing
-            process. The valid data value must be a text string. 
+            process. The valid data value must be a text string.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1169,14 +1169,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             asset that has been removed. The asset will still be visible if
             requested with the includeremoved parameter as described in the
             protocol section. When assets are removed they are not moved to the
-            beginning of the most recently modified list. 
+            beginning of the most recently modified list.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
       <xs:enumeration value='OPEN_DOOR'>
         <xs:annotation>
           <xs:documentation>
-            Service to open a door. 
+            Service to open a door.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1190,7 +1190,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='OPEN_CHUCK'>
         <xs:annotation>
           <xs:documentation>
-            Service to open a chuck. 
+            Service to open a chuck.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1205,7 +1205,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Service to advance material or feed product to a piece of equipment
-            from a continuous or bulk source. 
+            from a continuous or bulk source.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1228,7 +1228,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Service to change the part or product associated with a piece of
-            equipment to a different part or product. 
+            equipment to a different part or product.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1609,7 +1609,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             The measurement of alternating voltage or current. If not specified
-            further in statistic, defaults to RMS voltage. 
+            further in statistic, defaults to RMS voltage.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1621,7 +1621,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             electronically controlled chuck. The valid data value must be active
             value or inactive value. When manualunclamp subtype is active value,
             it is expected that a chuck cannot be unclamped until manualunclamp
-            subtype is set to inactive value. 
+            subtype is set to inactive value.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1699,7 +1699,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             controller on a piece of equipment. The valid data value must be on
             value or off value. When machineaxislock subtype is on value,
             program execution continues normally, but no equipment motion occurs
-            
+
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1726,7 +1726,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             value or off value. Program execution is paused after each block
             event of code is executed when singleblock subtype is on value. When
             singleblock subtype is on value, execution event must change to
-            interrupted value after completion of each block event of code. 
+            interrupted value after completion of each block event of code.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1765,7 +1765,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             When multiple locations on a piece of bar stock are referenced as
             the indication for the endofbar event, the additional location(s)
             must be designated as auxiliary subtype indication(s) for the
-            endofbar event. 
+            endofbar event.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1902,7 +1902,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             The feedrate specified by a logic or motion program, by a pre-set
-            value, or set by a switch as the feedrate for the axes. 
+            value, or set by a switch as the feedrate for the axes.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -2518,6 +2518,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER_3D'>
         <xs:annotation>
           <xs:documentation>
@@ -3001,14 +3008,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:attribute name='instanceId' type='InstanceIdType' use='required'>
           <xs:annotation>
             <xs:documentation>
-              A number indicating which invocation of the agent. 
+              A number indicating which invocation of the agent.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name='sender' type='SenderType' use='required'>
           <xs:annotation>
             <xs:documentation>
-              The agent identification information. 
+              The agent identification information.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -3236,7 +3243,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:simpleType name='CategoryType'>
     <xs:annotation>
       <xs:documentation>
-        Specifies the kind of information provided by a data item. 
+        Specifies the kind of information provided by a data item.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
@@ -3297,7 +3304,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='TIME_SERIES'>
         <xs:annotation>
           <xs:documentation>
-            A series of sampled data. 
+            A series of sampled data.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -3312,7 +3319,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             The reported value(s) are represented as a set of key-value pair.
-            Each reported value in the data set MUST have a unique key. 
+            Each reported value in the data set MUST have a unique key.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -3484,7 +3491,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:attribute name='category' type='CategoryType' use='required'>
       <xs:annotation>
         <xs:documentation>
-          Specifies the kind of information provided by a data item. 
+          Specifies the kind of information provided by a data item.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -3507,7 +3514,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:annotation>
         <xs:documentation>
           The identifier attribute of the composition element that the reported
-          data is most closely associated. 
+          data is most closely associated.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -3567,7 +3574,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             <xs:annotation>
               <xs:documentation>
                 value represents a single data value that is expected to be
-                reported for a dataitem element. 
+                reported for a dataitem element.
               </xs:documentation>
             </xs:annotation>
           </xs:element>
@@ -3692,7 +3699,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           <xs:annotation>
             <xs:documentation>
               The identifier attribute of the composition element that the
-              reported data is most closely associated. 
+              reported data is most closely associated.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -3913,7 +3920,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:annotation>
         <xs:documentation>
           A number representing the sequential position of an occurrence of a
-          category type in the data buffer of an agent. 
+          category type in the data buffer of an agent.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -3951,7 +3958,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:annotation>
         <xs:documentation>
           The identifier attribute of the composition element that the reported
-          data is most closely associated. 
+          data is most closely associated.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -4878,7 +4885,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             The emergency stop circuit is complete and the piece of equipment,
-            component, or composition element is allowed to operate. 
+            component, or composition element is allowed to operate.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -5438,7 +5445,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         An identifier of a part or product moving through the manufacturing
-        process. The valid data value must be a text string. 
+        process. The valid data value must be a text string.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -5449,7 +5456,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         An identifier of a part or product moving through the manufacturing
-        process. The valid data value must be a text string. 
+        process. The valid data value must be a text string.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -5845,7 +5852,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='SerialNumberType'>
     <xs:annotation>
       <xs:documentation>
-        The serial number associated with a piece of equipment. 
+        The serial number associated with a piece of equipment.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -5855,7 +5862,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='SerialNumber' type='SerialNumberType' substitutionGroup='StringEvent'>
     <xs:annotation>
       <xs:documentation>
-        The serial number associated with a piece of equipment. 
+        The serial number associated with a piece of equipment.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -5935,7 +5942,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The identifier for a class of Cutting Tools. This is defined as an XML
-        string type and is implementation dependent. 
+        string type and is implementation dependent.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -5946,7 +5953,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The identifier for a class of Cutting Tools. This is defined as an XML
-        string type and is implementation dependent. 
+        string type and is implementation dependent.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -6094,7 +6101,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         that has been removed. The asset will still be visible if requested with
         the includeremoved parameter as described in the protocol section. When
         assets are removed they are not moved to the beginning of the most
-        recently modified list. 
+        recently modified list.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -6108,14 +6115,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         that has been removed. The asset will still be visible if requested with
         the includeremoved parameter as described in the protocol section. When
         assets are removed they are not moved to the beginning of the most
-        recently modified list. 
+        recently modified list.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
   <xs:complexType name='OpenDoorType'>
     <xs:annotation>
       <xs:documentation>
-        Service to open a door. 
+        Service to open a door.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -6125,7 +6132,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='OpenDoor' type='OpenDoorType' substitutionGroup='StringEvent'>
     <xs:annotation>
       <xs:documentation>
-        Service to open a door. 
+        Service to open a door.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -6149,7 +6156,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='OpenChuckType'>
     <xs:annotation>
       <xs:documentation>
-        Service to open a chuck. 
+        Service to open a chuck.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -6159,7 +6166,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='OpenChuck' type='OpenChuckType' substitutionGroup='StringEvent'>
     <xs:annotation>
       <xs:documentation>
-        Service to open a chuck. 
+        Service to open a chuck.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -6184,7 +6191,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Service to advance material or feed product to a piece of equipment from
-        a continuous or bulk source. 
+        a continuous or bulk source.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -6195,7 +6202,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Service to advance material or feed product to a piece of equipment from
-        a continuous or bulk source. 
+        a continuous or bulk source.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -6239,7 +6246,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Service to change the part or product associated with a piece of
-        equipment to a different part or product. 
+        equipment to a different part or product.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -6250,7 +6257,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Service to change the part or product associated with a piece of
-        equipment to a different part or product. 
+        equipment to a different part or product.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -6540,7 +6547,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Discrete of The identifier for a class of Cutting Tools. This is defined
-        as an XML string type and is implementation dependent. 
+        as an XML string type and is implementation dependent.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -6551,7 +6558,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Discrete of The identifier for a class of Cutting Tools. This is defined
-        as an XML string type and is implementation dependent. 
+        as an XML string type and is implementation dependent.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -6687,7 +6694,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:documentation>
         An XML element that provides the information and data reported from a
         piece of equipment for those dataitem elements defined with a category
-        attribute of sample category in the mtconnectdevices document. 
+        attribute of sample category in the mtconnectdevices document.
       </xs:documentation>
     </xs:annotation>
     <xs:attributeGroup ref='ObservationType'/>
@@ -6734,7 +6741,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:documentation>
         An XML element that provides the information and data reported from a
         piece of equipment for those dataitem elements defined with a category
-        attribute of sample category in the mtconnectdevices document. 
+        attribute of sample category in the mtconnectdevices document.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -8124,7 +8131,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='TiltType'>
     <xs:annotation>
       <xs:documentation>
-        The measurement of angular displacement. 
+        The measurement of angular displacement.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -8134,14 +8141,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='Tilt' type='TiltType' substitutionGroup='CommonSample'>
     <xs:annotation>
       <xs:documentation>
-        The measurement of angular displacement. 
+        The measurement of angular displacement.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
   <xs:complexType name='TiltTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of angular displacement. 
+        Time series of The measurement of angular displacement.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -8151,7 +8158,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='TiltTimeSeries' type='TiltTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of angular displacement. 
+        Time series of The measurement of angular displacement.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -8921,7 +8928,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             <xs:documentation>
               If the piece of equipment designates a severity level to a fault,
               nativeseverity reports that severity information to a client
-              software application. 
+              software application.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -9524,14 +9531,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:attribute name='serialNumber' type='SerialNumberAttrType' use='required'>
           <xs:annotation>
             <xs:documentation>
-              The serial number associated with a piece of equipment. 
+              The serial number associated with a piece of equipment.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name='manufacturers' type='ManufacturersType' use='optional'>
           <xs:annotation>
             <xs:documentation>
-              The manufacturers of the Cutting Item or Tool. 
+              The manufacturers of the Cutting Item or Tool.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -9539,7 +9546,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           <xs:annotation>
             <xs:documentation>
               The identifier for a class of Cutting Tools. This is defined as an
-              XML string type and is implementation dependent. 
+              XML string type and is implementation dependent.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -9601,7 +9608,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           <xs:annotation>
             <xs:documentation>
               The identifier for a class of Cutting Tools. This is defined as an
-              XML string type and is implementation dependent. 
+              XML string type and is implementation dependent.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -10088,7 +10095,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The dimension from the yz-plane to the furthest point of the Tool Item
-        or Adaptive Item measured in the -X direction. 
+        or Adaptive Item measured in the -X direction.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10099,7 +10106,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The dimension from the yz-plane to the furthest point of the Tool Item
-        or Adaptive Item measured in the -X direction. 
+        or Adaptive Item measured in the -X direction.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10107,7 +10114,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The total weight of the Cutting Tool in grams. The force exerted by the
-        mass of the Cutting Tool. 
+        mass of the Cutting Tool.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10118,7 +10125,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The total weight of the Cutting Tool in grams. The force exerted by the
-        mass of the Cutting Tool. 
+        mass of the Cutting Tool.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10130,7 +10137,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         cutting reference point determined by the main function of the tool. The
         cuttingtool functional length will be the length of the entire tool, not
         a single Cutting Item. Each cuttingitem can have an independent
-        functionallength represented in its measurements. 
+        functionallength represented in its measurements.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10145,14 +10152,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         cutting reference point determined by the main function of the tool. The
         cuttingtool functional length will be the length of the entire tool, not
         a single Cutting Item. Each cuttingitem can have an independent
-        functionallength represented in its measurements. 
+        functionallength represented in its measurements.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
   <xs:complexType name='BodyDiameterMaxType'>
     <xs:annotation>
       <xs:documentation>
-        The largest diameter of the body of a Tool Item. 
+        The largest diameter of the body of a Tool Item.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10162,7 +10169,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='BodyDiameterMax' type='BodyDiameterMaxType' substitutionGroup='AssemblyMeasurement'>
     <xs:annotation>
       <xs:documentation>
-        The largest diameter of the body of a Tool Item. 
+        The largest diameter of the body of a Tool Item.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10199,7 +10206,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         The maximum diameter of a circle on which the defined point Pk of each
         of the master inserts is located on a Tool Item. The normal of the
         machined peripheral surface points towards the axis of the Cutting Tool.
-        
+
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10212,7 +10219,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         The maximum diameter of a circle on which the defined point Pk of each
         of the master inserts is located on a Tool Item. The normal of the
         machined peripheral surface points towards the axis of the Cutting Tool.
-        
+
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10220,7 +10227,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The dimension between two parallel tangents on the outside edge of a
-        flange. 
+        flange.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10231,7 +10238,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The dimension between two parallel tangents on the outside edge of a
-        flange. 
+        flange.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10239,7 +10246,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The maximum engagement of the cutting edge or edges with the workpiece
-        measured perpendicular to the feed motion. 
+        measured perpendicular to the feed motion.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10250,7 +10257,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The maximum engagement of the cutting edge or edges with the workpiece
-        measured perpendicular to the feed motion. 
+        measured perpendicular to the feed motion.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10258,7 +10265,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The largest length dimension of the Cutting Tool including the master
-        insert where applicable. 
+        insert where applicable.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10269,7 +10276,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The largest length dimension of the Cutting Tool including the master
-        insert where applicable. 
+        insert where applicable.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10277,7 +10284,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The dimension of the diameter of a cylindrical portion of a Tool Item or
-        an Adaptive Item that can participate in a connection. 
+        an Adaptive Item that can participate in a connection.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10288,14 +10295,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The dimension of the diameter of a cylindrical portion of a Tool Item or
-        an Adaptive Item that can participate in a connection. 
+        an Adaptive Item that can participate in a connection.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
   <xs:complexType name='ShankHeightType'>
     <xs:annotation>
       <xs:documentation>
-        The dimension of the height of the shank. 
+        The dimension of the height of the shank.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10305,14 +10312,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='ShankHeight' type='ShankHeightType' substitutionGroup='AssemblyMeasurement'>
     <xs:annotation>
       <xs:documentation>
-        The dimension of the height of the shank. 
+        The dimension of the height of the shank.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
   <xs:complexType name='ShankLengthType'>
     <xs:annotation>
       <xs:documentation>
-        The dimension of the length of the shank. 
+        The dimension of the length of the shank.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10322,7 +10329,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='ShankLength' type='ShankLengthType' substitutionGroup='AssemblyMeasurement'>
     <xs:annotation>
       <xs:documentation>
-        The dimension of the length of the shank. 
+        The dimension of the length of the shank.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10429,7 +10436,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='CornerRadiusType'>
     <xs:annotation>
       <xs:documentation>
-        The nominal radius of a rounded corner measured in the X Y-plane. 
+        The nominal radius of a rounded corner measured in the X Y-plane.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10439,7 +10446,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='CornerRadius' type='CornerRadiusType' substitutionGroup='CuttingItemMeasurement'>
     <xs:annotation>
       <xs:documentation>
-        The nominal radius of a rounded corner measured in the X Y-plane. 
+        The nominal radius of a rounded corner measured in the X Y-plane.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10466,7 +10473,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The distance from the basal plane of the Tool Item to the cutting point.
-        
+
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10477,7 +10484,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The distance from the basal plane of the Tool Item to the cutting point.
-        
+
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10485,7 +10492,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The theoretical sharp point of the Cutting Tool from which the major
-        functional dimensions are taken. 
+        functional dimensions are taken.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10496,7 +10503,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The theoretical sharp point of the Cutting Tool from which the major
-        functional dimensions are taken. 
+        functional dimensions are taken.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10504,7 +10511,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The dimension between two parallel tangents on the outside edge of a
-        flange. 
+        flange.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10515,7 +10522,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The dimension between two parallel tangents on the outside edge of a
-        flange. 
+        flange.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10561,7 +10568,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The diameter of a circle to which all edges of a equilateral and round
-        regular insert are tangential. 
+        regular insert are tangential.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10572,7 +10579,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The diameter of a circle to which all edges of a equilateral and round
-        regular insert are tangential. 
+        regular insert are tangential.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10641,7 +10648,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The angle between the tool cutting edge plane and the tool feed plane
-        measured in a plane parallel the xy-plane. 
+        measured in a plane parallel the xy-plane.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10652,7 +10659,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The angle between the tool cutting edge plane and the tool feed plane
-        measured in a plane parallel the xy-plane. 
+        measured in a plane parallel the xy-plane.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10660,7 +10667,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The angle between the tool cutting edge plane and a plane perpendicular
-        to the tool feed plane measured in a plane parallel the xy-plane. 
+        to the tool feed plane measured in a plane parallel the xy-plane.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10671,7 +10678,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The angle between the tool cutting edge plane and a plane perpendicular
-        to the tool feed plane measured in a plane parallel the xy-plane. 
+        to the tool feed plane measured in a plane parallel the xy-plane.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -10696,7 +10703,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The angle of the tool with respect to the workpiece for a given process.
-        The value is application specific. 
+        The value is application specific.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10707,7 +10714,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Angle between the driving mechanism locator on a Tool Item and the main
-        cutting edge. 
+        cutting edge.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -10809,14 +10816,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:annotation>
         <xs:documentation>
           The number or numbers representing the individual Cutting Item or
-          items on the tool. 
+          items on the tool.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name='itemId' type='ItemIdType' use='optional'>
       <xs:annotation>
         <xs:documentation>
-          The manufacturer identifier of this Cutting Item. 
+          The manufacturer identifier of this Cutting Item.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -10830,7 +10837,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:attribute name='manufacturers' type='ManufacturersType' use='optional'>
       <xs:annotation>
         <xs:documentation>
-          The manufacturers of the Cutting Item or Tool. 
+          The manufacturers of the Cutting Item or Tool.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
