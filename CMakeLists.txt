@@ -9,6 +9,7 @@ set(AGENT_VERSION_RC "")
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 option(AGENT_ENABLE_UNITTESTS "Enables the agent's unit tests" ON)
+set(INSTALL_GTEST OFF FORCE)
 
 project(cppagent)
 
