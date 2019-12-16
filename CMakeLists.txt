@@ -3,7 +3,7 @@ set(AGENT_VERSION_MAJOR 1)
 set(AGENT_VERSION_MINOR 5)
 set(AGENT_VERSION_PATCH 0)
 set(AGENT_VERSION_BUILD 12)
-set(AGENT_VERSION_RC "RC12")
+set(AGENT_VERSION_RC "")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
@@ -75,3 +75,20 @@ endif()
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
 # We will set this to the agent_test project.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT agent_test)
+
+install(FILES README.md LICENSE.TXT DESTINATION ".")
+install(DIRECTORY schemas/ DESTINATION "schemas")
+install(DIRECTORY simulator/ DESTINATION "simulator")
+install(DIRECTORY styles/ DESTINATION "styles")
+install(DIRECTORY tools/ DESTINATION "tools")
+install(FILES simulator/agent.cfg DESTINATION "bin")
+
+set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
+set(CPACK_PACKAGE_VERSION "${AGENT_VERSION_MAJOR}.${AGENT_VERSION_MINOR}.${AGENT_VERSION_PATCH}.${AGENT_VERSION_BUILD}")
+set(CPACK_PACKAGE_VERSION_MAJOR ${AGENT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${AGENT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${AGENT_VERSION_PATCH})
+set(CPACK_PACKAGE_NAME "cppagent")
+set(CPACK_PACKAGE_VENDOR "MTConnect.org")
+
+include(CPack)
