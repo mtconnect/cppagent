@@ -21,8 +21,8 @@
 
 #include <dlib/logger.h>
 
+#include <cstring>
 #include <fstream>
-#include <string.h>
 
 #ifdef _WINDOWS
 #define stricmp _stricmp
@@ -54,11 +54,11 @@ namespace mtconnect
 
 #include <dlib/threads.h>
 
-#include <ctype.h>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <strsafe.h>
 #include <windows.h>
 
@@ -642,8 +642,8 @@ namespace mtconnect
 #include "fcntl.h"
 #include "sys/stat.h"
 
+#include <csignal>
 #include <iostream>
-#include <signal.h>
 
 namespace mtconnect
 {

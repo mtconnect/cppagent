@@ -24,6 +24,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace mtconnect
@@ -44,8 +45,12 @@ namespace mtconnect
         COMPONENT
       };
 
-      Reference(const std::string &id, const std::string &name, ReferenceType type)
-          : m_type(type), m_id(id), m_name(name), m_dataItem(nullptr), m_component(nullptr)
+      Reference(std::string id, std::string name, ReferenceType type)
+          : m_type(type),
+            m_id(std::move(id)),
+            m_name(std::move(name)),
+            m_dataItem(nullptr),
+            m_component(nullptr)
       {
       }
 
@@ -163,7 +168,7 @@ namespace mtconnect
     // Add to/get the component's std::list of children
     void addChild(Component &child)
     {
-      m_children.push_back(&child);
+      m_children.emplace_back(&child);
     }
     std::list<Component *> &getChildren()
     {
@@ -173,7 +178,7 @@ namespace mtconnect
     // Add and get composition...
     void addComposition(Composition *composition)
     {
-      m_compositions.push_back(composition);
+      m_compositions.emplace_back(composition);
     }
     std::list<Composition *> &getCompositions()
     {
@@ -199,7 +204,7 @@ namespace mtconnect
     // References
     void addReference(Reference &reference)
     {
-      m_references.push_back(reference);
+      m_references.emplace_back(reference);
     }
     const std::vector<Reference> &getReferences() const
     {

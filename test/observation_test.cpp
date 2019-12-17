@@ -65,8 +65,8 @@ class ObservationTest : public testing::Test
     m_dataItem2.reset();
   }
 
-  Observation *m_compEventA;
-  Observation *m_compEventB;
+  Observation *m_compEventA{nullptr};
+  Observation *m_compEventB{nullptr};
   std::unique_ptr<DataItem> m_dataItem1;
   std::unique_ptr<DataItem> m_dataItem2;
 
@@ -247,11 +247,11 @@ TEST_F(ObservationTest, StlLists)
   auto event = new Observation(*m_dataItem1, 123, time, value);
 
   ASSERT_EQ(1, (int)event->refCount());
-  vector.push_back(event);
+  vector.emplace_back(event);
   ASSERT_EQ(2, (int)event->refCount());
 
   std::list<ObservationPtr> list;
-  list.push_back(event);
+  list.emplace_back(event);
   ASSERT_EQ(3, (int)event->refCount());
 }
 

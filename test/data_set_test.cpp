@@ -23,7 +23,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 using namespace mtconnect;
@@ -56,9 +56,9 @@ class DataSetTest : public testing::Test
 
   std::unique_ptr<Checkpoint> m_checkpoint;
   std::unique_ptr<Agent> m_agent;
-  Adapter *m_adapter;
+  Adapter *m_adapter{nullptr};
   std::string m_agentId;
-  DataItem *m_dataItem1;
+  DataItem *m_dataItem1{nullptr};
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };

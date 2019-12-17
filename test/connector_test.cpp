@@ -29,6 +29,7 @@ using namespace date;
 #include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
 
 #include <chrono>
+#include <memory>
 #include <sstream>
 #include <thread>
 
@@ -48,7 +49,7 @@ class TestConnector : public Connector
   void processData(const std::string &data) override
   {
     m_data = data;
-    m_list.push_back(m_data);
+    m_list.emplace_back(m_data);
   }
 
   void protocolCommand(const std::string &data) override
@@ -97,7 +98,7 @@ class ConnectorTest : public testing::Test, public dlib::threaded_object
   {
     ASSERT_TRUE(!create_listener(m_server, 0, "127.0.0.1"));
     m_port = m_server->get_listening_port();
-    m_connector.reset(new TestConnector("127.0.0.1", m_port));
+    m_connector = std::make_unique<TestConnector>("127.0.0.1", m_port);
     m_connector->m_disconnected = true;
   }
 
@@ -118,7 +119,7 @@ class ConnectorTest : public testing::Test, public dlib::threaded_object
   dlib::scoped_ptr<dlib::listener> m_server;
   dlib::scoped_ptr<dlib::connection> m_serverSocket;
   dlib::scoped_ptr<TestConnector> m_connector;
-  unsigned short m_port;
+  unsigned short m_port{0};
 };
 
 TEST_F(ConnectorTest, Connection)
@@ -385,7 +386,7 @@ TEST_F(ConnectorTest, IPV6Connection)
 
   ASSERT_TRUE(!create_listener(m_server, 0, "::1"));
   m_port = m_server->get_listening_port();
-  m_connector.reset(new TestConnector("::1", m_port));
+  m_connector = std::make_unique<TestConnector>("::1", m_port);
   m_connector->m_disconnected = true;
 
   ASSERT_TRUE(m_connector->m_disconnected);

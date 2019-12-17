@@ -58,7 +58,7 @@ namespace mtconnect
 
   Observation::Observation(DataItem &dataItem, uint64_t sequence, const string &time,
                            const string &value)
-      : m_hasAttributes(false)
+      : m_level(ELevel::NORMAL), m_isFloat(false), m_sampleCount(0), m_hasAttributes(false)
   {
     m_dataItem = &dataItem;
     m_isTimeSeries = m_dataItem->isTimeSeries();
@@ -94,7 +94,9 @@ namespace mtconnect
         m_time(observation.m_time),
         m_duration(observation.m_duration),
         m_rest(observation.m_rest),
+        m_level(ELevel::NORMAL),
         m_value(observation.m_value),
+        m_isFloat(false),
         m_isTimeSeries(observation.m_isTimeSeries),
         m_hasAttributes(false),
         m_code(observation.m_code),
@@ -121,29 +123,29 @@ namespace mtconnect
     lock_guard<std::mutex> lock(g_attributeMutex);
     if (!m_hasAttributes)
     {
-      m_attributes.push_back(AttributeItem("dataItemId", m_dataItem->getId()));
-      m_attributes.push_back(AttributeItem("timestamp", m_time));
+      m_attributes.emplace_back(AttributeItem("dataItemId", m_dataItem->getId()));
+      m_attributes.emplace_back(AttributeItem("timestamp", m_time));
 
       if (!m_dataItem->getName().empty())
-        m_attributes.push_back(AttributeItem("name", m_dataItem->getName()));
+        m_attributes.emplace_back(AttributeItem("name", m_dataItem->getName()));
 
       if (!m_dataItem->getCompositionId().empty())
-        m_attributes.push_back(AttributeItem("compositionId", m_dataItem->getCompositionId()));
+        m_attributes.emplace_back(AttributeItem("compositionId", m_dataItem->getCompositionId()));
 
       m_sequenceStr = int64ToString(m_sequence);
-      m_attributes.push_back(AttributeItem("sequence", m_sequenceStr));
+      m_attributes.emplace_back(AttributeItem("sequence", m_sequenceStr));
 
       if (!m_dataItem->getSubType().empty())
-        m_attributes.push_back(AttributeItem("subType", m_dataItem->getSubType()));
+        m_attributes.emplace_back(AttributeItem("subType", m_dataItem->getSubType()));
 
       if (!m_dataItem->getStatistic().empty())
-        m_attributes.push_back(AttributeItem("statistic", m_dataItem->getStatistic()));
+        m_attributes.emplace_back(AttributeItem("statistic", m_dataItem->getStatistic()));
 
       if (!m_duration.empty())
-        m_attributes.push_back(AttributeItem("duration", m_duration));
+        m_attributes.emplace_back(AttributeItem("duration", m_duration));
 
       if (!m_resetTriggered.empty())
-        m_attributes.push_back(AttributeItem("resetTriggered", m_resetTriggered));
+        m_attributes.emplace_back(AttributeItem("resetTriggered", m_resetTriggered));
 
       if (m_dataItem->isCondition())
       {
@@ -169,7 +171,7 @@ namespace mtconnect
           if (!token.empty())
           {
             m_code = token;
-            m_attributes.push_back(AttributeItem("nativeCode", token));
+            m_attributes.emplace_back(AttributeItem("nativeCode", token));
           }
         }
 
@@ -178,7 +180,7 @@ namespace mtconnect
           getline(toParse, token, '|');
 
           if (!token.empty())
-            m_attributes.push_back(AttributeItem("nativeSeverity", token));
+            m_attributes.emplace_back(AttributeItem("nativeSeverity", token));
         }
 
         if (!toParse.eof())
@@ -186,10 +188,10 @@ namespace mtconnect
           getline(toParse, token, '|');
 
           if (!token.empty())
-            m_attributes.push_back(AttributeItem("qualifier", token));
+            m_attributes.emplace_back(AttributeItem("qualifier", token));
         }
 
-        m_attributes.push_back(AttributeItem("type", m_dataItem->getType()));
+        m_attributes.emplace_back(AttributeItem("type", m_dataItem->getType()));
       }
       else if (m_dataItem->isTimeSeries())
       {
@@ -201,19 +203,19 @@ namespace mtconnect
         if (token.empty())
           token = "0";
 
-        m_attributes.push_back(AttributeItem("sampleCount", token));
+        m_attributes.emplace_back(AttributeItem("sampleCount", token));
         m_sampleCount = atoi(token.c_str());
 
         getline(toParse, token, '|');
 
         if (!token.empty())
-          m_attributes.push_back(AttributeItem("sampleRate", token));
+          m_attributes.emplace_back(AttributeItem("sampleRate", token));
       }
       else if (m_dataItem->isMessage())
       {
         // Format to parse: NATIVECODE
         if (!m_rest.empty())
-          m_attributes.push_back(AttributeItem("nativeCode", m_rest));
+          m_attributes.emplace_back(AttributeItem("nativeCode", m_rest));
       }
       else if (m_dataItem->isAlarm())
       {
@@ -222,24 +224,24 @@ namespace mtconnect
         string token;
 
         getline(toParse, token, '|');
-        m_attributes.push_back(AttributeItem("code", token));
+        m_attributes.emplace_back(AttributeItem("code", token));
 
         getline(toParse, token, '|');
-        m_attributes.push_back(AttributeItem("nativeCode", token));
+        m_attributes.emplace_back(AttributeItem("nativeCode", token));
 
         getline(toParse, token, '|');
-        m_attributes.push_back(AttributeItem("severity", token));
+        m_attributes.emplace_back(AttributeItem("severity", token));
 
         getline(toParse, token, '|');
-        m_attributes.push_back(AttributeItem("state", token));
+        m_attributes.emplace_back(AttributeItem("state", token));
       }
       else if (m_dataItem->isDataSet())
       {
-        m_attributes.push_back(AttributeItem("count", intToString(m_dataSet.size())));
+        m_attributes.emplace_back(AttributeItem("count", intToString(m_dataSet.size())));
         m_sampleCount = m_dataSet.size();
       }
       else if (m_dataItem->isAssetChanged() || m_dataItem->isAssetRemoved())
-        m_attributes.push_back(AttributeItem("assetType", m_rest));
+        m_attributes.emplace_back(AttributeItem("assetType", m_rest, true));
 
       m_hasAttributes = true;
     }
@@ -376,7 +378,7 @@ namespace mtconnect
 
           if (cp != np)
           {
-            m_timeSeries.push_back(m_dataItem->convertValue(v));
+            m_timeSeries.emplace_back(m_dataItem->convertValue(v));
           }
           else
             np = nullptr;
@@ -430,7 +432,7 @@ namespace mtconnect
     if (m_prev.getObject())
       m_prev->getList(list);
 
-    list.push_back(this);
+    list.emplace_back(this);
   }
 
   Observation *Observation::find(const std::string &code)

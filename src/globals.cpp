@@ -18,15 +18,15 @@
 #include "globals.hpp"
 
 #include <chrono>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
 #include <list>
 #include <map>
 #include <mutex>
 #include <set>
 #include <sstream>
-#include <stdio.h>
-#include <string.h>
 #include <string>
-#include <time.h>
 #include <vector>
 
 // Don't include WinSock.h when processing <windows.h>
@@ -77,17 +77,17 @@ namespace mtconnect
 
   string toUpperCase(string &text)
   {
-    for (auto i = 0u; i < text.length(); i++)
-      text[i] = toupper(text[i]);
+    for (char &c : text)
+      c = toupper(c);
 
     return text;
   }
 
   bool isNonNegativeInteger(const string &s)
   {
-    for (auto i = 0u; i < s.length(); i++)
+    for (const char c : s)
     {
-      if (!isdigit(s[i]))
+      if (!isdigit(c))
         return false;
     }
 

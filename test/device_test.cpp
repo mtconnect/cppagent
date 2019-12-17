@@ -52,7 +52,7 @@ class DeviceTest : public testing::Test
     m_devB = nullptr;
   }
 
-  Device *m_devA, *m_devB;
+  Device *m_devA{nullptr}, *m_devB{nullptr};
 };
 
 TEST_F(DeviceTest, Getters)

@@ -252,7 +252,7 @@ namespace mtconnect
 
       // Collect the Devices...
       for (int i = 0; i != nodeset->nodeNr; ++i)
-        deviceList.push_back(static_cast<Device *>(handleNode(nodeset->nodeTab[i])));
+        deviceList.emplace_back(static_cast<Device *>(handleNode(nodeset->nodeTab[i])));
 
       xmlXPathFreeObject(devices);
       xmlXPathFreeContext(xpathCtx);
@@ -658,7 +658,7 @@ namespace mtconnect
         else if (name == "Channels")
           channels = child;
         else
-          rest.push_back(child);
+          rest.emplace_back(child);
       }
 
       string restText;
@@ -892,7 +892,7 @@ namespace mtconnect
       else if (!xmlStrcmp(child->name, BAD_CAST "ItemLife"))
       {
         CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
-        item->m_lives.push_back(value);
+        item->m_lives.emplace_back(value);
       }
       else if (xmlStrcmp(child->name, BAD_CAST "text"))
       {
@@ -923,7 +923,7 @@ namespace mtconnect
           if (!xmlStrcmp(itemNode->name, BAD_CAST "CuttingItem"))
           {
             CuttingItemPtr item = parseCuttingItem(itemNode, doc);
-            tool->m_items.push_back(item);
+            tool->m_items.emplace_back(item);
           }
         }
       }
@@ -946,14 +946,14 @@ namespace mtconnect
           {
             auto text = getCDATA(status);
             if (!text.empty())
-              tool->m_status.push_back(text);
+              tool->m_status.emplace_back(text);
           }
         }
       }
       else if (!xmlStrcmp(child->name, BAD_CAST "ToolLife"))
       {
         CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
-        tool->m_lives.push_back(value);
+        tool->m_lives.emplace_back(value);
       }
       else if (xmlStrcmp(child->name, BAD_CAST "text"))
         tool->addValue(parseCuttingToolNode(child, doc));
@@ -1077,11 +1077,11 @@ namespace mtconnect
       {
         auto item = parseCuttingItem(root, document);
 
-        for (size_t i = 0; i < ptr->m_items.size(); i++)
+        for (auto &i : ptr->m_items)
         {
-          if (item->m_identity["indices"] == ptr->m_items[i]->m_identity["indices"])
+          if (item->m_identity["indices"] == i->m_identity["indices"])
           {
-            ptr->m_items[i] = item;
+            i = item;
             break;
           }
         }

@@ -77,11 +77,11 @@ TEST(AdapterTest, EscapedLine)
   data["y|\"a\\|z"] = {"y", "\"a\\", "z"};
   data["y|\"a\\|\"z"] = {"y", "\"a\\", "\"z"};
 
-  for (auto it = data.begin(); it != data.end(); ++it)
+  for (const auto &test : data)
   {
     std::string value;
-    std::istringstream toParse(it->first);
-    for (const std::string &expected : it->second)
+    std::istringstream toParse(test.first);
+    for (const std::string &expected : test.second)
     {
       mtconnect::Adapter::getEscapedLine(toParse, value);
       ASSERT_EQ(expected, value);

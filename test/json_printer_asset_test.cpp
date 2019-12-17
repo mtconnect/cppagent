@@ -5,7 +5,7 @@
 //  Created by William Sobel on 3/28/19.
 //
 
-#include <stdio.h>
+#include <cstdio>
 
 //
 // Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
@@ -44,6 +44,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -56,8 +57,8 @@ class JsonPrinterAssetTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_printer.reset(new JsonPrinter("1.5", true));
-    m_parser.reset(new XmlParser());
+    m_printer = std::make_unique<JsonPrinter>("1.5", true);
+    m_parser = std::make_unique<XmlParser>();
   }
 
   void TearDown() override

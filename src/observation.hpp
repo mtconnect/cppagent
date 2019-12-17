@@ -25,11 +25,19 @@
 #include <cmath>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace mtconnect
 {
-  typedef std::pair<const char *, std::string> AttributeItem;
+  struct AttributeItem : public std::pair<const char *, std::string>
+  {
+    AttributeItem(const char *f, const std::string &s, bool force = false)
+    : std::pair<const char *, std::string>(f, s), m_force(force) {}
+    
+    bool m_force;
+  };
+
   typedef std::vector<AttributeItem> AttributeList;
 
   class Observation;
@@ -38,11 +46,11 @@ namespace mtconnect
 
   struct DataSetEntry
   {
-    DataSetEntry(const std::string &key, const std::string &value, bool removed = false)
-        : m_key(key), m_value(value), m_removed(removed)
+    DataSetEntry(std::string key, std::string value, bool removed = false)
+        : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {
     }
-    DataSetEntry(const std::string &key) : m_key(key), m_value(""), m_removed(false)
+    DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false)
     {
     }
 

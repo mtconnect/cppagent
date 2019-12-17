@@ -77,10 +77,8 @@ namespace mtconnect
     {
       if (key == "ToolLife")
       {
-        for (size_t i = 0; i < m_lives.size(); i++)
+        for (const auto &life : m_lives)
         {
-          auto life = m_lives[i];
-
           if (life->m_properties.count(sel) > 0 && life->m_properties[sel] == val)
           {
             life->m_value = value;
@@ -90,10 +88,8 @@ namespace mtconnect
       }
       else
       {
-        for (size_t i = 0; i < m_items.size(); i++)
+        for (const auto &item : m_items)
         {
-          auto item = m_items[i];
-
           if (item->m_identity.count(sel) > 0 && val == item->m_identity[sel])
           {
             if (item->m_values.count(key) > 0)
@@ -116,7 +112,7 @@ namespace mtconnect
 
         while (getline(stream, val, ','))
         {
-          m_status.push_back(val);
+          m_status.emplace_back(val);
         }
       }
       else

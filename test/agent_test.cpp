@@ -76,11 +76,11 @@ class AgentTest : public testing::Test
 
  public:
   std::unique_ptr<Agent> m_agent;
-  Adapter *m_adapter;
+  Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
-  std::chrono::milliseconds m_delay;
+  std::chrono::milliseconds m_delay{};
 };
 
 TEST_F(AgentTest, Constructor)
@@ -854,7 +854,7 @@ TEST_F(AgentTest, AutoAvailable)
   m_adapter->setAutoAvailable(true);
   auto d = m_agent->getDevices()[0];
   std::vector<Device *> devices;
-  devices.push_back(d);
+  devices.emplace_back(d);
 
   {
     PARSE_XML_RESPONSE;
@@ -897,7 +897,7 @@ TEST_F(AgentTest, MultipleDisconnect)
   ASSERT_TRUE(m_adapter);
   auto d = m_agent->getDevices()[0];
   std::vector<Device *> devices;
-  devices.push_back(d);
+  devices.emplace_back(d);
 
   {
     PARSE_XML_RESPONSE;
@@ -1663,6 +1663,21 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
   }
 }
 
+TEST_F(AgentTest, AssetChangedWhenUnavailable)
+{
+  addAdapter();
+
+  {
+    m_agentTestHelper->m_path = "/current";
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "");
+  }
+}
+
+
 TEST_F(AgentTest, RemoveAllAssets)
 {
   addAdapter();
@@ -1810,7 +1825,7 @@ TEST_F(AgentTest, StreamData)
   // Start a thread...
   key_value_map query;
   query["interval"] = "50";
-  query["heartbeat"] = to_string(heartbeatFreq.count()).c_str();
+  query["heartbeat"] = to_string(heartbeatFreq.count());
   query["from"] = int64ToString(m_agent->getSequence());
   m_agentTestHelper->m_path = "/LinuxCNC/sample";
 

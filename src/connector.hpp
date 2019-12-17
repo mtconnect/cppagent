@@ -35,7 +35,7 @@ namespace mtconnect
   {
    public:
     // Instantiate the server by assigning it a server and port/
-    Connector(const std::string &server, unsigned int port,
+    Connector(std::string server, unsigned int port,
               std::chrono::seconds legacyTimout = std::chrono::seconds{600});
 
     // Virtual desctructor

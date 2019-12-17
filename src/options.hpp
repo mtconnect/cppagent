@@ -173,7 +173,7 @@ namespace mtconnect
     }
     void append(Option *option)
     {
-      push_back(*option);
+      emplace_back(*option);
     }
 
    protected:

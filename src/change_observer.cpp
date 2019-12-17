@@ -30,7 +30,7 @@ namespace mtconnect
 
   void ChangeObserver::addSignaler(ChangeSignaler *sig)
   {
-    m_signalers.push_back(sig);
+    m_signalers.emplace_back(sig);
   }
 
   bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
@@ -56,7 +56,7 @@ namespace mtconnect
   {
     std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
 
-    m_observers.push_back(observer);
+    m_observers.emplace_back(observer);
     observer->addSignaler(this);
   }
 

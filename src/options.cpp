@@ -21,11 +21,11 @@
 
 #include <sys/stat.h>
 
-#include <ctype.h>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 using namespace std;
 
@@ -207,7 +207,7 @@ namespace mtconnect
         break;
 
       case eBoolean:
-        *(boolPtr_) = (*aCp == 'Y' || *aCp == 'T') ? true : false;
+        *(boolPtr_) = *aCp == 'Y' || *aCp == 'T';
         break;
 
       case eCharacter:
@@ -218,7 +218,7 @@ namespace mtconnect
         if (expand_)
           expandFiles(aCp);
         else
-          list_->push_back(aCp);
+          list_->emplace_back(aCp);
 
         break;
 
@@ -260,7 +260,7 @@ namespace mtconnect
 #endif
     }
     else
-      list_->push_back(fileName);
+      list_->emplace_back(fileName);
   }
 
   bool Option::operator<(const Option &another) const
@@ -308,7 +308,7 @@ namespace mtconnect
     int i = 0;
 
     while (optionList[i])
-      push_back(*optionList[i++]);
+      emplace_back(*optionList[i++]);
   }
 
   OptionsList::~OptionsList()
@@ -317,7 +317,7 @@ namespace mtconnect
 
   void OptionsList::addOption(Option &option)
   {
-    push_back(option);
+    emplace_back(option);
   }
 
   int OptionsList::parse(int &argc, const char **argv)
@@ -452,11 +452,9 @@ namespace mtconnect
 
     bool hasSimpleFlags = false;
 
-    for (auto iter = begin(); iter != end(); iter++)
+    for (const auto &opt : *this)
     {
-      Option *opt = &(*iter);
-
-      if (opt->getName() && !opt->hasArgument() && (len = strlen(opt->getName())) == 1)
+      if (opt.getName() && !opt.hasArgument() && (len = strlen(opt.getName())) == 1)
       {
         hasSimpleFlags = true;
         break;
@@ -468,13 +466,11 @@ namespace mtconnect
       *cp++ = '[';
       *cp++ = '-';
 
-      for (auto iter = begin(); iter != end(); iter++)
+      for (const auto &opt : *this)
       {
-        Option *opt = &(*iter);
-
-        if (opt->getName() && !opt->hasArgument() && (len = strlen(opt->getName())) == 1)
+        if (opt.getName() && !opt.hasArgument() && (len = strlen(opt.getName())) == 1)
         {
-          strcpy(cp, opt->getName());
+          strcpy(cp, opt.getName());
           cp += len;
         }
       }
@@ -484,40 +480,38 @@ namespace mtconnect
 
     char staging[128] = {0}, *cp2 = nullptr;
 
-    for (auto iter = begin(); iter != end(); iter++)
+    for (const auto &opt : *this)
     {
-      Option *opt = &(*iter);
-
-      if (opt->getName() && !opt->hasArgument() && (len = strlen(opt->getName())) == 1)
+      if (opt.getName() && !opt.hasArgument() && (len = strlen(opt.getName())) == 1)
         continue;
 
       *cp++ = ' ';
 
       cp2 = staging;
 
-      if (!opt->isRequired())
+      if (!opt.isRequired())
         *cp2++ = '[';
 
-      if (opt->getType() == Option::eList)
+      if (opt.getType() == Option::eList)
         *cp2++ = '{';
 
-      if (opt->getName() && !opt->hasArgument() && strlen(opt->getName()) > 1)
+      if (opt.getName() && !opt.hasArgument() && strlen(opt.getName()) > 1)
       {
-        len = sprintf(cp2, "-%s", opt->getName());
+        len = sprintf(cp2, "-%s", opt.getName());
         cp2 += len;
       }
-      else if (opt->getName() && opt->hasArgument())
+      else if (opt.getName() && opt.hasArgument())
       {
-        len = sprintf(cp2, "-%s <%s>", opt->getName(), opt->getArgDesc());
+        len = sprintf(cp2, "-%s <%s>", opt.getName(), opt.getArgDesc());
         cp2 += len;
       }
-      else if (!opt->getName())
+      else if (!opt.getName())
       {
-        len = sprintf(cp2, "<%s>", opt->getArgDesc());
+        len = sprintf(cp2, "<%s>", opt.getArgDesc());
         cp2 += len;
       }
 
-      if (opt->getType() == Option::eList)
+      if (opt.getType() == Option::eList)
       {
         *cp2++ = '}';
         *cp2++ = '.';
@@ -525,7 +519,7 @@ namespace mtconnect
         *cp2++ = '.';
       }
 
-      if (!opt->isRequired())
+      if (!opt.isRequired())
         *cp2++ = ']';
 
       *cp2 = '\0';
@@ -548,26 +542,24 @@ namespace mtconnect
     *cp = '\0';
     fputs(buffer, stderr);
 
-    for (auto iter = begin(); iter != end(); iter++)
+    for (const auto &opt : *this)
     {
-      Option *opt = &(*iter);
-
-      if (opt->getName())
+      if (opt.getName())
       {
-        if (opt->hasArgument())
-          sprintf(buffer, "-%-2.2s <%s>", opt->getName(), opt->getArgDesc());
+        if (opt.hasArgument())
+          sprintf(buffer, "-%-2.2s <%s>", opt.getName(), opt.getArgDesc());
         else
-          sprintf(buffer, "-%-6.6s", opt->getName());
+          sprintf(buffer, "-%-6.6s", opt.getName());
       }
-      else if (opt->getOrder() >= 0)
+      else if (opt.getOrder() >= 0)
       {
-        sprintf(buffer, "<%s>", opt->getArgDesc());
+        sprintf(buffer, "<%s>", opt.getArgDesc());
       }
       else
-        sprintf(buffer, "<%s>...", opt->getArgDesc());
+        sprintf(buffer, "<%s>...", opt.getArgDesc());
 
       fprintf(stderr, "    %-20.20s : ", buffer);
-      const char *cp = opt->getUsage();
+      const char *cp = opt.getUsage();
 
       while (*cp != '\0')
       {
@@ -598,10 +590,10 @@ namespace mtconnect
 
   bool OptionsList::find(const char *optName, Option *&option)
   {
-    for (auto iter = begin(); iter != end(); iter++)
+    for (auto &opt : *this)
     {
-      option = &(*iter);
-      const char *name = option->getName();
+      option = &opt;
+      const char *name = opt.getName();
 
       // Unnamed options are at the end of the list.
       if (!name)
@@ -609,7 +601,7 @@ namespace mtconnect
 
       size_t len = strlen(name);
 
-      if (option->ignoreCase())
+      if (opt.ignoreCase())
       {
         if (!strncasecmp(optName, name, len))
           return true;
@@ -623,12 +615,12 @@ namespace mtconnect
 
   bool OptionsList::find(int order, Option *&option)
   {
-    for (auto iter = begin(); iter != end(); iter++)
+    for (auto &opt : *this)
     {
-      option = &(*iter);
+      option = &opt;
 
       // Unnamed options are at the end of the list.
-      if (!option->getName() && option->getOrder() == order)
+      if (!opt.getName() && opt.getOrder() == order)
         return true;
     }
 

@@ -378,7 +378,7 @@ namespace mtconnect
     }
     void addConstrainedValue(std::string value)
     {
-      m_values.push_back(value);
+      m_values.emplace_back(value);
       m_hasConstraints = true;
     }
 

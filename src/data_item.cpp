@@ -43,11 +43,14 @@ namespace mtconnect
         m_hasSignificantDigits(false),
         m_hasConstraints(false),
         m_filterValue(0.0),
+        m_filterPeriod(0.0),
         m_hasMinimumDelta(false),
         m_hasMinimumPeriod(false),
         m_lastSampleValue(NAN),
         m_lastTimeOffset(NAN),
         m_dataSource(nullptr),
+        m_conversionFactor(1.0),
+        m_conversionOffset(0.0),
         m_conversionDetermined(false),
         m_conversionRequired(false),
         m_hasFactor(false)
@@ -337,13 +340,13 @@ namespace mtconnect
 
         for (int i = 0; i < 3; i++)
         {
-          auto pos = value.find(" ", start);
+          auto pos = value.find(' ', start);
           result << floatToString((atof(value.substr(start, pos).c_str()) + m_conversionOffset) *
                                   m_conversionFactor);
 
           if (pos != string::npos)
           {
-            start = value.find_first_not_of(" ", pos);
+            start = value.find_first_not_of(' ', pos);
             result << " ";
           }
         }

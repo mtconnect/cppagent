@@ -22,7 +22,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 using namespace std::chrono;

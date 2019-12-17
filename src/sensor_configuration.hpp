@@ -20,6 +20,7 @@
 #include "component_configuration.hpp"
 #include "globals.hpp"
 
+#include <utility>
 #include <vector>
 
 namespace mtconnect
@@ -29,8 +30,10 @@ namespace mtconnect
    public:
     struct Calibration
     {
-      Calibration(const std::string &date, const std::string &nextDate, const std::string &initials)
-          : m_date(date), m_nextDate(nextDate), m_initials(initials)
+      Calibration(std::string date, std::string nextDate, std::string initials)
+          : m_date(std::move(date)),
+            m_nextDate(std::move(nextDate)),
+            m_initials(std::move(initials))
       {
       }
       Calibration(const Calibration &other)
@@ -52,9 +55,11 @@ namespace mtconnect
     class Channel
     {
      public:
-      Channel(const std::string &calibrationDate, const std::string &nextCalibrationDate,
-              const std::string &initials, const std::map<std::string, std::string> &attrs)
-          : m_attributes(attrs), m_calibration(calibrationDate, nextCalibrationDate, initials)
+      Channel(std::string calibrationDate, std::string nextCalibrationDate, std::string initials,
+              const std::map<std::string, std::string> &attrs)
+          : m_attributes(attrs),
+            m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
+                          std::move(initials))
       {
       }
       Channel(const Channel &other)
@@ -92,12 +97,12 @@ namespace mtconnect
 
     // Sensor Configuration begins here
    public:
-    SensorConfiguration(const std::string &firmwareVer, const std::string &calibrationDate,
-                        const std::string &nextCalibrationDate, const std::string &initials,
-                        const std::string &rest)
-        : m_firmwareVersion(firmwareVer),
-          m_calibration(calibrationDate, nextCalibrationDate, initials),
-          m_rest(rest)
+    SensorConfiguration(std::string firmwareVer, std::string calibrationDate,
+                        std::string nextCalibrationDate, std::string initials, std::string rest)
+        : m_firmwareVersion(std::move(firmwareVer)),
+          m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
+                        std::move(initials)),
+          m_rest(std::move(rest))
     {
     }
     virtual ~SensorConfiguration()
@@ -106,7 +111,7 @@ namespace mtconnect
 
     void addChannel(const Channel &channel)
     {
-      m_channels.push_back(channel);
+      m_channels.emplace_back(channel);
     }
 
     const std::vector<Channel> &getChannels() const

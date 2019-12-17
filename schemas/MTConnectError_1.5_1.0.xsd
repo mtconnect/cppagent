@@ -2364,6 +2364,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLILITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milliliter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER/REVOLUTION'>
         <xs:annotation>
           <xs:documentation>
@@ -2616,6 +2658,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLILITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milliliter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER/REVOLUTION'>
         <xs:annotation>
           <xs:documentation>
@@ -2825,6 +2909,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Rotational velocity in revolution per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of time in minutes
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>

@@ -33,6 +33,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <thread>
@@ -119,7 +120,8 @@ namespace mtconnect
         m_monitorFiles(false),
         m_minimumConfigReloadAge(15),
         m_restart(false),
-        m_exePath("")
+        m_exePath(""),
+        m_pretty(false)
   {
     bool success = false;
     char pathSep = '/';
@@ -355,7 +357,8 @@ namespace mtconnect
       {
         // Start the file monitor to check for changes to cfg or devices.
         g_logger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
-        mon.reset(new dlib::thread_function(make_mfp(*this, &AgentConfiguration::monitorThread)));
+        mon = std::make_unique<dlib::thread_function>(
+            make_mfp(*this, &AgentConfiguration::monitorThread));
       }
 
       m_agent->start();
@@ -485,7 +488,7 @@ namespace mtconnect
             sin >> one;
             sin >> two;
             sin >> three;
-            if (one == "file" && !three.size())
+            if (one == "file" && three.empty())
               name = two;
             else
               name = one;
@@ -568,24 +571,24 @@ namespace mtconnect
     if (reader.is_key_defined("Devices"))
     {
       auto fileName = reader["Devices"];
-      devices_files.push_back(fileName);
+      devices_files.emplace_back(fileName);
 
       if (!m_exePath.empty() && !fileName.empty() && fileName[0] != '/' && fileName[0] != '\\' &&
           fileName[1] != ':')
       {
-        devices_files.push_back(m_exePath + reader["Devices"]);
+        devices_files.emplace_back(m_exePath + reader["Devices"]);
       }
     }
 
-    devices_files.push_back("Devices.xml");
+    devices_files.emplace_back("Devices.xml");
 
     if (!m_exePath.empty())
-      devices_files.push_back(m_exePath + "Devices.xml");
+      devices_files.emplace_back(m_exePath + "Devices.xml");
 
-    devices_files.push_back("probe.xml");
+    devices_files.emplace_back("probe.xml");
 
     if (!m_exePath.empty())
-      devices_files.push_back(m_exePath + "probe.xml");
+      devices_files.emplace_back(m_exePath + "probe.xml");
 
     m_devicesFile.clear();
 
@@ -631,8 +634,8 @@ namespace mtconnect
     m_agent->set_listening_ip(serverIp);
     m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
 
-    for (size_t i = 0; i < m_agent->getDevices().size(); i++)
-      m_agent->getDevices()[i]->m_preserveUuid = defaultPreserve;
+    for (auto device : m_agent->getDevices())
+      device->m_preserveUuid = defaultPreserve;
 
     loadAllowPut(reader);
     loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,
@@ -674,7 +677,7 @@ namespace mtconnect
         const auto &adapter = adapters.block(block);
         string deviceName;
         if (adapter.is_key_defined("Device"))
-          deviceName = adapter["Device"].c_str();
+          deviceName = adapter["Device"];
         else
           deviceName = block;
 

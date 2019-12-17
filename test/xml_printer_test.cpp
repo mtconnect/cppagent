@@ -51,8 +51,8 @@ class XmlPrinterTest : public testing::Test
     m_printer = nullptr;
   }
 
-  mtconnect::XmlParser *m_config;
-  mtconnect::XmlPrinter *m_printer;
+  mtconnect::XmlParser *m_config{nullptr};
+  mtconnect::XmlPrinter *m_printer{nullptr};
   std::vector<mtconnect::Device *> m_devices;
 
   // Construct a component event and set it as the data item's latest event
@@ -572,7 +572,7 @@ TEST_F(XmlPrinterTest, PrintAsset)
   // Add the xml to the agent...
   vector<AssetPtr> assets;
   AssetPtr asset(new Asset((string) "123", (string) "TEST", (string) "HELLO"));
-  assets.push_back(asset);
+  assets.emplace_back(asset);
 
   {
     PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
@@ -783,7 +783,7 @@ TEST_F(XmlPrinterTest, AssetsStyle)
 
   vector<AssetPtr> assets;
   AssetPtr asset = new Asset((string) "123", (string) "TEST", (string) "HELLO");
-  assets.push_back(asset);
+  assets.emplace_back(asset);
   asset->unrefer();
 
   PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
@@ -825,7 +825,7 @@ TEST_F(XmlPrinterTest, PrintCuttingTool)
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
 
   vector<AssetPtr> assets;
-  assets.push_back(asset);
+  assets.emplace_back(asset);
 
   {
     PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
@@ -842,7 +842,7 @@ TEST_F(XmlPrinterTest, PrintRemovedCuttingTool)
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
 
   vector<AssetPtr> assets;
-  assets.push_back(asset);
+  assets.emplace_back(asset);
 
   {
     PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
@@ -861,7 +861,7 @@ TEST_F(XmlPrinterTest, PrintExtendedCuttingTool)
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
 
   vector<AssetPtr> assets;
-  assets.push_back(asset);
+  assets.emplace_back(asset);
 
   {
     PARSE_XML(m_printer->printAssets(123, 4, 2, assets));

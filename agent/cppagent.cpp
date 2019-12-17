@@ -18,10 +18,11 @@
 #include "agent.hpp"
 #include "config.hpp"
 #include "fcntl.h"
-#include "string.h"
 #include "sys/stat.h"
 
 #include "dlib/config_reader.h"
+
+#include <cstring>
 
 using namespace std;
 using namespace dlib;

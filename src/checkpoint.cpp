@@ -228,7 +228,7 @@ namespace mtconnect
   bool Checkpoint::dataSetDifference(Observation *event) const
   {
     auto item = event->getDataItem();
-    if (item->isDataSet() && event->getDataSet().size() > 0 && event->getResetTriggered().empty())
+    if (item->isDataSet() && !event->getDataSet().empty() && event->getResetTriggered().empty())
     {
       const auto &id = item->getId();
       const auto ptr = m_events.find(id);

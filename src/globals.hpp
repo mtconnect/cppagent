@@ -21,7 +21,7 @@
 #define __STDC_LIMIT_MACROS 1
 #endif
 #if _MSC_VER > 1500
-#include <stdint.h>
+#include <cstdint>
 #else
 #endif
 #ifndef UINT64_MAX
@@ -57,8 +57,8 @@ typedef unsigned __int64 uint64_t;
 #define ISNAN(x) std::isnan(x)
 #include <sys/resource.h>
 
+#include <cstdint>
 #include <memory>
-#include <stdint.h>
 #include <unistd.h>
 #endif
 
