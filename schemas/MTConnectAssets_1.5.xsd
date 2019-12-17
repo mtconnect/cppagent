@@ -9704,7 +9704,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             </xs:element>
           </xs:choice>
         </xs:sequence>
-        <xs:attribute name='toolId' type='CuttingToolIdType' use='optional'>
+        <xs:attribute name='toolId' type='CuttingToolIdType' use='required'>
           <xs:annotation>
             <xs:documentation>
               The identifier for a class of Cutting Tools. This is defined as an
