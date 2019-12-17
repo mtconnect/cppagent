@@ -30,7 +30,14 @@
 
 namespace mtconnect
 {
-  typedef std::pair<const char *, std::string> AttributeItem;
+  struct AttributeItem : public std::pair<const char *, std::string>
+  {
+    AttributeItem(const char *f, const std::string &s, bool force = false)
+    : std::pair<const char *, std::string>(f, s), m_force(force) {}
+    
+    bool m_force;
+  };
+
   typedef std::vector<AttributeItem> AttributeList;
 
   class Observation;

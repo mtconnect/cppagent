@@ -241,7 +241,7 @@ namespace mtconnect
         m_sampleCount = m_dataSet.size();
       }
       else if (m_dataItem->isAssetChanged() || m_dataItem->isAssetRemoved())
-        m_attributes.emplace_back(AttributeItem("assetType", m_rest));
+        m_attributes.emplace_back(AttributeItem("assetType", m_rest, true));
 
       m_hasAttributes = true;
     }

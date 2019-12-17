@@ -839,7 +839,7 @@ namespace mtconnect
   {
     for (const auto &attr : attributes)
     {
-      if (!attr.second.empty())
+      if (!attr.second.empty() || attr.m_force)
       {
         THROW_IF_XML2_ERROR(
             xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first, BAD_CAST attr.second.c_str()));
