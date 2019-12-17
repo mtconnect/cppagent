@@ -1165,6 +1165,16 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name='ClockTimeValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time in seconds
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='(-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?)|UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:simpleType name='DurationTimeType'>
     <xs:annotation>
       <xs:documentation>
@@ -1910,6 +1920,25 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='ClockTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The reading of a timing device a specific point in time
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='(-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?)|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ClockTime' type='ClockTimeType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The reading of a timing device a specific point in time
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='AbsTimeSeriesType' abstract='true'>
     <xs:annotation>
       <xs:documentation>
@@ -2578,6 +2607,23 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Time series of The length of an object
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ClockTimeTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The reading of a timing device a specific point in time
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ClockTimeTimeSeries' type='ClockTimeTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The reading of a timing device a specific point in time
       </xs:documentation>
     </xs:annotation>
   </xs:element>

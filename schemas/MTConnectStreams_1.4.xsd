@@ -137,7 +137,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:string'/>
   </xs:simpleType>
-  <xs:simpleType name='SerialNumberAttrType'>
+  <xs:simpleType name='SerialNumberType'>
     <xs:annotation>
       <xs:documentation>
         A serial number for a piece of equipment
@@ -267,131 +267,122 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:string'>
       <xs:enumeration value='ACCELERATION'/>
-      <xs:enumeration value='ACCUMULATED_TIME'/>
-      <xs:enumeration value='ANGULAR_ACCELERATION'/>
-      <xs:enumeration value='ANGULAR_VELOCITY'/>
+      <xs:enumeration value='ACTIVE_AXES'/>
+      <xs:enumeration value='ALARM'/>
       <xs:enumeration value='AMPERAGE'/>
       <xs:enumeration value='ANGLE'/>
+      <xs:enumeration value='ANGULAR_ACCELERATION'/>
+      <xs:enumeration value='ANGULAR_VELOCITY'/>
+      <xs:enumeration value='AVAILABILITY'/>
       <xs:enumeration value='AXIS_FEEDRATE'/>
-      <xs:enumeration value='CLOCK_TIME'/>
+      <xs:enumeration value='BLOCK'/>
+      <xs:enumeration value='CODE'/>
+      <xs:enumeration value='DIRECTION'/>
+      <xs:enumeration value='DOOR_STATE'/>
+      <xs:enumeration value='EMERGENCY_STOP'/>
+      <xs:enumeration value='EXECUTION'/>
+      <xs:enumeration value='FREQUENCY'/>
+      <xs:enumeration value='PART_COUNT'/>
+      <xs:enumeration value='PART_ID'/>
+      <xs:enumeration value='PATH_FEEDRATE'/>
+      <xs:enumeration value='PATH_POSITION'/>
+      <xs:enumeration value='PATH_MODE'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='CONTROLLER_MODE'/>
+      <xs:enumeration value='LOAD'/>
+      <xs:enumeration value='MESSAGE'/>
+      <xs:enumeration value='POSITION'/>
+      <xs:enumeration value='POWER_STATUS'/>
+      <xs:enumeration value='POWER_STATE'/>
+      <xs:enumeration value='PRESSURE'/>
+      <xs:enumeration value='RESET'/>
+      <xs:enumeration value='PROGRAM'/>
+      <xs:enumeration value='PROGRAM_COMMENT'/>
+      <xs:enumeration value='ROTARY_MODE'/>
+      <xs:enumeration value='COUPLED_AXES'/>
+      <xs:enumeration value='AXIS_COUPLING'/>
+      <xs:enumeration value='SPINDLE_SPEED'/>
+      <xs:enumeration value='TEMPERATURE'/>
+      <xs:enumeration value='TORQUE'/>
+      <xs:enumeration value='TOOL_ASSET_ID'/>
+      <xs:enumeration value='TOOL_ID'/>
+      <xs:enumeration value='TOOL_NUMBER'/>
+      <xs:enumeration value='VELOCITY'/>
+      <xs:enumeration value='VIBRATION'/>
+      <xs:enumeration value='VOLTAGE'/>
+      <xs:enumeration value='WATTAGE'/>
+      <xs:enumeration value='ACCUMULATED_TIME'/>
+      <xs:enumeration value='ACTUATOR_STATE'/>
+      <xs:enumeration value='ASSET_CHANGED'/>
       <xs:enumeration value='CONCENTRATION'/>
       <xs:enumeration value='CONDUCTIVITY'/>
       <xs:enumeration value='DISPLACEMENT'/>
       <xs:enumeration value='ELECTRICAL_ENERGY'/>
-      <xs:enumeration value='EQUIPMENT_TIMER'/>
       <xs:enumeration value='FILL_LEVEL'/>
       <xs:enumeration value='FLOW'/>
-      <xs:enumeration value='FREQUENCY'/>
-      <xs:enumeration value='LENGTH'/>
       <xs:enumeration value='LINEAR_FORCE'/>
-      <xs:enumeration value='LOAD'/>
       <xs:enumeration value='MASS'/>
-      <xs:enumeration value='PATH_FEEDRATE'/>
-      <xs:enumeration value='PATH_POSITION'/>
       <xs:enumeration value='PH'/>
-      <xs:enumeration value='POSITION'/>
       <xs:enumeration value='POWER_FACTOR'/>
-      <xs:enumeration value='PRESSURE'/>
-      <xs:enumeration value='PROCESS_TIMER'/>
       <xs:enumeration value='RESISTANCE'/>
       <xs:enumeration value='ROTARY_VELOCITY'/>
-      <xs:enumeration value='SOUND_LEVEL'/>
-      <xs:enumeration value='SPINDLE_SPEED'/>
+      <xs:enumeration value='SOUND_PRESSURE'/>
       <xs:enumeration value='STRAIN'/>
-      <xs:enumeration value='TEMPERATURE'/>
-      <xs:enumeration value='TENSION'/>
       <xs:enumeration value='TILT'/>
-      <xs:enumeration value='TORQUE'/>
-      <xs:enumeration value='VELOCITY'/>
-      <xs:enumeration value='VISCOSITY'/>
-      <xs:enumeration value='VOLTAGE'/>
       <xs:enumeration value='VOLT_AMPERE'/>
       <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
-      <xs:enumeration value='WATTAGE'/>
-      <xs:enumeration value='ACTIVE_AXES'/>
-      <xs:enumeration value='ACTUATOR_STATE'/>
-      <xs:enumeration value='ALARM'/>
-      <xs:enumeration value='AVAILABILITY'/>
-      <xs:enumeration value='AXIS_COUPLING'/>
-      <xs:enumeration value='AXIS_FEEDRATE_OVERRIDE'/>
-      <xs:enumeration value='AXIS_INTERLOCK'/>
-      <xs:enumeration value='AXIS_STATE'/>
-      <xs:enumeration value='BLOCK'/>
-      <xs:enumeration value='BLOCK_COUNT'/>
-      <xs:enumeration value='CHUCK_STATE'/>
-      <xs:enumeration value='CODE'/>
-      <xs:enumeration value='COMPOSITION_STATE'/>
-      <xs:enumeration value='CONTROLLER_MODE'/>
-      <xs:enumeration value='CONTROLLER_MODE_OVERRIDE'/>
-      <xs:enumeration value='COUPLED_AXES'/>
-      <xs:enumeration value='DIRECTION'/>
-      <xs:enumeration value='DOOR_STATE'/>
-      <xs:enumeration value='DRY_RUN'/>
-      <xs:enumeration value='EMERGENCY_STOP'/>
-      <xs:enumeration value='EQUIPMENT_MODE'/>
-      <xs:enumeration value='EXECUTION'/>
-      <xs:enumeration value='FUNCTIONAL_MODE'/>
-      <xs:enumeration value='HARDNESS'/>
-      <xs:enumeration value='LEVEL'/>
-      <xs:enumeration value='LINE'/>
-      <xs:enumeration value='LINE_LABEL'/>
-      <xs:enumeration value='LINE_NUMBER'/>
-      <xs:enumeration value='MATERIAL'/>
-      <xs:enumeration value='MESSAGE'/>
-      <xs:enumeration value='OPERATOR_ID'/>
-      <xs:enumeration value='PALLET_ID'/>
-      <xs:enumeration value='PART_ASSET_ID'/>
-      <xs:enumeration value='PART_COUNT'/>
-      <xs:enumeration value='PART_ID'/>
-      <xs:enumeration value='PART_NUMBER'/>
-      <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'/>
-      <xs:enumeration value='PATH_MODE'/>
-      <xs:enumeration value='POWER_STATE'/>
-      <xs:enumeration value='POWER_STATUS'/>
-      <xs:enumeration value='PROGRAM'/>
-      <xs:enumeration value='PROGRAM_COMMENT'/>
-      <xs:enumeration value='PROGRAM_EDIT'/>
-      <xs:enumeration value='PROGRAM_EDIT_NAME'/>
-      <xs:enumeration value='PROGRAM_HEADER'/>
-      <xs:enumeration value='ROTARY_MODE'/>
-      <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
-      <xs:enumeration value='SERIAL_NUMBER'/>
-      <xs:enumeration value='SPINDLE_INTERLOCK'/>
-      <xs:enumeration value='TOOL_ASSET_ID'/>
-      <xs:enumeration value='TOOL_ID'/>
-      <xs:enumeration value='TOOL_NUMBER'/>
-      <xs:enumeration value='TOOL_OFFSET'/>
-      <xs:enumeration value='USER'/>
-      <xs:enumeration value='WIRE'/>
-      <xs:enumeration value='WORKHOLDING_ID'/>
-      <xs:enumeration value='WORK_OFFSET'/>
-      <xs:enumeration value='ACTUATOR'/>
-      <xs:enumeration value='CHUCK_INTERLOCK'/>
+      <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='VISCOSITY'/>
+      <xs:enumeration value='CLOCK_TIME'/>
       <xs:enumeration value='COMMUNICATIONS'/>
-      <xs:enumeration value='DATA_RANGE'/>
-      <xs:enumeration value='END_OF_BAR'/>
-      <xs:enumeration value='HARDWARE'/>
-      <xs:enumeration value='INTERFACE_STATE'/>
       <xs:enumeration value='LOGIC_PROGRAM'/>
       <xs:enumeration value='MOTION_PROGRAM'/>
+      <xs:enumeration value='HARDWARE'/>
       <xs:enumeration value='SYSTEM'/>
-      <xs:enumeration value='ASSET_CHANGED'/>
-      <xs:enumeration value='ASSET_REMOVED'/>
+      <xs:enumeration value='LEVEL'/>
+      <xs:enumeration value='ACTUATOR'/>
+      <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
+      <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='AXIS_FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='PART_ASSET_ID'/>
+      <xs:enumeration value='PROGRAM_EDIT'/>
+      <xs:enumeration value='PROGRAM_EDIT_NAME'/>
+      <xs:enumeration value='CLOCK_TIME'/>
+      <xs:enumeration value='CHUCK_STATE'/>
+      <xs:enumeration value='END_OF_BAR'/>
       <xs:enumeration value='AUXILIARY_END_OF_BAR'/>
-      <xs:enumeration value='CLOSE_CHUCK'/>
-      <xs:enumeration value='CLOSE_DOOR'/>
-      <xs:enumeration value='INTERFACE_STATE'/>
-      <xs:enumeration value='MACHINE_AXIS_LOCK'/>
+      <xs:enumeration value='AXIS_INTERLOCK'/>
       <xs:enumeration value='MANUAL_CHUCK_UNCLAMP_INTERLOCK'/>
-      <xs:enumeration value='MATERIAL_CHANGE'/>
+      <xs:enumeration value='LENGTH'/>
+      <xs:enumeration value='AXIS_STATE'/>
+      <xs:enumeration value='INTERFACE_STATE'/>
+      <xs:enumeration value='FUNCTIONAL_MODE'/>
+      <xs:enumeration value='WORKHOLDING_ID'/>
+      <xs:enumeration value='PALLET_ID'/>
+      <xs:enumeration value='OPERATOR_ID'/>
+      <xs:enumeration value='ASSET_REMOVED'/>
+      <xs:enumeration value='PROGRAM_HEADER'/>
       <xs:enumeration value='MATERIAL_FEED'/>
-      <xs:enumeration value='MATERIAL_LOAD'/>
+      <xs:enumeration value='MATERIAL_CHANGE'/>
       <xs:enumeration value='MATERIAL_RETRACT'/>
-      <xs:enumeration value='MATERIAL_UNLOAD'/>
-      <xs:enumeration value='OPEN_CHUCK'/>
-      <xs:enumeration value='OPEN_DOOR'/>
       <xs:enumeration value='PART_CHANGE'/>
-      <xs:enumeration value='RESET'/>
+      <xs:enumeration value='OPEN_DOOR'/>
+      <xs:enumeration value='CLOSE_DOOR'/>
+      <xs:enumeration value='OPEN_CHUCK'/>
+      <xs:enumeration value='CLOSE_CHUCK'/>
+      <xs:enumeration value='MATERIAL_LOAD'/>
+      <xs:enumeration value='MATERIAL_UNLOAD'/>
+      <xs:enumeration value='TRANSFORMATION'/>
+      <xs:enumeration value='SINGLE_BLOCK'/>
+      <xs:enumeration value='DRY_RUN'/>
+      <xs:enumeration value='OPTIONAL_STOP'/>
+      <xs:enumeration value='MACHINE_AXIS_LOCK'/>
+      <xs:enumeration value='TOOL_CHANGE_STOP'/>
+      <xs:enumeration value='LINE_NUMBER'/>
+      <xs:enumeration value='LINE_LABEL'/>
+      <xs:enumeration value='BLOCK_COUNT'/>
+      <xs:enumeration value='USER'/>
+      <xs:enumeration value='PART_NUMBER'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemEnumType'>
@@ -409,74 +400,49 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:enumeration value='ABSOLUTE'/>
       <xs:enumeration value='ACTUAL'/>
-      <xs:enumeration value='ACTION'/>
-      <xs:enumeration value='ALL'/>
-      <xs:enumeration value='ALTERNATING'/>
-      <xs:enumeration value='AUXILIARY'/>
-      <xs:enumeration value='A_SCALE'/>
-      <xs:enumeration value='BAD'/>
-      <xs:enumeration value='BRINELL'/>
-      <xs:enumeration value='B_SCALE'/>
       <xs:enumeration value='COMMANDED'/>
-      <xs:enumeration value='CONTROL'/>
-      <xs:enumeration value='C_SCALE'/>
-      <xs:enumeration value='DELAY'/>
-      <xs:enumeration value='DIRECT'/>
-      <xs:enumeration value='DRY_RUN'/>
-      <xs:enumeration value='DYNAMIC'/>
-      <xs:enumeration value='D_SCALE'/>
-      <xs:enumeration value='FIXTURE'/>
-      <xs:enumeration value='GOOD'/>
-      <xs:enumeration value='JOG'/>
-      <xs:enumeration value='INCREMENTAL'/>
-      <xs:enumeration value='KINETIC'/>
-      <xs:enumeration value='LATERAL'/>
-      <xs:enumeration value='LEEB'/>
-      <xs:enumeration value='LENGTH'/>
-      <xs:enumeration value='LINE'/>
-      <xs:enumeration value='LINEAR'/>
-      <xs:enumeration value='LOADED'/>
-      <xs:enumeration value='MACHINE_AXIS_LOCK'/>
-      <xs:enumeration value='MAINTENANCE'/>
-      <xs:enumeration value='MANUAL_UNCLAMP'/>
       <xs:enumeration value='MAXIMUM'/>
       <xs:enumeration value='MINIMUM'/>
-      <xs:enumeration value='MOHS'/>
-      <xs:enumeration value='MOLE'/>
-      <xs:enumeration value='MOTION'/>
-      <xs:enumeration value='NO_SCALE'/>
-      <xs:enumeration value='OPERATOR'/>
-      <xs:enumeration value='OPERATING'/>
-      <xs:enumeration value='OPTIONAL_STOP'/>
-      <xs:enumeration value='TOOL_CHANGE_STOP'/>
+      <xs:enumeration value='OTHER'/>
       <xs:enumeration value='OVERRIDE'/>
-      <xs:enumeration value='PRIMARY'/>
       <xs:enumeration value='PROBE'/>
-      <xs:enumeration value='PROGRAMMED'/>
-      <xs:enumeration value='POWERED'/>
-      <xs:enumeration value='PROCESS'/>
-      <xs:enumeration value='RADIAL'/>
-      <xs:enumeration value='RAPID'/>
-      <xs:enumeration value='RELATIVE'/>
-      <xs:enumeration value='REMAINING'/>
+      <xs:enumeration value='TARGET'/>
+      <xs:enumeration value='GOOD'/>
+      <xs:enumeration value='BAD'/>
+      <xs:enumeration value='ALL'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='CONTROL'/>
+      <xs:enumeration value='ALTERNATING'/>
+      <xs:enumeration value='DIRECT'/>
+      <xs:enumeration value='WEIGHT'/>
+      <xs:enumeration value='VOLUME'/>
+      <xs:enumeration value='MOLE'/>
+      <xs:enumeration value='KINETIC'/>
+      <xs:enumeration value='DYNAMIC'/>
+      <xs:enumeration value='NO_SCALE'/>
+      <xs:enumeration value='A_SCALE'/>
+      <xs:enumeration value='B_SCALE'/>
+      <xs:enumeration value='C_SCALE'/>
+      <xs:enumeration value='D_SCALE'/>
       <xs:enumeration value='REQUEST'/>
       <xs:enumeration value='RESPONSE'/>
-      <xs:enumeration value='ROCKWELL'/>
-      <xs:enumeration value='ROTARY'/>
-      <xs:enumeration value='SET_UP'/>
-      <xs:enumeration value='SHORE'/>
-      <xs:enumeration value='SINGLE_BLOCK'/>
-      <xs:enumeration value='STANDARD'/>
-      <xs:enumeration value='SWITCHED'/>
-      <xs:enumeration value='TARGET'/>
+      <xs:enumeration value='REMAINING'/>
+      <xs:enumeration value='JOG'/>
+      <xs:enumeration value='RAPID'/>
+      <xs:enumeration value='PROGRAMMED'/>
+      <xs:enumeration value='PRIMARY'/>
+      <xs:enumeration value='AUXILIARY'/>
+      <xs:enumeration value='MANUAL_UNCLAMP'/>
+      <xs:enumeration value='WORKPIECE'/>
+      <xs:enumeration value='FIXTURE'/>
       <xs:enumeration value='TOOL'/>
-      <xs:enumeration value='USABLE'/>
-      <xs:enumeration value='VERTICAL'/>
-      <xs:enumeration value='VICKERS'/>
-      <xs:enumeration value='VOLUME'/>
-      <xs:enumeration value='WORKING'/>
+      <xs:enumeration value='ABSOLUTE'/>
+      <xs:enumeration value='RELATIVE'/>
+      <xs:enumeration value='TOOL_EDGE'/>
+      <xs:enumeration value='TOOL_GROUP'/>
+      <xs:enumeration value='ROTARY'/>
+      <xs:enumeration value='LINEAR'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
@@ -494,15 +460,15 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:enumeration value='AVERAGE'/>
-      <xs:enumeration value='KURTOSIS'/>
-      <xs:enumeration value='MAXIMUM'/>
-      <xs:enumeration value='MEDIAN'/>
-      <xs:enumeration value='MODE'/>
       <xs:enumeration value='MINIMUM'/>
-      <xs:enumeration value='RANGE'/>
-      <xs:enumeration value='ROOT_MEAN_SQUARE'/>
+      <xs:enumeration value='MAXIMUM'/>
+      <xs:enumeration value='AVERAGE'/>
       <xs:enumeration value='STANDARD_DEVIATION'/>
+      <xs:enumeration value='ROOT_MEAN_SQUARE'/>
+      <xs:enumeration value='MEAN'/>
+      <xs:enumeration value='MODE'/>
+      <xs:enumeration value='RANGE'/>
+      <xs:enumeration value='KURTOSIS'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemStatisticsType'>
@@ -533,7 +499,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='AMPERE'/>
       <xs:enumeration value='CELSIUS'/>
       <xs:enumeration value='COUNT'/>
-      <xs:enumeration value='DECIBEL'/>
       <xs:enumeration value='DEGREE'/>
       <xs:enumeration value='DEGREE/SECOND'/>
       <xs:enumeration value='DEGREE/SECOND^2'/>
@@ -542,27 +507,28 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='KILOGRAM'/>
       <xs:enumeration value='LITER'/>
       <xs:enumeration value='LITER/SECOND'/>
-      <xs:enumeration value='MICRO_RADIAN'/>
       <xs:enumeration value='MILLIMETER'/>
       <xs:enumeration value='MILLIMETER/SECOND'/>
       <xs:enumeration value='MILLIMETER/SECOND^2'/>
       <xs:enumeration value='MILLIMETER_3D'/>
       <xs:enumeration value='NEWTON'/>
       <xs:enumeration value='NEWTON_METER'/>
-      <xs:enumeration value='OHM'/>
       <xs:enumeration value='PASCAL'/>
-      <xs:enumeration value='PASCAL_SECOND'/>
       <xs:enumeration value='PERCENT'/>
       <xs:enumeration value='PH'/>
       <xs:enumeration value='REVOLUTION/MINUTE'/>
       <xs:enumeration value='SECOND'/>
-      <xs:enumeration value='SIEMENS/METER'/>
-      <xs:enumeration value='SOUND_LEVEL'/>
       <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='OHM'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='SIEMENS/METER'/>
+      <xs:enumeration value='MICRO_RADIAN'/>
+      <xs:enumeration value='PASCAL_SECOND'/>
       <xs:enumeration value='VOLT_AMPERE'/>
       <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
-      <xs:enumeration value='WATT'/>
       <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='DECIBEL'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='UnitsType'>
@@ -584,7 +550,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='AMPERE'/>
       <xs:enumeration value='CELSIUS'/>
       <xs:enumeration value='COUNT'/>
-      <xs:enumeration value='DECIBEL'/>
       <xs:enumeration value='DEGREE'/>
       <xs:enumeration value='DEGREE/SECOND'/>
       <xs:enumeration value='DEGREE/SECOND^2'/>
@@ -593,27 +558,28 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='KILOGRAM'/>
       <xs:enumeration value='LITER'/>
       <xs:enumeration value='LITER/SECOND'/>
-      <xs:enumeration value='MICRO_RADIAN'/>
       <xs:enumeration value='MILLIMETER'/>
       <xs:enumeration value='MILLIMETER/SECOND'/>
       <xs:enumeration value='MILLIMETER/SECOND^2'/>
       <xs:enumeration value='MILLIMETER_3D'/>
       <xs:enumeration value='NEWTON'/>
       <xs:enumeration value='NEWTON_METER'/>
-      <xs:enumeration value='OHM'/>
       <xs:enumeration value='PASCAL'/>
-      <xs:enumeration value='PASCAL_SECOND'/>
       <xs:enumeration value='PERCENT'/>
       <xs:enumeration value='PH'/>
       <xs:enumeration value='REVOLUTION/MINUTE'/>
       <xs:enumeration value='SECOND'/>
-      <xs:enumeration value='SIEMENS/METER'/>
-      <xs:enumeration value='SOUND_LEVEL'/>
       <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='OHM'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='SIEMENS/METER'/>
+      <xs:enumeration value='MICRO_RADIAN'/>
+      <xs:enumeration value='PASCAL_SECOND'/>
       <xs:enumeration value='VOLT_AMPERE'/>
       <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
-      <xs:enumeration value='WATT'/>
       <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='DECIBEL'/>
       <xs:enumeration value='CENTIPOISE'/>
       <xs:enumeration value='DEGREE/MINUTE'/>
       <xs:enumeration value='FAHRENHEIT'/>
@@ -681,7 +647,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='ACTION_COMPLETE'/>
       <xs:enumeration value='ANNUAL'/>
       <xs:enumeration value='DAY'/>
-      <xs:enumeration value='LIFE'/>
       <xs:enumeration value='MAINTENANCE'/>
       <xs:enumeration value='MANUAL'/>
       <xs:enumeration value='MONTH'/>
@@ -902,9 +867,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         An floating point value or array of floating point values
       </xs:documentation>
     </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-    </xs:restriction>
+    <xs:restriction base='xs:string'/>
   </xs:simpleType>
   <xs:simpleType name='PositionValueType'>
     <xs:annotation>
@@ -1136,6 +1099,16 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name='SoundPressureValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        Sound pressure level
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:simpleType name='ResistanceValueType'>
     <xs:annotation>
       <xs:documentation>
@@ -1256,14 +1229,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
-  <xs:simpleType name='ClockTimeValueType'>
+  <xs:simpleType name='ClockTimeType'>
     <xs:annotation>
       <xs:documentation>
-        The time in seconds
+        The length in millimeters
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='(-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?)|UNAVAILABLE'/>
+      <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DurationTimeType'>
@@ -1296,6 +1269,82 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='AmperageType'>
+    <xs:annotation>
+      <xs:documentation>
+        An current a component is drawing
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Amperage' type='AmperageType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        An current a component is drawing
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='GlobalPositionType'>
+    <xs:annotation>
+      <xs:documentation>
+        DEPRECATED: The three space position of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)? [+-]?\d+(\.\d+)?([Ee][+-]?\d+)? [+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='GlobalPosition' type='GlobalPositionType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        DEPRECATED: The three space position of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PositionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The position of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Position' type='PositionType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The position of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VelocityType'>
+    <xs:annotation>
+      <xs:documentation>
+        The velocity of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Velocity' type='VelocityType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The velocity of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='AccelerationType'>
     <xs:annotation>
       <xs:documentation>
@@ -1312,25 +1361,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The acceleration of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AccumulatedTimeType'>
-    <xs:annotation>
-      <xs:documentation>
-        The non-contiguous duration of an event in seconds
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AccumulatedTime' type='AccumulatedTimeType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The non-contiguous duration of an event in seconds
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -1372,10 +1402,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='AmperageType'>
+  <xs:complexType name='PathFeedrateType'>
     <xs:annotation>
       <xs:documentation>
-        An current a component is drawing
+        The feedrate of the component
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -1384,29 +1414,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='Amperage' type='AmperageType' substitutionGroup='Sample'>
+  <xs:element name='PathFeedrate' type='PathFeedrateType' substitutionGroup='Sample'>
     <xs:annotation>
       <xs:documentation>
-        An current a component is drawing
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AngleType'>
-    <xs:annotation>
-      <xs:documentation>
-        The angle of the component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Angle' type='AngleType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The angle of the component
+        The feedrate of the component
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -1429,29 +1440,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='ClockTimeType'>
+  <xs:complexType name='SpindleSpeedType'>
     <xs:annotation>
       <xs:documentation>
-        The clock time
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='(-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?)|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ClockTime' type='ClockTimeType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The clock time
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ConcentrationType'>
-    <xs:annotation>
-      <xs:documentation>
-        The Concentration
+        The spindle speed of the component: DEPRECATED
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -1460,17 +1452,17 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='Concentration' type='ConcentrationType' substitutionGroup='Sample'>
+  <xs:element name='SpindleSpeed' type='SpindleSpeedType' substitutionGroup='Sample'>
     <xs:annotation>
       <xs:documentation>
-        The Concentration
+        The spindle speed of the component: DEPRECATED
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='ConductivityType'>
+  <xs:complexType name='RotaryVelocityType'>
     <xs:annotation>
       <xs:documentation>
-        The Conductivity
+        The rotational velocity of the component in RPM
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -1479,17 +1471,17 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='Conductivity' type='ConductivityType' substitutionGroup='Sample'>
+  <xs:element name='RotaryVelocity' type='RotaryVelocityType' substitutionGroup='Sample'>
     <xs:annotation>
       <xs:documentation>
-        The Conductivity
+        The rotational velocity of the component in RPM
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='DisplacementType'>
+  <xs:complexType name='AngleType'>
     <xs:annotation>
       <xs:documentation>
-        The linear displacement in millimeters
+        The angle of the component
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -1498,17 +1490,17 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='Displacement' type='DisplacementType' substitutionGroup='Sample'>
+  <xs:element name='Angle' type='AngleType' substitutionGroup='Sample'>
     <xs:annotation>
       <xs:documentation>
-        The linear displacement in millimeters
+        The angle of the component
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='ElectricalEnergyType'>
+  <xs:complexType name='TemperatureType'>
     <xs:annotation>
       <xs:documentation>
-        Electrical energy
+        The temperature
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -1517,18 +1509,17 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='ElectricalEnergy' type='ElectricalEnergyType' substitutionGroup='Sample'>
+  <xs:element name='Temperature' type='TemperatureType' substitutionGroup='Sample'>
     <xs:annotation>
       <xs:documentation>
-        Electrical energy
+        The temperature
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='EquipmentTimerType'>
+  <xs:complexType name='LoadType'>
     <xs:annotation>
       <xs:documentation>
-        The measurement of the amount of time a piece of equipment or a sub-part
-        of a piece of equipment has performed specific activities
+        The program code
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -1537,49 +1528,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='EquipmentTimer' type='EquipmentTimerType' substitutionGroup='Sample'>
+  <xs:element name='Load' type='LoadType' substitutionGroup='Sample'>
     <xs:annotation>
       <xs:documentation>
-        The measurement of the amount of time a piece of equipment or a sub-part
-        of a piece of equipment has performed specific activities
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='FillLevelType'>
-    <xs:annotation>
-      <xs:documentation>
-        The fill level of a tank
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='FillLevel' type='FillLevelType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The fill level of a tank
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='FlowType'>
-    <xs:annotation>
-      <xs:documentation>
-        The flow
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Flow' type='FlowType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The flow
+        The program code
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -1602,10 +1554,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='LengthType'>
+  <xs:complexType name='VoltsType'>
     <xs:annotation>
       <xs:documentation>
-        The length of an object
+        DEPRECATED: The voltage
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -1614,10 +1566,371 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='Length' type='LengthType' substitutionGroup='Sample'>
+  <xs:element name='Volts' type='VoltsType' substitutionGroup='Sample'>
     <xs:annotation>
       <xs:documentation>
-        The length of an object
+        DEPRECATED: The voltage
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VoltageType'>
+    <xs:annotation>
+      <xs:documentation>
+        The voltage
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Voltage' type='VoltageType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The voltage
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='WattType'>
+    <xs:annotation>
+      <xs:documentation>
+        DEPRECATED: The number of Watts
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Watt' type='WattType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        DEPRECATED: The number of Watts
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PressureType'>
+    <xs:annotation>
+      <xs:documentation>
+        The pressure
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Pressure' type='PressureType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The pressure
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='TorqueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The torque
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Torque' type='TorqueType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The torque
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PathPositionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The 3 dimensional position for tool tip in the path (X Y Z)
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)? [+-]?\d+(\.\d+)?([Ee][+-]?\d+)? [+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PathPosition' type='PathPositionType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The 3 dimensional position for tool tip in the path (X Y Z)
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='WattageType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of Watts
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Wattage' type='WattageType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of Watts
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DisplacementType'>
+    <xs:annotation>
+      <xs:documentation>
+        The linear displacement in millimeters
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Displacement' type='DisplacementType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The linear displacement in millimeters
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='TiltType'>
+    <xs:annotation>
+      <xs:documentation>
+        The tilt
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Tilt' type='TiltType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The tilt
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AccumulatedTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The non-contiguous duration of an event in seconds
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AccumulatedTime' type='AccumulatedTimeType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The non-contiguous duration of an event in seconds
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PowerFactorType'>
+    <xs:annotation>
+      <xs:documentation>
+        The power factor
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PowerFactor' type='PowerFactorType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The power factor
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='StrainType'>
+    <xs:annotation>
+      <xs:documentation>
+        The strain
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Strain' type='StrainType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The strain
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='FlowType'>
+    <xs:annotation>
+      <xs:documentation>
+        The flow
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Flow' type='FlowType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The flow
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='SoundPressureType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sound pressure
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='SoundPressure' type='SoundPressureType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The sound pressure
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ResistanceType'>
+    <xs:annotation>
+      <xs:documentation>
+        The Resistance
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Resistance' type='ResistanceType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The Resistance
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ConductivityType'>
+    <xs:annotation>
+      <xs:documentation>
+        The Conductivity
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Conductivity' type='ConductivityType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The Conductivity
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ViscosityType'>
+    <xs:annotation>
+      <xs:documentation>
+        The Viscosity
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Viscosity' type='ViscosityType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The Viscosity
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ConcentrationType'>
+    <xs:annotation>
+      <xs:documentation>
+        The Concentration
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Concentration' type='ConcentrationType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The Concentration
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ElectricalEnergyType'>
+    <xs:annotation>
+      <xs:documentation>
+        Electrical energy
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ElectricalEnergy' type='ElectricalEnergyType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        Electrical energy
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='FillLevelType'>
+    <xs:annotation>
+      <xs:documentation>
+        The fill level of a tank
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='FillLevel' type='FillLevelType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The fill level of a tank
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -1642,217 +1955,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='LoadType'>
-    <xs:annotation>
-      <xs:documentation>
-        The program code
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Load' type='LoadType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The program code
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='MassType'>
-    <xs:annotation>
-      <xs:documentation>
-        The mass of a component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Mass' type='MassType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The mass of a component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PathFeedrateType'>
-    <xs:annotation>
-      <xs:documentation>
-        The feedrate of the component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PathFeedrate' type='PathFeedrateType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The feedrate of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PathPositionType'>
-    <xs:annotation>
-      <xs:documentation>
-        The 3 dimensional position for tool tip in the path (X Y Z)
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)? [+-]?\d+(\.\d+)?([Ee][+-]?\d+)? [+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PathPosition' type='PathPositionType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The 3 dimensional position for tool tip in the path (X Y Z)
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PhType'>
-    <xs:annotation>
-      <xs:documentation>
-        The measurement of acidity or alkalinity
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Ph' type='PhType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The measurement of acidity or alkalinity
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PositionType'>
-    <xs:annotation>
-      <xs:documentation>
-        The position of the component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Position' type='PositionType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The position of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PowerFactorType'>
-    <xs:annotation>
-      <xs:documentation>
-        The power factor
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PowerFactor' type='PowerFactorType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The power factor
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PressureType'>
-    <xs:annotation>
-      <xs:documentation>
-        The pressure
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Pressure' type='PressureType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The pressure
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ProcessTimerType'>
-    <xs:annotation>
-      <xs:documentation>
-        The measurement of the amount of time a piece of equipment has performed
-        different types of activities associated with the process
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ProcessTimer' type='ProcessTimerType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The measurement of the amount of time a piece of equipment has performed
-        different types of activities associated with the process
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ResistanceType'>
-    <xs:annotation>
-      <xs:documentation>
-        The Resistance
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Resistance' type='ResistanceType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The Resistance
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='RotaryVelocityType'>
-    <xs:annotation>
-      <xs:documentation>
-        The rotational velocity of the component in RPM
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='RotaryVelocity' type='RotaryVelocityType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The rotational velocity of the component in RPM
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
   <xs:complexType name='SoundLevelType'>
     <xs:annotation>
       <xs:documentation>
@@ -1864,10 +1966,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:extension base='DecibelValueType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:complexType name='SpindleSpeedType'>
+  <xs:complexType name='LengthType'>
     <xs:annotation>
       <xs:documentation>
-        DEPRECATED: The spindle speed of the component: DEPRECATED
+        The length of an object
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -1876,221 +1978,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='SpindleSpeed' type='SpindleSpeedType' substitutionGroup='Sample'>
+  <xs:element name='Length' type='LengthType' substitutionGroup='Sample'>
     <xs:annotation>
       <xs:documentation>
-        DEPRECATED: The spindle speed of the component: DEPRECATED
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='StrainType'>
-    <xs:annotation>
-      <xs:documentation>
-        The strain
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Strain' type='StrainType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The strain
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='TemperatureType'>
-    <xs:annotation>
-      <xs:documentation>
-        The temperature
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Temperature' type='TemperatureType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The temperature
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='TensionType'>
-    <xs:annotation>
-      <xs:documentation>
-        A measurement of a force that stretches or elongates an object
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Tension' type='TensionType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        A measurement of a force that stretches or elongates an object
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='TiltType'>
-    <xs:annotation>
-      <xs:documentation>
-        The tilt
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Tilt' type='TiltType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The tilt
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='TorqueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The torque
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Torque' type='TorqueType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The torque
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='VelocityType'>
-    <xs:annotation>
-      <xs:documentation>
-        The velocity of the component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Velocity' type='VelocityType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The velocity of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ViscosityType'>
-    <xs:annotation>
-      <xs:documentation>
-        The Viscosity
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Viscosity' type='ViscosityType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The Viscosity
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='VoltAmpereType'>
-    <xs:annotation>
-      <xs:documentation>
-        The measure of the apparent power in an electrical circuit, equal to the
-        product of root-mean-square (RMS) voltage and RMS current
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='VoltAmpere' type='VoltAmpereType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The measure of the apparent power in an electrical circuit, equal to the
-        product of root-mean-square (RMS) voltage and RMS current
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='VoltAmpereReactiveType'>
-    <xs:annotation>
-      <xs:documentation>
-        The measurement of reactive power in an AC electrical circuit
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='VoltAmpereReactive' type='VoltAmpereReactiveType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The measurement of reactive power in an AC electrical circuit
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='VoltageType'>
-    <xs:annotation>
-      <xs:documentation>
-        The voltage
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Voltage' type='VoltageType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The voltage
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='WattageType'>
-    <xs:annotation>
-      <xs:documentation>
-        The number of Watts
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='SampleType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Wattage' type='WattageType' substitutionGroup='Sample'>
-    <xs:annotation>
-      <xs:documentation>
-        The number of Watts
+        The length of an object
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -2132,6 +2023,74 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='AmperageTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of An current a component is drawing
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AmperageTimeSeries' type='AmperageTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of An current a component is drawing
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='GlobalPositionTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of DEPRECATED: The three space position of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='GlobalPositionTimeSeries' type='GlobalPositionTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of DEPRECATED: The three space position of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PositionTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The position of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PositionTimeSeries' type='PositionTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The position of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VelocityTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The velocity of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VelocityTimeSeries' type='VelocityTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The velocity of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='AccelerationTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
@@ -2146,23 +2105,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Time series of The acceleration of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AccumulatedTimeTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The non-contiguous duration of an event in seconds
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AccumulatedTimeTimeSeries' type='AccumulatedTimeTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The non-contiguous duration of an event in seconds
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -2200,37 +2142,20 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='AmperageTimeSeriesType'>
+  <xs:complexType name='PathFeedrateTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of An current a component is drawing
+        Time series of The feedrate of the component
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='AmperageTimeSeries' type='AmperageTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='PathFeedrateTimeSeries' type='PathFeedrateTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of An current a component is drawing
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AngleTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The angle of the component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AngleTimeSeries' type='AngleTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The angle of the component
+        Time series of The feedrate of the component
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -2251,196 +2176,71 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='ClockTimeTimeSeriesType'>
+  <xs:complexType name='SpindleSpeedTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The clock time
+        Time series of The spindle speed of the component: DEPRECATED
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='ClockTimeTimeSeries' type='ClockTimeTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='SpindleSpeedTimeSeries' type='SpindleSpeedTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The clock time
+        Time series of The spindle speed of the component: DEPRECATED
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='ConcentrationTimeSeriesType'>
+  <xs:complexType name='RotaryVelocityTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The Concentration
+        Time series of The rotational velocity of the component in RPM
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='ConcentrationTimeSeries' type='ConcentrationTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='RotaryVelocityTimeSeries' type='RotaryVelocityTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The Concentration
+        Time series of The rotational velocity of the component in RPM
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='ConductivityTimeSeriesType'>
+  <xs:complexType name='AngleTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The Conductivity
+        Time series of The angle of the component
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='ConductivityTimeSeries' type='ConductivityTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='AngleTimeSeries' type='AngleTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The Conductivity
+        Time series of The angle of the component
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='DisplacementTimeSeriesType'>
+  <xs:complexType name='TemperatureTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The linear displacement in millimeters
+        Time series of The temperature
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='DisplacementTimeSeries' type='DisplacementTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='TemperatureTimeSeries' type='TemperatureTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The linear displacement in millimeters
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ElectricalEnergyTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of Electrical energy
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ElectricalEnergyTimeSeries' type='ElectricalEnergyTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of Electrical energy
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='EquipmentTimerTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The measurement of the amount of time a piece of
-        equipment or a sub-part of a piece of equipment has performed specific
-        activities
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='EquipmentTimerTimeSeries' type='EquipmentTimerTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The measurement of the amount of time a piece of
-        equipment or a sub-part of a piece of equipment has performed specific
-        activities
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='FillLevelTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The fill level of a tank
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='FillLevelTimeSeries' type='FillLevelTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The fill level of a tank
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='FlowTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The flow
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='FlowTimeSeries' type='FlowTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The flow
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='FrequencyTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The frequency in hertz
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='FrequencyTimeSeries' type='FrequencyTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The frequency in hertz
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='LengthTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The length of an object
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='LengthTimeSeries' type='LengthTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The length of an object
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='LinearForceTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The magnitude of a push or pull introduced by an actuator
-        or exerted on an object
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='LinearForceTimeSeries' type='LinearForceTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The magnitude of a push or pull introduced by an actuator
-        or exerted on an object
+        Time series of The temperature
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -2461,37 +2261,105 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='MassTimeSeriesType'>
+  <xs:complexType name='FrequencyTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The mass of a component
+        Time series of The frequency in hertz
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='MassTimeSeries' type='MassTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='FrequencyTimeSeries' type='FrequencyTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The mass of a component
+        Time series of The frequency in hertz
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='PathFeedrateTimeSeriesType'>
+  <xs:complexType name='VoltsTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The feedrate of the component
+        Time series of DEPRECATED: The voltage
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='PathFeedrateTimeSeries' type='PathFeedrateTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='VoltsTimeSeries' type='VoltsTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The feedrate of the component
+        Time series of DEPRECATED: The voltage
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VoltageTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The voltage
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VoltageTimeSeries' type='VoltageTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The voltage
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='WattTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of DEPRECATED: The number of Watts
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='WattTimeSeries' type='WattTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of DEPRECATED: The number of Watts
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PressureTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The pressure
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PressureTimeSeries' type='PressureTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The pressure
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='TorqueTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The torque
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='TorqueTimeSeries' type='TorqueTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The torque
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -2514,198 +2382,37 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='PhTimeSeriesType'>
+  <xs:complexType name='WattageTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of acidity or alkalinity
+        Time series of The number of Watts
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='PhTimeSeries' type='PhTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='WattageTimeSeries' type='WattageTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of acidity or alkalinity
+        Time series of The number of Watts
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='PositionTimeSeriesType'>
+  <xs:complexType name='DisplacementTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The position of the component
+        Time series of The linear displacement in millimeters
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='PositionTimeSeries' type='PositionTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='DisplacementTimeSeries' type='DisplacementTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The position of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PowerFactorTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The power factor
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PowerFactorTimeSeries' type='PowerFactorTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The power factor
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PressureTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The pressure
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PressureTimeSeries' type='PressureTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The pressure
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ProcessTimerTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The measurement of the amount of time a piece of
-        equipment has performed different types of activities associated with
-        the process
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ProcessTimerTimeSeries' type='ProcessTimerTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The measurement of the amount of time a piece of
-        equipment has performed different types of activities associated with
-        the process
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ResistanceTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The Resistance
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ResistanceTimeSeries' type='ResistanceTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The Resistance
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='RotaryVelocityTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The rotational velocity of the component in RPM
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='RotaryVelocityTimeSeries' type='RotaryVelocityTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The rotational velocity of the component in RPM
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='SpindleSpeedTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of DEPRECATED: The spindle speed of the component:
-        DEPRECATED
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='SpindleSpeedTimeSeries' type='SpindleSpeedTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of DEPRECATED: The spindle speed of the component:
-        DEPRECATED
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='StrainTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The strain
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='StrainTimeSeries' type='StrainTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The strain
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='TemperatureTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The temperature
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='TemperatureTimeSeries' type='TemperatureTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of The temperature
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='TensionTimeSeriesType'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of A measurement of a force that stretches or elongates an
-        object
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='TimeSeriesType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='TensionTimeSeries' type='TensionTimeSeriesType' substitutionGroup='TimeSeries'>
-    <xs:annotation>
-      <xs:documentation>
-        Time series of A measurement of a force that stretches or elongates an
-        object
+        Time series of The linear displacement in millimeters
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -2726,37 +2433,122 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='TorqueTimeSeriesType'>
+  <xs:complexType name='AccumulatedTimeTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The torque
+        Time series of The non-contiguous duration of an event in seconds
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='TorqueTimeSeries' type='TorqueTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='AccumulatedTimeTimeSeries' type='AccumulatedTimeTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The torque
+        Time series of The non-contiguous duration of an event in seconds
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='VelocityTimeSeriesType'>
+  <xs:complexType name='PowerFactorTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The velocity of the component
+        Time series of The power factor
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='VelocityTimeSeries' type='VelocityTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='PowerFactorTimeSeries' type='PowerFactorTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The velocity of the component
+        Time series of The power factor
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='StrainTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The strain
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='StrainTimeSeries' type='StrainTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The strain
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='FlowTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The flow
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='FlowTimeSeries' type='FlowTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The flow
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='SoundPressureTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The sound pressure
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='SoundPressureTimeSeries' type='SoundPressureTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The sound pressure
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ResistanceTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The Resistance
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ResistanceTimeSeries' type='ResistanceTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The Resistance
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ConductivityTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The Conductivity
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ConductivityTimeSeries' type='ConductivityTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The Conductivity
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -2777,77 +2569,90 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='VoltAmpereTimeSeriesType'>
+  <xs:complexType name='ConcentrationTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measure of the apparent power in an electrical
-        circuit, equal to the product of root-mean-square (RMS) voltage and RMS
-        current
+        Time series of The Concentration
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='VoltAmpereTimeSeries' type='VoltAmpereTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='ConcentrationTimeSeries' type='ConcentrationTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measure of the apparent power in an electrical
-        circuit, equal to the product of root-mean-square (RMS) voltage and RMS
-        current
+        Time series of The Concentration
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='VoltAmpereReactiveTimeSeriesType'>
+  <xs:complexType name='ElectricalEnergyTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of reactive power in an AC electrical
-        circuit
+        Time series of Electrical energy
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='VoltAmpereReactiveTimeSeries' type='VoltAmpereReactiveTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='ElectricalEnergyTimeSeries' type='ElectricalEnergyTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of reactive power in an AC electrical
-        circuit
+        Time series of Electrical energy
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='VoltageTimeSeriesType'>
+  <xs:complexType name='FillLevelTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The voltage
+        Time series of The fill level of a tank
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='VoltageTimeSeries' type='VoltageTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='FillLevelTimeSeries' type='FillLevelTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The voltage
+        Time series of The fill level of a tank
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='WattageTimeSeriesType'>
+  <xs:complexType name='LinearForceTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The number of Watts
+        Time series of The magnitude of a push or pull introduced by an actuator
+        or exerted on an object
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='TimeSeriesType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='WattageTimeSeries' type='WattageTimeSeriesType' substitutionGroup='TimeSeries'>
+  <xs:element name='LinearForceTimeSeries' type='LinearForceTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The number of Watts
+        Time series of The magnitude of a push or pull introduced by an actuator
+        or exerted on an object
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='LengthTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The length of an object
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='LengthTimeSeries' type='LengthTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The length of an object
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -2868,7 +2673,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:simpleType name='EventCountValueType'>
+  <xs:simpleType name='PartCountValueType'>
     <xs:annotation>
       <xs:documentation>
         The number of parts
@@ -2972,14 +2777,163 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
-  <xs:simpleType name='NumericEventValueType'>
+  <xs:simpleType name='DirectionValueType'>
     <xs:annotation>
       <xs:documentation>
-        The value for a numeric floating point event
+        Rotation Direction
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      <xs:enumeration value='CLOCKWISE'/>
+      <xs:enumeration value='COUNTER_CLOCKWISE'/>
+      <xs:enumeration value='POSITIVE'/>
+      <xs:enumeration value='NEGATIVE'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='PowerStateValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A power status
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ON'/>
+      <xs:enumeration value='OFF'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='ExecutionValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The execution value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='READY'/>
+      <xs:enumeration value='INTERRUPTED'/>
+      <xs:enumeration value='ACTIVE'/>
+      <xs:enumeration value='STOPPED'/>
+      <xs:enumeration value='FEED_HOLD'/>
+      <xs:enumeration value='PROGRAM_COMPLETED'/>
+      <xs:enumeration value='PROGRAM_STOPPED'/>
+      <xs:enumeration value='OPTIONAL_STOP'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='ControllerModeValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The cnc mode value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='AUTOMATIC'/>
+      <xs:enumeration value='MANUAL'/>
+      <xs:enumeration value='MANUAL_DATA_INPUT'/>
+      <xs:enumeration value='SEMI_AUTOMATIC'/>
+      <xs:enumeration value='EDIT'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DoorStateValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The status of a door
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='OPEN'/>
+      <xs:enumeration value='CLOSED'/>
+      <xs:enumeration value='UNLATCHED'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='RotaryModeValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The rotary functions
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='SPINDLE'/>
+      <xs:enumeration value='INDEX'/>
+      <xs:enumeration value='CONTOUR'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='EmergencyStopValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        ESTOP values
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='TRIGGERED'/>
+      <xs:enumeration value='ARMED'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='AxesCouplingValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The method for axes coupling
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='TANDEM'/>
+      <xs:enumeration value='SYCHRONOUS'/>
+      <xs:enumeration value='MASTER'/>
+      <xs:enumeration value='SLAVE'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='AvailabilityValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        Possible values for availability data item
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='AVAILABLE'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='ActuatorStateValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The possible values for actuator state.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTIVE'/>
+      <xs:enumeration value='INACTIVE'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='PathModeValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The values for path mode
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='SYNCHRONOUS'/>
+      <xs:enumeration value='MIRROR'/>
+      <xs:enumeration value='INDEPENDENT'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='ChuckStateValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The values of the clamp status
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='OPEN'/>
+      <xs:enumeration value='CLOSED'/>
+      <xs:enumeration value='UNLATCHED'/>
+      <xs:enumeration value='UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='BooleanValueType'>
@@ -2991,6 +2945,19 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:restriction base='xs:string'>
       <xs:enumeration value='YES'/>
       <xs:enumeration value='NO'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='AxisStateValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The values for the axis states
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='HOME'/>
+      <xs:enumeration value='TRAVEL'/>
+      <xs:enumeration value='STOPPED'/>
       <xs:enumeration value='UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
@@ -3013,236 +2980,20 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:simpleType name='ActuatorStateValueType'>
+  <xs:complexType name='CodeType'>
     <xs:annotation>
       <xs:documentation>
-        The possible values for actuator state.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ACTIVE'/>
-      <xs:enumeration value='INACTIVE'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='ActuatorStateType'>
-    <xs:annotation>
-      <xs:documentation>
-        The actuator state of the component
+        DEPRECATED: The program code
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ACTIVE'/>
-        <xs:enumeration value='INACTIVE'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
+      <xs:restriction base='EventType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='ActuatorState' type='ActuatorStateType' substitutionGroup='Event'>
+  <xs:element name='Code' type='CodeType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        The actuator state of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ActiveAxesType'>
-    <xs:annotation>
-      <xs:documentation>
-        The list of axes in use
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='UNAVAILABLE|[a-zA-Z][0-9]*( [a-zA-Z][0-9]*)*'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ActiveAxes' type='ActiveAxesType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The list of axes in use
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AssetChangedType'>
-    <xs:annotation>
-      <xs:documentation>
-        An asset was just modified
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='EventType'>
-        <xs:attribute name='assetType' type='AssetAttrType' use='required'/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AssetChanged' type='AssetChangedType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        An asset was just modified
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AssetRemovedType'>
-    <xs:annotation>
-      <xs:documentation>
-        An asset was just modified
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='EventType'>
-        <xs:attribute name='assetType' type='AssetAttrType' use='required'/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AssetRemoved' type='AssetRemovedType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        An asset was just modified
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='AvailabilityValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        Possible values for availability data item
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='AVAILABLE'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='AvailabilityType'>
-    <xs:annotation>
-      <xs:documentation>
-        The availability of the component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='AVAILABLE'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Availability' type='AvailabilityType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The availability of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='AxesCouplingValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The method for axes coupling
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='TANDEM'/>
-      <xs:enumeration value='SYCHRONOUS'/>
-      <xs:enumeration value='MASTER'/>
-      <xs:enumeration value='SLAVE'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='AxesCouplingType'>
-    <xs:annotation>
-      <xs:documentation>
-        The way the axes are associated
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='TANDEM'/>
-        <xs:enumeration value='SYCHRONOUS'/>
-        <xs:enumeration value='MASTER'/>
-        <xs:enumeration value='SLAVE'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AxesCoupling' type='AxesCouplingType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The way the axes are associated
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AxisFeedrateOverrideType'>
-    <xs:annotation>
-      <xs:documentation>
-        The override of the feedrate
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AxisFeedrateOverride' type='AxisFeedrateOverrideType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The override of the feedrate
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AxisInterlockType'>
-    <xs:annotation>
-      <xs:documentation>
-        Spindle lock status
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='YES'/>
-        <xs:enumeration value='NO'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AxisInterlock' type='AxisInterlockType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        Spindle lock status
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='AxisStateValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The values for the axis states
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='HOME'/>
-      <xs:enumeration value='TRAVEL'/>
-      <xs:enumeration value='STOPPED'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='AxisStateType'>
-    <xs:annotation>
-      <xs:documentation>
-        The home/travel state of the axis
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='HOME'/>
-        <xs:enumeration value='TRAVEL'/>
-        <xs:enumeration value='STOPPED'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='AxisState' type='AxisStateType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The home/travel state of the axis
+        DEPRECATED: The program code
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -3263,11 +3014,71 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='BlockCountType'>
+  <xs:complexType name='LineType'>
     <xs:annotation>
       <xs:documentation>
-        The total count of the number of blocks of program code that have been
-        executed since execution started
+        The program&apos;s line of execution
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:pattern value='[A-Za-z0-9]*|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Line' type='LineType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The program&apos;s line of execution
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PowerStatusType'>
+    <xs:annotation>
+      <xs:documentation>
+        DEPRECATED: The components power status
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='ON'/>
+        <xs:enumeration value='OFF'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PowerStatus' type='PowerStatusType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        DEPRECATED: The components power status
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PowerStateType'>
+    <xs:annotation>
+      <xs:documentation>
+        The components power state
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='ON'/>
+        <xs:enumeration value='OFF'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PowerState' type='PowerStateType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The components power state
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PartCountType'>
+    <xs:annotation>
+      <xs:documentation>
+        An event that indicates the number of parts
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -3276,257 +3087,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='BlockCount' type='BlockCountType' substitutionGroup='Event'>
+  <xs:element name='PartCount' type='PartCountType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        The total count of the number of blocks of program code that have been
-        executed since execution started
+        An event that indicates the number of parts
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:simpleType name='ChuckInterlockValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The values for the chuck interlock state
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ACTIVE'/>
-      <xs:enumeration value='INACTIVE'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='ChuckInterlockType'>
-    <xs:annotation>
-      <xs:documentation>
-        Prevents the chuck from unclaming
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ACTIVE'/>
-        <xs:enumeration value='INACTIVE'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ChuckInterlock' type='ChuckInterlockType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        Prevents the chuck from unclaming
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='ChuckStateValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The values of the clamp status
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='OPEN'/>
-      <xs:enumeration value='CLOSED'/>
-      <xs:enumeration value='UNLATCHED'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='ChuckStateType'>
-    <xs:annotation>
-      <xs:documentation>
-        The chuck status
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='OPEN'/>
-        <xs:enumeration value='CLOSED'/>
-        <xs:enumeration value='UNLATCHED'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ChuckState' type='ChuckStateType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The chuck status
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='CodeType'>
-    <xs:annotation>
-      <xs:documentation>
-        DEPRECATED: The program code
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Code' type='CodeType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        DEPRECATED: The program code
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='CompositionStateValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The allowable values for composition states
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ACTIVE'/>
-      <xs:enumeration value='INACTIVE'/>
-      <xs:enumeration value='RIGHT'/>
-      <xs:enumeration value='LEFT'/>
-      <xs:enumeration value='TRANSITIONING'/>
-      <xs:enumeration value='OPEN'/>
-      <xs:enumeration value='CLOSED'/>
-      <xs:enumeration value='UNLATCHED'/>
-      <xs:enumeration value='ON'/>
-      <xs:enumeration value='OFF'/>
-      <xs:enumeration value='UP'/>
-      <xs:enumeration value='DOWN'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='CompositionStateType'>
-    <xs:annotation>
-      <xs:documentation>
-        The state of a composition element
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ACTIVE'/>
-        <xs:enumeration value='INACTIVE'/>
-        <xs:enumeration value='RIGHT'/>
-        <xs:enumeration value='LEFT'/>
-        <xs:enumeration value='TRANSITIONING'/>
-        <xs:enumeration value='OPEN'/>
-        <xs:enumeration value='CLOSED'/>
-        <xs:enumeration value='UNLATCHED'/>
-        <xs:enumeration value='ON'/>
-        <xs:enumeration value='OFF'/>
-        <xs:enumeration value='UP'/>
-        <xs:enumeration value='DOWN'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='CompositionState' type='CompositionStateType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The state of a composition element
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='ControllerModeValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The cnc mode value
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='AUTOMATIC'/>
-      <xs:enumeration value='MANUAL'/>
-      <xs:enumeration value='MANUAL_DATA_INPUT'/>
-      <xs:enumeration value='SEMI_AUTOMATIC'/>
-      <xs:enumeration value='EDIT'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='ControllerModeType'>
-    <xs:annotation>
-      <xs:documentation>
-        CNC mode state
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='AUTOMATIC'/>
-        <xs:enumeration value='MANUAL'/>
-        <xs:enumeration value='MANUAL_DATA_INPUT'/>
-        <xs:enumeration value='SEMI_AUTOMATIC'/>
-        <xs:enumeration value='EDIT'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ControllerMode' type='ControllerModeType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        CNC mode state
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='SwitchStateValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The values for a switched value
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ON'/>
-      <xs:enumeration value='OFF'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='ControllerModeOverrideType'>
-    <xs:annotation>
-      <xs:documentation>
-        setting or operator selection that changes the behavior of a piece of
-        equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ON'/>
-        <xs:enumeration value='OFF'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ControllerModeOverride' type='ControllerModeOverrideType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        setting or operator selection that changes the behavior of a piece of
-        equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='CoupledAxesType'>
-    <xs:annotation>
-      <xs:documentation>
-        The list of associated axes
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='UNAVAILABLE|[a-zA-Z][0-9]*( [a-zA-Z][0-9]*)*'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='CoupledAxes' type='CoupledAxesType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The list of associated axes
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='DirectionValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        Rotation Direction
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='CLOCKWISE'/>
-      <xs:enumeration value='COUNTER_CLOCKWISE'/>
-      <xs:enumeration value='POSITIVE'/>
-      <xs:enumeration value='NEGATIVE'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
   <xs:complexType name='DirectionType'>
     <xs:annotation>
       <xs:documentation>
@@ -3550,134 +3117,23 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:simpleType name='DoorStateValueType'>
+  <xs:complexType name='ProgramType'>
     <xs:annotation>
       <xs:documentation>
-        The status of a door
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='OPEN'/>
-      <xs:enumeration value='CLOSED'/>
-      <xs:enumeration value='UNLATCHED'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='DoorStateType'>
-    <xs:annotation>
-      <xs:documentation>
-        The status of the door
+        The programs file name or identifier
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='OPEN'/>
-        <xs:enumeration value='CLOSED'/>
-        <xs:enumeration value='UNLATCHED'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
+      <xs:restriction base='EventType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='DoorState' type='DoorStateType' substitutionGroup='Event'>
+  <xs:element name='Program' type='ProgramType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        The status of the door
+        The programs file name or identifier
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='EndOfBarType'>
-    <xs:annotation>
-      <xs:documentation>
-        An end of bar status
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='YES'/>
-        <xs:enumeration value='NO'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='EndOfBar' type='EndOfBarType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        An end of bar status
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='EmergencyStopValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        ESTOP values
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='TRIGGERED'/>
-      <xs:enumeration value='ARMED'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='EmergencyStopType'>
-    <xs:annotation>
-      <xs:documentation>
-        Emergency Stop status
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='TRIGGERED'/>
-        <xs:enumeration value='ARMED'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='EmergencyStop' type='EmergencyStopType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        Emergency Stop status
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='EquipmentModeType'>
-    <xs:annotation>
-      <xs:documentation>
-        The equipment modes
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ON'/>
-        <xs:enumeration value='OFF'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='EquipmentMode' type='EquipmentModeType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The equipment modes
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='ExecutionValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The execution value
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='READY'/>
-      <xs:enumeration value='INTERRUPTED'/>
-      <xs:enumeration value='ACTIVE'/>
-      <xs:enumeration value='STOPPED'/>
-      <xs:enumeration value='FEED_HOLD'/>
-      <xs:enumeration value='PROGRAM_COMPLETED'/>
-      <xs:enumeration value='PROGRAM_STOPPED'/>
-      <xs:enumeration value='OPTIONAL_STOP'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
   <xs:complexType name='ExecutionType'>
     <xs:annotation>
       <xs:documentation>
@@ -3705,567 +3161,27 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:simpleType name='FunctionalModeValueType'>
+  <xs:complexType name='ControllerModeType'>
     <xs:annotation>
       <xs:documentation>
-        The valid functional modes
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='UNAVAILABLE'/>
-      <xs:enumeration value='PRODUCTION'/>
-      <xs:enumeration value='SETUP'/>
-      <xs:enumeration value='TEARDOWN'/>
-      <xs:enumeration value='MAINTENANCE'/>
-      <xs:enumeration value='PROCESS_DEVELOPMENT'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='FunctionalModeType'>
-    <xs:annotation>
-      <xs:documentation>
-        The current function the device is performing
+        CNC mode state
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:restriction base='EventType'>
-        <xs:enumeration value='UNAVAILABLE'/>
-        <xs:enumeration value='PRODUCTION'/>
-        <xs:enumeration value='SETUP'/>
-        <xs:enumeration value='TEARDOWN'/>
-        <xs:enumeration value='MAINTENANCE'/>
-        <xs:enumeration value='PROCESS_DEVELOPMENT'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='FunctionalMode' type='FunctionalModeType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The current function the device is performing
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='HardnessType'>
-    <xs:annotation>
-      <xs:documentation>
-        The measured hardness of a material
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Hardness' type='HardnessType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The measured hardness of a material
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='LineType'>
-    <xs:annotation>
-      <xs:documentation>
-        DEPRECATED: The program&apos;s line of execution
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='[A-Za-z0-9]*|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Line' type='LineType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        DEPRECATED: The program&apos;s line of execution
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='LineLabelType'>
-    <xs:annotation>
-      <xs:documentation>
-        The identifier for a block of code in a program
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='LineLabel' type='LineLabelType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The identifier for a block of code in a program
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='LineNumberType'>
-    <xs:annotation>
-      <xs:documentation>
-        The reference to the position of a block within a control program
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='[A-Za-z0-9]*|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='LineNumber' type='LineNumberType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The reference to the position of a block within a control program
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='MaterialType'>
-    <xs:annotation>
-      <xs:documentation>
-        The identifier for the material
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Material' type='MaterialType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The identifier for the material
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='MessageType'>
-    <xs:annotation>
-      <xs:documentation>
-        A generic message
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='EventType'>
-        <xs:attribute name='nativeCode' type='NativeCodeType' use='optional'/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Message' type='MessageType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        A generic message
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='OperatorIdValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The operator identifier
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'/>
-  </xs:simpleType>
-  <xs:complexType name='OperatorIdType'>
-    <xs:annotation>
-      <xs:documentation>
-        The identifier of the operator of the device
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='OperatorId' type='OperatorIdType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The identifier of the operator of the device
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='PalletIdValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The pallet identifier
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'/>
-  </xs:simpleType>
-  <xs:complexType name='PalletIdType'>
-    <xs:annotation>
-      <xs:documentation>
-        The identifier of the pallet being used
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PalletId' type='PalletIdType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The identifier of the pallet being used
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PartCountType'>
-    <xs:annotation>
-      <xs:documentation>
-        An event that indicates the number of parts
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='[+-]?\d+|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PartCount' type='PartCountType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        An event that indicates the number of parts
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PartIdType'>
-    <xs:annotation>
-      <xs:documentation>
-        The current Tool Identifier
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PartId' type='PartIdType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The current Tool Identifier
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PathFeedrateOverrideType'>
-    <xs:annotation>
-      <xs:documentation>
-        The override of the feedrate
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PathFeedrateOverride' type='PathFeedrateOverrideType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The override of the feedrate
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='PathModeValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The values for path mode
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='SYNCHRONOUS'/>
-      <xs:enumeration value='MIRROR'/>
-      <xs:enumeration value='INDEPENDENT'/>
-      <xs:enumeration value='MASTER'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='PathModeType'>
-    <xs:annotation>
-      <xs:documentation>
-        The actuator state of the component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='SYNCHRONOUS'/>
-        <xs:enumeration value='MIRROR'/>
-        <xs:enumeration value='INDEPENDENT'/>
-        <xs:enumeration value='MASTER'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PathMode' type='PathModeType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The actuator state of the component
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='PowerStateValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        A power status
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ON'/>
-      <xs:enumeration value='OFF'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='PowerStateType'>
-    <xs:annotation>
-      <xs:documentation>
-        The components power state
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ON'/>
-        <xs:enumeration value='OFF'/>
+        <xs:enumeration value='AUTOMATIC'/>
+        <xs:enumeration value='MANUAL'/>
+        <xs:enumeration value='MANUAL_DATA_INPUT'/>
+        <xs:enumeration value='SEMI_AUTOMATIC'/>
+        <xs:enumeration value='EDIT'/>
         <xs:enumeration value='UNAVAILABLE'/>
       </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='PowerState' type='PowerStateType' substitutionGroup='Event'>
+  <xs:element name='ControllerMode' type='ControllerModeType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        The components power state
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PowerStatusType'>
-    <xs:annotation>
-      <xs:documentation>
-        DEPRECATED: The components power status
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ON'/>
-        <xs:enumeration value='OFF'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='PowerStatus' type='PowerStatusType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        DEPRECATED: The components power status
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ProgramType'>
-    <xs:annotation>
-      <xs:documentation>
-        The programs file name or identifier
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Program' type='ProgramType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The programs file name or identifier
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='ProgramEditValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The values for the program edit values
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ACTIVE'/>
-      <xs:enumeration value='READY'/>
-      <xs:enumeration value='NOT_READY'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='ProgramEditType'>
-    <xs:annotation>
-      <xs:documentation>
-        The program edit state
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ACTIVE'/>
-        <xs:enumeration value='READY'/>
-        <xs:enumeration value='NOT_READY'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ProgramEdit' type='ProgramEditType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The program edit state
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ProgramEditNameType'>
-    <xs:annotation>
-      <xs:documentation>
-        The name of the program being edited
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ProgramEditName' type='ProgramEditNameType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The name of the program being edited
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='ProgramCommentValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        A comment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'/>
-  </xs:simpleType>
-  <xs:complexType name='ProgramCommentType'>
-    <xs:annotation>
-      <xs:documentation>
-        A comment in the control program
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ProgramComment' type='ProgramCommentType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        A comment in the control program
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='ProgramHeaderValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        A header
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'/>
-  </xs:simpleType>
-  <xs:complexType name='ProgramHeaderType'>
-    <xs:annotation>
-      <xs:documentation>
-        A header in the control program
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='ProgramHeader' type='ProgramHeaderType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        A header in the control program
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='RotaryModeValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The rotary functions
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='SPINDLE'/>
-      <xs:enumeration value='INDEX'/>
-      <xs:enumeration value='CONTOUR'/>
-      <xs:enumeration value='UNAVAILABLE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='RotaryModeType'>
-    <xs:annotation>
-      <xs:documentation>
-        The function of the rotary axis
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='SPINDLE'/>
-        <xs:enumeration value='INDEX'/>
-        <xs:enumeration value='CONTOUR'/>
-        <xs:enumeration value='UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='RotaryMode' type='RotaryModeType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The function of the rotary axis
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='RotaryVelocityOverrideType'>
-    <xs:annotation>
-      <xs:documentation>
-        The override of the spindle speed (rotary velocity)
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='RotaryVelocityOverride' type='RotaryVelocityOverrideType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The override of the spindle speed (rotary velocity)
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='SerialNumberType'>
-    <xs:annotation>
-      <xs:documentation>
-        The serial number associated with a Component, Asset, or Device
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='EventType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='SerialNumber' type='SerialNumberType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The serial number associated with a Component, Asset, or Device
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='SpindleInterlockValueType'>
-    <xs:annotation>
-      <xs:documentation>
-        The values for spindle interlock
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ACTIVE'/>
-      <xs:enumeration value='INACTIVE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name='SpindleInterlockType'>
-    <xs:annotation>
-      <xs:documentation>
-        The interlock state of a spindle
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:restriction base='EventType'>
-        <xs:enumeration value='ACTIVE'/>
-        <xs:enumeration value='INACTIVE'/>
-      </xs:restriction>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='SpindleInterlock' type='SpindleInterlockType' substitutionGroup='Event'>
-    <xs:annotation>
-      <xs:documentation>
-        The interlock state of a spindle
+        CNC mode state
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -4320,90 +3236,708 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='ToolOffsetType'>
+  <xs:complexType name='PartIdType'>
     <xs:annotation>
       <xs:documentation>
-        A refernce to the tool offset tables
+        The current Tool Identifier
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='EventType'/>
+      <xs:restriction base='EventType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='ToolOffset' type='ToolOffsetType' substitutionGroup='Event'>
+  <xs:element name='PartId' type='PartIdType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        A refernce to the tool offset tables
+        The current Tool Identifier
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='UserType'>
+  <xs:complexType name='DoorStateType'>
     <xs:annotation>
       <xs:documentation>
-        The identifier of the person responsible for operating the piece of
-        equipment
+        The status of the door
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='EventType'/>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='OPEN'/>
+        <xs:enumeration value='CLOSED'/>
+        <xs:enumeration value='UNLATCHED'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='User' type='UserType' substitutionGroup='Event'>
+  <xs:element name='DoorState' type='DoorStateType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        The identifier of the person responsible for operating the piece of
-        equipment
+        The status of the door
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='WireType'>
+  <xs:complexType name='RotaryModeType'>
     <xs:annotation>
       <xs:documentation>
-        The identifier for the type of wire used as the cutting mechanism in EDM
+        The function of the rotary axis
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='EventType'/>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='SPINDLE'/>
+        <xs:enumeration value='INDEX'/>
+        <xs:enumeration value='CONTOUR'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='Wire' type='WireType' substitutionGroup='Event'>
+  <xs:element name='RotaryMode' type='RotaryModeType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        The identifier for the type of wire used as the cutting mechanism in EDM
+        The function of the rotary axis
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='ActiveAxesType'>
+    <xs:annotation>
+      <xs:documentation>
+        The list of axes in use
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:pattern value='UNAVAILABLE|[a-zA-Z][0-9]*( [a-zA-Z][0-9]*)*'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ActiveAxes' type='ActiveAxesType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The list of axes in use
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CoupledAxesType'>
+    <xs:annotation>
+      <xs:documentation>
+        The list of associated axes
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:pattern value='UNAVAILABLE|[a-zA-Z][0-9]*( [a-zA-Z][0-9]*)*'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='CoupledAxes' type='CoupledAxesType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The list of associated axes
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AxesCouplingType'>
+    <xs:annotation>
+      <xs:documentation>
+        The way the axes are associated
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='TANDEM'/>
+        <xs:enumeration value='SYCHRONOUS'/>
+        <xs:enumeration value='MASTER'/>
+        <xs:enumeration value='SLAVE'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AxesCoupling' type='AxesCouplingType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The way the axes are associated
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='MessageType'>
+    <xs:annotation>
+      <xs:documentation>
+        A generic message
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='EventType'>
+        <xs:attribute name='nativeCode' type='NativeCodeType' use='optional'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Message' type='MessageType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        A generic message
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='EmergencyStopType'>
+    <xs:annotation>
+      <xs:documentation>
+        Emergency Stop status
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='TRIGGERED'/>
+        <xs:enumeration value='ARMED'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='EmergencyStop' type='EmergencyStopType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        Emergency Stop status
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AvailabilityType'>
+    <xs:annotation>
+      <xs:documentation>
+        The availability of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='AVAILABLE'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Availability' type='AvailabilityType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The availability of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ActuatorStateType'>
+    <xs:annotation>
+      <xs:documentation>
+        The actuator state of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='ACTIVE'/>
+        <xs:enumeration value='INACTIVE'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ActuatorState' type='ActuatorStateType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The actuator state of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PathModeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The actuator state of the component
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='SYNCHRONOUS'/>
+        <xs:enumeration value='MIRROR'/>
+        <xs:enumeration value='INDEPENDENT'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PathMode' type='PathModeType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The actuator state of the component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='LinePowerStateType'>
+    <xs:annotation>
+      <xs:documentation>
+        The state of the line power
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='PowerStateType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='LinePowerState' type='LinePowerStateType' substitutionGroup='PowerState'>
+    <xs:annotation>
+      <xs:documentation>
+        The state of the line power
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ControlPowerStateType'>
+    <xs:annotation>
+      <xs:documentation>
+        The state of the line power
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='PowerStateType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ControlPowerState' type='ControlPowerStateType' substitutionGroup='PowerState'>
+    <xs:annotation>
+      <xs:documentation>
+        The state of the line power
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AssetChangedType'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset was just modified
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='EventType'>
+        <xs:attribute name='assetType' type='AssetAttrType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AssetChanged' type='AssetChangedType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset was just modified
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AssetRemovedType'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset was just modified
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='EventType'>
+        <xs:attribute name='assetType' type='AssetAttrType' use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AssetRemoved' type='AssetRemovedType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset was just modified
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='WorkholdingIdValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The workholding identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
   <xs:complexType name='WorkholdingIdType'>
     <xs:annotation>
       <xs:documentation>
-        The identifier for the workholding or clamp in use
+        The current workholding Identifier
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='EventType'/>
+      <xs:restriction base='EventType'/>
     </xs:simpleContent>
   </xs:complexType>
   <xs:element name='WorkholdingId' type='WorkholdingIdType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        The identifier for the workholding or clamp in use
+        The current workholding Identifier
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:complexType name='WorkOffsetType'>
+  <xs:complexType name='ChuckStateType'>
     <xs:annotation>
       <xs:documentation>
-        A reference to the work offset tables
+        The chuck status
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='EventType'/>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='OPEN'/>
+        <xs:enumeration value='CLOSED'/>
+        <xs:enumeration value='UNLATCHED'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='WorkOffset' type='WorkOffsetType' substitutionGroup='Event'>
+  <xs:element name='ChuckState' type='ChuckStateType' substitutionGroup='Event'>
     <xs:annotation>
       <xs:documentation>
-        A reference to the work offset tables
+        The chuck status
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='EndOfBarType'>
+    <xs:annotation>
+      <xs:documentation>
+        An end of bar status
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='YES'/>
+        <xs:enumeration value='NO'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='EndOfBar' type='EndOfBarType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        An end of bar status
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AxisInterlockType'>
+    <xs:annotation>
+      <xs:documentation>
+        Spindle lock status
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='YES'/>
+        <xs:enumeration value='NO'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AxisInterlock' type='AxisInterlockType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        Spindle lock status
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='ChuckInterlockValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The values for the chuck interlock state
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTIVE'/>
+      <xs:enumeration value='INACTIVE'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='ChuckInterlockType'>
+    <xs:annotation>
+      <xs:documentation>
+        Prevents the chuck from unclaming
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='ACTIVE'/>
+        <xs:enumeration value='INACTIVE'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ChuckInterlock' type='ChuckInterlockType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        Prevents the chuck from unclaming
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AxisStateType'>
+    <xs:annotation>
+      <xs:documentation>
+        The home/travel state of the axis
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='HOME'/>
+        <xs:enumeration value='TRAVEL'/>
+        <xs:enumeration value='STOPPED'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AxisState' type='AxisStateType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The home/travel state of the axis
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PathFeedrateOverrideType'>
+    <xs:annotation>
+      <xs:documentation>
+        The override of the feedrate
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PathFeedrateOverride' type='PathFeedrateOverrideType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The override of the feedrate
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AxisFeedrateOverrideType'>
+    <xs:annotation>
+      <xs:documentation>
+        The override of the feedrate
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AxisFeedrateOverride' type='AxisFeedrateOverrideType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The override of the feedrate
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='RotaryVelocityOverrideType'>
+    <xs:annotation>
+      <xs:documentation>
+        The override of the spindle speed (rotary velocity)
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='RotaryVelocityOverride' type='RotaryVelocityOverrideType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The override of the spindle speed (rotary velocity)
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PartAssetIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The unique part Identifier as referenced in part 4 - assets
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PartAssetId' type='PartAssetIdType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The unique part Identifier as referenced in part 4 - assets
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='FunctionalModeValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The valid functional modes
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='UNAVAILABLE'/>
+      <xs:enumeration value='PRODUCTION'/>
+      <xs:enumeration value='SETUP'/>
+      <xs:enumeration value='TEARDOWN'/>
+      <xs:enumeration value='MAINTENANCE'/>
+      <xs:enumeration value='PROCESS_DEVELOPMENT'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='FunctionalModeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The current function the device is performing
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='UNAVAILABLE'/>
+        <xs:enumeration value='PRODUCTION'/>
+        <xs:enumeration value='SETUP'/>
+        <xs:enumeration value='TEARDOWN'/>
+        <xs:enumeration value='MAINTENANCE'/>
+        <xs:enumeration value='PROCESS_DEVELOPMENT'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='FunctionalMode' type='FunctionalModeType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The current function the device is performing
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='PalletIdValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The pallet identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:complexType name='PalletIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of the pallet being used
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PalletId' type='PalletIdType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of the pallet being used
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='ProgramCommentValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A comment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:complexType name='ProgramCommentType'>
+    <xs:annotation>
+      <xs:documentation>
+        A comment in the control program
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProgramComment' type='ProgramCommentType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        A comment in the control program
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='ProgramHeaderValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A header
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:complexType name='ProgramHeaderType'>
+    <xs:annotation>
+      <xs:documentation>
+        A header in the control program
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProgramHeader' type='ProgramHeaderType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        A header in the control program
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='OperatorIdValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The operator identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:complexType name='OperatorIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of the operator of the device
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='OperatorId' type='OperatorIdType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of the operator of the device
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='ProgramEditValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The values for the program edit values
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTIVE'/>
+      <xs:enumeration value='READY'/>
+      <xs:enumeration value='NOT_READY'/>
+      <xs:enumeration value='UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='ProgramEditType'>
+    <xs:annotation>
+      <xs:documentation>
+        The program edit state
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:enumeration value='ACTIVE'/>
+        <xs:enumeration value='READY'/>
+        <xs:enumeration value='NOT_READY'/>
+        <xs:enumeration value='UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProgramEdit' type='ProgramEditType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The program edit state
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ProgramEditNameType'>
+    <xs:annotation>
+      <xs:documentation>
+        The name of the program being edited
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ProgramEditName' type='ProgramEditNameType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The name of the program being edited
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -4525,6 +4059,79 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Discrete of The program code
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='OrderType'>
+    <xs:annotation>
+      <xs:documentation>
+        The order in which something will be done
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='TransformationValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The transformation name
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:complexType name='TransformationType'>
+    <xs:annotation>
+      <xs:documentation>
+        A geometric transformation
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='EventType'>
+        <xs:attribute name='order' type='OrderType' use='optional'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Transformation' type='TransformationType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        A geometric transformation
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='UserType'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of the person currently responsible for operating the
+        piece of equipment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='User' type='UserType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        The identifier of the person currently responsible for operating the
+        piece of equipment
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='PartNumberType'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier of a part or product moving through the manufacturing
+        process
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='PartNumber' type='PartNumberType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier of a part or product moving through the manufacturing
+        process
       </xs:documentation>
     </xs:annotation>
   </xs:element>

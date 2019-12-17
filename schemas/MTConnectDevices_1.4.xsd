@@ -137,7 +137,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:string'/>
   </xs:simpleType>
-  <xs:simpleType name='SerialNumberAttrType'>
+  <xs:simpleType name='SerialNumberType'>
     <xs:annotation>
       <xs:documentation>
         A serial number for a piece of equipment
@@ -267,131 +267,122 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:string'>
       <xs:enumeration value='ACCELERATION'/>
-      <xs:enumeration value='ACCUMULATED_TIME'/>
-      <xs:enumeration value='ANGULAR_ACCELERATION'/>
-      <xs:enumeration value='ANGULAR_VELOCITY'/>
+      <xs:enumeration value='ACTIVE_AXES'/>
+      <xs:enumeration value='ALARM'/>
       <xs:enumeration value='AMPERAGE'/>
       <xs:enumeration value='ANGLE'/>
+      <xs:enumeration value='ANGULAR_ACCELERATION'/>
+      <xs:enumeration value='ANGULAR_VELOCITY'/>
+      <xs:enumeration value='AVAILABILITY'/>
       <xs:enumeration value='AXIS_FEEDRATE'/>
-      <xs:enumeration value='CLOCK_TIME'/>
+      <xs:enumeration value='BLOCK'/>
+      <xs:enumeration value='CODE'/>
+      <xs:enumeration value='DIRECTION'/>
+      <xs:enumeration value='DOOR_STATE'/>
+      <xs:enumeration value='EMERGENCY_STOP'/>
+      <xs:enumeration value='EXECUTION'/>
+      <xs:enumeration value='FREQUENCY'/>
+      <xs:enumeration value='PART_COUNT'/>
+      <xs:enumeration value='PART_ID'/>
+      <xs:enumeration value='PATH_FEEDRATE'/>
+      <xs:enumeration value='PATH_POSITION'/>
+      <xs:enumeration value='PATH_MODE'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='CONTROLLER_MODE'/>
+      <xs:enumeration value='LOAD'/>
+      <xs:enumeration value='MESSAGE'/>
+      <xs:enumeration value='POSITION'/>
+      <xs:enumeration value='POWER_STATUS'/>
+      <xs:enumeration value='POWER_STATE'/>
+      <xs:enumeration value='PRESSURE'/>
+      <xs:enumeration value='RESET'/>
+      <xs:enumeration value='PROGRAM'/>
+      <xs:enumeration value='PROGRAM_COMMENT'/>
+      <xs:enumeration value='ROTARY_MODE'/>
+      <xs:enumeration value='COUPLED_AXES'/>
+      <xs:enumeration value='AXIS_COUPLING'/>
+      <xs:enumeration value='SPINDLE_SPEED'/>
+      <xs:enumeration value='TEMPERATURE'/>
+      <xs:enumeration value='TORQUE'/>
+      <xs:enumeration value='TOOL_ASSET_ID'/>
+      <xs:enumeration value='TOOL_ID'/>
+      <xs:enumeration value='TOOL_NUMBER'/>
+      <xs:enumeration value='VELOCITY'/>
+      <xs:enumeration value='VIBRATION'/>
+      <xs:enumeration value='VOLTAGE'/>
+      <xs:enumeration value='WATTAGE'/>
+      <xs:enumeration value='ACCUMULATED_TIME'/>
+      <xs:enumeration value='ACTUATOR_STATE'/>
+      <xs:enumeration value='ASSET_CHANGED'/>
       <xs:enumeration value='CONCENTRATION'/>
       <xs:enumeration value='CONDUCTIVITY'/>
       <xs:enumeration value='DISPLACEMENT'/>
       <xs:enumeration value='ELECTRICAL_ENERGY'/>
-      <xs:enumeration value='EQUIPMENT_TIMER'/>
       <xs:enumeration value='FILL_LEVEL'/>
       <xs:enumeration value='FLOW'/>
-      <xs:enumeration value='FREQUENCY'/>
-      <xs:enumeration value='LENGTH'/>
       <xs:enumeration value='LINEAR_FORCE'/>
-      <xs:enumeration value='LOAD'/>
       <xs:enumeration value='MASS'/>
-      <xs:enumeration value='PATH_FEEDRATE'/>
-      <xs:enumeration value='PATH_POSITION'/>
       <xs:enumeration value='PH'/>
-      <xs:enumeration value='POSITION'/>
       <xs:enumeration value='POWER_FACTOR'/>
-      <xs:enumeration value='PRESSURE'/>
-      <xs:enumeration value='PROCESS_TIMER'/>
       <xs:enumeration value='RESISTANCE'/>
       <xs:enumeration value='ROTARY_VELOCITY'/>
-      <xs:enumeration value='SOUND_LEVEL'/>
-      <xs:enumeration value='SPINDLE_SPEED'/>
+      <xs:enumeration value='SOUND_PRESSURE'/>
       <xs:enumeration value='STRAIN'/>
-      <xs:enumeration value='TEMPERATURE'/>
-      <xs:enumeration value='TENSION'/>
       <xs:enumeration value='TILT'/>
-      <xs:enumeration value='TORQUE'/>
-      <xs:enumeration value='VELOCITY'/>
-      <xs:enumeration value='VISCOSITY'/>
-      <xs:enumeration value='VOLTAGE'/>
       <xs:enumeration value='VOLT_AMPERE'/>
       <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
-      <xs:enumeration value='WATTAGE'/>
-      <xs:enumeration value='ACTIVE_AXES'/>
-      <xs:enumeration value='ACTUATOR_STATE'/>
-      <xs:enumeration value='ALARM'/>
-      <xs:enumeration value='AVAILABILITY'/>
-      <xs:enumeration value='AXIS_COUPLING'/>
-      <xs:enumeration value='AXIS_FEEDRATE_OVERRIDE'/>
-      <xs:enumeration value='AXIS_INTERLOCK'/>
-      <xs:enumeration value='AXIS_STATE'/>
-      <xs:enumeration value='BLOCK'/>
-      <xs:enumeration value='BLOCK_COUNT'/>
-      <xs:enumeration value='CHUCK_STATE'/>
-      <xs:enumeration value='CODE'/>
-      <xs:enumeration value='COMPOSITION_STATE'/>
-      <xs:enumeration value='CONTROLLER_MODE'/>
-      <xs:enumeration value='CONTROLLER_MODE_OVERRIDE'/>
-      <xs:enumeration value='COUPLED_AXES'/>
-      <xs:enumeration value='DIRECTION'/>
-      <xs:enumeration value='DOOR_STATE'/>
-      <xs:enumeration value='DRY_RUN'/>
-      <xs:enumeration value='EMERGENCY_STOP'/>
-      <xs:enumeration value='EQUIPMENT_MODE'/>
-      <xs:enumeration value='EXECUTION'/>
-      <xs:enumeration value='FUNCTIONAL_MODE'/>
-      <xs:enumeration value='HARDNESS'/>
-      <xs:enumeration value='LEVEL'/>
-      <xs:enumeration value='LINE'/>
-      <xs:enumeration value='LINE_LABEL'/>
-      <xs:enumeration value='LINE_NUMBER'/>
-      <xs:enumeration value='MATERIAL'/>
-      <xs:enumeration value='MESSAGE'/>
-      <xs:enumeration value='OPERATOR_ID'/>
-      <xs:enumeration value='PALLET_ID'/>
-      <xs:enumeration value='PART_ASSET_ID'/>
-      <xs:enumeration value='PART_COUNT'/>
-      <xs:enumeration value='PART_ID'/>
-      <xs:enumeration value='PART_NUMBER'/>
-      <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'/>
-      <xs:enumeration value='PATH_MODE'/>
-      <xs:enumeration value='POWER_STATE'/>
-      <xs:enumeration value='POWER_STATUS'/>
-      <xs:enumeration value='PROGRAM'/>
-      <xs:enumeration value='PROGRAM_COMMENT'/>
-      <xs:enumeration value='PROGRAM_EDIT'/>
-      <xs:enumeration value='PROGRAM_EDIT_NAME'/>
-      <xs:enumeration value='PROGRAM_HEADER'/>
-      <xs:enumeration value='ROTARY_MODE'/>
-      <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
-      <xs:enumeration value='SERIAL_NUMBER'/>
-      <xs:enumeration value='SPINDLE_INTERLOCK'/>
-      <xs:enumeration value='TOOL_ASSET_ID'/>
-      <xs:enumeration value='TOOL_ID'/>
-      <xs:enumeration value='TOOL_NUMBER'/>
-      <xs:enumeration value='TOOL_OFFSET'/>
-      <xs:enumeration value='USER'/>
-      <xs:enumeration value='WIRE'/>
-      <xs:enumeration value='WORKHOLDING_ID'/>
-      <xs:enumeration value='WORK_OFFSET'/>
-      <xs:enumeration value='ACTUATOR'/>
-      <xs:enumeration value='CHUCK_INTERLOCK'/>
+      <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='VISCOSITY'/>
+      <xs:enumeration value='CLOCK_TIME'/>
       <xs:enumeration value='COMMUNICATIONS'/>
-      <xs:enumeration value='DATA_RANGE'/>
-      <xs:enumeration value='END_OF_BAR'/>
-      <xs:enumeration value='HARDWARE'/>
-      <xs:enumeration value='INTERFACE_STATE'/>
       <xs:enumeration value='LOGIC_PROGRAM'/>
       <xs:enumeration value='MOTION_PROGRAM'/>
+      <xs:enumeration value='HARDWARE'/>
       <xs:enumeration value='SYSTEM'/>
-      <xs:enumeration value='ASSET_CHANGED'/>
-      <xs:enumeration value='ASSET_REMOVED'/>
+      <xs:enumeration value='LEVEL'/>
+      <xs:enumeration value='ACTUATOR'/>
+      <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'/>
+      <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='AXIS_FEEDRATE_OVERRIDE'/>
+      <xs:enumeration value='PART_ASSET_ID'/>
+      <xs:enumeration value='PROGRAM_EDIT'/>
+      <xs:enumeration value='PROGRAM_EDIT_NAME'/>
+      <xs:enumeration value='CLOCK_TIME'/>
+      <xs:enumeration value='CHUCK_STATE'/>
+      <xs:enumeration value='END_OF_BAR'/>
       <xs:enumeration value='AUXILIARY_END_OF_BAR'/>
-      <xs:enumeration value='CLOSE_CHUCK'/>
-      <xs:enumeration value='CLOSE_DOOR'/>
-      <xs:enumeration value='INTERFACE_STATE'/>
-      <xs:enumeration value='MACHINE_AXIS_LOCK'/>
+      <xs:enumeration value='AXIS_INTERLOCK'/>
       <xs:enumeration value='MANUAL_CHUCK_UNCLAMP_INTERLOCK'/>
-      <xs:enumeration value='MATERIAL_CHANGE'/>
+      <xs:enumeration value='LENGTH'/>
+      <xs:enumeration value='AXIS_STATE'/>
+      <xs:enumeration value='INTERFACE_STATE'/>
+      <xs:enumeration value='FUNCTIONAL_MODE'/>
+      <xs:enumeration value='WORKHOLDING_ID'/>
+      <xs:enumeration value='PALLET_ID'/>
+      <xs:enumeration value='OPERATOR_ID'/>
+      <xs:enumeration value='ASSET_REMOVED'/>
+      <xs:enumeration value='PROGRAM_HEADER'/>
       <xs:enumeration value='MATERIAL_FEED'/>
-      <xs:enumeration value='MATERIAL_LOAD'/>
+      <xs:enumeration value='MATERIAL_CHANGE'/>
       <xs:enumeration value='MATERIAL_RETRACT'/>
-      <xs:enumeration value='MATERIAL_UNLOAD'/>
-      <xs:enumeration value='OPEN_CHUCK'/>
-      <xs:enumeration value='OPEN_DOOR'/>
       <xs:enumeration value='PART_CHANGE'/>
-      <xs:enumeration value='RESET'/>
+      <xs:enumeration value='OPEN_DOOR'/>
+      <xs:enumeration value='CLOSE_DOOR'/>
+      <xs:enumeration value='OPEN_CHUCK'/>
+      <xs:enumeration value='CLOSE_CHUCK'/>
+      <xs:enumeration value='MATERIAL_LOAD'/>
+      <xs:enumeration value='MATERIAL_UNLOAD'/>
+      <xs:enumeration value='TRANSFORMATION'/>
+      <xs:enumeration value='SINGLE_BLOCK'/>
+      <xs:enumeration value='DRY_RUN'/>
+      <xs:enumeration value='OPTIONAL_STOP'/>
+      <xs:enumeration value='MACHINE_AXIS_LOCK'/>
+      <xs:enumeration value='TOOL_CHANGE_STOP'/>
+      <xs:enumeration value='LINE_NUMBER'/>
+      <xs:enumeration value='LINE_LABEL'/>
+      <xs:enumeration value='BLOCK_COUNT'/>
+      <xs:enumeration value='USER'/>
+      <xs:enumeration value='PART_NUMBER'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemEnumType'>
@@ -409,74 +400,49 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:enumeration value='ABSOLUTE'/>
       <xs:enumeration value='ACTUAL'/>
-      <xs:enumeration value='ACTION'/>
-      <xs:enumeration value='ALL'/>
-      <xs:enumeration value='ALTERNATING'/>
-      <xs:enumeration value='AUXILIARY'/>
-      <xs:enumeration value='A_SCALE'/>
-      <xs:enumeration value='BAD'/>
-      <xs:enumeration value='BRINELL'/>
-      <xs:enumeration value='B_SCALE'/>
       <xs:enumeration value='COMMANDED'/>
-      <xs:enumeration value='CONTROL'/>
-      <xs:enumeration value='C_SCALE'/>
-      <xs:enumeration value='DELAY'/>
-      <xs:enumeration value='DIRECT'/>
-      <xs:enumeration value='DRY_RUN'/>
-      <xs:enumeration value='DYNAMIC'/>
-      <xs:enumeration value='D_SCALE'/>
-      <xs:enumeration value='FIXTURE'/>
-      <xs:enumeration value='GOOD'/>
-      <xs:enumeration value='JOG'/>
-      <xs:enumeration value='INCREMENTAL'/>
-      <xs:enumeration value='KINETIC'/>
-      <xs:enumeration value='LATERAL'/>
-      <xs:enumeration value='LEEB'/>
-      <xs:enumeration value='LENGTH'/>
-      <xs:enumeration value='LINE'/>
-      <xs:enumeration value='LINEAR'/>
-      <xs:enumeration value='LOADED'/>
-      <xs:enumeration value='MACHINE_AXIS_LOCK'/>
-      <xs:enumeration value='MAINTENANCE'/>
-      <xs:enumeration value='MANUAL_UNCLAMP'/>
       <xs:enumeration value='MAXIMUM'/>
       <xs:enumeration value='MINIMUM'/>
-      <xs:enumeration value='MOHS'/>
-      <xs:enumeration value='MOLE'/>
-      <xs:enumeration value='MOTION'/>
-      <xs:enumeration value='NO_SCALE'/>
-      <xs:enumeration value='OPERATOR'/>
-      <xs:enumeration value='OPERATING'/>
-      <xs:enumeration value='OPTIONAL_STOP'/>
-      <xs:enumeration value='TOOL_CHANGE_STOP'/>
+      <xs:enumeration value='OTHER'/>
       <xs:enumeration value='OVERRIDE'/>
-      <xs:enumeration value='PRIMARY'/>
       <xs:enumeration value='PROBE'/>
-      <xs:enumeration value='PROGRAMMED'/>
-      <xs:enumeration value='POWERED'/>
-      <xs:enumeration value='PROCESS'/>
-      <xs:enumeration value='RADIAL'/>
-      <xs:enumeration value='RAPID'/>
-      <xs:enumeration value='RELATIVE'/>
-      <xs:enumeration value='REMAINING'/>
+      <xs:enumeration value='TARGET'/>
+      <xs:enumeration value='GOOD'/>
+      <xs:enumeration value='BAD'/>
+      <xs:enumeration value='ALL'/>
+      <xs:enumeration value='LINE'/>
+      <xs:enumeration value='CONTROL'/>
+      <xs:enumeration value='ALTERNATING'/>
+      <xs:enumeration value='DIRECT'/>
+      <xs:enumeration value='WEIGHT'/>
+      <xs:enumeration value='VOLUME'/>
+      <xs:enumeration value='MOLE'/>
+      <xs:enumeration value='KINETIC'/>
+      <xs:enumeration value='DYNAMIC'/>
+      <xs:enumeration value='NO_SCALE'/>
+      <xs:enumeration value='A_SCALE'/>
+      <xs:enumeration value='B_SCALE'/>
+      <xs:enumeration value='C_SCALE'/>
+      <xs:enumeration value='D_SCALE'/>
       <xs:enumeration value='REQUEST'/>
       <xs:enumeration value='RESPONSE'/>
-      <xs:enumeration value='ROCKWELL'/>
-      <xs:enumeration value='ROTARY'/>
-      <xs:enumeration value='SET_UP'/>
-      <xs:enumeration value='SHORE'/>
-      <xs:enumeration value='SINGLE_BLOCK'/>
-      <xs:enumeration value='STANDARD'/>
-      <xs:enumeration value='SWITCHED'/>
-      <xs:enumeration value='TARGET'/>
+      <xs:enumeration value='REMAINING'/>
+      <xs:enumeration value='JOG'/>
+      <xs:enumeration value='RAPID'/>
+      <xs:enumeration value='PROGRAMMED'/>
+      <xs:enumeration value='PRIMARY'/>
+      <xs:enumeration value='AUXILIARY'/>
+      <xs:enumeration value='MANUAL_UNCLAMP'/>
+      <xs:enumeration value='WORKPIECE'/>
+      <xs:enumeration value='FIXTURE'/>
       <xs:enumeration value='TOOL'/>
-      <xs:enumeration value='USABLE'/>
-      <xs:enumeration value='VERTICAL'/>
-      <xs:enumeration value='VICKERS'/>
-      <xs:enumeration value='VOLUME'/>
-      <xs:enumeration value='WORKING'/>
+      <xs:enumeration value='ABSOLUTE'/>
+      <xs:enumeration value='RELATIVE'/>
+      <xs:enumeration value='TOOL_EDGE'/>
+      <xs:enumeration value='TOOL_GROUP'/>
+      <xs:enumeration value='ROTARY'/>
+      <xs:enumeration value='LINEAR'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
@@ -494,15 +460,15 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:enumeration value='AVERAGE'/>
-      <xs:enumeration value='KURTOSIS'/>
-      <xs:enumeration value='MAXIMUM'/>
-      <xs:enumeration value='MEDIAN'/>
-      <xs:enumeration value='MODE'/>
       <xs:enumeration value='MINIMUM'/>
-      <xs:enumeration value='RANGE'/>
-      <xs:enumeration value='ROOT_MEAN_SQUARE'/>
+      <xs:enumeration value='MAXIMUM'/>
+      <xs:enumeration value='AVERAGE'/>
       <xs:enumeration value='STANDARD_DEVIATION'/>
+      <xs:enumeration value='ROOT_MEAN_SQUARE'/>
+      <xs:enumeration value='MEAN'/>
+      <xs:enumeration value='MODE'/>
+      <xs:enumeration value='RANGE'/>
+      <xs:enumeration value='KURTOSIS'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemStatisticsType'>
@@ -533,7 +499,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='AMPERE'/>
       <xs:enumeration value='CELSIUS'/>
       <xs:enumeration value='COUNT'/>
-      <xs:enumeration value='DECIBEL'/>
       <xs:enumeration value='DEGREE'/>
       <xs:enumeration value='DEGREE/SECOND'/>
       <xs:enumeration value='DEGREE/SECOND^2'/>
@@ -542,27 +507,28 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='KILOGRAM'/>
       <xs:enumeration value='LITER'/>
       <xs:enumeration value='LITER/SECOND'/>
-      <xs:enumeration value='MICRO_RADIAN'/>
       <xs:enumeration value='MILLIMETER'/>
       <xs:enumeration value='MILLIMETER/SECOND'/>
       <xs:enumeration value='MILLIMETER/SECOND^2'/>
       <xs:enumeration value='MILLIMETER_3D'/>
       <xs:enumeration value='NEWTON'/>
       <xs:enumeration value='NEWTON_METER'/>
-      <xs:enumeration value='OHM'/>
       <xs:enumeration value='PASCAL'/>
-      <xs:enumeration value='PASCAL_SECOND'/>
       <xs:enumeration value='PERCENT'/>
       <xs:enumeration value='PH'/>
       <xs:enumeration value='REVOLUTION/MINUTE'/>
       <xs:enumeration value='SECOND'/>
-      <xs:enumeration value='SIEMENS/METER'/>
-      <xs:enumeration value='SOUND_LEVEL'/>
       <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='OHM'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='SIEMENS/METER'/>
+      <xs:enumeration value='MICRO_RADIAN'/>
+      <xs:enumeration value='PASCAL_SECOND'/>
       <xs:enumeration value='VOLT_AMPERE'/>
       <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
-      <xs:enumeration value='WATT'/>
       <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='DECIBEL'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='UnitsType'>
@@ -584,7 +550,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='AMPERE'/>
       <xs:enumeration value='CELSIUS'/>
       <xs:enumeration value='COUNT'/>
-      <xs:enumeration value='DECIBEL'/>
       <xs:enumeration value='DEGREE'/>
       <xs:enumeration value='DEGREE/SECOND'/>
       <xs:enumeration value='DEGREE/SECOND^2'/>
@@ -593,27 +558,28 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='KILOGRAM'/>
       <xs:enumeration value='LITER'/>
       <xs:enumeration value='LITER/SECOND'/>
-      <xs:enumeration value='MICRO_RADIAN'/>
       <xs:enumeration value='MILLIMETER'/>
       <xs:enumeration value='MILLIMETER/SECOND'/>
       <xs:enumeration value='MILLIMETER/SECOND^2'/>
       <xs:enumeration value='MILLIMETER_3D'/>
       <xs:enumeration value='NEWTON'/>
       <xs:enumeration value='NEWTON_METER'/>
-      <xs:enumeration value='OHM'/>
       <xs:enumeration value='PASCAL'/>
-      <xs:enumeration value='PASCAL_SECOND'/>
       <xs:enumeration value='PERCENT'/>
       <xs:enumeration value='PH'/>
       <xs:enumeration value='REVOLUTION/MINUTE'/>
       <xs:enumeration value='SECOND'/>
-      <xs:enumeration value='SIEMENS/METER'/>
-      <xs:enumeration value='SOUND_LEVEL'/>
       <xs:enumeration value='VOLT'/>
+      <xs:enumeration value='WATT'/>
+      <xs:enumeration value='OHM'/>
+      <xs:enumeration value='SOUND_LEVEL'/>
+      <xs:enumeration value='SIEMENS/METER'/>
+      <xs:enumeration value='MICRO_RADIAN'/>
+      <xs:enumeration value='PASCAL_SECOND'/>
       <xs:enumeration value='VOLT_AMPERE'/>
       <xs:enumeration value='VOLT_AMPERE_REACTIVE'/>
-      <xs:enumeration value='WATT'/>
       <xs:enumeration value='WATT_SECOND'/>
+      <xs:enumeration value='DECIBEL'/>
       <xs:enumeration value='CENTIPOISE'/>
       <xs:enumeration value='DEGREE/MINUTE'/>
       <xs:enumeration value='FAHRENHEIT'/>
@@ -681,7 +647,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='ACTION_COMPLETE'/>
       <xs:enumeration value='ANNUAL'/>
       <xs:enumeration value='DAY'/>
-      <xs:enumeration value='LIFE'/>
       <xs:enumeration value='MAINTENANCE'/>
       <xs:enumeration value='MANUAL'/>
       <xs:enumeration value='MONTH'/>
@@ -971,7 +936,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:sequence>
     <xs:attribute name='manufacturer' type='NameType' use='optional'/>
     <xs:attribute name='model' type='ModelType' use='optional'/>
-    <xs:attribute name='serialNumber' type='SerialNumberAttrType' use='optional'/>
+    <xs:attribute name='serialNumber' type='SerialNumberType' use='optional'/>
     <xs:attribute name='station' type='StationType' use='optional'/>
   </xs:complexType>
   <xs:complexType name='AbstractConfigurationType' abstract='true'>
@@ -1054,7 +1019,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='ControllerType'>
     <xs:annotation>
       <xs:documentation>
-        A controller system for a machine tool
+        A controller
       </xs:documentation>
     </xs:annotation>
     <xs:complexContent>
@@ -1064,7 +1029,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='Controller' type='ControllerType' substitutionGroup='CommonComponent'>
     <xs:annotation>
       <xs:documentation>
-        A controller system for a machine tool
+        A controller
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -1082,6 +1047,23 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         DEPRECATED: A power measuring component
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='SensorType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sensor, this is not abstract to allow for easy extensibility.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Sensor' type='SensorType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        A sensor, this is not abstract to allow for easy extensibility.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -1136,6 +1118,93 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='CompositionsType'>
+    <xs:annotation>
+      <xs:documentation>
+        A collection of sub elements
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Composition' type='CompositionType' minOccurs='1' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            An assembly of a component
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name='CompositionTypeExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for Composition
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='CompositionEnumTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The vocab for the type of composition
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTUATOR'/>
+      <xs:enumeration value='AMPLIFIER'/>
+      <xs:enumeration value='BALLSCREW'/>
+      <xs:enumeration value='BATTERY'/>
+      <xs:enumeration value='BELT'/>
+      <xs:enumeration value='CIRCUIT_BREAKER'/>
+      <xs:enumeration value='CHAIN'/>
+      <xs:enumeration value='CHUCK'/>
+      <xs:enumeration value='CHUTE'/>
+      <xs:enumeration value='CLAMP'/>
+      <xs:enumeration value='COMPRESSON'/>
+      <xs:enumeration value='DOON'/>
+      <xs:enumeration value='FAN'/>
+      <xs:enumeration value='FILTER'/>
+      <xs:enumeration value='GRIPPER'/>
+      <xs:enumeration value='HOPPER'/>
+      <xs:enumeration value='MOTOR'/>
+      <xs:enumeration value='PUMP'/>
+      <xs:enumeration value='POSITION_FEEDBACK'/>
+      <xs:enumeration value='POWER_SUPPLY'/>
+      <xs:enumeration value='SWITCH'/>
+      <xs:enumeration value='TANK'/>
+      <xs:enumeration value='TRANSFORMER'/>
+      <xs:enumeration value='VALVE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='CompositionEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The vocab for the type of composition
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='CompositionEnumTypeEnum CompositionTypeExtType'/>
+  </xs:simpleType>
+  <xs:complexType name='CompositionType'>
+    <xs:annotation>
+      <xs:documentation>
+        An abstract element
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Description' type='ComponentDescriptionType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The descriptive information about this sub element
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name='id' type='IDType' use='required'/>
+    <xs:attribute name='uuid' type='UuidType' use='optional'/>
+    <xs:attribute name='name' type='NameType' use='optional'/>
+    <xs:attribute name='type' type='CompositionEnumType' use='required'/>
+  </xs:complexType>
   <xs:simpleType name='CalibrationDateType'>
     <xs:annotation>
       <xs:documentation>
@@ -1293,104 +1362,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:attribute name='number' type='ChannelNumberType' use='required'/>
     <xs:attribute name='name' type='NameType' use='optional'/>
   </xs:complexType>
-  <xs:complexType name='CompositionsType'>
-    <xs:annotation>
-      <xs:documentation>
-        A collection of sub elements
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element name='Composition' type='CompositionType' minOccurs='1' maxOccurs='unbounded'>
-        <xs:annotation>
-          <xs:documentation>
-            An assembly of a component
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:simpleType name='CompositionTypeExtType'>
-    <xs:annotation>
-      <xs:documentation>
-        An extension point for Composition
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name='CompositionEnumTypeEnum'>
-    <xs:annotation>
-      <xs:documentation>
-        The vocab for the type of composition
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='ACTUATOR'/>
-      <xs:enumeration value='AMPLIFIER'/>
-      <xs:enumeration value='BALLSCREW'/>
-      <xs:enumeration value='BATTERY'/>
-      <xs:enumeration value='BELT'/>
-      <xs:enumeration value='BRAKE'/>
-      <xs:enumeration value='CIRCUIT_BREAKER'/>
-      <xs:enumeration value='CHAIN'/>
-      <xs:enumeration value='CHOPPER'/>
-      <xs:enumeration value='CHUCK'/>
-      <xs:enumeration value='CHUTE'/>
-      <xs:enumeration value='CLAMP'/>
-      <xs:enumeration value='COMPRESSON'/>
-      <xs:enumeration value='DOOR'/>
-      <xs:enumeration value='DRAIN'/>
-      <xs:enumeration value='ENCODER'/>
-      <xs:enumeration value='FAN'/>
-      <xs:enumeration value='FILTER'/>
-      <xs:enumeration value='GRIPPER'/>
-      <xs:enumeration value='HOPPER'/>
-      <xs:enumeration value='LINEAR_POSITION_FEEDBACK'/>
-      <xs:enumeration value='MOTOR'/>
-      <xs:enumeration value='OIL'/>
-      <xs:enumeration value='PUMP'/>
-      <xs:enumeration value='POWER_SUPPLY'/>
-      <xs:enumeration value='PULLY'/>
-      <xs:enumeration value='SENSING_ELEMENT'/>
-      <xs:enumeration value='STORAGE_BATTERY'/>
-      <xs:enumeration value='SWITCH'/>
-      <xs:enumeration value='TANK'/>
-      <xs:enumeration value='TENSIONER'/>
-      <xs:enumeration value='TRANSFORMER'/>
-      <xs:enumeration value='VALVE'/>
-      <xs:enumeration value='WATER'/>
-      <xs:enumeration value='WIRE'/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name='CompositionEnumType'>
-    <xs:annotation>
-      <xs:documentation>
-        The vocab for the type of composition
-      </xs:documentation>
-    </xs:annotation>
-    <xs:union memberTypes='CompositionEnumTypeEnum CompositionTypeExtType'/>
-  </xs:simpleType>
-  <xs:complexType name='CompositionType'>
-    <xs:annotation>
-      <xs:documentation>
-        An abstract element
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element name='Description' type='ComponentDescriptionType' minOccurs='0' maxOccurs='1'>
-        <xs:annotation>
-          <xs:documentation>
-            The descriptive information about this sub element
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-    </xs:sequence>
-    <xs:attribute name='id' type='IDType' use='required'/>
-    <xs:attribute name='uuid' type='UuidType' use='optional'/>
-    <xs:attribute name='name' type='NameType' use='optional'/>
-    <xs:attribute name='type' type='CompositionEnumType' use='required'/>
-  </xs:complexType>
   <xs:complexType name='AxesType'>
     <xs:annotation>
       <xs:documentation>
@@ -1473,25 +1444,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         DEPRECATED: A spindle axis that spins
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ChuckType'>
-    <xs:annotation>
-      <xs:documentation>
-        A component that represents a mechanism that holds a part or stock
-        material in place.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='CommonComponentType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Chuck' type='ChuckType' substitutionGroup='CommonComponent'>
-    <xs:annotation>
-      <xs:documentation>
-        A component that represents a mechanism that holds a part or stock
-        material in place.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -1600,7 +1552,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='ElectricType'>
     <xs:annotation>
       <xs:documentation>
-        A component representing the electrical system
+        A component representing the coolant system
       </xs:documentation>
     </xs:annotation>
     <xs:complexContent>
@@ -1610,341 +1562,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='Electric' type='ElectricType' substitutionGroup='System'>
     <xs:annotation>
       <xs:documentation>
-        A component representing the electrical system
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='EnclosureType'>
-    <xs:annotation>
-      <xs:documentation>
-        Represents the structure used to contain or isolate a piece of equipment
-        or an area.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='SystemType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Enclosure' type='EnclosureType' substitutionGroup='System'>
-    <xs:annotation>
-      <xs:documentation>
-        Represents the structure used to contain or isolate a piece of equipment
-        or an area.
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ProtectiveType'>
-    <xs:annotation>
-      <xs:documentation>
-        A system that detect or prevent harm or damage to equipment or personnel
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='SystemType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Protective' type='ProtectiveType' substitutionGroup='System'>
-    <xs:annotation>
-      <xs:documentation>
-        A system that detect or prevent harm or damage to equipment or personnel
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ProcessPowerType'>
-    <xs:annotation>
-      <xs:documentation>
-        A power source associated with a piece of equipment that supplies energy
-        to the manufacturing process separate from the Electric system
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='SystemType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='ProcessPower' type='ProcessPowerType' substitutionGroup='System'>
-    <xs:annotation>
-      <xs:documentation>
-        A power source associated with a piece of equipment that supplies energy
-        to the manufacturing process separate from the Electric system
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='FeederType'>
-    <xs:annotation>
-      <xs:documentation>
-        A system that manages the delivery of materials within a piece of
-        equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='SystemType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Feeder' type='FeederType' substitutionGroup='System'>
-    <xs:annotation>
-      <xs:documentation>
-        A system that manages the delivery of materials within a piece of
-        equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='DielectricType'>
-    <xs:annotation>
-      <xs:documentation>
-        A chemical mixture used in a manufacturing process being performed at
-        that piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='SystemType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Dielectric' type='DielectricType' substitutionGroup='System'>
-    <xs:annotation>
-      <xs:documentation>
-        A chemical mixture used in a manufacturing process being performed at
-        that piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AuxiliariesType'>
-    <xs:annotation>
-      <xs:documentation>
-        A grouping of functional sub-systems that provide supplementary or
-        extended capabilities for a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='CommonComponentType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Auxiliaries' type='AuxiliariesType' substitutionGroup='CommonComponent'>
-    <xs:annotation>
-      <xs:documentation>
-        A grouping of functional sub-systems that provide supplementary or
-        extended capabilities for a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='AuxiliaryType'>
-    <xs:annotation>
-      <xs:documentation>
-        A functional sub-systems that provide supplementary or extended
-        capabilities for a piece of equipment, , but they are not required for
-        the basic operation of the equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='CommonComponentType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Auxiliary' type='AuxiliaryType' substitutionGroup='CommonComponent'>
-    <xs:annotation>
-      <xs:documentation>
-        A functional sub-systems that provide supplementary or extended
-        capabilities for a piece of equipment, , but they are not required for
-        the basic operation of the equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='LoaderType'>
-    <xs:annotation>
-      <xs:documentation>
-        unit comprised of all the parts involved in moving and distributing
-        materials, parts, and other items to or from a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AuxiliaryType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Loader' type='LoaderType' substitutionGroup='Auxiliary'>
-    <xs:annotation>
-      <xs:documentation>
-        unit comprised of all the parts involved in moving and distributing
-        materials, parts, and other items to or from a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='WasteDisposalType'>
-    <xs:annotation>
-      <xs:documentation>
-        unit comprised of all the parts involved in removing manufacturing
-        byproducts from a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AuxiliaryType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='WasteDisposal' type='WasteDisposalType' substitutionGroup='Auxiliary'>
-    <xs:annotation>
-      <xs:documentation>
-        unit comprised of all the parts involved in removing manufacturing
-        byproducts from a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ToolingDeliveryType'>
-    <xs:annotation>
-      <xs:documentation>
-        unit involved in managing, positioning, storing, and delivering tooling
-        within a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AuxiliaryType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='ToolingDelivery' type='ToolingDeliveryType' substitutionGroup='Auxiliary'>
-    <xs:annotation>
-      <xs:documentation>
-        unit involved in managing, positioning, storing, and delivering tooling
-        within a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='BarFeederType'>
-    <xs:annotation>
-      <xs:documentation>
-        a unit involved in delivering bar stock to a piece of equipment.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AuxiliaryType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='BarFeeder' type='BarFeederType' substitutionGroup='Auxiliary'>
-    <xs:annotation>
-      <xs:documentation>
-        a unit involved in delivering bar stock to a piece of equipment.
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='EnvironmentalType'>
-    <xs:annotation>
-      <xs:documentation>
-        unit or function involved in monitoring, managing, or conditioning the
-        environment around or within a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AuxiliaryType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Environmental' type='EnvironmentalType' substitutionGroup='Auxiliary'>
-    <xs:annotation>
-      <xs:documentation>
-        unit or function involved in monitoring, managing, or conditioning the
-        environment around or within a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='SensorType'>
-    <xs:annotation>
-      <xs:documentation>
-        A sensor, this is not abstract to allow for easy extensibility.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AuxiliaryType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Sensor' type='SensorType' substitutionGroup='Auxiliary'>
-    <xs:annotation>
-      <xs:documentation>
-        A sensor, this is not abstract to allow for easy extensibility.
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ResourcesType'>
-    <xs:annotation>
-      <xs:documentation>
-        groups items that support the operation of a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='CommonComponentType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Resources' type='ResourcesType' substitutionGroup='CommonComponent'>
-    <xs:annotation>
-      <xs:documentation>
-        groups items that support the operation of a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ResourceType'>
-    <xs:annotation>
-      <xs:documentation>
-        An item that supports the operation of a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='CommonComponentType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Resource' type='ResourceType' substitutionGroup='CommonComponent'>
-    <xs:annotation>
-      <xs:documentation>
-        An item that supports the operation of a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='MaterialsType'>
-    <xs:annotation>
-      <xs:documentation>
-        materials or other items consumed or used by the piece of equipment for
-        production of parts, materials, or other types of goods
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='ResourceType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Materials' type='MaterialsType' substitutionGroup='Resource'>
-    <xs:annotation>
-      <xs:documentation>
-        materials or other items consumed or used by the piece of equipment for
-        production of parts, materials, or other types of goods
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='StockType'>
-    <xs:annotation>
-      <xs:documentation>
-        material that is used in a manufacturing process and to which work is
-        applied in a machine or piece of equipment to produce parts
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='ResourceType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Stock' type='StockType' substitutionGroup='Resource'>
-    <xs:annotation>
-      <xs:documentation>
-        material that is used in a manufacturing process and to which work is
-        applied in a machine or piece of equipment to produce parts
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='PersonnelType'>
-    <xs:annotation>
-      <xs:documentation>
-        provides information about an individual or individuals who either
-        control, support, or otherwise interface with a piece of equipment
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='ResourceType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Personnel' type='PersonnelType' substitutionGroup='Resource'>
-    <xs:annotation>
-      <xs:documentation>
-        provides information about an individual or individuals who either
-        control, support, or otherwise interface with a piece of equipment
+        A component representing the coolant system
       </xs:documentation>
     </xs:annotation>
   </xs:element>
