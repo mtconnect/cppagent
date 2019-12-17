@@ -198,6 +198,10 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
       else if (first->properties)
       {
         text = xmlGetProp(first, BAD_CAST attribute.c_str());
+        if (text == nullptr)
+        {
+          text = xmlStrdup(BAD_CAST "ATTRIBUTE NOT FOUND");
+        }
       }
 
       if (text)

@@ -1663,6 +1663,21 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
   }
 }
 
+TEST_F(AgentTest, AssetChangedWhenUnavailable)
+{
+  addAdapter();
+
+  {
+    m_agentTestHelper->m_path = "/current";
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "");
+  }
+}
+
+
 TEST_F(AgentTest, RemoveAllAssets)
 {
   addAdapter();
