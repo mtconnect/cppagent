@@ -36,6 +36,8 @@ if(NOT TARGET dlib::dlib)
     message(STATUS "  * Configure dlib library")
     execute_process(
       COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
         -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -54,6 +56,8 @@ if(NOT TARGET dlib::dlib)
         -DDLIB_JPEG_SUPPORT=OFF
         -DDLIB_PNG_SUPPORT=OFF
         -DDLIB_USE_MKL_FFT=OFF
+	-DWINVER=${WINVER}
+	-DCMAKE_DEBUG_POSTFIX=d 
         -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install/dlib
         ${dlibprovider_SOURCE_DIR}/dlib
       WORKING_DIRECTORY ${dlibprovider_BINARY_DIR}
@@ -65,9 +69,9 @@ if(NOT TARGET dlib::dlib)
     message("${_output}")
     message("============================================================")
 
-    message(STATUS "  * Build dlib library")
+    message(STATUS "  * Build Release dlib library")
     execute_process(
-      COMMAND ${CMAKE_COMMAND} --build . --target install -- ${build_options}
+      COMMAND ${CMAKE_COMMAND} --build . --target install --config Release -- ${build_options}
       WORKING_DIRECTORY ${dlibprovider_BINARY_DIR}
       OUTPUT_FILE       ${dlibprovider_BINARY_DIR}/build_output.log
       ERROR_FILE        ${dlibprovider_BINARY_DIR}/build_output.log
@@ -76,12 +80,34 @@ if(NOT TARGET dlib::dlib)
     message("============================================================")
     message("${_output}")
     message("============================================================")
+
+    if(MSVC)
+      message(STATUS "  * Build Debug dlib library")
+      execute_process(
+	COMMAND ${CMAKE_COMMAND} --build . --target install --config Debug -- ${build_options}
+	WORKING_DIRECTORY ${dlibprovider_BINARY_DIR}
+	OUTPUT_FILE       ${dlibprovider_BINARY_DIR}/build_output.log
+	ERROR_FILE        ${dlibprovider_BINARY_DIR}/build_output.log
+	)
+      
+      file(READ "${dlibprovider_BINARY_DIR}/build_output.log" _output)
+      message("============================================================")
+      message("${_output}")
+      message("============================================================")
+    endif()
   endif()
 
   message(STATUS "  * Create targets for dlib library")
   add_library(dlib::dlib STATIC IMPORTED)
+
   set_target_properties(dlib::dlib PROPERTIES
     IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}"
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/install/dlib/include"
-  )
+    )
+
+  if(MSVC)
+    set_target_properties(dlib::dlib PROPERTIES
+      IMPORTED_LOCATION_DEBUG "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlibd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+      )
+  endif()
 endif()
