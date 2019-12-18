@@ -53,6 +53,7 @@ else()
       message(STATUS "  * Configure LibXML2")
       execute_process(
         COMMAND ${CMAKE_COMMAND}
+          -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_VERBOSE_MAKEFILE=${CMAKE_VERBOSE_MAKEFILE}
           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -74,7 +75,7 @@ else()
 
       message(STATUS "  * Build LibXML2")
       execute_process(
-        COMMAND ${CMAKE_COMMAND} --build . --target install -- ${build_options}
+        COMMAND ${CMAKE_COMMAND} --build . --target install --config Release -- ${build_options}
         WORKING_DIRECTORY ${libxmlprovider_BINARY_DIR}
         OUTPUT_FILE       ${libxmlprovider_BINARY_DIR}/build_output.log
         ERROR_FILE        ${libxmlprovider_BINARY_DIR}/build_output.log
