@@ -31,23 +31,20 @@ init:
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
-- sh: sudo apt-get update
-- sh: sudo apt-get --yes install libxml2-dev
+    echo %MSBUILD_FLAGS%
+# - sh: sudo apt-get update
+# - sh: sudo apt-get --yes install libxml2-dev
 
 before_build:
 - cmd: |-
-    git submodule init
-    git submodule update
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAPPVEYOR=ON -DAGENT_ENABLE_UNITTESTS=ON -G %generator%
-- sh: git submodule init
-- sh: git submodule update
+    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -G %generator%
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version
-- sh: cmake ..
+- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
     
 
 build:
@@ -61,7 +58,7 @@ build_script:
     cmake --build . --config Debug --target ALL_BUILD -- %MSBUILD_FLAGS%
 - sh: |-
     cd ${APPVEYOR_BUILD_FOLDER}/build
-    cmake --build . --config Debug --target all -- -j 4
+    cmake --build . --config Debug --target all -- -j4
 
 test_script:
 - cmd: ctest -C Debug --output-on-failure
@@ -76,6 +73,5 @@ only_commits:
     - test/
     - cmake/
     - dlib_fix/
-    - cppunit_make/
     - libxml2_make/
     - agent/
