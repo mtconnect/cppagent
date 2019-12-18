@@ -99,17 +99,15 @@ if(NOT TARGET dlib::dlib)
 
   message(STATUS "  * Create targets for dlib library")
   add_library(dlib::dlib STATIC IMPORTED)
-  
+
+  set_target_properties(dlib::dlib PROPERTIES
+    IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/install/dlib/include"
+    )
+
   if(MSVC)
     set_target_properties(dlib::dlib PROPERTIES
-      IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}"
       IMPORTED_LOCATION_DEBUG "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlibd${CMAKE_STATIC_LIBRARY_SUFFIX}"
-      INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/install/dlib/include"
-      )
-  else()
-    set_target_properties(dlib::dlib PROPERTIES
-      IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}"
-      INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/install/dlib/include"
       )
   endif()
 endif()
