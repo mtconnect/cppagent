@@ -8,8 +8,7 @@ image:
 - Visual Studio 2017
 
 configuration:
-- Debug
-#- Release
+- Release
 
 platform:
 - x86
@@ -55,13 +54,13 @@ build:
 build_script:
 - cmd: |-
     cd %APPVEYOR_BUILD_FOLDER%\build
-    cmake --build . --config Debug --target ALL_BUILD -- %MSBUILD_FLAGS%
+    cmake --build . --config Release --target ALL_BUILD -- %MSBUILD_FLAGS%
 - sh: |-
     cd ${APPVEYOR_BUILD_FOLDER}/build
-    cmake --build . --config Debug --target all -- -j4
+    cmake --build . --config Release --target all -- -j4
 
 test_script:
-- cmd: ctest -C Debug --output-on-failure
+- cmd: ctest -C Release --output-on-failure
 - sh: ctest
 
   
