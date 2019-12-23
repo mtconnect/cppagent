@@ -311,7 +311,7 @@ namespace mtconnect
       // Check if the files have changed.
       if (check && (cfg_at_start != cfg || devices_at_start != devices))
       {
-        time_t now = time(NULL);
+        time_t now = time(nullptr);
         g_logger
             << LWARN
             << "Dected change in configuarion files. Will reload when youngest file is at least "
@@ -367,7 +367,7 @@ namespace mtconnect
       {
         // Will destruct and wait to re-initialize.
         g_logger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
-        mon.reset(0);
+        mon.reset(nullptr);
         g_logger << LDEBUG << "Monitor has exited";
       }
     } while (m_restart);

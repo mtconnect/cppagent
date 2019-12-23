@@ -214,7 +214,7 @@ namespace mtconnect
 
     if (len > 0u)
     {
-      ms_v = strtol(ms + 1, 0, 10);
+      ms_v = strtol(ms + 1, nullptr, 10);
 
       for (int pf = 7 - len; pf > 0; pf--)
         ms_v *= 10;

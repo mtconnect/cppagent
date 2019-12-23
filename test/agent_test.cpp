@@ -267,11 +267,12 @@ TEST_F(AgentTest, EmptyStream)
     m_agentTestHelper->m_path = "/current";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']@name", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']@name", nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable",
-                          0);
+                          nullptr);
     ASSERT_XML_PATH_EQUAL(
-        doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier", 0);
+        doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier",
+        nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode", "SPINDLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ToolGroup", "UNAVAILABLE");
   }
@@ -281,7 +282,7 @@ TEST_F(AgentTest, EmptyStream)
     char line[80] = {0};
     sprintf(line, "%d", (int)m_agent->getSequence());
     PARSE_XML_RESPONSE_QUERY_KV("from", line);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 }
 
@@ -315,7 +316,7 @@ TEST_F(AgentTest, AddToBuffer)
   {
     m_agentTestHelper->m_path = "/sample";
     PARSE_XML_RESPONSE_QUERY_KV("from", "36");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 
   key = "power";
@@ -531,7 +532,7 @@ TEST_F(AgentTest, SampleAtNextSeq)
   {
     value = intToString(seq);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 }
 
@@ -1844,7 +1845,7 @@ TEST_F(AgentTest, StreamData)
     try
     {
       PARSE_XML_RESPONSE_QUERY(query);
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+      ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
 
       auto delta = system_clock::now() - startTime;
       ASSERT_TRUE(delta < (heartbeatFreq + 25ms));

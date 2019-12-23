@@ -15,5 +15,6 @@ target_link_libraries(
     agent_lib
     $<$<PLATFORM_ID:Windows>:shlwapi>
 )
+target_clangtidy_setup(agent_lib)
 
 install(TARGETS agent RUNTIME DESTINATION bin)

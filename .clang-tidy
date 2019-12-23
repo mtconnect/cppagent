@@ -1,0 +1,5 @@
+Checks:          '-*,modernize-use-nullptr'
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: false
+FormatStyle:     File
