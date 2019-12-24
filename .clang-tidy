@@ -1,4 +1,4 @@
-Checks:          '-*,modernize-use-nullptr,modernize-use-default-member-init,modernize-replace-auto-ptr,modernize-use-bool-literals,modernize-use-emplace,modernize-use-equals-default,modernize-use-equals-delete,modernize-use-override,modernize-use-using,modernize-use-uncaught-exceptions,modernize-use-transparent-functors,modernize-use-noexcept,modernize-use-nodiscard'
+Checks:          '-*,modernize-*,-modernize-avoid-c-arrays,-modernize-use-trailing-return-type'
 WarningsAsErrors: ''
 HeaderFilterRegex: 'src/.*\.hpp$'
 AnalyzeTemporaryDtors: false

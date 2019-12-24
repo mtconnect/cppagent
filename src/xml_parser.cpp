@@ -591,7 +591,7 @@ namespace mtconnect
       if (!xmlStrcmp(child->name, BAD_CAST "Description"))
       {
         auto body = getCDATA(child);
-        Composition::Description *desc = new Composition::Description(body, getAttributes(child));
+        auto *desc = new Composition::Description(body, getAttributes(child));
         comp->setDescription(desc);
       }
     }

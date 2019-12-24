@@ -51,8 +51,8 @@ namespace mtconnect
     {
      public:
       Channel(std::string calibrationDate, std::string nextCalibrationDate, std::string initials,
-              const std::map<std::string, std::string> &attrs)
-          : m_attributes(attrs),
+              std::map<std::string, std::string> attrs)
+          : m_attributes(std::move(attrs)),
             m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
                           std::move(initials))
       {

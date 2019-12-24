@@ -117,7 +117,7 @@ TEST_F(DeviceTest, Relationships)
 {
   // Test get/set parents
   map<string, string> dummy;
-  mtconnect::Component *linear = new mtconnect::Component("Linear", dummy);
+  auto *linear = new mtconnect::Component("Linear", dummy);
 
   auto devPointer = dynamic_cast<mtconnect::Component *>(m_devA);
   ASSERT_TRUE(devPointer);
@@ -125,7 +125,7 @@ TEST_F(DeviceTest, Relationships)
   linear->setParent(*m_devA);
   ASSERT_TRUE(devPointer == linear->getParent());
 
-  mtconnect::Component *controller = new mtconnect::Component("Controller", dummy);
+  auto *controller = new mtconnect::Component("Controller", dummy);
   controller->setParent(*m_devA);
   ASSERT_TRUE(devPointer == controller->getParent());
 
@@ -137,8 +137,8 @@ TEST_F(DeviceTest, Relationships)
   // Test add/get children
   ASSERT_TRUE(m_devA->getChildren().empty());
 
-  mtconnect::Component *axes = new mtconnect::Component("Axes", dummy),
-                       *thermostat = new mtconnect::Component("Thermostat", dummy);
+  auto *axes = new mtconnect::Component("Axes", dummy),
+       *thermostat = new mtconnect::Component("Thermostat", dummy);
   m_devA->addChild(*axes);
   m_devA->addChild(*thermostat);
 
@@ -153,7 +153,7 @@ TEST_F(DeviceTest, DataItems)
 
   map<string, string> dummy;
 
-  DataItem *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
+  auto *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
   m_devA->addDataItem(*data1);
   m_devA->addDataItem(*data2);
 

@@ -829,7 +829,7 @@ namespace mtconnect
 
     if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
     {
-      CuttingTool *tool = dynamic_cast<CuttingTool *>(asset.getObject());
+      auto *tool = dynamic_cast<CuttingTool *>(asset.getObject());
       addCuttingToolIdentity(obj, tool->getIdentity());
       obj["Description"] = tool->getDescription();
 

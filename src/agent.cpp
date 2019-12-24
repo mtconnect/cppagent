@@ -62,10 +62,10 @@ namespace mtconnect
     m_mimeTypes["ico"] = "image/x-icon";
 
     // Create the XmlPrinter
-    XmlPrinter *xmlPrinter = new XmlPrinter(version, m_pretty);
+    auto *xmlPrinter = new XmlPrinter(version, m_pretty);
     m_printers["xml"].reset(xmlPrinter);
 
-    JsonPrinter *jsonPrinter = new JsonPrinter(version, m_pretty);
+    auto *jsonPrinter = new JsonPrinter(version, m_pretty);
     m_printers["json"].reset(jsonPrinter);
 
     try

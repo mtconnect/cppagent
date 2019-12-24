@@ -889,7 +889,7 @@ namespace mtconnect
 
     if (!style.empty())
     {
-      string pi = "xml-stylesheet type=\"text/xsl\" href=\"" + style + '"';
+      string pi = R"(xml-stylesheet type="text/xsl" href=")" + style + '"';
       THROW_IF_XML2_ERROR(xmlTextWriterStartPI(writer, BAD_CAST pi.c_str()));
       THROW_IF_XML2_ERROR(xmlTextWriterEndPI(writer));
     }
