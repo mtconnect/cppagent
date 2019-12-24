@@ -44,7 +44,7 @@ namespace mtconnect
   class DataItem;
   class Device;
 
-  typedef std::vector<std::pair<std::string, std::string>> AssetChangeList;
+  using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
   struct OutgoingThings : public dlib::outgoing_things
   {
@@ -52,7 +52,7 @@ namespace mtconnect
     std::ostream *m_out = nullptr;
     const Printer *m_printer = nullptr;
   };
-  typedef struct dlib::incoming_things IncomingThings;
+  using IncomingThings = struct dlib::incoming_things;
 
   class Agent : public dlib::server_http
   {
@@ -111,7 +111,7 @@ namespace mtconnect
           bool pretty = false);
 
     // Virtual destructor
-    virtual ~Agent();
+    ~Agent() override;
 
     // Overridden method that is called per web request – not used
     // using httpRequest which is called from our own on_connect method.
@@ -250,9 +250,9 @@ namespace mtconnect
     }
 
    protected:
-    virtual void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
-                            const std::string &local_ip, unsigned short foreign_port,
-                            unsigned short local_port, dlib::uint64) override;
+    void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
+                    const std::string &local_ip, unsigned short foreign_port,
+                    unsigned short local_port, dlib::uint64) override;
 
     // HTTP methods to handle the 3 basic calls
     std::string handleCall(const Printer *printer, std::ostream &out, const std::string &path,
@@ -396,7 +396,7 @@ namespace mtconnect
         m_buffer = std::make_unique<char[]>(m_size);
       }
 
-      ~CachedFile()
+      ~CachedFile() override
       {
         m_buffer.reset();
       }

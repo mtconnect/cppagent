@@ -95,7 +95,7 @@ namespace mtconnect
           m_rest(std::move(rest))
     {
     }
-    virtual ~SensorConfiguration() = default;
+    ~SensorConfiguration() override = default;
 
     void addChannel(const Channel &channel)
     {

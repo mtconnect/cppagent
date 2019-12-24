@@ -38,11 +38,11 @@ namespace mtconnect
     bool m_force;
   };
 
-  typedef std::vector<AttributeItem> AttributeList;
+  using AttributeList = std::vector<AttributeItem>;
 
   class Observation;
-  typedef RefCountedPtr<Observation> ObservationPtr;
-  typedef dlib::array<ObservationPtr> ObservationPtrArray;
+  using ObservationPtr = RefCountedPtr<Observation>;
+  using ObservationPtrArray = dlib::array<ObservationPtr>;
 
   struct DataSetEntry
   {
@@ -77,7 +77,7 @@ namespace mtconnect
     }
   };
 
-  typedef std::set<DataSetEntry> DataSet;
+  using DataSet = std::set<DataSetEntry>;
 
   class Observation : public RefCounted
   {
@@ -214,7 +214,7 @@ namespace mtconnect
 
    protected:
     // Virtual destructor
-    virtual ~Observation();
+    ~Observation() override;
 
    protected:
     // Holds the data item from the device
@@ -278,7 +278,7 @@ namespace mtconnect
     m_prev = event;
   }
 
-  typedef bool (*ObservationComparer)(ObservationPtr &aE1, ObservationPtr &aE2);
+  using ObservationComparer = bool (*)(ObservationPtr &, ObservationPtr &);
   inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2)
   {
     return aE1 < aE2;

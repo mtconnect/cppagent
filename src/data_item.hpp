@@ -63,7 +63,7 @@ namespace mtconnect
     DataItem(std::map<std::string, std::string> const &attributes);
 
     // Destructor
-    ~DataItem();
+    ~DataItem() override;
 
     // Get a map of all the attributes of this data item
     const std::map<std::string, std::string> &getAttributes() const

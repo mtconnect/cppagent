@@ -27,11 +27,11 @@
 namespace mtconnect
 {
   class Asset;
-  typedef RefCountedPtr<Asset> AssetPtr;
+  using AssetPtr = RefCountedPtr<Asset>;
 
   // An association of the index type to the value.
-  typedef std::map<std::string, std::string> AssetKeys;
-  typedef std::map<std::string, std::string> XmlAttributes;
+  using AssetKeys = std::map<std::string, std::string>;
+  using XmlAttributes = std::map<std::string, std::string>;
 
   class Asset : public RefCounted
   {
@@ -59,7 +59,7 @@ namespace mtconnect
 
     Asset(std::string assetId, std::string type, std::string content, const bool removed = false);
 
-    virtual ~Asset();
+    ~Asset() override;
 
     const std::string &getAssetId() const
     {
@@ -139,5 +139,5 @@ namespace mtconnect
     virtual void addIdentity(const std::string &key, const std::string &value);
   };
 
-  typedef std::map<std::string, AssetPtr> AssetIndex;
+  using AssetIndex = std::map<std::string, AssetPtr>;
 }  // namespace mtconnect

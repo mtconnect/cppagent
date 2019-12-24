@@ -38,7 +38,7 @@ namespace mtconnect
     ExtendedComponentConfiguration(std::string content) : m_content(std::move(content))
     {
     }
-    virtual ~ExtendedComponentConfiguration() = default;
+    ~ExtendedComponentConfiguration() override = default;
 
     const std::string &getContent() const
     {

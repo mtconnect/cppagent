@@ -46,7 +46,7 @@ namespace mtconnect
             std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
 
     // Virtual destructor
-    virtual ~Adapter();
+    ~Adapter() override;
 
     // Set pointer to the agent
     void setAgent(Agent &agent);

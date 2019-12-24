@@ -33,7 +33,7 @@ namespace mtconnect
     // Constructor that sets variables from an attribute map
     Device(const std::map<std::string, std::string> &attributes);
 
-    ~Device();
+    ~Device() override;
 
     // Add/get items to/from the device name to data item mapping
     void addDeviceDataItem(DataItem &dataItem);
@@ -61,7 +61,7 @@ namespace mtconnect
       return m_deviceDataItemsById;
     }
 
-    virtual void addDataItem(DataItem &dataItem) override;
+    void addDataItem(DataItem &dataItem) override;
 
     std::vector<Adapter *> m_adapters;
     bool m_preserveUuid;

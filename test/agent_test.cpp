@@ -46,7 +46,7 @@ class AgentTest : public testing::Test
 {
  public:
   typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
-  typedef dlib::queue<std::string>::kernel_1a_c queue_type;
+  using queue_type = dlib::queue<std::string>::kernel_1a_c;
 
  protected:
   void SetUp() override

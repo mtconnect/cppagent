@@ -14,8 +14,8 @@ namespace mtconnect
   class Device;
   class Asset;
   class CuttingTool;
-  typedef RefCountedPtr<Asset> AssetPtr;
-  typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
+  using AssetPtr = RefCountedPtr<Asset>;
+  using CuttingToolPtr = RefCountedPtr<CuttingTool>;
 
   class Printer
   {

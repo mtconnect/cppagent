@@ -145,7 +145,7 @@ namespace mtconnect
 #include <libkern/OSAtomic.h>
   typedef volatile long AtomicInt;
 #else
-  typedef int AtomicInt;
+  using AtomicInt = int;
 #endif
 #endif
 }  // namespace mtconnect

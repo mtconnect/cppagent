@@ -33,9 +33,9 @@ namespace mtconnect
   class RollingFileLogger;
   class XmlPrinter;
 
-  typedef void (XmlPrinter::*NamespaceFunction)(const std::string &urn, const std::string &location,
-                                                const std::string &prefix);
-  typedef void (XmlPrinter::*StyleFunction)(const std::string &location);
+  using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
+                                                 const std::string &);
+  using StyleFunction = void (XmlPrinter::*)(const std::string &);
 
   class AgentConfiguration : public MTConnectService
   {
