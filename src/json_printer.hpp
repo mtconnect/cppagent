@@ -27,9 +27,7 @@ namespace mtconnect
   {
    public:
     JsonPrinter(const std::string version = "", bool pretty = false);
-    virtual ~JsonPrinter()
-    {
-    }
+    virtual ~JsonPrinter() = default;
 
     virtual std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
                                    const uint64_t nextSeq, const std::string &errorCode,

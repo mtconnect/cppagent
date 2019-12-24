@@ -472,9 +472,7 @@ namespace mtconnect
     CategoryRef(const char *cat) : m_category(cat)
     {
     }
-    CategoryRef(const CategoryRef &other) : m_category(other.m_category), m_events(other.m_events)
-    {
-    }
+    CategoryRef(const CategoryRef &other) = default;
 
     bool addObservation(const ObservationPtr &observation)
     {

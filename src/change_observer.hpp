@@ -30,9 +30,7 @@ namespace mtconnect
   class ChangeObserver
   {
    public:
-    ChangeObserver()
-    {
-    }
+    ChangeObserver() = default;
 
     virtual ~ChangeObserver();
 

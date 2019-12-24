@@ -114,9 +114,7 @@ namespace mtconnect
     }
   }
 
-  Observation::~Observation()
-  {
-  }
+  Observation::~Observation() = default;
 
   const AttributeList &Observation::getAttributes()
   {

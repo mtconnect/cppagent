@@ -43,9 +43,7 @@ namespace mtconnect
     }
   }
 
-  Device::~Device()
-  {
-  }
+  Device::~Device() = default;
 
   void Device::addDeviceDataItem(DataItem &dataItem)
   {

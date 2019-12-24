@@ -55,9 +55,8 @@ namespace mtconnect
     }
 
     DataSetEntry(const DataSetEntry &other)
-        : m_key(other.m_key), m_value(other.m_value), m_removed(other.m_removed)
-    {
-    }
+
+        = default;
 
     std::string m_key;
     std::string m_value;

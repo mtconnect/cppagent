@@ -1,4 +1,4 @@
-Checks:          '-*,modernize-use-nullptr,modernize-use-default-member-init'
+Checks:          '-*,modernize-use-nullptr,modernize-use-default-member-init,modernize-replace-auto-ptr,modernize-use-bool-literals,modernize-use-emplace,modernize-use-equals-default,modernize-use-equals-delete'
 WarningsAsErrors: ''
 HeaderFilterRegex: 'src/.*\.hpp$'
 AnalyzeTemporaryDtors: false

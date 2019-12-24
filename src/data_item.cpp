@@ -170,9 +170,7 @@ namespace mtconnect
     m_attributes = buildAttributes();
   }
 
-  DataItem::~DataItem()
-  {
-  }
+  DataItem::~DataItem() = default;
 
   void DataItem::setDataSource(Adapter *source)
   {

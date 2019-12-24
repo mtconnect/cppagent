@@ -37,9 +37,7 @@ namespace mtconnect
 {
   static dlib::logger g_logger("init.service");
 
-  MTConnectService::MTConnectService()
-  {
-  }
+  MTConnectService::MTConnectService() = default;
 
   void MTConnectService::initialize(int argc, const char *argv[])
   {

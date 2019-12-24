@@ -48,9 +48,7 @@ namespace mtconnect
 
   struct OutgoingThings : public dlib::outgoing_things
   {
-    OutgoingThings()
-    {
-    }
+    OutgoingThings() = default;
     std::ostream *m_out = nullptr;
     const Printer *m_printer = nullptr;
   };
@@ -73,12 +71,7 @@ namespace mtconnect
         m_message = anotherError.m_message;
       }
 
-      ParameterError &operator=(const ParameterError &anotherError)
-      {
-        m_code = anotherError.m_code;
-        m_message = anotherError.m_message;
-        return *this;
-      }
+      ParameterError &operator=(const ParameterError &anotherError) = default;
 
       std::string m_code;
       std::string m_message;

@@ -37,15 +37,10 @@ namespace mtconnect
       {
       }
       Calibration(const Calibration &other)
-          : m_date(other.m_date), m_nextDate(other.m_nextDate), m_initials(other.m_initials)
-      {
-      }
-      Calibration()
-      {
-      }
-      ~Calibration()
-      {
-      }
+
+          = default;
+      Calibration() = default;
+      ~Calibration() = default;
 
       std::string m_date;
       std::string m_nextDate;
@@ -63,14 +58,9 @@ namespace mtconnect
       {
       }
       Channel(const Channel &other)
-          : m_attributes(other.m_attributes),
-            m_description(other.m_description),
-            m_calibration(other.m_calibration)
-      {
-      }
-      ~Channel()
-      {
-      }
+
+          = default;
+      ~Channel() = default;
 
       void setDescription(const std::string &desc)
       {
@@ -105,9 +95,7 @@ namespace mtconnect
           m_rest(std::move(rest))
     {
     }
-    virtual ~SensorConfiguration()
-    {
-    }
+    virtual ~SensorConfiguration() = default;
 
     void addChannel(const Channel &channel)
     {

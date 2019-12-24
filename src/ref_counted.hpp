@@ -128,9 +128,7 @@ namespace mtconnect
       m_refCount.store(1);
     }
 
-    virtual ~RefCounted()
-    {
-    }
+    virtual ~RefCounted() = default;
 
     // Reference count management
     void referTo()

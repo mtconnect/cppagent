@@ -287,9 +287,7 @@ namespace mtconnect
   // Option::Option(const Option &aOption)
 
   //---- Destructor
-  Option::~Option()
-  {
-  }
+  Option::~Option() = default;
 
   // --------- Class OptionList begins here.
 
@@ -311,9 +309,7 @@ namespace mtconnect
       emplace_back(*optionList[i++]);
   }
 
-  OptionsList::~OptionsList()
-  {
-  }
+  OptionsList::~OptionsList() = default;
 
   void OptionsList::addOption(Option &option)
   {
