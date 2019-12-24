@@ -93,7 +93,7 @@ namespace mtconnect
 
    protected:
     // LibXML XML Doc
-    xmlDocPtr m_doc;
+    xmlDocPtr m_doc = nullptr;
     std::map<std::string, std::function<void(xmlNodePtr, Component *, Device *)>> m_handlers;
   };
 }  // namespace mtconnect

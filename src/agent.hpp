@@ -48,11 +48,11 @@ namespace mtconnect
 
   struct OutgoingThings : public dlib::outgoing_things
   {
-    OutgoingThings() : m_out(nullptr), m_printer(nullptr)
+    OutgoingThings()
     {
     }
-    std::ostream *m_out;
-    const Printer *m_printer;
+    std::ostream *m_out = nullptr;
+    const Printer *m_printer = nullptr;
   };
   typedef struct dlib::incoming_things IncomingThings;
 
@@ -380,9 +380,9 @@ namespace mtconnect
     struct CachedFile : public RefCounted
     {
       std::unique_ptr<char[]> m_buffer;
-      size_t m_size;
+      size_t m_size = 0;
 
-      CachedFile() : m_buffer(nullptr), m_size(0)
+      CachedFile() : m_buffer(nullptr)
       {
       }
 

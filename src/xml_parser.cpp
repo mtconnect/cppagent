@@ -119,8 +119,7 @@ namespace mtconnect
   }
 
   XmlParser::XmlParser()
-      : m_doc(nullptr),
-        m_handlers(
+      : m_handlers(
             {{"Components",
               [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
              {"DataItems",

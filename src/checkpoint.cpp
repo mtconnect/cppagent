@@ -23,7 +23,7 @@ using namespace std;
 
 namespace mtconnect
 {
-  Checkpoint::Checkpoint() : m_hasFilter(false)
+  Checkpoint::Checkpoint()
   {
   }
 

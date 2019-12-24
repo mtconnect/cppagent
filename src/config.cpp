@@ -114,14 +114,8 @@ namespace mtconnect
       return defaultValue;
   }
 
-  AgentConfiguration::AgentConfiguration()
-      : m_agent(nullptr),
-        m_loggerFile(nullptr),
-        m_monitorFiles(false),
-        m_minimumConfigReloadAge(15),
-        m_restart(false),
-        m_exePath(""),
-        m_pretty(false)
+  AgentConfiguration::AgentConfiguration() : m_exePath("")
+
   {
     bool success = false;
     char pathSep = '/';

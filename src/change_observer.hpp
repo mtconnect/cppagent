@@ -30,7 +30,7 @@ namespace mtconnect
   class ChangeObserver
   {
    public:
-    ChangeObserver() : m_sequence(UINT64_MAX)
+    ChangeObserver()
     {
     }
 
@@ -78,7 +78,7 @@ namespace mtconnect
     mutable std::condition_variable_any m_cv;
 
     std::vector<ChangeSignaler *> m_signalers;
-    volatile uint64_t m_sequence;
+    volatile uint64_t m_sequence = UINT64_MAX;
 
    protected:
     friend class ChangeSignaler;

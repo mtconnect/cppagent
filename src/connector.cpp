@@ -36,7 +36,6 @@ namespace mtconnect
         m_localPort(0),
         m_connected(false),
         m_realTime(false),
-        m_heartbeats(false),
         m_heartbeatFrequency{HEARTBEAT_FREQ},
         m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
         m_connectActive(false)

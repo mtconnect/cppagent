@@ -85,13 +85,13 @@ namespace mtconnect
     void monitorThread();
 
    protected:
-    Agent *m_agent;
-    RollingFileLogger *m_loggerFile;
-    bool m_monitorFiles;
-    int m_minimumConfigReloadAge;
+    Agent *m_agent = nullptr;
+    RollingFileLogger *m_loggerFile = nullptr;
+    bool m_monitorFiles = false;
+    int m_minimumConfigReloadAge = 15;
     std::string m_devicesFile;
-    bool m_restart;
+    bool m_restart = false;
     std::string m_exePath;
-    bool m_pretty;
+    bool m_pretty = false;
   };
 }  // namespace mtconnect
