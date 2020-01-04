@@ -47,6 +47,7 @@ add_agent_test(json_printer_error TRUE)
 add_agent_test(json_printer_probe TRUE)
 add_agent_test(json_printer_stream TRUE)
 add_agent_test(observation TRUE)
+add_agent_test(table TRUE)
 add_agent_test(xml_parser TRUE)
 add_agent_test(xml_printer TRUE)
 

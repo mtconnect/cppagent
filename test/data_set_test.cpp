@@ -93,10 +93,10 @@ TEST_F(DataSetTest, InitialSet)
 
   auto map1 = ce->getDataSet();
 
-  ASSERT_EQ((string) "1", map1.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map1.find("b"_E)->m_value);
-  ASSERT_EQ((string) "3", map1.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map1.find("d"_E)->m_value);
+  ASSERT_EQ((string) "1", get<string>(map1.find("a"_E)->m_value));
+  ASSERT_EQ((string) "2", get<string>(map1.find("b"_E)->m_value));
+  ASSERT_EQ((string) "3", get<string>(map1.find("c"_E)->m_value));
+  ASSERT_EQ((string) "4", get<string>(map1.find("d"_E)->m_value));
 
   m_checkpoint->addObservation(ce);
   auto c2 = *m_checkpoint->getEventPtr("v1");
@@ -109,10 +109,10 @@ TEST_F(DataSetTest, InitialSet)
   ASSERT_EQ((string) "4", attrs.at("count"));
 
   auto map2 = c2->getDataSet();
-  ASSERT_EQ((string) "1", map2.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map2.find("b"_E)->m_value);
-  ASSERT_EQ((string) "3", map2.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map2.find("d"_E)->m_value);
+  ASSERT_EQ((string) "1", get<string>(map2.find("a"_E)->m_value));
+  ASSERT_EQ((string) "2", get<string>(map2.find("b"_E)->m_value));
+  ASSERT_EQ((string) "3", get<string>(map2.find("c"_E)->m_value));
+  ASSERT_EQ((string) "4", get<string>(map2.find("d"_E)->m_value));
 
   ce->unrefer();
 }
@@ -134,10 +134,10 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ((size_t)4, ce3->getDataSet().size());
 
   auto map1 = ce3->getDataSet();
-  ASSERT_EQ((string) "1", map1.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map1.find("b"_E)->m_value);
-  ASSERT_EQ((string) "5", map1.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map1.find("d"_E)->m_value);
+  ASSERT_EQ((string) "1", get<string>(map1.find("a"_E)->m_value));
+  ASSERT_EQ((string) "2", get<string>(map1.find("b"_E)->m_value));
+  ASSERT_EQ((string) "5", get<string>(map1.find("c"_E)->m_value));
+  ASSERT_EQ((string) "4", get<string>(map1.find("d"_E)->m_value));
 
   string value3("e=6");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -147,11 +147,11 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ((size_t)5, ce5->getDataSet().size());
 
   auto map2 = ce5->getDataSet();
-  ASSERT_EQ((string) "1", map2.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map2.find("b"_E)->m_value);
-  ASSERT_EQ((string) "5", map2.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map2.find("d"_E)->m_value);
-  ASSERT_EQ((string) "6", map2.find("e"_E)->m_value);
+  ASSERT_EQ((string) "1", get<string>(map2.find("a"_E)->m_value));
+  ASSERT_EQ((string) "2", get<string>(map2.find("b"_E)->m_value));
+  ASSERT_EQ((string) "5", get<string>(map2.find("c"_E)->m_value));
+  ASSERT_EQ((string) "4", get<string>(map2.find("d"_E)->m_value));
+  ASSERT_EQ((string) "6", get<string>(map2.find("e"_E)->m_value));
 }
 
 TEST_F(DataSetTest, UpdateMany)
@@ -171,11 +171,11 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ((size_t)5, ce3->getDataSet().size());
 
   auto map1 = ce3->getDataSet();
-  ASSERT_EQ((string) "1", map1.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map1.find("b"_E)->m_value);
-  ASSERT_EQ((string) "5", map1.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map1.find("d"_E)->m_value);
-  ASSERT_EQ((string) "6", map1.find("e"_E)->m_value);
+  ASSERT_EQ((string) "1", get<string>(map1.find("a"_E)->m_value));
+  ASSERT_EQ((string) "2", get<string>(map1.find("b"_E)->m_value));
+  ASSERT_EQ((string) "5", get<string>(map1.find("c"_E)->m_value));
+  ASSERT_EQ((string) "4", get<string>(map1.find("d"_E)->m_value));
+  ASSERT_EQ((string) "6", get<string>(map1.find("e"_E)->m_value));
 
   string value3("e=7 a=8 f=9");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -185,12 +185,12 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ((size_t)6, ce5->getDataSet().size());
 
   auto map2 = ce5->getDataSet();
-  ASSERT_EQ((string) "8", map2.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map2.find("b"_E)->m_value);
-  ASSERT_EQ((string) "5", map2.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map2.find("d"_E)->m_value);
-  ASSERT_EQ((string) "7", map2.find("e"_E)->m_value);
-  ASSERT_EQ((string) "9", map2.find("f"_E)->m_value);
+  ASSERT_EQ((string) "8", get<string>(map2.find("a"_E)->m_value));
+  ASSERT_EQ((string) "2", get<string>(map2.find("b"_E)->m_value));
+  ASSERT_EQ((string) "5", get<string>(map2.find("c"_E)->m_value));
+  ASSERT_EQ((string) "4", get<string>(map2.find("d"_E)->m_value));
+  ASSERT_EQ((string) "7", get<string>(map2.find("e"_E)->m_value));
+  ASSERT_EQ((string) "9", get<string>(map2.find("f"_E)->m_value));
 }
 
 TEST_F(DataSetTest, Reset)
@@ -210,8 +210,8 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ((size_t)2, ce3->getDataSet().size());
 
   auto map1 = ce3->getDataSet();
-  ASSERT_EQ((string) "5", map1.find("c"_E)->m_value);
-  ASSERT_EQ((string) "6", map1.find("e"_E)->m_value);
+  ASSERT_EQ((string) "5", get<string>(map1.find("c"_E)->m_value));
+  ASSERT_EQ((string) "6", get<string>(map1.find("e"_E)->m_value));
 
   string value3("x=pop y=hop");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -221,8 +221,8 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ((size_t)4, ce5->getDataSet().size());
 
   auto map2 = ce5->getDataSet();
-  ASSERT_EQ((string) "pop", map2.find("x"_E)->m_value);
-  ASSERT_EQ((string) "hop", map2.find("y"_E)->m_value);
+  ASSERT_EQ((string) "pop", get<string>(map2.find("x"_E)->m_value));
+  ASSERT_EQ((string) "hop", get<string>(map2.find("y"_E)->m_value));
 }
 
 TEST_F(DataSetTest, BadData)
@@ -238,8 +238,8 @@ TEST_F(DataSetTest, BadData)
   ASSERT_EQ((size_t)2, ce2->getDataSet().size());
 
   auto map1 = ce2->getDataSet();
-  ASSERT_EQ((string) "2", map1.find("a"_E)->m_value);
-  ASSERT_EQ((string) "xxx", map1.find("b3"_E)->m_value);
+  ASSERT_EQ((string) "2", get<string>(map1.find("a"_E)->m_value));
+  ASSERT_EQ((string) "xxx", get<string>(map1.find("b3"_E)->m_value));
 }
 
 #define ASSERT_DATA_SET_ENTRY(doc, var, key, expected) \
@@ -473,9 +473,9 @@ TEST_F(DataSetTest, DeleteKey)
   ASSERT_TRUE(ds.find("a"_E)->m_removed);
 
   auto map1 = ce3->getDataSet();
-  ASSERT_EQ((string) "2", map1.find("b"_E)->m_value);
-  ASSERT_EQ((string) "4", map1.find("d"_E)->m_value);
-  ASSERT_EQ((string) "6", map1.find("e"_E)->m_value);
+  ASSERT_EQ((string) "2", get<string>(map1.find("b"_E)->m_value));
+  ASSERT_EQ((string) "4", get<string>(map1.find("d"_E)->m_value));
+  ASSERT_EQ((string) "6", get<string>(map1.find("e"_E)->m_value));
   ASSERT_TRUE(map1.find("c"_E) == map1.end());
   ASSERT_TRUE(map1.find("a"_E) == map1.end());
 }

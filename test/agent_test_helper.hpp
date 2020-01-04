@@ -26,6 +26,8 @@
 #include <map>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 namespace mtconnect
 {
   class Agent;
@@ -51,8 +53,11 @@ class AgentTestHelper
 
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line, dlib::key_value_map &aQueries, xmlDocPtr *doc);
-  void putResponseHelper(const char *file, int line, std::string body,
+  void responseHelper(const char *file, int line, dlib::key_value_map &aQueries, nlohmann::json &doc);
+  void putResponseHelper(const char *file, int line, const std::string &body,
                          dlib::key_value_map &aQueries, xmlDocPtr *doc);
+  
+  void makeRequest(const char *file, int line, const char *request, const std::string &body, dlib::key_value_map &aQueries);
 };
 
 #define PARSE_XML_RESPONSE                                                                   \
@@ -76,3 +81,8 @@ class AgentTestHelper
   xmlDocPtr doc = nullptr;                                                       \
   m_agentTestHelper->putResponseHelper(__FILE__, __LINE__, body, queries, &doc); \
   ASSERT_TRUE(doc)
+
+#define PARSE_JSON_RESPONSE \
+  nlohmann::json doc; \
+  m_agentTestHelper->responseHelper(__FILE__, __LINE__, m_agentTestHelper->m_queries, doc)
+

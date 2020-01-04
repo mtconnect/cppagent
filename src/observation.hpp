@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <variant>
 
 namespace mtconnect
 {
@@ -43,13 +44,25 @@ namespace mtconnect
   class Observation;
   typedef RefCountedPtr<Observation> ObservationPtr;
   typedef dlib::array<ObservationPtr> ObservationPtrArray;
+  
+  template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+  template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+  struct DataSetEntry;
+  typedef std::set<DataSetEntry> DataSet;
+  typedef std::variant<DataSet, std::string> DataSetValue;
 
   struct DataSetEntry
   {
-    DataSetEntry(std::string key, std::string value, bool removed = false)
+    DataSetEntry(std::string key, std::string &value, bool removed = false)
         : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {
     }
+    DataSetEntry(std::string key, DataSet &value, bool removed = false)
+        : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+    {
+    }
+
     DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false)
     {
     }
@@ -60,7 +73,7 @@ namespace mtconnect
     }
 
     std::string m_key;
-    std::string m_value;
+    DataSetValue m_value;
     bool m_removed;
 
     bool operator==(const DataSetEntry &other) const
@@ -77,8 +90,6 @@ namespace mtconnect
       return m_key == other.m_key && m_value == other.m_value && m_removed == other.m_removed;
     }
   };
-
-  typedef std::set<DataSetEntry> DataSet;
 
   class Observation : public RefCounted
   {
@@ -263,7 +274,7 @@ namespace mtconnect
     // Convert the value to the agent unit standards
     void convertValue(const std::string &value);
 
-    void parseDataSet(const std::string &s);
+    void parseDataSet(DataSet &dataSet, const std::string &s, bool table);
   };
 
   inline Observation::ELevel Observation::getLevel()

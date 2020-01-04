@@ -48,7 +48,8 @@ namespace mtconnect
       VALUE,
       TIME_SERIES,
       DISCRETE,
-      DATA_SET
+      DATA_SET,
+      TABLE
     };
 
     enum EFilterType
@@ -217,9 +218,13 @@ namespace mtconnect
     {
       return m_representation == DISCRETE;
     }
+    bool isTable() const
+    {
+      return m_representation == TABLE;
+    }
     bool isDataSet() const
     {
-      return m_representation == DATA_SET;
+      return m_representation == DATA_SET || isTable();
     }
     bool isDiscrete() const
     {

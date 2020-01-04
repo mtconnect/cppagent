@@ -96,6 +96,12 @@ namespace mtconnect
         m_representation = DATA_SET;
         m_camelType += "DataSet";
       }
+      else if (repPos->second == "TABLE")
+      {
+        m_representation = TABLE;
+        m_camelType += "Table";
+      }
+
     }
 
     if (!m_prefix.empty())
@@ -219,6 +225,9 @@ namespace mtconnect
 
     if (m_representation == DATA_SET)
       attributes["representation"] = "DATA_SET";
+    
+    if (m_representation == TABLE)
+      attributes["representation"] = "TABLE";
 
     if (!m_statistic.empty())
       attributes["statistic"] = m_statistic;

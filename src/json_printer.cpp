@@ -406,7 +406,17 @@ namespace mtconnect
         }
         else
         {
-          value[e.m_key] = e.m_value;
+          visit(overloaded {
+            [&value, &e](const std::string &st) { value[e.m_key] = st; },
+            [&value, &e](const DataSet &arg) {
+              auto row = json::object();
+              for (auto &c : arg)
+              {
+                row[c.m_key] = get<string>(c.m_value);
+              }
+              value[e.m_key] = row;
+            }
+          }, e.m_value);
         }
       }
     }
