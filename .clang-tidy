@@ -1,6 +1,6 @@
-Checks:          '-*,modernize-*,-modernize-avoid-c-arrays,-modernize-use-trailing-return-type'
-WarningsAsErrors: ''
-HeaderFilterRegex: 'src/.*\.hpp$'
+Checks:          '-*,modernize-*,-modernize-avoid-c-arrays,-modernize-use-trailing-return-type,bugprone-*,-bugprone-copy-constructor-init,-bugprone-forward-declaration-namespace,-bugprone-unhandled-self-assignment,-bugprone-integer-division,-bugprone-branch-clone,-bugprone-suspicious-string-compare,-bugprone-exception-escape,-bugprone-narrowing-conversions'
+WarningsAsErrors: '*'
+HeaderFilterRegex: '/src/.*\.hpp$'
 AnalyzeTemporaryDtors: false
 FormatStyle:     File
 CheckOptions:
