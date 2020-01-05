@@ -29,7 +29,6 @@ namespace mtconnect
 {
   class Agent;
   class Device;
-  class log_level;
   class RollingFileLogger;
   class XmlPrinter;
 
