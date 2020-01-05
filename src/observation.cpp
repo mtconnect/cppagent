@@ -284,7 +284,7 @@ namespace mtconnect
     if (regex_match(value, float_regex))
       return DataSetValue(stod(value));
     else if (regex_match(value, int_regex))
-      return DataSetValue(stoll(value));
+      return DataSetValue((int64_t) stoll(value));
     else
       return DataSetValue(value);
   }
