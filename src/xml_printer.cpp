@@ -336,7 +336,7 @@ namespace mtconnect
     ~AutoElement()
     {
       if (!m_name.empty())
-        closeElement(m_writer);
+        xmlTextWriterEndElement(m_writer);
     }
 
     const string &key() const
