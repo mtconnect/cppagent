@@ -23,6 +23,7 @@
 #include "version.h"
 
 #include <dlib/sockets.h>
+#include <dlib/logger.h>
 
 #include <nlohmann/json.hpp>
 
@@ -35,6 +36,8 @@ using json = nlohmann::json;
 
 namespace mtconnect
 {
+  static dlib::logger g_logger("json.printer");
+  
   JsonPrinter::JsonPrinter(const string version, bool pretty)
       : Printer(pretty), m_schemaVersion(version)
   {
@@ -408,11 +411,20 @@ namespace mtconnect
         {
           visit(overloaded {
             [&value, &e](const std::string &st) { value[e.m_key] = st; },
+            [&value, &e](const int64_t &i) { value[e.m_key] = i; },
+            [&value, &e](const double &d) { value[e.m_key] = d; },
             [&value, &e](const DataSet &arg) {
               auto row = json::object();
               for (auto &c : arg)
               {
-                row[c.m_key] = get<string>(c.m_value);
+                visit(overloaded {
+                  [&row, &c](const std::string &st) { row[c.m_key] = st; },
+                  [&row, &c](const int64_t &i) { row[c.m_key] = i; },
+                  [&row, &c](const double &d) { row[c.m_key] = d; },
+                  [](auto &a) {
+                    g_logger << dlib::LERROR << "Invalid  variant type for table cell";
+                  }
+                }, c.m_value);
               }
               value[e.m_key] = row;
             }

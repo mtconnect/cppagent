@@ -87,7 +87,7 @@ TEST_F(TableTest, DataItem)
 
 TEST_F(TableTest, InitialSet)
 {
-  string value("G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9.0 U=10.0}");
+  string value("G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
   auto ce = new Observation(*m_dataItem1, 2, "time", value);
 
   ASSERT_EQ((size_t)3, ce->getDataSet().size());
@@ -102,24 +102,24 @@ TEST_F(TableTest, InitialSet)
   auto set1 = ce->getDataSet();
   auto g531 = get<DataSet>(set1.find("G53.1"_E)->m_value);
   ASSERT_EQ((size_t) 3, g531.size());
-  ASSERT_EQ("1.0", get<string>(g531.find("X"_E)->m_value));
-  ASSERT_EQ("2.0", get<string>(g531.find("Y"_E)->m_value));
-  ASSERT_EQ("3.0", get<string>(g531.find("Z"_E)->m_value));
+  ASSERT_EQ(1.0, get<double>(g531.find("X"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(g531.find("Y"_E)->m_value));
+  ASSERT_EQ(3.0, get<double>(g531.find("Z"_E)->m_value));
 
   auto set2 = ce->getDataSet();
   auto g532 = get<DataSet>(set1.find("G53.2"_E)->m_value);
   ASSERT_EQ((size_t) 3, g532.size());
-  ASSERT_EQ("4.0", get<string>(g532.find("X"_E)->m_value));
-  ASSERT_EQ("5.0", get<string>(g532.find("Y"_E)->m_value));
-  ASSERT_EQ("6.0", get<string>(g532.find("Z"_E)->m_value));
+  ASSERT_EQ(4.0, get<double>(g532.find("X"_E)->m_value));
+  ASSERT_EQ(5.0, get<double>(g532.find("Y"_E)->m_value));
+  ASSERT_EQ(6.0, get<double>(g532.find("Z"_E)->m_value));
 
   auto set3 = ce->getDataSet();
   auto g533 = get<DataSet>(set1.find("G53.3"_E)->m_value);
   ASSERT_EQ((size_t) 4, g533.size());
-  ASSERT_EQ("7.0", get<string>(g533.find("X"_E)->m_value));
-  ASSERT_EQ("8.0", get<string>(g533.find("Y"_E)->m_value));
-  ASSERT_EQ("9.0", get<string>(g533.find("Z"_E)->m_value));
-  ASSERT_EQ("10.0", get<string>(g533.find("U"_E)->m_value));
+  ASSERT_EQ(7.0, get<double>(g533.find("X"_E)->m_value));
+  ASSERT_EQ(8.0, get<double>(g533.find("Y"_E)->m_value));
+  ASSERT_EQ(9, get<int64_t>(g533.find("Z"_E)->m_value));
+  ASSERT_EQ(10.0, get<double>(g533.find("U"_E)->m_value));
 }
 
 #define ASSERT_TABLE_ENTRY(doc, var, key, cell, expected) \
@@ -138,7 +138,7 @@ TEST_F(TableTest, Current)
                           "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9.0 U=10.0}");
+  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
 
   {
     PARSE_XML_RESPONSE;
@@ -146,18 +146,18 @@ TEST_F(TableTest, Current)
                           "//m:DeviceStream//m:WorkpieceOffsetTable"
                           "[@dataItemId='wp1']@count",
                           "3");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "X", "1.0");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "Y", "2.0");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "Z", "3.0");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "X", "1");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "Y", "2");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "Z", "3");
     
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "X", "4.0");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "Y", "5.0");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "Z", "6.0");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "X", "4");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "Y", "5");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "Z", "6");
     
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "X", "7.0");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "Y", "8.0");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "Z", "9.0");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "U", "10.0");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "X", "7");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "Y", "8");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "Z", "9");
+    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "U", "10");
   }
 }
 
@@ -169,7 +169,7 @@ TEST_F(TableTest, JsonCurrent)
   m_agentTestHelper->m_path = "/current";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
-  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9.0 U=10.0}");
+  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
 
   {
     PARSE_JSON_RESPONSE;
@@ -203,16 +203,16 @@ TEST_F(TableTest, JsonCurrent)
     
     ASSERT_EQ(string("3"), offsets.at("/WorkpieceOffsetTable/count"_json_pointer).get<string>());
 
-    ASSERT_EQ(string("1.0"), offsets.at("/WorkpieceOffsetTable/value/G53.1/X"_json_pointer).get<string>());
-    ASSERT_EQ(string("2.0"), offsets.at("/WorkpieceOffsetTable/value/G53.1/Y"_json_pointer).get<string>());
-    ASSERT_EQ(string("3.0"), offsets.at("/WorkpieceOffsetTable/value/G53.1/Z"_json_pointer).get<string>());
-    ASSERT_EQ(string("4.0"), offsets.at("/WorkpieceOffsetTable/value/G53.2/X"_json_pointer).get<string>());
-    ASSERT_EQ(string("5.0"), offsets.at("/WorkpieceOffsetTable/value/G53.2/Y"_json_pointer).get<string>());
-    ASSERT_EQ(string("6.0"), offsets.at("/WorkpieceOffsetTable/value/G53.2/Z"_json_pointer).get<string>());
-    ASSERT_EQ(string("7.0"), offsets.at("/WorkpieceOffsetTable/value/G53.3/X"_json_pointer).get<string>());
-    ASSERT_EQ(string("8.0"), offsets.at("/WorkpieceOffsetTable/value/G53.3/Y"_json_pointer).get<string>());
-    ASSERT_EQ(string("9.0"), offsets.at("/WorkpieceOffsetTable/value/G53.3/Z"_json_pointer).get<string>());
-    ASSERT_EQ(string("10.0"), offsets.at("/WorkpieceOffsetTable/value/G53.3/U"_json_pointer).get<string>());
+    ASSERT_EQ(1.0, offsets.at("/WorkpieceOffsetTable/value/G53.1/X"_json_pointer).get<double>());
+    ASSERT_EQ(2.0, offsets.at("/WorkpieceOffsetTable/value/G53.1/Y"_json_pointer).get<double>());
+    ASSERT_EQ(3.0, offsets.at("/WorkpieceOffsetTable/value/G53.1/Z"_json_pointer).get<double>());
+    ASSERT_EQ(4.0, offsets.at("/WorkpieceOffsetTable/value/G53.2/X"_json_pointer).get<double>());
+    ASSERT_EQ(5.0, offsets.at("/WorkpieceOffsetTable/value/G53.2/Y"_json_pointer).get<double>());
+    ASSERT_EQ(6.0, offsets.at("/WorkpieceOffsetTable/value/G53.2/Z"_json_pointer).get<double>());
+    ASSERT_EQ(7.0, offsets.at("/WorkpieceOffsetTable/value/G53.3/X"_json_pointer).get<double>());
+    ASSERT_EQ(8.0, offsets.at("/WorkpieceOffsetTable/value/G53.3/Y"_json_pointer).get<double>());
+    ASSERT_EQ(9, offsets.at("/WorkpieceOffsetTable/value/G53.3/Z"_json_pointer).get<int64_t>());
+    ASSERT_EQ(10.0, offsets.at("/WorkpieceOffsetTable/value/G53.3/U"_json_pointer).get<double>());
 
   }
 

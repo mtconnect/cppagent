@@ -271,11 +271,23 @@ namespace mtconnect
 #define SQ_RE "'([^\\\\']+(\\\\')?)+'"
 #define CB_RE "\\{([^\\}\\\\]+(\\\\\\})?)+\\}"
 #define VAL_RE "[^ \t]+"
-
+  
   static const char *reg = WS_RE KEY_RE "(=(" DQ_RE "|" SQ_RE "|" CB_RE "|" VAL_RE ")?)?";
+  static const char *int_reg = "[+-]?[0-9]+";
+  static const char *float_reg = "[+-]?[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?";
   static regex tokenizer(reg);
+  static regex int_regex(int_reg);
+  static regex float_regex(float_reg);
   
-  
+  static DataSetValue dataSetValue(const string &value)
+  {
+    if (regex_match(value, float_regex))
+      return DataSetValue(stod(value));
+    else if (regex_match(value, int_regex))
+      return DataSetValue(stoll(value));
+    else
+      return DataSetValue(value);
+  }
 
   // Split the data set entries by space delimiters and account for the
   // use of single and double quotes as well as curly braces
@@ -337,7 +349,7 @@ namespace mtconnect
           parseDataSet(set, value, false);
           dataSet.emplace(key, set, removed);
         } else {
-          dataSet.emplace(key, value, removed);
+          dataSet.emplace(key, dataSetValue(value), removed);
         }
         
         // Parse the rest of the string...

@@ -814,13 +814,32 @@ namespace mtconnect
           [this, &writer, &attrs](const string &st) {
             addSimpleElement(writer, "Entry", st, attrs);
           },
+          [this, &writer, &attrs](const int64_t &i) {
+            addSimpleElement(writer, "Entry", to_string(i), attrs);
+          },
+          [this, &writer, &attrs](const double &d) {
+            addSimpleElement(writer, "Entry", to_string(d), attrs);
+          },
           [this, &writer, &attrs](const DataSet &row) {
             // Table
             AutoElement ele(writer, "Entry");
             addAttributes(writer, attrs);
             for (auto &c : row) {
               map<string, string> attrs = {{"key", c.m_key}};
-              addSimpleElement(writer, "Cell", get<string>(c.m_value), attrs);
+              visit(overloaded {
+                [this, &writer, &attrs](const string &s) {
+                  addSimpleElement(writer, "Cell", s, attrs);
+                },
+                [this, &writer, &attrs](const int64_t &i) {
+                  addSimpleElement(writer, "Cell", to_string(i), attrs);
+                },
+                [this, &writer, &attrs](const double &d) {
+                  addSimpleElement(writer, "Cell", floatToString(d), attrs);
+                },
+                [](auto &a) {
+                  g_logger << dlib::LERROR << "Invalid type for DataSetVariant cell";
+                }
+              }, c.m_value);
             }
           }
         }, e.m_value);

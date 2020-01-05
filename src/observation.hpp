@@ -50,7 +50,7 @@ namespace mtconnect
 
   struct DataSetEntry;
   typedef std::set<DataSetEntry> DataSet;
-  typedef std::variant<DataSet, std::string> DataSetValue;
+  typedef std::variant<DataSet, std::string, int64_t, double> DataSetValue;
 
   struct DataSetEntry
   {
@@ -62,11 +62,13 @@ namespace mtconnect
         : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {
     }
-
+    DataSetEntry(std::string key, DataSetValue value, bool removed = false)
+        : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+    {
+    }
     DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false)
     {
     }
-
     DataSetEntry(const DataSetEntry &other)
         : m_key(other.m_key), m_value(other.m_value), m_removed(other.m_removed)
     {
