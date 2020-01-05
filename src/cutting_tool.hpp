@@ -46,10 +46,7 @@ namespace mtconnect
 
     CuttingToolValue() = default;
 
-    CuttingToolValue(const CuttingToolValue &another)
-        : m_properties(another.m_properties), m_key(another.m_key), m_value(another.m_value)
-    {
-    }
+    CuttingToolValue(const CuttingToolValue &another) = default;
 
     ~CuttingToolValue() override;
 

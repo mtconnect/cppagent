@@ -49,7 +49,7 @@ namespace mtconnect
     AssetKeys m_identity;
 
    public:
-    Asset(const Asset &another)
+    Asset(const Asset &another) : RefCounted(another)
     {
       m_assetId = another.m_assetId;
       m_content = another.m_content;

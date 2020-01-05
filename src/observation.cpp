@@ -89,7 +89,8 @@ namespace mtconnect
   }
 
   Observation::Observation(const Observation &observation)
-      : m_dataItem(observation.m_dataItem),
+      : RefCounted(observation),
+        m_dataItem(observation.m_dataItem),
         m_sequence(observation.m_sequence),
         m_time(observation.m_time),
         m_duration(observation.m_duration),

@@ -379,7 +379,7 @@ namespace mtconnect
       {
       }
 
-      CachedFile(const CachedFile &file) : m_buffer(nullptr), m_size(file.m_size)
+      CachedFile(const CachedFile &file) : RefCounted(file), m_buffer(nullptr), m_size(file.m_size)
       {
         m_buffer = std::make_unique<char[]>(file.m_size);
         memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);

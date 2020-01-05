@@ -1,4 +1,4 @@
-Checks:          '-*,modernize-*,-modernize-avoid-c-arrays,-modernize-use-trailing-return-type,bugprone-*,-bugprone-copy-constructor-init,-bugprone-unhandled-self-assignment,-bugprone-branch-clone,-bugprone-narrowing-conversions'
+Checks:          '-*,modernize-*,-modernize-avoid-c-arrays,-modernize-use-trailing-return-type,bugprone-*,-bugprone-unhandled-self-assignment,-bugprone-branch-clone,-bugprone-narrowing-conversions'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '/src/.*\.hpp$'
 AnalyzeTemporaryDtors: false
