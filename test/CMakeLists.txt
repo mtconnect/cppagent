@@ -6,11 +6,12 @@ FetchContent_Declare(
 FetchContent_GetProperties(googletest)
 if(NOT googletest_POPULATED)
   set(BUILD_GMOCK "ON")
-  set(INSTALL_GTEST "OFF")
+  set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_Populate(googletest)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
 endif()
+
 
 # Define test cases
 macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
