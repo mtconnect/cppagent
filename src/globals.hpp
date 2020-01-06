@@ -89,6 +89,9 @@ namespace mtconnect
   };
 
   //####### METHODS #######
+  float stringToFloat(const std::string &text);
+  int stringToInt(const std::string &text, int outOfRangeDefault = 0);
+
   std::string int64ToString(uint64_t i);
 
   std::string intToString(unsigned int i);
@@ -145,7 +148,7 @@ namespace mtconnect
 #include <libkern/OSAtomic.h>
   typedef volatile long AtomicInt;
 #else
-  typedef int AtomicInt;
+  using AtomicInt = int;
 #endif
 #endif
 }  // namespace mtconnect

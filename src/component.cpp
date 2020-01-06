@@ -51,14 +51,14 @@ namespace mtconnect
 
     const auto sampleIntervalPos = attributes.find("sampleInterval");
     if (sampleIntervalPos != attributes.end())
-      m_sampleInterval = atof(sampleIntervalPos->second.c_str());
+      m_sampleInterval = stringToFloat(sampleIntervalPos->second.c_str());
     else
     {
       const auto sampleRatePos = attributes.find("sampleRate");
       if (sampleRatePos == attributes.end())
         m_sampleInterval = 0.0f;
       else
-        m_sampleInterval = atof(sampleRatePos->second.c_str());
+        m_sampleInterval = stringToFloat(sampleRatePos->second.c_str());
     }
 
     m_parent = nullptr;

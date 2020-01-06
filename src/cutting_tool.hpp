@@ -28,13 +28,13 @@ namespace mtconnect
 {
   class Printer;
   class CuttingTool;
-  typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
+  using CuttingToolPtr = RefCountedPtr<CuttingTool>;
 
   class CuttingToolValue;
-  typedef RefCountedPtr<CuttingToolValue> CuttingToolValuePtr;
+  using CuttingToolValuePtr = RefCountedPtr<CuttingToolValue>;
 
   class CuttingItem;
-  typedef RefCountedPtr<CuttingItem> CuttingItemPtr;
+  using CuttingItemPtr = RefCountedPtr<CuttingItem>;
 
   class CuttingToolValue : public RefCounted
   {
@@ -44,16 +44,11 @@ namespace mtconnect
     {
     }
 
-    CuttingToolValue()
-    {
-    }
+    CuttingToolValue() = default;
 
-    CuttingToolValue(const CuttingToolValue &another)
-        : m_properties(another.m_properties), m_key(another.m_key), m_value(another.m_value)
-    {
-    }
+    CuttingToolValue(const CuttingToolValue &another) = default;
 
-    virtual ~CuttingToolValue();
+    ~CuttingToolValue() override;
 
    public:
     std::map<std::string, std::string> m_properties;
@@ -64,7 +59,7 @@ namespace mtconnect
   class CuttingItem : public RefCounted
   {
    public:
-    virtual ~CuttingItem();
+    ~CuttingItem() override;
 
    public:
     std::map<std::string, std::string> m_identity;
@@ -81,7 +76,7 @@ namespace mtconnect
         : Asset(assetId, type, content, removed)
     {
     }
-    ~CuttingTool();
+    ~CuttingTool() override;
 
     void addIdentity(const std::string &key, const std::string &value) override;
     void addValue(const CuttingToolValuePtr value);

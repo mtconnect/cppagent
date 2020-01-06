@@ -29,6 +29,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
     "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:${AGENT_TEST_NAME}_test>/../Resources\"")
+  target_clangtidy_setup(agent_lib)
   add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
 endmacro()
 

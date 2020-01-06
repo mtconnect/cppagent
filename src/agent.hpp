@@ -44,17 +44,15 @@ namespace mtconnect
   class DataItem;
   class Device;
 
-  typedef std::vector<std::pair<std::string, std::string>> AssetChangeList;
+  using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
   struct OutgoingThings : public dlib::outgoing_things
   {
-    OutgoingThings() : m_out(nullptr), m_printer(nullptr)
-    {
-    }
-    std::ostream *m_out;
-    const Printer *m_printer;
+    OutgoingThings() = default;
+    std::ostream *m_out = nullptr;
+    const Printer *m_printer = nullptr;
   };
-  typedef struct dlib::incoming_things IncomingThings;
+  using IncomingThings = struct dlib::incoming_things;
 
   class Agent : public dlib::server_http
   {
@@ -73,12 +71,7 @@ namespace mtconnect
         m_message = anotherError.m_message;
       }
 
-      ParameterError &operator=(const ParameterError &anotherError)
-      {
-        m_code = anotherError.m_code;
-        m_message = anotherError.m_message;
-        return *this;
-      }
+      ParameterError &operator=(const ParameterError &anotherError) = default;
 
       std::string m_code;
       std::string m_message;
@@ -118,7 +111,7 @@ namespace mtconnect
           bool pretty = false);
 
     // Virtual destructor
-    virtual ~Agent();
+    ~Agent() override;
 
     // Overridden method that is called per web request – not used
     // using httpRequest which is called from our own on_connect method.
@@ -257,9 +250,9 @@ namespace mtconnect
     }
 
    protected:
-    virtual void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
-                            const std::string &local_ip, unsigned short foreign_port,
-                            unsigned short local_port, dlib::uint64) override;
+    void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
+                    const std::string &local_ip, unsigned short foreign_port,
+                    unsigned short local_port, dlib::uint64) override;
 
     // HTTP methods to handle the 3 basic calls
     std::string handleCall(const Printer *printer, std::ostream &out, const std::string &path,
@@ -367,7 +360,7 @@ namespace mtconnect
     std::vector<Checkpoint> m_checkpoints;
 
     int m_checkpointFreq;
-    int m_checkpointCount;
+    long long m_checkpointCount;
 
     // Data containers
     std::vector<Adapter *> m_adapters;
@@ -380,13 +373,13 @@ namespace mtconnect
     struct CachedFile : public RefCounted
     {
       std::unique_ptr<char[]> m_buffer;
-      size_t m_size;
+      size_t m_size = 0;
 
-      CachedFile() : m_buffer(nullptr), m_size(0)
+      CachedFile() : m_buffer(nullptr)
       {
       }
 
-      CachedFile(const CachedFile &file) : m_buffer(nullptr), m_size(file.m_size)
+      CachedFile(const CachedFile &file) : RefCounted(file), m_buffer(nullptr), m_size(file.m_size)
       {
         m_buffer = std::make_unique<char[]>(file.m_size);
         memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
@@ -403,7 +396,7 @@ namespace mtconnect
         m_buffer = std::make_unique<char[]>(m_size);
       }
 
-      ~CachedFile()
+      ~CachedFile() override
       {
         m_buffer.reset();
       }

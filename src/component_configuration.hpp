@@ -28,12 +28,8 @@ namespace mtconnect
   class ComponentConfiguration
   {
    public:
-    ComponentConfiguration()
-    {
-    }
-    virtual ~ComponentConfiguration()
-    {
-    }
+    ComponentConfiguration() = default;
+    virtual ~ComponentConfiguration() = default;
   };
 
   class ExtendedComponentConfiguration : public ComponentConfiguration
@@ -42,9 +38,7 @@ namespace mtconnect
     ExtendedComponentConfiguration(std::string content) : m_content(std::move(content))
     {
     }
-    virtual ~ExtendedComponentConfiguration()
-    {
-    }
+    ~ExtendedComponentConfiguration() override = default;
 
     const std::string &getContent() const
     {

@@ -443,7 +443,7 @@ TEST_F(DataSetTest, CurrentAt)
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 5));
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 5).c_str());
   }
 
@@ -451,7 +451,7 @@ TEST_F(DataSetTest, CurrentAt)
     PARSE_XML_RESPONSE;
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", nullptr);
   }
 }
 

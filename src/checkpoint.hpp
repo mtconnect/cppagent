@@ -59,6 +59,6 @@ namespace mtconnect
    protected:
     std::map<std::string, ObservationPtr *> m_events;
     std::set<std::string> m_filter;
-    bool m_hasFilter;
+    bool m_hasFilter = false;
   };
 }  // namespace mtconnect

@@ -123,12 +123,12 @@ TEST_F(ComponentTest, Relationships)
 {
   // Test get/set parents
   map<string, string> dummy;
-  mtconnect::Component *linear = new mtconnect::Component("Linear", dummy);
+  auto *linear = new mtconnect::Component("Linear", dummy);
 
   m_compA->setParent(*linear);
   ASSERT_TRUE(linear == m_compA->getParent());
 
-  Device *device = new Device(dummy);
+  auto *device = new Device(dummy);
   auto devPointer = dynamic_cast<mtconnect::Component *>(device);
 
   ASSERT_TRUE(devPointer);
@@ -143,8 +143,8 @@ TEST_F(ComponentTest, Relationships)
   // Test add/get children
   ASSERT_TRUE(m_compA->getChildren().empty());
 
-  mtconnect::Component *axes = new mtconnect::Component("Axes", dummy),
-                       *thermostat = new mtconnect::Component("Thermostat", dummy);
+  auto *axes = new mtconnect::Component("Axes", dummy),
+       *thermostat = new mtconnect::Component("Thermostat", dummy);
   m_compA->addChild(*axes);
   m_compA->addChild(*thermostat);
 
@@ -164,7 +164,7 @@ TEST_F(ComponentTest, DataItems)
 
   map<string, string> dummy;
 
-  DataItem *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
+  auto *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
   m_compA->addDataItem(*data1);
   m_compA->addDataItem(*data2);
 

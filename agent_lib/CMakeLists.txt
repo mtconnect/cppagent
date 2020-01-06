@@ -76,3 +76,4 @@ target_compile_definitions(
 )
 target_compile_features(agent_lib PUBLIC cxx_std_14)
 target_clangformat_setup(agent_lib)
+target_clangtidy_setup(agent_lib)

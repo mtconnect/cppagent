@@ -114,14 +114,8 @@ namespace mtconnect
       return defaultValue;
   }
 
-  AgentConfiguration::AgentConfiguration()
-      : m_agent(nullptr),
-        m_loggerFile(nullptr),
-        m_monitorFiles(false),
-        m_minimumConfigReloadAge(15),
-        m_restart(false),
-        m_exePath(""),
-        m_pretty(false)
+  AgentConfiguration::AgentConfiguration() : m_exePath("")
+
   {
     bool success = false;
     char pathSep = '/';
@@ -311,7 +305,7 @@ namespace mtconnect
       // Check if the files have changed.
       if (check && (cfg_at_start != cfg || devices_at_start != devices))
       {
-        time_t now = time(NULL);
+        time_t now = time(nullptr);
         g_logger
             << LWARN
             << "Dected change in configuarion files. Will reload when youngest file is at least "
@@ -367,7 +361,7 @@ namespace mtconnect
       {
         // Will destruct and wait to re-initialize.
         g_logger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
-        mon.reset(0);
+        mon.reset(nullptr);
         g_logger << LDEBUG << "Monitor has exited";
       }
     } while (m_restart);

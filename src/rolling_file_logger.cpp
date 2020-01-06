@@ -62,9 +62,11 @@ namespace mtconnect
     close(m_fd);
   }
 
-  int RollingFileLogger::getFileAge()
+  std::time_t RollingFileLogger::getFileAge()
   {
-    struct stat buffer{};
+    struct stat buffer
+    {
+    };
 
     int res = ::stat(m_file.full_name().c_str(), &buffer);
 
@@ -86,7 +88,7 @@ namespace mtconnect
 
     if (m_schedule != NEVER)
     {
-      int age = getFileAge();
+      const auto age = getFileAge();
 
       if ((m_schedule == DAILY && age > DAY) || (m_schedule == WEEKLY && age > 7 * DAY))
         rollover(0);
@@ -110,7 +112,7 @@ namespace mtconnect
     // File was probable rolled over... threading race.
     if (m_schedule != NEVER)
     {
-      int age = getFileAge();
+      const auto age = getFileAge();
 
       if ((m_schedule == DAILY && age < DAY) || (m_schedule == WEEKLY && age < 7 * DAY))
         return;

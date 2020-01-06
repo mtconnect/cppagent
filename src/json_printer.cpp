@@ -494,9 +494,7 @@ namespace mtconnect
     CategoryRef(const char *cat) : m_category(cat)
     {
     }
-    CategoryRef(const CategoryRef &other) : m_category(other.m_category), m_events(other.m_events)
-    {
-    }
+    CategoryRef(const CategoryRef &other) = default;
 
     bool addObservation(const ObservationPtr &observation)
     {
@@ -853,7 +851,7 @@ namespace mtconnect
 
     if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
     {
-      CuttingTool *tool = dynamic_cast<CuttingTool *>(asset.getObject());
+      auto *tool = dynamic_cast<CuttingTool *>(asset.getObject());
       addCuttingToolIdentity(obj, tool->getIdentity());
       obj["Description"] = tool->getDescription();
 

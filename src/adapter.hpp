@@ -46,7 +46,7 @@ namespace mtconnect
             std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
 
     // Virtual destructor
-    virtual ~Adapter();
+    ~Adapter() override;
 
     // Set pointer to the agent
     void setAgent(Agent &agent);
@@ -159,7 +159,8 @@ namespace mtconnect
       if (!dataItem->allowDups())
       {
         if (dataItem->hasMinimumDelta() || dataItem->hasMinimumPeriod())
-          return dataItem->isFiltered(dataItem->convertValue(atof(value.c_str())), timeOffset);
+          return dataItem->isFiltered(dataItem->convertValue(stringToFloat(value.c_str())),
+                                      timeOffset);
         else
           return m_dupCheck && dataItem->isDuplicate(value);
       }

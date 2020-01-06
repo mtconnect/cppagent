@@ -34,23 +34,25 @@ namespace mtconnect
   struct AttributeItem : public std::pair<const char *, std::string>
   {
     AttributeItem(const char *f, const std::string &s, bool force = false)
-    : std::pair<const char *, std::string>(f, s), m_force(force) {}
-    
+        : std::pair<const char *, std::string>(f, s), m_force(force)
+    {
+    }
+
     bool m_force;
   };
 
-  typedef std::vector<AttributeItem> AttributeList;
+  using AttributeList = std::vector<AttributeItem>;
 
   class Observation;
-  typedef RefCountedPtr<Observation> ObservationPtr;
-  typedef dlib::array<ObservationPtr> ObservationPtrArray;
-  
+  using ObservationPtr = RefCountedPtr<Observation>;
+  using ObservationPtrArray = dlib::array<ObservationPtr>;
+
   template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
   template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
   struct DataSetEntry;
-  typedef std::set<DataSetEntry> DataSet;
-  typedef std::variant<DataSet, std::string, int64_t, double> DataSetValue;
+  using DataSet = std::set<DataSetEntry>;
+  using DataSetValue = std::variant<DataSet, std::string, int64_t, double> ;
 
   struct DataSetEntry
   {
@@ -70,9 +72,8 @@ namespace mtconnect
     {
     }
     DataSetEntry(const DataSetEntry &other)
-        : m_key(other.m_key), m_value(other.m_value), m_removed(other.m_removed)
-    {
-    }
+
+        = default;
 
     std::string m_key;
     DataSetValue m_value;
@@ -228,7 +229,7 @@ namespace mtconnect
 
    protected:
     // Virtual destructor
-    virtual ~Observation();
+    ~Observation() override;
 
    protected:
     // Holds the data item from the device
@@ -292,7 +293,7 @@ namespace mtconnect
     m_prev = event;
   }
 
-  typedef bool (*ObservationComparer)(ObservationPtr &aE1, ObservationPtr &aE2);
+  using ObservationComparer = bool (*)(ObservationPtr &, ObservationPtr &);
   inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2)
   {
     return aE1 < aE2;

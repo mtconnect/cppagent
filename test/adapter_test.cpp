@@ -30,28 +30,28 @@ TEST(AdapterTest, EscapedLine)
 {
   std::map<std::string, std::vector<std::string>> data;
   // correctly escaped
-  data["\"a\\|b\""] = {"a|b"};
-  data["\"a\\|b\"|z"] = {"a|b", "z"};
-  data["y|\"a\\|b\""] = {"y", "a|b"};
-  data["y|\"a\\|b\"|z"] = {"y", "a|b", "z"};
+  data[R"("a\|b")"] = {"a|b"};
+  data[R"("a\|b"|z)"] = {"a|b", "z"};
+  data[R"(y|"a\|b")"] = {"y", "a|b"};
+  data[R"(y|"a\|b"|z)"] = {"y", "a|b", "z"};
 
   // correctly escaped with multiple pipes
-  data["\"a\\|b\\|c\""] = {"a|b|c"};
-  data["\"a\\|b\\|c\"|z"] = {"a|b|c", "z"};
-  data["y|\"a\\|b\\|c\""] = {"y", "a|b|c"};
-  data["y|\"a\\|b\\|c\"|z"] = {"y", "a|b|c", "z"};
+  data[R"("a\|b\|c")"] = {"a|b|c"};
+  data[R"("a\|b\|c"|z)"] = {"a|b|c", "z"};
+  data[R"(y|"a\|b\|c")"] = {"y", "a|b|c"};
+  data[R"(y|"a\|b\|c"|z)"] = {"y", "a|b|c", "z"};
 
   // correctly escaped with pipe at front
-  data["\"\\|b\\|c\""] = {"|b|c"};
-  data["\"\\|b\\|c\"|z"] = {"|b|c", "z"};
-  data["y|\"\\|b\\|c\""] = {"y", "|b|c"};
-  data["y|\"\\|b\\|c\"|z"] = {"y", "|b|c", "z"};
+  data[R"("\|b\|c")"] = {"|b|c"};
+  data[R"("\|b\|c"|z)"] = {"|b|c", "z"};
+  data[R"(y|"\|b\|c")"] = {"y", "|b|c"};
+  data[R"(y|"\|b\|c"|z)"] = {"y", "|b|c", "z"};
 
   // correctly escaped with pipes at end
-  data["\"a\\|b\\|\""] = {"a|b|"};
-  data["\"a\\|b\\|\"|z"] = {"a|b|", "z"};
-  data["y|\"a\\|b\\|\""] = {"y", "a|b|"};
-  data["y|\"a\\|b\\|\"|z"] = {"y", "a|b|", "z"};
+  data[R"("a\|b\|")"] = {"a|b|"};
+  data[R"("a\|b\|"|z)"] = {"a|b|", "z"};
+  data[R"(y|"a\|b\|")"] = {"y", "a|b|"};
+  data[R"(y|"a\|b\|"|z)"] = {"y", "a|b|", "z"};
 
   // missing first quote
   data["a\\|b\""] = {"a\\", "b\""};
@@ -60,10 +60,10 @@ TEST(AdapterTest, EscapedLine)
   data["y|a\\|b\"|z"] = {"y", "a\\", "b\"", "z"};
 
   // missing first quote and multiple pipes
-  data["a\\|b\\|c\""] = {"a\\", "b\\", "c\""};
-  data["a\\|b\\|c\"|z"] = {"a\\", "b\\", "c\"", "z"};
-  data["y|a\\|b\\|c\""] = {"y", "a\\", "b\\", "c\""};
-  data["y|a\\|b\\|c\"|z"] = {"y", "a\\", "b\\", "c\"", "z"};
+  data[R"(a\|b\|c")"] = {"a\\", "b\\", "c\""};
+  data[R"(a\|b\|c"|z)"] = {"a\\", "b\\", "c\"", "z"};
+  data[R"(y|a\|b\|c")"] = {"y", "a\\", "b\\", "c\""};
+  data[R"(y|a\|b\|c"|z)"] = {"y", "a\\", "b\\", "c\"", "z"};
 
   // missing last quote
   data["\"a\\|b"] = {"\"a\\", "b"};
@@ -75,7 +75,7 @@ TEST(AdapterTest, EscapedLine)
   data["\"a\\|"] = {"\"a\\", ""};
   data["y|\"a\\|"] = {"y", "\"a\\", ""};
   data["y|\"a\\|z"] = {"y", "\"a\\", "z"};
-  data["y|\"a\\|\"z"] = {"y", "\"a\\", "\"z"};
+  data[R"(y|"a\|"z)"] = {"y", "\"a\\", "\"z"};
 
   for (const auto &test : data)
   {
