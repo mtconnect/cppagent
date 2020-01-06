@@ -33,8 +33,10 @@ namespace mtconnect
   struct AttributeItem : public std::pair<const char *, std::string>
   {
     AttributeItem(const char *f, const std::string &s, bool force = false)
-    : std::pair<const char *, std::string>(f, s), m_force(force) {}
-    
+        : std::pair<const char *, std::string>(f, s), m_force(force)
+    {
+    }
+
     bool m_force;
   };
 

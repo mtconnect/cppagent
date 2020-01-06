@@ -94,7 +94,7 @@ namespace mtconnect
       m_heartbeats = false;
       g_logger << LDEBUG << "(Port:" << m_localPort << ")"
                << "Sending initial PING";
-      int status = m_connection->write(ping, strlen(ping));
+      auto status = m_connection->write(ping, strlen(ping));
       if (status < 0)
       {
         g_logger << LWARN << "(Port:" << m_localPort << ")"
@@ -314,7 +314,7 @@ namespace mtconnect
     if (m_connected)
     {
       string completeCommand = "* " + command + "\n";
-      int status = m_connection->write(completeCommand.c_str(), completeCommand.length());
+      long status = m_connection->write(completeCommand.c_str(), completeCommand.length());
       if (status <= 0)
       {
         g_logger << LWARN << "(Port:" << m_localPort << ")"

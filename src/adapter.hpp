@@ -159,7 +159,8 @@ namespace mtconnect
       if (!dataItem->allowDups())
       {
         if (dataItem->hasMinimumDelta() || dataItem->hasMinimumPeriod())
-          return dataItem->isFiltered(dataItem->convertValue(atof(value.c_str())), timeOffset);
+          return dataItem->isFiltered(dataItem->convertValue(stringToFloat(value.c_str())),
+                                      timeOffset);
         else
           return m_dupCheck && dataItem->isDuplicate(value);
       }

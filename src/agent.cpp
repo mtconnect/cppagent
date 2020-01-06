@@ -568,7 +568,7 @@ namespace mtconnect
       m_first.addObservation(event);
 
     // Checkpoint management
-    int index = m_slidingBuffer->get_element_id(seqNum);
+    const auto index = m_slidingBuffer->get_element_id(seqNum);
     if (m_checkpointCount > 0 && !(index % m_checkpointFreq))
     {
       // Copy the checkpoint from the current into the slot
@@ -924,7 +924,7 @@ namespace mtconnect
         string result;
 
         auto count =
-            checkAndGetParam(queries, "count", DEFAULT_COUNT, 1, true, m_slidingBufferSize);
+            checkAndGetParam64(queries, "count", DEFAULT_COUNT, 1, true, m_slidingBufferSize);
         auto freq =
             checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
         // Check for 1.2 conversion to interval
@@ -1589,7 +1589,7 @@ namespace mtconnect
     if (!isNonNegativeInteger(queries[param]))
       throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be a positive integer.");
 
-    long int value = strtol(queries[param].c_str(), nullptr, 10);
+    int value = stringToInt(queries[param].c_str(), maxValue + 1);
 
     if (minValue != NO_VALUE32 && value < minValue)
     {

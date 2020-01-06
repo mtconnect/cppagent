@@ -360,7 +360,7 @@ namespace mtconnect
     std::vector<Checkpoint> m_checkpoints;
 
     int m_checkpointFreq;
-    int m_checkpointCount;
+    long long m_checkpointCount;
 
     // Data containers
     std::vector<Adapter *> m_adapters;

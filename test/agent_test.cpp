@@ -176,6 +176,15 @@ TEST_F(AgentTest, BadCount)
   }
 
   {
+    query["count"] = "500";
+    PARSE_XML_RESPONSE_QUERY(query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    string value("'count' must be less than or equal to ");
+    value += intToString(m_agent->getBufferSize()) + ".";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
+  }
+
+  {
     query["count"] = "999999999999999999";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
@@ -202,6 +211,14 @@ TEST_F(AgentTest, BadFreq)
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
+  }
+
+  {
+    query["frequency"] = "2147483647";
+    PARSE_XML_RESPONSE_QUERY(query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
+                          "'frequency' must be less than or equal to 2147483646.");
   }
 
   {
@@ -1677,7 +1694,6 @@ TEST_F(AgentTest, AssetChangedWhenUnavailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "");
   }
 }
-
 
 TEST_F(AgentTest, RemoveAllAssets)
 {
