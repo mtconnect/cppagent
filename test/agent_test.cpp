@@ -46,7 +46,7 @@ class AgentTest : public testing::Test
 {
  public:
   typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
-  typedef dlib::queue<std::string>::kernel_1a_c queue_type;
+  using queue_type = dlib::queue<std::string>::kernel_1a_c;
 
  protected:
   void SetUp() override
@@ -176,6 +176,15 @@ TEST_F(AgentTest, BadCount)
   }
 
   {
+    query["count"] = "500";
+    PARSE_XML_RESPONSE_QUERY(query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    string value("'count' must be less than or equal to ");
+    value += intToString(m_agent->getBufferSize()) + ".";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
+  }
+
+  {
     query["count"] = "999999999999999999";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
@@ -202,6 +211,14 @@ TEST_F(AgentTest, BadFreq)
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
+  }
+
+  {
+    query["frequency"] = "2147483647";
+    PARSE_XML_RESPONSE_QUERY(query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
+                          "'frequency' must be less than or equal to 2147483646.");
   }
 
   {
@@ -267,11 +284,12 @@ TEST_F(AgentTest, EmptyStream)
     m_agentTestHelper->m_path = "/current";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']@name", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']@name", nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable",
-                          0);
+                          nullptr);
     ASSERT_XML_PATH_EQUAL(
-        doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier", 0);
+        doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier",
+        nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode", "SPINDLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ToolGroup", "UNAVAILABLE");
   }
@@ -281,7 +299,7 @@ TEST_F(AgentTest, EmptyStream)
     char line[80] = {0};
     sprintf(line, "%d", (int)m_agent->getSequence());
     PARSE_XML_RESPONSE_QUERY_KV("from", line);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 }
 
@@ -315,7 +333,7 @@ TEST_F(AgentTest, AddToBuffer)
   {
     m_agentTestHelper->m_path = "/sample";
     PARSE_XML_RESPONSE_QUERY_KV("from", "36");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 
   key = "power";
@@ -531,7 +549,7 @@ TEST_F(AgentTest, SampleAtNextSeq)
   {
     value = intToString(seq);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 }
 
@@ -1677,7 +1695,6 @@ TEST_F(AgentTest, AssetChangedWhenUnavailable)
   }
 }
 
-
 TEST_F(AgentTest, RemoveAllAssets)
 {
   addAdapter();
@@ -1844,7 +1861,7 @@ TEST_F(AgentTest, StreamData)
     try
     {
       PARSE_XML_RESPONSE_QUERY(query);
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+      ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
 
       auto delta = system_clock::now() - startTime;
       ASSERT_TRUE(delta < (heartbeatFreq + 25ms));

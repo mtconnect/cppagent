@@ -112,7 +112,7 @@ namespace mtconnect
 
     const char *getCharPtr() const
     {
-      return charPtrPtr_ ? *charPtrPtr_ : 0;
+      return charPtrPtr_ ? *charPtrPtr_ : nullptr;
     }
     bool getBool() const
     {

@@ -119,8 +119,7 @@ namespace mtconnect
   }
 
   XmlParser::XmlParser()
-      : m_doc(nullptr),
-        m_handlers(
+      : m_handlers(
             {{"Components",
               [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
              {"DataItems",
@@ -228,7 +227,7 @@ namespace mtconnect
           // Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the
           // schema location again.
           if (!isMTConnectUrn((const char *)ns->href) &&
-              strncmp((const char *)ns->href, "http://www.w3.org/", 18u) &&
+              strncmp((const char *)ns->href, "http://www.w3.org/", 18u) != 0 &&
               locationUrn != (const char *)ns->href && ns->prefix)
           {
             string urn = (const char *)ns->href;
@@ -339,7 +338,7 @@ namespace mtconnect
         {
           if (ns->prefix)
           {
-            if (strncmp((const char *)ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
+            if (strncmp((const char *)ns->href, "urn:mtconnect.org:MTConnectDevices", 34u) != 0)
             {
               THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
             }
@@ -483,7 +482,7 @@ namespace mtconnect
       string prefix;
 
       if (node->ns && node->ns->prefix &&
-          strncmp((const char *)node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
+          strncmp((const char *)node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u) != 0)
       {
         prefix = (const char *)node->ns->prefix;
       }
@@ -592,7 +591,7 @@ namespace mtconnect
       if (!xmlStrcmp(child->name, BAD_CAST "Description"))
       {
         auto body = getCDATA(child);
-        Composition::Description *desc = new Composition::Description(body, getAttributes(child));
+        auto *desc = new Composition::Description(body, getAttributes(child));
         comp->setDescription(desc);
       }
     }

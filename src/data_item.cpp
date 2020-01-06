@@ -147,7 +147,7 @@ namespace mtconnect
     const auto nativeScalePos = attributes.find("nativeScale");
     if (nativeScalePos != attributes.end())
     {
-      m_nativeScale = atof(nativeScalePos->second.c_str());
+      m_nativeScale = stringToFloat(nativeScalePos->second.c_str());
       m_hasNativeScale = true;
     }
 
@@ -170,9 +170,7 @@ namespace mtconnect
     m_attributes = buildAttributes();
   }
 
-  DataItem::~DataItem()
-  {
-  }
+  DataItem::~DataItem() = default;
 
   void DataItem::setDataSource(Adapter *source)
   {
@@ -314,7 +312,7 @@ namespace mtconnect
     }
     else if (m_hasFactor)
     {
-      return (value + m_conversionOffset) * m_conversionFactor;
+      return static_cast<float>((value + m_conversionOffset) * m_conversionFactor);
     }
     else
     {

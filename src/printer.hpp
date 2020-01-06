@@ -14,8 +14,8 @@ namespace mtconnect
   class Device;
   class Asset;
   class CuttingTool;
-  typedef RefCountedPtr<Asset> AssetPtr;
-  typedef RefCountedPtr<CuttingTool> CuttingToolPtr;
+  using AssetPtr = RefCountedPtr<Asset>;
+  using CuttingToolPtr = RefCountedPtr<CuttingTool>;
 
   class Printer
   {
@@ -23,9 +23,7 @@ namespace mtconnect
     Printer(bool pretty = false) : m_pretty(pretty)
     {
     }
-    virtual ~Printer()
-    {
-    }
+    virtual ~Printer() = default;
 
     virtual std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
                                    const uint64_t nextSeq, const std::string &errorCode,

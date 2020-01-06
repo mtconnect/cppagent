@@ -25,9 +25,7 @@ using namespace std;
 
 namespace mtconnect
 {
-  CuttingTool::~CuttingTool()
-  {
-  }
+  CuttingTool::~CuttingTool() = default;
 
   void CuttingTool::addValue(const CuttingToolValuePtr value)
   {
@@ -151,11 +149,7 @@ namespace mtconnect
     return m_content;
   }
 
-  CuttingToolValue::~CuttingToolValue()
-  {
-  }
+  CuttingToolValue::~CuttingToolValue() = default;
 
-  CuttingItem::~CuttingItem()
-  {
-  }
+  CuttingItem::~CuttingItem() = default;
 }  // namespace mtconnect

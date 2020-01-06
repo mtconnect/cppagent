@@ -61,6 +61,7 @@ endif()
 include(cmake/msvc_use_static_runtime.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
+include(cmake/ClangTidy.cmake)
 
 # Add our dependency projects
 include(cmake/LibXML2.cmake)

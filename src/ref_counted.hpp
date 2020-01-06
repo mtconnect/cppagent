@@ -123,14 +123,12 @@ namespace mtconnect
       m_refCount.store(1);
     }
 
-    RefCounted(RefCounted &aRef)
+    RefCounted(const RefCounted &aRef)
     {
       m_refCount.store(1);
     }
 
-    virtual ~RefCounted()
-    {
-    }
+    virtual ~RefCounted() = default;
 
     // Reference count management
     void referTo()

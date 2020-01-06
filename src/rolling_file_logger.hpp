@@ -54,7 +54,7 @@ namespace mtconnect
 
    protected:
     void rollover(uint64_t size);
-    int getFileAge();
+    std::time_t getFileAge();
 
    private:
     std::mutex m_fileLock;
