@@ -215,7 +215,52 @@ TEST_F(TableTest, JsonCurrent)
     ASSERT_EQ(10.0, offsets.at("/WorkpieceOffsetTable/value/G53.3/U"_json_pointer).get<double>());
 
   }
+}
 
+TEST_F(TableTest, JsonCurrentText)
+{
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  ASSERT_TRUE(m_adapter);
   
+  m_agentTestHelper->m_path = "/current";
+  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  
+  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0 s='string with space'} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
+  
+  {
+    PARSE_JSON_RESPONSE;
+    
+    auto streams = doc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
+    ASSERT_EQ(4_S, streams.size());
+    
+    json stream;
+    for (auto &s : streams) {
+      auto id = s.at("/ComponentStream/componentId"_json_pointer);
+      ASSERT_TRUE(id.is_string());
+      if (id.get<string>() == "path1") {
+        stream = s;
+        break;
+      }
+    }
+    ASSERT_TRUE(stream.is_object());
+    
+    auto events = stream.at("/ComponentStream/Events"_json_pointer);
+    ASSERT_TRUE(events.is_array());
+    json offsets;
+    for (auto &o : events) {
+      ASSERT_TRUE(o.is_object());
+      auto v = o.begin().key();
+      if (v == "WorkpieceOffsetTable") {
+        offsets = o;
+        break;
+      }
+    }
+    ASSERT_TRUE(offsets.is_object());
+    
+    ASSERT_EQ(string("3"), offsets.at("/WorkpieceOffsetTable/count"_json_pointer).get<string>());
+    
+    ASSERT_EQ(string("string with space"), offsets.at("/WorkpieceOffsetTable/value/G53.1/s"_json_pointer).get<string>());
+    
+  }
 }
 
