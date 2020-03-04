@@ -60,7 +60,9 @@ namespace mtconnect
     
     bool operator()(const DataSet &v);
     template<class T>
-    bool operator()(const T &v) { return std::get<T>(m_other) == v; }
+    bool operator()(const T &v) {
+      return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
+    }
     
   private:
     const DataSetValue &m_other;

@@ -42,7 +42,10 @@ namespace mtconnect
   
   bool DataSetValueSame::operator()(const DataSet &v)
   {
-    const DataSet &oset(std::get<DataSet>(m_other));
+    if (!std::holds_alternative<DataSet>(m_other))
+      return false;
+    
+    const auto &oset = std::get<DataSet>(m_other);
     
     if (v.size() != oset.size()) return false;
     
