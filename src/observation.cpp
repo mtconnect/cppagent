@@ -39,6 +39,21 @@ namespace mtconnect
   static dlib::logger g_logger("Observation");
 
   const string Observation::SLevels[NumLevels] = {"Normal", "Warning", "Fault", "Unavailable"};
+  
+  bool DataSetValueSame::operator()(const DataSet &v)
+  {
+    const DataSet &oset(std::get<DataSet>(m_other));
+    
+    if (v.size() != oset.size()) return false;
+    
+    for (const auto &e1 : v) {
+      const auto &e2 = oset.find(e1);
+      if (e2 == oset.end() || !visit(DataSetValueSame(e2->m_value), e1.m_value))
+        return false;
+    }
+    
+    return true;
+  }
 
   inline static bool splitValue(string &key, string &value)
   {

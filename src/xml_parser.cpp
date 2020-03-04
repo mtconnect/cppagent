@@ -575,11 +575,45 @@ namespace mtconnect
         {
           d->setResetTrigger(getCDATA(child));
         }
+        else if (!xmlStrcmp(child->name, BAD_CAST "Definition"))
+        {
+          loadDataItemDefinition(child, d, device);
+        }
       }
     }
 
     parent->addDataItem(*d);
     device->addDeviceDataItem(*d);
+  }
+  
+  // Load the data items
+  void XmlParser::loadDataItemDefinition(xmlNodePtr definition, DataItem *dataItem, Device *device)\
+  {
+    unique_ptr<DataItemDefinition> def(new DataItemDefinition());
+    
+    if (definition->children)
+    {
+      for (xmlNodePtr child = definition->children; child; child = child->next)
+      {
+        if (child->type != XML_ELEMENT_NODE)
+          continue;
+
+        if (!xmlStrcmp(child->name, BAD_CAST "Description"))
+        {
+          def->m_description = getCDATA(child);
+        }
+        else if (!xmlStrcmp(child->name, BAD_CAST "EntryDefinition"))
+        {
+          
+        }
+        else if (!xmlStrcmp(child->name, BAD_CAST "CellDefinition"))
+        {
+          
+        }
+      }
+    }
+    
+    dataItem->setDefinition(def);
   }
 
   void XmlParser::handleComposition(xmlNodePtr composition, Component *parent)

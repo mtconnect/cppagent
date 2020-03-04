@@ -53,6 +53,18 @@ namespace mtconnect
   struct DataSetEntry;
   using DataSet = std::set<DataSetEntry>;
   using DataSetValue = std::variant<DataSet, std::string, int64_t, double> ;
+  
+  struct DataSetValueSame
+  {
+    DataSetValueSame(const DataSetValue &other) : m_other(other) {}
+    
+    bool operator()(const DataSet &v);
+    template<class T>
+    bool operator()(const T &v) { return std::get<T>(m_other) == v; }
+    
+  private:
+    const DataSetValue &m_other;
+  };
 
   struct DataSetEntry
   {
@@ -72,7 +84,6 @@ namespace mtconnect
     {
     }
     DataSetEntry(const DataSetEntry &other)
-
         = default;
 
     std::string m_key;
@@ -90,7 +101,8 @@ namespace mtconnect
 
     bool same(const DataSetEntry &other) const
     {
-      return m_key == other.m_key && m_value == other.m_value && m_removed == other.m_removed;
+      return m_key == other.m_key && m_removed == other.m_removed &&
+             std::visit(DataSetValueSame(other.m_value), m_value);
     }
   };
 

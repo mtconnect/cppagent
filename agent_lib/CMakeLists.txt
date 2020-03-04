@@ -21,6 +21,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/cutting_tool.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/data_item.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/data_item.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/definitions.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/globals.cpp"
