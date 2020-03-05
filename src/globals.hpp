@@ -94,6 +94,7 @@ namespace mtconnect
 
   std::string int64ToString(uint64_t i);
 
+  std::string int32ToString(int i);
   std::string intToString(unsigned int i);
 
   // Convert a float to string
@@ -104,6 +105,7 @@ namespace mtconnect
 
   // Check if each char in a string is a positive integer
   bool isNonNegativeInteger(const std::string &s);
+  bool isInteger(const std::string &s);
 
   // Get a specified time formatted
   std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint,

@@ -265,9 +265,11 @@ namespace mtconnect
                           const std::string &device);
 
     // Handle stream calls, which includes both current and sample
-    std::string handleStream(const Printer *printer, std::ostream &out, const std::string &path,
-                             bool current, unsigned int frequency, uint64_t start = 0,
-                             unsigned int count = 0,
+    std::string handleStream(const Printer *printer, std::ostream &out,
+                             const std::string &path,
+                             bool current, unsigned int frequency,
+                             uint64_t start = 0,
+                             int count = 0,
                              std::chrono::milliseconds heartbeat = std::chrono::milliseconds{
                                  10000});
 
@@ -288,7 +290,7 @@ namespace mtconnect
     std::string fetchCurrentData(const Printer *printer, std::set<std::string> &filterSet,
                                  uint64_t at);
     std::string fetchSampleData(const Printer *printer, std::set<std::string> &filterSet,
-                                uint64_t start, unsigned int count, uint64_t &end,
+                                uint64_t start, int count, uint64_t &end,
                                 bool &endOfBuffer, ChangeObserver *observer = nullptr);
 
     // Output an XML Error
@@ -309,7 +311,8 @@ namespace mtconnect
     // Perform a check on parameter and return a value or a code
     int checkAndGetParam(const dlib::key_value_map &queries, const std::string &param,
                          const int defaultValue, const int minValue = NO_VALUE32,
-                         bool minError = false, const int maxValue = NO_VALUE32);
+                         bool minError = false, const int maxValue = NO_VALUE32,
+                         bool positive = true);
 
     // Perform a check on parameter and return a value or a code
     uint64_t checkAndGetParam64(const dlib::key_value_map &queries, const std::string &param,

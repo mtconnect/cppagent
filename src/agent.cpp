@@ -913,8 +913,8 @@ namespace mtconnect
               printer, "INVALID_REQUEST",
               "You cannot specify both the at and frequency arguments to a current request");
 
-        return handleStream(printer, out, devicesAndPath(path, deviceName), true, freq, at, 0,
-                            heartbeat);
+        return handleStream(printer, out, devicesAndPath(path, deviceName),
+                            true, freq, at, 0, heartbeat);
       }
       else if (call == "probe" || call.empty())
         return handleProbe(printer, deviceName);
@@ -923,8 +923,11 @@ namespace mtconnect
         string path = queries[(string) "path"];
         string result;
 
-        auto count =
-            checkAndGetParam64(queries, "count", DEFAULT_COUNT, 1, true, m_slidingBufferSize);
+        int32_t count =
+            checkAndGetParam(queries, "count", DEFAULT_COUNT, -m_slidingBufferSize, true, m_slidingBufferSize, false);
+        if (count == 0)
+          throw ParameterError("OUT_OF_RANGE", "'count' must not be 0.");
+
         auto freq =
             checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
         // Check for 1.2 conversion to interval
@@ -935,12 +938,16 @@ namespace mtconnect
             checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, m_sequence);
 
         if (start == NO_START)  // If there was no data in queries
-          start = checkAndGetParam64(queries, "from", 1, getFirstSequence(), true, m_sequence);
+          start = checkAndGetParam64(queries, "from", NO_START, getFirstSequence(), true, m_sequence);
 
         auto heartbeat = std::chrono::milliseconds{
             checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
+        
+        if (start == NO_START)
+          start = (count >= 0) ? 1 : m_sequence - 1;
 
-        return handleStream(printer, out, devicesAndPath(path, deviceName), false, freq, start,
+        return handleStream(printer, out, devicesAndPath(path, deviceName), false,
+                            freq, start,
                             count, heartbeat);
       }
       else if (findDeviceByUUIDorName(call) && device.empty())
@@ -1025,8 +1032,9 @@ namespace mtconnect
                                m_assets.size(), deviceList, &m_assetCounts);
   }
 
-  string Agent::handleStream(const Printer *printer, ostream &out, const string &path, bool current,
-                             unsigned int frequency, uint64_t start, unsigned int count,
+  string Agent::handleStream(const Printer *printer, ostream &out, const string &path,
+                             bool current, unsigned int frequency,
+                             uint64_t start, int count,
                              std::chrono::milliseconds heartbeat)
   {
     std::set<string> filter;
@@ -1506,7 +1514,7 @@ namespace mtconnect
   }
 
   string Agent::fetchSampleData(const Printer *printer, std::set<string> &filterSet, uint64_t start,
-                                unsigned int count, uint64_t &end, bool &endOfBuffer,
+                                int count, uint64_t &end, bool &endOfBuffer,
                                 ChangeObserver *observer)
   {
     ObservationPtrArray results;
@@ -1515,12 +1523,24 @@ namespace mtconnect
       std::lock_guard<std::mutex> lock(m_sequenceLock);
 
       firstSeq = (m_sequence > m_slidingBufferSize) ? m_sequence - m_slidingBufferSize : 1;
-
+      int limit;
+      
       // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
-      start = (start <= firstSeq) ? firstSeq : start;
-
+      if (count >= 0)
+      {
+        start = (start <= firstSeq) ? firstSeq : start;
+        limit = count;
+      }
+      else
+      {
+        start = (start >= m_sequence) ? m_sequence - 1 : start;
+        limit = -count;
+      }
+        
       uint64_t i;
-      for (i = start; results.size() < count && i < m_sequence; i++)
+      for (i = start;
+           results.size() < limit && i < m_sequence && i >= firstSeq;
+           count >= 0 ? i++ : i--)
       {
         // Filter out according to if it exists in the list
         const string &dataId = (*m_slidingBuffer)[i]->getDataItem()->getId();
@@ -1532,7 +1552,11 @@ namespace mtconnect
       }
 
       end = i;
-      endOfBuffer = i >= m_sequence;
+      
+      if (count >= 0)
+        endOfBuffer = i >= m_sequence;
+      else
+        endOfBuffer = i <= firstSeq;
 
       if (observer)
         observer->reset();
@@ -1578,31 +1602,37 @@ namespace mtconnect
 
   int Agent::checkAndGetParam(const key_value_map &queries, const string &param,
                               const int defaultValue, const int minValue, bool minError,
-                              const int maxValue)
+                              const int maxValue, bool positive)
   {
+    
     if (!queries.count(param))
       return defaultValue;
 
-    if (queries[param].empty())
+    const auto &v = queries[param];
+
+    if (v.empty())
       throw ParameterError("QUERY_ERROR", "'" + param + "' cannot be empty.");
 
-    if (!isNonNegativeInteger(queries[param]))
+    if (positive && !isNonNegativeInteger(v))
       throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be a positive integer.");
+    
+    if (!positive && !isInteger(v))
+      throw ParameterError("OUT_OF_RANGE", "'" + param + "' must an integer.");
 
-    int value = stringToInt(queries[param].c_str(), maxValue + 1);
+    int value = stringToInt(v.c_str(), maxValue + 1);
 
     if (minValue != NO_VALUE32 && value < minValue)
     {
       if (minError)
         throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be greater than or equal to " +
-                                                 intToString(minValue) + ".");
+                                                 int32ToString(minValue) + ".");
 
       return minValue;
     }
 
     if (maxValue != NO_VALUE32 && value > maxValue)
       throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be less than or equal to " +
-                                               intToString(maxValue) + ".");
+                                               int32ToString(maxValue) + ".");
 
     return value;
   }

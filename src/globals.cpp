@@ -97,6 +97,13 @@ namespace mtconnect
     return stm.str();
   }
 
+  string int32ToString(int i)
+  {
+    ostringstream stm;
+    stm << i;
+    return stm.str();
+  }
+
   string intToString(unsigned int i)
   {
     ostringstream stm;
@@ -124,6 +131,21 @@ namespace mtconnect
     for (const char c : s)
     {
       if (!isdigit(c))
+        return false;
+    }
+
+    return true;
+  }
+
+  bool isInteger(const string &s)
+  {
+    auto iter = s.cbegin();
+    if (*iter == '-' || *iter == '+')
+      ++iter;
+    
+    for (;iter != s.end(); iter++)
+    {
+      if (!isdigit(*iter))
         return false;
     }
 

@@ -158,21 +158,23 @@ TEST_F(AgentTest, BadCount)
     query["count"] = "NON_INTEGER";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be a positive integer.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must an integer.");
   }
 
   {
-    query["count"] = "-123";
+    query["count"] = "-500";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be a positive integer.");
+    string value("'count' must be greater than or equal to ");
+    value += int32ToString(-m_agent->getBufferSize()) + ".";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
 
   {
     query["count"] = "0";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be greater than or equal to 1.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must not be 0.");
   }
 
   {
@@ -185,13 +187,23 @@ TEST_F(AgentTest, BadCount)
   }
 
   {
-    query["count"] = "999999999999999999";
+    query["count"] = "9999999";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than or equal to ");
     value += intToString(m_agent->getBufferSize()) + ".";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
+  
+  {
+    query["count"] = "-9999999";
+    PARSE_XML_RESPONSE_QUERY(query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    string value("'count' must be greater than or equal to ");
+    value += int32ToString(-m_agent->getBufferSize()) + ".";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
+  }
+
 }
 
 TEST_F(AgentTest, BadFreq)
@@ -653,6 +665,47 @@ TEST_F(AgentTest, SampleCount)
     }
   }
 }
+
+
+TEST_F(AgentTest, SampleLastCount)
+{
+  key_value_map kvm;
+
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  ASSERT_TRUE(m_adapter);
+
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
+    m_adapter->processData(line);
+  }
+  
+  int64_t seq = m_agent->getSequence() - 20;
+
+  {
+    m_agentTestHelper->m_path = "/sample";
+    kvm["path"] = "//DataItem[@name='Xact']";
+    kvm["count"] = "-10";
+
+    PARSE_XML_RESPONSE_QUERY(kvm);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq).c_str());
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
+
+    // Make sure we got 10 lines
+    for (int j = 0; j < 10; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j * 2 + 1).c_str());
+    }
+  }
+}
+
 
 TEST_F(AgentTest, AdapterCommands)
 {
