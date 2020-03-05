@@ -6509,10 +6509,70 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:element>
     </xs:sequence>
   </xs:complexType>
-  <xs:complexType name='AbstractSetDefinitionType'>
+  <xs:complexType name='EntryDefinitionType'>
     <xs:annotation>
       <xs:documentation>
-        An abstract definition
+        The entry definition
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Description' type='DataItemDescriptionType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            An XML element that can contain any descriptive content.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='CellDefinitions' type='CellDefinitionsType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            Optional definitions for cells
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name='key' type='KeyType' use='required'>
+      <xs:annotation>
+        <xs:documentation>
+          unique key
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='type' type='DataItemEnumType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          The type of either a structural element or a dataitem being measured.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='units' type='UnitsType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          The unit of measurement for the reported value of the data item.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name='CellDefinitionsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The aggergation of CellDefinition
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='CellDefinition' type='CellDefinitionType' minOccurs='1' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            A cell definition
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='CellDefinitionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The definition of a tabular cell
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -6545,51 +6605,5 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-  </xs:complexType>
-  <xs:complexType name='EntryDefinitionType'>
-    <xs:annotation>
-      <xs:documentation>
-        The entry definition
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AbstractSetDefinitionType'>
-        <xs:sequence>
-          <xs:element name='CellDefinitions' type='CellDefinitionsType' minOccurs='0' maxOccurs='1'>
-            <xs:annotation>
-              <xs:documentation>
-                Optional definitions for cells
-              </xs:documentation>
-            </xs:annotation>
-          </xs:element>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name='CellDefinitionsType'>
-    <xs:annotation>
-      <xs:documentation>
-        The aggergation of CellDefinition
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element name='CellDefinition' type='CellDefinitionType' minOccurs='1' maxOccurs='unbounded'>
-        <xs:annotation>
-          <xs:documentation>
-            A cell definition
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name='CellDefinitionType'>
-    <xs:annotation>
-      <xs:documentation>
-        The definition of a tabular cell
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='AbstractSetDefinitionType'/>
-    </xs:simpleContent>
   </xs:complexType>
 </xs:schema>
