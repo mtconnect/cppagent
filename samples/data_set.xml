@@ -32,7 +32,18 @@
                 <DataItem type="CONTROLLER_MODE" category="EVENT" id="p2" name="mode"/>
                 <DataItem type="LINE" category="EVENT" id="p3" name="line"/>
                 <DataItem type="PROGRAM" category="EVENT" id="p4" name="program"/>
-                <DataItem type="WORKPIECE_OFFSET" category="EVENT" id="wp1" name="wpo" representation="TABLE"/>
+                <DataItem type="WORKPIECE_OFFSET" category="EVENT" id="wp1" name="wpo" representation="TABLE">
+									<Definition>
+										<CellDefinitions>
+											<CellDefinition key="X" units="MILLIMETER" type="POSITION" />
+											<CellDefinition key="Y" units="MILLIMETER" type="POSITION" />
+											<CellDefinition key="Z" units="MILLIMETER" type="POSITION" />
+											<CellDefinition key="A" units="DEGREE" type="ANGLE" />
+											<CellDefinition key="B" units="DEGREE" type="ANGLE" />
+											<CellDefinition key="C" units="DEGREE" type="ANGLE" />
+										</CellDefinitions>
+									</Definition>
+								</DataItem>
               </DataItems>
             </Path>
           </Components>

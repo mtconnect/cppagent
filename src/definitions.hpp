@@ -22,29 +22,43 @@
 
 namespace mtconnect
 {
-  class AbstractDefinition {
-  public:
+  struct Definition {
+    Definition() {}
+    virtual ~Definition() {}
+    std::string m_description;
+  };
+  
+  struct AbstractDefinition : public Definition {
+    AbstractDefinition() {}
+    virtual ~AbstractDefinition() {}
     std::string m_key;
     std::string m_units;
     std::string m_type;
-    std::string m_description;
     
     bool operator<(const AbstractDefinition &other) { return m_key < other.m_key; }
     bool operator==(const AbstractDefinition &other) { return m_key == other.m_key; }
   };
-  
-  class CellDefinition : public AbstractDefinition {
-    
+      
+  inline bool operator<(const AbstractDefinition &a, const AbstractDefinition &b)
+      { return a.m_key < b.m_key; }
+
+  struct CellDefinition : public AbstractDefinition {
+    CellDefinition() {}
+    virtual ~CellDefinition() {}
   };
   
-  class EntryDefinition : public AbstractDefinition {
-  public:
+  struct EntryDefinition : public AbstractDefinition {
+    EntryDefinition() {}
+    EntryDefinition(const EntryDefinition &other)
+      : AbstractDefinition(other), m_cells(other.m_cells) {}
+    virtual ~EntryDefinition() {}
+      
     std::set<CellDefinition> m_cells;
   };
   
-  class DataItemDefinition {
-  public:
-    std::string m_description;
+  struct DataItemDefinition : public Definition {
+    DataItemDefinition() {}
+    virtual ~DataItemDefinition() {}
 
     std::set<EntryDefinition> m_entries;
     std::set<CellDefinition> m_cells;

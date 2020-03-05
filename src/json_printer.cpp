@@ -164,6 +164,57 @@ namespace mtconnect
 
     return print(doc, m_pretty);
   }
+  
+  static inline json toJson(const set<CellDefinition> &definitions)
+  {
+    json entries = json::object();
+
+    for (const auto &entry  : definitions)
+    {
+      json e = json::object();
+      if (!entry.m_description.empty())
+        e["Description"] = entry.m_description;
+      if (!entry.m_units.empty()) e["units"] = entry.m_units;
+      if (!entry.m_type.empty()) e["type"] = entry.m_type;
+      
+      entries[entry.m_key] = e;
+    }
+
+    return entries;
+  }
+  
+  static inline json toJson(const DataItemDefinition &definition)
+  {
+    json obj = json::object();
+    if (!definition.m_description.empty())
+      obj["Description"] = definition.m_description;
+    
+    if (!definition.m_entries.empty()) {
+      json entries = json::object();
+      for (const auto &entry  : definition.m_entries)
+      {
+        json e = json::object();
+        if (!entry.m_description.empty())
+          e["Description"] = entry.m_description;
+        if (!entry.m_units.empty()) e["units"] = entry.m_units;
+        if (!entry.m_type.empty()) e["type"] = entry.m_type;
+        
+        if (!entry.m_cells.empty()) {
+          e["CellDefinitions"] = toJson(entry.m_cells);
+        }
+        
+        entries[entry.m_key] = e;
+      }
+    
+      obj["EntryDefinitions"] = entries;
+    }
+    
+    if (!definition.m_cells.empty()) {
+      obj["CellDefinitions"] = toJson(definition.m_cells);
+    }
+    
+    return obj;
+  }
 
   static inline json toJson(DataItem *item)
   {
@@ -215,6 +266,11 @@ namespace mtconnect
     }
 
     json dataItem = json::object({{"DataItem", obj}});
+    
+    if (item->hasDefinition())
+    {
+      obj["Definition"] = toJson(item->getDefinition());
+    }
 
     return dataItem;
   }

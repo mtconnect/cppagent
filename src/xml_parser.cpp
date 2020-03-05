@@ -117,6 +117,22 @@ namespace mtconnect
 
     return toReturn;
   }
+  
+  static inline void forEachElement(const xmlNodePtr node, map<string,function<void(const xmlNodePtr)>> funs)
+  {
+    for (xmlNodePtr child = node->children; child; child = child->next)
+    {
+      if (child->type != XML_ELEMENT_NODE)
+        continue;
+      
+      string name((const char *)child->name);
+      auto lambda = funs.find(name);
+      if (lambda != funs.end())
+      {
+        lambda->second(child);
+      }
+    }
+  }
 
   XmlParser::XmlParser()
       : m_handlers(
@@ -586,33 +602,54 @@ namespace mtconnect
     device->addDeviceDataItem(*d);
   }
   
+  void XmlParser::loadDefinition(xmlNodePtr definition, AbstractDefinition *def)
+  {
+    def->m_key = getAttribute(definition, "key");
+    def->m_units = getAttribute(definition, "units");
+    def->m_type = getAttribute(definition, "type");
+    
+    forEachElement(definition, {
+      {"Description", [&def](xmlNodePtr node){ def->m_description = getCDATA(node); }}
+    });
+  }
+  
+  void XmlParser::loadDefinitions(xmlNodePtr definitions, std::set<EntryDefinition> &result)
+  {
+    forEachElement(definitions, {
+      {"EntryDefinition", [this, &result](xmlNodePtr node){
+        EntryDefinition def;
+        loadDefinition(node, &def);
+        forEachElement(node, {
+          {"CellDefinitions", [this, &def](xmlNodePtr node){ loadDefinitions(node, def.m_cells); }}
+        });
+        result.emplace(def);
+      }}
+    });
+  }
+  
+  void XmlParser::loadDefinitions(xmlNodePtr definitions, std::set<CellDefinition> &result)
+  {
+    forEachElement(definitions, {
+      {"CellDefinition", [this, &result](xmlNodePtr node){
+        CellDefinition def;
+        loadDefinition(node, &def);
+        result.emplace(def);
+      }},
+    });
+  }
+  
+
   // Load the data items
-  void XmlParser::loadDataItemDefinition(xmlNodePtr definition, DataItem *dataItem, Device *device)\
+  void XmlParser::loadDataItemDefinition(xmlNodePtr definition, DataItem *dataItem, Device *device)
   {
     unique_ptr<DataItemDefinition> def(new DataItemDefinition());
     
-    if (definition->children)
-    {
-      for (xmlNodePtr child = definition->children; child; child = child->next)
-      {
-        if (child->type != XML_ELEMENT_NODE)
-          continue;
-
-        if (!xmlStrcmp(child->name, BAD_CAST "Description"))
-        {
-          def->m_description = getCDATA(child);
-        }
-        else if (!xmlStrcmp(child->name, BAD_CAST "EntryDefinition"))
-        {
-          
-        }
-        else if (!xmlStrcmp(child->name, BAD_CAST "CellDefinition"))
-        {
-          
-        }
-      }
-    }
-    
+    forEachElement(definition, {
+      {"Description", [&def](xmlNodePtr node){ def->m_description = getCDATA(node); }},
+      {"EntryDefinitions", [this, &def](xmlNodePtr node){ loadDefinitions(node, def->m_entries); }},
+      {"CellDefinitions", [this, &def](xmlNodePtr node){ loadDefinitions(node, def->m_cells); }},
+    });
+        
     dataItem->setDefinition(def);
   }
 

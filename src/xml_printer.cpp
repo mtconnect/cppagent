@@ -616,8 +616,57 @@ namespace mtconnect
 
     if (dataItem->hasResetTrigger())
       addSimpleElement(writer, "ResetTrigger", dataItem->getResetTrigger());
+    
+    if (dataItem->hasDefinition())
+      printDataItemDefinition(writer, dataItem->getDefinition());
+  }
+  
+  void XmlPrinter::printDataItemDefinition(xmlTextWriterPtr writer, const DataItemDefinition &definition) const
+  {
+    AutoElement ele(writer, "Definition");
+    
+    if (!definition.m_description.empty())
+      addSimpleElement(writer, "Description", definition.m_description);
+    
+    if (!definition.m_entries.empty())
+    {
+      AutoElement ele(writer, "EntryDefinitions");
+      for (const auto &entry : definition.m_entries)
+      {
+        AutoElement ele(writer, "EntryDefinition");
+        addAttributes(writer, {
+          {string("key"), entry.m_key},
+          {string("units"), entry.m_units},
+          {string("type"), entry.m_type}
+        });
+        if (!entry.m_description.empty())
+          addSimpleElement(writer, "Description", entry.m_description);
+        printCellDefinitions(writer, entry.m_cells);
+      }
+    }
+    
+    printCellDefinitions(writer, definition.m_cells);
   }
 
+  void XmlPrinter::printCellDefinitions(xmlTextWriterPtr writer, const std::set<CellDefinition> &definitions) const
+  {
+    if (!definitions.empty())
+    {
+      AutoElement ele(writer, "CellDefinitions");
+      for (const auto &entry : definitions)
+      {
+        AutoElement ele(writer, "CellDefinition");
+        addAttributes(writer, {
+          {string("key"), entry.m_key},
+          {string("units"), entry.m_units},
+          {string("type"), entry.m_type}
+        });
+        if (!entry.m_description.empty())
+          addSimpleElement(writer, "Description", entry.m_description);
+      }
+    }
+  }
+  
   string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
                                  const uint64_t lastSeq, ObservationPtrArray &observations) const
