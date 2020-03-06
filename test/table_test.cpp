@@ -287,13 +287,6 @@ TEST_F(TableTest, JsonCurrentText)
   }
 }
 
-#define ASSERT_ENTRY(doc, var, key, cell, expected) \
-ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']/m:Cell[@key='" cell "']", expected)
-
-#define ASSERT_CELL(doc, var, key, cell, expected) \
-ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']/m:Cell[@key='" cell "']", expected)
-
-
 
 TEST_F(TableTest, XmlCellDefinitions)
 {
@@ -338,4 +331,54 @@ TEST_F(TableTest, XmlCellDefinitions)
 
   }
 
+}
+
+TEST_F(TableTest, JsonDefinitionTest)
+{
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  ASSERT_TRUE(m_adapter);
+  
+  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  
+  {
+    PARSE_JSON_RESPONSE;
+    
+    auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
+    auto device = devices.at(0).at("/Device"_json_pointer);
+
+    auto components = device.at("/Components"_json_pointer);
+    ASSERT_TRUE(components.is_array());
+    ASSERT_EQ(3_S, components.size());
+
+    auto controller = components.at(1);
+    ASSERT_TRUE(controller.is_object());
+    ASSERT_EQ(string("Controller"), controller.begin().key());
+
+    auto paths = controller.at("/Controller/Components"_json_pointer);
+    ASSERT_TRUE(components.is_array());
+    ASSERT_EQ(3_S, components.size());
+
+    auto path = paths.at(0);
+    ASSERT_TRUE(path.is_object());
+    ASSERT_EQ(string("Path"), path.begin().key());
+
+    auto dataItems = path.at("/Path/DataItems"_json_pointer);
+    ASSERT_TRUE(dataItems.is_array());
+    ASSERT_EQ(7_S, dataItems.size());
+
+    auto offset = dataItems.at(6);
+    ASSERT_TRUE(offset.is_object());
+    ASSERT_EQ(string("DataItem"), offset.begin().key());
+    auto wo = offset.at("/DataItem"_json_pointer);
+    
+    ASSERT_EQ(string("wpo"), wo.at("/name"_json_pointer).get<string>());
+    
+    //cout << "\n" << offset << endl;
+    //cout << "\n" << wo << endl;
+
+    auto d1 = wo.at("/Definition/Description"_json_pointer);
+    ASSERT_EQ(string("A Complex Workpiece Offset Table"), d1.get<string>());
+
+  }
 }

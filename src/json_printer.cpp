@@ -264,13 +264,13 @@ namespace mtconnect
       char *ep;
       obj["InitialValue"] = strtod(item->getInitialValue().c_str(), &ep);
     }
-
-    json dataItem = json::object({{"DataItem", obj}});
     
     if (item->hasDefinition())
     {
       obj["Definition"] = toJson(item->getDefinition());
     }
+    
+    json dataItem = json::object({{"DataItem", obj}});
 
     return dataItem;
   }
