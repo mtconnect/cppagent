@@ -380,5 +380,32 @@ TEST_F(TableTest, JsonDefinitionTest)
     auto d1 = wo.at("/Definition/Description"_json_pointer);
     ASSERT_EQ(string("A Complex Workpiece Offset Table"), d1.get<string>());
 
+    auto cells = wo.at("/Definition/CellDefinitions"_json_pointer);
+    ASSERT_TRUE(cells.is_object());
+
+    ASSERT_EQ(string("MILLIMETER"), cells.at("/X/units"_json_pointer).get<string>());
+    ASSERT_EQ(string("POSITION"), cells.at("/X/type"_json_pointer).get<string>());
+
+    ASSERT_EQ(string("MILLIMETER"), cells.at("/Y/units"_json_pointer).get<string>());
+    ASSERT_EQ(string("POSITION"), cells.at("/Y/type"_json_pointer).get<string>());
+
+    ASSERT_EQ(string("MILLIMETER"), cells.at("/Z/units"_json_pointer).get<string>());
+    ASSERT_EQ(string("POSITION"), cells.at("/Z/type"_json_pointer).get<string>());
+
+    ASSERT_EQ(string("DEGREE"), cells.at("/A/units"_json_pointer).get<string>());
+    ASSERT_EQ(string("ANGLE"), cells.at("/A/type"_json_pointer).get<string>());
+
+    ASSERT_EQ(string("DEGREE"), cells.at("/B/units"_json_pointer).get<string>());
+    ASSERT_EQ(string("ANGLE"), cells.at("/B/type"_json_pointer).get<string>());
+
+    ASSERT_EQ(string("DEGREE"), cells.at("/C/units"_json_pointer).get<string>());
+    ASSERT_EQ(string("ANGLE"), cells.at("/C/type"_json_pointer).get<string>());
+    ASSERT_EQ(string("Spindle Angle"), cells.at("/C/Description"_json_pointer).get<string>());
+    
+    auto entries = wo.at("/Definition/EntryDefinitions"_json_pointer);
+    ASSERT_TRUE(entries.is_object());
+
+    ASSERT_EQ(string("Some Pressure thing"), entries.at("/G54/Description"_json_pointer).get<string>());
+
   }
 }
