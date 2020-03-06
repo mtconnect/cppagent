@@ -34,13 +34,27 @@
                 <DataItem type="PROGRAM" category="EVENT" id="p4" name="program"/>
                 <DataItem type="WORKPIECE_OFFSET" category="EVENT" id="wp1" name="wpo" representation="TABLE">
 									<Definition>
+										<Description>A Complex Workpiece Offset Table</Description>
+										<EntryDefinitions>
+											<EntryDefinition key="G54">
+												<Description>Some Pressure thing</Description>
+												<CellDefinitions>
+													<CellDefinition key="P" units="PASCAL" type="PRESSURE">
+														<Description>Pressure of the P</Description>
+													</CellDefinition>
+												</CellDefinitions>
+											</EntryDefinition>
+											<EntryDefinition key="ADD" units="PERCENT" type="FILL_LEVEL"/>
+										</EntryDefinitions>												
 										<CellDefinitions>
 											<CellDefinition key="X" units="MILLIMETER" type="POSITION" />
 											<CellDefinition key="Y" units="MILLIMETER" type="POSITION" />
 											<CellDefinition key="Z" units="MILLIMETER" type="POSITION" />
 											<CellDefinition key="A" units="DEGREE" type="ANGLE" />
 											<CellDefinition key="B" units="DEGREE" type="ANGLE" />
-											<CellDefinition key="C" units="DEGREE" type="ANGLE" />
+											<CellDefinition key="C" units="DEGREE" type="ANGLE">
+												<Description>Spindle Angle</Description>
+											</CellDefinition>
 										</CellDefinitions>
 									</Definition>
 								</DataItem>

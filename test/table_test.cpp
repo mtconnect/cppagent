@@ -287,3 +287,55 @@ TEST_F(TableTest, JsonCurrentText)
   }
 }
 
+#define ASSERT_ENTRY(doc, var, key, cell, expected) \
+ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']/m:Cell[@key='" cell "']", expected)
+
+#define ASSERT_CELL(doc, var, key, cell, expected) \
+ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']/m:Cell[@key='" cell "']", expected)
+
+
+
+TEST_F(TableTest, XmlCellDefinitions)
+{
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  ASSERT_TRUE(m_adapter);
+
+  m_agentTestHelper->m_path = "/probe";
+
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:Description",
+                          "A Complex Workpiece Offset Table");
+    
+    ASSERT_XML_PATH_COUNT(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition", 6);
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='X']@type",
+                          "POSITION");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='X']@units",
+                          "MILLIMETER");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='Y']@type",
+                          "POSITION");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='Z']@type",
+                          "POSITION");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='A']@type",
+                          "ANGLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='B']@type",
+                          "ANGLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='C']@type",
+                          "ANGLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='C']@units",
+                          "DEGREE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='C']/m:Description",
+                          "Spindle Angle");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition/m:Description",
+                          "Some Pressure thing");
+    ASSERT_XML_PATH_COUNT(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition/m:CellDefinitions/m:CellDefinition", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition[@key='G54']/m:CellDefinitions/m:CellDefinition[@key='P']@units",
+                          "PASCAL");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition/m:CellDefinitions/m:CellDefinition/m:Description",
+                          "Pressure of the P");
+
+  }
+
+}
