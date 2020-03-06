@@ -407,5 +407,9 @@ TEST_F(TableTest, JsonDefinitionTest)
 
     ASSERT_EQ(string("Some Pressure thing"), entries.at("/G54/Description"_json_pointer).get<string>());
 
+    ASSERT_EQ(string("PASCAL"), entries.at("/G54/CellDefinitions/P/units"_json_pointer).get<string>());
+    ASSERT_EQ(string("PRESSURE"), entries.at("/G54/CellDefinitions/P/type"_json_pointer).get<string>());
+    ASSERT_EQ(string("Pressure of the P"), entries.at("/G54/CellDefinitions/P/Description"_json_pointer).get<string>());
+
   }
 }
