@@ -929,23 +929,23 @@ namespace mtconnect
           throw ParameterError("OUT_OF_RANGE", "'count' must not be 0.");
 
         auto freq =
-            checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
+            checkAndGetParam(queries, "interval", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
         // Check for 1.2 conversion to interval
         if (freq == NO_FREQ)
-          freq = checkAndGetParam(queries, "interval", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
+          freq = checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
+        
+        if (count < 0 && freq != NO_FREQ)
+          throw ParameterError("OUT_OF_RANGE", "'count' must not be used with an 'interval'.");
 
         auto start =
-            checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, m_sequence);
+            checkAndGetParam64(queries, "from", NO_START, getFirstSequence(), true, m_sequence);
 
         if (start == NO_START)  // If there was no data in queries
-          start = checkAndGetParam64(queries, "from", NO_START, getFirstSequence(), true, m_sequence);
+          start = checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, m_sequence);
 
         auto heartbeat = std::chrono::milliseconds{
             checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
         
-        if (start == NO_START)
-          start = (count >= 0) ? 1 : m_sequence - 1;
-
         return handleStream(printer, out, devicesAndPath(path, deviceName), false,
                             freq, start,
                             count, heartbeat);
@@ -1275,7 +1275,7 @@ namespace mtconnect
 
     chrono::milliseconds interMilli{interval};
     uint64_t firstSeq = getFirstSequence();
-    if (start < firstSeq)
+    if (start == NO_START || start < firstSeq)
       start = firstSeq;
 
     try
@@ -1528,12 +1528,12 @@ namespace mtconnect
       // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
       if (count >= 0)
       {
-        start = (start <= firstSeq) ? firstSeq : start;
+        start = (start == NO_START || start <= firstSeq) ? firstSeq : start;
         limit = count;
       }
       else
       {
-        start = (start >= m_sequence) ? m_sequence - 1 : start;
+        start = (start == NO_START || start >= m_sequence) ? m_sequence - 1 : start;
         limit = -count;
       }
         
