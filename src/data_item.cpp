@@ -23,6 +23,7 @@
 
 #include <map>
 #include <string>
+#include <array>
 
 using namespace std;
 
@@ -264,13 +265,28 @@ namespace mtconnect
   {
     return m_id == name || m_name == name || (!m_source.empty() && m_source == name);
   }
+  
+  static void capitalize(string::iterator start,
+                           string::iterator end)
+  {
+    // Exceptions to the rule
+    static std::array<string, 3> exceptions = {"AC", "DC", "PH"};
+    
+    if (std::none_of(exceptions.begin(), exceptions.end(),
+                    [&start, &end](const string &s) {
+                      return equal(start, end, s.begin());
+                    }))
+    {
+      *start = ::toupper(*start);
+      start++;
+      transform(start, end, start, ::tolower);
+    }
+  }
 
   string DataItem::getCamelType(const string &type, string &prefix)
   {
     if (type.empty())
       return "";
-    else if (type == "PH")  // Exception to the rule.
-      return "PH";
 
     string camel;
     auto colon = type.find(':');
@@ -282,19 +298,20 @@ namespace mtconnect
     }
     else
       camel = type;
-
-    auto second = camel.begin();
-    second++;
-    transform(second, camel.end(), second, ::tolower);
-
-    auto word = find(second, camel.end(), '_');
-
-    while (word != camel.end())
+    
+    auto start = camel.begin();
+    decltype(start) end;
+    
+    do
     {
-      camel.erase(word);
-      camel.replace(word, word + 1ul, 1ul, ::toupper(*word));
-      word = find(word, camel.end(), '_');
+      end = find(start, camel.end(), '_');
+      capitalize(start, end);
+      if (end != camel.end()) {
+        camel.erase(end);
+        start = end;
+      }
     }
+    while (end != camel.end());
 
     return camel;
   }

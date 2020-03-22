@@ -157,6 +157,8 @@ TEST_F(DataItemTest, GetCamel)
 
   // Test the one exception to the rules...
   ASSERT_EQ((string) "PH", DataItem::getCamelType("PH", prefix));
+  ASSERT_EQ((string) "VoltageDC", DataItem::getCamelType("VOLTAGE_DC", prefix));
+  ASSERT_EQ((string) "VoltageAC", DataItem::getCamelType("VOLTAGE_AC", prefix));
 
   ASSERT_EQ((string) "CamelCase", DataItem::getCamelType("CAMEL_CASE", prefix));
   ASSERT_EQ((string) "ABCc", DataItem::getCamelType("A_B_CC", prefix));
