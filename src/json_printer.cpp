@@ -176,7 +176,8 @@ namespace mtconnect
         e["Description"] = entry.m_description;
       if (!entry.m_units.empty()) e["units"] = entry.m_units;
       if (!entry.m_type.empty()) e["type"] = entry.m_type;
-      
+      if (!entry.m_subType.empty()) e["subType"] = entry.m_subType;
+
       entries[entry.m_key] = e;
     }
 
@@ -198,7 +199,8 @@ namespace mtconnect
           e["Description"] = entry.m_description;
         if (!entry.m_units.empty()) e["units"] = entry.m_units;
         if (!entry.m_type.empty()) e["type"] = entry.m_type;
-        
+        if (!entry.m_subType.empty()) e["subType"] = entry.m_subType;
+
         if (!entry.m_cells.empty()) {
           e["CellDefinitions"] = toJson(entry.m_cells);
         }

@@ -637,7 +637,8 @@ namespace mtconnect
         addAttributes(writer, {
           {string("key"), entry.m_key},
           {string("units"), entry.m_units},
-          {string("type"), entry.m_type}
+          {string("type"), entry.m_type},
+          {string("subType"), entry.m_subType}
         });
         if (!entry.m_description.empty())
           addSimpleElement(writer, "Description", entry.m_description);
@@ -659,7 +660,8 @@ namespace mtconnect
         addAttributes(writer, {
           {string("key"), entry.m_key},
           {string("units"), entry.m_units},
-          {string("type"), entry.m_type}
+          {string("type"), entry.m_type},
+          {string("subType"), entry.m_subType}
         });
         if (!entry.m_description.empty())
           addSimpleElement(writer, "Description", entry.m_description);

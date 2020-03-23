@@ -302,16 +302,18 @@ namespace mtconnect
     auto start = camel.begin();
     decltype(start) end;
     
+    bool done;
     do
     {
       end = find(start, camel.end(), '_');
       capitalize(start, end);
-      if (end != camel.end()) {
+      done = end == camel.end();
+      if (!done) {
         camel.erase(end);
         start = end;
       }
     }
-    while (end != camel.end());
+    while (!done);
 
     return camel;
   }

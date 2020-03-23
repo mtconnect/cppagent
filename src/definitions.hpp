@@ -34,7 +34,8 @@ namespace mtconnect
     std::string m_key;
     std::string m_units;
     std::string m_type;
-    
+    std::string m_subType;
+
     bool operator<(const AbstractDefinition &other) { return m_key < other.m_key; }
     bool operator==(const AbstractDefinition &other) { return m_key == other.m_key; }
   };

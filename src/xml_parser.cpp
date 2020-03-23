@@ -607,7 +607,8 @@ namespace mtconnect
     def->m_key = getAttribute(definition, "key");
     def->m_units = getAttribute(definition, "units");
     def->m_type = getAttribute(definition, "type");
-    
+    def->m_subType = getAttribute(definition, "subType");
+
     forEachElement(definition, {
       {"Description", [&def](xmlNodePtr node){ def->m_description = getCDATA(node); }}
     });
