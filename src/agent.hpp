@@ -277,7 +277,7 @@ namespace mtconnect
     std::string handleAssets(const Printer *printer, std::ostream &out,
                              const dlib::key_value_map &queries, const std::string &list);
 
-    std::string storeAsset(std::ostream &out, const dlib::key_value_map &queries,
+    std::string storeAsset(std::ostream &out, const dlib::key_value_map &queries, const std::string &command, 
                            const std::string &asset, const std::string &body);
 
     // Stream the data to the user

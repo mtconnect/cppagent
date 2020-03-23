@@ -82,6 +82,13 @@ void AgentTestHelper::putResponseHelper(const char *file, int line, const string
   *doc = xmlParseMemory(m_result.c_str(), m_result.length());
 }
 
+void AgentTestHelper::deleteResponseHelper(const char *file, int line,
+                                        key_value_map &aQueries, xmlDocPtr *doc)
+{
+  makeRequest(file, line, "DELETE", "", aQueries);
+  *doc = xmlParseMemory(m_result.c_str(), m_result.length());
+}
+
 void AgentTestHelper::responseHelper(const char *file, int line, dlib::key_value_map &aQueries, nlohmann::json &doc)
 {
   makeRequest(file, line, "GET", "", aQueries);

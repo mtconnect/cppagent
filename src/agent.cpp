@@ -433,28 +433,26 @@ namespace mtconnect
       g_logger << LDEBUG << "Request: " << incoming.request_type << " " << incoming.path << " from "
                << incoming.foreign_ip << ":" << incoming.foreign_port;
 
-      if (m_putEnabled)
+      if (m_putEnabled && incoming.request_type != "GET")
       {
-        if ((incoming.request_type == "PUT" || incoming.request_type == "POST") &&
-            !m_putAllowedHosts.empty() && !m_putAllowedHosts.count(incoming.foreign_ip))
+        if (incoming.request_type != "PUT" &&
+            incoming.request_type != "POST" &&
+            incoming.request_type != "DELETE")
         {
           return printError(printer, "UNSUPPORTED",
-                            "HTTP PUT is not allowed from " + incoming.foreign_ip);
+                            "Only the HTTP GET, PUT, POST, and DELETE requests are supported");
         }
 
-        if (incoming.request_type != "GET" && incoming.request_type != "PUT" &&
-            incoming.request_type != "POST")
+        if (!m_putAllowedHosts.empty() &&
+            !m_putAllowedHosts.count(incoming.foreign_ip))
         {
           return printError(printer, "UNSUPPORTED",
-                            "Only the HTTP GET and PUT requests are supported");
+                            "HTTP PUT, POST, and DELETE are not allowed from " + incoming.foreign_ip);
         }
       }
-      else
+      else if (incoming.request_type != "GET")
       {
-        if (incoming.request_type != "GET")
-        {
           return printError(printer, "UNSUPPORTED", "Only the HTTP GET request is supported");
-        }
       }
 
       // Parse the URL path looking for '/'
@@ -481,7 +479,7 @@ namespace mtconnect
         if (incoming.request_type == "GET")
           result = handleAssets(printer, *outgoing.m_out, incoming.queries, list);
         else
-          result = storeAsset(*outgoing.m_out, incoming.queries, list, incoming.body);
+          result = storeAsset(*outgoing.m_out, incoming.queries, incoming.request_type, list, incoming.body);
       }
       else
       {
@@ -1123,7 +1121,8 @@ namespace mtconnect
   // Store an asset in the map by asset # and use the circular buffer as
   // an LRU. Check if we're removing an existing asset and clean up the
   // map, and then store this asset.
-  std::string Agent::storeAsset(std::ostream &aOut, const key_value_map &queries,
+  std::string Agent::storeAsset(std::ostream &aOut,
+                                const key_value_map &queries, const std::string &command,
                                 const std::string &id, const std::string &body)
   {
     string name = queries["device"];
@@ -1137,10 +1136,22 @@ namespace mtconnect
     if (!device)
       device = m_devices[0];
 
-    if (addAsset(device, id, body, type))
-      return "<success/>";
-    else
-      return "<failure/>";
+    if (command == "PUT" || command == "POST")
+    {
+      if (addAsset(device, id, body, type))
+        return "<success/>";
+      else
+        return "<failure>Cannot add asset (" + id + ")</failure>";
+    }
+    else if (command == "DELETE")
+    {
+      if (removeAsset(device, id, ""))
+        return "<success/>";
+      else
+        return "<failure>Cannot remove asset (" + id + ")</failure>";
+    }
+    
+    return "<failure>Bad Command:" + command + "</failure>";
   }
 
   string Agent::handleFile(const string &uri, OutgoingThings &outgoing)

@@ -1734,6 +1734,38 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
   }
 }
 
+TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
+{
+  addAdapter();
+  m_agent->enablePut();
+
+
+  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
+
+  m_adapter->processData("TIME|@ASSET@|111|Part|<Part>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
+
+  m_agentTestHelper->m_path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "111");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+
+  m_agentTestHelper->m_path = "/asset/111";
+  {
+    PARSE_XML_RESPONSE_DELETE;
+  }
+  
+  m_agentTestHelper->m_path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "111");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+}
+
+
 TEST_F(AgentTest, AssetChangedWhenUnavailable)
 {
   addAdapter();
@@ -1859,7 +1891,7 @@ TEST_F(AgentTest, PutBlockingFrom)
 
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT is not allowed from 127.0.0.1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT, POST, and DELETE are not allowed from 127.0.0.1");
   }
 
   m_agentTestHelper->m_path = "/LinuxCNC/current";

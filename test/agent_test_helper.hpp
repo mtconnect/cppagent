@@ -56,7 +56,9 @@ class AgentTestHelper
   void responseHelper(const char *file, int line, dlib::key_value_map &aQueries, nlohmann::json &doc);
   void putResponseHelper(const char *file, int line, const std::string &body,
                          dlib::key_value_map &aQueries, xmlDocPtr *doc);
-  
+  void deleteResponseHelper(const char *file, int line, 
+                            dlib::key_value_map &aQueries, xmlDocPtr *doc);
+
   void makeRequest(const char *file, int line, const char *request, const std::string &body, dlib::key_value_map &aQueries);
 };
 
@@ -80,6 +82,11 @@ class AgentTestHelper
 #define PARSE_XML_RESPONSE_PUT(body, queries)                                    \
   xmlDocPtr doc = nullptr;                                                       \
   m_agentTestHelper->putResponseHelper(__FILE__, __LINE__, body, queries, &doc); \
+  ASSERT_TRUE(doc)
+
+#define PARSE_XML_RESPONSE_DELETE                                    \
+  xmlDocPtr doc = nullptr;                                                       \
+  m_agentTestHelper->deleteResponseHelper(__FILE__, __LINE__, m_agentTestHelper->m_queries, &doc); \
   ASSERT_TRUE(doc)
 
 #define PARSE_JSON_RESPONSE \
