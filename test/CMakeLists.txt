@@ -1,3 +1,5 @@
+include(GoogleTest)
+
 # Include googletest
 FetchContent_Declare(
   googletest
@@ -22,6 +24,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
     list(APPEND _sources test_globals.cpp agent_test_helper.cpp)
   endif()
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
+  # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
   target_link_libraries(${AGENT_TEST_NAME}_test agent_lib gtest)
   target_include_directories(${AGENT_TEST_NAME}_test
     PRIVATE "${googletest_SOURCE_DIR}/googletest/include")
@@ -31,6 +34,8 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
     "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:${AGENT_TEST_NAME}_test>/../Resources\"")
   target_clangtidy_setup(agent_lib)
   add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
+
+  gtest_discover_tests(${AGENT_TEST_NAME}_test)
 endmacro()
 
 add_agent_test(agent TRUE)
@@ -40,6 +45,7 @@ add_agent_test(change_observer FALSE)
 add_agent_test(checkpoint FALSE)
 add_agent_test(component FALSE)
 add_agent_test(connector FALSE)
+add_agent_test(coordinate_system TRUE)
 add_agent_test(data_item FALSE)
 add_agent_test(data_set TRUE)
 add_agent_test(device FALSE)
@@ -49,6 +55,8 @@ add_agent_test(json_printer_error TRUE)
 add_agent_test(json_printer_probe TRUE)
 add_agent_test(json_printer_stream TRUE)
 add_agent_test(observation TRUE)
+add_agent_test(relationship TRUE)
+add_agent_test(specification TRUE)
 add_agent_test(table TRUE)
 add_agent_test(xml_parser TRUE)
 add_agent_test(xml_printer TRUE)

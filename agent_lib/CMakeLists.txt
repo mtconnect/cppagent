@@ -74,7 +74,9 @@ target_compile_definitions(
     $<$<PLATFORM_ID:Windows>:NOMINMAX>
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>
-)
+    )
+
+# set_property(SOURCE ${AGENT_SOURCES} PROPERTY COMPILE_FLAGS_DEBUG "${COVERAGE_FLAGS}")
 target_compile_features(agent_lib PUBLIC cxx_std_14)
 target_clangformat_setup(agent_lib)
 target_clangtidy_setup(agent_lib)

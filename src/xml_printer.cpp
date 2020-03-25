@@ -465,19 +465,23 @@ namespace mtconnect
     if (!desc.empty() || !body.empty())
       addSimpleElement(writer, "Description", body, desc);
 
-    if (component->getConfiguration())
+    if (!component->getConfiguration().empty())
     {
       AutoElement configEle(writer, "Configuration");
-      auto configuration = component->getConfiguration();
-      if (typeid(*configuration) == typeid(ExtendedComponentConfiguration))
+      const auto &configurations = component->getConfiguration();
+      for (const auto &configuration : configurations)
       {
-        auto ext = static_cast<const ExtendedComponentConfiguration *>(configuration);
-        printRawContent(writer, "Configuration", ext->getContent());
-      }
-      else if (typeid(*configuration) == typeid(SensorConfiguration))
-      {
-        auto sensor = static_cast<const SensorConfiguration *>(configuration);
-        printSensorConfiguration(writer, sensor);
+        const auto conf = configuration.get();
+        if (typeid(*conf) == typeid(ExtendedComponentConfiguration))
+        {
+          auto ext = static_cast<const ExtendedComponentConfiguration *>(conf);
+          printRawContent(writer, "Configuration", ext->getContent());
+        }
+        else if (typeid(*conf) == typeid(SensorConfiguration))
+        {
+          auto sensor = static_cast<const SensorConfiguration *>(conf);
+          printSensorConfiguration(writer, sensor);
+        }
       }
     }
 

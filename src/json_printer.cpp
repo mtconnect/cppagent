@@ -369,12 +369,12 @@ namespace mtconnect
 
         sensor["Channels"] = channels;
       }
-      parent["Configuration"] = json::object({{"SensorConfiguration", sensor}});
+      parent["SensorConfiguration"] = sensor;;
     }
     else if (typeid(*config) == typeid(ExtendedComponentConfiguration))
     {
       auto obj = static_cast<const ExtendedComponentConfiguration *>(config);
-      parent["Configuration"] = obj->getContent();
+      parent["ExtendedConfiguration"] = obj->getContent();
     }
   }
 
@@ -390,8 +390,16 @@ namespace mtconnect
     if (desc.begin() != desc.end())
       comp["Description"] = desc;
 
-    if (component->getConfiguration())
-      toJson(comp, component->getConfiguration());
+    if (!component->getConfiguration().empty())
+    {
+      json obj = json::object();
+
+      for (const auto &conf : component->getConfiguration())
+      {
+        toJson(obj, conf.get());
+      }
+      comp["Configuration"] = obj;
+    }
     toJson(comp, "DataItems", component->getDataItems());
     toJson(comp, "Components", component->getChildren());
     toJson(comp, "Compositions", component->getCompositions());

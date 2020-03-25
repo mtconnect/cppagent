@@ -266,7 +266,7 @@ TEST_F(XmlParserTest, Configuration)
   }
 
   ASSERT_TRUE(power);
-  ASSERT_TRUE(power->getConfiguration());
+  ASSERT_FALSE(power->getConfiguration().empty());
 }
 
 TEST_F(XmlParserTest, ParseAsset)

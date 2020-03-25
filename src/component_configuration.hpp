@@ -35,7 +35,7 @@ namespace mtconnect
   class ExtendedComponentConfiguration : public ComponentConfiguration
   {
    public:
-    ExtendedComponentConfiguration(std::string content) : m_content(std::move(content))
+    ExtendedComponentConfiguration(const std::string &content) : m_content(content)
     {
     }
     ~ExtendedComponentConfiguration() override = default;

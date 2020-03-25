@@ -761,13 +761,13 @@ namespace mtconnect
           sensor->addChannel(chl);
         }
       }
-      parent->setConfiguration(sensor);
+      parent->addConfiguration(std::move(sensor));
     }
     else
     {
       // Unknown configuration
       auto ext = new ExtendedComponentConfiguration(getRawContent(config));
-      parent->setConfiguration(ext);
+      parent->addConfiguration(std::move(ext));
     }
   }
 
