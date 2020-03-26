@@ -21,6 +21,7 @@
 #include "device.hpp"
 #include "sensor_configuration.hpp"
 #include "version.h"
+#include "relationships.hpp"
 
 #include <dlib/sockets.h>
 #include <dlib/logger.h>
@@ -336,12 +337,37 @@ namespace mtconnect
     if (!cal.m_initials.empty())
       parent["CalibrationInitials"] = cal.m_initials;
   }
+  
+  inline json toJson(const Relationship *rel)
+  {
+    json obj = json::object();
+    json fields = json::object({
+      {"id", rel->m_id},
+      {"name", rel->m_name},
+      {"type", rel->m_type},
+      {"criticality", rel->m_criticality}
+    });
+        
+    if (auto r = dynamic_cast<const ComponentRelationship*>(rel))
+    {
+      fields["idRef"] = r->m_idRef;
+      obj["ComponentRelationship"] = fields;
+    }
+    if (auto r = dynamic_cast<const DeviceRelationship*>(rel))
+    {
+      fields["href"] = r->m_href;
+      fields["role"] = r->m_role;
+      fields["deviceUuidRef"] = r->m_deviceUuidRef;
+      obj["DeviceRelationship"] = fields;
+    }
+
+    return obj;
+  }
 
   inline void toJson(json &parent, const ComponentConfiguration *config)
   {
-    if (typeid(*config) == typeid(SensorConfiguration))
+    if (auto obj = dynamic_cast<const SensorConfiguration *>(config))
     {
-      auto obj = static_cast<const SensorConfiguration *>(config);
       json sensor = json::object();
       if (!obj->getFirmwareVersion().empty())
         sensor["FirmwareVersion"] = obj->getFirmwareVersion();
@@ -371,9 +397,20 @@ namespace mtconnect
       }
       parent["SensorConfiguration"] = sensor;;
     }
-    else if (typeid(*config) == typeid(ExtendedComponentConfiguration))
+    else if (auto obj = dynamic_cast<const Relationships *>(config))
     {
-      auto obj = static_cast<const ExtendedComponentConfiguration *>(config);
+      json relationships = json::array();
+      
+      for (const auto &rel : obj->getRelationships())
+      {
+        json jrel = toJson(rel.get());
+        relationships.emplace_back(jrel);
+      }
+      
+      parent["Relationships"] = relationships;
+    }
+    else if (auto obj = dynamic_cast<const ExtendedComponentConfiguration *>(config))
+    {
       parent["ExtendedConfiguration"] = obj->getContent();
     }
   }

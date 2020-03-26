@@ -126,5 +126,40 @@ TEST_F(RelationshipTest, XmlPrinting)
 
 TEST_F(RelationshipTest, JsonPrinting)
 {
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  ASSERT_TRUE(m_adapter);
   
+  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  
+  {
+    PARSE_JSON_RESPONSE;
+    
+    auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
+    auto device = devices.at(0).at("/Device"_json_pointer);
+
+    auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
+    auto relationships = rotary.at("/Configuration/Relationships"_json_pointer);
+    ASSERT_TRUE(relationships.is_array());
+    ASSERT_EQ(2_S, relationships.size());
+
+    auto crel = relationships.at(0);
+    auto cfields = crel.at("/ComponentRelationship"_json_pointer);
+    EXPECT_EQ("ref1", cfields["id"]);
+    EXPECT_EQ("Power", cfields["name"]);
+    EXPECT_EQ("PEER", cfields["type"]);
+    EXPECT_EQ("CRITICAL", cfields["criticality"]);
+    EXPECT_EQ("power", cfields["idRef"]);
+
+    auto drel = relationships.at(1);
+    auto dfields = drel.at("/DeviceRelationship"_json_pointer);
+    EXPECT_EQ("ref2", dfields["id"]);
+    EXPECT_EQ("coffee", dfields["name"]);
+    EXPECT_EQ("PARENT", dfields["type"]);
+    EXPECT_EQ("NON_CRITICAL", dfields["criticality"]);
+    EXPECT_EQ("AUXILIARY", dfields["role"]);
+    EXPECT_EQ("http://127.0.0.1:2000/coffee", dfields["href"]);
+    EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", dfields["deviceUuidRef"]);
+
+  }
 }
