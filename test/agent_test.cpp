@@ -1629,6 +1629,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
     m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
   }
 }
@@ -1643,6 +1644,22 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
     m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
+  }
+}
+
+TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
+{
+  m_agent.reset();
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.5", 25ms);
+  m_agentTestHelper->m_agent = m_agent.get();
+
+  {
+    m_agentTestHelper->m_path = "/probe";
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", "true");
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
   }
 }

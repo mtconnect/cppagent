@@ -253,7 +253,11 @@ namespace mtconnect
     {
       m_resetTrigger = aTrigger;
     }
-
+    void makeDiscrete()
+    {
+      m_isDiscrete = true;
+      m_attributes = buildAttributes();
+    }
     bool hasInitialValue() const
     {
       return !m_initialValue.empty();

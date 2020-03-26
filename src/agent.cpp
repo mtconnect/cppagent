@@ -161,6 +161,12 @@ namespace mtconnect
         device->addDataItem(*di);
         device->addDeviceDataItem(*di);
       }
+      
+      if (device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 5)))
+      {
+        auto di = device->getAssetChanged();
+        di->makeDiscrete();
+      }
 
       if (!device->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
       {
