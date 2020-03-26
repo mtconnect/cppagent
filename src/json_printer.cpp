@@ -22,7 +22,7 @@
 #include "sensor_configuration.hpp"
 #include "version.h"
 #include "relationships.hpp"
-
+#include "specifications.hpp"
 #include <dlib/sockets.h>
 #include <dlib/logger.h>
 
@@ -364,6 +364,26 @@ namespace mtconnect
     return obj;
   }
 
+  inline json toJson(const Specification *spec)
+  {
+    json fields = json::object({
+      {"type", spec->m_type},
+      {"subType", spec->m_subType},
+      {"units", spec->m_units},
+      {"name", spec->m_name},
+      {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
+      {"dataItemIdRef", spec->m_dataItemIdRef},
+      {"compositionIdRef", spec->m_compositionIdRef},
+      {"Maximum", spec->m_maximum},
+      {"Minimum", spec->m_minimum},
+      {"Nominal", spec->m_nominal}
+    });
+    json obj = json::object({
+      {"Specification", fields}
+    });
+    return obj;
+  }
+  
   inline void toJson(json &parent, const ComponentConfiguration *config)
   {
     if (auto obj = dynamic_cast<const SensorConfiguration *>(config))
@@ -408,6 +428,18 @@ namespace mtconnect
       }
       
       parent["Relationships"] = relationships;
+    }
+    else if (auto obj = dynamic_cast<const Specifications *>(config))
+    {
+      json specifications = json::array();
+      
+      for (const auto &spec : obj->getSpecifications())
+      {
+        json jspec = toJson(spec.get());
+        specifications.emplace_back(jspec);
+      }
+      
+      parent["Specifications"] = specifications;
     }
     else if (auto obj = dynamic_cast<const ExtendedComponentConfiguration *>(config))
     {
