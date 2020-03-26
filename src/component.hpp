@@ -154,7 +154,7 @@ namespace mtconnect
     {
       m_configuration.emplace_back(configuration);
     }
-
+    
     // Get the device that any component is associated with
     Device *getDevice();
 

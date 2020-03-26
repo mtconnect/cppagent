@@ -22,6 +22,7 @@
 #include "data_item.hpp"
 #include "device.hpp"
 #include "globals.hpp"
+#include "relationships.hpp"
 
 #include <libxml/tree.h>
 

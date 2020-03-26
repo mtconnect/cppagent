@@ -34,6 +34,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/options.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/ref_counted.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/relationships.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/rolling_file_logger.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/rolling_file_logger.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/sensor_configuration.hpp"
