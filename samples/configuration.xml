@@ -4,6 +4,19 @@
   <Devices>
     <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
       <Description manufacturer="NIST" serialNumber=""/>
+			<Configuration>
+				<CoordinateSystems>
+					<CoordinateSystem id="world" type="WORLD" name="world">
+						<Origin>101 102 103</Origin>
+					</CoordinateSystem>
+					<CoordinateSystem id="machine" type="MACHINE" name="machine" nativeName="xxx" parentIdRef="world">
+						<Transformation>
+							<Translation>10 10 10</Translation>
+							<Rotation>90 0 90</Rotation>
+						</Transformation>
+					</CoordinateSystem>
+				</CoordinateSystems>
+			</Configuration>
       <DataItems>
 	<DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
       </DataItems>
@@ -16,9 +29,16 @@
 									<ComponentRelationship id="ref1" name="Power" type="PEER" criticality="CRITICAL" idRef="power"/>
 									<DeviceRelationship id="ref2" name="coffee" type="PARENT" criticality="NON_CRITICAL" role="AUXILIARY" href="http://127.0.0.1:2000/coffee" deviceUuidRef="bfccbfb0-5111-0138-6cd5-0c85909298d9"/>
 								</Relationships>
+								<Specifications>
+									<Specification type="ROTARY_VELOCITY" subType="ACTUAL" dataItemIdRef="c1" units="REVOLUTION/MINUTE" compositionIdRef="cmotor" name="speed_limit" coordinateSystemIdRef="machine">
+										<Maximum>10000</Maximum>
+										<Minimum>100</Minimum>
+										<Nominal>1000</Nominal>
+									</Specification>										
+								</Specifications>
 							</Configuration>
               <DataItems>
-                <DataItem type="SPINDLE_SPEED" category="SAMPLE" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE" id="c1" subType="ACTUAL" name="Sspeed">
+                <DataItem type="ROTARY_VELOCITY" category="SAMPLE" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE" id="c1" subType="ACTUAL" name="Sspeed">
                   <Source>spindle_speed</Source>
 		</DataItem>
 		<DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c2">

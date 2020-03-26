@@ -21,6 +21,7 @@
 #include "cutting_tool.hpp"
 #include "sensor_configuration.hpp"
 #include "xml_printer.hpp"
+#include "specifications.hpp"
 
 #include <dlib/logger.h>
 
@@ -805,12 +806,39 @@ namespace mtconnect
 
   void handleCoordinateSystems(xmlNodePtr node, Component *parent)
   {
-    
   }
 
   void handleSpecifications(xmlNodePtr node, Component *parent)
   {
+    unique_ptr<Specifications> specifications = make_unique<Specifications>();
+    for (xmlNodePtr child = node->children; child; child = child->next)
+    {
+      auto attrs = getAttributes(child);
+      
+      unique_ptr<Specification> spec{ new Specification() };
+      
+      spec->m_name = attrs["name"];
+      spec->m_type = attrs["type"];
+      spec->m_subType = attrs["subType"];
+      spec->m_units = attrs["units"];
+      spec->m_dataItemIdRef = attrs["dataItemIdRef"];
+      spec->m_compositionIdRef = attrs["compositionIdRef"];
+      spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
+
+      for (xmlNodePtr val = child->children; val; val = val->next)
+      {
+        if (xmlStrcmp(val->name, BAD_CAST "Maximum") == 0)
+          spec->m_maximum = getCDATA(val);
+        else if (xmlStrcmp(val->name, BAD_CAST "Minimum") == 0)
+          spec->m_minimum = getCDATA(val);
+        else if (xmlStrcmp(val->name, BAD_CAST "Nominal") == 0)
+          spec->m_nominal = getCDATA(val);
+      }
+      
+      specifications->addSpecification(spec);
+    }
     
+    parent->addConfiguration(specifications.release());
   }
 
   void XmlParser::handleConfiguration(xmlNodePtr node, Component *parent, Device *device)

@@ -57,12 +57,12 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
   
-  ASSERT_EQ(1, m_component->getConfiguration().size());
+  ASSERT_EQ(2, m_component->getConfiguration().size());
   
   const auto conf = m_component->getConfiguration().front().get();
   ASSERT_EQ(typeid(Relationships), typeid(*conf));
   
-  const Relationships *rels = dynamic_cast<const Relationships*>(m_component->getConfiguration().front().get());
+  const Relationships *rels = dynamic_cast<const Relationships*>(conf);
   ASSERT_NE(nullptr, rels);
   ASSERT_EQ(2, rels->getRelationships().size());
   
@@ -91,10 +91,6 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("http://127.0.0.1:2000/coffee", drel->m_href);
   EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", drel->m_deviceUuidRef);
 }
-
-#define ASSERT_DATA_SET_ENTRY(doc, var, key, expected) \
-ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']", expected)
-
 
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define RELATIONSHIPS_PATH CONFIGURATION_PATH "/m:Relationships"
