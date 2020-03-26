@@ -23,6 +23,7 @@
 #include "sensor_configuration.hpp"
 #include "version.h"
 #include "relationships.hpp"
+#include "specifications.hpp"
 
 #include <dlib/logger.h>
 #include <dlib/sockets.h>
@@ -535,6 +536,37 @@ namespace mtconnect
       }
     }
   }
+  
+  void printSpecifications(xmlTextWriterPtr writer, const Specifications *specs)
+  {
+    AutoElement ele(writer, "Specifications");
+    for (const auto &spec : specs->getSpecifications())
+    {
+      AutoElement ele(writer, "Specification");
+      addAttributes(writer, map<string,string>({
+        {"type", spec->m_type},
+        {"subType", spec->m_subType},
+        {"units", spec->m_units},
+        {"name", spec->m_name},
+        {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
+        {"compositionIdRef", spec->m_compositionIdRef},
+        {"dataItemIdRef", spec->m_dataItemIdRef}
+      }));
+
+      if (!spec->m_maximum.empty())
+      {
+        addSimpleElement(writer, "Maximum", spec->m_maximum);
+      }
+      if (!spec->m_minimum.empty())
+      {
+        addSimpleElement(writer, "Minimum", spec->m_minimum);
+      }
+      if (!spec->m_nominal.empty())
+      {
+        addSimpleElement(writer, "Nominal", spec->m_nominal);
+      }
+    }
+  }
 
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
                                     const char *name) const
@@ -567,6 +599,11 @@ namespace mtconnect
         {
           printRelationships(writer, conf);
         }
+        else if (auto conf = dynamic_cast<const Specifications*>(c))
+        {
+          printSpecifications(writer, conf);
+        }
+
       }
     }
 

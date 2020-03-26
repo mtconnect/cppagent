@@ -86,7 +86,7 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
 
 
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
-#define RELATIONSHIPS_PATH CONFIGURATION_PATH "/m:Specifications"
+#define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
 
 TEST_F(SpecificationTest, XmlPrinting)
 {
@@ -94,6 +94,20 @@ TEST_F(SpecificationTest, XmlPrinting)
   {
     PARSE_XML_RESPONSE;
     
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH , 1);
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*" , 1);
+
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@type" , "ROTARY_VELOCITY");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@subType" , "ACTUAL");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@units" , "REVOLUTION/MINUTE");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@name" , "speed_limit");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@compositionIdRef" , "cmotor");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@coordinateSystemIdRef" , "machine");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@dataItemIdRef" , "c1");
+    
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Maximum" , "10000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Minimum" , "100");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Nominal" , "1000");
   }
 }
 
