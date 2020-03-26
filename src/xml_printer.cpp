@@ -550,36 +550,22 @@ namespace mtconnect
 
     if (!component->getConfiguration().empty())
     {
-      map<type_index, std::function<void(xmlTextWriterPtr writer, ComponentConfiguration*)>> dispatch{
-        {typeid(SensorConfiguration),
-          [this](xmlTextWriterPtr writer, ComponentConfiguration *conf) {
-            printSensorConfiguration(writer, static_cast<const SensorConfiguration *>(conf));
-          }
-        },
-        {typeid(ExtendedComponentConfiguration),
-          [](xmlTextWriterPtr writer, ComponentConfiguration *conf) {
-            auto ext = static_cast<const ExtendedComponentConfiguration *>(conf);
-            printRawContent(writer, "Configuration", ext->getContent());
-          }
-        },
-        {typeid(Relationships),
-          [](xmlTextWriterPtr writer, ComponentConfiguration *conf) {
-            auto rel = static_cast<const Relationships *>(conf);
-            printRelationships(writer, rel);
-          }
-        }
-
-      };
-      
       AutoElement configEle(writer, "Configuration");
       const auto &configurations = component->getConfiguration();
       for (const auto &configuration : configurations)
       {
-        const auto conf = configuration.get();
-        auto lambda = dispatch[typeid(*conf)];
-        if (lambda)
+        auto c = configuration.get();
+        if (auto conf = dynamic_cast<const SensorConfiguration*>(c))
         {
-          (lambda)(writer, conf);
+          printSensorConfiguration(writer, conf);
+        }
+        else if (auto conf = dynamic_cast<const ExtendedComponentConfiguration*>(c))
+        {
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST conf->getContent().c_str()));
+        }
+        else if (auto conf = dynamic_cast<const Relationships*>(c))
+        {
+          printRelationships(writer, conf);
         }
       }
     }
