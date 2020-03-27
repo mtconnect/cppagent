@@ -6,10 +6,10 @@
       <Description manufacturer="NIST" serialNumber=""/>
 			<Configuration>
 				<CoordinateSystems>
-					<CoordinateSystem id="world" type="WORLD" name="world">
+					<CoordinateSystem id="world" type="WORLD" name="worldy">
 						<Origin>101 102 103</Origin>
 					</CoordinateSystem>
-					<CoordinateSystem id="machine" type="MACHINE" name="machine" nativeName="xxx" parentIdRef="world">
+					<CoordinateSystem id="machine" type="MACHINE" name="machiney" nativeName="xxx" parentIdRef="world">
 						<Transformation>
 							<Translation>10 10 10</Translation>
 							<Rotation>90 0 90</Rotation>

@@ -32,7 +32,6 @@ class RelationshipTest : public testing::Test
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->m_agent = m_agent.get();
 
-    std::map<string, string> attributes;
     auto device = m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("c");
   }

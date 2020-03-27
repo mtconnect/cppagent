@@ -22,6 +22,7 @@
 #include "sensor_configuration.hpp"
 #include "xml_printer.hpp"
 #include "specifications.hpp"
+#include "coordinate_systems.hpp"
 
 #include <dlib/logger.h>
 
@@ -806,6 +807,46 @@ namespace mtconnect
 
   void handleCoordinateSystems(xmlNodePtr node, Component *parent)
   {
+    unique_ptr<CoordinateSystems> systems = make_unique<CoordinateSystems>();
+    
+    for (xmlNodePtr child = node->children; child; child = child->next)
+    {
+      unique_ptr<CoordinateSystem> system{ new CoordinateSystem() };
+      
+      auto attrs = getAttributes(child);
+      
+      system->m_id = attrs["id"];
+      system->m_name = attrs["name"];
+      system->m_type = attrs["type"];
+      system->m_nativeName = attrs["nativeName"];
+      system->m_parentIdRef = attrs["parentIdRef"];
+      
+      for (xmlNodePtr val = child->children; val; val = val->next)
+      {
+        if (xmlStrcmp(val->name, BAD_CAST "Transformation") == 0)
+        {
+          for (xmlNodePtr t = val->children; t; t = t->next)
+          {
+            if (xmlStrcmp(t->name, BAD_CAST "Translation") == 0)
+            {
+              system->m_translation = getCDATA(t);
+            }
+            else if (xmlStrcmp(t->name, BAD_CAST "Rotation") == 0)
+            {
+              system->m_rotation = getCDATA(t);
+            }
+          }
+        }
+        else if (xmlStrcmp(val->name, BAD_CAST "Origin") == 0)
+        {
+          system->m_origin = getCDATA(val);
+        }
+      }
+
+      systems->addCoordinateSystem(system);
+    }
+    
+    parent->addConfiguration(systems.release());
   }
 
   void handleSpecifications(xmlNodePtr node, Component *parent)

@@ -17,6 +17,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/connector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/connector.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/coordinate_systems.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/cutting_tool.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/cutting_tool.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/data_item.cpp"

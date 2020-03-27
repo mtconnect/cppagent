@@ -32,7 +32,6 @@ class SpecificationTest : public testing::Test
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->m_agent = m_agent.get();
 
-    std::map<string, string> attributes;
     auto device = m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("c");
   }
@@ -58,8 +57,7 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
   ASSERT_NE(nullptr, m_component);
   
   ASSERT_EQ(2, m_component->getConfiguration().size());
-  
-  
+    
   auto ci = m_component->getConfiguration().begin();
   // Get the second configuration.
   ci++;

@@ -23,6 +23,7 @@
 #include "version.h"
 #include "relationships.hpp"
 #include "specifications.hpp"
+#include "coordinate_systems.hpp"
 #include <dlib/sockets.h>
 #include <dlib/logger.h>
 
@@ -96,7 +97,10 @@ namespace mtconnect
   static inline void addAttributes(json &doc, const map<string, string> &attrs)
   {
     for (const auto &attr : attrs)
-      doc[attr.first] = attr.second;
+    {
+      if (!attr.second.empty())
+        doc[attr.first] = attr.second;
+    }
   }
 
   static inline void add(json &doc, const char *key, const string &value)
@@ -341,7 +345,8 @@ namespace mtconnect
   inline json toJson(const Relationship *rel)
   {
     json obj = json::object();
-    json fields = json::object({
+    json fields = json::object();
+    addAttributes(fields, {
       {"id", rel->m_id},
       {"name", rel->m_name},
       {"type", rel->m_type},
@@ -366,7 +371,8 @@ namespace mtconnect
 
   inline json toJson(const Specification *spec)
   {
-    json fields = json::object({
+    json fields = json::object();
+    addAttributes(fields, {
       {"type", spec->m_type},
       {"subType", spec->m_subType},
       {"units", spec->m_units},
@@ -383,6 +389,42 @@ namespace mtconnect
     });
     return obj;
   }
+  
+  inline json toJson(const CoordinateSystem *system)
+  {
+    json fields = json::object();
+    addAttributes(fields, {
+      {"id", system->m_id},
+      {"type", system->m_type},
+      {"name", system->m_name},
+      {"nativeName", system->m_nativeName},
+      {"parentIdRef", system->m_parentIdRef},
+    });
+    
+    if (!system->m_origin.empty())
+    {
+      json obj = json::object();
+      obj["Origin"] = system->m_origin;
+      fields["Transformation"] = obj;
+}
+    if (!system->m_translation.empty() || !system->m_rotation.empty())
+    {
+      json obj = json::object();
+      
+      if (!system->m_translation.empty())
+        obj["Translation"] = system->m_translation;
+      if (!system->m_translation.empty())
+        obj["Rotation"] = system->m_rotation;
+
+      fields["Transformation"] = obj;
+    }
+
+    json obj = json::object({
+      {"CoordinateSystem", fields}
+    });
+    return obj;
+  }
+
   
   inline void toJson(json &parent, const ComponentConfiguration *config)
   {
@@ -440,6 +482,18 @@ namespace mtconnect
       }
       
       parent["Specifications"] = specifications;
+    }
+    else if (auto obj = dynamic_cast<const CoordinateSystems *>(config))
+    {
+      json systems = json::array();
+      
+      for (const auto &system : obj->getCoordinateSystems())
+      {
+        json jsystem = toJson(system.get());
+        systems.emplace_back(jsystem);
+      }
+      
+      parent["CoordinateSystems"] = systems;
     }
     else if (auto obj = dynamic_cast<const ExtendedComponentConfiguration *>(config))
     {

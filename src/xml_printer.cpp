@@ -24,6 +24,7 @@
 #include "version.h"
 #include "relationships.hpp"
 #include "specifications.hpp"
+#include "coordinate_systems.hpp"
 
 #include <dlib/logger.h>
 #include <dlib/sockets.h>
@@ -567,6 +568,35 @@ namespace mtconnect
       }
     }
   }
+  
+  void printCoordinateSystems(xmlTextWriterPtr writer, const CoordinateSystems *systems)
+  {
+    AutoElement ele(writer, "CoordinateSystems");
+    for (const auto &system : systems->getCoordinateSystems())
+    {
+      AutoElement ele(writer, "CoordinateSystem");
+      addAttributes(writer, map<string,string>({
+        {"id", system->m_id},
+        {"type", system->m_type},
+        {"name", system->m_name},
+        {"nativeName", system->m_nativeName},
+        {"parentIdRef", system->m_parentIdRef}
+      }));
+
+      if (!system->m_origin.empty())
+      {
+        addSimpleElement(writer, "Origin", system->m_origin);
+      }
+      if (!system->m_translation.empty() || !system->m_rotation.empty())
+      {
+        AutoElement ele(writer, "Transformation");
+        if (!system->m_translation.empty())
+          addSimpleElement(writer, "Translation", system->m_translation);
+        if (!system->m_rotation.empty())
+          addSimpleElement(writer, "Rotation", system->m_rotation);
+      }
+    }
+  }
 
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
                                     const char *name) const
@@ -602,6 +632,10 @@ namespace mtconnect
         else if (auto conf = dynamic_cast<const Specifications*>(c))
         {
           printSpecifications(writer, conf);
+        }
+        else if (auto conf = dynamic_cast<const CoordinateSystems*>(c))
+        {
+          printCoordinateSystems(writer, conf);
         }
 
       }
