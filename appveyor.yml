@@ -1,7 +1,7 @@
 version: '{build}'
-# branches:
-#  only:
-#  - master
+branches:
+  only:
+  - master
 # clone_folder: c:\projects\cppagent_dev
 image:
 - Ubuntu1804
