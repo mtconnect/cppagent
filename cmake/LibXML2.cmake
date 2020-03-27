@@ -26,7 +26,8 @@ else()
     include(FetchContent)
     FetchContent_Declare(
       libxmlprovider
-      URL "https://gitlab.gnome.org/GNOME/libxml2/-/archive/${agent_xml2_lib_version_tag}/libxml2-${agent_xml2_lib_version_tag}.zip"
+      URL "https://github.com/GNOME/libxml2/archive/${agent_xml2_lib_version_tag}.zip"
+#      URL "https://gitlab.gnome.org/GNOME/libxml2/-/archive/${agent_xml2_lib_version_tag}/libxml2-${agent_xml2_lib_version_tag}.zip"
     )
     FetchContent_GetProperties(libxmlprovider)
 
