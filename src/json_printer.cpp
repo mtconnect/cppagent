@@ -177,12 +177,13 @@ namespace mtconnect
     for (const auto &entry  : definitions)
     {
       json e = json::object();
-      if (!entry.m_description.empty())
-        e["Description"] = entry.m_description;
-      if (!entry.m_units.empty()) e["units"] = entry.m_units;
-      if (!entry.m_type.empty()) e["type"] = entry.m_type;
-      if (!entry.m_subType.empty()) e["subType"] = entry.m_subType;
-
+      addAttributes(e, {
+        {"Description", entry.m_description},
+        {"units", entry.m_units},
+        {"type", entry.m_type},
+        {"subType", entry.m_subType}
+      });
+      
       entries[entry.m_key] = e;
     }
 
@@ -200,12 +201,13 @@ namespace mtconnect
       for (const auto &entry  : definition.m_entries)
       {
         json e = json::object();
-        if (!entry.m_description.empty())
-          e["Description"] = entry.m_description;
-        if (!entry.m_units.empty()) e["units"] = entry.m_units;
-        if (!entry.m_type.empty()) e["type"] = entry.m_type;
-        if (!entry.m_subType.empty()) e["subType"] = entry.m_subType;
-
+        addAttributes(e, {
+          {"Description", entry.m_description},
+          {"units", entry.m_units},
+          {"type", entry.m_type},
+          {"subType", entry.m_subType}
+        });
+        
         if (!entry.m_cells.empty()) {
           e["CellDefinitions"] = toJson(entry.m_cells);
         }
@@ -334,12 +336,11 @@ namespace mtconnect
 
   inline void toJson(json &parent, const SensorConfiguration::Calibration &cal)
   {
-    if (!cal.m_date.empty())
-      parent["CalibrationDate"] = cal.m_date;
-    if (!cal.m_nextDate.empty())
-      parent["NextCalibrationDate"] = cal.m_nextDate;
-    if (!cal.m_initials.empty())
-      parent["CalibrationInitials"] = cal.m_initials;
+    addAttributes(parent, {
+      {"CalibrationDate", cal.m_date},
+      {"NextCalibrationDate", cal.m_nextDate},
+      {"CalibrationInitials", cal.m_initials}
+    });
   }
   
   inline json toJson(const Relationship *rel)
@@ -661,7 +662,8 @@ namespace mtconnect
       {
         obj["sequence"] = observation->getSequence();
       }
-      else if (strcmp(attr.first, "sampleCount") == 0 or strcmp(attr.first, "sampleRate") == 0 or
+      else if (strcmp(attr.first, "sampleCount") == 0 or
+               strcmp(attr.first, "sampleRate") == 0 or
                strcmp(attr.first, "duration") == 0)
       {
         char *ep;
