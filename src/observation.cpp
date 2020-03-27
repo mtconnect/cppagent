@@ -39,22 +39,24 @@ namespace mtconnect
   static dlib::logger g_logger("Observation");
 
   const string Observation::SLevels[NumLevels] = {"Normal", "Warning", "Fault", "Unavailable"};
-  
+
   bool DataSetValueSame::operator()(const DataSet &v)
   {
     if (!std::holds_alternative<DataSet>(m_other))
       return false;
-    
+
     const auto &oset = std::get<DataSet>(m_other);
-    
-    if (v.size() != oset.size()) return false;
-    
-    for (const auto &e1 : v) {
+
+    if (v.size() != oset.size())
+      return false;
+
+    for (const auto &e1 : v)
+    {
       const auto &e2 = oset.find(e1);
       if (e2 == oset.end() || !visit(DataSetValueSame(e2->m_value), e1.m_value))
         return false;
     }
-    
+
     return true;
   }
 
@@ -140,9 +142,10 @@ namespace mtconnect
     if (!m_hasAttributes)
     {
       lock_guard<std::mutex> lock(g_attributeMutex);
-      
+
       // Double check in case of a race.
-      if (m_hasAttributes) return m_attributes;
+      if (m_hasAttributes)
+        return m_attributes;
 
       m_attributes.emplace_back(AttributeItem("dataItemId", m_dataItem->getId()));
       m_attributes.emplace_back(AttributeItem("timestamp", m_time));
@@ -288,20 +291,20 @@ namespace mtconnect
 #define SQ_RE "'([^\\\\']+(\\\\')?)+'"
 #define CB_RE "\\{([^\\}\\\\]+(\\\\\\})?)+\\}"
 #define VAL_RE "[^ \t]+"
-  
+
   static const char *reg = WS_RE KEY_RE "(=(" DQ_RE "|" SQ_RE "|" CB_RE "|" VAL_RE ")?)?";
   static const char *int_reg = "[+-]?[0-9]+";
   static const char *float_reg = "[+-]?[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?";
   static regex tokenizer(reg);
   static regex int_regex(int_reg);
   static regex float_regex(float_reg);
-  
+
   static DataSetValue dataSetValue(const string &value)
   {
     if (regex_match(value, float_regex))
       return DataSetValue(stod(value));
     else if (regex_match(value, int_regex))
-      return DataSetValue((int64_t) stoll(value));
+      return DataSetValue((int64_t)stoll(value));
     else
       return DataSetValue(value);
   }
@@ -359,16 +362,19 @@ namespace mtconnect
             }
           } while (pos != string::npos && pos < value.size());
         }
-        
+
         // Map the value.
-        if (table) {
+        if (table)
+        {
           DataSet set;
           parseDataSet(set, value, false);
           dataSet.emplace(key, set, removed);
-        } else {
+        }
+        else
+        {
           dataSet.emplace(key, dataSetValue(value), removed);
         }
-        
+
         // Parse the rest of the string...
         rest = m.suffix();
       }

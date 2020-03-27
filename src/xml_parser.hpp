@@ -68,13 +68,12 @@ namespace mtconnect
 
     // Load the data items
     void loadDataItem(xmlNodePtr dataItems, Component *component, Device *device);
-    
+
     // Load the data items
     void loadDataItemDefinition(xmlNodePtr dataItems, DataItem *dataItem, Device *device);
     void loadDefinition(xmlNodePtr definition, AbstractDefinition *def);
     void loadDefinitions(xmlNodePtr definitions, std::set<EntryDefinition> &result);
     void loadDefinitions(xmlNodePtr definitions, std::set<CellDefinition> &result);
-
 
     // Perform loading on children and set up relationships
     void handleChildren(xmlNodePtr components, Component *parent = nullptr,

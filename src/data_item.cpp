@@ -21,9 +21,9 @@
 #include "adapter.hpp"
 #include "device.hpp"
 
+#include <array>
 #include <map>
 #include <string>
-#include <array>
 
 using namespace std;
 
@@ -102,7 +102,6 @@ namespace mtconnect
         m_representation = TABLE;
         m_camelType += "Table";
       }
-
     }
 
     if (!m_prefix.empty())
@@ -224,7 +223,7 @@ namespace mtconnect
 
     if (m_representation == DATA_SET)
       attributes["representation"] = "DATA_SET";
-    
+
     if (m_representation == TABLE)
       attributes["representation"] = "TABLE";
 
@@ -265,17 +264,14 @@ namespace mtconnect
   {
     return m_id == name || m_name == name || (!m_source.empty() && m_source == name);
   }
-  
-  static void capitalize(string::iterator start,
-                           string::iterator end)
+
+  static void capitalize(string::iterator start, string::iterator end)
   {
     // Exceptions to the rule
     static std::array<string, 3> exceptions = {"AC", "DC", "PH"};
-    
+
     if (std::none_of(exceptions.begin(), exceptions.end(),
-                    [&start, &end](const string &s) {
-                      return equal(start, end, s.begin());
-                    }))
+                     [&start, &end](const string &s) { return equal(start, end, s.begin()); }))
     {
       *start = ::toupper(*start);
       start++;
@@ -298,22 +294,22 @@ namespace mtconnect
     }
     else
       camel = type;
-    
+
     auto start = camel.begin();
     decltype(start) end;
-    
+
     bool done;
     do
     {
       end = find(start, camel.end(), '_');
       capitalize(start, end);
       done = end == camel.end();
-      if (!done) {
+      if (!done)
+      {
         camel.erase(end);
         start = end;
       }
-    }
-    while (!done);
+    } while (!done);
 
     return camel;
   }

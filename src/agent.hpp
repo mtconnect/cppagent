@@ -265,10 +265,8 @@ namespace mtconnect
                           const std::string &device);
 
     // Handle stream calls, which includes both current and sample
-    std::string handleStream(const Printer *printer, std::ostream &out,
-                             const std::string &path,
-                             bool current, unsigned int frequency,
-                             uint64_t start = 0,
+    std::string handleStream(const Printer *printer, std::ostream &out, const std::string &path,
+                             bool current, unsigned int frequency, uint64_t start = 0,
                              int count = 0,
                              std::chrono::milliseconds heartbeat = std::chrono::milliseconds{
                                  10000});
@@ -277,8 +275,9 @@ namespace mtconnect
     std::string handleAssets(const Printer *printer, std::ostream &out,
                              const dlib::key_value_map &queries, const std::string &list);
 
-    std::string storeAsset(std::ostream &out, const dlib::key_value_map &queries, const std::string &command, 
-                           const std::string &asset, const std::string &body);
+    std::string storeAsset(std::ostream &out, const dlib::key_value_map &queries,
+                           const std::string &command, const std::string &asset,
+                           const std::string &body);
 
     // Stream the data to the user
     void streamData(const Printer *printer, std::ostream &out, std::set<std::string> &filterSet,
@@ -290,8 +289,8 @@ namespace mtconnect
     std::string fetchCurrentData(const Printer *printer, std::set<std::string> &filterSet,
                                  uint64_t at);
     std::string fetchSampleData(const Printer *printer, std::set<std::string> &filterSet,
-                                uint64_t start, int count, uint64_t &end,
-                                bool &endOfBuffer, ChangeObserver *observer = nullptr);
+                                uint64_t start, int count, uint64_t &end, bool &endOfBuffer,
+                                ChangeObserver *observer = nullptr);
 
     // Output an XML Error
     std::string printError(const Printer *printer, const std::string &errorCode,

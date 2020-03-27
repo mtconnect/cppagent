@@ -25,7 +25,6 @@
 
 namespace mtconnect
 {
-
   struct Specification
   {
     Specification(const Specification &s) = default;
@@ -39,13 +38,13 @@ namespace mtconnect
     std::string m_dataItemIdRef;
     std::string m_compositionIdRef;
     std::string m_coordinateSystemIdRef;
-    
+
     // Elements
     std::string m_maximum;
     std::string m_minimum;
     std::string m_nominal;
   };
-  
+
   class Specifications : public ComponentConfiguration
   {
    public:
@@ -65,7 +64,6 @@ namespace mtconnect
       m_specifications.emplace_back(std::move(s));
     }
 
-    
    protected:
     std::list<std::unique_ptr<Specification>> m_specifications;
   };

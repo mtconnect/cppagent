@@ -25,7 +25,6 @@
 
 namespace mtconnect
 {
-
   struct CoordinateSystem
   {
     CoordinateSystem(const CoordinateSystem &s) = default;
@@ -37,16 +36,16 @@ namespace mtconnect
     std::string m_name;
     std::string m_nativeName;
     std::string m_parentIdRef;
-    
+
     // Elements
     // Transformation
     std::string m_rotation;
     std::string m_translation;
-    
+
     // Origin
     std::string m_origin;
   };
-  
+
   class CoordinateSystems : public ComponentConfiguration
   {
    public:
@@ -65,7 +64,7 @@ namespace mtconnect
     {
       m_coordinateSystems.emplace_back(std::move(s));
     }
-    
+
    protected:
     std::list<std::unique_ptr<CoordinateSystem>> m_coordinateSystems;
   };

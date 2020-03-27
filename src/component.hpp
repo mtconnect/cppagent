@@ -150,11 +150,11 @@ namespace mtconnect
       return m_description;
     }
 
-    void addConfiguration(ComponentConfiguration* configuration)
+    void addConfiguration(ComponentConfiguration *configuration)
     {
       m_configuration.emplace_back(configuration);
     }
-    
+
     // Get the device that any component is associated with
     Device *getDevice();
 

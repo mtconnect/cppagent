@@ -18,13 +18,13 @@
 #include "xml_printer.hpp"
 
 #include "composition.hpp"
+#include "coordinate_systems.hpp"
 #include "cutting_tool.hpp"
 #include "device.hpp"
-#include "sensor_configuration.hpp"
-#include "version.h"
 #include "relationships.hpp"
+#include "sensor_configuration.hpp"
 #include "specifications.hpp"
-#include "coordinate_systems.hpp"
+#include "version.h"
 
 #include <dlib/logger.h>
 #include <dlib/sockets.h>
@@ -32,9 +32,9 @@
 #include <libxml/xmlwriter.h>
 
 #include <set>
-#include <utility>
 #include <typeindex>
 #include <typeinfo>
+#include <utility>
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr)                                           \
@@ -294,9 +294,8 @@ namespace mtconnect
       THROW_IF_XML2_ERROR(
           xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST value.c_str()));
   }
-  
-  void addAttributes(xmlTextWriterPtr writer,
-                     const std::map<string, string> &attributes)
+
+  void addAttributes(xmlTextWriterPtr writer, const std::map<string, string> &attributes)
   {
     for (const auto &attr : attributes)
     {
@@ -383,10 +382,9 @@ namespace mtconnect
     string m_name;
     string m_key;
   };
-  
-  void addSimpleElement(xmlTextWriterPtr writer, const string &element,
-                        const string &body, const map<string, string> &attributes = {},
-                        bool raw = false)
+
+  void addSimpleElement(xmlTextWriterPtr writer, const string &element, const string &body,
+                        const map<string, string> &attributes = {}, bool raw = false)
   {
     AutoElement ele(writer, element);
 
@@ -504,7 +502,7 @@ namespace mtconnect
       }
     }
   }
-  
+
   void printRelationships(xmlTextWriterPtr writer, const Relationships *rels)
   {
     if (rels->getRelationships().size() > 0)
@@ -512,13 +510,11 @@ namespace mtconnect
       AutoElement ele(writer, "Relationships");
       for (const auto &rel : rels->getRelationships())
       {
-        map<string,string> attrs {
-          {"id", rel->m_id},
-          {"type", rel->m_type},
-          {"name", rel->m_name},
-          {"criticality", rel->m_criticality}
-        };
-        
+        map<string, string> attrs{{"id", rel->m_id},
+                                  {"type", rel->m_type},
+                                  {"name", rel->m_name},
+                                  {"criticality", rel->m_criticality}};
+
         string name;
         if (auto crel = dynamic_cast<ComponentRelationship *>(rel.get()))
         {
@@ -532,27 +528,26 @@ namespace mtconnect
           attrs["role"] = drel->m_role;
           attrs["deviceUuidRef"] = drel->m_deviceUuidRef;
         }
-        
+
         addSimpleElement(writer, name, "", attrs);
       }
     }
   }
-  
+
   void printSpecifications(xmlTextWriterPtr writer, const Specifications *specs)
   {
     AutoElement ele(writer, "Specifications");
     for (const auto &spec : specs->getSpecifications())
     {
       AutoElement ele(writer, "Specification");
-      addAttributes(writer, map<string,string>({
-        {"type", spec->m_type},
-        {"subType", spec->m_subType},
-        {"units", spec->m_units},
-        {"name", spec->m_name},
-        {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
-        {"compositionIdRef", spec->m_compositionIdRef},
-        {"dataItemIdRef", spec->m_dataItemIdRef}
-      }));
+      addAttributes(writer,
+                    map<string, string>({{"type", spec->m_type},
+                                         {"subType", spec->m_subType},
+                                         {"units", spec->m_units},
+                                         {"name", spec->m_name},
+                                         {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
+                                         {"compositionIdRef", spec->m_compositionIdRef},
+                                         {"dataItemIdRef", spec->m_dataItemIdRef}}));
 
       if (!spec->m_maximum.empty())
       {
@@ -568,20 +563,18 @@ namespace mtconnect
       }
     }
   }
-  
+
   void printCoordinateSystems(xmlTextWriterPtr writer, const CoordinateSystems *systems)
   {
     AutoElement ele(writer, "CoordinateSystems");
     for (const auto &system : systems->getCoordinateSystems())
     {
       AutoElement ele(writer, "CoordinateSystem");
-      addAttributes(writer, map<string,string>({
-        {"id", system->m_id},
-        {"type", system->m_type},
-        {"name", system->m_name},
-        {"nativeName", system->m_nativeName},
-        {"parentIdRef", system->m_parentIdRef}
-      }));
+      addAttributes(writer, map<string, string>({{"id", system->m_id},
+                                                 {"type", system->m_type},
+                                                 {"name", system->m_name},
+                                                 {"nativeName", system->m_nativeName},
+                                                 {"parentIdRef", system->m_parentIdRef}}));
 
       if (!system->m_origin.empty())
       {
@@ -617,27 +610,26 @@ namespace mtconnect
       for (const auto &configuration : configurations)
       {
         auto c = configuration.get();
-        if (auto conf = dynamic_cast<const SensorConfiguration*>(c))
+        if (auto conf = dynamic_cast<const SensorConfiguration *>(c))
         {
           printSensorConfiguration(writer, conf);
         }
-        else if (auto conf = dynamic_cast<const ExtendedComponentConfiguration*>(c))
+        else if (auto conf = dynamic_cast<const ExtendedComponentConfiguration *>(c))
         {
           THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST conf->getContent().c_str()));
         }
-        else if (auto conf = dynamic_cast<const Relationships*>(c))
+        else if (auto conf = dynamic_cast<const Relationships *>(c))
         {
           printRelationships(writer, conf);
         }
-        else if (auto conf = dynamic_cast<const Specifications*>(c))
+        else if (auto conf = dynamic_cast<const Specifications *>(c))
         {
           printSpecifications(writer, conf);
         }
-        else if (auto conf = dynamic_cast<const CoordinateSystems*>(c))
+        else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
         {
           printCoordinateSystems(writer, conf);
         }
-
       }
     }
 
@@ -776,40 +768,40 @@ namespace mtconnect
 
     if (dataItem->hasResetTrigger())
       addSimpleElement(writer, "ResetTrigger", dataItem->getResetTrigger());
-    
+
     if (dataItem->hasDefinition())
       printDataItemDefinition(writer, dataItem->getDefinition());
   }
-  
-  void XmlPrinter::printDataItemDefinition(xmlTextWriterPtr writer, const DataItemDefinition &definition) const
+
+  void XmlPrinter::printDataItemDefinition(xmlTextWriterPtr writer,
+                                           const DataItemDefinition &definition) const
   {
     AutoElement ele(writer, "Definition");
-    
+
     if (!definition.m_description.empty())
       addSimpleElement(writer, "Description", definition.m_description);
-    
+
     if (!definition.m_entries.empty())
     {
       AutoElement ele(writer, "EntryDefinitions");
       for (const auto &entry : definition.m_entries)
       {
         AutoElement ele(writer, "EntryDefinition");
-        addAttributes(writer, {
-          {string("key"), entry.m_key},
-          {string("units"), entry.m_units},
-          {string("type"), entry.m_type},
-          {string("subType"), entry.m_subType}
-        });
+        addAttributes(writer, {{string("key"), entry.m_key},
+                               {string("units"), entry.m_units},
+                               {string("type"), entry.m_type},
+                               {string("subType"), entry.m_subType}});
         if (!entry.m_description.empty())
           addSimpleElement(writer, "Description", entry.m_description);
         printCellDefinitions(writer, entry.m_cells);
       }
     }
-    
+
     printCellDefinitions(writer, definition.m_cells);
   }
 
-  void XmlPrinter::printCellDefinitions(xmlTextWriterPtr writer, const std::set<CellDefinition> &definitions) const
+  void XmlPrinter::printCellDefinitions(xmlTextWriterPtr writer,
+                                        const std::set<CellDefinition> &definitions) const
   {
     if (!definitions.empty())
     {
@@ -817,18 +809,16 @@ namespace mtconnect
       for (const auto &entry : definitions)
       {
         AutoElement ele(writer, "CellDefinition");
-        addAttributes(writer, {
-          {string("key"), entry.m_key},
-          {string("units"), entry.m_units},
-          {string("type"), entry.m_type},
-          {string("subType"), entry.m_subType}
-        });
+        addAttributes(writer, {{string("key"), entry.m_key},
+                               {string("units"), entry.m_units},
+                               {string("type"), entry.m_type},
+                               {string("subType"), entry.m_subType}});
         if (!entry.m_description.empty())
           addSimpleElement(writer, "Description", entry.m_description);
       }
     }
   }
-  
+
   string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
                                  const uint64_t lastSeq, ObservationPtrArray &observations) const
@@ -1021,39 +1011,40 @@ namespace mtconnect
         {
           attrs["removed"] = "true";
         }
-        visit(overloaded {
-          [&writer, &attrs](const string &st) {
-            addSimpleElement(writer, "Entry", st, attrs);
-          },
-          [&writer, &attrs](const int64_t &i) {
-            addSimpleElement(writer, "Entry", to_string(i), attrs);
-          },
-          [&writer, &attrs](const double &d) {
-            addSimpleElement(writer, "Entry", to_string(d), attrs);
-          },
-          [&writer, &attrs](const DataSet &row) {
-            // Table
-            AutoElement ele(writer, "Entry");
-            addAttributes(writer, attrs);
-            for (auto &c : row) {
-              map<string, string> attrs = {{"key", c.m_key}};
-              visit(overloaded {
-                [&writer, &attrs](const string &s) {
-                  addSimpleElement(writer, "Cell", s, attrs);
-                },
-                [&writer, &attrs](const int64_t &i) {
-                  addSimpleElement(writer, "Cell", to_string(i), attrs);
-                },
-                [&writer, &attrs](const double &d) {
-                  addSimpleElement(writer, "Cell", floatToString(d), attrs);
-                },
-                [](auto &a) {
-                  g_logger << dlib::LERROR << "Invalid type for DataSetVariant cell";
-                }
-              }, c.m_value);
-            }
-          }
-        }, e.m_value);
+        visit(overloaded{[&writer, &attrs](const string &st) {
+                           addSimpleElement(writer, "Entry", st, attrs);
+                         },
+                         [&writer, &attrs](const int64_t &i) {
+                           addSimpleElement(writer, "Entry", to_string(i), attrs);
+                         },
+                         [&writer, &attrs](const double &d) {
+                           addSimpleElement(writer, "Entry", to_string(d), attrs);
+                         },
+                         [&writer, &attrs](const DataSet &row) {
+                           // Table
+                           AutoElement ele(writer, "Entry");
+                           addAttributes(writer, attrs);
+                           for (auto &c : row)
+                           {
+                             map<string, string> attrs = {{"key", c.m_key}};
+                             visit(overloaded{
+                                       [&writer, &attrs](const string &s) {
+                                         addSimpleElement(writer, "Cell", s, attrs);
+                                       },
+                                       [&writer, &attrs](const int64_t &i) {
+                                         addSimpleElement(writer, "Cell", to_string(i), attrs);
+                                       },
+                                       [&writer, &attrs](const double &d) {
+                                         addSimpleElement(writer, "Cell", floatToString(d), attrs);
+                                       },
+                                       [](auto &a) {
+                                         g_logger << dlib::LERROR
+                                                  << "Invalid type for DataSetVariant cell";
+                                       }},
+                                   c.m_value);
+                           }
+                         }},
+              e.m_value);
       }
     }
     else if (!result->getValue().empty())

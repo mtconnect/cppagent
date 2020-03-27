@@ -121,8 +121,10 @@ namespace mtconnect
     // Helper to print individual components and details
     void printProbeHelper(xmlTextWriterPtr writer, Component *component, const char *name) const;
     void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem) const;
-    void printDataItemDefinition(xmlTextWriterPtr writer, const DataItemDefinition &definition) const;
-    void printCellDefinitions(xmlTextWriterPtr writer, const std::set<CellDefinition> &definitions) const;
+    void printDataItemDefinition(xmlTextWriterPtr writer,
+                                 const DataItemDefinition &definition) const;
+    void printCellDefinitions(xmlTextWriterPtr writer,
+                              const std::set<CellDefinition> &definitions) const;
 
     void addObservation(xmlTextWriterPtr writer, Observation *result) const;
 

@@ -18,11 +18,11 @@
 #include "xml_parser.hpp"
 
 #include "composition.hpp"
+#include "coordinate_systems.hpp"
 #include "cutting_tool.hpp"
 #include "sensor_configuration.hpp"
-#include "xml_printer.hpp"
 #include "specifications.hpp"
-#include "coordinate_systems.hpp"
+#include "xml_printer.hpp"
 
 #include <dlib/logger.h>
 
@@ -119,14 +119,15 @@ namespace mtconnect
 
     return toReturn;
   }
-  
-  static inline void forEachElement(const xmlNodePtr node, map<string,function<void(const xmlNodePtr)>> funs)
+
+  static inline void forEachElement(const xmlNodePtr node,
+                                    map<string, function<void(const xmlNodePtr)>> funs)
   {
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
       if (child->type != XML_ELEMENT_NODE)
         continue;
-      
+
       string name((const char *)child->name);
       auto lambda = funs.find(name);
       if (lambda != funs.end())
@@ -603,7 +604,7 @@ namespace mtconnect
     parent->addDataItem(*d);
     device->addDeviceDataItem(*d);
   }
-  
+
   void XmlParser::loadDefinition(xmlNodePtr definition, AbstractDefinition *def)
   {
     def->m_key = getAttribute(definition, "key");
@@ -611,48 +612,51 @@ namespace mtconnect
     def->m_type = getAttribute(definition, "type");
     def->m_subType = getAttribute(definition, "subType");
 
-    forEachElement(definition, {
-      {"Description", [&def](xmlNodePtr node){ def->m_description = getCDATA(node); }}
-    });
+    forEachElement(
+        definition,
+        {{"Description", [&def](xmlNodePtr node) { def->m_description = getCDATA(node); }}});
   }
-  
+
   void XmlParser::loadDefinitions(xmlNodePtr definitions, std::set<EntryDefinition> &result)
   {
-    forEachElement(definitions, {
-      {"EntryDefinition", [this, &result](xmlNodePtr node){
-        EntryDefinition def;
-        loadDefinition(node, &def);
-        forEachElement(node, {
-          {"CellDefinitions", [this, &def](xmlNodePtr node){ loadDefinitions(node, def.m_cells); }}
-        });
-        result.emplace(def);
-      }}
-    });
+    forEachElement(definitions, {{"EntryDefinition", [this, &result](xmlNodePtr node) {
+                                    EntryDefinition def;
+                                    loadDefinition(node, &def);
+                                    forEachElement(
+                                        node, {{"CellDefinitions", [this, &def](xmlNodePtr node) {
+                                                  loadDefinitions(node, def.m_cells);
+                                                }}});
+                                    result.emplace(def);
+                                  }}});
   }
-  
+
   void XmlParser::loadDefinitions(xmlNodePtr definitions, std::set<CellDefinition> &result)
   {
     forEachElement(definitions, {
-      {"CellDefinition", [this, &result](xmlNodePtr node){
-        CellDefinition def;
-        loadDefinition(node, &def);
-        result.emplace(def);
-      }},
-    });
+                                    {"CellDefinition",
+                                     [this, &result](xmlNodePtr node) {
+                                       CellDefinition def;
+                                       loadDefinition(node, &def);
+                                       result.emplace(def);
+                                     }},
+                                });
   }
-  
 
   // Load the data items
   void XmlParser::loadDataItemDefinition(xmlNodePtr definition, DataItem *dataItem, Device *device)
   {
     unique_ptr<DataItemDefinition> def(new DataItemDefinition());
-    
-    forEachElement(definition, {
-      {"Description", [&def](xmlNodePtr node){ def->m_description = getCDATA(node); }},
-      {"EntryDefinitions", [this, &def](xmlNodePtr node){ loadDefinitions(node, def->m_entries); }},
-      {"CellDefinitions", [this, &def](xmlNodePtr node){ loadDefinitions(node, def->m_cells); }},
-    });
-        
+
+    forEachElement(
+        definition,
+        {
+            {"Description", [&def](xmlNodePtr node) { def->m_description = getCDATA(node); }},
+            {"EntryDefinitions",
+             [this, &def](xmlNodePtr node) { loadDefinitions(node, def->m_entries); }},
+            {"CellDefinitions",
+             [this, &def](xmlNodePtr node) { loadDefinitions(node, def->m_cells); }},
+        });
+
     dataItem->setDefinition(def);
   }
 
@@ -708,7 +712,7 @@ namespace mtconnect
       parent->addReference(ref);
     }
   }
-  
+
   void handleSensorConfiguration(xmlNodePtr node, Component *parent)
   {
     // Decode sensor configuration
@@ -765,19 +769,19 @@ namespace mtconnect
   void handleRelationships(xmlNodePtr node, Component *parent)
   {
     unique_ptr<Relationships> relationships = make_unique<Relationships>();
-    
+
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
       unique_ptr<Relationship> relationship;
       if (xmlStrcmp(child->name, BAD_CAST "ComponentRelationship") == 0)
       {
-        unique_ptr<ComponentRelationship> crel{ new ComponentRelationship() };
+        unique_ptr<ComponentRelationship> crel{new ComponentRelationship()};
         crel->m_idRef = getAttribute(child, "idRef");
         relationship = std::move(crel);
       }
       else if (xmlStrcmp(child->name, BAD_CAST "DeviceRelationship") == 0)
       {
-        unique_ptr<DeviceRelationship> drel{ new DeviceRelationship() };
+        unique_ptr<DeviceRelationship> drel{new DeviceRelationship()};
         drel->m_href = getAttribute(child, "href");
         drel->m_role = getAttribute(child, "role");
         drel->m_deviceUuidRef = getAttribute(child, "deviceUuidRef");
@@ -786,10 +790,10 @@ namespace mtconnect
       }
       else
       {
-        g_logger << dlib::LWARN << "Bad Relationship: " << (const char *) child->name
+        g_logger << dlib::LWARN << "Bad Relationship: " << (const char *)child->name
                  << ", skipping";
       }
-      
+
       if (relationship)
       {
         auto attrs = getAttributes(child);
@@ -801,26 +805,26 @@ namespace mtconnect
         relationships->addRelationship(relationship);
       }
     }
-    
+
     parent->addConfiguration(relationships.release());
   }
 
   void handleCoordinateSystems(xmlNodePtr node, Component *parent)
   {
     unique_ptr<CoordinateSystems> systems = make_unique<CoordinateSystems>();
-    
+
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
-      unique_ptr<CoordinateSystem> system{ new CoordinateSystem() };
-      
+      unique_ptr<CoordinateSystem> system{new CoordinateSystem()};
+
       auto attrs = getAttributes(child);
-      
+
       system->m_id = attrs["id"];
       system->m_name = attrs["name"];
       system->m_type = attrs["type"];
       system->m_nativeName = attrs["nativeName"];
       system->m_parentIdRef = attrs["parentIdRef"];
-      
+
       for (xmlNodePtr val = child->children; val; val = val->next)
       {
         if (xmlStrcmp(val->name, BAD_CAST "Transformation") == 0)
@@ -845,7 +849,7 @@ namespace mtconnect
 
       systems->addCoordinateSystem(system);
     }
-    
+
     parent->addConfiguration(systems.release());
   }
 
@@ -855,9 +859,9 @@ namespace mtconnect
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
       auto attrs = getAttributes(child);
-      
-      unique_ptr<Specification> spec{ new Specification() };
-      
+
+      unique_ptr<Specification> spec{new Specification()};
+
       spec->m_name = attrs["name"];
       spec->m_type = attrs["type"];
       spec->m_subType = attrs["subType"];
@@ -875,31 +879,28 @@ namespace mtconnect
         else if (xmlStrcmp(val->name, BAD_CAST "Nominal") == 0)
           spec->m_nominal = getCDATA(val);
       }
-      
+
       specifications->addSpecification(spec);
     }
-    
+
     parent->addConfiguration(specifications.release());
   }
 
   void XmlParser::handleConfiguration(xmlNodePtr node, Component *parent, Device *device)
   {
-    static std::map<std::string, std::function<void(xmlNodePtr, Component *)>> handlers({
-      {"SensorConfiguration",
-      [](xmlNodePtr n, Component *p) { handleSensorConfiguration(n, p); }},
-      {"Relationships",
-      [](xmlNodePtr n, Component *p) { handleRelationships(n, p); }},
-      {"CoordinateSystems",
-      [](xmlNodePtr n, Component *p) { handleCoordinateSystems(n, p); }},
-      {"Specifications",
-      [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }}
-    });
-    
+    static std::map<std::string, std::function<void(xmlNodePtr, Component *)>> handlers(
+        {{"SensorConfiguration",
+          [](xmlNodePtr n, Component *p) { handleSensorConfiguration(n, p); }},
+         {"Relationships", [](xmlNodePtr n, Component *p) { handleRelationships(n, p); }},
+         {"CoordinateSystems", [](xmlNodePtr n, Component *p) { handleCoordinateSystems(n, p); }},
+         {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }}});
+
     // Get the first node
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
-      const char *qname = (const char *) child->name;
-      if (handlers.count(qname) > 0) {
+      const char *qname = (const char *)child->name;
+      if (handlers.count(qname) > 0)
+      {
         auto &handler = handlers[qname];
         (handler)(child, parent);
       }
@@ -910,7 +911,6 @@ namespace mtconnect
         parent->addConfiguration(std::move(ext));
       }
     }
-
   }
 
   AssetPtr XmlParser::parseAsset(const std::string &assetId, const std::string &type,

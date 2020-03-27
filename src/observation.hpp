@@ -26,8 +26,8 @@
 #include <set>
 #include <string>
 #include <utility>
-#include <vector>
 #include <variant>
+#include <vector>
 
 namespace mtconnect
 {
@@ -47,24 +47,32 @@ namespace mtconnect
   using ObservationPtr = RefCountedPtr<Observation>;
   using ObservationPtrArray = dlib::array<ObservationPtr>;
 
-  template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-  template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+  template <class... Ts>
+  struct overloaded : Ts...
+  {
+    using Ts::operator()...;
+  };
+  template <class... Ts>
+  overloaded(Ts...)->overloaded<Ts...>;
 
   struct DataSetEntry;
   using DataSet = std::set<DataSetEntry>;
-  using DataSetValue = std::variant<DataSet, std::string, int64_t, double> ;
-  
+  using DataSetValue = std::variant<DataSet, std::string, int64_t, double>;
+
   struct DataSetValueSame
   {
-    DataSetValueSame(const DataSetValue &other) : m_other(other) {}
-    
+    DataSetValueSame(const DataSetValue &other) : m_other(other)
+    {
+    }
+
     bool operator()(const DataSet &v);
-    template<class T>
-    bool operator()(const T &v) {
+    template <class T>
+    bool operator()(const T &v)
+    {
       return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
     }
-    
-  private:
+
+   private:
     const DataSetValue &m_other;
   };
 
@@ -85,8 +93,7 @@ namespace mtconnect
     DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false)
     {
     }
-    DataSetEntry(const DataSetEntry &other)
-        = default;
+    DataSetEntry(const DataSetEntry &other) = default;
 
     std::string m_key;
     DataSetValue m_value;

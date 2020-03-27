@@ -142,8 +142,8 @@ namespace mtconnect
     auto iter = s.cbegin();
     if (*iter == '-' || *iter == '+')
       ++iter;
-    
-    for (;iter != s.end(); iter++)
+
+    for (; iter != s.end(); iter++)
     {
       if (!isdigit(*iter))
         return false;

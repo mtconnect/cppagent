@@ -18,8 +18,8 @@
 #pragma once
 #include "change_observer.hpp"
 #include "component.hpp"
-#include "globals.hpp"
 #include "definitions.hpp"
+#include "globals.hpp"
 
 #include <dlib/threads.h>
 
@@ -171,7 +171,10 @@ namespace mtconnect
     {
       return m_hasNativeScale;
     }
-    bool hasDefinition() const { return (bool) m_definition; }
+    bool hasDefinition() const
+    {
+      return (bool)m_definition;
+    }
 
     // Add a source (extra information) to data item
     void addSource(const std::string &source, const std::string &sourceDataItemId,
@@ -286,12 +289,14 @@ namespace mtconnect
     {
       return m_source.empty() ? (m_name.empty() ? m_id : m_name) : m_source;
     }
-    
-    const DataItemDefinition &getDefinition() {
+
+    const DataItemDefinition &getDefinition()
+    {
       return *m_definition;
     }
-    
-    void setDefinition(std::unique_ptr<DataItemDefinition> &def) {
+
+    void setDefinition(std::unique_ptr<DataItemDefinition> &def)
+    {
       std::swap(m_definition, def);
     }
 
@@ -546,7 +551,7 @@ namespace mtconnect
     bool m_conversionDetermined;
     bool m_conversionRequired;
     bool m_hasFactor;
-    
+
     // Definitons
     std::unique_ptr<DataItemDefinition> m_definition;
   };

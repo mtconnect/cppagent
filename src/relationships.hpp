@@ -36,7 +36,7 @@ namespace mtconnect
     std::string m_name;
     std::string m_criticality;
   };
-  
+
   struct ComponentRelationship : public Relationship
   {
     ComponentRelationship() = default;
@@ -45,13 +45,13 @@ namespace mtconnect
 
     std::string m_idRef;
   };
-  
-  struct DeviceRelationship  : public Relationship
+
+  struct DeviceRelationship : public Relationship
   {
     DeviceRelationship() = default;
     DeviceRelationship(const DeviceRelationship &r) = default;
     virtual ~DeviceRelationship() = default;
-    
+
     std::string m_deviceUuidRef;
     std::string m_role;
     std::string m_href;
@@ -62,7 +62,7 @@ namespace mtconnect
    public:
     Relationships() = default;
     virtual ~Relationships() = default;
-    
+
     void addRelationship(Relationship *r)
     {
       m_relationships.emplace_back(std::move(r));
@@ -76,7 +76,7 @@ namespace mtconnect
     {
       return m_relationships;
     }
-    
+
    protected:
     std::list<std::unique_ptr<Relationship>> m_relationships;
   };

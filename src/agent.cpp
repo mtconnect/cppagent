@@ -161,7 +161,7 @@ namespace mtconnect
         device->addDataItem(*di);
         device->addDeviceDataItem(*di);
       }
-      
+
       if (device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 5)))
       {
         auto di = device->getAssetChanged();
@@ -441,24 +441,23 @@ namespace mtconnect
 
       if (m_putEnabled && incoming.request_type != "GET")
       {
-        if (incoming.request_type != "PUT" &&
-            incoming.request_type != "POST" &&
+        if (incoming.request_type != "PUT" && incoming.request_type != "POST" &&
             incoming.request_type != "DELETE")
         {
           return printError(printer, "UNSUPPORTED",
                             "Only the HTTP GET, PUT, POST, and DELETE requests are supported");
         }
 
-        if (!m_putAllowedHosts.empty() &&
-            !m_putAllowedHosts.count(incoming.foreign_ip))
+        if (!m_putAllowedHosts.empty() && !m_putAllowedHosts.count(incoming.foreign_ip))
         {
-          return printError(printer, "UNSUPPORTED",
-                            "HTTP PUT, POST, and DELETE are not allowed from " + incoming.foreign_ip);
+          return printError(
+              printer, "UNSUPPORTED",
+              "HTTP PUT, POST, and DELETE are not allowed from " + incoming.foreign_ip);
         }
       }
       else if (incoming.request_type != "GET")
       {
-          return printError(printer, "UNSUPPORTED", "Only the HTTP GET request is supported");
+        return printError(printer, "UNSUPPORTED", "Only the HTTP GET request is supported");
       }
 
       // Parse the URL path looking for '/'
@@ -485,7 +484,8 @@ namespace mtconnect
         if (incoming.request_type == "GET")
           result = handleAssets(printer, *outgoing.m_out, incoming.queries, list);
         else
-          result = storeAsset(*outgoing.m_out, incoming.queries, incoming.request_type, list, incoming.body);
+          result = storeAsset(*outgoing.m_out, incoming.queries, incoming.request_type, list,
+                              incoming.body);
       }
       else
       {
@@ -917,8 +917,8 @@ namespace mtconnect
               printer, "INVALID_REQUEST",
               "You cannot specify both the at and frequency arguments to a current request");
 
-        return handleStream(printer, out, devicesAndPath(path, deviceName),
-                            true, freq, at, 0, heartbeat);
+        return handleStream(printer, out, devicesAndPath(path, deviceName), true, freq, at, 0,
+                            heartbeat);
       }
       else if (call == "probe" || call.empty())
         return handleProbe(printer, deviceName);
@@ -927,8 +927,8 @@ namespace mtconnect
         string path = queries[(string) "path"];
         string result;
 
-        int32_t count =
-            checkAndGetParam(queries, "count", DEFAULT_COUNT, -m_slidingBufferSize, true, m_slidingBufferSize, false);
+        int32_t count = checkAndGetParam(queries, "count", DEFAULT_COUNT, -m_slidingBufferSize,
+                                         true, m_slidingBufferSize, false);
         if (count == 0)
           throw ParameterError("OUT_OF_RANGE", "'count' must not be 0.");
 
@@ -937,7 +937,7 @@ namespace mtconnect
         // Check for 1.2 conversion to interval
         if (freq == NO_FREQ)
           freq = checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
-        
+
         if (count < 0 && freq != NO_FREQ)
           throw ParameterError("OUT_OF_RANGE", "'count' must not be used with an 'interval'.");
 
@@ -945,13 +945,13 @@ namespace mtconnect
             checkAndGetParam64(queries, "from", NO_START, getFirstSequence(), true, m_sequence);
 
         if (start == NO_START)  // If there was no data in queries
-          start = checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, m_sequence);
+          start =
+              checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, m_sequence);
 
         auto heartbeat = std::chrono::milliseconds{
             checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
-        
-        return handleStream(printer, out, devicesAndPath(path, deviceName), false,
-                            freq, start,
+
+        return handleStream(printer, out, devicesAndPath(path, deviceName), false, freq, start,
                             count, heartbeat);
       }
       else if (findDeviceByUUIDorName(call) && device.empty())
@@ -1036,9 +1036,8 @@ namespace mtconnect
                                m_assets.size(), deviceList, &m_assetCounts);
   }
 
-  string Agent::handleStream(const Printer *printer, ostream &out, const string &path,
-                             bool current, unsigned int frequency,
-                             uint64_t start, int count,
+  string Agent::handleStream(const Printer *printer, ostream &out, const string &path, bool current,
+                             unsigned int frequency, uint64_t start, int count,
                              std::chrono::milliseconds heartbeat)
   {
     std::set<string> filter;
@@ -1127,9 +1126,9 @@ namespace mtconnect
   // Store an asset in the map by asset # and use the circular buffer as
   // an LRU. Check if we're removing an existing asset and clean up the
   // map, and then store this asset.
-  std::string Agent::storeAsset(std::ostream &aOut,
-                                const key_value_map &queries, const std::string &command,
-                                const std::string &id, const std::string &body)
+  std::string Agent::storeAsset(std::ostream &aOut, const key_value_map &queries,
+                                const std::string &command, const std::string &id,
+                                const std::string &body)
   {
     string name = queries["device"];
     string type = queries["type"];
@@ -1156,7 +1155,7 @@ namespace mtconnect
       else
         return "<failure>Cannot remove asset (" + id + ")</failure>";
     }
-    
+
     return "<failure>Bad Command:" + command + "</failure>";
   }
 
@@ -1541,7 +1540,7 @@ namespace mtconnect
 
       firstSeq = (m_sequence > m_slidingBufferSize) ? m_sequence - m_slidingBufferSize : 1;
       int limit;
-      
+
       // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
       if (count >= 0)
       {
@@ -1553,10 +1552,9 @@ namespace mtconnect
         start = (start == NO_START || start >= m_sequence) ? m_sequence - 1 : start;
         limit = -count;
       }
-        
+
       uint64_t i;
-      for (i = start;
-           results.size() < limit && i < m_sequence && i >= firstSeq;
+      for (i = start; results.size() < limit && i < m_sequence && i >= firstSeq;
            count >= 0 ? i++ : i--)
       {
         // Filter out according to if it exists in the list
@@ -1569,7 +1567,7 @@ namespace mtconnect
       }
 
       end = i;
-      
+
       if (count >= 0)
         endOfBuffer = i >= m_sequence;
       else
@@ -1621,7 +1619,6 @@ namespace mtconnect
                               const int defaultValue, const int minValue, bool minError,
                               const int maxValue, bool positive)
   {
-    
     if (!queries.count(param))
       return defaultValue;
 
@@ -1632,7 +1629,7 @@ namespace mtconnect
 
     if (positive && !isNonNegativeInteger(v))
       throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be a positive integer.");
-    
+
     if (!positive && !isInteger(v))
       throw ParameterError("OUT_OF_RANGE", "'" + param + "' must an integer.");
 

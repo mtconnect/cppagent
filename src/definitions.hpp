@@ -17,52 +17,86 @@
 
 #pragma once
 
-#include <string>
 #include <set>
+#include <string>
 
 namespace mtconnect
 {
-  struct Definition {
-    Definition() {}
-    virtual ~Definition() {}
+  struct Definition
+  {
+    Definition()
+    {
+    }
+    virtual ~Definition()
+    {
+    }
     std::string m_description;
   };
-  
-  struct AbstractDefinition : public Definition {
-    AbstractDefinition() {}
-    virtual ~AbstractDefinition() {}
+
+  struct AbstractDefinition : public Definition
+  {
+    AbstractDefinition()
+    {
+    }
+    virtual ~AbstractDefinition()
+    {
+    }
     std::string m_key;
     std::string m_units;
     std::string m_type;
     std::string m_subType;
 
-    bool operator<(const AbstractDefinition &other) { return m_key < other.m_key; }
-    bool operator==(const AbstractDefinition &other) { return m_key == other.m_key; }
+    bool operator<(const AbstractDefinition &other)
+    {
+      return m_key < other.m_key;
+    }
+    bool operator==(const AbstractDefinition &other)
+    {
+      return m_key == other.m_key;
+    }
   };
-      
-  inline bool operator<(const AbstractDefinition &a, const AbstractDefinition &b)
-      { return a.m_key < b.m_key; }
 
-  struct CellDefinition : public AbstractDefinition {
-    CellDefinition() {}
-    virtual ~CellDefinition() {}
+  inline bool operator<(const AbstractDefinition &a, const AbstractDefinition &b)
+  {
+    return a.m_key < b.m_key;
+  }
+
+  struct CellDefinition : public AbstractDefinition
+  {
+    CellDefinition()
+    {
+    }
+    virtual ~CellDefinition()
+    {
+    }
   };
-  
-  struct EntryDefinition : public AbstractDefinition {
-    EntryDefinition() {}
+
+  struct EntryDefinition : public AbstractDefinition
+  {
+    EntryDefinition()
+    {
+    }
     EntryDefinition(const EntryDefinition &other)
-      : AbstractDefinition(other), m_cells(other.m_cells) {}
-    virtual ~EntryDefinition() {}
-      
+        : AbstractDefinition(other), m_cells(other.m_cells)
+    {
+    }
+    virtual ~EntryDefinition()
+    {
+    }
+
     std::set<CellDefinition> m_cells;
   };
-  
-  struct DataItemDefinition : public Definition {
-    DataItemDefinition() {}
-    virtual ~DataItemDefinition() {}
+
+  struct DataItemDefinition : public Definition
+  {
+    DataItemDefinition()
+    {
+    }
+    virtual ~DataItemDefinition()
+    {
+    }
 
     std::set<EntryDefinition> m_entries;
     std::set<CellDefinition> m_cells;
   };
-}
-
+}  // namespace mtconnect
