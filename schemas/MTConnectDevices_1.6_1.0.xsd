@@ -192,7 +192,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         The item&apos;s reference to the Device model composition
       </xs:documentation>
     </xs:annotation>
-    <xs:restriction base='xs:NMTOKEN'/>
+    <xs:restriction base='xs:IDREF'/>
   </xs:simpleType>
   <xs:simpleType name='DurationTimeType'>
     <xs:annotation>
@@ -341,7 +341,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='AMPERAGE'>
         <xs:annotation>
           <xs:documentation>
-            The measurement of electrical current.
+            DEPRECATED in Version 1.6. Replaced by amperageac sample and
+            amperagedc sample.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -642,7 +643,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='VOLTAGE'>
         <xs:annotation>
           <xs:documentation>
-            The measurement of electrical potential between two points.
+            DEPRECATED in Version 1.6. Replaced by voltageac sample and
+            voltagedc sample.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1440,8 +1442,235 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
              A data value whose meaning may change over time due to changes in
-            the opertion of a piece of equipment or the process being executed
+            the operation of a piece of equipment or the process being executed
             on that piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERAGE_AC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of an electrical current that reverses direction at
+            regular short intervals.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERAGE_DC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of an electric current flowing in one direction
+            only.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLTAGE_AC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the electrical potential between two points in an
+            electrical circuit in which the current periodically reverses
+            direction.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLTAGE_DC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the electrical potential between two points in an
+            electrical circuit in which the current is unidirectional.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='X_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the X direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Y_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the Y direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Z_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the Z direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DIAMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            The measured dimension of a diameter.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPERATING_SYSTEM'>
+        <xs:annotation>
+          <xs:documentation>
+            The Operating System of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FIRMWARE'>
+        <xs:annotation>
+          <xs:documentation>
+            The embedded software of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='APPLICATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The application on a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LIBRARY'>
+        <xs:annotation>
+          <xs:documentation>
+            The software library on a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NETWORK'>
+        <xs:annotation>
+          <xs:documentation>
+            Network details of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ORIENTATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A measured or calculated orientation of a plane or vector relative
+            to a cartesian coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROTATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A three space angular rotation relative to a coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TRANSLATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A three space linear translation relative to a coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CoordinateSystems'>
+        <xs:annotation>
+          <xs:documentation>
+            It aggregates coordinatesystem new configurations for a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Specifications'>
+        <xs:annotation>
+          <xs:documentation>
+            It aggregates specification elements describing the design
+            characteristics for a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WORLD'>
+        <xs:annotation>
+          <xs:documentation>
+            stationary coordinate system referenced to earth, which is
+            independent of the robot motion. Ref:ISO 9787:2013. For non-robotic
+            devices, stationary coordinate system referenced to earth, which is
+            independent of the motion of a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='BASE'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the base mounting surface. Ref:ISO
+            9787:2013. A base mounting surface is a connection surface between
+            the arm and its supporting structure. Ref:ISO 9787:2013. For
+            non-robotic devices, it is the connection surface between the device
+            and its supporting structure.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OBJECT'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the object. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TASK'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the site of the task. Ref:ISO
+            9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MECHANICAL_INTERFACE'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the mechanical interface. Ref:ISO
+            9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the tool or to the end effector
+            attached to the mechanical interface. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MOBILE_PLATFORM'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to one of the components of a mobile
+            platform. Ref:ISO 8373:2012
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CAMERA'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the sensor which monitors the site
+            of the task. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_RELATIVE'>
+        <xs:annotation>
+          <xs:documentation>
+            The amount of water vapor present expressed as a percent to reach
+            saturation at the same temperature.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_ABSOLUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            The amount of water vapor expressed in grams per cubic meter.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_SPECIFIC'>
+        <xs:annotation>
+          <xs:documentation>
+            The ratio of the water vapor present over the total weight of the
+            water vapor and air present expressed as a percent.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1967,6 +2196,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='COMPLETE'>
+        <xs:annotation>
+          <xs:documentation>
+            Completion of an action.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='CONSUMED'>
         <xs:annotation>
           <xs:documentation>
@@ -2029,6 +2265,92 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             The identity of the primary logic or motion program currently being
             executed. It is the starting nest level in a call structure and may
             contain calls to sub programs.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LICENSE'>
+        <xs:annotation>
+          <xs:documentation>
+            The license code to validate or activate the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VERSION'>
+        <xs:annotation>
+          <xs:documentation>
+            The version of the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RELEASE_DATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The date the hardware or software was released for general use.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INSTALL_DATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The date the hardware or software was installed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MANUFACTURER'>
+        <xs:annotation>
+          <xs:documentation>
+            The corporate identity for the maker of the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='IPV4_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            The IPV4 network address of the component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='IPV6_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            The IPV6 network address of the component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GATEWAY'>
+        <xs:annotation>
+          <xs:documentation>
+            The Gateway for the component network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SUBNET_MASK'>
+        <xs:annotation>
+          <xs:documentation>
+            The SubNet mask for the component network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VLAN_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            The layer2 Virtual Local Network (VLAN) ID for the component
+            network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MAC_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            Media Access Control Address. The unique physical address of the
+            network hardware.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WIRELESS'>
+        <xs:annotation>
+          <xs:documentation>
+            Identifies whether the connection type is wireless. 
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -2135,7 +2457,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='x:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='UnitsTypeEnum'>
@@ -2377,6 +2699,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GRAM/CUBIC_METER'>
+        <xs:annotation>
+          <xs:documentation>
+            Gram per cubic meter.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -2629,6 +2958,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GRAM/CUBIC_METER'>
+        <xs:annotation>
+          <xs:documentation>
+            Gram per cubic meter.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -3314,33 +3650,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-  </xs:complexType>
-  <xs:complexType name='AbstractConfigurationType' abstract='true'>
-    <xs:annotation>
-      <xs:documentation>
-        It is an abstract type XML element. It will never appear in the XML
-        document representing a piece of equipment. 
-      </xs:documentation>
-    </xs:annotation>
-  </xs:complexType>
-  <xs:element abstract='true' name='AbstractConfiguration' type='AbstractConfigurationType'>
-    <xs:annotation>
-      <xs:documentation>
-        It is an abstract type XML element. It will never appear in the XML
-        document representing a piece of equipment. 
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ComponentConfigurationType' mixed='true'>
-    <xs:annotation>
-      <xs:documentation>
-        The configuration data associated with this component. For example,
-        sensors may use 1451.5 or TEDS
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element ref='AbstractConfiguration' minOccurs='1' maxOccurs='unbounded'/>
-    </xs:sequence>
   </xs:complexType>
   <xs:complexType name='CommonComponentType'>
     <xs:annotation>
@@ -4155,6 +4464,29 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='WorkEnvelopeType'>
+    <xs:annotation>
+      <xs:documentation>
+        workenvelope organizes information about the physical process execution
+        space within a piece of equipment. The workenvelope MAY provide
+        information regarding the physical workspace and the conditions within
+        that workspace.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='WorkEnvelope' type='WorkEnvelopeType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        workenvelope organizes information about the physical process execution
+        space within a piece of equipment. The workenvelope MAY provide
+        information regarding the physical workspace and the conditions within
+        that workspace.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='CompositionsType'>
     <xs:annotation>
       <xs:documentation>
@@ -4508,6 +4840,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='WORKPIECE'>
+        <xs:annotation>
+          <xs:documentation>
+            An object or material on which a form of work is performed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='CompositionEnumTypeType'>
@@ -4562,6 +4901,126 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+  </xs:complexType>
+  <xs:simpleType name='IdRefType'>
+    <xs:annotation>
+      <xs:documentation>
+        A reference to an identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:IDREF'/>
+  </xs:simpleType>
+  <xs:complexType name='ReferencesType'>
+    <xs:annotation>
+      <xs:documentation>
+        An XML container consisting of one or more types of reference XML
+        elements.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element ref='Reference' minOccurs='1' maxOccurs='unbounded'/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='ReferenceType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        reference is a pointer to information that is associated with another
+        structural element defined elsewhere in the XML document for a piece of
+        equipment.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name='idRef' type='IdRefType' use='required'>
+      <xs:annotation>
+        <xs:documentation>
+          A pointer to the id attribute of an element that contains the
+          information to be associated with this XML element.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='name' type='NameType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          The name of an element or a piece of equipment.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:element abstract='true' name='Reference' type='ReferenceType'>
+    <xs:annotation>
+      <xs:documentation>
+        reference is a pointer to information that is associated with another
+        structural element defined elsewhere in the XML document for a piece of
+        equipment.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DataItemRefType'>
+    <xs:annotation>
+      <xs:documentation>
+        dataitemref XML element is a pointer to a data entity associated with
+        another structural element defined elsewhere in the XML document for a
+        piece of equipment.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='ReferenceType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='DataItemRef' type='DataItemRefType' substitutionGroup='Reference'>
+    <xs:annotation>
+      <xs:documentation>
+        dataitemref XML element is a pointer to a data entity associated with
+        another structural element defined elsewhere in the XML document for a
+        piece of equipment.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ComponentRefType'>
+    <xs:annotation>
+      <xs:documentation>
+        componentref XML element is a pointer to all of the information
+        associated with another structural element defined elsewhere in the XML
+        document for a piece of equipment. 
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='ReferenceType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='ComponentRef' type='ComponentRefType' substitutionGroup='Reference'>
+    <xs:annotation>
+      <xs:documentation>
+        componentref XML element is a pointer to all of the information
+        associated with another structural element defined elsewhere in the XML
+        document for a piece of equipment. 
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AbstractConfigurationType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        It is an abstract type XML element. It will never appear in the XML
+        document representing a piece of equipment. 
+      </xs:documentation>
+    </xs:annotation>
+  </xs:complexType>
+  <xs:element abstract='true' name='AbstractConfiguration' type='AbstractConfigurationType'>
+    <xs:annotation>
+      <xs:documentation>
+        It is an abstract type XML element. It will never appear in the XML
+        document representing a piece of equipment. 
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ComponentConfigurationType' mixed='true'>
+    <xs:annotation>
+      <xs:documentation>
+        The configuration data associated with this component.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element ref='AbstractConfiguration' minOccurs='1' maxOccurs='unbounded'/>
+    </xs:sequence>
   </xs:complexType>
   <xs:simpleType name='CalibrationDateType'>
     <xs:annotation>
@@ -4764,7 +5223,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='SpecificationsType'>
     <xs:annotation>
       <xs:documentation>
-        Calibration data for a sensor
+        It aggregates specification elements describing the design
+        characteristics for a piece of equipment.
       </xs:documentation>
     </xs:annotation>
     <xs:complexContent>
@@ -4778,7 +5238,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='Specifications' type='SpecificationsType' substitutionGroup='AbstractConfiguration'>
     <xs:annotation>
       <xs:documentation>
-        Calibration data for a sensor
+        It aggregates specification elements describing the design
+        characteristics for a piece of equipment.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -4799,7 +5260,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='SpecificationType' mixed='true'>
     <xs:annotation>
       <xs:documentation>
-        A specification
+        It defines information describing the design characteristics for a piece
+        of equipment.
       </xs:documentation>
     </xs:annotation>
     <xs:complexContent>
@@ -4822,18 +5284,33 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name='compositionId' type='CompositionIdType' use='optional'>
+        <xs:attribute name='name' type='NameType' use='optional'>
           <xs:annotation>
             <xs:documentation>
-              The identifier attribute of the composition element that the
-              reported data is most closely associated. 
+              The name of an element or a piece of equipment.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name='dataItemIdRef' type='SourceDataItemIdType' use='optional'>
           <xs:annotation>
             <xs:documentation>
-              The optional data item identifier
+              A reference to the id attribute of the dataitem associated with
+              this element.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name='compositionIdRef' type='CompositionIdType' use='optional'>
+          <xs:annotation>
+            <xs:documentation>
+              A reference to the id attribute of the composition associated with
+              this element.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name='coordinateSystemIdRef' type='CoordinateSystemIdRefType' use='optional'>
+          <xs:annotation>
+            <xs:documentation>
+              References the coordinatesystem new for geometric specifications.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
@@ -4850,7 +5327,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='Specification' type='SpecificationType' substitutionGroup='AbstractSpecification'>
     <xs:annotation>
       <xs:documentation>
-        A specification
+        It defines information describing the design characteristics for a piece
+        of equipment.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -4939,686 +5417,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The target or expected value for this data item.
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='RatedType'>
-    <xs:annotation>
-      <xs:documentation>
-        The value of the constraint
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='ConstraintType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:element name='Rated' type='RatedType' substitutionGroup='Constraint'>
-    <xs:annotation>
-      <xs:documentation>
-        The value of the constraint
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='DutyCycleType' mixed='true'>
-    <xs:annotation>
-      <xs:documentation>
-        The duty cycle
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='SpecificationValueType'>
-        <xs:sequence>
-          <xs:element name='Peak' type='LimitValueType'>
-            <xs:annotation>
-              <xs:documentation>
-                The peak value of the duty cycle
-              </xs:documentation>
-            </xs:annotation>
-          </xs:element>
-          <xs:element name='Value' type='LimitValueType'>
-            <xs:annotation>
-              <xs:documentation>
-                value represents a single data value that is expected to be
-                reported for a dataitem element. 
-              </xs:documentation>
-            </xs:annotation>
-          </xs:element>
-        </xs:sequence>
-        <xs:attribute name='duration' type='DurationTimeType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              The time-period over which the data was collected.
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='DutyCycle' type='DutyCycleType' substitutionGroup='SpecificationValue'>
-    <xs:annotation>
-      <xs:documentation>
-        The duty cycle
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='GearNumberType'>
-    <xs:annotation>
-      <xs:documentation>
-        The number of the gear
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:integer'/>
-  </xs:simpleType>
-  <xs:simpleType name='GearRatioType'>
-    <xs:annotation>
-      <xs:documentation>
-        The ratio for the gear
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:float'/>
-  </xs:simpleType>
-  <xs:complexType name='GearSpecificationType' mixed='true'>
-    <xs:annotation>
-      <xs:documentation>
-        A power transmission gearing, ratio given as CDATA
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='SpecificationValueType'>
-        <xs:sequence>
-          <xs:element name='GearRatio' type='GearRatioType'>
-            <xs:annotation>
-              <xs:documentation>
-                The gear ratio
-              </xs:documentation>
-            </xs:annotation>
-          </xs:element>
-        </xs:sequence>
-        <xs:attribute name='number' type='GearNumberType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              A unique identifier that will only refer to a specific sensing
-              element.
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='GearSpecification' type='GearSpecificationType' substitutionGroup='SpecificationValue'>
-    <xs:annotation>
-      <xs:documentation>
-        A power transmission gearing, ratio given as CDATA
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='MotionTypeEnumType'>
-    <xs:annotation>
-      <xs:documentation>
-        The types of motion
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='REVOLUTE'>
-        <xs:annotation>
-          <xs:documentation>
-            Rotates
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='PRISMATIC'>
-        <xs:annotation>
-          <xs:documentation>
-            Linear motion
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='TWIST'>
-        <xs:annotation>
-          <xs:documentation>
-            Twister
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='REVOLVE'>
-        <xs:annotation>
-          <xs:documentation>
-            Revolver
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name='CoordinateSystemTypeEnumType'>
-    <xs:annotation>
-      <xs:documentation>
-        The type of coordinate system
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='WORLD'>
-        <xs:annotation>
-          <xs:documentation>
-            The world
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='BASE'>
-        <xs:annotation>
-          <xs:documentation>
-            The base of the manipulator chain
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='TOOL'>
-        <xs:annotation>
-          <xs:documentation>
-            The tool&apos;s coord
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='WORKPIECE'>
-        <xs:annotation>
-          <xs:documentation>
-            The workpiece
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='OBJECT'>
-        <xs:annotation>
-          <xs:documentation>
-            The object
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='TASK'>
-        <xs:annotation>
-          <xs:documentation>
-            The current task
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='MECHANICAL_INTERFACE'>
-        <xs:annotation>
-          <xs:documentation>
-            The last joint in the chain
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='GRIPPER'>
-        <xs:annotation>
-          <xs:documentation>
-            The gripper
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='PLATFORM'>
-        <xs:annotation>
-          <xs:documentation>
-            The platform
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='JOINT'>
-        <xs:annotation>
-          <xs:documentation>
-            A given joint
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='MACHINE'>
-        <xs:annotation>
-          <xs:documentation>
-            For machine tools, the coordinate system in the work area
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name='ActuationTypeEnumType'>
-    <xs:annotation>
-      <xs:documentation>
-        The actuation of this component
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='DIRECT'>
-        <xs:annotation>
-          <xs:documentation>
-            The motion is directly controller
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='DERIVATIVE'>
-        <xs:annotation>
-          <xs:documentation>
-            The motion is created by an unpowered linkage, can be a calculated
-            value
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='VIRTUAL'>
-        <xs:annotation>
-          <xs:documentation>
-            The component provide a logical position
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='FIXED'>
-        <xs:annotation>
-          <xs:documentation>
-            The position is fixed in space, it does not move
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name='GeometryTypeEnumType'>
-    <xs:annotation>
-      <xs:documentation>
-        The geometry related to this coordinate system
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:string'>
-      <xs:enumeration value='CARTESIAN'>
-        <xs:annotation>
-          <xs:documentation>
-            The coordinate system uses cartesian coordinates
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='POLAR'>
-        <xs:annotation>
-          <xs:documentation>
-            The positions will be given in polar coordinates
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value='CYLINDRICAL'>
-        <xs:annotation>
-          <xs:documentation>
-            The positions are given in cylindrical coordinates
-          </xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name='IsKinematicType'>
-    <xs:annotation>
-      <xs:documentation>
-        Flag indicating if a coordinate system is part of a kinematic chain
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:boolean'/>
-  </xs:simpleType>
-  <xs:complexType name='LinkType'>
-    <xs:annotation>
-      <xs:documentation>
-        A linkage between two axes
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AxesType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Link' type='LinkType' substitutionGroup='Axes'>
-    <xs:annotation>
-      <xs:documentation>
-        A linkage between two axes
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='TableType'>
-    <xs:annotation>
-      <xs:documentation>
-        A surface for holding an object or material
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='CommonComponentType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Table' type='TableType' substitutionGroup='CommonComponent'>
-    <xs:annotation>
-      <xs:documentation>
-        A surface for holding an object or material
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='CoordinateSystemsType' mixed='true'>
-    <xs:annotation>
-      <xs:documentation>
-        For measured values relative to a coordinate system like position
-        sample, the coordinate system being used may be reported.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AbstractConfigurationType'>
-        <xs:sequence>
-          <xs:element name='CoordinateSystem' type='CoordinateSystemType' minOccurs='1' maxOccurs='unbounded'>
-            <xs:annotation>
-              <xs:documentation>
-                For measured values relative to a coordinate system like
-                position sample, the coordinate system being used may be
-                reported.
-              </xs:documentation>
-            </xs:annotation>
-          </xs:element>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='CoordinateSystems' type='CoordinateSystemsType' substitutionGroup='AbstractConfiguration'>
-    <xs:annotation>
-      <xs:documentation>
-        For measured values relative to a coordinate system like position
-        sample, the coordinate system being used may be reported.
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='MotionOriginType'>
-    <xs:annotation>
-      <xs:documentation>
-        A translation and rotation of a new origin of motion
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element name='Translation' type='ThreeSpaceValueType' minOccurs='0' maxOccurs='1'>
-        <xs:annotation>
-          <xs:documentation>
-            An offset applied first
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name='Rotation' type='ThreeSpaceValueType' minOccurs='0' maxOccurs='1'>
-        <xs:annotation>
-          <xs:documentation>
-            A angluar rotation applied second
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name='CoordinateSystemType'>
-    <xs:annotation>
-      <xs:documentation>
-        For measured values relative to a coordinate system like position
-        sample, the coordinate system being used may be reported.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:choice minOccurs='0' maxOccurs='1'>
-      <xs:element name='Location' type='LocationType'>
-        <xs:annotation>
-          <xs:documentation>
-            The Pot or Spindle this tool currently resides in.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:sequence minOccurs='1'>
-        <xs:element name='Translation' type='ThreeSpaceValueType' minOccurs='0' maxOccurs='1'>
-          <xs:annotation>
-            <xs:documentation>
-              An offset applied first
-            </xs:documentation>
-          </xs:annotation>
-        </xs:element>
-        <xs:element name='Rotation' type='ThreeSpaceValueType' minOccurs='0' maxOccurs='1'>
-          <xs:annotation>
-            <xs:documentation>
-              A angluar rotation applied second
-            </xs:documentation>
-          </xs:annotation>
-        </xs:element>
-      </xs:sequence>
-    </xs:choice>
-    <xs:attribute name='id' type='IDType' use='required'>
-      <xs:annotation>
-        <xs:documentation>
-          The unique identifier for this element.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='geometry' type='GeometryTypeEnumType' use='optional' default='CARTESIAN'>
-      <xs:annotation>
-        <xs:documentation>
-          The geometry used in this coordinate system
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='name' type='NameType' use='optional'>
-      <xs:annotation>
-        <xs:documentation>
-          The name of an element or a piece of equipment.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='parentId' type='IdRefType' use='optional'>
-      <xs:annotation>
-        <xs:documentation>
-          The parent of the coordinate system
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='motionIdRef' type='IdRefType' use='optional'>
-      <xs:annotation>
-        <xs:documentation>
-          If this coordinate system represents a montion frame for a component
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='type' type='CoordinateSystemTypeEnumType' use='required'>
-      <xs:annotation>
-        <xs:documentation>
-          The type of either a structural element or a dataitem being measured.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-  <xs:complexType name='LocationType'>
-    <xs:annotation>
-      <xs:documentation>
-        The Pot or Spindle this tool currently resides in.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='ThreeSpaceValueType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name='TransformationType'>
-    <xs:annotation>
-      <xs:documentation>
-        An offset in space
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element name='Translaton' type='ThreeSpaceValueType'>
-        <xs:annotation>
-          <xs:documentation>
-            An offset applied first
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name='Rotation' type='ThreeSpaceValueType'>
-        <xs:annotation>
-          <xs:documentation>
-            A quaternion transform applied second
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name='MotionAxisType'>
-    <xs:annotation>
-      <xs:documentation>
-        The unit vector along which the motion occurs
-      </xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='ThreeSpaceValueType'/>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name='MotionType' mixed='true'>
-    <xs:annotation>
-      <xs:documentation>
-        The axis motion types
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='AbstractConfigurationType'>
-        <xs:sequence>
-          <xs:element name='Origin' type='MotionOriginType' minOccurs='0' maxOccurs='1'>
-            <xs:annotation>
-              <xs:documentation>
-                The axis motion
-              </xs:documentation>
-            </xs:annotation>
-          </xs:element>
-          <xs:element name='Axis' type='MotionAxisType' minOccurs='0' maxOccurs='1'>
-            <xs:annotation>
-              <xs:documentation>
-                The axis motion
-              </xs:documentation>
-            </xs:annotation>
-          </xs:element>
-        </xs:sequence>
-        <xs:attribute name='id' type='IDType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              The unique identifier for this element.
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name='kinematicParentIdRef' type='IdRefType' use='optional'>
-          <xs:annotation>
-            <xs:documentation>
-              The parent of the coordinate system
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name='coordinateSystemId' type='CoordinateSystemIdType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              The identifier of the coordinate system that this motion is
-              relative to
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name='type' type='MotionTypeEnumType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              The type of either a structural element or a dataitem being
-              measured.
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name='actuation' type='ActuationTypeEnumType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              The actuation method
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='Motion' type='MotionType' substitutionGroup='AbstractConfiguration'>
-    <xs:annotation>
-      <xs:documentation>
-        The axis motion types
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:simpleType name='IdRefType'>
-    <xs:annotation>
-      <xs:documentation>
-        A reference to an identifier
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:IDREF'/>
-  </xs:simpleType>
-  <xs:complexType name='ReferencesType'>
-    <xs:annotation>
-      <xs:documentation>
-        An XML container consisting of one or more types of reference XML
-        elements.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element ref='Reference' minOccurs='1' maxOccurs='unbounded'/>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name='ReferenceType' abstract='true'>
-    <xs:annotation>
-      <xs:documentation>
-        reference is a pointer to information that is associated with another
-        structural element defined elsewhere in the XML document for a piece of
-        equipment.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:attribute name='idRef' type='IdRefType' use='required'>
-      <xs:annotation>
-        <xs:documentation>
-          A pointer to the id attribute of an element that contains the
-          information to be associated with this XML element.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='name' type='NameType' use='optional'>
-      <xs:annotation>
-        <xs:documentation>
-          The name of an element or a piece of equipment.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-  <xs:element abstract='true' name='Reference' type='ReferenceType'>
-    <xs:annotation>
-      <xs:documentation>
-        reference is a pointer to information that is associated with another
-        structural element defined elsewhere in the XML document for a piece of
-        equipment.
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='DataItemRefType'>
-    <xs:annotation>
-      <xs:documentation>
-        dataitemref XML element is a pointer to a data entity associated with
-        another structural element defined elsewhere in the XML document for a
-        piece of equipment.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='ReferenceType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='DataItemRef' type='DataItemRefType' substitutionGroup='Reference'>
-    <xs:annotation>
-      <xs:documentation>
-        dataitemref XML element is a pointer to a data entity associated with
-        another structural element defined elsewhere in the XML document for a
-        piece of equipment.
-      </xs:documentation>
-    </xs:annotation>
-  </xs:element>
-  <xs:complexType name='ComponentRefType'>
-    <xs:annotation>
-      <xs:documentation>
-        componentref XML element is a pointer to all of the information
-        associated with another structural element defined elsewhere in the XML
-        document for a piece of equipment. 
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexContent>
-      <xs:extension base='ReferenceType'/>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name='ComponentRef' type='ComponentRefType' substitutionGroup='Reference'>
-    <xs:annotation>
-      <xs:documentation>
-        componentref XML element is a pointer to all of the information
-        associated with another structural element defined elsewhere in the XML
-        document for a piece of equipment. 
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -5878,6 +5676,214 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:simpleType name='CoordinateSystemIdRefType'>
+    <xs:annotation>
+      <xs:documentation>
+        The reference to the coordinate system
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:IDREF'/>
+  </xs:simpleType>
+  <xs:simpleType name='CoordinateSystemTypeEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The type of coordinate system
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='WORLD'>
+        <xs:annotation>
+          <xs:documentation>
+            The world
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='BASE'>
+        <xs:annotation>
+          <xs:documentation>
+            The base of the manipulator chain
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OBJECT'>
+        <xs:annotation>
+          <xs:documentation>
+            The object
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TASK'>
+        <xs:annotation>
+          <xs:documentation>
+            The current task
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MECHANICAL_INTERFACE'>
+        <xs:annotation>
+          <xs:documentation>
+            The last joint in the chain
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL'>
+        <xs:annotation>
+          <xs:documentation>
+            The tool&apos;s coord
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MOBILE_PLATFORM'>
+        <xs:annotation>
+          <xs:documentation>
+            The platform
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MACHINE'>
+        <xs:annotation>
+          <xs:documentation>
+            For machine tools, the coordinate system in the work area
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CAMERA'>
+        <xs:annotation>
+          <xs:documentation>
+            For machine tools, the coordinate system in the work area
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='CoordinateSystemsType' mixed='true'>
+    <xs:annotation>
+      <xs:documentation>
+        It aggregates coordinatesystem new configurations for a component.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='AbstractConfigurationType'>
+        <xs:sequence>
+          <xs:element name='CoordinateSystem' type='CoordinateSystemType' minOccurs='1' maxOccurs='unbounded'>
+            <xs:annotation>
+              <xs:documentation>
+                For measured values relative to a coordinate system like
+                position sample, the coordinate system being used may be
+                reported.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='CoordinateSystems' type='CoordinateSystemsType' substitutionGroup='AbstractConfiguration'>
+    <xs:annotation>
+      <xs:documentation>
+        It aggregates coordinatesystem new configurations for a component.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='CoordinateSystemType'>
+    <xs:annotation>
+      <xs:documentation>
+        For measured values relative to a coordinate system like position
+        sample, the coordinate system being used may be reported.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs='0' maxOccurs='1'>
+      <xs:element name='Origin' type='OriginType'>
+        <xs:annotation>
+          <xs:documentation>
+             The coordinates of the origin position of a coordinate system. The
+            coordinate MUST be in millimeter3d.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Transformation' type='TransformationType'>
+        <xs:annotation>
+          <xs:documentation>
+             The process of transforming to the origin position of the
+            coordinate system from a parent coordinate system using translation
+            event and rotation event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:choice>
+    <xs:attribute name='id' type='IDType' use='required'>
+      <xs:annotation>
+        <xs:documentation>
+          The unique identifier for this element.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='name' type='NameType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          The name of an element or a piece of equipment.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='nativeName' type='NameType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          The common name normally associated with a piece of equipment or an
+          element.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='parentIdRef' type='IdRefType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          A pointer to the id attribute of the parent coordinatesystem new.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='type' type='CoordinateSystemTypeEnumType' use='required'>
+      <xs:annotation>
+        <xs:documentation>
+          The type of either a structural element or a dataitem being measured.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name='OriginType'>
+    <xs:annotation>
+      <xs:documentation>
+         The coordinates of the origin position of a coordinate system. The
+        coordinate MUST be in millimeter3d.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ThreeSpaceValueType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='TransformationType'>
+    <xs:annotation>
+      <xs:documentation>
+         The process of transforming to the origin position of the coordinate
+        system from a parent coordinate system using translation event and
+        rotation event.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Translaton' type='ThreeSpaceValueType'>
+        <xs:annotation>
+          <xs:documentation>
+            An offset applied first
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name='Rotation' type='ThreeSpaceValueType'>
+        <xs:annotation>
+          <xs:documentation>
+            A quaternion transform applied second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:simpleType name='SampleIntervalType'>
     <xs:annotation>
       <xs:documentation>
@@ -6181,7 +6187,9 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:element name='Definition' type='DataItemDefinitionType' minOccurs='0' maxOccurs='1'>
         <xs:annotation>
           <xs:documentation>
-            The descriptive information about this data item
+            The Definition defines the meaning of entry and Cell elements
+            associated with the dataitem when the representation is either
+            dataset or table.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -6480,14 +6488,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:element name='EntryDefinitions' type='EntryDefinitionsType' minOccurs='0' maxOccurs='1'>
         <xs:annotation>
           <xs:documentation>
-            The aggergate of entry definitions
+            The EntryDefinitions aggregates EntryDefinition .
           </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name='CellDefinitions' type='CellDefinitionsType' minOccurs='0' maxOccurs='1'>
         <xs:annotation>
           <xs:documentation>
-            The aggregate of cell definitions
+            The CellDefinitions aggregates CellDefinition.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -6496,23 +6504,53 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='EntryDefinitionsType'>
     <xs:annotation>
       <xs:documentation>
-        The aggergation of EntryDefinition
+        The EntryDefinitions aggregates EntryDefinition .
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:element name='EntryDefinition' type='EntryDefinitionType' minOccurs='1' maxOccurs='unbounded'>
         <xs:annotation>
           <xs:documentation>
-            An entry definition
+            The semantic definition of an entry
           </xs:documentation>
         </xs:annotation>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:attributeGroup name='DefinitionAttrsType'>
+    <xs:attribute name='key' type='KeyType' use='required'>
+      <xs:annotation>
+        <xs:documentation>
+          unique key
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='type' type='DataItemEnumType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          The type of either a structural element or a dataitem being measured.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='subType' type='DataItemSubEnumType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          A sub-categorization of the data item type.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name='units' type='UnitsType' use='optional'>
+      <xs:annotation>
+        <xs:documentation>
+          The unit of measurement for the reported value of the data item.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:attributeGroup>
   <xs:complexType name='EntryDefinitionType'>
     <xs:annotation>
       <xs:documentation>
-        The entry definition
+        The semantic definition of an entry
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -6526,44 +6564,24 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:element name='CellDefinitions' type='CellDefinitionsType' minOccurs='0' maxOccurs='1'>
         <xs:annotation>
           <xs:documentation>
-            Optional definitions for cells
+            The CellDefinitions aggregates CellDefinition.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name='key' type='KeyType' use='required'>
-      <xs:annotation>
-        <xs:documentation>
-          unique key
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='type' type='DataItemEnumType' use='optional'>
-      <xs:annotation>
-        <xs:documentation>
-          The type of either a structural element or a dataitem being measured.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='units' type='UnitsType' use='optional'>
-      <xs:annotation>
-        <xs:documentation>
-          The unit of measurement for the reported value of the data item.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
+    <xs:attributeGroup ref='DefinitionAttrsType'/>
   </xs:complexType>
   <xs:complexType name='CellDefinitionsType'>
     <xs:annotation>
       <xs:documentation>
-        The aggergation of CellDefinition
+        The CellDefinitions aggregates CellDefinition.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:element name='CellDefinition' type='CellDefinitionType' minOccurs='1' maxOccurs='unbounded'>
         <xs:annotation>
           <xs:documentation>
-            A cell definition
+            The semantic definition of a Cell.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -6572,7 +6590,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='CellDefinitionType'>
     <xs:annotation>
       <xs:documentation>
-        The definition of a tabular cell
+        The semantic definition of a Cell.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -6584,26 +6602,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         </xs:annotation>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name='key' type='KeyType' use='required'>
-      <xs:annotation>
-        <xs:documentation>
-          unique key
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='type' type='DataItemEnumType' use='optional'>
-      <xs:annotation>
-        <xs:documentation>
-          The type of either a structural element or a dataitem being measured.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name='units' type='UnitsType' use='optional'>
-      <xs:annotation>
-        <xs:documentation>
-          The unit of measurement for the reported value of the data item.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
+    <xs:attributeGroup ref='DefinitionAttrsType'/>
   </xs:complexType>
 </xs:schema>

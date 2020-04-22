@@ -191,7 +191,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         The item&apos;s reference to the Device model composition
       </xs:documentation>
     </xs:annotation>
-    <xs:restriction base='xs:NMTOKEN'/>
+    <xs:restriction base='xs:IDREF'/>
   </xs:simpleType>
   <xs:simpleType name='DurationTimeType'>
     <xs:annotation>
@@ -340,7 +340,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='AMPERAGE'>
         <xs:annotation>
           <xs:documentation>
-            The measurement of electrical current.
+            DEPRECATED in Version 1.6. Replaced by amperageac sample and
+            amperagedc sample.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -641,7 +642,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='VOLTAGE'>
         <xs:annotation>
           <xs:documentation>
-            The measurement of electrical potential between two points.
+            DEPRECATED in Version 1.6. Replaced by voltageac sample and
+            voltagedc sample.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1439,8 +1441,235 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
              A data value whose meaning may change over time due to changes in
-            the opertion of a piece of equipment or the process being executed
+            the operation of a piece of equipment or the process being executed
             on that piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERAGE_AC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of an electrical current that reverses direction at
+            regular short intervals.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERAGE_DC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of an electric current flowing in one direction
+            only.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLTAGE_AC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the electrical potential between two points in an
+            electrical circuit in which the current periodically reverses
+            direction.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLTAGE_DC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the electrical potential between two points in an
+            electrical circuit in which the current is unidirectional.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='X_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the X direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Y_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the Y direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Z_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the Z direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DIAMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            The measured dimension of a diameter.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPERATING_SYSTEM'>
+        <xs:annotation>
+          <xs:documentation>
+            The Operating System of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FIRMWARE'>
+        <xs:annotation>
+          <xs:documentation>
+            The embedded software of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='APPLICATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The application on a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LIBRARY'>
+        <xs:annotation>
+          <xs:documentation>
+            The software library on a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NETWORK'>
+        <xs:annotation>
+          <xs:documentation>
+            Network details of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ORIENTATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A measured or calculated orientation of a plane or vector relative
+            to a cartesian coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROTATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A three space angular rotation relative to a coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TRANSLATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A three space linear translation relative to a coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CoordinateSystems'>
+        <xs:annotation>
+          <xs:documentation>
+            It aggregates coordinatesystem new configurations for a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Specifications'>
+        <xs:annotation>
+          <xs:documentation>
+            It aggregates specification elements describing the design
+            characteristics for a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WORLD'>
+        <xs:annotation>
+          <xs:documentation>
+            stationary coordinate system referenced to earth, which is
+            independent of the robot motion. Ref:ISO 9787:2013. For non-robotic
+            devices, stationary coordinate system referenced to earth, which is
+            independent of the motion of a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='BASE'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the base mounting surface. Ref:ISO
+            9787:2013. A base mounting surface is a connection surface between
+            the arm and its supporting structure. Ref:ISO 9787:2013. For
+            non-robotic devices, it is the connection surface between the device
+            and its supporting structure.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OBJECT'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the object. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TASK'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the site of the task. Ref:ISO
+            9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MECHANICAL_INTERFACE'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the mechanical interface. Ref:ISO
+            9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the tool or to the end effector
+            attached to the mechanical interface. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MOBILE_PLATFORM'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to one of the components of a mobile
+            platform. Ref:ISO 8373:2012
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CAMERA'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the sensor which monitors the site
+            of the task. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_RELATIVE'>
+        <xs:annotation>
+          <xs:documentation>
+            The amount of water vapor present expressed as a percent to reach
+            saturation at the same temperature.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_ABSOLUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            The amount of water vapor expressed in grams per cubic meter.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_SPECIFIC'>
+        <xs:annotation>
+          <xs:documentation>
+            The ratio of the water vapor present over the total weight of the
+            water vapor and air present expressed as a percent.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -1966,6 +2195,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='COMPLETE'>
+        <xs:annotation>
+          <xs:documentation>
+            Completion of an action.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='CONSUMED'>
         <xs:annotation>
           <xs:documentation>
@@ -2028,6 +2264,92 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             The identity of the primary logic or motion program currently being
             executed. It is the starting nest level in a call structure and may
             contain calls to sub programs.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LICENSE'>
+        <xs:annotation>
+          <xs:documentation>
+            The license code to validate or activate the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VERSION'>
+        <xs:annotation>
+          <xs:documentation>
+            The version of the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RELEASE_DATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The date the hardware or software was released for general use.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INSTALL_DATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The date the hardware or software was installed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MANUFACTURER'>
+        <xs:annotation>
+          <xs:documentation>
+            The corporate identity for the maker of the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='IPV4_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            The IPV4 network address of the component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='IPV6_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            The IPV6 network address of the component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GATEWAY'>
+        <xs:annotation>
+          <xs:documentation>
+            The Gateway for the component network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SUBNET_MASK'>
+        <xs:annotation>
+          <xs:documentation>
+            The SubNet mask for the component network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VLAN_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            The layer2 Virtual Local Network (VLAN) ID for the component
+            network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MAC_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            Media Access Control Address. The unique physical address of the
+            network hardware.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WIRELESS'>
+        <xs:annotation>
+          <xs:documentation>
+            Identifies whether the connection type is wireless. 
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -2134,7 +2456,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='x:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='UnitsTypeEnum'>
@@ -2376,6 +2698,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GRAM/CUBIC_METER'>
+        <xs:annotation>
+          <xs:documentation>
+            Gram per cubic meter.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -2628,6 +2957,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         <xs:annotation>
           <xs:documentation>
             Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GRAM/CUBIC_METER'>
+        <xs:annotation>
+          <xs:documentation>
+            Gram per cubic meter.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -3611,7 +3947,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='AmperageType'>
     <xs:annotation>
       <xs:documentation>
-        The measurement of electrical current.
+        DEPRECATED in Version 1.6. Replaced by amperageac sample and amperagedc
+        sample.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -3621,14 +3958,16 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='Amperage' type='AmperageType' substitutionGroup='CommonSample'>
     <xs:annotation>
       <xs:documentation>
-        The measurement of electrical current.
+        DEPRECATED in Version 1.6. Replaced by amperageac sample and amperagedc
+        sample.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
   <xs:complexType name='AmperageTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of electrical current.
+        Time series of DEPRECATED in Version 1.6. Replaced by amperageac sample
+        and amperagedc sample.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -3638,7 +3977,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='AmperageTimeSeries' type='AmperageTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of electrical current.
+        Time series of DEPRECATED in Version 1.6. Replaced by amperageac sample
+        and amperagedc sample.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -5050,7 +5390,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:complexType name='VoltageType'>
     <xs:annotation>
       <xs:documentation>
-        The measurement of electrical potential between two points.
+        DEPRECATED in Version 1.6. Replaced by voltageac sample and voltagedc
+        sample.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -5060,15 +5401,16 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='Voltage' type='VoltageType' substitutionGroup='CommonSample'>
     <xs:annotation>
       <xs:documentation>
-        The measurement of electrical potential between two points.
+        DEPRECATED in Version 1.6. Replaced by voltageac sample and voltagedc
+        sample.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
   <xs:complexType name='VoltageTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of electrical potential between two
-        points.
+        Time series of DEPRECATED in Version 1.6. Replaced by voltageac sample
+        and voltagedc sample.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
@@ -5078,8 +5420,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
   <xs:element name='VoltageTimeSeries' type='VoltageTimeSeriesType' substitutionGroup='TimeSeries'>
     <xs:annotation>
       <xs:documentation>
-        Time series of The measurement of electrical potential between two
-        points.
+        Time series of DEPRECATED in Version 1.6. Replaced by voltageac sample
+        and voltagedc sample.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -5550,6 +5892,456 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         Time series of The feedrate for the axes, or a single axis.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AmperageACType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement of an electrical current that reverses direction at
+        regular short intervals.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AmperageAC' type='AmperageACType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement of an electrical current that reverses direction at
+        regular short intervals.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AmperageACTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measurement of an electrical current that reverses
+        direction at regular short intervals.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AmperageACTimeSeries' type='AmperageACTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measurement of an electrical current that reverses
+        direction at regular short intervals.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AmperageDCType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement of an electric current flowing in one direction only.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AmperageDC' type='AmperageDCType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement of an electric current flowing in one direction only.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AmperageDCTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measurement of an electric current flowing in one
+        direction only.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='AmperageDCTimeSeries' type='AmperageDCTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measurement of an electric current flowing in one
+        direction only.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VoltageACType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement of the electrical potential between two points in an
+        electrical circuit in which the current periodically reverses direction.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VoltageAC' type='VoltageACType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement of the electrical potential between two points in an
+        electrical circuit in which the current periodically reverses direction.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VoltageACTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measurement of the electrical potential between two
+        points in an electrical circuit in which the current periodically
+        reverses direction.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VoltageACTimeSeries' type='VoltageACTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measurement of the electrical potential between two
+        points in an electrical circuit in which the current periodically
+        reverses direction.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VoltageDCType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement of the electrical potential between two points in an
+        electrical circuit in which the current is unidirectional.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VoltageDC' type='VoltageDCType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement of the electrical potential between two points in an
+        electrical circuit in which the current is unidirectional.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='VoltageDCTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measurement of the electrical potential between two
+        points in an electrical circuit in which the current is unidirectional.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='VoltageDCTimeSeries' type='VoltageDCTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measurement of the electrical potential between two
+        points in an electrical circuit in which the current is unidirectional.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='XDimensionType'>
+    <xs:annotation>
+      <xs:documentation>
+        Measured dimension of an entity relative to the X direction of the
+        referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='XDimension' type='XDimensionType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        Measured dimension of an entity relative to the X direction of the
+        referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='XDimensionTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of Measured dimension of an entity relative to the X
+        direction of the referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='XDimensionTimeSeries' type='XDimensionTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of Measured dimension of an entity relative to the X
+        direction of the referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='YDimensionType'>
+    <xs:annotation>
+      <xs:documentation>
+        Measured dimension of an entity relative to the Y direction of the
+        referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='YDimension' type='YDimensionType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        Measured dimension of an entity relative to the Y direction of the
+        referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='YDimensionTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of Measured dimension of an entity relative to the Y
+        direction of the referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='YDimensionTimeSeries' type='YDimensionTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of Measured dimension of an entity relative to the Y
+        direction of the referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ZDimensionType'>
+    <xs:annotation>
+      <xs:documentation>
+        Measured dimension of an entity relative to the Z direction of the
+        referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ZDimension' type='ZDimensionType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        Measured dimension of an entity relative to the Z direction of the
+        referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ZDimensionTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of Measured dimension of an entity relative to the Z
+        direction of the referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='ZDimensionTimeSeries' type='ZDimensionTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of Measured dimension of an entity relative to the Z
+        direction of the referenced coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DiameterType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measured dimension of a diameter.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Diameter' type='DiameterType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The measured dimension of a diameter.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='DiameterTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measured dimension of a diameter.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='DiameterTimeSeries' type='DiameterTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The measured dimension of a diameter.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='OrientationType'>
+    <xs:annotation>
+      <xs:documentation>
+        A measured or calculated orientation of a plane or vector relative to a
+        cartesian coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Orientation' type='OrientationType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        A measured or calculated orientation of a plane or vector relative to a
+        cartesian coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='OrientationTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of A measured or calculated orientation of a plane or vector
+        relative to a cartesian coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='OrientationTimeSeries' type='OrientationTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of A measured or calculated orientation of a plane or vector
+        relative to a cartesian coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='HumidityRelativeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The amount of water vapor present expressed as a percent to reach
+        saturation at the same temperature.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='HumidityRelative' type='HumidityRelativeType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The amount of water vapor present expressed as a percent to reach
+        saturation at the same temperature.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='HumidityRelativeTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The amount of water vapor present expressed as a percent
+        to reach saturation at the same temperature.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='HumidityRelativeTimeSeries' type='HumidityRelativeTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The amount of water vapor present expressed as a percent
+        to reach saturation at the same temperature.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='HumidityAbsoluteType'>
+    <xs:annotation>
+      <xs:documentation>
+        The amount of water vapor expressed in grams per cubic meter.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='HumidityAbsolute' type='HumidityAbsoluteType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The amount of water vapor expressed in grams per cubic meter.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='HumidityAbsoluteTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The amount of water vapor expressed in grams per cubic
+        meter.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='HumidityAbsoluteTimeSeries' type='HumidityAbsoluteTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The amount of water vapor expressed in grams per cubic
+        meter.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='HumiditySpecificType'>
+    <xs:annotation>
+      <xs:documentation>
+        The ratio of the water vapor present over the total weight of the water
+        vapor and air present expressed as a percent.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='CommonSampleType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='HumiditySpecific' type='HumiditySpecificType' substitutionGroup='CommonSample'>
+    <xs:annotation>
+      <xs:documentation>
+        The ratio of the water vapor present over the total weight of the water
+        vapor and air present expressed as a percent.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='HumiditySpecificTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The ratio of the water vapor present over the total
+        weight of the water vapor and air present expressed as a percent.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='HumiditySpecificTimeSeries' type='HumiditySpecificTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The ratio of the water vapor present over the total
+        weight of the water vapor and air present expressed as a percent.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -8115,7 +8907,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
          A data value whose meaning may change over time due to changes in the
-        opertion of a piece of equipment or the process being executed on that
+        operation of a piece of equipment or the process being executed on that
         piece of equipment.
       </xs:documentation>
     </xs:annotation>
@@ -8127,8 +8919,127 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
          A data value whose meaning may change over time due to changes in the
-        opertion of a piece of equipment or the process being executed on that
+        operation of a piece of equipment or the process being executed on that
         piece of equipment.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='OperatingSystemType'>
+    <xs:annotation>
+      <xs:documentation>
+        The Operating System of a component.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='OperatingSystem' type='OperatingSystemType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        The Operating System of a component.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='FirmwareType'>
+    <xs:annotation>
+      <xs:documentation>
+        The embedded software of a component.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Firmware' type='FirmwareType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        The embedded software of a component.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ApplicationType'>
+    <xs:annotation>
+      <xs:documentation>
+        The application on a component.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Application' type='ApplicationType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        The application on a component.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='LibraryType'>
+    <xs:annotation>
+      <xs:documentation>
+        The software library on a component.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Library' type='LibraryType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        The software library on a component.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='NetworkType'>
+    <xs:annotation>
+      <xs:documentation>
+        Network details of a component.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Network' type='NetworkType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        Network details of a component.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='RotationType'>
+    <xs:annotation>
+      <xs:documentation>
+        A three space angular rotation relative to a coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Rotation' type='RotationType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        A three space angular rotation relative to a coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='TranslationType'>
+    <xs:annotation>
+      <xs:documentation>
+        A three space linear translation relative to a coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='StringEventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='Translation' type='TranslationType' substitutionGroup='StringEvent'>
+    <xs:annotation>
+      <xs:documentation>
+        A three space linear translation relative to a coordinate system.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -8298,7 +9209,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         DataSet of A data value whose meaning may change over time due to
-        changes in the opertion of a piece of equipment or the process being
+        changes in the operation of a piece of equipment or the process being
         executed on that piece of equipment.
       </xs:documentation>
     </xs:annotation>
@@ -8314,7 +9225,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         DataSet of A data value whose meaning may change over time due to
-        changes in the opertion of a piece of equipment or the process being
+        changes in the operation of a piece of equipment or the process being
         executed on that piece of equipment.
       </xs:documentation>
     </xs:annotation>
@@ -8323,7 +9234,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         DataSet of A data value whose meaning may change over time due to
-        changes in the opertion of a piece of equipment or the process being
+        changes in the operation of a piece of equipment or the process being
         executed on that piece of equipment.
       </xs:documentation>
     </xs:annotation>
@@ -8353,7 +9264,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         DataSet of A data value whose meaning may change over time due to
-        changes in the opertion of a piece of equipment or the process being
+        changes in the operation of a piece of equipment or the process being
         executed on that piece of equipment.
       </xs:documentation>
     </xs:annotation>
@@ -8413,7 +9324,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           <xs:element name='Cell' type='WorkOffsetCellType' minOccurs='0' maxOccurs='unbounded'>
             <xs:annotation>
               <xs:documentation>
-                Cells for WorkOffset table
+                An element representing a key-value pair published as part of an
+                entry.
               </xs:documentation>
             </xs:annotation>
           </xs:element>
@@ -8503,7 +9415,8 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           <xs:element name='Cell' type='ToolOffsetCellType' minOccurs='0' maxOccurs='unbounded'>
             <xs:annotation>
               <xs:documentation>
-                Cells for ToolOffset table
+                An element representing a key-value pair published as part of an
+                entry.
               </xs:documentation>
             </xs:annotation>
           </xs:element>

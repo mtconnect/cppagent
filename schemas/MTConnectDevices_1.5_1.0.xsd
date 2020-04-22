@@ -1959,6 +1959,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='COMPLETE'>
+        <xs:annotation>
+          <xs:documentation>
+            Completion of an action.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='CONSUMED'>
         <xs:annotation>
           <xs:documentation>
