@@ -650,7 +650,7 @@ namespace mtconnect
     }
     else
     {
-      value = "";
+      value = observation->getValue();
     }
 
     json obj = json::object();
