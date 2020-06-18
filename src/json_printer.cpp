@@ -565,7 +565,11 @@ namespace mtconnect
 
     json value;
 
-    if (observation->isTimeSeries() && observation->getValue() != "UNAVAILABLE")
+    if (observation->isUnavailable())
+    {
+      value = observation->getValue();
+    }
+    else if (observation->isTimeSeries())
     {
       ostringstream ostr;
       ostr.precision(6);
@@ -576,7 +580,7 @@ namespace mtconnect
       for (auto &e : v)
         value.emplace_back(e);
     }
-    else if (observation->isDataSet() && observation->getValue() != "UNAVAILABLE")
+    else if (observation->isDataSet())
     {
       value = json::object();
 
@@ -612,9 +616,9 @@ namespace mtconnect
         }
       }
     }
-    else if (!observation->getValue().empty())
+    else if (dataItem->getCategory() == DataItem::SAMPLE)
     {
-      if (dataItem->getCategory() == DataItem::SAMPLE)
+      if (!observation->getValue().empty())
       {
         if (dataItem->is3D())
         {
@@ -641,8 +645,12 @@ namespace mtconnect
       }
       else
       {
-        value = observation->getValue();
+        value = 0;
       }
+    }
+    else
+    {
+      value = "";
     }
 
     json obj = json::object();
