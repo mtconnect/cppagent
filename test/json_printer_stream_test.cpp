@@ -433,7 +433,8 @@ TEST_F(JsonPrinterStreamTest, Message)
 TEST_F(JsonPrinterStreamTest, Unavailability)
 {
   Checkpoint checkpoint;
-  addObservationToCheckpoint(checkpoint, "m17f1750", 10254804, "|UNAVAILABLE");  // asset changed
+  addObservationToCheckpoint(checkpoint, "m17f1750", 10254804, "UNAVAILABLE");  // asset changed
+  addObservationToCheckpoint(checkpoint, "dcbc0570", 10254804, "UNAVAILABLE");  // X Position
   addObservationToCheckpoint(checkpoint, "a5b23650", 10254804,
                              "unavailable||||");  // Motion Program Condition
   ObservationPtrArray list;
@@ -442,9 +443,10 @@ TEST_F(JsonPrinterStreamTest, Unavailability)
 
   auto jdoc = json::parse(doc);
   auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
-  ASSERT_EQ(2_S, streams.size());
+  ASSERT_EQ(3_S, streams.size());
+  cout << streams;
 
-  auto stream = streams.at("/1/ComponentStream"_json_pointer);
+  auto stream = streams.at("/2/ComponentStream"_json_pointer);
   ASSERT_TRUE(stream.is_object());
 
   ASSERT_EQ(string("p5add360"), stream.at("/componentId"_json_pointer).get<string>());
@@ -469,4 +471,17 @@ TEST_F(JsonPrinterStreamTest, Unavailability)
   ASSERT_TRUE(motion.is_object());
 
   ASSERT_EQ(string("a5b23650"), motion.at("/Unavailable/dataItemId"_json_pointer).get<string>());
+  
+  auto sample = streams.at("/1/ComponentStream"_json_pointer);
+  ASSERT_TRUE(sample.is_object());
+
+  ASSERT_EQ(string("e373fec0"), sample.at("/componentId"_json_pointer).get<string>());
+
+  auto samples = sample.at("/Samples"_json_pointer);
+  ASSERT_TRUE(samples.is_array());
+  ASSERT_EQ(1_S, samples.size());
+  auto position = samples.at(0);
+  ASSERT_TRUE(position.is_object());
+  ASSERT_EQ(string("UNAVAILABLE"), position.at("/Position/value"_json_pointer).get<string>());
+
 }
