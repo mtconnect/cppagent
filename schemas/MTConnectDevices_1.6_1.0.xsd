@@ -218,6 +218,14 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:NMTOKEN'/>
   </xs:simpleType>
+  <xs:simpleType name='IdRefType'>
+    <xs:annotation>
+      <xs:documentation>
+        A reference to an identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:IDREF'/>
+  </xs:simpleType>
   <xs:simpleType name='AssetIdType'>
     <xs:annotation>
       <xs:documentation>
@@ -2203,6 +2211,20 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='REQUEST'>
+        <xs:annotation>
+          <xs:documentation>
+            A subtype of an interface dataitem type to communicate a request. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RESPONSE'>
+        <xs:annotation>
+          <xs:documentation>
+            A subtype of an interface dataitem type to communicate a response.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='CONSUMED'>
         <xs:annotation>
           <xs:documentation>
@@ -2695,10 +2717,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER/REVOLUTION'>
         <xs:annotation>
           <xs:documentation>
             Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE_3D'>
+        <xs:annotation>
+          <xs:documentation>
+            A space-delimited, floating-point representation of the angular
+            rotation in degrees around the X, Y, and Z axes relative to a
+            cartesian coordinate system respectively in order as A, B, and C. If
+            any of the rotations is not known, it MUST be zero (0).
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -2954,10 +3014,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MILLIMETER/REVOLUTION'>
         <xs:annotation>
           <xs:documentation>
             Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE_3D'>
+        <xs:annotation>
+          <xs:documentation>
+            A space-delimited, floating-point representation of the angular
+            rotation in degrees around the X, Y, and Z axes relative to a
+            cartesian coordinate system respectively in order as A, B, and C. If
+            any of the rotations is not known, it MUST be zero (0).
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
@@ -4416,6 +4514,92 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='DoorInterfaceType'>
+    <xs:annotation>
+      <xs:documentation>
+        doorinterface provides the set of information used to coordinate the
+        operations between two pieces of equipment, one of which controls the
+        operation of a door. 
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='DoorInterface' type='DoorInterfaceType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        doorinterface provides the set of information used to coordinate the
+        operations between two pieces of equipment, one of which controls the
+        operation of a door. 
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ChuckInterfaceType'>
+    <xs:annotation>
+      <xs:documentation>
+        chuckinterface provides the set of information used to coordinate the
+        operations between two pieces of equipment, one of which controls the
+        operation of a chuck. 
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='ChuckInterface' type='ChuckInterfaceType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        chuckinterface provides the set of information used to coordinate the
+        operations between two pieces of equipment, one of which controls the
+        operation of a chuck. 
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='BarFeederInterfaceType'>
+    <xs:annotation>
+      <xs:documentation>
+        barfeederinterface provides the set of information used to coordinate
+        the operations between a Bar Feeder and another piece of equipment. 
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='BarFeederInterface' type='BarFeederInterfaceType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        barfeederinterface provides the set of information used to coordinate
+        the operations between a Bar Feeder and another piece of equipment. 
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='MaterialHandlerInterfaceType'>
+    <xs:annotation>
+      <xs:documentation>
+        materialhandlerinterface provides the set of information used to
+        coordinate the operations between a piece of equipment and another
+        associated piece of equipment used to automatically handle various types
+        of materials or services associated with the original piece of
+        equipment. 
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='MaterialHandlerInterface' type='MaterialHandlerInterfaceType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        materialhandlerinterface provides the set of information used to
+        coordinate the operations between a piece of equipment and another
+        associated piece of equipment used to automatically handle various types
+        of materials or services associated with the original piece of
+        equipment. 
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='DepositionType'>
     <xs:annotation>
       <xs:documentation>
@@ -4902,14 +5086,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>
-  <xs:simpleType name='IdRefType'>
-    <xs:annotation>
-      <xs:documentation>
-        A reference to an identifier
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:IDREF'/>
-  </xs:simpleType>
   <xs:complexType name='ReferencesType'>
     <xs:annotation>
       <xs:documentation>
@@ -5307,7 +5483,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name='coordinateSystemIdRef' type='CoordinateSystemIdRefType' use='optional'>
+        <xs:attribute name='coordinateSystemIdRef' type='IdRefType' use='optional'>
           <xs:annotation>
             <xs:documentation>
               References the coordinatesystem new for geometric specifications.
@@ -5676,14 +5852,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:simpleType name='CoordinateSystemIdRefType'>
-    <xs:annotation>
-      <xs:documentation>
-        The reference to the coordinate system
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:IDREF'/>
-  </xs:simpleType>
   <xs:simpleType name='CoordinateSystemTypeEnumType'>
     <xs:annotation>
       <xs:documentation>
@@ -5868,7 +6036,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name='Translaton' type='ThreeSpaceValueType'>
+      <xs:element name='Translation' type='ThreeSpaceValueType'>
         <xs:annotation>
           <xs:documentation>
             An offset applied first
@@ -5947,15 +6115,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:NMTOKEN'/>
-  </xs:simpleType>
-  <xs:simpleType name='CoordinateSystemIdType'>
-    <xs:annotation>
-      <xs:documentation>
-        The id reference for the coordinate system associated with this data
-        item
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:IDREF'/>
   </xs:simpleType>
   <xs:simpleType name='DiscreteType'>
     <xs:annotation>
@@ -6268,10 +6427,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name='coordinateSystemId' type='CoordinateSystemIdType' use='optional'>
+    <xs:attribute name='coordinateSystemIdRef' type='IdRefType' use='optional'>
       <xs:annotation>
         <xs:documentation>
-          The coordinate system reference to a particular coordinate system
+          References the coordinatesystem new for geometric specifications.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
