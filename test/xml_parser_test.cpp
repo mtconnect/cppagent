@@ -150,12 +150,12 @@ TEST_F(XmlParserTest, GetDataItems)
   ASSERT_EQ(0, (int)filter.size());
 
   filter.clear();
-  m_xmlParser->getDataItems(filter, "//Rotary[@name=\"C\"]//DataItem[@type=\"LOAD\"]");
+  m_xmlParser->getDataItems(filter, R"(//Rotary[@name="C"]//DataItem[@type="LOAD"])");
   ASSERT_EQ(2, (int)filter.size());
 
   filter.clear();
   m_xmlParser->getDataItems(
-      filter, "//Rotary[@name=\"C\"]//DataItem[@category=\"CONDITION\" or @category=\"SAMPLE\"]");
+      filter, R"(//Rotary[@name="C"]//DataItem[@category="CONDITION" or @category="SAMPLE"])");
   ASSERT_EQ(5, (int)filter.size());
 }
 
@@ -266,7 +266,7 @@ TEST_F(XmlParserTest, Configuration)
   }
 
   ASSERT_TRUE(power);
-  ASSERT_TRUE(power->getConfiguration());
+  ASSERT_FALSE(power->getConfiguration().empty());
 }
 
 TEST_F(XmlParserTest, ParseAsset)

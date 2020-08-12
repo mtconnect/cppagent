@@ -110,9 +110,9 @@ namespace mtconnect
     {
       return m_prefix;
     }
-    const ComponentConfiguration *getConfiguration() const
+    const std::list<std::unique_ptr<ComponentConfiguration>> &getConfiguration() const
     {
-      return m_configuration.get();
+      return m_configuration;
     }
 
     // Setter methods
@@ -150,9 +150,9 @@ namespace mtconnect
       return m_description;
     }
 
-    void setConfiguration(ComponentConfiguration *configuration)
+    void addConfiguration(ComponentConfiguration *configuration)
     {
-      m_configuration.reset(configuration);
+      m_configuration.emplace_back(configuration);
     }
 
     // Get the device that any component is associated with
@@ -243,7 +243,7 @@ namespace mtconnect
     // Description of itself
     std::map<std::string, std::string> m_description;
     std::string m_descriptionBody;
-    std::unique_ptr<ComponentConfiguration> m_configuration;
+    std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
 
     // Component relationships
     // Pointer to the parent component

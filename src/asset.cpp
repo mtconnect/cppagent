@@ -32,9 +32,7 @@ namespace mtconnect
   {
   }
 
-  Asset::~Asset()
-  {
-  }
+  Asset::~Asset() = default;
 
   void Asset::addIdentity(const std::string &key, const std::string &value)
   {

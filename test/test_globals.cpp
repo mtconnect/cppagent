@@ -143,7 +143,7 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
   // Special case when no children are expected
   xmlNodePtr first = obj->nodesetval->nodeTab[0];
 
-  if (expected == 0)
+  if (expected == nullptr)
   {
     bool has_content = false;
     stringstream message;

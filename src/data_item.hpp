@@ -18,6 +18,7 @@
 #pragma once
 #include "change_observer.hpp"
 #include "component.hpp"
+#include "definitions.hpp"
 #include "globals.hpp"
 
 #include <dlib/threads.h>
@@ -48,7 +49,8 @@ namespace mtconnect
       VALUE,
       TIME_SERIES,
       DISCRETE,
-      DATA_SET
+      DATA_SET,
+      TABLE
     };
 
     enum EFilterType
@@ -63,7 +65,7 @@ namespace mtconnect
     DataItem(std::map<std::string, std::string> const &attributes);
 
     // Destructor
-    ~DataItem();
+    ~DataItem() override;
 
     // Get a map of all the attributes of this data item
     const std::map<std::string, std::string> &getAttributes() const
@@ -169,6 +171,10 @@ namespace mtconnect
     {
       return m_hasNativeScale;
     }
+    bool hasDefinition() const
+    {
+      return (bool)m_definition;
+    }
 
     // Add a source (extra information) to data item
     void addSource(const std::string &source, const std::string &sourceDataItemId,
@@ -217,9 +223,13 @@ namespace mtconnect
     {
       return m_representation == DISCRETE;
     }
+    bool isTable() const
+    {
+      return m_representation == TABLE;
+    }
     bool isDataSet() const
     {
-      return m_representation == DATA_SET;
+      return m_representation == DATA_SET || isTable();
     }
     bool isDiscrete() const
     {
@@ -246,7 +256,11 @@ namespace mtconnect
     {
       m_resetTrigger = aTrigger;
     }
-
+    void makeDiscrete()
+    {
+      m_isDiscrete = true;
+      m_attributes = buildAttributes();
+    }
     bool hasInitialValue() const
     {
       return !m_initialValue.empty();
@@ -274,6 +288,16 @@ namespace mtconnect
     const std::string &getSourceOrName() const
     {
       return m_source.empty() ? (m_name.empty() ? m_id : m_name) : m_source;
+    }
+
+    const DataItemDefinition &getDefinition()
+    {
+      return *m_definition;
+    }
+
+    void setDefinition(std::unique_ptr<DataItemDefinition> &def)
+    {
+      std::swap(m_definition, def);
     }
 
     // Transform a name to camel casing
@@ -527,5 +551,8 @@ namespace mtconnect
     bool m_conversionDetermined;
     bool m_conversionRequired;
     bool m_hasFactor;
+
+    // Definitons
+    std::unique_ptr<DataItemDefinition> m_definition;
   };
 }  // namespace mtconnect

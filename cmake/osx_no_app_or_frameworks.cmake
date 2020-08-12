@@ -8,5 +8,6 @@ set(CMAKE_FIND_FRAMEWORK NEVER FORCE)
 # ms suffix which was added post 11.
 if (APPLE)
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef -Wno-deprecated-declarations -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-local-typedef -Wno-deprecated-declarations")
+  set(COVERAGE_FLAGS "-fcoverage-mapping -fprofile-instr-generate")
 endif()

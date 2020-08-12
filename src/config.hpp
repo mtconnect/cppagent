@@ -29,13 +29,12 @@ namespace mtconnect
 {
   class Agent;
   class Device;
-  class log_level;
   class RollingFileLogger;
   class XmlPrinter;
 
-  typedef void (XmlPrinter::*NamespaceFunction)(const std::string &urn, const std::string &location,
-                                                const std::string &prefix);
-  typedef void (XmlPrinter::*StyleFunction)(const std::string &location);
+  using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
+                                                 const std::string &);
+  using StyleFunction = void (XmlPrinter::*)(const std::string &);
 
   class AgentConfiguration : public MTConnectService
   {
@@ -85,13 +84,13 @@ namespace mtconnect
     void monitorThread();
 
    protected:
-    Agent *m_agent;
-    RollingFileLogger *m_loggerFile;
-    bool m_monitorFiles;
-    int m_minimumConfigReloadAge;
+    Agent *m_agent = nullptr;
+    RollingFileLogger *m_loggerFile = nullptr;
+    bool m_monitorFiles = false;
+    int m_minimumConfigReloadAge = 15;
     std::string m_devicesFile;
-    bool m_restart;
+    bool m_restart = false;
     std::string m_exePath;
-    bool m_pretty;
+    bool m_pretty = false;
   };
 }  // namespace mtconnect

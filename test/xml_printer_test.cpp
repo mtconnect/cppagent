@@ -441,17 +441,18 @@ TEST_F(XmlPrinterTest, Condition)
                         "OTEMP");
   ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@nativeSeverity",
                         "1");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal", 0);
+  ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal",
+                        nullptr);
   ASSERT_XML_PATH_EQUAL(
-      doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal@qualifier", 0);
+      doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal@qualifier", nullptr);
   ASSERT_XML_PATH_EQUAL(
-      doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal@nativeCode", 0);
+      doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Normal@nativeCode", nullptr);
   ASSERT_XML_PATH_EQUAL(
       doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeCode", "LOGIC");
   ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault",
                         "PLC Error");
-  ASSERT_XML_PATH_EQUAL(doc,
-                        "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@qualifier", 0);
+  ASSERT_XML_PATH_EQUAL(
+      doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@qualifier", nullptr);
   ASSERT_XML_PATH_EQUAL(
       doc, "//m:ComponentStream[@name='Controller']/m:Condition/m:Fault@nativeSeverity", "2");
 }
@@ -525,7 +526,7 @@ TEST_F(XmlPrinterTest, TimeSeries)
 
     PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
     ASSERT_XML_PATH_EQUAL(
-        doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate", 0);
+        doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleRate", nullptr);
     ASSERT_XML_PATH_EQUAL(
         doc, "//m:ComponentStream[@name='X']/m:Samples/m:PositionTimeSeries@sampleCount", "6");
     ASSERT_XML_PATH_EQUAL(

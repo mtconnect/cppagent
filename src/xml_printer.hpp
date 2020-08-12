@@ -23,8 +23,8 @@
 
 extern "C"
 {
-  typedef struct _xmlTextWriter xmlTextWriter;
-  typedef xmlTextWriter *xmlTextWriterPtr;
+  using xmlTextWriter = struct _xmlTextWriter;
+  using xmlTextWriterPtr = xmlTextWriter *;
 }
 
 namespace mtconnect
@@ -37,32 +37,28 @@ namespace mtconnect
   {
    public:
     XmlPrinter(const std::string version = "", bool pretty = false);
-    virtual ~XmlPrinter()
-    {
-    }
+    ~XmlPrinter() override = default;
 
-    virtual std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
-                                   const uint64_t nextSeq, const std::string &errorCode,
-                                   const std::string &errorText) const override;
+    std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
+                           const uint64_t nextSeq, const std::string &errorCode,
+                           const std::string &errorText) const override;
 
-    virtual std::string printProbe(
-        const unsigned int instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-        const unsigned int assetBufferSize, const unsigned int assetCount,
-        const std::vector<Device *> &devices,
-        const std::map<std::string, int> *count = nullptr) const override;
+    std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
+                           const uint64_t nextSeq, const unsigned int assetBufferSize,
+                           const unsigned int assetCount, const std::vector<Device *> &devices,
+                           const std::map<std::string, int> *count = nullptr) const override;
 
-    virtual std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
-                                    const uint64_t nextSeq, const uint64_t firstSeq,
-                                    const uint64_t lastSeq,
-                                    ObservationPtrArray &results) const override;
+    std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
+                            const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
+                            ObservationPtrArray &results) const override;
 
-    virtual std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
-                                    const unsigned int assetCount,
-                                    std::vector<AssetPtr> const &assets) const override;
+    std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
+                            const unsigned int assetCount,
+                            std::vector<AssetPtr> const &assets) const override;
 
-    virtual std::string printCuttingTool(CuttingToolPtr const tool) const override;
+    std::string printCuttingTool(CuttingToolPtr const tool) const override;
 
-    virtual std::string mimeType() const override
+    std::string mimeType() const override
     {
       return "text/xml";
     }
@@ -125,18 +121,12 @@ namespace mtconnect
     // Helper to print individual components and details
     void printProbeHelper(xmlTextWriterPtr writer, Component *component, const char *name) const;
     void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem) const;
+    void printDataItemDefinition(xmlTextWriterPtr writer,
+                                 const DataItemDefinition &definition) const;
+    void printCellDefinitions(xmlTextWriterPtr writer,
+                              const std::set<CellDefinition> &definitions) const;
 
-    // Add attributes to an xml element
-    void addSimpleElement(xmlTextWriterPtr writer, const std::string &element,
-                          const std::string &body,
-                          const std::map<std::string, std::string> &attributes = {},
-                          bool raw = false) const;
-
-    void addAttributes(xmlTextWriterPtr writer,
-                       const std::map<std::string, std::string> &attributes) const;
-    void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes) const;
-
-    void addEvent(xmlTextWriterPtr writer, Observation *result) const;
+    void addObservation(xmlTextWriterPtr writer, Observation *result) const;
 
     // Asset printing
     void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr tool, const char *value,

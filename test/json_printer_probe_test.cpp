@@ -29,6 +29,7 @@
 #include "test_globals.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
+#include "agent.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -50,14 +51,14 @@ class JsonPrinterProbeTest : public testing::Test
     m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
     m_printer = std::make_unique<JsonPrinter>("1.5", true);
 
-    m_config = std::make_unique<XmlParser>();
-    m_devices =
-        m_config->parseFile(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", m_xmlPrinter.get());
+    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", 4, 4, "1.5");
+
+    m_devices = m_agent->getDevices();
   }
 
   void TearDown() override
   {
-    m_config.reset();
+    m_agent.reset();
     m_xmlPrinter.reset();
     m_printer.reset();
     m_devices.clear();
@@ -66,7 +67,7 @@ class JsonPrinterProbeTest : public testing::Test
   std::unique_ptr<JsonPrinter> m_printer;
   std::vector<Device *> m_devices;
 
-  std::unique_ptr<XmlParser> m_config;
+  std::unique_ptr<Agent> m_agent;
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
 };
 
@@ -122,8 +123,11 @@ TEST_F(JsonPrinterProbeTest, TopLevelDataItems)
   ASSERT_EQ(string("avail"), avail.at("/DataItem/name"_json_pointer).get<string>());
 
   // Availability event
+  cout << "\n" << dataItems << endl;
   auto change = dataItems.at(1);
+
   ASSERT_EQ(string("ASSET_CHANGED"), change.at("/DataItem/type"_json_pointer).get<string>());
+  ASSERT_EQ(string("true"), change.at("/DataItem/discrete"_json_pointer).get<string>());
   ASSERT_EQ(string("EVENT"), change.at("/DataItem/category"_json_pointer).get<string>());
   ASSERT_EQ(string("e4a300e0"), change.at("/DataItem/id"_json_pointer).get<string>());
 

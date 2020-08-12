@@ -18,10 +18,14 @@
 #include "json_printer.hpp"
 
 #include "composition.hpp"
+#include "coordinate_systems.hpp"
 #include "device.hpp"
+#include "relationships.hpp"
 #include "sensor_configuration.hpp"
+#include "specifications.hpp"
 #include "version.h"
 
+#include <dlib/logger.h>
 #include <dlib/sockets.h>
 
 #include <nlohmann/json.hpp>
@@ -35,6 +39,8 @@ using json = nlohmann::json;
 
 namespace mtconnect
 {
+  static dlib::logger g_logger("json.printer");
+
   JsonPrinter::JsonPrinter(const string version, bool pretty)
       : Printer(pretty), m_schemaVersion(version)
   {
@@ -92,7 +98,10 @@ namespace mtconnect
   static inline void addAttributes(json &doc, const map<string, string> &attrs)
   {
     for (const auto &attr : attrs)
-      doc[attr.first] = attr.second;
+    {
+      if (!attr.second.empty())
+        doc[attr.first] = attr.second;
+    }
   }
 
   static inline void add(json &doc, const char *key, const string &value)
@@ -162,6 +171,60 @@ namespace mtconnect
     return print(doc, m_pretty);
   }
 
+  static inline json toJson(const set<CellDefinition> &definitions)
+  {
+    json entries = json::object();
+
+    for (const auto &entry : definitions)
+    {
+      json e = json::object();
+      addAttributes(e, {{"Description", entry.m_description},
+                        {"units", entry.m_units},
+                        {"type", entry.m_type},
+                        {"subType", entry.m_subType}});
+
+      entries[entry.m_key] = e;
+    }
+
+    return entries;
+  }
+
+  static inline json toJson(const DataItemDefinition &definition)
+  {
+    json obj = json::object();
+    if (!definition.m_description.empty())
+      obj["Description"] = definition.m_description;
+
+    if (!definition.m_entries.empty())
+    {
+      json entries = json::object();
+      for (const auto &entry : definition.m_entries)
+      {
+        json e = json::object();
+        addAttributes(e, {{"Description", entry.m_description},
+                          {"units", entry.m_units},
+                          {"type", entry.m_type},
+                          {"subType", entry.m_subType}});
+
+        if (!entry.m_cells.empty())
+        {
+          e["CellDefinitions"] = toJson(entry.m_cells);
+        }
+
+        entries[entry.m_key] = e;
+      }
+
+      obj["EntryDefinitions"] = entries;
+    }
+
+    if (!definition.m_cells.empty())
+    {
+      obj["CellDefinitions"] = toJson(definition.m_cells);
+    }
+
+    return obj;
+  }
+
   static inline json toJson(DataItem *item)
   {
     json obj = json::object();
@@ -209,6 +272,11 @@ namespace mtconnect
     {
       char *ep;
       obj["InitialValue"] = strtod(item->getInitialValue().c_str(), &ep);
+    }
+
+    if (item->hasDefinition())
+    {
+      obj["Definition"] = toJson(item->getDefinition());
     }
 
     json dataItem = json::object({{"DataItem", obj}});
@@ -268,19 +336,90 @@ namespace mtconnect
 
   inline void toJson(json &parent, const SensorConfiguration::Calibration &cal)
   {
-    if (!cal.m_date.empty())
-      parent["CalibrationDate"] = cal.m_date;
-    if (!cal.m_nextDate.empty())
-      parent["NextCalibrationDate"] = cal.m_nextDate;
-    if (!cal.m_initials.empty())
-      parent["CalibrationInitials"] = cal.m_initials;
+    addAttributes(parent, {{"CalibrationDate", cal.m_date},
+                           {"NextCalibrationDate", cal.m_nextDate},
+                           {"CalibrationInitials", cal.m_initials}});
+  }
+
+  inline json toJson(const Relationship *rel)
+  {
+    json obj = json::object();
+    json fields = json::object();
+    addAttributes(fields, {{"id", rel->m_id},
+                           {"name", rel->m_name},
+                           {"type", rel->m_type},
+                           {"criticality", rel->m_criticality}});
+
+    if (auto r = dynamic_cast<const ComponentRelationship *>(rel))
+    {
+      fields["idRef"] = r->m_idRef;
+      obj["ComponentRelationship"] = fields;
+    }
+    if (auto r = dynamic_cast<const DeviceRelationship *>(rel))
+    {
+      fields["href"] = r->m_href;
+      fields["role"] = r->m_role;
+      fields["deviceUuidRef"] = r->m_deviceUuidRef;
+      obj["DeviceRelationship"] = fields;
+    }
+
+    return obj;
+  }
+
+  inline json toJson(const Specification *spec)
+  {
+    json fields = json::object();
+    addAttributes(fields, {{"type", spec->m_type},
+                           {"subType", spec->m_subType},
+                           {"units", spec->m_units},
+                           {"name", spec->m_name},
+                           {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
+                           {"dataItemIdRef", spec->m_dataItemIdRef},
+                           {"compositionIdRef", spec->m_compositionIdRef},
+                           {"Maximum", spec->m_maximum},
+                           {"Minimum", spec->m_minimum},
+                           {"Nominal", spec->m_nominal}});
+    json obj = json::object({{"Specification", fields}});
+    return obj;
+  }
+
+  inline json toJson(const CoordinateSystem *system)
+  {
+    json fields = json::object();
+    addAttributes(fields, {
+                              {"id", system->m_id},
+                              {"type", system->m_type},
+                              {"name", system->m_name},
+                              {"nativeName", system->m_nativeName},
+                              {"parentIdRef", system->m_parentIdRef},
+                          });
+
+    if (!system->m_origin.empty())
+    {
+      json obj = json::object();
+      obj["Origin"] = system->m_origin;
+      fields["Transformation"] = obj;
+    }
+    if (!system->m_translation.empty() || !system->m_rotation.empty())
+    {
+      json obj = json::object();
+
+      if (!system->m_translation.empty())
+        obj["Translation"] = system->m_translation;
+      if (!system->m_translation.empty())
+        obj["Rotation"] = system->m_rotation;
+
+      fields["Transformation"] = obj;
+    }
+
+    json obj = json::object({{"CoordinateSystem", fields}});
+    return obj;
   }
 
   inline void toJson(json &parent, const ComponentConfiguration *config)
   {
-    if (typeid(*config) == typeid(SensorConfiguration))
+    if (auto obj = dynamic_cast<const SensorConfiguration *>(config))
     {
-      auto obj = static_cast<const SensorConfiguration *>(config);
       json sensor = json::object();
       if (!obj->getFirmwareVersion().empty())
         sensor["FirmwareVersion"] = obj->getFirmwareVersion();
@@ -308,12 +447,48 @@ namespace mtconnect
 
         sensor["Channels"] = channels;
       }
-      parent["Configuration"] = json::object({{"SensorConfiguration", sensor}});
+      parent["SensorConfiguration"] = sensor;
+      ;
     }
-    else if (typeid(*config) == typeid(ExtendedComponentConfiguration))
+    else if (auto obj = dynamic_cast<const Relationships *>(config))
     {
-      auto obj = static_cast<const ExtendedComponentConfiguration *>(config);
-      parent["Configuration"] = obj->getContent();
+      json relationships = json::array();
+
+      for (const auto &rel : obj->getRelationships())
+      {
+        json jrel = toJson(rel.get());
+        relationships.emplace_back(jrel);
+      }
+
+      parent["Relationships"] = relationships;
+    }
+    else if (auto obj = dynamic_cast<const Specifications *>(config))
+    {
+      json specifications = json::array();
+
+      for (const auto &spec : obj->getSpecifications())
+      {
+        json jspec = toJson(spec.get());
+        specifications.emplace_back(jspec);
+      }
+
+      parent["Specifications"] = specifications;
+    }
+    else if (auto obj = dynamic_cast<const CoordinateSystems *>(config))
+    {
+      json systems = json::array();
+
+      for (const auto &system : obj->getCoordinateSystems())
+      {
+        json jsystem = toJson(system.get());
+        systems.emplace_back(jsystem);
+      }
+
+      parent["CoordinateSystems"] = systems;
+    }
+    else if (auto obj = dynamic_cast<const ExtendedComponentConfiguration *>(config))
+    {
+      parent["ExtendedConfiguration"] = obj->getContent();
     }
   }
 
@@ -329,8 +504,16 @@ namespace mtconnect
     if (desc.begin() != desc.end())
       comp["Description"] = desc;
 
-    if (component->getConfiguration())
-      toJson(comp, component->getConfiguration());
+    if (!component->getConfiguration().empty())
+    {
+      json obj = json::object();
+
+      for (const auto &conf : component->getConfiguration())
+      {
+        toJson(obj, conf.get());
+      }
+      comp["Configuration"] = obj;
+    }
     toJson(comp, "DataItems", component->getDataItems());
     toJson(comp, "Components", component->getChildren());
     toJson(comp, "Compositions", component->getCompositions());
@@ -382,7 +565,11 @@ namespace mtconnect
 
     json value;
 
-    if (observation->isTimeSeries() && observation->getValue() != "UNAVAILABLE")
+    if (observation->isUnavailable())
+    {
+      value = observation->getValue();
+    }
+    else if (observation->isTimeSeries())
     {
       ostringstream ostr;
       ostr.precision(6);
@@ -393,7 +580,7 @@ namespace mtconnect
       for (auto &e : v)
         value.emplace_back(e);
     }
-    else if (observation->isDataSet() && observation->getValue() != "UNAVAILABLE")
+    else if (observation->isDataSet())
     {
       value = json::object();
 
@@ -406,13 +593,32 @@ namespace mtconnect
         }
         else
         {
-          value[e.m_key] = e.m_value;
+          visit(overloaded{[&value, &e](const std::string &st) { value[e.m_key] = st; },
+                           [&value, &e](const int64_t &i) { value[e.m_key] = i; },
+                           [&value, &e](const double &d) { value[e.m_key] = d; },
+                           [&value, &e](const DataSet &arg) {
+                             auto row = json::object();
+                             for (auto &c : arg)
+                             {
+                               visit(overloaded{
+                                         [&row, &c](const std::string &st) { row[c.m_key] = st; },
+                                         [&row, &c](const int64_t &i) { row[c.m_key] = i; },
+                                         [&row, &c](const double &d) { row[c.m_key] = d; },
+                                         [](auto &a) {
+                                           g_logger << dlib::LERROR
+                                                    << "Invalid  variant type for table cell";
+                                         }},
+                                     c.m_value);
+                             }
+                             value[e.m_key] = row;
+                           }},
+                e.m_value);
         }
       }
     }
-    else if (!observation->getValue().empty())
+    else if (dataItem->getCategory() == DataItem::SAMPLE)
     {
-      if (dataItem->getCategory() == DataItem::SAMPLE)
+      if (!observation->getValue().empty())
       {
         if (dataItem->is3D())
         {
@@ -439,8 +645,12 @@ namespace mtconnect
       }
       else
       {
-        value = observation->getValue();
+        value = 0;
       }
+    }
+    else
+    {
+      value = observation->getValue();
     }
 
     json obj = json::object();
@@ -472,9 +682,7 @@ namespace mtconnect
     CategoryRef(const char *cat) : m_category(cat)
     {
     }
-    CategoryRef(const CategoryRef &other) : m_category(other.m_category), m_events(other.m_events)
-    {
-    }
+    CategoryRef(const CategoryRef &other) = default;
 
     bool addObservation(const ObservationPtr &observation)
     {
@@ -831,7 +1039,7 @@ namespace mtconnect
 
     if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
     {
-      CuttingTool *tool = dynamic_cast<CuttingTool *>(asset.getObject());
+      auto *tool = dynamic_cast<CuttingTool *>(asset.getObject());
       addCuttingToolIdentity(obj, tool->getIdentity());
       obj["Description"] = tool->getDescription();
 

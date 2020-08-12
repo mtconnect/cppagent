@@ -46,7 +46,7 @@ class AgentTest : public testing::Test
 {
  public:
   typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
-  typedef dlib::queue<std::string>::kernel_1a_c queue_type;
+  using queue_type = dlib::queue<std::string>::kernel_1a_c;
 
  protected:
   void SetUp() override
@@ -158,31 +158,52 @@ TEST_F(AgentTest, BadCount)
     query["count"] = "NON_INTEGER";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be a positive integer.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must an integer.");
   }
 
   {
-    query["count"] = "-123";
+    query["count"] = "-500";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be a positive integer.");
+    string value("'count' must be greater than or equal to ");
+    value += int32ToString(-m_agent->getBufferSize()) + ".";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
 
   {
     query["count"] = "0";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must be greater than or equal to 1.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must not be 0.");
   }
 
   {
-    query["count"] = "999999999999999999";
+    query["count"] = "500";
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than or equal to ");
     value += intToString(m_agent->getBufferSize()) + ".";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
+
+  {
+    query["count"] = "9999999";
+    PARSE_XML_RESPONSE_QUERY(query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    string value("'count' must be less than or equal to ");
+    value += intToString(m_agent->getBufferSize()) + ".";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
+  }
+  
+  {
+    query["count"] = "-9999999";
+    PARSE_XML_RESPONSE_QUERY(query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    string value("'count' must be greater than or equal to ");
+    value += int32ToString(-m_agent->getBufferSize()) + ".";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
+  }
+
 }
 
 TEST_F(AgentTest, BadFreq)
@@ -202,6 +223,14 @@ TEST_F(AgentTest, BadFreq)
     PARSE_XML_RESPONSE_QUERY(query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
+  }
+
+  {
+    query["frequency"] = "2147483647";
+    PARSE_XML_RESPONSE_QUERY(query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
+                          "'frequency' must be less than or equal to 2147483646.");
   }
 
   {
@@ -267,11 +296,12 @@ TEST_F(AgentTest, EmptyStream)
     m_agentTestHelper->m_path = "/current";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']@name", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']@name", nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable",
-                          0);
+                          nullptr);
     ASSERT_XML_PATH_EQUAL(
-        doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier", 0);
+        doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier",
+        nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode", "SPINDLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ToolGroup", "UNAVAILABLE");
   }
@@ -281,7 +311,7 @@ TEST_F(AgentTest, EmptyStream)
     char line[80] = {0};
     sprintf(line, "%d", (int)m_agent->getSequence());
     PARSE_XML_RESPONSE_QUERY_KV("from", line);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 }
 
@@ -315,7 +345,7 @@ TEST_F(AgentTest, AddToBuffer)
   {
     m_agentTestHelper->m_path = "/sample";
     PARSE_XML_RESPONSE_QUERY_KV("from", "36");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 
   key = "power";
@@ -531,7 +561,7 @@ TEST_F(AgentTest, SampleAtNextSeq)
   {
     value = intToString(seq);
     PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 }
 
@@ -635,6 +665,47 @@ TEST_F(AgentTest, SampleCount)
     }
   }
 }
+
+
+TEST_F(AgentTest, SampleLastCount)
+{
+  key_value_map kvm;
+
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  ASSERT_TRUE(m_adapter);
+
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
+    m_adapter->processData(line);
+  }
+  
+  int64_t seq = m_agent->getSequence() - 20;
+
+  {
+    m_agentTestHelper->m_path = "/sample";
+    kvm["path"] = "//DataItem[@name='Xact']";
+    kvm["count"] = "-10";
+
+    PARSE_XML_RESPONSE_QUERY(kvm);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq).c_str());
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
+
+    // Make sure we got 10 lines
+    for (int j = 0; j < 10; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j * 2 + 1).c_str());
+    }
+  }
+}
+
 
 TEST_F(AgentTest, AdapterCommands)
 {
@@ -1558,6 +1629,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
     m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
   }
 }
@@ -1572,6 +1644,22 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
     m_agentTestHelper->m_path = "/probe";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
+  }
+}
+
+TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
+{
+  m_agent.reset();
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.5", 25ms);
+  m_agentTestHelper->m_agent = m_agent.get();
+
+  {
+    m_agentTestHelper->m_path = "/probe";
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", "true");
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
   }
 }
@@ -1663,6 +1751,38 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
   }
 }
 
+TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
+{
+  addAdapter();
+  m_agent->enablePut();
+
+
+  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
+
+  m_adapter->processData("TIME|@ASSET@|111|Part|<Part>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
+
+  m_agentTestHelper->m_path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "111");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+
+  m_agentTestHelper->m_path = "/asset/111";
+  {
+    PARSE_XML_RESPONSE_DELETE;
+  }
+  
+  m_agentTestHelper->m_path = "/current";
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "111");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+}
+
+
 TEST_F(AgentTest, AssetChangedWhenUnavailable)
 {
   addAdapter();
@@ -1676,7 +1796,6 @@ TEST_F(AgentTest, AssetChangedWhenUnavailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "");
   }
 }
-
 
 TEST_F(AgentTest, RemoveAllAssets)
 {
@@ -1789,7 +1908,7 @@ TEST_F(AgentTest, PutBlockingFrom)
 
   {
     PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT is not allowed from 127.0.0.1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT, POST, and DELETE are not allowed from 127.0.0.1");
   }
 
   m_agentTestHelper->m_path = "/LinuxCNC/current";
@@ -1844,7 +1963,7 @@ TEST_F(AgentTest, StreamData)
     try
     {
       PARSE_XML_RESPONSE_QUERY(query);
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", 0);
+      ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
 
       auto delta = system_clock::now() - startTime;
       ASSERT_TRUE(delta < (heartbeatFreq + 25ms));

@@ -40,6 +40,26 @@ namespace mtconnect
 
   const string Observation::SLevels[NumLevels] = {"Normal", "Warning", "Fault", "Unavailable"};
 
+  bool DataSetValueSame::operator()(const DataSet &v)
+  {
+    if (!std::holds_alternative<DataSet>(m_other))
+      return false;
+
+    const auto &oset = std::get<DataSet>(m_other);
+
+    if (v.size() != oset.size())
+      return false;
+
+    for (const auto &e1 : v)
+    {
+      const auto &e2 = oset.find(e1);
+      if (e2 == oset.end() || !visit(DataSetValueSame(e2->m_value), e1.m_value))
+        return false;
+    }
+
+    return true;
+  }
+
   inline static bool splitValue(string &key, string &value)
   {
     auto found = key.find_first_of(':');
@@ -89,7 +109,8 @@ namespace mtconnect
   }
 
   Observation::Observation(const Observation &observation)
-      : m_dataItem(observation.m_dataItem),
+      : RefCounted(observation),
+        m_dataItem(observation.m_dataItem),
         m_sequence(observation.m_sequence),
         m_time(observation.m_time),
         m_duration(observation.m_duration),
@@ -114,15 +135,18 @@ namespace mtconnect
     }
   }
 
-  Observation::~Observation()
-  {
-  }
+  Observation::~Observation() = default;
 
   const AttributeList &Observation::getAttributes()
   {
-    lock_guard<std::mutex> lock(g_attributeMutex);
     if (!m_hasAttributes)
     {
+      lock_guard<std::mutex> lock(g_attributeMutex);
+
+      // Double check in case of a race.
+      if (m_hasAttributes)
+        return m_attributes;
+
       m_attributes.emplace_back(AttributeItem("dataItemId", m_dataItem->getId()));
       m_attributes.emplace_back(AttributeItem("timestamp", m_time));
 
@@ -269,11 +293,25 @@ namespace mtconnect
 #define VAL_RE "[^ \t]+"
 
   static const char *reg = WS_RE KEY_RE "(=(" DQ_RE "|" SQ_RE "|" CB_RE "|" VAL_RE ")?)?";
+  static const char *int_reg = "[+-]?[0-9]+";
+  static const char *float_reg = "[+-]?[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?";
   static regex tokenizer(reg);
+  static regex int_regex(int_reg);
+  static regex float_regex(float_reg);
+
+  static DataSetValue dataSetValue(const string &value)
+  {
+    if (regex_match(value, float_regex))
+      return DataSetValue(stod(value));
+    else if (regex_match(value, int_regex))
+      return DataSetValue((int64_t)stoll(value));
+    else
+      return DataSetValue(value);
+  }
 
   // Split the data set entries by space delimiters and account for the
   // use of single and double quotes as well as curly braces
-  void Observation::parseDataSet(const string &s)
+  void Observation::parseDataSet(DataSet &dataSet, const string &s, bool table)
   {
     smatch m;
     string rest(s);
@@ -326,7 +364,16 @@ namespace mtconnect
         }
 
         // Map the value.
-        m_dataSet.emplace(key, value, removed);
+        if (table)
+        {
+          DataSet set;
+          parseDataSet(set, value, false);
+          dataSet.emplace(key, set, removed);
+        }
+        else
+        {
+          dataSet.emplace(key, dataSetValue(value), removed);
+        }
 
         // Parse the rest of the string...
         rest = m.suffix();
@@ -411,7 +458,7 @@ namespace mtconnect
         }
       }
 
-      parseDataSet(set);
+      parseDataSet(m_dataSet, set, m_dataItem->isTable());
     }
     else if (m_dataItem->conversionRequired())
       m_value = m_dataItem->convertValue(value);

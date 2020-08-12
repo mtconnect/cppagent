@@ -1,0 +1,8 @@
+Checks:          '-*,modernize-*,-modernize-avoid-c-arrays,-modernize-use-trailing-return-type,bugprone-*,-bugprone-unhandled-self-assignment,-bugprone-branch-clone'
+WarningsAsErrors: '*'
+HeaderFilterRegex: '/src/.*\.hpp$'
+AnalyzeTemporaryDtors: false
+FormatStyle:     File
+CheckOptions:
+  - key:             modernize-use-default-member-init.UseAssignment
+    value:           1

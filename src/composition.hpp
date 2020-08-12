@@ -75,7 +75,7 @@ namespace mtconnect
       {
         if (!m_hasAttributes)
         {
-          Description *self = const_cast<Description *>(this);
+          auto *self = const_cast<Description *>(this);
 
           if (!m_manufacturer.empty())
             self->m_attributes["manufacturer"] = m_manufacturer;
@@ -148,7 +148,7 @@ namespace mtconnect
     {
       if (!m_hasAttributes)
       {
-        Composition *self = const_cast<Composition *>(this);
+        auto *self = const_cast<Composition *>(this);
 
         self->m_attributes["id"] = m_id;
         self->m_attributes["type"] = m_type;

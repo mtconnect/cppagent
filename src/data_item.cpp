@@ -21,6 +21,7 @@
 #include "adapter.hpp"
 #include "device.hpp"
 
+#include <array>
 #include <map>
 #include <string>
 
@@ -96,6 +97,11 @@ namespace mtconnect
         m_representation = DATA_SET;
         m_camelType += "DataSet";
       }
+      else if (repPos->second == "TABLE")
+      {
+        m_representation = TABLE;
+        m_camelType += "Table";
+      }
     }
 
     if (!m_prefix.empty())
@@ -147,7 +153,7 @@ namespace mtconnect
     const auto nativeScalePos = attributes.find("nativeScale");
     if (nativeScalePos != attributes.end())
     {
-      m_nativeScale = atof(nativeScalePos->second.c_str());
+      m_nativeScale = stringToFloat(nativeScalePos->second.c_str());
       m_hasNativeScale = true;
     }
 
@@ -170,9 +176,7 @@ namespace mtconnect
     m_attributes = buildAttributes();
   }
 
-  DataItem::~DataItem()
-  {
-  }
+  DataItem::~DataItem() = default;
 
   void DataItem::setDataSource(Adapter *source)
   {
@@ -220,6 +224,9 @@ namespace mtconnect
     if (m_representation == DATA_SET)
       attributes["representation"] = "DATA_SET";
 
+    if (m_representation == TABLE)
+      attributes["representation"] = "TABLE";
+
     if (!m_statistic.empty())
       attributes["statistic"] = m_statistic;
 
@@ -258,12 +265,24 @@ namespace mtconnect
     return m_id == name || m_name == name || (!m_source.empty() && m_source == name);
   }
 
+  static void capitalize(string::iterator start, string::iterator end)
+  {
+    // Exceptions to the rule
+    static std::array<string, 4> exceptions = {"AC", "DC", "PH", "IP"};
+
+    if (std::none_of(exceptions.begin(), exceptions.end(),
+                     [&start, &end](const string &s) { return equal(start, end, s.begin()); }))
+    {
+      *start = ::toupper(*start);
+      start++;
+      transform(start, end, start, ::tolower);
+    }
+  }
+
   string DataItem::getCamelType(const string &type, string &prefix)
   {
     if (type.empty())
       return "";
-    else if (type == "PH")  // Exception to the rule.
-      return "PH";
 
     string camel;
     auto colon = type.find(':');
@@ -276,18 +295,21 @@ namespace mtconnect
     else
       camel = type;
 
-    auto second = camel.begin();
-    second++;
-    transform(second, camel.end(), second, ::tolower);
+    auto start = camel.begin();
+    decltype(start) end;
 
-    auto word = find(second, camel.end(), '_');
-
-    while (word != camel.end())
+    bool done;
+    do
     {
-      camel.erase(word);
-      camel.replace(word, word + 1ul, 1ul, ::toupper(*word));
-      word = find(word, camel.end(), '_');
-    }
+      end = find(start, camel.end(), '_');
+      capitalize(start, end);
+      done = end == camel.end();
+      if (!done)
+      {
+        camel.erase(end);
+        start = end;
+      }
+    } while (!done);
 
     return camel;
   }
@@ -314,7 +336,7 @@ namespace mtconnect
     }
     else if (m_hasFactor)
     {
-      return (value + m_conversionOffset) * m_conversionFactor;
+      return static_cast<float>((value + m_conversionOffset) * m_conversionFactor);
     }
     else
     {

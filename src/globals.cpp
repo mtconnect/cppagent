@@ -54,7 +54,50 @@ using namespace std::chrono;
 
 namespace mtconnect
 {
+  float stringToFloat(const std::string &text)
+  {
+    float value = 0.0;
+    try
+    {
+      value = stof(text);
+    }
+    catch (const std::out_of_range &)
+    {
+      value = 0.0;
+    }
+    catch (const std::invalid_argument &)
+    {
+      value = 0.0;
+    }
+    return value;
+  }
+
+  int stringToInt(const std::string &text, int outOfRangeDefault)
+  {
+    int value = 0.0;
+    try
+    {
+      value = stoi(text);
+    }
+    catch (const std::out_of_range &)
+    {
+      value = outOfRangeDefault;
+    }
+    catch (const std::invalid_argument &)
+    {
+      value = 0;
+    }
+    return value;
+  }
+
   string int64ToString(uint64_t i)
+  {
+    ostringstream stm;
+    stm << i;
+    return stm.str();
+  }
+
+  string int32ToString(int i)
   {
     ostringstream stm;
     stm << i;
@@ -77,8 +120,8 @@ namespace mtconnect
 
   string toUpperCase(string &text)
   {
-    for (char &c : text)
-      c = toupper(c);
+    std::transform(text.begin(), text.end(), text.begin(),
+                   [](unsigned char c) { return std::toupper(c); });
 
     return text;
   }
@@ -88,6 +131,21 @@ namespace mtconnect
     for (const char c : s)
     {
       if (!isdigit(c))
+        return false;
+    }
+
+    return true;
+  }
+
+  bool isInteger(const string &s)
+  {
+    auto iter = s.cbegin();
+    if (*iter == '-' || *iter == '+')
+      ++iter;
+
+    for (; iter != s.end(); iter++)
+    {
+      if (!isdigit(*iter))
         return false;
     }
 
@@ -143,11 +201,10 @@ namespace mtconnect
   {
     char timeBuffer[50] = {0};
     time_t seconds;
-    int micros;
     struct tm *timeinfo;
 
     seconds = aTime / 1000000ull;
-    micros = aTime % 1000000ull;
+    const int micros = static_cast<int>(aTime % 1000000ull);
 
     timeinfo = gmtime(&seconds);
     strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S", timeinfo);
@@ -209,15 +266,16 @@ namespace mtconnect
       setenv("TZ", existingTz, 1);
 #endif
 
-    int ms_v = 0;
-    auto len = strlen(ms);
+    uint64_t ms_v = 0;
+    uint64_t len = strlen(ms);
 
     if (len > 0u)
     {
-      ms_v = strtol(ms + 1, 0, 10);
+      ms_v = strtol(ms + 1, nullptr, 10);
 
-      for (int pf = 7 - len; pf > 0; pf--)
-        ms_v *= 10;
+      if (len < 8u)
+        for (auto pf = 7 - len; pf > 0; pf--)
+          ms_v *= 10;
     }
 
     return time + ms_v;
@@ -303,18 +361,18 @@ namespace mtconnect
 #ifdef _WINDOWS
     HANDLE myself = GetCurrentProcess();
     PROCESS_MEMORY_COUNTERS memory;
-    
+
     if (GetProcessMemoryInfo(myself, &memory, sizeof(memory)))
       size = (long)(memory.PeakWorkingSetSize / 1024l);
 
 #else
     struct rusage memory;
-    
+
     if (!getrusage(RUSAGE_SELF, &memory))
       size = memory.ru_maxrss;
 
 #endif
-    
+
     return size;
   }
 #endif

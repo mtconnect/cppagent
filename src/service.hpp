@@ -49,8 +49,8 @@ namespace mtconnect
     std::string m_name;
     std::string m_configFile;
     std::string m_pidFile;
-    bool m_isService;
-    bool m_isDebug;
+    bool m_isService = false;
+    bool m_isDebug = false;
 
     void install();
     void remove();

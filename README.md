@@ -1,7 +1,7 @@
 
-MTConnect C++ Agent Version 1.5.0.0
+MTConnect C++ Agent Version 1.6.0.0
 --------
-[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48/branch/master?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/8ijbprd7rtwohv7c?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent-dev)
 
 The C++ Agent provides the a complete implementation of the HTTP
 server required by the MTConnect standard. The agent provides the
@@ -10,6 +10,8 @@ server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 1.6.0.0 added coordinate systems, specifications, and tabular data.
 
 Version 1.5.0.0 added Data Set capabilities and has been updated to use C++ 14.
 
@@ -822,6 +824,18 @@ Will be effectively the same as specifying:
 And the streams will only have the one value when a sample is request is made at that point in the stream.
 
 When the `discrete` flag is set to `true` in the data item, all change tracking is ignored and each set is treated as if it is new.
+
+One can quote values using the following methods: `"<text>"`, `'<text>'`, and `{<text>}`. Spaces and other characters can be included in the text and the matching character can be escaped with a `\` if it is required as follows: `"hello \"there\""` will yield the value: `hellow "there"`.
+
+### `TABLE` Representation ###
+
+A `TABLE` representation is similar to the `DATA_SET` that has a key value pair as the value. Using the encoding mentioned above, the following representations are allowed for tables:
+
+    <timestamp>|wpo|G53.1={X=1.0 Y=2.0 Z=3.0 s='string with space'} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}
+
+Using the quoting conventions explained in the previous section, the inner content can contain quoted text and exscaped values. The value is interpreted as a key/value pair in the same way as the `DATA_SET`. A table can be thought of as a data set of data sets.
+
+All the reset rules of data set apply to tables and the values are treated as a unit.
 
 Assets
 -----

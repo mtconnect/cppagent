@@ -143,7 +143,7 @@ namespace mtconnect
         offset = ((uint64_t)(atof(time.c_str()) * 1000.0)) - m_baseOffset;
 
       // convert microseconds to seconds
-      anOffset = offset / 1000000;
+      anOffset = offset / 1000000.0;
       result = getRelativeTimeString(m_baseTime + offset);
     }
     else if (m_ignoreTimestamps || time.empty())
@@ -153,7 +153,7 @@ namespace mtconnect
     }
     else
     {
-      anOffset = parseTimeMicro(time) / 1000000;
+      anOffset = parseTimeMicro(time) / 1000000.0;
       result = time;
     }
 

@@ -20,6 +20,7 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "agent.hpp"
+#include <nlohmann/json.hpp>
 #include "agent_test_helper.hpp"
 
 #include <cstdio>
@@ -28,16 +29,17 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 
-void AgentTestHelper::responseHelper(const char *file, int line, key_value_map &aQueries,
-                                     xmlDocPtr *doc)
+void AgentTestHelper::makeRequest(const char *file, int line, const char *request, const std::string &body, dlib::key_value_map &aQueries)
 {
   IncomingThings incoming("", "", 0, 0);
   OutgoingThings outgoing;
-  incoming.request_type = "GET";
+  incoming.request_type = request;
   incoming.path = m_path;
   incoming.queries = aQueries;
   incoming.cookies = m_cookies;
   incoming.headers = m_incomingHeaders;
+  incoming.body = body;
+  incoming.foreign_ip = m_incomingIp;
 
   outgoing.m_out = &m_out;
 
@@ -63,30 +65,32 @@ void AgentTestHelper::responseHelper(const char *file, int line, key_value_map &
     message += iter->first + "=" + iter->second + ",";
 
   ASSERT_EQ(outgoing.http_return, 200) << message << " -- " << file << "(" << line << ")";
+}
 
+
+void AgentTestHelper::responseHelper(const char *file, int line, key_value_map &aQueries,
+                                     xmlDocPtr *doc)
+{
+  makeRequest(file, line, "GET", "", aQueries);
   *doc = xmlParseMemory(m_result.c_str(), m_result.length());
 }
 
-void AgentTestHelper::putResponseHelper(const char *file, int line, string body,
+void AgentTestHelper::putResponseHelper(const char *file, int line, const string &body,
                                         key_value_map &aQueries, xmlDocPtr *doc)
 {
-  IncomingThings incoming("", "", 0, 0);
-  OutgoingThings outgoing;
-  incoming.request_type = "PUT";
-  incoming.path = m_path;
-  incoming.queries = aQueries;
-  incoming.cookies = m_cookies;
-  incoming.headers = m_incomingHeaders;
-  incoming.body = body;
-  incoming.foreign_ip = m_incomingIp;
-
-  outgoing.m_out = &m_out;
-
-  m_result = m_agent->httpRequest(incoming, outgoing);
-
-  string message = (string) "No response to request" + m_path;
-
-  ASSERT_EQ(outgoing.http_return, 200) << message << " -- " << file << "(" << line << ")";
-
+  makeRequest(file, line, "PUT", body, aQueries);
   *doc = xmlParseMemory(m_result.c_str(), m_result.length());
+}
+
+void AgentTestHelper::deleteResponseHelper(const char *file, int line,
+                                        key_value_map &aQueries, xmlDocPtr *doc)
+{
+  makeRequest(file, line, "DELETE", "", aQueries);
+  *doc = xmlParseMemory(m_result.c_str(), m_result.length());
+}
+
+void AgentTestHelper::responseHelper(const char *file, int line, dlib::key_value_map &aQueries, nlohmann::json &doc)
+{
+  makeRequest(file, line, "GET", "", aQueries);
+  doc = nlohmann::json::parse(m_result);
 }

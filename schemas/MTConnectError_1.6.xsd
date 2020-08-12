@@ -1,0 +1,3640 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+Copyright (c) 2008-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the AMT nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+DISCLAIMER OF WARRANTY. ALL MTCONNECT MATERIALS AND SPECIFICATIONS PROVIDED
+BY AMT, MTCONNECT OR ANY PARTICIPANT TO YOU OR ANY PARTY ARE PROVIDED "AS IS"
+AND WITHOUT ANY WARRANTY OF ANY KIND. AMT, MTCONNECT, AND EACH OF THEIR
+RESPECTIVE MEMBERS, OFFICERS, DIRECTORS, AFFILIATES, SPONSORS, AND AGENTS
+(COLLECTIVELY, THE "AMT PARTIES") AND PARTICIPANTS MAKE NO REPRESENTATION OR
+WARRANTY OF ANY KIND WHATSOEVER RELATING TO THESE MATERIALS, INCLUDING, WITHOUT
+LIMITATION, ANY EXPRESS OR IMPLIED WARRANTY OF NONINFRINGEMENT,
+MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. 
+
+LIMITATION OF LIABILITY. IN NO EVENT SHALL AMT, MTCONNECT, ANY OTHER AMT
+PARTY, OR ANY PARTICIPANT BE LIABLE FOR THE COST OF PROCURING SUBSTITUTE GOODS
+OR SERVICES, LOST PROFITS, LOSS OF USE, LOSS OF DATA OR ANY INCIDENTAL,
+CONSEQUENTIAL, INDIRECT, SPECIAL OR PUNITIVE DAMAGES OR OTHER DIRECT DAMAGES,
+WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
+THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
+SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
+-->
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectError:1.6' xmlns:mt='urn:mtconnect.org:MTConnectError:1.6' targetNamespace='urn:mtconnect.org:MTConnectError:1.6' elementFormDefault='qualified' attributeFormDefault='unqualified' xmlns:vc='http://www.w3.org/2007/XMLSchema-versioning' vc:minVersion='1.1'>
+  <xs:element name='MTConnectError' type='MTConnectErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        It is the root XML element of an mtconnecterrors response document.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:simpleType name='SenderType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sender of the message
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='CreationTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The date and time the document was created
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='SequenceType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sequence number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='18446744073709551615'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='TestIndicatorType'>
+    <xs:annotation>
+      <xs:documentation>
+        A debugging flag for testing.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:boolean'/>
+  </xs:simpleType>
+  <xs:simpleType name='InstanceIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The instance number of the agent, used for fault tolerance
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='18446744073709551615'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='BufferSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The size of the agents buffer
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='TimestampType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time the sample was reported
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='OccurrenceTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The time a sample occurred
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:dateTime'/>
+  </xs:simpleType>
+  <xs:simpleType name='VersionType'>
+    <xs:annotation>
+      <xs:documentation>
+        A version number
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='NameType'>
+    <xs:annotation>
+      <xs:documentation>
+        A short name for any element
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='UuidType'>
+    <xs:annotation>
+      <xs:documentation>
+        A universally unique id that uniquely identifies the element for
+        it&apos;s entire life
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='SerialNumberAttrType'>
+    <xs:annotation>
+      <xs:documentation>
+        A serial number for a piece of equipment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ItemSourceType'>
+    <xs:annotation>
+      <xs:documentation>
+        The measurement source
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='RateType'>
+    <xs:annotation>
+      <xs:documentation>
+        A sample rate in milliseconds per sample
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='ComponentIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The id of the component (maps to the id from probe)
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:ID'/>
+  </xs:simpleType>
+  <xs:simpleType name='IDType'>
+    <xs:annotation>
+      <xs:documentation>
+        An identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:ID'/>
+  </xs:simpleType>
+  <xs:simpleType name='SignificantDigitsValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number significant digits
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'/>
+  </xs:simpleType>
+  <xs:simpleType name='CompositionIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The item&apos;s reference to the Device model composition
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:IDREF'/>
+  </xs:simpleType>
+  <xs:simpleType name='DurationTimeType'>
+    <xs:annotation>
+      <xs:documentation>
+        A length of time in seconds
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:float'/>
+  </xs:simpleType>
+  <xs:simpleType name='RemovedType'>
+    <xs:annotation>
+      <xs:documentation>
+        A flag indicating the item has been removed
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:boolean'/>
+  </xs:simpleType>
+  <xs:simpleType name='KeyType'>
+    <xs:annotation>
+      <xs:documentation>
+        The key for adata set
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:NMTOKEN'/>
+  </xs:simpleType>
+  <xs:simpleType name='IdRefType'>
+    <xs:annotation>
+      <xs:documentation>
+        A reference to an identifier
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:IDREF'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        The unique id of the asset
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetAttrTypeType'>
+    <xs:annotation>
+      <xs:documentation>
+        An asset type
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='AssetBufferSizeType'>
+    <xs:annotation>
+      <xs:documentation>
+        The maximum number of assets
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='1'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='AssetCountAttrType'>
+    <xs:annotation>
+      <xs:documentation>
+        The number of assets
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:integer'>
+      <xs:minInclusive value='0'/>
+      <xs:maxExclusive value='4294967295'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='FloatListValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        Common floating point sample value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:list>
+      <xs:simpleType>
+        <xs:restriction base='xs:float'/>
+      </xs:simpleType>
+    </xs:list>
+  </xs:simpleType>
+  <xs:simpleType name='ThreeSpaceValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A three dimensional value &apos;X Y Z&apos; or &apos;A B C&apos;
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='FloatListValueType'>
+      <xs:maxLength value='3'/>
+      <xs:minLength value='3'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DescriptionTextType'>
+    <xs:annotation>
+      <xs:documentation>
+        A description
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatsExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item statistics types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemEnumTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The types of measurements available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTUATOR'>
+        <xs:annotation>
+          <xs:documentation>
+            A mechanism for moving or controlling a mechanical part of a piece
+            of equipment. It takes energy usually provided by air, electric
+            current, or liquid and converts the energy into some kind of motion.
+            
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ACCELERATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the rate of change of velocity.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ACCUMULATED_TIME'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of accumulated time for an activity or event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERAGE'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.6. Replaced by amperageac sample and
+            amperagedc sample.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ANGLE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of angular position.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ANGULAR_ACCELERATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement rate of change of angular velocity.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ANGULAR_VELOCITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the rate of change of angular position.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AXIS_FEEDRATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the feedrate of a linear axis.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CLOCK_TIME'>
+        <xs:annotation>
+          <xs:documentation>
+            The value provided by a timing device at a specific point in time.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CONCENTRATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the percentage of one component within a mixture
+            of components
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CONDUCTIVITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the ability of a material to conduct electricity.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DISPLACEMENT'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the change in position of an object.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ELECTRICAL_ENERGY'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of electrical energy consumption by a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='EQUIPMENT_TIMER'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the amount of time a piece of equipment or a
+            sub-part of a piece of equipment has performed specific activities.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FILL_LEVEL'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the amount of a substance remaining compared to
+            the planned maximum amount of that substance.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FLOW'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the rate of flow of a fluid.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FREQUENCY'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the number of occurrences of a repeating event
+            per unit time.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GLOBAL_POSITION'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.1
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LENGTH'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the length of an object.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LEVEL'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.2. See filllevel sample
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LINEAR_FORCE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the push or pull introduced by an actuator or
+            exerted on an object.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LOAD'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the actual versus the standard rating of a piece
+            of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MASS'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the mass of an object(s) or an amount of
+            material.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PATH_FEEDRATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the feedrate for the axes, or a single axis,
+            associated with a path component-a vector.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PATH_POSITION'>
+        <xs:annotation>
+          <xs:documentation>
+            A measured or calculated position of a control point associated with
+            a controller element, or path element if provided, of a piece of
+            equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PH'>
+        <xs:annotation>
+          <xs:documentation>
+            A measure of the acidity or alkalinity of a solution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='POSITION'>
+        <xs:annotation>
+          <xs:documentation>
+            A measured or calculated position of a component element as reported
+            by a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='POWER_FACTOR'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the ratio of real power flowing to a load to the
+            apparent power in that AC circuit.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PRESSURE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of force per unit area exerted by a gas or liquid.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROCESS_TIMER'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the amount of time a piece of equipment has
+            performed different types of activities associated with the process
+            being performed at that piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RESISTANCE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the degree to which a substance opposes the
+            passage of an electric current.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROTARY_VELOCITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the rotational speed of a rotary axis.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SOUND_LEVEL'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of a sound level or sound pressure level relative to
+            atmospheric pressure.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SPINDLE_SPEED'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.2. Replaced by rotaryvelocity sample
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='STRAIN'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the amount of deformation per unit length of an
+            object when a load is applied.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TEMPERATURE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of temperature.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of a force that stretches or elongates an object.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TILT'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of angular displacement. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TORQUE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the turning force exerted on an object or by an
+            object.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VELOCITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the rate of change of position of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VISCOSITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of a fluids resistance to flow.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLT_AMPERE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the apparent power in an electrical circuit,
+            equal to the product of root-mean-square (RMS) voltage and RMS
+            current (commonly referred to as VA).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of reactive power in an AC electrical circuit
+            (commonly referred to as VAR).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLTAGE'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.6. Replaced by voltageac sample and
+            voltagedc sample.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WATTAGE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of power flowing through or dissipated by an
+            electrical circuit or piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ACTIVE_AXES'>
+        <xs:annotation>
+          <xs:documentation>
+            The set of axes currently associated with a path or controller
+            structural element.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ACTUATOR_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            Represents the operational state of an apparatus for moving or
+            controlling a mechanism or system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ALARM'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED: Replaced with condition category category data items in
+            Version 1.1.0.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AVAILABILITY'>
+        <xs:annotation>
+          <xs:documentation>
+            Represents the agent&apos;s ability to communicate with the data
+            source.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AXIS_COUPLING'>
+        <xs:annotation>
+          <xs:documentation>
+            Describes the way the axes will be associated to each other. This is
+            used in conjunction with coupledaxes event to indicate the way they
+            are interacting.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AXIS_FEEDRATE_OVERRIDE'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of a signal or calculation issued to adjust the feedrate
+            of an individual linear type axis.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AXIS_INTERLOCK'>
+        <xs:annotation>
+          <xs:documentation>
+            An indicator of the state of the axis lockout function when power
+            has been removed and the axis is allowed to move freely.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AXIS_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indicator of the controlled state of a linear or rotary component
+            representing an axis.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='BLOCK'>
+        <xs:annotation>
+          <xs:documentation>
+            The line of code or command being executed by a controller
+            structural element.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='BLOCK_COUNT'>
+        <xs:annotation>
+          <xs:documentation>
+            The total count of the number of blocks of program code that have
+            been executed since execution started.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CHUCK_INTERLOCK'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the state of an interlock function or control logic
+            state intended to prevent the associated chuck component from being
+            operated.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CHUCK_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the operating state of a mechanism that holds a
+            part or stock material during a manufacturing process. It may also
+            represent a mechanism that holds any other mechanism in place within
+            a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CODE'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.1.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='COMPOSITION_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the operating condition of a mechanism represented
+            by a composition type element.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CONTROLLER_MODE'>
+        <xs:annotation>
+          <xs:documentation>
+            The current operating mode of the controller component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CONTROLLER_MODE_OVERRIDE'>
+        <xs:annotation>
+          <xs:documentation>
+            A setting or operator selection that changes the behavior of a piece
+            of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='COUPLED_AXES'>
+        <xs:annotation>
+          <xs:documentation>
+            Refers to the set of associated axes.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DIRECTION'>
+        <xs:annotation>
+          <xs:documentation>
+            The direction of motion.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DOOR_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The operational state of a door type component or composition
+            element.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='EMERGENCY_STOP'>
+        <xs:annotation>
+          <xs:documentation>
+            The current state of the emergency stop signal for a piece of
+            equipment, controller path, or any other component or subsystem of a
+            piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='END_OF_BAR'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of whether the end of a piece of bar stock being feed
+            by a bar feeder has been reached.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='EQUIPMENT_MODE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication that a piece of equipment, or a sub-part of a piece of
+            equipment, is performing specific types of activities.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='EXECUTION'>
+        <xs:annotation>
+          <xs:documentation>
+            The execution status of the controller.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FUNCTIONAL_MODE'>
+        <xs:annotation>
+          <xs:documentation>
+            The current intended production status of the device or component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HARDNESS'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the hardness of a material.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INTERFACE_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the operational state of an interface component
+            component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LINE'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.4.0.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LINE_LABEL'>
+        <xs:annotation>
+          <xs:documentation>
+            An optional identifier for a block event of code in a program event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LINE_NUMBER'>
+        <xs:annotation>
+          <xs:documentation>
+            A reference to the position of a block of program code within a
+            control program.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MATERIAL'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier of a material used or consumed in the manufacturing
+            process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MESSAGE'>
+        <xs:annotation>
+          <xs:documentation>
+            Any text string of information to be transferred from a piece of
+            equipment to a client software application.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPERATOR_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier of the person currently responsible for operating the
+            piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PALLET_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier for a pallet.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PART_COUNT'>
+        <xs:annotation>
+          <xs:documentation>
+            The count of parts produced.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PART_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            An identifier of a part in a manufacturing operation.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PART_NUMBER'>
+        <xs:annotation>
+          <xs:documentation>
+            An identifier of a part or product moving through the manufacturing
+            process. The valid data value must be a text string. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PATH_FEEDRATE_OVERRIDE'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of a signal or calculation issued to adjust the feedrate
+            for the axes associated with a path component that may represent a
+            single axis or the coordinated movement of multiple axes.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PATH_MODE'>
+        <xs:annotation>
+          <xs:documentation>
+            Describes the operational relationship between a path structural
+            element and another path structural element for pieces of equipment
+            comprised of multiple logical groupings of controlled axes or other
+            logical operations.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='POWER_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The indication of the status of the source of energy for a
+            structural element to allow it to perform its intended function or
+            the state of an enabling signal providing permission for the
+            structural element to perform its functions.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='POWER_STATUS'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.1.0.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            The name of the logic or motion program being executed by the
+            controller component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_COMMENT'>
+        <xs:annotation>
+          <xs:documentation>
+            A comment or non-executable statement in the control program. The
+            valid data value must be a text string.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_EDIT'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the status of the controller components program
+            editing mode. On many controls, a program can be edited while
+            another program is currently being executed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_EDIT_NAME'>
+        <xs:annotation>
+          <xs:documentation>
+            The name of the program being edited. This is used in conjunction
+            with programedit event when in active value state. The valid data
+            value must be a text string.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_HEADER'>
+        <xs:annotation>
+          <xs:documentation>
+            The non-executable header section of the control program.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROTARY_MODE'>
+        <xs:annotation>
+          <xs:documentation>
+            The current operating mode for a rotary type axis.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROTARY_VELOCITY_OVERRIDE'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of a command issued to adjust the programmed velocity for
+            a rotary type axis. This command represents a percentage change to
+            the velocity calculated by a logic or motion program or set by a
+            switch for a rotary type axis.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SERIAL_NUMBER'>
+        <xs:annotation>
+          <xs:documentation>
+            The serial number associated with a component, asset
+            mtconnectassets, or device. The valid data value must be a text
+            string.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SPINDLE_INTERLOCK'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the status of the spindle for a piece of equipment
+            when power has been removed and it is free to rotate.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL_ASSET_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier of an individual tool asset.The valid data value must
+            be a text string.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED in Version 1.2.0. See toolassetid event. The identifier
+            of the tool currently in use for a given path.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL_NUMBER'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier assigned by the controller component to a cutting
+            tool when in use by a piece of equipment. The valid data value must
+            be a text string.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL_OFFSET'>
+        <xs:annotation>
+          <xs:documentation>
+            A reference to the tool offset variables applied to the active
+            cutting tool associated with a path in a controller type component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='USER'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier of the person currently responsible for operating the
+            piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WIRE'>
+        <xs:annotation>
+          <xs:documentation>
+            A string like piece or filament of relatively rigid or flexible
+            material provided in a variety of diameters.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WORK_OFFSET'>
+        <xs:annotation>
+          <xs:documentation>
+            A reference to the offset variables for a work piece or part
+            associated with a path in a controller type component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WORKHOLDING_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier for the current workholding or part clamp in use by a
+            piece of equipment. The valid data value must be a text string.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='COMMUNICATIONS'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication that the piece of equipment has experienced a
+            communications failure.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DATA_RANGE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication that the value of the data associated with a measured
+            value or a calculation is outside of an expected range.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HARDWARE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of a fault associated with the hardware subsystem of
+            the structural element.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LOGIC_PROGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication that an error occurred in the logic program or
+            programmable logic controller (PLC) associated with a piece of
+            equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MOTION_PROGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication that an error occurred in the motion program
+            associated with a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SYSTEM'>
+        <xs:annotation>
+          <xs:documentation>
+            A general purpose indication associated with an electronic component
+            of a piece of equipment or a controller that represents a fault that
+            is not associated with the operator, program, or hardware.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ASSET_CHANGED'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the cdata for the event MUST be the assetid of the
+            asset that has been added or changed. There will not be a separate
+            message for new assets.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ASSET_REMOVED'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the cdata for the event MUST be the assetid of the
+            asset that has been removed. The asset will still be visible if
+            requested with the includeremoved parameter as described in the
+            protocol section. When assets are removed they are not moved to the
+            beginning of the most recently modified list. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPEN_DOOR'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to open a door. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CLOSE_DOOR'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to close a door.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPEN_CHUCK'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to open a chuck. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CLOSE_CHUCK'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to close a chuck.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MATERIAL_FEED'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to advance material or feed product to a piece of equipment
+            from a continuous or bulk source. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MATERIAL_CHANGE'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to change the type of material or product being loaded or
+            fed to a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MATERIAL_RETRACT'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to remove or retract material or product.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PART_CHANGE'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to change the part or product associated with a piece of
+            equipment to a different part or product. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MATERIAL_LOAD'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to load a piece of material or product.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MATERIAL_UNLOAD'>
+        <xs:annotation>
+          <xs:documentation>
+            Service to unload a piece of material or product.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLUME_SPATIAL'>
+        <xs:annotation>
+          <xs:documentation>
+            The geometric volume of an object or container.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLUME_FLUID'>
+        <xs:annotation>
+          <xs:documentation>
+            The fluid volume of an object or container.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CAPACITY_SPATIAL'>
+        <xs:annotation>
+          <xs:documentation>
+            The geometric capacity of an object or container.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CAPACITY_FLUID'>
+        <xs:annotation>
+          <xs:documentation>
+            The fluid capacity of an object or container.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DENSITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The volumetric mass of a material per unit volume of that material.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_VOLUME'>
+        <xs:annotation>
+          <xs:documentation>
+            The spatial volume of material to be deposited in an additive
+            manufacturing process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_RATE_VOLUMETRIC'>
+        <xs:annotation>
+          <xs:documentation>
+            The rate at which a spatial volume of material is deposited in an
+            additive manufacturing process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_ACCELERATION_VOLUMETRIC'>
+        <xs:annotation>
+          <xs:documentation>
+            The rate of change in spatial volume of material deposited in an
+            additive manufacturing process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_MASS'>
+        <xs:annotation>
+          <xs:documentation>
+            The mass of the material deposited in an additive manufacturing
+            process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEPOSITION_DENSITY'>
+        <xs:annotation>
+          <xs:documentation>
+            The density of the material deposited in an additive manufacturing
+            process per unit of volume.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROCESS_TIME'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date associated with an activity or event. processtime
+            event MUST be reported in ISO 8601 format.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DATE_CODE'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date code associated with a material or other physical
+            item. datecode event MUST be reported in ISO 8601 format.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MATERIAL_LAYER'>
+        <xs:annotation>
+          <xs:documentation>
+            Identifies the layers of material applied to a part or product as
+            part of an additive manufacturing process. The valid data value MUST
+            be an integer.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WAIT_STATE'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the reason that execution event is reporting a
+            value of wait. The valid data value MUST be poweringup,
+            poweringdown, partload, partunload, toolload, toolunload,
+            materialload event, materialunload event, secondaryprocess, pausing,
+            or resuming.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PART_DETECT'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication designating whether a part or work piece has been
+            detected or is present. The valid data value MUST be present or
+            notpresent.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEVICE_UUID'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier of another piece of equipment that is temporarily
+            associated with a component of this piece of equipment to perform a
+            particular function. The valid data value MUST be a NMTOKEN XML
+            type.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUTTING_SPEED'>
+        <xs:annotation>
+          <xs:documentation>
+             The speed difference (relative velocity) between the cutting
+            mechanism and the surface of the workpiece it is operating on.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PATH_FEEDRATE_PER_REVOLUTION'>
+        <xs:annotation>
+          <xs:documentation>
+            The feedrate for the axes, or a single axis.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_NEST_LEVEL'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the nesting level within a control program that is
+            associated with the code or instructions that is currently being
+            executed. If an Initial Value is not defined, the nesting level
+            associated with the highest or initial nesting level of the program
+            MUST default to zero (0). The value reported for programnestlevel
+            event MUST be an integer.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_LOCATION_TYPE'>
+        <xs:annotation>
+          <xs:documentation>
+            Defines whether the logic or motion program defined by program event
+            is being executed from the local memory of the controller or from an
+            outside source. The valid data value MUST be local or external.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAM_LOCATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The Uniform Resource Identifier (URI) for the source file associated
+            with program event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL_GROUP'>
+        <xs:annotation>
+          <xs:documentation>
+            An identifier for the tool group associated with a specific tool.
+            Commonly used to designate spare tools.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VARIABLE'>
+        <xs:annotation>
+          <xs:documentation>
+             A data value whose meaning may change over time due to changes in
+            the operation of a piece of equipment or the process being executed
+            on that piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERAGE_AC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of an electrical current that reverses direction at
+            regular short intervals.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERAGE_DC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of an electric current flowing in one direction
+            only.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLTAGE_AC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the electrical potential between two points in an
+            electrical circuit in which the current periodically reverses
+            direction.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLTAGE_DC'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the electrical potential between two points in an
+            electrical circuit in which the current is unidirectional.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='X_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the X direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Y_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the Y direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Z_DIMENSION'>
+        <xs:annotation>
+          <xs:documentation>
+            Measured dimension of an entity relative to the Z direction of the
+            referenced coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DIAMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            The measured dimension of a diameter.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPERATING_SYSTEM'>
+        <xs:annotation>
+          <xs:documentation>
+            The Operating System of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FIRMWARE'>
+        <xs:annotation>
+          <xs:documentation>
+            The embedded software of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='APPLICATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The application on a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LIBRARY'>
+        <xs:annotation>
+          <xs:documentation>
+            The software library on a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NETWORK'>
+        <xs:annotation>
+          <xs:documentation>
+            Network details of a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ORIENTATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A measured or calculated orientation of a plane or vector relative
+            to a cartesian coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROTATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A three space angular rotation relative to a coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TRANSLATION'>
+        <xs:annotation>
+          <xs:documentation>
+            A three space linear translation relative to a coordinate system.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CoordinateSystems'>
+        <xs:annotation>
+          <xs:documentation>
+            It aggregates coordinatesystem new configurations for a component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='Specifications'>
+        <xs:annotation>
+          <xs:documentation>
+            It aggregates specification elements describing the design
+            characteristics for a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WORLD'>
+        <xs:annotation>
+          <xs:documentation>
+            stationary coordinate system referenced to earth, which is
+            independent of the robot motion. Ref:ISO 9787:2013. For non-robotic
+            devices, stationary coordinate system referenced to earth, which is
+            independent of the motion of a piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='BASE'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the base mounting surface. Ref:ISO
+            9787:2013. A base mounting surface is a connection surface between
+            the arm and its supporting structure. Ref:ISO 9787:2013. For
+            non-robotic devices, it is the connection surface between the device
+            and its supporting structure.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OBJECT'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the object. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TASK'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the site of the task. Ref:ISO
+            9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MECHANICAL_INTERFACE'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the mechanical interface. Ref:ISO
+            9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the tool or to the end effector
+            attached to the mechanical interface. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MOBILE_PLATFORM'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to one of the components of a mobile
+            platform. Ref:ISO 8373:2012
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CAMERA'>
+        <xs:annotation>
+          <xs:documentation>
+            coordinate system referenced to the sensor which monitors the site
+            of the task. Ref:ISO 9787:2013
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_RELATIVE'>
+        <xs:annotation>
+          <xs:documentation>
+            The amount of water vapor present expressed as a percent to reach
+            saturation at the same temperature.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_ABSOLUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            The amount of water vapor expressed in grams per cubic meter.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HUMIDITY_SPECIFIC'>
+        <xs:annotation>
+          <xs:documentation>
+            The ratio of the water vapor present over the total weight of the
+            water vapor and air present expressed as a percent.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VARIABLE'>
+        <xs:annotation>
+          <xs:documentation>
+            A user variable
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The types of measurements available
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemEnumTypeEnum DataItemExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemSubEnumTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The sub-types for a measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='ACTUAL'>
+        <xs:annotation>
+          <xs:documentation>
+            The measured value of the data item type given by a sensor or
+            encoder.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MAXIMUM'>
+        <xs:annotation>
+          <xs:documentation>
+            Maximum value of a data entity or attribute.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MINIMUM'>
+        <xs:annotation>
+          <xs:documentation>
+            The minimum value of a data entity or attribute.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DIRECT'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of DC current or voltage.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TARGET'>
+        <xs:annotation>
+          <xs:documentation>
+            The desired measure or count for a data item value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='COMMANDED'>
+        <xs:annotation>
+          <xs:documentation>
+            A value specified by the controller type component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OVERRIDE'>
+        <xs:annotation>
+          <xs:documentation>
+            DEPRECATED: The operators overridden value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROGRAMMED'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of a signal or calculation specified by a logic or motion
+            program or set by a switch.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RAPID'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of a signal or calculation issued to adjust the feedrate
+            of a component or composition that is operating in a rapid
+            positioning mode.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WORKING'>
+        <xs:annotation>
+          <xs:documentation>
+            A piece of equipment performing any activity, the equipment is
+            active and performing a function under load or not.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='STANDARD'>
+        <xs:annotation>
+          <xs:documentation>
+            The standard or original length of an object.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='USEABLE'>
+        <xs:annotation>
+          <xs:documentation>
+            The remaining useable length of an object.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROBE'>
+        <xs:annotation>
+          <xs:documentation>
+            The position provided by a measurement probe.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PROCESS'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the time from the beginning of production of a
+            part or product on a piece of equipment until the time that
+            production is complete for that part or product on that piece of
+            equipment. This includes the time that the piece of equipment is
+            running, producing parts or products, or in the process of producing
+            parts.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='A_SCALE'>
+        <xs:annotation>
+          <xs:documentation>
+            A Scale weighting factor. This is the default weighting factor if no
+            factor is specified
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='B_SCALE'>
+        <xs:annotation>
+          <xs:documentation>
+            B Scale weighting factor
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='C_SCALE'>
+        <xs:annotation>
+          <xs:documentation>
+            C Scale weighting factor
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='D_SCALE'>
+        <xs:annotation>
+          <xs:documentation>
+            D Scale weighting factor
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NO_SCALE'>
+        <xs:annotation>
+          <xs:documentation>
+            No weighting factor on the frequency scale
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ALTERNATING'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of alternating voltage or current. If not specified
+            further in statistic, defaults to RMS voltage. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MANUAL_UNCLAMP'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the state of an operator controlled interlock that
+            can inhibit the ability to initiate an unclamp action of an
+            electronically controlled chuck. The valid data value must be active
+            value or inactive value. When manualunclamp subtype is active value,
+            it is expected that a chuck cannot be unclamped until manualunclamp
+            subtype is set to inactive value. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ACTION'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the operating state of a mechanism represented by a
+            composition type component. The operating state indicates whether
+            the composition element is activated or disabled. The valid data
+            value must be active value or inactive value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LATERAL'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the position of a mechanism that may move in a
+            lateral direction. The mechanism is represented by a composition
+            type component. The position information indicates whether the
+            composition element is positioned to the right, to the left, or is
+            in transition. The valid data value must be right value, left value,
+            or transitioning value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MOTION'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the open or closed state of a mechanism. The
+            mechanism is represented by a composition type component. The
+            operating state indicates whether the state of the composition
+            element is open, closed, or unlatched. The valid data value must be
+            open value, unlatched value, or closed value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SWITCHED'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the activation state of a mechanism represented by
+            a composition type component. The activation state indicates whether
+            the composition element is activated or not. The valid data value
+            must be on value or off value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VERTICAL'>
+        <xs:annotation>
+          <xs:documentation>
+            An indication of the position of a mechanism that may move in a
+            vertical direction. The mechanism is represented by a composition
+            type component. The position information indicates whether the
+            composition element is positioned to the top, to the bottom, or is
+            in transition. The valid data value must be up value, down value, or
+            transitioning value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DRY_RUN'>
+        <xs:annotation>
+          <xs:documentation>
+            A setting or operator selection used to execute a test mode to
+            confirm the execution of machine functions. The valid data value
+            must be on value or off value. When dryrun subtype is on value, the
+            equipment performs all of its normal functions, except no part or
+            product is produced. If the equipment has a spindle, spindle
+            operation is suspended.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MACHINE_AXIS_LOCK'>
+        <xs:annotation>
+          <xs:documentation>
+            A setting or operator selection that changes the behavior of the
+            controller on a piece of equipment. The valid data value must be on
+            value or off value. When machineaxislock subtype is on value,
+            program execution continues normally, but no equipment motion occurs
+            
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPTIONAL_STOP'>
+        <xs:annotation>
+          <xs:documentation>
+            A setting or operator selection that changes the behavior of the
+            controller on a piece of equipment. The valid data value must be on
+            value or off value. The program execution is stopped after a
+            specific program block is executed when optionalstop subtype is on
+            value. In the case of a G-Code program, a program block event
+            containing a M01 code designates the command for an optionalstop
+            subtype. execution event must change to optionalstop subtype after a
+            program block specifying an optional stop is executed and the
+            optionalstop subtype selection is on value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SINGLE_BLOCK'>
+        <xs:annotation>
+          <xs:documentation>
+            A setting or operator selection that changes the behavior of the
+            controller on a piece of equipment. The valid data value must be on
+            value or off value. Program execution is paused after each block
+            event of code is executed when singleblock subtype is on value. When
+            singleblock subtype is on value, execution event must change to
+            interrupted value after completion of each block event of code. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOOL_CHANGE_STOP'>
+        <xs:annotation>
+          <xs:documentation>
+            A setting or operator selection that changes the behavior of the
+            controller on a piece of equipment. The valid data value must be on
+            value or off value. Program execution is paused when a command is
+            executed requesting a cutting tool to be changed. execution event
+            must change to interrupted value after completion of the command
+            requesting a cutting tool to be changed and toolchangestop subtype
+            is on value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LINEAR'>
+        <xs:annotation>
+          <xs:documentation>
+            The direction of motion of a linear motion.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROTARY'>
+        <xs:annotation>
+          <xs:documentation>
+            The rotational direction of a rotary motion using the right hand
+            rule convention. The valid data value must be clockwise value or
+            counterclockwise value.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AUXILIARY'>
+        <xs:annotation>
+          <xs:documentation>
+            When multiple locations on a piece of bar stock are referenced as
+            the indication for the endofbar event, the additional location(s)
+            must be designated as auxiliary subtype indication(s) for the
+            endofbar event. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PRIMARY'>
+        <xs:annotation>
+          <xs:documentation>
+            Specific applications MAY reference one or more locations on a piece
+            of bar stock as the indication for the endofbar event. The main or
+            most important location must be designated as the primary subtype
+            indication for the endofbar event. If no subtype is specified,
+            primary subtype must be the default endofbar event indication.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DELAY'>
+        <xs:annotation>
+          <xs:documentation>
+            A piece of equipment waiting for an event or an action to occur.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LOADED'>
+        <xs:annotation>
+          <xs:documentation>
+            Subparts of a piece of equipment are under load.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPERATING'>
+        <xs:annotation>
+          <xs:documentation>
+            A piece of equipment are powered or performing any activity.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='POWERED'>
+        <xs:annotation>
+          <xs:documentation>
+            Primary power is applied to the piece of equipment and, as a
+            minimum, the controller or logic portion of the piece of equipment
+            is powered and functioning or components that are required to remain
+            on are powered.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='BRINELL'>
+        <xs:annotation>
+          <xs:documentation>
+            A scale to measure the resistance to deformation of a surface.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LEEB'>
+        <xs:annotation>
+          <xs:documentation>
+            A scale to measure the elasticity of a surface.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MOHS'>
+        <xs:annotation>
+          <xs:documentation>
+            A scale to measure the resistance to scratching of a surface.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROCKWELL'>
+        <xs:annotation>
+          <xs:documentation>
+            A scale to measure the resistance to deformation of a surface.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SHORE'>
+        <xs:annotation>
+          <xs:documentation>
+            A scale to measure the resistance to deformation of a surface.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VICKERS'>
+        <xs:annotation>
+          <xs:documentation>
+            A scale to measure the resistance to deformation of a surface.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ABSOLUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            The position of a block of program code relative to the beginning of
+            the control program.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INCREMENTAL'>
+        <xs:annotation>
+          <xs:documentation>
+            The position of a block of program code relative to the occurrence
+            of the last linelabel event encountered in the control program.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ALL'>
+        <xs:annotation>
+          <xs:documentation>
+            The count of all the parts produced. If the subtype is not given,
+            this is the default.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='BAD'>
+        <xs:annotation>
+          <xs:documentation>
+            Indicates the count of incorrect parts produced.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GOOD'>
+        <xs:annotation>
+          <xs:documentation>
+            Indicates the count of correct parts made.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='REMAINING'>
+        <xs:annotation>
+          <xs:documentation>
+            Remaining measure of an object or an action.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='JOG'>
+        <xs:annotation>
+          <xs:documentation>
+            The feedrate specified by a logic or motion program, by a pre-set
+            value, or set by a switch as the feedrate for the axes. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CONTROL'>
+        <xs:annotation>
+          <xs:documentation>
+            The state of the enabling signal or control logic that enables or
+            disables the function or operation of the structural element.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LINE'>
+        <xs:annotation>
+          <xs:documentation>
+            The state of the power source for the structural element.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RADIAL'>
+        <xs:annotation>
+          <xs:documentation>
+            A reference to a radial type tool offset variable.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LENGTH'>
+        <xs:annotation>
+          <xs:documentation>
+            A reference to a length type tool offset variable.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MAINTENANCE'>
+        <xs:annotation>
+          <xs:documentation>
+            Action related to maintenance on the piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OPERATOR'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier of the person currently responsible for operating the
+            piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SET_UP'>
+        <xs:annotation>
+          <xs:documentation>
+            The identifier of the person currently responsible for preparing a
+            piece of equipment for production or restoring the piece of
+            equipment to a neutral state after production.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='COMPLETE'>
+        <xs:annotation>
+          <xs:documentation>
+            Completion of an action.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='REQUEST'>
+        <xs:annotation>
+          <xs:documentation>
+            A subtype of an interface dataitem type to communicate a request. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RESPONSE'>
+        <xs:annotation>
+          <xs:documentation>
+            A subtype of an interface dataitem type to communicate a response.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CONSUMED'>
+        <xs:annotation>
+          <xs:documentation>
+            The amount of bulk material consumed from an object or container
+            during a manufacturing process.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='START'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date associated with the beginning of an activity or
+            event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TARGET_COMPLETION'>
+        <xs:annotation>
+          <xs:documentation>
+            The projected time and date associated with the end or completion of
+            an activity or event.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MANUFACTURE'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date code relating to the production of a material or
+            other physical item.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='EXPIRATION'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date code relating to the expiration or end of useful
+            life for a material or other physical item.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FIRST_USE'>
+        <xs:annotation>
+          <xs:documentation>
+            The time and date code relating the first use of a material or other
+            physical item.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SCHEDULE'>
+        <xs:annotation>
+          <xs:documentation>
+            The identity of a control program that is used to specify the order
+            of execution of other programs.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MAIN'>
+        <xs:annotation>
+          <xs:documentation>
+            The identity of the primary logic or motion program currently being
+            executed. It is the starting nest level in a call structure and may
+            contain calls to sub programs.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LICENSE'>
+        <xs:annotation>
+          <xs:documentation>
+            The license code to validate or activate the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VERSION'>
+        <xs:annotation>
+          <xs:documentation>
+            The version of the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RELEASE_DATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The date the hardware or software was released for general use.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INSTALL_DATE'>
+        <xs:annotation>
+          <xs:documentation>
+            The date the hardware or software was installed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MANUFACTURER'>
+        <xs:annotation>
+          <xs:documentation>
+            The corporate identity for the maker of the hardware or software.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='IPV4_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            The IPV4 network address of the component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='IPV6_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            The IPV6 network address of the component.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GATEWAY'>
+        <xs:annotation>
+          <xs:documentation>
+            The Gateway for the component network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SUBNET_MASK'>
+        <xs:annotation>
+          <xs:documentation>
+            The SubNet mask for the component network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VLAN_ID'>
+        <xs:annotation>
+          <xs:documentation>
+            The layer2 Virtual Local Network (VLAN) ID for the component
+            network.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MAC_ADDRESS'>
+        <xs:annotation>
+          <xs:documentation>
+            Media Access Control Address. The unique physical address of the
+            network hardware.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WIRELESS'>
+        <xs:annotation>
+          <xs:documentation>
+            Identifies whether the connection type is wireless. 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemSubEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The sub-types for a measurement
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemSubEnumTypeEnum DataItemExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatisticsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        Statistical operations on data
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='AVERAGE'>
+        <xs:annotation>
+          <xs:documentation>
+            Mathematical Average value calculated for the data item during the
+            calculation period.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='KURTOSIS'>
+        <xs:annotation>
+          <xs:documentation>
+            A measure of the &quot;peakedness&quot; of a probability
+            distribution; i.e., the shape of the distribution curve.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MAXIMUM'>
+        <xs:annotation>
+          <xs:documentation>
+            Maximum value of a data entity or attribute.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MEDIAN'>
+        <xs:annotation>
+          <xs:documentation>
+            The middle number of a series of numbers.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MINIMUM'>
+        <xs:annotation>
+          <xs:documentation>
+            The minimum value of a data entity or attribute.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MODE'>
+        <xs:annotation>
+          <xs:documentation>
+            The number in a series of numbers that occurs most often.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RANGE'>
+        <xs:annotation>
+          <xs:documentation>
+            Difference between the maximum and minimum value of a data item
+            during the calculation period. Also represents Peak-to-Peak
+            measurement in a waveform.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ROOT_MEAN_SQUARE'>
+        <xs:annotation>
+          <xs:documentation>
+            Mathematical Root Mean Square (RMS) value calculated for the data
+            item during the calculation period.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='STANDARD_DEVIATION'>
+        <xs:annotation>
+          <xs:documentation>
+            Statistical Standard Deviation value calculated for the data item
+            during the calculation period.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemStatisticsType'>
+    <xs:annotation>
+      <xs:documentation>
+        Statistical operations on data
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemStatisticsTypeEnum DataItemStatsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for data item types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The unit of measurement for the reported value of the data item.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='PH'>
+        <xs:annotation>
+          <xs:documentation>
+            A measure of the acidity or alkalinity of a solution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLT_AMPERE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the apparent power in an electrical circuit,
+            equal to the product of root-mean-square (RMS) voltage and RMS
+            current (commonly referred to as VA).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of reactive power in an AC electrical circuit
+            (commonly referred to as VAR).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERE'>
+        <xs:annotation>
+          <xs:documentation>
+            Amps
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CELSIUS'>
+        <xs:annotation>
+          <xs:documentation>
+            Degrees Celsius
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='COUNT'>
+        <xs:annotation>
+          <xs:documentation>
+            A count of something.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DECIBEL'>
+        <xs:annotation>
+          <xs:documentation>
+            Sound Level
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE'>
+        <xs:annotation>
+          <xs:documentation>
+            Angle in degrees
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Angular degrees per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Angular acceleration in degrees per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HERTZ'>
+        <xs:annotation>
+          <xs:documentation>
+            Frequency measured in cycles per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='JOULE'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of energy.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='KILOGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            Kilograms
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LITER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Liters per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MICRO_RADIAN'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of Tilt
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Millimeters per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Acceleration in millimeters per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER_3D'>
+        <xs:annotation>
+          <xs:documentation>
+            A point in space identified by X, Y, and Z positions and represented
+            by a space-delimited set of numbers each expressed in millimeters.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NEWTON'>
+        <xs:annotation>
+          <xs:documentation>
+            Force in Newtons
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NEWTON_METER'>
+        <xs:annotation>
+          <xs:documentation>
+            Torque, a unit for force times distance.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OHM'>
+        <xs:annotation>
+          <xs:documentation>
+            Measure of Electrical Resistance
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PASCAL'>
+        <xs:annotation>
+          <xs:documentation>
+            Pressure in Newtons per square meter
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PASCAL_SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of Viscosity
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PERCENT'>
+        <xs:annotation>
+          <xs:documentation>
+            Percentage
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='REVOLUTION/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Revolutions per minute
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of time.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SIEMENS/METER'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of Electrical Conductivity
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLT'>
+        <xs:annotation>
+          <xs:documentation>
+            Volts
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WATT'>
+        <xs:annotation>
+          <xs:documentation>
+            Watts
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WATT_SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of electrical energy, equal to one Joule
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of volume of a fluid
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/REVOLUTION'>
+        <xs:annotation>
+          <xs:documentation>
+            Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE_3D'>
+        <xs:annotation>
+          <xs:documentation>
+            A space-delimited, floating-point representation of the angular
+            rotation in degrees around the X, Y, and Z axes relative to a
+            cartesian coordinate system respectively in order as A, B, and C. If
+            any of the rotations is not known, it MUST be zero (0).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GRAM/CUBIC_METER'>
+        <xs:annotation>
+          <xs:documentation>
+            Gram per cubic meter.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='UnitsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The unit of measurement for the reported value of the data item.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='UnitsTypeEnum UnitsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='NativeUnitsTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The native units of measurement for the reported value of the data item.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='PH'>
+        <xs:annotation>
+          <xs:documentation>
+            A measure of the acidity or alkalinity of a solution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLT_AMPERE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of the apparent power in an electrical circuit,
+            equal to the product of root-mean-square (RMS) voltage and RMS
+            current (commonly referred to as VA).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLT_AMPERE_REACTIVE'>
+        <xs:annotation>
+          <xs:documentation>
+            The measurement of reactive power in an AC electrical circuit
+            (commonly referred to as VAR).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='AMPERE'>
+        <xs:annotation>
+          <xs:documentation>
+            Amps
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CELSIUS'>
+        <xs:annotation>
+          <xs:documentation>
+            Degrees Celsius
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='COUNT'>
+        <xs:annotation>
+          <xs:documentation>
+            A count of something.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DECIBEL'>
+        <xs:annotation>
+          <xs:documentation>
+            Sound Level
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE'>
+        <xs:annotation>
+          <xs:documentation>
+            Angle in degrees
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Angular degrees per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Angular acceleration in degrees per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='HERTZ'>
+        <xs:annotation>
+          <xs:documentation>
+            Frequency measured in cycles per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='JOULE'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of energy.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='KILOGRAM'>
+        <xs:annotation>
+          <xs:documentation>
+            Kilograms
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LITER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Liters per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MICRO_RADIAN'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of Tilt
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Millimeters per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Acceleration in millimeters per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER_3D'>
+        <xs:annotation>
+          <xs:documentation>
+            A point in space identified by X, Y, and Z positions and represented
+            by a space-delimited set of numbers each expressed in millimeters.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NEWTON'>
+        <xs:annotation>
+          <xs:documentation>
+            Force in Newtons
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NEWTON_METER'>
+        <xs:annotation>
+          <xs:documentation>
+            Torque, a unit for force times distance.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OHM'>
+        <xs:annotation>
+          <xs:documentation>
+            Measure of Electrical Resistance
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PASCAL'>
+        <xs:annotation>
+          <xs:documentation>
+            Pressure in Newtons per square meter
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PASCAL_SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of Viscosity
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='PERCENT'>
+        <xs:annotation>
+          <xs:documentation>
+            Percentage
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='REVOLUTION/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Revolutions per minute
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of time.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SIEMENS/METER'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of Electrical Conductivity
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='VOLT'>
+        <xs:annotation>
+          <xs:documentation>
+            Volts
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WATT'>
+        <xs:annotation>
+          <xs:documentation>
+            Watts
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WATT_SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of electrical energy, equal to one Joule
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of volume of a fluid
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Geometric volume in millimeters
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Change of geometric volume per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CUBIC_MILLIMETER/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Change in geometric volume per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIGRAM/CUBIC_MILLIMETER'>
+        <xs:annotation>
+          <xs:documentation>
+            Milligram per cubic millimeter 
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/REVOLUTION'>
+        <xs:annotation>
+          <xs:documentation>
+            Millimeters per revolution.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE_3D'>
+        <xs:annotation>
+          <xs:documentation>
+            A space-delimited, floating-point representation of the angular
+            rotation in degrees around the X, Y, and Z axes relative to a
+            cartesian coordinate system respectively in order as A, B, and C. If
+            any of the rotations is not known, it MUST be zero (0).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GRAM/CUBIC_METER'>
+        <xs:annotation>
+          <xs:documentation>
+            Gram per cubic meter.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='CENTIPOISE'>
+        <xs:annotation>
+          <xs:documentation>
+            A measure of Viscosity
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DEGREE/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Rotational velocity in degrees per minute
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FAHRENHEIT'>
+        <xs:annotation>
+          <xs:documentation>
+            Temperature in Fahrenheit
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FOOT'>
+        <xs:annotation>
+          <xs:documentation>
+            Feet
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FOOT/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Feet per minute
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FOOT/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Feet per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FOOT/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Acceleration in feet per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='FOOT_3D'>
+        <xs:annotation>
+          <xs:documentation>
+            A point in space identified by X, Y, and Z positions and represented
+            by a space-delimited set of numbers each expressed in feet.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='GALLON/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Gallons per minute.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INCH'>
+        <xs:annotation>
+          <xs:documentation>
+            Inches
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INCH/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Inches per minute
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INCH/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Inches per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INCH/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Acceleration in inches per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INCH_3D'>
+        <xs:annotation>
+          <xs:documentation>
+            A point in space identified by X, Y, and Z positions and represented
+            by a space-delimited set of numbers each expressed in inches.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INCH_POUND'>
+        <xs:annotation>
+          <xs:documentation>
+            A measure of torque in inch pounds.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='KELVIN'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement of temperature
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='KILOWATT'>
+        <xs:annotation>
+          <xs:documentation>
+            A measurement in kilowatt.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='KILOWATT_HOUR'>
+        <xs:annotation>
+          <xs:documentation>
+            Kilowatt hours which is 3.6 mega joules.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LITER'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of volume of a fluid
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LITER/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Measurement of rate of flow of a fluid
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MILLIMETER/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Velocity in millimeters per minute
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OTHER'>
+        <xs:annotation>
+          <xs:documentation>
+            Unsupported units
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='POUND'>
+        <xs:annotation>
+          <xs:documentation>
+            US pounds
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='POUND/INCH^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Pressure in pounds per square inch (PSI).
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RADIAN'>
+        <xs:annotation>
+          <xs:documentation>
+            Angle in radians
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RADIAN/MINUTE'>
+        <xs:annotation>
+          <xs:documentation>
+            Velocity in radians per minute.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RADIAN/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Velocity in radians per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='RADIAN/SECOND^2'>
+        <xs:annotation>
+          <xs:documentation>
+            Rotational acceleration in radian per second squared
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='REVOLUTION/SECOND'>
+        <xs:annotation>
+          <xs:documentation>
+            Rotational velocity in revolution per second
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='NativeUnitsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The native units of measurement for the reported value of the data item.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='NativeUnitsTypeEnum UnitsExtType'/>
+  </xs:simpleType>
+  <xs:simpleType name='CoordinateSystemEnumType'>
+    <xs:annotation>
+      <xs:documentation>
+        The coordinate system to be used for the position
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='MACHINE'>
+        <xs:annotation>
+          <xs:documentation>
+            An unchangeable coordinate system that has machine zero as its
+            origin.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WORK'>
+        <xs:annotation>
+          <xs:documentation>
+            The coordinate system that represents the working area for a
+            particular workpiece whose origin is shifted within the machine
+            coordinate system. If the work coordinates are not currently defined
+            in the piece of equipment, the machine coordinates will be used.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemResetValueExtType'>
+    <xs:annotation>
+      <xs:documentation>
+        An extension point for reset types
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[a-ln-z]:[A-Z_0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemResetValueTypeEnum'>
+    <xs:annotation>
+      <xs:documentation>
+        The reset intervals
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='MAINTENANCE'>
+        <xs:annotation>
+          <xs:documentation>
+            Action related to maintenance on the piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ACTION_COMPLETE'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the data entity that is measuring an action or
+            operation is to be reset upon completion of that action or
+            operation.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ANNUAL'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the data entity is to be reset at the end of a 12-month
+            period.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='DAY'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the data entity is to be reset at the end of a 24-hour
+            period.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='LIFE'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the data item is not reset and accumulates for the
+            entire life of the piece of equipment.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='MONTH'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the data entity is to be reset at the end of a monthly
+            period.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='POWER_ON'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the data entity is to be reset when power was applied
+            to the piece of equipment after a planned or unplanned interruption
+            of power has occurred.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='SHIFT'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the data entity is to be reset at the end of a work
+            shift.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='WEEK'>
+        <xs:annotation>
+          <xs:documentation>
+            The value of the data entity is to be reset at the end of a 7-day
+            period.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='DataItemResetValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        The reset intervals
+      </xs:documentation>
+    </xs:annotation>
+    <xs:union memberTypes='DataItemResetValueTypeEnum DataItemResetValueExtType'/>
+  </xs:simpleType>
+  <xs:complexType name='HeaderType'>
+    <xs:annotation>
+      <xs:documentation>
+        An XML container in an mtconnect response document that provides
+        information from an agent defining version information, storage
+        capacity, and parameters associated with the data management within the
+        agent.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='xs:string'>
+        <xs:attribute name='version' type='VersionType' use='required'>
+          <xs:annotation>
+            <xs:documentation>
+              The protocol version number.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name='creationTime' type='CreationTimeType' use='required'>
+          <xs:annotation>
+            <xs:documentation>
+              The time the response was created.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name='testIndicator' type='TestIndicatorType' use='optional'>
+          <xs:annotation>
+            <xs:documentation>
+              Optional flag that indicates the system is operating in test mode.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name='instanceId' type='InstanceIdType' use='required'>
+          <xs:annotation>
+            <xs:documentation>
+              A number indicating which invocation of the agent. 
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name='sender' type='SenderType' use='required'>
+          <xs:annotation>
+            <xs:documentation>
+              The agent identification information. 
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name='bufferSize' type='BufferSizeType' use='required'>
+          <xs:annotation>
+            <xs:documentation>
+              A value representing the maximum number of data entity that MAY be
+              retained in the agent that published the response document at any
+              point in time.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name='MTConnectErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        It is the root XML element of an mtconnecterrors response document.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Header' type='HeaderType'>
+        <xs:annotation>
+          <xs:documentation>
+            An XML container in an mtconnect response document that provides
+            information from an agent defining version information, storage
+            capacity, and parameters associated with the data management within
+            the agent.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:choice minOccurs='1'>
+        <xs:element name='Error' type='ErrorType'>
+          <xs:annotation>
+            <xs:documentation>
+              An error, XML element, occurs while interpreting a request for
+              information from a client software application or when an agent
+              experiences an error while publishing the response to a request
+              for information.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name='Errors' type='ErrorsType'>
+          <xs:annotation>
+            <xs:documentation>
+              An XML container element in an mtconnecterrors response document
+              provided by an agent when an error is encountered associated with
+              a request for information from a client software application.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='ErrorsType'>
+    <xs:annotation>
+      <xs:documentation>
+        An XML container element in an mtconnecterrors response document
+        provided by an agent when an error is encountered associated with a
+        request for information from a client software application.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='Error' type='ErrorType' minOccurs='1' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            An error, XML element, occurs while interpreting a request for
+            information from a client software application or when an agent
+            experiences an error while publishing the response to a request for
+            information.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name='ErrorDescriptionType'>
+    <xs:annotation>
+      <xs:documentation>
+        The text description of the error
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='ErrorCodeType'>
+    <xs:annotation>
+      <xs:documentation>
+        Provides a descriptive code that indicates the type of error that was
+        encountered by an agent.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:enumeration value='UNAUTHORIZED'>
+        <xs:annotation>
+          <xs:documentation>
+            The request did not have sufficient permissions to perform the
+            request.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='NO_DEVICE'>
+        <xs:annotation>
+          <xs:documentation>
+            The device specified in the URI could not be found.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='OUT_OF_RANGE'>
+        <xs:annotation>
+          <xs:documentation>
+            The sequence number was beyond the end of the buffer.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='TOO_MANY'>
+        <xs:annotation>
+          <xs:documentation>
+            The count given is too large.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INVALID_URI'>
+        <xs:annotation>
+          <xs:documentation>
+            The URI provided was incorrect.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INVALID_REQUEST'>
+        <xs:annotation>
+          <xs:documentation>
+            The request was not one of the three specified requests.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INTERNAL_ERROR'>
+        <xs:annotation>
+          <xs:documentation>
+            Contact the software provider, the agent did not behave correctly.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='INVALID_PATH'>
+        <xs:annotation>
+          <xs:documentation>
+            The xpath could not be parsed. Invalid syntax.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='UNSUPPORTED'>
+        <xs:annotation>
+          <xs:documentation>
+            The request is not supported by this implementation
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value='ASSET_NOT_FOUND'>
+        <xs:annotation>
+          <xs:documentation>
+            The asset ID cannot be found
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name='ErrorType'>
+    <xs:annotation>
+      <xs:documentation>
+        An error, XML element, occurs while interpreting a request for
+        information from a client software application or when an agent
+        experiences an error while publishing the response to a request for
+        information.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ErrorDescriptionType'>
+        <xs:attribute name='errorCode' type='ErrorCodeType' use='required'>
+          <xs:annotation>
+            <xs:documentation>
+              Provides a descriptive code that indicates the type of error that
+              was encountered by an agent.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+</xs:schema>

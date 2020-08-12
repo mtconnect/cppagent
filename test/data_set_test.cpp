@@ -22,9 +22,11 @@
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
+#include "json_helper.hpp"
 
 #include <cstdio>
 
+using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 
@@ -93,10 +95,10 @@ TEST_F(DataSetTest, InitialSet)
 
   auto map1 = ce->getDataSet();
 
-  ASSERT_EQ((string) "1", map1.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map1.find("b"_E)->m_value);
-  ASSERT_EQ((string) "3", map1.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map1.find("d"_E)->m_value);
+  ASSERT_EQ(1, get<int64_t>(map1.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
+  ASSERT_EQ(3, get<int64_t>(map1.find("c"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
 
   m_checkpoint->addObservation(ce);
   auto c2 = *m_checkpoint->getEventPtr("v1");
@@ -109,10 +111,10 @@ TEST_F(DataSetTest, InitialSet)
   ASSERT_EQ((string) "4", attrs.at("count"));
 
   auto map2 = c2->getDataSet();
-  ASSERT_EQ((string) "1", map2.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map2.find("b"_E)->m_value);
-  ASSERT_EQ((string) "3", map2.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map2.find("d"_E)->m_value);
+  ASSERT_EQ(1, get<int64_t>(map2.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(map2.find("b"_E)->m_value));
+  ASSERT_EQ(3, get<int64_t>(map2.find("c"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(map2.find("d"_E)->m_value));
 
   ce->unrefer();
 }
@@ -134,10 +136,10 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ((size_t)4, ce3->getDataSet().size());
 
   auto map1 = ce3->getDataSet();
-  ASSERT_EQ((string) "1", map1.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map1.find("b"_E)->m_value);
-  ASSERT_EQ((string) "5", map1.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map1.find("d"_E)->m_value);
+  ASSERT_EQ(1, get<int64_t>(map1.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
+  ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
 
   string value3("e=6");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -147,11 +149,11 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ((size_t)5, ce5->getDataSet().size());
 
   auto map2 = ce5->getDataSet();
-  ASSERT_EQ((string) "1", map2.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map2.find("b"_E)->m_value);
-  ASSERT_EQ((string) "5", map2.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map2.find("d"_E)->m_value);
-  ASSERT_EQ((string) "6", map2.find("e"_E)->m_value);
+  ASSERT_EQ(1, get<int64_t>(map2.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(map2.find("b"_E)->m_value));
+  ASSERT_EQ(5, get<int64_t>(map2.find("c"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(map2.find("d"_E)->m_value));
+  ASSERT_EQ(6, get<int64_t>(map2.find("e"_E)->m_value));
 }
 
 TEST_F(DataSetTest, UpdateMany)
@@ -171,11 +173,11 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ((size_t)5, ce3->getDataSet().size());
 
   auto map1 = ce3->getDataSet();
-  ASSERT_EQ((string) "1", map1.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map1.find("b"_E)->m_value);
-  ASSERT_EQ((string) "5", map1.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map1.find("d"_E)->m_value);
-  ASSERT_EQ((string) "6", map1.find("e"_E)->m_value);
+  ASSERT_EQ(1, get<int64_t>(map1.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
+  ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
+  ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
 
   string value3("e=7 a=8 f=9");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -185,12 +187,12 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ((size_t)6, ce5->getDataSet().size());
 
   auto map2 = ce5->getDataSet();
-  ASSERT_EQ((string) "8", map2.find("a"_E)->m_value);
-  ASSERT_EQ((string) "2", map2.find("b"_E)->m_value);
-  ASSERT_EQ((string) "5", map2.find("c"_E)->m_value);
-  ASSERT_EQ((string) "4", map2.find("d"_E)->m_value);
-  ASSERT_EQ((string) "7", map2.find("e"_E)->m_value);
-  ASSERT_EQ((string) "9", map2.find("f"_E)->m_value);
+  ASSERT_EQ(8, get<int64_t>(map2.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(map2.find("b"_E)->m_value));
+  ASSERT_EQ(5, get<int64_t>(map2.find("c"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(map2.find("d"_E)->m_value));
+  ASSERT_EQ(7, get<int64_t>(map2.find("e"_E)->m_value));
+  ASSERT_EQ(9, get<int64_t>(map2.find("f"_E)->m_value));
 }
 
 TEST_F(DataSetTest, Reset)
@@ -210,8 +212,8 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ((size_t)2, ce3->getDataSet().size());
 
   auto map1 = ce3->getDataSet();
-  ASSERT_EQ((string) "5", map1.find("c"_E)->m_value);
-  ASSERT_EQ((string) "6", map1.find("e"_E)->m_value);
+  ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
+  ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
 
   string value3("x=pop y=hop");
   ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
@@ -221,8 +223,8 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ((size_t)4, ce5->getDataSet().size());
 
   auto map2 = ce5->getDataSet();
-  ASSERT_EQ((string) "pop", map2.find("x"_E)->m_value);
-  ASSERT_EQ((string) "hop", map2.find("y"_E)->m_value);
+  ASSERT_EQ((string) "pop", get<string>(map2.find("x"_E)->m_value));
+  ASSERT_EQ((string) "hop", get<string>(map2.find("y"_E)->m_value));
 }
 
 TEST_F(DataSetTest, BadData)
@@ -238,8 +240,8 @@ TEST_F(DataSetTest, BadData)
   ASSERT_EQ((size_t)2, ce2->getDataSet().size());
 
   auto map1 = ce2->getDataSet();
-  ASSERT_EQ((string) "2", map1.find("a"_E)->m_value);
-  ASSERT_EQ((string) "xxx", map1.find("b3"_E)->m_value);
+  ASSERT_EQ(2, get<int64_t>(map1.find("a"_E)->m_value));
+  ASSERT_EQ((string) "xxx", get<string>(map1.find("b3"_E)->m_value));
 }
 
 #define ASSERT_DATA_SET_ENTRY(doc, var, key, expected) \
@@ -441,7 +443,7 @@ TEST_F(DataSetTest, CurrentAt)
     PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 5));
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 5).c_str());
   }
 
@@ -449,7 +451,7 @@ TEST_F(DataSetTest, CurrentAt)
     PARSE_XML_RESPONSE;
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", nullptr);
   }
 }
 
@@ -473,9 +475,9 @@ TEST_F(DataSetTest, DeleteKey)
   ASSERT_TRUE(ds.find("a"_E)->m_removed);
 
   auto map1 = ce3->getDataSet();
-  ASSERT_EQ((string) "2", map1.find("b"_E)->m_value);
-  ASSERT_EQ((string) "4", map1.find("d"_E)->m_value);
-  ASSERT_EQ((string) "6", map1.find("e"_E)->m_value);
+  ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
+  ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
   ASSERT_TRUE(map1.find("c"_E) == map1.end());
   ASSERT_TRUE(map1.find("a"_E) == map1.end());
 }
@@ -674,5 +676,56 @@ TEST_F(DataSetTest, Probe)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars']@representation", "DATA_SET");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars2']@representation", "DATA_SET");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars2']@discrete", "true");
+  }
+}
+
+TEST_F(DataSetTest, JsonCurrent)
+{
+  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  ASSERT_TRUE(m_adapter);
+  
+  m_agentTestHelper->m_path = "/current";
+  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  
+  m_adapter->processData("TIME|vars|a=1 b=2 c=3 d=cow");
+  
+  {
+    PARSE_JSON_RESPONSE;
+    
+    auto streams = doc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
+    ASSERT_EQ(4_S, streams.size());
+    
+    json stream;
+    for (auto &s : streams) {
+      auto id = s.at("/ComponentStream/componentId"_json_pointer);
+      ASSERT_TRUE(id.is_string());
+      if (id.get<string>() == "path1") {
+        stream = s;
+        break;
+      }
+    }
+    ASSERT_TRUE(stream.is_object());
+    
+    auto events = stream.at("/ComponentStream/Events"_json_pointer);
+    ASSERT_TRUE(events.is_array());
+    json offsets;
+    for (auto &o : events) {
+      ASSERT_TRUE(o.is_object());
+      auto v = o.begin().key();
+      if (v == "VariableDataSet") {
+        offsets = o;
+        break;
+      }
+    }
+    ASSERT_TRUE(offsets.is_object());
+    
+    
+    ASSERT_EQ(string("4"), offsets.at("/VariableDataSet/count"_json_pointer).get<string>());
+
+    ASSERT_EQ(1, offsets.at("/VariableDataSet/value/a"_json_pointer).get<int>());
+    ASSERT_EQ(2, offsets.at("/VariableDataSet/value/b"_json_pointer).get<int>());
+    ASSERT_EQ(3, offsets.at("/VariableDataSet/value/c"_json_pointer).get<int>());
+    ASSERT_EQ(string("cow"), offsets.at("/VariableDataSet/value/d"_json_pointer).get<string>());
+
   }
 }

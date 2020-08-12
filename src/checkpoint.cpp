@@ -23,9 +23,7 @@ using namespace std;
 
 namespace mtconnect
 {
-  Checkpoint::Checkpoint() : m_hasFilter(false)
-  {
-  }
+  Checkpoint::Checkpoint() = default;
 
   Checkpoint::Checkpoint(const Checkpoint &checkpoint, const std::set<std::string> *filterSet)
   {

@@ -26,6 +26,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace mtconnect
@@ -33,34 +34,69 @@ namespace mtconnect
   struct AttributeItem : public std::pair<const char *, std::string>
   {
     AttributeItem(const char *f, const std::string &s, bool force = false)
-    : std::pair<const char *, std::string>(f, s), m_force(force) {}
-    
+        : std::pair<const char *, std::string>(f, s), m_force(force)
+    {
+    }
+
     bool m_force;
   };
 
-  typedef std::vector<AttributeItem> AttributeList;
+  using AttributeList = std::vector<AttributeItem>;
 
   class Observation;
-  typedef RefCountedPtr<Observation> ObservationPtr;
-  typedef dlib::array<ObservationPtr> ObservationPtrArray;
+  using ObservationPtr = RefCountedPtr<Observation>;
+  using ObservationPtrArray = dlib::array<ObservationPtr>;
+
+  template <class... Ts>
+  struct overloaded : Ts...
+  {
+    using Ts::operator()...;
+  };
+  template <class... Ts>
+  overloaded(Ts...)->overloaded<Ts...>;
+
+  struct DataSetEntry;
+  using DataSet = std::set<DataSetEntry>;
+  using DataSetValue = std::variant<DataSet, std::string, int64_t, double>;
+
+  struct DataSetValueSame
+  {
+    DataSetValueSame(const DataSetValue &other) : m_other(other)
+    {
+    }
+
+    bool operator()(const DataSet &v);
+    template <class T>
+    bool operator()(const T &v)
+    {
+      return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
+    }
+
+   private:
+    const DataSetValue &m_other;
+  };
 
   struct DataSetEntry
   {
-    DataSetEntry(std::string key, std::string value, bool removed = false)
+    DataSetEntry(std::string key, std::string &value, bool removed = false)
+        : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+    {
+    }
+    DataSetEntry(std::string key, DataSet &value, bool removed = false)
+        : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+    {
+    }
+    DataSetEntry(std::string key, DataSetValue value, bool removed = false)
         : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {
     }
     DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false)
     {
     }
-
-    DataSetEntry(const DataSetEntry &other)
-        : m_key(other.m_key), m_value(other.m_value), m_removed(other.m_removed)
-    {
-    }
+    DataSetEntry(const DataSetEntry &other) = default;
 
     std::string m_key;
-    std::string m_value;
+    DataSetValue m_value;
     bool m_removed;
 
     bool operator==(const DataSetEntry &other) const
@@ -74,11 +110,10 @@ namespace mtconnect
 
     bool same(const DataSetEntry &other) const
     {
-      return m_key == other.m_key && m_value == other.m_value && m_removed == other.m_removed;
+      return m_key == other.m_key && m_removed == other.m_removed &&
+             std::visit(DataSetValueSame(other.m_value), m_value);
     }
   };
-
-  typedef std::set<DataSetEntry> DataSet;
 
   class Observation : public RefCounted
   {
@@ -215,7 +250,7 @@ namespace mtconnect
 
    protected:
     // Virtual destructor
-    virtual ~Observation();
+    ~Observation() override;
 
    protected:
     // Holds the data item from the device
@@ -263,7 +298,7 @@ namespace mtconnect
     // Convert the value to the agent unit standards
     void convertValue(const std::string &value);
 
-    void parseDataSet(const std::string &s);
+    void parseDataSet(DataSet &dataSet, const std::string &s, bool table);
   };
 
   inline Observation::ELevel Observation::getLevel()
@@ -279,7 +314,7 @@ namespace mtconnect
     m_prev = event;
   }
 
-  typedef bool (*ObservationComparer)(ObservationPtr &aE1, ObservationPtr &aE2);
+  using ObservationComparer = bool (*)(ObservationPtr &, ObservationPtr &);
   inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2)
   {
     return aE1 < aE2;
