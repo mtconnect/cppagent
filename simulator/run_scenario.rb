@@ -6,7 +6,7 @@ require 'thread'
 loop_file = false
 port = 7878
 scenario = false
-verbose = false
+$verbose = false
 fast = false
 server = '0.0.0.0'
 
@@ -31,7 +31,7 @@ OptionParser.new do |opts|
   end
   
   opts.on('-v', '--[no-]verbose', 'Verbose output') do |v|
-    verbose = v
+    $verbose = v
   end
   
   opts.on('-f', '--[no-]fast', 'Pump as fast as possible') do |v|
@@ -53,31 +53,33 @@ end
 
 def heartbeat(socket)
   Thread.new do
-    while (select([socket], nil, nil))
-      begin
+    begin
+      while (select([socket], nil, nil))
         if (r = socket.read_nonblock(256)) =~ /\* PING/
-          puts "Received #{r.strip}, responding with pong" #if verbose
-          mutex.synchronize {
+          puts "Received #{r.strip}, responding with pong" if $verbose
+          $mutex.synchronize {
             socket.puts "* PONG 10000"
+            socket.flush
           }
         else
-          puts "Received '#{r.strip}'"
+          puts "Received '#{r.strip}'" if $verbose
         end
-      rescue
       end
+    rescue
+      puts "Heartbeat thread error, exiting: #{$!}"
     end
   end
 end
 
 server = TCPServer.new(server, port)
 sockets = []
-mutex = Mutex.new
+$mutex = Mutex.new
 
 Thread.new do
   while true
     puts "Waiting on #{server} #{port}"
     s = server.accept
-    mutex.synchronize {
+    $mutex.synchronize {
       sockets << s
     }
     heartbeat(s)
@@ -123,10 +125,10 @@ begin
         line = l
       end
       
-      mutex.synchronize {
+      $mutex.synchronize {
         sockets.each do |socket|
           begin
-            puts  line if verbose        
+            puts  line if $verbose        
             socket.puts line
             socket.flush
           rescue
