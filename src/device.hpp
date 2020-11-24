@@ -34,7 +34,7 @@ namespace mtconnect
     Device(const std::map<std::string, std::string> &attributes);
 
     ~Device() override;
-
+    
     // Add/get items to/from the device name to data item mapping
     void addDeviceDataItem(DataItem &dataItem);
     DataItem *getDeviceDataItem(const std::string &name);
@@ -66,6 +66,11 @@ namespace mtconnect
     std::vector<Adapter *> m_adapters;
     bool m_preserveUuid;
     bool m_availabilityAdded;
+    
+    const std::string &getMTConnectVersion() const
+    {
+      return m_mtconnectVersion;
+    }
 
     // Cached data items
     DataItem *getAvailability() const
@@ -84,11 +89,12 @@ namespace mtconnect
    protected:
     // The iso841Class of the device
     unsigned int m_iso841Class;
+    std::string m_mtconnectVersion;
 
     DataItem *m_availability;
     DataItem *m_assetChanged;
     DataItem *m_assetRemoved;
-
+    
     // Mapping of device names to data items
     std::map<std::string, DataItem *> m_deviceDataItemsByName;
     std::map<std::string, DataItem *> m_deviceDataItemsById;
