@@ -131,7 +131,7 @@ TEST_F(XmlParserTest, GetDataItems)
   std::set<string> filter;
 
   m_xmlParser->getDataItems(filter, "//Linear");
-  ASSERT_EQ(13, (int)filter.size());
+  ASSERT_EQ(14, (int)filter.size());
 
   filter.clear();
   m_xmlParser->getDataItems(filter, "//Linear//DataItem[@category='CONDITION']");
@@ -562,4 +562,17 @@ TEST_F(XmlParserTest, ExtendedAssetFragment)
   CuttingToolPtr tool = (CuttingTool *)asset.getObject();
 
   ASSERT_EQ(((size_t)1), tool->m_values.count("x:Color"));
+}
+
+TEST_F(XmlParserTest, DataItemRelationships)
+{
+  const auto &device = m_devices.front();
+  auto &dataItemsMap = device->getDeviceDataItems();
+  
+  const auto item = dataItemsMap.at("xlc");
+  ASSERT_TRUE(item != nullptr);
+  
+  const auto &relations = item->getRelationships();
+  
+  ASSERT_EQ((size_t) 2, relations.size());
 }

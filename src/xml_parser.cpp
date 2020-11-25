@@ -598,6 +598,10 @@ namespace mtconnect
         {
           loadDataItemDefinition(child, d, device);
         }
+        else if (!xmlStrcmp(child->name, BAD_CAST "Relationships"))
+        {
+          loadDataItemRelationships(child, d, device);
+        }
       }
     }
 
@@ -658,6 +662,35 @@ namespace mtconnect
         });
 
     dataItem->setDefinition(def);
+  }
+
+  static void addDataItemRelationship(xmlNodePtr node, DataItem *dataItem)
+  {
+    DataItem::Relationship rel;
+    auto attrs = getAttributes(node);
+    
+    rel.m_relation = string((char*) node->name);
+    rel.m_name = attrs["name"];
+    rel.m_type = attrs["type"];
+    rel.m_idRef = attrs["idRef"];
+    if (!rel.m_type.empty() && !rel.m_idRef.empty())
+      dataItem->getRelationships().push_back(rel);
+  }
+
+  void XmlParser::loadDataItemRelationships(xmlNodePtr relationships, DataItem *dataItem, Device *device)
+  {
+    
+    forEachElement(
+                   relationships,
+                   {
+      {"DataItemRelationship", [&dataItem](xmlNodePtr node) {
+        addDataItemRelationship(node, dataItem);
+      }},
+      {"SpecificationRelationship",
+        [&dataItem](xmlNodePtr node) {
+          addDataItemRelationship(node, dataItem);
+        }}
+    });
   }
 
   void XmlParser::handleComposition(xmlNodePtr composition, Component *parent)

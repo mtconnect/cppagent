@@ -344,7 +344,7 @@ TEST_F(AgentTest, AddToBuffer)
 
   {
     m_agentTestHelper->m_path = "/sample";
-    PARSE_XML_RESPONSE_QUERY_KV("from", "36");
+    PARSE_XML_RESPONSE_QUERY_KV("from", "37");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 
