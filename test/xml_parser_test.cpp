@@ -614,3 +614,11 @@ TEST_F(XmlParserTest, DataItemRelationships)
 	    rel2->m_idRef);
  
 }
+
+TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
+{
+  const auto dev = m_devices[0];
+  ASSERT_TRUE(dev);
+
+  ASSERT_EQ(string("1.7"), dev->getMTConnectVersion());
+}

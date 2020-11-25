@@ -871,3 +871,10 @@ TEST_F(XmlPrinterTest, PrintExtendedCuttingTool)
 
   m_printer->clearAssetsNamespaces();
 }
+
+TEST_F(XmlPrinterTest, PrintDeviceMTConnectVersion)
+{
+  PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
+  
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Device@mtconnectVersion", "1.7");
+}
