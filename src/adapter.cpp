@@ -199,7 +199,6 @@ namespace mtconnect
         if (stream.eof())
           offset += 1;
         stream.seekg(offset, std::ios_base::cur);
-        
         auto newPipe = store.find("|");
         store.erase(newPipe);
         store.append("\\");
