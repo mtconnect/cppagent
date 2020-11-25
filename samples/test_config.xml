@@ -54,7 +54,7 @@
 										<SpecificationRelationship type="LIMIT" idRef="spec1"/>
 									</Relationships>
 								</DataItem>
-								<DataItem category="EVENT" type="PROCESS_LIMITS" id="xclpl" representation="DATA_SET">
+								<DataItem category="EVENT" type="PROCESS_LIMITS" id="xlcpl" representation="DATA_SET">
 									<Relationships>
 										<DataItemRelationship name="bob" type="OBSERVATION" idRef="xlc"/>
 									</Relationships>
