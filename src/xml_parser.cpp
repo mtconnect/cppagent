@@ -675,6 +675,11 @@ namespace mtconnect
     rel.m_idRef = attrs["idRef"];
     if (!rel.m_type.empty() && !rel.m_idRef.empty())
       dataItem->getRelationships().push_back(rel);
+    else {
+      g_logger << dlib::LWARN << "Bad Data Item Relationship: " << rel.m_relation << ", "
+          << rel.m_name << ", " << rel.m_type << ", " << rel.m_idRef
+          << ": type or idRef missing, skipping";
+    }
   }
 
   void XmlParser::loadDataItemRelationships(xmlNodePtr relationships, DataItem *dataItem, Device *device)

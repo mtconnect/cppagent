@@ -595,7 +595,6 @@ TEST_F(XmlParserTest, DataItemRelationships)
   ASSERT_EQ(string("spec1"),
 	    rel->m_idRef);
   
-
   const auto item2 = dataItemsMap.at("xlcpl");
   ASSERT_TRUE(item2 != nullptr);
   
@@ -604,14 +603,10 @@ TEST_F(XmlParserTest, DataItemRelationships)
   ASSERT_EQ((size_t) 1, relations2.size());
   
   auto rel2 = relations2.begin();
-  ASSERT_EQ(string("DataItemRelationship"),
-	    rel2->m_relation);
-  ASSERT_EQ(string("OBSERVATION"),
-	    rel2->m_type);
-  ASSERT_EQ(string("bob"),
-	    rel2->m_name);
-  ASSERT_EQ(string("xlc"),
-	    rel2->m_idRef);
+  ASSERT_EQ(string("DataItemRelationship"), rel2->m_relation);
+  ASSERT_EQ(string("OBSERVATION"), rel2->m_type);
+  ASSERT_EQ(string("bob"), rel2->m_name);
+  ASSERT_EQ(string("xlc"), rel2->m_idRef);
  
 }
 

@@ -878,3 +878,12 @@ TEST_F(XmlPrinterTest, PrintDeviceMTConnectVersion)
   
   ASSERT_XML_PATH_EQUAL(doc, "//m:Device@mtconnectVersion", "1.7");
 }
+
+TEST_F(XmlPrinterTest, PrintDataItemRelationships)
+{
+  PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
+
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='bfc']/m:Source@dataItemId", "mf");
+
+  
+}
