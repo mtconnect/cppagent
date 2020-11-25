@@ -306,3 +306,16 @@ TEST_F(JsonPrinterProbeTest, Configuration)
   ASSERT_EQ(string("2018-09-11"),
             config.at("/Channels/0/Channel/CalibrationDate"_json_pointer).get<string>());
 }
+
+TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
+{
+  auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+  auto jdoc = json::parse(doc);
+  auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+  auto device = devices.at(0).at("/Device"_json_pointer);
+  cout << "\n" << device << endl;
+
+  ASSERT_EQ(string("1.7"), device.at("/mtconnectVersion"_json_pointer).get<string>());
+
+}
+

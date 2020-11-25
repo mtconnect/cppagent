@@ -35,11 +35,17 @@ namespace mtconnect
         m_assetChanged(nullptr),
         m_assetRemoved(nullptr)
   {
-    const auto isoPos = attributes.find("iso841Class");
+    const auto &isoPos = attributes.find("iso841Class");
     if (isoPos != attributes.end())
     {
       m_iso841Class = atoi(isoPos->second.c_str());
       m_attributes["iso841Class"] = isoPos->second;
+    }
+    const auto &version = attributes.find("mtconnectVersion");
+    if (version != attributes.end())
+    {
+      m_mtconnectVersion = version->second;
+      m_attributes["mtconnectVersion"] = m_mtconnectVersion;
     }
   }
 

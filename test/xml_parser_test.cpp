@@ -563,3 +563,12 @@ TEST_F(XmlParserTest, ExtendedAssetFragment)
 
   ASSERT_EQ(((size_t)1), tool->m_values.count("x:Color"));
 }
+
+TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
+{
+  const auto dev = m_devices[0];
+  ASSERT_TRUE(dev);
+
+  ASSERT_EQ(string("1.7"), dev->getMTConnectVersion());
+}
+
