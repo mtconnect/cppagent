@@ -131,7 +131,7 @@ TEST_F(XmlParserTest, GetDataItems)
   std::set<string> filter;
 
   m_xmlParser->getDataItems(filter, "//Linear");
-  ASSERT_EQ(14, (int)filter.size());
+  ASSERT_EQ(13, (int)filter.size());
 
   filter.clear();
   m_xmlParser->getDataItems(filter, "//Linear//DataItem[@category='CONDITION']");
@@ -566,6 +566,17 @@ TEST_F(XmlParserTest, ExtendedAssetFragment)
 
 TEST_F(XmlParserTest, DataItemRelationships)
 {
+  
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
+
+  unique_ptr<XmlPrinter> printer(new XmlPrinter());
+  m_xmlParser = new XmlParser();
+  m_devices = m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", printer.get());
+  
   const auto &device = m_devices.front();
   auto &dataItemsMap = device->getDeviceDataItems();
   

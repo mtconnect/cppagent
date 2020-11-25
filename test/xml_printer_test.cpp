@@ -881,9 +881,25 @@ TEST_F(XmlPrinterTest, PrintDeviceMTConnectVersion)
 
 TEST_F(XmlPrinterTest, PrintDataItemRelationships)
 {
+  delete m_config;
+  m_config = nullptr;
+  
+  m_config = new XmlParser();
+  m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", m_printer);
+  
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='bfc']/m:Source@dataItemId", "mf");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@name", "archie");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@type", "LIMIT");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@idRef", "xlcpl");
 
-  
+
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@name", nullptr);
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@type", "LIMIT");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@idRef", "spec1");
+
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@name", "bob");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@type", "OBSERVATION");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@idRef", "xlc");
+
 }
