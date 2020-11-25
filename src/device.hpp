@@ -34,7 +34,7 @@ namespace mtconnect
     Device(const std::map<std::string, std::string> &attributes);
 
     ~Device() override;
-    
+
     // Add/get items to/from the device name to data item mapping
     void addDeviceDataItem(DataItem &dataItem);
     DataItem *getDeviceDataItem(const std::string &name);
