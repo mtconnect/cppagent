@@ -35,6 +35,35 @@
 										<Minimum>100</Minimum>
 										<Nominal>1000</Nominal>
 									</Specification>										
+									<Specification id="spec1" type="LOAD" units="PERCENT" name="loadspec" originator="MANUFACTURER">
+										<Maximum>1000</Maximum>
+										<Minimum>-1000</Minimum>
+										<Nominal>100</Nominal>
+										<UpperLimit>500</UpperLimit>
+										<LowerLimit>-500</LowerLimit>
+										<UpperWarning>200</UpperWarning>
+										<LowerWarning>-200</LowerWarning>
+									</Specification>
+									<ProcessSpecification id="pspec1" type="LOAD" units="PERCENT" name="procspec" originator="USER">
+										<SpecificationLimits>
+											<UpperLimit>500</UpperLimit>
+ 											<Nominal>50</Nominal>
+											<LowerLimit>-500</LowerLimit>
+										</SpecificationLimits>
+										<ControlLimits>
+											<UpperLimit>500</UpperLimit>
+											<LowerLimit>-500</LowerLimit>
+ 											<Nominal>10</Nominal>
+											<UpperWarning>200</UpperWarning>
+											<LowerWarning>-200</LowerWarning>
+										</ControlLimits>
+										<AlarmLimits>
+											<UpperLimit>500</UpperLimit>
+											<LowerLimit>-500</LowerLimit>
+											<UpperWarning>200</UpperWarning>
+											<LowerWarning>-200</LowerWarning>
+										</AlarmLimits>
+									</ProcessSpecification>
 								</Specifications>
 							</Configuration>
               <DataItems>

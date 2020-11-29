@@ -539,7 +539,7 @@ namespace mtconnect
     AutoElement ele(writer, "Specifications");
     for (const auto &spec : specs->getSpecifications())
     {
-      AutoElement ele(writer, "Specification");
+      AutoElement ele(writer, spec->getClass());
       addAttributes(writer,
                     map<string, string>({{"type", spec->m_type},
                                          {"subType", spec->m_subType},
@@ -547,19 +547,27 @@ namespace mtconnect
                                          {"name", spec->m_name},
                                          {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
                                          {"compositionIdRef", spec->m_compositionIdRef},
-                                         {"dataItemIdRef", spec->m_dataItemIdRef}}));
+                                         {"dataItemIdRef", spec->m_dataItemIdRef},
+        {"id", spec->m_id },
+        {"originator", spec->m_originator}
+      }));
 
-      if (!spec->m_maximum.empty())
+      if (spec->hasGroups())
       {
-        addSimpleElement(writer, "Maximum", spec->m_maximum);
+        const auto &groups = spec->getGroups();
+        for (const auto &group : groups)
+        {
+          AutoElement ele(writer, group.first);
+          for (const auto &limit : group.second)
+            addSimpleElement(writer, limit.first, to_string(limit.second));
+        }
       }
-      if (!spec->m_minimum.empty())
+      else
       {
-        addSimpleElement(writer, "Minimum", spec->m_minimum);
-      }
-      if (!spec->m_nominal.empty())
-      {
-        addSimpleElement(writer, "Nominal", spec->m_nominal);
+        const auto group = spec->getGroup("Limits");
+        for (const auto &limit : group->second)
+          addSimpleElement(writer, limit.first, to_string(limit.second));
+
       }
     }
   }

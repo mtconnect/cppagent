@@ -21,16 +21,35 @@
 #include "globals.hpp"
 
 #include <utility>
-#include <vector>
+#include <list>
+#include <map>
+#include <set>
 
 namespace mtconnect
 {
-  struct Specification
+  class Specification
   {
-    Specification(const Specification &s) = default;
-    Specification() = default;
-
+  public:
+    Specification(const Specification &s)
+      : m_id(s.m_id), m_type(s.m_type), m_subType(s.m_subType),
+        m_units(s.m_units), m_name(s.m_name), m_dataItemIdRef(s.m_dataItemIdRef),
+        m_compositionIdRef(s.m_compositionIdRef),
+        m_coordinateSystemIdRef(s.m_coordinateSystemIdRef),
+        m_originator(s.m_originator), m_hasGroups(s.m_hasGroups),
+       m_class(s.m_class)
+    {
+    }
+    Specification(const std::string &klass) {
+      m_hasGroups = klass == "ProcessSpecification";
+      m_class = klass;
+    }
+    virtual ~Specification() = default;
+    
+  public:
+    typedef std::map<std::string, double> Group;
+    
     // Attributes
+    std::string m_id;
     std::string m_type;
     std::string m_subType;
     std::string m_units;
@@ -38,11 +57,37 @@ namespace mtconnect
     std::string m_dataItemIdRef;
     std::string m_compositionIdRef;
     std::string m_coordinateSystemIdRef;
+    std::string m_originator;
+    
+    bool addLimit(const std::string &group, const std::string &limit,
+                  double value);
+    
+    const auto getGroup(const std::string &group) const {
+      return m_groups.find(group);
+    }
+    std::set<std::string> getGroupKeys() const {
+      std::set<std::string> keys;
+      std::transform(m_groups.begin(), m_groups.end(), std::inserter(keys, keys.begin()),
+                     [](const auto &kv) { return kv.first; } );
+      return keys;
+    }
+    
+    const std::map<std::string, Group> &getGroups() const { return m_groups; }
+    double getLimit(const std::string &group, const std::string &limit)
+    {
+      if (m_groups.count(group) > 0 && m_groups[group].count(limit) > 0)
+        return m_groups[group][limit];
+      else
+        return FP_QNAN;
+    }
 
-    // Elements
-    std::string m_maximum;
-    std::string m_minimum;
-    std::string m_nominal;
+    bool hasGroups() const { return m_hasGroups; }
+    const std::string &getClass() const { return m_class; }
+    
+  protected:
+    std::map<std::string, Group> m_groups;
+    bool m_hasGroups;
+    std::string m_class;
   };
 
   class Specifications : public ComponentConfiguration
@@ -64,7 +109,7 @@ namespace mtconnect
       m_specifications.emplace_back(std::move(s));
     }
 
-   protected:
+  protected:
     std::list<std::unique_ptr<Specification>> m_specifications;
   };
 }  // namespace mtconnect

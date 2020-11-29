@@ -66,7 +66,7 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
   
   const auto specs = dynamic_cast<const Specifications*>(conf);
   ASSERT_NE(nullptr, specs);
-  ASSERT_EQ(1, specs->getSpecifications().size());
+  ASSERT_EQ(3, specs->getSpecifications().size());
 
   const auto &spec = specs->getSpecifications().front();
   EXPECT_EQ("ROTARY_VELOCITY", spec->m_type);
@@ -76,10 +76,12 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("cmotor", spec->m_compositionIdRef);
   EXPECT_EQ("machine", spec->m_coordinateSystemIdRef);
   EXPECT_EQ("c1", spec->m_dataItemIdRef);
-  
-  EXPECT_EQ("10000", spec->m_maximum);
-  EXPECT_EQ("100", spec->m_minimum);
-  EXPECT_EQ("1000", spec->m_nominal);
+  EXPECT_EQ("Specification", spec->getClass());
+  EXPECT_FALSE(spec->hasGroups());
+
+  EXPECT_EQ(10000.0, spec->getLimit("Limits", "Maximum"));
+  EXPECT_EQ(100.0, spec->getLimit("Limits", "Minimum"));
+  EXPECT_EQ(1000.0, spec->getLimit("Limits", "Nominal"));
 }
 
 
@@ -93,7 +95,7 @@ TEST_F(SpecificationTest, XmlPrinting)
     PARSE_XML_RESPONSE;
     
     ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH , 1);
-    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*" , 1);
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*" , 3);
 
     ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@type" , "ROTARY_VELOCITY");
     ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@subType" , "ACTUAL");
@@ -103,9 +105,9 @@ TEST_F(SpecificationTest, XmlPrinting)
     ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@coordinateSystemIdRef" , "machine");
     ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@dataItemIdRef" , "c1");
     
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Maximum" , "10000");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Minimum" , "100");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Nominal" , "1000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Maximum" , "10000.000000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Minimum" , "100.000000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Nominal" , "1000.000000");
   }
 }
 
@@ -126,7 +128,7 @@ TEST_F(SpecificationTest, JsonPrinting)
     auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
     auto specifications = rotary.at("/Configuration/Specifications"_json_pointer);
     ASSERT_TRUE(specifications.is_array());
-    ASSERT_EQ(1_S, specifications.size());
+    ASSERT_EQ(3_S, specifications.size());
 
     auto crel = specifications.at(0);
     auto cfields = crel.at("/Specification"_json_pointer);
@@ -138,8 +140,47 @@ TEST_F(SpecificationTest, JsonPrinting)
     EXPECT_EQ("machine", cfields["coordinateSystemIdRef"]);
     EXPECT_EQ("c1", cfields["dataItemIdRef"]);
     
-    EXPECT_EQ("10000", cfields["Maximum"]);
-    EXPECT_EQ("100", cfields["Minimum"]);
-    EXPECT_EQ("1000", cfields["Nominal"]);
+    EXPECT_EQ(10000.0, cfields["Maximum"]);
+    EXPECT_EQ(100.0, cfields["Minimum"]);
+    EXPECT_EQ(1000.0, cfields["Nominal"]);
   }
+}
+
+TEST_F(SpecificationTest, Parse17SpecificationValues)
+{
+  ASSERT_NE(nullptr, m_component);
+  
+  ASSERT_EQ(2, m_component->getConfiguration().size());
+  
+  auto ci = m_component->getConfiguration().begin();
+  // Get the second configuration.
+  ci++;
+  const auto conf = ci->get();
+  ASSERT_EQ(typeid(Specifications), typeid(*conf));
+  
+  const auto specs = dynamic_cast<const Specifications*>(conf);
+  ASSERT_NE(nullptr, specs);
+  ASSERT_EQ(3, specs->getSpecifications().size());
+  
+  auto si = specs->getSpecifications().begin();
+  
+  // Advance to second specificaiton
+  si++;
+  
+  EXPECT_EQ("spec1", (*si)->m_id);
+  EXPECT_EQ("LOAD", (*si)->m_type);
+  EXPECT_EQ("PERCENT", (*si)->m_units);
+  EXPECT_EQ("loadspec", (*si)->m_name);
+  EXPECT_EQ("MANUFACTURER", (*si)->m_originator);
+  
+  EXPECT_EQ("Specification", (*si)->getClass());
+  EXPECT_FALSE((*si)->hasGroups());
+
+  EXPECT_EQ(1000.0, (*si)->getLimit("Limits", "Maximum"));
+  EXPECT_EQ(-1000.0, (*si)->getLimit("Limits", "Minimum"));
+  EXPECT_EQ(100.0, (*si)->getLimit("Limits", "Nominal"));
+  EXPECT_EQ(500.0, (*si)->getLimit("Limits", "UpperLimit"));
+  EXPECT_EQ(-500.0, (*si)->getLimit("Limits", "LowerLimit"));
+  EXPECT_EQ(200.0, (*si)->getLimit("Limits", "UpperWarning"));
+  EXPECT_EQ(-200.0, (*si)->getLimit("Limits", "LowerWarning"));
 }
