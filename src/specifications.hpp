@@ -92,7 +92,7 @@ namespace mtconnect
       if (it != m_groups.end() && (gi = it->second.find(limit)) != it->second.end())
         return gi->second;
       else
-        return FP_QNAN;
+        return FP_NAN;
     }
     double getLimit(const std::string &limit) const
     {
