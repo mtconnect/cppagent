@@ -564,7 +564,7 @@ namespace mtconnect
       }
       else
       {
-        const auto group = spec->getGroup("Limits");
+        const auto group = spec->getLimits();
         if (group) {
           for (const auto &limit : *group)
             addSimpleElement(writer, limit.first, floatToString(limit.second));

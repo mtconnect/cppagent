@@ -885,14 +885,14 @@ namespace mtconnect
             {
               std::string name((const char*) val->name);
               std::string value(getCDATA(val));
-              spec->addLimit(group, name, stod(value));
+              spec->addLimitForGroup(group, name, stod(value));
             }
           }
           else
           {
             std::string name((const char*) limit->name);
             std::string value(getCDATA(limit));
-            spec->addLimit("Limits", name, stod(value));
+            spec->addLimit(name, stod(value));
           }
         }
         

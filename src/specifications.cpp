@@ -37,7 +37,7 @@ namespace mtconnect
     { "ProcessSpecification", { "SpecificationLimits", "ControlLimits", "AlarmLimits" } }
   });
   
-  bool Specification::addLimit(const std::string &group,
+  bool Specification::addLimitForGroup(const std::string &group,
                                const std::string &limit,
                                double value)
   {

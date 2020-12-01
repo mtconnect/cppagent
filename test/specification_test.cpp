@@ -80,9 +80,9 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("Specification", spec->getClass());
   EXPECT_FALSE(spec->hasGroups());
 
-  EXPECT_EQ(10000.0, spec->getLimit("Limits", "Maximum"));
-  EXPECT_EQ(100.0, spec->getLimit("Limits", "Minimum"));
-  EXPECT_EQ(1000.0, spec->getLimit("Limits", "Nominal"));
+  EXPECT_EQ(10000.0, spec->getLimit("Maximum"));
+  EXPECT_EQ(100.0, spec->getLimit("Minimum"));
+  EXPECT_EQ(1000.0, spec->getLimit("Nominal"));
 }
 
 
@@ -178,13 +178,13 @@ TEST_F(SpecificationTest, Parse17SpecificationValues)
   
   EXPECT_FALSE((*si)->hasGroups());
 
-  EXPECT_EQ(1000.0, (*si)->getLimit("Limits", "Maximum"));
-  EXPECT_EQ(-1000.0, (*si)->getLimit("Limits", "Minimum"));
-  EXPECT_EQ(100.0, (*si)->getLimit("Limits", "Nominal"));
-  EXPECT_EQ(500.0, (*si)->getLimit("Limits", "UpperLimit"));
-  EXPECT_EQ(-500.0, (*si)->getLimit("Limits", "LowerLimit"));
-  EXPECT_EQ(200.0, (*si)->getLimit("Limits", "UpperWarning"));
-  EXPECT_EQ(-200.0, (*si)->getLimit("Limits", "LowerWarning"));
+  EXPECT_EQ(1000.0, (*si)->getLimit("Maximum"));
+  EXPECT_EQ(-1000.0, (*si)->getLimit("Minimum"));
+  EXPECT_EQ(100.0, (*si)->getLimit("Nominal"));
+  EXPECT_EQ(500.0, (*si)->getLimit("UpperLimit"));
+  EXPECT_EQ(-500.0, (*si)->getLimit("LowerLimit"));
+  EXPECT_EQ(200.0, (*si)->getLimit("UpperWarning"));
+  EXPECT_EQ(-200.0, (*si)->getLimit("LowerWarning"));
 }
 
 TEST_F(SpecificationTest, ParseProcessSpecificationValues)

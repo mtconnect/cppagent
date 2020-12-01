@@ -60,8 +60,12 @@ namespace mtconnect
     std::string m_coordinateSystemIdRef;
     std::string m_originator;
     
-    bool addLimit(const std::string &group, const std::string &limit,
+    bool addLimitForGroup(const std::string &group, const std::string &limit,
                   double value);
+    bool addLimit(const std::string &limit, double value)
+    {
+      return addLimitForGroup("Limits", limit, value);
+    }
     
     const std::optional<Group> getGroup(const std::string &group) const {
       auto it = m_groups.find(group);
@@ -69,6 +73,9 @@ namespace mtconnect
         return it->second;
       else
         return {};
+    }
+    auto getLimits() const {
+      return getGroup("Limits");
     }
     std::set<std::string> getGroupKeys() const {
       std::set<std::string> keys;
@@ -78,12 +85,18 @@ namespace mtconnect
     }
     
     const std::map<std::string, Group> &getGroups() const { return m_groups; }
-    double getLimit(const std::string &group, const std::string &limit)
+    double getLimitForGroup(const std::string &group, const std::string &limit) const
     {
-      if (m_groups.count(group) > 0 && m_groups[group].count(limit) > 0)
-        return m_groups[group][limit];
+      auto it = m_groups.find(group);
+      decltype(it->second.find(limit)) gi;
+      if (it != m_groups.end() && (gi = it->second.find(limit)) != it->second.end())
+        return gi->second;
       else
         return FP_QNAN;
+    }
+    double getLimit(const std::string &limit) const
+    {
+      return getLimitForGroup("Limits", limit);
     }
 
     bool hasGroups() const { return m_hasGroups; }
