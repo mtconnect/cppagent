@@ -376,8 +376,8 @@ namespace mtconnect
                            {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
                            {"dataItemIdRef", spec->m_dataItemIdRef},
                            {"compositionIdRef", spec->m_compositionIdRef},
-                           {"originator", spec->m_compositionIdRef},
-      {"id", spec->m_compositionIdRef}});
+                           {"originator", spec->m_originator},
+                           {"id", spec->m_id}});
     
     if (spec->hasGroups())
     {
