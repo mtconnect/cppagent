@@ -393,8 +393,11 @@ namespace mtconnect
     else
     {
       const auto group = spec->getGroup("Limits");
-      for (const auto &limit : group->second)
-        fields[limit.first] = limit.second;
+      if (group)
+      {
+        for (const auto &limit : *group)
+          fields[limit.first] = limit.second;
+      }
     }
 
     json obj = json::object({{spec->getClass(), fields}});

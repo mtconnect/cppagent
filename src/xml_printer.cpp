@@ -559,14 +559,16 @@ namespace mtconnect
         {
           AutoElement ele(writer, group.first);
           for (const auto &limit : group.second)
-            addSimpleElement(writer, limit.first, to_string(limit.second));
+            addSimpleElement(writer, limit.first, floatToString(limit.second));
         }
       }
       else
       {
         const auto group = spec->getGroup("Limits");
-        for (const auto &limit : group->second)
-          addSimpleElement(writer, limit.first, to_string(limit.second));
+        if (group) {
+          for (const auto &limit : *group)
+            addSimpleElement(writer, limit.first, floatToString(limit.second));
+        }
 
       }
     }

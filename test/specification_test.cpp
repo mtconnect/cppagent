@@ -14,6 +14,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <set>
 
 using json = nlohmann::json;
 using namespace std;
@@ -105,9 +106,9 @@ TEST_F(SpecificationTest, XmlPrinting)
     ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@coordinateSystemIdRef" , "machine");
     ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@dataItemIdRef" , "c1");
     
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Maximum" , "10000.000000");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Minimum" , "100.000000");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Nominal" , "1000.000000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Maximum" , "10000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Minimum" , "100");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Nominal" , "1000");
   }
 }
 
@@ -166,14 +167,15 @@ TEST_F(SpecificationTest, Parse17SpecificationValues)
   
   // Advance to second specificaiton
   si++;
-  
+
+  EXPECT_EQ("Specification", (*si)->getClass());
+
   EXPECT_EQ("spec1", (*si)->m_id);
   EXPECT_EQ("LOAD", (*si)->m_type);
   EXPECT_EQ("PERCENT", (*si)->m_units);
   EXPECT_EQ("loadspec", (*si)->m_name);
   EXPECT_EQ("MANUFACTURER", (*si)->m_originator);
   
-  EXPECT_EQ("Specification", (*si)->getClass());
   EXPECT_FALSE((*si)->hasGroups());
 
   EXPECT_EQ(1000.0, (*si)->getLimit("Limits", "Maximum"));
@@ -183,4 +185,62 @@ TEST_F(SpecificationTest, Parse17SpecificationValues)
   EXPECT_EQ(-500.0, (*si)->getLimit("Limits", "LowerLimit"));
   EXPECT_EQ(200.0, (*si)->getLimit("Limits", "UpperWarning"));
   EXPECT_EQ(-200.0, (*si)->getLimit("Limits", "LowerWarning"));
+}
+
+TEST_F(SpecificationTest, ParseProcessSpecificationValues)
+{
+  ASSERT_NE(nullptr, m_component);
+  
+  ASSERT_EQ(2, m_component->getConfiguration().size());
+  
+  auto ci = m_component->getConfiguration().begin();
+  // Get the second configuration.
+  ci++;
+  const auto conf = ci->get();
+  ASSERT_EQ(typeid(Specifications), typeid(*conf));
+  
+  const auto specs = dynamic_cast<const Specifications*>(conf);
+  ASSERT_NE(nullptr, specs);
+  ASSERT_EQ(3, specs->getSpecifications().size());
+  
+  auto si = specs->getSpecifications().begin();
+  
+  // Advance to third specificaiton
+  si++; si++;
+  EXPECT_EQ("ProcessSpecification", (*si)->getClass());
+  
+  EXPECT_EQ("pspec1", (*si)->m_id);
+  EXPECT_EQ("LOAD", (*si)->m_type);
+  EXPECT_EQ("PERCENT", (*si)->m_units);
+  EXPECT_EQ("procspec", (*si)->m_name);
+  EXPECT_EQ("USER", (*si)->m_originator);
+  
+  EXPECT_TRUE((*si)->hasGroups());
+  auto groups = (*si)->getGroupKeys();
+  std::set<string> expected = { "SpecificationLimits", "AlarmLimits", "ControlLimits" };
+  ASSERT_EQ(expected, groups);
+  
+  const auto spec = (*si)->getGroup("SpecificationLimits");
+  EXPECT_TRUE(spec);
+  
+  EXPECT_EQ(500.0, spec->find("UpperLimit")->second);
+  EXPECT_EQ(50.0, spec->find("Nominal")->second);
+  EXPECT_EQ(-500.0, spec->find("LowerLimit")->second);
+
+  const auto control = (*si)->getGroup("ControlLimits");
+  EXPECT_TRUE(control);
+  
+  EXPECT_EQ(500.0, control->find("UpperLimit")->second);
+  EXPECT_EQ(200.0, control->find("UpperWarning")->second);
+  EXPECT_EQ(10, control->find("Nominal")->second);
+  EXPECT_EQ(-200.0, control->find("LowerWarning")->second);
+  EXPECT_EQ(-500.0, control->find("LowerLimit")->second);
+
+  const auto alarm = (*si)->getGroup("ControlLimits");
+  EXPECT_TRUE(alarm);
+  
+  EXPECT_EQ(500.0, alarm->find("UpperLimit")->second);
+  EXPECT_EQ(200.0, alarm->find("UpperWarning")->second);
+  EXPECT_EQ(-200.0, alarm->find("LowerWarning")->second);
+  EXPECT_EQ(-500.0, alarm->find("LowerLimit")->second);
 }

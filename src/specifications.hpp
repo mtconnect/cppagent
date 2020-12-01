@@ -24,6 +24,7 @@
 #include <list>
 #include <map>
 #include <set>
+#include <optional>
 
 namespace mtconnect
 {
@@ -62,8 +63,12 @@ namespace mtconnect
     bool addLimit(const std::string &group, const std::string &limit,
                   double value);
     
-    const auto getGroup(const std::string &group) const {
-      return m_groups.find(group);
+    const std::optional<Group> getGroup(const std::string &group) const {
+      auto it = m_groups.find(group);
+      if (it != m_groups.end())
+        return it->second;
+      else
+        return {};
     }
     std::set<std::string> getGroupKeys() const {
       std::set<std::string> keys;
