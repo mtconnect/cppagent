@@ -25,6 +25,7 @@
 #include <map>
 #include <set>
 #include <optional>
+#include <cmath>
 
 namespace mtconnect
 {
@@ -92,7 +93,7 @@ namespace mtconnect
       if (it != m_groups.end() && (gi = it->second.find(limit)) != it->second.end())
         return gi->second;
       else
-        return FP_NAN;
+        return std::nan("1");
     }
     double getLimit(const std::string &limit) const
     {
