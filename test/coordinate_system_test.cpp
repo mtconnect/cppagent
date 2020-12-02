@@ -68,25 +68,39 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
   auto systems = cds->getCoordinateSystems().begin();
   
   const auto &world = *systems;
-  EXPECT_EQ("world", world->m_id);
-  EXPECT_EQ("WORLD", world->m_type);
-  EXPECT_EQ("worldy", world->m_name);
-  EXPECT_EQ("101 102 103", world->m_origin);
-  EXPECT_TRUE(world->m_nativeName.empty());
-  EXPECT_TRUE(world->m_parentIdRef.empty());
-  EXPECT_TRUE(world->m_rotation.empty());
-  EXPECT_TRUE(world->m_translation.empty());
+  EXPECT_EQ("world", world->m_attributes["id"]);
+  EXPECT_EQ("WORLD", world->m_attributes["type"]);
+  EXPECT_EQ("worldy", world->m_attributes["name"]);
+  EXPECT_EQ(world->m_attributes.end(), world->m_attributes.find("nativeName"));
+  EXPECT_EQ(world->m_attributes.end(), world->m_attributes.find("parentIdRef"));
+
+  EXPECT_TRUE(world->m_geometry);
+  ASSERT_TRUE(holds_alternative<Origin>(world->m_geometry->m_location));
+  const Origin &wt = get<Origin>(world->m_geometry->m_location);
+  EXPECT_EQ(101.0, wt.m_x);
+  EXPECT_EQ(102.0, wt.m_y);
+  EXPECT_EQ(103.0, wt.m_z);
 
   systems++;
   const auto &machine = *systems;
-  EXPECT_EQ("machine", machine->m_id);
-  EXPECT_EQ("MACHINE", machine->m_type);
-  EXPECT_EQ("machiney", machine->m_name);
-  EXPECT_EQ("xxx", machine->m_nativeName);
-  EXPECT_EQ("world", machine->m_parentIdRef);
-  EXPECT_EQ("10 10 10", machine->m_translation);
-  EXPECT_EQ("90 0 90", machine->m_rotation);
-  EXPECT_TRUE(machine->m_origin.empty());
+  EXPECT_EQ("machine", machine->m_attributes["id"]);
+  EXPECT_EQ("MACHINE", machine->m_attributes["type"]);
+  EXPECT_EQ("machiney", machine->m_attributes["name"]);
+  EXPECT_EQ("xxx", machine->m_attributes["nativeName"]);
+  EXPECT_EQ("world", machine->m_attributes["parentIdRef"]);
+  
+  EXPECT_TRUE(machine->m_geometry);
+  ASSERT_TRUE(holds_alternative<Transformation>(machine->m_geometry->m_location));
+  const Transformation &mt = get<Transformation>(machine->m_geometry->m_location);
+  EXPECT_TRUE(mt.m_translation);
+  EXPECT_EQ(10.0, mt.m_translation->m_x);
+  EXPECT_EQ(10.0, mt.m_translation->m_y);
+  EXPECT_EQ(10.0, mt.m_translation->m_z);
+
+  EXPECT_TRUE(mt.m_rotation);
+  EXPECT_EQ(90.0, mt.m_rotation->m_roll);
+  EXPECT_EQ(0, mt.m_rotation->m_pitch);
+  EXPECT_EQ(90.0, mt.m_rotation->m_yaw);
 }
 
 #define CONFIGURATION_PATH "//m:Device/m:Configuration"
@@ -142,8 +156,11 @@ TEST_F(CoordinateSystemTest, JsonPrinting)
     EXPECT_EQ("WORLD", wfields["type"]);
     EXPECT_EQ("worldy", wfields["name"]);
     EXPECT_EQ("world", wfields["id"]);
-
-    EXPECT_EQ("101 102 103", wfields["Transformation"]["Origin"].get<string>());
+    json origin = wfields["Origin"];
+    EXPECT_TRUE(origin.is_array());
+    EXPECT_EQ(101.0, origin[0]);
+    EXPECT_EQ(102.0, origin[1]);
+    EXPECT_EQ(103.0, origin[2]);
     
     auto machine = systems.at(1);
     auto mfields = machine.at("/CoordinateSystem"_json_pointer);
@@ -153,8 +170,17 @@ TEST_F(CoordinateSystemTest, JsonPrinting)
     EXPECT_EQ("machine", mfields["id"]);
     EXPECT_EQ("xxx", mfields["nativeName"]);
     EXPECT_EQ("world", mfields["parentIdRef"]);
-
-    EXPECT_EQ("10 10 10", mfields["Transformation"]["Translation"]);
-    EXPECT_EQ("90 0 90", mfields["Transformation"]["Rotation"]);
+    
+    json trans = mfields["Transformation"]["Translation"];
+    ASSERT_TRUE(trans.is_array());
+    EXPECT_EQ(10.0, trans[0]);
+    EXPECT_EQ(10.0, trans[1]);
+    EXPECT_EQ(10.0, trans[2]);
+    
+    json rot = mfields["Transformation"]["Rotation"];
+    ASSERT_TRUE(rot.is_array());
+    EXPECT_EQ(90.0, rot[0]);
+    EXPECT_EQ(0.0, rot[1]);
+    EXPECT_EQ(90.0, rot[2]);
   }
 }

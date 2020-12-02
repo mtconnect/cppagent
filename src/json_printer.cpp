@@ -394,7 +394,7 @@ namespace mtconnect
     }
   }
   
-  inline json toJson(const SolidModel &model)
+  inline json toJson(const GeometricConfiguration &model)
   {
     json obj = json::object();
     addAttributes(obj, model.m_attributes);
@@ -473,39 +473,6 @@ namespace mtconnect
     return obj;
   }
 
-  inline json toJson(const CoordinateSystem *system)
-  {
-    json fields = json::object();
-    addAttributes(fields, {
-                              {"id", system->m_id},
-                              {"type", system->m_type},
-                              {"name", system->m_name},
-                              {"nativeName", system->m_nativeName},
-                              {"parentIdRef", system->m_parentIdRef},
-                          });
-
-    if (!system->m_origin.empty())
-    {
-      json obj = json::object();
-      obj["Origin"] = system->m_origin;
-      fields["Transformation"] = obj;
-    }
-    if (!system->m_translation.empty() || !system->m_rotation.empty())
-    {
-      json obj = json::object();
-
-      if (!system->m_translation.empty())
-        obj["Translation"] = system->m_translation;
-      if (!system->m_translation.empty())
-        obj["Rotation"] = system->m_rotation;
-
-      fields["Transformation"] = obj;
-    }
-
-    json obj = json::object({{"CoordinateSystem", fields}});
-    return obj;
-  }
-
   inline void toJson(json &parent, const ComponentConfiguration *config)
   {
     if (auto obj = dynamic_cast<const SensorConfiguration *>(config))
@@ -570,7 +537,7 @@ namespace mtconnect
 
       for (const auto &system : obj->getCoordinateSystems())
       {
-        json jsystem = toJson(system.get());
+        json jsystem = json::object({ { "CoordinateSystem", toJson(*system.get()) } });
         systems.emplace_back(jsystem);
       }
 

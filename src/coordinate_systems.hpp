@@ -25,25 +25,29 @@
 
 namespace mtconnect
 {
-  struct CoordinateSystem
+  struct CoordinateSystem : public GeometricConfiguration
   {
     CoordinateSystem(const CoordinateSystem &s) = default;
     CoordinateSystem() = default;
-
-    // Attributes
-    std::string m_id;
-    std::string m_type;
-    std::string m_name;
-    std::string m_nativeName;
-    std::string m_parentIdRef;
-
-    // Elements
-    // Transformation
-    std::string m_rotation;
-    std::string m_translation;
-
-    // Origin
-    std::string m_origin;
+    ~CoordinateSystem() = default;
+    
+    const std::string &klass() const override
+    {
+      const static std::string &klass("CoordinateSystem");
+      return klass;
+    }
+    bool hasScale() const override { return false; }
+    const std::map<std::string, bool> &properties() const override
+    {
+      const static std::map<std::string, bool> properties = {
+        { "id", true },
+        { "type", true },
+        { "name", false },
+        { "nativeName", false },
+        { "parentIdRef", false },
+      };;
+      return properties;
+    }
   };
 
   class CoordinateSystems : public ComponentConfiguration

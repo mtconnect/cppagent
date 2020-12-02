@@ -197,7 +197,8 @@ namespace mtconnect
     }
   }
   
-  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node)
+  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node,
+                                                    bool hasScale)
   {
     Geometry geometry;
     forEachElement(node, {
@@ -238,12 +239,15 @@ namespace mtconnect
         else
           g_logger << dlib::LWARN << "Cannot parse Origin";
       }},
-      { "Scale", [&geometry](const xmlNodePtr n) {
-        auto s = getThreeSpace(getCDATA(n));
-        if (s)
-          geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
-        else
-          g_logger << dlib::LWARN << "Cannot parse Scale";
+      { "Scale", [&geometry, hasScale](const xmlNodePtr n) {
+        if (hasScale)
+        {
+          auto s = getThreeSpace(getCDATA(n));
+          if (s)
+            geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
+          else
+            g_logger << dlib::LWARN << "Cannot parse Scale";
+        }
       }}
     });
     
@@ -963,6 +967,23 @@ namespace mtconnect
 
     parent->addConfiguration(relationships.release());
   }
+  
+  template<class T>
+  unique_ptr<T> handleGeometricConfiguration(xmlNodePtr node)
+  {
+    unique_ptr<T> model = make_unique<T>();
+    model->m_attributes = getValidatedAttributes(node, model->properties());
+    if (!model->m_attributes.empty())
+    {
+      model->m_geometry = getGeometry(node, model->hasScale());
+    }
+    else
+    {
+      g_logger << dlib::LWARN << "Skipping Geometric Definition";
+    }
+    
+    return model;
+  }
 
   void handleCoordinateSystems(xmlNodePtr node, Component *parent)
   {
@@ -970,39 +991,7 @@ namespace mtconnect
 
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
-      unique_ptr<CoordinateSystem> system{new CoordinateSystem()};
-
-      auto attrs = getAttributes(child);
-
-      system->m_id = attrs["id"];
-      system->m_name = attrs["name"];
-      system->m_type = attrs["type"];
-      system->m_nativeName = attrs["nativeName"];
-      system->m_parentIdRef = attrs["parentIdRef"];
-
-      for (xmlNodePtr val = child->children; val; val = val->next)
-      {
-        if (xmlStrcmp(val->name, BAD_CAST "Transformation") == 0)
-        {
-          for (xmlNodePtr t = val->children; t; t = t->next)
-          {
-            if (xmlStrcmp(t->name, BAD_CAST "Translation") == 0)
-            {
-              system->m_translation = getCDATA(t);
-            }
-            else if (xmlStrcmp(t->name, BAD_CAST "Rotation") == 0)
-            {
-              system->m_rotation = getCDATA(t);
-            }
-          }
-        }
-        else if (xmlStrcmp(val->name, BAD_CAST "Origin") == 0)
-        {
-          system->m_origin = getCDATA(val);
-        }
-      }
-
-      systems->addCoordinateSystem(system);
+      systems->addCoordinateSystem(handleGeometricConfiguration<CoordinateSystem>(child).release());
     }
 
     parent->addConfiguration(systems.release());
@@ -1062,20 +1051,6 @@ namespace mtconnect
     parent->addConfiguration(specifications.release());
   }
   
-  void handleSolidModel(xmlNodePtr node, Component *parent)
-  {
-    unique_ptr<SolidModel> model = make_unique<SolidModel>();
-    model->m_attributes = getValidatedAttributes(node, SolidModel::m_properties);
-    if (!model->m_attributes.empty())
-    {
-      model->m_geometry = getGeometry(node);
-      parent->addConfiguration(model.release());
-    }
-    else
-    {
-      g_logger << dlib::LWARN << "Skipping SolidModel";
-    }
-  }
 
   void XmlParser::handleConfiguration(xmlNodePtr node, Component *parent, Device *device)
   {
@@ -1085,7 +1060,7 @@ namespace mtconnect
          {"Relationships", [](xmlNodePtr n, Component *p) { handleRelationships(n, p); }},
          {"CoordinateSystems", [](xmlNodePtr n, Component *p) { handleCoordinateSystems(n, p); }},
          {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }},
-         {"SolidModel", [](xmlNodePtr n, Component *p) { handleSolidModel(n, p); }}  });
+      {"SolidModel", [](xmlNodePtr n, Component *p) { p->addConfiguration(handleGeometricConfiguration<SolidModel>(n).release()); }}  });
 
     // Get the first node
     for (xmlNodePtr child = node->children; child; child = child->next)

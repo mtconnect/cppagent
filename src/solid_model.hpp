@@ -26,19 +26,26 @@
 
 namespace mtconnect
 {
-  class SolidModel : public ComponentConfiguration
+  class SolidModel : public GeometricConfiguration
   {
   public:
     SolidModel(const SolidModel &s) = default;
     SolidModel() = default;
     ~SolidModel() override = default;
     
-    const static inline std::map<std::string, bool> m_properties = { { "id", true }, { "solidModelIdRef", false }, { "itemRef", false },
-      { "mediaType", true }, { "coordinateSystemIdRef", true },
-      { "href", false }
-    };;
-    std::map<std::string, std::string> m_attributes;
-
-    std::optional<Geometry> m_geometry;
+    const std::string &klass() const override
+    {
+      const static std::string &klass("SolidModel");
+      return klass;
+    }
+    bool hasScale() const override { return true; }
+    const std::map<std::string, bool> &properties() const override
+    {
+      const static std::map<std::string, bool> properties = { { "id", true }, { "solidModelIdRef", false }, { "itemRef", false },
+        { "mediaType", true }, { "coordinateSystemIdRef", true },
+        { "href", false }
+      };;
+      return properties;
+    }
   };
 }  // namespace mtconnect
