@@ -580,7 +580,7 @@ namespace mtconnect
     AutoElement ele(writer, "Specifications");
     for (const auto &spec : specs->getSpecifications())
     {
-      AutoElement ele(writer, "Specification");
+      AutoElement ele(writer, spec->getClass());
       addAttributes(writer,
                     map<string, string>({{"type", spec->m_type},
                                          {"subType", spec->m_subType},
@@ -588,19 +588,29 @@ namespace mtconnect
                                          {"name", spec->m_name},
                                          {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
                                          {"compositionIdRef", spec->m_compositionIdRef},
-                                         {"dataItemIdRef", spec->m_dataItemIdRef}}));
+                                         {"dataItemIdRef", spec->m_dataItemIdRef},
+        {"id", spec->m_id },
+        {"originator", spec->m_originator}
+      }));
 
-      if (!spec->m_maximum.empty())
+      if (spec->hasGroups())
       {
-        addSimpleElement(writer, "Maximum", spec->m_maximum);
+        const auto &groups = spec->getGroups();
+        for (const auto &group : groups)
+        {
+          AutoElement ele(writer, group.first);
+          for (const auto &limit : group.second)
+            addSimpleElement(writer, limit.first, floatToString(limit.second));
+        }
       }
-      if (!spec->m_minimum.empty())
+      else
       {
-        addSimpleElement(writer, "Minimum", spec->m_minimum);
-      }
-      if (!spec->m_nominal.empty())
-      {
-        addSimpleElement(writer, "Nominal", spec->m_nominal);
+        const auto group = spec->getLimits();
+        if (group) {
+          for (const auto &limit : *group)
+            addSimpleElement(writer, limit.first, floatToString(limit.second));
+        }
+
       }
     }
   }
@@ -824,6 +834,8 @@ namespace mtconnect
 
     if (dataItem->hasDefinition())
       printDataItemDefinition(writer, dataItem->getDefinition());
+    
+    printDataItemRelationships(writer, dataItem->getRelationships());
   }
 
   void XmlPrinter::printDataItemDefinition(xmlTextWriterPtr writer,
@@ -869,6 +881,23 @@ namespace mtconnect
         if (!entry.m_description.empty())
           addSimpleElement(writer, "Description", entry.m_description);
       }
+    }
+  }
+  
+  void XmlPrinter::printDataItemRelationships(xmlTextWriterPtr writer,
+                                  const std::list<DataItem::Relationship> &relations) const
+  {
+    if (relations.size() > 0)
+    {
+      AutoElement ele(writer, "Relationships");
+      for (const auto &rel : relations)
+      {
+        addSimpleElement(writer, rel.m_relation, "",
+                         {{string("name"), rel.m_name},
+                          {string("type"), rel.m_type},
+                          {string("idRef"), rel.m_idRef}});
+      }
+
     }
   }
 

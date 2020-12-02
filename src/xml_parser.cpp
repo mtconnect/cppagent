@@ -715,6 +715,10 @@ namespace mtconnect
         {
           loadDataItemDefinition(child, d, device);
         }
+        else if (!xmlStrcmp(child->name, BAD_CAST "Relationships"))
+        {
+          loadDataItemRelationships(child, d, device);
+        }
       }
     }
 
@@ -775,6 +779,40 @@ namespace mtconnect
         });
 
     dataItem->setDefinition(def);
+  }
+
+  static void addDataItemRelationship(xmlNodePtr node, DataItem *dataItem)
+  {
+    DataItem::Relationship rel;
+    auto attrs = getAttributes(node);
+    
+    rel.m_relation = string((char*) node->name);
+    rel.m_name = attrs["name"];
+    rel.m_type = attrs["type"];
+    rel.m_idRef = attrs["idRef"];
+    if (!rel.m_type.empty() && !rel.m_idRef.empty())
+      dataItem->getRelationships().push_back(rel);
+    else {
+      g_logger << dlib::LWARN << "Bad Data Item Relationship: " << rel.m_relation << ", "
+          << rel.m_name << ", " << rel.m_type << ", " << rel.m_idRef
+          << ": type or idRef missing, skipping";
+    }
+  }
+
+  void XmlParser::loadDataItemRelationships(xmlNodePtr relationships, DataItem *dataItem, Device *device)
+  {
+    
+    forEachElement(
+                   relationships,
+                   {
+      {"DataItemRelationship", [&dataItem](xmlNodePtr node) {
+        addDataItemRelationship(node, dataItem);
+      }},
+      {"SpecificationRelationship",
+        [&dataItem](xmlNodePtr node) {
+          addDataItemRelationship(node, dataItem);
+        }}
+    });
   }
 
   void XmlParser::handleComposition(xmlNodePtr composition, Component *parent)
@@ -977,27 +1015,48 @@ namespace mtconnect
     {
       auto attrs = getAttributes(child);
 
-      unique_ptr<Specification> spec{new Specification()};
-
-      spec->m_name = attrs["name"];
-      spec->m_type = attrs["type"];
-      spec->m_subType = attrs["subType"];
-      spec->m_units = attrs["units"];
-      spec->m_dataItemIdRef = attrs["dataItemIdRef"];
-      spec->m_compositionIdRef = attrs["compositionIdRef"];
-      spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
-
-      for (xmlNodePtr val = child->children; val; val = val->next)
+      std::string klass((const char*) child->name);
+      if (klass == "Specification" || klass == "ProcessSpecification")
       {
-        if (xmlStrcmp(val->name, BAD_CAST "Maximum") == 0)
-          spec->m_maximum = getCDATA(val);
-        else if (xmlStrcmp(val->name, BAD_CAST "Minimum") == 0)
-          spec->m_minimum = getCDATA(val);
-        else if (xmlStrcmp(val->name, BAD_CAST "Nominal") == 0)
-          spec->m_nominal = getCDATA(val);
-      }
+        unique_ptr<Specification> spec{new Specification(klass)};
 
-      specifications->addSpecification(spec);
+        spec->m_id= attrs["id"];
+        spec->m_name = attrs["name"];
+        spec->m_type = attrs["type"];
+        spec->m_subType = attrs["subType"];
+        spec->m_units = attrs["units"];
+        spec->m_dataItemIdRef = attrs["dataItemIdRef"];
+        spec->m_compositionIdRef = attrs["compositionIdRef"];
+        spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
+        spec->m_originator = attrs["originator"];
+
+        for (xmlNodePtr limit = child->children; limit; limit = limit->next)
+        {
+          if (spec->hasGroups())
+          {
+            std::string group((const char*) limit->name);
+
+            for (xmlNodePtr val = limit->children; val; val = val->next)
+            {
+              std::string name((const char*) val->name);
+              std::string value(getCDATA(val));
+              spec->addLimitForGroup(group, name, stod(value));
+            }
+          }
+          else
+          {
+            std::string name((const char*) limit->name);
+            std::string value(getCDATA(limit));
+            spec->addLimit(name, stod(value));
+          }
+        }
+        
+        specifications->addSpecification(spec);
+      }
+      else
+      {
+        g_logger << dlib::LWARN << "Bad Specifictation type " << klass << ", skipping";
+      }
     }
 
     parent->addConfiguration(specifications.release());

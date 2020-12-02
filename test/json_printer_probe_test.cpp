@@ -313,9 +313,49 @@ TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
   auto jdoc = json::parse(doc);
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
   auto device = devices.at(0).at("/Device"_json_pointer);
-  cout << "\n" << device << endl;
 
   ASSERT_EQ(string("1.7"), device.at("/mtconnectVersion"_json_pointer).get<string>());
+
+}
+
+TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
+{
+  m_agent.release();
+  m_printer = std::make_unique<JsonPrinter>("1.7", true);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/relationship_test.xml", 4, 4, "1.7");
+  m_devices = m_agent->getDevices();
+  auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+  auto jdoc = json::parse(doc);
+
+  auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+  auto linear = devices.at(0).at("/Device/Components/0/Axes/Components/0/Linear"_json_pointer);
+  ASSERT_TRUE(linear.is_object());
+  
+  auto load = linear.at("/DataItems/4/DataItem"_json_pointer);
+  ASSERT_TRUE(load.is_object());
+  ASSERT_EQ(string("xlc"), load["id"].get<string>());
+  
+  auto dir1 = load.at("/Relationships/0"_json_pointer);
+  ASSERT_TRUE(dir1.is_object());
+  ASSERT_EQ(string("archie"), dir1.at("/DataItemRelationship/name"_json_pointer));
+  ASSERT_EQ(string("LIMIT"), dir1.at("/DataItemRelationship/type"_json_pointer));
+  ASSERT_EQ(string("xlcpl"), dir1.at("/DataItemRelationship/idRef"_json_pointer));
+
+  auto dir2 = load.at("/Relationships/1"_json_pointer);
+  ASSERT_TRUE(dir2.is_object());
+  ASSERT_EQ(string("LIMIT"), dir2.at("/SpecificationRelationship/type"_json_pointer));
+  ASSERT_EQ(string("spec1"), dir2.at("/SpecificationRelationship/idRef"_json_pointer));
+
+  cout << "\n" << linear << endl;
+  auto limits = linear.at("/DataItems/5/DataItem"_json_pointer);
+  ASSERT_TRUE(load.is_object());
+  ASSERT_EQ(string("xlcpl"), limits["id"].get<string>());
+
+  auto dir3 = limits.at("/Relationships/0"_json_pointer);
+  ASSERT_TRUE(dir3.is_object());
+  ASSERT_EQ(string("bob"), dir3.at("/DataItemRelationship/name"_json_pointer));
+  ASSERT_EQ(string("OBSERVATION"), dir3.at("/DataItemRelationship/type"_json_pointer));
+  ASSERT_EQ(string("xlc"), dir3.at("/DataItemRelationship/idRef"_json_pointer));
 
 }
 

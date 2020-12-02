@@ -59,6 +59,13 @@ namespace mtconnect
       FILTER_PERIOD,
       FILTER_NONE
     };
+    
+    struct Relationship {
+      std::string m_relation;
+      std::string m_type;
+      std::string m_name;
+      std::string m_idRef;
+    };
 
    public:
     // Construct a data item with appropriate attributes mapping
@@ -450,6 +457,10 @@ namespace mtconnect
           return "Undefined";
       }
     }
+    
+    std::list<Relationship> &getRelationships() {
+      return m_relationships;
+    }
 
    protected:
     double simpleFactor(const std::string &units);
@@ -554,5 +565,8 @@ namespace mtconnect
 
     // Definitons
     std::unique_ptr<DataItemDefinition> m_definition;
+    
+    // Relations
+    std::list<Relationship> m_relationships;
   };
 }  // namespace mtconnect

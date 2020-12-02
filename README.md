@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 1.6.0.0
+MTConnect C++ Agent Version 1.7
 --------
 [![Build status](https://ci.appveyor.com/api/projects/status/8ijbprd7rtwohv7c?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent-dev)
 
@@ -10,6 +10,8 @@ server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 1.7.0.0 added kinematics, solid models, and new specifications types.
 
 Version 1.6.0.0 added coordinate systems, specifications, and tabular data.
 

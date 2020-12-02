@@ -44,6 +44,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/service.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/solid_model.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/specifications.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/specifications.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/version.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_parser.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_parser.hpp"
