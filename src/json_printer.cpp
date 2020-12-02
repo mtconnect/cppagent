@@ -23,6 +23,8 @@
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"
 #include "specifications.hpp"
+#include "solid_model.hpp"
+
 #include "version.h"
 
 #include <dlib/logger.h>
@@ -333,6 +335,52 @@ namespace mtconnect
       parent[collection] = items;
     }
   }
+  
+  inline void toJson(json &parent, const Geometry &geometry)
+  {
+    if (geometry.m_location.index() != 0)
+    {
+      visit(overloaded {
+        [&parent](const Origin &o) {
+          parent["Origin"] = json::array({ o.m_x, o.m_y, o.m_z });
+        },
+        [&parent](const Transformation &t) {
+          json trans = json::object();
+          if (t.m_translation)
+          {
+            trans["Translation"] = json::array({ t.m_translation->m_x,
+              t.m_translation->m_y,
+              t.m_translation->m_z });
+;
+          }
+          if (t.m_rotation)
+          {
+            trans["Rotation"] = json::array({ t.m_rotation->m_roll,
+              t.m_rotation->m_pitch,
+              t.m_rotation->m_yaw });
+          }
+          parent["Transformation"] = trans;
+        },
+        [](const std::monostate &a){}
+      }, geometry.m_location);
+    }
+    
+    if (geometry.m_scale)
+    {
+      parent["Scale"] = json::array({ geometry.m_scale->m_scaleX,
+        geometry.m_scale->m_scaleY,
+        geometry.m_scale->m_scaleZ });
+    }
+  }
+  
+  inline json toJson(const SolidModel &model)
+  {
+    json obj = json::object();
+    addAttributes(obj, model.m_attributes);
+    if (model.m_geometry)
+      toJson(obj, *model.m_geometry);
+    return obj;
+  }
 
   inline void toJson(json &parent, const SensorConfiguration::Calibration &cal)
   {
@@ -489,6 +537,10 @@ namespace mtconnect
     else if (auto obj = dynamic_cast<const ExtendedComponentConfiguration *>(config))
     {
       parent["ExtendedConfiguration"] = obj->getContent();
+    }
+    else if (auto obj = dynamic_cast<const SolidModel *>(config))
+    {
+      parent["SolidModel"] = toJson(*obj);
     }
   }
 

@@ -155,16 +155,13 @@ TEST_F(SolidModelTest, RotaryXmlPrinting)
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@coordinateSystemIdRef" , "machine");
     
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "/m:Transformation/m:Translation" , "10 20 30");
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "/m:Transformation/m:Rotation" , "90 -90 180");    
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "/m:Transformation/m:Rotation" , "90 -90 180");
   }
 }
 
-/*
-TEST_F(CoordinateSystemTest, JsonPrinting)
+
+TEST_F(SolidModelTest, DeviceJsonPrinting)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
-  ASSERT_TRUE(m_adapter);
-  
   m_agentTestHelper->m_path = "/probe";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
@@ -174,31 +171,65 @@ TEST_F(CoordinateSystemTest, JsonPrinting)
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
 
-    auto systems = device.at("/Configuration/CoordinateSystems"_json_pointer);
-    ASSERT_TRUE(systems.is_array());
-    ASSERT_EQ(2_S, systems.size());
+    auto model = device.at("/Configuration/SolidModel"_json_pointer);
+    ASSERT_TRUE(model.is_object());
     
+    ASSERT_EQ(6, model.size());
+    EXPECT_EQ("dm", model["id"]);
+    EXPECT_EQ("STL", model["mediaType"]);
+    EXPECT_EQ("/models/foo.stl", model["href"]);
+    EXPECT_EQ("machine", model["coordinateSystemIdRef"]);
 
-    auto world = systems.at(0);    
-    auto wfields = world.at("/CoordinateSystem"_json_pointer);
-    ASSERT_EQ(4, wfields.size());
-    EXPECT_EQ("WORLD", wfields["type"]);
-    EXPECT_EQ("worldy", wfields["name"]);
-    EXPECT_EQ("world", wfields["id"]);
-
-    EXPECT_EQ("101 102 103", wfields["Transformation"]["Origin"].get<string>());
+    auto origin = model["Origin"];
+    ASSERT_TRUE(origin.is_array());
+    ASSERT_EQ(3, origin.size());
+    ASSERT_EQ(10.0, origin[0].get<double>());
+    ASSERT_EQ(20.0, origin[1].get<double>());
+    ASSERT_EQ(30.0, origin[2].get<double>());
     
-    auto machine = systems.at(1);
-    auto mfields = machine.at("/CoordinateSystem"_json_pointer);
-    ASSERT_EQ(6, mfields.size());
-    EXPECT_EQ("MACHINE", mfields["type"]);
-    EXPECT_EQ("machiney", mfields["name"]);
-    EXPECT_EQ("machine", mfields["id"]);
-    EXPECT_EQ("xxx", mfields["nativeName"]);
-    EXPECT_EQ("world", mfields["parentIdRef"]);
-
-    EXPECT_EQ("10 10 10", mfields["Transformation"]["Translation"]);
-    EXPECT_EQ("90 0 90", mfields["Transformation"]["Rotation"]);
+    auto scale = model["Scale"];
+    ASSERT_TRUE(scale.is_array());
+    ASSERT_EQ(3, scale.size());
+    ASSERT_EQ(2.0, scale[0].get<double>());
+    ASSERT_EQ(3.0, scale[1].get<double>());
+    ASSERT_EQ(4.0, scale[2].get<double>());
   }
 }
-*/
+
+TEST_F(SolidModelTest, RotaryJsonPrinting)
+{
+  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  
+  {
+    PARSE_JSON_RESPONSE;
+    
+    auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
+    auto device = devices.at(0).at("/Device"_json_pointer);
+    auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
+
+    auto model = rotary.at("/Configuration/SolidModel"_json_pointer);
+    ASSERT_TRUE(model.is_object());
+    
+    ASSERT_EQ(6, model.size());
+    EXPECT_EQ("cm", model["id"]);
+    EXPECT_EQ("STL", model["mediaType"]);
+    EXPECT_EQ("machine", model["coordinateSystemIdRef"]);
+    EXPECT_EQ("dm", model["solidModelIdRef"]);
+    EXPECT_EQ("spindle", model["itemRef"]);
+
+    auto trans = model.at("/Transformation/Translation"_json_pointer);
+    ASSERT_TRUE(trans.is_array());
+    ASSERT_EQ(3, trans.size());
+    ASSERT_EQ(10.0, trans[0].get<double>());
+    ASSERT_EQ(20.0, trans[1].get<double>());
+    ASSERT_EQ(30.0, trans[2].get<double>());
+    
+    auto rot = model.at("/Transformation/Rotation"_json_pointer);
+    ASSERT_TRUE(rot.is_array());
+    ASSERT_EQ(3, rot.size());
+    ASSERT_EQ(90.0, rot[0].get<double>());
+    ASSERT_EQ(-90.0, rot[1].get<double>());
+    ASSERT_EQ(180.0, rot[2].get<double>());
+  }
+}
