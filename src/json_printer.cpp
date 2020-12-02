@@ -397,10 +397,31 @@ namespace mtconnect
                            {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
                            {"dataItemIdRef", spec->m_dataItemIdRef},
                            {"compositionIdRef", spec->m_compositionIdRef},
-                           {"Maximum", spec->m_maximum},
-                           {"Minimum", spec->m_minimum},
-                           {"Nominal", spec->m_nominal}});
-    json obj = json::object({{"Specification", fields}});
+                           {"originator", spec->m_originator},
+                           {"id", spec->m_id}});
+    
+    if (spec->hasGroups())
+    {
+      const auto &groups = spec->getGroups();
+      for (const auto &group : groups)
+      {
+        json limits = json::object();
+        for (const auto &limit : group.second)
+          limits[limit.first] = limit.second;
+        fields[group.first] = limits;
+      }
+    }
+    else
+    {
+      const auto group = spec->getLimits();
+      if (group)
+      {
+        for (const auto &limit : *group)
+          fields[limit.first] = limit.second;
+      }
+    }
+
+    json obj = json::object({{spec->getClass(), fields}});
     return obj;
   }
 

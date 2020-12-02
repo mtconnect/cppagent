@@ -898,27 +898,48 @@ namespace mtconnect
     {
       auto attrs = getAttributes(child);
 
-      unique_ptr<Specification> spec{new Specification()};
-
-      spec->m_name = attrs["name"];
-      spec->m_type = attrs["type"];
-      spec->m_subType = attrs["subType"];
-      spec->m_units = attrs["units"];
-      spec->m_dataItemIdRef = attrs["dataItemIdRef"];
-      spec->m_compositionIdRef = attrs["compositionIdRef"];
-      spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
-
-      for (xmlNodePtr val = child->children; val; val = val->next)
+      std::string klass((const char*) child->name);
+      if (klass == "Specification" || klass == "ProcessSpecification")
       {
-        if (xmlStrcmp(val->name, BAD_CAST "Maximum") == 0)
-          spec->m_maximum = getCDATA(val);
-        else if (xmlStrcmp(val->name, BAD_CAST "Minimum") == 0)
-          spec->m_minimum = getCDATA(val);
-        else if (xmlStrcmp(val->name, BAD_CAST "Nominal") == 0)
-          spec->m_nominal = getCDATA(val);
-      }
+        unique_ptr<Specification> spec{new Specification(klass)};
 
-      specifications->addSpecification(spec);
+        spec->m_id= attrs["id"];
+        spec->m_name = attrs["name"];
+        spec->m_type = attrs["type"];
+        spec->m_subType = attrs["subType"];
+        spec->m_units = attrs["units"];
+        spec->m_dataItemIdRef = attrs["dataItemIdRef"];
+        spec->m_compositionIdRef = attrs["compositionIdRef"];
+        spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
+        spec->m_originator = attrs["originator"];
+
+        for (xmlNodePtr limit = child->children; limit; limit = limit->next)
+        {
+          if (spec->hasGroups())
+          {
+            std::string group((const char*) limit->name);
+
+            for (xmlNodePtr val = limit->children; val; val = val->next)
+            {
+              std::string name((const char*) val->name);
+              std::string value(getCDATA(val));
+              spec->addLimitForGroup(group, name, stod(value));
+            }
+          }
+          else
+          {
+            std::string name((const char*) limit->name);
+            std::string value(getCDATA(limit));
+            spec->addLimit(name, stod(value));
+          }
+        }
+        
+        specifications->addSpecification(spec);
+      }
+      else
+      {
+        g_logger << dlib::LWARN << "Bad Specifictation type " << klass << ", skipping";
+      }
     }
 
     parent->addConfiguration(specifications.release());
