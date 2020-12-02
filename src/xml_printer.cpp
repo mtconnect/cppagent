@@ -24,6 +24,7 @@
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"
 #include "specifications.hpp"
+#include "solid_model.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>
@@ -403,6 +404,46 @@ namespace mtconnect
         xmlFree(text);
     }
   }
+  
+  inline void printGeometry(xmlTextWriterPtr writer, const Geometry &geometry)
+  {
+    if (geometry.m_location.index() != 0)
+    {
+      visit(overloaded {
+        [&writer](const Origin &o) {
+          stringstream s;
+          s << o.m_x << ' ' << o.m_y << ' ' << o.m_z;
+          addSimpleElement(writer, "Origin", s.str());
+        },
+        [&writer](const Transformation &t) {
+          AutoElement ele(writer, "Transformation");
+          if (t.m_translation)
+          {
+            stringstream s;
+            s << t.m_translation->m_x << ' ' << t.m_translation->m_y << ' '
+              << t.m_translation->m_z;
+            addSimpleElement(writer, "Translation", s.str());
+          }
+          if (t.m_rotation)
+          {
+            stringstream s;
+            s << t.m_rotation->m_roll << ' ' << t.m_rotation->m_pitch << ' '
+              << t.m_rotation->m_yaw;
+            addSimpleElement(writer, "Rotation", s.str());
+          }
+        },
+        [](const std::monostate &a){}
+      }, geometry.m_location);
+    }
+    
+    if (geometry.m_scale)
+    {
+      stringstream s;
+      s << geometry.m_scale->m_scaleX << ' ' << geometry.m_scale->m_scaleY << ' '
+        << geometry.m_scale->m_scaleZ;
+      addSimpleElement(writer, "Scale", s.str());
+    }
+  }
 
   string XmlPrinter::printError(const unsigned int instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const string &errorCode,
@@ -590,6 +631,14 @@ namespace mtconnect
       }
     }
   }
+  
+  void printSolidModel(xmlTextWriterPtr writer, const SolidModel *model)
+  {
+    AutoElement ele(writer, "SolidModel");
+    addAttributes(writer, model->m_attributes);
+    if (model->m_geometry)
+      printGeometry(writer, *model->m_geometry);
+  }
 
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
                                     const char *name) const
@@ -629,6 +678,10 @@ namespace mtconnect
         else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
         {
           printCoordinateSystems(writer, conf);
+        }
+        else if (auto conf = dynamic_cast<const SolidModel *>(c))
+        {
+          printSolidModel(writer, conf);
         }
       }
     }

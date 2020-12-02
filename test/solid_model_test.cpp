@@ -131,8 +131,8 @@ TEST_F(SolidModelTest, DeviceXmlPrinting)
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@href" , "/models/foo.stl");
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@coordinateSystemIdRef" , "machine");
 
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "m:Origin" , "10 20 30");
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "m:Scale" , "2 3 4");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "/m:Origin" , "10 20 30");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "/m:Scale" , "2 3 4");
 
   }
 }
@@ -154,8 +154,8 @@ TEST_F(SolidModelTest, RotaryXmlPrinting)
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@itemRef" , "spindle");
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@coordinateSystemIdRef" , "machine");
     
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "m:Transformation/m:Translation" , "10 20 30");
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "m:Transformation/m:Rotation" , "90 -90 180");    
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "/m:Transformation/m:Translation" , "10 20 30");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "/m:Transformation/m:Rotation" , "90 -90 180");    
   }
 }
 
