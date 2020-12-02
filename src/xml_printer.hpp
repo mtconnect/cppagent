@@ -123,6 +123,8 @@ namespace mtconnect
     void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem) const;
     void printDataItemDefinition(xmlTextWriterPtr writer,
                                  const DataItemDefinition &definition) const;
+    void printDataItemRelationships(xmlTextWriterPtr writer,
+                                   const std::list<DataItem::Relationship> &relations) const;
     void printCellDefinitions(xmlTextWriterPtr writer,
                               const std::set<CellDefinition> &definitions) const;
 

@@ -224,6 +224,22 @@ namespace mtconnect
 
     return obj;
   }
+  
+  static inline json toJson(const list<DataItem::Relationship> &relations)
+  {
+    json array = json::array();
+    for (const auto &rel : relations)
+    {
+      json obj = json::object();
+      add(obj, "name", rel.m_name);
+      obj["type"] = rel.m_type;
+      obj["idRef"] = rel.m_idRef;
+      
+      array.emplace_back(json::object({{rel.m_relation, obj}}));
+    }
+    
+    return array;
+  }
 
   static inline json toJson(DataItem *item)
   {
@@ -277,6 +293,11 @@ namespace mtconnect
     if (item->hasDefinition())
     {
       obj["Definition"] = toJson(item->getDefinition());
+    }
+    
+    if (item->getRelationships().size() > 0)
+    {
+      obj["Relationships"] = toJson(item->getRelationships());
     }
 
     json dataItem = json::object({{"DataItem", obj}});

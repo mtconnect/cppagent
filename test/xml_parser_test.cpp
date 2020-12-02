@@ -564,6 +564,63 @@ TEST_F(XmlParserTest, ExtendedAssetFragment)
   ASSERT_EQ(((size_t)1), tool->m_values.count("x:Color"));
 }
 
+TEST_F(XmlParserTest, DataItemRelationships)
+{
+  
+  if (m_xmlParser)
+  {
+    delete m_xmlParser;
+    m_xmlParser = nullptr;
+  }
+
+  unique_ptr<XmlPrinter> printer(new XmlPrinter());
+  m_xmlParser = new XmlParser();
+  m_devices = m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", printer.get());
+  
+  const auto &device = m_devices.front();
+  auto &dataItemsMap = device->getDeviceDataItems();
+  
+  const auto item1 = dataItemsMap.at("xlc");
+  ASSERT_TRUE(item1 != nullptr);
+  
+  const auto &relations = item1->getRelationships();
+  
+  ASSERT_EQ((size_t) 2, relations.size());
+
+  auto rel = relations.begin();
+  ASSERT_EQ(string("DataItemRelationship"),
+	    rel->m_relation);
+  ASSERT_EQ(string("LIMIT"),
+	    rel->m_type);
+  ASSERT_EQ(string("archie"),
+	    rel->m_name);
+  ASSERT_EQ(string("xlcpl"),
+	    rel->m_idRef);
+  
+  rel++;
+  ASSERT_EQ(string("SpecificationRelationship"),
+	    rel->m_relation);
+  ASSERT_EQ(string("LIMIT"),
+	    rel->m_type);
+  ASSERT_TRUE(rel->m_name.empty());
+  ASSERT_EQ(string("spec1"),
+	    rel->m_idRef);
+  
+  const auto item2 = dataItemsMap.at("xlcpl");
+  ASSERT_TRUE(item2 != nullptr);
+  
+  const auto &relations2 = item2->getRelationships();
+  
+  ASSERT_EQ((size_t) 1, relations2.size());
+  
+  auto rel2 = relations2.begin();
+  ASSERT_EQ(string("DataItemRelationship"), rel2->m_relation);
+  ASSERT_EQ(string("OBSERVATION"), rel2->m_type);
+  ASSERT_EQ(string("bob"), rel2->m_name);
+  ASSERT_EQ(string("xlc"), rel2->m_idRef);
+ 
+}
+
 TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
 {
   const auto dev = m_devices[0];
@@ -571,4 +628,3 @@ TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
 
   ASSERT_EQ(string("1.7"), dev->getMTConnectVersion());
 }
-

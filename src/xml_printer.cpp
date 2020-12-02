@@ -771,6 +771,8 @@ namespace mtconnect
 
     if (dataItem->hasDefinition())
       printDataItemDefinition(writer, dataItem->getDefinition());
+    
+    printDataItemRelationships(writer, dataItem->getRelationships());
   }
 
   void XmlPrinter::printDataItemDefinition(xmlTextWriterPtr writer,
@@ -816,6 +818,23 @@ namespace mtconnect
         if (!entry.m_description.empty())
           addSimpleElement(writer, "Description", entry.m_description);
       }
+    }
+  }
+  
+  void XmlPrinter::printDataItemRelationships(xmlTextWriterPtr writer,
+                                  const std::list<DataItem::Relationship> &relations) const
+  {
+    if (relations.size() > 0)
+    {
+      AutoElement ele(writer, "Relationships");
+      for (const auto &rel : relations)
+      {
+        addSimpleElement(writer, rel.m_relation, "",
+                         {{string("name"), rel.m_name},
+                          {string("type"), rel.m_type},
+                          {string("idRef"), rel.m_idRef}});
+      }
+
     }
   }
 
