@@ -65,6 +65,7 @@ TEST_F(SolidModelTest, ParseDeviceSolidModel)
   ASSERT_EQ(model->m_attributes.end(), model->m_attributes.find("dummy"));
   
   ASSERT_TRUE(model->m_geometry);
+  ASSERT_NE(0, model->m_geometry->m_location.index());
   ASSERT_TRUE(holds_alternative<Origin>(model->m_geometry->m_location));
   
   const Origin &o = get<Origin>(model->m_geometry->m_location);
@@ -97,6 +98,7 @@ TEST_F(SolidModelTest, ParseRotarySolidModel)
   ASSERT_EQ("machine", model->m_attributes.find("coordinateSystemIdRef")->second);
   
   ASSERT_TRUE(model->m_geometry);
+  ASSERT_NE(0, model->m_geometry->m_location.index());
   ASSERT_TRUE(holds_alternative<Transformation>(model->m_geometry->m_location));
   
   const Transformation &t = get<Transformation>(model->m_geometry->m_location);

@@ -188,7 +188,7 @@ namespace mtconnect
     s >> v.m_1 >> v.m_2 >> v.m_3;
     if (s.rdstate() & std::istream::failbit)
     {
-      g_logger << dlib::LWARN << "Skipping translation";
+      g_logger << dlib::LWARN << "Cannot parse three space value: " << cdata;
       return nullopt;
     }
     else
@@ -202,51 +202,52 @@ namespace mtconnect
     Geometry geometry;
     forEachElement(node, {
       { "Transformation", [&geometry](const xmlNodePtr n) {
-        Transformation t;
+        if (geometry.m_location.index() != 0)
+        {
+          g_logger << dlib::LWARN << "Translation or Origin already given";
+          return;
+        }
         
+        Transformation t;
         forEachElement(n, {
-          { "Translation", [&t](const xmlNodePtr c){
+          { "Translation", [&t](const xmlNodePtr c) {
             auto s = getThreeSpace(getCDATA(c));
-            if (s) {
-              Translation l;
-              l.m_x = s->m_1; l.m_y = s->m_2; l.m_z = s->m_3;
-              t.m_translation.emplace(l);
-            }}
-          },
+            if (s)
+              t.m_translation.emplace(s->m_1, s->m_2, s->m_3);
+          }},
           { "Rotation", [&t](const xmlNodePtr c){
             auto s = getThreeSpace(getCDATA(c));
-            if (s) {
-              Rotation l;
-              l.m_roll = s->m_1; l.m_pitch = s->m_2; l.m_yaw = s->m_3;
-              t.m_rotation.emplace(l);
-            }}
-          }
-        });
+            if (s)
+              t.m_rotation.emplace(s->m_1, s->m_2, s->m_3);
+          }} });
         if (t.m_rotation || t.m_translation)
           geometry.m_location.emplace<Transformation>(t);
         else
           g_logger << dlib::LWARN << "Cannot parse Translation";
-      }
-      },
+      }},
       { "Origin", [&geometry](const xmlNodePtr n) {
+        if (geometry.m_location.index() != 0)
+        {
+          g_logger << dlib::LWARN << "Translation or Origin already given";
+          return;
+        }
+
         auto s = getThreeSpace(getCDATA(n));
-        if (s) {
-          Origin o;
-          o.m_x = s->m_1; o.m_y = s->m_2; o.m_z = s->m_3;
-          geometry.m_location.emplace<Origin>(o);
-        }}
-      },
+        if (s)
+          geometry.m_location.emplace<Origin>(s->m_1, s->m_2, s->m_3);
+        else
+          g_logger << dlib::LWARN << "Cannot parse Origin";
+      }},
       { "Scale", [&geometry](const xmlNodePtr n) {
         auto s = getThreeSpace(getCDATA(n));
-        if (s) {
-          Scale o;
-          o.m_scaleX = s->m_1; o.m_scaleY = s->m_2; o.m_scaleZ = s->m_3;
-          geometry.m_scale.emplace(o);
-        }}
-      }
+        if (s)
+          geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
+        else
+          g_logger << dlib::LWARN << "Cannot parse Scale";
+      }}
     });
     
-    if (geometry.m_location.index() != std::variant_npos ||
+    if (geometry.m_location.index() != 0 ||
         geometry.m_scale)
       return make_optional(geometry);
     else

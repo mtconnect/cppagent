@@ -29,16 +29,28 @@ namespace mtconnect
 
   struct Origin
   {
+    Origin() = default;
+    Origin(const Origin &) = default;
+    Origin(double x, double y, double z) : m_x(x), m_y(y), m_z(z) {}
+    
     double m_x, m_y, m_z;    
   };
 
   struct Translation
   {
-    double m_x, m_y, m_z;    
+    Translation() = default;
+    Translation(const Translation &) = default;
+    Translation(double x, double y, double z) : m_x(x), m_y(y), m_z(z) {}
+
+    double m_x, m_y, m_z;
   };
 
   struct Rotation
   {
+    Rotation() = default;
+    Rotation(const Rotation &) = default;
+    Rotation(double r, double p, double y) : m_roll(r), m_pitch(p), m_yaw(y) {}
+
     double m_roll, m_pitch, m_yaw;    
   };      
   
@@ -54,6 +66,10 @@ namespace mtconnect
 
   struct Scale 
   {
+    Scale() = default;
+    Scale(const Scale &) = default;
+    Scale(double x, double y, double z) : m_scaleX(x), m_scaleY(y), m_scaleZ(z) {}
+    
     double m_scaleX, m_scaleY, m_scaleZ;
   };
 
@@ -63,7 +79,7 @@ namespace mtconnect
     Geometry(const Geometry &) = default;
     ~Geometry() = default;
     
-    std::variant<Origin, Transformation> m_location;
+    std::variant<std::monostate, Origin, Transformation> m_location;
     std::optional<Scale> m_scale;
   };
 }  // namespace mtconnect
