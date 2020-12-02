@@ -116,35 +116,50 @@ TEST_F(SolidModelTest, ParseRotarySolidModel)
 }
 
 
-/*
-#define CONFIGURATION_PATH "//m:Device/m:Configuration"
-#define COORDINATE_SYSTEMS_PATH CONFIGURATION_PATH "/m:CoordinateSystems"
+#define DEVICE_CONFIGURATION_PATH "//m:Device/m:Configuration"
+#define DEVICE_SOLID_MODEL_PATH DEVICE_CONFIGURATION_PATH "/m:SolidModel"
 
-TEST_F(CoordinateSystemTest, XmlPrinting)
+TEST_F(SolidModelTest, DeviceXmlPrinting)
 {
   m_agentTestHelper->m_path = "/probe";
   {
     PARSE_XML_RESPONSE;
     
-    ASSERT_XML_PATH_COUNT(doc, COORDINATE_SYSTEMS_PATH , 1);
-    ASSERT_XML_PATH_COUNT(doc, COORDINATE_SYSTEMS_PATH "/*" , 2);
+    ASSERT_XML_PATH_COUNT(doc, DEVICE_SOLID_MODEL_PATH , 1);
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@id" , "dm");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@mediaType" , "STL");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@href" , "/models/foo.stl");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@coordinateSystemIdRef" , "machine");
 
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@type" , "WORLD");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@name" , "worldy");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']/m:Origin" , "101 102 103");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@nativeName" , nullptr);
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@parentIdRef" , nullptr);
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "m:Origin" , "10 20 30");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "m:Scale" , "2 3 4");
 
-    
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@type" , "MACHINE");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@name" , "machiney");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@nativeName" , "xxx");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@parentIdRef" , "world");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']/m:Transformation/m:Translation" , "10 10 10");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']/m:Transformation/m:Rotation" , "90 0 90");
   }
 }
 
+#define ROTARY_CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
+#define ROTARY_SOLID_MODEL_PATH ROTARY_CONFIGURATION_PATH "/m:SolidModel"
+
+
+TEST_F(SolidModelTest, RotaryXmlPrinting)
+{
+  m_agentTestHelper->m_path = "/probe";
+  {
+    PARSE_XML_RESPONSE;
+    
+    ASSERT_XML_PATH_COUNT(doc, ROTARY_SOLID_MODEL_PATH , 1);
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@id" , "cm");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@mediaType" , "STL");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@solidModelIdRef" , "dm");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@itemRef" , "spindle");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@coordinateSystemIdRef" , "machine");
+    
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "m:Transformation/m:Translation" , "10 20 30");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "m:Transformation/m:Rotation" , "90 -90 180");    
+  }
+}
+
+/*
 TEST_F(CoordinateSystemTest, JsonPrinting)
 {
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
