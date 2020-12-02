@@ -22,6 +22,7 @@
 #include "cutting_tool.hpp"
 #include "sensor_configuration.hpp"
 #include "specifications.hpp"
+#include "solid_model.hpp"
 #include "xml_printer.hpp"
 
 #include <dlib/logger.h>
@@ -120,6 +121,43 @@ namespace mtconnect
     return toReturn;
   }
 
+  // Put all of the attributes of an element into a map
+  static inline std::map<string, string> getValidatedAttributes(const xmlNodePtr node, const std::map<string, bool> &parameters)
+  {
+    std::map<string, string> toReturn;
+    std::map<string,bool> matched = parameters;
+    
+    for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
+    {
+      if (attr->type == XML_ATTRIBUTE_NODE)
+      {
+        string key = (const char*)(attr->name);
+        auto it = matched.find(key);
+        if (it != matched.end())
+        {
+          matched.erase(it);
+          toReturn[key] = (const char *)attr->children->content;
+        }
+        else
+        {
+          g_logger << dlib::LWARN <<  "Unknown attribute for SolidModel: " << key << ", skipping";
+        }
+      }
+    }
+    
+    for (auto &p : matched)
+    {
+      if (p.second) {
+        g_logger << dlib::LWARN <<  "SolidModel missing required attribute: "
+          << p.first;
+        toReturn.clear();
+      }
+    }
+    
+    return toReturn;
+  }
+
+  
   static inline void forEachElement(const xmlNodePtr node,
                                     map<string, function<void(const xmlNodePtr)>> funs)
   {
@@ -135,6 +173,84 @@ namespace mtconnect
         lambda->second(child);
       }
     }
+  }
+  
+  struct ThreeSpace {
+    double m_1, m_2, m_3;
+  };
+  
+  static inline std::optional<ThreeSpace> getThreeSpace(const string &cdata)
+  {
+    ThreeSpace v;
+    
+    stringstream s(cdata);
+    Translation l;
+    s >> v.m_1 >> v.m_2 >> v.m_3;
+    if (s.rdstate() & std::istream::failbit)
+    {
+      g_logger << dlib::LWARN << "Skipping translation";
+      return nullopt;
+    }
+    else
+    {
+      return make_optional(v);
+    }
+  }
+  
+  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node)
+  {
+    Geometry geometry;
+    forEachElement(node, {
+      { "Transformation", [&geometry](const xmlNodePtr n) {
+        Transformation t;
+        
+        forEachElement(n, {
+          { "Translation", [&t](const xmlNodePtr c){
+            auto s = getThreeSpace(getCDATA(c));
+            if (s) {
+              Translation l;
+              l.m_x = s->m_1; l.m_y = s->m_2; l.m_z = s->m_3;
+              t.m_translation.emplace(l);
+            }}
+          },
+          { "Rotation", [&t](const xmlNodePtr c){
+            auto s = getThreeSpace(getCDATA(c));
+            if (s) {
+              Rotation l;
+              l.m_roll = s->m_1; l.m_pitch = s->m_2; l.m_yaw = s->m_3;
+              t.m_rotation.emplace(l);
+            }}
+          }
+        });
+        if (t.m_rotation || t.m_translation)
+          geometry.m_location.emplace<Transformation>(t);
+        else
+          g_logger << dlib::LWARN << "Cannot parse Translation";
+      }
+      },
+      { "Origin", [&geometry](const xmlNodePtr n) {
+        auto s = getThreeSpace(getCDATA(n));
+        if (s) {
+          Origin o;
+          o.m_x = s->m_1; o.m_y = s->m_2; o.m_z = s->m_3;
+          geometry.m_location.emplace<Origin>(o);
+        }}
+      },
+      { "Scale", [&geometry](const xmlNodePtr n) {
+        auto s = getThreeSpace(getCDATA(n));
+        if (s) {
+          Scale o;
+          o.m_scaleX = s->m_1; o.m_scaleY = s->m_2; o.m_scaleZ = s->m_3;
+          geometry.m_scale.emplace(o);
+        }}
+      }
+    });
+    
+    if (geometry.m_location.index() != std::variant_npos ||
+        geometry.m_scale)
+      return make_optional(geometry);
+    else
+      return nullopt;
   }
 
   XmlParser::XmlParser()
@@ -885,6 +1001,21 @@ namespace mtconnect
 
     parent->addConfiguration(specifications.release());
   }
+  
+  void handleSolidModel(xmlNodePtr node, Component *parent)
+  {
+    unique_ptr<SolidModel> model = make_unique<SolidModel>();
+    model->m_attributes = getValidatedAttributes(node, SolidModel::m_properties);
+    if (!model->m_attributes.empty())
+    {
+      model->m_geometry = getGeometry(node);
+      parent->addConfiguration(model.release());
+    }
+    else
+    {
+      g_logger << dlib::LWARN << "Skipping SolidModel";
+    }
+  }
 
   void XmlParser::handleConfiguration(xmlNodePtr node, Component *parent, Device *device)
   {
@@ -893,7 +1024,8 @@ namespace mtconnect
           [](xmlNodePtr n, Component *p) { handleSensorConfiguration(n, p); }},
          {"Relationships", [](xmlNodePtr n, Component *p) { handleRelationships(n, p); }},
          {"CoordinateSystems", [](xmlNodePtr n, Component *p) { handleCoordinateSystems(n, p); }},
-         {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }}});
+         {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }},
+         {"SolidModel", [](xmlNodePtr n, Component *p) { handleSolidModel(n, p); }}  });
 
     // Get the first node
     for (xmlNodePtr child = node->children; child; child = child->next)

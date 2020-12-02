@@ -1,0 +1,44 @@
+//
+// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+#pragma once
+
+#include "component_configuration.hpp"
+#include "globals.hpp"
+#include "geometry.hpp"
+#include <utility>
+#include <vector>
+#include <map>
+
+namespace mtconnect
+{
+  class SolidModel : public ComponentConfiguration
+  {
+  public:
+    SolidModel(const SolidModel &s) = default;
+    SolidModel() = default;
+    ~SolidModel() override = default;
+    
+    const static inline std::map<std::string, bool> m_properties = { { "id", true }, { "solidModelIdRef", false }, { "itemRef", false },
+      { "mediaType", true }, { "coordinateSystemIdRef", true },
+      { "href", false }
+    };;
+    std::map<std::string, std::string> m_attributes;
+
+    std::optional<Geometry> m_geometry;
+  };
+}  // namespace mtconnect
