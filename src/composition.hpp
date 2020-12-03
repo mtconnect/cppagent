@@ -18,6 +18,7 @@
 #pragma once
 
 #include "globals.hpp"
+#include "component_configuration.hpp"
 
 #include <list>
 #include <map>
@@ -34,17 +35,6 @@ namespace mtconnect
     class Description
     {
      public:
-      Description(std::string body, std::string manufacturer, std::string model,
-                  std::string serialNumber, std::string station)
-          : m_body(std::move(body)),
-            m_manufacturer(std::move(manufacturer)),
-            m_model(std::move(model)),
-            m_serialNumber(std::move(serialNumber)),
-            m_station(std::move(station)),
-            m_hasAttributes(false)
-      {
-      }
-
       Description(const Description &another)
           : m_body(another.m_body),
             m_manufacturer(another.m_manufacturer),
@@ -174,6 +164,16 @@ namespace mtconnect
     {
       m_description.reset(aDescription);
     }
+    
+    const auto &getConfiguration() const
+    {
+      return m_configuration;
+    }
+    
+    void addConfiguration(std::unique_ptr<ComponentConfiguration> &config)
+    {
+      m_configuration.emplace_back(std::move(config));
+    }
 
    protected:
     std::string m_id;
@@ -181,6 +181,7 @@ namespace mtconnect
     std::string m_name;
     std::string m_type;
 
+    std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
     std::map<std::string, std::string> m_attributes;
     bool m_hasAttributes;
 

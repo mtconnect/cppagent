@@ -18,6 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
+#include "composition.hpp"
 #include "globals.hpp"
 
 #include <list>
@@ -31,7 +32,6 @@ namespace mtconnect
 {
   class DataItem;
   class Device;
-  class Composition;
   class Agent;
 
   class Component
