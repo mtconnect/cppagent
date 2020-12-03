@@ -24,77 +24,66 @@ namespace mtconnect
 {
   struct Definition
   {
-    Definition()
-    {
-    }
-    virtual ~Definition()
-    {
-    }
+    Definition() = default;
+    virtual ~Definition() = default;
+
     std::string m_description;
   };
 
   struct AbstractDefinition : public Definition
   {
-    AbstractDefinition()
-    {
-    }
-    virtual ~AbstractDefinition()
-    {
-    }
+    AbstractDefinition() = default;
+    AbstractDefinition(const AbstractDefinition&) = default;
+    virtual ~AbstractDefinition() = default;
+    
     std::string m_key;
+    std::string m_keyType;
     std::string m_units;
     std::string m_type;
     std::string m_subType;
-
-    bool operator<(const AbstractDefinition &other)
+    
+    const std::string &getKey() const
     {
-      return m_key < other.m_key;
+      if (m_key.empty())
+        return m_keyType;
+      else
+        return m_key;
     }
-    bool operator==(const AbstractDefinition &other)
+
+    bool operator<(const AbstractDefinition &other) const
     {
-      return m_key == other.m_key;
+      return getKey() < other.getKey();
+    }
+    bool operator==(const AbstractDefinition &other) const
+    {
+      return getKey() == other.getKey();
     }
   };
 
-  inline bool operator<(const AbstractDefinition &a, const AbstractDefinition &b)
-  {
-    return a.m_key < b.m_key;
-  }
-
   struct CellDefinition : public AbstractDefinition
   {
-    CellDefinition()
-    {
-    }
-    virtual ~CellDefinition()
-    {
-    }
+    CellDefinition() = default;
+    CellDefinition(const CellDefinition&) = default;
+    virtual ~CellDefinition() = default;
   };
 
   struct EntryDefinition : public AbstractDefinition
   {
-    EntryDefinition()
-    {
-    }
+    EntryDefinition() = default;
     EntryDefinition(const EntryDefinition &other)
         : AbstractDefinition(other), m_cells(other.m_cells)
     {
     }
-    virtual ~EntryDefinition()
-    {
-    }
+    virtual ~EntryDefinition() = default;
 
     std::set<CellDefinition> m_cells;
   };
 
   struct DataItemDefinition : public Definition
   {
-    DataItemDefinition()
-    {
-    }
-    virtual ~DataItemDefinition()
-    {
-    }
+    DataItemDefinition() = default;
+    DataItemDefinition(const DataItemDefinition&) = default;
+    virtual ~DataItemDefinition() = default;
 
     std::set<EntryDefinition> m_entries;
     std::set<CellDefinition> m_cells;
