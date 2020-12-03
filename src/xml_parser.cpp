@@ -22,6 +22,7 @@
 #include "cutting_tool.hpp"
 #include "sensor_configuration.hpp"
 #include "specifications.hpp"
+#include "solid_model.hpp"
 #include "xml_printer.hpp"
 
 #include <dlib/logger.h>
@@ -120,6 +121,43 @@ namespace mtconnect
     return toReturn;
   }
 
+  // Put all of the attributes of an element into a map
+  static inline std::map<string, string> getValidatedAttributes(const xmlNodePtr node, const std::map<string, bool> &parameters)
+  {
+    std::map<string, string> toReturn;
+    std::map<string,bool> matched = parameters;
+    
+    for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
+    {
+      if (attr->type == XML_ATTRIBUTE_NODE)
+      {
+        string key = (const char*)(attr->name);
+        auto it = matched.find(key);
+        if (it != matched.end())
+        {
+          matched.erase(it);
+          toReturn[key] = (const char *)attr->children->content;
+        }
+        else
+        {
+          g_logger << dlib::LWARN <<  "Unknown attribute for SolidModel: " << key << ", skipping";
+        }
+      }
+    }
+    
+    for (auto &p : matched)
+    {
+      if (p.second) {
+        g_logger << dlib::LWARN <<  "SolidModel missing required attribute: "
+          << p.first;
+        toReturn.clear();
+      }
+    }
+    
+    return toReturn;
+  }
+
+  
   static inline void forEachElement(const xmlNodePtr node,
                                     map<string, function<void(const xmlNodePtr)>> funs)
   {
@@ -135,6 +173,89 @@ namespace mtconnect
         lambda->second(child);
       }
     }
+  }
+  
+  struct ThreeSpace {
+    double m_1, m_2, m_3;
+  };
+  
+  static inline std::optional<ThreeSpace> getThreeSpace(const string &cdata)
+  {
+    ThreeSpace v;
+    
+    stringstream s(cdata);
+    Translation l;
+    s >> v.m_1 >> v.m_2 >> v.m_3;
+    if (s.rdstate() & std::istream::failbit)
+    {
+      g_logger << dlib::LWARN << "Cannot parse three space value: " << cdata;
+      return nullopt;
+    }
+    else
+    {
+      return make_optional(v);
+    }
+  }
+  
+  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node,
+                                                    bool hasScale)
+  {
+    Geometry geometry;
+    forEachElement(node, {
+      { "Transformation", [&geometry](const xmlNodePtr n) {
+        if (geometry.m_location.index() != 0)
+        {
+          g_logger << dlib::LWARN << "Translation or Origin already given";
+          return;
+        }
+        
+        Transformation t;
+        forEachElement(n, {
+          { "Translation", [&t](const xmlNodePtr c) {
+            auto s = getThreeSpace(getCDATA(c));
+            if (s)
+              t.m_translation.emplace(s->m_1, s->m_2, s->m_3);
+          }},
+          { "Rotation", [&t](const xmlNodePtr c){
+            auto s = getThreeSpace(getCDATA(c));
+            if (s)
+              t.m_rotation.emplace(s->m_1, s->m_2, s->m_3);
+          }} });
+        if (t.m_rotation || t.m_translation)
+          geometry.m_location.emplace<Transformation>(t);
+        else
+          g_logger << dlib::LWARN << "Cannot parse Translation";
+      }},
+      { "Origin", [&geometry](const xmlNodePtr n) {
+        if (geometry.m_location.index() != 0)
+        {
+          g_logger << dlib::LWARN << "Translation or Origin already given";
+          return;
+        }
+
+        auto s = getThreeSpace(getCDATA(n));
+        if (s)
+          geometry.m_location.emplace<Origin>(s->m_1, s->m_2, s->m_3);
+        else
+          g_logger << dlib::LWARN << "Cannot parse Origin";
+      }},
+      { "Scale", [&geometry, hasScale](const xmlNodePtr n) {
+        if (hasScale)
+        {
+          auto s = getThreeSpace(getCDATA(n));
+          if (s)
+            geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
+          else
+            g_logger << dlib::LWARN << "Cannot parse Scale";
+        }
+      }}
+    });
+    
+    if (geometry.m_location.index() != 0 ||
+        geometry.m_scale)
+      return make_optional(geometry);
+    else
+      return nullopt;
   }
 
   XmlParser::XmlParser()
@@ -846,6 +967,23 @@ namespace mtconnect
 
     parent->addConfiguration(relationships.release());
   }
+  
+  template<class T>
+  unique_ptr<T> handleGeometricConfiguration(xmlNodePtr node)
+  {
+    unique_ptr<T> model = make_unique<T>();
+    model->m_attributes = getValidatedAttributes(node, model->properties());
+    if (!model->m_attributes.empty())
+    {
+      model->m_geometry = getGeometry(node, model->hasScale());
+    }
+    else
+    {
+      g_logger << dlib::LWARN << "Skipping Geometric Definition";
+    }
+    
+    return model;
+  }
 
   void handleCoordinateSystems(xmlNodePtr node, Component *parent)
   {
@@ -853,39 +991,7 @@ namespace mtconnect
 
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
-      unique_ptr<CoordinateSystem> system{new CoordinateSystem()};
-
-      auto attrs = getAttributes(child);
-
-      system->m_id = attrs["id"];
-      system->m_name = attrs["name"];
-      system->m_type = attrs["type"];
-      system->m_nativeName = attrs["nativeName"];
-      system->m_parentIdRef = attrs["parentIdRef"];
-
-      for (xmlNodePtr val = child->children; val; val = val->next)
-      {
-        if (xmlStrcmp(val->name, BAD_CAST "Transformation") == 0)
-        {
-          for (xmlNodePtr t = val->children; t; t = t->next)
-          {
-            if (xmlStrcmp(t->name, BAD_CAST "Translation") == 0)
-            {
-              system->m_translation = getCDATA(t);
-            }
-            else if (xmlStrcmp(t->name, BAD_CAST "Rotation") == 0)
-            {
-              system->m_rotation = getCDATA(t);
-            }
-          }
-        }
-        else if (xmlStrcmp(val->name, BAD_CAST "Origin") == 0)
-        {
-          system->m_origin = getCDATA(val);
-        }
-      }
-
-      systems->addCoordinateSystem(system);
+      systems->addCoordinateSystem(handleGeometricConfiguration<CoordinateSystem>(child).release());
     }
 
     parent->addConfiguration(systems.release());
@@ -944,6 +1050,7 @@ namespace mtconnect
 
     parent->addConfiguration(specifications.release());
   }
+  
 
   void XmlParser::handleConfiguration(xmlNodePtr node, Component *parent, Device *device)
   {
@@ -952,7 +1059,8 @@ namespace mtconnect
           [](xmlNodePtr n, Component *p) { handleSensorConfiguration(n, p); }},
          {"Relationships", [](xmlNodePtr n, Component *p) { handleRelationships(n, p); }},
          {"CoordinateSystems", [](xmlNodePtr n, Component *p) { handleCoordinateSystems(n, p); }},
-         {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }}});
+         {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }},
+      {"SolidModel", [](xmlNodePtr n, Component *p) { p->addConfiguration(handleGeometricConfiguration<SolidModel>(n).release()); }}  });
 
     // Get the first node
     for (xmlNodePtr child = node->children; child; child = child->next)

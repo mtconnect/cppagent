@@ -19,57 +19,37 @@
 
 #include "component_configuration.hpp"
 #include "globals.hpp"
-
+#include "geometry.hpp"
 #include <utility>
 #include <vector>
+#include <map>
 
 namespace mtconnect
 {
-  struct CoordinateSystem : public GeometricConfiguration
+  class SolidModel : public GeometricConfiguration
   {
-    CoordinateSystem(const CoordinateSystem &s) = default;
-    CoordinateSystem() = default;
-    ~CoordinateSystem() = default;
+  public:
+    SolidModel(const SolidModel &s) = default;
+    SolidModel() = default;
+    ~SolidModel() override = default;
     
     const std::string &klass() const override
     {
-      const static std::string &klass("CoordinateSystem");
+      const static std::string &klass("SolidModel");
       return klass;
     }
-    bool hasScale() const override { return false; }
+    bool hasScale() const override { return true; }
     const std::map<std::string, bool> &properties() const override
     {
       const static std::map<std::string, bool> properties = {
         { "id", true },
-        { "type", true },
-        { "name", false },
-        { "nativeName", false },
-        { "parentIdRef", false },
+        { "solidModelIdRef", false },
+        { "itemRef", false },
+        { "mediaType", true },
+        { "coordinateSystemIdRef", false },
+        { "href", false }
       };;
       return properties;
     }
-  };
-
-  class CoordinateSystems : public ComponentConfiguration
-  {
-   public:
-    CoordinateSystems() = default;
-    virtual ~CoordinateSystems() = default;
-
-    const std::list<std::unique_ptr<CoordinateSystem>> &getCoordinateSystems() const
-    {
-      return m_coordinateSystems;
-    }
-    void addCoordinateSystem(CoordinateSystem *s)
-    {
-      m_coordinateSystems.emplace_back(std::move(s));
-    }
-    void addCoordinateSystem(std::unique_ptr<CoordinateSystem> &s)
-    {
-      m_coordinateSystems.emplace_back(std::move(s));
-    }
-
-   protected:
-    std::list<std::unique_ptr<CoordinateSystem>> m_coordinateSystems;
   };
 }  // namespace mtconnect

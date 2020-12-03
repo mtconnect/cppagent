@@ -6,5 +6,6 @@ Release
 *.suo
 *.ncb
 *.user
+*.log
 test/agent.log*
 build/

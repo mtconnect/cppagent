@@ -566,7 +566,6 @@ TEST_F(XmlParserTest, ExtendedAssetFragment)
 
 TEST_F(XmlParserTest, DataItemRelationships)
 {
-  
   if (m_xmlParser)
   {
     delete m_xmlParser;
