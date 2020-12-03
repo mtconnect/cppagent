@@ -300,7 +300,7 @@ TEST_F(TableTest, XmlCellDefinitions)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:Description",
                           "A Complex Workpiece Offset Table");
     
-    ASSERT_XML_PATH_COUNT(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition", 6);
+    ASSERT_XML_PATH_COUNT(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition", 7);
 
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='X']@type",
                           "POSITION");
@@ -320,7 +320,7 @@ TEST_F(TableTest, XmlCellDefinitions)
                           "DEGREE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='C']/m:Description",
                           "Spindle Angle");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@keyType='UUID']@type", "FEATURE_ID");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@keyType='FEATURE_ID']@type", "UUID");
 
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition/m:Description",
                           "Some Pressure thing");
@@ -329,7 +329,7 @@ TEST_F(TableTest, XmlCellDefinitions)
                           "PASCAL");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition/m:CellDefinitions/m:CellDefinition/m:Description",
                           "Pressure of the P");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition[@keyType='UUID']@@type", "FEATURE_ID");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition[@keyType='FEATURE_ID']@type", "UUID");
 
   }
 
@@ -403,6 +403,10 @@ TEST_F(TableTest, JsonDefinitionTest)
     ASSERT_EQ(string("DEGREE"), cells.at("/C/units"_json_pointer).get<string>());
     ASSERT_EQ(string("ANGLE"), cells.at("/C/type"_json_pointer).get<string>());
     ASSERT_EQ(string("Spindle Angle"), cells.at("/C/Description"_json_pointer).get<string>());
+
+    ASSERT_EQ(string("FEATURE_ID"), cells.at("/./keyType"_json_pointer).get<string>());
+    ASSERT_EQ(string("UUID"), cells.at("/./type"_json_pointer).get<string>());
+
     
     auto entries = wo.at("/Definition/EntryDefinitions"_json_pointer);
     ASSERT_TRUE(entries.is_object());
@@ -412,6 +416,8 @@ TEST_F(TableTest, JsonDefinitionTest)
     ASSERT_EQ(string("PASCAL"), entries.at("/G54/CellDefinitions/P/units"_json_pointer).get<string>());
     ASSERT_EQ(string("PRESSURE"), entries.at("/G54/CellDefinitions/P/type"_json_pointer).get<string>());
     ASSERT_EQ(string("Pressure of the P"), entries.at("/G54/CellDefinitions/P/Description"_json_pointer).get<string>());
+    ASSERT_EQ(string("FEATURE_ID"), entries.at("/./keyType"_json_pointer).get<string>());
+    ASSERT_EQ(string("UUID"), entries.at("/./type"_json_pointer).get<string>());
 
   }
 }

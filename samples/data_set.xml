@@ -45,7 +45,7 @@
 												</CellDefinitions>
 											</EntryDefinition>
 											<EntryDefinition key="ADD" units="PERCENT" type="FILL_LEVEL"/>
-											<EntryDefinition keyType="UUID" type="FEATURE_ID" />
+											<EntryDefinition keyType="FEATURE_ID" type="UUID" />
 										</EntryDefinitions>												
 										<CellDefinitions>
 											<CellDefinition key="X" units="MILLIMETER" type="POSITION" />
@@ -56,7 +56,7 @@
 											<CellDefinition key="C" units="DEGREE" type="ANGLE">
 												<Description>Spindle Angle</Description>
 											</CellDefinition>
-											<CellDefinition keyType="UUID" type="FEATURE_ID" />
+											<CellDefinition keyType="FEATURE_ID" type="UUID" />
 										</CellDefinitions>
 									</Definition>
 								</DataItem>

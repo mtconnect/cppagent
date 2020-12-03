@@ -181,9 +181,13 @@ namespace mtconnect
       addAttributes(e, {{"Description", entry.m_description},
                         {"units", entry.m_units},
                         {"type", entry.m_type},
+                        {"keyType", entry.m_keyType},
                         {"subType", entry.m_subType}});
 
-      entries[entry.m_key] = e;
+      if (!entry.m_key.empty())
+        entries[entry.m_key] = e;
+      else
+        entries["."] = e;
     }
 
     return entries;
@@ -204,6 +208,7 @@ namespace mtconnect
         addAttributes(e, {{"Description", entry.m_description},
                           {"units", entry.m_units},
                           {"type", entry.m_type},
+                          {"keyType", entry.m_keyType},
                           {"subType", entry.m_subType}});
 
         if (!entry.m_cells.empty())
@@ -211,7 +216,10 @@ namespace mtconnect
           e["CellDefinitions"] = toJson(entry.m_cells);
         }
 
-        entries[entry.m_key] = e;
+        if (!entry.m_key.empty())
+          entries[entry.m_key] = e;
+        else
+          entries["."] = e;
       }
 
       obj["EntryDefinitions"] = entries;
