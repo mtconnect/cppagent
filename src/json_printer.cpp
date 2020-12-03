@@ -307,16 +307,16 @@ namespace mtconnect
     return dataItem;
   }
 
-  static inline json toJson(Composition *composition)
+  static inline json toJson(const unique_ptr<Composition> &composition)
   {
     json obj = json::object();
 
-    addAttributes(obj, composition->getAttributes());
-    if (composition->getDescription() != nullptr)
+    addAttributes(obj, composition->m_attributes);
+    if (composition->getDescription())
     {
       json desc = json::object();
-      addAttributes(desc, composition->getDescription()->getAttributes());
-      addText(desc, composition->getDescription()->getBody());
+      addAttributes(desc, composition->getDescription()->m_attributes);
+      addText(desc, composition->getDescription()->m_body);
       obj["Description"] = desc;
     }
 

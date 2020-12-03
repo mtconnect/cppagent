@@ -13,6 +13,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/component.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/component.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/composition.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/description.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/connector.cpp"

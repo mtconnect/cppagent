@@ -80,14 +80,10 @@ namespace mtconnect
     void handleChildren(xmlNodePtr components, Component *parent = nullptr,
                         Device *device = nullptr);
 
-    void handleComposition(xmlNodePtr dataItems, Component *component);
+    std::unique_ptr<Composition> handleComposition(xmlNodePtr composition);
 
     // Perform loading of references and set up relationships
-    void handleReference(xmlNodePtr reference, Component *parent = nullptr,
-                         Device *device = nullptr);
-
-    void handleConfiguration(xmlNodePtr component, Component *parent = nullptr,
-                             Device *device = nullptr);
+    void handleReference(xmlNodePtr reference, Component *parent = nullptr);
 
     // Asset Parser
     AssetPtr handleAsset(xmlNodePtr asset, const std::string &assetId, const std::string &type,

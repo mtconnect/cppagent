@@ -139,8 +139,6 @@ namespace mtconnect
     void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item) const;
     void printAssetNode(xmlTextWriterPtr writer, Asset *asset) const;
 
-    void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration *sensor) const;
-
    protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;
     std::map<std::string, SchemaNamespace> m_streamsNamespaces;
