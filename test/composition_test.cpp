@@ -79,8 +79,8 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ(1000.0, spec->getLimit("Nominal"));
 }
 
-/*
-#define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
+#define COMPOSITION_PATH  "//m:Power[@id='power']/m:Compositions/m:Composition[@id='zmotor']"
+#define CONFIGURATION_PATH COMPOSITION_PATH "/m:Configuration"
 #define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
 
 TEST_F(CompositionTest, XmlPrinting)
@@ -88,24 +88,22 @@ TEST_F(CompositionTest, XmlPrinting)
   m_agentTestHelper->m_path = "/probe";
   {
     PARSE_XML_RESPONSE;
-    
+
+    ASSERT_XML_PATH_COUNT(doc, COMPOSITION_PATH , 1);
+
     ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH , 1);
-    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*" , 3);
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*" , 1);
 
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@type" , "ROTARY_VELOCITY");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@subType" , "ACTUAL");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@units" , "REVOLUTION/MINUTE");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@compositionIdRef" , "cmotor");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@coordinateSystemIdRef" , "machine");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@dataItemIdRef" , "c1");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@type" , "VOLTAGE_AC");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@units" , "VOLT");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@name" , "voltage");
 
-    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/*", 3);
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Maximum" , "10000");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Minimum" , "100");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Nominal" , "1000");
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/m:Specification/*", 3);
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Maximum" , "10000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Minimum" , "100");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Nominal" , "1000");
   }
 }
-
 
 TEST_F(CompositionTest, JsonPrinting)
 {
@@ -118,20 +116,16 @@ TEST_F(CompositionTest, JsonPrinting)
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
 
-    auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
-    auto specifications = rotary.at("/Configuration/Specifications"_json_pointer);
+    auto composition = device.at("/Components/2/Power/Compositions/0/Composition"_json_pointer);
+    auto specifications = composition.at("/Configuration/Specifications"_json_pointer);
     ASSERT_TRUE(specifications.is_array());
-    ASSERT_EQ(3_S, specifications.size());
+    ASSERT_EQ(1_S, specifications.size());
 
     auto crel = specifications.at(0);
     auto cfields = crel.at("/Specification"_json_pointer);
-    EXPECT_EQ("ROTARY_VELOCITY", cfields["type"]);
-    EXPECT_EQ("ACTUAL", cfields["subType"]);
-    EXPECT_EQ("REVOLUTION/MINUTE", cfields["units"]);
-    EXPECT_EQ("speed_limit", cfields["name"]);
-    EXPECT_EQ("cmotor", cfields["compositionIdRef"]);
-    EXPECT_EQ("machine", cfields["coordinateSystemIdRef"]);
-    EXPECT_EQ("c1", cfields["dataItemIdRef"]);
+    EXPECT_EQ("VOLTAGE_AC", cfields["type"]);
+    EXPECT_EQ("VOLT", cfields["units"]);
+    EXPECT_EQ("voltage", cfields["name"]);
     
     EXPECT_EQ(10000.0, cfields["Maximum"]);
     EXPECT_EQ(100.0, cfields["Minimum"]);
@@ -139,4 +133,3 @@ TEST_F(CompositionTest, JsonPrinting)
   }
 }
 
-*/

@@ -315,24 +315,6 @@ namespace mtconnect
     return dataItem;
   }
 
-  static inline json toJson(const unique_ptr<Composition> &composition)
-  {
-    json obj = json::object();
-
-    addAttributes(obj, composition->m_attributes);
-    if (composition->getDescription())
-    {
-      json desc = json::object();
-      addAttributes(desc, composition->getDescription()->m_attributes);
-      addText(desc, composition->getDescription()->m_body);
-      obj["Description"] = desc;
-    }
-
-    json comp = json::object({{"Composition", obj}});
-
-    return comp;
-  }
-
   static inline json jsonReference(const Component::Reference &reference)
   {
     json ref = json::object({{"idRef", reference.m_id}});
@@ -568,6 +550,36 @@ namespace mtconnect
       parent[obj->klass()] = toJson(*obj);
     }
   }
+  
+  static inline json toJson(const unique_ptr<Composition> &composition)
+  {
+    json obj = json::object();
+    
+    addAttributes(obj, composition->m_attributes);
+    if (composition->getDescription())
+    {
+      json desc = json::object();
+      addAttributes(desc, composition->getDescription()->m_attributes);
+      addText(desc, composition->getDescription()->m_body);
+      obj["Description"] = desc;
+    }
+    if (!composition->getConfiguration().empty())
+    {
+      json cfg = json::object();
+      
+      for (const auto &conf : composition->getConfiguration())
+      {
+        toJson(cfg, conf.get());
+      }
+      obj["Configuration"] = cfg;
+    }
+    
+    json comp = json::object({{"Composition", obj}});
+    
+    return comp;
+  }
+  
+
 
   static json toJson(Component *component)
   {

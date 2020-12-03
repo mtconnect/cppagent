@@ -737,9 +737,9 @@ namespace mtconnect
         const auto &desc = comp->getDescription();
         if (desc)
           addSimpleElement(writer, "Description", desc->m_body, desc->m_attributes);
-        for (const auto &config : comp->getConfiguration())
+        if (!comp->getConfiguration().empty())
         {
-          
+          printConfiguration(writer, comp->getConfiguration());
         }
       }
     }
