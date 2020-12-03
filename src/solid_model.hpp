@@ -41,8 +41,12 @@ namespace mtconnect
     bool hasScale() const override { return true; }
     const std::map<std::string, bool> &properties() const override
     {
-      const static std::map<std::string, bool> properties = { { "id", true }, { "solidModelIdRef", false }, { "itemRef", false },
-        { "mediaType", true }, { "coordinateSystemIdRef", true },
+      const static std::map<std::string, bool> properties = {
+        { "id", true },
+        { "solidModelIdRef", false },
+        { "itemRef", false },
+        { "mediaType", true },
+        { "coordinateSystemIdRef", false },
         { "href", false }
       };;
       return properties;
