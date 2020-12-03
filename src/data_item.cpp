@@ -268,10 +268,21 @@ namespace mtconnect
   static void capitalize(string::iterator start, string::iterator end)
   {
     // Exceptions to the rule
-    static std::array<string, 4> exceptions = {"AC", "DC", "PH", "IP"};
-
-    if (std::none_of(exceptions.begin(), exceptions.end(),
-                     [&start, &end](const string &s) { return equal(start, end, s.begin()); }))
+    const static std::map<string, string> exceptions = {
+      { "AC", "AC" },
+      { "DC", "DC" },
+      { "PH", "PH" },
+      { "IP", "IP" },
+      { "URI", "URI" },
+      { "MTCONNECT", "MTConnect" }
+    };
+    
+    const auto &w = exceptions.find(string(start, end));
+    if (w != exceptions.end())
+    {
+      copy(w->second.begin(),w->second.end(), start);
+    }
+    else
     {
       *start = ::toupper(*start);
       start++;

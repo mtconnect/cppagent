@@ -24,6 +24,7 @@
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"
 #include "specifications.hpp"
+#include "solid_model.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>
@@ -403,6 +404,53 @@ namespace mtconnect
         xmlFree(text);
     }
   }
+  
+  inline void printGeometry(xmlTextWriterPtr writer, const Geometry &geometry)
+  {
+    if (geometry.m_location.index() != 0)
+    {
+      visit(overloaded {
+        [&writer](const Origin &o) {
+          stringstream s;
+          s << o.m_x << ' ' << o.m_y << ' ' << o.m_z;
+          addSimpleElement(writer, "Origin", s.str());
+        },
+        [&writer](const Transformation &t) {
+          AutoElement ele(writer, "Transformation");
+          if (t.m_translation)
+          {
+            stringstream s;
+            s << t.m_translation->m_x << ' ' << t.m_translation->m_y << ' '
+              << t.m_translation->m_z;
+            addSimpleElement(writer, "Translation", s.str());
+          }
+          if (t.m_rotation)
+          {
+            stringstream s;
+            s << t.m_rotation->m_roll << ' ' << t.m_rotation->m_pitch << ' '
+              << t.m_rotation->m_yaw;
+            addSimpleElement(writer, "Rotation", s.str());
+          }
+        },
+        [](const std::monostate &a){}
+      }, geometry.m_location);
+    }
+    
+    if (geometry.m_scale)
+    {
+      stringstream s;
+      s << geometry.m_scale->m_scaleX << ' ' << geometry.m_scale->m_scaleY << ' '
+        << geometry.m_scale->m_scaleZ;
+      addSimpleElement(writer, "Scale", s.str());
+    }
+    if (geometry.m_axis)
+    {
+      stringstream s;
+      s << geometry.m_axis->m_x << ' ' << geometry.m_axis->m_y << ' '
+        << geometry.m_axis->m_z;
+      addSimpleElement(writer, "Axis", s.str());
+    }
+  }
 
   string XmlPrinter::printError(const unsigned int instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const string &errorCode,
@@ -573,34 +621,26 @@ namespace mtconnect
       }
     }
   }
+  
+  void printGeometricConfiguration(xmlTextWriterPtr writer, const GeometricConfiguration &model)
+  {
+    AutoElement ele(writer, model.klass());
+    addAttributes(writer, model.m_attributes);
+    if (!model.m_description.empty())
+      addSimpleElement(writer, "Description", model.m_description);
+    if (model.m_geometry)
+      printGeometry(writer, *model.m_geometry);
+  }
 
   void printCoordinateSystems(xmlTextWriterPtr writer, const CoordinateSystems *systems)
   {
     AutoElement ele(writer, "CoordinateSystems");
     for (const auto &system : systems->getCoordinateSystems())
     {
-      AutoElement ele(writer, "CoordinateSystem");
-      addAttributes(writer, map<string, string>({{"id", system->m_id},
-                                                 {"type", system->m_type},
-                                                 {"name", system->m_name},
-                                                 {"nativeName", system->m_nativeName},
-                                                 {"parentIdRef", system->m_parentIdRef}}));
-
-      if (!system->m_origin.empty())
-      {
-        addSimpleElement(writer, "Origin", system->m_origin);
-      }
-      if (!system->m_translation.empty() || !system->m_rotation.empty())
-      {
-        AutoElement ele(writer, "Transformation");
-        if (!system->m_translation.empty())
-          addSimpleElement(writer, "Translation", system->m_translation);
-        if (!system->m_rotation.empty())
-          addSimpleElement(writer, "Rotation", system->m_rotation);
-      }
+      printGeometricConfiguration(writer, *system);
     }
   }
-
+  
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
                                     const char *name) const
   {
@@ -639,6 +679,10 @@ namespace mtconnect
         else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
         {
           printCoordinateSystems(writer, conf);
+        }
+        else if (auto conf = dynamic_cast<const GeometricConfiguration *>(c))
+        {
+          printGeometricConfiguration(writer, *conf);
         }
       }
     }
