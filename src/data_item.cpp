@@ -273,6 +273,7 @@ namespace mtconnect
       { "DC", "DC" },
       { "PH", "PH" },
       { "IP", "IP" },
+      { "URI", "URI" },
       { "MTCONNECT", "MTConnect" }
     };
     
