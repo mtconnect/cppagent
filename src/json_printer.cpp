@@ -392,6 +392,12 @@ namespace mtconnect
         geometry.m_scale->m_scaleY,
         geometry.m_scale->m_scaleZ });
     }
+    if (geometry.m_axis)
+    {
+      parent["Axis"] = json::array({ geometry.m_axis->m_x,
+        geometry.m_axis->m_y,
+        geometry.m_axis->m_z });
+    }
   }
   
   inline json toJson(const GeometricConfiguration &model)
@@ -547,9 +553,9 @@ namespace mtconnect
     {
       parent["ExtendedConfiguration"] = obj->getContent();
     }
-    else if (auto obj = dynamic_cast<const SolidModel *>(config))
+    else if (auto obj = dynamic_cast<const GeometricConfiguration *>(config))
     {
-      parent["SolidModel"] = toJson(*obj);
+      parent[obj->klass()] = toJson(*obj);
     }
   }
 

@@ -30,6 +30,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/globals.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/motion.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/options.cpp"
