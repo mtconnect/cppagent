@@ -35,6 +35,15 @@ namespace mtconnect
     
     double m_x, m_y, m_z;    
   };
+  
+  struct Axis
+  {
+    Axis() = default;
+    Axis(const Axis &) = default;
+    Axis(double x, double y, double z) : m_x(x), m_y(y), m_z(z) {}
+    
+    double m_x, m_y, m_z;
+  };
 
   struct Translation
   {
@@ -81,5 +90,6 @@ namespace mtconnect
     
     std::variant<std::monostate, Origin, Transformation> m_location;
     std::optional<Scale> m_scale;
+    std::optional<Axis> m_axis;
   };
 }  // namespace mtconnect

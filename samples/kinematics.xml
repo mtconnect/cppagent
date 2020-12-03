@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.7">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.7"/>
+  <Devices>
+    <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
+      <Description manufacturer="NIST" serialNumber=""/>
+			<Configuration>
+				<CoordinateSystems>
+					<CoordinateSystem id="world" type="WORLD" name="worldy">
+						<Origin>101 102 103</Origin>
+					</CoordinateSystem>
+					<CoordinateSystem id="machine" type="MACHINE" name="machiney" nativeName="xxx" parentIdRef="world">
+						<Transformation>
+							<Translation>10 10 10</Translation>
+							<Rotation>90 0 90</Rotation>
+						</Transformation>
+					</CoordinateSystem>
+				</CoordinateSystems>
+			</Configuration>
+      <DataItems>
+				<DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
+      </DataItems>
+      <Components>
+        <Axes name="Axes" id="axes">
+          <Components>
+						<Linear name="Z" id="z">
+							<Configuration>
+								<Motion id="zax" coordinateSystemIdRef="machine" type="PRISMATIC" actuation="DIRECT">
+									<Description>The linears Z kinematics</Description>
+									<Origin>100.0 101.0 102.0</Origin>
+									<Axis>0.0 0.1 1.0</Axis>
+								</Motion>													
+							</Configuration>
+						</Linear>
+            <Rotary name="C" id="c">
+							<Configuration>
+								<Motion id="spin" parentIdRef="zax" coordinateSystemIdRef="machine" type="CONTINUOUS" actuation="DIRECT">
+									<Description>The spindle kinematics</Description>
+									<Transformation>
+										<Translation>10.0 20.0 30.0</Translation>
+										<Rotation>90.0 0.0 180</Rotation>
+									</Transformation>
+									<Axis>0.0 0.5 1.0</Axis>
+								</Motion>													
+							</Configuration>
+            </Rotary>
+          </Components>
+        </Axes>
+			</Components>
+		</Device>
+	</Devices>
+</MTConnectDevices>

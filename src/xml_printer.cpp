@@ -443,6 +443,13 @@ namespace mtconnect
         << geometry.m_scale->m_scaleZ;
       addSimpleElement(writer, "Scale", s.str());
     }
+    if (geometry.m_axis)
+    {
+      stringstream s;
+      s << geometry.m_axis->m_x << ' ' << geometry.m_axis->m_y << ' '
+        << geometry.m_axis->m_z;
+      addSimpleElement(writer, "Axis", s.str());
+    }
   }
 
   string XmlPrinter::printError(const unsigned int instanceId, const unsigned int bufferSize,
@@ -619,6 +626,8 @@ namespace mtconnect
   {
     AutoElement ele(writer, model.klass());
     addAttributes(writer, model.m_attributes);
+    if (!model.m_description.empty())
+      addSimpleElement(writer, "Description", model.m_description);
     if (model.m_geometry)
       printGeometry(writer, *model.m_geometry);
   }
@@ -671,7 +680,7 @@ namespace mtconnect
         {
           printCoordinateSystems(writer, conf);
         }
-        else if (auto conf = dynamic_cast<const SolidModel *>(c))
+        else if (auto conf = dynamic_cast<const GeometricConfiguration *>(c))
         {
           printGeometricConfiguration(writer, *conf);
         }

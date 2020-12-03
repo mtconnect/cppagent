@@ -23,6 +23,7 @@
 #include "sensor_configuration.hpp"
 #include "specifications.hpp"
 #include "solid_model.hpp"
+#include "motion.hpp"
 #include "xml_printer.hpp"
 
 #include <dlib/logger.h>
@@ -140,7 +141,7 @@ namespace mtconnect
         }
         else
         {
-          g_logger << dlib::LWARN <<  "Unknown attribute for SolidModel: " << key << ", skipping";
+          g_logger << dlib::LWARN <<  "Unknown attribute for " << (const char*) node->name << ": " << key << ", skipping";
         }
       }
     }
@@ -148,7 +149,7 @@ namespace mtconnect
     for (auto &p : matched)
     {
       if (p.second) {
-        g_logger << dlib::LWARN <<  "SolidModel missing required attribute: "
+        g_logger << dlib::LWARN << (const char*) node->name << " missing required attribute: "
           << p.first;
         toReturn.clear();
       }
@@ -198,7 +199,7 @@ namespace mtconnect
   }
   
   static inline std::optional<Geometry> getGeometry(const xmlNodePtr node,
-                                                    bool hasScale)
+                                                    bool hasScale, bool hasAxis)
   {
     Geometry geometry;
     forEachElement(node, {
@@ -245,6 +246,16 @@ namespace mtconnect
           auto s = getThreeSpace(getCDATA(n));
           if (s)
             geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
+          else
+            g_logger << dlib::LWARN << "Cannot parse Scale";
+        }
+      }},
+      { "Axis", [&geometry, hasAxis](const xmlNodePtr n) {
+        if (hasAxis)
+        {
+          auto s = getThreeSpace(getCDATA(n));
+          if (s)
+            geometry.m_axis.emplace(s->m_1, s->m_2, s->m_3);
           else
             g_logger << dlib::LWARN << "Cannot parse Scale";
         }
@@ -975,12 +986,20 @@ namespace mtconnect
     model->m_attributes = getValidatedAttributes(node, model->properties());
     if (!model->m_attributes.empty())
     {
-      model->m_geometry = getGeometry(node, model->hasScale());
+      model->m_geometry = getGeometry(node, model->hasScale(), model->hasAxis());
     }
     else
     {
       g_logger << dlib::LWARN << "Skipping Geometric Definition";
     }
+    
+    if (model->hasDescription())
+    {
+      forEachElement(node, {
+        {"Description", [&model](xmlNodePtr n) { model->m_description = getCDATA(n); }}
+      });
+    }
+      
     
     return model;
   }
@@ -1060,7 +1079,9 @@ namespace mtconnect
          {"Relationships", [](xmlNodePtr n, Component *p) { handleRelationships(n, p); }},
          {"CoordinateSystems", [](xmlNodePtr n, Component *p) { handleCoordinateSystems(n, p); }},
          {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }},
-      {"SolidModel", [](xmlNodePtr n, Component *p) { p->addConfiguration(handleGeometricConfiguration<SolidModel>(n).release()); }}  });
+      {"SolidModel", [](xmlNodePtr n, Component *p) { p->addConfiguration(handleGeometricConfiguration<SolidModel>(n).release()); }},
+      {"Motion", [](xmlNodePtr n, Component *p) { p->addConfiguration(handleGeometricConfiguration<Motion>(n).release()); }}
+    });
 
     // Get the first node
     for (xmlNodePtr child = node->children; child; child = child->next)
