@@ -320,6 +320,7 @@ TEST_F(TableTest, XmlCellDefinitions)
                           "DEGREE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@key='C']/m:Description",
                           "Spindle Angle");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:CellDefinitions/m:CellDefinition[@keyType='UUID']@type", "FEATURE_ID");
 
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition/m:Description",
                           "Some Pressure thing");
@@ -328,6 +329,7 @@ TEST_F(TableTest, XmlCellDefinitions)
                           "PASCAL");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition/m:CellDefinitions/m:CellDefinition/m:Description",
                           "Pressure of the P");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:EntryDefinitions/m:EntryDefinition[@keyType='UUID']@@type", "FEATURE_ID");
 
   }
 

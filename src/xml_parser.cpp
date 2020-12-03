@@ -612,6 +612,7 @@ namespace mtconnect
   void XmlParser::loadDefinition(xmlNodePtr definition, AbstractDefinition *def)
   {
     def->m_key = getAttribute(definition, "key");
+    def->m_keyType = getAttribute(definition, "keyType");
     def->m_units = getAttribute(definition, "units");
     def->m_type = getAttribute(definition, "type");
     def->m_subType = getAttribute(definition, "subType");
