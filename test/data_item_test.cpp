@@ -160,6 +160,7 @@ TEST_F(DataItemTest, GetCamel)
   ASSERT_EQ((string) "VoltageDC", DataItem::getCamelType("VOLTAGE_DC", prefix));
   ASSERT_EQ((string) "VoltageAC", DataItem::getCamelType("VOLTAGE_AC", prefix));
   ASSERT_EQ((string) "MTConnectVersion", DataItem::getCamelType("MTCONNECT_VERSION", prefix));
+  ASSERT_EQ((string) "DeviceURI", DataItem::getCamelType("DEVICE_URI", prefix));
 
   ASSERT_EQ((string) "CamelCase", DataItem::getCamelType("CAMEL_CASE", prefix));
   ASSERT_EQ((string) "ABCc", DataItem::getCamelType("A_B_CC", prefix));
