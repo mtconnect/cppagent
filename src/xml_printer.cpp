@@ -852,6 +852,7 @@ namespace mtconnect
       {
         AutoElement ele(writer, "EntryDefinition");
         addAttributes(writer, {{string("key"), entry.m_key},
+                               {string("keyType"), entry.m_keyType},
                                {string("units"), entry.m_units},
                                {string("type"), entry.m_type},
                                {string("subType"), entry.m_subType}});
@@ -874,6 +875,7 @@ namespace mtconnect
       {
         AutoElement ele(writer, "CellDefinition");
         addAttributes(writer, {{string("key"), entry.m_key},
+                               {string("keyType"), entry.m_keyType},
                                {string("units"), entry.m_units},
                                {string("type"), entry.m_type},
                                {string("subType"), entry.m_subType}});
