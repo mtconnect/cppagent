@@ -54,10 +54,9 @@ class CompositionTest : public testing::Test
 
 TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
 {
-  ASSERT_NE(nullptr, m_component);
+  ASSERT_NE(nullptr, m_composition);
   
-  ASSERT_EQ(2, m_component->getConfiguration().size());
-    
+  ASSERT_EQ(1, m_composition->getConfiguration().size());
   auto ci = m_composition->getConfiguration().begin();
   
   // Get the second configuration.

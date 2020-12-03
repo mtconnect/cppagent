@@ -99,11 +99,13 @@
 								Hello There
 							</Description>
 							<Configuration>
-								<Specification type="VOLTAGE_AC" units="VOLT" name="voltage">
-									<Maximum>10000</Maximum>
-									<Minimum>100</Minimum>
-									<Nominal>1000</Nominal>
-								</Specification>                    
+								<Specifications>
+									<Specification type="VOLTAGE_AC" units="VOLT" name="voltage">
+										<Maximum>10000</Maximum>
+										<Minimum>100</Minimum>
+										<Nominal>1000</Nominal>
+									</Specification>
+								</Specifications>
 							</Configuration>
 						</Composition>
           </Compositions>
