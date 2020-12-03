@@ -901,7 +901,7 @@ namespace mtconnect
     }
   }
 
-  unique_ptr<SensorConfiguration> handleSensorConfiguration(xmlNodePtr node)
+  unique_ptr<ComponentConfiguration> handleSensorConfiguration(xmlNodePtr node)
   {
     // Decode sensor configuration
     string firmware, date, nextDate, initials;
@@ -952,7 +952,7 @@ namespace mtconnect
       }
     }
     
-    return sensor;
+    return move(sensor);
   }
 
   unique_ptr<ComponentConfiguration> handleRelationships(xmlNodePtr node)
@@ -1093,6 +1093,10 @@ namespace mtconnect
   {
     forEachElement(node, {
       {
+        {"SensorConfiguration", [&parent](xmlNodePtr n){
+          auto s = handleSensorConfiguration(n);
+          parent->addConfiguration(s);
+        }},
         {"Relationships", [&parent](xmlNodePtr n) {
           auto r = handleRelationships(n);
           parent->addConfiguration(r); }},
