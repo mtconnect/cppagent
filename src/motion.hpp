@@ -33,6 +33,7 @@ namespace mtconnect
     Motion() = default;
     ~Motion() override = default;
     
+    bool hasDescription() const override { return true; }
     const std::string &klass() const override
     {
       const static std::string &klass("Motion");
@@ -52,4 +53,5 @@ namespace mtconnect
       return properties;
     }
   };
+  
 }  // namespace mtconnect

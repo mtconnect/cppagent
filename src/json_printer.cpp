@@ -406,6 +406,8 @@ namespace mtconnect
     addAttributes(obj, model.m_attributes);
     if (model.m_geometry)
       toJson(obj, *model.m_geometry);
+    if (!model.m_description.empty())
+      obj["Description"] = model.m_description;
     return obj;
   }
 

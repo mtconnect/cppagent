@@ -26,6 +26,7 @@
 						<Linear name="Z" id="z">
 							<Configuration>
 								<Motion id="zax" coordinateSystemIdRef="machine" type="PRISMATIC" actuation="DIRECT">
+									<Description>The linears Z kinematics</Description>
 									<Origin>100.0 101.0 102.0</Origin>
 									<Axis>0.0 0.1 1.0</Axis>
 								</Motion>													
@@ -34,6 +35,7 @@
             <Rotary name="C" id="c">
 							<Configuration>
 								<Motion id="spin" parentIdRef="zax" coordinateSystemIdRef="machine" type="CONTINUOUS" actuation="DIRECT">
+									<Description>The spindle kinematics</Description>
 									<Transformation>
 										<Translation>10.0 20.0 30.0</Translation>
 										<Rotation>90.0 0.0 180</Rotation>

@@ -450,7 +450,6 @@ namespace mtconnect
         << geometry.m_axis->m_z;
       addSimpleElement(writer, "Axis", s.str());
     }
-
   }
 
   string XmlPrinter::printError(const unsigned int instanceId, const unsigned int bufferSize,
@@ -627,6 +626,8 @@ namespace mtconnect
   {
     AutoElement ele(writer, model.klass());
     addAttributes(writer, model.m_attributes);
+    if (!model.m_description.empty())
+      addSimpleElement(writer, "Description", model.m_description);
     if (model.m_geometry)
       printGeometry(writer, *model.m_geometry);
   }

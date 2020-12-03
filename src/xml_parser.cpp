@@ -993,6 +993,14 @@ namespace mtconnect
       g_logger << dlib::LWARN << "Skipping Geometric Definition";
     }
     
+    if (model->hasDescription())
+    {
+      forEachElement(node, {
+        {"Description", [&model](xmlNodePtr n) { model->m_description = getCDATA(n); }}
+      });
+    }
+      
+    
     return model;
   }
 

@@ -62,6 +62,7 @@ TEST_F(KinematicsTest, ParseZAxisKinematics)
   ASSERT_EQ("PRISMATIC", model->m_attributes.find("type")->second);
   ASSERT_EQ("DIRECT", model->m_attributes.find("actuation")->second);
   ASSERT_EQ("machine", model->m_attributes.find("coordinateSystemIdRef")->second);
+  ASSERT_EQ("The linears Z kinematics", model->m_description);
   
   ASSERT_TRUE(model->m_geometry);
   ASSERT_NE(0, model->m_geometry->m_location.index());
@@ -95,6 +96,7 @@ TEST_F(KinematicsTest, ParseCAxisKinematics)
   ASSERT_EQ("DIRECT", model->m_attributes.find("actuation")->second);
   ASSERT_EQ("machine", model->m_attributes.find("coordinateSystemIdRef")->second);
   ASSERT_EQ("zax", model->m_attributes.find("parentIdRef")->second);
+  ASSERT_EQ("The spindle kinematics", model->m_description);
 
   ASSERT_TRUE(model->m_geometry);
   ASSERT_NE(0, model->m_geometry->m_location.index());
@@ -134,6 +136,7 @@ TEST_F(KinematicsTest, ZAxisXmlPrinting)
 
     ASSERT_XML_PATH_EQUAL(doc, ZAXIS_MOTION_PATH "/m:Origin" , "100 101 102");
     ASSERT_XML_PATH_EQUAL(doc, ZAXIS_MOTION_PATH "/m:Axis" , "0 0.1 1");
+    ASSERT_XML_PATH_EQUAL(doc, ZAXIS_MOTION_PATH "/m:Description" , "The linears Z kinematics");
 
   }
 }
@@ -159,6 +162,7 @@ TEST_F(KinematicsTest, RotaryXmlPrinting)
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "/m:Transformation/m:Translation" , "10 20 30");
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "/m:Transformation/m:Rotation" , "90 0 180");
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "/m:Axis" , "0 0.5 1");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "/m:Description" , "The spindle kinematics");
   }
 }
 
@@ -178,7 +182,7 @@ TEST_F(KinematicsTest, ZAxisJsonPrinting)
     auto motion = linear.at("/Configuration/Motion"_json_pointer);
     ASSERT_TRUE(motion.is_object());
     
-    ASSERT_EQ(6, motion.size());
+    ASSERT_EQ(7, motion.size());
     EXPECT_EQ("zax", motion["id"]);
     EXPECT_EQ("PRISMATIC", motion["type"]);
     EXPECT_EQ("DIRECT", motion["actuation"]);
@@ -197,6 +201,8 @@ TEST_F(KinematicsTest, ZAxisJsonPrinting)
     ASSERT_EQ(0.0, axis[0].get<double>());
     ASSERT_EQ(0.1, axis[1].get<double>());
     ASSERT_EQ(1.0, axis[2].get<double>());
+    
+    ASSERT_EQ("The linears Z kinematics", motion["Description"].get<string>());
   }
 }
 
@@ -215,7 +221,7 @@ TEST_F(KinematicsTest, RotaryJsonPrinting)
     auto motion = rotary.at("/Configuration/Motion"_json_pointer);
     ASSERT_TRUE(motion.is_object());
     
-    ASSERT_EQ(7, motion.size());
+    ASSERT_EQ(8, motion.size());
     EXPECT_EQ("spin", motion["id"]);
     EXPECT_EQ("CONTINUOUS", motion["type"]);
     EXPECT_EQ("DIRECT", motion["actuation"]);
@@ -242,6 +248,9 @@ TEST_F(KinematicsTest, RotaryJsonPrinting)
     ASSERT_EQ(0.0, axis[0].get<double>());
     ASSERT_EQ(0.5, axis[1].get<double>());
     ASSERT_EQ(1.0, axis[2].get<double>());
+    
+    ASSERT_EQ("The spindle kinematics", motion["Description"].get<string>());
+
   }
 }
 
