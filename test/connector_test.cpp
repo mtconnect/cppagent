@@ -242,7 +242,6 @@ TEST_F(ConnectorTest, HeartbeatPong)
   for (int i = 0; i < 5; i++)
   {
     // Receive initial heartbeat request "* PING\n"
-
     char buf[1024] = {0};
     ASSERT_TRUE(m_serverSocket->read(buf, 1023, 1100) > 0);
     buf[7] = '\0';
@@ -258,6 +257,58 @@ TEST_F(ConnectorTest, HeartbeatPong)
     ASSERT_EQ(strlen(pong), written);
     this_thread::sleep_for(10ms);
 
+    ASSERT_TRUE(!m_connector->m_disconnected);
+  }
+}
+
+TEST_F(ConnectorTest, HeartbeatDataKeepAlive)
+{
+  // TODO Copy&Paste from Heartbeat
+  // Start the accept thread
+  start();
+  
+  auto res = m_server->accept(m_serverSocket);
+  ASSERT_EQ(0, res);
+  ASSERT_TRUE(m_serverSocket.get());
+  
+  // Receive initial heartbeat request "* PING\n"
+  char buf[1024] = {0};
+  auto numRead = m_serverSocket->read(buf, 1023, 5000);
+  ASSERT_EQ(7L, numRead);
+  buf[7] = '\0';
+  ASSERT_TRUE(strcmp(buf, "* PING\n") == 0);
+  
+  // Respond to the heartbeat of 1 second
+  const auto pong = "* PONG 1000\n";
+  auto written = (size_t)m_serverSocket->write(pong, strlen(pong));
+  ASSERT_EQ(strlen(pong), written);
+  this_thread::sleep_for(1000ms);
+  
+  ASSERT_TRUE(m_connector->heartbeats());
+  ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
+  // TODO END Copy&Paste from Heartbeat
+  
+  auto last_heartbeat = system_clock::now();
+  
+  // Test to make sure we can send and receive 5 heartbeats
+  for (int i = 0; i < 5; i++)
+  {
+    // Receive initial heartbeat request "* PING\n"
+    char buf[1024] = {0};
+    ASSERT_TRUE(m_serverSocket->read(buf, 1023, 1100) > 0);
+    buf[7] = '\0';
+    ASSERT_TRUE(!strcmp(buf, "* PING\n"));
+    
+    auto now = system_clock::now();
+    ASSERT_TRUE(now - last_heartbeat < 2000ms);
+    last_heartbeat = now;
+    
+    // Respond to the heartbeat of 1 second
+    const auto data = "Some Data\n";
+    auto written = (size_t)m_serverSocket->write(data, strlen(data));
+    ASSERT_EQ(strlen(data), written);
+    this_thread::sleep_for(10ms);
+    
     ASSERT_TRUE(!m_connector->m_disconnected);
   }
 }
@@ -293,6 +344,8 @@ TEST_F(ConnectorTest, HeartbeatTimeout)
 
   ASSERT_TRUE(m_connector->m_disconnected);
 }
+
+
 
 TEST_F(ConnectorTest, LegacyTimeout)
 {
