@@ -56,6 +56,9 @@ using namespace std;
 namespace mtconnect
 {
   static dlib::logger g_logger("xml.parser");
+  
+  template<class T>
+  void handleConfiguration(xmlNodePtr node, T *parent);
 
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
@@ -167,11 +170,17 @@ namespace mtconnect
       if (child->type != XML_ELEMENT_NODE)
         continue;
 
+      auto other = funs.find("OTHERWISE");
+      
       string name((const char *)child->name);
       auto lambda = funs.find(name);
       if (lambda != funs.end())
       {
         lambda->second(child);
+      }
+      else if (other != funs.end())
+      {
+        other->second(child);
       }
     }
   }
@@ -281,13 +290,15 @@ namespace mtconnect
               [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
              {"DataItem", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItem(n, p, d); }},
              {"Reference",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p, d); }},
+              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
              {"DataItemRef",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p, d); }},
+              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
              {"ComponentRef",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p, d); }},
+              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
              {"Composition",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleComposition(n, p); }},
+              [this](xmlNodePtr n, Component *p, Device *d) {
+                auto c = handleComposition(n);
+                p->addComposition(c); }},
              {"Description", [](xmlNodePtr n, Component *p,
                                 Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
              {"Configuration",
@@ -818,9 +829,7 @@ namespace mtconnect
   void XmlParser::loadDataItemRelationships(xmlNodePtr relationships, DataItem *dataItem, Device *device)
   {
     
-    forEachElement(
-                   relationships,
-                   {
+    forEachElement(relationships, {
       {"DataItemRelationship", [&dataItem](xmlNodePtr node) {
         addDataItemRelationship(node, dataItem);
       }},
@@ -831,21 +840,29 @@ namespace mtconnect
     });
   }
 
-  void XmlParser::handleComposition(xmlNodePtr composition, Component *parent)
+  unique_ptr<Composition> XmlParser::handleComposition(xmlNodePtr composition)
   {
-    auto comp = new Composition(getAttributes(composition));
-
-    for (xmlNodePtr child = composition->children; child; child = child->next)
+    auto comp = make_unique<Composition>();
+    comp->m_attributes = getValidatedAttributes(composition, comp->properties());
+    if (!comp->m_attributes.empty())
     {
-      if (!xmlStrcmp(child->name, BAD_CAST "Description"))
-      {
-        auto body = getCDATA(child);
-        auto *desc = new Composition::Description(body, getAttributes(child));
-        comp->setDescription(desc);
-      }
+      forEachElement(composition, {
+        { "Description", [&comp](xmlNodePtr n) {
+          Description desc;
+          desc.m_attributes = getValidatedAttributes(n, desc.properties());
+          desc.m_body = getCDATA(n);
+          comp->setDescription(desc);
+        }},
+        { "Configuration", [&comp](xmlNodePtr n) {
+          handleConfiguration(n, (Composition*) comp.get());
+        }}
+        });
     }
-
-    parent->addComposition(comp);
+    else
+    {
+      g_logger << dlib::LWARN << "Skipping Composition";
+    }
+    return comp;
   }
 
   void XmlParser::handleChildren(xmlNodePtr components, Component *parent, Device *device)
@@ -859,7 +876,7 @@ namespace mtconnect
     }
   }
 
-  void XmlParser::handleReference(xmlNodePtr reference, Component *parent, Device *device)
+  void XmlParser::handleReference(xmlNodePtr reference, Component *parent)
   {
     auto attrs = getAttributes(reference);
     string name;
@@ -884,7 +901,7 @@ namespace mtconnect
     }
   }
 
-  void handleSensorConfiguration(xmlNodePtr node, Component *parent)
+  unique_ptr<ComponentConfiguration> handleSensorConfiguration(xmlNodePtr node)
   {
     // Decode sensor configuration
     string firmware, date, nextDate, initials;
@@ -909,7 +926,7 @@ namespace mtconnect
     for (auto &text : rest)
       restText.append(getRawContent(text));
 
-    auto sensor = new SensorConfiguration(firmware, date, nextDate, initials, restText);
+    unique_ptr<SensorConfiguration> sensor(new SensorConfiguration(firmware, date, nextDate, initials, restText));
 
     if (channels)
     {
@@ -934,10 +951,11 @@ namespace mtconnect
         sensor->addChannel(chl);
       }
     }
-    parent->addConfiguration(std::move(sensor));
+    
+    return move(sensor);
   }
 
-  void handleRelationships(xmlNodePtr node, Component *parent)
+  unique_ptr<ComponentConfiguration> handleRelationships(xmlNodePtr node)
   {
     unique_ptr<Relationships> relationships = make_unique<Relationships>();
 
@@ -977,7 +995,7 @@ namespace mtconnect
       }
     }
 
-    parent->addConfiguration(relationships.release());
+    return move(relationships);
   }
   
   template<class T>
@@ -1000,12 +1018,11 @@ namespace mtconnect
         {"Description", [&model](xmlNodePtr n) { model->m_description = getCDATA(n); }}
       });
     }
-      
     
     return model;
   }
 
-  void handleCoordinateSystems(xmlNodePtr node, Component *parent)
+  unique_ptr<ComponentConfiguration> handleCoordinateSystems(xmlNodePtr node)
   {
     unique_ptr<CoordinateSystems> systems = make_unique<CoordinateSystems>();
 
@@ -1014,10 +1031,10 @@ namespace mtconnect
       systems->addCoordinateSystem(handleGeometricConfiguration<CoordinateSystem>(child).release());
     }
 
-    parent->addConfiguration(systems.release());
+    return move(systems);
   }
 
-  void handleSpecifications(xmlNodePtr node, Component *parent)
+  unique_ptr<ComponentConfiguration> handleSpecifications(xmlNodePtr node)
   {
     unique_ptr<Specifications> specifications = make_unique<Specifications>();
     for (xmlNodePtr child = node->children; child; child = child->next)
@@ -1067,39 +1084,40 @@ namespace mtconnect
         g_logger << dlib::LWARN << "Bad Specifictation type " << klass << ", skipping";
       }
     }
-
-    parent->addConfiguration(specifications.release());
+    
+    return move(specifications);
   }
   
-
-  void XmlParser::handleConfiguration(xmlNodePtr node, Component *parent, Device *device)
+  template<class T>
+  void handleConfiguration(xmlNodePtr node, T *parent)
   {
-    static std::map<std::string, std::function<void(xmlNodePtr, Component *)>> handlers(
-        {{"SensorConfiguration",
-          [](xmlNodePtr n, Component *p) { handleSensorConfiguration(n, p); }},
-         {"Relationships", [](xmlNodePtr n, Component *p) { handleRelationships(n, p); }},
-         {"CoordinateSystems", [](xmlNodePtr n, Component *p) { handleCoordinateSystems(n, p); }},
-         {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }},
-      {"SolidModel", [](xmlNodePtr n, Component *p) { p->addConfiguration(handleGeometricConfiguration<SolidModel>(n).release()); }},
-      {"Motion", [](xmlNodePtr n, Component *p) { p->addConfiguration(handleGeometricConfiguration<Motion>(n).release()); }}
-    });
-
-    // Get the first node
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      const char *qname = (const char *)child->name;
-      if (handlers.count(qname) > 0)
+    forEachElement(node, {
       {
-        auto &handler = handlers[qname];
-        (handler)(child, parent);
-      }
-      else
-      {
-        // Unknown configuration
-        auto ext = new ExtendedComponentConfiguration(getRawContent(child));
-        parent->addConfiguration(std::move(ext));
-      }
-    }
+        {"SensorConfiguration", [&parent](xmlNodePtr n){
+          auto s = handleSensorConfiguration(n);
+          parent->addConfiguration(s);
+        }},
+        {"Relationships", [&parent](xmlNodePtr n) {
+          auto r = handleRelationships(n);
+          parent->addConfiguration(r); }},
+        {"CoordinateSystems", [&parent](xmlNodePtr n) {
+          auto c = handleCoordinateSystems(n);
+          parent->addConfiguration(c); }},
+        {"Specifications", [&parent](xmlNodePtr n) {
+          auto s = handleSpecifications(n);
+          parent->addConfiguration(s); }},
+        {"SolidModel", [&parent](xmlNodePtr n) {
+          unique_ptr<ComponentConfiguration> g(move(handleGeometricConfiguration<SolidModel>(n)));
+          parent->addConfiguration(g); }},
+        {"Motion", [&parent](xmlNodePtr n) {
+          unique_ptr<ComponentConfiguration> g(move(handleGeometricConfiguration<Motion>(n)));
+          parent->addConfiguration(g);
+        }},
+        {"OTHERWISE", [&parent](xmlNodePtr n) {
+          unique_ptr<ComponentConfiguration> ext(new ExtendedComponentConfiguration(getRawContent(n)));
+          parent->addConfiguration(ext);
+        }}
+      } });
   }
 
   AssetPtr XmlParser::parseAsset(const std::string &assetId, const std::string &type,

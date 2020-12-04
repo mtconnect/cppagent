@@ -520,8 +520,8 @@ namespace mtconnect
     return ret;
   }
 
-  void XmlPrinter::printSensorConfiguration(xmlTextWriterPtr writer,
-                                            const SensorConfiguration *sensor) const
+  void printSensorConfiguration(xmlTextWriterPtr writer,
+                                const SensorConfiguration *sensor)
   {
     AutoElement sensorEle(writer, "SensorConfiguration");
 
@@ -641,6 +641,40 @@ namespace mtconnect
     }
   }
   
+  void printConfiguration(xmlTextWriterPtr writer, const std::list<unique_ptr<ComponentConfiguration>> &configurations)
+  {
+    AutoElement configEle(writer, "Configuration");
+    for (const auto &configuration : configurations)
+    {
+      auto c = configuration.get();
+      if (auto conf = dynamic_cast<const SensorConfiguration *>(c))
+      {
+        printSensorConfiguration(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const ExtendedComponentConfiguration *>(c))
+      {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST conf->getContent().c_str()));
+      }
+      else if (auto conf = dynamic_cast<const Relationships *>(c))
+      {
+        printRelationships(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const Specifications *>(c))
+      {
+        printSpecifications(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
+      {
+        printCoordinateSystems(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const GeometricConfiguration *>(c))
+      {
+        printGeometricConfiguration(writer, *conf);
+      }
+    }
+  }
+
+  
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
                                     const char *name) const
   {
@@ -652,41 +686,12 @@ namespace mtconnect
 
     if (!desc.empty() || !body.empty())
       addSimpleElement(writer, "Description", body, desc);
-
+    
     if (!component->getConfiguration().empty())
     {
-      AutoElement configEle(writer, "Configuration");
-      const auto &configurations = component->getConfiguration();
-      for (const auto &configuration : configurations)
-      {
-        auto c = configuration.get();
-        if (auto conf = dynamic_cast<const SensorConfiguration *>(c))
-        {
-          printSensorConfiguration(writer, conf);
-        }
-        else if (auto conf = dynamic_cast<const ExtendedComponentConfiguration *>(c))
-        {
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST conf->getContent().c_str()));
-        }
-        else if (auto conf = dynamic_cast<const Relationships *>(c))
-        {
-          printRelationships(writer, conf);
-        }
-        else if (auto conf = dynamic_cast<const Specifications *>(c))
-        {
-          printSpecifications(writer, conf);
-        }
-        else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
-        {
-          printCoordinateSystems(writer, conf);
-        }
-        else if (auto conf = dynamic_cast<const GeometricConfiguration *>(c))
-        {
-          printGeometricConfiguration(writer, *conf);
-        }
-      }
+      printConfiguration(writer, component->getConfiguration());
     }
-
+    
     auto datum = component->getDataItems();
 
     if (!datum.empty())
@@ -724,15 +729,18 @@ namespace mtconnect
     {
       AutoElement ele(writer, "Compositions");
 
-      for (auto comp : component->getCompositions())
+      for (const auto &comp : component->getCompositions())
       {
         AutoElement ele2(writer, "Composition");
 
-        addAttributes(writer, comp->getAttributes());
-        const Composition::Description *desc = comp->getDescription();
-
+        addAttributes(writer, comp->m_attributes);
+        const auto &desc = comp->getDescription();
         if (desc)
-          addSimpleElement(writer, "Description", desc->getBody(), desc->getAttributes());
+          addSimpleElement(writer, "Description", desc->m_body, desc->m_attributes);
+        if (!comp->getConfiguration().empty())
+        {
+          printConfiguration(writer, comp->getConfiguration());
+        }
       }
     }
 

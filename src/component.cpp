@@ -77,9 +77,6 @@ namespace mtconnect
     for (auto &i : m_dataItems)
       delete i;
     m_dataItems.clear();
-    for (auto &i : m_compositions)
-      delete i;
-    m_compositions.clear();
   }
 
   std::map<string, string> Component::buildAttributes() const

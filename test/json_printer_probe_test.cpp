@@ -123,7 +123,7 @@ TEST_F(JsonPrinterProbeTest, TopLevelDataItems)
   ASSERT_EQ(string("avail"), avail.at("/DataItem/name"_json_pointer).get<string>());
 
   // Availability event
-  cout << "\n" << dataItems << endl;
+  // cout << "\n" << dataItems << endl;
   auto change = dataItems.at(1);
 
   ASSERT_EQ(string("ASSET_CHANGED"), change.at("/DataItem/type"_json_pointer).get<string>());
@@ -346,7 +346,6 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   ASSERT_EQ(string("LIMIT"), dir2.at("/SpecificationRelationship/type"_json_pointer));
   ASSERT_EQ(string("spec1"), dir2.at("/SpecificationRelationship/idRef"_json_pointer));
 
-  cout << "\n" << linear << endl;
   auto limits = linear.at("/DataItems/5/DataItem"_json_pointer);
   ASSERT_TRUE(load.is_object());
   ASSERT_EQ(string("xlcpl"), limits["id"].get<string>());
