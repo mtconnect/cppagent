@@ -241,6 +241,10 @@ namespace mtconnect
 
   void Connector::parseBuffer(const char *buffer)
   {
+    // Treat any data as a heartbeat.
+    if (m_heartbeats)
+      m_lastHeartbeat = system_clock::now();
+
     // Append the temporary buffer to the socket buffer
     m_buffer.append(buffer);
 
@@ -286,10 +290,6 @@ namespace mtconnect
             }
             if (!m_heartbeats)
               startHeartbeats(line);
-            else
-            {
-              m_lastHeartbeat = system_clock::now();
-            }
           }
           else
           {
