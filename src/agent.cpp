@@ -67,39 +67,65 @@ namespace mtconnect
     // Create the Printers
     m_printers["xml"] = unique_ptr<Printer>(new XmlPrinter(version, m_pretty));
     m_printers["json"] = unique_ptr<Printer>(new JsonPrinter(version, m_pretty));
-
-    auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
     
-    loadXMLDeviceFile(configXmlPath);
-    
-    // Grab data from configuration
-    string time = getCurrentTime(GMT_UV_SEC);
-
     // Unique id number for agent instance
     m_instanceId = getCurrentTimeInSec();
-
+    
+    auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
     createCircularBuffer(bufferSize);
     
-    verifyDevices(xmlPrinter->getSchemaVersion());
+    createAgentDevice();
+    loadXMLDeviceFile(configXmlPath);
     
     // Reload the document for path resolution
     m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize,
                                                      m_maxAssets, m_assets.size(),
                                                      m_sequence, m_devices));
 
-    initializeDataItems(time);
+    m_initialized = true;
   }
   
   void Agent::createAgentDevice()
   {
     // Create the Agent Device
     m_agentDevice = new AgentDevice({
-      { "name", "AgentDevice" },
+      { "name", "Agent" },
       { "uuid", "0b49a3a0-18ca-0139-8748-2cde48001122" },
-      { "id", "2cde48001122" },
+      { "id", "agent_2cde48001122" },
       { "mtconnectVersion", "1.7" }
     });
-    m_devices.push_back(m_agentDevice);
+    
+    // Add the required data items
+    auto di = new DataItem({ { "type", "AVAILABILITY" },
+      { "id", "agent_avail" },
+      { "category", "EVENT" } });
+    di->setComponent(*m_agentDevice);
+    m_agentDevice->addDataItem(*di);
+    m_agentDevice->addDeviceDataItem(*di);
+    
+    // Add the required data items
+    auto add = new DataItem({ { "type", "DEVICE_ADDED" },
+      { "id", "device_added" },
+      { "category", "EVENT" } });
+    add->setComponent(*m_agentDevice);
+    m_agentDevice->addDataItem(*add);
+    m_agentDevice->addDeviceDataItem(*add);
+    
+    auto removed = new DataItem({ { "type", "DEVICE_REMOVED" },
+      { "id", "device_removed" },
+      { "category", "EVENT" } });
+    removed->setComponent(*m_agentDevice);
+    m_agentDevice->addDataItem(*removed);
+    m_agentDevice->addDeviceDataItem(*removed);
+
+    auto changed = new DataItem({ { "type", "DEVICE_CHANGED" },
+      { "id", "device_changed" },
+      { "category", "EVENT" } });
+    changed->setComponent(*m_agentDevice);
+    m_agentDevice->addDataItem(*changed);
+    m_agentDevice->addDeviceDataItem(*changed);
+    
+    addDevice(m_agentDevice);
   }
   
   void Agent::loadXMLDeviceFile(const std::string &configXmlPath)
@@ -108,17 +134,10 @@ namespace mtconnect
     {
       // Load the configuration for the Agent
       auto devices = m_xmlParser->parseFile(configXmlPath, dynamic_cast<XmlPrinter*>(m_printers["xml"].get()));
-      m_devices.insert(m_devices.end(), devices.begin(), devices.end());
       
-      std::set<std::string> uuids;
-      for (const auto &device : m_devices)
-      {
-        if (uuids.count(device->getUuid()) > 0)
-          throw runtime_error("Duplicate UUID: " + device->getUuid());
-        
-        uuids.insert(device->getUuid());
-        device->resolveReferences();
-      }
+      // Fir the DeviceAdded event for each device
+      for (auto device : devices)
+        addDevice(device);
     }
     catch (runtime_error &e)
     {
@@ -150,102 +169,136 @@ namespace mtconnect
       m_checkpoints.emplace_back();
   }
   
-  void Agent::verifyDevices(const string &schemaVersion)
+  void Agent::verifyDevice(Device *device)
   {
+    auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
+    const auto &schemaVersion = xmlPrinter->getSchemaVersion();
+    
     // Add the devices to the device map and create availability and
     // asset changed events if they don't exist
-    for (const auto device : m_devices)
+    // Make sure we have two device level data items:
+    // 1. Availability
+    // 2. AssetChanged
+    if (!device->getAvailability())
     {
-      m_deviceNameMap[device->getName()] = device;
-      m_deviceUuidMap[device->getUuid()] = device;
-      
-      // Make sure we have two device level data items:
-      // 1. Availability
-      // 2. AssetChanged
-      if (!device->getAvailability())
-      {
-        // Create availability data item and add it to the device.
-        Attributes attrs {
-          { "type", "AVAILABILITY" },
-          { "id", device->getId() + "_avail" },
-          { "category", "EVENT" }
-        };
-        auto di = new DataItem(attrs);
-        di->setComponent(*device);
-        device->addDataItem(*di);
-        device->addDeviceDataItem(*di);
-        device->m_availabilityAdded = true;
-      }
-      
-      int major, minor;
-      char c;
-      stringstream ss(schemaVersion);
-      ss >> major >> c >> minor;
-      if (!device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
-      {
-        // Create asset change data item and add it to the device.
-        Attributes attrs {
-          { "type", "ASSET_CHANGED" },
-          { "id", device->getId() + "_asset_chg" },
-          { "category", "EVENT" }
-        };
-        auto di = new DataItem(attrs);
-        di->setComponent(*device);
-        device->addDataItem(*di);
-        device->addDeviceDataItem(*di);
-      }
-      
-      if (device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 5)))
-      {
-        auto di = device->getAssetChanged();
-        di->makeDiscrete();
-      }
-      
-      if (!device->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
-      {
-        // Create asset removed data item and add it to the device.
-        Attributes attrs {
-          { "type", "ASSET_REMOVED" },
-          { "id", device->getId() + "_asset_rem" },
-          { "category", "EVENT" }
-        };
-        auto di = new DataItem(attrs);
-        di->setComponent(*device);
-        device->addDataItem(*di);
-        device->addDeviceDataItem(*di);
-      }
+      // Create availability data item and add it to the device.
+      Attributes attrs {
+        { "type", "AVAILABILITY" },
+        { "id", device->getId() + "_avail" },
+        { "category", "EVENT" }
+      };
+      auto di = new DataItem(attrs);
+      di->setComponent(*device);
+      device->addDataItem(*di);
+      device->addDeviceDataItem(*di);
+      device->m_availabilityAdded = true;
     }
-
+    
+    int major, minor;
+    char c;
+    stringstream ss(schemaVersion);
+    ss >> major >> c >> minor;
+    if (!device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
+    {
+      // Create asset change data item and add it to the device.
+      Attributes attrs {
+        { "type", "ASSET_CHANGED" },
+        { "id", device->getId() + "_asset_chg" },
+        { "category", "EVENT" }
+      };
+      auto di = new DataItem(attrs);
+      di->setComponent(*device);
+      device->addDataItem(*di);
+      device->addDeviceDataItem(*di);
+    }
+    
+    if (device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 5)))
+    {
+      auto di = device->getAssetChanged();
+      di->makeDiscrete();
+    }
+    
+    if (!device->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
+    {
+      // Create asset removed data item and add it to the device.
+      Attributes attrs {
+        { "type", "ASSET_REMOVED" },
+        { "id", device->getId() + "_asset_rem" },
+        { "category", "EVENT" }
+      };
+      auto di = new DataItem(attrs);
+      di->setComponent(*device);
+      device->addDataItem(*di);
+      device->addDeviceDataItem(*di);
+    }
   }
   
-  void Agent::initializeDataItems(const string &time)
+  void Agent::initializeDataItems(Device *device)
   {
+    // Grab data from configuration
+    string time = getCurrentTime(GMT_UV_SEC);
+
     // Initialize the id mapping for the devices and set all data items to UNAVAILABLE
-    for (const auto device : m_devices)
+    const auto &items = device->getDeviceDataItems();
+    
+    for (const auto item : items)
     {
-      const auto &items = device->getDeviceDataItems();
+      // Check for single valued constrained data items.
+      auto d = item.second;
+      const string *value = &g_unavailable;
+      if (d->isCondition())
+        value = &g_conditionUnavailable;
+      else if (d->hasConstantValue())
+        value = &(d->getConstrainedValues()[0]);
       
-      for (const auto item : items)
+      addToBuffer(d, *value, time);
+      if (!m_dataItemMap.count(d->getId()))
+        m_dataItemMap[d->getId()] = d;
+      else
       {
-        // Check for single valued constrained data items.
-        auto d = item.second;
-        const string *value = &g_unavailable;
-        if (d->isCondition())
-          value = &g_conditionUnavailable;
-        else if (d->hasConstantValue())
-          value = &(d->getConstrainedValues()[0]);
+        g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
+        << " for device: " << device->getName()
+        << " and data item name: " << d->getName();
+        std::exit(1);
+      }
+    }
+  }
+  
+  // Add the a device from a configuration file
+  void Agent::addDevice(Device *device)
+  {
+    // Check if device already exists
+    auto old = m_deviceUuidMap.find(device->getUuid());
+    if (old != m_deviceUuidMap.end())
+    {
+      // Update existing device
+      g_logger << LFATAL << "Device " << device->getUuid() << " already exists. "
+               << " Update not supported yet";
+      std::exit(1);
+   }
+    else
+    {
+      // Check if we are already initialized. If so, the device will need to be
+      // verified, additional data items added, and initial values set.
+      if (!m_initialized)
+      {
+        m_devices.push_back(device);
+        m_deviceNameMap[device->getName()] = device;
+        m_deviceUuidMap[device->getUuid()] = device;
+       
+        device->resolveReferences();
+        verifyDevice(device);
+        initializeDataItems(device);
         
-        addToBuffer(d, *value, time);
-        if (!m_dataItemMap.count(d->getId()))
-          m_dataItemMap[d->getId()] = d;
-        else
+        // Check for single valued constrained data items.
+        if (device != m_agentDevice)
         {
-          g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
-          << " for device: " << device->getName()
-          << " and data item name: " << d->getName();
-          std::exit(1);
+          auto d = m_agentDevice->getDeviceDataItem("device_added");
+          addToBuffer(d, device->getUuid(), getCurrentTime(GMT_UV_SEC));
         }
       }
+      else
+        g_logger << LWARN << "Adding device " << device->getUuid() << " after initialialization not supported yet";
     }
   }
 

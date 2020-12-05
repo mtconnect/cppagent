@@ -138,6 +138,9 @@ namespace mtconnect
     {
       return m_devices;
     }
+    
+    // Add the a device from a configuration file
+    void addDevice(Device *device);
 
     // Add component events to the sliding buffer
     unsigned int addToBuffer(DataItem *dataItem, const std::string &value, std::string time = "");
@@ -204,6 +207,7 @@ namespace mtconnect
     {
       return &m_assets;
     }
+    auto getAgentDevice() { return m_agentDevice; }
 
     // Starting
     virtual void start();
@@ -255,8 +259,8 @@ namespace mtconnect
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
     void createCircularBuffer(int bufferSize);
-    void verifyDevices(const std::string &schemaVersion);
-    void initializeDataItems(const std::string &time);
+    void verifyDevice(Device *device);
+    void initializeDataItems(Device *device);
 
     // HTTP Protocol
     void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
@@ -341,6 +345,7 @@ namespace mtconnect
    protected:
     // Unique id based on the time of creation
     uint64_t m_instanceId;
+    bool m_initialized{false};
 
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;

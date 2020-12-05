@@ -37,10 +37,12 @@ class AgentDeviceTest : public testing::Test
     m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25);
     m_agentId = intToString(getCurrentTimeInSec());
     m_adapter = nullptr;
-
+    m_agentDevice = nullptr;
+    
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->m_agent = m_agent.get();
     m_agentTestHelper->m_queries.clear();
+    m_agentDevice = m_agent->getAgentDevice();
   }
 
   void TearDown() override
@@ -58,9 +60,55 @@ class AgentDeviceTest : public testing::Test
   }
 
  public:
+  AgentDevice *m_agentDevice{nullptr};
   std::unique_ptr<Agent> m_agent;
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
+TEST_F(AgentDeviceTest, AgentDeviceCreation)
+{
+  ASSERT_NE(nullptr, m_agentDevice);
+  ASSERT_EQ(2, m_agent->getDevices().size());
+  ASSERT_EQ("Agent", m_agentDevice->getName());
+}
+
+TEST_F(AgentDeviceTest, VerifyRequiredDataItems)
+{
+  ASSERT_NE(nullptr, m_agentDevice);
+  auto avail = m_agentDevice->getDeviceDataItem("agent_avail");
+  ASSERT_NE(nullptr, avail);
+  ASSERT_EQ("AVAILABILITY", avail->getType());
+
+  auto added = m_agentDevice->getDeviceDataItem("device_added");
+  ASSERT_NE(nullptr, added);
+  ASSERT_EQ("DEVICE_ADDED", added->getType());
+
+  auto removed = m_agentDevice->getDeviceDataItem("device_removed");
+  ASSERT_NE(nullptr, removed);
+  ASSERT_EQ("DEVICE_REMOVED", removed->getType());
+
+  auto changed = m_agentDevice->getDeviceDataItem("device_changed");
+  ASSERT_NE(nullptr, changed);
+  ASSERT_EQ("DEVICE_CHANGED", changed->getType());
+}
+
+TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
+{
+  auto &uuid = m_agent->getDevices()[1]->getUuid();
+  ASSERT_EQ("000", uuid);
+  auto found = false;
+  
+  for (auto seq = m_agent->getSequence() - 1; !found && seq > 0ull; seq--)
+  {
+    auto event = m_agent->getFromBuffer(seq);
+    if (event->getDataItem()->getType() == "DEVICE_ADDED" &&
+        uuid == event->getValue())
+    {
+      found = true;
+    }
+  }
+
+  ASSERT_TRUE(found);
+}
