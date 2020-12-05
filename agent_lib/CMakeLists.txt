@@ -3,6 +3,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent_device.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/change_observer.cpp"

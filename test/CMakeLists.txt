@@ -39,6 +39,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
 endmacro()
 
 add_agent_test(agent TRUE)
+add_agent_test(agent_device TRUE)
 add_agent_test(adapter FALSE)
 add_agent_test(config FALSE)
 add_agent_test(change_observer FALSE)
