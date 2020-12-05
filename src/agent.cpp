@@ -16,6 +16,7 @@
 //
 
 #include "agent.hpp"
+#include "agent_device.hpp"
 
 #include "json_printer.hpp"
 #include "xml_printer.hpp"
@@ -48,37 +49,73 @@ namespace mtconnect
 
   // Agent public methods
   Agent::Agent(const string &configXmlPath, int bufferSize, int maxAssets,
-               const std::string &version, std::chrono::milliseconds checkpointFreq, bool pretty)
-      : m_putEnabled(false), m_logStreamData(false), m_pretty(pretty)
+               const std::string &version, int checkpointFreq, bool pretty)
+      : m_putEnabled(false), m_logStreamData(false), m_pretty(pretty),
+        m_mimeTypes({{
+          { "xsl", "text/xsl" },
+          { "xml", "text/xml" },
+          { "json", "application/json" },
+          { "css", "text/css" },
+          { "xsd",  "text/xml" },
+          { "jpg", "image/jpeg" },
+          { "jpeg", "image/jpeg" },
+          { "png", "image/png" },
+          { "ico", "image/x-icon" }
+        }}), m_maxAssets(maxAssets), m_sequence(1ull), m_checkpointFreq(checkpointFreq),
+        m_xmlParser(make_unique<XmlParser>())
   {
-    m_mimeTypes["xsl"] = "text/xsl";
-    m_mimeTypes["xml"] = "text/xml";
-    m_mimeTypes["json"] = "application/json";
-    m_mimeTypes["css"] = "text/css";
-    m_mimeTypes["xsd"] = "text/xml";
-    m_mimeTypes["jpg"] = "image/jpeg";
-    m_mimeTypes["jpeg"] = "image/jpeg";
-    m_mimeTypes["png"] = "image/png";
-    m_mimeTypes["ico"] = "image/x-icon";
+    // Create the Printers
+    m_printers["xml"] = unique_ptr<Printer>(new XmlPrinter(version, m_pretty));
+    m_printers["json"] = unique_ptr<Printer>(new JsonPrinter(version, m_pretty));
 
-    // Create the XmlPrinter
-    auto *xmlPrinter = new XmlPrinter(version, m_pretty);
-    m_printers["xml"].reset(xmlPrinter);
+    auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
+    
+    loadXMLDeviceFile(configXmlPath);
+    
+    // Grab data from configuration
+    string time = getCurrentTime(GMT_UV_SEC);
 
-    auto *jsonPrinter = new JsonPrinter(version, m_pretty);
-    m_printers["json"].reset(jsonPrinter);
+    // Unique id number for agent instance
+    m_instanceId = getCurrentTimeInSec();
 
+    createCircularBuffer(bufferSize);
+    
+    verifyDevices(xmlPrinter->getSchemaVersion());
+    
+    // Reload the document for path resolution
+    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize,
+                                                     m_maxAssets, m_assets.size(),
+                                                     m_sequence, m_devices));
+
+    initializeDataItems(time);
+  }
+  
+  void Agent::createAgentDevice()
+  {
+    // Create the Agent Device
+    m_agentDevice = new AgentDevice({
+      { "name", "AgentDevice" },
+      { "uuid", "0b49a3a0-18ca-0139-8748-2cde48001122" },
+      { "id", "2cde48001122" },
+      { "mtconnectVersion", "1.7" }
+    });
+    m_devices.push_back(m_agentDevice);
+  }
+  
+  void Agent::loadXMLDeviceFile(const std::string &configXmlPath)
+  {
     try
     {
       // Load the configuration for the Agent
-      m_xmlParser = make_unique<XmlParser>();
-      m_devices = m_xmlParser->parseFile(configXmlPath, xmlPrinter);
+      auto devices = m_xmlParser->parseFile(configXmlPath, dynamic_cast<XmlPrinter*>(m_printers["xml"].get()));
+      m_devices.insert(m_devices.end(), devices.begin(), devices.end());
+      
       std::set<std::string> uuids;
       for (const auto &device : m_devices)
       {
         if (uuids.count(device->getUuid()) > 0)
           throw runtime_error("Duplicate UUID: " + device->getUuid());
-
+        
         uuids.insert(device->getUuid());
         device->resolveReferences();
       }
@@ -97,85 +134,81 @@ namespace mtconnect
       cerr << f.what() << endl;
       throw f;
     }
-
-    // Grab data from configuration
-    string time = getCurrentTime(GMT_UV_SEC);
-
-    // Unique id number for agent instance
-    m_instanceId = getCurrentTimeInSec();
-
+  }
+  
+  void Agent::createCircularBuffer(int bufferSize)
+  {
     // Sequence number and sliding buffer for data
-    m_sequence = 1ull;
     m_slidingBufferSize = 1 << bufferSize;
     m_slidingBuffer = make_unique<sliding_buffer_kernel_1<ObservationPtr>>();
     m_slidingBuffer->set_size(bufferSize);
-    m_checkpointFreq = checkpointFreq.count();
-    m_checkpointCount = (m_slidingBufferSize / checkpointFreq.count()) + 1;
-
-    // Asset sliding buffer
-    m_maxAssets = maxAssets;
-
+    m_checkpointCount = (m_slidingBufferSize / m_checkpointFreq) + 1;
+    
     // Create the checkpoints at a regular frequency
     m_checkpoints.reserve(m_checkpointCount);
     for (auto i = 0; i < m_checkpointCount; i++)
       m_checkpoints.emplace_back();
-
+  }
+  
+  void Agent::verifyDevices(const string &schemaVersion)
+  {
     // Add the devices to the device map and create availability and
     // asset changed events if they don't exist
     for (const auto device : m_devices)
     {
       m_deviceNameMap[device->getName()] = device;
       m_deviceUuidMap[device->getUuid()] = device;
-
+      
       // Make sure we have two device level data items:
       // 1. Availability
       // 2. AssetChanged
       if (!device->getAvailability())
       {
         // Create availability data item and add it to the device.
-        std::map<string, string> attrs;
-        attrs["type"] = "AVAILABILITY";
-        attrs["id"] = device->getId() + "_avail";
-        attrs["category"] = "EVENT";
-
+        Attributes attrs {
+          { "type", "AVAILABILITY" },
+          { "id", device->getId() + "_avail" },
+          { "category", "EVENT" }
+        };
         auto di = new DataItem(attrs);
         di->setComponent(*device);
         device->addDataItem(*di);
         device->addDeviceDataItem(*di);
         device->m_availabilityAdded = true;
       }
-
+      
       int major, minor;
       char c;
-      stringstream ss(xmlPrinter->getSchemaVersion());
+      stringstream ss(schemaVersion);
       ss >> major >> c >> minor;
       if (!device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
       {
         // Create asset change data item and add it to the device.
-        std::map<string, string> attrs;
-        attrs["type"] = "ASSET_CHANGED";
-        attrs["id"] = device->getId() + "_asset_chg";
-        attrs["category"] = "EVENT";
+        Attributes attrs {
+          { "type", "ASSET_CHANGED" },
+          { "id", device->getId() + "_asset_chg" },
+          { "category", "EVENT" }
+        };
         auto di = new DataItem(attrs);
         di->setComponent(*device);
         device->addDataItem(*di);
         device->addDeviceDataItem(*di);
       }
-
+      
       if (device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 5)))
       {
         auto di = device->getAssetChanged();
         di->makeDiscrete();
       }
-
+      
       if (!device->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
       {
         // Create asset removed data item and add it to the device.
-        std::map<string, string> attrs;
-        attrs["type"] = "ASSET_REMOVED";
-        attrs["id"] = device->getId() + "_asset_rem";
-        attrs["category"] = "EVENT";
-
+        Attributes attrs {
+          { "type", "ASSET_REMOVED" },
+          { "id", device->getId() + "_asset_rem" },
+          { "category", "EVENT" }
+        };
         auto di = new DataItem(attrs);
         di->setComponent(*device);
         device->addDataItem(*di);
@@ -183,15 +216,15 @@ namespace mtconnect
       }
     }
 
-    // Reload the document for path resolution
-    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize, m_maxAssets,
-                                                     m_assets.size(), m_sequence, m_devices));
-
+  }
+  
+  void Agent::initializeDataItems(const string &time)
+  {
     // Initialize the id mapping for the devices and set all data items to UNAVAILABLE
     for (const auto device : m_devices)
     {
       const auto &items = device->getDeviceDataItems();
-
+      
       for (const auto item : items)
       {
         // Check for single valued constrained data items.
@@ -201,15 +234,15 @@ namespace mtconnect
           value = &g_conditionUnavailable;
         else if (d->hasConstantValue())
           value = &(d->getConstrainedValues()[0]);
-
+        
         addToBuffer(d, *value, time);
         if (!m_dataItemMap.count(d->getId()))
           m_dataItemMap[d->getId()] = d;
         else
         {
           g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
-                   << " for device: " << device->getName()
-                   << " and data item name: " << d->getName();
+          << " for device: " << device->getName()
+          << " and data item name: " << d->getName();
           std::exit(1);
         }
       }
@@ -256,7 +289,7 @@ namespace mtconnect
     m_slidingBuffer.reset();
     m_xmlParser.reset();
     m_checkpoints.clear();
-
+    m_agentDevice = nullptr;
     for (auto &i : m_devices)
       delete i;
     m_devices.clear();

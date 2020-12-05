@@ -547,7 +547,7 @@ namespace mtconnect
     string serverIp = get_with_default(reader, "ServerIp", "");
     auto bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
     auto maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
-    auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000ms);
+    auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
     auto legacyTimeout = get_with_default(reader, "LegacyTimeout", 600s);
     auto reconnectInterval = get_with_default(reader, "ReconnectInterval", 10000ms);
     auto ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);

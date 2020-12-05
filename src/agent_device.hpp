@@ -29,8 +29,8 @@ namespace mtconnect
   {
   public:
     // Constructor that sets variables from an attribute map
-    AgentDevice(const std::map<std::string, std::string> &attributes)
-    : Device(attributes) {}
+    AgentDevice(const Attributes &attributes)
+    : Device(attributes, "AgentDevice") {}
     ~AgentDevice() override = default;
 
     

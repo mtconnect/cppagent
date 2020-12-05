@@ -51,7 +51,7 @@ class AgentTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25ms);
+    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25);
     m_agentId = intToString(getCurrentTimeInSec());
     m_adapter = nullptr;
 
@@ -743,7 +743,7 @@ TEST_F(AgentTest, AdapterCommands)
 TEST_F(AgentTest, AdapterDeviceCommand)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/two_devices.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/two_devices.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
   m_agentTestHelper->m_path = "/probe";
 
@@ -1622,7 +1622,7 @@ TEST_F(AgentTest, AssetStorageWithoutType)
 TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.2", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.2", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   {
@@ -1637,7 +1637,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.3", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.3", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   {
@@ -1652,7 +1652,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   {
@@ -2013,7 +2013,7 @@ TEST_F(AgentTest, StreamData)
 
 TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
-  ASSERT_THROW(new Agent(PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25ms),
+  ASSERT_THROW(new Agent(PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25),
                std::runtime_error);
 }
 
@@ -2197,7 +2197,7 @@ TEST_F(AgentTest, FilterValues13)
 {
   m_agent.reset();
   m_agent =
-      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", 8, 4, "1.5", 25ms);
+      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2250,7 +2250,7 @@ TEST_F(AgentTest, FilterValues13)
 TEST_F(AgentTest, FilterValues)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2316,7 +2316,7 @@ TEST_F(AgentTest, FilterValues)
 
   // Test period filter with ignore timestamps
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2351,7 +2351,7 @@ TEST_F(AgentTest, FilterValues)
 
   // Test period filter with relative time
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2422,7 +2422,7 @@ TEST_F(AgentTest, References)
 {
   m_agent.reset();
   m_agent =
-      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/reference_example.xml", 8, 4, "1.5", 25ms);
+      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/reference_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
@@ -2473,7 +2473,7 @@ TEST_F(AgentTest, References)
 TEST_F(AgentTest, Discrete)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   m_agentTestHelper->m_path = "/sample";
@@ -2522,7 +2522,7 @@ TEST_F(AgentTest, UpcaseValues)
 {
   m_agentTestHelper->m_path = "/current";
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);

@@ -141,6 +141,8 @@ namespace mtconnect
     return (str.length() >= ending.length() &&
             str.compare(str.length() - ending.length(), ending.length(), ending) == 0);
   }
+  
+  typedef std::map<std::string,std::string> Attributes;
 
 #ifdef _WINDOWS
 #include <io.h>

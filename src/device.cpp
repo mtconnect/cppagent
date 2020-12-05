@@ -26,8 +26,9 @@ namespace mtconnect
 {
   static dlib::logger g_logger("device");
 
-  Device::Device(const std::map<std::string, std::string> &attributes)
-      : Component("Device", attributes),
+  Device::Device(const Attributes &attributes,
+                 const std::string block)
+      : Component(block, attributes),
         m_preserveUuid(false),
         m_availabilityAdded(false),
         m_iso841Class(-1),

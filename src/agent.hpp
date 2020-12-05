@@ -43,6 +43,7 @@ namespace mtconnect
   class Observation;
   class DataItem;
   class Device;
+  class AgentDevice;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
@@ -107,7 +108,7 @@ namespace mtconnect
     // Load agent with the xml configuration
     Agent(const std::string &configXmlPath, int bufferSize, int maxAssets,
           const std::string &version,
-          std::chrono::milliseconds checkpointFreq = std::chrono::milliseconds{1000},
+          int checkpointFreq = 1000,
           bool pretty = false);
 
     // Virtual destructor
@@ -250,6 +251,14 @@ namespace mtconnect
     }
 
    protected:
+    // Initialization methods
+    void createAgentDevice();
+    void loadXMLDeviceFile(const std::string &config);
+    void createCircularBuffer(int bufferSize);
+    void verifyDevices(const std::string &schemaVersion);
+    void initializeDataItems(const std::string &time);
+
+    // HTTP Protocol
     void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
                     const std::string &local_ip, unsigned short foreign_port,
                     unsigned short local_port, dlib::uint64) override;
@@ -355,6 +364,9 @@ namespace mtconnect
     // Natural key indices for assets
     std::map<std::string, AssetIndex> m_assetIndices;
     unsigned int m_maxAssets;
+    
+    // Agent Device
+    AgentDevice *m_agentDevice{nullptr};
 
     // Checkpoints
     Checkpoint m_latest;

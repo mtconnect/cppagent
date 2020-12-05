@@ -34,7 +34,7 @@ class AgentDeviceTest : public testing::Test
 
   void SetUp() override
   {
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25ms);
+    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25);
     m_agentId = intToString(getCurrentTimeInSec());
     m_adapter = nullptr;
 
