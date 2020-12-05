@@ -18,6 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
+#include "composition.hpp"
 #include "globals.hpp"
 
 #include <list>
@@ -31,7 +32,6 @@ namespace mtconnect
 {
   class DataItem;
   class Device;
-  class Composition;
   class Agent;
 
   class Component
@@ -110,7 +110,7 @@ namespace mtconnect
     {
       return m_prefix;
     }
-    const std::list<std::unique_ptr<ComponentConfiguration>> &getConfiguration() const
+    const auto &getConfiguration() const
     {
       return m_configuration;
     }
@@ -150,9 +150,9 @@ namespace mtconnect
       return m_description;
     }
 
-    void addConfiguration(ComponentConfiguration *configuration)
+    void addConfiguration(std::unique_ptr<ComponentConfiguration> &configuration)
     {
-      m_configuration.emplace_back(configuration);
+      m_configuration.emplace_back(std::move(configuration));
     }
 
     // Get the device that any component is associated with
@@ -176,11 +176,11 @@ namespace mtconnect
     }
 
     // Add and get composition...
-    void addComposition(Composition *composition)
+    void addComposition(std::unique_ptr<Composition> &composition)
     {
-      m_compositions.emplace_back(composition);
+      m_compositions.emplace_back(std::move(composition));
     }
-    std::list<Composition *> &getCompositions()
+    const std::list<std::unique_ptr<Composition>> &getCompositions() const
     {
       return m_compositions;
     }
@@ -257,7 +257,7 @@ namespace mtconnect
     std::list<DataItem *> m_dataItems;
 
     // List of all the compositions
-    std::list<Composition *> m_compositions;
+    std::list<std::unique_ptr<Composition>> m_compositions;
 
     // The set of attribtues
     std::map<std::string, std::string> m_attributes;

@@ -61,7 +61,7 @@ namespace mtconnect
   {
    public:
     Relationships() = default;
-    virtual ~Relationships() = default;
+    ~Relationships() override = default;
 
     void addRelationship(Relationship *r)
     {

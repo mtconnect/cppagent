@@ -19,61 +19,39 @@
 
 #include "globals.hpp"
 #include "component_configuration.hpp"
-#include "description.hpp"
 
 #include <list>
 #include <map>
-#include <memory>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <optional>
 
 namespace mtconnect
 {
-  class Composition
+  class Description
   {
-   public:
-    Composition() = default;
-    Composition(const Composition&) = default;
-    ~Composition() = default;
-    
+  public:
+    Description() = default;
+    Description(const Description &another) = default;
+    Description(std::string body)
+      : m_body(std::move(body))
+    {}
+    ~Description() = default;
     
     const std::map<std::string, bool> &properties() const
     {
       const static std::map<std::string, bool> properties = {
-        { "id", true },
-        { "uuid", false },
-        { "name", false },
-        { "type", true }
+							     { "manufacturer", false },
+							     { "model", false },
+							     { "serialNumber", false },
+							     { "station", false }
       };;
       return properties;
     }
-
-    const std::optional<Description> &getDescription() const
-    {
-      return m_description;
-    }
-
-    void setDescription(Description &d)
-    {
-      m_description = d;
-    }
     
-    const auto &getConfiguration() const
-    {
-      return m_configuration;
-    }
-    
-    void addConfiguration(std::unique_ptr<ComponentConfiguration> &config)
-    {
-      m_configuration.emplace_back(std::move(config));
-    }
-
+    std::string m_body;
     std::map<std::string, std::string> m_attributes;
-
-   protected:
-    std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
-    std::optional<Description> m_description;
+    
+  protected:
   };
 }  // namespace mtconnect
