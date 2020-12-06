@@ -182,12 +182,11 @@ namespace mtconnect
     if (!device->getAvailability())
     {
       // Create availability data item and add it to the device.
-      Attributes attrs {
+      auto di = new DataItem({
         { "type", "AVAILABILITY" },
         { "id", device->getId() + "_avail" },
         { "category", "EVENT" }
-      };
-      auto di = new DataItem(attrs);
+      });
       di->setComponent(*device);
       device->addDataItem(*di);
       device->addDeviceDataItem(*di);
@@ -201,12 +200,11 @@ namespace mtconnect
     if (!device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
     {
       // Create asset change data item and add it to the device.
-      Attributes attrs {
+      auto di = new DataItem({
         { "type", "ASSET_CHANGED" },
         { "id", device->getId() + "_asset_chg" },
         { "category", "EVENT" }
-      };
-      auto di = new DataItem(attrs);
+      });
       di->setComponent(*device);
       device->addDataItem(*di);
       device->addDeviceDataItem(*di);
@@ -221,12 +219,11 @@ namespace mtconnect
     if (!device->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
     {
       // Create asset removed data item and add it to the device.
-      Attributes attrs {
+      auto di = new DataItem({
         { "type", "ASSET_REMOVED" },
         { "id", device->getId() + "_asset_rem" },
         { "category", "EVENT" }
-      };
-      auto di = new DataItem(attrs);
+      });
       di->setComponent(*device);
       device->addDataItem(*di);
       device->addDeviceDataItem(*di);
@@ -612,7 +609,8 @@ namespace mtconnect
     return result;
   }
 
-  Adapter *Agent::addAdapter(const string &deviceName, const string &host, const unsigned int port,
+  Adapter *Agent::addAdapter(const string &deviceName, const string &host,
+                             const unsigned int port,
                              bool start, std::chrono::seconds legacyTimeout)
   {
     auto adapter = new Adapter(deviceName, host, port, legacyTimeout);
