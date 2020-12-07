@@ -26,7 +26,7 @@ class SpecificationTest : public testing::Test
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/configuration.xml", 4, 4, "1.5");
+    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/configuration.xml", 4, 4, "1.7");
     m_agentId = int64ToString(getCurrentTimeInSec());
     m_adapter = nullptr;
 
@@ -91,7 +91,7 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
 
 TEST_F(SpecificationTest, XmlPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
     PARSE_XML_RESPONSE;
     
@@ -114,7 +114,7 @@ TEST_F(SpecificationTest, XmlPrinting)
 
 TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
     PARSE_XML_RESPONSE;
     
@@ -138,10 +138,11 @@ TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
 
 TEST_F(SpecificationTest, JsonPrinting)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
   {
@@ -173,10 +174,7 @@ TEST_F(SpecificationTest, JsonPrinting)
 
 TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
-  ASSERT_TRUE(m_adapter);
-  
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
   {
@@ -313,7 +311,7 @@ TEST_F(SpecificationTest, ParseProcessSpecificationValues)
 
 TEST_F(SpecificationTest, XmlPrintingForProcessSpecification)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
     PARSE_XML_RESPONSE;
     
@@ -345,10 +343,7 @@ TEST_F(SpecificationTest, XmlPrintingForProcessSpecification)
 
 TEST_F(SpecificationTest, JsonPrintingForProcessSpecification)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
-  ASSERT_TRUE(m_adapter);
-  
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
   {

@@ -121,7 +121,7 @@ TEST_F(SolidModelTest, ParseRotarySolidModel)
 
 TEST_F(SolidModelTest, DeviceXmlPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
     PARSE_XML_RESPONSE;
     
@@ -143,7 +143,7 @@ TEST_F(SolidModelTest, DeviceXmlPrinting)
 
 TEST_F(SolidModelTest, RotaryXmlPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
     PARSE_XML_RESPONSE;
     
@@ -162,7 +162,7 @@ TEST_F(SolidModelTest, RotaryXmlPrinting)
 
 TEST_F(SolidModelTest, DeviceJsonPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
   {
@@ -198,7 +198,7 @@ TEST_F(SolidModelTest, DeviceJsonPrinting)
 
 TEST_F(SolidModelTest, RotaryJsonPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
   {

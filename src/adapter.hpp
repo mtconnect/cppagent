@@ -62,6 +62,7 @@ namespace mtconnect
     {
       return m_device;
     }
+    const auto &getDeviceName() const { return m_deviceName; }
 
     bool isAutoAvailable() const
     {
@@ -153,6 +154,17 @@ namespace mtconnect
     // Method called when connection is lost.
     void disconnected() override;
     void connected() override;
+    
+    // Agent Device methods
+    const std::string &getUrl() const
+    {
+      
+      return m_url;
+    }
+    const std::string &getIdentity() const
+    {
+      return m_identity;
+    }
 
     bool isDuplicate(DataItem *dataItem, const std::string &value, double timeOffset) const
     {
@@ -215,6 +227,8 @@ namespace mtconnect
     std::string m_assetId;
     std::string m_assetType;
     std::string m_time;
+    std::string m_url;
+    std::string m_identity;
     std::ostringstream m_body;
     Device *m_assetDevice;
     std::set<std::string> m_logOnce;

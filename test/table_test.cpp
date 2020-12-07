@@ -127,7 +127,9 @@ TEST_F(TableTest, InitialSet)
 
 TEST_F(TableTest, Current)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/current";
@@ -186,7 +188,8 @@ TEST_F(TableTest, Current)
 
 TEST_F(TableTest, JsonCurrent)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
   m_agentTestHelper->m_path = "/current";
@@ -242,7 +245,8 @@ TEST_F(TableTest, JsonCurrent)
 
 TEST_F(TableTest, JsonCurrentText)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
   m_agentTestHelper->m_path = "/current";
@@ -290,7 +294,8 @@ TEST_F(TableTest, JsonCurrentText)
 
 TEST_F(TableTest, XmlCellDefinitions)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/probe";
@@ -337,7 +342,8 @@ TEST_F(TableTest, XmlCellDefinitions)
 
 TEST_F(TableTest, JsonDefinitionTest)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
   m_agentTestHelper->m_path = "/probe";

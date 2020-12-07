@@ -249,7 +249,8 @@ TEST_F(DataSetTest, BadData)
 
 TEST_F(DataSetTest, Current)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/current";
@@ -316,7 +317,8 @@ TEST_F(DataSetTest, Current)
 
 TEST_F(DataSetTest, Sample)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -381,7 +383,8 @@ TEST_F(DataSetTest, Sample)
 
 TEST_F(DataSetTest, CurrentAt)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   auto seq = m_agent->getSequence();
@@ -484,7 +487,8 @@ TEST_F(DataSetTest, DeleteKey)
 
 TEST_F(DataSetTest, ResetWithNoItems)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -520,7 +524,8 @@ TEST_F(DataSetTest, ResetWithNoItems)
 
 TEST_F(DataSetTest, DuplicateCompression)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -588,7 +593,8 @@ TEST_F(DataSetTest, DuplicateCompression)
 
 TEST_F(DataSetTest, QuoteDelimeter)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a='1 2 3' b=\"x y z\" c={cats and dogs}");
@@ -627,7 +633,8 @@ TEST_F(DataSetTest, QuoteDelimeter)
 
 TEST_F(DataSetTest, Discrete)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   auto di = m_agent->getDataItemByName("LinuxCNC", "vars2");
@@ -666,7 +673,8 @@ TEST_F(DataSetTest, Discrete)
 
 TEST_F(DataSetTest, Probe)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/probe";
@@ -681,9 +689,10 @@ TEST_F(DataSetTest, Probe)
 
 TEST_F(DataSetTest, JsonCurrent)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
-  
+
   m_agentTestHelper->m_path = "/current";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   

@@ -111,18 +111,19 @@ namespace mtconnect
   {
     if (!m_device)
     {
-      if (getClass() == "Device")
-        m_device = (Device *)this;
-      else if (m_parent)
+      m_device = dynamic_cast<Device*>(this);
+      if (m_device == nullptr && m_parent)
         m_device = m_parent->getDevice();
     }
 
     return m_device;
   }
 
-  void Component::addDataItem(DataItem &dataItem)
+  void Component::addDataItem(DataItem *dataItem)
   {
-    m_dataItems.emplace_back(&dataItem);
+    m_dataItems.emplace_back(dataItem);
+    if (getDevice())
+      getDevice()->addDeviceDataItem(dataItem);
   }
 
   void Component::resolveReferences()
@@ -154,9 +155,9 @@ namespace mtconnect
       childComponent->resolveReferences();
   }
 
-  void Component::setParent(Component &parent)
+  void Component::setParent(Component *parent)
   {
-    m_parent = &parent;
+    m_parent = parent;
     auto device = getDevice();
     if (device)
       device->addComponent(this);

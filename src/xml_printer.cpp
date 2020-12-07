@@ -502,7 +502,7 @@ namespace mtconnect
       {
         AutoElement devices(writer, "Devices");
         for (const auto dev : deviceList)
-          printProbeHelper(writer, dev, "Device");
+          printProbeHelper(writer, dev, dev->getClass().c_str());
       }
       closeElement(writer);  // MTConnectDevices
 

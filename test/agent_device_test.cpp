@@ -34,7 +34,7 @@ class AgentDeviceTest : public testing::Test
 
   void SetUp() override
   {
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25);
+    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.7", 25);
     m_agentId = intToString(getCurrentTimeInSec());
     m_adapter = nullptr;
     m_agentDevice = nullptr;
@@ -55,7 +55,8 @@ class AgentDeviceTest : public testing::Test
   void addAdapter()
   {
     ASSERT_FALSE(m_adapter);
-    m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+    m_adapter = new Adapter("LinuxCNC", "server", 7878);
+    m_agent->addAdapter(m_adapter);
     ASSERT_TRUE(m_adapter);
   }
 

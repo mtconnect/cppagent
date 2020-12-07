@@ -602,29 +602,28 @@ namespace mtconnect
     else
     {
       // Node is a component
-      Component *component = nullptr;
-      component = loadComponent(node, name);
+      Component *component = loadComponent(node, name);
 
       // Top level, then must be a device
       if (device == nullptr)
         device = dynamic_cast<Device *>(component);
 
       // Construct relationships
-      if (component && parent)
+      if (component)
       {
-        parent->addChild(*component);
-        component->setParent(*parent);
-      }
+        if (parent)
+          parent->addChild(component);
 
-      // Recurse for children
-      if (component && node->children)
-      {
-        for (xmlNodePtr child = node->children; child; child = child->next)
+        // Recurse for children
+        if (node->children)
         {
-          if (child->type != XML_ELEMENT_NODE)
-            continue;
-
-          handleNode(child, component, device);
+          for (xmlNodePtr child = node->children; child; child = child->next)
+          {
+            if (child->type != XML_ELEMENT_NODE)
+              continue;
+            
+            handleNode(child, component, device);
+          }
         }
       }
 
@@ -748,8 +747,7 @@ namespace mtconnect
       }
     }
 
-    parent->addDataItem(*d);
-    device->addDeviceDataItem(*d);
+    parent->addDataItem(d);
   }
 
   void XmlParser::loadDefinition(xmlNodePtr definition, AbstractDefinition *def)

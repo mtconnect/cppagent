@@ -25,14 +25,22 @@
 
 namespace mtconnect
 {
+  class Adapter;
+  
   class AgentDevice : public Device
   {
   public:
     // Constructor that sets variables from an attribute map
-    AgentDevice(const Attributes &attributes)
-    : Device(attributes, "AgentDevice") {}
+    AgentDevice(const Attributes &attributes);
     ~AgentDevice() override = default;
 
+    void addAdapter(const Adapter *adapter);
+    
+  protected:
+    void addRequiredDataItems();
+    
+  protected:
+    Component *m_adapters{nullptr};
     
   };
 }

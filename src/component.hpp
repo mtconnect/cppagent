@@ -159,16 +159,16 @@ namespace mtconnect
     Device *getDevice();
 
     // Set/Get the component's parent component
-    void setParent(Component &parent);
     Component *getParent() const
     {
       return m_parent;
     }
 
     // Add to/get the component's std::list of children
-    void addChild(Component &child)
+    void addChild(Component *child)
     {
-      m_children.emplace_back(&child);
+      child->setParent(this);
+      m_children.emplace_back(child);
     }
     std::list<Component *> &getChildren()
     {
@@ -186,7 +186,7 @@ namespace mtconnect
     }
 
     // Add to/get the component's std::list of data items
-    virtual void addDataItem(DataItem &dataItem);
+    virtual void addDataItem(DataItem *dataItem);
     const std::list<DataItem *> &getDataItems() const
     {
       return m_dataItems;
@@ -220,6 +220,7 @@ namespace mtconnect
     {
       m_attributes = buildAttributes();
     }
+    void setParent(Component *parent);
 
    protected:
     // Unique ID for each component

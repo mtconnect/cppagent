@@ -74,7 +74,15 @@ namespace mtconnect
     auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
     createCircularBuffer(bufferSize);
     
-    createAgentDevice();
+    // TODO: Check Schema version before creating Agent Device. Only > 1.7'
+    int major, minor;
+    char c;
+    stringstream vstr(version);
+    vstr >> major >> c >> minor;
+    if (major > 1 || (major == 1 && minor >= 7))
+    {
+      createAgentDevice();
+    }
     loadXMLDeviceFile(configXmlPath);
     
     // Reload the document for path resolution
@@ -94,36 +102,6 @@ namespace mtconnect
       { "id", "agent_2cde48001122" },
       { "mtconnectVersion", "1.7" }
     });
-    
-    // Add the required data items
-    auto di = new DataItem({ { "type", "AVAILABILITY" },
-      { "id", "agent_avail" },
-      { "category", "EVENT" } });
-    di->setComponent(*m_agentDevice);
-    m_agentDevice->addDataItem(*di);
-    m_agentDevice->addDeviceDataItem(*di);
-    
-    // Add the required data items
-    auto add = new DataItem({ { "type", "DEVICE_ADDED" },
-      { "id", "device_added" },
-      { "category", "EVENT" } });
-    add->setComponent(*m_agentDevice);
-    m_agentDevice->addDataItem(*add);
-    m_agentDevice->addDeviceDataItem(*add);
-    
-    auto removed = new DataItem({ { "type", "DEVICE_REMOVED" },
-      { "id", "device_removed" },
-      { "category", "EVENT" } });
-    removed->setComponent(*m_agentDevice);
-    m_agentDevice->addDataItem(*removed);
-    m_agentDevice->addDeviceDataItem(*removed);
-
-    auto changed = new DataItem({ { "type", "DEVICE_CHANGED" },
-      { "id", "device_changed" },
-      { "category", "EVENT" } });
-    changed->setComponent(*m_agentDevice);
-    m_agentDevice->addDataItem(*changed);
-    m_agentDevice->addDeviceDataItem(*changed);
     
     addDevice(m_agentDevice);
   }
@@ -188,8 +166,7 @@ namespace mtconnect
         { "category", "EVENT" }
       });
       di->setComponent(*device);
-      device->addDataItem(*di);
-      device->addDeviceDataItem(*di);
+      device->addDataItem(di);
       device->m_availabilityAdded = true;
     }
     
@@ -206,8 +183,7 @@ namespace mtconnect
         { "category", "EVENT" }
       });
       di->setComponent(*device);
-      device->addDataItem(*di);
-      device->addDeviceDataItem(*di);
+      device->addDataItem(di);
     }
     
     if (device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 5)))
@@ -225,8 +201,7 @@ namespace mtconnect
         { "category", "EVENT" }
       });
       di->setComponent(*device);
-      device->addDataItem(*di);
-      device->addDeviceDataItem(*di);
+      device->addDataItem(di);
     }
   }
   
@@ -236,27 +211,30 @@ namespace mtconnect
     string time = getCurrentTime(GMT_UV_SEC);
 
     // Initialize the id mapping for the devices and set all data items to UNAVAILABLE
-    const auto &items = device->getDeviceDataItems();
-    
-    for (const auto item : items)
+    for (auto item : device->getDeviceDataItems())
     {
-      // Check for single valued constrained data items.
       auto d = item.second;
-      const string *value = &g_unavailable;
-      if (d->isCondition())
-        value = &g_conditionUnavailable;
-      else if (d->hasConstantValue())
-        value = &(d->getConstrainedValues()[0]);
-      
-      addToBuffer(d, *value, time);
-      if (!m_dataItemMap.count(d->getId()))
-        m_dataItemMap[d->getId()] = d;
-      else
+      if (!d->isInitialized())
       {
-        g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
-        << " for device: " << device->getName()
-        << " and data item name: " << d->getName();
-        std::exit(1);
+        // Check for single valued constrained data items.
+        const string *value = &g_unavailable;
+        if (d->isCondition())
+          value = &g_conditionUnavailable;
+        else if (d->hasConstantValue())
+          value = &(d->getConstrainedValues()[0]);
+        
+        addToBuffer(d, *value, time);
+        if (!m_dataItemMap.count(d->getId()))
+          m_dataItemMap[d->getId()] = d;
+        else
+        {
+          g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
+          << " for device: " << device->getName()
+          << " and data item name: " << d->getName();
+          std::exit(1);
+        }
+        
+        d->setInitialized();
       }
     }
   }
@@ -288,7 +266,7 @@ namespace mtconnect
         initializeDataItems(device);
         
         // Check for single valued constrained data items.
-        if (device != m_agentDevice)
+        if (m_agentDevice && device != m_agentDevice)
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
           addToBuffer(d, device->getUuid(), getCurrentTime(GMT_UV_SEC));
@@ -608,23 +586,32 @@ namespace mtconnect
 
     return result;
   }
-
-  Adapter *Agent::addAdapter(const string &deviceName, const string &host,
-                             const unsigned int port,
-                             bool start, std::chrono::seconds legacyTimeout)
+  
+  void Agent::addAdapter(Adapter *adapter, bool start)
   {
-    auto adapter = new Adapter(deviceName, host, port, legacyTimeout);
     adapter->setAgent(*this);
     m_adapters.emplace_back(adapter);
 
-    const auto dev = getDeviceByName(deviceName);
+    const auto dev = getDeviceByName(adapter->getDeviceName());
     if (dev && dev->m_availabilityAdded)
       adapter->setAutoAvailable(true);
 
     if (start)
       adapter->start();
-
-    return adapter;
+    
+    if (m_agentDevice)
+    {
+      m_agentDevice->addAdapter(adapter);
+      initializeDataItems(m_agentDevice);
+      // Reload the document for path resolution
+      if (m_initialized)
+      {
+        auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
+        m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize,
+                                                         m_maxAssets, m_assets.size(),
+                                                         m_sequence, m_devices));
+      }
+    }
   }
 
   unsigned int Agent::addToBuffer(DataItem *dataItem, const string &value, string time)

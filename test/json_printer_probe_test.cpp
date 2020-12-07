@@ -328,7 +328,7 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   auto jdoc = json::parse(doc);
 
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
-  auto linear = devices.at(0).at("/Device/Components/0/Axes/Components/0/Linear"_json_pointer);
+  auto linear = devices.at(1).at("/Device/Components/0/Axes/Components/0/Linear"_json_pointer);
   ASSERT_TRUE(linear.is_object());
   
   auto load = linear.at("/DataItems/4/DataItem"_json_pointer);

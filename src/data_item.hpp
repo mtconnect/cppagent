@@ -169,6 +169,8 @@ namespace mtconnect
     {
       return m_representation;
     }
+    bool isInitialized() const { return m_initialized; }
+    void setInitialized() { m_initialized = true; }
 
     void setConversionFactor(double factor, double offset);
 
@@ -510,6 +512,7 @@ namespace mtconnect
     bool m_isAssetChanged;
     bool m_isAssetRemoved;
     bool m_isDiscrete;
+    bool m_initialized;
 
     // Sig figs of data item
     unsigned int m_significantDigits;

@@ -124,7 +124,7 @@ TEST_F(KinematicsTest, ParseCAxisKinematics)
 
 TEST_F(KinematicsTest, ZAxisXmlPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
     PARSE_XML_RESPONSE;
     
@@ -148,7 +148,7 @@ TEST_F(KinematicsTest, ZAxisXmlPrinting)
 
 TEST_F(KinematicsTest, RotaryXmlPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
     PARSE_XML_RESPONSE;
     
@@ -169,7 +169,7 @@ TEST_F(KinematicsTest, RotaryXmlPrinting)
 
 TEST_F(KinematicsTest, ZAxisJsonPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
   {
@@ -208,7 +208,7 @@ TEST_F(KinematicsTest, ZAxisJsonPrinting)
 
 TEST_F(KinematicsTest, RotaryJsonPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   
   {

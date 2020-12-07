@@ -36,7 +36,7 @@ namespace mtconnect
     ~Device() override;
 
     // Add/get items to/from the device name to data item mapping
-    void addDeviceDataItem(DataItem &dataItem);
+    void addDeviceDataItem(DataItem *dataItem);
     DataItem *getDeviceDataItem(const std::string &name);
     void addAdapter(Adapter *anAdapter)
     {
@@ -61,7 +61,7 @@ namespace mtconnect
       return m_deviceDataItemsById;
     }
 
-    void addDataItem(DataItem &dataItem) override;
+    void addDataItem(DataItem *dataItem) override;
 
     std::vector<Adapter *> m_adapters;
     bool m_preserveUuid;

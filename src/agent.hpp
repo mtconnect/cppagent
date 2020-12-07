@@ -126,9 +126,7 @@ namespace mtconnect
     const std::string httpRequest(const IncomingThings &incoming, OutgoingThings &outgoing);
 
     // Add an adapter to the agent
-    Adapter *addAdapter(const std::string &device, const std::string &host, const unsigned int port,
-                        bool start = false,
-                        std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
+    void addAdapter(Adapter *adapter, bool start = false);
 
     // Get device from device map
     Device *getDeviceByName(const std::string &name);

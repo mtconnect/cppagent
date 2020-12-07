@@ -54,7 +54,8 @@ namespace mtconnect
         m_conversionOffset(0.0),
         m_conversionDetermined(false),
         m_conversionRequired(false),
-        m_hasFactor(false)
+        m_hasFactor(false),
+        m_initialized(false)
   {
     const auto idPos = attributes.find("id");
     if (idPos != attributes.end())
