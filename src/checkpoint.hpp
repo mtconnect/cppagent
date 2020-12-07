@@ -40,10 +40,7 @@ namespace mtconnect
     void clear();
     void filter(std::set<std::string> const &filterSet);
 
-    const std::map<std::string, ObservationPtr *> &getEvents() const
-    {
-      return m_events;
-    }
+    const std::map<std::string, ObservationPtr *> &getEvents() const { return m_events; }
 
     void getObservations(ObservationPtrArray &list,
                          std::set<std::string> const *filterSet = nullptr) const;

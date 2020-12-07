@@ -30,7 +30,7 @@ namespace mtconnect
     CoordinateSystem(const CoordinateSystem &s) = default;
     CoordinateSystem() = default;
     ~CoordinateSystem() = default;
-    
+
     const std::string &klass() const override
     {
       const static std::string &klass("CoordinateSystem");
@@ -39,12 +39,10 @@ namespace mtconnect
     const std::map<std::string, bool> &properties() const override
     {
       const static std::map<std::string, bool> properties = {
-        { "id", true },
-        { "type", true },
-        { "name", false },
-        { "nativeName", false },
-        { "parentIdRef", false },
-      };;
+          {"id", true},          {"type", true},         {"name", false},
+          {"nativeName", false}, {"parentIdRef", false},
+      };
+      ;
       return properties;
     }
   };

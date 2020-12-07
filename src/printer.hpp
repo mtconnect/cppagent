@@ -20,9 +20,7 @@ namespace mtconnect
   class Printer
   {
    public:
-    Printer(bool pretty = false) : m_pretty(pretty)
-    {
-    }
+    Printer(bool pretty = false) : m_pretty(pretty) {}
     virtual ~Printer() = default;
 
     virtual std::string printError(const unsigned int instanceId, const unsigned int bufferSize,

@@ -18,31 +18,28 @@
 #pragma once
 #include "component.hpp"
 #include "data_item.hpp"
-#include "globals.hpp"
 #include "device.hpp"
+#include "globals.hpp"
 
 #include <map>
 
 namespace mtconnect
 {
   class Adapter;
-  
+
   class AgentDevice : public Device
   {
-  public:
+   public:
     // Constructor that sets variables from an attribute map
     AgentDevice(const Attributes &attributes);
     ~AgentDevice() override = default;
 
     void addAdapter(const Adapter *adapter);
-    
-  protected:
-    void addRequiredDataItems();
-    
-  protected:
-    Component *m_adapters{nullptr};
-    
-  };
-}
 
-    
+   protected:
+    void addRequiredDataItems();
+
+   protected:
+    Component *m_adapters{nullptr};
+  };
+}  // namespace mtconnect

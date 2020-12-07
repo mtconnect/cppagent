@@ -17,17 +17,17 @@
 
 #pragma once
 
-#include "globals.hpp"
 #include "component_configuration.hpp"
 #include "description.hpp"
+#include "globals.hpp"
 
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
-#include <optional>
 
 namespace mtconnect
 {
@@ -35,36 +35,23 @@ namespace mtconnect
   {
    public:
     Composition() = default;
-    Composition(const Composition&) = default;
+    Composition(const Composition &) = default;
     ~Composition() = default;
-    
-    
+
     const std::map<std::string, bool> &properties() const
     {
       const static std::map<std::string, bool> properties = {
-        { "id", true },
-        { "uuid", false },
-        { "name", false },
-        { "type", true }
-      };;
+          {"id", true}, {"uuid", false}, {"name", false}, {"type", true}};
+      ;
       return properties;
     }
 
-    const std::optional<Description> &getDescription() const
-    {
-      return m_description;
-    }
+    const std::optional<Description> &getDescription() const { return m_description; }
 
-    void setDescription(Description &d)
-    {
-      m_description = d;
-    }
-    
-    const auto &getConfiguration() const
-    {
-      return m_configuration;
-    }
-    
+    void setDescription(Description &d) { m_description = d; }
+
+    const auto &getConfiguration() const { return m_configuration; }
+
     void addConfiguration(std::unique_ptr<ComponentConfiguration> &config)
     {
       m_configuration.emplace_back(std::move(config));

@@ -50,19 +50,10 @@ namespace mtconnect
     void configureLogger(dlib::config_reader::kernel_1a &reader);
     void loadConfig(std::istream &file);
 
-    void setAgent(Agent *agent)
-    {
-      m_agent = agent;
-    }
-    const Agent *getAgent() const
-    {
-      return m_agent;
-    }
+    void setAgent(Agent *agent) { m_agent = agent; }
+    const Agent *getAgent() const { return m_agent; }
 
-    const RollingFileLogger *getLogger() const
-    {
-      return m_loggerFile;
-    }
+    const RollingFileLogger *getLogger() const { return m_loggerFile; }
 
    protected:
     Device *defaultDevice();

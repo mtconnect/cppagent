@@ -48,10 +48,7 @@ namespace mtconnect
 
     std::string printCuttingTool(CuttingToolPtr const tool) const override;
 
-    std::string mimeType() const override
-    {
-      return "application/json";
-    }
+    std::string mimeType() const override { return "application/json"; }
 
    protected:
     const std::string &hostname() const;

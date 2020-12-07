@@ -58,10 +58,7 @@ namespace mtconnect
 
     std::string printCuttingTool(CuttingToolPtr const tool) const override;
 
-    std::string mimeType() const override
-    {
-      return "text/xml";
-    }
+    std::string mimeType() const override { return "text/xml"; }
 
     void addDevicesNamespace(const std::string &urn, const std::string &location,
                              const std::string &prefix);
@@ -124,7 +121,7 @@ namespace mtconnect
     void printDataItemDefinition(xmlTextWriterPtr writer,
                                  const DataItemDefinition &definition) const;
     void printDataItemRelationships(xmlTextWriterPtr writer,
-                                   const std::list<DataItem::Relationship> &relations) const;
+                                    const std::list<DataItem::Relationship> &relations) const;
     void printCellDefinitions(xmlTextWriterPtr writer,
                               const std::set<CellDefinition> &definitions) const;
 

@@ -22,9 +22,8 @@
 #include "device.hpp"
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"
-#include "specifications.hpp"
 #include "solid_model.hpp"
-
+#include "specifications.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>
@@ -67,10 +66,7 @@ namespace mtconnect
   }
 
   // trim from both ends (in place)
-  static inline std::string trim(std::string s)
-  {
-    return rtrim(ltrim(s));
-  }
+  static inline std::string trim(std::string s) { return rtrim(ltrim(s)); }
 
   const string &JsonPrinter::hostname() const
   {
@@ -118,10 +114,7 @@ namespace mtconnect
       doc[key] = atof(value.c_str());
   }
 
-  static inline void addText(json &doc, const std::string &text)
-  {
-    add(doc, "text", trim(text));
-  }
+  static inline void addText(json &doc, const std::string &text) { add(doc, "text", trim(text)); }
 
   inline json header(const string &version, const string &hostname, const unsigned int instanceId,
                      const unsigned int bufferSize, const string &schemaVersion)
@@ -234,7 +227,7 @@ namespace mtconnect
 
     return obj;
   }
-  
+
   static inline json toJson(const list<DataItem::Relationship> &relations)
   {
     json array = json::array();
@@ -244,10 +237,10 @@ namespace mtconnect
       add(obj, "name", rel.m_name);
       obj["type"] = rel.m_type;
       obj["idRef"] = rel.m_idRef;
-      
+
       array.emplace_back(json::object({{rel.m_relation, obj}}));
     }
-    
+
     return array;
   }
 
@@ -304,7 +297,7 @@ namespace mtconnect
     {
       obj["Definition"] = toJson(item->getDefinition());
     }
-    
+
     if (item->getRelationships().size() > 0)
     {
       obj["Relationships"] = toJson(item->getRelationships());
@@ -346,50 +339,45 @@ namespace mtconnect
       parent[collection] = items;
     }
   }
-  
+
   inline void toJson(json &parent, const Geometry &geometry)
   {
     if (geometry.m_location.index() != 0)
     {
-      visit(overloaded {
-        [&parent](const Origin &o) {
-          parent["Origin"] = json::array({ o.m_x, o.m_y, o.m_z });
-        },
-        [&parent](const Transformation &t) {
-          json trans = json::object();
-          if (t.m_translation)
-          {
-            trans["Translation"] = json::array({ t.m_translation->m_x,
-              t.m_translation->m_y,
-              t.m_translation->m_z });
-;
-          }
-          if (t.m_rotation)
-          {
-            trans["Rotation"] = json::array({ t.m_rotation->m_roll,
-              t.m_rotation->m_pitch,
-              t.m_rotation->m_yaw });
-          }
-          parent["Transformation"] = trans;
-        },
-        [](const std::monostate &a){}
-      }, geometry.m_location);
+      visit(overloaded{[&parent](const Origin &o) {
+                         parent["Origin"] = json::array({o.m_x, o.m_y, o.m_z});
+                       },
+                       [&parent](const Transformation &t) {
+                         json trans = json::object();
+                         if (t.m_translation)
+                         {
+                           trans["Translation"] = json::array(
+                               {t.m_translation->m_x, t.m_translation->m_y, t.m_translation->m_z});
+                           ;
+                         }
+                         if (t.m_rotation)
+                         {
+                           trans["Rotation"] = json::array(
+                               {t.m_rotation->m_roll, t.m_rotation->m_pitch, t.m_rotation->m_yaw});
+                         }
+                         parent["Transformation"] = trans;
+                       },
+                       [](const std::monostate &a) {}},
+            geometry.m_location);
     }
-    
+
     if (geometry.m_scale)
     {
-      parent["Scale"] = json::array({ geometry.m_scale->m_scaleX,
-        geometry.m_scale->m_scaleY,
-        geometry.m_scale->m_scaleZ });
+      parent["Scale"] = json::array(
+          {geometry.m_scale->m_scaleX, geometry.m_scale->m_scaleY, geometry.m_scale->m_scaleZ});
     }
     if (geometry.m_axis)
     {
-      parent["Axis"] = json::array({ geometry.m_axis->m_x,
-        geometry.m_axis->m_y,
-        geometry.m_axis->m_z });
+      parent["Axis"] =
+          json::array({geometry.m_axis->m_x, geometry.m_axis->m_y, geometry.m_axis->m_z});
     }
   }
-  
+
   inline json toJson(const GeometricConfiguration &model)
   {
     json obj = json::object();
@@ -445,7 +433,7 @@ namespace mtconnect
                            {"compositionIdRef", spec->m_compositionIdRef},
                            {"originator", spec->m_originator},
                            {"id", spec->m_id}});
-    
+
     if (spec->hasGroups())
     {
       const auto &groups = spec->getGroups();
@@ -535,7 +523,7 @@ namespace mtconnect
 
       for (const auto &system : obj->getCoordinateSystems())
       {
-        json jsystem = json::object({ { "CoordinateSystem", toJson(*system.get()) } });
+        json jsystem = json::object({{"CoordinateSystem", toJson(*system.get())}});
         systems.emplace_back(jsystem);
       }
 
@@ -550,11 +538,11 @@ namespace mtconnect
       parent[obj->klass()] = toJson(*obj);
     }
   }
-  
+
   static inline json toJson(const unique_ptr<Composition> &composition)
   {
     json obj = json::object();
-    
+
     addAttributes(obj, composition->m_attributes);
     if (composition->getDescription())
     {
@@ -566,20 +554,18 @@ namespace mtconnect
     if (!composition->getConfiguration().empty())
     {
       json cfg = json::object();
-      
+
       for (const auto &conf : composition->getConfiguration())
       {
         toJson(cfg, conf.get());
       }
       obj["Configuration"] = cfg;
     }
-    
+
     json comp = json::object({{"Composition", obj}});
-    
+
     return comp;
   }
-  
-
 
   static json toJson(Component *component)
   {
@@ -768,9 +754,7 @@ namespace mtconnect
   class CategoryRef
   {
    public:
-    CategoryRef(const char *cat) : m_category(cat)
-    {
-    }
+    CategoryRef(const char *cat) : m_category(cat) {}
     CategoryRef(const CategoryRef &other) = default;
 
     bool addObservation(const ObservationPtr &observation)
@@ -779,10 +763,7 @@ namespace mtconnect
       return true;
     }
 
-    bool isCategory(const char *cat)
-    {
-      return m_category == cat;
-    }
+    bool isCategory(const char *cat) { return m_category == cat; }
 
     pair<string, json> toJson()
     {
@@ -806,18 +787,13 @@ namespace mtconnect
   class ComponentRef
   {
    public:
-    ComponentRef(const Component *component) : m_component(component), m_categoryRef(nullptr)
-    {
-    }
+    ComponentRef(const Component *component) : m_component(component), m_categoryRef(nullptr) {}
     ComponentRef(const ComponentRef &other)
         : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
     {
     }
 
-    bool isComponent(const Component *component)
-    {
-      return m_component == component;
-    }
+    bool isComponent(const Component *component) { return m_component == component; }
 
     bool addObservation(const ObservationPtr &observation, const Component *component,
                         const DataItem *dataItem)
@@ -869,17 +845,12 @@ namespace mtconnect
   class DeviceRef
   {
    public:
-    DeviceRef(const Device *device) : m_device(device), m_componentRef(nullptr)
-    {
-    }
+    DeviceRef(const Device *device) : m_device(device), m_componentRef(nullptr) {}
     DeviceRef(const DeviceRef &other) : m_device(other.m_device), m_components(other.m_components)
     {
     }
 
-    bool isDevice(const Device *device)
-    {
-      return device == m_device;
-    }
+    bool isDevice(const Device *device) { return device == m_device; }
 
     bool addObservation(const ObservationPtr &observation, const Device *device,
                         const Component *component, const DataItem *dataItem)

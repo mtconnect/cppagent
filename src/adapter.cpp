@@ -57,7 +57,7 @@ namespace mtconnect
     stringstream url;
     url << "shdr://" << server << ':' << port;
     m_url = url.str();
-    
+
     stringstream identity;
     identity << '_' << server << '_' << port;
     m_identity = identity.str();
@@ -542,10 +542,7 @@ namespace mtconnect
     m_agent->disconnected(this, m_allDevices);
   }
 
-  void Adapter::connected()
-  {
-    m_agent->connected(this, m_allDevices);
-  }
+  void Adapter::connected() { m_agent->connected(this, m_allDevices); }
 
   // Adapter private methods
   void Adapter::thread()

@@ -63,10 +63,7 @@ namespace mtconnect
     Relationships() = default;
     ~Relationships() override = default;
 
-    void addRelationship(Relationship *r)
-    {
-      m_relationships.emplace_back(std::move(r));
-    }
+    void addRelationship(Relationship *r) { m_relationships.emplace_back(std::move(r)); }
     void addRelationship(std::unique_ptr<Relationship> &r)
     {
       m_relationships.emplace_back(std::move(r));

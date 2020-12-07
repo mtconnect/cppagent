@@ -16,8 +16,8 @@
 //
 
 #include "agent.hpp"
-#include "agent_device.hpp"
 
+#include "agent_device.hpp"
 #include "json_printer.hpp"
 #include "xml_printer.hpp"
 #include <sys/stat.h>
@@ -50,30 +50,33 @@ namespace mtconnect
   // Agent public methods
   Agent::Agent(const string &configXmlPath, int bufferSize, int maxAssets,
                const std::string &version, int checkpointFreq, bool pretty)
-      : m_putEnabled(false), m_logStreamData(false), m_pretty(pretty),
-        m_mimeTypes({{
-          { "xsl", "text/xsl" },
-          { "xml", "text/xml" },
-          { "json", "application/json" },
-          { "css", "text/css" },
-          { "xsd",  "text/xml" },
-          { "jpg", "image/jpeg" },
-          { "jpeg", "image/jpeg" },
-          { "png", "image/png" },
-          { "ico", "image/x-icon" }
-        }}), m_maxAssets(maxAssets), m_sequence(1ull), m_checkpointFreq(checkpointFreq),
+      : m_putEnabled(false),
+        m_logStreamData(false),
+        m_pretty(pretty),
+        m_mimeTypes({{{"xsl", "text/xsl"},
+                      {"xml", "text/xml"},
+                      {"json", "application/json"},
+                      {"css", "text/css"},
+                      {"xsd", "text/xml"},
+                      {"jpg", "image/jpeg"},
+                      {"jpeg", "image/jpeg"},
+                      {"png", "image/png"},
+                      {"ico", "image/x-icon"}}}),
+        m_maxAssets(maxAssets),
+        m_sequence(1ull),
+        m_checkpointFreq(checkpointFreq),
         m_xmlParser(make_unique<XmlParser>())
   {
     // Create the Printers
     m_printers["xml"] = unique_ptr<Printer>(new XmlPrinter(version, m_pretty));
     m_printers["json"] = unique_ptr<Printer>(new JsonPrinter(version, m_pretty));
-    
+
     // Unique id number for agent instance
     m_instanceId = getCurrentTimeInSec();
-    
-    auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
+
+    auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
     createCircularBuffer(bufferSize);
-    
+
     // TODO: Check Schema version before creating Agent Device. Only > 1.7'
     int major, minor;
     char c;
@@ -84,35 +87,33 @@ namespace mtconnect
       createAgentDevice();
     }
     loadXMLDeviceFile(configXmlPath);
-    
+
     // Reload the document for path resolution
-    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize,
-                                                     m_maxAssets, m_assets.size(),
-                                                     m_sequence, m_devices));
+    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize, m_maxAssets,
+                                                     m_assets.size(), m_sequence, m_devices));
 
     m_initialized = true;
   }
-  
+
   void Agent::createAgentDevice()
   {
     // Create the Agent Device
-    m_agentDevice = new AgentDevice({
-      { "name", "Agent" },
-      { "uuid", "0b49a3a0-18ca-0139-8748-2cde48001122" },
-      { "id", "agent_2cde48001122" },
-      { "mtconnectVersion", "1.7" }
-    });
-    
+    m_agentDevice = new AgentDevice({{"name", "Agent"},
+                                     {"uuid", "0b49a3a0-18ca-0139-8748-2cde48001122"},
+                                     {"id", "agent_2cde48001122"},
+                                     {"mtconnectVersion", "1.7"}});
+
     addDevice(m_agentDevice);
   }
-  
+
   void Agent::loadXMLDeviceFile(const std::string &configXmlPath)
   {
     try
     {
       // Load the configuration for the Agent
-      auto devices = m_xmlParser->parseFile(configXmlPath, dynamic_cast<XmlPrinter*>(m_printers["xml"].get()));
-      
+      auto devices = m_xmlParser->parseFile(configXmlPath,
+                                            dynamic_cast<XmlPrinter *>(m_printers["xml"].get()));
+
       // Fir the DeviceAdded event for each device
       for (auto device : devices)
         addDevice(device);
@@ -132,7 +133,7 @@ namespace mtconnect
       throw f;
     }
   }
-  
+
   void Agent::createCircularBuffer(int bufferSize)
   {
     // Sequence number and sliding buffer for data
@@ -140,18 +141,18 @@ namespace mtconnect
     m_slidingBuffer = make_unique<sliding_buffer_kernel_1<ObservationPtr>>();
     m_slidingBuffer->set_size(bufferSize);
     m_checkpointCount = (m_slidingBufferSize / m_checkpointFreq) + 1;
-    
+
     // Create the checkpoints at a regular frequency
     m_checkpoints.reserve(m_checkpointCount);
     for (auto i = 0; i < m_checkpointCount; i++)
       m_checkpoints.emplace_back();
   }
-  
+
   void Agent::verifyDevice(Device *device)
   {
-    auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
+    auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
     const auto &schemaVersion = xmlPrinter->getSchemaVersion();
-    
+
     // Add the devices to the device map and create availability and
     // asset changed events if they don't exist
     // Make sure we have two device level data items:
@@ -160,16 +161,13 @@ namespace mtconnect
     if (!device->getAvailability())
     {
       // Create availability data item and add it to the device.
-      auto di = new DataItem({
-        { "type", "AVAILABILITY" },
-        { "id", device->getId() + "_avail" },
-        { "category", "EVENT" }
-      });
+      auto di = new DataItem(
+          {{"type", "AVAILABILITY"}, {"id", device->getId() + "_avail"}, {"category", "EVENT"}});
       di->setComponent(*device);
       device->addDataItem(di);
       device->m_availabilityAdded = true;
     }
-    
+
     int major, minor;
     char c;
     stringstream ss(schemaVersion);
@@ -177,34 +175,30 @@ namespace mtconnect
     if (!device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
     {
       // Create asset change data item and add it to the device.
-      auto di = new DataItem({
-        { "type", "ASSET_CHANGED" },
-        { "id", device->getId() + "_asset_chg" },
-        { "category", "EVENT" }
-      });
+      auto di = new DataItem({{"type", "ASSET_CHANGED"},
+                              {"id", device->getId() + "_asset_chg"},
+                              {"category", "EVENT"}});
       di->setComponent(*device);
       device->addDataItem(di);
     }
-    
+
     if (device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 5)))
     {
       auto di = device->getAssetChanged();
       di->makeDiscrete();
     }
-    
+
     if (!device->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
     {
       // Create asset removed data item and add it to the device.
-      auto di = new DataItem({
-        { "type", "ASSET_REMOVED" },
-        { "id", device->getId() + "_asset_rem" },
-        { "category", "EVENT" }
-      });
+      auto di = new DataItem({{"type", "ASSET_REMOVED"},
+                              {"id", device->getId() + "_asset_rem"},
+                              {"category", "EVENT"}});
       di->setComponent(*device);
       device->addDataItem(di);
     }
   }
-  
+
   void Agent::initializeDataItems(Device *device)
   {
     // Grab data from configuration
@@ -222,23 +216,23 @@ namespace mtconnect
           value = &g_conditionUnavailable;
         else if (d->hasConstantValue())
           value = &(d->getConstrainedValues()[0]);
-        
+
         addToBuffer(d, *value, time);
         if (!m_dataItemMap.count(d->getId()))
           m_dataItemMap[d->getId()] = d;
         else
         {
           g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
-          << " for device: " << device->getName()
-          << " and data item name: " << d->getName();
+                   << " for device: " << device->getName()
+                   << " and data item name: " << d->getName();
           std::exit(1);
         }
-        
+
         d->setInitialized();
       }
     }
   }
-  
+
   // Add the a device from a configuration file
   void Agent::addDevice(Device *device)
   {
@@ -250,7 +244,7 @@ namespace mtconnect
       g_logger << LFATAL << "Device " << device->getUuid() << " already exists. "
                << " Update not supported yet";
       std::exit(1);
-   }
+    }
     else
     {
       // Check if we are already initialized. If so, the device will need to be
@@ -260,11 +254,11 @@ namespace mtconnect
         m_devices.push_back(device);
         m_deviceNameMap[device->getName()] = device;
         m_deviceUuidMap[device->getUuid()] = device;
-       
+
         device->resolveReferences();
         verifyDevice(device);
         initializeDataItems(device);
-        
+
         // Check for single valued constrained data items.
         if (m_agentDevice && device != m_agentDevice)
         {
@@ -273,7 +267,8 @@ namespace mtconnect
         }
       }
       else
-        g_logger << LWARN << "Adding device " << device->getUuid() << " after initialialization not supported yet";
+        g_logger << LWARN << "Adding device " << device->getUuid()
+                 << " after initialialization not supported yet";
     }
   }
 
@@ -586,7 +581,7 @@ namespace mtconnect
 
     return result;
   }
-  
+
   void Agent::addAdapter(Adapter *adapter, bool start)
   {
     adapter->setAgent(*this);
@@ -598,7 +593,7 @@ namespace mtconnect
 
     if (start)
       adapter->start();
-    
+
     if (m_agentDevice)
     {
       m_agentDevice->addAdapter(adapter);
@@ -606,10 +601,10 @@ namespace mtconnect
       // Reload the document for path resolution
       if (m_initialized)
       {
-        auto xmlPrinter = dynamic_cast<XmlPrinter*>(m_printers["xml"].get());
+        auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
         m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize,
-                                                         m_maxAssets, m_assets.size(),
-                                                         m_sequence, m_devices));
+                                                         m_maxAssets, m_assets.size(), m_sequence,
+                                                         m_devices));
       }
     }
   }

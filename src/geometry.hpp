@@ -20,28 +20,27 @@
 #include "component_configuration.hpp"
 #include "globals.hpp"
 
-#include <utility>
 #include <optional>
+#include <utility>
 #include <variant>
 
 namespace mtconnect
 {
-
   struct Origin
   {
     Origin() = default;
     Origin(const Origin &) = default;
     Origin(double x, double y, double z) : m_x(x), m_y(y), m_z(z) {}
-    
-    double m_x, m_y, m_z;    
+
+    double m_x, m_y, m_z;
   };
-  
+
   struct Axis
   {
     Axis() = default;
     Axis(const Axis &) = default;
     Axis(double x, double y, double z) : m_x(x), m_y(y), m_z(z) {}
-    
+
     double m_x, m_y, m_z;
   };
 
@@ -60,25 +59,25 @@ namespace mtconnect
     Rotation(const Rotation &) = default;
     Rotation(double r, double p, double y) : m_roll(r), m_pitch(p), m_yaw(y) {}
 
-    double m_roll, m_pitch, m_yaw;    
-  };      
-  
+    double m_roll, m_pitch, m_yaw;
+  };
+
   struct Transformation
   {
     Transformation() = default;
     Transformation(const Transformation &) = default;
     ~Transformation() = default;
-    
+
     std::optional<Translation> m_translation;
-    std::optional<Rotation> m_rotation;    
+    std::optional<Rotation> m_rotation;
   };
 
-  struct Scale 
+  struct Scale
   {
     Scale() = default;
     Scale(const Scale &) = default;
     Scale(double x, double y, double z) : m_scaleX(x), m_scaleY(y), m_scaleZ(z) {}
-    
+
     double m_scaleX, m_scaleY, m_scaleZ;
   };
 
@@ -87,7 +86,7 @@ namespace mtconnect
     Geometry() = default;
     Geometry(const Geometry &) = default;
     ~Geometry() = default;
-    
+
     std::variant<std::monostate, Origin, Transformation> m_location;
     std::optional<Scale> m_scale;
     std::optional<Axis> m_axis;

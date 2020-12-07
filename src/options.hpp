@@ -69,63 +69,21 @@ namespace mtconnect
     //---- Destructor
     ~Option();
 
-    EType getType() const
-    {
-      return type_;
-    }
-    const char *getName() const
-    {
-      return name_;
-    }
-    const char *getUsage() const
-    {
-      return usage_;
-    }
-    const char *getArgDesc() const
-    {
-      return argDesc_;
-    }
-    int getOrder() const
-    {
-      return order_;
-    }
-    bool ignoreCase() const
-    {
-      return ignoreCase_;
-    }
-    bool hasArgument() const
-    {
-      return argument_;
-    }
-    bool hasSwitch() const
-    {
-      return switch_;
-    }
-    bool isRequired() const
-    {
-      return required_;
-    }
-    bool isSet() const
-    {
-      return isSet_;
-    }
+    EType getType() const { return type_; }
+    const char *getName() const { return name_; }
+    const char *getUsage() const { return usage_; }
+    const char *getArgDesc() const { return argDesc_; }
+    int getOrder() const { return order_; }
+    bool ignoreCase() const { return ignoreCase_; }
+    bool hasArgument() const { return argument_; }
+    bool hasSwitch() const { return switch_; }
+    bool isRequired() const { return required_; }
+    bool isSet() const { return isSet_; }
 
-    const char *getCharPtr() const
-    {
-      return charPtrPtr_ ? *charPtrPtr_ : nullptr;
-    }
-    bool getBool() const
-    {
-      return boolPtr_ ? *boolPtr_ : false;
-    }
-    int getInt() const
-    {
-      return intPtr_ ? *intPtr_ : -1;
-    }
-    const std::list<std::string> &getList() const
-    {
-      return *list_;
-    }
+    const char *getCharPtr() const { return charPtrPtr_ ? *charPtrPtr_ : nullptr; }
+    bool getBool() const { return boolPtr_ ? *boolPtr_ : false; }
+    int getInt() const { return intPtr_ ? *intPtr_ : -1; }
+    const std::list<std::string> &getList() const { return *list_; }
     bool operator<(const Option &another) const;
 
     bool setValue(const char *aCp);
@@ -167,14 +125,8 @@ namespace mtconnect
 
     int parse(int &argc, const char **argv);
     void usage();
-    void setOwnsOptions(bool flag = true)
-    {
-      ownsOptions_ = flag;
-    }
-    void append(Option *option)
-    {
-      emplace_back(*option);
-    }
+    void setOwnsOptions(bool flag = true) { ownsOptions_ = flag; }
+    void append(Option *option) { emplace_back(*option); }
 
    protected:
     void getArg(const char **&argv, int &argc, Option *option, const char *aAt);

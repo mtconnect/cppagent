@@ -111,7 +111,7 @@ namespace mtconnect
   {
     if (!m_device)
     {
-      m_device = dynamic_cast<Device*>(this);
+      m_device = dynamic_cast<Device *>(this);
       if (m_device == nullptr && m_parent)
         m_device = m_parent->getDevice();
     }

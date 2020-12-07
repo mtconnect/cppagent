@@ -47,10 +47,7 @@ namespace mtconnect
 
     void write(const char *message);
 
-    uint64_t getMaxSize() const
-    {
-      return m_maxSize;
-    }
+    uint64_t getMaxSize() const { return m_maxSize; }
 
    protected:
     void rollover(uint64_t size);

@@ -18,21 +18,22 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "globals.hpp"
 #include "geometry.hpp"
+#include "globals.hpp"
+
+#include <map>
 #include <utility>
 #include <vector>
-#include <map>
 
 namespace mtconnect
 {
   class SolidModel : public GeometricConfiguration
   {
-  public:
+   public:
     SolidModel(const SolidModel &s) = default;
     SolidModel() = default;
     ~SolidModel() override = default;
-    
+
     const std::string &klass() const override
     {
       const static std::string &klass("SolidModel");
@@ -42,13 +43,9 @@ namespace mtconnect
     const std::map<std::string, bool> &properties() const override
     {
       const static std::map<std::string, bool> properties = {
-        { "id", true },
-        { "solidModelIdRef", false },
-        { "itemRef", false },
-        { "mediaType", true },
-        { "coordinateSystemIdRef", false },
-        { "href", false }
-      };;
+          {"id", true},        {"solidModelIdRef", false},       {"itemRef", false},
+          {"mediaType", true}, {"coordinateSystemIdRef", false}, {"href", false}};
+      ;
       return properties;
     }
   };

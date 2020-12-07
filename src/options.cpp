@@ -311,10 +311,7 @@ namespace mtconnect
 
   OptionsList::~OptionsList() = default;
 
-  void OptionsList::addOption(Option &option)
-  {
-    emplace_back(option);
-  }
+  void OptionsList::addOption(Option &option) { emplace_back(option); }
 
   int OptionsList::parse(int &argc, const char **argv)
   {

@@ -20,10 +20,10 @@
 #include "composition.hpp"
 #include "coordinate_systems.hpp"
 #include "cutting_tool.hpp"
-#include "sensor_configuration.hpp"
-#include "specifications.hpp"
-#include "solid_model.hpp"
 #include "motion.hpp"
+#include "sensor_configuration.hpp"
+#include "solid_model.hpp"
+#include "specifications.hpp"
 #include "xml_printer.hpp"
 
 #include <dlib/logger.h>
@@ -56,8 +56,8 @@ using namespace std;
 namespace mtconnect
 {
   static dlib::logger g_logger("xml.parser");
-  
-  template<class T>
+
+  template <class T>
   void handleConfiguration(xmlNodePtr node, T *parent);
 
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
@@ -126,16 +126,17 @@ namespace mtconnect
   }
 
   // Put all of the attributes of an element into a map
-  static inline std::map<string, string> getValidatedAttributes(const xmlNodePtr node, const std::map<string, bool> &parameters)
+  static inline std::map<string, string> getValidatedAttributes(
+      const xmlNodePtr node, const std::map<string, bool> &parameters)
   {
     std::map<string, string> toReturn;
-    std::map<string,bool> matched = parameters;
-    
+    std::map<string, bool> matched = parameters;
+
     for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
     {
       if (attr->type == XML_ATTRIBUTE_NODE)
       {
-        string key = (const char*)(attr->name);
+        string key = (const char *)(attr->name);
         auto it = matched.find(key);
         if (it != matched.end())
         {
@@ -144,24 +145,25 @@ namespace mtconnect
         }
         else
         {
-          g_logger << dlib::LWARN <<  "Unknown attribute for " << (const char*) node->name << ": " << key << ", skipping";
+          g_logger << dlib::LWARN << "Unknown attribute for " << (const char *)node->name << ": "
+                   << key << ", skipping";
         }
       }
     }
-    
+
     for (auto &p : matched)
     {
-      if (p.second) {
-        g_logger << dlib::LWARN << (const char*) node->name << " missing required attribute: "
-          << p.first;
+      if (p.second)
+      {
+        g_logger << dlib::LWARN << (const char *)node->name
+                 << " missing required attribute: " << p.first;
         toReturn.clear();
       }
     }
-    
+
     return toReturn;
   }
 
-  
   static inline void forEachElement(const xmlNodePtr node,
                                     map<string, function<void(const xmlNodePtr)>> funs)
   {
@@ -171,7 +173,7 @@ namespace mtconnect
         continue;
 
       auto other = funs.find("OTHERWISE");
-      
+
       string name((const char *)child->name);
       auto lambda = funs.find(name);
       if (lambda != funs.end())
@@ -184,15 +186,16 @@ namespace mtconnect
       }
     }
   }
-  
-  struct ThreeSpace {
+
+  struct ThreeSpace
+  {
     double m_1, m_2, m_3;
   };
-  
+
   static inline std::optional<ThreeSpace> getThreeSpace(const string &cdata)
   {
     ThreeSpace v;
-    
+
     stringstream s(cdata);
     Translation l;
     s >> v.m_1 >> v.m_2 >> v.m_3;
@@ -206,73 +209,74 @@ namespace mtconnect
       return make_optional(v);
     }
   }
-  
-  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node,
-                                                    bool hasScale, bool hasAxis)
+
+  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node, bool hasScale,
+                                                    bool hasAxis)
   {
     Geometry geometry;
-    forEachElement(node, {
-      { "Transformation", [&geometry](const xmlNodePtr n) {
-        if (geometry.m_location.index() != 0)
-        {
-          g_logger << dlib::LWARN << "Translation or Origin already given";
-          return;
-        }
-        
-        Transformation t;
-        forEachElement(n, {
-          { "Translation", [&t](const xmlNodePtr c) {
-            auto s = getThreeSpace(getCDATA(c));
-            if (s)
-              t.m_translation.emplace(s->m_1, s->m_2, s->m_3);
-          }},
-          { "Rotation", [&t](const xmlNodePtr c){
-            auto s = getThreeSpace(getCDATA(c));
-            if (s)
-              t.m_rotation.emplace(s->m_1, s->m_2, s->m_3);
-          }} });
-        if (t.m_rotation || t.m_translation)
-          geometry.m_location.emplace<Transformation>(t);
-        else
-          g_logger << dlib::LWARN << "Cannot parse Translation";
-      }},
-      { "Origin", [&geometry](const xmlNodePtr n) {
-        if (geometry.m_location.index() != 0)
-        {
-          g_logger << dlib::LWARN << "Translation or Origin already given";
-          return;
-        }
+    forEachElement(node, {{"Transformation",
+                           [&geometry](const xmlNodePtr n) {
+                             if (geometry.m_location.index() != 0)
+                             {
+                               g_logger << dlib::LWARN << "Translation or Origin already given";
+                               return;
+                             }
 
-        auto s = getThreeSpace(getCDATA(n));
-        if (s)
-          geometry.m_location.emplace<Origin>(s->m_1, s->m_2, s->m_3);
-        else
-          g_logger << dlib::LWARN << "Cannot parse Origin";
-      }},
-      { "Scale", [&geometry, hasScale](const xmlNodePtr n) {
-        if (hasScale)
-        {
-          auto s = getThreeSpace(getCDATA(n));
-          if (s)
-            geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
-          else
-            g_logger << dlib::LWARN << "Cannot parse Scale";
-        }
-      }},
-      { "Axis", [&geometry, hasAxis](const xmlNodePtr n) {
-        if (hasAxis)
-        {
-          auto s = getThreeSpace(getCDATA(n));
-          if (s)
-            geometry.m_axis.emplace(s->m_1, s->m_2, s->m_3);
-          else
-            g_logger << dlib::LWARN << "Cannot parse Scale";
-        }
-      }}
-    });
-    
-    if (geometry.m_location.index() != 0 ||
-        geometry.m_scale)
+                             Transformation t;
+                             forEachElement(n, {{"Translation",
+                                                 [&t](const xmlNodePtr c) {
+                                                   auto s = getThreeSpace(getCDATA(c));
+                                                   if (s)
+                                                     t.m_translation.emplace(s->m_1, s->m_2,
+                                                                             s->m_3);
+                                                 }},
+                                                {"Rotation", [&t](const xmlNodePtr c) {
+                                                   auto s = getThreeSpace(getCDATA(c));
+                                                   if (s)
+                                                     t.m_rotation.emplace(s->m_1, s->m_2, s->m_3);
+                                                 }}});
+                             if (t.m_rotation || t.m_translation)
+                               geometry.m_location.emplace<Transformation>(t);
+                             else
+                               g_logger << dlib::LWARN << "Cannot parse Translation";
+                           }},
+                          {"Origin",
+                           [&geometry](const xmlNodePtr n) {
+                             if (geometry.m_location.index() != 0)
+                             {
+                               g_logger << dlib::LWARN << "Translation or Origin already given";
+                               return;
+                             }
+
+                             auto s = getThreeSpace(getCDATA(n));
+                             if (s)
+                               geometry.m_location.emplace<Origin>(s->m_1, s->m_2, s->m_3);
+                             else
+                               g_logger << dlib::LWARN << "Cannot parse Origin";
+                           }},
+                          {"Scale",
+                           [&geometry, hasScale](const xmlNodePtr n) {
+                             if (hasScale)
+                             {
+                               auto s = getThreeSpace(getCDATA(n));
+                               if (s)
+                                 geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
+                               else
+                                 g_logger << dlib::LWARN << "Cannot parse Scale";
+                             }
+                           }},
+                          {"Axis", [&geometry, hasAxis](const xmlNodePtr n) {
+                             if (hasAxis)
+                             {
+                               auto s = getThreeSpace(getCDATA(n));
+                               if (s)
+                                 geometry.m_axis.emplace(s->m_1, s->m_2, s->m_3);
+                               else
+                                 g_logger << dlib::LWARN << "Cannot parse Scale";
+                             }
+                           }}});
+
+    if (geometry.m_location.index() != 0 || geometry.m_scale)
       return make_optional(geometry);
     else
       return nullopt;
@@ -298,7 +302,8 @@ namespace mtconnect
              {"Composition",
               [this](xmlNodePtr n, Component *p, Device *d) {
                 auto c = handleComposition(n);
-                p->addComposition(c); }},
+                p->addComposition(c);
+              }},
              {"Description", [](xmlNodePtr n, Component *p,
                                 Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
              {"Configuration",
@@ -621,7 +626,7 @@ namespace mtconnect
           {
             if (child->type != XML_ELEMENT_NODE)
               continue;
-            
+
             handleNode(child, component, device);
           }
         }
@@ -810,32 +815,29 @@ namespace mtconnect
   {
     DataItem::Relationship rel;
     auto attrs = getAttributes(node);
-    
-    rel.m_relation = string((char*) node->name);
+
+    rel.m_relation = string((char *)node->name);
     rel.m_name = attrs["name"];
     rel.m_type = attrs["type"];
     rel.m_idRef = attrs["idRef"];
     if (!rel.m_type.empty() && !rel.m_idRef.empty())
       dataItem->getRelationships().push_back(rel);
-    else {
+    else
+    {
       g_logger << dlib::LWARN << "Bad Data Item Relationship: " << rel.m_relation << ", "
-          << rel.m_name << ", " << rel.m_type << ", " << rel.m_idRef
-          << ": type or idRef missing, skipping";
+               << rel.m_name << ", " << rel.m_type << ", " << rel.m_idRef
+               << ": type or idRef missing, skipping";
     }
   }
 
-  void XmlParser::loadDataItemRelationships(xmlNodePtr relationships, DataItem *dataItem, Device *device)
+  void XmlParser::loadDataItemRelationships(xmlNodePtr relationships, DataItem *dataItem,
+                                            Device *device)
   {
-    
-    forEachElement(relationships, {
-      {"DataItemRelationship", [&dataItem](xmlNodePtr node) {
-        addDataItemRelationship(node, dataItem);
-      }},
-      {"SpecificationRelationship",
-        [&dataItem](xmlNodePtr node) {
-          addDataItemRelationship(node, dataItem);
-        }}
-    });
+    forEachElement(relationships,
+                   {{"DataItemRelationship",
+                     [&dataItem](xmlNodePtr node) { addDataItemRelationship(node, dataItem); }},
+                    {"SpecificationRelationship",
+                     [&dataItem](xmlNodePtr node) { addDataItemRelationship(node, dataItem); }}});
   }
 
   unique_ptr<Composition> XmlParser::handleComposition(xmlNodePtr composition)
@@ -844,17 +846,17 @@ namespace mtconnect
     comp->m_attributes = getValidatedAttributes(composition, comp->properties());
     if (!comp->m_attributes.empty())
     {
-      forEachElement(composition, {
-        { "Description", [&comp](xmlNodePtr n) {
-          Description desc;
-          desc.m_attributes = getValidatedAttributes(n, desc.properties());
-          desc.m_body = getCDATA(n);
-          comp->setDescription(desc);
-        }},
-        { "Configuration", [&comp](xmlNodePtr n) {
-          handleConfiguration(n, (Composition*) comp.get());
-        }}
-        });
+      forEachElement(composition, {{"Description",
+                                    [&comp](xmlNodePtr n) {
+                                      Description desc;
+                                      desc.m_attributes =
+                                          getValidatedAttributes(n, desc.properties());
+                                      desc.m_body = getCDATA(n);
+                                      comp->setDescription(desc);
+                                    }},
+                                   {"Configuration", [&comp](xmlNodePtr n) {
+                                      handleConfiguration(n, (Composition *)comp.get());
+                                    }}});
     }
     else
     {
@@ -924,7 +926,8 @@ namespace mtconnect
     for (auto &text : rest)
       restText.append(getRawContent(text));
 
-    unique_ptr<SensorConfiguration> sensor(new SensorConfiguration(firmware, date, nextDate, initials, restText));
+    unique_ptr<SensorConfiguration> sensor(
+        new SensorConfiguration(firmware, date, nextDate, initials, restText));
 
     if (channels)
     {
@@ -949,7 +952,7 @@ namespace mtconnect
         sensor->addChannel(chl);
       }
     }
-    
+
     return move(sensor);
   }
 
@@ -995,8 +998,8 @@ namespace mtconnect
 
     return move(relationships);
   }
-  
-  template<class T>
+
+  template <class T>
   unique_ptr<T> handleGeometricConfiguration(xmlNodePtr node)
   {
     unique_ptr<T> model = make_unique<T>();
@@ -1009,14 +1012,13 @@ namespace mtconnect
     {
       g_logger << dlib::LWARN << "Skipping Geometric Definition";
     }
-    
+
     if (model->hasDescription())
     {
-      forEachElement(node, {
-        {"Description", [&model](xmlNodePtr n) { model->m_description = getCDATA(n); }}
-      });
+      forEachElement(
+          node, {{"Description", [&model](xmlNodePtr n) { model->m_description = getCDATA(n); }}});
     }
-    
+
     return model;
   }
 
@@ -1039,12 +1041,12 @@ namespace mtconnect
     {
       auto attrs = getAttributes(child);
 
-      std::string klass((const char*) child->name);
+      std::string klass((const char *)child->name);
       if (klass == "Specification" || klass == "ProcessSpecification")
       {
         unique_ptr<Specification> spec{new Specification(klass)};
 
-        spec->m_id= attrs["id"];
+        spec->m_id = attrs["id"];
         spec->m_name = attrs["name"];
         spec->m_type = attrs["type"];
         spec->m_subType = attrs["subType"];
@@ -1058,23 +1060,23 @@ namespace mtconnect
         {
           if (spec->hasGroups())
           {
-            std::string group((const char*) limit->name);
+            std::string group((const char *)limit->name);
 
             for (xmlNodePtr val = limit->children; val; val = val->next)
             {
-              std::string name((const char*) val->name);
+              std::string name((const char *)val->name);
               std::string value(getCDATA(val));
               spec->addLimitForGroup(group, name, stod(value));
             }
           }
           else
           {
-            std::string name((const char*) limit->name);
+            std::string name((const char *)limit->name);
             std::string value(getCDATA(limit));
             spec->addLimit(name, stod(value));
           }
         }
-        
+
         specifications->addSpecification(spec);
       }
       else
@@ -1082,40 +1084,50 @@ namespace mtconnect
         g_logger << dlib::LWARN << "Bad Specifictation type " << klass << ", skipping";
       }
     }
-    
+
     return move(specifications);
   }
-  
-  template<class T>
+
+  template <class T>
   void handleConfiguration(xmlNodePtr node, T *parent)
   {
-    forEachElement(node, {
-      {
-        {"SensorConfiguration", [&parent](xmlNodePtr n){
-          auto s = handleSensorConfiguration(n);
-          parent->addConfiguration(s);
-        }},
-        {"Relationships", [&parent](xmlNodePtr n) {
-          auto r = handleRelationships(n);
-          parent->addConfiguration(r); }},
-        {"CoordinateSystems", [&parent](xmlNodePtr n) {
-          auto c = handleCoordinateSystems(n);
-          parent->addConfiguration(c); }},
-        {"Specifications", [&parent](xmlNodePtr n) {
-          auto s = handleSpecifications(n);
-          parent->addConfiguration(s); }},
-        {"SolidModel", [&parent](xmlNodePtr n) {
-          unique_ptr<ComponentConfiguration> g(move(handleGeometricConfiguration<SolidModel>(n)));
-          parent->addConfiguration(g); }},
-        {"Motion", [&parent](xmlNodePtr n) {
-          unique_ptr<ComponentConfiguration> g(move(handleGeometricConfiguration<Motion>(n)));
-          parent->addConfiguration(g);
-        }},
-        {"OTHERWISE", [&parent](xmlNodePtr n) {
-          unique_ptr<ComponentConfiguration> ext(new ExtendedComponentConfiguration(getRawContent(n)));
-          parent->addConfiguration(ext);
-        }}
-      } });
+    forEachElement(node, {{{"SensorConfiguration",
+                            [&parent](xmlNodePtr n) {
+                              auto s = handleSensorConfiguration(n);
+                              parent->addConfiguration(s);
+                            }},
+                           {"Relationships",
+                            [&parent](xmlNodePtr n) {
+                              auto r = handleRelationships(n);
+                              parent->addConfiguration(r);
+                            }},
+                           {"CoordinateSystems",
+                            [&parent](xmlNodePtr n) {
+                              auto c = handleCoordinateSystems(n);
+                              parent->addConfiguration(c);
+                            }},
+                           {"Specifications",
+                            [&parent](xmlNodePtr n) {
+                              auto s = handleSpecifications(n);
+                              parent->addConfiguration(s);
+                            }},
+                           {"SolidModel",
+                            [&parent](xmlNodePtr n) {
+                              unique_ptr<ComponentConfiguration> g(
+                                  move(handleGeometricConfiguration<SolidModel>(n)));
+                              parent->addConfiguration(g);
+                            }},
+                           {"Motion",
+                            [&parent](xmlNodePtr n) {
+                              unique_ptr<ComponentConfiguration> g(
+                                  move(handleGeometricConfiguration<Motion>(n)));
+                              parent->addConfiguration(g);
+                            }},
+                           {"OTHERWISE", [&parent](xmlNodePtr n) {
+                              unique_ptr<ComponentConfiguration> ext(
+                                  new ExtendedComponentConfiguration(getRawContent(n)));
+                              parent->addConfiguration(ext);
+                            }}}});
   }
 
   AssetPtr XmlParser::parseAsset(const std::string &assetId, const std::string &type,

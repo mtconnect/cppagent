@@ -17,41 +17,36 @@
 
 #pragma once
 
-#include "globals.hpp"
 #include "component_configuration.hpp"
+#include "globals.hpp"
 
 #include <list>
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
-#include <optional>
 
 namespace mtconnect
 {
   class Description
   {
-  public:
+   public:
     Description() = default;
     Description(const Description &another) = default;
-    Description(std::string body)
-      : m_body(std::move(body))
-    {}
+    Description(std::string body) : m_body(std::move(body)) {}
     ~Description() = default;
-    
+
     const std::map<std::string, bool> &properties() const
     {
       const static std::map<std::string, bool> properties = {
-							     { "manufacturer", false },
-							     { "model", false },
-							     { "serialNumber", false },
-							     { "station", false }
-      };;
+          {"manufacturer", false}, {"model", false}, {"serialNumber", false}, {"station", false}};
+      ;
       return properties;
     }
-    
+
     std::string m_body;
     std::map<std::string, std::string> m_attributes;
-    
-  protected:
+
+   protected:
   };
 }  // namespace mtconnect

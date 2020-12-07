@@ -20,36 +20,42 @@
 #include "component_configuration.hpp"
 #include "globals.hpp"
 
-#include <utility>
+#include <cmath>
 #include <list>
 #include <map>
-#include <set>
 #include <optional>
-#include <cmath>
+#include <set>
+#include <utility>
 
 namespace mtconnect
 {
   class Specification
   {
-  public:
+   public:
     Specification(const Specification &s)
-      : m_id(s.m_id), m_type(s.m_type), m_subType(s.m_subType),
-        m_units(s.m_units), m_name(s.m_name), m_dataItemIdRef(s.m_dataItemIdRef),
-        m_compositionIdRef(s.m_compositionIdRef),
-        m_coordinateSystemIdRef(s.m_coordinateSystemIdRef),
-        m_originator(s.m_originator), m_hasGroups(s.m_hasGroups),
-       m_class(s.m_class)
+        : m_id(s.m_id),
+          m_type(s.m_type),
+          m_subType(s.m_subType),
+          m_units(s.m_units),
+          m_name(s.m_name),
+          m_dataItemIdRef(s.m_dataItemIdRef),
+          m_compositionIdRef(s.m_compositionIdRef),
+          m_coordinateSystemIdRef(s.m_coordinateSystemIdRef),
+          m_originator(s.m_originator),
+          m_hasGroups(s.m_hasGroups),
+          m_class(s.m_class)
     {
     }
-    Specification(const std::string &klass) {
+    Specification(const std::string &klass)
+    {
       m_hasGroups = klass == "ProcessSpecification";
       m_class = klass;
     }
     virtual ~Specification() = default;
-    
-  public:
+
+   public:
     typedef std::map<std::string, double> Group;
-    
+
     // Attributes
     std::string m_id;
     std::string m_type;
@@ -60,31 +66,30 @@ namespace mtconnect
     std::string m_compositionIdRef;
     std::string m_coordinateSystemIdRef;
     std::string m_originator;
-    
-    bool addLimitForGroup(const std::string &group, const std::string &limit,
-                  double value);
+
+    bool addLimitForGroup(const std::string &group, const std::string &limit, double value);
     bool addLimit(const std::string &limit, double value)
     {
       return addLimitForGroup("Limits", limit, value);
     }
-    
-    const std::optional<Group> getGroup(const std::string &group) const {
+
+    const std::optional<Group> getGroup(const std::string &group) const
+    {
       auto it = m_groups.find(group);
       if (it != m_groups.end())
         return it->second;
       else
         return {};
     }
-    auto getLimits() const {
-      return getGroup("Limits");
-    }
-    std::set<std::string> getGroupKeys() const {
+    auto getLimits() const { return getGroup("Limits"); }
+    std::set<std::string> getGroupKeys() const
+    {
       std::set<std::string> keys;
       std::transform(m_groups.begin(), m_groups.end(), std::inserter(keys, keys.begin()),
-                     [](const auto &kv) { return kv.first; } );
+                     [](const auto &kv) { return kv.first; });
       return keys;
     }
-    
+
     const std::map<std::string, Group> &getGroups() const { return m_groups; }
     double getLimitForGroup(const std::string &group, const std::string &limit) const
     {
@@ -95,15 +100,12 @@ namespace mtconnect
       else
         return std::nan("1");
     }
-    double getLimit(const std::string &limit) const
-    {
-      return getLimitForGroup("Limits", limit);
-    }
+    double getLimit(const std::string &limit) const { return getLimitForGroup("Limits", limit); }
 
     bool hasGroups() const { return m_hasGroups; }
     const std::string &getClass() const { return m_class; }
-    
-  protected:
+
+   protected:
     std::map<std::string, Group> m_groups;
     bool m_hasGroups;
     std::string m_class;
@@ -119,16 +121,13 @@ namespace mtconnect
     {
       return m_specifications;
     }
-    void addSpecification(Specification *s)
-    {
-      m_specifications.emplace_back(std::move(s));
-    }
+    void addSpecification(Specification *s) { m_specifications.emplace_back(std::move(s)); }
     void addSpecification(std::unique_ptr<Specification> &s)
     {
       m_specifications.emplace_back(std::move(s));
     }
 
-  protected:
+   protected:
     std::list<std::unique_ptr<Specification>> m_specifications;
   };
 }  // namespace mtconnect

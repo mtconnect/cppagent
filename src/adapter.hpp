@@ -50,101 +50,41 @@ namespace mtconnect
 
     // Set pointer to the agent
     void setAgent(Agent &agent);
-    bool isDupChecking() const
-    {
-      return m_dupCheck;
-    }
-    void setDupCheck(bool flag)
-    {
-      m_dupCheck = flag;
-    }
-    Device *getDevice() const
-    {
-      return m_device;
-    }
+    bool isDupChecking() const { return m_dupCheck; }
+    void setDupCheck(bool flag) { m_dupCheck = flag; }
+    Device *getDevice() const { return m_device; }
     const auto &getDeviceName() const { return m_deviceName; }
 
-    bool isAutoAvailable() const
-    {
-      return m_autoAvailable;
-    }
-    void setAutoAvailable(bool flag)
-    {
-      m_autoAvailable = flag;
-    }
+    bool isAutoAvailable() const { return m_autoAvailable; }
+    void setAutoAvailable(bool flag) { m_autoAvailable = flag; }
 
-    bool isIgnoringTimestamps() const
-    {
-      return m_ignoreTimestamps;
-    }
-    void setIgnoreTimestamps(bool flag)
-    {
-      m_ignoreTimestamps = flag;
-    }
+    bool isIgnoringTimestamps() const { return m_ignoreTimestamps; }
+    void setIgnoreTimestamps(bool flag) { m_ignoreTimestamps = flag; }
 
     void setReconnectInterval(std::chrono::milliseconds interval)
     {
       m_reconnectInterval = interval;
     }
-    std::chrono::milliseconds getReconnectInterval() const
-    {
-      return m_reconnectInterval;
-    }
+    std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
 
-    void setRelativeTime(bool flag)
-    {
-      m_relativeTime = flag;
-    }
-    bool getRelativeTime() const
-    {
-      return m_relativeTime;
-    }
+    void setRelativeTime(bool flag) { m_relativeTime = flag; }
+    bool getRelativeTime() const { return m_relativeTime; }
 
-    void setConversionRequired(bool flag)
-    {
-      m_conversionRequired = flag;
-    }
-    bool conversionRequired() const
-    {
-      return m_conversionRequired;
-    }
+    void setConversionRequired(bool flag) { m_conversionRequired = flag; }
+    bool conversionRequired() const { return m_conversionRequired; }
 
-    void setUpcaseValue(bool flag)
-    {
-      m_upcaseValue = flag;
-    }
-    bool upcaseValue() const
-    {
-      return m_upcaseValue;
-    }
+    void setUpcaseValue(bool flag) { m_upcaseValue = flag; }
+    bool upcaseValue() const { return m_upcaseValue; }
 
-    uint64_t getBaseTime() const
-    {
-      return m_baseTime;
-    }
-    uint64_t getBaseOffset() const
-    {
-      return m_baseOffset;
-    }
+    uint64_t getBaseTime() const { return m_baseTime; }
+    uint64_t getBaseOffset() const { return m_baseOffset; }
 
-    bool isParsingTime() const
-    {
-      return m_parseTime;
-    }
-    void setParseTime(bool flag)
-    {
-      m_parseTime = flag;
-    }
+    bool isParsingTime() const { return m_parseTime; }
+    void setParseTime(bool flag) { m_parseTime = flag; }
 
     // For testing...
-    void setBaseOffset(uint64_t offset)
-    {
-      m_baseOffset = offset;
-    }
-    void setBaseTime(uint64_t offset)
-    {
-      m_baseTime = offset;
-    }
+    void setBaseOffset(uint64_t offset) { m_baseOffset = offset; }
+    void setBaseTime(uint64_t offset) { m_baseTime = offset; }
     static void getEscapedLine(std::istringstream &stream, std::string &store);
 
     // Inherited method to incoming data from the server
@@ -154,17 +94,10 @@ namespace mtconnect
     // Method called when connection is lost.
     void disconnected() override;
     void connected() override;
-    
+
     // Agent Device methods
-    const std::string &getUrl() const
-    {
-      
-      return m_url;
-    }
-    const std::string &getIdentity() const
-    {
-      return m_identity;
-    }
+    const std::string &getUrl() const { return m_url; }
+    const std::string &getIdentity() const { return m_identity; }
 
     bool isDuplicate(DataItem *dataItem, const std::string &value, double timeOffset) const
     {

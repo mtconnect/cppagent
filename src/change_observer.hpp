@@ -55,15 +55,9 @@ namespace mtconnect
       m_cv.notify_one();
     }
 
-    uint64_t getSequence() const
-    {
-      return m_sequence;
-    }
+    uint64_t getSequence() const { return m_sequence; }
 
-    bool wasSignaled() const
-    {
-      return m_sequence != UINT64_MAX;
-    }
+    bool wasSignaled() const { return m_sequence != UINT64_MAX; }
 
     void reset()
     {

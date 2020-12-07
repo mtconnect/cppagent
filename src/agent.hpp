@@ -107,9 +107,7 @@ namespace mtconnect
    public:
     // Load agent with the xml configuration
     Agent(const std::string &configXmlPath, int bufferSize, int maxAssets,
-          const std::string &version,
-          int checkpointFreq = 1000,
-          bool pretty = false);
+          const std::string &version, int checkpointFreq = 1000, bool pretty = false);
 
     // Virtual destructor
     ~Agent() override;
@@ -132,11 +130,8 @@ namespace mtconnect
     Device *getDeviceByName(const std::string &name);
     const Device *getDeviceByName(const std::string &name) const;
     Device *findDeviceByUUIDorName(const std::string &idOrName);
-    const std::vector<Device *> &getDevices() const
-    {
-      return m_devices;
-    }
-    
+    const std::vector<Device *> &getDevices() const { return m_devices; }
+
     // Add the a device from a configuration file
     void addDevice(Device *device);
 
@@ -159,26 +154,11 @@ namespace mtconnect
 
     DataItem *getDataItemByName(const std::string &deviceName, const std::string &dataItemName);
 
-    Observation *getFromBuffer(uint64_t seq) const
-    {
-      return (*m_slidingBuffer)[seq];
-    }
-    uint64_t getSequence() const
-    {
-      return m_sequence;
-    }
-    unsigned int getBufferSize() const
-    {
-      return m_slidingBufferSize;
-    }
-    unsigned int getMaxAssets() const
-    {
-      return m_maxAssets;
-    }
-    unsigned int getAssetCount() const
-    {
-      return m_assets.size();
-    }
+    Observation *getFromBuffer(uint64_t seq) const { return (*m_slidingBuffer)[seq]; }
+    uint64_t getSequence() const { return m_sequence; }
+    unsigned int getBufferSize() const { return m_slidingBufferSize; }
+    unsigned int getMaxAssets() const { return m_maxAssets; }
+    unsigned int getAssetCount() const { return m_assets.size(); }
 
     int getAssetCount(const std::string &type) const
     {
@@ -197,14 +177,8 @@ namespace mtconnect
     }
 
     // For testing...
-    void setSequence(uint64_t seq)
-    {
-      m_sequence = seq;
-    }
-    std::list<AssetPtr *> *getAssets()
-    {
-      return &m_assets;
-    }
+    void setSequence(uint64_t seq) { m_sequence = seq; }
+    std::list<AssetPtr *> *getAssets() { return &m_assets; }
     auto getAgentDevice() { return m_agentDevice; }
 
     // Starting
@@ -214,43 +188,25 @@ namespace mtconnect
     void clear();
 
     void registerFile(const std::string &uri, const std::string &path);
-    void addMimeType(const std::string &ext, const std::string &type)
-    {
-      m_mimeTypes[ext] = type;
-    }
+    void addMimeType(const std::string &ext, const std::string &type) { m_mimeTypes[ext] = type; }
 
     // PUT and POST handling
-    void enablePut(bool flag = true)
-    {
-      m_putEnabled = flag;
-    }
-    bool isPutEnabled() const
-    {
-      return m_putEnabled;
-    }
-    void allowPutFrom(const std::string &host)
-    {
-      m_putAllowedHosts.insert(host);
-    }
+    void enablePut(bool flag = true) { m_putEnabled = flag; }
+    bool isPutEnabled() const { return m_putEnabled; }
+    void allowPutFrom(const std::string &host) { m_putAllowedHosts.insert(host); }
     bool isPutAllowedFrom(const std::string &host) const
     {
       return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
     }
 
     // For debugging
-    void setLogStreamData(bool log)
-    {
-      m_logStreamData = log;
-    }
+    void setLogStreamData(bool log) { m_logStreamData = log; }
 
     // Handle probe calls
     std::string handleProbe(const Printer *printer, const std::string &device);
 
     // Get the printer for a type
-    Printer *getPrinter(const std::string &aType)
-    {
-      return m_printers[aType].get();
-    }
+    Printer *getPrinter(const std::string &aType) { return m_printers[aType].get(); }
 
    protected:
     // Initialization methods
@@ -313,10 +269,7 @@ namespace mtconnect
     // Get a file
     std::string handleFile(const std::string &uri, OutgoingThings &outgoing);
 
-    bool isFile(const std::string &uri) const
-    {
-      return m_fileMap.find(uri) != m_fileMap.end();
-    }
+    bool isFile(const std::string &uri) const { return m_fileMap.find(uri) != m_fileMap.end(); }
 
     // Perform a check on parameter and return a value or a code
     int checkAndGetParam(const dlib::key_value_map &queries, const std::string &param,
@@ -367,7 +320,7 @@ namespace mtconnect
     // Natural key indices for assets
     std::map<std::string, AssetIndex> m_assetIndices;
     unsigned int m_maxAssets;
-    
+
     // Agent Device
     AgentDevice *m_agentDevice{nullptr};
 
@@ -392,9 +345,7 @@ namespace mtconnect
       std::unique_ptr<char[]> m_buffer;
       size_t m_size = 0;
 
-      CachedFile() : m_buffer(nullptr)
-      {
-      }
+      CachedFile() : m_buffer(nullptr) {}
 
       CachedFile(const CachedFile &file) : RefCounted(file), m_buffer(nullptr), m_size(file.m_size)
       {
@@ -413,10 +364,7 @@ namespace mtconnect
         m_buffer = std::make_unique<char[]>(m_size);
       }
 
-      ~CachedFile() override
-      {
-        m_buffer.reset();
-      }
+      ~CachedFile() override { m_buffer.reset(); }
 
       CachedFile &operator=(const CachedFile &file)
       {

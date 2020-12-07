@@ -61,81 +61,28 @@ namespace mtconnect
 
     ~Asset() override;
 
-    const std::string &getAssetId() const
-    {
-      return m_assetId;
-    }
-    virtual std::string &getContent(const Printer *aPrinter)
-    {
-      return m_content;
-    }
-    const std::string &getType() const
-    {
-      return m_type;
-    }
-    AssetKeys &getKeys()
-    {
-      return m_keys;
-    }
-    const std::string &getDeviceUuid() const
-    {
-      return m_deviceUuid;
-    }
-    const std::string &getTimestamp() const
-    {
-      return m_timestamp;
-    }
-    const std::string &getDescription() const
-    {
-      return m_description;
-    }
-    const XmlAttributes &getArchetype() const
-    {
-      return m_archetype;
-    }
-    bool isRemoved() const
-    {
-      return m_removed;
-    }
+    const std::string &getAssetId() const { return m_assetId; }
+    virtual std::string &getContent(const Printer *aPrinter) { return m_content; }
+    const std::string &getType() const { return m_type; }
+    AssetKeys &getKeys() { return m_keys; }
+    const std::string &getDeviceUuid() const { return m_deviceUuid; }
+    const std::string &getTimestamp() const { return m_timestamp; }
+    const std::string &getDescription() const { return m_description; }
+    const XmlAttributes &getArchetype() const { return m_archetype; }
+    bool isRemoved() const { return m_removed; }
 
-    const AssetKeys &getIdentity() const
-    {
-      return m_identity;
-    }
+    const AssetKeys &getIdentity() const { return m_identity; }
 
-    bool operator==(const Asset &another) const
-    {
-      return m_assetId == another.m_assetId;
-    }
+    bool operator==(const Asset &another) const { return m_assetId == another.m_assetId; }
 
-    void setAssetId(const std::string &id)
-    {
-      m_assetId = id;
-    }
-    void setDeviceUuid(const std::string &uuid)
-    {
-      m_deviceUuid = uuid;
-    }
-    void setTimestamp(const std::string &timestamp)
-    {
-      m_timestamp = timestamp;
-    }
-    void setRemoved(bool removed)
-    {
-      m_removed = removed;
-    }
-    void setDescription(const std::string &desc)
-    {
-      m_description = desc;
-    }
-    void setArchetype(const XmlAttributes &arch)
-    {
-      m_archetype = arch;
-    }
+    void setAssetId(const std::string &id) { m_assetId = id; }
+    void setDeviceUuid(const std::string &uuid) { m_deviceUuid = uuid; }
+    void setTimestamp(const std::string &timestamp) { m_timestamp = timestamp; }
+    void setRemoved(bool removed) { m_removed = removed; }
+    void setDescription(const std::string &desc) { m_description = desc; }
+    void setArchetype(const XmlAttributes &arch) { m_archetype = arch; }
 
-    virtual void changed()
-    {
-    }
+    virtual void changed() {}
     virtual void addIdentity(const std::string &key, const std::string &value);
   };
 

@@ -33,15 +33,15 @@ namespace mtconnect
   struct AbstractDefinition : public Definition
   {
     AbstractDefinition() = default;
-    AbstractDefinition(const AbstractDefinition&) = default;
+    AbstractDefinition(const AbstractDefinition &) = default;
     virtual ~AbstractDefinition() = default;
-    
+
     std::string m_key;
     std::string m_keyType;
     std::string m_units;
     std::string m_type;
     std::string m_subType;
-    
+
     const std::string &getKey() const
     {
       if (m_key.empty())
@@ -50,20 +50,14 @@ namespace mtconnect
         return m_key;
     }
 
-    bool operator<(const AbstractDefinition &other) const
-    {
-      return getKey() < other.getKey();
-    }
-    bool operator==(const AbstractDefinition &other) const
-    {
-      return getKey() == other.getKey();
-    }
+    bool operator<(const AbstractDefinition &other) const { return getKey() < other.getKey(); }
+    bool operator==(const AbstractDefinition &other) const { return getKey() == other.getKey(); }
   };
 
   struct CellDefinition : public AbstractDefinition
   {
     CellDefinition() = default;
-    CellDefinition(const CellDefinition&) = default;
+    CellDefinition(const CellDefinition &) = default;
     virtual ~CellDefinition() = default;
   };
 
@@ -82,7 +76,7 @@ namespace mtconnect
   struct DataItemDefinition : public Definition
   {
     DataItemDefinition() = default;
-    DataItemDefinition(const DataItemDefinition&) = default;
+    DataItemDefinition(const DataItemDefinition &) = default;
     virtual ~DataItemDefinition() = default;
 
     std::set<EntryDefinition> m_entries;

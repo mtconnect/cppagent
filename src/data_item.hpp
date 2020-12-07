@@ -59,8 +59,9 @@ namespace mtconnect
       FILTER_PERIOD,
       FILTER_NONE
     };
-    
-    struct Relationship {
+
+    struct Relationship
+    {
       std::string m_relation;
       std::string m_type;
       std::string m_name;
@@ -75,100 +76,31 @@ namespace mtconnect
     ~DataItem() override;
 
     // Get a map of all the attributes of this data item
-    const std::map<std::string, std::string> &getAttributes() const
-    {
-      return m_attributes;
-    }
+    const std::map<std::string, std::string> &getAttributes() const { return m_attributes; }
 
     // Getter methods for data item specs
-    const std::string &getId() const
-    {
-      return m_id;
-    }
-    const std::string &getName() const
-    {
-      return m_name;
-    }
-    const std::string &getSource() const
-    {
-      return m_source;
-    }
-    const std::string &getSourceDataItemId() const
-    {
-      return m_sourceDataItemId;
-    }
-    const std::string &getSourceComponentId() const
-    {
-      return m_sourceComponentId;
-    }
-    const std::string &getSourceCompositionId() const
-    {
-      return m_sourceCompositionId;
-    }
-    const std::string &getType() const
-    {
-      return m_type;
-    }
-    const std::string &getElementName() const
-    {
-      return m_camelType;
-    }
-    const std::string &getPrefixedElementName() const
-    {
-      return m_prefixedCamelType;
-    }
-    const std::string &getSubType() const
-    {
-      return m_subType;
-    }
-    const std::string &getNativeUnits() const
-    {
-      return m_nativeUnits;
-    }
-    const std::string &getUnits() const
-    {
-      return m_units;
-    }
-    const std::string &getPrefix() const
-    {
-      return m_prefix;
-    }
-    const std::string &getStatistic() const
-    {
-      return m_statistic;
-    }
-    const std::string &getSampleRate() const
-    {
-      return m_sampleRate;
-    }
-    const std::string &getCompositionId() const
-    {
-      return m_compositionId;
-    }
-    float getNativeScale() const
-    {
-      return m_nativeScale;
-    }
-    double getConversionFactor() const
-    {
-      return m_conversionFactor;
-    }
-    double getConversionOffset() const
-    {
-      return m_conversionOffset;
-    }
-    bool hasFactor() const
-    {
-      return m_hasFactor;
-    }
-    ECategory getCategory() const
-    {
-      return m_category;
-    }
-    ERepresentation getRepresentation() const
-    {
-      return m_representation;
-    }
+    const std::string &getId() const { return m_id; }
+    const std::string &getName() const { return m_name; }
+    const std::string &getSource() const { return m_source; }
+    const std::string &getSourceDataItemId() const { return m_sourceDataItemId; }
+    const std::string &getSourceComponentId() const { return m_sourceComponentId; }
+    const std::string &getSourceCompositionId() const { return m_sourceCompositionId; }
+    const std::string &getType() const { return m_type; }
+    const std::string &getElementName() const { return m_camelType; }
+    const std::string &getPrefixedElementName() const { return m_prefixedCamelType; }
+    const std::string &getSubType() const { return m_subType; }
+    const std::string &getNativeUnits() const { return m_nativeUnits; }
+    const std::string &getUnits() const { return m_units; }
+    const std::string &getPrefix() const { return m_prefix; }
+    const std::string &getStatistic() const { return m_statistic; }
+    const std::string &getSampleRate() const { return m_sampleRate; }
+    const std::string &getCompositionId() const { return m_compositionId; }
+    float getNativeScale() const { return m_nativeScale; }
+    double getConversionFactor() const { return m_conversionFactor; }
+    double getConversionOffset() const { return m_conversionOffset; }
+    bool hasFactor() const { return m_hasFactor; }
+    ECategory getCategory() const { return m_category; }
+    ERepresentation getRepresentation() const { return m_representation; }
     bool isInitialized() const { return m_initialized; }
     void setInitialized() { m_initialized = true; }
 
@@ -176,14 +108,8 @@ namespace mtconnect
 
     // Returns if data item has this attribute
     bool hasName(const std::string &name) const;
-    bool hasNativeScale() const
-    {
-      return m_hasNativeScale;
-    }
-    bool hasDefinition() const
-    {
-      return (bool)m_definition;
-    }
+    bool hasNativeScale() const { return m_hasNativeScale; }
+    bool hasDefinition() const { return (bool)m_definition; }
 
     // Add a source (extra information) to data item
     void addSource(const std::string &source, const std::string &sourceDataItemId,
@@ -196,102 +122,36 @@ namespace mtconnect
     }
 
     // Returns true if data item is a sample
-    bool isSample() const
-    {
-      return m_category == SAMPLE;
-    }
-    bool isEvent() const
-    {
-      return m_category == EVENT;
-    }
-    bool isCondition() const
-    {
-      return m_category == CONDITION;
-    }
-    bool isAlarm() const
-    {
-      return m_isAlarm;
-    }
-    bool isMessage() const
-    {
-      return m_isMessage;
-    }
-    bool isAssetChanged() const
-    {
-      return m_isAssetChanged;
-    }
-    bool isAssetRemoved() const
-    {
-      return m_isAssetRemoved;
-    }
-    bool isTimeSeries() const
-    {
-      return m_representation == TIME_SERIES;
-    }
-    bool isDiscreteRep() const
-    {
-      return m_representation == DISCRETE;
-    }
-    bool isTable() const
-    {
-      return m_representation == TABLE;
-    }
-    bool isDataSet() const
-    {
-      return m_representation == DATA_SET || isTable();
-    }
-    bool isDiscrete() const
-    {
-      return m_isDiscrete;
-    }
-    bool allowDups() const
-    {
-      return isDiscrete() || isDiscreteRep();
-    }
-    bool is3D() const
-    {
-      return m_threeD;
-    }
+    bool isSample() const { return m_category == SAMPLE; }
+    bool isEvent() const { return m_category == EVENT; }
+    bool isCondition() const { return m_category == CONDITION; }
+    bool isAlarm() const { return m_isAlarm; }
+    bool isMessage() const { return m_isMessage; }
+    bool isAssetChanged() const { return m_isAssetChanged; }
+    bool isAssetRemoved() const { return m_isAssetRemoved; }
+    bool isTimeSeries() const { return m_representation == TIME_SERIES; }
+    bool isDiscreteRep() const { return m_representation == DISCRETE; }
+    bool isTable() const { return m_representation == TABLE; }
+    bool isDataSet() const { return m_representation == DATA_SET || isTable(); }
+    bool isDiscrete() const { return m_isDiscrete; }
+    bool allowDups() const { return isDiscrete() || isDiscreteRep(); }
+    bool is3D() const { return m_threeD; }
 
-    bool hasResetTrigger() const
-    {
-      return !m_resetTrigger.empty();
-    }
-    const std::string &getResetTrigger() const
-    {
-      return m_resetTrigger;
-    }
-    void setResetTrigger(const std::string &aTrigger)
-    {
-      m_resetTrigger = aTrigger;
-    }
+    bool hasResetTrigger() const { return !m_resetTrigger.empty(); }
+    const std::string &getResetTrigger() const { return m_resetTrigger; }
+    void setResetTrigger(const std::string &aTrigger) { m_resetTrigger = aTrigger; }
     void makeDiscrete()
     {
       m_isDiscrete = true;
       m_attributes = buildAttributes();
     }
-    bool hasInitialValue() const
-    {
-      return !m_initialValue.empty();
-    }
-    const std::string &getInitialValue() const
-    {
-      return m_initialValue;
-    }
-    void setInitialValue(const std::string &aValue)
-    {
-      m_initialValue = aValue;
-    }
+    bool hasInitialValue() const { return !m_initialValue.empty(); }
+    const std::string &getInitialValue() const { return m_initialValue; }
+    void setInitialValue(const std::string &aValue) { m_initialValue = aValue; }
 
     // Set/get component that data item is associated with
-    void setComponent(Component &component)
-    {
-      m_component = &component;
-    }
-    Component *getComponent() const
-    {
-      return m_component;
-    }
+    void setComponent(Component &component) { m_component = &component; }
+    Component *getComponent() const { return m_component; }
 
     // Get the name for the adapter feed
     const std::string &getSourceOrName() const
@@ -299,15 +159,9 @@ namespace mtconnect
       return m_source.empty() ? (m_name.empty() ? m_id : m_name) : m_source;
     }
 
-    const DataItemDefinition &getDefinition()
-    {
-      return *m_definition;
-    }
+    const DataItemDefinition &getDefinition() { return *m_definition; }
 
-    void setDefinition(std::unique_ptr<DataItemDefinition> &def)
-    {
-      std::swap(m_definition, def);
-    }
+    void setDefinition(std::unique_ptr<DataItemDefinition> &def) { std::swap(m_definition, def); }
 
     // Transform a name to camel casing
     static std::string getCamelType(const std::string &type, std::string &prefix);
@@ -361,43 +215,16 @@ namespace mtconnect
     }
 
     // Constraints
-    bool hasConstraints() const
-    {
-      return m_hasConstraints;
-    }
-    std::string getMaximum() const
-    {
-      return m_maximum;
-    }
-    std::string getMinimum() const
-    {
-      return m_minimum;
-    }
-    const std::vector<std::string> &getConstrainedValues() const
-    {
-      return m_values;
-    }
-    bool hasConstantValue() const
-    {
-      return m_values.size() == 1;
-    }
+    bool hasConstraints() const { return m_hasConstraints; }
+    std::string getMaximum() const { return m_maximum; }
+    std::string getMinimum() const { return m_minimum; }
+    const std::vector<std::string> &getConstrainedValues() const { return m_values; }
+    bool hasConstantValue() const { return m_values.size() == 1; }
 
-    bool hasMinimumDelta() const
-    {
-      return m_hasMinimumDelta;
-    }
-    bool hasMinimumPeriod() const
-    {
-      return m_hasMinimumPeriod;
-    }
-    double getFilterValue() const
-    {
-      return m_filterValue;
-    }
-    double getFilterPeriod() const
-    {
-      return m_filterPeriod;
-    }
+    bool hasMinimumDelta() const { return m_hasMinimumDelta; }
+    bool hasMinimumPeriod() const { return m_hasMinimumPeriod; }
+    double getFilterValue() const { return m_filterValue; }
+    double getFilterPeriod() const { return m_filterPeriod; }
 
     void setMaximum(std::string max)
     {
@@ -430,17 +257,11 @@ namespace mtconnect
     std::string convertValue(const std::string &value);
     float convertValue(float value);
 
-    Adapter *getDataSource() const
-    {
-      return m_dataSource;
-    }
+    Adapter *getDataSource() const { return m_dataSource; }
     void setDataSource(Adapter *source);
     bool operator<(const DataItem &another) const;
 
-    bool operator==(DataItem &another) const
-    {
-      return m_id == another.m_id;
-    }
+    bool operator==(DataItem &another) const { return m_id == another.m_id; }
 
     const char *getCategoryText() const
     {
@@ -459,10 +280,8 @@ namespace mtconnect
           return "Undefined";
       }
     }
-    
-    std::list<Relationship> &getRelationships() {
-      return m_relationships;
-    }
+
+    std::list<Relationship> &getRelationships() { return m_relationships; }
 
    protected:
     double simpleFactor(const std::string &units);
@@ -568,7 +387,7 @@ namespace mtconnect
 
     // Definitons
     std::unique_ptr<DataItemDefinition> m_definition;
-    
+
     // Relations
     std::list<Relationship> m_relationships;
   };

@@ -21,9 +21,8 @@
 #include "device.hpp"
 #include "options.hpp"
 #include "rolling_file_logger.hpp"
-#include "xml_printer.hpp"
 #include "version.h"
-
+#include "xml_printer.hpp"
 #include <sys/stat.h>
 
 #include <date/date.h>
@@ -371,10 +370,7 @@ namespace mtconnect
     } while (m_restart);
   }
 
-  void AgentConfiguration::stop()
-  {
-    m_agent->clear();
-  }
+  void AgentConfiguration::stop() { m_agent->clear(); }
 
   Device *AgentConfiguration::defaultDevice()
   {
@@ -624,13 +620,13 @@ namespace mtconnect
     m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
 
     // Check for schema version
-    
-    string schemaVersion = get_with_default(reader, "SchemaVersion", strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR) );
+
+    string schemaVersion = get_with_default(
+        reader, "SchemaVersion", strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
     if (!m_agent)
-      m_agent = new Agent(m_devicesFile, bufferSize, maxAssets,
-                          schemaVersion, checkpointFrequency,
+      m_agent = new Agent(m_devicesFile, bufferSize, maxAssets, schemaVersion, checkpointFrequency,
                           m_pretty);
     XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
 
@@ -707,8 +703,7 @@ namespace mtconnect
 
         g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
         auto adp = new Adapter(deviceName, host, port,
-                               get_with_default(adapter, "LegacyTimeout",
-                                                legacyTimeout));
+                               get_with_default(adapter, "LegacyTimeout", legacyTimeout));
 
         device->m_preserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
 
@@ -751,7 +746,7 @@ namespace mtconnect
             adp->addDevice(name);
           }
         }
-        
+
         m_agent->addAdapter(adp, false);
       }
     }

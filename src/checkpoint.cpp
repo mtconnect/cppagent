@@ -43,10 +43,7 @@ namespace mtconnect
     m_events.clear();
   }
 
-  Checkpoint::~Checkpoint()
-  {
-    clear();
-  }
+  Checkpoint::~Checkpoint() { clear(); }
 
   void Checkpoint::addObservation(Observation *event)
   {

@@ -83,10 +83,7 @@ namespace mtconnect
     void updateValue(const std::string &key, const std::string &value);
 
     std::string &getContent(const Printer *aPrinter) override;
-    void changed() override
-    {
-      m_content.clear();
-    }
+    void changed() override { m_content.clear(); }
 
    public:
     std::vector<std::string> m_status;

@@ -32,18 +32,9 @@ namespace mtconnect
     virtual void stop() = 0;
     virtual void start() = 0;
 
-    void setName(std::string const &name)
-    {
-      m_name = name;
-    }
-    std::string const &name() const
-    {
-      return m_name;
-    }
-    void setDebug(bool debug)
-    {
-      m_isDebug = debug;
-    }
+    void setName(std::string const &name) { m_name = name; }
+    std::string const &name() const { return m_name; }
+    void setDebug(bool debug) { m_isDebug = debug; }
 
    protected:
     std::string m_name;
