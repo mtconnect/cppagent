@@ -43,7 +43,7 @@ namespace mtconnect
     stringstream name;
     name << adapter->getServer() << ':' << adapter->getPort();
 
-    auto comp = new Component("Adpater", {{"id", id}, {"name", name.str()}});
+    auto comp = new Component("Adapter", {{"id", id}, {"name", name.str()}});
     m_adapters->addChild(comp);
 
     {

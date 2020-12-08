@@ -34,7 +34,8 @@ class AgentDeviceTest : public testing::Test
 
   void SetUp() override
   {
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.7", 25);
+    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml",
+                                 8, 4, "1.7", 25, true);
     m_agentId = intToString(getCurrentTimeInSec());
     m_adapter = nullptr;
     m_agentDevice = nullptr;
@@ -116,9 +117,11 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 
 #define AGENT_PATH "//m:Agent"
 #define AGENT_DATA_ITEMS_PATH AGENT_PATH "/m:DataItems"
-#define ADAPTER_PATH AGENT_PATH "/m:Components/m:Adapters/m:Components/m:Adapter"
+#define ADAPTERS_PATH AGENT_PATH "/m:Components/m:Adapters"
+#define ADAPTER_PATH ADAPTERS_PATH "/m:Components/m:Adapter"
+#define ADAPTER_DATA_ITEMS_PATH ADAPTER_PATH "/m:DataItems"
 
-TEST_F(AgentDeviceTest, AdapterAddedTest)
+TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
 {
   addAdapter();
   
@@ -127,7 +130,43 @@ TEST_F(AgentDeviceTest, AdapterAddedTest)
     {
       PARSE_XML_RESPONSE;
       
+      ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
+      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", "_server_7878");
+      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "server:7878");
+      
+      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
+                            "/m:DataItem[@id='_server_7878_adapter_uri']@type",
+                            "ADAPTER_URI");
+      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
+                            "/m:DataItem[@id='_server_7878_adapter_uri']/m:Constraints/m:Value",
+                            "shdr://server:7878");
     }
+  }
+}
 
+#define AGENT_DEVICE_STREAM "//m:DeviceStream[@name='Agent']"
+#define AGENT_DEVICE_DEVICE_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Agent']"
+#define AGENT_DEVICE_ADAPTER_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Adapter']"
+
+
+TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
+{
+  addAdapter();
+  
+  {
+    m_agentTestHelper->m_path = "/Agent/current";
+    {
+      PARSE_XML_RESPONSE;
+      
+      ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_STREAM "/*", 2);
+      ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_DEVICE_STREAM "/*", 1);
+
+      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_DEVICE_STREAM "/m:Events/m:DeviceAdded",
+                            "000");
+
+      ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_ADAPTER_STREAM "/*", 1);
+      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
+                            "shdr://server:7878");
+    }
   }
 }

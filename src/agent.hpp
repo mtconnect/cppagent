@@ -185,6 +185,7 @@ namespace mtconnect
     void loadXMLDeviceFile(const std::string &config);
     void verifyDevice(Device *device);
     void initializeDataItems(Device *device);
+    void loadCachedProbe();
 
     // HTTP Protocol
     void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,

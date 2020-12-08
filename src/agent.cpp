@@ -85,14 +85,8 @@ namespace mtconnect
       createAgentDevice();
     }
     loadXMLDeviceFile(configXmlPath);
-
-    // Reload the document for path resolution
-    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId,
-                                                     m_circularBuffer.getBufferSize(),
-                                                     m_maxAssets, m_assets.size(),
-                                                     m_circularBuffer.getSequence(),
-                                                     m_devices));
-
+    loadCachedProbe();
+    
     m_initialized = true;
   }
 
@@ -257,6 +251,17 @@ namespace mtconnect
         g_logger << LWARN << "Adding device " << device->getUuid()
                  << " after initialialization not supported yet";
     }
+  }
+
+  void Agent::loadCachedProbe()
+  {
+    // Reload the document for path resolution
+    auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
+    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId,
+                                                     m_circularBuffer.getBufferSize(),
+                                                     m_maxAssets, m_assets.size(),
+                                                     m_circularBuffer.getSequence(),
+                                                     m_devices));
   }
 
   const Device *Agent::getDeviceByName(const std::string &name) const
@@ -586,12 +591,7 @@ namespace mtconnect
       // Reload the document for path resolution
       if (m_initialized)
       {
-        auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
-        m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId,
-                                                         m_circularBuffer.getBufferSize(),
-                                                         m_maxAssets, m_assets.size(),
-                                                         m_circularBuffer.getSequence(),
-                                                         m_devices));
+        loadCachedProbe();
       }
     }
   }
@@ -1555,7 +1555,12 @@ namespace mtconnect
 
     if (!device.empty())
     {
-      string prefix = "//Devices/Device[@name=\"" + device + "\"or@uuid=\"" + device + "\"]";
+      string prefix;
+      if (device == "Agent")
+        prefix = "//Devices/Agent[@name=\"" + device + "\"or@uuid=\"" + device + "\"]";
+      else
+        prefix = "//Devices/Device[@name=\"" + device + "\"or@uuid=\"" + device + "\"]";
+
 
       if (!path.empty())
       {
