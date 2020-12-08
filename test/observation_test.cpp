@@ -50,11 +50,11 @@ class ObservationTest : public testing::Test
     m_dataItem2 = make_unique<DataItem>(attributes2);
 
     string time("NOW"), value("CODE|NATIVE|CRITICAL|ACTIVE|DESCRIPTION");
-    m_compEventA = new Observation(*m_dataItem1, time, value);
+    m_compEventA = new Observation(*m_dataItem1, time, value, 2);
 
     time = "LATER";
     value = "1.1231";
-    m_compEventB = new Observation(*m_dataItem2, time, value);
+    m_compEventB = new Observation(*m_dataItem2, time, value, 4);
   }
 
   void TearDown() override

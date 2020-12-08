@@ -40,7 +40,7 @@ namespace mtconnect
       // Create the checkpoints at a regular frequency
       m_checkpoints.reserve(m_checkpointCount);
       for (auto i = 0; i < m_checkpointCount; i++)
-	m_checkpoints.emplace_back();      
+        m_checkpoints.emplace_back();      
     }
     
     ~CircularBuffer()
@@ -64,14 +64,12 @@ namespace mtconnect
     }
     
     void setSequence(uint64_t seq) { m_sequence = seq; }
-    void incrementSequence() { m_sequence++; }
 
     uint64_t addToBuffer(Observation *event)
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
       auto seq = m_sequence;
-      m_sequence++;
 
       event->setSequence(seq);
       
@@ -92,6 +90,7 @@ namespace mtconnect
       
       // See if the next sequence has an event. If the event exists it
       // should be added to the first checkpoint.
+      m_sequence++;
       if ((*m_slidingBuffer)[m_sequence])
       {
         // Keep the last checkpoint up to date with the last.
