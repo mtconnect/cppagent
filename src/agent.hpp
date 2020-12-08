@@ -27,13 +27,11 @@
 
 #include <dlib/md5.h>
 #include <dlib/server.h>
-#include <dlib/sliding_buffer.h>
 
 #include <chrono>
 #include <list>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <set>
 #include <sstream>
 #include <string>

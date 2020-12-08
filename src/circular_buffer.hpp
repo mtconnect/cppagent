@@ -110,11 +110,11 @@ namespace mtconnect
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
-      uint64_t firstSeq = getFirstSequence();
-      long pos = (long)m_slidingBuffer->get_element_id(at);
-      long first = (long)m_slidingBuffer->get_element_id(firstSeq);
-      long checkIndex = pos / m_checkpointFreq;
-      long closestCp = checkIndex * m_checkpointFreq;
+      auto firstSeq = getFirstSequence();
+      auto pos = m_slidingBuffer->get_element_id(at);
+      auto first = m_slidingBuffer->get_element_id(firstSeq);
+      auto checkIndex = pos / m_checkpointFreq;
+      auto closestCp = checkIndex * m_checkpointFreq;
       unsigned long index;
       
       Checkpoint *ref(nullptr);
@@ -138,12 +138,14 @@ namespace mtconnect
       auto check = std::make_unique<Checkpoint>(*ref, &filterSet);
       
       // Roll forward from the checkpoint.
-      for (; index <= static_cast<unsigned long>(pos); index++)
-        check->addObservation(((*m_slidingBuffer)[static_cast<unsigned long>(index)]).getObject());
-
+      for (; index <= pos; index++)
+      {
+        Observation *o = (*m_slidingBuffer)[index];
+        check->addObservation(o);
+      }
+      
       return check;
     }
-    
     
     std::unique_ptr<ObservationPtrArray> getObservations(std::set<std::string> &filterSet,
                                                          uint64_t start,

@@ -113,3 +113,21 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 
   ASSERT_TRUE(found);
 }
+
+#define AGENT_PATH "//m:Agent"
+#define AGENT_DATA_ITEMS_PATH AGENT_PATH "/m:DataItems"
+#define ADAPTER_PATH AGENT_PATH "/m:Components/m:Adapters/m:Components/m:Adapter"
+
+TEST_F(AgentDeviceTest, AdapterAddedTest)
+{
+  addAdapter();
+  
+  {
+    m_agentTestHelper->m_path = "/Agent/probe";
+    {
+      PARSE_XML_RESPONSE;
+      
+    }
+
+  }
+}

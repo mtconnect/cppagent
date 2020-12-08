@@ -58,6 +58,7 @@ namespace mtconnect
       auto di = new DataItem(
           {{"type", "ADAPTER_URI"}, {"id", id + "_adapter_uri"}, {"category", "EVENT"}});
       di->setComponent(*comp);
+      di->addConstrainedValue(adapter->getUrl());
       comp->addDataItem(di);
     }
 
