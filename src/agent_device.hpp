@@ -35,7 +35,9 @@ namespace mtconnect
     ~AgentDevice() override = default;
 
     void addAdapter(const Adapter *adapter);
-
+    
+    DataItem *getConnectionStatus(const Adapter *adapter);
+    
    protected:
     void addRequiredDataItems();
 

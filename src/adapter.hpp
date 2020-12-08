@@ -92,6 +92,7 @@ namespace mtconnect
     void protocolCommand(const std::string &data) override;
 
     // Method called when connection is lost.
+    void connecting() override;
     void disconnected() override;
     void connected() override;
 

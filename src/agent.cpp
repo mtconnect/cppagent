@@ -843,6 +843,12 @@ namespace mtconnect
 
     return true;
   }
+  
+  void Agent::connecting(Adapter *adapter)
+  {
+    auto di = m_agentDevice->getConnectionStatus(adapter);
+    addToBuffer(di, "LISTENING");
+  }
 
   // Add values for related data items UNAVAILABLE
   void Agent::disconnected(Adapter *adapter, std::vector<Device *> devices)
@@ -850,6 +856,10 @@ namespace mtconnect
     auto time = getCurrentTime(GMT_UV_SEC);
     g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
+    auto di = m_agentDevice->getConnectionStatus(adapter);
+    addToBuffer(di, "CLOSED", time);
+
+    
     for (const auto device : devices)
     {
       const auto &dataItems = device->getDeviceDataItems();
@@ -891,10 +901,13 @@ namespace mtconnect
 
   void Agent::connected(Adapter *adapter, std::vector<Device *> devices)
   {
+    auto time = getCurrentTime(GMT_UV_SEC);
+    auto di = m_agentDevice->getConnectionStatus(adapter);
+    addToBuffer(di, "ESTABLISHED", time);
+    
     if (!adapter->isAutoAvailable())
       return;
 
-    auto time = getCurrentTime(GMT_UV_SEC);
     for (const auto device : devices)
     {
       g_logger << LDEBUG
@@ -1557,7 +1570,7 @@ namespace mtconnect
     {
       string prefix;
       if (device == "Agent")
-        prefix = "//Devices/Agent[@name=\"" + device + "\"or@uuid=\"" + device + "\"]";
+        prefix = "//Devices/Agent";
       else
         prefix = "//Devices/Device[@name=\"" + device + "\"or@uuid=\"" + device + "\"]";
 

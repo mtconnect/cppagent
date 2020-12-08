@@ -541,8 +541,16 @@ namespace mtconnect
     m_baseTime = 0;
     m_agent->disconnected(this, m_allDevices);
   }
+  
+  void Adapter::connecting()
+  {
+    m_agent->connecting(this);
+  }
 
-  void Adapter::connected() { m_agent->connected(this, m_allDevices); }
+  void Adapter::connected()
+  {
+    m_agent->connected(this, m_allDevices);
+  }
 
   // Adapter private methods
   void Adapter::thread()

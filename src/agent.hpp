@@ -123,6 +123,7 @@ namespace mtconnect
     bool removeAllAssets(Device *device, const std::string &type, const std::string &time);
 
     // Message when adapter has connected and disconnected
+    void connecting(Adapter *adapter);
     void disconnected(Adapter *adapter, std::vector<Device *> devices);
     void connected(Adapter *adapter, std::vector<Device *> devices);
 

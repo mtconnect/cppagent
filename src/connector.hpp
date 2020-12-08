@@ -54,6 +54,7 @@ namespace mtconnect
     bool isConnected() const { return m_connected; }
 
     // Method called when connection is lost.
+    virtual void connecting() = 0;
     virtual void disconnected() = 0;
     virtual void connected() = 0;
 

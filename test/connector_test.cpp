@@ -57,6 +57,8 @@ class TestConnector : public Connector
     m_command = data;
   }
 
+  void connecting() override {}
+  
   void disconnected() override
   {
     m_disconnected = true;

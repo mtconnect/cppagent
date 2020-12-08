@@ -35,6 +35,11 @@ namespace mtconnect
     m_adapters = new Component("Adapters", {{"id", "__adapters__"}});
     addChild(m_adapters);
   }
+  
+  DataItem *AgentDevice::getConnectionStatus(const Adapter *adapter)
+  {
+    return getDeviceDataItem(adapter->getIdentity() + "_connection_status");
+  }
 
   void AgentDevice::addAdapter(const Adapter *adapter)
   {
