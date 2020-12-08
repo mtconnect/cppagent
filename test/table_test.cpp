@@ -88,7 +88,7 @@ TEST_F(TableTest, DataItem)
 TEST_F(TableTest, InitialSet)
 {
   string value("G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
-  auto ce = new Observation(*m_dataItem1, 2, "time", value);
+  auto ce = new Observation(*m_dataItem1, "time", value, 2);
 
   ASSERT_EQ((size_t)3, ce->getDataSet().size());
   auto &al = ce->getAttributes();

@@ -50,11 +50,11 @@ class ObservationTest : public testing::Test
     m_dataItem2 = make_unique<DataItem>(attributes2);
 
     string time("NOW"), value("CODE|NATIVE|CRITICAL|ACTIVE|DESCRIPTION");
-    m_compEventA = new Observation(*m_dataItem1, 2, time, value);
+    m_compEventA = new Observation(*m_dataItem1, time, value);
 
     time = "LATER";
     value = "1.1231";
-    m_compEventB = new Observation(*m_dataItem2, 4, time, value);
+    m_compEventB = new Observation(*m_dataItem2, time, value);
   }
 
   void TearDown() override
@@ -188,7 +188,7 @@ void ObservationTest::testValueHelper(std::map<string, string> &attributes,
   attributes["nativeUnits"] = nativeUnits;
   DataItem dataItem(attributes);
 
-  ObservationPtr event(new Observation(dataItem, 123, time, value), true);
+  ObservationPtr event(new Observation(dataItem, time, value, 123), true);
 
   stringstream message;
   double diff = abs(expected - atof(event->getValue().c_str()));
@@ -201,7 +201,7 @@ void ObservationTest::testValueHelper(std::map<string, string> &attributes,
 TEST_F(ObservationTest, RefCounts)
 {
   string time("NOW"), value("111");
-  auto event = new Observation(*m_dataItem1, 123, time, value);
+  auto event = new Observation(*m_dataItem1, time, value, 123);
 
   ASSERT_TRUE(event->refCount() == 1);
 
@@ -244,7 +244,7 @@ TEST_F(ObservationTest, StlLists)
   std::vector<ObservationPtr> vector;
 
   string time("NOW"), value("111");
-  auto event = new Observation(*m_dataItem1, 123, time, value);
+  auto event = new Observation(*m_dataItem1, time, value, 123);
 
   ASSERT_EQ(1, (int)event->refCount());
   vector.emplace_back(event);
@@ -258,9 +258,9 @@ TEST_F(ObservationTest, StlLists)
 TEST_F(ObservationTest, EventChaining)
 {
   string time("NOW"), value("111");
-  ObservationPtr event1(new Observation(*m_dataItem1, 123, time, value), true);
-  ObservationPtr event2(new Observation(*m_dataItem1, 123, time, value), true);
-  ObservationPtr event3(new Observation(*m_dataItem1, 123, time, value), true);
+  ObservationPtr event1(new Observation(*m_dataItem1, time, value), true);
+  ObservationPtr event2(new Observation(*m_dataItem1, time, value), true);
+  ObservationPtr event3(new Observation(*m_dataItem1, time, value), true);
 
   ASSERT_TRUE(event1.getObject() == event1->getFirst());
 
@@ -297,7 +297,7 @@ TEST_F(ObservationTest, Condition)
   attributes1["category"] = "CONDITION";
   auto d = make_unique<DataItem>(attributes1);
 
-  ObservationPtr event1(new Observation(*d, 123, time, (string) "FAULT|4321|1|HIGH|Overtemp"),
+  ObservationPtr event1(new Observation(*d, time, (string) "FAULT|4321|1|HIGH|Overtemp", 123),
                         true);
 
   ASSERT_EQ(Observation::FAULT, event1->getLevel());
@@ -316,7 +316,7 @@ TEST_F(ObservationTest, Condition)
   ASSERT_EQ((string) "1", attrs1["nativeSeverity"]);
   ASSERT_EQ((string) "Fault", event1->getLevelString());
 
-  ObservationPtr event2(new Observation(*d, 123, time, (string) "fault|4322|2|LOW|Overtemp"), true);
+  ObservationPtr event2(new Observation(*d, time, (string) "fault|4322|2|LOW|Overtemp", 123), true);
 
   ASSERT_EQ(Observation::FAULT, event2->getLevel());
   ASSERT_EQ((string) "Overtemp", event2->getValue());
@@ -350,7 +350,7 @@ TEST_F(ObservationTest, TimeSeries)
 
   ASSERT_TRUE(d->isTimeSeries());
 
-  ObservationPtr event1(new Observation(*d, 123, time, (string) "6||1 2 3 4 5 6 "), true);
+  ObservationPtr event1(new Observation(*d, time, (string) "6||1 2 3 4 5 6 ", 123), true);
   const auto &attr_list1 = event1->getAttributes();
   map<string, string> attrs1;
 
@@ -370,7 +370,7 @@ TEST_F(ObservationTest, TimeSeries)
   ASSERT_EQ((string) "", event1->getValue());
   ASSERT_EQ(0, (int)attrs1.count("sampleRate"));
 
-  ObservationPtr event2(new Observation(*d, 123, time, (string) "7|42000|10 20 30 40 50 60 70 "),
+  ObservationPtr event2(new Observation(*d, time, (string) "7|42000|10 20 30 40 50 60 70 ", 123),
                         true);
   const auto &attr_list2 = event2->getAttributes();
   map<string, string> attrs2;
@@ -404,7 +404,7 @@ TEST_F(ObservationTest, Duration)
   attributes1["statistic"] = "AVERAGE";
   auto d = make_unique<DataItem>(attributes1);
 
-  ObservationPtr event1(new Observation(*d, 123, time, (string) "11.0"), true);
+  ObservationPtr event1(new Observation(*d, time, (string) "11.0", 123), true);
   const auto &attr_list = event1->getAttributes();
   map<string, string> attrs1;
 
@@ -430,7 +430,7 @@ TEST_F(ObservationTest, AssetChanged)
 
   ASSERT_TRUE(d->isAssetChanged());
 
-  ObservationPtr event1(new Observation(*d, 123, time, (string) "CuttingTool|123"), true);
+  ObservationPtr event1(new Observation(*d, time, (string) "CuttingTool|123", 123), true);
   const auto &attr_list = event1->getAttributes();
   map<string, string> attrs1;
 

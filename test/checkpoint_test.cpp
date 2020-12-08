@@ -76,20 +76,20 @@ TEST_F(CheckpointTest, AddObservations)
   string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
       warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||"), unavailable("UNAVAILABLE|||");
 
-  p1 = new Observation(*m_dataItem1, 2, time, warning1);
+  p1 = new Observation(*m_dataItem1, time, warning1, 2);
   p1->unrefer();
 
   ASSERT_EQ(1, (int)p1->refCount());
   m_checkpoint->addObservation(p1);
   ASSERT_EQ(2, (int)p1->refCount());
 
-  p2 = new Observation(*m_dataItem1, 2, time, warning2);
+  p2 = new Observation(*m_dataItem1, time, warning2, 2);
   p2->unrefer();
 
   m_checkpoint->addObservation(p2);
   ASSERT_TRUE(p1.getObject() == p2->getPrev());
 
-  p3 = new Observation(*m_dataItem1, 2, time, normal);
+  p3 = new Observation(*m_dataItem1, time, normal, 2);
   p3->unrefer();
 
   m_checkpoint->addObservation(p3);
@@ -97,7 +97,7 @@ TEST_F(CheckpointTest, AddObservations)
   ASSERT_EQ(2, (int)p1->refCount());
   ASSERT_EQ(1, (int)p2->refCount());
 
-  p4 = new Observation(*m_dataItem1, 2, time, warning1);
+  p4 = new Observation(*m_dataItem1, time, warning1, 2);
   p4->unrefer();
 
   m_checkpoint->addObservation(p4);
@@ -105,12 +105,12 @@ TEST_F(CheckpointTest, AddObservations)
   ASSERT_EQ(1, (int)p3->refCount());
 
   // Test non condition
-  p3 = new Observation(*m_dataItem2, 2, time, value);
+  p3 = new Observation(*m_dataItem2, time, value, 2);
   p3->unrefer();
   m_checkpoint->addObservation(p3);
   ASSERT_EQ(2, (int)p3->refCount());
 
-  p4 = new Observation(*m_dataItem2, 2, time, value);
+  p4 = new Observation(*m_dataItem2, time, value, 2);
   p4->unrefer();
 
   m_checkpoint->addObservation(p4);
@@ -126,12 +126,12 @@ TEST_F(CheckpointTest, Copy)
   string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
       warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
 
-  p1 = new Observation(*m_dataItem1, 2, time, warning1);
+  p1 = new Observation(*m_dataItem1, time, warning1, 2);
   p1->unrefer();
   m_checkpoint->addObservation(p1);
   ASSERT_EQ(2, (int)p1->refCount());
 
-  p2 = new Observation(*m_dataItem1, 2, time, warning2);
+  p2 = new Observation(*m_dataItem1, time, warning2, 2);
   p2->unrefer();
   m_checkpoint->addObservation(p2);
   ASSERT_TRUE(p1.getObject() == p2->getPrev());
@@ -153,16 +153,16 @@ TEST_F(CheckpointTest, GetObservations)
   std::set<string> filter;
   filter.insert(m_dataItem1->getId());
 
-  p = new Observation(*m_dataItem1, 2, time, warning1);
+  p = new Observation(*m_dataItem1, time, warning1, 2);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
-  p = new Observation(*m_dataItem1, 2, time, warning2);
+  p = new Observation(*m_dataItem1, time, warning2, 2);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
   filter.insert(m_dataItem2->getId());
-  p = new Observation(*m_dataItem2, 2, time, value);
+  p = new Observation(*m_dataItem2, time, value, 2);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
@@ -176,7 +176,7 @@ TEST_F(CheckpointTest, GetObservations)
   auto d1 = make_unique<DataItem>(attributes);
   filter.insert(d1->getId());
 
-  p = new Observation(*d1, 2, time, value);
+  p = new Observation(*d1, time, value, 2);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
@@ -204,15 +204,15 @@ TEST_F(CheckpointTest, Filter)
   std::set<string> filter;
   filter.insert(m_dataItem1->getId());
 
-  p1 = new Observation(*m_dataItem1, 2, time, warning1);
+  p1 = new Observation(*m_dataItem1, time, warning1);
   m_checkpoint->addObservation(p1);
   p1->unrefer();
 
-  p2 = new Observation(*m_dataItem1, 2, time, warning2);
+  p2 = new Observation(*m_dataItem1, time, warning2);
   m_checkpoint->addObservation(p2);
   p2->unrefer();
 
-  p3 = new Observation(*m_dataItem2, 2, time, value);
+  p3 = new Observation(*m_dataItem2, time, value);
   m_checkpoint->addObservation(p3);
   p3->unrefer();
 
@@ -225,7 +225,7 @@ TEST_F(CheckpointTest, Filter)
   attributes["category"] = "SAMPLE";
   auto d1 = make_unique<DataItem>(attributes);
 
-  p4 = new Observation(*d1, 2, time, value);
+  p4 = new Observation(*d1, time, value);
   m_checkpoint->addObservation(p4);
   p4->unrefer();
 
@@ -251,15 +251,15 @@ TEST_F(CheckpointTest, CopyAndFilter)
   std::set<string> filter;
   filter.insert(m_dataItem1->getId());
 
-  p = new Observation(*m_dataItem1, 2, time, warning1);
+  p = new Observation(*m_dataItem1, time, warning1);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
-  p = new Observation(*m_dataItem1, 2, time, warning2);
+  p = new Observation(*m_dataItem1, time, warning2);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
-  p = new Observation(*m_dataItem2, 2, time, value);
+  p = new Observation(*m_dataItem2, time, value);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
@@ -272,7 +272,7 @@ TEST_F(CheckpointTest, CopyAndFilter)
   attributes["category"] = "SAMPLE";
   auto d1 = make_unique<DataItem>(attributes);
 
-  p = new Observation(*d1, 2, time, value);
+  p = new Observation(*d1, time, value);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
@@ -288,7 +288,7 @@ TEST_F(CheckpointTest, CopyAndFilter)
   ASSERT_EQ(2, (int)list.size());
   list.clear();
 
-  p = new Observation(*m_dataItem1, 2, time, warning3);
+  p = new Observation(*m_dataItem1, time, warning3);
   check.addObservation(p);
   p->unrefer();
 
@@ -297,7 +297,7 @@ TEST_F(CheckpointTest, CopyAndFilter)
   ASSERT_EQ(3, (int)list.size());
   list.clear();
 
-  p = new Observation(*d1, 2, time, value);
+  p = new Observation(*d1, time, value);
   m_checkpoint->addObservation(p);
   p->unrefer();
 
@@ -319,7 +319,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   filter.insert(m_dataItem1->getId());
   ObservationPtrArray list;
 
-  p1 = new Observation(*m_dataItem1, 2, time, warning1);
+  p1 = new Observation(*m_dataItem1, time, warning1);
   p1->unrefer();
   m_checkpoint->addObservation(p1);
 
@@ -327,7 +327,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   ASSERT_EQ(1, (int)list.size());
   list.clear();
 
-  p2 = new Observation(*m_dataItem1, 2, time, warning2);
+  p2 = new Observation(*m_dataItem1, time, warning2);
   p2->unrefer();
 
   m_checkpoint->addObservation(p2);
@@ -337,7 +337,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   ASSERT_EQ(2, (int)list.size());
   list.clear();
 
-  p3 = new Observation(*m_dataItem1, 2, time, warning3);
+  p3 = new Observation(*m_dataItem1, time, warning3);
   p3->unrefer();
 
   m_checkpoint->addObservation(p3);
@@ -350,7 +350,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   list.clear();
 
   // Replace Warning on CODE 2 with a fault
-  p4 = new Observation(*m_dataItem1, 2, time, fault2);
+  p4 = new Observation(*m_dataItem1, time, fault2);
   p4->unrefer();
 
   m_checkpoint->addObservation(p4);
@@ -374,7 +374,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   list.clear();
 
   // Clear Code 2
-  p5 = new Observation(*m_dataItem1, 2, time, normal2);
+  p5 = new Observation(*m_dataItem1, time, normal2);
   p5->unrefer();
 
   m_checkpoint->addObservation(p5);
@@ -395,7 +395,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   list.clear();
 
   // Clear all
-  p6 = new Observation(*m_dataItem1, 2, time, normal);
+  p6 = new Observation(*m_dataItem1, time, normal);
   p6->unrefer();
 
   m_checkpoint->addObservation(p6);
@@ -416,7 +416,7 @@ TEST_F(CheckpointTest, LastConditionNormal)
   filter.insert(m_dataItem1->getId());
   ObservationPtrArray list;
 
-  p1 = new Observation(*m_dataItem1, 2, time, fault1);
+  p1 = new Observation(*m_dataItem1, time, fault1);
   p1->unrefer();
   m_checkpoint->addObservation(p1);
 
@@ -424,7 +424,7 @@ TEST_F(CheckpointTest, LastConditionNormal)
   ASSERT_EQ(1, (int)list.size());
   list.clear();
 
-  p2 = new Observation(*m_dataItem1, 2, time, normal1);
+  p2 = new Observation(*m_dataItem1, time, normal1);
   p2->unrefer();
   m_checkpoint->addObservation(p2);
 

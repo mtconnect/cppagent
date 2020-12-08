@@ -76,8 +76,8 @@ namespace mtconnect
     }
   }
 
-  Observation::Observation(DataItem &dataItem, uint64_t sequence, const string &time,
-                           const string &value)
+  Observation::Observation(DataItem &dataItem, const string &time,
+                           const string &value, uint64_t sequence)
       : m_level(ELevel::NORMAL), m_isFloat(false), m_sampleCount(0), m_hasAttributes(false)
   {
     m_dataItem = &dataItem;

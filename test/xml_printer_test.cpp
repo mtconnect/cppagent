@@ -807,7 +807,7 @@ Observation *XmlPrinterTest::newEvent(const char *name, uint64_t sequence, strin
 
   const auto d = device->getDeviceDataItem(name);
   EXPECT_TRUE(d) << "Could not find data item " << name;
-  return new Observation(*d, sequence, time, value);
+  return new Observation(*d, time, value, sequence);
 }
 
 Observation *XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, const char *name,

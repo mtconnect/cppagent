@@ -77,7 +77,7 @@ class JsonPrinterStreamTest : public testing::Test
   {
     const auto d = getDataItem(name);
     ASSERT_TRUE(d) << "Could not find data item " << name;
-    auto event = new Observation(*d, sequence, time, value);
+    auto event = new Observation(*d, time, value, sequence);
     checkpoint.addObservation(event);
   }
 

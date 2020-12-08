@@ -22,6 +22,8 @@
 #include "checkpoint.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
+#include "cached_file.hpp"
+#include "circular_buffer.hpp"
 
 #include <dlib/md5.h>
 #include <dlib/server.h>
@@ -79,32 +81,6 @@ namespace mtconnect
     };
 
    public:
-    // Slowest frequency allowed
-    static const int SLOWEST_FREQ = 2147483646;
-
-    // Fastest frequency allowed
-    static const int FASTEST_FREQ = 0;
-
-    // Default count for sample query
-    static const unsigned int DEFAULT_COUNT = 100;
-
-    // Code to return when a parameter has no value
-    static const int NO_VALUE32 = -1;
-    static const uint64_t NO_VALUE64 = UINT64_MAX;
-
-    // Code to return for no frequency specified
-    static const int NO_FREQ = -2;
-
-    // Code to return for no heartbeat specified
-    static const int NO_HB = 0;
-
-    // Code for no start value specified
-    static const uint64_t NO_START = NO_VALUE64;
-
-    // Small file size
-    static const int SMALL_FILE = 10 * 1024;  // 10k is considered small
-
-   public:
     // Load agent with the xml configuration
     Agent(const std::string &configXmlPath, int bufferSize, int maxAssets,
           const std::string &version, int checkpointFreq = 1000, bool pretty = false);
@@ -154,9 +130,12 @@ namespace mtconnect
 
     DataItem *getDataItemByName(const std::string &deviceName, const std::string &dataItemName);
 
-    Observation *getFromBuffer(uint64_t seq) const { return (*m_slidingBuffer)[seq]; }
-    uint64_t getSequence() const { return m_sequence; }
-    unsigned int getBufferSize() const { return m_slidingBufferSize; }
+    Observation *getFromBuffer(uint64_t seq) const
+    {
+      return m_circularBuffer.getFromBuffer(seq);
+    }
+    uint64_t getSequence() const { return m_circularBuffer.getSequence(); }
+    unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
     unsigned int getMaxAssets() const { return m_maxAssets; }
     unsigned int getAssetCount() const { return m_assets.size(); }
 
@@ -168,16 +147,10 @@ namespace mtconnect
       return 0;
     }
 
-    uint64_t getFirstSequence() const
-    {
-      if (m_sequence > m_slidingBufferSize)
-        return m_sequence - m_slidingBufferSize;
-      else
-        return 1;
-    }
+    uint64_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
 
     // For testing...
-    void setSequence(uint64_t seq) { m_sequence = seq; }
+    void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
     std::list<AssetPtr *> *getAssets() { return &m_assets; }
     auto getAgentDevice() { return m_agentDevice; }
 
@@ -212,7 +185,6 @@ namespace mtconnect
     // Initialization methods
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
-    void createCircularBuffer(int bufferSize);
     void verifyDevice(Device *device);
     void initializeDataItems(Device *device);
 
@@ -301,17 +273,12 @@ namespace mtconnect
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;
     std::map<std::string, std::unique_ptr<Printer>> m_printers;
+    
+    // Circular Buffer
+    CircularBuffer m_circularBuffer;
 
     // For access to the sequence number and sliding buffer, use the mutex
-    std::mutex m_sequenceLock;
     std::mutex m_assetLock;
-
-    // Sequence number
-    uint64_t m_sequence;
-
-    // The sliding/circular buffer to hold all of the events/sample data
-    std::unique_ptr<dlib::sliding_buffer_kernel_1<ObservationPtr>> m_slidingBuffer;
-    unsigned int m_slidingBufferSize;
 
     // Asset storage, circ buffer stores ids
     std::list<AssetPtr *> m_assets;
@@ -324,14 +291,6 @@ namespace mtconnect
     // Agent Device
     AgentDevice *m_agentDevice{nullptr};
 
-    // Checkpoints
-    Checkpoint m_latest;
-    Checkpoint m_first;
-    std::vector<Checkpoint> m_checkpoints;
-
-    int m_checkpointFreq;
-    long long m_checkpointCount;
-
     // Data containers
     std::vector<Adapter *> m_adapters;
     std::vector<Device *> m_devices;
@@ -339,49 +298,6 @@ namespace mtconnect
     std::map<std::string, Device *> m_deviceUuidMap;
     std::map<std::string, DataItem *> m_dataItemMap;
     std::map<std::string, int> m_assetCounts;
-
-    struct CachedFile : public RefCounted
-    {
-      std::unique_ptr<char[]> m_buffer;
-      size_t m_size = 0;
-
-      CachedFile() : m_buffer(nullptr) {}
-
-      CachedFile(const CachedFile &file) : RefCounted(file), m_buffer(nullptr), m_size(file.m_size)
-      {
-        m_buffer = std::make_unique<char[]>(file.m_size);
-        memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
-      }
-
-      CachedFile(char *buffer, size_t size) : m_buffer(nullptr), m_size(size)
-      {
-        m_buffer = std::make_unique<char[]>(m_size);
-        memcpy(m_buffer.get(), buffer, size);
-      }
-
-      CachedFile(size_t size) : m_buffer(nullptr), m_size(size)
-      {
-        m_buffer = std::make_unique<char[]>(m_size);
-      }
-
-      ~CachedFile() override { m_buffer.reset(); }
-
-      CachedFile &operator=(const CachedFile &file)
-      {
-        m_buffer.reset();
-        m_buffer = std::make_unique<char[]>(file.m_size);
-        memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
-        m_size = file.m_size;
-        return *this;
-      }
-
-      void allocate(size_t size)
-      {
-        m_buffer.reset();
-        m_buffer = std::make_unique<char[]>(size);
-        m_size = size;
-      }
-    };
 
     // For file handling, small files will be cached
     std::map<std::string, std::string> m_fileMap;

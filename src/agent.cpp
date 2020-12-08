@@ -52,6 +52,7 @@ namespace mtconnect
                const std::string &version, int checkpointFreq, bool pretty)
       : m_putEnabled(false),
         m_logStreamData(false),
+        m_circularBuffer(bufferSize, checkpointFreq),
         m_pretty(pretty),
         m_mimeTypes({{{"xsl", "text/xsl"},
                       {"xml", "text/xml"},
@@ -63,8 +64,6 @@ namespace mtconnect
                       {"png", "image/png"},
                       {"ico", "image/x-icon"}}}),
         m_maxAssets(maxAssets),
-        m_sequence(1ull),
-        m_checkpointFreq(checkpointFreq),
         m_xmlParser(make_unique<XmlParser>())
   {
     // Create the Printers
@@ -75,7 +74,6 @@ namespace mtconnect
     m_instanceId = getCurrentTimeInSec();
 
     auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
-    createCircularBuffer(bufferSize);
 
     // TODO: Check Schema version before creating Agent Device. Only > 1.7'
     int major, minor;
@@ -89,8 +87,11 @@ namespace mtconnect
     loadXMLDeviceFile(configXmlPath);
 
     // Reload the document for path resolution
-    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize, m_maxAssets,
-                                                     m_assets.size(), m_sequence, m_devices));
+    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId,
+                                                     m_circularBuffer.getBufferSize(),
+                                                     m_maxAssets, m_assets.size(),
+                                                     m_circularBuffer.getSequence(),
+                                                     m_devices));
 
     m_initialized = true;
   }
@@ -132,20 +133,6 @@ namespace mtconnect
       cerr << f.what() << endl;
       throw f;
     }
-  }
-
-  void Agent::createCircularBuffer(int bufferSize)
-  {
-    // Sequence number and sliding buffer for data
-    m_slidingBufferSize = 1 << bufferSize;
-    m_slidingBuffer = make_unique<sliding_buffer_kernel_1<ObservationPtr>>();
-    m_slidingBuffer->set_size(bufferSize);
-    m_checkpointCount = (m_slidingBufferSize / m_checkpointFreq) + 1;
-
-    // Create the checkpoints at a regular frequency
-    m_checkpoints.reserve(m_checkpointCount);
-    for (auto i = 0; i < m_checkpointCount; i++)
-      m_checkpoints.emplace_back();
   }
 
   void Agent::verifyDevice(Device *device)
@@ -309,9 +296,7 @@ namespace mtconnect
 
   Agent::~Agent()
   {
-    m_slidingBuffer.reset();
     m_xmlParser.reset();
-    m_checkpoints.clear();
     m_agentDevice = nullptr;
     for (auto &i : m_devices)
       delete i;
@@ -602,8 +587,10 @@ namespace mtconnect
       if (m_initialized)
       {
         auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
-        m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_slidingBufferSize,
-                                                         m_maxAssets, m_assets.size(), m_sequence,
+        m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId,
+                                                         m_circularBuffer.getBufferSize(),
+                                                         m_maxAssets, m_assets.size(),
+                                                         m_circularBuffer.getSequence(),
                                                          m_devices));
       }
     }
@@ -614,44 +601,15 @@ namespace mtconnect
     if (!dataItem)
       return 0;
 
-    std::lock_guard<std::mutex> lock(m_sequenceLock);
+    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
-    auto seqNum = m_sequence;
-    auto event = new Observation(*dataItem, seqNum, time, value);
-
-    if (!dataItem->allowDups() && dataItem->isDataSet() && !m_latest.dataSetDifference(event))
+    RefCountedPtr<Observation> event(new Observation(*dataItem, time, value), true);
+    if (!dataItem->allowDups() && dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(event))
     {
-      event->unrefer();
       return 0;
     }
-    else
-    {
-      m_sequence++;
-    }
-
-    (*m_slidingBuffer)[seqNum] = event;
-    m_latest.addObservation(event);
-    event->unrefer();
-
-    // Special case for the first event in the series to prime the first checkpoint.
-    if (seqNum == 1)
-      m_first.addObservation(event);
-
-    // Checkpoint management
-    const auto index = m_slidingBuffer->get_element_id(seqNum);
-    if (m_checkpointCount > 0 && !(index % m_checkpointFreq))
-    {
-      // Copy the checkpoint from the current into the slot
-      m_checkpoints[index / m_checkpointFreq].copy(m_latest);
-    }
-
-    // See if the next sequence has an event. If the event exists it
-    // should be added to the first checkpoint.
-    if ((*m_slidingBuffer)[m_sequence])
-    {
-      // Keep the last checkpoint up to date with the last.
-      m_first.addObservation((*m_slidingBuffer)[m_sequence]);
-    }
+    
+    auto seqNum = m_circularBuffer.addToBuffer(event);
 
     dataItem->signalObservers(seqNum);
 
@@ -839,7 +797,7 @@ namespace mtconnect
       asset->setTimestamp(time);
 
       // Check if the asset changed id is the same as this asset.
-      auto ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
+      auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
       if (ptr && (*ptr)->getValue() == id)
         addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
     }
@@ -860,7 +818,7 @@ namespace mtconnect
     {
       std::lock_guard<std::mutex> lock(m_assetLock);
 
-      auto ptr = m_latest.getEventPtr(device->getAssetChanged()->getId());
+      auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
       string changedId;
       if (ptr)
         changedId = (*ptr)->getValue();
@@ -902,7 +860,7 @@ namespace mtconnect
                          (adapter->isAutoAvailable() && !dataItem->getDataSource() &&
                           dataItem->getType() == "AVAILABILITY")))
         {
-          auto ptr = m_latest.getEventPtr(dataItem->getId());
+          auto ptr = m_circularBuffer.getLatest().getEventPtr(dataItem->getId());
 
           if (ptr)
           {
@@ -974,7 +932,7 @@ namespace mtconnect
           freq = checkAndGetParam(queries, "interval", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
 
         auto at =
-            checkAndGetParam64(queries, "at", NO_START, getFirstSequence(), true, m_sequence - 1);
+            checkAndGetParam64(queries, "at", NO_START, getFirstSequence(), true, m_circularBuffer.getSequence() - 1);
         auto heartbeat = std::chrono::milliseconds{
             checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
 
@@ -993,8 +951,9 @@ namespace mtconnect
         string path = queries[(string) "path"];
         string result;
 
-        int32_t count = checkAndGetParam(queries, "count", DEFAULT_COUNT, -m_slidingBufferSize,
-                                         true, m_slidingBufferSize, false);
+        int32_t count = checkAndGetParam(queries, "count", DEFAULT_COUNT,
+                                         -m_circularBuffer.getBufferSize(),
+                                         true, m_circularBuffer.getBufferSize(), false);
         if (count == 0)
           throw ParameterError("OUT_OF_RANGE", "'count' must not be 0.");
 
@@ -1008,11 +967,11 @@ namespace mtconnect
           throw ParameterError("OUT_OF_RANGE", "'count' must not be used with an 'interval'.");
 
         auto start =
-            checkAndGetParam64(queries, "from", NO_START, getFirstSequence(), true, m_sequence);
+            checkAndGetParam64(queries, "from", NO_START, getFirstSequence(), true, getSequence());
 
         if (start == NO_START)  // If there was no data in queries
           start =
-              checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, m_sequence);
+              checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, getSequence());
 
         auto heartbeat = std::chrono::milliseconds{
             checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
@@ -1098,7 +1057,7 @@ namespace mtconnect
     else
       deviceList = m_devices;
 
-    return printer->printProbe(m_instanceId, m_slidingBufferSize, m_sequence, m_maxAssets,
+    return printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), m_maxAssets,
                                m_assets.size(), deviceList, &m_assetCounts);
   }
 
@@ -1459,7 +1418,7 @@ namespace mtconnect
             }
 
             {
-              std::lock_guard<std::mutex> lock(m_sequenceLock);
+              std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
               // Make sure the observer was signaled!
               if (!observer.wasSignaled())
@@ -1470,7 +1429,7 @@ namespace mtconnect
                 // was signaled between the time the wait timed out and the mutex was locked.
                 // Otherwise, nothing has arrived and we set to the next sequence number to
                 // the next sequence number to be allocated and continue.
-                start = m_sequence;
+                start = m_circularBuffer.getSequence();
               }
               else
               {
@@ -1550,48 +1509,20 @@ namespace mtconnect
     ObservationPtrArray events;
     uint64_t firstSeq, seq;
     {
-      std::lock_guard<std::mutex> lock(m_sequenceLock);
+      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
       firstSeq = getFirstSequence();
-      seq = m_sequence;
+      seq = m_circularBuffer.getSequence();
       if (at == NO_START)
-        m_latest.getObservations(events, &filterSet);
+        m_circularBuffer.getLatest().getObservations(events, &filterSet);
       else
       {
-        long pos = (long)m_slidingBuffer->get_element_id(at);
-        long first = (long)m_slidingBuffer->get_element_id(firstSeq);
-        long checkIndex = pos / m_checkpointFreq;
-        long closestCp = checkIndex * m_checkpointFreq;
-        unsigned long index;
-
-        Checkpoint *ref(nullptr);
-
-        // Compute the closest checkpoint. If the checkpoint is after the
-        // first checkpoint and before the next incremental checkpoint,
-        // use first.
-        if (first > closestCp && pos >= first)
-        {
-          ref = &m_first;
-          // The checkpoint is inclusive of the "first" event. So we add one
-          // so we don't duplicate effort.
-          index = first + 1;
-        }
-        else
-        {
-          index = closestCp + 1;
-          ref = &m_checkpoints[checkIndex];
-        }
-
-        Checkpoint check(*ref, &filterSet);
-
-        // Roll forward from the checkpoint.
-        for (; index <= (unsigned long)pos; index++)
-          check.addObservation(((*m_slidingBuffer)[(unsigned long)index]).getObject());
-
-        check.getObservations(events);
+        auto check = m_circularBuffer.getCheckpointAt(at, filterSet);
+        check->getObservations(events);
       }
     }
 
-    return printer->printSample(m_instanceId, m_slidingBufferSize, seq, firstSeq, m_sequence - 1,
+    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
+                                seq, firstSeq, m_circularBuffer.getSequence() - 1,
                                 events);
   }
 
@@ -1599,58 +1530,23 @@ namespace mtconnect
                                 int count, uint64_t &end, bool &endOfBuffer,
                                 ChangeObserver *observer)
   {
-    ObservationPtrArray results;
     uint64_t firstSeq;
-    {
-      std::lock_guard<std::mutex> lock(m_sequenceLock);
+    auto results = m_circularBuffer.getObservations(filterSet, start, count,
+                                                    firstSeq, end, endOfBuffer);
 
-      firstSeq = (m_sequence > m_slidingBufferSize) ? m_sequence - m_slidingBufferSize : 1;
-      int limit;
+    if (observer)
+      observer->reset();
 
-      // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
-      if (count >= 0)
-      {
-        start = (start == NO_START || start <= firstSeq) ? firstSeq : start;
-        limit = count;
-      }
-      else
-      {
-        start = (start == NO_START || start >= m_sequence) ? m_sequence - 1 : start;
-        limit = -count;
-      }
-
-      uint64_t i;
-      for (i = start; results.size() < limit && i < m_sequence && i >= firstSeq;
-           count >= 0 ? i++ : i--)
-      {
-        // Filter out according to if it exists in the list
-        const string &dataId = (*m_slidingBuffer)[i]->getDataItem()->getId();
-        if (filterSet.count(dataId) > 0)
-        {
-          ObservationPtr event = (*m_slidingBuffer)[i];
-          results.push_back(event);
-        }
-      }
-
-      end = i;
-
-      if (count >= 0)
-        endOfBuffer = i >= m_sequence;
-      else
-        endOfBuffer = i <= firstSeq;
-
-      if (observer)
-        observer->reset();
-    }
-
-    return printer->printSample(m_instanceId, m_slidingBufferSize, end, firstSeq, m_sequence - 1,
-                                results);
+    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
+                                end, firstSeq, m_circularBuffer.getSequence() - 1,
+                                *results);
   }
 
   string Agent::printError(const Printer *printer, const string &errorCode, const string &text)
   {
     g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
-    return printer->printError(m_instanceId, m_slidingBufferSize, m_sequence, errorCode, text);
+    return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
+                               m_circularBuffer.getSequence(), errorCode, text);
   }
 
   string Agent::devicesAndPath(const string &path, const string &device)

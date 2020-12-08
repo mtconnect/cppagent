@@ -121,8 +121,8 @@ namespace mtconnect
 
    public:
     // Initialize with the data item reference, sequence number, time and value
-    Observation(DataItem &dataItem, uint64_t sequence, const std::string &time,
-                const std::string &value);
+    Observation(DataItem &dataItem, const std::string &time,
+                const std::string &value, uint64_t sequence = 0);
 
     // Copy constructor
     Observation(const Observation &observation);
@@ -159,6 +159,7 @@ namespace mtconnect
     uint64_t getSequence() const { return m_sequence; }
 
     void copySequence(const Observation *other) { m_sequence = other->m_sequence; }
+    void setSequence(uint64_t sequence) { m_sequence = sequence; }
 
     const std::string &getDuration() const { return m_duration; }
 
