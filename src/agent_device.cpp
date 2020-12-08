@@ -70,7 +70,9 @@ namespace mtconnect
     {
       auto di = new DataItem({{"type", "OBSERVATION_UPDATE_RATE"},
                               {"id", id + "_observation_update_rate"},
-                              {"category", "EVENT"}});
+                              {"units", "COUNT/SECOND" },
+                              {"statistic", "AVERAGE" },
+                              {"category", "SAMPLE"}});
       di->setComponent(*comp);
       comp->addDataItem(di);
     }
@@ -78,7 +80,9 @@ namespace mtconnect
     {
       auto di = new DataItem({{"type", "ASSET_UPDATE_RATE"},
                               {"id", id + "_asset_update_rate"},
-                              {"category", "EVENT"}});
+                              {"units", "COUNT/SECOND" },
+                              {"statistic", "AVERAGE" },
+                              {"category", "SAMPLE"}});
       di->setComponent(*comp);
       comp->addDataItem(di);
     }

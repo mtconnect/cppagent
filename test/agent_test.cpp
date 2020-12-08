@@ -888,7 +888,7 @@ TEST_F(AgentTest, DuplicateCheck)
 
 TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
 {
-  m_agentTestHelper->m_path = "/sample";
+  m_agentTestHelper->m_path = "/LinuxCNC/sample";
 
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
   m_agent->addAdapter(m_adapter);
