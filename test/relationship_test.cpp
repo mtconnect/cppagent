@@ -121,7 +121,8 @@ TEST_F(RelationshipTest, XmlPrinting)
 
 TEST_F(RelationshipTest, JsonPrinting)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
   m_agentTestHelper->m_path = "/probe";

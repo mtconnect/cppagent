@@ -18,21 +18,22 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "globals.hpp"
 #include "geometry.hpp"
+#include "globals.hpp"
+
+#include <map>
 #include <utility>
 #include <vector>
-#include <map>
 
 namespace mtconnect
 {
   class Motion : public GeometricConfiguration
   {
-  public:
+   public:
     Motion(const Motion &s) = default;
     Motion() = default;
     ~Motion() override = default;
-    
+
     bool hasDescription() const override { return true; }
     const std::string &klass() const override
     {
@@ -42,16 +43,14 @@ namespace mtconnect
     bool hasAxis() const override { return true; }
     const std::map<std::string, bool> &properties() const override
     {
-      const static std::map<std::string, bool> properties =
-	{
-	 { "id", true },
-	 { "parentIdRef", false },
-	 { "type", true },
-	 { "coordinateSystemIdRef", true },
-	 { "actuation", true }
-      };;
+      const static std::map<std::string, bool> properties = {{"id", true},
+                                                             {"parentIdRef", false},
+                                                             {"type", true},
+                                                             {"coordinateSystemIdRef", true},
+                                                             {"actuation", true}};
+      ;
       return properties;
     }
   };
-  
+
 }  // namespace mtconnect

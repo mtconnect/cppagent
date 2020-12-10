@@ -88,7 +88,7 @@ TEST_F(TableTest, DataItem)
 TEST_F(TableTest, InitialSet)
 {
   string value("G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
-  auto ce = new Observation(*m_dataItem1, 2, "time", value);
+  auto ce = new Observation(*m_dataItem1, "time", value, 2);
 
   ASSERT_EQ((size_t)3, ce->getDataSet().size());
   auto &al = ce->getAttributes();
@@ -127,7 +127,9 @@ TEST_F(TableTest, InitialSet)
 
 TEST_F(TableTest, Current)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/current";
@@ -186,7 +188,8 @@ TEST_F(TableTest, Current)
 
 TEST_F(TableTest, JsonCurrent)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
   m_agentTestHelper->m_path = "/current";
@@ -242,7 +245,8 @@ TEST_F(TableTest, JsonCurrent)
 
 TEST_F(TableTest, JsonCurrentText)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
   m_agentTestHelper->m_path = "/current";
@@ -290,7 +294,8 @@ TEST_F(TableTest, JsonCurrentText)
 
 TEST_F(TableTest, XmlCellDefinitions)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/probe";
@@ -337,7 +342,8 @@ TEST_F(TableTest, XmlCellDefinitions)
 
 TEST_F(TableTest, JsonDefinitionTest)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
   m_agentTestHelper->m_path = "/probe";

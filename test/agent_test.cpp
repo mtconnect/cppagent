@@ -51,7 +51,7 @@ class AgentTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25ms);
+    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25);
     m_agentId = intToString(getCurrentTimeInSec());
     m_adapter = nullptr;
 
@@ -70,7 +70,8 @@ class AgentTest : public testing::Test
   void addAdapter()
   {
     ASSERT_FALSE(m_adapter);
-    m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+    m_adapter = new Adapter("LinuxCNC", "server", 7878);
+    m_agent->addAdapter(m_adapter);
     ASSERT_TRUE(m_adapter);
   }
 
@@ -343,8 +344,9 @@ TEST_F(AgentTest, AddToBuffer)
   ASSERT_FALSE(event1);
 
   {
+    string last = to_string(m_agent->getSequence());
     m_agentTestHelper->m_path = "/sample";
-    PARSE_XML_RESPONSE_QUERY_KV("from", "36");
+    PARSE_XML_RESPONSE_QUERY_KV("from", last);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 
@@ -373,7 +375,8 @@ TEST_F(AgentTest, Adapter)
 {
   m_agentTestHelper->m_path = "/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   {
@@ -406,7 +409,8 @@ TEST_F(AgentTest, CurrentAt)
   m_agentTestHelper->m_path = "/current";
   string key("at"), value;
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   // Get the current position
@@ -472,7 +476,8 @@ TEST_F(AgentTest, CurrentAt64)
   m_agentTestHelper->m_path = "/current";
   string key("at"), value;
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   // Get the current position
@@ -504,7 +509,8 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
   m_agentTestHelper->m_path = "/current";
   string key("at"), value;
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   // Get the current position
@@ -543,7 +549,8 @@ TEST_F(AgentTest, SampleAtNextSeq)
   m_agentTestHelper->m_path = "/sample";
   string key("from"), value;
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   // Get the current position
@@ -570,7 +577,8 @@ TEST_F(AgentTest, SequenceNumberRollover)
 #ifndef WIN32
   key_value_map kvm;
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   // Set the sequence number near MAX_UINT32
@@ -631,7 +639,8 @@ TEST_F(AgentTest, SampleCount)
 {
   key_value_map kvm;
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   int64_t seq = m_agent->getSequence();
@@ -671,7 +680,8 @@ TEST_F(AgentTest, SampleLastCount)
 {
   key_value_map kvm;
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
 
@@ -715,7 +725,8 @@ TEST_F(AgentTest, AdapterCommands)
   ASSERT_TRUE(device);
   ASSERT_FALSE(device->m_preserveUuid);
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->parseBuffer("* uuid: MK-1234\n");
@@ -743,7 +754,7 @@ TEST_F(AgentTest, AdapterCommands)
 TEST_F(AgentTest, AdapterDeviceCommand)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/two_devices.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/two_devices.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
   m_agentTestHelper->m_path = "/probe";
 
@@ -752,7 +763,8 @@ TEST_F(AgentTest, AdapterDeviceCommand)
   auto device2 = m_agent->getDeviceByName("Device2");
   ASSERT_TRUE(device2);
 
-  m_adapter = m_agent->addAdapter("*", "server", 7878, false);
+  m_adapter = new Adapter("*", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   ASSERT_TRUE(nullptr == m_adapter->getDevice());
 
@@ -777,7 +789,8 @@ TEST_F(AgentTest, UUIDChange)
   ASSERT_TRUE(device);
   ASSERT_FALSE(device->m_preserveUuid);
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->parseBuffer("* uuid: MK-1234\n");
@@ -845,8 +858,8 @@ TEST_F(AgentTest, DuplicateCheck)
 {
   m_agentTestHelper->m_path = "/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
-  ASSERT_TRUE(m_adapter);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   m_adapter->setDupCheck(true);
 
   {
@@ -875,9 +888,10 @@ TEST_F(AgentTest, DuplicateCheck)
 
 TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
 {
-  m_agentTestHelper->m_path = "/sample";
+  m_agentTestHelper->m_path = "/LinuxCNC/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   m_adapter->setDupCheck(true);
 
@@ -918,10 +932,11 @@ TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
 
 TEST_F(AgentTest, AutoAvailable)
 {
-  m_agentTestHelper->m_path = "/sample";
+  m_agentTestHelper->m_path = "/LinuxCNC/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
-  ASSERT_TRUE(m_adapter);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
+
   m_adapter->setAutoAvailable(true);
   auto d = m_agent->getDevices()[0];
   std::vector<Device *> devices;
@@ -962,10 +977,12 @@ TEST_F(AgentTest, AutoAvailable)
 
 TEST_F(AgentTest, MultipleDisconnect)
 {
-  m_agentTestHelper->m_path = "/sample";
+  m_agentTestHelper->m_path = "/LinuxCNC/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
+  
   auto d = m_agent->getDevices()[0];
   std::vector<Device *> devices;
   devices.emplace_back(d);
@@ -1032,7 +1049,8 @@ TEST_F(AgentTest, IgnoreTimestamps)
 {
   m_agentTestHelper->m_path = "/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|line|204");
@@ -1622,11 +1640,11 @@ TEST_F(AgentTest, AssetStorageWithoutType)
 TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.2", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.2", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   {
-    m_agentTestHelper->m_path = "/probe";
+    m_agentTestHelper->m_path = "/LinuxCNC/probe";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
@@ -1637,11 +1655,11 @@ TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.3", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.3", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   {
-    m_agentTestHelper->m_path = "/probe";
+    m_agentTestHelper->m_path = "/LinuxCNC/probe";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
@@ -1652,11 +1670,11 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   {
-    m_agentTestHelper->m_path = "/probe";
+    m_agentTestHelper->m_path = "/LinuxCNC/probe";
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", "true");
@@ -1936,7 +1954,8 @@ TEST_F(AgentTest, PutBlockingFrom)
 
 TEST_F(AgentTest, StreamData)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   auto heartbeatFreq{200ms};
@@ -2013,13 +2032,14 @@ TEST_F(AgentTest, StreamData)
 
 TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
-  ASSERT_THROW(new Agent(PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25ms),
+  ASSERT_THROW(new Agent(PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25),
                std::runtime_error);
 }
 
 TEST_F(AgentTest, StreamDataObserver)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   // Start a thread...
@@ -2064,7 +2084,8 @@ TEST_F(AgentTest, RelativeTime)
   {
     m_agentTestHelper->m_path = "/sample";
 
-    m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+    m_adapter = new Adapter("LinuxCNC", "server", 7878);
+    m_agent->addAdapter(m_adapter);
     ASSERT_TRUE(m_adapter);
 
     m_adapter->setRelativeTime(true);
@@ -2088,7 +2109,8 @@ TEST_F(AgentTest, RelativeParsedTime)
   {
     m_agentTestHelper->m_path = "/sample";
 
-    m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+    m_adapter = new Adapter("LinuxCNC", "server", 7878);
+    m_agent->addAdapter(m_adapter);
     ASSERT_TRUE(m_adapter);
 
     m_adapter->setRelativeTime(true);
@@ -2112,7 +2134,8 @@ TEST_F(AgentTest, RelativeParsedTimeDetection)
 {
   m_agentTestHelper->m_path = "/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->setRelativeTime(true);
@@ -2128,7 +2151,8 @@ TEST_F(AgentTest, RelativeOffsetDetection)
 {
   m_agentTestHelper->m_path = "/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->setRelativeTime(true);
@@ -2142,7 +2166,8 @@ TEST_F(AgentTest, RelativeOffsetDetection)
 
 TEST_F(AgentTest, DynamicCalibration)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   // Add a 10.111000 seconds
@@ -2181,7 +2206,8 @@ TEST_F(AgentTest, DynamicCalibration)
 
 TEST_F(AgentTest, InitialTimeSeriesValues)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/current";
@@ -2197,10 +2223,11 @@ TEST_F(AgentTest, FilterValues13)
 {
   m_agent.reset();
   m_agent =
-      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", 8, 4, "1.5", 25ms);
+      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/sample";
@@ -2250,10 +2277,11 @@ TEST_F(AgentTest, FilterValues13)
 TEST_F(AgentTest, FilterValues)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/sample";
@@ -2316,11 +2344,12 @@ TEST_F(AgentTest, FilterValues)
 
   // Test period filter with ignore timestamps
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
   m_adapter->setIgnoreTimestamps(true);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/sample";
@@ -2351,10 +2380,11 @@ TEST_F(AgentTest, FilterValues)
 
   // Test period filter with relative time
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   m_adapter->setRelativeTime(true);
   ASSERT_TRUE(m_adapter);
 
@@ -2394,7 +2424,8 @@ TEST_F(AgentTest, FilterValues)
 
 TEST_F(AgentTest, ResetTriggered)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/sample";
@@ -2422,10 +2453,11 @@ TEST_F(AgentTest, References)
 {
   m_agent.reset();
   m_agent =
-      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/reference_example.xml", 8, 4, "1.5", 25ms);
+      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/reference_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   string id = "mf";
@@ -2473,12 +2505,13 @@ TEST_F(AgentTest, References)
 TEST_F(AgentTest, Discrete)
 {
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
   m_agentTestHelper->m_path = "/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   m_adapter->setDupCheck(true);
   ASSERT_TRUE(m_adapter);
 
@@ -2522,11 +2555,12 @@ TEST_F(AgentTest, UpcaseValues)
 {
   m_agentTestHelper->m_path = "/current";
   m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25ms);
+  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25);
   m_agentTestHelper->m_agent = m_agent.get();
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
   m_adapter->setDupCheck(true);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   ASSERT_TRUE(m_adapter->upcaseValue());
 
@@ -2550,8 +2584,9 @@ TEST_F(AgentTest, ConditionSequence)
 {
   m_agentTestHelper->m_path = "/current";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
   m_adapter->setDupCheck(true);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   auto logic = m_agent->getDataItemByName("LinuxCNC", "lp");
@@ -2730,8 +2765,9 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
 {
   m_agentTestHelper->m_path = "/current";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
   m_adapter->setDupCheck(true);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   auto program = m_agent->getDataItemByName("LinuxCNC", "program");
@@ -2794,8 +2830,9 @@ TEST_F(AgentTest, ConstantValue)
 {
   m_agentTestHelper->m_path = "/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
-
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
+  
   auto di = m_agent->getDataItemByName("LinuxCNC", "block");
   ASSERT_TRUE(di);
   di->addConstrainedValue("UNAVAILABLE");
@@ -2823,7 +2860,8 @@ TEST_F(AgentTest, BadDataItem)
 {
   m_agentTestHelper->m_path = "/sample";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   {
@@ -2844,7 +2882,8 @@ TEST_F(AgentTest, Composition)
 {
   m_agentTestHelper->m_path = "/current";
 
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   m_adapter->setDupCheck(true);
   ASSERT_TRUE(m_adapter);
 

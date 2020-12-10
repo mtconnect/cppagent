@@ -16,37 +16,32 @@
 //
 
 #pragma once
-
-#include "component_configuration.hpp"
-#include "geometry.hpp"
+#include "component.hpp"
+#include "data_item.hpp"
+#include "device.hpp"
 #include "globals.hpp"
 
 #include <map>
-#include <utility>
-#include <vector>
 
 namespace mtconnect
 {
-  class SolidModel : public GeometricConfiguration
+  class Adapter;
+
+  class AgentDevice : public Device
   {
    public:
-    SolidModel(const SolidModel &s) = default;
-    SolidModel() = default;
-    ~SolidModel() override = default;
+    // Constructor that sets variables from an attribute map
+    AgentDevice(const Attributes &attributes);
+    ~AgentDevice() override = default;
 
-    const std::string &klass() const override
-    {
-      const static std::string &klass("SolidModel");
-      return klass;
-    }
-    bool hasScale() const override { return true; }
-    const std::map<std::string, bool> &properties() const override
-    {
-      const static std::map<std::string, bool> properties = {
-          {"id", true},        {"solidModelIdRef", false},       {"itemRef", false},
-          {"mediaType", true}, {"coordinateSystemIdRef", false}, {"href", false}};
-      ;
-      return properties;
-    }
+    void addAdapter(const Adapter *adapter);
+    
+    DataItem *getConnectionStatus(const Adapter *adapter);
+    
+   protected:
+    void addRequiredDataItems();
+
+   protected:
+    Component *m_adapters{nullptr};
   };
 }  // namespace mtconnect

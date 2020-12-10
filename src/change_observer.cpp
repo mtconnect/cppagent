@@ -28,10 +28,7 @@ namespace mtconnect
       signaler->removeObserver(this);
   }
 
-  void ChangeObserver::addSignaler(ChangeSignaler *sig)
-  {
-    m_signalers.emplace_back(sig);
-  }
+  void ChangeObserver::addSignaler(ChangeSignaler *sig) { m_signalers.emplace_back(sig); }
 
   bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
   {

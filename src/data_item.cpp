@@ -54,7 +54,8 @@ namespace mtconnect
         m_conversionOffset(0.0),
         m_conversionDetermined(false),
         m_conversionRequired(false),
-        m_hasFactor(false)
+        m_hasFactor(false),
+        m_initialized(false)
   {
     const auto idPos = attributes.find("id");
     if (idPos != attributes.end())
@@ -268,19 +269,14 @@ namespace mtconnect
   static void capitalize(string::iterator start, string::iterator end)
   {
     // Exceptions to the rule
-    const static std::map<string, string> exceptions = {
-      { "AC", "AC" },
-      { "DC", "DC" },
-      { "PH", "PH" },
-      { "IP", "IP" },
-      { "URI", "URI" },
-      { "MTCONNECT", "MTConnect" }
-    };
-    
+    const static std::map<string, string> exceptions = {{"AC", "AC"},   {"DC", "DC"},
+                                                        {"PH", "PH"},   {"IP", "IP"},
+                                                        {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+
     const auto &w = exceptions.find(string(start, end));
     if (w != exceptions.end())
     {
-      copy(w->second.begin(),w->second.end(), start);
+      copy(w->second.begin(), w->second.end(), start);
     }
     else
     {

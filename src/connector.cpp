@@ -77,6 +77,8 @@ namespace mtconnect
   void Connector::connect()
   {
     m_connected = false;
+    connecting();
+    
     const char *ping = "* PING\n";
 
     AutoSignal sig(m_connectionMutex, m_connectionClosed, &m_connectActive);

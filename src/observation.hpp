@@ -53,7 +53,7 @@ namespace mtconnect
     using Ts::operator()...;
   };
   template <class... Ts>
-  overloaded(Ts...)->overloaded<Ts...>;
+  overloaded(Ts...) -> overloaded<Ts...>;
 
   struct DataSetEntry;
   using DataSet = std::set<DataSetEntry>;
@@ -61,9 +61,7 @@ namespace mtconnect
 
   struct DataSetValueSame
   {
-    DataSetValueSame(const DataSetValue &other) : m_other(other)
-    {
-    }
+    DataSetValueSame(const DataSetValue &other) : m_other(other) {}
 
     bool operator()(const DataSet &v);
     template <class T>
@@ -90,23 +88,15 @@ namespace mtconnect
         : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {
     }
-    DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false)
-    {
-    }
+    DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
     DataSetEntry(const DataSetEntry &other) = default;
 
     std::string m_key;
     DataSetValue m_value;
     bool m_removed;
 
-    bool operator==(const DataSetEntry &other) const
-    {
-      return m_key == other.m_key;
-    }
-    bool operator<(const DataSetEntry &other) const
-    {
-      return m_key < other.m_key;
-    }
+    bool operator==(const DataSetEntry &other) const { return m_key == other.m_key; }
+    bool operator<(const DataSetEntry &other) const { return m_key < other.m_key; }
 
     bool same(const DataSetEntry &other) const
     {
@@ -131,8 +121,8 @@ namespace mtconnect
 
    public:
     // Initialize with the data item reference, sequence number, time and value
-    Observation(DataItem &dataItem, uint64_t sequence, const std::string &time,
-                const std::string &value);
+    Observation(DataItem &dataItem, const std::string &time,
+                const std::string &value, uint64_t sequence = 0);
 
     // Copy constructor
     Observation(const Observation &observation);
@@ -144,21 +134,12 @@ namespace mtconnect
     const AttributeList &getAttributes();
 
     // Get the data item associated with this event
-    DataItem *getDataItem() const
-    {
-      return m_dataItem;
-    }
+    DataItem *getDataItem() const { return m_dataItem; }
 
     // Get the value
-    const std::string &getValue() const
-    {
-      return m_value;
-    }
+    const std::string &getValue() const { return m_value; }
     ELevel getLevel();
-    const std::string &getLevelString()
-    {
-      return SLevels[getLevel()];
-    }
+    const std::string &getLevelString() { return SLevels[getLevel()]; }
     const std::string &getCode()
     {
       getAttributes();
@@ -167,55 +148,23 @@ namespace mtconnect
     void normal();
 
     // Time series info...
-    const std::vector<float> &getTimeSeries() const
-    {
-      return m_timeSeries;
-    }
-    bool isTimeSeries() const
-    {
-      return m_isTimeSeries;
-    }
-    int getSampleCount() const
-    {
-      return m_sampleCount;
-    }
-    const DataSet &getDataSet() const
-    {
-      return m_dataSet;
-    }
-    const std::string &getResetTriggered() const
-    {
-      return m_resetTriggered;
-    }
-    bool isDataSet() const
-    {
-      return m_dataItem->isDataSet();
-    }
-    bool isUnavailable() const
-    {
-      return m_value == "UNAVAILABLE";
-    }
+    const std::vector<float> &getTimeSeries() const { return m_timeSeries; }
+    bool isTimeSeries() const { return m_isTimeSeries; }
+    int getSampleCount() const { return m_sampleCount; }
+    const DataSet &getDataSet() const { return m_dataSet; }
+    const std::string &getResetTriggered() const { return m_resetTriggered; }
+    bool isDataSet() const { return m_dataItem->isDataSet(); }
+    bool isUnavailable() const { return m_value == "UNAVAILABLE"; }
 
-    uint64_t getSequence() const
-    {
-      return m_sequence;
-    }
+    uint64_t getSequence() const { return m_sequence; }
 
-    void copySequence(const Observation *other)
-    {
-      m_sequence = other->m_sequence;
-    }
+    void copySequence(const Observation *other) { m_sequence = other->m_sequence; }
+    void setSequence(uint64_t sequence) { m_sequence = sequence; }
 
-    const std::string &getDuration() const
-    {
-      return m_duration;
-    }
+    const std::string &getDuration() const { return m_duration; }
 
     Observation *getFirst();
-    Observation *getPrev()
-    {
-      return m_prev;
-    }
+    Observation *getPrev() { return m_prev; }
     void getList(std::list<ObservationPtr> &list);
     void appendTo(Observation *event);
     Observation *find(const std::string &nativeCode);
@@ -309,15 +258,9 @@ namespace mtconnect
     return m_level;
   }
 
-  inline void Observation::appendTo(Observation *event)
-  {
-    m_prev = event;
-  }
+  inline void Observation::appendTo(Observation *event) { m_prev = event; }
 
   using ObservationComparer = bool (*)(ObservationPtr &, ObservationPtr &);
-  inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2)
-  {
-    return aE1 < aE2;
-  }
+  inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2) { return aE1 < aE2; }
 
 }  // namespace mtconnect

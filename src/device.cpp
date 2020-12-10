@@ -26,8 +26,8 @@ namespace mtconnect
 {
   static dlib::logger g_logger("device");
 
-  Device::Device(const std::map<std::string, std::string> &attributes)
-      : Component("Device", attributes),
+  Device::Device(const Attributes &attributes, const std::string block)
+      : Component(block, attributes),
         m_preserveUuid(false),
         m_availabilityAdded(false),
         m_iso841Class(-1),
@@ -51,33 +51,34 @@ namespace mtconnect
 
   Device::~Device() = default;
 
-  void Device::addDeviceDataItem(DataItem &dataItem)
+  // TODO: Clean up these initialization methods for data items
+  void Device::addDeviceDataItem(DataItem *dataItem)
   {
-    if (!dataItem.getSource().empty())
-      m_deviceDataItemsBySource[dataItem.getSource()] = &dataItem;
+    if (!dataItem->getSource().empty())
+      m_deviceDataItemsBySource[dataItem->getSource()] = dataItem;
 
-    if (!dataItem.getName().empty())
-      m_deviceDataItemsByName[dataItem.getName()] = &dataItem;
+    if (!dataItem->getName().empty())
+      m_deviceDataItemsByName[dataItem->getName()] = dataItem;
 
-    if (m_deviceDataItemsById.find(dataItem.getId()) != m_deviceDataItemsById.end())
+    if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
     {
-      g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem.getId() << " for device "
+      g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem->getId() << " for device "
                << m_name << ", skipping";
     }
     else
-      m_deviceDataItemsById[dataItem.getId()] = &dataItem;
+      m_deviceDataItemsById[dataItem->getId()] = dataItem;
   }
 
-  void Device::addDataItem(DataItem &dataItem)
+  void Device::addDataItem(DataItem *dataItem)
   {
     Component::addDataItem(dataItem);
 
-    if (dataItem.getType() == "AVAILABILITY")
-      m_availability = &dataItem;
-    else if (dataItem.getType() == "ASSET_CHANGED")
-      m_assetChanged = &dataItem;
-    else if (dataItem.getType() == "ASSET_REMOVED")
-      m_assetRemoved = &dataItem;
+    if (dataItem->getType() == "AVAILABILITY")
+      m_availability = dataItem;
+    else if (dataItem->getType() == "ASSET_CHANGED")
+      m_assetChanged = dataItem;
+    else if (dataItem->getType() == "ASSET_REMOVED")
+      m_assetRemoved = dataItem;
   }
 
   DataItem *Device::getDeviceDataItem(const std::string &name)

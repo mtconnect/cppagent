@@ -51,24 +51,16 @@ namespace mtconnect
     virtual void protocolCommand(const std::string &data) = 0;
 
     // The connected state of this connection
-    bool isConnected() const
-    {
-      return m_connected;
-    }
+    bool isConnected() const { return m_connected; }
 
     // Method called when connection is lost.
+    virtual void connecting() = 0;
     virtual void disconnected() = 0;
     virtual void connected() = 0;
 
     // heartbeats
-    bool heartbeats() const
-    {
-      return m_heartbeats;
-    }
-    std::chrono::milliseconds heartbeatFrequency() const
-    {
-      return m_heartbeatFrequency;
-    }
+    bool heartbeats() const { return m_heartbeats; }
+    std::chrono::milliseconds heartbeatFrequency() const { return m_heartbeatFrequency; }
 
     // Collect data and until it is \n terminated
     void parseBuffer(const char *buffer);
@@ -76,24 +68,15 @@ namespace mtconnect
     // Send a command to the adapter
     void sendCommand(const std::string &command);
 
-    unsigned int getPort() const
-    {
-      return m_port;
-    }
-    const std::string &getServer() const
-    {
-      return m_server;
-    }
+    unsigned int getPort() const { return m_port; }
+    const std::string &getServer() const { return m_server; }
 
     std::chrono::seconds getLegacyTimeout() const
     {
       return std::chrono::duration_cast<std::chrono::seconds>(m_legacyTimeout);
     }
 
-    void setRealTime(bool realTime = true)
-    {
-      m_realTime = realTime;
-    }
+    void setRealTime(bool realTime = true) { m_realTime = realTime; }
 
    protected:
     void startHeartbeats(const std::string &buf);

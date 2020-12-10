@@ -6,7 +6,7 @@ NamespaceIndentation: All
 AllowShortBlocksOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: false
 BreakBeforeBraces: Allman
 IncludeCategories:

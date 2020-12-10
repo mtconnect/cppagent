@@ -54,6 +54,13 @@ namespace mtconnect
         m_assetDevice(nullptr),
         m_reconnectInterval{10000ms}
   {
+    stringstream url;
+    url << "shdr://" << server << ':' << port;
+    m_url = url.str();
+
+    stringstream identity;
+    identity << '_' << server << '_' << port;
+    m_identity = identity.str();
   }
 
   Adapter::~Adapter()
@@ -533,6 +540,11 @@ namespace mtconnect
   {
     m_baseTime = 0;
     m_agent->disconnected(this, m_allDevices);
+  }
+  
+  void Adapter::connecting()
+  {
+    m_agent->connecting(this);
   }
 
   void Adapter::connected()

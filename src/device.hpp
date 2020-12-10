@@ -31,17 +31,13 @@ namespace mtconnect
   {
    public:
     // Constructor that sets variables from an attribute map
-    Device(const std::map<std::string, std::string> &attributes);
-
+    Device(const Attributes &attributes, const std::string block = "Device");
     ~Device() override;
 
     // Add/get items to/from the device name to data item mapping
-    void addDeviceDataItem(DataItem &dataItem);
+    void addDeviceDataItem(DataItem *dataItem);
     DataItem *getDeviceDataItem(const std::string &name);
-    void addAdapter(Adapter *anAdapter)
-    {
-      m_adapters.emplace_back(anAdapter);
-    }
+    void addAdapter(Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
     Component *getComponentById(const std::string &aId)
     {
       auto comp = m_componentsById.find(aId);
@@ -61,30 +57,18 @@ namespace mtconnect
       return m_deviceDataItemsById;
     }
 
-    void addDataItem(DataItem &dataItem) override;
+    void addDataItem(DataItem *dataItem) override;
 
     std::vector<Adapter *> m_adapters;
     bool m_preserveUuid;
     bool m_availabilityAdded;
-    
-    const std::string &getMTConnectVersion() const
-    {
-      return m_mtconnectVersion;
-    }
+
+    const std::string &getMTConnectVersion() const { return m_mtconnectVersion; }
 
     // Cached data items
-    DataItem *getAvailability() const
-    {
-      return m_availability;
-    }
-    DataItem *getAssetChanged() const
-    {
-      return m_assetChanged;
-    }
-    DataItem *getAssetRemoved() const
-    {
-      return m_assetRemoved;
-    }
+    DataItem *getAvailability() const { return m_availability; }
+    DataItem *getAssetChanged() const { return m_assetChanged; }
+    DataItem *getAssetRemoved() const { return m_assetRemoved; }
 
    protected:
     // The iso841Class of the device
@@ -94,7 +78,7 @@ namespace mtconnect
     DataItem *m_availability;
     DataItem *m_assetChanged;
     DataItem *m_assetRemoved;
-    
+
     // Mapping of device names to data items
     std::map<std::string, DataItem *> m_deviceDataItemsByName;
     std::map<std::string, DataItem *> m_deviceDataItemsById;

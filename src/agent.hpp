@@ -22,16 +22,16 @@
 #include "checkpoint.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
+#include "cached_file.hpp"
+#include "circular_buffer.hpp"
 
 #include <dlib/md5.h>
 #include <dlib/server.h>
-#include <dlib/sliding_buffer.h>
 
 #include <chrono>
 #include <list>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <set>
 #include <sstream>
 #include <string>
@@ -43,6 +43,7 @@ namespace mtconnect
   class Observation;
   class DataItem;
   class Device;
+  class AgentDevice;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
@@ -78,37 +79,9 @@ namespace mtconnect
     };
 
    public:
-    // Slowest frequency allowed
-    static const int SLOWEST_FREQ = 2147483646;
-
-    // Fastest frequency allowed
-    static const int FASTEST_FREQ = 0;
-
-    // Default count for sample query
-    static const unsigned int DEFAULT_COUNT = 100;
-
-    // Code to return when a parameter has no value
-    static const int NO_VALUE32 = -1;
-    static const uint64_t NO_VALUE64 = UINT64_MAX;
-
-    // Code to return for no frequency specified
-    static const int NO_FREQ = -2;
-
-    // Code to return for no heartbeat specified
-    static const int NO_HB = 0;
-
-    // Code for no start value specified
-    static const uint64_t NO_START = NO_VALUE64;
-
-    // Small file size
-    static const int SMALL_FILE = 10 * 1024;  // 10k is considered small
-
-   public:
     // Load agent with the xml configuration
     Agent(const std::string &configXmlPath, int bufferSize, int maxAssets,
-          const std::string &version,
-          std::chrono::milliseconds checkpointFreq = std::chrono::milliseconds{1000},
-          bool pretty = false);
+          const std::string &version, int checkpointFreq = 1000, bool pretty = false);
 
     // Virtual destructor
     ~Agent() override;
@@ -125,18 +98,16 @@ namespace mtconnect
     const std::string httpRequest(const IncomingThings &incoming, OutgoingThings &outgoing);
 
     // Add an adapter to the agent
-    Adapter *addAdapter(const std::string &device, const std::string &host, const unsigned int port,
-                        bool start = false,
-                        std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
+    void addAdapter(Adapter *adapter, bool start = false);
 
     // Get device from device map
     Device *getDeviceByName(const std::string &name);
     const Device *getDeviceByName(const std::string &name) const;
     Device *findDeviceByUUIDorName(const std::string &idOrName);
-    const std::vector<Device *> &getDevices() const
-    {
-      return m_devices;
-    }
+    const std::vector<Device *> &getDevices() const { return m_devices; }
+
+    // Add the a device from a configuration file
+    void addDevice(Device *device);
 
     // Add component events to the sliding buffer
     unsigned int addToBuffer(DataItem *dataItem, const std::string &value, std::string time = "");
@@ -152,6 +123,7 @@ namespace mtconnect
     bool removeAllAssets(Device *device, const std::string &type, const std::string &time);
 
     // Message when adapter has connected and disconnected
+    void connecting(Adapter *adapter);
     void disconnected(Adapter *adapter, std::vector<Device *> devices);
     void connected(Adapter *adapter, std::vector<Device *> devices);
 
@@ -159,24 +131,12 @@ namespace mtconnect
 
     Observation *getFromBuffer(uint64_t seq) const
     {
-      return (*m_slidingBuffer)[seq];
+      return m_circularBuffer.getFromBuffer(seq);
     }
-    uint64_t getSequence() const
-    {
-      return m_sequence;
-    }
-    unsigned int getBufferSize() const
-    {
-      return m_slidingBufferSize;
-    }
-    unsigned int getMaxAssets() const
-    {
-      return m_maxAssets;
-    }
-    unsigned int getAssetCount() const
-    {
-      return m_assets.size();
-    }
+    uint64_t getSequence() const { return m_circularBuffer.getSequence(); }
+    unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
+    unsigned int getMaxAssets() const { return m_maxAssets; }
+    unsigned int getAssetCount() const { return m_assets.size(); }
 
     int getAssetCount(const std::string &type) const
     {
@@ -186,23 +146,12 @@ namespace mtconnect
       return 0;
     }
 
-    uint64_t getFirstSequence() const
-    {
-      if (m_sequence > m_slidingBufferSize)
-        return m_sequence - m_slidingBufferSize;
-      else
-        return 1;
-    }
+    uint64_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
 
     // For testing...
-    void setSequence(uint64_t seq)
-    {
-      m_sequence = seq;
-    }
-    std::list<AssetPtr *> *getAssets()
-    {
-      return &m_assets;
-    }
+    void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
+    std::list<AssetPtr *> *getAssets() { return &m_assets; }
+    auto getAgentDevice() { return m_agentDevice; }
 
     // Starting
     virtual void start();
@@ -211,45 +160,35 @@ namespace mtconnect
     void clear();
 
     void registerFile(const std::string &uri, const std::string &path);
-    void addMimeType(const std::string &ext, const std::string &type)
-    {
-      m_mimeTypes[ext] = type;
-    }
+    void addMimeType(const std::string &ext, const std::string &type) { m_mimeTypes[ext] = type; }
 
     // PUT and POST handling
-    void enablePut(bool flag = true)
-    {
-      m_putEnabled = flag;
-    }
-    bool isPutEnabled() const
-    {
-      return m_putEnabled;
-    }
-    void allowPutFrom(const std::string &host)
-    {
-      m_putAllowedHosts.insert(host);
-    }
+    void enablePut(bool flag = true) { m_putEnabled = flag; }
+    bool isPutEnabled() const { return m_putEnabled; }
+    void allowPutFrom(const std::string &host) { m_putAllowedHosts.insert(host); }
     bool isPutAllowedFrom(const std::string &host) const
     {
       return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
     }
 
     // For debugging
-    void setLogStreamData(bool log)
-    {
-      m_logStreamData = log;
-    }
+    void setLogStreamData(bool log) { m_logStreamData = log; }
 
     // Handle probe calls
     std::string handleProbe(const Printer *printer, const std::string &device);
 
     // Get the printer for a type
-    Printer *getPrinter(const std::string &aType)
-    {
-      return m_printers[aType].get();
-    }
+    Printer *getPrinter(const std::string &aType) { return m_printers[aType].get(); }
 
    protected:
+    // Initialization methods
+    void createAgentDevice();
+    void loadXMLDeviceFile(const std::string &config);
+    void verifyDevice(Device *device);
+    void initializeDataItems(Device *device);
+    void loadCachedProbe();
+
+    // HTTP Protocol
     void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
                     const std::string &local_ip, unsigned short foreign_port,
                     unsigned short local_port, dlib::uint64) override;
@@ -302,10 +241,7 @@ namespace mtconnect
     // Get a file
     std::string handleFile(const std::string &uri, OutgoingThings &outgoing);
 
-    bool isFile(const std::string &uri) const
-    {
-      return m_fileMap.find(uri) != m_fileMap.end();
-    }
+    bool isFile(const std::string &uri) const { return m_fileMap.find(uri) != m_fileMap.end(); }
 
     // Perform a check on parameter and return a value or a code
     int checkAndGetParam(const dlib::key_value_map &queries, const std::string &param,
@@ -332,21 +268,17 @@ namespace mtconnect
    protected:
     // Unique id based on the time of creation
     uint64_t m_instanceId;
+    bool m_initialized{false};
 
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;
     std::map<std::string, std::unique_ptr<Printer>> m_printers;
+    
+    // Circular Buffer
+    CircularBuffer m_circularBuffer;
 
     // For access to the sequence number and sliding buffer, use the mutex
-    std::mutex m_sequenceLock;
     std::mutex m_assetLock;
-
-    // Sequence number
-    uint64_t m_sequence;
-
-    // The sliding/circular buffer to hold all of the events/sample data
-    std::unique_ptr<dlib::sliding_buffer_kernel_1<ObservationPtr>> m_slidingBuffer;
-    unsigned int m_slidingBufferSize;
 
     // Asset storage, circ buffer stores ids
     std::list<AssetPtr *> m_assets;
@@ -356,13 +288,8 @@ namespace mtconnect
     std::map<std::string, AssetIndex> m_assetIndices;
     unsigned int m_maxAssets;
 
-    // Checkpoints
-    Checkpoint m_latest;
-    Checkpoint m_first;
-    std::vector<Checkpoint> m_checkpoints;
-
-    int m_checkpointFreq;
-    long long m_checkpointCount;
+    // Agent Device
+    AgentDevice *m_agentDevice{nullptr};
 
     // Data containers
     std::vector<Adapter *> m_adapters;
@@ -371,54 +298,6 @@ namespace mtconnect
     std::map<std::string, Device *> m_deviceUuidMap;
     std::map<std::string, DataItem *> m_dataItemMap;
     std::map<std::string, int> m_assetCounts;
-
-    struct CachedFile : public RefCounted
-    {
-      std::unique_ptr<char[]> m_buffer;
-      size_t m_size = 0;
-
-      CachedFile() : m_buffer(nullptr)
-      {
-      }
-
-      CachedFile(const CachedFile &file) : RefCounted(file), m_buffer(nullptr), m_size(file.m_size)
-      {
-        m_buffer = std::make_unique<char[]>(file.m_size);
-        memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
-      }
-
-      CachedFile(char *buffer, size_t size) : m_buffer(nullptr), m_size(size)
-      {
-        m_buffer = std::make_unique<char[]>(m_size);
-        memcpy(m_buffer.get(), buffer, size);
-      }
-
-      CachedFile(size_t size) : m_buffer(nullptr), m_size(size)
-      {
-        m_buffer = std::make_unique<char[]>(m_size);
-      }
-
-      ~CachedFile() override
-      {
-        m_buffer.reset();
-      }
-
-      CachedFile &operator=(const CachedFile &file)
-      {
-        m_buffer.reset();
-        m_buffer = std::make_unique<char[]>(file.m_size);
-        memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
-        m_size = file.m_size;
-        return *this;
-      }
-
-      void allocate(size_t size)
-      {
-        m_buffer.reset();
-        m_buffer = std::make_unique<char[]>(size);
-        m_size = size;
-      }
-    };
 
     // For file handling, small files will be cached
     std::map<std::string, std::string> m_fileMap;

@@ -26,10 +26,7 @@ namespace mtconnect
   {
    public:
     // Constructors
-    RefCountedPtr()
-    {
-      m_object = nullptr;
-    }
+    RefCountedPtr() { m_object = nullptr; }
 
     RefCountedPtr(const RefCountedPtr &ptr, bool takeRef = false)
     {
@@ -53,34 +50,16 @@ namespace mtconnect
     ~RefCountedPtr();
 
     // Getters
-    T *getObject() const
-    {
-      return m_object;
-    }
-    T *operator->() const
-    {
-      return m_object;
-    }
-    operator T *() const
-    {
-      return m_object;
-    }
+    T *getObject() const { return m_object; }
+    T *operator->() const { return m_object; }
+    operator T *() const { return m_object; }
 
     // Setters
     T *setObject(T *object, bool takeRef = false);
-    T *operator=(T *object)
-    {
-      return setObject(object);
-    }
-    T *operator=(RefCountedPtr<T> &ptr)
-    {
-      return setObject(ptr.getObject());
-    }
+    T *operator=(T *object) { return setObject(object); }
+    T *operator=(RefCountedPtr<T> &ptr) { return setObject(ptr.getObject()); }
 
-    bool operator==(const RefCountedPtr &another)
-    {
-      return *m_object == *(another.m_object);
-    }
+    bool operator==(const RefCountedPtr &another) { return *m_object == *(another.m_object); }
 
     bool operator<(const RefCountedPtr &another);
 
@@ -118,23 +97,14 @@ namespace mtconnect
   class RefCounted
   {
    public:
-    RefCounted()
-    {
-      m_refCount.store(1);
-    }
+    RefCounted() { m_refCount.store(1); }
 
-    RefCounted(const RefCounted &aRef)
-    {
-      m_refCount.store(1);
-    }
+    RefCounted(const RefCounted &aRef) { m_refCount.store(1); }
 
     virtual ~RefCounted() = default;
 
     // Reference count management
-    void referTo()
-    {
-      std::atomic_fetch_add(&m_refCount, 1);
-    }
+    void referTo() { std::atomic_fetch_add(&m_refCount, 1); }
 
     void unrefer()
     {
@@ -143,10 +113,7 @@ namespace mtconnect
         delete this;
     }
 
-    unsigned int refCount()
-    {
-      return m_refCount.load();
-    }
+    unsigned int refCount() { return m_refCount.load(); }
 
    protected:
     // Reference count

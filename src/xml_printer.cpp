@@ -23,8 +23,8 @@
 #include "device.hpp"
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"
-#include "specifications.hpp"
 #include "solid_model.hpp"
+#include "specifications.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>
@@ -83,10 +83,7 @@ namespace mtconnect
       }
     }
 
-    operator xmlTextWriterPtr()
-    {
-      return m_writer;
-    }
+    operator xmlTextWriterPtr() { return m_writer; }
 
     string getContent()
     {
@@ -122,10 +119,7 @@ namespace mtconnect
     m_devicesNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearDevicesNamespaces()
-  {
-    m_devicesNamespaces.clear();
-  }
+  void XmlPrinter::clearDevicesNamespaces() { m_devicesNamespaces.clear(); }
 
   string XmlPrinter::getDevicesUrn(const std::string &prefix)
   {
@@ -156,10 +150,7 @@ namespace mtconnect
     m_errorNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearErrorNamespaces()
-  {
-    m_errorNamespaces.clear();
-  }
+  void XmlPrinter::clearErrorNamespaces() { m_errorNamespaces.clear(); }
 
   string XmlPrinter::getErrorUrn(const std::string &prefix)
   {
@@ -190,20 +181,11 @@ namespace mtconnect
     m_streamsNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearStreamsNamespaces()
-  {
-    m_streamsNamespaces.clear();
-  }
+  void XmlPrinter::clearStreamsNamespaces() { m_streamsNamespaces.clear(); }
 
-  void XmlPrinter::setSchemaVersion(const std::string &version)
-  {
-    m_schemaVersion = version;
-  }
+  void XmlPrinter::setSchemaVersion(const std::string &version) { m_schemaVersion = version; }
 
-  const std::string &XmlPrinter::getSchemaVersion()
-  {
-    return m_schemaVersion;
-  }
+  const std::string &XmlPrinter::getSchemaVersion() { return m_schemaVersion; }
 
   string XmlPrinter::getStreamsUrn(const std::string &prefix)
   {
@@ -234,10 +216,7 @@ namespace mtconnect
     m_assetsNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearAssetsNamespaces()
-  {
-    m_assetsNamespaces.clear();
-  }
+  void XmlPrinter::clearAssetsNamespaces() { m_assetsNamespaces.clear(); }
 
   string XmlPrinter::getAssetsUrn(const std::string &prefix)
   {
@@ -257,25 +236,13 @@ namespace mtconnect
       return "";
   }
 
-  void XmlPrinter::setStreamStyle(const std::string &style)
-  {
-    m_streamsStyle = style;
-  }
+  void XmlPrinter::setStreamStyle(const std::string &style) { m_streamsStyle = style; }
 
-  void XmlPrinter::setDevicesStyle(const std::string &style)
-  {
-    m_devicesStyle = style;
-  }
+  void XmlPrinter::setDevicesStyle(const std::string &style) { m_devicesStyle = style; }
 
-  void XmlPrinter::setErrorStyle(const std::string &style)
-  {
-    m_errorStyle = style;
-  }
+  void XmlPrinter::setErrorStyle(const std::string &style) { m_errorStyle = style; }
 
-  void XmlPrinter::setAssetsStyle(const std::string &style)
-  {
-    m_assetsStyle = style;
-  }
+  void XmlPrinter::setAssetsStyle(const std::string &style) { m_assetsStyle = style; }
 
   static inline void printRawContent(xmlTextWriterPtr writer, const char *element,
                                      const std::string &text)
@@ -333,9 +300,7 @@ namespace mtconnect
   class AutoElement
   {
    public:
-    AutoElement(xmlTextWriterPtr writer) : m_writer(writer)
-    {
-    }
+    AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}
     AutoElement(xmlTextWriterPtr writer, const char *name, string key = "")
         : m_writer(writer), m_name(name), m_key(std::move(key))
     {
@@ -369,14 +334,8 @@ namespace mtconnect
         xmlTextWriterEndElement(m_writer);
     }
 
-    const string &key() const
-    {
-      return m_key;
-    }
-    const string &name() const
-    {
-      return m_name;
-    }
+    const string &key() const { return m_key; }
+    const string &name() const { return m_name; }
 
    protected:
     xmlTextWriterPtr m_writer;
@@ -404,38 +363,37 @@ namespace mtconnect
         xmlFree(text);
     }
   }
-  
+
   inline void printGeometry(xmlTextWriterPtr writer, const Geometry &geometry)
   {
     if (geometry.m_location.index() != 0)
     {
-      visit(overloaded {
-        [&writer](const Origin &o) {
-          stringstream s;
-          s << o.m_x << ' ' << o.m_y << ' ' << o.m_z;
-          addSimpleElement(writer, "Origin", s.str());
-        },
-        [&writer](const Transformation &t) {
-          AutoElement ele(writer, "Transformation");
-          if (t.m_translation)
-          {
-            stringstream s;
-            s << t.m_translation->m_x << ' ' << t.m_translation->m_y << ' '
-              << t.m_translation->m_z;
-            addSimpleElement(writer, "Translation", s.str());
-          }
-          if (t.m_rotation)
-          {
-            stringstream s;
-            s << t.m_rotation->m_roll << ' ' << t.m_rotation->m_pitch << ' '
-              << t.m_rotation->m_yaw;
-            addSimpleElement(writer, "Rotation", s.str());
-          }
-        },
-        [](const std::monostate &a){}
-      }, geometry.m_location);
+      visit(overloaded{[&writer](const Origin &o) {
+                         stringstream s;
+                         s << o.m_x << ' ' << o.m_y << ' ' << o.m_z;
+                         addSimpleElement(writer, "Origin", s.str());
+                       },
+                       [&writer](const Transformation &t) {
+                         AutoElement ele(writer, "Transformation");
+                         if (t.m_translation)
+                         {
+                           stringstream s;
+                           s << t.m_translation->m_x << ' ' << t.m_translation->m_y << ' '
+                             << t.m_translation->m_z;
+                           addSimpleElement(writer, "Translation", s.str());
+                         }
+                         if (t.m_rotation)
+                         {
+                           stringstream s;
+                           s << t.m_rotation->m_roll << ' ' << t.m_rotation->m_pitch << ' '
+                             << t.m_rotation->m_yaw;
+                           addSimpleElement(writer, "Rotation", s.str());
+                         }
+                       },
+                       [](const std::monostate &a) {}},
+            geometry.m_location);
     }
-    
+
     if (geometry.m_scale)
     {
       stringstream s;
@@ -446,8 +404,7 @@ namespace mtconnect
     if (geometry.m_axis)
     {
       stringstream s;
-      s << geometry.m_axis->m_x << ' ' << geometry.m_axis->m_y << ' '
-        << geometry.m_axis->m_z;
+      s << geometry.m_axis->m_x << ' ' << geometry.m_axis->m_y << ' ' << geometry.m_axis->m_z;
       addSimpleElement(writer, "Axis", s.str());
     }
   }
@@ -502,7 +459,7 @@ namespace mtconnect
       {
         AutoElement devices(writer, "Devices");
         for (const auto dev : deviceList)
-          printProbeHelper(writer, dev, "Device");
+          printProbeHelper(writer, dev, dev->getClass().c_str());
       }
       closeElement(writer);  // MTConnectDevices
 
@@ -520,8 +477,7 @@ namespace mtconnect
     return ret;
   }
 
-  void printSensorConfiguration(xmlTextWriterPtr writer,
-                                const SensorConfiguration *sensor)
+  void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration *sensor)
   {
     AutoElement sensorEle(writer, "SensorConfiguration");
 
@@ -596,9 +552,8 @@ namespace mtconnect
                                          {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
                                          {"compositionIdRef", spec->m_compositionIdRef},
                                          {"dataItemIdRef", spec->m_dataItemIdRef},
-        {"id", spec->m_id },
-        {"originator", spec->m_originator}
-      }));
+                                         {"id", spec->m_id},
+                                         {"originator", spec->m_originator}}));
 
       if (spec->hasGroups())
       {
@@ -613,15 +568,15 @@ namespace mtconnect
       else
       {
         const auto group = spec->getLimits();
-        if (group) {
+        if (group)
+        {
           for (const auto &limit : *group)
             addSimpleElement(writer, limit.first, floatToString(limit.second));
         }
-
       }
     }
   }
-  
+
   void printGeometricConfiguration(xmlTextWriterPtr writer, const GeometricConfiguration &model)
   {
     AutoElement ele(writer, model.klass());
@@ -640,8 +595,9 @@ namespace mtconnect
       printGeometricConfiguration(writer, *system);
     }
   }
-  
-  void printConfiguration(xmlTextWriterPtr writer, const std::list<unique_ptr<ComponentConfiguration>> &configurations)
+
+  void printConfiguration(xmlTextWriterPtr writer,
+                          const std::list<unique_ptr<ComponentConfiguration>> &configurations)
   {
     AutoElement configEle(writer, "Configuration");
     for (const auto &configuration : configurations)
@@ -674,7 +630,6 @@ namespace mtconnect
     }
   }
 
-  
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
                                     const char *name) const
   {
@@ -686,12 +641,12 @@ namespace mtconnect
 
     if (!desc.empty() || !body.empty())
       addSimpleElement(writer, "Description", body, desc);
-    
+
     if (!component->getConfiguration().empty())
     {
       printConfiguration(writer, component->getConfiguration());
     }
-    
+
     auto datum = component->getDataItems();
 
     if (!datum.empty())
@@ -833,7 +788,7 @@ namespace mtconnect
 
     if (dataItem->hasDefinition())
       printDataItemDefinition(writer, dataItem->getDefinition());
-    
+
     printDataItemRelationships(writer, dataItem->getRelationships());
   }
 
@@ -884,9 +839,9 @@ namespace mtconnect
       }
     }
   }
-  
-  void XmlPrinter::printDataItemRelationships(xmlTextWriterPtr writer,
-                                  const std::list<DataItem::Relationship> &relations) const
+
+  void XmlPrinter::printDataItemRelationships(
+      xmlTextWriterPtr writer, const std::list<DataItem::Relationship> &relations) const
   {
     if (relations.size() > 0)
     {
@@ -898,7 +853,6 @@ namespace mtconnect
                           {string("type"), rel.m_type},
                           {string("idRef"), rel.m_idRef}});
       }
-
     }
   }
 

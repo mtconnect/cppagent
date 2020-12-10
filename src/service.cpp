@@ -39,9 +39,7 @@ namespace mtconnect
 
   MTConnectService::MTConnectService() = default;
 
-  void MTConnectService::initialize(int argc, const char *argv[])
-  {
-  }
+  void MTConnectService::initialize(int argc, const char *argv[]) {}
 }  // namespace mtconnect
 
 #ifdef _WINDOWS
@@ -85,9 +83,7 @@ namespace mtconnect
 
   static MTConnectService *g_service = nullptr;
 
-  static void agent_termination_handler()
-  {
-  }
+  static void agent_termination_handler() {}
 
   void commandLine()
   {
@@ -661,10 +657,7 @@ namespace mtconnect
   }
 
   static std::string s_pidFile;
-  static void cleanup_pid()
-  {
-    unlink(s_pidFile.c_str());
-  }
+  static void cleanup_pid() { unlink(s_pidFile.c_str()); }
 
   void MTConnectService::daemonize()
   {
@@ -772,8 +765,6 @@ namespace mtconnect
     return 0;
   }
 
-  void MTConnectService::install()
-  {
-  }
+  void MTConnectService::install() {}
 }  // namespace mtconnect
 #endif

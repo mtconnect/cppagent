@@ -21,6 +21,7 @@
 #include "device.hpp"
 #include "options.hpp"
 #include "rolling_file_logger.hpp"
+#include "version.h"
 #include "xml_printer.hpp"
 #include <sys/stat.h>
 
@@ -50,6 +51,8 @@
 #ifdef MACOSX
 #include <mach-o/dyld.h>
 #endif
+
+#define strfy(line) #line
 
 using namespace std;
 using namespace dlib;
@@ -367,16 +370,17 @@ namespace mtconnect
     } while (m_restart);
   }
 
-  void AgentConfiguration::stop()
-  {
-    m_agent->clear();
-  }
+  void AgentConfiguration::stop() { m_agent->clear(); }
 
   Device *AgentConfiguration::defaultDevice()
   {
     const auto &devices = m_agent->getDevices();
-    if (devices.size() == 1)
-      return devices[0];
+    if (devices.size() > 0)
+    {
+      for (auto device : devices)
+        if (device->getClass() != "Agent")
+          return device;
+    }
     else
       return nullptr;
   }
@@ -547,7 +551,7 @@ namespace mtconnect
     string serverIp = get_with_default(reader, "ServerIp", "");
     auto bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
     auto maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
-    auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000ms);
+    auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
     auto legacyTimeout = get_with_default(reader, "LegacyTimeout", 600s);
     auto reconnectInterval = get_with_default(reader, "ReconnectInterval", 10000ms);
     auto ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
@@ -616,7 +620,9 @@ namespace mtconnect
     m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
 
     // Check for schema version
-    string schemaVersion = get_with_default(reader, "SchemaVersion", "");
+
+    string schemaVersion = get_with_default(
+        reader, "SchemaVersion", strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
     if (!m_agent)
@@ -696,8 +702,9 @@ namespace mtconnect
         auto port = get_with_default(adapter, "Port", 7878);
 
         g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
-        auto adp = m_agent->addAdapter(deviceName, host, port, false,
-                                       get_with_default(adapter, "LegacyTimeout", legacyTimeout));
+        auto adp = new Adapter(deviceName, host, port,
+                               get_with_default(adapter, "LegacyTimeout", legacyTimeout));
+
         device->m_preserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
 
         // Add additional device information
@@ -739,16 +746,21 @@ namespace mtconnect
             adp->addDevice(name);
           }
         }
+
+        m_agent->addAdapter(adp, false);
       }
     }
     else if ((device = defaultDevice()))
     {
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
-      auto adp = m_agent->addAdapter(device->getName(), "localhost", 7878, false, legacyTimeout);
+      auto adp = new Adapter(device->getName(), "localhost", 7878, legacyTimeout);
+
       adp->setIgnoreTimestamps(ignoreTimestamps || adp->isIgnoringTimestamps());
       adp->setReconnectInterval(reconnectInterval);
       device->m_preserveUuid = defaultPreserve;
+
+      m_agent->addAdapter(adp, false);
     }
     else
     {

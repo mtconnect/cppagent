@@ -82,7 +82,7 @@ TEST_F(DataSetTest, DataItem)
 TEST_F(DataSetTest, InitialSet)
 {
   string value("a=1 b=2 c=3 d=4");
-  auto ce = new Observation(*m_dataItem1, 2, "time", value);
+  auto ce = new Observation(*m_dataItem1, "time", value);
 
   ASSERT_EQ((size_t)4, ce->getDataSet().size());
   auto &al = ce->getAttributes();
@@ -122,14 +122,14 @@ TEST_F(DataSetTest, InitialSet)
 TEST_F(DataSetTest, UpdateOneElement)
 {
   string value("a=1 b=2 c=3 d=4");
-  ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
+  ObservationPtr ce(new Observation(*m_dataItem1, "time", value));
   m_checkpoint->addObservation(ce);
 
   auto cecp = *m_checkpoint->getEventPtr("v1");
   ASSERT_EQ((size_t)4, cecp->getDataSet().size());
 
   string value2("c=5");
-  ObservationPtr ce2(new Observation(*m_dataItem1, 2, "time", value2));
+  ObservationPtr ce2(new Observation(*m_dataItem1, "time", value2));
   m_checkpoint->addObservation(ce2);
 
   auto ce3 = *m_checkpoint->getEventPtr("v1");
@@ -142,7 +142,7 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
 
   string value3("e=6");
-  ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
+  ObservationPtr ce4(new Observation(*m_dataItem1, "time", value3));
   m_checkpoint->addObservation(ce4);
 
   auto ce5 = *m_checkpoint->getEventPtr("v1");
@@ -159,14 +159,14 @@ TEST_F(DataSetTest, UpdateOneElement)
 TEST_F(DataSetTest, UpdateMany)
 {
   string value("a=1 b=2 c=3 d=4");
-  ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
+  ObservationPtr ce(new Observation(*m_dataItem1, "time", value));
   m_checkpoint->addObservation(ce);
 
   auto cecp = *m_checkpoint->getEventPtr("v1");
   ASSERT_EQ((size_t)4, cecp->getDataSet().size());
 
   string value2("c=5 e=6");
-  ObservationPtr ce2(new Observation(*m_dataItem1, 2, "time", value2));
+  ObservationPtr ce2(new Observation(*m_dataItem1, "time", value2));
   m_checkpoint->addObservation(ce2);
 
   auto ce3 = *m_checkpoint->getEventPtr("v1");
@@ -180,7 +180,7 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
 
   string value3("e=7 a=8 f=9");
-  ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
+  ObservationPtr ce4(new Observation(*m_dataItem1, "time", value3));
   m_checkpoint->addObservation(ce4);
 
   auto ce5 = *m_checkpoint->getEventPtr("v1");
@@ -198,14 +198,14 @@ TEST_F(DataSetTest, UpdateMany)
 TEST_F(DataSetTest, Reset)
 {
   string value("a=1 b=2 c=3 d=4");
-  ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
+  ObservationPtr ce(new Observation(*m_dataItem1, "time", value));
   m_checkpoint->addObservation(ce);
 
   auto cecp = *m_checkpoint->getEventPtr("v1");
   ASSERT_EQ((size_t)4, cecp->getDataSet().size());
 
   string value2(":MANUAL c=5 e=6");
-  ObservationPtr ce2(new Observation(*m_dataItem1, 2, "time", value2));
+  ObservationPtr ce2(new Observation(*m_dataItem1, "time", value2));
   m_checkpoint->addObservation(ce2);
 
   auto ce3 = *m_checkpoint->getEventPtr("v1");
@@ -216,7 +216,7 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
 
   string value3("x=pop y=hop");
-  ObservationPtr ce4(new Observation(*m_dataItem1, 2, "time", value3));
+  ObservationPtr ce4(new Observation(*m_dataItem1, "time", value3));
   m_checkpoint->addObservation(ce4);
 
   auto ce5 = *m_checkpoint->getEventPtr("v1");
@@ -230,12 +230,12 @@ TEST_F(DataSetTest, Reset)
 TEST_F(DataSetTest, BadData)
 {
   string value("12356");
-  auto ce = new Observation(*m_dataItem1, 2, "time", value);
+  auto ce = new Observation(*m_dataItem1, "time", value);
 
   ASSERT_EQ((size_t)1, ce->getDataSet().size());
 
   string value1("  a=2      b3=xxx");
-  auto ce2 = new Observation(*m_dataItem1, 2, "time", value1);
+  auto ce2 = new Observation(*m_dataItem1, "time", value1);
 
   ASSERT_EQ((size_t)2, ce2->getDataSet().size());
 
@@ -249,7 +249,8 @@ TEST_F(DataSetTest, BadData)
 
 TEST_F(DataSetTest, Current)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/current";
@@ -316,7 +317,8 @@ TEST_F(DataSetTest, Current)
 
 TEST_F(DataSetTest, Sample)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -381,7 +383,8 @@ TEST_F(DataSetTest, Sample)
 
 TEST_F(DataSetTest, CurrentAt)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   auto seq = m_agent->getSequence();
@@ -458,14 +461,14 @@ TEST_F(DataSetTest, CurrentAt)
 TEST_F(DataSetTest, DeleteKey)
 {
   string value("a=1 b=2 c=3 d=4");
-  ObservationPtr ce(new Observation(*m_dataItem1, 2, "time", value));
+  ObservationPtr ce(new Observation(*m_dataItem1, "time", value));
   m_checkpoint->addObservation(ce);
 
   auto cecp = *m_checkpoint->getEventPtr("v1");
   ASSERT_EQ((size_t)4, cecp->getDataSet().size());
 
   string value2("c e=6 a");
-  ObservationPtr ce2(new Observation(*m_dataItem1, 4, "time", value2));
+  ObservationPtr ce2(new Observation(*m_dataItem1, "time", value2));
   m_checkpoint->addObservation(ce2);
 
   auto ce3 = *m_checkpoint->getEventPtr("v1");
@@ -484,7 +487,8 @@ TEST_F(DataSetTest, DeleteKey)
 
 TEST_F(DataSetTest, ResetWithNoItems)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -520,7 +524,8 @@ TEST_F(DataSetTest, ResetWithNoItems)
 
 TEST_F(DataSetTest, DuplicateCompression)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -588,7 +593,8 @@ TEST_F(DataSetTest, DuplicateCompression)
 
 TEST_F(DataSetTest, QuoteDelimeter)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a='1 2 3' b=\"x y z\" c={cats and dogs}");
@@ -627,7 +633,8 @@ TEST_F(DataSetTest, QuoteDelimeter)
 
 TEST_F(DataSetTest, Discrete)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   auto di = m_agent->getDataItemByName("LinuxCNC", "vars2");
@@ -666,7 +673,8 @@ TEST_F(DataSetTest, Discrete)
 
 TEST_F(DataSetTest, Probe)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_agentTestHelper->m_path = "/probe";
@@ -681,9 +689,10 @@ TEST_F(DataSetTest, Probe)
 
 TEST_F(DataSetTest, JsonCurrent)
 {
-  m_adapter = m_agent->addAdapter("LinuxCNC", "server", 7878, false);
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
-  
+
   m_agentTestHelper->m_path = "/current";
   m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
   

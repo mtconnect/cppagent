@@ -57,10 +57,7 @@ namespace mtconnect
     m_directory = get_parent_directory(m_file);
   }
 
-  RollingFileLogger::~RollingFileLogger()
-  {
-    close(m_fd);
-  }
+  RollingFileLogger::~RollingFileLogger() { close(m_fd); }
 
   std::time_t RollingFileLogger::getFileAge()
   {

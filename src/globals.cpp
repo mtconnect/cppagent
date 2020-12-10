@@ -187,15 +187,9 @@ namespace mtconnect
     return duration_cast<timePeriod>(system_clock::now().time_since_epoch()).count();
   }
 
-  uint64_t getCurrentTimeInMicros()
-  {
-    return getCurrentTimeIn<microseconds>();
-  }
+  uint64_t getCurrentTimeInMicros() { return getCurrentTimeIn<microseconds>(); }
 
-  uint64_t getCurrentTimeInSec()
-  {
-    return getCurrentTimeIn<seconds>();
-  }
+  uint64_t getCurrentTimeInSec() { return getCurrentTimeIn<seconds>(); }
 
   string getRelativeTimeString(uint64_t aTime)
   {
