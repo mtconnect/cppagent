@@ -21,13 +21,6 @@ using namespace std;
 
 namespace mtconnect
 {
-  std::unique_ptr<std::map<std::string, Factory>> EntityFactory::m_stringFactory;
-  std::unique_ptr<std::list<EntityFactory::RegexPair>> EntityFactory::m_regexFactory;
   
-  void EntityFactory::createFactories()
-  {
-    m_stringFactory = make_unique<std::map<std::string, Factory>>();
-    m_regexFactory = make_unique<std::list<EntityFactory::RegexPair>>();
-  }
 }
 

@@ -39,9 +39,11 @@
 namespace mtconnect
 {
   class Entity;
+  class EntityFactory;
   using EntityPtr = std::shared_ptr<Entity>;
   using EntityList = std::list<std::shared_ptr<Entity>>;
   using Value = std::variant<EntityPtr, EntityList, std::string, int, double>;
+  using EntityFactoryPtr = std::shared_ptr<EntityFactory>;
   
   class PropertyError : public std::logic_error
   {
@@ -78,9 +80,11 @@ namespace mtconnect
       m_upperMultiplicity(upper)
     {
     }
-
+    Requirement(const std::string &name, Type type, EntityFactoryPtr &o,
+                bool required = true);
+    
     Requirement() = default;
-    Requirement(const Requirement &) = default;
+    Requirement(const Requirement &o);
     ~Requirement() = default;
     
     bool isRequired() const { return m_lowerMultiplicity > 0; }
@@ -89,29 +93,21 @@ namespace mtconnect
     int getLowerMultiplicity() const { return m_lowerMultiplicity; }
     const std::string &getName() const { return m_name; }
     Type getType() const { return m_type; }
+    auto &getFactory() { return m_factory; }
     
     bool operator<(const Requirement &o) const
     {
       return m_name < o.m_name;
     }
     
-    bool isMetBy(const Value &value) const
-    {
-      if (value.index() != m_type)
-        return false;
-      
-      if (std::holds_alternative<std::string>(value) &&
-          std::get<std::string>(value).empty())
-        return false;
-      
-      return true;
-    }
+    bool isMetBy(const Value &value) const;
     
   protected:
     std::string m_name;
     int m_upperMultiplicity;
     int m_lowerMultiplicity;
     Type m_type;
+    EntityFactoryPtr m_factory;
   };
   
   class Entity
@@ -149,35 +145,40 @@ namespace mtconnect
     Value m_noValue{""};
   };
   
-  class Factory
+  using Requirements = std::list<Requirement>;
+
+  class EntityFactory
   {
   public:
-    using Requirements = std::list<Requirement>;
     using Function = std::function<std::shared_ptr<Entity>(const std::string &name,
                                                            Entity::Properties &)>;
+    using RegexPair = std::pair<std::regex, EntityFactoryPtr>;
+    using StringFactory = std::map<std::string, EntityFactoryPtr>;
+    using RegexFactory = std::list<RegexPair>;
 
   public:
-    
+
+    // Factory Methods
     static auto createEntity(const std::string &name,
-                      Entity::Properties &p)
+                             Entity::Properties &p)
     {
       return std::make_shared<Entity>(name, p);
     }
     
-    
-    Factory() : m_function(createEntity) {}
-    Factory(const Factory &) = default;
-    ~Factory() = default;
-    Factory(Requirements r)
+    EntityFactory(const EntityFactory &other) = delete;
+    EntityFactory() : m_function(createEntity) {}
+    ~EntityFactory() = default;
+    EntityFactory(Requirements r)
     : m_requirements(r), m_function(createEntity)
     {
+      registerEntityRequirements();
     }
-    Factory(Requirements r, Function f)
+    EntityFactory(Requirements r, Function f)
     : m_requirements(r), m_function(f)
     {
+      registerEntityRequirements();
     }
-
-
+    
     bool isSufficient(const Entity::Properties &properties) const
     {
       std::set<std::string> keys;
@@ -218,65 +219,124 @@ namespace mtconnect
       else
         return nullptr;
     }
+
+    
+    // Factory
+    bool registerFactory(const std::string &name, EntityFactoryPtr &factory)
+    {
+      m_stringFactory.emplace(make_pair(name, factory));
+      return true;
+    }
+    bool registerFactory(const std::regex &exp, EntityFactoryPtr &factory)
+    {
+      m_regexFactory.emplace_back(make_pair(exp, factory));
+      return true;
+    }
+    
+    EntityFactoryPtr factoryFor(const std::string &name)
+    {
+      const auto it = m_stringFactory.find(name);
+      if (it != m_stringFactory.end())
+        return it->second;
+      else
+      {
+        for (const auto &r : m_regexFactory)
+        {
+          if (std::regex_match(name, r.first))
+            return r.second;
+        }
+      }
+      
+      return nullptr;
+    }
+    
+    std::shared_ptr<Entity> create(const std::string &name, Entity::Properties &a)
+    {
+      auto factory = factoryFor(name);
+      if (factory)
+        return (*factory)(name, a);
+      else
+        return nullptr;
+    }
+    
+    void registerEntityRequirements()
+    {
+      for (auto &r : m_requirements)
+      {
+        auto factory = r.getFactory();
+        if (factory && (r.getType() == Requirement::ENTITY ||
+                        r.getType() == Requirement::ENTITY_LIST))
+        {
+            registerFactory(r.getName(), factory);
+        }
+      }
+    }
+
+    
+    // For testing
+    void clear()
+    {
+      m_stringFactory.clear();
+      m_regexFactory.clear();
+    }
     
   protected:
     Requirements m_requirements;
     Function m_function;
+    
+    StringFactory m_stringFactory;
+    RegexFactory m_regexFactory;
   };
 
-  class EntityFactory
+  
+  // Inlines
+  inline Requirement::Requirement(const Requirement &o)
+  : m_name(o.m_name), m_upperMultiplicity(o.m_upperMultiplicity),
+    m_lowerMultiplicity(o.m_lowerMultiplicity), m_type(o.m_type),
+    m_factory(o.m_factory)
   {
-  public:
-    using RegexPair = std::pair<std::regex, Factory>;
-    EntityFactory() = delete;
-
-    static bool registerFactory(const std::string &name, const Factory &factory)
-    {
-      if (!m_stringFactory)
-        createFactories();
-      m_stringFactory->emplace(make_pair(name, factory));
-      return true;
-    }
-    static bool registerFactory(const std::regex &exp, const Factory &factory)
-    {
-      if (!m_regexFactory)
-        createFactories();
-      m_regexFactory->emplace_back(make_pair(exp, factory));
-      return true;
-    }
+  }
+  
+  inline Requirement::Requirement(const std::string &name, Type type, EntityFactoryPtr &f,
+                                  bool required)
+  : m_name(name), m_type(type), m_upperMultiplicity(1),
+    m_lowerMultiplicity(required ? 1 : 0)
+  {
+    if (type == ENTITY_LIST)
+      m_upperMultiplicity = Infinite;
+    m_factory = f;
+  }
+ 
+  
+  inline bool Requirement::isMetBy(const Value &value) const
+  {
+    if (value.index() != m_type)
+      return false;
     
-    inline static std::shared_ptr<Entity> create(const std::string name, Entity::Properties &a)
+    if (std::holds_alternative<std::string>(value) &&
+        std::get<std::string>(value).empty())
+      return false;
+    
+    if ((m_type == ENTITY || m_type == ENTITY_LIST) && !m_factory)
+      return false;
+    
+    if (m_type == ENTITY)
     {
-      if (m_stringFactory)
+      const auto &e = std::get<EntityPtr>(value);
+      return e->getName() == m_name;
+    }
+    else if (m_type == ENTITY_LIST)
+    {
+      const auto &l = std::get<EntityList>(value);
+      for (const auto &e : l)
       {
-        const auto it = m_stringFactory->find(name);
-        if (it != m_stringFactory->end())
-          return it->second(name, a);
-        else
-        {
-          for (const auto &r : *m_regexFactory)
-          {
-            if (std::regex_match(name, r.first))
-              return r.second(name, a);
-          }
-        }
+        const auto &f = m_factory->factoryFor(e->getName());
+        if (!f)
+          return false;
       }
-      return nullptr;
     }
-    
-    // For testing
-    static void clear()
-    {
-      m_stringFactory->clear();
-      m_regexFactory->clear();
-    }
-    
-  protected:
-    static void createFactories();
-    
-  protected:
-    static std::unique_ptr<std::map<std::string, Factory>> m_stringFactory;
-    static std::unique_ptr<std::list<RegexPair>> m_regexFactory;
-  };
+
+    return true;
+  }
 
 }

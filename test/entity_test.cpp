@@ -37,7 +37,6 @@ class EntityTest : public testing::Test
 
   void TearDown() override
   {
-    EntityFactory::clear();
     m_agent.reset();
     m_agentTestHelper.reset();
   }
@@ -52,18 +51,70 @@ class EntityTest : public testing::Test
 
 TEST_F(EntityTest, TestSimpleFactory)
 {
-  EntityFactory::registerFactory(string("simple"),
-                                 Factory({ Requirement("name", true ),
-                                           Requirement("id", true),
-                                           Requirement("size", false, Requirement::INTEGER) } ));
+  EntityFactoryPtr root = make_shared<EntityFactory>();
+  EntityFactoryPtr simpleFact = make_shared<EntityFactory>(Requirements({
+    Requirement("name", true ),
+    Requirement("id", true),
+    Requirement("size", false, Requirement::INTEGER) }));
+  root->registerFactory("simple", simpleFact);
 
   Entity::Properties simple { { "id", "abc" }, { "name", "xxx" }, {"size", 10 }};
   
-  auto entity = EntityFactory::create("simple", simple);
+  auto entity = root->create("simple", simple);
   ASSERT_TRUE(entity);
   ASSERT_EQ(3, entity->getProperties().size());
   ASSERT_EQ("simple", entity->getName());
   ASSERT_EQ("abc", get<std::string>(entity->getProperty("id")));
   ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
   ASSERT_EQ(10, get<int>(entity->getProperty("size")));
+}
+
+TEST_F(EntityTest, TestSimpleTwoLevelFactory)
+{
+  auto root = make_shared<EntityFactory>();
+  
+  auto second = make_shared<EntityFactory>(Requirements({
+    Requirement("key", true ),
+    Requirement("value", true) }));
+  
+  auto simple = make_shared<EntityFactory>(Requirements{
+    Requirement("name", true ),
+    Requirement("id", true),
+    Requirement("size", false, Requirement::INTEGER),
+    Requirement("second", Requirement::ENTITY, second)
+  });
+  root->registerFactory("simple",  simple);
+  
+  auto fact = root->factoryFor("simple");
+  ASSERT_TRUE(fact);
+  
+  auto sfact = fact->factoryFor("second");
+  ASSERT_TRUE(sfact);
+  
+  Entity::Properties sndp { {"key", "1" }, {"value", "arf"}};
+  auto se = fact->create("second", sndp);
+  ASSERT_TRUE(se);
+  ASSERT_EQ(2, se->getProperties().size());
+  ASSERT_EQ("1", get<std::string>(se->getProperty("key")));
+  ASSERT_EQ("arf", get<std::string>(se->getProperty("value")));
+
+  Entity::Properties simpp {
+    { "id", "abc" }, { "name", "xxx" }, {"size", 10 },
+    { "second", se }
+  };
+  
+  auto entity = root->create("simple", simpp);
+  ASSERT_TRUE(entity);
+  ASSERT_EQ(4, entity->getProperties().size());
+  ASSERT_EQ("simple", entity->getName());
+  ASSERT_EQ("abc", get<std::string>(entity->getProperty("id")));
+  ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
+  ASSERT_EQ(10, get<int>(entity->getProperty("size")));
+  
+  auto v = get<EntityPtr>(entity->getProperty("second"));
+  ASSERT_TRUE(v);
+  ASSERT_EQ(2, v->getProperties().size());
+  ASSERT_EQ("1", get<std::string>(v->getProperty("key")));
+  ASSERT_EQ("arf", get<std::string>(v->getProperty("value")));
+
 }
