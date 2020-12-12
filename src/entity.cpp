@@ -16,11 +16,19 @@
 //
 
 #include "entity.hpp"
+#include <dlib/logger.h>
 
 using namespace std;
 
 namespace mtconnect
 {
-  
+  namespace entity {
+    static dlib::logger g_logger("Entity");
+ 
+    void Factory::LogError(const std::string &what)
+    {
+      g_logger << dlib::LWARN << what;
+    }
+  }
 }
 
