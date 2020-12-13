@@ -32,6 +32,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity.cpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity_parser.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity_parser.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/file_asset.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/file_asset.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry.hpp"

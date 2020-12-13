@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "asset.hpp"
 #include "globals.hpp"
 #include "entity.hpp"
 
@@ -27,15 +26,4 @@
 
 namespace mtconnect
 {
-  class FileArchetypeAsset : public entity::Entity
-  {
-  public:
-    static entity::EntityFactoryPtr getFactory();
-  };
-  
-  class FileAsset : public FileArchetypeAsset
-  {
-  public:
-    static entity::EntityFactoryPtr getFactory();
-  };
 }
