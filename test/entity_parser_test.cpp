@@ -4,7 +4,6 @@
 
 #include "adapter.hpp"
 #include "agent.hpp"
-#include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 #include "entity_parser.hpp"
 
@@ -25,27 +24,81 @@ class EntityParserTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/solid_model.xml", 4, 4, "1.7");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-
-    m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
-    m_device = m_agent->getDeviceByName("LinuxCNC");
-    
-    
   }
 
   void TearDown() override
   {
-    m_agent.reset();
-    m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Agent> m_agent;
-  std::string m_agentId;
-  Device *m_device{nullptr};
-
-  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
+TEST_F(EntityParserTest, TestParseSimpleDocument)
+{
+  auto fileProperty = make_shared<Factory>(Requirements({
+    Requirement("name", true ),
+    Requirement("value", true) }));
+  
+  auto fileProperties = make_shared<Factory>(Requirements({
+    Requirement("FileProperty", Requirement::ENTITY, fileProperty) }));
+  
+  auto fileComment = make_shared<Factory>(Requirements({
+    Requirement("timestamp", true ),
+    Requirement("value", true) }));
+  
+  auto fileComments = make_shared<Factory>(Requirements({
+    Requirement("FileComment", Requirement::ENTITY, fileComment) }));
+  
+  auto fileArchetype = make_shared<Factory>(Requirements{
+    Requirement("assetId", true ),
+    Requirement("deviceUuid", true ),
+    Requirement("timestamp", true ),
+    Requirement("removed", false ),
+    Requirement("name", true ),
+    Requirement("mediaTyep", true),
+    Requirement("applicationCategory", true),
+    Requirement("applicationType", true),
+    Requirement("FileComments", Requirement::ENTITY_LIST, fileComments, false),
+    Requirement("FileProperties", Requirement::ENTITY_LIST, fileProperties, false)
+  });
+  
+  auto root = make_shared<Factory>(Requirements{
+    Requirement("FileArchetype", Requirement::ENTITY, fileArchetype)
+  });
+
+  auto doc = string {
+    "<FileArchetype name='xxxx' assetId='uuid' timesamp='2020-12-01T10:00Z' \n"
+    "     mediaType='json' applicationCategory='ASSEMBLY' applicationType='DATA' >\n"
+    "  <FileProperties>\n"
+    "    <FileProperty name='one'>Round</FileProperty>\n"
+    "    <FileProperty name='two'>Flat</FileProperty>\n"
+    "  </FileProperties>\n"
+    "</FileArchetype>"
+  };
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  ASSERT_EQ("FileArchetype", entity->getName());
+  ASSERT_EQ("xxx", get<string>(entity->getProperty("name")));
+  ASSERT_EQ("uuid", get<string>(entity->getProperty("assetId")));
+  ASSERT_EQ("2020-12-01T10:00Z", get<string>(entity->getProperty("timestamp")));
+  ASSERT_EQ("json", get<string>(entity->getProperty("mediaType")));
+  ASSERT_EQ("ASSEMBLY", get<string>(entity->getProperty("applicationCategory")));
+  ASSERT_EQ("DATA", get<string>(entity->getProperty("applicationType")));
+
+  auto &fps = get<EntityList>(entity->getProperty("FileProperties"));
+  ASSERT_EQ(2, fps.size());
+  
+  auto it = fps.begin();
+  ASSERT_EQ("FileProperty", (*it)->getName());
+  ASSERT_EQ("one", get<string>((*it)->getProperty("name")));
+  ASSERT_EQ("Round", get<string>((*it)->getProperty("value")));
+  
+  it++;
+  ASSERT_EQ("FileProperty", (*it)->getName());
+  ASSERT_EQ("two", get<string>((*it)->getProperty("name")));
+  ASSERT_EQ("Flat", get<string>((*it)->getProperty("value")));
+}

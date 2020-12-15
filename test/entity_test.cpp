@@ -52,8 +52,8 @@ class EntityTest : public testing::Test
 
 TEST_F(EntityTest, TestSimpleFactory)
 {
-  EntityFactoryPtr root = make_shared<Factory>();
-  EntityFactoryPtr simpleFact = make_shared<Factory>(Requirements({
+  FactoryPtr root = make_shared<Factory>();
+  FactoryPtr simpleFact = make_shared<Factory>(Requirements({
     Requirement("name", true ),
     Requirement("id", true),
     Requirement("size", false, Requirement::INTEGER) }));
@@ -129,7 +129,8 @@ TEST_F(EntityTest, TestSimpleEntityList)
     Requirement("value", true) }));
   
   auto seconds = make_shared<Factory>(Requirements({
-    Requirement("second", Requirement::ENTITY, second) }));
+    Requirement("second", Requirement::ENTITY, second,
+                1, Requirement::Infinite) }));
 
   auto simple = make_shared<Factory>(Requirements{
     Requirement("name", true ),
@@ -144,6 +145,7 @@ TEST_F(EntityTest, TestSimpleEntityList)
   
   auto secondsFact = fact->factoryFor("seconds");
   ASSERT_TRUE(secondsFact);
+  ASSERT_TRUE(secondsFact->isList());
 
   auto secondFact = secondsFact->factoryFor("second");
   ASSERT_TRUE(secondFact);
@@ -163,10 +165,12 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_EQ("meow", get<std::string>(se2->getProperty("value")));
   
   EntityList list { se1, se2 };
+  Properties sndp3 { { "value", list } };
+  auto se3 = fact->create("seconds", sndp3);
   
   Properties simpp {
     { "id", "abc" }, { "name", "xxx" }, {"size", 10 },
-    { "seconds", list }
+    { "seconds", se3 }
   };
   
   auto entity = root->create("simple", simpp);
@@ -177,17 +181,19 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
   ASSERT_EQ(10, get<int>(entity->getProperty("size")));
   
-  auto &l = get<EntityList>(entity->getProperty("seconds"));
-  ASSERT_EQ(2, l.size());
+  auto l = entity->getList("seconds");
+  
+  ASSERT_TRUE(l);
+  ASSERT_EQ(2, l->size());
 
-  auto it = l.begin();
-  ASSERT_NE(l.end(), it);
+  auto it = l->begin();
+  ASSERT_NE(l->end(), it);
   ASSERT_EQ(2, (*it)->getProperties().size());
   ASSERT_EQ("1", get<std::string>((*it)->getProperty("key")));
   ASSERT_EQ("arf", get<std::string>((*it)->getProperty("value")));
   
   it++;
-  ASSERT_NE(l.end(), it);
+  ASSERT_NE(l->end(), it);
   ASSERT_EQ(2, (*it)->getProperties().size());
   ASSERT_EQ("2", get<std::string>((*it)->getProperty("key")));
   ASSERT_EQ("meow", get<std::string>((*it)->getProperty("value")));
@@ -195,8 +201,8 @@ TEST_F(EntityTest, TestSimpleEntityList)
 
 TEST_F(EntityTest, MissingProperty)
 {
-  EntityFactoryPtr root = make_shared<Factory>();
-  EntityFactoryPtr simpleFact = make_shared<Factory>(Requirements({
+  FactoryPtr root = make_shared<Factory>();
+  FactoryPtr simpleFact = make_shared<Factory>(Requirements({
     Requirement("name", true ),
     Requirement("id", true),
     Requirement("size", false, Requirement::INTEGER) }));
@@ -215,8 +221,8 @@ TEST_F(EntityTest, MissingProperty)
 
 TEST_F(EntityTest, MissingOptionalProperty)
 {
-  EntityFactoryPtr root = make_shared<Factory>();
-  EntityFactoryPtr simpleFact = make_shared<Factory>(Requirements({
+  FactoryPtr root = make_shared<Factory>();
+  FactoryPtr simpleFact = make_shared<Factory>(Requirements({
     Requirement("name", true ),
     Requirement("id", true),
     Requirement("size", false, Requirement::INTEGER) }));
@@ -237,8 +243,8 @@ TEST_F(EntityTest, MissingOptionalProperty)
 
 TEST_F(EntityTest, UnexpectedProperty)
 {
-  EntityFactoryPtr root = make_shared<Factory>();
-  EntityFactoryPtr simpleFact = make_shared<Factory>(Requirements({
+  FactoryPtr root = make_shared<Factory>();
+  FactoryPtr simpleFact = make_shared<Factory>(Requirements({
     Requirement("name", true ),
     Requirement("id", true),
     Requirement("size", false, Requirement::INTEGER) }));

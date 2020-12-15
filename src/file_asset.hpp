@@ -30,12 +30,12 @@ namespace mtconnect
   class FileArchetypeAsset : public entity::Entity
   {
   public:
-    static entity::EntityFactoryPtr getFactory();
+    static entity::FactoryPtr getFactory();
   };
   
   class FileAsset : public FileArchetypeAsset
   {
   public:
-    static entity::EntityFactoryPtr getFactory();
+    static entity::FactoryPtr getFactory();
   };
 }

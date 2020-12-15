@@ -26,4 +26,22 @@
 
 namespace mtconnect
 {
+  namespace entity
+  {
+    class XmlParser
+    {
+    public:
+      XmlParser() = default;
+      ~XmlParser() = default;
+      
+      EntityPtr parse(FactoryPtr factory,
+                       const std::string &document,
+                       const std::string &version,
+                       ErrorList &errors);
+      EntityPtr parseFile(FactoryPtr factory,
+                           const std::string &path,
+                           ErrorList &errors);
+      
+    };
+  }
 }

@@ -22,7 +22,7 @@ namespace mtconnect
   using namespace entity;
   using namespace std;
   
-  EntityFactoryPtr FileArchetypeAsset::getFactory()
+  FactoryPtr FileArchetypeAsset::getFactory()
   {
     static auto root = make_shared<Factory>();
     
@@ -41,18 +41,22 @@ namespace mtconnect
       Requirement("FileComment", Requirement::ENTITY, fileComment) }));
 
     static auto fileArchetype = make_shared<Factory>(Requirements{
+      Requirement("assetId", true ),
+      Requirement("deviceUuid", true ),
+      Requirement("timestamp", true ),
+      Requirement("removed", false ),
       Requirement("name", true ),
       Requirement("mediaTyep", true),
       Requirement("applicationCategory", true),
       Requirement("applicationType", true),
-      Requirement("FileComments", Requirement::ENTITY_LIST, fileComments),
-      Requirement("FileProperties", Requirement::ENTITY_LIST, fileProperties)
+      Requirement("FileComments", Requirement::ENTITY_LIST, fileComments, false),
+      Requirement("FileProperties", Requirement::ENTITY_LIST, fileProperties, false)
     });
 
     return fileArchetype;
   }
   
-  EntityFactoryPtr FileAsset::getFactory()
+  FactoryPtr FileAsset::getFactory()
   {
     static auto file = make_shared<Factory>(*FileArchetypeAsset::getFactory());
     
@@ -73,10 +77,10 @@ namespace mtconnect
       Requirement("verisionId", Requirement::STRING),
       Requirement("state", Requirement::STRING),
       Requirement("FileLocation", Requirement::ENTITY, fileLocation),
-      Requirement("Signature", Requirement::ENTITY, value),
-      Requirement("PublicKey", Requirement::ENTITY, value),
+      Requirement("Signature", Requirement::ENTITY, value, false),
+      Requirement("PublicKey", Requirement::ENTITY, value, false),
       Requirement("CreationTime", Requirement::ENTITY, value),
-      Requirement("ModificationTime", Requirement::ENTITY, value),
+      Requirement("ModificationTime", Requirement::ENTITY, value, false),
       Requirement("Destinations", Requirement::ENTITY_LIST, destinations)
     }));
     
