@@ -39,14 +39,16 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
     Requirement("value", true) }));
   
   auto fileProperties = make_shared<Factory>(Requirements({
-    Requirement("FileProperty", Requirement::ENTITY, fileProperty) }));
+    Requirement("FileProperty", Requirement::ENTITY, fileProperty,
+                1, Requirement::Infinite) }));
   
   auto fileComment = make_shared<Factory>(Requirements({
     Requirement("timestamp", true ),
     Requirement("value", true) }));
   
   auto fileComments = make_shared<Factory>(Requirements({
-    Requirement("FileComment", Requirement::ENTITY, fileComment) }));
+    Requirement("FileComment", Requirement::ENTITY, fileComment,
+                1, Requirement::Infinite) }));
   
   auto fileArchetype = make_shared<Factory>(Requirements{
     Requirement("assetId", true ),
@@ -54,7 +56,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
     Requirement("timestamp", true ),
     Requirement("removed", false ),
     Requirement("name", true ),
-    Requirement("mediaTyep", true),
+    Requirement("mediaType", true),
     Requirement("applicationCategory", true),
     Requirement("applicationType", true),
     Requirement("FileComments", Requirement::ENTITY_LIST, fileComments, false),
@@ -66,7 +68,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   });
 
   auto doc = string {
-    "<FileArchetype name='xxxx' assetId='uuid' timesamp='2020-12-01T10:00Z' \n"
+    "<FileArchetype name='xxxx' assetId='uuid' deviceUuid='duid' timestamp='2020-12-01T10:00Z' \n"
     "     mediaType='json' applicationCategory='ASSEMBLY' applicationType='DATA' >\n"
     "  <FileProperties>\n"
     "    <FileProperty name='one'>Round</FileProperty>\n"
@@ -82,17 +84,18 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   ASSERT_EQ(0, errors.size());
   
   ASSERT_EQ("FileArchetype", entity->getName());
-  ASSERT_EQ("xxx", get<string>(entity->getProperty("name")));
+  ASSERT_EQ("xxxx", get<string>(entity->getProperty("name")));
   ASSERT_EQ("uuid", get<string>(entity->getProperty("assetId")));
   ASSERT_EQ("2020-12-01T10:00Z", get<string>(entity->getProperty("timestamp")));
   ASSERT_EQ("json", get<string>(entity->getProperty("mediaType")));
   ASSERT_EQ("ASSEMBLY", get<string>(entity->getProperty("applicationCategory")));
   ASSERT_EQ("DATA", get<string>(entity->getProperty("applicationType")));
 
-  auto &fps = get<EntityList>(entity->getProperty("FileProperties"));
-  ASSERT_EQ(2, fps.size());
+  auto fps = entity->getList("FileProperties");
+  ASSERT_TRUE(fps);
+  ASSERT_EQ(2, fps->size());
   
-  auto it = fps.begin();
+  auto it = fps->begin();
   ASSERT_EQ("FileProperty", (*it)->getName());
   ASSERT_EQ("one", get<string>((*it)->getProperty("name")));
   ASSERT_EQ("Round", get<string>((*it)->getProperty("value")));

@@ -58,14 +58,8 @@ namespace mtconnect
       
       g_logger << dlib::LERROR << "XML: " << buffer;
     }
-    
-    EntityPtr parseXmlEntity(FactoryPtr factory, xmlNodePtr node, ErrorList &errors)
-    {
-      
-    }
-    
-    
-    static Value parseXmlNode(FactoryPtr factory, xmlNodePtr node,
+        
+    static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node,
                             ErrorList &errors)
     {
       string qname((const char*) node->name);
@@ -80,7 +74,11 @@ namespace mtconnect
       if (ef)
       {
         Properties properties;
-        EntityList list;
+        EntityList *l { nullptr };
+        if (ef->isList())
+        {
+          l = &properties["value"].emplace<EntityList>();
+        }
         
         for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
         {
@@ -98,12 +96,11 @@ namespace mtconnect
             auto ent = parseXmlNode(ef, child, errors);
             if (ef->isList())
             {
-              //list.emplace_back(ent);
+              l->emplace_back(ent);
             }
             else
             {
-              auto e = get<EntityPtr>(ent);
-              properties.insert({ e->getName(), ent });
+              properties.insert({ ent->getName(), ent });
             }
           }
           else if (child->type == XML_TEXT_NODE)
@@ -114,15 +111,8 @@ namespace mtconnect
           }
         }
         
-        if (ef->isList())
-        {
-          return list;
-        }
-        else
-        {
-          auto entity = ef->make(qname, properties, errors);
-          return entity;
-        }
+        auto entity = ef->make(qname, properties, errors);
+        return entity;
       }
       else
       {
@@ -151,7 +141,7 @@ namespace mtconnect
                                                                XML_PARSE_NOBLANKS),
                                                         [](xmlDocPtr d){ xmlFreeDoc(d); });
         xmlNodePtr root = xmlDocGetRootElement(doc.get());
-        //entity = parseXmlNode(factory, root, errors);
+        entity = parseXmlNode(factory, root, errors);
       }
       
       catch (PropertyError e)
