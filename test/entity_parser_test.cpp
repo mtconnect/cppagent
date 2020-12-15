@@ -5,7 +5,7 @@
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "json_helper.hpp"
-#include "entity_parser.hpp"
+#include "entity/parser.hpp"
 
 #include <cstdio>
 #include <fstream>

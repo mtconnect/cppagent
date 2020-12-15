@@ -15,20 +15,35 @@
 //    limitations under the License.
 //
 
-#include "entity.hpp"
-#include <dlib/logger.h>
+#pragma once
 
-using namespace std;
+#include "globals.hpp"
+#include "requirement.hpp"
+#include "entity.hpp"
+#include "factory.hpp"
+
+#include <map>
+#include <utility>
+#include <vector>
 
 namespace mtconnect
 {
-  namespace entity {
-    static dlib::logger g_logger("Entity");
- 
-    void Factory::LogError(const std::string &what)
+  namespace entity
+  {
+    class XmlParser
     {
-      g_logger << dlib::LWARN << what;
-    }
+    public:
+      XmlParser() = default;
+      ~XmlParser() = default;
+      
+      EntityPtr parse(FactoryPtr factory,
+                       const std::string &document,
+                       const std::string &version,
+                       ErrorList &errors);
+      EntityPtr parseFile(FactoryPtr factory,
+                           const std::string &path,
+                           ErrorList &errors);
+      
+    };
   }
 }
-

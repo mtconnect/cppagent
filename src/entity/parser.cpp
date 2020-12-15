@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "entity_parser.hpp"
+#include "entity/parser.hpp"
 
 #include <dlib/logger.h>
 
