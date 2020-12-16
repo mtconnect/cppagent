@@ -55,7 +55,7 @@ namespace mtconnect
           else
           {
             try {
-              if (!r.isMetBy(p->second))
+              if (!r.isMetBy(p->second, m_isList))
               {
                 return false;
               }

@@ -38,9 +38,11 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
     Requirement("name", true ),
     Requirement("value", true) }));
   
-  auto fileProperties = make_shared<Factory>(Requirements({
+  auto fileProperties = make_shared<Factory>(Requirements({
     Requirement("FileProperty", Requirement::ENTITY, fileProperty,
                 1, Requirement::Infinite) }));
+  auto r = fileProperties->getRequirement("FileProperty");
+  r->setMatcher(fileProprties);
   
   auto fileComment = make_shared<Factory>(Requirements({
     Requirement("timestamp", true ),

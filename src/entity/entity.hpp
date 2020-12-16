@@ -24,6 +24,7 @@ namespace mtconnect
   namespace entity
   {
     using ErrorList = std::list<PropertyError>;
+    using Properties = std::map<std::string, Value>;
 
     class Entity
     {

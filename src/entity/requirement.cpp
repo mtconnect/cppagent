@@ -27,25 +27,56 @@ namespace mtconnect
   namespace entity {
     static dlib::logger g_logger("EntityRequirement");
 
-    bool Requirement::isMetBy(const Value &value) const
+    bool Requirement::isMetBy(const Value &value, bool isList) const
     {
       // Is this a multiple entry
-      if (m_upperMultiplicity > 1 && value.index() == ENTITY_LIST)
+      if ((m_type == ENTITY || m_type == ENTITY_LIST))
       {
-        const auto &l = std::get<EntityList>(value);
-        for (const auto &e : l)
+        if (!m_factory)
         {
-          if ((m_isPattern && !matches(e->getName())) ||
-              (!m_isPattern && m_name != e->getName()))
+          throw PropertyRequirementError("For entity or list requirement " + m_name + ", no factory");
+        }
+        if (holds_alternative<EntityPtr>(value))
+        {
+          const auto e = get<EntityPtr>(value);
+          if (!matches(e->getName()))
+          {
+            throw PropertyRequirementError("Requirement " + m_name +
+                                           " does not have a matching entity name: " +
+                                           e->getName());
+          }
+        }
+        else if (holds_alternative<EntityList>(value))
+        {
+          const auto l = std::get<EntityList>(value);
+          if (l.size() > m_upperMultiplicity || l.size() < m_lowerMultiplicity)
           {
             throw PropertyRequirementError("Entity list requirement " + m_name +
-                                           " does not match requirement with name " + e->getName());
+                                           " must have at least " +
+                                           to_string(m_lowerMultiplicity) +
+                                           " and no more than " +
+                                           to_string(m_upperMultiplicity) +
+                                           "entries, " + to_string(l.size()) +
+                                           " found");
           }
+          for (const auto &e : l)
+          {
+            if (!matches(e->getName()))
+            {
+              throw PropertyRequirementError("Entity list requirement " + m_name +
+                                             " does not match requirement with name " + e->getName());
+            }
+          }
+        }
+        else
+        {
+          throw PropertyRequirementError("Entity or list requirement " + m_name +
+                                         " does not have correct type");
         }
       }
       else
       {
-        if (value.index() != m_type && (m_type == ENTITY_LIST && value.index() != ENTITY))
+        if (value.index() != m_type)
         {
           throw PropertyTypeError("Incorrect type for property " + m_name);
         }
@@ -54,25 +85,8 @@ namespace mtconnect
         {
           throw PropertyRequirementError("Value of " + m_name + " is empty");
         }
-        
-        if (m_type == ENTITY || m_type == ENTITY_LIST)
-        {
-          if (!m_factory)
-          {
-            throw PropertyRequirementError("For entity or list requirement " + m_name + ", no factory");
-          }
-        
-          if (m_type == ENTITY)
-          {
-            const auto &e = std::get<EntityPtr>(value);
-            if (e->getName() != m_name)
-              throw PropertyRequirementError("Requirement " + m_name +
-                                             " does not have a matching entity name: " +
-                                             e->getName());
-
-          }
-        }
       }
+      
       return true;
     }
     
@@ -97,29 +111,6 @@ namespace mtconnect
       }
       m_factory = f;
     }
-    Requirement::Requirement(const std::string &name, const std::regex &pattern,
-                                    Type type, FactoryPtr &f, bool required)
-    : m_pattern(pattern), m_type(type), m_upperMultiplicity(1),
-    m_lowerMultiplicity(required ? 1 : 0), m_isPattern(true)
-    {
-      if (type == ENTITY_LIST)
-      {
-        f->setList(true);
-      }
-      m_factory = f;
-    }
-    Requirement::Requirement(const std::string &name, const std::regex &pattern,
-                                    Type type, FactoryPtr &f, int lower, int upper)
-    : m_pattern(name), m_type(type), m_upperMultiplicity(upper), m_lowerMultiplicity(lower),
-    m_name(name)
-    {
-      if (type == ENTITY_LIST)
-      {
-        f->setList(true);
-      }
-      m_factory = f;
-    }
-
   }
 }
 

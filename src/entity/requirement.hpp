@@ -46,7 +46,6 @@ namespace mtconnect
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Value = std::variant<EntityPtr, EntityList, std::string, int, double,nullptr_t>;
     using FactoryPtr = std::shared_ptr<Factory>;
-    using Properties = std::map<std::string, Value>;
 
     class PropertyError : public std::logic_error
     {
@@ -75,6 +74,13 @@ namespace mtconnect
     };
     
     using ErrorList = std::list<PropertyError>;
+    
+    struct Matcher
+    {
+      virtual bool matches(const std::string &s) const = 0;
+    };
+    
+    using MatcherPtr = std::weak_ptr<Matcher>;
 
     class Requirement
     {
@@ -110,11 +116,6 @@ namespace mtconnect
                   bool required = true);
       Requirement(const std::string &name, Type type, FactoryPtr &o,
                   int lower, int upper);
-      Requirement(const std::string &name, const std::regex &p, Type type, FactoryPtr &o,
-                  bool required = true);
-      Requirement(const std::string &name, const std::regex &p, Type type, FactoryPtr &o,
-                  int lower, int upper);
-
       
       Requirement() = default;
       Requirement(const Requirement &o) = default;
@@ -124,25 +125,36 @@ namespace mtconnect
       bool isOptional() const { return !isRequired(); }
       int getUpperMultiplicity() const { return m_upperMultiplicity; }
       int getLowerMultiplicity() const { return m_lowerMultiplicity; }
-      const auto &getPattern() const { return m_pattern; }
+      const auto &getPattern() const { return m_matcher; }
+      void setMatcher(MatcherPtr m)
+      {
+        m_matcher = m;
+      }
       const std::string &getName() const { return m_name; }
       Type getType() const { return m_type; }
       auto &getFactory() { return m_factory; }
             
       bool isPattern() const { return m_isPattern; }
-      bool isMetBy(const Value &value) const;
+      bool isMetBy(const Value &value, bool isList) const;
       bool matches(const std::string &s) const
       {
-        return std::regex_match(s, m_pattern);
+        if (auto m = m_matcher.lock())
+        {
+          return m->matches(s);
+        }
+        else
+        {
+          return m_name == s;
+        }
       }
       
     protected:
-      std::regex m_pattern;
       bool m_isPattern { false };
       std::string m_name;
       int m_upperMultiplicity;
       int m_lowerMultiplicity;
       Type m_type;
+      MatcherPtr m_matcher;
       FactoryPtr m_factory;
     };
 

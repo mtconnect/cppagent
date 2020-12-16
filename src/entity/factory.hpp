@@ -26,7 +26,7 @@ namespace mtconnect
     using ErrorList = std::list<PropertyError>;
     using Requirements = std::list<Requirement>;
 
-    class Factory
+    class Factory : public Matcher
     {
     public:
       using Function = std::function<std::shared_ptr<Entity>(const std::string &name,
@@ -61,6 +61,15 @@ namespace mtconnect
       void setList(bool list) { m_isList = list; }
       bool isList() const { return m_isList; }
       
+      Requirement* getRequirement(const std::string &name)
+      {
+        for (auto &r : m_requirements)
+        {
+          if (r.getName() == name)
+            return &r;
+        }
+        return nullptr;
+      }
       void addRequirements(const Requirements &reqs)
       {
         for (const auto &r : reqs)
@@ -104,7 +113,7 @@ namespace mtconnect
         return true;
       }
       
-      FactoryPtr factoryFor(const std::string &name)
+      FactoryPtr factoryFor(const std::string &name) const
       {
         const auto it = m_stringFactory.find(name);
         if (it != m_stringFactory.end())
@@ -119,6 +128,12 @@ namespace mtconnect
         }
         
         return nullptr;
+      }
+      
+      bool matches(const std::string &s) const override
+      {
+        auto f = factoryFor(s);
+        return (bool) f;
       }
       
       EntityPtr operator()(const std::string &name,
@@ -151,7 +166,7 @@ namespace mtconnect
           if (factory && (r.getType() == Requirement::ENTITY ||
                           r.getType() == Requirement::ENTITY_LIST))
           {
-              registerFactory(r.getName(), factory);
+            registerFactory(r.getName(), factory);
           }
         }
       }

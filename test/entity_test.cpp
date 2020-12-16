@@ -270,9 +270,12 @@ TEST_F(EntityTest, EntityListAnyEntities)
     Requirement("value", true) }));
   
   auto seconds = make_shared<Factory>(Requirements({
-    Requirement("something", Requirement::ENTITY, second) }));
+    Requirement("something", Requirement::ENTITY, second,
+                1, Requirement::Infinite) }));
   seconds->registerFactory(regex(".+"), second);
-    
+  auto r = seconds->getRequirement("something");
+  r->setMatcher(seconds);
+
   auto simple = make_shared<Factory>(Requirements{
     Requirement("name", true ),
     Requirement("id", true),
@@ -309,10 +312,14 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_EQ("meow", get<std::string>(se2->getProperty("value")));
   
   EntityList list { se1, se2 };
+  Properties sndp3 { { "value", list } };
+  auto se3 = fact->create("seconds", sndp3, errors);
+  ASSERT_EQ(0, errors.size());
+  ASSERT_TRUE(se3);
   
   Properties simpp {
     { "id", "abc" }, { "name", "xxx" }, {"size", 10 },
-    { "seconds", list }
+    { "seconds", se3 }
   };
   
   auto entity = root->create("simple", simpp, errors);
@@ -324,18 +331,18 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
   ASSERT_EQ(10, get<int>(entity->getProperty("size")));
   
-  auto &l = get<EntityList>(entity->getProperty("seconds"));
-  ASSERT_EQ(2, l.size());
+  auto l = entity->getList("seconds");
+  ASSERT_EQ(2, l->size());
   
-  auto it = l.begin();
-  ASSERT_NE(l.end(), it);
+  auto it = l->begin();
+  ASSERT_NE(l->end(), it);
   ASSERT_EQ(2, (*it)->getProperties().size());
   ASSERT_EQ("dog", (*it)->getName());
   ASSERT_EQ("1", get<std::string>((*it)->getProperty("key")));
   ASSERT_EQ("arf", get<std::string>((*it)->getProperty("value")));
   
   it++;
-  ASSERT_NE(l.end(), it);
+  ASSERT_NE(l->end(), it);
   ASSERT_EQ(2, (*it)->getProperties().size());
   ASSERT_EQ("cat", (*it)->getName());
   ASSERT_EQ("2", get<std::string>((*it)->getProperty("key")));
