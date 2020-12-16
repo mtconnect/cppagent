@@ -25,8 +25,8 @@ namespace mtconnect
   {
     using ErrorList = std::list<PropertyError>;
     using Requirements = std::list<Requirement>;
-
-    class Factory : public Matcher
+    
+    class Factory : public Matcher, public std::enable_shared_from_this<Factory>
     {
     public:
       using Function = std::function<std::shared_ptr<Entity>(const std::string &name,
@@ -34,9 +34,9 @@ namespace mtconnect
       using RegexPair = std::pair<std::regex, FactoryPtr>;
       using StringFactory = std::map<std::string, FactoryPtr>;
       using RegexFactory = std::list<RegexPair>;
-
+      
     public:
-
+      
       // Factory Methods
       static auto createEntity(const std::string &name,
                                Properties &p)
@@ -58,6 +58,10 @@ namespace mtconnect
         registerEntityRequirements();
       }
       
+      std::shared_ptr<Factory> getptr() {
+        return shared_from_this();
+      }
+      
       void setList(bool list) { m_isList = list; }
       bool isList() const { return m_isList; }
       
@@ -70,12 +74,14 @@ namespace mtconnect
         }
         return nullptr;
       }
+      
       void addRequirements(const Requirements &reqs)
       {
         for (const auto &r : reqs)
           m_requirements.emplace_back(r);
         registerEntityRequirements();
       }
+      
       void setFunction(Function f)
       {
         m_function = f;
@@ -167,6 +173,18 @@ namespace mtconnect
                           r.getType() == Requirement::ENTITY_LIST))
           {
             registerFactory(r.getName(), factory);
+          }
+        }
+      }
+      
+      void registerMatchers()
+      {
+        for (auto &r : m_requirements)
+        {
+          if (r.getUpperMultiplicity() > 1 && !r.hasMatcher())
+          {
+            auto m = getptr();
+            r.setMatcher(m);
           }
         }
       }

@@ -26,7 +26,7 @@ namespace mtconnect
     using ErrorList = std::list<PropertyError>;
     using Properties = std::map<std::string, Value>;
 
-    class Entity
+    class Entity : public std::enable_shared_from_this<Entity>
     {
     public:
       Entity(const std::string &name, const Properties &props)
@@ -38,6 +38,10 @@ namespace mtconnect
       {
       }
       
+      std::shared_ptr<Entity> getptr() {
+        return shared_from_this();
+      }
+
       const std::string &getName() const { return m_name; }
       const Properties &getProperties() const
       {

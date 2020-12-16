@@ -131,6 +131,7 @@ TEST_F(EntityTest, TestSimpleEntityList)
   auto seconds = make_shared<Factory>(Requirements({
     Requirement("second", Requirement::ENTITY, second,
                 1, Requirement::Infinite) }));
+  seconds->registerMatchers();
 
   auto simple = make_shared<Factory>(Requirements{
     Requirement("name", true ),
@@ -273,8 +274,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
     Requirement("something", Requirement::ENTITY, second,
                 1, Requirement::Infinite) }));
   seconds->registerFactory(regex(".+"), second);
-  auto r = seconds->getRequirement("something");
-  r->setMatcher(seconds);
+  seconds->registerMatchers();
 
   auto simple = make_shared<Factory>(Requirements{
     Requirement("name", true ),

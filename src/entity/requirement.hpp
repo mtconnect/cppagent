@@ -125,7 +125,7 @@ namespace mtconnect
       bool isOptional() const { return !isRequired(); }
       int getUpperMultiplicity() const { return m_upperMultiplicity; }
       int getLowerMultiplicity() const { return m_lowerMultiplicity; }
-      const auto &getPattern() const { return m_matcher; }
+      const auto &getMatcher() const { return m_matcher; }
       void setMatcher(MatcherPtr m)
       {
         m_matcher = m;
@@ -134,7 +134,7 @@ namespace mtconnect
       Type getType() const { return m_type; }
       auto &getFactory() { return m_factory; }
             
-      bool isPattern() const { return m_isPattern; }
+      bool hasMatcher() const { return m_matcher.use_count() > 0; }
       bool isMetBy(const Value &value, bool isList) const;
       bool matches(const std::string &s) const
       {
@@ -149,7 +149,6 @@ namespace mtconnect
       }
       
     protected:
-      bool m_isPattern { false };
       std::string m_name;
       int m_upperMultiplicity;
       int m_lowerMultiplicity;
