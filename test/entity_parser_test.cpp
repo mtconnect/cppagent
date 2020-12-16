@@ -30,6 +30,37 @@ class EntityParserTest : public testing::Test
   void TearDown() override
   {
   }
+  
+  FactoryPtr components()
+  {
+    auto component = make_shared<Factory>(Requirements{
+      Requirement("id", true ),
+      Requirement("name", false ),
+      Requirement("uuid", false ),
+    });
+    
+    auto components = make_shared<Factory>(Requirements({
+      Requirement("Component", Requirement::ENTITY, component,
+                  1, Requirement::Infinite) }));
+    components->registerMatchers();
+    components->registerFactory(regex(".+"), component);
+    
+    component->addRequirements({
+      Requirement("Components", Requirement::ENTITY_LIST, components, false)
+    });
+    
+    auto device = make_shared<Factory>(*component);
+    device->addRequirements(Requirements{
+      Requirement("name", true ),
+      Requirement("uuid", true ),
+    });
+    
+    auto root = make_shared<Factory>(Requirements{
+      Requirement("Device", Requirement::ENTITY, device)
+    });
+
+    return root;
+  }
 
 };
 
@@ -111,31 +142,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
 
 TEST_F(EntityParserTest, TestRecursiveEntityLists)
 {
-  auto component = make_shared<Factory>(Requirements{
-    Requirement("id", true ),
-    Requirement("name", false ),
-    Requirement("uuid", false ),
-  });
-  
-  auto components = make_shared<Factory>(Requirements({
-    Requirement("Component", Requirement::ENTITY, component,
-                1, Requirement::Infinite) }));
-  components->registerMatchers();
-  components->registerFactory(regex(".+"), component);
-  
-  component->addRequirements({
-    Requirement("Components", Requirement::ENTITY_LIST, components, false)
-  });
-  
-  auto device = make_shared<Factory>(*component);
-  device->addRequirements(Requirements{
-    Requirement("name", true ),
-    Requirement("uuid", true ),
-  });
-  
-  auto root = make_shared<Factory>(Requirements{
-    Requirement("Device", Requirement::ENTITY, device)
-  });
+  auto root = components();
   
   auto doc = string {
     "<Device id='d1' name='foo' uuid='xxx'>\n"
@@ -182,4 +189,71 @@ TEST_F(EntityParserTest, TestRecursiveEntityLists)
   ASSERT_EQ("Heating", (*sli)->getName());
   ASSERT_EQ("h1", get<string>((*sli)->getProperty("id")));
 
+}
+
+TEST_F(EntityParserTest, TestRecursiveEntityListFailure)
+{
+  auto root = components();
+
+  auto doc = string {
+    "<Device id='d1' name='foo'>\n"
+    "  <Components>\n"
+    "    <Systems id='s1'>\n"
+    "       <Components>\n"
+    "         <Electric id='e1'/>\n"
+    "         <Heating id='h1'/>\n"
+    "       </Components>\n"
+    "    </Systems>\n"
+    "  </Components>\n"
+    "</Device>"
+  };
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_FALSE(entity);
+  ASSERT_EQ(string("Property uuid is required and not provided"),
+            errors.front().what());
+}
+
+TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
+{
+  auto root = components();
+  
+  auto doc = string {
+    "<Device id='d1' uuid='xxx' name='foo'>\n"
+    "  <Components>\n"
+    "    <Systems id='s1'>\n"
+    "       <Components>\n"
+    "       </Components>\n"
+    "    </Systems>\n"
+    "  </Components>\n"
+    "</Device>"
+  };
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_TRUE(entity);
+  ASSERT_EQ(string("Entity list requirement Component must have at least 1 entries, 0 found"),
+            errors.front().what());
+  ASSERT_EQ("Device", entity->getName());
+  ASSERT_EQ("d1", get<string>(entity->getProperty("id")));
+  ASSERT_EQ("foo", get<string>(entity->getProperty("name")));
+  ASSERT_EQ("xxx", get<string>(entity->getProperty("uuid")));
+  
+  auto l = entity->getList("Components");
+  ASSERT_TRUE(l);
+  ASSERT_EQ(1, l->size());
+  
+  auto systems = l->front();
+  ASSERT_EQ("Systems", systems->getName());
+  ASSERT_EQ("s1", get<string>(systems->getProperty("id")));
+  
+  auto sl = systems->getList("Components");
+  ASSERT_FALSE(sl);
 }

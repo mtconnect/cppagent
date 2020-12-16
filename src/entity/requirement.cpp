@@ -51,12 +51,13 @@ namespace mtconnect
           const auto l = std::get<EntityList>(value);
           if (l.size() > m_upperMultiplicity || l.size() < m_lowerMultiplicity)
           {
+            string upper;
+            if (m_upperMultiplicity != Infinite)
+              upper = " and no more than " + to_string(m_upperMultiplicity);
             throw PropertyRequirementError("Entity list requirement " + m_name +
                                            " must have at least " +
                                            to_string(m_lowerMultiplicity) +
-                                           " and no more than " +
-                                           to_string(m_upperMultiplicity) +
-                                           "entries, " + to_string(l.size()) +
+                                           upper + " entries, " + to_string(l.size()) +
                                            " found");
           }
           for (const auto &e : l)
