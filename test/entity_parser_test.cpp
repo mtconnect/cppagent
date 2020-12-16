@@ -5,6 +5,7 @@
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "json_helper.hpp"
+#include "entity.hpp"
 #include "entity/parser.hpp"
 
 #include <cstdio>
@@ -38,11 +39,10 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
     Requirement("name", true ),
     Requirement("value", true) }));
   
-  auto fileProperties = make_shared<Factory>(Requirements({
+  auto fileProperties = make_shared<Factory>(  Requirements({
     Requirement("FileProperty", Requirement::ENTITY, fileProperty,
                 1, Requirement::Infinite) }));
-  auto r = fileProperties->getRequirement("FileProperty");
-  r->setMatcher(fileProprties);
+  fileProperties->registerMatchers();
   
   auto fileComment = make_shared<Factory>(Requirements({
     Requirement("timestamp", true ),
@@ -51,7 +51,8 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   auto fileComments = make_shared<Factory>(Requirements({
     Requirement("FileComment", Requirement::ENTITY, fileComment,
                 1, Requirement::Infinite) }));
-  
+  fileComments->registerMatchers();
+
   auto fileArchetype = make_shared<Factory>(Requirements{
     Requirement("assetId", true ),
     Requirement("deviceUuid", true ),

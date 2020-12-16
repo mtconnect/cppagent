@@ -179,11 +179,11 @@ namespace mtconnect
       
       void registerMatchers()
       {
+        auto m = getptr();
         for (auto &r : m_requirements)
         {
           if (r.getUpperMultiplicity() > 1 && !r.hasMatcher())
           {
-            auto m = getptr();
             r.setMatcher(m);
           }
         }
