@@ -164,10 +164,12 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_EQ(2, se2->getProperties().size());
   ASSERT_EQ("2", get<std::string>(se2->getProperty("key")));
   ASSERT_EQ("meow", get<std::string>(se2->getProperty("value")));
-  
+
+  ErrorList errors;
   EntityList list { se1, se2 };
-  Properties sndp3 { { "value", list } };
-  auto se3 = fact->create("seconds", sndp3);
+  auto se3 = fact->create("seconds", list, errors);
+  ASSERT_EQ(0, errors.size());
+  ASSERT_TRUE(se3);
   
   Properties simpp {
     { "id", "abc" }, { "name", "xxx" }, {"size", 10 },
@@ -312,8 +314,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_EQ("meow", get<std::string>(se2->getProperty("value")));
   
   EntityList list { se1, se2 };
-  Properties sndp3 { { "value", list } };
-  auto se3 = fact->create("seconds", sndp3, errors);
+  auto se3 = fact->create("seconds", list, errors);
   ASSERT_EQ(0, errors.size());
   ASSERT_TRUE(se3);
   

@@ -121,6 +121,16 @@ namespace mtconnect
       Requirement(const Requirement &o) = default;
       ~Requirement() = default;
       
+      Requirement &operator =(const Requirement &o)
+      {
+        m_type = o.m_type;
+        m_lowerMultiplicity = o.m_lowerMultiplicity;
+        m_upperMultiplicity = o.m_upperMultiplicity;
+        m_factory = o.m_factory;
+        m_matcher = o.m_matcher;
+        return *this;
+      }
+      
       bool isRequired() const { return m_lowerMultiplicity > 0; }
       bool isOptional() const { return !isRequired(); }
       int getUpperMultiplicity() const { return m_upperMultiplicity; }

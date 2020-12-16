@@ -40,7 +40,7 @@ namespace mtconnect
         {
           std::string key;
           if (m_isList)
-            key = "value";
+            key = "list";
           else
             key = r.getName();
           const auto p = properties.find(key);

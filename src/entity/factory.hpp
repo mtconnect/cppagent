@@ -78,7 +78,20 @@ namespace mtconnect
       void addRequirements(const Requirements &reqs)
       {
         for (const auto &r : reqs)
-          m_requirements.emplace_back(r);
+        {
+          auto old = std::find_if(m_requirements.begin(), m_requirements.end(),
+                                  [&r](Requirement &o){
+                                      return r.getName() == o.getName();
+                                  });
+          if (old != m_requirements.end())
+          {
+            *old = r;
+          }
+          else
+          {
+            m_requirements.emplace_back(r);
+          }
+        }
         registerEntityRequirements();
       }
       
@@ -148,7 +161,19 @@ namespace mtconnect
         return make(name, p, errors);
       }
 
-      
+      std::shared_ptr<Entity> create(const std::string &name, EntityList &a,
+                                     ErrorList &errors)
+      {
+        auto factory = factoryFor(name);
+        if (factory)
+        {
+          Properties p { { "list", a } };
+          return (*factory)(name, p, errors);
+        }
+        else
+          return nullptr;
+      }
+
       std::shared_ptr<Entity> create(const std::string &name, Properties &a,
                                      ErrorList &errors)
       {

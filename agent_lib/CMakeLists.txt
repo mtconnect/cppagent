@@ -36,8 +36,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/requirement.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/factory.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/factory.cpp"  
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/parser.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/parser.cpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/file_asset.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/file_asset.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry.hpp"
@@ -72,6 +72,17 @@ set(AGENT_SOURCES
 add_custom_target(UPDATE_VERSION ALL
   COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/../src/version.cpp")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../src/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/version.h")
+
+set(AGENT_LIB_HEADERS ${AGENT_SOURCES})
+list(FILTER AGENT_LIB_HEADERS INCLUDE REGEX "\\.(h|hpp)$")
+set(AGENT_LIB_SOURCES ${AGENT_SOURCES})
+list(FILTER AGENT_LIB_SOURCES INCLUDE REGEX "\\.(c|cpp)$")
+
+# For IDE Grouping
+source_group("Header Files")
+source_group("Source Files")
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Header Files" FILES ${AGENT_LIB_HEADERS})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Source Files" FILES ${AGENT_LIB_SOURCES})
 
 add_library(agent_lib STATIC ${AGENT_SOURCES})
 add_dependencies(agent_lib UPDATE_VERSION)

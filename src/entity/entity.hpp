@@ -63,7 +63,7 @@ namespace mtconnect
         auto *p = std::get_if<EntityPtr>(&v);
         if (p)
         {
-          auto &lv = (*p)->getValue();
+          auto &lv = (*p)->getProperty("list");
           auto *l = std::get_if<EntityList>(&lv);
           if (l)
             return *l;

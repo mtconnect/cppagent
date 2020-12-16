@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "entity/parser.hpp"
+#include "entity/xml_parser.hpp"
 
 #include <dlib/logger.h>
 
@@ -77,7 +77,7 @@ namespace mtconnect
         EntityList *l { nullptr };
         if (ef->isList())
         {
-          l = &properties["value"].emplace<EntityList>();
+          l = &properties["list"].emplace<EntityList>();
         }
         
         for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
@@ -94,13 +94,16 @@ namespace mtconnect
           if (child->type == XML_ELEMENT_NODE)
           {
             auto ent = parseXmlNode(ef, child, errors);
-            if (ef->isList())
+            if (ent)
             {
-              l->emplace_back(ent);
-            }
-            else
-            {
-              properties.insert({ ent->getName(), ent });
+              if (ef->isList())
+              {
+                l->emplace_back(ent);
+              }
+              else
+              {
+                properties.insert({ ent->getName(), ent });
+              }
             }
           }
           else if (child->type == XML_TEXT_NODE)
