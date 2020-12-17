@@ -44,7 +44,9 @@ namespace mtconnect
     class Factory;
     using EntityPtr = std::shared_ptr<Entity>;
     using EntityList = std::list<std::shared_ptr<Entity>>;
-    using Value = std::variant<EntityPtr, EntityList, std::string, int, double,nullptr_t>;
+    using Vector = std::vector<double>;
+    using Value = std::variant<EntityPtr, EntityList, std::string, int64_t, double,
+                              Vector, nullptr_t>;
     using FactoryPtr = std::shared_ptr<Factory>;
 
     class PropertyError : public std::logic_error
@@ -72,6 +74,11 @@ namespace mtconnect
     public:
       using PropertyError::PropertyError;
     };
+    class PropertyConversionError : public PropertyError
+    {
+    public:
+      using PropertyError::PropertyError;
+    };
     
     using ErrorList = std::list<PropertyError>;
     
@@ -91,7 +98,8 @@ namespace mtconnect
         STRING = 2,
         INTEGER = 3,
         DOUBLE = 4,
-        NO_VALUE=5
+        VECTOR = 5,
+        NO_VALUE = 6
       };
       
       const static auto Infinite { std::numeric_limits<int>::max() };
@@ -146,6 +154,7 @@ namespace mtconnect
             
       bool hasMatcher() const { return m_matcher.use_count() > 0; }
       bool isMetBy(const Value &value, bool isList) const;
+      bool convertType(Value &value);
       bool matches(const std::string &s) const
       {
         if (auto m = m_matcher.lock())

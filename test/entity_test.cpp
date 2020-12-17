@@ -67,7 +67,7 @@ TEST_F(EntityTest, TestSimpleFactory)
   ASSERT_EQ("simple", entity->getName());
   ASSERT_EQ("abc", get<std::string>(entity->getProperty("id")));
   ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
-  ASSERT_EQ(10, get<int>(entity->getProperty("size")));
+  ASSERT_EQ(10, get<int64_t>(entity->getProperty("size")));
 }
 
 TEST_F(EntityTest, TestSimpleTwoLevelFactory)
@@ -110,7 +110,7 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   ASSERT_EQ("simple", entity->getName());
   ASSERT_EQ("abc", get<std::string>(entity->getProperty("id")));
   ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
-  ASSERT_EQ(10, get<int>(entity->getProperty("size")));
+  ASSERT_EQ(10, get<int64_t>(entity->getProperty("size")));
   
   auto v = get<EntityPtr>(entity->getProperty("second"));
   ASSERT_TRUE(v);
@@ -182,7 +182,7 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_EQ("simple", entity->getName());
   ASSERT_EQ("abc", get<std::string>(entity->getProperty("id")));
   ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
-  ASSERT_EQ(10, get<int>(entity->getProperty("size")));
+  ASSERT_EQ(10, get<int64_t>(entity->getProperty("size")));
   
   auto l = entity->getList("seconds");
   
@@ -330,7 +330,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_EQ("simple", entity->getName());
   ASSERT_EQ("abc", get<std::string>(entity->getProperty("id")));
   ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
-  ASSERT_EQ(10, get<int>(entity->getProperty("size")));
+  ASSERT_EQ(10, get<int64_t>(entity->getProperty("size")));
   
   auto l = entity->getList("seconds");
   ASSERT_EQ(2, l->size());
@@ -348,5 +348,148 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_EQ("cat", (*it)->getName());
   ASSERT_EQ("2", get<std::string>((*it)->getProperty("key")));
   ASSERT_EQ("meow", get<std::string>((*it)->getProperty("value")));
+}
 
+TEST_F(EntityTest, TestRequirementIntegerConversions)
+{
+  Value v("123");
+  ASSERT_TRUE(holds_alternative<string>(v));
+  Requirement r1("integer", Requirement::INTEGER);
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_TRUE(holds_alternative<int64_t>(v));
+  ASSERT_EQ(123, get<int64_t>(v));
+  
+  ASSERT_FALSE(r1.convertType(v));
+  
+  Requirement r2("string", Requirement::STRING);
+  ASSERT_TRUE(r2.convertType(v));
+  ASSERT_TRUE(holds_alternative<string>(v));
+  ASSERT_EQ("123", get<string>(v));
+
+  v = "aaa";
+  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+  ASSERT_TRUE(holds_alternative<string>(v));
+  ASSERT_EQ("aaa", get<string>(v));
+
+  Requirement r3("vector", Requirement::VECTOR);
+  v = 123ll;
+  ASSERT_TRUE(holds_alternative<int64_t>(v));
+  ASSERT_TRUE(r3.convertType(v));
+  ASSERT_TRUE(holds_alternative<Vector>(v));
+  ASSERT_EQ(1, get<Vector>(v).size());
+  ASSERT_EQ(123.0, get<Vector>(v)[0]);
+
+  v = 123ll;
+  Requirement r4("entity", Requirement::ENTITY);
+  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+
+  Requirement r5("entity_list", Requirement::ENTITY_LIST);
+  ASSERT_THROW(r5.convertType(v), PropertyConversionError);
+  
+  v = 1234.0;
+  ASSERT_TRUE(holds_alternative<double>(v));
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_TRUE(holds_alternative<int64_t>(v));
+  ASSERT_EQ(1234, get<int64_t>(v));
+  
+  v = nullptr;
+  ASSERT_FALSE(r1.convertType(v));
+}
+
+TEST_F(EntityTest, TestRequirementStringConversion)
+{
+  Value v(1234567890ll);
+  Requirement r1("string", Requirement::STRING);
+  ASSERT_TRUE(holds_alternative<int64_t>(v));
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_TRUE(holds_alternative<string>(v));
+  ASSERT_EQ("1234567890", get<string>(v));
+  
+  v = 1234.56;
+  ASSERT_TRUE(holds_alternative<double>(v));
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_TRUE(holds_alternative<string>(v));
+  ASSERT_EQ("1234.56", get<string>(v));
+
+  v = Vector{1.123, 2.345, 6.789};
+  ASSERT_TRUE(holds_alternative<Vector>(v));
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_TRUE(holds_alternative<string>(v));
+  ASSERT_EQ("1.123 2.345 6.789", get<string>(v));
+
+  ASSERT_FALSE(r1.convertType(v));
+
+}
+
+TEST_F(EntityTest, TestRequirementDoubleConversions)
+{
+  Value v("123.24");
+  ASSERT_TRUE(holds_alternative<string>(v));
+  Requirement r1("double", Requirement::DOUBLE);
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_TRUE(holds_alternative<double>(v));
+  ASSERT_EQ(123.24, get<double>(v));
+  
+  ASSERT_FALSE(r1.convertType(v));
+    
+  Requirement r6("integer", Requirement::INTEGER);
+  ASSERT_TRUE(r6.convertType(v));
+  ASSERT_TRUE(holds_alternative<int64_t>(v));
+  ASSERT_EQ(123, get<int64_t>(v));
+
+  v = 123.24;
+  Requirement r4("entity", Requirement::ENTITY);
+  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+  
+  Requirement r5("entity_list", Requirement::ENTITY_LIST);
+  ASSERT_THROW(r5.convertType(v), PropertyConversionError);
+  
+  v = "aaa";
+  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+  ASSERT_TRUE(holds_alternative<string>(v));
+  ASSERT_EQ("aaa", get<string>(v));
+
+  v = 123.24;
+  Requirement r3("vector", Requirement::VECTOR);
+  ASSERT_TRUE(holds_alternative<double>(v));
+  ASSERT_TRUE(r3.convertType(v));
+  ASSERT_TRUE(holds_alternative<Vector>(v));
+  ASSERT_EQ(1, get<Vector>(v).size());
+  ASSERT_EQ(123.24, get<Vector>(v)[0]);
+}
+
+TEST_F(EntityTest, TestRequirementVectorConversions)
+{
+  Value v("1.234 3.456 6.7889");
+  ASSERT_TRUE(holds_alternative<string>(v));
+  Requirement r1("vector", Requirement::VECTOR);
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_TRUE(holds_alternative<Vector>(v));
+  ASSERT_EQ(3, get<Vector>(v).size());
+  ASSERT_EQ(1.234, get<Vector>(v)[0]);
+  ASSERT_EQ(3.456, get<Vector>(v)[1]);
+  ASSERT_EQ(6.7889, get<Vector>(v)[2]);
+  
+  v = "aaaa bbb cccc";
+  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+
+  v = "  1.234     3.456       6.7889    ";
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_TRUE(holds_alternative<Vector>(v));
+  ASSERT_EQ(3, get<Vector>(v).size());
+  ASSERT_EQ(1.234, get<Vector>(v)[0]);
+  ASSERT_EQ(3.456, get<Vector>(v)[1]);
+  ASSERT_EQ(6.7889, get<Vector>(v)[2]);
+
+  Requirement r2("entity", Requirement::ENTITY);
+  ASSERT_THROW(r2.convertType(v), PropertyConversionError);
+  
+  Requirement r3("entity_list", Requirement::ENTITY_LIST);
+  ASSERT_THROW(r3.convertType(v), PropertyConversionError);
+
+  Requirement r4("entity_list", Requirement::DOUBLE);
+  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+
+  Requirement r6("entity_list", Requirement::INTEGER);
+  ASSERT_THROW(r6.convertType(v), PropertyConversionError);
 }
