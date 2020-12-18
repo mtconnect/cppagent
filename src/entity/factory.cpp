@@ -34,14 +34,14 @@ namespace mtconnect
     {
       for (const auto &r : m_requirements)
       {
-        if (r.getType() != Requirement::ENTITY && r.getType() != Requirement::ENTITY_LIST)
+        if (r.getType() != ENTITY && r.getType() != ENTITY_LIST)
         {
           const auto p = properties.find(r.getName());
           if (p != properties.end() && p->second.index() != r.getType())
           {
             try {
               Value &v = p->second;
-              r.convertType(v);
+              ConvertValueToType(v, r.getType());
             } catch (PropertyError &e) {
               g_logger << dlib::LWARN << "Error occurred converting " << r.getName() << ": " <<
                 e.what();

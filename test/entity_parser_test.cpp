@@ -40,13 +40,13 @@ class EntityParserTest : public testing::Test
     });
     
     auto components = make_shared<Factory>(Requirements({
-      Requirement("Component", Requirement::ENTITY, component,
+      Requirement("Component", ENTITY, component,
                   1, Requirement::Infinite) }));
     components->registerMatchers();
     components->registerFactory(regex(".+"), component);
     
     component->addRequirements({
-      Requirement("Components", Requirement::ENTITY_LIST, components, false)
+      Requirement("Components", ENTITY_LIST, components, false)
     });
     
     auto device = make_shared<Factory>(*component);
@@ -56,7 +56,7 @@ class EntityParserTest : public testing::Test
     });
     
     auto root = make_shared<Factory>(Requirements{
-      Requirement("Device", Requirement::ENTITY, device)
+      Requirement("Device", ENTITY, device)
     });
 
     return root;
@@ -71,7 +71,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
     Requirement("value", true) }));
   
   auto fileProperties = make_shared<Factory>(  Requirements({
-    Requirement("FileProperty", Requirement::ENTITY, fileProperty,
+    Requirement("FileProperty", ENTITY, fileProperty,
                 1, Requirement::Infinite) }));
   fileProperties->registerMatchers();
   
@@ -80,7 +80,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
     Requirement("value", true) }));
   
   auto fileComments = make_shared<Factory>(Requirements({
-    Requirement("FileComment", Requirement::ENTITY, fileComment,
+    Requirement("FileComment", ENTITY, fileComment,
                 1, Requirement::Infinite) }));
   fileComments->registerMatchers();
 
@@ -93,12 +93,12 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
     Requirement("mediaType", true),
     Requirement("applicationCategory", true),
     Requirement("applicationType", true),
-    Requirement("FileComments", Requirement::ENTITY_LIST, fileComments, false),
-    Requirement("FileProperties", Requirement::ENTITY_LIST, fileProperties, false)
+    Requirement("FileComments", ENTITY_LIST, fileComments, false),
+    Requirement("FileProperties", ENTITY_LIST, fileProperties, false)
   });
   
   auto root = make_shared<Factory>(Requirements{
-    Requirement("FileArchetype", Requirement::ENTITY, fileArchetype)
+    Requirement("FileArchetype", ENTITY, fileArchetype)
   });
 
   auto doc = string {

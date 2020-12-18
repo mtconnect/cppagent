@@ -56,7 +56,7 @@ TEST_F(EntityTest, TestSimpleFactory)
   FactoryPtr simpleFact = make_shared<Factory>(Requirements({
     Requirement("name", true ),
     Requirement("id", true),
-    Requirement("size", false, Requirement::INTEGER) }));
+    Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
 
   Properties simple { { "id", "abc" }, { "name", "xxx" }, {"size", 10 }};
@@ -81,8 +81,8 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   auto simple = make_shared<Factory>(Requirements{
     Requirement("name", true ),
     Requirement("id", true),
-    Requirement("size", false, Requirement::INTEGER),
-    Requirement("second", Requirement::ENTITY, second)
+    Requirement("size", false, INTEGER),
+    Requirement("second", ENTITY, second)
   });
   root->registerFactory("simple",  simple);
   
@@ -129,15 +129,15 @@ TEST_F(EntityTest, TestSimpleEntityList)
     Requirement("value", true) }));
   
   auto seconds = make_shared<Factory>(Requirements({
-    Requirement("second", Requirement::ENTITY, second,
+    Requirement("second", ENTITY, second,
                 1, Requirement::Infinite) }));
   seconds->registerMatchers();
 
   auto simple = make_shared<Factory>(Requirements{
     Requirement("name", true ),
     Requirement("id", true),
-    Requirement("size", false, Requirement::INTEGER),
-    Requirement("seconds", Requirement::ENTITY_LIST, seconds)
+    Requirement("size", false, INTEGER),
+    Requirement("seconds", ENTITY_LIST, seconds)
   });
   root->registerFactory("simple",  simple);
   
@@ -208,7 +208,7 @@ TEST_F(EntityTest, MissingProperty)
   FactoryPtr simpleFact = make_shared<Factory>(Requirements({
     Requirement("name", true ),
     Requirement("id", true),
-    Requirement("size", false, Requirement::INTEGER) }));
+    Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
   
   Properties simple { { "name", "xxx" }, {"size", 10 }};
@@ -228,7 +228,7 @@ TEST_F(EntityTest, MissingOptionalProperty)
   FactoryPtr simpleFact = make_shared<Factory>(Requirements({
     Requirement("name", true ),
     Requirement("id", true),
-    Requirement("size", false, Requirement::INTEGER) }));
+    Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
   
   Properties simple { { "id", "abc" }, { "name", "xxx" }};
@@ -250,7 +250,7 @@ TEST_F(EntityTest, UnexpectedProperty)
   FactoryPtr simpleFact = make_shared<Factory>(Requirements({
     Requirement("name", true ),
     Requirement("id", true),
-    Requirement("size", false, Requirement::INTEGER) }));
+    Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
   
   Properties simple { { "id", "abc" }, { "name", "xxx" }, { "junk", "junk" }};
@@ -273,7 +273,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
     Requirement("value", true) }));
   
   auto seconds = make_shared<Factory>(Requirements({
-    Requirement("something", Requirement::ENTITY, second,
+    Requirement("something", ENTITY, second,
                 1, Requirement::Infinite) }));
   seconds->registerFactory(regex(".+"), second);
   seconds->registerMatchers();
@@ -281,8 +281,8 @@ TEST_F(EntityTest, EntityListAnyEntities)
   auto simple = make_shared<Factory>(Requirements{
     Requirement("name", true ),
     Requirement("id", true),
-    Requirement("size", false, Requirement::INTEGER),
-    Requirement("seconds", Requirement::ENTITY_LIST, seconds)
+    Requirement("size", false, INTEGER),
+    Requirement("seconds", ENTITY_LIST, seconds)
   });
   root->registerFactory("simple",  simple);
   
@@ -354,14 +354,14 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 {
   Value v("123");
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("integer", Requirement::INTEGER);
+  Requirement r1("integer", INTEGER);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_EQ(123, get<int64_t>(v));
   
   ASSERT_FALSE(r1.convertType(v));
   
-  Requirement r2("string", Requirement::STRING);
+  Requirement r2("string", STRING);
   ASSERT_TRUE(r2.convertType(v));
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("123", get<string>(v));
@@ -371,7 +371,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("aaa", get<string>(v));
 
-  Requirement r3("vector", Requirement::VECTOR);
+  Requirement r3("vector", VECTOR);
   v = 123ll;
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_TRUE(r3.convertType(v));
@@ -380,10 +380,10 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_EQ(123.0, get<Vector>(v)[0]);
 
   v = 123ll;
-  Requirement r4("entity", Requirement::ENTITY);
+  Requirement r4("entity", ENTITY);
   ASSERT_THROW(r4.convertType(v), PropertyConversionError);
 
-  Requirement r5("entity_list", Requirement::ENTITY_LIST);
+  Requirement r5("entity_list", ENTITY_LIST);
   ASSERT_THROW(r5.convertType(v), PropertyConversionError);
   
   v = 1234.0;
@@ -399,7 +399,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 TEST_F(EntityTest, TestRequirementStringConversion)
 {
   Value v(1234567890ll);
-  Requirement r1("string", Requirement::STRING);
+  Requirement r1("string", STRING);
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<string>(v));
@@ -425,23 +425,23 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
 {
   Value v("123.24");
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("double", Requirement::DOUBLE);
+  Requirement r1("double", DOUBLE);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<double>(v));
   ASSERT_EQ(123.24, get<double>(v));
   
   ASSERT_FALSE(r1.convertType(v));
     
-  Requirement r6("integer", Requirement::INTEGER);
+  Requirement r6("integer", INTEGER);
   ASSERT_TRUE(r6.convertType(v));
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_EQ(123, get<int64_t>(v));
 
   v = 123.24;
-  Requirement r4("entity", Requirement::ENTITY);
+  Requirement r4("entity", ENTITY);
   ASSERT_THROW(r4.convertType(v), PropertyConversionError);
   
-  Requirement r5("entity_list", Requirement::ENTITY_LIST);
+  Requirement r5("entity_list", ENTITY_LIST);
   ASSERT_THROW(r5.convertType(v), PropertyConversionError);
   
   v = "aaa";
@@ -450,7 +450,7 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
   ASSERT_EQ("aaa", get<string>(v));
 
   v = 123.24;
-  Requirement r3("vector", Requirement::VECTOR);
+  Requirement r3("vector", VECTOR);
   ASSERT_TRUE(holds_alternative<double>(v));
   ASSERT_TRUE(r3.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
@@ -462,7 +462,7 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
 {
   Value v("1.234 3.456 6.7889");
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("vector", Requirement::VECTOR);
+  Requirement r1("vector", VECTOR);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
   ASSERT_EQ(3, get<Vector>(v).size());
@@ -481,15 +481,15 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   ASSERT_EQ(3.456, get<Vector>(v)[1]);
   ASSERT_EQ(6.7889, get<Vector>(v)[2]);
 
-  Requirement r2("entity", Requirement::ENTITY);
+  Requirement r2("entity", ENTITY);
   ASSERT_THROW(r2.convertType(v), PropertyConversionError);
   
-  Requirement r3("entity_list", Requirement::ENTITY_LIST);
+  Requirement r3("entity_list", ENTITY_LIST);
   ASSERT_THROW(r3.convertType(v), PropertyConversionError);
 
-  Requirement r4("entity_list", Requirement::DOUBLE);
+  Requirement r4("entity_list", DOUBLE);
   ASSERT_THROW(r4.convertType(v), PropertyConversionError);
 
-  Requirement r6("entity_list", Requirement::INTEGER);
+  Requirement r6("entity_list", INTEGER);
   ASSERT_THROW(r6.convertType(v), PropertyConversionError);
 }

@@ -31,14 +31,14 @@ namespace mtconnect
       Requirement("value", true) }));
     
     static auto fileProperties = make_shared<Factory>(Requirements({
-        Requirement("FileProperty", Requirement::ENTITY, fileProperty) }));
+        Requirement("FileProperty", ENTITY, fileProperty) }));
     
     static auto fileComment = make_shared<Factory>(Requirements({
       Requirement("timestamp", true ),
       Requirement("value", true) }));
     
     static auto fileComments = make_shared<Factory>(Requirements({
-      Requirement("FileComment", Requirement::ENTITY, fileComment) }));
+      Requirement("FileComment", ENTITY, fileComment) }));
 
     static auto fileArchetype = make_shared<Factory>(Requirements{
       Requirement("assetId", true ),
@@ -49,8 +49,8 @@ namespace mtconnect
       Requirement("mediaTyep", true),
       Requirement("applicationCategory", true),
       Requirement("applicationType", true),
-      Requirement("FileComments", Requirement::ENTITY_LIST, fileComments, false),
-      Requirement("FileProperties", Requirement::ENTITY_LIST, fileProperties, false)
+      Requirement("FileComments", ENTITY_LIST, fileComments, false),
+      Requirement("FileProperties", ENTITY_LIST, fileProperties, false)
     });
 
     return fileArchetype;
@@ -64,7 +64,7 @@ namespace mtconnect
       Requirement("value", true )}));
     
     static auto destinations = make_shared<Factory>(Requirements({
-      Requirement("Destination", Requirement::ENTITY, destination) }));
+      Requirement("Destination", ENTITY, destination) }));
 
     static auto fileLocation = make_shared<Factory>(Requirements({
       Requirement("href", true )}));
@@ -73,15 +73,15 @@ namespace mtconnect
       Requirement("value", true )}));
 
     file->addRequirements(Requirements({
-      Requirement("size", Requirement::INTEGER),
-      Requirement("verisionId", Requirement::STRING),
-      Requirement("state", Requirement::STRING),
-      Requirement("FileLocation", Requirement::ENTITY, fileLocation),
-      Requirement("Signature", Requirement::ENTITY, value, false),
-      Requirement("PublicKey", Requirement::ENTITY, value, false),
-      Requirement("CreationTime", Requirement::ENTITY, value),
-      Requirement("ModificationTime", Requirement::ENTITY, value, false),
-      Requirement("Destinations", Requirement::ENTITY_LIST, destinations)
+      Requirement("size", INTEGER),
+      Requirement("verisionId", STRING),
+      Requirement("state", STRING),
+      Requirement("FileLocation", ENTITY, fileLocation),
+      Requirement("Signature", ENTITY, value, false),
+      Requirement("PublicKey", ENTITY, value, false),
+      Requirement("CreationTime", ENTITY, value),
+      Requirement("ModificationTime", ENTITY, value, false),
+      Requirement("Destinations", ENTITY_LIST, destinations)
     }));
     
     return file;

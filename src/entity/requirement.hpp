@@ -45,9 +45,23 @@ namespace mtconnect
     using EntityPtr = std::shared_ptr<Entity>;
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
-    using Value = std::variant<EntityPtr, EntityList, std::string, int64_t, double,
+    using Value = std::variant<std::monostate, EntityPtr, EntityList,
+                              std::string, int64_t, double,
                               Vector, nullptr_t>;
     using FactoryPtr = std::shared_ptr<Factory>;
+    
+    enum ValueType {
+      EMPTY = 0,
+      ENTITY = 1,
+      ENTITY_LIST = 2,
+      STRING = 3,
+      INTEGER = 4,
+      DOUBLE = 5,
+      VECTOR = 6,
+      NULL_VALUE = 7
+    };
+
+    bool ConvertValueToType(Value &value, ValueType type);
 
     class PropertyError : public std::logic_error
     {
@@ -92,37 +106,28 @@ namespace mtconnect
     class Requirement
     {
     public:
-      enum Type {
-        ENTITY = 0,
-        ENTITY_LIST = 1,
-        STRING = 2,
-        INTEGER = 3,
-        DOUBLE = 4,
-        VECTOR = 5,
-        NO_VALUE = 6
-      };
       
       const static auto Infinite { std::numeric_limits<int>::max() };
 
     public:
-      Requirement(const std::string &name, Type type, bool required = true)
+      Requirement(const std::string &name, ValueType type, bool required = true)
         : m_name(name), m_type(type), m_upperMultiplicity(1),
           m_lowerMultiplicity(required ? 1 : 0)
       {
       }
-      Requirement(const std::string &name, bool required, Type type = STRING)
+      Requirement(const std::string &name, bool required, ValueType type = STRING)
       : m_name(name), m_type(type), m_upperMultiplicity(1),
         m_lowerMultiplicity(required ? 1 : 0)
       {
       }
-      Requirement(const std::string &name, Type type, int lower, int upper)
+      Requirement(const std::string &name, ValueType type, int lower, int upper)
       : m_name(name), m_type(type), m_lowerMultiplicity(lower),
         m_upperMultiplicity(upper)
       {
       }
-      Requirement(const std::string &name, Type type, FactoryPtr &o,
+      Requirement(const std::string &name, ValueType type, FactoryPtr &o,
                   bool required = true);
-      Requirement(const std::string &name, Type type, FactoryPtr &o,
+      Requirement(const std::string &name, ValueType type, FactoryPtr &o,
                   int lower, int upper);
       
       Requirement() = default;
@@ -149,12 +154,12 @@ namespace mtconnect
         m_matcher = m;
       }
       const std::string &getName() const { return m_name; }
-      Type getType() const { return m_type; }
+      ValueType getType() const { return m_type; }
       auto &getFactory() { return m_factory; }
             
+      bool convertType(Value &v) const { return ConvertValueToType(v, m_type); }
       bool hasMatcher() const { return m_matcher.use_count() > 0; }
       bool isMetBy(const Value &value, bool isList) const;
-      bool convertType(Value &value) const;
       bool matches(const std::string &s) const
       {
         if (auto m = m_matcher.lock())
@@ -171,7 +176,7 @@ namespace mtconnect
       std::string m_name;
       int m_upperMultiplicity;
       int m_lowerMultiplicity;
-      Type m_type;
+      ValueType m_type;
       MatcherPtr m_matcher;
       FactoryPtr m_factory;
     };

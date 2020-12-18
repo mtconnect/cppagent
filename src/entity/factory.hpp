@@ -196,8 +196,8 @@ namespace mtconnect
         for (auto &r : m_requirements)
         {
           auto factory = r.getFactory();
-          if (factory && (r.getType() == Requirement::ENTITY ||
-                          r.getType() == Requirement::ENTITY_LIST))
+          if (factory && (r.getType() == ENTITY ||
+                          r.getType() == ENTITY_LIST))
           {
             registerFactory(r.getName(), factory);
           }

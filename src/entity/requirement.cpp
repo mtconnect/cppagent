@@ -29,7 +29,7 @@ namespace mtconnect
   namespace entity {
     static dlib::logger g_logger("EntityRequirement");
 
-    Requirement::Requirement(const std::string &name, Type type, FactoryPtr &f,
+    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f,
                              bool required)
     : m_name(name), m_type(type), m_upperMultiplicity(1),
     m_lowerMultiplicity(required ? 1 : 0)
@@ -41,7 +41,7 @@ namespace mtconnect
       m_factory = f;
     }
     
-    Requirement::Requirement(const std::string &name, Type type, FactoryPtr &f,
+    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f,
                              int lower, int upper)
     : m_name(name), m_type(type), m_upperMultiplicity(upper), m_lowerMultiplicity(lower)
     {
@@ -179,15 +179,15 @@ namespace mtconnect
       const string &m_string;
     };
     
-    bool Requirement::convertType(Value &value) const
+    bool ConvertValueToType(Value &value, ValueType type)
     {
       bool converted = false;
-      if (value.index() != m_type)
+      if (value.index() != type)
       {
         visit(overloaded {
           [&](const string &arg) {
             StringConverter s(arg);
-            switch (m_type) {
+            switch (type) {
               case INTEGER:
                 value = int64_t(s);
                 converted = true;
@@ -209,7 +209,7 @@ namespace mtconnect
             }
           },
           [&](double arg) {
-            switch (m_type) {
+            switch (type) {
               case STRING:
               {
                 stringstream s;
@@ -238,7 +238,7 @@ namespace mtconnect
 
           },
           [&](int64_t arg) {
-            switch (m_type) {
+            switch (type) {
               case STRING:
                 value = to_string(arg);
                 converted = true;
@@ -263,7 +263,7 @@ namespace mtconnect
             }
           },
           [&](const Vector &arg) {
-            switch (m_type) {
+            switch (type) {
               case STRING:
               {
                 if (arg.size() > 0)

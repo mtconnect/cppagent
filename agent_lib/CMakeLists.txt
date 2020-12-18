@@ -38,7 +38,9 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/factory.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.cpp"  
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/file_asset.cpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/file_asset.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/file_asset.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/globals.cpp"
@@ -66,6 +68,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_parser.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer_helper.hpp"
 )
 
 ## configure a header file to pass some of the CMake settings to the source code

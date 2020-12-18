@@ -43,8 +43,7 @@ namespace mtconnect
 {
   namespace entity
   {
-    static dlib::logger g_logger("EntityParser");
-    
+    static dlib::logger g_logger("entity.xml_parser");
     
     extern "C" void XMLCDECL entityXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
     {
@@ -58,9 +57,8 @@ namespace mtconnect
       
       g_logger << dlib::LERROR << "XML: " << buffer;
     }
-        
-    static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node,
-                            ErrorList &errors)
+    
+    string nodeQName(xmlNodePtr node)
     {
       string qname((const char*) node->name);
       
@@ -69,7 +67,15 @@ namespace mtconnect
       {
         qname.insert(0, (const char* ) node->ns->prefix);
       }
+      
+      return qname;
+    }
+        
+    static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node,
+                            ErrorList &errors)
+    {
 
+      auto qname = nodeQName(node);
       auto ef = factory->factoryFor(qname);
       if (ef)
       {
@@ -105,6 +111,16 @@ namespace mtconnect
                 properties.insert({ ent->getName(), ent });
               }
             }
+            else if (child->children->type == XML_TEXT_NODE && child->children->content &&
+                     *child->children->content != '\0' && child->properties == nullptr)
+            {
+              properties.insert({  nodeQName(child),
+                string((const char *) child->children->content ) });
+            }
+            else
+            {
+              g_logger << dlib::LWARN << "Unexpected element: " << nodeQName(child);
+            }
           }
           else if (child->type == XML_TEXT_NODE)
           {
@@ -116,10 +132,6 @@ namespace mtconnect
         
         auto entity = ef->make(qname, properties, errors);
         return entity;
-      }
-      else
-      {
-        g_logger << dlib::LWARN << "Unexpected element: " << qname;
       }
       
       return nullptr;
