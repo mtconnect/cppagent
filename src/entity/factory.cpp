@@ -29,63 +29,79 @@ namespace mtconnect
     {
       g_logger << dlib::LWARN << what;
     }
+    
+    void Factory::performConversions(Properties &properties) const
+    {
+      for (const auto &r : m_requirements)
+      {
+        if (r.getType() != Requirement::ENTITY && r.getType() != Requirement::ENTITY_LIST)
+        {
+          const auto p = properties.find(r.getName());
+          if (p != properties.end() && p->second.index() != r.getType())
+          {
+            Value &v = p->second;
+            r.convertType(v);
+          }
+        }
+      }
+    }
 
     bool Factory::isSufficient(const Properties &properties, ErrorList &errors) const
     {
       std::set<std::string> keys;
       std::transform(properties.begin(), properties.end(), std::inserter(keys, keys.end()),
-		     [](const auto &v) { return v.first; });
+                     [](const auto &v) { return v.first; });
       
-        for (const auto &r : m_requirements)
+      for (const auto &r : m_requirements)
+      {
+        std::string key;
+        if (m_isList)
+          key = "list";
+        else
+          key = r.getName();
+        const auto p = properties.find(key);
+        if (p == properties.end())
         {
-          std::string key;
-          if (m_isList)
-            key = "list";
-          else
-            key = r.getName();
-          const auto p = properties.find(key);
-          if (p == properties.end())
+          if (r.isRequired())
           {
-            if (r.isRequired())
+            throw MissingPropertyError("Property " + r.getName() +
+                                       " is required and not provided");
+          }
+        }
+        else
+        {
+          try {
+            if (!r.isMetBy(p->second, m_isList))
             {
-              throw MissingPropertyError("Property " + r.getName() +
-                                         " is required and not provided");
+              return false;
             }
           }
-          else
-          {
-            try {
-              if (!r.isMetBy(p->second, m_isList))
-              {
-                return false;
-              }
+          catch (PropertyError &e) {
+            LogError(e.what());
+            if (r.isRequired())
+              throw;
+            else
+            {
+              errors.emplace_back(e);
+              LogError("Not required, skipping " + r.getName());
             }
-            catch (PropertyError &e) {
-              LogError(e.what());
-              if (r.isRequired())
-                throw;
-              else
-              {
-                errors.emplace_back(e);
-                LogError("Not required, skipping " + r.getName());
-              }
-            }
-            keys.erase(r.getName());
           }
+          keys.erase(r.getName());
         }
-        
-        // Check for additional properties
-        if (!m_isList && !keys.empty())
-        {
-          std::stringstream os;
-          os << "The following keys were present and not expected: ";
-          for (auto &k : keys)
-            os << k << ",";
-          throw ExtraPropertyError(os.str());
-        }
-        
-        return true;
-      }      
+      }
+      
+      // Check for additional properties
+      if (!m_isList && !keys.empty())
+      {
+        std::stringstream os;
+        os << "The following keys were present and not expected: ";
+        for (auto &k : keys)
+          os << k << ",";
+        throw ExtraPropertyError(os.str());
+      }
+      
+      return true;
+    }
   }
 }
 

@@ -154,7 +154,7 @@ namespace mtconnect
             
       bool hasMatcher() const { return m_matcher.use_count() > 0; }
       bool isMetBy(const Value &value, bool isList) const;
-      bool convertType(Value &value);
+      bool convertType(Value &value) const;
       bool matches(const std::string &s) const
       {
         if (auto m = m_matcher.lock())

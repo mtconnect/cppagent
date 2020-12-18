@@ -179,7 +179,7 @@ namespace mtconnect
       const string &m_string;
     };
     
-    bool Requirement::convertType(Value &value)
+    bool Requirement::convertType(Value &value) const
     {
       bool converted = false;
       if (value.index() != m_type)

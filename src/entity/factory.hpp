@@ -100,6 +100,7 @@ namespace mtconnect
         m_function = f;
       }
       
+      void performConversions(Properties &p) const;      
       bool isSufficient(const Properties &properties, ErrorList &errors) const;
       
       EntityPtr make(const std::string &name,
@@ -107,6 +108,7 @@ namespace mtconnect
       {
         try
         {
+          performConversions(p);
           if (isSufficient(p, errors))
             return m_function(name, p);
         }
@@ -168,7 +170,7 @@ namespace mtconnect
         if (factory)
         {
           Properties p { { "list", a } };
-          return (*factory)(name, p, errors);
+          return factory->make(name, p, errors);
         }
         else
           return nullptr;
@@ -179,7 +181,7 @@ namespace mtconnect
       {
         auto factory = factoryFor(name);
         if (factory)
-          return (*factory)(name, a, errors);
+          return factory->make(name, a, errors);
         else
           return nullptr;
       }
