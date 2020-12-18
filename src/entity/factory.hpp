@@ -100,7 +100,7 @@ namespace mtconnect
         m_function = f;
       }
       
-      void performConversions(Properties &p) const;      
+      void performConversions(Properties &p, ErrorList &errors) const;
       bool isSufficient(const Properties &properties, ErrorList &errors) const;
       
       EntityPtr make(const std::string &name,
@@ -108,7 +108,7 @@ namespace mtconnect
       {
         try
         {
-          performConversions(p);
+          performConversions(p, errors);
           if (isSufficient(p, errors))
             return m_function(name, p);
         }

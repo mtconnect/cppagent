@@ -30,7 +30,7 @@ namespace mtconnect
       g_logger << dlib::LWARN << what;
     }
     
-    void Factory::performConversions(Properties &properties) const
+    void Factory::performConversions(Properties &properties, ErrorList &errors) const
     {
       for (const auto &r : m_requirements)
       {
@@ -39,8 +39,15 @@ namespace mtconnect
           const auto p = properties.find(r.getName());
           if (p != properties.end() && p->second.index() != r.getType())
           {
-            Value &v = p->second;
-            r.convertType(v);
+            try {
+              Value &v = p->second;
+              r.convertType(v);
+            } catch (PropertyError &e) {
+              g_logger << dlib::LWARN << "Error occurred converting " << r.getName() << ": " <<
+                e.what();
+              errors.emplace_back(e);
+              properties.erase(p);
+            }
           }
         }
       }
