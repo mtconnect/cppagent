@@ -88,6 +88,23 @@ namespace mtconnect
 
       }
       
+      const auto order = entity->getOrder();
+      if (order)
+      {
+        list<Property> ordered;
+        for (auto &o : *order)
+        {
+          auto ele = find_if(elements.begin(), elements.end(),
+                             [&o](auto &e) { return o == e.first; });
+          if (ele != elements.end())
+          {
+            ordered.emplace_back(*ele);
+            elements.erase(ele);
+          }
+        }
+        elements.splice(elements.begin(), ordered);
+      }
+      
       for (auto &e : elements)
       {
         if (holds_alternative<EntityPtr>(e.second))

@@ -16,6 +16,7 @@
 //
 
 #include "entity/xml_parser.hpp"
+#include "xml_helper.hpp"
 
 #include <dlib/logger.h>
 
@@ -24,20 +25,6 @@
 #include <libxml/xpathInternals.h>
 
 using namespace std;
-
-#define strstrfy(x) #x
-#define strfy(x) strstrfy(x)
-#define THROW_IF_XML2_ERROR(expr)                                                  \
-  if ((expr) < 0)                                                                  \
-  {                                                                                \
-    throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
-  }
-#define THROW_IF_XML2_NULL(expr)                                                   \
-  if (!(expr))                                                                     \
-  {                                                                                \
-    throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
-  }
-
 
 namespace mtconnect
 {

@@ -17,29 +17,11 @@
 
 #pragma once
 
+#include "xml_helper.hpp"
 #include <libxml/xmlwriter.h>
-
 
 namespace mtconnect
 {
-  class XmlError : public std::logic_error
-  {
-  public:
-      using std::logic_error::logic_error;
-  };
-  
-#define strfy(line) #line
-#define THROW_IF_XML2_ERROR(expr)                                           \
-  if ((expr) < 0)                                                           \
-  {                                                                         \
-    throw XmlError("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
-  }
-#define THROW_IF_XML2_NULL(expr)                                            \
-  if (!(expr))                                                              \
-  {                                                                         \
-    throw XmlError("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
-  }
-  
   class XmlWriter
   {
   public:

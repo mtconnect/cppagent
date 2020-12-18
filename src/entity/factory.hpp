@@ -62,6 +62,16 @@ namespace mtconnect
         return shared_from_this();
       }
       
+      void setOrder(OrderList list)
+      {
+        m_order = std::make_shared<OrderList>(list);
+      }
+      void setOrder(OrderListPtr &list)
+      {
+        m_order = list;
+      }
+      const OrderListPtr &getOrder() const { return m_order; }
+      
       void setList(bool list) { m_isList = list; }
       bool isList() const { return m_isList; }
       
@@ -110,7 +120,12 @@ namespace mtconnect
         {
           performConversions(p, errors);
           if (isSufficient(p, errors))
-            return m_function(name, p);
+          {
+            auto ent = m_function(name, p);
+            if (m_order)
+              ent->setOrder(m_order);
+            return ent;
+          }
         }
         catch (PropertyError &e)
         {
@@ -229,6 +244,7 @@ namespace mtconnect
     protected:
       Requirements m_requirements;
       Function m_function;
+      OrderListPtr m_order;
       
       StringFactory m_stringFactory;
       RegexFactory m_regexFactory;

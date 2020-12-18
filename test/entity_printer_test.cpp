@@ -182,3 +182,71 @@ TEST_F(EntityParserTest, TestRecursiveEntityLists)
   printer.print(*m_writer, entity);
   ASSERT_EQ(doc, m_writer->getContent());
 }
+
+TEST_F(EntityParserTest, TestEntityOrder)
+{
+  auto component = make_shared<Factory>(Requirements{
+    Requirement("id", true ),
+    Requirement("value", false ),
+  });
+  
+  auto components = make_shared<Factory>(Requirements({
+    Requirement("ZFirstValue", ENTITY, component),
+    Requirement("HSecondValue", ENTITY, component),
+    Requirement("AThirdValue", ENTITY, component),
+    Requirement("GFourthValue", ENTITY, component),
+    Requirement("Simple", false),
+    Requirement("Unordered", false)
+  }));
+  components->setOrder({ "ZFirstValue", "Simple",
+    "HSecondValue", "AThirdValue", "GFourthValue"
+  });
+  
+  auto device = make_shared<Factory>(Requirements({
+    Requirement("name", true ),
+    Requirement("Components", ENTITY, components),
+  }));
+  
+  auto root = make_shared<Factory>(Requirements{
+    Requirement("Device", ENTITY, device)
+  });
+
+  auto doc = string {
+    "<Device name=\"foo\">\n"
+    "  <Components>\n"
+    "    <Unordered>Last</Unordered>\n"
+    "    <HSecondValue id=\"a\">First</HSecondValue>\n"
+    "    <GFourthValue id=\"b\">Second</GFourthValue>\n"
+    "    <ZFirstValue id=\"c\">Third</ZFirstValue>\n"
+    "    <Simple>Fourth</Simple>\n"
+    "    <AThirdValue id=\"d\">Fifth</AThirdValue>\n"
+    "  </Components>\n"
+    "</Device>\n"
+  };
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  entity::XmlPrinter printer;
+  
+  printer.print(*m_writer, entity);
+  
+  auto expected = string {
+    "<Device name=\"foo\">\n"
+    "  <Components>\n"
+    "    <ZFirstValue id=\"c\">Third</ZFirstValue>\n"
+    "    <Simple>Fourth</Simple>\n"
+    "    <HSecondValue id=\"a\">First</HSecondValue>\n"
+    "    <AThirdValue id=\"d\">Fifth</AThirdValue>\n"
+    "    <GFourthValue id=\"b\">Second</GFourthValue>\n"
+    "    <Unordered>Last</Unordered>\n"
+    "  </Components>\n"
+    "</Device>\n"
+  };
+
+  ASSERT_EQ(expected, m_writer->getContent());
+
+}

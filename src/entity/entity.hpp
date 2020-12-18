@@ -25,6 +25,8 @@ namespace mtconnect
   {
     using ErrorList = std::list<PropertyError>;
     using Properties = std::map<std::string, Value>;
+    using OrderList = std::list<std::string>;
+    using OrderListPtr = std::shared_ptr<OrderList>;
 
     class Entity : public std::enable_shared_from_this<Entity>
     {
@@ -72,10 +74,17 @@ namespace mtconnect
         return std::nullopt;
       }
       
+      void setOrder(const OrderListPtr order)
+      {
+        m_order = order;
+      }
+      const OrderListPtr getOrder() const { return m_order; }
+      
       // Entity Factory
     protected:
       std::string m_name;
       Properties m_properties;
+      OrderListPtr m_order;
     };
   }
 }
