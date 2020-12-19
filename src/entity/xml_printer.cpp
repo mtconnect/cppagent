@@ -20,6 +20,8 @@
 #include <libxml/xmlwriter.h>
 #include <dlib/logger.h>
 
+#include <unordered_map>
+
 using namespace std;
 
 namespace mtconnect
@@ -28,29 +30,29 @@ namespace mtconnect
   {
     static dlib::logger g_logger("entity.xml.printer");
     
-    const char *toString(const Value &value, Value &target)
+    const char *toCharPtr(const Value &value, string &temp)
     {
-      const char *s{nullptr};
+      const string *s;
       if (!holds_alternative<string>(value))
       {
-        target = value;
-        ConvertValueToType(target, STRING);
-        s = get<string>(target).c_str();
+        Value conv = value;
+        ConvertValueToType(conv, STRING);
+        temp = get<string>(conv);
+        s = &temp;
       }
       else
       {
-        s = get<string>(value).c_str();
+        s = &get<string>(value);
       }
       
-      return s;
+      return s->c_str();
     }
           
     using Property = pair<string,Value>;
     void printProperty(xmlTextWriterPtr writer, const Property &p)
     {
-      Value v;
-      const char *s = toString(p.second, v);
-      
+      string t;
+      const char *s = toCharPtr(p.second, t);
       if (p.first == "value")
       {
         // The value is the content for a simple element
@@ -58,8 +60,8 @@ namespace mtconnect
       }
       else
       {
-        AutoElement element(writer, p.first.c_str());
-        printProperty(writer, { "value", p.second });
+        AutoElement element(writer, p.first);
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
       }
     }
     
@@ -70,41 +72,49 @@ namespace mtconnect
       list<Property> attributes;
       list<Property> elements;
       auto &properties = entity->getProperties();
+      const auto order = entity->getOrder();
       
-      partition_copy(properties.begin(), properties.end(),
-                     back_inserter(attributes), back_inserter(elements),
-                     [](auto &prop) {
+      // Partition the properties
+      for (const auto &prop : properties)
+      {
         auto &key = prop.first;
-        return (key != "value" && key != "list" && islower(key[0]));
-      });
+        if (key != "value" && key != "list" && islower(key[0]))
+          attributes.emplace_back(prop);
+        else
+          elements.emplace_back(prop);
+      }
+      
+      // Reorder elements if they need to be specially ordered.
+      if (order)
+      {
+        // Creates a temp ordering map
+        unordered_map<string,int> ordering;
+        int i = 0;
+        for (const auto &s : *order)
+          ordering.insert({s, i++});
+        
+        // Sort all ordered elements first based on the order in the
+        // ordering list
+        elements.sort([&ordering](auto &e1, auto &e2) -> bool {
+          auto it1 = ordering.find(e1.first);
+          if (it1 == ordering.end())
+            return false;
+          auto it2 = ordering.find(e2.first);
+          if (it2 == ordering.end())
+            return true;
+          return it1->second < it2->second;
+        });
+      }
       
       for (auto &a : attributes)
       {
-        Value t;
-        const char *s = toString(a.second, t);
+        string t;
         THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
                                     BAD_CAST a.first.c_str(),
-                                    BAD_CAST s));
+                                    BAD_CAST toCharPtr(a.second, t)));
 
       }
-      
-      const auto order = entity->getOrder();
-      if (order)
-      {
-        list<Property> ordered;
-        for (auto &o : *order)
-        {
-          auto ele = find_if(elements.begin(), elements.end(),
-                             [&o](auto &e) { return o == e.first; });
-          if (ele != elements.end())
-          {
-            ordered.emplace_back(*ele);
-            elements.erase(ele);
-          }
-        }
-        elements.splice(elements.begin(), ordered);
-      }
-      
+                  
       for (auto &e : elements)
       {
         if (holds_alternative<EntityPtr>(e.second))
