@@ -40,9 +40,6 @@ namespace mtconnect
                        const std::string &document,
                        const std::string &version,
                        ErrorList &errors);
-      EntityPtr parseFile(FactoryPtr factory,
-                           const std::string &path,
-                           ErrorList &errors);
       
     };
   }

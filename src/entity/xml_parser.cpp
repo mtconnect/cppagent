@@ -57,11 +57,23 @@ namespace mtconnect
       
       return qname;
     }
+    
+    inline void trim(string &s)
+    {
+      auto beg = s.find_first_not_of(" \t\n");
+      if (beg > 0)
+        s.erase(0, beg);
+      if (!s.empty())
+      {
+        auto end = s.find_last_not_of(" \t\n");
+        if (end < s.size() - 1)
+          s.erase(end);
+      }
+    }
         
     static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node,
                             ErrorList &errors)
     {
-
       auto qname = nodeQName(node);
       auto ef = factory->factoryFor(qname);
       if (ef)
@@ -101,8 +113,12 @@ namespace mtconnect
             else if (child->children->type == XML_TEXT_NODE && child->children->content &&
                      *child->children->content != '\0' && child->properties == nullptr)
             {
-              properties.insert({  nodeQName(child),
-                string((const char *) child->children->content ) });
+              // TODO: Fix when the child is an element that failed because of an
+              // error instead of not being associated with simple content entity.
+              string s((const char *) child->children->content);
+              trim(s);
+              if (!s.empty())
+                properties.insert({  nodeQName(child), s });
             }
             else
             {
@@ -111,9 +127,10 @@ namespace mtconnect
           }
           else if (child->type == XML_TEXT_NODE)
           {
-            auto content = (const char *) child->content;
-            if (*content != 0)
-              properties.insert({ "value", content });
+            string s((const char *) child->content);
+            trim(s);
+            if (!s.empty())
+              properties.insert({ "value", s });
           }
         }
         
@@ -148,23 +165,18 @@ namespace mtconnect
       
       catch (PropertyError e)
       {
-        
+        g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
+        errors.emplace_back(e);
+        throw;
       }
       
-      catch (string e)
+      catch (XmlError e)
       {
-        g_logger << dlib::LFATAL << "Cannot parse XML document: " << e;
+        g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
         throw;
       }
       
       return entity;
-    }
-    
-    EntityPtr XmlParser::parseFile(FactoryPtr factory,
-                                    const string &path,
-                                    ErrorList &errors)
-    {
-      
-    }
+    }    
   }
 }
