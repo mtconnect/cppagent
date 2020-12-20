@@ -59,7 +59,7 @@ TEST_F(EntityTest, TestSimpleFactory)
     Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
 
-  Properties simple { { "id", "abc" }, { "name", "xxx" }, {"size", 10 }};
+  Properties simple({ { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(10ll) }});
   
   auto entity = root->create("simple", simple);
   ASSERT_TRUE(entity);
@@ -100,8 +100,8 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   ASSERT_EQ("arf", get<std::string>(se->getProperty("value")));
 
   Properties simpp {
-    { "id", "abc" }, { "name", "xxx" }, {"size", 10 },
-    { "second", se }
+    { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(10ll) },
+    { "second", Value(se) }
   };
   
   auto entity = root->create("simple", simpp);
@@ -172,8 +172,8 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_TRUE(se3);
   
   Properties simpp {
-    { "id", "abc" }, { "name", "xxx" }, {"size", 10 },
-    { "seconds", se3 }
+    { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(10ll) },
+    { "seconds", Value(se3) }
   };
   
   auto entity = root->create("simple", simpp);
@@ -211,7 +211,7 @@ TEST_F(EntityTest, MissingProperty)
     Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
   
-  Properties simple { { "name", "xxx" }, {"size", 10 }};
+  Properties simple { { "name", "xxx" }, {"size", 10ll }};
   
   ErrorList errors;
   auto entity = root->create("simple", simple, errors);
@@ -319,7 +319,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_TRUE(se3);
   
   Properties simpp {
-    { "id", "abc" }, { "name", "xxx" }, {"size", 10 },
+    { "id", "abc" }, { "name", "xxx" }, {"size", 10ll },
     { "seconds", se3 }
   };
   

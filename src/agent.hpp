@@ -53,7 +53,8 @@ namespace mtconnect
     std::ostream *m_out = nullptr;
     const Printer *m_printer = nullptr;
   };
-  using IncomingThings = struct dlib::incoming_things;
+  
+  using IncomingThings = dlib::incoming_things;
 
   class Agent : public dlib::server_http
   {

@@ -71,7 +71,7 @@ class AgentDeviceTest : public testing::Test
   
   void createListener()
   {
-    ASSERT_TRUE(!create_listener(m_server, 78788, "127.0.0.1"));
+    ASSERT_TRUE(!create_listener(m_server, 21788, "127.0.0.1"));
     m_port = m_server->get_listening_port();
   }
   
@@ -81,7 +81,7 @@ class AgentDeviceTest : public testing::Test
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
-  int m_port{78788};
+  int m_port{21788};
   dlib::scoped_ptr<dlib::listener> m_server;
   dlib::scoped_ptr<dlib::connection> m_serverSocket;
 };
@@ -148,14 +148,14 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
       PARSE_XML_RESPONSE;
       
       ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
-      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", "_127.0.0.1_78788");
-      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:78788");
+      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", "_127.0.0.1_21788");
+      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:21788");
       
       ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
-                            "/m:DataItem[@id='_127.0.0.1_78788_adapter_uri']@type",
+                            "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']@type",
                             "ADAPTER_URI");
       ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
-                            "/m:DataItem[@id='_127.0.0.1_78788_adapter_uri']/m:Constraints/m:Value",
+                            "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']/m:Constraints/m:Value",
                             m_adapter->getUrl().c_str());
     }
   }
