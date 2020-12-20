@@ -59,7 +59,7 @@ TEST_F(EntityTest, TestSimpleFactory)
     Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
 
-  Properties simple({ { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(10ll) }});
+  Properties simple({ { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(int64_t(10)) }});
   
   auto entity = root->create("simple", simple);
   ASSERT_TRUE(entity);
@@ -100,7 +100,7 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   ASSERT_EQ("arf", get<std::string>(se->getProperty("value")));
 
   Properties simpp {
-    { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(10ll) },
+    { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(int64_t(10)) },
     { "second", Value(se) }
   };
   
@@ -172,7 +172,7 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_TRUE(se3);
   
   Properties simpp {
-    { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(10ll) },
+    { "id", Value("abc") }, { "name", Value("xxx") }, {"size", Value(int64_t(10)) },
     { "seconds", Value(se3) }
   };
   
@@ -211,7 +211,7 @@ TEST_F(EntityTest, MissingProperty)
     Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
   
-  Properties simple { { "name", "xxx" }, {"size", 10ll }};
+  Properties simple { { "name", "xxx" }, {"size", int64_t(10) }};
   
   ErrorList errors;
   auto entity = root->create("simple", simple, errors);
@@ -319,7 +319,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_TRUE(se3);
   
   Properties simpp {
-    { "id", "abc" }, { "name", "xxx" }, {"size", 10ll },
+    { "id", "abc" }, { "name", "xxx" }, {"size", int64_t(10) },
     { "seconds", se3 }
   };
   
@@ -372,14 +372,14 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_EQ("aaa", get<string>(v));
 
   Requirement r3("vector", VECTOR);
-  v = 123ll;
+  v = int64_t(123);
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_TRUE(r3.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
   ASSERT_EQ(1, get<Vector>(v).size());
   ASSERT_EQ(123.0, get<Vector>(v)[0]);
 
-  v = 123ll;
+  v = int64_t(123);
   Requirement r4("entity", ENTITY);
   ASSERT_THROW(r4.convertType(v), PropertyConversionError);
 
@@ -390,7 +390,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_TRUE(holds_alternative<double>(v));
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<int64_t>(v));
-  ASSERT_EQ(1234, get<int64_t>(v));
+  ASSERT_EQ(int64_t(1234), get<int64_t>(v));
   
   v = nullptr;
   ASSERT_FALSE(r1.convertType(v));
@@ -398,7 +398,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 
 TEST_F(EntityTest, TestRequirementStringConversion)
 {
-  Value v(1234567890ll);
+  Value v(int64_t(1234567890));
   Requirement r1("string", STRING);
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_TRUE(r1.convertType(v));
@@ -425,7 +425,7 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
 {
   Value v("123.24");
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("double", DOUBLE);
+  Requirement r1("double", entity::DOUBLE);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<double>(v));
   ASSERT_EQ(123.24, get<double>(v));
@@ -487,7 +487,7 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   Requirement r3("entity_list", ENTITY_LIST);
   ASSERT_THROW(r3.convertType(v), PropertyConversionError);
 
-  Requirement r4("entity_list", DOUBLE);
+  Requirement r4("entity_list", entity::DOUBLE);
   ASSERT_THROW(r4.convertType(v), PropertyConversionError);
 
   Requirement r6("entity_list", INTEGER);
