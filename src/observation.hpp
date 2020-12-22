@@ -47,14 +47,6 @@ namespace mtconnect
   using ObservationPtr = RefCountedPtr<Observation>;
   using ObservationPtrArray = dlib::array<ObservationPtr>;
 
-  template <class... Ts>
-  struct overloaded : Ts...
-  {
-    using Ts::operator()...;
-  };
-  template <class... Ts>
-  overloaded(Ts...) -> overloaded<Ts...>;
-
   struct DataSetEntry;
   using DataSet = std::set<DataSetEntry>;
   using DataSetValue = std::variant<DataSet, std::string, int64_t, double>;

@@ -27,6 +27,7 @@ namespace mtconnect
     using Properties = std::map<std::string, Value>;
     using OrderList = std::list<std::string>;
     using OrderListPtr = std::shared_ptr<OrderList>;
+    using Property = std::pair<std::string, Value>;
 
     class Entity : public std::enable_shared_from_this<Entity>
     {
@@ -57,6 +58,10 @@ namespace mtconnect
           return noValue;
         else
           return it->second;
+      }
+      void addProperty(const Property &property)
+      {
+        m_properties.insert(property);
       }
 
       const Value &getValue() const { return getProperty("value"); }

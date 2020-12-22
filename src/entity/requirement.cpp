@@ -288,7 +288,7 @@ namespace mtconnect
                 break;
             }
           },
-          [&](auto arg) {
+          [&](const auto &arg) {
             converted = false;
           }
         }, value);

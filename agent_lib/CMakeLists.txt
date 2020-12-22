@@ -7,6 +7,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent_device.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset_buffer.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset_buffer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/cached_file.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/change_observer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/change_observer.hpp"

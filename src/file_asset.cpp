@@ -69,18 +69,15 @@ namespace mtconnect
     static auto fileLocation = make_shared<Factory>(Requirements({
       Requirement("href", true )}));
 
-    static auto value = make_shared<Factory>(Requirements({
-      Requirement("value", true )}));
-
     file->addRequirements(Requirements({
       Requirement("size", INTEGER),
       Requirement("verisionId", STRING),
       Requirement("state", STRING),
       Requirement("FileLocation", ENTITY, fileLocation),
-      Requirement("Signature", ENTITY, value, false),
-      Requirement("PublicKey", ENTITY, value, false),
-      Requirement("CreationTime", ENTITY, value),
-      Requirement("ModificationTime", ENTITY, value, false),
+      Requirement("Signature", false),
+      Requirement("PublicKey", false),
+      Requirement("CreationTime", false),
+      Requirement("ModificationTime", false),
       Requirement("Destinations", ENTITY_LIST, destinations)
     }));
     

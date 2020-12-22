@@ -56,8 +56,7 @@ namespace mtconnect
       m_type = another.m_type;
       m_removed = another.m_removed;
     }
-
-    Asset(std::string assetId, std::string type, std::string content, const bool removed = false);
+    Asset(std::string assetId, std::string type, std::string content, bool removed = false);
 
     ~Asset() override;
 

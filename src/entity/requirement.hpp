@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "asset.hpp"
 #include "globals.hpp"
 
 #include <map>
@@ -35,6 +34,15 @@
 #include <tuple>
 #include <limits>
 #include <stdexcept>
+#include <atomic>
+
+#include <cmath>
+#include <set>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
+
 
 namespace mtconnect
 {

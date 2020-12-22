@@ -41,7 +41,7 @@ else()
     if(EXISTS "${_link_library}")
       message(STATUS "  * Reusing previously built LibXML2 library")
     else()
-      message(STATUS "  * Donwload LibXML2")
+      message(STATUS "  * Download LibXML2")
       FetchContent_Populate(libxmlprovider)
 
       if(UNIX)
