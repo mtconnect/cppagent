@@ -68,7 +68,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
 {
   auto fileProperty = make_shared<Factory>(Requirements({
     Requirement("name", true ),
-    Requirement("value", true) }));
+    Requirement("VALUE", true) }));
   
   auto fileProperties = make_shared<Factory>(  Requirements({
     Requirement("FileProperty", ENTITY, fileProperty,
@@ -77,7 +77,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   
   auto fileComment = make_shared<Factory>(Requirements({
     Requirement("timestamp", true ),
-    Requirement("value", true) }));
+    Requirement("VALUE", true) }));
   
   auto fileComments = make_shared<Factory>(Requirements({
     Requirement("FileComment", ENTITY, fileComment,
@@ -132,12 +132,12 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   auto it = fps->begin();
   ASSERT_EQ("FileProperty", (*it)->getName());
   ASSERT_EQ("one", get<string>((*it)->getProperty("name")));
-  ASSERT_EQ("Round", get<string>((*it)->getProperty("value")));
+  ASSERT_EQ("Round", get<string>((*it)->getProperty("VALUE")));
   
   it++;
   ASSERT_EQ("FileProperty", (*it)->getName());
   ASSERT_EQ("two", get<string>((*it)->getProperty("name")));
-  ASSERT_EQ("Flat", get<string>((*it)->getProperty("value")));
+  ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
 }
 
 TEST_F(EntityParserTest, TestRecursiveEntityLists)

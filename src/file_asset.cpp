@@ -28,14 +28,14 @@ namespace mtconnect
     
     static auto fileProperty = make_shared<Factory>(Requirements({
       Requirement("name", true ),
-      Requirement("value", true) }));
+      Requirement("VALUE", true) }));
     
     static auto fileProperties = make_shared<Factory>(Requirements({
         Requirement("FileProperty", ENTITY, fileProperty) }));
     
     static auto fileComment = make_shared<Factory>(Requirements({
       Requirement("timestamp", true ),
-      Requirement("value", true) }));
+      Requirement("VALUE", true) }));
     
     static auto fileComments = make_shared<Factory>(Requirements({
       Requirement("FileComment", ENTITY, fileComment) }));
@@ -65,7 +65,7 @@ namespace mtconnect
     static auto file = make_shared<Factory>(*FileArchetypeAsset::getFactory());
     
     static auto destination = make_shared<Factory>(Requirements({
-      Requirement("value", true )}));
+      Requirement("VALUE", true )}));
     
     static auto destinations = make_shared<Factory>(Requirements({
       Requirement("Destination", ENTITY, destination) }));

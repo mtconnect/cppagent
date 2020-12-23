@@ -39,7 +39,7 @@ class EntityParserTest : public testing::Test
   {
     auto fileProperty = make_shared<Factory>(Requirements({
       Requirement("name", true ),
-      Requirement("value", true) }));
+      Requirement("VALUE", true) }));
     
     auto fileProperties = make_shared<Factory>(  Requirements({
       Requirement("FileProperty", ENTITY, fileProperty,
@@ -48,7 +48,7 @@ class EntityParserTest : public testing::Test
     
     auto fileComment = make_shared<Factory>(Requirements({
       Requirement("timestamp", true ),
-      Requirement("value", true) }));
+      Requirement("VALUE", true) }));
     
     auto fileComments = make_shared<Factory>(Requirements({
       Requirement("FileComment", ENTITY, fileComment,
@@ -187,7 +187,7 @@ TEST_F(EntityParserTest, TestEntityOrder)
 {
   auto component = make_shared<Factory>(Requirements{
     Requirement("id", true ),
-    Requirement("value", false ),
+    Requirement("VALUE", false ),
   });
   
   auto components = make_shared<Factory>(Requirements({

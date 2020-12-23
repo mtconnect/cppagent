@@ -184,7 +184,7 @@ namespace mtconnect
         auto factory = factoryFor(name);
         if (factory)
         {
-          Properties p { { "list", a } };
+          Properties p { { "LIST", a } };
           return factory->make(name, p, errors);
         }
         else

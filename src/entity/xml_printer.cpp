@@ -53,7 +53,7 @@ namespace mtconnect
     {
       string t;
       const char *s = toCharPtr(p.second, t);
-      if (p.first == "value")
+      if (p.first == "VALUE")
       {
         // The value is the content for a simple element
         THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
@@ -78,7 +78,7 @@ namespace mtconnect
       for (const auto &prop : properties)
       {
         auto &key = prop.first;
-        if (key != "value" && key != "list" && islower(key[0]))
+        if (key != "VALUE" && key != "LIST" && islower(key[0]))
           attributes.emplace_back(prop);
         else
           elements.emplace_back(prop);

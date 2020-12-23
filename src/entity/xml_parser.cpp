@@ -82,7 +82,7 @@ namespace mtconnect
         EntityList *l { nullptr };
         if (ef->isList())
         {
-          l = &properties["list"].emplace<EntityList>();
+          l = &properties["LIST"].emplace<EntityList>();
         }
         
         for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
@@ -130,7 +130,7 @@ namespace mtconnect
             string s((const char *) child->content);
             trim(s);
             if (!s.empty())
-              properties.insert({ "value", s });
+              properties.insert({ "VALUE", s });
           }
         }
         

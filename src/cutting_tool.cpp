@@ -29,12 +29,12 @@ namespace mtconnect
   {
     static auto definition = make_shared<Factory>(Requirements({
       Requirement("format", false),
-      Requirement("value", true)
+      Requirement("VALUE", true)
     }));
         
     static auto reconditionCount = make_shared<Factory>(Requirements({
       Requirement("maximumCount", INTEGER, false),
-      Requirement("value", INTEGER, true)
+      Requirement("VALUE", INTEGER, true)
     }));
 
     static auto toolLife = make_shared<Factory>(Requirements({
@@ -43,14 +43,14 @@ namespace mtconnect
       Requirement("warning", DOUBLE, false),
       Requirement("limit", DOUBLE, false),
       Requirement("initial", DOUBLE, false),
-      Requirement("value", DOUBLE, true)
+      Requirement("VALUE", DOUBLE, true)
     }));
     
     static auto constraint = make_shared<Factory>(Requirements({
       Requirement("maximum", DOUBLE, false),
       Requirement("minimum", DOUBLE, false),
       Requirement("nominal", DOUBLE, false),
-      Requirement("value", DOUBLE, false)
+      Requirement("VALUE", DOUBLE, false)
     }));
 
     static auto measurement = make_shared<Factory>(Requirements({
@@ -61,7 +61,7 @@ namespace mtconnect
       Requirement("maximum", DOUBLE, false),
       Requirement("minimum", DOUBLE, false),
       Requirement("nominal", DOUBLE, false),
-      Requirement("value", DOUBLE, false)
+      Requirement("VALUE", DOUBLE, false)
     }));
 
     static auto measurements = make_shared<Factory>(Requirements({

@@ -64,13 +64,13 @@ namespace mtconnect
         m_properties.insert(property);
       }
 
-      const Value &getValue() const { return getProperty("value"); }
+      const Value &getValue() const { return getProperty("VALUE"); }
       std::optional<EntityList> getList(const std::string &name) const {
         auto &v = getProperty(name);
         auto *p = std::get_if<EntityPtr>(&v);
         if (p)
         {
-          auto &lv = (*p)->getProperty("list");
+          auto &lv = (*p)->getProperty("LIST");
           auto *l = std::get_if<EntityList>(&lv);
           if (l)
             return *l;
