@@ -35,7 +35,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER)
   target_clangtidy_setup(agent_lib)
   add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
 
-  gtest_discover_tests(${AGENT_TEST_NAME}_test)
+  gtest_discover_tests(${AGENT_TEST_NAME}_test DISCOVERY_MODE PRE_TEST)
 endmacro()
 
 add_agent_test(agent TRUE)

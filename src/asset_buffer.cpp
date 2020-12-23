@@ -99,13 +99,15 @@ namespace  mtconnect {
   AssetEntityPtr AssetBuffer::removeAsset(AssetEntityPtr asset)
   {
     AssetEntityPtr old {};
-
+    
+    return old;
   }
   
   AssetEntityPtr AssetBuffer::removeAsset(const std::string &id)
   {
     AssetEntityPtr old {};
 
+    return old;
   }
 
 }
