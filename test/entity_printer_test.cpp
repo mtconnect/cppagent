@@ -22,7 +22,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 
-class EntityParserTest : public testing::Test
+class EntityPrinterTest : public testing::Test
 {
  protected:
   void SetUp() override
@@ -79,7 +79,7 @@ class EntityParserTest : public testing::Test
   std::unique_ptr<XmlWriter> m_writer;
 };
 
-TEST_F(EntityParserTest, TestParseSimpleDocument)
+TEST_F(EntityPrinterTest, TestParseSimpleDocument)
 {
   auto root = createFileArchetypeFactory();
   
@@ -104,7 +104,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
-TEST_F(EntityParserTest, TestFileArchetypeWithDescription)
+TEST_F(EntityPrinterTest, TestFileArchetypeWithDescription)
 {
   auto root = createFileArchetypeFactory();
   
@@ -130,7 +130,7 @@ TEST_F(EntityParserTest, TestFileArchetypeWithDescription)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
-TEST_F(EntityParserTest, TestRecursiveEntityLists)
+TEST_F(EntityPrinterTest, TestRecursiveEntityLists)
 {
   auto component = make_shared<Factory>(Requirements{
     Requirement("id", true ),
@@ -183,7 +183,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityLists)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
-TEST_F(EntityParserTest, TestEntityOrder)
+TEST_F(EntityPrinterTest, TestEntityOrder)
 {
   auto component = make_shared<Factory>(Requirements{
     Requirement("id", true ),
@@ -248,5 +248,44 @@ TEST_F(EntityParserTest, TestEntityOrder)
   };
 
   ASSERT_EQ(expected, m_writer->getContent());
+}
 
+TEST_F(EntityPrinterTest, TestRawContent)
+{
+  auto definition = make_shared<Factory>(Requirements({
+    Requirement("format", false),
+    Requirement("RAW", true)
+  }));
+  
+  auto root = make_shared<Factory>(Requirements({
+    Requirement("Definition", ENTITY, definition, true)
+  }));
+
+  auto doc = R"DOC(
+<Definition format="XML">
+  <SomeContent with="stuff">
+    And some text
+  </SomeContent>
+  <AndMoreContent/>
+  And random text as well.
+</Definition>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity);
+
+  auto expected = R"DOC(<Definition format="XML"><SomeContent with="stuff">
+    And some text
+  </SomeContent><AndMoreContent/>
+  And random text as well.
+</Definition>
+)DOC";
+  
+  ASSERT_EQ(expected, m_writer->getContent());
 }

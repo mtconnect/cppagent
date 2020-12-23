@@ -257,3 +257,39 @@ TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
   auto sl = systems->getList("Components");
   ASSERT_FALSE(sl);
 }
+
+TEST_F(EntityParserTest, TestRawContent)
+{
+  auto definition = make_shared<Factory>(Requirements({
+    Requirement("format", false),
+    Requirement("RAW", true)
+  }));
+  
+  auto root = make_shared<Factory>(Requirements({
+    Requirement("Definition", ENTITY, definition, true)
+  }));
+
+  auto doc = R"DOC(
+<Definition format="XML">
+  <SomeContent with="stuff">
+    And some text
+  </SomeContent>
+  <AndMoreContent/>
+  And random text as well.
+</Definition>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  
+  auto expected = R"DOC(<SomeContent with="stuff">
+    And some text
+  </SomeContent><AndMoreContent/>
+  And random text as well.
+)DOC";
+  
+  ASSERT_EQ("XML", get<string>(entity->getProperty("format")));
+  ASSERT_EQ(expected, get<string>(entity->getProperty("RAW")));
+}

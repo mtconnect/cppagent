@@ -74,7 +74,9 @@ namespace mtconnect
       
       void setList(bool list) { m_isList = list; }
       bool isList() const { return m_isList; }
-      
+      void setHasRaw(bool raw) { m_hasRaw = raw; }
+      bool hasRaw() const { return m_hasRaw; }
+
       Requirement* getRequirement(const std::string &name)
       {
         for (auto &r : m_requirements)
@@ -216,6 +218,10 @@ namespace mtconnect
           {
             registerFactory(r.getName(), factory);
           }
+          else if (r.getName() == "RAW")
+          {
+            m_hasRaw = true;
+          }
         }
       }
       
@@ -249,6 +255,7 @@ namespace mtconnect
       StringFactory m_stringFactory;
       RegexFactory m_regexFactory;
       bool m_isList { false };
+      bool m_hasRaw { false };
     };
 
     

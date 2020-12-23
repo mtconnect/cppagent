@@ -70,6 +70,27 @@ namespace mtconnect
           s.erase(end);
       }
     }
+    
+    static Value parseRawNode(xmlNodePtr node)
+    {
+      stringstream str;
+      for (xmlNodePtr child = node->children; child; child = child->next)
+      {
+        xmlBufferPtr buf;
+        THROW_IF_XML2_NULL(buf = xmlBufferCreate());
+        auto count = xmlNodeDump(buf, child->doc, child, 0, 0);
+        if (count > 0)
+        {
+          str << (const char *) buf->content;
+        }
+        xmlBufferFree(buf);
+      }
+      Value content { nullptr };
+      if (str.tellp() > 0)
+          content = str.str();
+      return content;
+    }
+
         
     static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node,
                             ErrorList &errors)
@@ -94,43 +115,55 @@ namespace mtconnect
           }
         }
               
-        for (xmlNodePtr child = node->children; child; child = child->next)
+        if (ef->hasRaw())
         {
-          if (child->type == XML_ELEMENT_NODE)
+          auto value = parseRawNode(node);
+          if (holds_alternative<string>(value))
+            properties.insert({ "RAW", value });
+        }
+        else
+        {
+          for (xmlNodePtr child = node->children; child; child = child->next)
           {
-            auto ent = parseXmlNode(ef, child, errors);
-            if (ent)
+            if (child->type == XML_ELEMENT_NODE)
             {
-              if (ef->isList())
+              auto ent = parseXmlNode(ef, child, errors);
+              if (ent)
               {
-                l->emplace_back(ent);
+                if (ef->isList())
+                {
+                  l->emplace_back(ent);
+                }
+                else
+                {
+                  properties.insert({ ent->getName(), ent });
+                }
+              }
+              else if (child->children != nullptr &&
+                       child->children->type == XML_TEXT_NODE &&
+                       child->children->content != nullptr &&
+                       *child->children->content != '\0' &&
+                       child->properties == nullptr)
+              {
+                // TODO: Fix when the child is an element that failed because of an
+                // error instead of not being associated with simple content entity.
+                string s((const char *) child->children->content);
+                trim(s);
+                if (!s.empty())
+                  properties.insert({  nodeQName(child), s });
               }
               else
               {
-                properties.insert({ ent->getName(), ent });
+                g_logger << dlib::LWARN << "Unexpected element: " << nodeQName(child);
               }
             }
-            else if (child->children->type == XML_TEXT_NODE && child->children->content &&
-                     *child->children->content != '\0' && child->properties == nullptr)
+            else if (child->type == XML_TEXT_NODE)
             {
-              // TODO: Fix when the child is an element that failed because of an
-              // error instead of not being associated with simple content entity.
-              string s((const char *) child->children->content);
+              string s((const char *) child->content);
               trim(s);
               if (!s.empty())
-                properties.insert({  nodeQName(child), s });
+                properties.insert({ "VALUE", s });
             }
-            else
-            {
-              g_logger << dlib::LWARN << "Unexpected element: " << nodeQName(child);
-            }
-          }
-          else if (child->type == XML_TEXT_NODE)
-          {
-            string s((const char *) child->content);
-            trim(s);
-            if (!s.empty())
-              properties.insert({ "VALUE", s });
           }
         }
         

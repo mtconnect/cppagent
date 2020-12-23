@@ -29,7 +29,7 @@ namespace mtconnect
   {
     static auto definition = make_shared<Factory>(Requirements({
       Requirement("format", false),
-      Requirement("VALUE", true)
+      Requirement("RAW", true)
     }));
         
     static auto reconditionCount = make_shared<Factory>(Requirements({

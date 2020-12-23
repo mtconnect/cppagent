@@ -58,6 +58,10 @@ namespace mtconnect
         // The value is the content for a simple element
         THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
       }
+      else if (p.first == "RAW")
+      {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST s));
+      }
       else
       {
         AutoElement element(writer, p.first);
