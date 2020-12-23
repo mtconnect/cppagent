@@ -42,8 +42,20 @@ namespace mtconnect
   
   entity::FactoryPtr Asset::getRoot()
   {
-    static auto root = make_shared<Factory>();
+    static auto root = make_shared<Factory>();    
+    root->registerFactory(regex(".+"), ExtendedAsset::getFactory());
+    root->registerMatchers();
     return root;
+  }
+
+  FactoryPtr ExtendedAsset::getFactory()
+  {
+    static auto asset = make_shared<Factory>(*Asset::getFactory());
+    asset->addRequirements(Requirements({
+      { "RAW", false }
+    }));
+    
+    return asset;
   }
 
 }  // namespace mtconnect

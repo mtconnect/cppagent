@@ -139,13 +139,13 @@ namespace mtconnect
       }
       
       // Factory
-      bool registerFactory(const std::string &name, FactoryPtr &factory)
+      bool registerFactory(const std::string &name, FactoryPtr factory)
       {
         m_stringFactory.emplace(make_pair(name, factory));
         return true;
       }
       
-      bool registerFactory(const std::regex &exp, FactoryPtr &factory)
+      bool registerFactory(const std::regex &exp, FactoryPtr factory)
       {
         m_regexFactory.emplace_back(make_pair(exp, factory));
         return true;

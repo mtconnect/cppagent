@@ -87,4 +87,10 @@ namespace mtconnect
     std::string m_assetId;
     bool m_removed;
   };
+  
+  class ExtendedAsset : public Asset
+  {
+  public:
+    static entity::FactoryPtr getFactory();
+  };
 }  // namespace mtconnect

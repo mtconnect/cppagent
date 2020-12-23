@@ -73,6 +73,28 @@ namespace mtconnect
 
     static auto ext = make_shared<Factory>();
     
+    static auto item = make_shared<Factory>(Requirements{
+      { "indices", true },
+      { "itemId", false },
+      { "grade", false },
+      { "manufacturers", false },
+      { "Description", false },
+      { "locus", false },
+      { "ItemLife", ENTITY, toolLife, 0, Requirement::Infinite },
+      { "ProgramToolGroup", false },
+      { "Measurements", ENTITY, measurements, false }
+    });
+    item->registerFactory(regex(".+"), ext);
+    measurements->registerMatchers();
+    item->setOrder({"Description", "Locus",
+      "ItemLife", "ProgramToolGroup", "Measurements"
+    });
+
+    static auto items = make_shared<Factory>(Requirements{
+      { "count", INTEGER, true},
+      { "CuttingItem", ENTITY, item, 1, Requirement::Infinite }
+    });
+    
     static auto lifeCycle = make_shared<Factory>(Requirements({
       Requirement("ReconditionCount", ENTITY, reconditionCount, false),
       Requirement("CuttingToolLife", ENTITY_LIST, toolLife,
