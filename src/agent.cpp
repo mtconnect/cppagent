@@ -63,8 +63,9 @@ namespace mtconnect
                       {"jpeg", "image/jpeg"},
                       {"png", "image/png"},
                       {"ico", "image/x-icon"}}}),
-        m_maxAssets(maxAssets),
+        m_assetBuffer(maxAssets),
         m_xmlParser(make_unique<XmlParser>())
+  
   {
     // Create the Printers
     m_printers["xml"] = unique_ptr<Printer>(new XmlPrinter(version, m_pretty));
@@ -259,7 +260,7 @@ namespace mtconnect
     auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
     m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId,
                                                      m_circularBuffer.getBufferSize(),
-                                                     m_maxAssets, m_assets.size(),
+                                                     getMaxAssets(),    m_assetBuffer.getCount(),
                                                      m_circularBuffer.getSequence(),
                                                      m_devices));
   }
@@ -306,7 +307,6 @@ namespace mtconnect
     for (auto &i : m_devices)
       delete i;
     m_devices.clear();
-    m_assets.clear();
   }
 
   void Agent::start()
@@ -619,6 +619,7 @@ namespace mtconnect
   bool Agent::addAsset(Device *device, const string &id, const string &asset, const string &type,
                        const string &inputTime)
   {
+#if 0
     // Check to make sure the values are present
     if (type.empty() || asset.empty() || id.empty())
     {
@@ -683,7 +684,7 @@ namespace mtconnect
       }
 
       // Check for overflow
-      if (m_assets.size() >= m_maxAssets)
+      if (m_assets.size() >= getMaxAssets())
       {
         AssetPtr oldref(*m_assets.front());
         m_assetCounts[oldref->getType()] -= 1;
@@ -720,10 +721,11 @@ namespace mtconnect
       addToBuffer(device->getAssetRemoved(), type + "|" + id, time);
     else
       addToBuffer(device->getAssetChanged(), type + "|" + id, time);
-
+#endif
     return true;
   }
-
+  
+#if 0
   bool Agent::updateAsset(Device *device, const std::string &id, AssetChangeList &assetChangeList,
                           const string &inputTime)
   {
@@ -772,12 +774,13 @@ namespace mtconnect
     }
 
     addToBuffer(device->getAssetChanged(), asset->getType() + "|" + id, time);
-
     return true;
   }
+#endif
 
   bool Agent::removeAsset(Device *device, const std::string &id, const string &inputTime)
   {
+#if 0
     AssetPtr asset;
 
     string time;
@@ -803,12 +806,13 @@ namespace mtconnect
     }
 
     addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, time);
-
+#endif
     return true;
   }
 
   bool Agent::removeAllAssets(Device *device, const std::string &type, const std::string &inputTime)
   {
+#if 0
     string time;
     if (inputTime.empty())
       time = getCurrentTime(GMT_UV_SEC);
@@ -840,7 +844,7 @@ namespace mtconnect
         }
       }
     }
-
+#endif
     return true;
   }
   
@@ -1078,8 +1082,8 @@ namespace mtconnect
     else
       deviceList = m_devices;
 
-    return printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), m_maxAssets,
-                               m_assets.size(), deviceList, &m_assetCounts);
+    return printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), getMaxAssets(),
+                               m_assetBuffer.getCount(), deviceList);
   }
 
   string Agent::handleStream(const Printer *printer, ostream &out, const string &path, bool current,
@@ -1120,6 +1124,7 @@ namespace mtconnect
   std::string Agent::handleAssets(const Printer *printer, std::ostream &aOut,
                                   const key_value_map &queries, const std::string &list)
   {
+#if 0
     using namespace dlib;
     std::vector<AssetPtr> assets;
 
@@ -1166,7 +1171,8 @@ namespace mtconnect
       }
     }
 
-    return printer->printAssets(m_instanceId, m_maxAssets, m_assets.size(), assets);
+    return printer->printAssets(m_instanceId, getMaxAssets(), m_assets.size(), assets);
+#endif
   }
 
   // Store an asset in the map by asset # and use the circular buffer as

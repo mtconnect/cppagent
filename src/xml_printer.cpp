@@ -932,7 +932,7 @@ namespace mtconnect
 
     return ret;
   }
-
+#if 0
   string XmlPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
                                  const unsigned int assetCount,
                                  std::vector<AssetPtr> const &assets) const
@@ -1000,7 +1000,8 @@ namespace mtconnect
       addSimpleElement(writer, "Description", body);
     }
   }
-
+#endif
+  
   void XmlPrinter::addObservation(xmlTextWriterPtr writer, Observation *result) const
   {
     auto dataItem = result->getDataItem();
@@ -1236,6 +1237,7 @@ namespace mtconnect
     }
   }
 
+#if 0
   // Cutting tools
   void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value) const
   {
@@ -1384,4 +1386,5 @@ namespace mtconnect
 
     return ret;
   }
+#endif
 }  // namespace mtconnect

@@ -430,7 +430,7 @@ namespace mtconnect
         }
       }
 
-      m_agent->updateAsset(device, assetId, list, time);
+      //m_agent->updateAsset(device, assetId, list, time);
     }
     else if (key == "@REMOVE_ASSET@")
       m_agent->removeAsset(device, assetId, time);

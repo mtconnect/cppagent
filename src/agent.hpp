@@ -18,12 +18,13 @@
 #pragma once
 
 #include "adapter.hpp"
-#include "asset.hpp"
 #include "checkpoint.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
 #include "cached_file.hpp"
 #include "circular_buffer.hpp"
+#include "asset_buffer.hpp"
+#include "printer.hpp"
 
 #include <dlib/md5.h>
 #include <dlib/server.h>
@@ -114,14 +115,14 @@ namespace mtconnect
     unsigned int addToBuffer(DataItem *dataItem, const std::string &value, std::string time = "");
 
     // Asset management
-    bool addAsset(Device *device, const std::string &id, const std::string &asset,
-                  const std::string &type, const std::string &time = "");
-
-    bool updateAsset(Device *device, const std::string &id, AssetChangeList &list,
+    bool addAsset(Device *device, const std::string &id,
+                  const std::string &asset,
+                  const std::string &type,
+                  const std::string &time = "");
+    bool removeAsset(Device *device, const std::string &id,
                      const std::string &time);
-
-    bool removeAsset(Device *device, const std::string &id, const std::string &time);
-    bool removeAllAssets(Device *device, const std::string &type, const std::string &time);
+    bool removeAllAssets(Device *device, const std::string &type,
+                         const std::string &time);
 
     // Message when adapter has connected and disconnected
     void connecting(Adapter *adapter);
@@ -136,22 +137,19 @@ namespace mtconnect
     }
     uint64_t getSequence() const { return m_circularBuffer.getSequence(); }
     unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
-    unsigned int getMaxAssets() const { return m_maxAssets; }
-    unsigned int getAssetCount() const { return m_assets.size(); }
-
-    int getAssetCount(const std::string &type) const
+    auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
+    auto getAssetCount() const { return m_assetBuffer.getCount(); }
+    const auto &getAssets() const { return m_assetBuffer.getAssets(); }
+    
+    auto getAssetCount(const std::string &type) const
     {
-      const auto assetPos = m_assetCounts.find(type);
-      if (assetPos != m_assetCounts.end())
-        return assetPos->second;
-      return 0;
+      return m_assetBuffer.getCountForType(type);
     }
 
     uint64_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
 
     // For testing...
     void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
-    std::list<AssetPtr *> *getAssets() { return &m_assets; }
     auto getAgentDevice() { return m_agentDevice; }
 
     // Starting
@@ -278,19 +276,11 @@ namespace mtconnect
     // Circular Buffer
     CircularBuffer m_circularBuffer;
 
-    // For access to the sequence number and sliding buffer, use the mutex
-    std::mutex m_assetLock;
-
-    // Asset storage, circ buffer stores ids
-    std::list<AssetPtr *> m_assets;
-    AssetIndex m_assetMap;
-
-    // Natural key indices for assets
-    std::map<std::string, AssetIndex> m_assetIndices;
-    unsigned int m_maxAssets;
-
     // Agent Device
     AgentDevice *m_agentDevice{nullptr};
+    
+    // Asset Buffer
+    AssetBuffer m_assetBuffer;
 
     // Data containers
     std::vector<Adapter *> m_adapters;
@@ -298,8 +288,7 @@ namespace mtconnect
     std::map<std::string, Device *> m_deviceNameMap;
     std::map<std::string, Device *> m_deviceUuidMap;
     std::map<std::string, DataItem *> m_dataItemMap;
-    std::map<std::string, int> m_assetCounts;
-
+    
     // For file handling, small files will be cached
     std::map<std::string, std::string> m_fileMap;
     std::map<std::string, RefCountedPtr<CachedFile>> m_fileCache;

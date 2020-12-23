@@ -949,7 +949,7 @@ namespace mtconnect
 
     return array;
   }
-
+#if 0
   inline static void addIdentity(json &obj, Asset *asset)
   {
     auto &identity = asset->getIdentity();
@@ -971,7 +971,6 @@ namespace mtconnect
         obj[key.first] = key.second;
     }
   }
-
   static set<string> IntegerKeys = {"negativeOverlap", "positiveOverlap",  "Location",
                                     "maximumCount",    "ReconditionCount", "significantDigits",
                                     "ToolLife"};
@@ -1146,4 +1145,5 @@ namespace mtconnect
     AssetPtr asset(tool);
     return toJson(asset);
   }
+#endif
 }  // namespace mtconnect

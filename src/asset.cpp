@@ -24,27 +24,26 @@ using namespace std;
 
 namespace mtconnect
 {
-  Asset::Asset(std::string asssetId, std::string type, std::string content, const bool removed)
-      : m_assetId(std::move(asssetId)),
-        m_content(std::move(content)),
-        m_type(std::move(type)),
-        m_removed(removed)
+  using namespace entity;
+  
+  FactoryPtr Asset::getFactory()
   {
+    static auto asset = make_shared<Factory>(Requirements({
+      Requirement("assetId", true ),
+      Requirement("deviceUuid", true ),
+      Requirement("timestamp", true ),
+      Requirement("removed", false ) }),
+      [](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<Asset>(name, props);
+      });
+      
+    return asset;
+  }
+  
+  entity::FactoryPtr Asset::getRoot()
+  {
+    static auto root = make_shared<Factory>();
+    return root;
   }
 
-  Asset::~Asset() = default;
-
-  void Asset::addIdentity(const std::string &key, const std::string &value)
-  {
-    if (key == "deviceUuid")
-      m_deviceUuid = value;
-    else if (key == "timestamp")
-      m_timestamp = value;
-    else if (key == "removed")
-      m_removed = value == "true";
-    else if (key == "assetId")
-      m_assetId = value;
-    else
-      m_identity[key] = value;
-  }
 }  // namespace mtconnect

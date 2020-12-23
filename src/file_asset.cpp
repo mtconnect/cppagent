@@ -40,18 +40,22 @@ namespace mtconnect
     static auto fileComments = make_shared<Factory>(Requirements({
       Requirement("FileComment", ENTITY, fileComment) }));
 
-    static auto fileArchetype = make_shared<Factory>(Requirements{
-      Requirement("assetId", true ),
-      Requirement("deviceUuid", true ),
-      Requirement("timestamp", true ),
-      Requirement("removed", false ),
-      Requirement("name", true ),
+    static auto fileArchetype = make_shared<Factory>(*Asset::getFactory());
+    fileArchetype->addRequirements(Requirements{
       Requirement("mediaTyep", true),
       Requirement("applicationCategory", true),
       Requirement("applicationType", true),
       Requirement("FileComments", ENTITY_LIST, fileComments, false),
       Requirement("FileProperties", ENTITY_LIST, fileProperties, false)
     });
+    
+    static bool first { true };
+    if (first)
+    {
+      auto root = Asset::getRoot();
+      root->registerFactory("FileArchetype", fileArchetype);
+      first = false;
+    }
 
     return fileArchetype;
   }
@@ -81,8 +85,14 @@ namespace mtconnect
       Requirement("Destinations", ENTITY_LIST, destinations)
     }));
     
+    static bool first { true };
+    if (first)
+    {
+      auto root = Asset::getRoot();
+      root->registerFactory("File", file);
+      first = false;
+    }
+    
     return file;
-  }
-
-  
+  }  
 }

@@ -18,9 +18,9 @@
 #include "asset_buffer.hpp"
 
 namespace  mtconnect {
-  AssetEntityPtr AssetBuffer::addAsset(AssetEntityPtr asset)
+  AssetPtr AssetBuffer::addAsset(AssetPtr asset)
   {
-    AssetEntityPtr old {};
+    AssetPtr old {};
 
     if (!asset->getTimestamp())
     {
@@ -39,7 +39,7 @@ namespace  mtconnect {
       if (old)
       {
         auto it = std::find_if(m_buffer.begin(), m_buffer.end(),
-                               [&id](const AssetEntityPtr &a) -> bool {
+                               [&id](const AssetPtr &a) -> bool {
           return id == a->getAssetId();
         });
         if (it == m_buffer.end())
@@ -96,16 +96,18 @@ namespace  mtconnect {
     return old;
   }
 
-  AssetEntityPtr AssetBuffer::removeAsset(AssetEntityPtr asset)
-  {
-    AssetEntityPtr old {};
-    
-    return old;
-  }
   
-  AssetEntityPtr AssetBuffer::removeAsset(const std::string &id)
+  AssetPtr AssetBuffer::removeAsset(const std::string &id)
   {
-    AssetEntityPtr old {};
+    AssetPtr old {};
+    
+    std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
+    
+    old = m_primaryIndex[id];
+    if (old)
+    {
+      old->addProperty({ "removed", "true" });
+    }
 
     return old;
   }

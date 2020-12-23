@@ -1129,7 +1129,8 @@ namespace mtconnect
                               parent->addConfiguration(ext);
                             }}}});
   }
-
+  
+#if 0
   AssetPtr XmlParser::parseAsset(const std::string &assetId, const std::string &type,
                                  const std::string &content)
   {
@@ -1258,7 +1259,6 @@ namespace mtconnect
 
     return asset;
   }
-
   CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr doc)
   {
     CuttingToolValuePtr value(new CuttingToolValue(), true);
@@ -1551,4 +1551,5 @@ namespace mtconnect
       }
     }
   }
+#endif
 }  // namespace mtconnect

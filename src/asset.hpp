@@ -18,72 +18,73 @@
 #pragma once
 
 #include "globals.hpp"
-#include "printer.hpp"
-#include "ref_counted.hpp"
+#include "entity.hpp"
 
 #include <map>
 #include <string>
 
 namespace mtconnect
 {
-  class Asset;
-  using AssetPtr = RefCountedPtr<Asset>;
-
-  // An association of the index type to the value.
-  using AssetKeys = std::map<std::string, std::string>;
-  using XmlAttributes = std::map<std::string, std::string>;
-
-  class Asset : public RefCounted
+  class Asset : public entity::Entity
   {
-   protected:
-    std::string m_assetId;
-    std::string m_content;
-    std::string m_type;
-    std::string m_deviceUuid;
-    std::string m_timestamp;
-    std::string m_description;
-    XmlAttributes m_archetype;
-
-    bool m_removed;
-    AssetKeys m_keys;
-    AssetKeys m_identity;
-
-   public:
-    Asset(const Asset &another) : RefCounted(another)
+  public:
+    Asset(const std::string &name, const entity::Properties &props)
+      : entity::Entity(name, props), m_removed(false)
     {
-      m_assetId = another.m_assetId;
-      m_content = another.m_content;
-      m_type = another.m_type;
-      m_removed = another.m_removed;
+      auto &removed = getProperty("removed");
+      if (std::holds_alternative<std::string>(removed) &&
+          std::get<std::string>(removed) == "true")
+        m_removed = true;
     }
-    Asset(std::string assetId, std::string type, std::string content, bool removed = false);
+    ~Asset() override = default;
+    
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
 
-    ~Asset() override;
+    const std::string &getType() const
+    {
+      return getName();
+    }
+    const std::string &getAssetId() const
+    {
+      if (m_assetId.empty())
+      {
+        const auto &v = getProperty("assetId");
+        if (std::holds_alternative<std::string>(v))
+          *const_cast<std::string*>(&m_assetId) = std::get<std::string>(v);
+        else
+          throw entity::PropertyError("Asset has no assetId");
+      }
+      return m_assetId;
+    }
 
-    const std::string &getAssetId() const { return m_assetId; }
-    virtual std::string &getContent(const Printer *aPrinter) { return m_content; }
-    const std::string &getType() const { return m_type; }
-    AssetKeys &getKeys() { return m_keys; }
-    const std::string &getDeviceUuid() const { return m_deviceUuid; }
-    const std::string &getTimestamp() const { return m_timestamp; }
-    const std::string &getDescription() const { return m_description; }
-    const XmlAttributes &getArchetype() const { return m_archetype; }
+    const std::optional<std::string> getDeviceUuid() const
+    {
+      const auto &v = getProperty("deviceUuid");
+      if (std::holds_alternative<std::string>(v))
+        return std::get<std::string>(v);
+      else
+        return std::nullopt;
+    }
+    const std::optional<std::string> getTimestamp() const
+    {
+      const auto &v = getProperty("timestamp");
+      if (std::holds_alternative<std::string>(v))
+        return std::get<std::string>(v);
+      else
+        return std::nullopt;
+    }
     bool isRemoved() const { return m_removed; }
-
-    const AssetKeys &getIdentity() const { return m_identity; }
-
-    bool operator==(const Asset &another) const { return m_assetId == another.m_assetId; }
-
-    void setAssetId(const std::string &id) { m_assetId = id; }
-    void setDeviceUuid(const std::string &uuid) { m_deviceUuid = uuid; }
-    void setTimestamp(const std::string &timestamp) { m_timestamp = timestamp; }
-    void setRemoved(bool removed) { m_removed = removed; }
-    void setDescription(const std::string &desc) { m_description = desc; }
-    void setArchetype(const XmlAttributes &arch) { m_archetype = arch; }
-
-    virtual void changed() {}
-    virtual void addIdentity(const std::string &key, const std::string &value);
+    void setRemoved()
+    {
+      addProperty({ "removed" , "true" });
+      m_removed = true;
+    }
+    
+    bool operator==(const Asset &another) const { return getAssetId() == another.getAssetId(); }
+    
+  protected:
+    std::string m_assetId;
+    bool m_removed;
   };
-
-  using AssetIndex = std::map<std::string, AssetPtr>;
 }  // namespace mtconnect

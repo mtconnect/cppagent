@@ -16,7 +16,6 @@
 //
 
 #include "cutting_tool.hpp"
-
 #include "printer.hpp"
 
 #include <sstream>
@@ -25,131 +24,106 @@ using namespace std;
 
 namespace mtconnect
 {
-  CuttingTool::~CuttingTool() = default;
-
-  void CuttingTool::addValue(const CuttingToolValuePtr value)
+  using namespace entity;
+  FactoryPtr CuttingToolArchetype::getFactory()
   {
-    m_content.clear();
+    static auto definition = make_shared<Factory>(Requirements({
+      Requirement("format", false),
+      Requirement("value", true)
+    }));
+        
+    static auto reconditionCount = make_shared<Factory>(Requirements({
+      Requirement("maximumCount", INTEGER, false),
+      Requirement("value", INTEGER, true)
+    }));
 
-    // Check for keys...
-    if (value->m_key == "Location")
-      m_keys[value->m_key] = value->m_value;
+    static auto toolLife = make_shared<Factory>(Requirements({
+      Requirement("type", true),
+      Requirement("countDirection", true),
+      Requirement("warning", DOUBLE, false),
+      Requirement("limit", DOUBLE, false),
+      Requirement("initial", DOUBLE, false),
+      Requirement("value", DOUBLE, true)
+    }));
+    
+    static auto constraint = make_shared<Factory>(Requirements({
+      Requirement("maximum", DOUBLE, false),
+      Requirement("minimum", DOUBLE, false),
+      Requirement("nominal", DOUBLE, false),
+      Requirement("value", DOUBLE, false)
+    }));
 
-    m_values[value->m_key] = value;
-  }
+    static auto measurement = make_shared<Factory>(Requirements({
+      Requirement("significantDigits", INTEGER, false),
+      Requirement("units", false),
+      Requirement("nativeUnits", false),
+      Requirement("code", false),
+      Requirement("maximum", DOUBLE, false),
+      Requirement("minimum", DOUBLE, false),
+      Requirement("nominal", DOUBLE, false),
+      Requirement("value", DOUBLE, false)
+    }));
 
-  inline static bool splitKey(string &key, string &sel, string &val)
-  {
-    auto found = key.find_first_of('@');
+    static auto measurements = make_shared<Factory>(Requirements({
+      Requirement("Measurement", ENTITY_LIST, measurement,
+                  0, Requirement::Infinite)
+    }));
+    measurements->registerMatchers();
+    measurements->registerFactory(regex(".+"), measurement);
 
-    if (found != string::npos)
+    static auto ext = make_shared<Factory>();
+    
+    static auto lifeCycle = make_shared<Factory>(Requirements({
+      Requirement("ReconditionCount", ENTITY, reconditionCount, false),
+      Requirement("CuttingToolLife", ENTITY_LIST, toolLife,
+                  0, 3),
+      Requirement("ProgramToolGroup", false),
+      Requirement("ProgramToolNumber", false),
+      Requirement("ProcessSpindleSpeed", ENTITY, constraint, false),
+      Requirement("ProcessFeedRate", ENTITY, constraint, false),
+      Requirement("ConnectionCodeMachineSide", false),
+      Requirement("Measurements", ENTITY, measurements, false),
+      Requirement("CuttingItems", ENTITY, toolLife, false)
+    }));
+    lifeCycle->registerFactory(regex(".+"), ext);
+    measurements->registerMatchers();
+    lifeCycle->setOrder({ "ReconditionCount", "CuttingToolLife",
+      "ProgramToolGroup", "ProgramToolNumber", "ProcessSpindleSpeed",
+      "ProcessFeedRate", "ConnectionCodeMachineSide", "Measurements",
+      "CuttingItems"
+    });
+    
+    static auto tool = make_shared<Factory>(*Asset::getFactory());
+    tool->addRequirements(Requirements{
+      Requirement("toolId", true),
+      Requirement("Description", false),
+      Requirement("CuttingToolDefinition", ENTITY, definition, false),
+      Requirement("CuttingToolLifeCycle", ENTITY, lifeCycle, false)
+    });
+
+    static bool first { true };
+    if (first)
     {
-      sel = key;
-      key.erase(found);
-      sel.erase(0, found + 1);
-      found = sel.find_first_of('=');
-
-      if (found != string::npos)
-      {
-        val = sel;
-        sel.erase(found);
-        val.erase(0, found + 1);
-        return true;
-      }
+      auto root = Asset::getRoot();
+      root->registerFactory("CuttingToolArchetype", tool);
+      first = false;
     }
 
-    return false;
+    return tool;
   }
 
-  void CuttingTool::updateValue(const std::string &inputKey, const std::string &value)
+  FactoryPtr CuttingTool::getFactory()
   {
-    m_content.clear();
+    FactoryPtr tool;
 
-    if (inputKey == "Location")
-      m_keys[inputKey] = value;
-
-    // Split into path and parts and update the asset bits.
-    string key = inputKey, sel, val;
-
-    if (splitKey(key, sel, val))
+    static bool first { true };
+    if (first)
     {
-      if (key == "ToolLife")
-      {
-        for (const auto &life : m_lives)
-        {
-          if (life->m_properties.count(sel) > 0 && life->m_properties[sel] == val)
-          {
-            life->m_value = value;
-            break;
-          }
-        }
-      }
-      else
-      {
-        for (const auto &item : m_items)
-        {
-          if (item->m_identity.count(sel) > 0 && val == item->m_identity[sel])
-          {
-            if (item->m_values.count(key) > 0)
-              item->m_values[key]->m_value = value;
-            else if (item->m_measurements.count(key) > 0)
-              item->m_measurements[key]->m_value = value;
-
-            break;
-          }
-        }
-      }
+      auto root = Asset::getRoot();
+      root->registerFactory("CuttingTool", tool);
+      first = false;
     }
-    else
-    {
-      if (inputKey == "CutterStatus")
-      {
-        m_status.clear();
-        istringstream stream(value);
-        string val;
-
-        while (getline(stream, val, ','))
-        {
-          m_status.emplace_back(val);
-        }
-      }
-      else
-      {
-        if (m_values.count(inputKey) > 0)
-          m_values[inputKey]->m_value = value;
-        else if (m_measurements.count(inputKey) > 0)
-          m_measurements[inputKey]->m_value = value;
-      }
-    }
+    
+    return tool;
   }
-
-  void CuttingTool::addIdentity(const std::string &key, const std::string &value)
-  {
-    m_content.clear();
-
-    Asset::addIdentity(key, value);
-
-    if (key == "toolId")
-      m_keys[key] = value;
-  }
-
-  std::string &CuttingTool::getContent(const Printer *aPrinter)
-  {
-    if (m_content.empty())
-    {
-      const auto serialNumberPos = m_identity.find("serialNumber");
-      if (serialNumberPos == m_identity.end())
-        Asset::addIdentity("serialNumber", m_assetId);
-      else if (serialNumberPos->second.empty())
-        Asset::addIdentity("serialNumber", m_assetId);
-
-      m_content = aPrinter->printCuttingTool(this);
-    }
-
-    return m_content;
-  }
-
-  CuttingToolValue::~CuttingToolValue() = default;
-
-  CuttingItem::~CuttingItem() = default;
 }  // namespace mtconnect

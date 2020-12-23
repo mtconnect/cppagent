@@ -19,6 +19,7 @@
 
 #include "globals.hpp"
 #include "entity.hpp"
+#include "asset.hpp"
 
 #include <map>
 #include <memory>
@@ -27,66 +28,15 @@
 
 namespace mtconnect
 {
-  class AssetEntity : public entity::Entity
-  {
-  public:
-    const std::string &getType() const
-    {
-      return getName();
-    }
-    const std::string &getAssetId() const
-    {
-      if (m_assetId.empty())
-      {
-        const auto &v = getProperty("assetId");
-        if (std::holds_alternative<std::string>(v))
-          *const_cast<std::string*>(&m_assetId) = std::get<std::string>(v);
-        else
-          throw entity::PropertyError("Asset has no assetId");
-      }
-      return m_assetId;
-    }
-
-    const std::optional<std::string> getDeviceUuid() const
-    {
-      const auto &v = getProperty("deviceUuid");
-      if (std::holds_alternative<std::string>(v))
-        return std::get<std::string>(v);
-      else
-        return std::nullopt;
-    }
-    const std::optional<std::string> getTimestamp() const
-    {
-      const auto &v = getProperty("timestamp");
-      if (std::holds_alternative<std::string>(v))
-        return std::get<std::string>(v);
-      else
-        return std::nullopt;
-    }
-    bool isRemoved() const
-    {
-      const auto &v = getProperty("removed");
-      if (std::holds_alternative<std::string>(v))
-        return std::get<std::string>(v) == "true";
-      else
-        return false;
-    }
-    
-    bool operator==(const AssetEntity &another) const { return getAssetId() == another.getAssetId(); }
-    
-  protected:
-    std::string m_assetId;
-
-  };
-  
-  using AssetEntityPtr = std::shared_ptr<AssetEntity>;
+  using AssetPtr = std::shared_ptr<Asset>;
   
   class AssetBuffer
   {
   public:
-    using Index = std::map<std::string, AssetEntityPtr>;
+    using Index = std::map<std::string, AssetPtr>;
     using SecondaryIndex = std::map<std::string, Index>;
     using TypeCount = std::map<std::string, size_t>;
+    using Buffer = std::list<AssetPtr>;
 
     AssetBuffer(size_t max)
     : m_maxAssets(max)
@@ -94,11 +44,17 @@ namespace mtconnect
     }
     ~AssetBuffer() = default;
     
-    AssetEntityPtr addAsset(AssetEntityPtr asset);
-    AssetEntityPtr removeAsset(AssetEntityPtr asset);
-    AssetEntityPtr removeAsset(const std::string &id);
+    auto getMaxAssets() const  { return m_maxAssets; }
+    auto getCount() const { return m_buffer.size(); }
+    
+    AssetPtr addAsset(AssetPtr asset);
+    AssetPtr removeAsset(AssetPtr asset)
+    {
+      return removeAsset(asset->getAssetId());
+    }
+    AssetPtr removeAsset(const std::string &id);
 
-    AssetEntityPtr getAsset(const std::string &id)
+    AssetPtr getAsset(const std::string &id)
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       auto idx = m_primaryIndex.find(id);
@@ -133,15 +89,48 @@ namespace mtconnect
         res[t.first] = t.second.size();
       return res;
     }
-        
+    size_t getCountForType(const std::string &type) const
+    {
+      auto index = m_typeIndex.find(type);
+      if (index != m_typeIndex.end())
+        return index->second.size();
+      else
+        return 0;
+    }
+    const auto &getAssets() const
+    {
+      return m_buffer;
+    }
+    
+    
+    size_t removeAllByType(const std::string &type)
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
+      auto &index = m_typeIndex[type];
+      auto count = index.size();
+      for (auto &asset : index)
+        removeAsset(asset.first);
+      
+      return count;
+    }
+
+    size_t removeAllByDevice(const std::string &uuid)
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
+      auto &index = m_deviceIndex[uuid];
+      auto count = index.size();
+      for (auto &asset : index)
+        removeAsset(asset.first);
+      
+      return count;
+    }
+
     // For mutex locking
     void lock() { m_bufferLock.lock(); }
     void unlock() { m_bufferLock.unlock(); }
     void try_lock() { m_bufferLock.try_lock(); }
 
   protected:
-    using Buffer = std::list<AssetEntityPtr>;
-    
     // Access control to the buffer
     mutable std::recursive_mutex m_bufferLock;
     
