@@ -24,6 +24,55 @@ namespace mtconnect
 {
   namespace entity {
     static dlib::logger g_logger("EntityFactory");
+    
+    void Factory::_dupFactory(FactoryPtr &factory, FactoryMap &factories)
+    {
+      auto old = factories.find(factory);
+      if (old != factories.end())
+      {
+        factory = old->second;
+      }
+      else
+      {
+        auto ptr = make_shared<Factory>(*factory);
+        ptr->_deepCopy(factories);
+        factories.emplace(factory, ptr);
+        factory = ptr;
+      }
+    }
+    
+    void Factory::_deepCopy(FactoryMap &factories)
+    {
+      for (auto &r : m_requirements)
+      {
+        auto factory = r.getFactory();
+        if (factory)
+        {
+          _dupFactory(factory, factories);
+          r.setFactory(factory);
+        }
+      }
+      
+      for (auto &f : m_regexFactory)
+      {
+        _dupFactory(f.second, factories);
+      }
+      
+      for (auto &f : m_stringFactory)
+      {
+        _dupFactory(f.second, factories);
+      }
+    }
+    
+    FactoryPtr Factory::deepCopy() const
+    {
+      auto copy = make_shared<Factory>(*this);
+      map<FactoryPtr, FactoryPtr> factories;
+      copy->_deepCopy(factories);
+      
+      return copy;
+    }
+
  
     void Factory::LogError(const std::string &what)
     {

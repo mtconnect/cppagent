@@ -163,7 +163,14 @@ namespace mtconnect
       }
       const std::string &getName() const { return m_name; }
       ValueType getType() const { return m_type; }
-      auto &getFactory() { return m_factory; }
+      auto &getFactory() const { return m_factory; }
+      void setFactory(FactoryPtr &f) { m_factory = f; }
+      void setMultiplicity(int lower, int upper)
+      {
+        m_upperMultiplicity = upper;
+        m_lowerMultiplicity = lower;
+      }
+      void makeRequired() { m_lowerMultiplicity = 1; }
             
       bool convertType(Value &v) const { return ConvertValueToType(v, m_type); }
       bool hasMatcher() const { return m_matcher.use_count() > 0; }

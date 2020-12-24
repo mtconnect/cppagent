@@ -320,7 +320,117 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
   ASSERT_EQ(content, doc);
 }
 
+TEST_F(CuttingToolTest, TestMinmalTool)
+{
+  const auto doc =
+R"DOC(<CuttingTool assetId="M8010N9172N:1.0" toolId="CAT">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>NEW</Status>
+    </CutterStatus>
+    <ToolLife countDirection="DOWN" initial="25" limit="1" type="PART_COUNT">10</ToolLife>
+    <ProgramToolGroup>A</ProgramToolGroup>
+    <ProgramToolNumber>10</ProgramToolNumber>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  auto asset = dynamic_cast<Asset*>(entity.get());
+  ASSERT_NE(nullptr, asset);
 
+  ASSERT_EQ("CAT", get<string>(entity->getProperty("toolId")));
+  ASSERT_EQ("M8010N9172N:1.0", asset->getAssetId());
+  
+  ASSERT_FALSE(asset->getTimestamp());
+  ASSERT_FALSE(asset->getDeviceUuid());
+  
+  auto lifeCycle = get<EntityPtr>(asset->getProperty("CuttingToolLifeCycle"));
+  ASSERT_TRUE(lifeCycle);
+  
+  ASSERT_EQ("A", get<string>(lifeCycle->getProperty("ProgramToolGroup")));
+  ASSERT_EQ("10", get<string>(lifeCycle->getProperty("ProgramToolNumber")));
+
+  auto stl = lifeCycle->getList("CutterStatus");
+  ASSERT_EQ(1, stl->size());
+  auto st = stl->front();
+  ASSERT_EQ("NEW", get<string>(st->getValue()));
+
+  auto life = get<EntityList>(lifeCycle->getProperty("ToolLife"));
+  ASSERT_EQ(1, life.size());
+    
+  auto it = life.begin();
+  ASSERT_EQ("ToolLife", (*it)->getName());
+  ASSERT_EQ("PART_COUNT", get<string>((*it)->getProperty("type")));
+  ASSERT_EQ("DOWN", get<string>((*it)->getProperty("countDirection")));
+  ASSERT_EQ(25.0, get<DOUBLE>((*it)->getProperty("initial")));
+  ASSERT_EQ(1.0, get<DOUBLE>((*it)->getProperty("limit")));
+  
+  // Round trip test
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity);
+
+  string content = m_writer->getContent();
+  ASSERT_EQ(content, doc);
+}
+
+TEST_F(CuttingToolTest, TestMinmalToolError)
+{
+  const auto doc =
+R"DOC(<CuttingTool assetId="M8010N9172N:1.0" toolId="CAT">
+  <CuttingToolLifeCycle>
+    <ToolLife countDirection="DOWN" initial="25" limit="1" type="PART_COUNT">10</ToolLife>
+    <ProgramToolGroup>A</ProgramToolGroup>
+    <ProgramToolNumber>10</ProgramToolNumber>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_EQ("Property CutterStatus is required and not provided",
+            string(errors.front().what()));
+}
+
+TEST_F(CuttingToolTest, TestMeasurementsError)
+{
+  const auto doc =
+R"DOC(<CuttingTool assetId="M8010N9172N:1.0" toolId="CAT">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>NEW</Status>
+    </CutterStatus>
+    <Measurements>
+      <FunctionalLength code="LF" maximum="5.2" minimum="4.95" nominal="5" units="MILLIMETER"/>
+      <CuttingDiameterMax code="DC" maximum="1.4" minimum="0.95" nominal="1.25" units="MILLIMETER"/>
+    </Measurements>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(3, errors.size());
+  auto it = errors.begin();
+  ASSERT_EQ("Property VALUE is required and not provided",
+            string(it->what()));
+  it++;
+  ASSERT_EQ("Property VALUE is required and not provided",
+            string(it->what()));
+  it++;
+  ASSERT_EQ("Entity list requirement Measurement must have at least 1 entries, 0 found",            
+            string(it->what()));
+}
 
 #if 0
 TEST_F(CuttingToolTest, AssetRefCounts)

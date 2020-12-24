@@ -58,6 +58,7 @@ namespace mtconnect
       {
         registerEntityRequirements();
       }
+      FactoryPtr deepCopy() const;
       
       std::shared_ptr<Factory> getptr() {
         return shared_from_this();
@@ -86,7 +87,6 @@ namespace mtconnect
       {
         return m_simpleProperties.count(name) > 0;
       }
-
       
       Requirement* getRequirement(const std::string &name)
       {
@@ -262,8 +262,11 @@ namespace mtconnect
       }
       
     protected:
+      using FactoryMap = std::map<FactoryPtr, FactoryPtr>;
       static void LogError(const std::string &what);
-      
+      void _deepCopy(FactoryMap &factories);
+      static void _dupFactory(FactoryPtr &factory, FactoryMap &factories);
+
     protected:
       Requirements m_requirements;
       Function m_function;
