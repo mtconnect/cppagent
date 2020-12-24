@@ -231,7 +231,6 @@ TEST_F(EntityPrinterTest, TestEntityOrder)
   ASSERT_EQ(0, errors.size());
   
   entity::XmlPrinter printer;
-  
   printer.print(*m_writer, entity);
   
   auto expected = string {

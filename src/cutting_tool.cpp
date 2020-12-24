@@ -65,7 +65,7 @@ namespace mtconnect
     }));
 
     static auto measurements = make_shared<Factory>(Requirements({
-      Requirement("Measurement", ENTITY_LIST, measurement,
+      Requirement("Measurement", ENTITY, measurement,
                   0, Requirement::Infinite)
     }));
     measurements->registerMatchers();
@@ -79,15 +79,15 @@ namespace mtconnect
       { "grade", false },
       { "manufacturers", false },
       { "Description", false },
-      { "locus", false },
-      { "ItemLife", ENTITY, toolLife, 0, Requirement::Infinite },
+      { "Locus", false },
+      { "ItemLife", ENTITY, toolLife, 0, 3 },
       { "ProgramToolGroup", false },
-      { "Measurements", ENTITY, measurements, false }
+      { "Measurements", ENTITY_LIST, measurements, false }
     });
     item->registerFactory(regex(".+"), ext);
     measurements->registerMatchers();
-    item->setOrder({"Description", "Locus",
-      "ItemLife", "ProgramToolGroup", "Measurements"
+    item->setOrder({"Description", "Locus", "ItemLife",
+      "ProgramToolGroup", "Measurements"
     });
 
     static auto items = make_shared<Factory>(Requirements{
@@ -97,19 +97,19 @@ namespace mtconnect
     
     static auto lifeCycle = make_shared<Factory>(Requirements({
       Requirement("ReconditionCount", ENTITY, reconditionCount, false),
-      Requirement("CuttingToolLife", ENTITY, toolLife,
+      Requirement("ToolLife", ENTITY, toolLife,
                   0, 3),
       Requirement("ProgramToolGroup", false),
       Requirement("ProgramToolNumber", false),
       Requirement("ProcessSpindleSpeed", ENTITY, constraint, false),
       Requirement("ProcessFeedRate", ENTITY, constraint, false),
       Requirement("ConnectionCodeMachineSide", false),
-      Requirement("Measurements", ENTITY, measurements, false),
-      Requirement("CuttingItems", ENTITY, toolLife, false)
+      Requirement("Measurements", ENTITY_LIST, measurements, false),
+      Requirement("CuttingItems", ENTITY_LIST, items, false)
     }));
     lifeCycle->registerFactory(regex(".+"), ext);
     measurements->registerMatchers();
-    lifeCycle->setOrder({ "ReconditionCount", "CuttingToolLife",
+    lifeCycle->setOrder({ "ReconditionCount", "ToolLife",
       "ProgramToolGroup", "ProgramToolNumber", "ProcessSpindleSpeed",
       "ProcessFeedRate", "ConnectionCodeMachineSide", "Measurements",
       "CuttingItems"

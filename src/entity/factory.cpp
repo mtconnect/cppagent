@@ -62,7 +62,7 @@ namespace mtconnect
       for (const auto &r : m_requirements)
       {
         std::string key;
-        if (m_isList)
+        if (m_isList && r.getType() == ENTITY)
           key = "LIST";
         else
           key = r.getName();

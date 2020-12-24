@@ -71,11 +71,11 @@ class CuttingToolTest : public testing::Test
 
 TEST_F(CuttingToolTest, TestMinmalArchetype)
 {
-  const auto doc = R"DOC(
-<CuttingToolArchetype toolId="CAT" assetId="M8010N9172N:1.0">
+  const auto doc =
+R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
   <CuttingToolLifeCycle>
-    <CuttingToolLife type="MINUTES" countDirection="UP" initial="0" limit="100"/>
-    <CuttingToolLife type="PART_COUNT" countDirection="DOWN" initial="25" limit="1"/>
+    <ToolLife countDirection="UP" initial="0" limit="100" type="MINUTES"/>
+    <ToolLife countDirection="DOWN" initial="25" limit="1" type="PART_COUNT"/>
     <ProgramToolGroup>A</ProgramToolGroup>
     <ProgramToolNumber>10</ProgramToolNumber>
   </CuttingToolLifeCycle>
@@ -103,23 +103,224 @@ TEST_F(CuttingToolTest, TestMinmalArchetype)
   ASSERT_EQ("A", get<string>(lifeCycle->getProperty("ProgramToolGroup")));
   ASSERT_EQ("10", get<string>(lifeCycle->getProperty("ProgramToolNumber")));
 
-  auto life = get<EntityList>(lifeCycle->getProperty("CuttingToolLife"));
+  auto life = get<EntityList>(lifeCycle->getProperty("ToolLife"));
   ASSERT_EQ(2, life.size());
   
   auto it = life.begin();
-  ASSERT_EQ("CuttingToolLife", (*it)->getName());
+  ASSERT_EQ("ToolLife", (*it)->getName());
   ASSERT_EQ("MINUTES", get<string>((*it)->getProperty("type")));
   ASSERT_EQ("UP", get<string>((*it)->getProperty("countDirection")));
   ASSERT_EQ(0.0, get<DOUBLE>((*it)->getProperty("initial")));
   ASSERT_EQ(100.0, get<DOUBLE>((*it)->getProperty("limit")));
 
   it++;
-  ASSERT_EQ("CuttingToolLife", (*it)->getName());
+  ASSERT_EQ("ToolLife", (*it)->getName());
   ASSERT_EQ("PART_COUNT", get<string>((*it)->getProperty("type")));
   ASSERT_EQ("DOWN", get<string>((*it)->getProperty("countDirection")));
   ASSERT_EQ(25.0, get<DOUBLE>((*it)->getProperty("initial")));
   ASSERT_EQ(1.0, get<DOUBLE>((*it)->getProperty("limit")));
+  
+  // Round trip test
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity);
+
+  string content = m_writer->getContent();
+  ASSERT_EQ(content, doc);
 }
+
+TEST_F(CuttingToolTest, TestMeasurements)
+{
+  const auto doc =
+R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
+  <CuttingToolLifeCycle>
+    <Measurements>
+      <FunctionalLength code="LF" maximum="5.2" minimum="4.95" nominal="5" units="MILLIMETER"/>
+      <CuttingDiameterMax code="DC" maximum="1.4" minimum="0.95" nominal="1.25" units="MILLIMETER"/>
+    </Measurements>
+  </CuttingToolLifeCycle>
+</CuttingToolArchetype>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  auto asset = dynamic_cast<Asset*>(entity.get());
+  ASSERT_NE(nullptr, asset);
+
+  ASSERT_EQ("CAT", get<string>(entity->getProperty("toolId")));
+  ASSERT_EQ("M8010N9172N:1.0", asset->getAssetId());
+  
+  ASSERT_FALSE(asset->getTimestamp());
+  ASSERT_FALSE(asset->getDeviceUuid());
+  
+  auto lifeCycle = get<EntityPtr>(asset->getProperty("CuttingToolLifeCycle"));
+  ASSERT_TRUE(lifeCycle);
+  
+  auto meas = lifeCycle->getList("Measurements");
+  ASSERT_TRUE(meas);
+  ASSERT_EQ(2, meas->size());
+
+  auto it = meas->begin();
+  ASSERT_EQ("FunctionalLength", (*it)->getName());
+  ASSERT_EQ("LF", get<string>((*it)->getProperty("code")));
+  ASSERT_EQ("MILLIMETER", get<string>((*it)->getProperty("units")));
+  ASSERT_EQ(5.0, get<DOUBLE>((*it)->getProperty("nominal")));
+  ASSERT_EQ(4.95, get<DOUBLE>((*it)->getProperty("minimum")));
+  ASSERT_EQ(5.2, get<DOUBLE>((*it)->getProperty("maximum")));
+
+  it++;
+  ASSERT_EQ("CuttingDiameterMax", (*it)->getName());
+  ASSERT_EQ("DC", get<string>((*it)->getProperty("code")));
+  ASSERT_EQ("MILLIMETER", get<string>((*it)->getProperty("units")));
+  ASSERT_EQ(1.25, get<DOUBLE>((*it)->getProperty("nominal")));
+  ASSERT_EQ(0.95, get<DOUBLE>((*it)->getProperty("minimum")));
+  ASSERT_EQ(1.4, get<DOUBLE>((*it)->getProperty("maximum")));
+  
+  // Round trip test
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity);
+
+  string content = m_writer->getContent();
+  ASSERT_EQ(content, doc);
+}
+
+TEST_F(CuttingToolTest, TestItems)
+{
+  const auto doc =
+R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
+  <CuttingToolLifeCycle>
+    <CuttingItems count="2">
+      <CuttingItem grade="KC725M" indices="1-4" itemId="SDET43PDER8GB" manufacturers="KMT">
+        <Locus>FLANGE: 1-4, ROW: 1</Locus>
+        <Measurements>
+          <CuttingEdgeLength code="L" maximum="12.725" minimum="12.675" nominal="12.7"/>
+          <WiperEdgeLength code="BS" nominal="2.56"/>
+          <IncribedCircleDiameter code="IC" nominal="12.7"/>
+          <CornerRadius code="RE" nominal="0.8"/>
+        </Measurements>
+      </CuttingItem>
+      <CuttingItem grade="KC725M" indices="5-8" itemId="SDET43PDER8GB" manufacturers="KMT">
+        <Locus>FLANGE: 1-4, ROW: 2</Locus>
+        <Measurements>
+          <CuttingEdgeLength code="L" maximum="12.725" minimum="12.675" nominal="12.7"/>
+          <WiperEdgeLength code="BS" nominal="2.56"/>
+          <IncribedCircleDiameter code="IC" nominal="12.7"/>
+          <CornerRadius code="RE" nominal="0.8"/>
+        </Measurements>
+      </CuttingItem>
+    </CuttingItems>
+  </CuttingToolLifeCycle>
+</CuttingToolArchetype>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  auto asset = dynamic_cast<Asset*>(entity.get());
+  ASSERT_NE(nullptr, asset);
+
+  ASSERT_EQ("CAT", get<string>(entity->getProperty("toolId")));
+  ASSERT_EQ("M8010N9172N:1.0", asset->getAssetId());
+  
+  ASSERT_FALSE(asset->getTimestamp());
+  ASSERT_FALSE(asset->getDeviceUuid());
+  
+  auto lifeCycle = get<EntityPtr>(asset->getProperty("CuttingToolLifeCycle"));
+  ASSERT_TRUE(lifeCycle);
+  
+  auto items = get<EntityPtr>(lifeCycle->getProperty("CuttingItems"));
+  ASSERT_EQ(2, get<int64_t>(items->getProperty("count")));
+
+  auto itemList = lifeCycle->getList("CuttingItems");
+  ASSERT_EQ(2, itemList->size());
+  
+  auto it = itemList->begin();
+  ASSERT_EQ("CuttingItem", (*it)->getName());
+  ASSERT_EQ("1-4", get<string>((*it)->getProperty("indices")));
+  ASSERT_EQ("SDET43PDER8GB", get<string>((*it)->getProperty("itemId")));
+  ASSERT_EQ("KMT", get<string>((*it)->getProperty("manufacturers")));
+  ASSERT_EQ("KC725M", get<string>((*it)->getProperty("grade")));
+  ASSERT_EQ("FLANGE: 1-4, ROW: 1", get<string>((*it)->getProperty("Locus")));
+
+  {
+    auto meas = (*it)->getList("Measurements");
+    ASSERT_TRUE(meas);
+    ASSERT_EQ(4, meas->size());
+
+    auto im = meas->begin();
+    ASSERT_EQ("CuttingEdgeLength", (*im)->getName());
+    ASSERT_EQ("L", get<string>((*im)->getProperty("code")));
+    ASSERT_EQ(12.7, get<DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(12.675, get<DOUBLE>((*im)->getProperty("minimum")));
+    ASSERT_EQ(12.725, get<DOUBLE>((*im)->getProperty("maximum")));
+
+    im++;
+    ASSERT_EQ("WiperEdgeLength", (*im)->getName());
+    ASSERT_EQ("BS", get<string>((*im)->getProperty("code")));
+    ASSERT_EQ(2.56, get<DOUBLE>((*im)->getProperty("nominal")));
+
+    im++;
+    ASSERT_EQ("IncribedCircleDiameter", (*im)->getName());
+    ASSERT_EQ("IC", get<string>((*im)->getProperty("code")));
+    ASSERT_EQ(12.7, get<DOUBLE>((*im)->getProperty("nominal")));
+
+    im++;
+    ASSERT_EQ("CornerRadius", (*im)->getName());
+    ASSERT_EQ("RE", get<string>((*im)->getProperty("code")));
+    ASSERT_EQ(0.8, get<DOUBLE>((*im)->getProperty("nominal")));
+  }
+
+  it++;
+  ASSERT_EQ("CuttingItem", (*it)->getName());
+  ASSERT_EQ("5-8", get<string>((*it)->getProperty("indices")));
+  ASSERT_EQ("SDET43PDER8GB", get<string>((*it)->getProperty("itemId")));
+  ASSERT_EQ("KMT", get<string>((*it)->getProperty("manufacturers")));
+  ASSERT_EQ("KC725M", get<string>((*it)->getProperty("grade")));
+  ASSERT_EQ("FLANGE: 1-4, ROW: 2", get<string>((*it)->getProperty("Locus")));
+
+  {
+    auto meas = (*it)->getList("Measurements");
+    ASSERT_TRUE(meas);
+    ASSERT_EQ(4, meas->size());
+
+    auto im = meas->begin();
+    ASSERT_EQ("CuttingEdgeLength", (*im)->getName());
+    ASSERT_EQ("L", get<string>((*im)->getProperty("code")));
+    ASSERT_EQ(12.7, get<DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(12.675, get<DOUBLE>((*im)->getProperty("minimum")));
+    ASSERT_EQ(12.725, get<DOUBLE>((*im)->getProperty("maximum")));
+
+    im++;
+    ASSERT_EQ("WiperEdgeLength", (*im)->getName());
+    ASSERT_EQ("BS", get<string>((*im)->getProperty("code")));
+    ASSERT_EQ(2.56, get<DOUBLE>((*im)->getProperty("nominal")));
+
+    im++;
+    ASSERT_EQ("IncribedCircleDiameter", (*im)->getName());
+    ASSERT_EQ("IC", get<string>((*im)->getProperty("code")));
+    ASSERT_EQ(12.7, get<DOUBLE>((*im)->getProperty("nominal")));
+
+    im++;
+    ASSERT_EQ("CornerRadius", (*im)->getName());
+    ASSERT_EQ("RE", get<string>((*im)->getProperty("code")));
+    ASSERT_EQ(0.8, get<DOUBLE>((*im)->getProperty("nominal")));
+  }
+  
+  // Round trip test
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity);
+
+  string content = m_writer->getContent();
+  ASSERT_EQ(content, doc);
+}
+
+
 
 #if 0
 TEST_F(CuttingToolTest, AssetRefCounts)
