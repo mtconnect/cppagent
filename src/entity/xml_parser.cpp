@@ -127,34 +127,54 @@ namespace mtconnect
           {
             if (child->type == XML_ELEMENT_NODE)
             {
-              auto ent = parseXmlNode(ef, child, errors);
-              if (ent)
+              auto name = nodeQName(child);
+              if (ef->isSimpleProperty(name))
               {
-                if (ef->isList())
+                if (child->children != nullptr &&
+                    child->children->content != nullptr)
                 {
-                  l->emplace_back(ent);
+                  string s((const char *) child->children->content);
+                  trim(s);
+                  if (!s.empty())
+                    properties.insert({  nodeQName(child), s });
                 }
-                else
-                {
-                  properties.insert({ ent->getName(), ent });
-                }
-              }
-              else if (child->children != nullptr &&
-                       child->children->type == XML_TEXT_NODE &&
-                       child->children->content != nullptr &&
-                       *child->children->content != '\0' &&
-                       child->properties == nullptr)
-              {
-                // TODO: Fix when the child is an element that failed because of an
-                // error instead of not being associated with simple content entity.
-                string s((const char *) child->children->content);
-                trim(s);
-                if (!s.empty())
-                  properties.insert({  nodeQName(child), s });
               }
               else
               {
-                g_logger << dlib::LWARN << "Unexpected element: " << nodeQName(child);
+                auto ent = parseXmlNode(ef, child, errors);
+                if (ent)
+                {
+                  if (ef->isList())
+                  {
+                    l->emplace_back(ent);
+                  }
+                  else if (ef->isPropertySet(ent->getName()))
+                  {
+                    auto res = properties.try_emplace(ent->getName(), EntityList{});
+                    get<EntityList>(res.first->second).emplace_back(ent);
+                  }
+                  else
+                  {
+                    properties.insert({ ent->getName(), ent });
+                  }
+                }
+//                else if (child->children != nullptr &&
+//                         child->children->type == XML_TEXT_NODE &&
+//                         child->children->content != nullptr &&
+//                         *child->children->content != '\0' &&
+//                         child->properties == nullptr)
+//                {
+//                  // TODO: Fix when the child is an element that failed because of an
+//                  // error instead of not being associated with simple content entity.
+//                  string s((const char *) child->children->content);
+//                  trim(s);
+//                  if (!s.empty())
+//                    properties.insert({  nodeQName(child), s });
+//                }
+                else
+                {
+                  g_logger << dlib::LWARN << "Unexpected element: " << nodeQName(child);
+                }
               }
             }
             else if (child->type == XML_TEXT_NODE)

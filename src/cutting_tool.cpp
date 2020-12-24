@@ -34,7 +34,7 @@ namespace mtconnect
         
     static auto reconditionCount = make_shared<Factory>(Requirements({
       Requirement("maximumCount", INTEGER, false),
-      Requirement("VALUE", INTEGER, true)
+      Requirement("VALUE", INTEGER, false)
     }));
 
     static auto toolLife = make_shared<Factory>(Requirements({
@@ -43,7 +43,7 @@ namespace mtconnect
       Requirement("warning", DOUBLE, false),
       Requirement("limit", DOUBLE, false),
       Requirement("initial", DOUBLE, false),
-      Requirement("VALUE", DOUBLE, true)
+      Requirement("VALUE", DOUBLE, false)
     }));
     
     static auto constraint = make_shared<Factory>(Requirements({
@@ -97,7 +97,7 @@ namespace mtconnect
     
     static auto lifeCycle = make_shared<Factory>(Requirements({
       Requirement("ReconditionCount", ENTITY, reconditionCount, false),
-      Requirement("CuttingToolLife", ENTITY_LIST, toolLife,
+      Requirement("CuttingToolLife", ENTITY, toolLife,
                   0, 3),
       Requirement("ProgramToolGroup", false),
       Requirement("ProgramToolNumber", false),
@@ -123,29 +123,20 @@ namespace mtconnect
       Requirement("CuttingToolLifeCycle", ENTITY, lifeCycle, false)
     });
 
-    static bool first { true };
-    if (first)
-    {
-      auto root = Asset::getRoot();
-      root->registerFactory("CuttingToolArchetype", tool);
-      first = false;
-    }
-
     return tool;
   }
+  
+  RegisterAsset<CuttingToolArchetype>* const  CuttingToolArchetype::m_registerAsset =
+   new RegisterAsset<CuttingToolArchetype>("CuttingToolArchetype");
 
   FactoryPtr CuttingTool::getFactory()
   {
     FactoryPtr tool;
-
-    static bool first { true };
-    if (first)
-    {
-      auto root = Asset::getRoot();
-      root->registerFactory("CuttingTool", tool);
-      first = false;
-    }
     
     return tool;
   }
+  
+  RegisterAsset<CuttingTool>* const  CuttingTool::m_registerAsset =
+   new RegisterAsset<CuttingTool>("CuttingTool");
+
 }  // namespace mtconnect

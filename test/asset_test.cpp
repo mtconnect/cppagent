@@ -56,6 +56,8 @@ TEST_F(AssetTest, TestExtendedAsset)
   
   auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
+  auto asset = dynamic_cast<Asset*>(entity.get());
+  ASSERT_NE(nullptr, asset);
   
   entity::XmlPrinter printer;
   printer.print(*m_writer, entity);
@@ -64,5 +66,4 @@ TEST_F(AssetTest, TestExtendedAsset)
 )DOC";
   
   ASSERT_EQ(expected, m_writer->getContent());
-
 }

@@ -30,8 +30,8 @@ namespace mtconnect
   {
     static auto asset = make_shared<Factory>(Requirements({
       Requirement("assetId", true ),
-      Requirement("deviceUuid", true ),
-      Requirement("timestamp", true ),
+      Requirement("deviceUuid", false ),
+      Requirement("timestamp", false ),
       Requirement("removed", false ) }),
       [](const std::string &name, Properties &props) -> EntityPtr {
         return make_shared<Asset>(name, props);
@@ -40,14 +40,6 @@ namespace mtconnect
     return asset;
   }
   
-  entity::FactoryPtr Asset::getRoot()
-  {
-    static auto root = make_shared<Factory>();    
-    root->registerFactory(regex(".+"), ExtendedAsset::getFactory());
-    root->registerMatchers();
-    return root;
-  }
-
   FactoryPtr ExtendedAsset::getFactory()
   {
     static auto asset = make_shared<Factory>(*Asset::getFactory());
@@ -56,6 +48,37 @@ namespace mtconnect
     }));
     
     return asset;
+  }
+  
+  using FactoryList = list<pair<string,FactoryPtr>>;
+  FactoryList* const AssetFactories = new FactoryList();
+  
+  void Asset::registerAssetType(const std::string &type, FactoryPtr factory)
+  {
+    AssetFactories->emplace_back(type, factory);
+  }
+  
+  entity::FactoryPtr Asset::getRoot()
+  {
+    static auto root = make_shared<Factory>();
+    static bool first { true };
+    
+    if (first)
+    {
+      root->registerFactory(regex(".+"), ExtendedAsset::getFactory());
+      root->registerMatchers();
+      
+      if (AssetFactories != nullptr)
+      {
+        for (auto &factory : *AssetFactories)
+        {
+          root->registerFactory(factory.first, factory.second);
+        }
+      }
+      first = false;
+    }
+    
+    return root;
   }
 
 }  // namespace mtconnect

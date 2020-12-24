@@ -18,6 +18,7 @@
 #pragma once
 
 #include "entity.hpp"
+#include <set>
 
 namespace mtconnect
 {
@@ -77,6 +78,16 @@ namespace mtconnect
       void setHasRaw(bool raw) { m_hasRaw = raw; }
       bool hasRaw() const { return m_hasRaw; }
 
+      bool isPropertySet(const std::string &name) const
+      {
+        return m_propertySets.count(name) > 0;
+      }
+      bool isSimpleProperty(const std::string &name) const
+      {
+        return m_simpleProperties.count(name) > 0;
+      }
+
+      
       Requirement* getRequirement(const std::string &name)
       {
         for (auto &r : m_requirements)
@@ -217,10 +228,16 @@ namespace mtconnect
                           r.getType() == ENTITY_LIST))
           {
             registerFactory(r.getName(), factory);
+            if (r.getUpperMultiplicity() > 1)
+              m_propertySets.insert(r.getName());
           }
           else if (r.getName() == "RAW")
           {
             m_hasRaw = true;
+          }
+          else
+          {
+            m_simpleProperties.insert(r.getName());
           }
         }
       }
@@ -256,6 +273,8 @@ namespace mtconnect
       RegexFactory m_regexFactory;
       bool m_isList { false };
       bool m_hasRaw { false };
+      std::set<std::string> m_propertySets;
+      std::set<std::string> m_simpleProperties;
     };
 
     

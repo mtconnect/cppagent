@@ -7,6 +7,11 @@
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 #include "solid_model.hpp"
+#include "cutting_tool.hpp"
+#include "xml_printer_helper.hpp"
+#include "entity.hpp"
+#include "entity/xml_parser.hpp"
+#include "entity/xml_printer.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -18,6 +23,10 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::entity;
+
+auto c1 = CuttingTool::m_registerAsset;
+auto c2 = CuttingToolArchetype::m_registerAsset;
 
 class CuttingToolTest : public testing::Test
 {
@@ -32,12 +41,15 @@ class CuttingToolTest : public testing::Test
     m_agentTestHelper->m_agent = m_agent.get();
 
     m_device = m_agent->getDeviceByName("LinuxCNC");
+    
+    m_writer = make_unique<XmlWriter>(true);
   }
 
   void TearDown() override
   {
     m_agent.reset();
     m_agentTestHelper.reset();
+    m_writer.reset();
   }
 
   void addAdapter()
@@ -52,9 +64,62 @@ class CuttingToolTest : public testing::Test
   std::string m_agentId;
   Device *m_device{nullptr};
   Adapter *m_adapter{nullptr};
-
+  
+  std::unique_ptr<XmlWriter> m_writer;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
+
+TEST_F(CuttingToolTest, TestMinmalArchetype)
+{
+  const auto doc = R"DOC(
+<CuttingToolArchetype toolId="CAT" assetId="M8010N9172N:1.0">
+  <CuttingToolLifeCycle>
+    <CuttingToolLife type="MINUTES" countDirection="UP" initial="0" limit="100"/>
+    <CuttingToolLife type="PART_COUNT" countDirection="DOWN" initial="25" limit="1"/>
+    <ProgramToolGroup>A</ProgramToolGroup>
+    <ProgramToolNumber>10</ProgramToolNumber>
+  </CuttingToolLifeCycle>
+</CuttingToolArchetype>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  auto asset = dynamic_cast<Asset*>(entity.get());
+  ASSERT_NE(nullptr, asset);
+
+  ASSERT_EQ("CAT", get<string>(entity->getProperty("toolId")));
+  ASSERT_EQ("M8010N9172N:1.0", asset->getAssetId());
+  
+  ASSERT_FALSE(asset->getTimestamp());
+  ASSERT_FALSE(asset->getDeviceUuid());
+  
+  auto lifeCycle = get<EntityPtr>(asset->getProperty("CuttingToolLifeCycle"));
+  ASSERT_TRUE(lifeCycle);
+  
+  ASSERT_EQ("A", get<string>(lifeCycle->getProperty("ProgramToolGroup")));
+  ASSERT_EQ("10", get<string>(lifeCycle->getProperty("ProgramToolNumber")));
+
+  auto life = get<EntityList>(lifeCycle->getProperty("CuttingToolLife"));
+  ASSERT_EQ(2, life.size());
+  
+  auto it = life.begin();
+  ASSERT_EQ("CuttingToolLife", (*it)->getName());
+  ASSERT_EQ("MINUTES", get<string>((*it)->getProperty("type")));
+  ASSERT_EQ("UP", get<string>((*it)->getProperty("countDirection")));
+  ASSERT_EQ(0.0, get<DOUBLE>((*it)->getProperty("initial")));
+  ASSERT_EQ(100.0, get<DOUBLE>((*it)->getProperty("limit")));
+
+  it++;
+  ASSERT_EQ("CuttingToolLife", (*it)->getName());
+  ASSERT_EQ("PART_COUNT", get<string>((*it)->getProperty("type")));
+  ASSERT_EQ("DOWN", get<string>((*it)->getProperty("countDirection")));
+  ASSERT_EQ(25.0, get<DOUBLE>((*it)->getProperty("initial")));
+  ASSERT_EQ(1.0, get<DOUBLE>((*it)->getProperty("limit")));
+}
 
 #if 0
 TEST_F(CuttingToolTest, AssetRefCounts)

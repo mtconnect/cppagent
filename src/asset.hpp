@@ -80,6 +80,7 @@ namespace mtconnect
       addProperty({ "removed" , "true" });
       m_removed = true;
     }
+    static void registerAssetType(const std::string &t, entity::FactoryPtr factory);
     
     bool operator==(const Asset &another) const { return getAssetId() == another.getAssetId(); }
     
@@ -93,4 +94,14 @@ namespace mtconnect
   public:
     static entity::FactoryPtr getFactory();
   };
+  
+  template<class T>
+  struct RegisterAsset
+  {
+    RegisterAsset(const std::string &t)
+    {
+      Asset::registerAssetType(t, T::getFactory());
+    }
+  };
+  
 }  // namespace mtconnect

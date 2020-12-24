@@ -30,12 +30,14 @@ namespace mtconnect
   {
   public:
     static entity::FactoryPtr getFactory();
+    static RegisterAsset<CuttingToolArchetype>* const m_registerAsset;
   };
   
   class CuttingTool : public Asset
   {
   public:
     static entity::FactoryPtr getFactory();
+    static RegisterAsset<CuttingTool>* const m_registerAsset;
   };
 
 }  // namespace mtconnect
