@@ -143,6 +143,10 @@ namespace mtconnect
         
         return r;
       }
+      operator bool() const
+      {
+        return m_string == "true";
+      }
       
       operator Vector() const
       {
@@ -198,6 +202,11 @@ namespace mtconnect
                 converted = true;
                 break;
 
+              case BOOL:
+                value = bool(s);
+                converted = true;
+                break;
+
               case VECTOR:
                 value = Vector(s);
                 converted = true;
@@ -220,6 +229,11 @@ namespace mtconnect
               }
               case INTEGER:
                 value = int64_t(arg);
+                converted = true;
+                break;
+                
+              case BOOL:
+                value = arg != 0.0;
                 converted = true;
                 break;
                 
@@ -246,6 +260,11 @@ namespace mtconnect
                 
               case DOUBLE:
                 value = double(arg);
+                converted = true;
+                break;
+                
+              case BOOL:
+                value = arg != 0;
                 converted = true;
                 break;
                 

@@ -23,7 +23,6 @@ namespace mtconnect
 {
   namespace entity
   {
-    using ErrorList = std::list<PropertyError>;
     using Properties = std::map<std::string, Value>;
     using OrderList = std::list<std::string>;
     using OrderListPtr = std::shared_ptr<OrderList>;
@@ -41,7 +40,7 @@ namespace mtconnect
       {
       }
       
-      std::shared_ptr<Entity> getptr() {
+      EntityPtr getptr() {
         return shared_from_this();
       }
 
@@ -59,10 +58,15 @@ namespace mtconnect
         else
           return it->second;
       }
-      void addProperty(const Property &property)
+      virtual void setProperty(const std::string &key, const Value &v)
       {
-        m_properties.insert(property);
+        m_properties.insert_or_assign(key, v);
       }
+      void setProperty(const Property &property)
+      {
+        setProperty(property.first, property.second);
+      }
+
 
       const Value &getValue() const { return getProperty("VALUE"); }
       std::optional<EntityList> getList(const std::string &name) const {

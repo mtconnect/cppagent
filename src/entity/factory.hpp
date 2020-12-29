@@ -60,7 +60,7 @@ namespace mtconnect
       }
       FactoryPtr deepCopy() const;
       
-      std::shared_ptr<Factory> getptr() {
+      FactoryPtr getptr() {
         return shared_from_this();
       }
       

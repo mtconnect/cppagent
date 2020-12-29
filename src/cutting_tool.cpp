@@ -171,8 +171,7 @@ namespace mtconnect
       
       auto measmts = lifeCycle->factoryFor("Measurements");
       auto meas = measmts->factoryFor("Measurement");
-      auto mv = meas->getRequirement("VALUE");
-      mv->makeRequired();
+      meas->getRequirement("VALUE")->makeRequired();
       
       auto items = lifeCycle->factoryFor("CuttingItems");
       auto item = items->factoryFor("CuttingItem");
@@ -182,8 +181,7 @@ namespace mtconnect
       });
       
       auto life = lifeCycle->factoryFor("ToolLife");
-      auto lv = life->getRequirement("VALUE");
-      lv->makeRequired();
+      life->getRequirement("VALUE")->makeRequired();
     }
     return tool;
   }

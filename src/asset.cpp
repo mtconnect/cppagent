@@ -32,7 +32,7 @@ namespace mtconnect
       Requirement("assetId", true ),
       Requirement("deviceUuid", false ),
       Requirement("timestamp", false ),
-      Requirement("removed", false ) }),
+      Requirement("removed", BOOL, false ) }),
       [](const std::string &name, Properties &props) -> EntityPtr {
         return make_shared<Asset>(name, props);
       });

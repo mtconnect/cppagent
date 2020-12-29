@@ -54,7 +54,7 @@ namespace mtconnect
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
     using Value = std::variant<std::monostate, EntityPtr, EntityList,
-                              std::string, int64_t, double,
+                              std::string, int64_t, double, bool,
                               Vector, nullptr_t>;
     using FactoryPtr = std::shared_ptr<Factory>;
     
@@ -65,8 +65,9 @@ namespace mtconnect
       STRING = 3,
       INTEGER = 4,
       DOUBLE = 5,
-      VECTOR = 6,
-      NULL_VALUE = 7
+      BOOL = 6,
+      VECTOR = 7,
+      NULL_VALUE = 8
     };
 
     bool ConvertValueToType(Value &value, ValueType type);

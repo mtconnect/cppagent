@@ -17,98 +17,161 @@
 
 #include "asset_buffer.hpp"
 
+using namespace std;
+
 namespace  mtconnect {
+  
+  inline void AssetBuffer::adjustCount(AssetPtr asset, int delta)
+  {
+    m_removedAssets += delta;
+    m_typeRemoveCount[asset->getType()] += delta;
+    if (auto device = asset->getDeviceUuid())
+      m_deviceRemoveCount[*device] += delta;
+  }
+
+  
+  AssetPtr AssetBuffer::updateAsset(const std::string &id,
+                                    Index::iterator &it,
+                                    AssetPtr asset)
+  {
+    AssetPtr old = it->second;
+
+    if (asset->getType() != old->getType())
+    {
+      throw entity::PropertyError("Assed id: " + id +
+                                  " cannot chage type from " +
+                                  old->getType() +
+                                  " to " + asset->getType());
+    }
+    
+    auto lit = std::find_if(m_buffer.begin(), m_buffer.end(),
+                           [&id](const AssetPtr &a) -> bool {
+      return id == a->getAssetId();
+    });
+    if (lit == m_buffer.end())
+    {
+      throw entity::PropertyError("Asset key " + id + " not found");
+    }
+    
+    // If the asset is not removed, then move it to the front
+    if (!asset->isRemoved())
+    {
+      m_buffer.erase(lit);
+    }
+    else
+    {
+      // otherwise, update in place
+      *lit = asset;
+    }
+    
+    it->second = asset;
+    m_typeIndex[old->getType()][id] = asset;
+    auto device = asset->getDeviceUuid();
+    auto od = old->getDeviceUuid();
+    
+    // Handle device change
+    if ((od && !device) || (device && od && *od != *device))
+    {
+      m_deviceIndex[*od].erase(id);
+    }
+    
+    // If the device is given, add the asset to the device index
+    if (device)
+    {
+      m_deviceIndex[*device][id] = asset;
+    }
+    
+    // Handle counts
+    if (old->isRemoved())
+    {
+      adjustCount(old, -1);
+    }
+    if (asset->isRemoved())
+    {
+      adjustCount(asset, 1);
+    }
+    else
+    {
+      m_buffer.emplace_back(asset);
+    }
+
+    return old;
+  }
+  
   AssetPtr AssetBuffer::addAsset(AssetPtr asset)
   {
     AssetPtr old {};
+    std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
 
     if (!asset->getTimestamp())
     {
-      auto time = getCurrentTime(GMT_UV_SEC);
-      asset->addProperty({ "timestamp", time });
+      asset->setProperty("timestamp", getCurrentTime(GMT_UV_SEC));
     }
-          
-    // Lock the asset addition to protect from multithreaded collisions. Releaes
-    // before we add the event so we don't cause a race condition.
+    
+    auto id = asset->getAssetId();
+    auto it = m_primaryIndex.find(id);
+    if (it != m_primaryIndex.end())
     {
-      std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      
-      auto id = asset->getAssetId();
-      
-      old = m_primaryIndex[id];
-      if (old)
-      {
-        auto it = std::find_if(m_buffer.begin(), m_buffer.end(),
-                               [&id](const AssetPtr &a) -> bool {
-          return id == a->getAssetId();
-        });
-        if (it == m_buffer.end())
-          throw entity::PropertyError("Asset key " + id + " not found");
-      }
+      old = updateAsset(id, it, asset);
+    }
+    else
+    {
+      // Add to the end of the buffer
+      m_buffer.emplace_back(asset);
 
       // Add to primary index
       m_primaryIndex[id] = asset;
 
       // Add secondary indexes
-      auto &types = m_typeIndex[asset->getType()];
-      types[id] = asset;
-
-      // Handle secondary index and cleanup
-      auto oldDevice = old->getDeviceUuid();
-      auto device = asset->getDeviceUuid();
-      if (device)
+      m_typeIndex[asset->getType()][id] = asset;
+      if (auto device = asset->getDeviceUuid())
       {
-        if (oldDevice && *oldDevice != *device)
-        {
-          auto &devices = m_deviceIndex[*oldDevice];
-          devices.erase(id);
-        }
-        
-        auto &devices = m_deviceIndex[*device];
-        devices[id] = asset;
-      }
-      else if (oldDevice)
-      {
-        asset->addProperty({"deviceUuid", *oldDevice });
-        auto &devices = m_deviceIndex[*oldDevice];
-        devices[id] = asset;
-      }
-                    
-      // Check for overflow
-      if (m_buffer.size() >= m_maxAssets)
-      {
-        auto old = m_buffer.front();
-        m_buffer.pop_front();
-        
-        m_primaryIndex.erase(old->getAssetId());
-        m_typeIndex[old->getType()].erase(old->getAssetId());
-        auto device = old->getDeviceUuid();
-        if (device)
-          m_deviceIndex[*device].erase(old->getAssetId());
+        m_deviceIndex[*device][id] = asset;
       }
       
-      if (!asset->isRemoved())
+      // Handle counts
+      if (asset->isRemoved())
       {
-        m_buffer.emplace_back(asset);
+        adjustCount(asset, 1);
+      }
+      
+      // Check for overflow
+      if (m_buffer.size() > m_maxAssets)
+      {
+        auto of = m_buffer.front();
+        m_buffer.pop_front();
+        
+        // Clean up indexes
+        m_primaryIndex.erase(of->getAssetId());
+        m_typeIndex[of->getType()].erase(of->getAssetId());
+        if (auto ofd = of->getDeviceUuid())
+        {
+          m_deviceIndex[*ofd].erase(of->getAssetId());
+        }
+        if (of->isRemoved())
+        {
+          adjustCount(of, -1);
+        }
       }
     }
-    
+  
     return old;
   }
 
   
   AssetPtr AssetBuffer::removeAsset(const std::string &id)
   {
-    AssetPtr old {};
-    
+    AssetPtr old {};    
     std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
     
-    old = m_primaryIndex[id];
-    if (old)
+    auto it = m_primaryIndex.find(id);
+    if (it != m_primaryIndex.end())
     {
-      old->addProperty({ "removed", "true" });
+      auto asset = make_shared<Asset>(*(it->second));
+      asset->setProperty("removed", true);
+      old = updateAsset(id, it, asset);
     }
-
+    
     return old;
   }
 

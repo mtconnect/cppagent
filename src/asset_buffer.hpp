@@ -37,6 +37,7 @@ namespace mtconnect
     using SecondaryIndex = std::map<std::string, Index>;
     using TypeCount = std::map<std::string, size_t>;
     using Buffer = std::list<AssetPtr>;
+    using RemoveCount = std::map<std::string, size_t>;
 
     AssetBuffer(size_t max)
     : m_maxAssets(max)
@@ -46,7 +47,8 @@ namespace mtconnect
     
     auto getMaxAssets() const  { return m_maxAssets; }
     auto getCount() const { return m_buffer.size(); }
-    
+    auto getActiveCount() const { return m_buffer.size() - m_removedAssets; }
+
     AssetPtr addAsset(AssetPtr asset);
     AssetPtr removeAsset(AssetPtr asset)
     {
@@ -86,20 +88,51 @@ namespace mtconnect
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       TypeCount res;
       for (const auto &t : m_typeIndex)
-        res[t.first] = t.second.size();
+      {
+        auto cit = m_typeRemoveCount.find(t.first);
+        auto delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+        res[t.first] = t.second.size() - delta;
+      }
       return res;
     }
     size_t getCountForType(const std::string &type) const
     {
       auto index = m_typeIndex.find(type);
       if (index != m_typeIndex.end())
-        return index->second.size();
+      {
+        auto cit = m_typeRemoveCount.find(type);
+        auto delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+        return index->second.size() - delta;
+      }
+      else
+        return 0;
+    }
+    size_t getCountForDevice(const std::string &device) const
+    {
+      auto index = m_deviceIndex.find(device);
+      if (index != m_deviceIndex.end())
+      {
+        auto cit = m_deviceRemoveCount.find(device);
+        auto delta = cit != m_deviceRemoveCount.end() ? cit->second : 0;
+        return index->second.size() - delta;
+      }
       else
         return 0;
     }
     const auto &getAssets() const
     {
       return m_buffer;
+    }
+    size_t getIndex(const std::string &id) const
+    {
+      size_t i = 0;
+      for (auto &a : m_buffer)
+      {
+        if (a->getAssetId() == id)
+          return i;
+        i++;
+      }
+      return -1;
     }
     
     
@@ -129,16 +162,25 @@ namespace mtconnect
     void lock() { m_bufferLock.lock(); }
     void unlock() { m_bufferLock.unlock(); }
     void try_lock() { m_bufferLock.try_lock(); }
+    
+  protected:
+    AssetPtr updateAsset(const std::string &id,
+                         Index::iterator &it,
+                         AssetPtr asset);
+    void adjustCount(AssetPtr asset, int delta);
 
   protected:
     // Access control to the buffer
     mutable std::recursive_mutex m_bufferLock;
     
+    size_t m_removedAssets{0};
     size_t m_maxAssets;
     Buffer m_buffer;
     Index m_primaryIndex;
     SecondaryIndex m_deviceIndex;
     SecondaryIndex m_typeIndex;
+    RemoveCount m_deviceRemoveCount;
+    RemoveCount m_typeRemoveCount;
   };
 }
 

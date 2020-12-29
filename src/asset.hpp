@@ -31,15 +31,38 @@ namespace mtconnect
     Asset(const std::string &name, const entity::Properties &props)
       : entity::Entity(name, props), m_removed(false)
     {
-      auto &removed = getProperty("removed");
-      if (std::holds_alternative<std::string>(removed) &&
-          std::get<std::string>(removed) == "true")
-        m_removed = true;
+      auto rp = m_properties.find("removed");
+      if (rp != m_properties.end())
+      {
+        if (std::holds_alternative<bool>(rp->second))
+          m_removed = std::get<bool>(rp->second);
+        else
+          entity::ConvertValueToType(rp->second, entity::BOOL);
+      }
     }
     ~Asset() override = default;
     
     static entity::FactoryPtr getFactory();
     static entity::FactoryPtr getRoot();
+    
+    void setProperty(const std::string &key, const entity::Value &v) override
+    {
+      entity::Value r = v;
+      if (key == "removed")
+      {
+        if (std::holds_alternative<bool>(r))
+          m_removed = std::get<bool>(r);
+        else
+          entity::ConvertValueToType(r, entity::BOOL);
+      }
+
+      m_properties.insert_or_assign(key, r);
+    }
+    void setProperty(const entity::Property &property)
+    {
+      Entity::setProperty(property);
+    }
+
 
     const std::string &getType() const
     {
@@ -77,7 +100,7 @@ namespace mtconnect
     bool isRemoved() const { return m_removed; }
     void setRemoved()
     {
-      addProperty({ "removed" , "true" });
+      setProperty("removed", true);
       m_removed = true;
     }
     static void registerAssetType(const std::string &t, entity::FactoryPtr factory);
