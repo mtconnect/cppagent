@@ -46,8 +46,13 @@ namespace mtconnect
     ~AssetBuffer() = default;
     
     auto getMaxAssets() const  { return m_maxAssets; }
-    auto getCount() const { return m_buffer.size(); }
-    auto getActiveCount() const { return m_buffer.size() - m_removedAssets; }
+    auto getCount(bool active = true) const
+    {
+      if (active)
+        return m_buffer.size() - m_removedAssets;
+      else
+        return m_buffer.size();
+    }
 
     AssetPtr addAsset(AssetPtr asset);
     AssetPtr removeAsset(AssetPtr asset)
@@ -83,37 +88,49 @@ namespace mtconnect
       else
         return Index{};
     }
-    TypeCount getCountsByType() const
+    TypeCount getCountsByType(bool active = true) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       TypeCount res;
       for (const auto &t : m_typeIndex)
       {
-        auto cit = m_typeRemoveCount.find(t.first);
-        auto delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+        int delta = 0;
+        if (active)
+        {
+          auto cit = m_typeRemoveCount.find(t.first);
+          delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+        }
         res[t.first] = t.second.size() - delta;
       }
       return res;
     }
-    size_t getCountForType(const std::string &type) const
+    size_t getCountForType(const std::string &type, bool active = true) const
     {
       auto index = m_typeIndex.find(type);
       if (index != m_typeIndex.end())
       {
-        auto cit = m_typeRemoveCount.find(type);
-        auto delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+        int delta = 0;
+        if (active)
+        {
+          auto cit = m_typeRemoveCount.find(type);
+          delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+        }
         return index->second.size() - delta;
       }
       else
         return 0;
     }
-    size_t getCountForDevice(const std::string &device) const
+    size_t getCountForDevice(const std::string &device, bool active = true) const
     {
       auto index = m_deviceIndex.find(device);
       if (index != m_deviceIndex.end())
       {
-        auto cit = m_deviceRemoveCount.find(device);
-        auto delta = cit != m_deviceRemoveCount.end() ? cit->second : 0;
+        int delta = 0;
+        if (active)
+        {
+          auto cit = m_deviceRemoveCount.find(device);
+          delta = cit != m_deviceRemoveCount.end() ? cit->second : 0;
+        }
         return index->second.size() - delta;
       }
       else

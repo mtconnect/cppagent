@@ -186,11 +186,10 @@ TEST_F(AssetBufferTest, RemovedAsset)
   m_assetBuffer->removeAsset(a0);
   ASSERT_EQ(0, m_assetBuffer->getIndex("A0"));
   
-    
-  ASSERT_EQ(10, m_assetBuffer->getCount());
-  ASSERT_EQ(9, m_assetBuffer->getActiveCount());
-  ASSERT_EQ(9, m_assetBuffer->getCountForType("Asset"));
+  ASSERT_EQ(10, m_assetBuffer->getCount(false));
+  ASSERT_EQ(9, m_assetBuffer->getCount());
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D0"));
+  ASSERT_EQ(4, m_assetBuffer->getCountForDevice("D0", false));
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D1"));
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D2"));
 
@@ -202,7 +201,7 @@ TEST_F(AssetBufferTest, RemovedAsset)
   ASSERT_EQ(-1, m_assetBuffer->getIndex("A0"));
   
   ASSERT_EQ(10, m_assetBuffer->getCount());
-  ASSERT_EQ(10, m_assetBuffer->getActiveCount());
+  ASSERT_EQ(10, m_assetBuffer->getCount(false));
   ASSERT_EQ(10, m_assetBuffer->getCountForType("Asset"));
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D0"));
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D1"));
