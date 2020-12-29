@@ -213,22 +213,33 @@ namespace mtconnect
                                                                XML_PARSE_NOBLANKS),
                                                         [](xmlDocPtr d){ xmlFreeDoc(d); });
         xmlNodePtr root = xmlDocGetRootElement(doc.get());
-        entity = parseXmlNode(factory, root, errors);
+        if (root != nullptr)
+          entity = parseXmlNode(factory, root, errors);
+        else
+          errors.emplace_back("Cannot parse asset");
       }
       
-      catch (PropertyError e)
+      catch (EntityError e)
       {
         g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
         errors.emplace_back(e);
-        throw;
+        entity.reset();
       }
       
       catch (XmlError e)
       {
         g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
-        throw;
+        errors.emplace_back(EntityError(e.what()));
+        entity.reset();
       }
       
+      catch (...)
+      {
+        g_logger << dlib::LERROR << "Cannot parse XML document: unknown error";
+        errors.emplace_back(EntityError("Unknown Error"));
+        entity.reset();
+      }
+            
       return entity;
     }    
   }

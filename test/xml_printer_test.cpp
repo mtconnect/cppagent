@@ -568,22 +568,6 @@ TEST_F(XmlPrinterTest, EscapedXMLCharacters)
                         "A duck > a foul & < cat '");
 }
 
-TEST_F(XmlPrinterTest, PrintAsset)
-{
-  // Add the xml to the agent...
-  vector<AssetPtr> assets;
-  AssetPtr asset(new Asset((string) "123", (string) "TEST", (string) "HELLO"));
-  assets.emplace_back(asset);
-
-  {
-    PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
-    ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@instanceId", "123");
-    ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@assetCount", "2");
-    ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectAssets/m:Header@assetBufferSize", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets", "HELLO");
-  }
-}
-
 TEST_F(XmlPrinterTest, PrintAssetProbe)
 {
   // Add the xml to the agent...
@@ -778,25 +762,6 @@ TEST_F(XmlPrinterTest, ErrorStyle)
   m_printer->setErrorStyle("");
 }
 
-TEST_F(XmlPrinterTest, AssetsStyle)
-{
-  m_printer->setAssetsStyle("/styles/Assets.xsl");
-
-  vector<AssetPtr> assets;
-  AssetPtr asset = new Asset((string) "123", (string) "TEST", (string) "HELLO");
-  assets.emplace_back(asset);
-  asset->unrefer();
-
-  PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
-
-  xmlNodePtr pi = doc->children;
-  ASSERT_EQ(string("xml-stylesheet"), string((const char *)pi->name));
-  ASSERT_EQ(string("type=\"text/xsl\" href=\"/styles/Assets.xsl\""),
-            string((const char *)pi->content));
-
-  m_printer->setAssetsStyle("");
-}
-
 Observation *XmlPrinterTest::newEvent(const char *name, uint64_t sequence, string value)
 {
   string time("TIME");
@@ -816,60 +781,6 @@ Observation *XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, const 
   Observation *event = newEvent(name, sequence, value);
   checkpoint.addObservation(event);
   return event;
-}
-
-// CuttingTool tests
-TEST_F(XmlPrinterTest, PrintCuttingTool)
-{
-  auto document = getFile("asset1.xml");
-  auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
-
-  vector<AssetPtr> assets;
-  assets.emplace_back(asset);
-
-  {
-    PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@toolId", "KSSP300R4SD43L240");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@removed", nullptr);
-  }
-}
-
-TEST_F(XmlPrinterTest, PrintRemovedCuttingTool)
-{
-  auto document = getFile("asset1.xml");
-  auto asset = m_config->parseAsset("KSSP300R4SD43L240.1", "CuttingTool", document);
-  asset->setRemoved(true);
-  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
-
-  vector<AssetPtr> assets;
-  assets.emplace_back(asset);
-
-  {
-    PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//m:CuttingTool@removed", "true");
-  }
-}
-
-// CuttingTool tests
-TEST_F(XmlPrinterTest, PrintExtendedCuttingTool)
-{
-  m_printer->addAssetsNamespace("urn:Example.com:Assets:1.3", "/schemas/MTConnectAssets_1.3.xsd",
-                                "x");
-
-  auto document = getFile("ext_asset.xml");
-  auto asset = m_config->parseAsset("B732A08500HP.1", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
-
-  vector<AssetPtr> assets;
-  assets.emplace_back(asset);
-
-  {
-    PARSE_XML(m_printer->printAssets(123, 4, 2, assets));
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets//x:Color", "BLUE");
-  }
-
-  m_printer->clearAssetsNamespaces();
 }
 
 TEST_F(XmlPrinterTest, PrintDeviceMTConnectVersion)

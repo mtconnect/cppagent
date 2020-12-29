@@ -24,7 +24,6 @@ namespace mtconnect
 {
   namespace entity
   {
-    using ErrorList = std::list<PropertyError>;
     using Requirements = std::list<Requirement>;
     
     class Factory : public Matcher, public std::enable_shared_from_this<Factory>

@@ -323,7 +323,7 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
 TEST_F(CuttingToolTest, TestMinmalTool)
 {
   const auto doc =
-R"DOC(<CuttingTool assetId="M8010N9172N:1.0" toolId="CAT">
+R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   <CuttingToolLifeCycle>
     <CutterStatus>
       <Status>NEW</Status>
@@ -382,7 +382,7 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" toolId="CAT">
 TEST_F(CuttingToolTest, TestMinmalToolError)
 {
   const auto doc =
-R"DOC(<CuttingTool assetId="M8010N9172N:1.0" toolId="CAT">
+R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   <CuttingToolLifeCycle>
     <ToolLife countDirection="DOWN" initial="25" limit="1" type="PART_COUNT">10</ToolLife>
     <ProgramToolGroup>A</ProgramToolGroup>
@@ -403,7 +403,7 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" toolId="CAT">
 TEST_F(CuttingToolTest, TestMeasurementsError)
 {
   const auto doc =
-R"DOC(<CuttingTool assetId="M8010N9172N:1.0" toolId="CAT">
+R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   <CuttingToolLifeCycle>
     <CutterStatus>
       <Status>NEW</Status>

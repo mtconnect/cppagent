@@ -72,10 +72,15 @@ namespace mtconnect
 
     bool ConvertValueToType(Value &value, ValueType type);
 
-    class PropertyError : public std::logic_error
+    class EntityError : public std::logic_error
     {
     public:
       using std::logic_error::logic_error;
+    };
+    class PropertyError : public EntityError
+    {
+    public:
+      using EntityError::EntityError;
     };
     class MissingPropertyError : public PropertyError
     {
@@ -103,7 +108,7 @@ namespace mtconnect
       using PropertyError::PropertyError;
     };
     
-    using ErrorList = std::list<PropertyError>;
+    using ErrorList = std::list<EntityError>;
     
     struct Matcher
     {

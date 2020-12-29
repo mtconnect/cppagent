@@ -307,6 +307,33 @@ namespace mtconnect
                 break;
             }
           },
+          [&](const bool b) {
+            switch (type) {
+              case INTEGER:
+                value = int64_t(b);
+                converted = true;
+                break;
+                
+              case DOUBLE:
+                value = double(b);
+                converted = true;
+                break;
+                
+              case STRING:
+                value = b ? string("true") : string("false");
+                converted = true;
+                break;
+                
+              case VECTOR:
+                value = Vector(double(b));
+                converted = true;
+                break;
+                
+              default:
+                throw PropertyConversionError("Cannot convert a string to a non-scalar");
+                break;
+            }
+          },
           [&](const auto &arg) {
             converted = false;
           }

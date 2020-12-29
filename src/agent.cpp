@@ -52,10 +52,10 @@ namespace mtconnect
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
 
-  static auto a1 = CuttingTool::m_registerAsset;
-  static auto a2 = CuttingToolArchetype::m_registerAsset;
-  static auto a3 = FileAsset::m_registerAsset;
-  static auto a4 = FileArchetypeAsset::m_registerAsset;
+  auto __a1__ = CuttingTool::m_registerAsset;
+  auto __a2__ = CuttingToolArchetype::m_registerAsset;
+  auto __a3__ = FileAsset::m_registerAsset;
+  auto __a4__ = FileArchetypeAsset::m_registerAsset;
   
   // Agent public methods
   Agent::Agent(const string &configXmlPath, int bufferSize, int maxAssets,
@@ -640,19 +640,33 @@ namespace mtconnect
       g_logger << LWARN << doc;
       for (auto e : errors)
         g_logger << LWARN << e.what();
-      throw "Could not parse asset: " + doc;
+      return false;
     }
 
     auto asset = dynamic_pointer_cast<Asset>(entity);
-    if (asset->getAssetId() != id)
+    string aid = id;
+    if (aid[0] == '@' || asset->getAssetId()[0] == '@')
     {
-      asset->setAssetId(id);
+      if (aid.empty())
+        aid = asset->getAssetId();
+      aid.erase(0, 1);
+      aid.insert(0, device->getUuid());
+    }
+    if (aid != asset->getAssetId())
+    {
+      asset->setAssetId(aid);
     }
     
     auto ts = asset->getTimestamp();
     if (!ts && !inputTime.empty())
     {
       asset->setProperty("timestamp", inputTime);
+    }
+    
+    auto ad = asset->getDeviceUuid();
+    if (!ad)
+    {
+      asset->setProperty("deviceUuid", device->getUuid());
     }
 
     auto old = m_assetBuffer.addAsset(asset);
@@ -674,6 +688,14 @@ namespace mtconnect
     {
       auto time = asset->getTimestamp();
       addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, *time);
+      
+      // Check if the asset changed id is the same as this asset.
+      auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
+      if (ptr && (*ptr)->getValue() == id)
+      {
+        addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE",
+                    *time);
+      }
     }
 
     return true;
@@ -984,6 +1006,12 @@ namespace mtconnect
         {
           assets.emplace_back(asset);
         }
+        else
+        {
+          // TODO: Handle multiple errors
+          return printer->printError(m_instanceId, 0, 0, "ASSET_NOT_FOUND",
+                                     (string) "Could not find asset: " + id);
+        }
       }
     }
     else
@@ -992,13 +1020,13 @@ namespace mtconnect
       auto device = queries.find("device");
       auto removedQuery = queries.find("removed");
       auto removed = removedQuery != queries.end() && removedQuery->second == "true";
-      auto count = checkAndGetParam(queries, "count", m_assetBuffer.getCount(removed),
+      auto count = checkAndGetParam(queries, "count", m_assetBuffer.getCount(false),
                                     1, false, NO_VALUE32);
 
       if (type != queries.end())
       {
         auto list = m_assetBuffer.getAssetsForType(type->second);
-        for (auto asset : list)
+        for (auto asset : reverse(list))
         {
           if ((!asset.second->isRemoved() || removed) &&
               (device == queries.end() ||
@@ -1014,7 +1042,7 @@ namespace mtconnect
       else if (device != queries.end())
       {
         auto list = m_assetBuffer.getAssetsForDevice(device->second);
-        for (auto asset : list)
+        for (auto asset : reverse(list))
         {
           if (!asset.second->isRemoved() || removed)
           {
@@ -1026,7 +1054,7 @@ namespace mtconnect
       }
       else
       {
-        for (auto asset : m_assetBuffer.getAssets())
+        for (auto asset : reverse(m_assetBuffer.getAssets()))
         {
           if (!asset->isRemoved() || removed)
           {
@@ -1049,12 +1077,12 @@ namespace mtconnect
                                 const std::string &command, const std::string &id,
                                 const std::string &body)
   {
-    string name = queries["device"];
+    string deviceId = queries["device"];
     string type = queries["type"];
     Device *device = nullptr;
 
-    if (!name.empty())
-      device = getDeviceByName(name);
+    if (!deviceId.empty())
+      device = findDeviceByUUIDorName(deviceId);
 
     // If the device was not found or was not provided, use the default device.
     if (!device)

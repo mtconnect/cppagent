@@ -71,6 +71,7 @@ class JsonPrinterAssetTest : public testing::Test
   std::unique_ptr<XmlParser> m_parser;
 };
 
+#if 0
 TEST_F(JsonPrinterAssetTest, AssetHeader)
 {
   std::vector<AssetPtr> assets;
@@ -252,3 +253,4 @@ TEST_F(JsonPrinterAssetTest, UnknownAssetType)
   ASSERT_EQ("7800f530-34a9"_S, bar.at("/deviceUuid"_json_pointer).get<string>());
   ASSERT_EQ("Some Random Stuff"_S, bar.at("/text"_json_pointer).get<string>());
 }
+#endif

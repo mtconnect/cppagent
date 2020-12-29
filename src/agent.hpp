@@ -138,12 +138,12 @@ namespace mtconnect
     uint64_t getSequence() const { return m_circularBuffer.getSequence(); }
     unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
     auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
-    auto getAssetCount() const { return m_assetBuffer.getCount(); }
+    auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
     const auto &getAssets() const { return m_assetBuffer.getAssets(); }
     
-    auto getAssetCount(const std::string &type) const
+    auto getAssetCount(const std::string &type, bool active = true) const
     {
-      return m_assetBuffer.getCountForType(type);
+      return m_assetBuffer.getCountForType(type, active);
     }
 
     uint64_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }

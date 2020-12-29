@@ -158,6 +158,9 @@ namespace mtconnect
       });
       
       tool = CuttingToolArchetype::getFactory()->deepCopy();
+      tool->addRequirements({{"serialNumber", STRING, true}});
+      tool->getRequirement("toolId")->makeRequired();
+      
       auto lifeCycle = tool->factoryFor("CuttingToolLifeCycle");
       lifeCycle->addRequirements(Requirements{
         {"CutterStatus", ENTITY_LIST, status, true},
@@ -177,7 +180,7 @@ namespace mtconnect
       auto item = items->factoryFor("CuttingItem");
 
       item->addRequirements(Requirements{
-        {"CutterStatus", ENTITY_LIST, status, true}
+        {"CutterStatus", ENTITY_LIST, status, false}
       });
       
       auto life = lifeCycle->factoryFor("ToolLife");
