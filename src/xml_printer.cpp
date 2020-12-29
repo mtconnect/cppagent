@@ -26,6 +26,8 @@
 #include "solid_model.hpp"
 #include "specifications.hpp"
 #include "version.h"
+#include "asset.hpp"
+#include "entity/xml_printer.hpp"
 
 #include <dlib/logger.h>
 #include <dlib/sockets.h>
@@ -932,13 +934,13 @@ namespace mtconnect
 
     return ret;
   }
-#if 0
-  string XmlPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
+  
+  string XmlPrinter::printAssets(const unsigned int instanceId,
+                                 const unsigned int bufferSize,
                                  const unsigned int assetCount,
-                                 std::vector<AssetPtr> const &assets) const
+                                 const AssetList &assets) const
   {
     string ret;
-
     try
     {
       XmlWriter writer(m_pretty);
@@ -946,24 +948,13 @@ namespace mtconnect
 
       {
         AutoElement ele(writer, "Assets");
-
+        entity::XmlPrinter printer;
+        
         for (const auto asset : assets)
         {
-          if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
-          {
-            THROW_IF_XML2_ERROR(
-                xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent(this).c_str()));
-          }
-          else
-          {
-            AutoElement ele(writer, asset->getType());
-            printAssetNode(writer, asset);
-            THROW_IF_XML2_ERROR(
-                xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent(this).c_str()));
-          }
+          printer.print(writer, asset);
         }
       }
-      closeElement(writer);  // MTConnectAssets
 
       ret = writer.getContent();
     }
@@ -978,29 +969,6 @@ namespace mtconnect
 
     return ret;
   }
-
-  void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset) const
-  {
-    addAttributes(writer, asset->getIdentity());
-
-    // Add the timestamp and device uuid fields.
-    addAttribute(writer, "timestamp", asset->getTimestamp());
-    addAttribute(writer, "deviceUuid", asset->getDeviceUuid());
-    addAttribute(writer, "assetId", asset->getAssetId());
-
-    if (asset->isRemoved())
-      addAttribute(writer, "removed", "true");
-
-    if (!asset->getArchetype().empty())
-      addSimpleElement(writer, "AssetArchetypeRef", "", asset->getArchetype());
-
-    if (!asset->getDescription().empty())
-    {
-      const auto &body = asset->getDescription();
-      addSimpleElement(writer, "Description", body);
-    }
-  }
-#endif
   
   void XmlPrinter::addObservation(xmlTextWriterPtr writer, Observation *result) const
   {
@@ -1236,155 +1204,4 @@ namespace mtconnect
       }
     }
   }
-
-#if 0
-  // Cutting tools
-  void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value) const
-  {
-    addSimpleElement(writer, value->m_key, value->m_value, value->m_properties, true);
-  }
-
-  void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr tool,
-                                         const char *value, std::set<string> *remaining) const
-  {
-    if (tool->m_values.count(value) > 0)
-    {
-      if (remaining)
-        remaining->erase(value);
-
-      auto ptr = tool->m_values[value];
-      printCuttingToolValue(writer, ptr);
-    }
-  }
-
-  void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr item,
-                                         const char *value, std::set<string> *remaining) const
-  {
-    if (item->m_values.count(value) > 0)
-    {
-      if (remaining)
-        remaining->erase(value);
-
-      auto ptr = item->m_values[value];
-      printCuttingToolValue(writer, ptr);
-    }
-  }
-
-  void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item) const
-  {
-    AutoElement ele(writer, "CuttingItem");
-    addAttributes(writer, item->m_identity);
-
-    set<string> remaining;
-    for (const auto &value : item->m_values)
-      remaining.insert(value.first);
-
-    printCuttingToolValue(writer, item, "Description", &remaining);
-    printCuttingToolValue(writer, item, "Locus", &remaining);
-
-    for (const auto &life : item->m_lives)
-      printCuttingToolValue(writer, life);
-
-    // Print extended items...
-    for (const auto &prop : remaining)
-      printCuttingToolValue(writer, item, prop.c_str());
-
-    // Print Measurements
-    if (!item->m_measurements.empty())
-    {
-      AutoElement ele(writer, "Measurements");
-
-      for (const auto &meas : item->m_measurements)
-        printCuttingToolValue(writer, meas.second);
-    }
-  }
-
-  string XmlPrinter::printCuttingTool(CuttingToolPtr const tool) const
-  {
-    string ret;
-
-    try
-    {
-      XmlWriter writer(m_pretty);
-
-      {
-        AutoElement ele(writer, tool->getType());
-        printAssetNode(writer, tool);
-
-        set<string> remaining;
-
-        for (const auto &value : tool->m_values)
-        {
-          if (value.first != "Description")
-            remaining.insert(value.first);
-        }
-
-        // Check for cutting tool definition
-        printCuttingToolValue(writer, tool, "CuttingToolDefinition", &remaining);
-
-        // Print the cutting tool life cycle.
-        {
-          AutoElement life(writer, "CuttingToolLifeCycle");
-
-          // Status...
-          if (!tool->m_status.empty())
-          {
-            AutoElement stat(writer, "CutterStatus");
-            for (const auto &status : tool->m_status)
-              addSimpleElement(writer, "Status", status);
-          }
-
-          // Other values
-          printCuttingToolValue(writer, tool, "ReconditionCount", &remaining);
-
-          // Tool life
-          for (const auto &life : tool->m_lives)
-            printCuttingToolValue(writer, life);
-
-          // Remaining items
-          printCuttingToolValue(writer, tool, "ProgramToolGroup", &remaining);
-          printCuttingToolValue(writer, tool, "ProgramToolNumber", &remaining);
-          printCuttingToolValue(writer, tool, "Location", &remaining);
-          printCuttingToolValue(writer, tool, "ProcessSpindleSpeed", &remaining);
-          printCuttingToolValue(writer, tool, "ProcessFeedRate", &remaining);
-          printCuttingToolValue(writer, tool, "ConnectionCodeMachineSide", &remaining);
-
-          // Print extended items...
-          for (const auto &prop : remaining)
-            printCuttingToolValue(writer, tool, prop.c_str());
-
-          // Print Measurements
-          if (!tool->m_measurements.empty())
-          {
-            AutoElement mes(writer, "Measurements");
-            for (const auto &meas : tool->m_measurements)
-              printCuttingToolValue(writer, meas.second);
-          }
-
-          // Print Cutting Items
-          if (!tool->m_items.empty())
-          {
-            AutoElement mes(writer, "CuttingItems");
-            addAttribute(writer, "count", tool->m_itemCount);
-
-            for (const auto &item : tool->m_items)
-              printCuttingToolItem(writer, item);
-          }
-        }
-      }
-
-      ret = writer.getContent();
-    }
-    catch (string error)
-    {
-      g_logger << dlib::LERROR << "printCuttingTool: " << error;
-    }
-    catch (...)
-    {
-      g_logger << dlib::LERROR << "printCuttingTool: unknown error";
-    }
-
-    return ret;
-  }
-#endif
 }  // namespace mtconnect

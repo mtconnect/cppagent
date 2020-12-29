@@ -31,11 +31,14 @@ namespace mtconnect
   {
   public:
     static entity::FactoryPtr getFactory();
+    static RegisterAsset<FileArchetypeAsset>* const m_registerAsset;
+
   };
   
   class FileAsset : public FileArchetypeAsset
   {
   public:
     static entity::FactoryPtr getFactory();
+    static RegisterAsset<FileAsset>* const m_registerAsset;
   };
 }

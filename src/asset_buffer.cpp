@@ -159,20 +159,26 @@ namespace  mtconnect {
   }
 
   
-  AssetPtr AssetBuffer::removeAsset(const std::string &id)
+  AssetPtr AssetBuffer::removeAsset(const std::string &id, const string time)
   {
-    AssetPtr old {};    
+    AssetPtr asset {};
     std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
     
     auto it = m_primaryIndex.find(id);
-    if (it != m_primaryIndex.end())
+    if (it != m_primaryIndex.end() && !it->second->isRemoved())
     {
-      auto asset = make_shared<Asset>(*(it->second));
+      asset = make_shared<Asset>(*(it->second));
       asset->setProperty("removed", true);
-      old = updateAsset(id, it, asset);
+      string ts;
+      if (!time.empty())
+        ts = time;
+      else
+        ts = getCurrentTime(GMT_UV_SEC);
+      asset->setProperty("timestamp", ts);
+      updateAsset(id, it, asset);
     }
     
-    return old;
+    return asset;
   }
 
 }

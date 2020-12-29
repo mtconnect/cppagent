@@ -3,6 +3,7 @@
 
 #include "globals.hpp"
 #include "observation.hpp"
+#include "asset.hpp"
 
 #include <list>
 #include <map>
@@ -34,13 +35,9 @@ namespace mtconnect
     virtual std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                     const uint64_t nextSeq, const uint64_t firstSeq,
                                     const uint64_t lastSeq, ObservationPtrArray &results) const = 0;
-#if 0
     virtual std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                                     const unsigned int assetCount,
-                                    std::vector<AssetPtr> const &assets) const = 0;
-
-    virtual std::string printCuttingTool(CuttingToolPtr const tool) const = 0;
-#endif
+                                    AssetList const &assets) const = 0;
     virtual std::string mimeType() const = 0;
 
    protected:

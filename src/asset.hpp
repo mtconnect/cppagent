@@ -21,10 +21,15 @@
 #include "entity.hpp"
 
 #include <map>
+#include <list>
 #include <string>
 
 namespace mtconnect
 {
+  class Asset;
+  using AssetPtr = std::shared_ptr<Asset>;
+  using AssetList = std::list<AssetPtr>;
+
   class Asset : public entity::Entity
   {
   public:
@@ -79,6 +84,11 @@ namespace mtconnect
           throw entity::PropertyError("Asset has no assetId");
       }
       return m_assetId;
+    }
+    void setAssetId(const std::string &id)
+    {
+      m_assetId = id;
+      setProperty("assetId", id);
     }
 
     const std::optional<std::string> getDeviceUuid() const

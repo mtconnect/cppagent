@@ -20,6 +20,11 @@
 #include "agent_device.hpp"
 #include "json_printer.hpp"
 #include "xml_printer.hpp"
+#include "asset.hpp"
+#include "file_asset.hpp"
+#include "cutting_tool.hpp"
+
+#include "entity/xml_parser.hpp"
 #include <sys/stat.h>
 
 #include <dlib/config_reader.h>
@@ -47,6 +52,11 @@ namespace mtconnect
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
 
+  static auto a1 = CuttingTool::m_registerAsset;
+  static auto a2 = CuttingToolArchetype::m_registerAsset;
+  static auto a3 = FileAsset::m_registerAsset;
+  static auto a4 = FileArchetypeAsset::m_registerAsset;
+  
   // Agent public methods
   Agent::Agent(const string &configXmlPath, int bufferSize, int maxAssets,
                const std::string &version, int checkpointFreq, bool pretty)
@@ -616,235 +626,71 @@ namespace mtconnect
     return seqNum;
   }
 
-  bool Agent::addAsset(Device *device, const string &id, const string &asset, const string &type,
-                       const string &inputTime)
+  bool Agent::addAsset(Device *device, const string &id, const string &doc,
+                       const string &type, const string &inputTime)
   {
-#if 0
-    // Check to make sure the values are present
-    if (type.empty() || asset.empty() || id.empty())
+    // Parse the asset
+    entity::ErrorList errors;
+    entity::XmlParser parser;
+    
+    auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+    if (!entity)
     {
-      g_logger << LWARN << "Asset '" << id
-               << "' missing required type, id, or body. Asset is rejected.";
-      return false;
+      g_logger << LWARN << "Asset '" << id << " could not be parsed";
+      g_logger << LWARN << doc;
+      for (auto e : errors)
+        g_logger << LWARN << e.what();
+      throw "Could not parse asset: " + doc;
     }
 
-    string time;
-    if (inputTime.empty())
-      time = getCurrentTime(GMT_UV_SEC);
-    else
-      time = inputTime;
-
-    AssetPtr ptr;
-
-    // Lock the asset addition to protect from multithreaded collisions. Releaes
-    // before we add the event so we don't cause a race condition.
+    auto asset = dynamic_pointer_cast<Asset>(entity);
+    if (asset->getAssetId() != id)
     {
-      std::lock_guard<std::mutex> lock(m_assetLock);
-
-      try
-      {
-        ptr = m_xmlParser->parseAsset(id, type, asset);
-      }
-      catch (runtime_error &e)
-      {
-        g_logger << LERROR << "addAsset: Error parsing asset: " << asset << "\n" << e.what();
-        return false;
-      }
-
-      if (!ptr.getObject())
-      {
-        g_logger << LERROR << "addAssete: Error parsing asset";
-        return false;
-      }
-
-      auto old = &m_assetMap[id];
-      if (!ptr->isRemoved())
-      {
-        if (old->getObject())
-          m_assets.remove(old);
-        else
-          m_assetCounts[type] += 1;
-      }
-      else if (!old->getObject())
-      {
-        g_logger << LWARN << "Cannot remove non-existent asset";
-        return false;
-      }
-
-      if (!ptr.getObject())
-      {
-        g_logger << LWARN << "Asset could not be created";
-        return false;
-      }
-      else
-      {
-        ptr->setAssetId(id);
-        ptr->setTimestamp(time);
-        ptr->setDeviceUuid(device->getUuid());
-      }
-
-      // Check for overflow
-      if (m_assets.size() >= getMaxAssets())
-      {
-        AssetPtr oldref(*m_assets.front());
-        m_assetCounts[oldref->getType()] -= 1;
-        m_assets.pop_front();
-        m_assetMap.erase(oldref->getAssetId());
-
-        // Remove secondary keys
-        const auto &keys = oldref->getKeys();
-        for (const auto &key : keys)
-        {
-          auto &index = m_assetIndices[key.first];
-          index.erase(key.second);
-        }
-      }
-
-      m_assetMap[id] = ptr;
-      if (!ptr->isRemoved())
-      {
-        AssetPtr &newPtr = m_assetMap[id];
-        m_assets.emplace_back(&newPtr);
-      }
-
-      // Add secondary keys
-      const auto &keys = ptr->getKeys();
-      for (const auto &key : keys)
-      {
-        auto &index = m_assetIndices[key.first];
-        index[key.second] = ptr;
-      }
+      asset->setAssetId(id);
+    }
+    
+    auto ts = asset->getTimestamp();
+    if (!ts && !inputTime.empty())
+    {
+      asset->setProperty("timestamp", inputTime);
     }
 
-    // Generate an asset changed event.
-    if (ptr->isRemoved())
-      addToBuffer(device->getAssetRemoved(), type + "|" + id, time);
+    auto old = m_assetBuffer.addAsset(asset);
+    
+    auto at = asset->getTimestamp();
+    if (asset->isRemoved())
+      addToBuffer(device->getAssetRemoved(), type + "|" + id, *at);
     else
-      addToBuffer(device->getAssetChanged(), type + "|" + id, time);
-#endif
+      addToBuffer(device->getAssetChanged(), type + "|" + id, *at);
+
     return true;
   }
   
-#if 0
-  bool Agent::updateAsset(Device *device, const std::string &id, AssetChangeList &assetChangeList,
-                          const string &inputTime)
-  {
-    AssetPtr asset;
-    string time;
-    if (inputTime.empty())
-      time = getCurrentTime(GMT_UV_SEC);
-    else
-      time = inputTime;
-
-    {
-      std::lock_guard<std::mutex> lock(m_assetLock);
-
-      asset = m_assetMap[id];
-      if (!asset.getObject())
-        return false;
-
-      if (asset->getType() != "CuttingTool" && asset->getType() != "CuttingToolArchitype")
-        return false;
-
-      CuttingToolPtr tool((CuttingTool *)asset.getObject());
-
-      try
-      {
-        for (const auto &assetChange : assetChangeList)
-        {
-          if (assetChange.first == "xml")
-            m_xmlParser->updateAsset(asset, asset->getType(), assetChange.second);
-          else
-            tool->updateValue(assetChange.first, assetChange.second);
-        }
-      }
-      catch (runtime_error &e)
-      {
-        g_logger << LERROR << "updateAsset: Error parsing asset: " << asset << "\n" << e.what();
-        return false;
-      }
-
-      // Move it to the front of the queue
-      m_assets.remove(&asset);
-      m_assets.emplace_back(&asset);
-
-      tool->setTimestamp(time);
-      tool->setDeviceUuid(device->getUuid());
-      tool->changed();
-    }
-
-    addToBuffer(device->getAssetChanged(), asset->getType() + "|" + id, time);
-    return true;
-  }
-#endif
 
   bool Agent::removeAsset(Device *device, const std::string &id, const string &inputTime)
   {
-#if 0
-    AssetPtr asset;
-
-    string time;
-    if (inputTime.empty())
-      time = getCurrentTime(GMT_UV_SEC);
-    else
-      time = inputTime;
-
+    auto asset = m_assetBuffer.removeAsset(id, inputTime);
+    if (asset)
     {
-      std::lock_guard<std::mutex> lock(m_assetLock);
-
-      asset = m_assetMap[id];
-      if (!asset.getObject())
-        return false;
-
-      asset->setRemoved(true);
-      asset->setTimestamp(time);
-
-      // Check if the asset changed id is the same as this asset.
-      auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
-      if (ptr && (*ptr)->getValue() == id)
-        addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
+      auto time = asset->getTimestamp();
+      addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, *time);
     }
 
-    addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, time);
-#endif
     return true;
   }
 
-  bool Agent::removeAllAssets(Device *device, const std::string &type, const std::string &inputTime)
+  bool Agent::removeAllAssets(Device *device, const std::string &type,
+                              const std::string &inputTime)
   {
-#if 0
-    string time;
-    if (inputTime.empty())
-      time = getCurrentTime(GMT_UV_SEC);
-    else
-      time = inputTime;
-
+    std::lock_guard<AssetBuffer> lock(m_assetBuffer);
+    auto assets = m_assetBuffer.getAssetsForType(type);
+    auto uuid = device->getUuid();
+    for (auto a : assets)
     {
-      std::lock_guard<std::mutex> lock(m_assetLock);
-
-      auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
-      string changedId;
-      if (ptr)
-        changedId = (*ptr)->getValue();
-
-      list<AssetPtr *>::reverse_iterator iter;
-      for (iter = m_assets.rbegin(); iter != m_assets.rend(); ++iter)
-      {
-        AssetPtr asset = (**iter);
-        if (type == asset->getType() && !asset->isRemoved())
-        {
-          asset->setRemoved(true);
-          asset->setTimestamp(time);
-
-          addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + asset->getAssetId(),
-                      time);
-
-          if (changedId == asset->getAssetId())
-            addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", time);
-        }
-      }
+      if (!a.second->getDeviceUuid() || a.second->getDeviceUuid() == uuid)
+        removeAsset(device, a.second->getAssetId(), inputTime);
     }
-#endif
+    
     return true;
   }
   
@@ -1121,58 +967,79 @@ namespace mtconnect
     }
   }
 
-  std::string Agent::handleAssets(const Printer *printer, std::ostream &aOut,
-                                  const key_value_map &queries, const std::string &list)
+  std::string Agent::handleAssets(const Printer *printer, ostream &aOut,
+                                  const key_value_map &queries,
+                                  const string &list)
   {
-#if 0
-    using namespace dlib;
-    std::vector<AssetPtr> assets;
-
+    AssetList assets;
     if (!list.empty())
     {
-      std::lock_guard<std::mutex> lock(m_assetLock);
-      istringstream str(list);
-      tokenizer_kernel_1 tok;
-      tok.set_stream(str);
-      tok.set_identifier_token(
-          tok.lowercase_letters() + tok.uppercase_letters() + tok.numbers() + "_.@$%&^:+-_=",
-          tok.lowercase_letters() + tok.uppercase_letters() + tok.numbers() + "_.@$%&^:+-_=");
-
-      int type;
-      string token;
-      for (tok.get_token(type, token); type != tok.END_OF_FILE; tok.get_token(type, token))
+      lock_guard<AssetBuffer> lock(m_assetBuffer);
+      stringstream str(list);
+      string id;
+      while (getline(str, id, ','))
       {
-        if (type == tok.IDENTIFIER)
+        auto asset = m_assetBuffer.getAsset(id);
+        if (asset)
         {
-          AssetPtr ptr = m_assetMap[token];
-          if (!ptr.getObject())
-            return printer->printError(m_instanceId, 0, 0, "ASSET_NOT_FOUND",
-                                       (string) "Could not find asset: " + token);
-          assets.emplace_back(ptr);
+          assets.emplace_back(asset);
         }
       }
     }
     else
     {
-      std::lock_guard<std::mutex> lock(m_assetLock);
-      // Return all asssets, first check if there is a type attribute
+      auto type = queries.find("type");
+      auto device = queries.find("device");
+      auto removedQuery = queries.find("removed");
+      auto removed = removedQuery != queries.end() && removedQuery->second == "true";
+      auto count = checkAndGetParam(queries, "count", m_assetBuffer.getCount(removed),
+                                    1, false, NO_VALUE32);
 
-      string type = queries["type"];
-      auto removed = (queries.count("removed") > 0 && queries["removed"] == "true");
-      auto count = checkAndGetParam(queries, "count", m_assets.size(), 1, false, NO_VALUE32);
-
-      std::list<AssetPtr *>::reverse_iterator iter;
-      for (iter = m_assets.rbegin(); iter != m_assets.rend() && count > 0; ++iter, --count)
+      if (type != queries.end())
       {
-        if ((type.empty() || type == (**iter)->getType()) && (removed || !(**iter)->isRemoved()))
+        auto list = m_assetBuffer.getAssetsForType(type->second);
+        for (auto asset : list)
         {
-          assets.emplace_back(**iter);
+          if ((!asset.second->isRemoved() || removed) &&
+              (device == queries.end() ||
+               (asset.second->getDeviceUuid() &&
+                asset.second->getDeviceUuid() == device->second)))
+          {
+            assets.emplace_back(asset.second);
+            if (assets.size() >= count)
+              break;
+          }
+        }
+      }
+      else if (device != queries.end())
+      {
+        auto list = m_assetBuffer.getAssetsForDevice(device->second);
+        for (auto asset : list)
+        {
+          if (!asset.second->isRemoved() || removed)
+          {
+            assets.emplace_back(asset.second);
+            if (assets.size() >= count)
+              break;
+          }
+        }
+      }
+      else
+      {
+        for (auto asset : m_assetBuffer.getAssets())
+        {
+          if (!asset->isRemoved() || removed)
+          {
+            assets.emplace_back(asset);
+            if (assets.size() >= count)
+              break;
+          }
         }
       }
     }
-
-    return printer->printAssets(m_instanceId, getMaxAssets(), m_assets.size(), assets);
-#endif
+    
+    return printer->printAssets(m_instanceId, getMaxAssets(),
+                                m_assetBuffer.getCount(), assets);
   }
 
   // Store an asset in the map by asset # and use the circular buffer as

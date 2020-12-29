@@ -27,16 +27,14 @@
 #include <mutex>
 
 namespace mtconnect
-{
-  using AssetPtr = std::shared_ptr<Asset>;
-  
+{  
   class AssetBuffer
   {
   public:
     using Index = std::map<std::string, AssetPtr>;
     using SecondaryIndex = std::map<std::string, Index>;
     using TypeCount = std::map<std::string, size_t>;
-    using Buffer = std::list<AssetPtr>;
+    using Buffer = AssetList;
     using RemoveCount = std::map<std::string, size_t>;
 
     AssetBuffer(size_t max)
@@ -55,11 +53,11 @@ namespace mtconnect
     }
 
     AssetPtr addAsset(AssetPtr asset);
-    AssetPtr removeAsset(AssetPtr asset)
+    AssetPtr removeAsset(AssetPtr asset, const std::string time = "")
     {
-      return removeAsset(asset->getAssetId());
+      return removeAsset(asset->getAssetId(), time);
     }
-    AssetPtr removeAsset(const std::string &id);
+    AssetPtr removeAsset(const std::string &id, const std::string time = "");
 
     AssetPtr getAsset(const std::string &id)
     {
@@ -140,9 +138,9 @@ namespace mtconnect
     {
       return m_buffer;
     }
-    size_t getIndex(const std::string &id) const
+    int getIndex(const std::string &id) const
     {
-      size_t i = 0;
+      int i = 0;
       for (auto &a : m_buffer)
       {
         if (a->getAssetId() == id)

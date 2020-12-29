@@ -51,13 +51,10 @@ namespace mtconnect
     std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
                             ObservationPtrArray &results) const override;
-#if 0
-    std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
+    std::string printAssets(const unsigned int anInstanceId,
+                            const unsigned int bufferSize,
                             const unsigned int assetCount,
-                            std::vector<AssetPtr> const &assets) const override;
-
-    std::string printCuttingTool(CuttingToolPtr const tool) const override;
-#endif
+                            const AssetList &assets) const override;
     std::string mimeType() const override { return "text/xml"; }
 
     void addDevicesNamespace(const std::string &urn, const std::string &location,
@@ -126,11 +123,6 @@ namespace mtconnect
                               const std::set<CellDefinition> &definitions) const;
 
     void addObservation(xmlTextWriterPtr writer, Observation *result) const;
-
-#if 0
-    // Asset printing
-    void printAssetNode(xmlTextWriterPtr writer, AssetPtr asset) const;
-#endif
     
    protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;

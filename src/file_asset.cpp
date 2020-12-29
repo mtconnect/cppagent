@@ -60,6 +60,10 @@ namespace mtconnect
     return fileArchetype;
   }
   
+  RegisterAsset<FileArchetypeAsset>* const  FileArchetypeAsset::m_registerAsset =
+   new RegisterAsset<FileArchetypeAsset>("FileArchetype");
+
+  
   FactoryPtr FileAsset::getFactory()
   {
     static auto file = make_shared<Factory>(*FileArchetypeAsset::getFactory());
@@ -94,5 +98,9 @@ namespace mtconnect
     }
     
     return file;
-  }  
+  }
+  
+  RegisterAsset<FileAsset>* const  FileAsset::m_registerAsset =
+   new RegisterAsset<FileAsset>("File");
+
 }
