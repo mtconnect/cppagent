@@ -12,6 +12,7 @@
 #include "entity.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
+#include "xml_printer.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -430,6 +431,44 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   it++;
   ASSERT_EQ("Entity list requirement Measurement must have at least 1 entries, 0 found",            
             string(it->what()));
+}
+
+TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
+{
+  auto printer = dynamic_cast<mtconnect::XmlPrinter *>(m_agent->getPrinter("xml"));
+  ASSERT_TRUE(printer != nullptr);
+
+  printer->clearAssetsNamespaces();
+  printer->addAssetsNamespace("urn:machine.com:MachineAssets:1.3",
+                              "http://www.machine.com/schemas/MachineAssets_1.3.xsd", "x");
+
+  addAdapter();
+
+  m_adapter->parseBuffer("TIME|@ASSET@|XXX.200|CuttingTool|--multiline--AAAA\n");
+  m_adapter->parseBuffer((getFile("asset5.xml") + "\n").c_str());
+  m_adapter->parseBuffer("--multiline--AAAA\n");
+  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
+
+  m_agentTestHelper->m_path = "/asset/XXX.200";
+
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@type", "PART_COUNT");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@countDirection", "UP");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@initial", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@limit", "0");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:CutterStatus/m:Status",
+                          "AVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='2']/m:CutterStatus/m:Status", "USED");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@type", "PART_COUNT");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@countDirection", "UP");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@initial", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@limit", "0");
+  }
 }
 
 #if 0

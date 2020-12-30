@@ -91,20 +91,14 @@ namespace mtconnect
       // Reorder elements if they need to be specially ordered.
       if (order)
       {
-        // Creates a temp ordering map
-        unordered_map<string,int> ordering;
-        int i = 0;
-        for (const auto &s : *order)
-          ordering.insert({s, i++});
-        
         // Sort all ordered elements first based on the order in the
         // ordering list
-        elements.sort([&ordering](auto &e1, auto &e2) -> bool {
-          auto it1 = ordering.find(e1.first);
-          if (it1 == ordering.end())
+        elements.sort([&order](auto &e1, auto &e2) -> bool {
+          auto it1 = order->find(e1.first);
+          if (it1 == order->end())
             return false;
-          auto it2 = ordering.find(e2.first);
-          if (it2 == ordering.end())
+          auto it2 = order->find(e2.first);
+          if (it2 == order->end())
             return true;
           return it1->second < it2->second;
         });

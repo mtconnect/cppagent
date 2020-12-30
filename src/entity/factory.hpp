@@ -65,13 +65,16 @@ namespace mtconnect
       
       void setOrder(OrderList list)
       {
-        m_order = std::make_shared<OrderList>(list);
+        m_order = std::make_shared<OrderMap>();
+        int i = 0;
+        for (auto &e : list)
+          m_order->emplace(e, i++);
       }
-      void setOrder(OrderListPtr &list)
+      void setOrder(OrderMapPtr &list)
       {
         m_order = list;
       }
-      const OrderListPtr &getOrder() const { return m_order; }
+      const OrderMapPtr &getOrder() const { return m_order; }
       
       void setList(bool list) { m_isList = list; }
       bool isList() const { return m_isList; }
@@ -269,7 +272,7 @@ namespace mtconnect
     protected:
       Requirements m_requirements;
       Function m_function;
-      OrderListPtr m_order;
+      OrderMapPtr m_order;
       
       StringFactory m_stringFactory;
       RegexFactory m_regexFactory;

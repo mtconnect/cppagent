@@ -31,23 +31,27 @@ namespace mtconnect
       Requirement("VALUE", true) }));
     
     static auto fileProperties = make_shared<Factory>(Requirements({
-        Requirement("FileProperty", ENTITY, fileProperty) }));
+        Requirement("FileProperty", ENTITY, fileProperty,
+                    1, Requirement::Infinite) }));
     
     static auto fileComment = make_shared<Factory>(Requirements({
       Requirement("timestamp", true ),
       Requirement("VALUE", true) }));
     
     static auto fileComments = make_shared<Factory>(Requirements({
-      Requirement("FileComment", ENTITY, fileComment) }));
+      Requirement("FileComment", ENTITY, fileComment,
+                  1, Requirement::Infinite) }));
 
     static auto fileArchetype = make_shared<Factory>(*Asset::getFactory());
     fileArchetype->addRequirements(Requirements{
-      Requirement("mediaTyep", true),
+      Requirement("name", true),
+      Requirement("mediaType", true),
       Requirement("applicationCategory", true),
       Requirement("applicationType", true),
       Requirement("FileComments", ENTITY_LIST, fileComments, false),
       Requirement("FileProperties", ENTITY_LIST, fileProperties, false)
     });
+    fileArchetype->setOrder({"FileProperties", "FileComments"});
     
     static bool first { true };
     if (first)
@@ -72,14 +76,15 @@ namespace mtconnect
       Requirement("VALUE", true )}));
     
     static auto destinations = make_shared<Factory>(Requirements({
-      Requirement("Destination", ENTITY, destination) }));
+      Requirement("Destination", ENTITY, destination,
+                  1, Requirement::Infinite) }));
 
     static auto fileLocation = make_shared<Factory>(Requirements({
       Requirement("href", true )}));
 
     file->addRequirements(Requirements({
       Requirement("size", INTEGER),
-      Requirement("verisionId", STRING),
+      Requirement("versionId", STRING),
       Requirement("state", STRING),
       Requirement("FileLocation", ENTITY, fileLocation),
       Requirement("Signature", false),
@@ -88,6 +93,16 @@ namespace mtconnect
       Requirement("ModificationTime", false),
       Requirement("Destinations", ENTITY_LIST, destinations)
     }));
+    file->setOrder({
+      "FileProperties",
+      "FileComments",
+      "FileLocation",
+      "Signature",
+      "PublicKey",
+      "Destinations",
+      "CreationTime",
+      "ModificationTime"
+    });
     
     static bool first { true };
     if (first)

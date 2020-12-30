@@ -629,6 +629,8 @@ namespace mtconnect
   bool Agent::addAsset(Device *device, const string &id, const string &doc,
                        const string &type, const string &inputTime)
   {
+    // TODO: Error handling for parse errors.
+    
     // Parse the asset
     entity::ErrorList errors;
     entity::XmlParser parser;
@@ -683,6 +685,8 @@ namespace mtconnect
 
   bool Agent::removeAsset(Device *device, const std::string &id, const string &inputTime)
   {
+    // TODO: Error handling for parse errors.
+
     auto asset = m_assetBuffer.removeAsset(id, inputTime);
     if (asset)
     {
@@ -887,6 +891,8 @@ namespace mtconnect
                           const key_value_map &queries, const string &adapter,
                           const string &deviceName)
   {
+    // TODO: Improve error handling for failed PUTS.
+
     string device = deviceName;
     if (device.empty() && adapter.empty())
       return printError(printer, "UNSUPPORTED", "Device must be specified for PUT");
@@ -1066,6 +1072,7 @@ namespace mtconnect
       }
     }
     
+    // TODO: Count should still have removed. Maybe make configurable
     return printer->printAssets(m_instanceId, getMaxAssets(),
                                 m_assetBuffer.getCount(), assets);
   }
@@ -1103,6 +1110,7 @@ namespace mtconnect
         return "<failure>Cannot remove asset (" + id + ")</failure>";
     }
 
+    // TODO: Improve error handling. Iterate errors from parser
     return "<failure>Bad Command:" + command + "</failure>";
   }
 
