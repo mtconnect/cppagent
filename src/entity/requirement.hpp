@@ -57,7 +57,8 @@ namespace mtconnect
                               std::string, int64_t, double, bool,
                               Vector, nullptr_t>;
     using FactoryPtr = std::shared_ptr<Factory>;
-    using ControlledVocab = std::set<std::string>;
+    using ControlledVocab = std::list<std::string>;
+    using Pattern = std::optional<std::regex>;
     
     enum ValueType {
       EMPTY = 0,
@@ -151,15 +152,20 @@ namespace mtconnect
       Requirement(const std::string &name, ValueType type, FactoryPtr &o,
                   int lower, int upper);
       Requirement(const std::string &name, const ControlledVocab &vocab,
-                  int lower = 0, int upper = 1)
-      : m_name(name), m_type(STRING), m_lowerMultiplicity(lower),
-        m_upperMultiplicity(upper), m_vocab(vocab)
-      {
-      }
-      Requirement(const std::string &name, const ControlledVocab &vocab,
                   bool required = true)
       : m_name(name), m_type(STRING), m_lowerMultiplicity(required ? 1 : 0),
-        m_upperMultiplicity(1), m_vocab(vocab)
+        m_upperMultiplicity(1)
+      {
+        std::stringstream str;
+        for (auto &s : vocab)
+          str << s << "|";
+        str.seekp(-1, std::ios_base::end);
+        m_pattern = std::make_optional<std::regex>(str.str());
+      }
+      Requirement(const std::string &name, const std::regex &pattern,
+                  bool required = true)
+      : m_name(name), m_type(STRING), m_lowerMultiplicity(required ? 1 : 0),
+        m_upperMultiplicity(1), m_pattern(pattern)
       {
       }
 
@@ -219,7 +225,7 @@ namespace mtconnect
       ValueType m_type;
       MatcherPtr m_matcher;
       FactoryPtr m_factory;
-      ControlledVocab m_vocab;
+      Pattern m_pattern;
     };
 
         // Inlines

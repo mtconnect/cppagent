@@ -113,7 +113,7 @@ namespace mtconnect
           {
             throw PropertyRequirementError("Value of " + m_name + " is empty");
           }
-          if (!m_vocab.empty() && m_vocab.count(v) == 0)
+          if (m_pattern && !std::regex_match(v, *m_pattern))
           {
             throw PropertyValueError("Invalid value for '" + m_name + "': '" + v + "' is not allowed");
           }

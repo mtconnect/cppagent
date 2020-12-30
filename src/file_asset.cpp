@@ -85,7 +85,7 @@ namespace mtconnect
     file->addRequirements(Requirements({
       Requirement("size", INTEGER),
       Requirement("versionId", STRING),
-      Requirement("state", STRING),
+      Requirement("state", {"EXPERIMENTAL", "PRODUCTION", "REVISION"}),
       Requirement("FileLocation", ENTITY, fileLocation),
       Requirement("Signature", false),
       Requirement("PublicKey", false),

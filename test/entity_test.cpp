@@ -503,9 +503,8 @@ TEST_F(EntityTest, TestControlledVocabulary)
 {
   FactoryPtr root = make_shared<Factory>();
   FactoryPtr simpleFact = make_shared<Factory>(Requirements({
-    Requirement("name", true ),
-    Requirement("id", true),
-    Requirement("type", {"BIG", "SMALL", "OTHER"}, true) }));
+    {"name", true }, {"id", true},
+    {"type", {"BIG", "SMALL", "OTHER"}, true} }));
   root->registerFactory("simple", simpleFact);
   
   Properties simple {

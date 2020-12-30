@@ -31,7 +31,7 @@ namespace mtconnect
     if (!tool)
     {
       static auto definition = make_shared<Factory>(Requirements({
-        Requirement("format", false),
+        Requirement("format", {"EXPRESS", "XML", "TEXT", "UNDEFINED"}),
         Requirement("RAW", true)
       }));
           
@@ -41,8 +41,8 @@ namespace mtconnect
       }));
 
       static auto toolLife = make_shared<Factory>(Requirements({
-        Requirement("type", true),
-        Requirement("countDirection", true),
+        Requirement("type", {"MINUTES", "PART_COUNT", "WEAR"}),
+        Requirement("countDirection", ControlledVocab{"UP", "DOWN"}),
         Requirement("warning", DOUBLE, false),
         Requirement("limit", DOUBLE, false),
         Requirement("initial", DOUBLE, false),
@@ -138,7 +138,21 @@ namespace mtconnect
     if (!tool)
     {
       static auto state = make_shared<Factory>(Requirements{
-        { "VALUE", STRING, true }
+        { "VALUE",
+          { "NEW",
+            "AVAILABLE",
+            "UNAVAILABLE",
+            "ALLOCATED",
+            "ALLOCATED",
+            "MEASURED",
+            "NOT_REGISTERED",
+            "RECONDITIONED",
+            "USED",
+            "EXPIRED",
+            "TAGGED_OUT",
+            "BROKEN",
+            "UNKNOWN"
+          } }
       });
       
       static auto status = make_shared<Factory>(Requirements{
@@ -146,7 +160,11 @@ namespace mtconnect
       });
       
       static auto location = make_shared<Factory>(Requirements{
-        { "type", true },
+        { "type",
+          {"POT", "STATION", "CRIB", "SPINDLE", "TRANSFER_POT",
+          "RETURN_POT", "STAGING_POT", "REMOVAL_POT", "EXPIRED_POT",
+            "END_EFFECTOR"
+        } },
         { "negativeOverlap", INTEGER, false },
         { "positiveOverlap", INTEGER, false },
         { "turret", false },
