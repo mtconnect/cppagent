@@ -106,10 +106,17 @@ namespace mtconnect
         {
           throw PropertyTypeError("Incorrect type for property " + m_name);
         }
-        if (std::holds_alternative<std::string>(value) &&
-            std::get<std::string>(value).empty())
+        if (std::holds_alternative<std::string>(value))
         {
-          throw PropertyRequirementError("Value of " + m_name + " is empty");
+          auto &v = std::get<std::string>(value);
+          if (v.empty() && m_lowerMultiplicity > 0)
+          {
+            throw PropertyRequirementError("Value of " + m_name + " is empty");
+          }
+          if (!m_vocab.empty() && m_vocab.count(v) == 0)
+          {
+            throw PropertyValueError("Invalid value for '" + m_name + "': '" + v + "' is not allowed");
+          }
         }
       }
       

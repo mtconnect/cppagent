@@ -57,6 +57,7 @@ namespace mtconnect
                               std::string, int64_t, double, bool,
                               Vector, nullptr_t>;
     using FactoryPtr = std::shared_ptr<Factory>;
+    using ControlledVocab = std::set<std::string>;
     
     enum ValueType {
       EMPTY = 0,
@@ -107,6 +108,12 @@ namespace mtconnect
     public:
       using PropertyError::PropertyError;
     };
+    class PropertyValueError : public PropertyError
+    {
+    public:
+      using PropertyError::PropertyError;
+    };
+
     
     using ErrorList = std::list<EntityError>;
     
@@ -143,7 +150,19 @@ namespace mtconnect
                   bool required = true);
       Requirement(const std::string &name, ValueType type, FactoryPtr &o,
                   int lower, int upper);
-      
+      Requirement(const std::string &name, const ControlledVocab &vocab,
+                  int lower = 0, int upper = 1)
+      : m_name(name), m_type(STRING), m_lowerMultiplicity(lower),
+        m_upperMultiplicity(upper), m_vocab(vocab)
+      {
+      }
+      Requirement(const std::string &name, const ControlledVocab &vocab,
+                  bool required = true)
+      : m_name(name), m_type(STRING), m_lowerMultiplicity(required ? 1 : 0),
+        m_upperMultiplicity(1), m_vocab(vocab)
+      {
+      }
+
       Requirement() = default;
       Requirement(const Requirement &o) = default;
       ~Requirement() = default;
@@ -200,6 +219,7 @@ namespace mtconnect
       ValueType m_type;
       MatcherPtr m_matcher;
       FactoryPtr m_factory;
+      ControlledVocab m_vocab;
     };
 
         // Inlines

@@ -498,3 +498,40 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   Requirement r6("entity_list", INTEGER);
   ASSERT_THROW(r6.convertType(v), PropertyConversionError);
 }
+
+TEST_F(EntityTest, TestControlledVocabulary)
+{
+  FactoryPtr root = make_shared<Factory>();
+  FactoryPtr simpleFact = make_shared<Factory>(Requirements({
+    Requirement("name", true ),
+    Requirement("id", true),
+    Requirement("type", {"BIG", "SMALL", "OTHER"}, true) }));
+  root->registerFactory("simple", simpleFact);
+  
+  Properties simple {
+    { "id", "abc" },
+    { "name", "xxx" },
+    { "type", "BIG" }
+  };
+  
+  ErrorList errors;
+  auto entity = root->create("simple", simple, errors);
+  ASSERT_EQ(0, errors.size());
+
+  ASSERT_TRUE(entity);
+  ASSERT_EQ(3, entity->getProperties().size());
+  ASSERT_EQ("simple", entity->getName());
+  ASSERT_EQ("abc", get<std::string>(entity->getProperty("id")));
+  ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
+  ASSERT_EQ("BIG", get<std::string>(entity->getProperty("type")));
+
+  Properties fail {
+    { "id", "abc" },
+    { "name", "xxx" },
+    { "type", "BAD" }
+  };
+  
+  auto entity2 = root->create("simple", fail, errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_EQ("Invalid value for 'type': 'BAD' is not allowed", string(errors.front().what()));
+}
