@@ -396,9 +396,12 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   entity::XmlParser parser;
   
   auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
-  ASSERT_EQ(1, errors.size());
-  ASSERT_EQ("Property CutterStatus is required and not provided",
-            string(errors.front().what()));
+  ASSERT_EQ(2, errors.size());
+  ASSERT_EQ("CuttingToolLifeCycle(CutterStatus): Property CutterStatus is required and not provided",
+            string(errors.front()->what()));
+  ASSERT_EQ("CuttingTool: Invalid element 'CuttingToolLifeCycle'",
+            string(errors.back()->what()));
+
 }
 
 TEST_F(CuttingToolTest, TestMeasurementsError)
@@ -421,16 +424,26 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   entity::XmlParser parser;
   
   auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
-  ASSERT_EQ(3, errors.size());
+  ASSERT_EQ(6, errors.size());
   auto it = errors.begin();
-  ASSERT_EQ("Property VALUE is required and not provided",
-            string(it->what()));
+  EXPECT_EQ("FunctionalLength(VALUE): Property VALUE is required and not provided",
+            string((*it)->what()));
   it++;
-  ASSERT_EQ("Property VALUE is required and not provided",
-            string(it->what()));
+  EXPECT_EQ("Measurements: Invalid element 'FunctionalLength'",
+            string((*it)->what()));
   it++;
-  ASSERT_EQ("Entity list requirement Measurement must have at least 1 entries, 0 found",            
-            string(it->what()));
+  EXPECT_EQ("CuttingDiameterMax(VALUE): Property VALUE is required and not provided",
+            string((*it)->what()));
+  it++;
+  EXPECT_EQ("Measurements: Invalid element 'CuttingDiameterMax'",
+            string((*it)->what()));
+  it++;
+  EXPECT_EQ("Measurements(Measurement): Entity list requirement Measurement must have at least 1 entries, 0 found",
+            string((*it)->what()));
+  it++;
+  EXPECT_EQ("CuttingToolLifeCycle: Invalid element 'Measurements'",
+            string((*it)->what()));
+
 }
 
 TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)

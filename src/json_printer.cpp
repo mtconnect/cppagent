@@ -154,18 +154,6 @@ namespace mtconnect
     return doc;
   }
 
-  std::string JsonPrinter::printError(const unsigned int instanceId, const unsigned int bufferSize,
-                                      const uint64_t nextSeq, const std::string &errorCode,
-                                      const std::string &errorText) const
-  {
-    json doc = json::object(
-        {{"MTConnectError",
-          {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion)},
-           {"Errors", {{"Error", {{"errorCode", errorCode}, {"text", trim(errorText)}}}}}}}});
-
-    return print(doc, m_pretty);
-  }
-
   static inline json toJson(const set<CellDefinition> &definitions)
   {
     json entries = json::object();
@@ -186,6 +174,27 @@ namespace mtconnect
     }
 
     return entries;
+  }
+  
+  std::string JsonPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                          const uint64_t nextSeq, const ProtoErrorList &list) const
+  {
+    json errors = json::array();
+    for (auto &e : list)
+    {
+      string s(e.second);
+      errors.push_back({
+        {"Error", { {"errorCode", e.first}, {"value", trim(s) } }
+          
+        } });
+    }
+    
+    json doc = json::object(
+        {{"MTConnectError",
+          {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion)},
+            { "Errors", errors }}}});
+
+    return print(doc, m_pretty);
   }
 
   static inline json toJson(const DataItemDefinition &definition)

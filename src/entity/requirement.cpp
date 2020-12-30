@@ -59,16 +59,16 @@ namespace mtconnect
       {
         if (!m_factory)
         {
-          throw PropertyRequirementError("For entity or list requirement " + m_name + ", no factory");
+          throw PropertyError("For entity or list requirement " + m_name + ", no factory", m_name);
         }
         if (holds_alternative<EntityPtr>(value))
         {
           const auto e = get<EntityPtr>(value);
           if (!matches(e->getName()))
           {
-            throw PropertyRequirementError("Requirement " + m_name +
+            throw PropertyError("Requirement " + m_name +
                                            " does not have a matching entity name: " +
-                                           e->getName());
+                                           e->getName(), m_name);
           }
         }
         else if (holds_alternative<EntityList>(value))
@@ -79,43 +79,47 @@ namespace mtconnect
             string upper;
             if (m_upperMultiplicity != Infinite)
               upper = " and no more than " + to_string(m_upperMultiplicity);
-            throw PropertyRequirementError("Entity list requirement " + m_name +
+            throw PropertyError("Entity list requirement " + m_name +
                                            " must have at least " +
                                            to_string(m_lowerMultiplicity) +
                                            upper + " entries, " + to_string(l.size()) +
-                                           " found");
+                                           " found", m_name);
           }
           for (const auto &e : l)
           {
             if (!matches(e->getName()))
             {
-              throw PropertyRequirementError("Entity list requirement " + m_name +
-                                             " does not match requirement with name " + e->getName());
+              throw PropertyError("Entity list requirement " + m_name +
+                                             " does not match requirement with name " + e->getName(), m_name);
             }
           }
         }
         else
         {
-          throw PropertyRequirementError("Entity or list requirement " + m_name +
-                                         " does not have correct type");
+          throw PropertyError("Entity or list requirement " + m_name +
+                                         " does not have correct type",
+                                         m_name);
         }
       }
       else
       {
         if (value.index() != m_type)
         {
-          throw PropertyTypeError("Incorrect type for property " + m_name);
+          throw PropertyError("Incorrect type for property " + m_name);
         }
         if (std::holds_alternative<std::string>(value))
         {
           auto &v = std::get<std::string>(value);
-          if (v.empty() && m_lowerMultiplicity > 0)
+          if (v.empty())
           {
-            throw PropertyRequirementError("Value of " + m_name + " is empty");
+            throw PropertyError("Value of " + m_name + " is empty",
+                                     m_name);
           }
           if (m_pattern && !std::regex_match(v, *m_pattern))
           {
-            throw PropertyValueError("Invalid value for '" + m_name + "': '" + v + "' is not allowed");
+            throw PropertyError("Invalid value for '" + m_name +
+                                     "': '" + v + "' is not allowed",
+                                     m_name);
           }
         }
       }
@@ -135,7 +139,7 @@ namespace mtconnect
         const char *sp = m_string.c_str();
         double r = strtod(sp, &ep);
         if (ep == sp)
-          throw PropertyConversionError("cannot convert string '" + m_string + "' to double");
+          throw PropertyError("cannot convert string '" + m_string + "' to double");
         
         return r;
       }
@@ -146,7 +150,7 @@ namespace mtconnect
         const char *sp = m_string.c_str();
         int64_t r = strtoll(sp, &ep, 10);
         if (ep == sp)
-          throw PropertyConversionError("cannot convert string '" + m_string + "' to integer");
+          throw PropertyError("cannot convert string '" + m_string + "' to integer");
         
         return r;
       }
@@ -176,13 +180,13 @@ namespace mtconnect
           }
           else
           {
-            throw PropertyConversionError("cannot convert string '" + m_string + "' to vector");
+            throw PropertyError("cannot convert string '" + m_string + "' to vector");
           }
           cp = np;
         }
 
         if (r.size() == 0)
-          throw PropertyConversionError("cannot convert string '" + m_string + "' to vector");
+          throw PropertyError("cannot convert string '" + m_string + "' to vector");
 
         return r;
       }
@@ -220,7 +224,7 @@ namespace mtconnect
                 break;
 
               default:
-                throw PropertyConversionError("Cannot convert a string to a non-scalar");
+                throw PropertyError("Cannot convert a string to a non-scalar");
                 break;
             }
           },
@@ -253,7 +257,7 @@ namespace mtconnect
               }
                 
               default:
-                throw PropertyConversionError("Cannot convert a double to a non-scalar");
+                throw PropertyError("Cannot convert a double to a non-scalar");
                 break;
             }
 
@@ -284,7 +288,7 @@ namespace mtconnect
               }
                 
               default:
-                throw PropertyConversionError("Cannot convert a integer to a non-scalar");
+                throw PropertyError("Cannot convert a integer to a non-scalar");
                 break;
             }
           },
@@ -305,12 +309,12 @@ namespace mtconnect
                 }
                 else
                 {
-                  throw PropertyConversionError("Cannot convert a empty Vector to a string");
+                  throw PropertyError("Cannot convert a empty Vector to a string");
                 }
               }
               
               default:
-                throw PropertyConversionError("Cannot convert a Vector to anything other than a string");
+                throw PropertyError("Cannot convert a Vector to anything other than a string");
                 break;
             }
           },
@@ -337,7 +341,7 @@ namespace mtconnect
                 break;
                 
               default:
-                throw PropertyConversionError("Cannot convert a string to a non-scalar");
+                throw PropertyError("Cannot convert a string to a non-scalar");
                 break;
             }
           },

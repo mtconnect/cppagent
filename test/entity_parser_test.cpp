@@ -214,8 +214,8 @@ TEST_F(EntityParserTest, TestRecursiveEntityListFailure)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(1, errors.size());
   ASSERT_FALSE(entity);
-  ASSERT_EQ(string("Property uuid is required and not provided"),
-            errors.front().what());
+  ASSERT_EQ(string("Device(uuid): Property uuid is required and not provided"),
+            errors.front()->what());
 }
 
 TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
@@ -237,10 +237,10 @@ TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
   entity::XmlParser parser;
   
   auto entity = parser.parse(root, doc, "1.7", errors);
-  ASSERT_EQ(1, errors.size());
+  ASSERT_EQ(2, errors.size());
   ASSERT_TRUE(entity);
-  ASSERT_EQ(string("Entity list requirement Component must have at least 1 entries, 0 found"),
-            errors.front().what());
+  ASSERT_EQ(string("Components(Component): Entity list requirement Component must have at least 1 entries, 0 found"),
+            errors.front()->what());
   ASSERT_EQ("Device", entity->getName());
   ASSERT_EQ("d1", get<string>(entity->getProperty("id")));
   ASSERT_EQ("foo", get<string>(entity->getProperty("name")));

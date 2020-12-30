@@ -126,7 +126,7 @@ namespace mtconnect
       }
       
       void performConversions(Properties &p, ErrorList &errors) const;
-      bool isSufficient(const Properties &properties, ErrorList &errors) const;
+      bool isSufficient(Properties &properties, ErrorList &errors) const;
       
       EntityPtr make(const std::string &name,
                      Properties &p, ErrorList &errors) const
@@ -142,10 +142,17 @@ namespace mtconnect
             return ent;
           }
         }
-        catch (PropertyError &e)
+        catch (EntityError &e)
         {
-          errors.emplace_back(e);
+          e.setEntity(name);
+          errors.emplace_back(std::make_unique<EntityError>(e));
           LogError("Failed to create " + name + ": " + e.what());
+        }
+        
+        for (auto &e : errors)
+        {
+          if (e->getEntity().empty())
+            e->setEntity(name);
         }
         
         return nullptr;

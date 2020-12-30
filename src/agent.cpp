@@ -640,8 +640,8 @@ namespace mtconnect
     {
       g_logger << LWARN << "Asset '" << id << " could not be parsed";
       g_logger << LWARN << doc;
-      for (auto e : errors)
-        g_logger << LWARN << e.what();
+      for (auto &e : errors)
+        g_logger << LWARN << e->what();
       return false;
     }
 

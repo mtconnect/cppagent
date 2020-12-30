@@ -93,7 +93,7 @@ namespace mtconnect
 
         
     static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node,
-                            ErrorList &errors)
+                                  ErrorList &errors)
     {
       auto qname = nodeQName(node);
       auto ef = factory->factoryFor(qname);
@@ -158,22 +158,10 @@ namespace mtconnect
                     properties.insert({ ent->getName(), ent });
                   }
                 }
-//                else if (child->children != nullptr &&
-//                         child->children->type == XML_TEXT_NODE &&
-//                         child->children->content != nullptr &&
-//                         *child->children->content != '\0' &&
-//                         child->properties == nullptr)
-//                {
-//                  // TODO: Fix when the child is an element that failed because of an
-//                  // error instead of not being associated with simple content entity.
-//                  string s((const char *) child->children->content);
-//                  trim(s);
-//                  if (!s.empty())
-//                    properties.insert({  nodeQName(child), s });
-//                }
                 else
                 {
                   g_logger << dlib::LWARN << "Unexpected element: " << nodeQName(child);
+                  errors.emplace_back(new EntityError("Invalid element '" + nodeQName(child) + "'", qname));
                 }
               }
             }
@@ -187,8 +175,13 @@ namespace mtconnect
           }
         }
         
-        auto entity = ef->make(qname, properties, errors);
-        return entity;
+        try {
+          auto entity = ef->make(qname, properties, errors);
+          return entity;
+        } catch (EntityError &e) {
+          e.setEntity(qname);
+          errors.emplace_back(e.dup());
+        }
       }
       
       return nullptr;
@@ -216,27 +209,27 @@ namespace mtconnect
         if (root != nullptr)
           entity = parseXmlNode(factory, root, errors);
         else
-          errors.emplace_back("Cannot parse asset");
+          errors.emplace_back(new EntityError("Cannot parse asset"));
       }
       
       catch (EntityError e)
       {
         g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
-        errors.emplace_back(e);
+        errors.emplace_back(e.dup());
         entity.reset();
       }
       
       catch (XmlError e)
       {
         g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
-        errors.emplace_back(EntityError(e.what()));
+        errors.emplace_back(new EntityError(e.what()));
         entity.reset();
       }
       
       catch (...)
       {
         g_logger << dlib::LERROR << "Cannot parse XML document: unknown error";
-        errors.emplace_back(EntityError("Unknown Error"));
+        errors.emplace_back(new EntityError("Unknown Error"));
         entity.reset();
       }
             

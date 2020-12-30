@@ -411,9 +411,10 @@ namespace mtconnect
     }
   }
 
-  string XmlPrinter::printError(const unsigned int instanceId, const unsigned int bufferSize,
-                                const uint64_t nextSeq, const string &errorCode,
-                                const string &errorText) const
+  std::string XmlPrinter::printErrors(const unsigned int instanceId,
+                                      const unsigned int bufferSize,
+                                      const uint64_t nextSeq,
+                                      const ProtoErrorList &list) const
   {
     string ret;
 
@@ -425,7 +426,10 @@ namespace mtconnect
 
       {
         AutoElement e1(writer, "Errors");
-        addSimpleElement(writer, "Error", errorText, {{"errorCode", errorCode}});
+        for (auto &e : list)
+        {
+          addSimpleElement(writer, "Error", e.second, {{ "errorCode", e.first }});
+        }
       }
       closeElement(writer);  // MTConnectError
 
@@ -442,7 +446,9 @@ namespace mtconnect
     }
 
     return ret;
+
   }
+
 
   string XmlPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,

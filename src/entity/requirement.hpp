@@ -77,46 +77,85 @@ namespace mtconnect
     class EntityError : public std::logic_error
     {
     public:
-      using std::logic_error::logic_error;
+      explicit EntityError(const std::string &s, const std::string &e = "")
+      : std::logic_error(s), m_entity(e) {}
+      
+      explicit EntityError(const char* s, const std::string &e = "")
+      : std::logic_error(s), m_entity(e) {}
+
+      EntityError(const EntityError&)  noexcept = default;
+      ~EntityError() override = default;
+
+      virtual const char *what() const noexcept override
+      {
+        if (m_text.empty())
+        {
+          auto *t = const_cast<EntityError*>(this);
+          t->m_text = m_entity + ": " + std::logic_error::what();
+        }
+        return m_text.c_str();
+      }
+      void setEntity(const std::string &s)
+      {
+        m_text.clear();
+        m_entity = s;
+      }
+      virtual EntityError *dup() const noexcept
+      {
+        return new EntityError(*this);
+      }
+      const std::string &getEntity() const
+      {
+        return m_entity;
+      }
+      
+    protected:
+      std::string m_text;
+      std::string m_entity;
     };
     class PropertyError : public EntityError
     {
     public:
-      using EntityError::EntityError;
-    };
-    class MissingPropertyError : public PropertyError
-    {
-    public:
-      using PropertyError::PropertyError;
-    };
-    class ExtraPropertyError : public PropertyError
-    {
-    public:
-      using PropertyError::PropertyError;
-    };
-    class PropertyTypeError : public PropertyError
-    {
-    public:
-      using PropertyError::PropertyError;
-    };
-    class PropertyRequirementError : public PropertyError
-    {
-    public:
-      using PropertyError::PropertyError;
-    };
-    class PropertyConversionError : public PropertyError
-    {
-    public:
-      using PropertyError::PropertyError;
-    };
-    class PropertyValueError : public PropertyError
-    {
-    public:
-      using PropertyError::PropertyError;
-    };
+      explicit PropertyError(const std::string &s, const std::string &p = "",
+                             const std::string &e = "")
+      : EntityError(s, e), m_property(p) {}
+      
+      explicit PropertyError(const char* s, const std::string &p = "",
+                             const std::string &e = "")
+      : EntityError(s, e), m_property(p) {}
 
+      PropertyError(const PropertyError&)  _NOEXCEPT = default;
+      ~PropertyError() override = default;
+      
+      virtual const char *what() const noexcept override
+      {
+        if (m_text.empty())
+        {
+          auto *t = const_cast<PropertyError*>(this);
+          t->m_text = m_entity + "(" + m_property + "): " + std::logic_error::what();
+        }
+        return m_text.c_str();
+      }
+      void setProperty(const std::string &p)
+      {
+        m_text.clear();
+        m_property = p;
+      }
+      EntityError *dup() const noexcept override
+      {
+        return new PropertyError(*this);
+      }
+      const std::string &getProperty() const
+      {
+        return m_property;
+      }
+
+
+    protected:
+      std::string m_property;
+    };
     
-    using ErrorList = std::list<EntityError>;
+    using ErrorList = std::list<std::unique_ptr<EntityError>>;
     
     struct Matcher
     {
@@ -128,7 +167,6 @@ namespace mtconnect
     class Requirement
     {
     public:
-      
       const static auto Infinite { std::numeric_limits<int>::max() };
 
     public:
@@ -203,7 +241,17 @@ namespace mtconnect
       }
       void makeRequired() { m_lowerMultiplicity = 1; }
             
-      bool convertType(Value &v) const { return ConvertValueToType(v, m_type); }
+      bool convertType(Value &v) const {
+        try {
+          return ConvertValueToType(v, m_type);
+        }
+        catch (PropertyError &e)
+        {
+          e.setProperty(m_name);
+          throw e;
+        }
+        return false;
+      }
       bool hasMatcher() const { return m_matcher.use_count() > 0; }
       bool isMetBy(const Value &value, bool isList) const;
       bool matches(const std::string &s) const

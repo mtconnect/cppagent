@@ -223,8 +223,8 @@ TEST_F(EntityTest, MissingProperty)
   ASSERT_FALSE(entity);
   
   ASSERT_EQ(1, errors.size());
-  ASSERT_EQ(string("Property id is required and not provided"),
-            errors.begin()->what());
+  ASSERT_EQ(string("simple(id): Property id is required and not provided"),
+            string(errors.front()->what()));
 }
 
 TEST_F(EntityTest, MissingOptionalProperty)
@@ -265,8 +265,8 @@ TEST_F(EntityTest, UnexpectedProperty)
   ASSERT_FALSE(entity);
   
   ASSERT_EQ(1, errors.size());
-  ASSERT_EQ(string("The following keys were present and not expected: junk,"),
-            errors.begin()->what());
+  ASSERT_EQ(string("simple(): The following keys were present and not expected: junk,"),
+            string(errors.front()->what()));
 }
 
 TEST_F(EntityTest, EntityListAnyEntities)
@@ -372,7 +372,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_EQ("123", get<string>(v));
 
   v = "aaa";
-  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r1.convertType(v), PropertyError);
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("aaa", get<string>(v));
 
@@ -386,10 +386,10 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 
   v = 123_i64;
   Requirement r4("entity", ENTITY);
-  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r4.convertType(v), PropertyError);
 
   Requirement r5("entity_list", ENTITY_LIST);
-  ASSERT_THROW(r5.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r5.convertType(v), PropertyError);
   
   v = 1234.0;
   ASSERT_TRUE(holds_alternative<double>(v));
@@ -444,13 +444,13 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
 
   v = 123.24;
   Requirement r4("entity", ENTITY);
-  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r4.convertType(v), PropertyError);
   
   Requirement r5("entity_list", ENTITY_LIST);
-  ASSERT_THROW(r5.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r5.convertType(v), PropertyError);
   
   v = "aaa";
-  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r1.convertType(v), PropertyError);
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("aaa", get<string>(v));
 
@@ -476,7 +476,7 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   ASSERT_EQ(6.7889, get<Vector>(v)[2]);
   
   v = "aaaa bbb cccc";
-  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r1.convertType(v), PropertyError);
 
   v = "  1.234     3.456       6.7889    ";
   ASSERT_TRUE(r1.convertType(v));
@@ -487,16 +487,16 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   ASSERT_EQ(6.7889, get<Vector>(v)[2]);
 
   Requirement r2("entity", ENTITY);
-  ASSERT_THROW(r2.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r2.convertType(v), PropertyError);
   
   Requirement r3("entity_list", ENTITY_LIST);
-  ASSERT_THROW(r3.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r3.convertType(v), PropertyError);
 
   Requirement r4("entity_list", entity::DOUBLE);
-  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r4.convertType(v), PropertyError);
 
   Requirement r6("entity_list", INTEGER);
-  ASSERT_THROW(r6.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r6.convertType(v), PropertyError);
 }
 
 TEST_F(EntityTest, TestControlledVocabulary)
@@ -532,5 +532,5 @@ TEST_F(EntityTest, TestControlledVocabulary)
   
   auto entity2 = root->create("simple", fail, errors);
   ASSERT_EQ(1, errors.size());
-  ASSERT_EQ("Invalid value for 'type': 'BAD' is not allowed", string(errors.front().what()));
+  ASSERT_EQ("simple(type): Invalid value for 'type': 'BAD' is not allowed", string(errors.front()->what()));
 }

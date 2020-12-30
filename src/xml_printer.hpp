@@ -32,16 +32,15 @@ namespace mtconnect
   class DataItem;
   class SensorConfiguration;
   class XmlWriter;
-
+    
   class XmlPrinter : public Printer
   {
    public:
     XmlPrinter(const std::string version = "", bool pretty = false);
     ~XmlPrinter() override = default;
 
-    std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
-                           const uint64_t nextSeq, const std::string &errorCode,
-                           const std::string &errorText) const override;
+    std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                           const uint64_t nextSeq, const ProtoErrorList &list) const override;
 
     std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                            const uint64_t nextSeq, const unsigned int assetBufferSize,

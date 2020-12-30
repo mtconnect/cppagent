@@ -94,7 +94,8 @@ namespace mtconnect
             } catch (PropertyError &e) {
               g_logger << dlib::LWARN << "Error occurred converting " << r.getName() << ": " <<
                 e.what();
-              errors.emplace_back(e);
+              e.setProperty(r.getName());
+              errors.emplace_back(e.dup());
               properties.erase(p);
             }
           }
@@ -102,12 +103,13 @@ namespace mtconnect
       }
     }
 
-    bool Factory::isSufficient(const Properties &properties, ErrorList &errors) const
+    bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
     {
       std::set<std::string> keys;
-      std::transform(properties.begin(), properties.end(), std::inserter(keys, keys.end()),
-                     [](const auto &v) { return v.first; });
-      
+      std::transform(properties.begin(), properties.end(),
+                     std::inserter(keys, keys.end()),
+                        [](const auto &v) { return v.first; });
+      bool success { true };
       for (const auto &r : m_requirements)
       {
         std::string key;
@@ -120,27 +122,35 @@ namespace mtconnect
         {
           if (r.isRequired())
           {
-            throw MissingPropertyError("Property " + r.getName() +
-                                       " is required and not provided");
+            errors.emplace_back(new PropertyError("Property " + r.getName() +
+                                                  " is required and not provided",
+                                                  r.getName()));
+            success = false;
           }
         }
         else
         {
-          try {
+          try
+          {
             if (!r.isMetBy(p->second, m_isList))
             {
-              return false;
+              success = false;
             }
           }
-          catch (PropertyError &e) {
+          catch (PropertyError &e)
+          {
             LogError(e.what());
             if (r.isRequired())
-              throw;
+            {
+              success = false;
+            }
             else
             {
-              errors.emplace_back(e);
               LogError("Not required, skipping " + r.getName());
+              properties.erase(p->first);
             }
+            e.setProperty(r.getName());
+            errors.emplace_back(e.dup());
           }
           keys.erase(r.getName());
         }
@@ -153,10 +163,11 @@ namespace mtconnect
         os << "The following keys were present and not expected: ";
         for (auto &k : keys)
           os << k << ",";
-        throw ExtraPropertyError(os.str());
+        errors.emplace_back(new PropertyError(os.str()));
+        success = false;
       }
       
-      return true;
+      return success;
     }
   }
 }

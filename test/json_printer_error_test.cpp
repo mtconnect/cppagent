@@ -62,7 +62,7 @@ TEST_F(JsonPrinterErrorTest, PrintError)
   ASSERT_EQ(false, jdoc.at("/MTConnectError/Header/testIndicator"_json_pointer).get<bool>());
 
   ASSERT_EQ(string("BAD_BAD"),
-            jdoc.at("/MTConnectError/Errors/Error/errorCode"_json_pointer).get<string>());
+            jdoc.at("/MTConnectError/Errors/0/Error/errorCode"_json_pointer).get<string>());
   ASSERT_EQ(string("Never do that again"),
-            jdoc.at("/MTConnectError/Errors/Error/text"_json_pointer).get<string>());
+            jdoc.at("/MTConnectError/Errors/0/Error/value"_json_pointer).get<string>());
 }
