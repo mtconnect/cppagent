@@ -18,6 +18,8 @@
 #pragma once
 
 #include "globals.hpp"
+#include "ref_counted.hpp"
+
 #include <memory>
 
 namespace mtconnect

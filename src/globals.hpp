@@ -41,7 +41,10 @@
 #include <sstream>
 #include <string>
 
-#ifdef _WINDOWS
+#if defined(_WIN32) || defined(_WIN64)
+#ifndef _WINDOWS
+#define _WINDOWS 1
+#endif
 #define ISNAN(x) _isnan(x)
 #if _MSC_VER < 1800
 #define NAN numeric_limits<double>::quiet_NaN()
@@ -50,7 +53,6 @@
 #define gets gets_s
 #define timezone _timezone
 #endif
-
 typedef unsigned __int64 uint64_t;
 #else
 #define O_BINARY 0
