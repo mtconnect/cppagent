@@ -124,7 +124,7 @@ namespace mtconnect
                              const std::string &e = "")
       : EntityError(s, e), m_property(p) {}
 
-      PropertyError(const PropertyError&)  _NOEXCEPT = default;
+      PropertyError(const PropertyError&)  noexcept = default;
       ~PropertyError() override = default;
       
       virtual const char *what() const noexcept override
