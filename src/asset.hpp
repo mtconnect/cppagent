@@ -127,14 +127,4 @@ namespace mtconnect
   public:
     static entity::FactoryPtr getFactory();
   };
-  
-  template<class T>
-  struct RegisterAsset
-  {
-    RegisterAsset(const std::string &t)
-    {
-      Asset::registerAssetType(t, T::getFactory());
-    }
-  };
-  
 }  // namespace mtconnect

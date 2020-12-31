@@ -129,8 +129,15 @@ namespace mtconnect
     return tool;
   }
   
-  RegisterAsset<CuttingToolArchetype>* const  CuttingToolArchetype::m_registerAsset =
-   new RegisterAsset<CuttingToolArchetype>("CuttingToolArchetype");
+  void CuttingToolArchetype::registerAsset()
+  {
+    static bool once { true };
+    if (once)
+    {
+      Asset::registerAssetType("CuttingToolArchetype", getFactory());
+      once =false;
+    }
+  }
 
   FactoryPtr CuttingTool::getFactory()
   {
@@ -207,7 +214,14 @@ namespace mtconnect
     return tool;
   }
   
-  RegisterAsset<CuttingTool>* const  CuttingTool::m_registerAsset =
-   new RegisterAsset<CuttingTool>("CuttingTool");
+  void CuttingTool::registerAsset()
+  {
+    static bool once { true };
+    if (once)
+    {
+      Asset::registerAssetType("CuttingTool", getFactory());
+      once =false;
+    }
+  }
 
 }  // namespace mtconnect

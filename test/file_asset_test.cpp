@@ -24,15 +24,13 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 
-auto c1 = FileAsset::m_registerAsset;
-auto c2 = FileArchetypeAsset::m_registerAsset;
-
-
 class FileAssetTest : public testing::Test
 {
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
+    FileArchetypeAsset::registerAsset();
+    FileAsset::registerAsset();
     m_writer = make_unique<XmlWriter>(true);
   }
 

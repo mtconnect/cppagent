@@ -26,14 +26,13 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 
-auto c1 = CuttingTool::m_registerAsset;
-auto c2 = CuttingToolArchetype::m_registerAsset;
-
 class CuttingToolTest : public testing::Test
 {
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
+    
+    // Asset types are registered in the agent.
     m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/solid_model.xml", 4, 4, "1.7");
     m_agentId = int64ToString(getCurrentTimeInSec());
     m_adapter = nullptr;

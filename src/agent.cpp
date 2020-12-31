@@ -51,11 +51,6 @@ namespace mtconnect
 
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
-
-  auto __a1__ = CuttingTool::m_registerAsset;
-  auto __a2__ = CuttingToolArchetype::m_registerAsset;
-  auto __a3__ = FileAsset::m_registerAsset;
-  auto __a4__ = FileArchetypeAsset::m_registerAsset;
   
   // Agent public methods
   Agent::Agent(const string &configXmlPath, int bufferSize, int maxAssets,
@@ -77,6 +72,11 @@ namespace mtconnect
         m_xmlParser(make_unique<XmlParser>())
   
   {
+    CuttingToolArchetype::registerAsset();
+    CuttingTool::registerAsset();
+    FileArchetypeAsset::registerAsset();
+    FileAsset::registerAsset();
+
     // Create the Printers
     m_printers["xml"] = unique_ptr<Printer>(new XmlPrinter(version, m_pretty));
     m_printers["json"] = unique_ptr<Printer>(new JsonPrinter(version, m_pretty));

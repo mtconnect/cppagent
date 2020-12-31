@@ -50,12 +50,10 @@ namespace mtconnect
     return asset;
   }
   
-  using FactoryList = list<pair<string,FactoryPtr>>;
-  FactoryList* const AssetFactories = new FactoryList();
-  
-  void Asset::registerAssetType(const std::string &type, FactoryPtr factory)
+    void Asset::registerAssetType(const std::string &type, FactoryPtr factory)
   {
-    AssetFactories->emplace_back(type, factory);
+    auto root = getRoot();
+    root->registerFactory(type, factory);
   }
   
   entity::FactoryPtr Asset::getRoot()
@@ -67,14 +65,6 @@ namespace mtconnect
     {
       root->registerFactory(regex(".+"), ExtendedAsset::getFactory());
       root->registerMatchers();
-      
-      if (AssetFactories != nullptr)
-      {
-        for (auto &factory : *AssetFactories)
-        {
-          root->registerFactory(factory.first, factory.second);
-        }
-      }
       first = false;
     }
     

@@ -24,11 +24,7 @@ matrix:
 # skip unsupported combinations
 init:
 - cmd: |-
-    set arch=Win64
-    echo %arch%
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
-    set generator=Visual Studio 16 2019
-    echo %generator%
     echo %MSBUILD_FLAGS%
 # - sh: sudo apt-get update
 # - sh: sudo apt-get --yes install libxml2-dev

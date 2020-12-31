@@ -64,9 +64,15 @@ namespace mtconnect
     return fileArchetype;
   }
   
-  RegisterAsset<FileArchetypeAsset>* const  FileArchetypeAsset::m_registerAsset =
-   new RegisterAsset<FileArchetypeAsset>("FileArchetype");
-
+  void FileArchetypeAsset::registerAsset()
+  {
+    static bool once { true };
+    if (once)
+    {
+      Asset::registerAssetType("FileArchetype", getFactory());
+      once =false;
+    }
+  }
   
   FactoryPtr FileAsset::getFactory()
   {
@@ -115,7 +121,14 @@ namespace mtconnect
     return file;
   }
   
-  RegisterAsset<FileAsset>* const  FileAsset::m_registerAsset =
-   new RegisterAsset<FileAsset>("File");
+  void FileAsset::registerAsset()
+  {
+    static bool once { true };
+    if (once)
+    {
+      Asset::registerAssetType("File", getFactory());
+      once =false;
+    }
+  }
 
 }

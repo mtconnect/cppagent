@@ -31,7 +31,7 @@ namespace mtconnect
   {
   public:
     static entity::FactoryPtr getFactory();
-    static RegisterAsset<FileArchetypeAsset>* const m_registerAsset;
+    static void registerAsset();
 
   };
   
@@ -39,6 +39,6 @@ namespace mtconnect
   {
   public:
     static entity::FactoryPtr getFactory();
-    static RegisterAsset<FileAsset>* const m_registerAsset;
+    static void registerAsset();
   };
 }

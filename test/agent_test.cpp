@@ -43,11 +43,6 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 
-auto a1 = CuttingTool::m_registerAsset;
-auto a2 = CuttingToolArchetype::m_registerAsset;
-auto a3 = FileAsset::m_registerAsset;
-auto a4 = FileArchetypeAsset::m_registerAsset;
-
 class AgentTest : public testing::Test
 {
  public:
