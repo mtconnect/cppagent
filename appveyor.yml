@@ -24,8 +24,10 @@ matrix:
 # skip unsupported combinations
 init:
 - cmd: |-
+    set arch=Win64
     echo %arch%
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
+    set generator=Visual Studio 16 2019
     echo %generator%
     echo %MSBUILD_FLAGS%
 # - sh: sudo apt-get update
@@ -36,7 +38,7 @@ before_build:
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -G %generator%
+    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -G %generator% -A %arch%
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version
