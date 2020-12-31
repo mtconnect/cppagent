@@ -142,13 +142,14 @@ namespace mtconnect
             return ent;
           }
         }
+        
         catch (EntityError &e)
         {
           e.setEntity(name);
           errors.emplace_back(std::make_unique<EntityError>(e));
           LogError("Failed to create " + name + ": " + e.what());
         }
-        
+
         for (auto &e : errors)
         {
           if (e->getEntity().empty())

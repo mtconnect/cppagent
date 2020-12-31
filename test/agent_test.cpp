@@ -2635,46 +2635,6 @@ TEST_F(AgentTest, AssetPrependId)
   }
 }
 
-TEST_F(AgentTest, AssetWithSimpleCuttingItems)
-{
-  XmlPrinter *printer = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
-  ASSERT_TRUE(printer != nullptr);
-
-  printer->clearAssetsNamespaces();
-  printer->addAssetsNamespace("urn:machine.com:MachineAssets:1.3",
-                              "http://www.machine.com/schemas/MachineAssets_1.3.xsd", "x");
-
-  addAdapter();
-
-  m_adapter->parseBuffer("TIME|@ASSET@|XXX.200|CuttingTool|--multiline--AAAA\n");
-  m_adapter->parseBuffer((getFile("asset5.xml") + "\n").c_str());
-  m_adapter->parseBuffer("--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/asset/XXX.200";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife", "0");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@type", "PART_COUNT");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@countDirection", "UP");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@initial", "0");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@limit", "0");
-
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:CutterStatus/m:Status",
-                          "AVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='2']/m:CutterStatus/m:Status", "USED");
-
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife", "0");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@type", "PART_COUNT");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@countDirection", "UP");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@initial", "0");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@limit", "0");
-  }
-
-  printer->clearAssetsNamespaces();
-}
-
 TEST_F(AgentTest, RemoveLastAssetChanged)
 {
   addAdapter();
@@ -2806,3 +2766,88 @@ TEST_F(AgentTest, RemoveAllAssets)
   }
 }
 
+TEST_F(AgentTest, AssetProbe)
+{
+  m_agent->enablePut();
+  m_agentTestHelper->m_path = "/asset/P1";
+  string body = "<Part assetId='P1'>TEST 1</Part>";
+  key_value_map queries;
+
+  queries["device"] = "LinuxCNC";
+  queries["type"] = "Part";
+
+  m_agentTestHelper->m_path = "/asset/P1";
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
+  }
+  m_agentTestHelper->m_path = "/asset/P2";
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    ASSERT_EQ((unsigned int)2, m_agent->getAssetCount());
+  }
+
+  {
+    m_agentTestHelper->m_path = "/probe";
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount@assetType", "Part");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount", "2");
+  }
+}
+
+TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
+{
+  m_agent->enablePut();
+  m_agentTestHelper->m_path = "/asset/P1";
+  const string body {
+R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>NEW</Status>
+    </CutterStatus>
+    <Measurements>
+      <FunctionalLength code="LF" maximum="5.2" minimum="4.95" nominal="5" units="MILLIMETER"/>
+      <CuttingDiameterMax code="DC" maximum="1.4" minimum="0.95" nominal="1.25" units="MILLIMETER"/>
+    </Measurements>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC" };
+  key_value_map queries;
+
+  queries["device"] = "LinuxCNC";
+  queries["type"] = "Part";
+
+  m_agentTestHelper->m_path = "/asset/P1";
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]",
+                          "Asset parsed with errors: P1");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]",
+                          "FunctionalLength(VALUE): Property VALUE is required and not provided");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]",
+                          "Measurements: Invalid element 'FunctionalLength'");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]",
+                          "CuttingDiameterMax(VALUE): Property VALUE is required and not provided");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]",
+                          "Measurements: Invalid element 'CuttingDiameterMax'");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]",
+                          "Measurements(Measurement): Entity list requirement Measurement must have at least 1 entries, 0 found");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]",
+                          "CuttingToolLifeCycle: Invalid element 'Measurements'");
+  }
+
+}

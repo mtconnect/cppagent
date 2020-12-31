@@ -33,7 +33,7 @@ namespace mtconnect
   public:
     using Index = std::map<std::string, AssetPtr>;
     using SecondaryIndex = std::map<std::string, Index>;
-    using TypeCount = std::map<std::string, size_t>;
+    using TypeCount = std::map<std::string, int>;
     using Buffer = AssetList;
     using RemoveCount = std::map<std::string, size_t>;
 

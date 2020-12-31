@@ -67,3 +67,4 @@ TEST_F(AssetTest, TestExtendedAsset)
   
   ASSERT_EQ(expected, m_writer->getContent());
 }
+

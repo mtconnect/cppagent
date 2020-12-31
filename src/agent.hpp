@@ -118,7 +118,8 @@ namespace mtconnect
     bool addAsset(Device *device, const std::string &id,
                   const std::string &asset,
                   const std::string &type,
-                  const std::string &time = "");
+                  const std::string &time,
+                  entity::ErrorList &errors);
     bool removeAsset(Device *device, const std::string &id,
                      const std::string &time);
     bool removeAllAssets(Device *device, const std::string &type,

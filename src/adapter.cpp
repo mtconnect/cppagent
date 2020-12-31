@@ -229,7 +229,9 @@ namespace mtconnect
     {
       if (data == m_terminator)
       {
-        m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time);
+        entity::ErrorList errors;
+        m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time,
+                          errors);
         m_gatheringAsset = false;
       }
       else
@@ -403,7 +405,10 @@ namespace mtconnect
         m_body.clear();
       }
       else
-        m_agent->addAsset(device, assetId, rest, type, time);
+      {
+        entity::ErrorList errors;
+        m_agent->addAsset(device, assetId, rest, type, time, errors);
+      }
     }
     else if (key == "@UPDATE_ASSET@")
     {

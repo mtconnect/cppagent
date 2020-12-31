@@ -627,12 +627,12 @@ namespace mtconnect
   }
 
   bool Agent::addAsset(Device *device, const string &id, const string &doc,
-                       const string &type, const string &inputTime)
+                       const string &type, const string &inputTime,
+                       entity::ErrorList &errors)
   {
     // TODO: Error handling for parse errors.
     
     // Parse the asset
-    entity::ErrorList errors;
     entity::XmlParser parser;
     
     auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
@@ -956,8 +956,11 @@ namespace mtconnect
     else
       deviceList = m_devices;
 
+    auto counts = m_assetBuffer.getCountsByType();
+    
     return printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), getMaxAssets(),
-                               m_assetBuffer.getCount(), deviceList);
+                               m_assetBuffer.getCount(), deviceList,
+                               &counts);
   }
 
   string Agent::handleStream(const Printer *printer, ostream &out, const string &path, bool current,
@@ -1097,10 +1100,28 @@ namespace mtconnect
 
     if (command == "PUT" || command == "POST")
     {
-      if (addAsset(device, id, body, type))
-        return "<success/>";
+      entity::ErrorList errors;
+      bool added = addAsset(device, id, body, type, "", errors);
+      if (!added || errors.size() > 0)
+      {
+        ProtoErrorList errorResp;
+        if (!added)
+          errorResp.emplace_back("INVALID_REQUEST", "Could not parse Asset: " + id);
+        else
+          errorResp.emplace_back("INVALID_REQUEST", "Asset parsed with errors: " + id);
+        for (auto &e : errors)
+        {
+          errorResp.emplace_back("INVALID_REQUEST", e->what());
+        }
+        auto printer = m_printers["xml"].get();
+        return printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
+                                    m_circularBuffer.getSequence(),
+                                    errorResp);
+      }
       else
-        return "<failure>Cannot add asset (" + id + ")</failure>";
+      {
+        return "<success/>";
+      }
     }
     else if (command == "DELETE")
     {
