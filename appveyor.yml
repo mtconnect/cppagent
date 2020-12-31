@@ -37,7 +37,7 @@ before_build:
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -G %generator% -A %arch%
+    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -G %generator%
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version
