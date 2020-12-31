@@ -24,7 +24,6 @@ matrix:
 # skip unsupported combinations
 init:
 - cmd: |-
-    set arch=
     echo %arch%
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     echo %generator%
