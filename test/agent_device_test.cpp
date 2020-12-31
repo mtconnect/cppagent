@@ -71,7 +71,7 @@ class AgentDeviceTest : public testing::Test
   
   void createListener()
   {
-    ASSERT_TRUE(!create_listener(m_server, 21788, "127.0.0.1"));
+    ASSERT_TRUE(!create_listener(m_server, m_port, "127.0.0.1"));
     m_port = m_server->get_listening_port();
   }
   
@@ -81,7 +81,7 @@ class AgentDeviceTest : public testing::Test
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
-  int m_port{21788};
+  uint16_t m_port{21788};
   dlib::scoped_ptr<dlib::listener> m_server;
   dlib::scoped_ptr<dlib::connection> m_serverSocket;
 };
@@ -190,6 +190,7 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 
 TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
 {
+  m_port = rand() % 10000 + 5000;
   addAdapter();
   
   {
