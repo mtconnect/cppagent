@@ -83,7 +83,8 @@ namespace mtconnect
       explicit EntityError(const char* s, const std::string &e = "")
       : std::logic_error(s), m_entity(e) {}
 
-      EntityError(const EntityError&)  noexcept = default;
+      EntityError(const EntityError &o)  noexcept
+      : std::logic_error(o), m_entity(o.m_entity) {}
       ~EntityError() override = default;
 
       virtual const char *what() const noexcept override
@@ -124,7 +125,8 @@ namespace mtconnect
                              const std::string &e = "")
       : EntityError(s, e), m_property(p) {}
 
-      PropertyError(const PropertyError&)  noexcept = default;
+      PropertyError(const PropertyError& o)  noexcept
+      : EntityError(o), m_property(o.m_property) {}
       ~PropertyError() override = default;
       
       virtual const char *what() const noexcept override
