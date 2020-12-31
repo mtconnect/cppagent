@@ -1222,8 +1222,8 @@ TEST_F(AgentTest, StreamData)
       PARSE_XML_RESPONSE_QUERY(query);
 
       auto delta = system_clock::now() - startTime;
-      ASSERT_TRUE(delta < (minExpectedResponse + 30ms));
-      ASSERT_TRUE(delta > minExpectedResponse);
+      ASSERT_LT(delta, (minExpectedResponse + 50ms));
+      ASSERT_GT(delta, minExpectedResponse);
       addThread.join();
     }
     catch (...)
