@@ -5,7 +5,7 @@ branches:
 # clone_folder: c:\projects\cppagent_dev
 image:
 - Ubuntu1804
-- Visual Studio 2017
+- Visual Studio 2019
 
 configuration:
 - Release
@@ -25,10 +25,8 @@ matrix:
 init:
 - cmd: |-
     set arch=
-    if "%arch%"=="Win64" ( set arch= Win64)
     echo %arch%
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
-    if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
     echo %generator%
     echo %MSBUILD_FLAGS%
 # - sh: sudo apt-get update
@@ -39,7 +37,7 @@ before_build:
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -G %generator%
+    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -G %generator% -A %arch%
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version

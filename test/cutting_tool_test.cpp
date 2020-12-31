@@ -111,15 +111,15 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
   ASSERT_EQ("ToolLife", (*it)->getName());
   ASSERT_EQ("MINUTES", get<string>((*it)->getProperty("type")));
   ASSERT_EQ("UP", get<string>((*it)->getProperty("countDirection")));
-  ASSERT_EQ(0.0, get<DOUBLE>((*it)->getProperty("initial")));
-  ASSERT_EQ(100.0, get<DOUBLE>((*it)->getProperty("limit")));
+  ASSERT_EQ(0.0, get<entity::DOUBLE>((*it)->getProperty("initial")));
+  ASSERT_EQ(100.0, get<entity::DOUBLE>((*it)->getProperty("limit")));
 
   it++;
   ASSERT_EQ("ToolLife", (*it)->getName());
   ASSERT_EQ("PART_COUNT", get<string>((*it)->getProperty("type")));
   ASSERT_EQ("DOWN", get<string>((*it)->getProperty("countDirection")));
-  ASSERT_EQ(25.0, get<DOUBLE>((*it)->getProperty("initial")));
-  ASSERT_EQ(1.0, get<DOUBLE>((*it)->getProperty("limit")));
+  ASSERT_EQ(25.0, get<entity::DOUBLE>((*it)->getProperty("initial")));
+  ASSERT_EQ(1.0, get<entity::DOUBLE>((*it)->getProperty("limit")));
   
   // Round trip test
   entity::XmlPrinter printer;
@@ -168,17 +168,17 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
   ASSERT_EQ("FunctionalLength", (*it)->getName());
   ASSERT_EQ("LF", get<string>((*it)->getProperty("code")));
   ASSERT_EQ("MILLIMETER", get<string>((*it)->getProperty("units")));
-  ASSERT_EQ(5.0, get<DOUBLE>((*it)->getProperty("nominal")));
-  ASSERT_EQ(4.95, get<DOUBLE>((*it)->getProperty("minimum")));
-  ASSERT_EQ(5.2, get<DOUBLE>((*it)->getProperty("maximum")));
+  ASSERT_EQ(5.0, get<entity::DOUBLE>((*it)->getProperty("nominal")));
+  ASSERT_EQ(4.95, get<entity::DOUBLE>((*it)->getProperty("minimum")));
+  ASSERT_EQ(5.2, get<entity::DOUBLE>((*it)->getProperty("maximum")));
 
   it++;
   ASSERT_EQ("CuttingDiameterMax", (*it)->getName());
   ASSERT_EQ("DC", get<string>((*it)->getProperty("code")));
   ASSERT_EQ("MILLIMETER", get<string>((*it)->getProperty("units")));
-  ASSERT_EQ(1.25, get<DOUBLE>((*it)->getProperty("nominal")));
-  ASSERT_EQ(0.95, get<DOUBLE>((*it)->getProperty("minimum")));
-  ASSERT_EQ(1.4, get<DOUBLE>((*it)->getProperty("maximum")));
+  ASSERT_EQ(1.25, get<entity::DOUBLE>((*it)->getProperty("nominal")));
+  ASSERT_EQ(0.95, get<entity::DOUBLE>((*it)->getProperty("minimum")));
+  ASSERT_EQ(1.4, get<entity::DOUBLE>((*it)->getProperty("maximum")));
   
   // Round trip test
   entity::XmlPrinter printer;
@@ -257,24 +257,24 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
     auto im = meas->begin();
     ASSERT_EQ("CuttingEdgeLength", (*im)->getName());
     ASSERT_EQ("L", get<string>((*im)->getProperty("code")));
-    ASSERT_EQ(12.7, get<DOUBLE>((*im)->getProperty("nominal")));
-    ASSERT_EQ(12.675, get<DOUBLE>((*im)->getProperty("minimum")));
-    ASSERT_EQ(12.725, get<DOUBLE>((*im)->getProperty("maximum")));
+    ASSERT_EQ(12.7, get<entity::DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(12.675, get<entity::DOUBLE>((*im)->getProperty("minimum")));
+    ASSERT_EQ(12.725, get<entity::DOUBLE>((*im)->getProperty("maximum")));
 
     im++;
     ASSERT_EQ("WiperEdgeLength", (*im)->getName());
     ASSERT_EQ("BS", get<string>((*im)->getProperty("code")));
-    ASSERT_EQ(2.56, get<DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(2.56, get<entity::DOUBLE>((*im)->getProperty("nominal")));
 
     im++;
     ASSERT_EQ("IncribedCircleDiameter", (*im)->getName());
     ASSERT_EQ("IC", get<string>((*im)->getProperty("code")));
-    ASSERT_EQ(12.7, get<DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(12.7, get<entity::DOUBLE>((*im)->getProperty("nominal")));
 
     im++;
     ASSERT_EQ("CornerRadius", (*im)->getName());
     ASSERT_EQ("RE", get<string>((*im)->getProperty("code")));
-    ASSERT_EQ(0.8, get<DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(0.8, get<entity::DOUBLE>((*im)->getProperty("nominal")));
   }
 
   it++;
@@ -293,24 +293,24 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
     auto im = meas->begin();
     ASSERT_EQ("CuttingEdgeLength", (*im)->getName());
     ASSERT_EQ("L", get<string>((*im)->getProperty("code")));
-    ASSERT_EQ(12.7, get<DOUBLE>((*im)->getProperty("nominal")));
-    ASSERT_EQ(12.675, get<DOUBLE>((*im)->getProperty("minimum")));
-    ASSERT_EQ(12.725, get<DOUBLE>((*im)->getProperty("maximum")));
+    ASSERT_EQ(12.7, get<entity::DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(12.675, get<entity::DOUBLE>((*im)->getProperty("minimum")));
+    ASSERT_EQ(12.725, get<entity::DOUBLE>((*im)->getProperty("maximum")));
 
     im++;
     ASSERT_EQ("WiperEdgeLength", (*im)->getName());
     ASSERT_EQ("BS", get<string>((*im)->getProperty("code")));
-    ASSERT_EQ(2.56, get<DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(2.56, get<entity::DOUBLE>((*im)->getProperty("nominal")));
 
     im++;
     ASSERT_EQ("IncribedCircleDiameter", (*im)->getName());
     ASSERT_EQ("IC", get<string>((*im)->getProperty("code")));
-    ASSERT_EQ(12.7, get<DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(12.7, get<entity::DOUBLE>((*im)->getProperty("nominal")));
 
     im++;
     ASSERT_EQ("CornerRadius", (*im)->getName());
     ASSERT_EQ("RE", get<string>((*im)->getProperty("code")));
-    ASSERT_EQ(0.8, get<DOUBLE>((*im)->getProperty("nominal")));
+    ASSERT_EQ(0.8, get<entity::DOUBLE>((*im)->getProperty("nominal")));
   }
   
   // Round trip test
@@ -369,8 +369,8 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   ASSERT_EQ("ToolLife", (*it)->getName());
   ASSERT_EQ("PART_COUNT", get<string>((*it)->getProperty("type")));
   ASSERT_EQ("DOWN", get<string>((*it)->getProperty("countDirection")));
-  ASSERT_EQ(25.0, get<DOUBLE>((*it)->getProperty("initial")));
-  ASSERT_EQ(1.0, get<DOUBLE>((*it)->getProperty("limit")));
+  ASSERT_EQ(25.0, get<entity::DOUBLE>((*it)->getProperty("initial")));
+  ASSERT_EQ(1.0, get<entity::DOUBLE>((*it)->getProperty("limit")));
   
   // Round trip test
   entity::XmlPrinter printer;
