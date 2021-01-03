@@ -22,12 +22,14 @@
 #include "agent.hpp"
 #include <nlohmann/json.hpp>
 #include "agent_test_helper.hpp"
+#include "http_server/http_server.hpp"
 
 #include <cstdio>
 
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
+using namespace mtconnect::http_server;
 
 void AgentTestHelper::makeRequest(const char *file, int line, const char *request, const std::string &body, dlib::key_value_map &aQueries)
 {
@@ -43,7 +45,7 @@ void AgentTestHelper::makeRequest(const char *file, int line, const char *reques
 
   outgoing.m_out = &m_out;
 
-  m_result = m_agent->httpRequest(incoming, outgoing);
+  //m_result = m_agent->httpRequest(incoming, outgoing);
 
   if (m_result.empty())
   {

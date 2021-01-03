@@ -319,8 +319,9 @@ namespace mtconnect
         changed =
             (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
       }
-    } while (!changed && m_agent->is_running());
+    } while (!changed); // && m_agent->is_running());
 
+#if 0
     // Restart agent if changed...
     // stop agent and signal to warm start
     if (m_agent->is_running() && changed)
@@ -329,7 +330,7 @@ namespace mtconnect
                << "Monitor thread has detected change in configuration files, restarting agent.";
 
       m_restart = true;
-      m_agent->clear();
+      m_agent->stop();
       delete m_agent;
       m_agent = nullptr;
 
@@ -339,7 +340,7 @@ namespace mtconnect
       const char *argv[] = {m_configFile.c_str()};
       initialize(1, argv);
     }
-
+#endif
     g_logger << LDEBUG << "Monitor thread is exiting";
   }
 
@@ -370,7 +371,7 @@ namespace mtconnect
     } while (m_restart);
   }
 
-  void AgentConfiguration::stop() { m_agent->clear(); }
+  void AgentConfiguration::stop() { m_agent->stop(); }
 
   Device *AgentConfiguration::defaultDevice()
   {
@@ -630,8 +631,8 @@ namespace mtconnect
                           m_pretty);
     XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
 
-    m_agent->set_listening_port(port);
-    m_agent->set_listening_ip(serverIp);
+//    m_agent->set_listening_port(port);
+//    m_agent->set_listening_ip(serverIp);
     m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
 
     for (auto device : m_agent->getDevices())
@@ -771,7 +772,7 @@ namespace mtconnect
   void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &reader)
   {
     auto putEnabled = get_bool_with_default(reader, "AllowPut", false);
-    m_agent->enablePut(putEnabled);
+    //m_agent->enablePut(putEnabled);
 
     string putHosts = get_with_default(reader, "AllowPutFrom", "");
     if (!putHosts.empty())
@@ -789,8 +790,8 @@ namespace mtconnect
             ip = "";
           if (!ip.empty())
           {
-            m_agent->enablePut();
-            m_agent->allowPutFrom(ip);
+            //m_agent->enablePut();
+            //m_agent->allowPutFrom(ip);
           }
         }
       } while (!toParse.eof());
@@ -823,8 +824,8 @@ namespace mtconnect
           if (ns.is_key_defined("Urn"))
             urn = ns["Urn"];
           (xmlPrinter->*callback)(urn, location, block);
-          if (ns.is_key_defined("Path") && !location.empty())
-            m_agent->registerFile(location, ns["Path"]);
+//          if (ns.is_key_defined("Path") && !location.empty())
+//            m_agent->registerFile(location, ns["Path"]);
         }
       }
     }
@@ -841,11 +842,11 @@ namespace mtconnect
       for (const auto &block : blocks)
       {
         const auto &file = files.block(block);
-        if (!file.is_key_defined("Location") || !file.is_key_defined("Path"))
-          g_logger << LERROR
-                   << "Name space must have a Location (uri) or Directory and Path: " << block;
-        else
-          m_agent->registerFile(file["Location"], file["Path"]);
+//        if (!file.is_key_defined("Location") || !file.is_key_defined("Path"))
+//          g_logger << LERROR
+//                   << "Name space must have a Location (uri) or Directory and Path: " << block;
+//        else
+//          m_agent->registerFile(file["Location"], file["Path"]);
       }
     }
   }
@@ -862,8 +863,8 @@ namespace mtconnect
       {
         string location = doc["Location"];
         (xmlPrinter->*styleFunction)(location);
-        if (doc.is_key_defined("Path"))
-          m_agent->registerFile(location, doc["Path"]);
+//        if (doc.is_key_defined("Path"))
+//          m_agent->registerFile(location, doc["Path"]);
       }
     }
   }
@@ -876,8 +877,8 @@ namespace mtconnect
       std::vector<string> keys;
       types.get_keys(keys);
 
-      for (const auto &key : keys)
-        m_agent->addMimeType(key, types[key]);
+//      for (const auto &key : keys)
+//        m_agent->addMimeType(key, types[key]);
     }
   }
 }  // namespace mtconnect

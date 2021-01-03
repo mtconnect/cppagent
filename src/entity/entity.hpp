@@ -69,7 +69,6 @@ namespace mtconnect
         setProperty(property.first, property.second);
       }
 
-
       const Value &getValue() const { return getProperty("VALUE"); }
       std::optional<EntityList> getList(const std::string &name) const {
         auto &v = getProperty(name);

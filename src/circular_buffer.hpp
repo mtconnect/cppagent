@@ -25,6 +25,8 @@
 
 namespace mtconnect
 {
+  using SequenceNumber_t = uint64_t;
+  
   class CircularBuffer 
   {
   public:
@@ -52,10 +54,10 @@ namespace mtconnect
     Observation *getFromBuffer(uint64_t seq) const { return (*m_slidingBuffer)[seq]; }
     auto getIndexAt(uint64_t at) { return m_slidingBuffer->get_element_id(at); }
       
-    uint64_t getSequence() const { return m_sequence; }
+    SequenceNumber_t getSequence() const { return m_sequence; }
     unsigned int getBufferSize() const { return m_slidingBufferSize; }
 
-    uint64_t getFirstSequence() const
+    SequenceNumber_t getFirstSequence() const
     {
       if (m_sequence > m_slidingBufferSize)
         return m_sequence - m_slidingBufferSize;
@@ -63,9 +65,9 @@ namespace mtconnect
         return 1ull;
     }
     
-    void setSequence(uint64_t seq) { m_sequence = seq; }
+    void setSequence(SequenceNumber_t seq) { m_sequence = seq; }
 
-    uint64_t addToBuffer(Observation *event)
+    SequenceNumber_t addToBuffer(Observation *event)
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
@@ -106,7 +108,7 @@ namespace mtconnect
     auto getCheckoointFreq() { return m_checkpointFreq; }
     auto getCheckpointCount() {return m_checkpointCount; }
 
-    std::unique_ptr<Checkpoint> getCheckpointAt(uint64_t at, std::set<std::string> &filterSet)
+    std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at, std::set<std::string> &filterSet)
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
@@ -171,7 +173,7 @@ namespace mtconnect
         limit = -count;
       }
       
-      uint64_t i;
+      SequenceNumber_t i;
       for (i = start; results->size() < limit && i < m_sequence && i >= firstSeq;
            count >= 0 ? i++ : i--)
       {
@@ -205,7 +207,7 @@ namespace mtconnect
     std::recursive_mutex m_sequenceLock;
     
     // Sequence number
-    uint64_t m_sequence;
+    SequenceNumber_t m_sequence;
     
     // The sliding/circular buffer to hold all of the events/sample data
     std::unique_ptr<dlib::sliding_buffer_kernel_1<ObservationPtr>> m_slidingBuffer;

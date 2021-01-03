@@ -55,19 +55,9 @@ namespace mtconnect
   // Agent public methods
   Agent::Agent(const string &configXmlPath, int bufferSize, int maxAssets,
                const std::string &version, int checkpointFreq, bool pretty)
-      : m_putEnabled(false),
-        m_logStreamData(false),
+      : m_logStreamData(false),
         m_circularBuffer(bufferSize, checkpointFreq),
-        m_pretty(pretty),
-        m_mimeTypes({{{"xsl", "text/xsl"},
-                      {"xml", "text/xml"},
-                      {"json", "application/json"},
-                      {"css", "text/css"},
-                      {"xsd", "text/xml"},
-                      {"jpg", "image/jpeg"},
-                      {"jpeg", "image/jpeg"},
-                      {"png", "image/png"},
-                      {"ico", "image/x-icon"}}}),
+        m_pretty(pretty),        
         m_assetBuffer(maxAssets),
         m_xmlParser(make_unique<XmlParser>())
   
@@ -328,7 +318,7 @@ namespace mtconnect
         adapter->start();
 
       // Start the server. This blocks until the server stops.
-      server_http::start();
+      //server_http::start();
     }
     catch (dlib::socket_error &e)
     {
@@ -337,7 +327,7 @@ namespace mtconnect
     }
   }
 
-  void Agent::clear()
+  void Agent::stop()
   {
     // Stop all adapter threads...
     g_logger << LINFO << "Shutting down adapters";
@@ -346,112 +336,13 @@ namespace mtconnect
       adapter->stop();
 
     g_logger << LINFO << "Shutting down server";
-    server::http_1a::clear();
+    //server::http_1a::clear();
     g_logger << LINFO << "Shutting completed";
 
     for (const auto adapter : m_adapters)
       delete adapter;
 
     m_adapters.clear();
-  }
-
-  // Register a file
-  void Agent::registerFile(const string &aUri, const string &aPath)
-  {
-    try
-    {
-      directory dir(aPath);
-      queue<file>::kernel_1a files;
-      dir.get_files(files);
-      files.reset();
-      string baseUri = aUri;
-
-      XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
-
-      if (*baseUri.rbegin() != '/')
-        baseUri.append(1, '/');
-
-      while (files.move_next())
-      {
-        file &file = files.element();
-        string name = file.name();
-        string uri = baseUri + name;
-        m_fileMap.insert(pair<string, string>(uri, file.full_name()));
-
-        // Check if the file name maps to a standard MTConnect schema file.
-        if (!name.find("MTConnect") && name.substr(name.length() - 4u, 4u) == ".xsd" &&
-            xmlPrinter->getSchemaVersion() == name.substr(name.length() - 7u, 3u))
-        {
-          string version = name.substr(name.length() - 7u, 3u);
-
-          if (name.substr(9u, 5u) == "Error")
-          {
-            string urn = "urn:mtconnect.org:MTConnectError:" + xmlPrinter->getSchemaVersion();
-            xmlPrinter->addErrorNamespace(urn, uri, "m");
-          }
-          else if (name.substr(9u, 7u) == "Devices")
-          {
-            string urn = "urn:mtconnect.org:MTConnectDevices:" + xmlPrinter->getSchemaVersion();
-            xmlPrinter->addDevicesNamespace(urn, uri, "m");
-          }
-          else if (name.substr(9u, 6u) == "Assets")
-          {
-            string urn = "urn:mtconnect.org:MTConnectAssets:" + xmlPrinter->getSchemaVersion();
-            xmlPrinter->addAssetsNamespace(urn, uri, "m");
-          }
-          else if (name.substr(9u, 7u) == "Streams")
-          {
-            string urn = "urn:mtconnect.org:MTConnectStreams:" + xmlPrinter->getSchemaVersion();
-            xmlPrinter->addStreamsNamespace(urn, uri, "m");
-          }
-        }
-      }
-    }
-    catch (directory::dir_not_found e)
-    {
-      g_logger << LDEBUG << "registerFile: Path " << aPath << " is not a directory: " << e.what()
-               << ", trying as a file";
-
-      try
-      {
-        file file(aPath);
-        m_fileMap.insert(pair<string, string>(aUri, aPath));
-      }
-      catch (file::file_not_found e)
-      {
-        g_logger << LERROR << "Cannot register file: " << aPath << ": " << e.what();
-      }
-    }
-  }
-
-  void Agent::on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
-                         const std::string &local_ip, unsigned short foreign_port,
-                         unsigned short local_port, uint64)
-  {
-    try
-    {
-      IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
-      OutgoingThings outgoing;
-
-      parse_http_request(in, incoming, get_max_content_length());
-      read_body(in, incoming);
-      outgoing.m_out = &out;
-      const std::string &result = httpRequest(incoming, outgoing);
-      if (out.good())
-      {
-        write_http_response(out, outgoing, result);
-      }
-    }
-    catch (dlib::http_parse_error &e)
-    {
-      g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
-      write_http_response(out, e);
-    }
-    catch (std::exception &e)
-    {
-      g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
-      write_http_response(out, e);
-    }
   }
 
   const Printer *Agent::printerForAccepts(const std::string &accepts) const
@@ -471,117 +362,6 @@ namespace mtconnect
   }
 
   // Methods for service
-  const string Agent::httpRequest(const IncomingThings &incoming, OutgoingThings &outgoing)
-  {
-    string result;
-
-    const Printer *printer = nullptr;
-    auto accepts = incoming.headers.find("Accept");
-    if (accepts != incoming.headers.end())
-    {
-      printer = printerForAccepts(accepts->second);
-    }
-
-    // If there are no specified accepts that match,
-    // default to XML
-    if (printer == nullptr)
-      printer = getPrinter("xml");
-
-    outgoing.m_printer = printer;
-    outgoing.headers["Content-Type"] = printer->mimeType();
-
-    try
-    {
-      g_logger << LDEBUG << "Request: " << incoming.request_type << " " << incoming.path << " from "
-               << incoming.foreign_ip << ":" << incoming.foreign_port;
-
-      if (m_putEnabled && incoming.request_type != "GET")
-      {
-        if (incoming.request_type != "PUT" && incoming.request_type != "POST" &&
-            incoming.request_type != "DELETE")
-        {
-          return printError(printer, "UNSUPPORTED",
-                            "Only the HTTP GET, PUT, POST, and DELETE requests are supported");
-        }
-
-        if (!m_putAllowedHosts.empty() && !m_putAllowedHosts.count(incoming.foreign_ip))
-        {
-          return printError(
-              printer, "UNSUPPORTED",
-              "HTTP PUT, POST, and DELETE are not allowed from " + incoming.foreign_ip);
-        }
-      }
-      else if (incoming.request_type != "GET")
-      {
-        return printError(printer, "UNSUPPORTED", "Only the HTTP GET request is supported");
-      }
-
-      // Parse the URL path looking for '/'
-      string path = incoming.path;
-      auto qm = path.find_last_of('?');
-      if (qm != string::npos)
-        path = path.substr(0, qm);
-
-      if (isFile(path))
-        return handleFile(path, outgoing);
-
-      string::size_type loc1 = path.find('/', 1);
-      string::size_type end = (path[path.length() - 1] == '/') ? path.length() - 1 : string::npos;
-
-      string first = path.substr(1, loc1 - 1);
-      string call, device;
-
-      if (first == "assets" || first == "asset")
-      {
-        string list;
-        if (loc1 != string::npos)
-          list = path.substr(loc1 + 1);
-
-        if (incoming.request_type == "GET")
-          result = handleAssets(printer, *outgoing.m_out, incoming.queries, list);
-        else
-          result = storeAsset(*outgoing.m_out, incoming.queries, incoming.request_type, list,
-                              incoming.body);
-      }
-      else
-      {
-        // If a '/' was found
-        if (loc1 < end)
-        {
-          // Look for another '/'
-          string::size_type loc2 = path.find('/', loc1 + 1);
-
-          if (loc2 == end)
-          {
-            device = first;
-            call = path.substr(loc1 + 1, loc2 - loc1 - 1);
-          }
-          else
-          {
-            // Path is too long
-            return printError(printer, "UNSUPPORTED", "The following path is invalid: " + path);
-          }
-        }
-        else
-        {
-          // Try to handle the call
-          call = first;
-        }
-
-        if (incoming.request_type == "GET")
-          result = handleCall(printer, *outgoing.m_out, path, incoming.queries, call, device);
-        else
-          result = handlePut(printer, *outgoing.m_out, path, incoming.queries, call, device);
-      }
-    }
-    catch (exception &e)
-    {
-      printError(printer, "SERVER_EXCEPTION", (string)e.what());
-    }
-
-    return result;
-  }
-
   void Agent::addAdapter(Adapter *adapter, bool start)
   {
     adapter->setAgent(*this);
@@ -806,87 +586,8 @@ namespace mtconnect
         g_logger << LDEBUG << "Cannot find availability for " << device->getName();
     }
   }
-
-  // Agent protected methods
-  string Agent::handleCall(const Printer *printer, ostream &out, const string &path,
-                           const key_value_map &queries, const string &call, const string &device)
-  {
-    try
-    {
-      string deviceName;
-      if (!device.empty())
-        deviceName = device;
-
-      if (call == "current")
-      {
-        const string path = queries[(string) "path"];
-        string result;
-
-        int freq =
-            checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
-        // Check for 1.2 conversion to interval
-        if (freq == NO_FREQ)
-          freq = checkAndGetParam(queries, "interval", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
-
-        auto at =
-            checkAndGetParam64(queries, "at", NO_START, getFirstSequence(), true, m_circularBuffer.getSequence() - 1);
-        auto heartbeat = std::chrono::milliseconds{
-            checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
-
-        if (freq != NO_FREQ && at != NO_START)
-          return printError(
-              printer, "INVALID_REQUEST",
-              "You cannot specify both the at and frequency arguments to a current request");
-
-        return handleStream(printer, out, devicesAndPath(path, deviceName), true, freq, at, 0,
-                            heartbeat);
-      }
-      else if (call == "probe" || call.empty())
-        return handleProbe(printer, deviceName);
-      else if (call == "sample")
-      {
-        string path = queries[(string) "path"];
-        string result;
-
-        int32_t count = checkAndGetParam(queries, "count", DEFAULT_COUNT,
-                                         -m_circularBuffer.getBufferSize(),
-                                         true, m_circularBuffer.getBufferSize(), false);
-        if (count == 0)
-          throw ParameterError("OUT_OF_RANGE", "'count' must not be 0.");
-
-        auto freq =
-            checkAndGetParam(queries, "interval", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
-        // Check for 1.2 conversion to interval
-        if (freq == NO_FREQ)
-          freq = checkAndGetParam(queries, "frequency", NO_FREQ, FASTEST_FREQ, false, SLOWEST_FREQ);
-
-        if (count < 0 && freq != NO_FREQ)
-          throw ParameterError("OUT_OF_RANGE", "'count' must not be used with an 'interval'.");
-
-        auto start =
-            checkAndGetParam64(queries, "from", NO_START, getFirstSequence(), true, getSequence());
-
-        if (start == NO_START)  // If there was no data in queries
-          start =
-              checkAndGetParam64(queries, "start", NO_START, getFirstSequence(), true, getSequence());
-
-        auto heartbeat = std::chrono::milliseconds{
-            checkAndGetParam(queries, "heartbeat", 10000, 10, true, 600000)};
-
-        return handleStream(printer, out, devicesAndPath(path, deviceName), false, freq, start,
-                            count, heartbeat);
-      }
-      else if (findDeviceByUUIDorName(call) && device.empty())
-        return handleProbe(printer, call);
-      else
-        return printError(printer, "UNSUPPORTED", "The following path is invalid: " + path);
-    }
-    catch (ParameterError &aError)
-    {
-      return printError(printer, aError.m_code, aError.m_message);
-    }
-  }
-
+  
+#if 0
   string Agent::handlePut(const Printer *printer, ostream &out, const string &path,
                           const key_value_map &queries, const string &adapter,
                           const string &deviceName)
@@ -962,7 +663,6 @@ namespace mtconnect
                                m_assetBuffer.getCount(), deviceList,
                                &counts);
   }
-
   string Agent::handleStream(const Printer *printer, ostream &out, const string &path, bool current,
                              unsigned int frequency, uint64_t start, int count,
                              std::chrono::milliseconds heartbeat)
@@ -997,7 +697,6 @@ namespace mtconnect
         return fetchSampleData(printer, filter, start, count, end, endOfBuffer);
     }
   }
-
   std::string Agent::handleAssets(const Printer *printer, ostream &aOut,
                                   const key_value_map &queries,
                                   const string &list)
@@ -1079,7 +778,7 @@ namespace mtconnect
     return printer->printAssets(m_instanceId, getMaxAssets(),
                                 m_assetBuffer.getCount(), assets);
   }
-
+  
   // Store an asset in the map by asset # and use the circular buffer as
   // an LRU. Check if we're removing an existing asset and clean up the
   // map, and then store this asset.
@@ -1228,7 +927,7 @@ namespace mtconnect
 
     return "";
   }
-
+  
   void Agent::streamData(const Printer *printer, ostream &out, std::set<string> &filterSet,
                          bool current, unsigned int interval, uint64_t start, unsigned int count,
                          std::chrono::milliseconds heartbeat)
@@ -1607,4 +1306,5 @@ namespace mtconnect
     auto dev = getDeviceByName(deviceName);
     return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
   }
+#endif
 }  // namespace mtconnect

@@ -41,8 +41,6 @@ class EntityTest : public testing::Test
     m_agentTestHelper->m_agent = m_agent.get();
 
     m_device = m_agent->getDeviceByName("LinuxCNC");
-    
-    
   }
 
   void TearDown() override

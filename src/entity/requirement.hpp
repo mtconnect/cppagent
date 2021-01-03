@@ -19,30 +19,23 @@
 
 #include "globals.hpp"
 
-#include <map>
-#include <utility>
-#include <vector>
-#include <map>
-#include <set>
-#include <variant>
-#include <list>
-#include <memory>
-#include <string>
-#include <functional>
-#include <regex>
-#include <typeindex>
-#include <tuple>
-#include <limits>
-#include <stdexcept>
 #include <atomic>
-
 #include <cmath>
+#include <functional>
+#include <limits>
+#include <list>
+#include <map>
+#include <memory>
+#include <optional>
+#include <regex>
 #include <set>
+#include <stdexcept>
 #include <string>
+#include <tuple>
+#include <typeindex>
 #include <utility>
 #include <variant>
 #include <vector>
-#include <optional>
 
 
 namespace mtconnect
