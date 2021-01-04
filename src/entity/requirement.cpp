@@ -154,6 +154,7 @@ namespace mtconnect
         
         return r;
       }
+      
       operator bool() const
       {
         return m_string == "true";
