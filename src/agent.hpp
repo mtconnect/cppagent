@@ -24,7 +24,7 @@
 #include "circular_buffer.hpp"
 #include "asset_buffer.hpp"
 #include "printer.hpp"
-#include "http_server/http_server.hpp"
+#include "http_server/server.hpp"
 
 #include <chrono>
 #include <list>
@@ -51,8 +51,11 @@ namespace mtconnect
     using RequestResult = std::pair<std::string,unsigned short>;
     
     // Load agent with the xml configuration
-    Agent(const std::string &configXmlPath, int bufferSize, int maxAssets,
-          const std::string &version, int checkpointFreq = 1000, bool pretty = false);
+    Agent(std::unique_ptr<http_server::Server> &server,
+          std::unique_ptr<http_server::FileCache> &cache,
+          const std::string &configXmlPath, int bufferSize, int maxAssets,
+          const std::string &version, int checkpointFreq = 1000,
+          bool pretty = false);
 
     // Virtual destructor
     ~Agent();
@@ -103,6 +106,7 @@ namespace mtconnect
     auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
     auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
     const auto &getAssets() const { return m_assetBuffer.getAssets(); }
+    auto getFileCache() { return m_cache.get(); }
     
     auto getAssetCount(const std::string &type, bool active = true) const
     {
@@ -142,6 +146,8 @@ namespace mtconnect
     Printer *getPrinter(const std::string &aType) { return m_printers[aType].get(); }
 
    protected:
+    // Add Routings
+    
     // Initialization methods
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
@@ -209,6 +215,10 @@ namespace mtconnect
     // Unique id based on the time of creation
     uint64_t m_instanceId;
     bool m_initialized{false};
+    
+    // HTTP Server
+    std::unique_ptr<http_server::Server> m_server;
+    std::unique_ptr<http_server::FileCache> m_cache;
 
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;

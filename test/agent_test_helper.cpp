@@ -22,7 +22,7 @@
 #include "agent.hpp"
 #include <nlohmann/json.hpp>
 #include "agent_test_helper.hpp"
-#include "http_server/http_server.hpp"
+#include "http_server/server.hpp"
 
 #include <cstdio>
 

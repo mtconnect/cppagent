@@ -35,6 +35,8 @@ namespace mtconnect
       using std::logic_error::logic_error;
     };
     
+    class Response;
+    
     class Routing
     {
     public:
@@ -68,13 +70,25 @@ namespace mtconnect
       using ParameterList = std::list<Parameter>;
       using QuerySet = std::set<Parameter>;
       using ParameterMap = std::map<std::string,ParameterValue>;
-      using Function = std::function<void(const ParameterMap &)>;
       using QueryMap = std::map<std::string,std::string>;
-
+      
+      struct Request
+      {
+        std::string m_body;
+        std::string m_accepts;
+        std::string m_contentType;
+        std::string m_verb;
+        std::string m_path;
+        QueryMap    m_query;
+        ParameterMap m_parameters;
+      };
+      
+      using Function = std::function<bool(const Request &, Response &response)>;
+      
       Routing(const Routing &r ) = default;
       Routing(const std::string &verb,
               const std::string &pattern,
-              const Function function = nullptr)
+              const Function function)
       : m_verb(verb), m_function(function)
       {
         std::string s(pattern);
@@ -89,24 +103,27 @@ namespace mtconnect
         }
 
         pathParameters(s);
+      }
+      Routing(const std::string &verb,
+              const std::regex &pattern,
+              const Function function)
+      : m_verb(verb), m_pattern(pattern), m_function(function)
+      {
         
       }
+
       
       const ParameterList &getPathParameters() const { return m_pathParameters; }
       const QuerySet &getQueryParameters() const { return m_queryParameters; }
-
       
-      std::optional<ParameterMap> matches(const std::string &verb,
-                                          const std::string &url,
-                                          const QueryMap &query = {})
+      bool matches(Request &request, Response &response) const
       {
         try
         {
+          request.m_parameters.clear();
           std::smatch m;
-          if (m_verb == verb && std::regex_match(url, m, m_pattern))
+          if (m_verb == request.m_verb && std::regex_match(request.m_path, m, m_pattern))
           {
-            ParameterMap res;
-            
             auto s = m.begin();
             s++;
             for (auto &p : m_pathParameters)
@@ -114,34 +131,33 @@ namespace mtconnect
               if (s != m.end())
               {
                 ParameterValue v(s->str());
-                res.emplace(make_pair(p.m_name, v));
+                request.m_parameters.emplace(make_pair(p.m_name, v));
                 s++;
               }
             }
             
             for (auto &p : m_queryParameters)
             {
-              auto q = query.find(p.m_name);
-              if (q != query.end())
+              auto q = request.m_query.find(p.m_name);
+              if (q != request.m_query.end())
               {
-                res.emplace(make_pair(p.m_name, convertValue(q->second, p.m_type)));
+                request.m_parameters.emplace(make_pair(p.m_name, convertValue(q->second, p.m_type)));
               }
               else if (!std::holds_alternative<std::monostate>(p.m_default))
               {
-                res.emplace(make_pair(p.m_name, p.m_default));
+                request.m_parameters.emplace(make_pair(p.m_name, p.m_default));
               }
             }
-            return res;
+            return m_function(request, response);
           }
         }
           
         catch (ParameterError &e)
         {
-          dlib::logger logger("http_server.router");
-          logger << dlib::LDEBUG << "Pattern error: " << e.what();
+          m_logger << dlib::LDEBUG << "Pattern error: " << e.what();
         }
         
-        return std::nullopt;
+        return false;
       }
       
     protected:
@@ -215,7 +231,7 @@ namespace mtconnect
       }
       
       ParameterValue convertValue(const std::string &s,
-                                  ParameterType t)
+                                  ParameterType t) const
       {
         switch(t)
         {
@@ -223,7 +239,7 @@ namespace mtconnect
             return s;
               
           case NONE:
-              throw ParameterError("Cannot convert to NONE");
+            throw ParameterError("Cannot convert to NONE");
               
           case DOUBLE:
           {
@@ -265,6 +281,8 @@ namespace mtconnect
       ParameterList m_pathParameters;
       QuerySet m_queryParameters;
       Function m_function;
+      static dlib::logger m_logger;
+
     };
   }    
 }

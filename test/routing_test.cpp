@@ -3,6 +3,7 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "http_server/routing.hpp"
+#include "http_server/response.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -19,55 +20,67 @@ class RoutingTest : public testing::Test
 {
  protected:
   void SetUp() override
-  {  // Create an agent with only 16 slots and 8 data items.
+  {
+    m_response = make_unique<Response>(m_out);
   }
 
   void TearDown() override
   {
+    m_response.reset();
   }
+
+  std::unique_ptr<Response> m_response;
+  strstream m_out;
+  const Routing::Function m_func { [](const Routing::Request &, Response &response) { return true; } };
 
 };
 
 TEST_F(RoutingTest, TestSimplePattern)
 {
-  Routing probe("GET", "/probe");
+  Routing::Request request;
+  request.m_verb = "GET";
+  
+  Routing probe("GET", "/probe", m_func);
   EXPECT_EQ(0, probe.getPathParameters().size());
   EXPECT_EQ(0, probe.getQueryParameters().size());
-  ASSERT_TRUE(probe.matches("GET", "/probe"));
-  ASSERT_TRUE(probe.matches("GET", "/probe"));
-  ASSERT_FALSE(probe.matches("PUT", "/probe"));
+  
+  request.m_path = "/probe";
+  ASSERT_TRUE(probe.matches(request, *(m_response.get())));
+  request.m_path = "/probe";
+  ASSERT_TRUE(probe.matches(request, *(m_response.get())));
+  request.m_verb = "PUT";
+  ASSERT_FALSE(probe.matches(request, *(m_response.get())));
 
-  Routing probeWithDevice("GET", "/{device}/probe");
+  Routing probeWithDevice("GET", "/{device}/probe", m_func);
   ASSERT_EQ(1, probeWithDevice.getPathParameters().size());
   EXPECT_EQ(0, probe.getQueryParameters().size());
   EXPECT_EQ("device", probeWithDevice.getPathParameters().front().m_name);
   
-  auto m2 = probeWithDevice.matches("GET", "/ABC123/probe");
-  ASSERT_TRUE(m2);
-  ASSERT_EQ("ABC123", get<string>((*m2)["device"]));
-
-  auto m3 = probeWithDevice.matches("GET", "/ABC123/probe");
-  ASSERT_TRUE(m3);
-  ASSERT_EQ("ABC123", get<string>((*m2)["device"]));
-  
-  ASSERT_FALSE(probe.matches("GET", "/ABC123/probe"));
+  request.m_verb = "GET";
+  request.m_path = "/ABC123/probe";
+  ASSERT_TRUE(probeWithDevice.matches(request, *(m_response.get())));
+  ASSERT_EQ("ABC123", get<string>(request.m_parameters["device"]));
 }
 
 TEST_F(RoutingTest, TestComplexPatterns)
 {
-  Routing r("GET", "/asset/{assets}");
+  Routing::Request request;
+  request.m_verb = "GET";
+
+  Routing r("GET", "/asset/{assets}", m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
   EXPECT_EQ("assets", r.getPathParameters().front().m_name);
 
-  auto m1 = r.matches("GET", "/asset/A1,A2,A3");
-  ASSERT_TRUE(m1);
-  ASSERT_EQ("A1,A2,A3", get<string>((*m1)["assets"]));
-  ASSERT_FALSE(r.matches("GET", "ABC123/probe"));
+  request.m_path = "/asset/A1,A2,A3";
+  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_EQ("A1,A2,A3", get<string>(request.m_parameters["assets"]));
+  request.m_path = "/ABC123/probe";
+  ASSERT_FALSE(r.matches(request, *(m_response.get())));
 }
 
 TEST_F(RoutingTest, TestCurrentAtQueryParameter)
 {
-  Routing r("GET", "/{device}/current?at={unsigned_integer}");
+  Routing r("GET", "/{device}/current?at={unsigned_integer}", m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
   ASSERT_EQ(1, r.getQueryParameters().size());
   
@@ -86,7 +99,7 @@ TEST_F(RoutingTest, TestSampleQueryParameters)
 {
   Routing r("GET", "/{device}/sample?from={unsigned_integer}&"
             "interval={double}&count={integer:100}&"
-            "heartbeat={double:10000}");
+            "heartbeat={double:10000}", m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
   ASSERT_EQ(4, r.getQueryParameters().size());
   
@@ -123,43 +136,59 @@ TEST_F(RoutingTest, TestSampleQueryParameters)
 
 TEST_F(RoutingTest, TestQueryParameterMatch)
 {
+  Routing::Request request;
+  request.m_verb = "GET";
+
   Routing r("GET", "/{device}/sample?from={unsigned_integer}&"
             "interval={double}&count={integer:100}&"
-            "heartbeat={double:10000}");
+            "heartbeat={double:10000}", m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
   ASSERT_EQ(4, r.getQueryParameters().size());
 
-  auto m1 = r.matches("GET", "/ABC123/sample");
-  ASSERT_TRUE(m1);
-  ASSERT_EQ("ABC123", get<string>((*m1)["device"]));
-  ASSERT_EQ(100, get<int32_t>((*m1)["count"]));
-  ASSERT_EQ(10000.0, get<double>((*m1)["heartbeat"]));
+  request.m_path = "/ABC123/sample";
+  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_EQ("ABC123", get<string>(request.m_parameters["device"]));
+  ASSERT_EQ(100, get<int32_t>(request.m_parameters["count"]));
+  ASSERT_EQ(10000.0, get<double>(request.m_parameters["heartbeat"]));
 
-  auto m2 = r.matches("GET", "/ABC123/sample",
-                      {{ "count", "1000"}, {"from", "12345"}});
-  ASSERT_TRUE(m2);
-  ASSERT_EQ("ABC123", get<string>((*m2)["device"]));
-  ASSERT_EQ(1000, get<int32_t>((*m2)["count"]));
-  ASSERT_EQ(12345, get<uint64_t>((*m2)["from"]));
-  ASSERT_EQ(10000.0, get<double>((*m2)["heartbeat"]));
+  request.m_path = "/ABC123/sample";
+  request.m_query = {{ "count", "1000"}, {"from", "12345"}};
+  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_EQ("ABC123", get<string>(request.m_parameters["device"]));
+  ASSERT_EQ(1000, get<int32_t>(request.m_parameters["count"]));
+  ASSERT_EQ(12345, get<uint64_t>(request.m_parameters["from"]));
+  ASSERT_EQ(10000.0, get<double>(request.m_parameters["heartbeat"]));
 
-  auto m3 = r.matches("GET", "/ABC123/sample",
-                      {{ "count", "1000"}, {"from", "12345"}, { "dummy" , "1" }
-  });
-  ASSERT_TRUE(m3);
-  ASSERT_EQ("ABC123", get<string>((*m3)["device"]));
-  ASSERT_EQ(1000, get<int32_t>((*m3)["count"]));
-  ASSERT_EQ(12345, get<uint64_t>((*m3)["from"]));
-  ASSERT_EQ(10000.0, get<double>((*m3)["heartbeat"]));
-  ASSERT_EQ(m3->end(), m3->find("dummy"));
+  request.m_query = {{ "count", "1000"}, {"from", "12345"}, { "dummy" , "1" }
+  };
+  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_EQ("ABC123", get<string>(request.m_parameters["device"]));
+  ASSERT_EQ(1000, get<int32_t>(request.m_parameters["count"]));
+  ASSERT_EQ(12345, get<uint64_t>(request.m_parameters["from"]));
+  ASSERT_EQ(10000.0, get<double>(request.m_parameters["heartbeat"]));
+  ASSERT_EQ(request.m_parameters.end(), request.m_parameters.find("dummy"));
 }
 
 TEST_F(RoutingTest, TestQueryParameterError)
 {
   Routing r("GET", "/{device}/sample?from={unsigned_integer}&"
             "interval={double}&count={integer:100}&"
-            "heartbeat={double:10000}");
-  auto m1 = r.matches("GET", "/ABC123/sample",
-                      {{ "count", "xxx"} });
-  ASSERT_FALSE(m1);
+            "heartbeat={double:10000}", m_func);
+  Routing::Request request;
+  request.m_verb = "GET";
+  request.m_path = "/ABC123/sample";
+  request.m_query = {{ "count", "xxx"} };
+  ASSERT_FALSE(r.matches(request, *(m_response.get())));
+}
+
+TEST_F(RoutingTest, RegexPatterns)
+{
+  Routing r("GET", regex("/.+"), m_func);
+  Routing::Request request;
+  request.m_verb = "GET";
+  request.m_path = "/some random stuff";
+  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+
+  Routing no("GET", regex("/.+"), [](const Routing::Request &, Response &response) { return false; });
+  ASSERT_FALSE(no.matches(request, *(m_response.get())));
 }

@@ -26,11 +26,31 @@ namespace mtconnect
 {
   namespace http_server
   {
+    FileCache::FileCache()
+        : m_mimeTypes({{{".xsl", "text/xsl"},
+                        {".xml", "text/xml"},
+                        {".json", "application/json"},
+                        {".css", "text/css"},
+                        {".xsd", "text/xml"},
+                        {".jpg", "image/jpeg"},
+                        {".jpeg", "image/jpeg"},
+                        {".png", "image/png"},
+                        {".ico", "image/x-icon"}}})
+    {
+    }
+    
     static dlib::logger g_logger("file_cache");
     namespace fs = std::filesystem;
+    
+    XmlNamespaceList FileCache::registerFiles(const string &uri,
+                                              const string &pathName,
+                                              const string &version)
+    {
+      return registerDirectory(uri, pathName, version);
+    }
 
     // Register a file
-    XmlNamespaceList FileCache::registerFile(const string &uri,
+    XmlNamespaceList FileCache::registerDirectory(const string &uri,
                                              const string &pathName,
                                              const string &version)
     {
@@ -48,7 +68,9 @@ namespace mtconnect
         }
         else if (!fs::is_directory(path))
         {
-          m_fileMap.emplace(uri, fs::absolute(path));
+          auto ns = registerFile(path, uri, version);
+          if (ns)
+            namespaces.emplace_back(*ns);
         }
         else
         {
@@ -59,33 +81,9 @@ namespace mtconnect
             string name = file.path().filename();
             fs::path uri = baseUri / name;
 
-            // Check if the file name maps to a standard MTConnect schema file.
-            if (!name.find("MTConnect") && name.substr(name.length() - 4u, 4u) == ".xsd" &&
-                version == name.substr(name.length() - 7u, 3u))
-            {
-              string version = name.substr(name.length() - 7u, 3u);
-
-              if (name.substr(9u, 5u) == "Error")
-              {
-                string urn = "urn:mtconnect.org:MTConnectError:" + version;
-                namespaces.emplace_back(urn, uri);
-              }
-              else if (name.substr(9u, 7u) == "Devices")
-              {
-                string urn = "urn:mtconnect.org:MTConnectDevices:" + version;
-                namespaces.emplace_back(urn, uri);
-              }
-              else if (name.substr(9u, 6u) == "Assets")
-              {
-                string urn = "urn:mtconnect.org:MTConnectAssets:" + version;
-                namespaces.emplace_back(urn, uri);
-              }
-              else if (name.substr(9u, 7u) == "Streams")
-              {
-                string urn = "urn:mtconnect.org:MTConnectStreams:" + version;
-                namespaces.emplace_back(urn, uri);
-              }
-            }
+            auto ns = registerFile(uri, file.path(), version);
+            if (ns)
+              namespaces.emplace_back(*ns);
           }
         }
       }
@@ -98,6 +96,63 @@ namespace mtconnect
       
       return namespaces;
     }
+    
+    std::optional<XmlNamespace> FileCache::registerFile(const std::string &uri,
+                                                        const std::string &pathName,
+                                                        const std::string &version)
+    {
+      optional<XmlNamespace> ns;
+      
+      fs::path path(pathName);
+      if (!fs::exists(path))
+      {
+        g_logger << dlib::LWARN << "The following path " <<
+            pathName << " cannot be found, full path: " <<
+            fs::absolute(path);
+        return nullopt;
+      }
+      else if (!fs::is_regular_file(path))
+      {
+        g_logger << dlib::LWARN << "The following path " <<
+              path << " is not a regular file: " <<
+              fs::absolute(path);
+        return nullopt;
+      }
+          
+      m_fileMap.emplace(uri, fs::absolute(path));
+      string name = path.filename();
+
+      // Check if the file name maps to a standard MTConnect schema file.
+      if (!name.find("MTConnect") && name.substr(name.length() - 4u, 4u) == ".xsd" &&
+          version == name.substr(name.length() - 7u, 3u))
+      {
+        string version = name.substr(name.length() - 7u, 3u);
+
+        if (name.substr(9u, 5u) == "Error")
+        {
+          string urn = "urn:mtconnect.org:MTConnectError:" + version;
+          ns = make_optional<XmlNamespace>(urn, uri);
+        }
+        else if (name.substr(9u, 7u) == "Devices")
+        {
+          string urn = "urn:mtconnect.org:MTConnectDevices:" + version;
+          ns = make_optional<XmlNamespace>(urn, uri);
+        }
+        else if (name.substr(9u, 6u) == "Assets")
+        {
+          string urn = "urn:mtconnect.org:MTConnectAssets:" + version;
+          ns = make_optional<XmlNamespace>(urn, uri);
+        }
+        else if (name.substr(9u, 7u) == "Streams")
+        {
+          string urn = "urn:mtconnect.org:MTConnectStreams:" + version;
+          ns = make_optional<XmlNamespace>(urn, uri);
+        }
+      }
+    
+      return ns;
+    }
+
     
     CachedFilePtr FileCache::getFile(const std::string &name)
     {
@@ -112,7 +167,14 @@ namespace mtconnect
           auto path = m_fileMap.find(name);
           if (path != m_fileMap.end())
           {
-            auto file = make_shared<CachedFile>(path->second);
+            auto ext = path->second.extension().string();
+            string mime;
+            auto mt = m_mimeTypes.find(ext);
+            if (mt != m_mimeTypes.end())
+              mime = mt->second;
+            else
+              mime = "application/octet-stream";
+            auto file = make_shared<CachedFile>(path->second, mime);
             m_fileCache.emplace(name, file);
             return file;
           }

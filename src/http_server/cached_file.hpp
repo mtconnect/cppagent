@@ -37,8 +37,8 @@ namespace mtconnect
         return shared_from_this();
       }
 
-      
-      CachedFile(const CachedFile &file) : m_size(file.m_size)
+      CachedFile(const CachedFile &file, const std::string &mime)
+      : m_size(file.m_size), m_mimeType(mime)
       {
         m_buffer = std::make_unique<char[]>(file.m_size);
         memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
@@ -55,8 +55,8 @@ namespace mtconnect
         m_buffer = std::make_unique<char[]>(m_size);
       }
       
-      CachedFile(const std::filesystem::path &path)
-        : m_buffer(nullptr)
+      CachedFile(const std::filesystem::path &path, const std::string &mime)
+        : m_buffer(nullptr), m_mimeType(mime)
       {
         m_size = std::filesystem::file_size(path);
         m_buffer = std::make_unique<char[]>(m_size);
@@ -85,6 +85,7 @@ namespace mtconnect
       
       std::unique_ptr<char[]> m_buffer;
       size_t m_size = 0;
+      std::string m_mimeType;
     };
   }
 }

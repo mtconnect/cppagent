@@ -32,17 +32,34 @@ namespace mtconnect
     class FileCache
     {
     public:
-      XmlNamespaceList registerFile(const std::string &uri, const std::string &path,
-                        const std::string &version);
+      FileCache();
+      
+      XmlNamespaceList registerFiles(const std::string &uri,
+                                     const std::string &path,
+                                     const std::string &version);
+      XmlNamespaceList registerDirectory(const std::string &uri,
+                                         const std::string &path,
+                                         const std::string &version);
+      std::optional<XmlNamespace> registerFile(const std::string &uri,
+                                    const std::string &path,
+                                    const std::string &version);
       CachedFilePtr getFile(const std::string &name);
-      bool hasFile(const std::string &name)
+      bool hasFile(const std::string &name) const
       {
         return (m_fileMap.find(name) != m_fileMap.end());
+      }
+      void addMimeType(const std::string &ext, const std::string &type)
+      {
+        std::string s(ext);
+        if (s[0] != '.')
+          s.insert(0, ".");
+        m_mimeTypes[s] = type;
       }
       
     protected:
       std::map<std::string, std::filesystem::path> m_fileMap;
       std::map<std::string, CachedFilePtr> m_fileCache;
+      std::map<std::string, std::string> m_mimeTypes;
     };
   }
 }

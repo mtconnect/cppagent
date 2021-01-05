@@ -25,6 +25,8 @@
 #include "cutting_tool.hpp"
 
 #include "entity/xml_parser.hpp"
+#include "http_server/file_cache.hpp"
+
 #include <sys/stat.h>
 
 #include <dlib/config_reader.h>
@@ -53,14 +55,17 @@ namespace mtconnect
   static dlib::logger g_logger("agent");
   
   // Agent public methods
-  Agent::Agent(const string &configXmlPath, int bufferSize, int maxAssets,
+  Agent::Agent(std::unique_ptr<http_server::Server> &server,
+               std::unique_ptr<http_server::FileCache> &cache,
+               const string &configXmlPath, int bufferSize, int maxAssets,
                const std::string &version, int checkpointFreq, bool pretty)
       : m_logStreamData(false),
         m_circularBuffer(bufferSize, checkpointFreq),
         m_pretty(pretty),        
         m_assetBuffer(maxAssets),
-        m_xmlParser(make_unique<XmlParser>())
-  
+        m_xmlParser(make_unique<XmlParser>()),
+        m_server(move(server)),
+        m_cache(move(cache))
   {
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();
@@ -318,7 +323,7 @@ namespace mtconnect
         adapter->start();
 
       // Start the server. This blocks until the server stops.
-      //server_http::start();
+      m_server->start();
     }
     catch (dlib::socket_error &e)
     {
@@ -336,7 +341,7 @@ namespace mtconnect
       adapter->stop();
 
     g_logger << LINFO << "Shutting down server";
-    //server::http_1a::clear();
+    m_server->stop();
     g_logger << LINFO << "Shutting completed";
 
     for (const auto adapter : m_adapters)
