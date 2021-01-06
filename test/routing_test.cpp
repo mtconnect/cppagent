@@ -30,7 +30,7 @@ class RoutingTest : public testing::Test
   }
 
   std::unique_ptr<Response> m_response;
-  strstream m_out;
+  stringstream m_out;
   const Routing::Function m_func { [](const Routing::Request &, Response &response) { return true; } };
 
 };

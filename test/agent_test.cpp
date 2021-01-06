@@ -42,6 +42,7 @@ typedef __int64 int64_t;
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
+using namespace mtconnect::http_server;
 
 class AgentTest : public testing::Test
 {
@@ -52,18 +53,19 @@ class AgentTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.3", 25);
+    auto server = make_unique<http_server::Server>();
+    auto cache = make_unique<http_server::FileCache>();
+    
+    m_agentTestHelper = make_unique<AgentTestHelper>();
+    m_agentTestHelper->m_agent = make_unique<Agent>(server, cache,
+                                                    PROJECT_ROOT_DIR "/samples/test_config.xml",
+                                                    8, 4, "1.3", 25);
     m_agentId = intToString(getCurrentTimeInSec());
     m_adapter = nullptr;
-
-    m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-    m_agentTestHelper->m_queries.clear();
   }
 
   void TearDown() override
   {
-    m_agent.reset();
     m_adapter = nullptr;
     m_agentTestHelper.reset();
   }
@@ -72,12 +74,11 @@ class AgentTest : public testing::Test
   {
     ASSERT_FALSE(m_adapter);
     m_adapter = new Adapter("LinuxCNC", "server", 7878);
-    m_agent->addAdapter(m_adapter);
+    m_agentTestHelper->m_agent->addAdapter(m_adapter);
     ASSERT_TRUE(m_adapter);
   }
 
  public:
-  std::unique_ptr<Agent> m_agent;
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
@@ -87,34 +88,59 @@ class AgentTest : public testing::Test
 
 TEST_F(AgentTest, Constructor)
 {
-  ASSERT_THROW(Agent(PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.5"), std::runtime_error);
-  ASSERT_NO_THROW(Agent(PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.5"));
+  auto server1 = make_unique<http_server::Server>();
+  auto cache1 = make_unique<http_server::FileCache>();
+  ASSERT_THROW(Agent(server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7"), std::runtime_error);
+  auto server2 = make_unique<http_server::Server>();
+  auto cache2 = make_unique<http_server::FileCache>();
+  ASSERT_NO_THROW(Agent(server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7"));
 }
 
+TEST_F(AgentTest, Probe)
+{
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
+  }
+}
+
+#if 0
 TEST_F(AgentTest, BadPath)
 {
   auto pathError = getFile(PROJECT_ROOT_DIR "/samples/test_error.xml");
 
   {
-    m_agentTestHelper->m_path = "/bad_path";
-    PARSE_XML_RESPONSE;
-    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_path;
+    PARSE_XML_RESPONSE("/bad_path");
+    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_request.m_path;
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
 
   {
-    m_agentTestHelper->m_path = "/bad/path/";
-    PARSE_XML_RESPONSE;
-    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_path;
+    PARSE_XML_RESPONSE("/bad/path/");
+    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_request.m_path;
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
 
   {
-    m_agentTestHelper->m_path = "/LinuxCNC/current/blah";
-    PARSE_XML_RESPONSE;
-    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_path;
+    PARSE_XML_RESPONSE("/LinuxCNC/current/blah");
+    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_request.m_path;
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
@@ -122,28 +148,25 @@ TEST_F(AgentTest, BadPath)
 
 TEST_F(AgentTest, BadXPath)
 {
-  m_agentTestHelper->m_path = "/current";
-  key_value_map query;
-
   {
-    query["path"] = "//////Linear";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{ "path", "//////Linear"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string) "The path could not be parsed. Invalid syntax: //////Linear";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
 
   {
-    query["path"] = "//Axes?//Linear";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{ "path", "//Axes?//Linear"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string) "The path could not be parsed. Invalid syntax: //Axes?//Linear";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
 
   {
-    query["path"] = "//Devices/Device[@name=\"I_DON'T_EXIST\"";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{ "path", "//Devices/Device[@name=\"I_DON'T_EXIST\""}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string)
     "The path could not be parsed. Invalid syntax: //Devices/Device[@name=\"I_DON'T_EXIST\"";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
@@ -153,56 +176,53 @@ TEST_F(AgentTest, BadXPath)
 
 TEST_F(AgentTest, BadCount)
 {
-  m_agentTestHelper->m_path = "/sample";
-  key_value_map query;
-
   {
-    query["count"] = "NON_INTEGER";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{"count", "NON_INTEGER"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must an integer.");
   }
 
   {
-    query["count"] = "-500";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{"count", "-500"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be greater than or equal to ");
-    value += int32ToString(-m_agent->getBufferSize()) + ".";
+    value += int32ToString(-m_agentTestHelper->m_agent->getBufferSize()) + ".";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
 
   {
-    query["count"] = "0";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{"count", "0"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must not be 0.");
   }
 
   {
-    query["count"] = "500";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{"count", "500"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than or equal to ");
-    value += intToString(m_agent->getBufferSize()) + ".";
+    value += intToString(m_agentTestHelper->m_agent->getBufferSize()) + ".";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
 
   {
-    query["count"] = "9999999";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{"count", "9999999"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than or equal to ");
-    value += intToString(m_agent->getBufferSize()) + ".";
+    value += intToString(m_agentTestHelper->m_agent->getBufferSize()) + ".";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
   
   {
-    query["count"] = "-9999999";
-    PARSE_XML_RESPONSE_QUERY(query);
+    Routing::QueryMap query{{"count", "-9999999"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be greater than or equal to ");
-    value += int32ToString(-m_agent->getBufferSize()) + ".";
+    value += int32ToString(-m_agentTestHelper->m_agent->getBufferSize()) + ".";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
 
@@ -268,27 +288,6 @@ TEST_F(AgentTest, XPath)
                           "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Load", "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Unavailable", "");
-  }
-}
-
-TEST_F(AgentTest, Probe)
-{
-  {
-    m_agentTestHelper->m_path = "/probe";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
-  }
-
-  {
-    m_agentTestHelper->m_path = "/";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
-  }
-
-  {
-    m_agentTestHelper->m_path = "/LinuxCNC";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
   }
 }
 
@@ -2846,3 +2845,4 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   }
 
 }
+#endif

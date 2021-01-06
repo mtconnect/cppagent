@@ -81,6 +81,16 @@ namespace mtconnect
         std::string m_path;
         QueryMap    m_query;
         ParameterMap m_parameters;
+        
+        template<typename T>
+        std::optional<T> parameter(const std::string &s) const
+        {
+          auto v = m_parameters.find(s);
+          if (v == m_parameters.end())
+            return std::nullopt;
+          else
+            return std::get<T>(v->second);
+        }
       };
       
       using Function = std::function<bool(const Request &, Response &response)>;
@@ -165,7 +175,7 @@ namespace mtconnect
       {
         std::regex reg("\\{([^}]+)\\}");
         std::smatch match;
-        std::strstream pat;
+        std::stringstream pat;
         
         while (regex_search(s, match, reg))
         {
@@ -175,8 +185,8 @@ namespace mtconnect
         }
         pat << s;
 
-        std::string l(pat.str());
-        m_pattern = std::regex(pat.str());
+        m_patternText = pat.str();
+        m_pattern = std::regex(m_patternText);
       }
       
       void queryParameters(std::string s)
@@ -278,6 +288,7 @@ namespace mtconnect
     protected:
       std::string m_verb;
       std::regex m_pattern;
+      std::string m_patternText;
       ParameterList m_pathParameters;
       QuerySet m_queryParameters;
       Function m_function;

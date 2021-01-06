@@ -60,8 +60,10 @@ namespace mtconnect
         {
           if (!m_putEnabled || !isPutAllowedFrom(foreign_ip))
           {
+            g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " <<
+                "Server is read-only. Only GET verb supported";
             response.writeResponse("Server is read-only. Only GET verb supported",
-                                   "text/plain", "Forbidden");
+                                   "text/plain", FORBIDDEN);
             out.flush();
            return;
           }
@@ -83,8 +85,10 @@ namespace mtconnect
         
         if (!dispatch(request, response))
         {
+          g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " <<
+              "No matching route for: " << request.m_verb << " " << request.m_path;
           response.writeResponse("No routing matches: " + request.m_verb + " "
-                                 + request.m_path, "text/plain", "Not Found");
+                                 + request.m_path, "text/plain", NOT_FOUND);
         }
         
         out.flush();

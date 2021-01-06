@@ -452,7 +452,7 @@ namespace mtconnect
 
   string XmlPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
-                                const unsigned int assetCount, const vector<Device *> &deviceList,
+                                const unsigned int assetCount, const list<Device *> &deviceList,
                                 const std::map<std::string, int> *count) const
   {
     string ret;

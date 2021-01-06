@@ -93,6 +93,12 @@ namespace mtconnect
     loadXMLDeviceFile(configXmlPath);
     loadCachedProbe();
     
+    createCurrentRoutings();
+    createSampleRoutings();
+    createAssetRoutings();
+    createFileRoutings();
+    createProbeRoutings();
+
     m_initialized = true;
   }
 
@@ -268,6 +274,225 @@ namespace mtconnect
                                                      getMaxAssets(),    m_assetBuffer.getCount(),
                                                      m_circularBuffer.getSequence(),
                                                      m_devices));
+  }
+  
+  const string Agent::acceptFormat(const std::string &accepts) const
+  {
+    std::stringstream list(accepts);
+    std::string accept;
+    while (std::getline(list, accept, ','))
+    {
+      for (const auto &p : m_printers)
+      {
+        if (endsWith(accept, p.first))
+          return p.first;
+      }
+    }
+
+    return "xml";
+  }
+  
+  static inline void respond(http_server::Response &response, const Agent::RequestResult &res)
+  {
+    response.writeResponse(res.m_body, res.m_format, res.m_status);
+  }
+  
+  void Agent::createFileRoutings()
+  {
+    using namespace http_server;
+    auto handler = [&](const Routing::Request &request,
+                    Response &response) -> bool
+    {
+      auto f = m_cache->getFile(request.m_path);
+      if (f)
+      {
+        response.writeResponse(f->m_buffer.get(), f->m_size,
+                               http_server::OK, f->m_mimeType);
+      }
+      return bool(f);
+    };
+    m_server->addRounting({ "GET", regex("/.+"), handler});
+  }
+  
+  void Agent::createProbeRoutings()
+  {
+    using namespace http_server;
+    // Probe
+    auto handler = [&](const Routing::Request &request,
+                                  Response &response) -> bool {
+      auto device = request.parameter<string>("device");
+      if (device && findDeviceByUUIDorName(*device) == nullptr)
+        return false;
+      
+      respond(response, probeRequest(acceptFormat(request.m_accepts),
+                                     device));
+      return true;
+    };
+
+    m_server->addRounting({ "GET", "/probe", handler});
+    m_server->addRounting({ "GET", "/{device}/probe", handler});
+    // Must be last
+    m_server->addRounting({ "GET", "/", handler});
+    m_server->addRounting({ "GET", "/{device}", handler});
+  }
+  
+  void Agent::createAssetRoutings()
+  {
+    using namespace http_server;
+    auto handler = [&](const Routing::Request &request,
+                       Response &response) -> bool {
+      auto removed = *request.parameter<string>("removed") == "true";
+      auto count = *request.parameter<int32_t>("count");
+      respond(response, assetRequest(acceptFormat(request.m_accepts),
+                                     count, removed,
+                                     request.parameter<string>("type"),
+                                     request.parameter<string>("device")));
+      return true;
+    };
+
+    auto idHandler = [&](const Routing::Request &request,
+                         Response &response) -> bool {
+      auto assets = request.parameter<string>("assets");
+      if (assets)
+      {
+        list<string> ids;
+        stringstream str(*assets);
+        string id;
+        while (getline(str, id, ';'))
+          ids.emplace_back(id);
+        respond(response, assetIdsRequest(acceptFormat(request.m_accepts), ids));
+      }
+      else
+      {
+        auto printer = printerForAccepts(request.m_accepts);
+        response.writeResponse(printError(printer,
+                                          "INVALID_REQUEST",
+                                          "No assets given"),
+                               printer->mimeType(), http_server::BAD_REQUEST);
+      }
+      return true;
+    };
+
+    string qp("type={string}&removed={string:false}&count={integer:100}");
+    m_server->addRounting({ "GET", "/assets?" + qp, handler});
+    m_server->addRounting({ "GET", "/asset?" + qp, handler});
+    m_server->addRounting({ "GET","/{device}/assets?" + qp, handler});
+    m_server->addRounting({ "GET", "/{device}/asset?" + qp, handler});
+    
+    m_server->addRounting({ "GET", "/asset/{assets}", idHandler});
+    m_server->addRounting({ "GET", "/assets/{assets}", idHandler});
+    
+    if (m_server->isPutEnabled())
+    {
+      auto putHandler = [&](const Routing::Request &request,
+                                    Response &response) -> bool {
+        respond(response, putAssetRequest(acceptFormat(request.m_accepts),
+                                          request.m_body,
+                                          request.parameter<string>("device"),
+                                          request.parameter<string>("uuid")));
+        return true;
+      };
+      
+      auto deleteHandler = [&](const Routing::Request &request,
+                               Response &response) -> bool {
+        auto assets = request.parameter<string>("assets");
+        if (assets)
+        {
+          list<string> ids;
+          stringstream str(*assets);
+          string id;
+          while (getline(str, id, ';'))
+            ids.emplace_back(id);
+          respond(response, deleteAssetRequest(acceptFormat(request.m_accepts), ids));
+        }
+        else
+        {
+          respond(response, deleteAllAssetsRequest(acceptFormat(request.m_accepts),
+                                                   request.parameter<string>("device"),
+                                                   request.parameter<string>("type")));
+        }
+        return true;
+      };
+
+      for (const auto &t : list<string>{"PUT", "POST"})
+      {
+        m_server->addRounting({ t, "/asset/{uuid}?device={string}&type={string}",
+          putHandler});
+        m_server->addRounting({ t, "/asset?device={string}&type={string}",
+          putHandler});
+        m_server->addRounting({ t, "/{device}/asset/{uuid}?type={string}",
+          putHandler});
+        m_server->addRounting({ t, "/{device}/asset?type={string}",
+        putHandler});
+      }
+
+      m_server->addRounting({ "DELETE", "/assets/{assets}",
+        deleteHandler});
+      m_server->addRounting({ "DELETE", "/{device}/assets?type={string}",
+        deleteHandler});
+    }
+  }
+  
+  void Agent::createCurrentRoutings()
+  {
+    using namespace http_server;
+    auto handler = [&](const Routing::Request &request,
+                                  Response &response) -> bool {
+      auto interval = request.parameter<int32_t>("interval");
+      if (interval)
+      {
+        respond(response, streamCurrentRequest(response, acceptFormat(request.m_accepts),
+                                               *interval,
+                                               request.parameter<string>("device"),
+                                               request.parameter<string>("path")));
+      }
+      else
+      {
+        respond(response, currentRequest(acceptFormat(request.m_accepts),
+                                         request.parameter<string>("device"),
+                                         request.parameter<uint64_t>("at"),
+                                         request.parameter<string>("path")));
+      }
+      return true;
+    };
+
+    string qp("path={string}&at={unsigned_integer}&interval={integer}");
+    m_server->addRounting({ "GET", "/current?" + qp, handler});
+    m_server->addRounting({ "GET", "/{device}/current?" + qp, handler});
+  }
+
+  void Agent::createSampleRoutings()
+  {
+    using namespace http_server;
+    auto handler = [&](const Routing::Request &request,
+                                  Response &response) -> bool {
+      auto interval = request.parameter<int32_t>("interval");
+      if (interval)
+      {
+        respond(response, streamSampleRequest(response, acceptFormat(request.m_accepts),
+                                              *interval, *request.parameter<int32_t>("heartbeat"),
+                                              *request.parameter<int32_t>("count"),
+                                              request.parameter<string>("device"),
+                                              request.parameter<uint64_t>("from"),
+                                               request.parameter<string>("path")));
+      }
+      else
+      {
+        respond(response, sampleRequest(acceptFormat(request.m_accepts),
+                                        *request.parameter<int32_t>("count"),
+                                        request.parameter<string>("device"),
+                                        request.parameter<uint64_t>("from"),
+                                        request.parameter<uint64_t>("to"),
+                                        request.parameter<string>("path")));
+      }
+      return true;
+    };
+
+    string qp("path={string}&from={unsigned_integer}&"
+              "interval={integer}&count={integer:100}&"
+              "heartbeat={integer:10000}&to={unsigned_integer}");
+    m_server->addRounting({ "GET", "/sample?" + qp, handler});
+    m_server->addRounting({ "GET", "/{device}/sample?" + qp, handler});
   }
 
   const Device *Agent::getDeviceByName(const std::string &name) const
@@ -592,6 +817,118 @@ namespace mtconnect
     }
   }
   
+  
+  // Agent Requests
+  Agent::RequestResult Agent::probeRequest(const std::string &format,
+                                           const std::optional<std::string> &device)
+  {
+    list<Device *> deviceList;
+    auto printer = getPrinter(format);
+
+    if (device)
+    {
+      auto dev = findDeviceByUUIDorName(*device);
+      if (!dev)
+      {
+        return { printError(printer,
+                            "NO_DEVICE",
+                            "Could not find the device '" + *device + "'"),
+          http_server::NOT_FOUND,
+          printer->mimeType()};
+      }
+      else
+        deviceList.emplace_back(dev);
+    }
+    else
+      deviceList = m_devices;
+
+    auto counts = m_assetBuffer.getCountsByType();
+    return {printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), getMaxAssets(),
+                               m_assetBuffer.getCount(), deviceList,
+                                &counts), http_server::OK, printer->mimeType()};
+  }
+  
+  Agent::RequestResult Agent::currentRequest(const std::string &format,
+                               const std::optional<std::string> &device,
+                               const std::optional<SequenceNumber_t> &at,
+                               const std::optional<std::string> &path)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  Agent::RequestResult Agent::sampleRequest(const std::string &format,
+                              const int count,
+                              const std::optional<std::string> &device ,
+                              const std::optional<SequenceNumber_t> &from,
+                              const std::optional<SequenceNumber_t> &to,
+                              const std::optional<std::string> &path)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  Agent::RequestResult Agent::streamSampleRequest(http_server::Response &response,
+                                    const std::string &format,
+                                    const int interval, const int heartbeat,
+                                    const int count,
+                                    const std::optional<std::string> &device,
+                                    const std::optional<SequenceNumber_t> &from,
+                                    const std::optional<std::string> &path)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  Agent::RequestResult Agent::streamCurrentRequest(http_server::Response &response,
+                                     const std::string &format,
+                                     const int interval,
+                                     const std::optional<std::string> &device,
+                                     const std::optional<std::string> &path)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  Agent::RequestResult Agent::assetRequest(const std::string &format,
+                             const int32_t count,
+                             const bool removed,
+                             const std::optional<std::string> &type,
+                             const std::optional<std::string> &device)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  Agent::RequestResult Agent::assetIdsRequest(const std::string &format,
+                                const std::list<std::string> &ids)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  Agent::RequestResult Agent::putAssetRequest(const std::string &format,
+                                       const std::string &asset,
+                                       const std::optional<std::string> &device,
+                                       const std::optional<std::string> &uuid)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  Agent::RequestResult Agent::deleteAssetRequest(const std::string &format,
+                                   const std::list<std::string> &ids)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  Agent::RequestResult Agent::deleteAllAssetsRequest(const std::string &format,
+                                       const std::optional<std::string> &device,
+                                       const std::optional<std::string> &type)
+  {
+    return {"",http_server::OK,""};
+  }
+  
+  string Agent::printError(const Printer *printer, const string &errorCode, const string &text)
+  {
+    g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
+    return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
+                               m_circularBuffer.getSequence(), errorCode, text);
+  }
+  
 #if 0
   string Agent::handlePut(const Printer *printer, ostream &out, const string &path,
                           const key_value_map &queries, const string &adapter,
@@ -647,27 +984,6 @@ namespace mtconnect
     return "<success/>";
   }
 
-  string Agent::handleProbe(const Printer *printer, const string &name)
-  {
-    std::vector<Device *> deviceList;
-
-    if (!name.empty())
-    {
-      auto device = findDeviceByUUIDorName(name);
-      if (!device)
-        return printError(printer, "NO_DEVICE", "Could not find the device '" + name + "'");
-      else
-        deviceList.emplace_back(device);
-    }
-    else
-      deviceList = m_devices;
-
-    auto counts = m_assetBuffer.getCountsByType();
-    
-    return printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), getMaxAssets(),
-                               m_assetBuffer.getCount(), deviceList,
-                               &counts);
-  }
   string Agent::handleStream(const Printer *printer, ostream &out, const string &path, bool current,
                              unsigned int frequency, uint64_t start, int count,
                              std::chrono::milliseconds heartbeat)

@@ -48,7 +48,21 @@ namespace mtconnect
   class Agent
   {
    public:
-    using RequestResult = std::pair<std::string,unsigned short>;
+    struct RequestResult
+    {
+      RequestResult() {};
+      RequestResult(const std::string &body,
+                    const http_server::ResponseCode status,
+                    const std::string &format)
+      : m_body(body), m_status(status), m_format(format)
+      {
+      }
+      RequestResult(const RequestResult &) = default;
+      
+      std::string m_body;
+      http_server::ResponseCode m_status;
+      std::string m_format;
+    };
     
     // Load agent with the xml configuration
     Agent(std::unique_ptr<http_server::Server> &server,
@@ -62,7 +76,10 @@ namespace mtconnect
 
     // Start and stop
     void start();   
-    void stop();    
+    void stop();
+    
+    // HTTP Server
+    auto getServer() { return m_server.get(); }
 
     // Add an adapter to the agent
     void addAdapter(Adapter *adapter, bool start = false);
@@ -71,7 +88,7 @@ namespace mtconnect
     Device *getDeviceByName(const std::string &name);
     const Device *getDeviceByName(const std::string &name) const;
     Device *findDeviceByUUIDorName(const std::string &idOrName);
-    const std::vector<Device *> &getDevices() const { return m_devices; }
+    const auto &getDevices() const { return m_devices; }
 
     // Add the a device from a configuration file
     void addDevice(Device *device);
@@ -120,24 +137,46 @@ namespace mtconnect
     auto getAgentDevice() { return m_agentDevice; }
     
     // MTConnect Requests
-    RequestResult probeRequest(std::string format,
-                               std::optional<std::string> device = std::nullopt);
-    RequestResult currentRequest(std::string format,
-                                 std::optional<std::string> device = std::nullopt,
-                                 std::optional<SequenceNumber_t> at = std::nullopt);
-    RequestResult sampleRequest(std::string format,
-                                std::optional<std::string> device = std::nullopt,
-                                std::optional<SequenceNumber_t> from = std::nullopt,
-                                std::optional<int> count = std::nullopt);
-    RequestResult streamSampleRequest(std::string format,
-                                      std::optional<std::string> device = std::nullopt,
-                                      std::optional<SequenceNumber_t> from = std::nullopt,
-                                      std::optional<int> count = std::nullopt,
-                                      std::optional<int> interval = std::nullopt);
-    RequestResult streamCurrentRequest(std::string format,
-                                       std::optional<std::string> device = std::nullopt,
-                                       std::optional<int> interval = std::nullopt);
-
+    RequestResult probeRequest(const std::string &format,
+                               const std::optional<std::string> &device = std::nullopt);
+    RequestResult currentRequest(const std::string &format,
+                                 const std::optional<std::string> &device = std::nullopt,
+                                 const std::optional<SequenceNumber_t> &at = std::nullopt,
+                                 const std::optional<std::string> &path = std::nullopt);
+    RequestResult sampleRequest(const std::string &format,
+                                const int count = 100,
+                                const std::optional<std::string> &device = std::nullopt,
+                                const std::optional<SequenceNumber_t> &from = std::nullopt,
+                                const std::optional<SequenceNumber_t> &to = std::nullopt,
+                                const std::optional<std::string> &path = std::nullopt);
+    RequestResult streamSampleRequest(http_server::Response &response,
+                                      const std::string &format,
+                                      const int interval, const int heartbeat,
+                                      const int count = 100,
+                                      const std::optional<std::string> &device = std::nullopt,
+                                      const std::optional<SequenceNumber_t> &from = std::nullopt,
+                                      const std::optional<std::string> &path = std::nullopt);
+    RequestResult streamCurrentRequest(http_server::Response &response,
+                                       const std::string &format,
+                                       const int interval,
+                                       const std::optional<std::string> &device = std::nullopt,
+                                       const std::optional<std::string> &path = std::nullopt);
+    RequestResult assetRequest(const std::string &format,
+                               const int32_t count,
+                               const bool removed,
+                               const std::optional<std::string> &type = std::nullopt,
+                               const std::optional<std::string> &device = std::nullopt);
+    RequestResult assetIdsRequest(const std::string &format,
+                                  const std::list<std::string> &ids);
+    RequestResult putAssetRequest(const std::string &format,
+                                  const std::string &asset,
+                                  const std::optional<std::string> &device = std::nullopt,
+                                  const std::optional<std::string> &uuid = std::nullopt);
+    RequestResult deleteAssetRequest(const std::string &format,
+                                     const std::list<std::string> &ids);
+    RequestResult deleteAllAssetsRequest(const std::string &format,
+                                         const std::optional<std::string> &device = std::nullopt,
+                                         const std::optional<std::string> &type = std::nullopt);
 
     // For debugging
     void setLogStreamData(bool log) { m_logStreamData = log; }
@@ -154,45 +193,15 @@ namespace mtconnect
     void verifyDevice(Device *device);
     void initializeDataItems(Device *device);
     void loadCachedProbe();
-#if 0
-
-    // HTTP methods to handle the 3 basic calls
-    std::string handleCall(const Printer *printer, std::ostream &out, const std::string &path,
-                           const dlib::key_value_map &queries, const std::string &call,
-                           const std::string &device);
-
-    // HTTP methods to handle the 3 basic calls
-    std::string handlePut(const Printer *printer, std::ostream &out, const std::string &path,
-                          const dlib::key_value_map &queries, const std::string &call,
-                          const std::string &device);
-
-    // Handle stream calls, which includes both current and sample
-    std::string handleStream(const Printer *printer, std::ostream &out, const std::string &path,
-                             bool current, unsigned int frequency, uint64_t start = 0,
-                             int count = 0,
-                             std::chrono::milliseconds heartbeat = std::chrono::milliseconds{
-                                 10000});
-
-    // Asset related methods
-    std::string handleAssets(const Printer *printer, std::ostream &out,
-                             const dlib::key_value_map &queries, const std::string &list);
-
-    std::string storeAsset(std::ostream &out, const dlib::key_value_map &queries,
-                           const std::string &command, const std::string &asset,
-                           const std::string &body);
-
-    // Stream the data to the user
-    void streamData(const Printer *printer, std::ostream &out, std::set<std::string> &filterSet,
-                    bool current, unsigned int frequency, uint64_t start = 1,
-                    unsigned int count = 0,
-                    std::chrono::milliseconds heartbeat = std::chrono::milliseconds{10000});
-    // Fetch the current/sample data and return the XML in a std::string
-    std::string fetchCurrentData(const Printer *printer, std::set<std::string> &filterSet,
-                                 uint64_t at);
-    std::string fetchSampleData(const Printer *printer, std::set<std::string> &filterSet,
-                                uint64_t start, int count, uint64_t &end, bool &endOfBuffer,
-                              ChangeObserver *observer = nullptr);
-#endif
+    
+    // HTTP Routings
+    const std::string acceptFormat(const std::string &accepts) const;
+    void createFileRoutings();
+    void createProbeRoutings();
+    void createSampleRoutings();
+    void createCurrentRoutings();
+    void createAssetRoutings();
+    
     // Output an XML Error
     std::string printError(const Printer *printer, const std::string &errorCode,
                            const std::string &text);
@@ -234,8 +243,8 @@ namespace mtconnect
     AssetBuffer m_assetBuffer;
 
     // Data containers
-    std::vector<Adapter *> m_adapters;
-    std::vector<Device *> m_devices;
+    std::list<Adapter *> m_adapters;
+    std::list<Device *> m_devices;
     std::map<std::string, Device *> m_deviceNameMap;
     std::map<std::string, Device *> m_deviceUuidMap;
     std::map<std::string, DataItem *> m_dataItemMap;
