@@ -93,6 +93,9 @@ namespace mtconnect
         return getCurrentTime(HUM_READ);
       }
       
+      bool good() const { return m_out.good(); }
+      void flush() { m_out.flush(); }
+
       virtual void beginMultipartStream()
       {
         if (m_out.ios_base::good())

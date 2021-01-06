@@ -284,7 +284,7 @@ namespace mtconnect
     {
       for (const auto &p : m_printers)
       {
-        if (endsWith(accept, p.first))
+        if (ends_with(accept, p.first))
           return p.first;
       }
     }
@@ -321,7 +321,9 @@ namespace mtconnect
     auto handler = [&](const Routing::Request &request,
                                   Response &response) -> bool {
       auto device = request.parameter<string>("device");
-      if (device && findDeviceByUUIDorName(*device) == nullptr)
+      
+      if (device && !ends_with(request.m_path, string("probe")) &&
+          findDeviceByUUIDorName(*device) == nullptr)
         return false;
       
       respond(response, probeRequest(acceptFormat(request.m_accepts),
@@ -583,7 +585,7 @@ namespace mtconnect
     {
       for (const auto &p : m_printers)
       {
-        if (endsWith(accept, p.first))
+        if (ends_with(accept, p.first))
           return p.second.get();
       }
     }
@@ -817,6 +819,108 @@ namespace mtconnect
     }
   }
   
+  // Helper
+  void Agent::checkRange(const Printer *printer,
+                         SequenceNumber_t value, SequenceNumber_t min,
+                         SequenceNumber_t max, const string &param)
+  {
+    using namespace http_server;
+    if (value <= min)
+    {
+      stringstream str;
+      str << '\'' << param << '\'' << " must be greater than " << min;
+      throw RequestError(str.str().c_str(),
+                         printError(printer, "OUT_OF_RANGE", str.str()),
+                         printer->mimeType(), BAD_REQUEST);
+    }
+    if (value >= max)
+    {
+      stringstream str;
+      str << '\'' << param << '\'' << " must be less than " << max;
+      throw RequestError(str.str().c_str(),
+                         printError(printer, "OUT_OF_RANGE", str.str()),
+                         printer->mimeType(), BAD_REQUEST);
+    }
+  }
+
+  void Agent::checkPath(const Printer *printer,
+                        const std::optional<std::string> &path,
+                        const Device *device,
+                        FilterSet &filter)
+  {
+    using namespace http_server;
+    try
+    {
+      auto pd = devicesAndPath(path, device);
+      m_xmlParser->getDataItems(filter, pd);
+    }
+    catch (exception &e)
+    {
+      throw RequestError(e.what(), printError(printer, "INVALID_XPATH", e.what()),
+                         printer->mimeType(), BAD_REQUEST);
+    }
+
+    if (filter.empty())
+    {
+      string msg = "The path could not be parsed. Invalid syntax: " + *path;
+      throw RequestError(msg.c_str(),
+                         printError(printer, "INVALID_XPATH", msg),
+                         printer->mimeType(), BAD_REQUEST);
+    }
+  }
+
+  Device *Agent::checkDevice(const Printer *printer, const std::string &uuid)
+  {
+    using namespace http_server;
+    auto dev = findDeviceByUUIDorName(uuid);
+    if (!dev)
+    {
+      string msg("Could not find the device '" + uuid + "'");
+      throw RequestError(msg.c_str(),
+                         printError(printer, "NO_DEVICE", msg),
+                                    printer->mimeType(), NOT_FOUND);
+    }
+      
+    return dev;
+  }
+  
+  string Agent::devicesAndPath(const std::optional<string> &path,
+                               const Device *device)
+  {
+    string dataPath;
+
+    if (device != nullptr)
+    {
+      string prefix;
+      if (device->getClass() == "Agent")
+        prefix = "//Devices/Agent";
+      else
+        prefix = "//Devices/Device[@uuid=\"" + device->getUuid() + "\"]";
+
+
+      if (path)
+      {
+        stringstream parse(*path);
+        string token;
+
+        // Prefix path (i.e. "path1|path2" => "{prefix}path1|{prefix}path2")
+        while (getline(parse, token, '|'))
+          dataPath += prefix + token + "|";
+
+        dataPath.erase(dataPath.length() - 1);
+      }
+      else
+      {
+        dataPath = prefix;
+      }
+    }
+    else
+    {
+      dataPath = path ? *path : "//Devices/Device";
+    }
+
+    return dataPath;
+  }
   
   // Agent Requests
   Agent::RequestResult Agent::probeRequest(const std::string &format,
@@ -827,25 +931,19 @@ namespace mtconnect
 
     if (device)
     {
-      auto dev = findDeviceByUUIDorName(*device);
-      if (!dev)
-      {
-        return { printError(printer,
-                            "NO_DEVICE",
-                            "Could not find the device '" + *device + "'"),
-          http_server::NOT_FOUND,
-          printer->mimeType()};
-      }
-      else
-        deviceList.emplace_back(dev);
+      auto dev = checkDevice(printer, *device);
+      deviceList.emplace_back(dev);
     }
     else
+    {
       deviceList = m_devices;
+    }
 
     auto counts = m_assetBuffer.getCountsByType();
-    return {printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), getMaxAssets(),
-                               m_assetBuffer.getCount(), deviceList,
-                                &counts), http_server::OK, printer->mimeType()};
+    return { printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(),
+                                 m_circularBuffer.getSequence(), getMaxAssets(),
+                                 m_assetBuffer.getCount(), deviceList,
+                                 &counts), http_server::OK, printer->mimeType() };
   }
   
   Agent::RequestResult Agent::currentRequest(const std::string &format,
@@ -853,7 +951,22 @@ namespace mtconnect
                                const std::optional<SequenceNumber_t> &at,
                                const std::optional<std::string> &path)
   {
-    return {"",http_server::OK,""};
+    using namespace http_server;
+    auto printer = getPrinter(format);
+    Device *dev { nullptr };
+    if (device)
+    {
+      dev = checkDevice(printer, *device);
+    }
+    FilterSetOpt filter;
+    if (path || device)
+    {
+      filter = make_optional<FilterSet>();
+      checkPath(printer, path, dev, *filter);
+    }
+
+    // Check if there is a frequency to stream data or not
+    return  { fetchCurrentData(printer, filter, at), OK, printer->mimeType() };
   }
   
   Agent::RequestResult Agent::sampleRequest(const std::string &format,
@@ -922,11 +1035,40 @@ namespace mtconnect
     return {"",http_server::OK,""};
   }
   
-  string Agent::printError(const Printer *printer, const string &errorCode, const string &text)
+  string Agent::printError(const Printer *printer,
+                           const string &errorCode,
+                           const string &text)
   {
     g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
     return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
                                m_circularBuffer.getSequence(), errorCode, text);
+  }
+  
+  string Agent::fetchCurrentData(const Printer *printer,
+                                 const FilterSetOpt &filterSet,
+                                 const optional<SequenceNumber_t> &at)
+  {
+    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+
+    ObservationPtrArray events;
+    uint64_t firstSeq, seq;
+    firstSeq = getFirstSequence();
+    seq = m_circularBuffer.getSequence();
+    if (at)
+    {
+      checkRange(printer, *at, firstSeq - 1, seq, "at");
+      
+      auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
+      check->getObservations(events);
+    }
+    else
+    {
+      m_circularBuffer.getLatest().getObservations(events, filterSet);
+    }
+
+    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
+                                seq, firstSeq, m_circularBuffer.getSequence() - 1,
+                                events);
   }
   
 #if 0
@@ -1475,28 +1617,6 @@ namespace mtconnect
     // Observer is auto removed from signalers
   }
 
-  string Agent::fetchCurrentData(const Printer *printer, std::set<string> &filterSet, uint64_t at)
-  {
-    ObservationPtrArray events;
-    uint64_t firstSeq, seq;
-    {
-      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-      firstSeq = getFirstSequence();
-      seq = m_circularBuffer.getSequence();
-      if (at == NO_START)
-        m_circularBuffer.getLatest().getObservations(events, &filterSet);
-      else
-      {
-        auto check = m_circularBuffer.getCheckpointAt(at, filterSet);
-        check->getObservations(events);
-      }
-    }
-
-    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
-                                seq, firstSeq, m_circularBuffer.getSequence() - 1,
-                                events);
-  }
-
   string Agent::fetchSampleData(const Printer *printer, std::set<string> &filterSet, uint64_t start,
                                 int count, uint64_t &end, bool &endOfBuffer,
                                 ChangeObserver *observer)
@@ -1511,121 +1631,6 @@ namespace mtconnect
     return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
                                 end, firstSeq, m_circularBuffer.getSequence() - 1,
                                 *results);
-  }
-
-  string Agent::printError(const Printer *printer, const string &errorCode, const string &text)
-  {
-    g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
-    return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
-                               m_circularBuffer.getSequence(), errorCode, text);
-  }
-
-  string Agent::devicesAndPath(const string &path, const string &device)
-  {
-    string dataPath;
-
-    if (!device.empty())
-    {
-      string prefix;
-      if (device == "Agent")
-        prefix = "//Devices/Agent";
-      else
-        prefix = "//Devices/Device[@name=\"" + device + "\"or@uuid=\"" + device + "\"]";
-
-
-      if (!path.empty())
-      {
-        istringstream toParse(path);
-        string token;
-
-        // Prefix path (i.e. "path1|path2" => "{prefix}path1|{prefix}path2")
-        while (getline(toParse, token, '|'))
-          dataPath += prefix + token + "|";
-
-        dataPath.erase(dataPath.length() - 1);
-      }
-      else
-        dataPath = prefix;
-    }
-    else
-      dataPath = (!path.empty()) ? path : "//Devices/Device";
-
-    return dataPath;
-  }
-
-  int Agent::checkAndGetParam(const key_value_map &queries, const string &param,
-                              const int defaultValue, const int minValue, bool minError,
-                              const int maxValue, bool positive)
-  {
-    if (!queries.count(param))
-      return defaultValue;
-
-    const auto &v = queries[param];
-
-    if (v.empty())
-      throw ParameterError("QUERY_ERROR", "'" + param + "' cannot be empty.");
-
-    if (positive && !isNonNegativeInteger(v))
-      throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be a positive integer.");
-
-    if (!positive && !isInteger(v))
-      throw ParameterError("OUT_OF_RANGE", "'" + param + "' must an integer.");
-
-    int value = stringToInt(v.c_str(), maxValue + 1);
-
-    if (minValue != NO_VALUE32 && value < minValue)
-    {
-      if (minError)
-        throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be greater than or equal to " +
-                                                 int32ToString(minValue) + ".");
-
-      return minValue;
-    }
-
-    if (maxValue != NO_VALUE32 && value > maxValue)
-      throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be less than or equal to " +
-                                               int32ToString(maxValue) + ".");
-
-    return value;
-  }
-
-  uint64_t Agent::checkAndGetParam64(const key_value_map &queries, const string &param,
-                                     const uint64_t defaultValue, const uint64_t minValue,
-                                     bool minError, const uint64_t maxValue)
-  {
-    if (!queries.count(param))
-      return defaultValue;
-
-    if (queries[param].empty())
-      throw ParameterError("QUERY_ERROR", "'" + param + "' cannot be empty.");
-
-    if (!isNonNegativeInteger(queries[param]))
-    {
-      throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be a positive integer.");
-    }
-
-    uint64_t value = strtoull(queries[param].c_str(), nullptr, 10);
-
-    if (minValue != NO_VALUE64 && value < minValue)
-    {
-      if (minError)
-        throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be greater than or equal to " +
-                                                 intToString(minValue) + ".");
-
-      return minValue;
-    }
-
-    if (maxValue != NO_VALUE64 && value > maxValue)
-      throw ParameterError("OUT_OF_RANGE", "'" + param + "' must be less than or equal to " +
-                                               int64ToString(maxValue) + ".");
-
-    return value;
-  }
-
-  DataItem *Agent::getDataItemByName(const string &deviceName, const string &dataItemName)
-  {
-    auto dev = getDeviceByName(deviceName);
-    return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
   }
 #endif
 }  // namespace mtconnect

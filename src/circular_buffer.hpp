@@ -108,7 +108,8 @@ namespace mtconnect
     auto getCheckoointFreq() { return m_checkpointFreq; }
     auto getCheckpointCount() {return m_checkpointCount; }
 
-    std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at, std::set<std::string> &filterSet)
+    std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at,
+                                                const FilterSetOpt &filterSet)
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
@@ -137,7 +138,7 @@ namespace mtconnect
         ref = &m_checkpoints[checkIndex];
       }
       
-      auto check = std::make_unique<Checkpoint>(*ref, &filterSet);
+      auto check = std::make_unique<Checkpoint>(*ref, filterSet);
       
       // Roll forward from the checkpoint.
       for (; index <= pos; index++)

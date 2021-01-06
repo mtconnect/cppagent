@@ -112,7 +112,12 @@ namespace mtconnect
     void disconnected(Adapter *adapter, std::vector<Device *> devices);
     void connected(Adapter *adapter, std::vector<Device *> devices);
 
-    DataItem *getDataItemByName(const std::string &deviceName, const std::string &dataItemName);
+    DataItem *getDataItemByName(const std::string &deviceName,
+                                const std::string &dataItemName)
+    {
+      auto dev = getDeviceByName(deviceName);
+      return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
+    }
 
     Observation *getFromBuffer(uint64_t seq) const
     {
@@ -185,8 +190,6 @@ namespace mtconnect
     Printer *getPrinter(const std::string &aType) { return m_printers[aType].get(); }
 
    protected:
-    // Add Routings
-    
     // Initialization methods
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
@@ -202,12 +205,18 @@ namespace mtconnect
     void createCurrentRoutings();
     void createAssetRoutings();
     
+    // Current Data Collection
+    std::string fetchCurrentData(const Printer *printer,
+                                 const FilterSetOpt &filterSet,
+                                 const std::optional<SequenceNumber_t> &at);
+    
     // Output an XML Error
     std::string printError(const Printer *printer, const std::string &errorCode,
                            const std::string &text);
 
     // Handle the device/path parameters for the xpath search
-    std::string devicesAndPath(const std::string &path, const std::string &device);
+    std::string devicesAndPath(const std::optional<std::string> &path,
+                               const Device *device);
 
     // Find data items by name/id
     DataItem *getDataItemById(const std::string &id) const
@@ -219,6 +228,16 @@ namespace mtconnect
     }
 
     const Printer *printerForAccepts(const std::string &accepts) const;
+    
+    void checkRange(const Printer *printer, SequenceNumber_t value,
+                    SequenceNumber_t min, SequenceNumber_t max,
+                    const std::string &param);
+    void checkPath(const Printer *printer,
+                   const std::optional<std::string> &path,
+                   const Device *device,
+                   FilterSet &filter);
+    Device *checkDevice(const Printer *printer,
+                        const std::string &uuid);
 
    protected:
     // Unique id based on the time of creation

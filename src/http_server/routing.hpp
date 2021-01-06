@@ -79,6 +79,8 @@ namespace mtconnect
         std::string m_contentType;
         std::string m_verb;
         std::string m_path;
+        std::string m_foreignIp;
+        uint16_t m_foreignPort;
         QueryMap    m_query;
         ParameterMap m_parameters;
         

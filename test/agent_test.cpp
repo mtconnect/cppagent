@@ -119,30 +119,14 @@ TEST_F(AgentTest, Probe)
   }
 }
 
-#if 0
-TEST_F(AgentTest, BadPath)
+TEST_F(AgentTest, BadDevices)
 {
-  auto pathError = getFile(PROJECT_ROOT_DIR "/samples/test_error.xml");
-
   {
-    PARSE_XML_RESPONSE("/bad_path");
-    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_request.m_path;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
+    PARSE_XML_RESPONSE("/LinuxCN/probe");
+    string message = (string) "Could not find the device 'LinuxCN'";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "NO_DEVICE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
-  }
-
-  {
-    PARSE_XML_RESPONSE("/bad/path/");
-    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_request.m_path;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
-  }
-
-  {
-    PARSE_XML_RESPONSE("/LinuxCNC/current/blah");
-    string message = (string) "The following path is invalid: " + m_agentTestHelper->m_request.m_path;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "UNSUPPORTED");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
+    ASSERT_EQ(NOT_FOUND, m_agentTestHelper->m_response.m_code);
   }
 }
 
@@ -173,6 +157,215 @@ TEST_F(AgentTest, BadXPath)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
   }
 }
+
+TEST_F(AgentTest, GoodPath)
+{
+  {
+    Routing::QueryMap query{{ "path", "//Power"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:ComponentStream[@component='Power']//m:PowerState",
+                          "UNAVAILABLE");
+    ASSERT_XML_PATH_COUNT(doc, "//m:ComponentStream", 1);
+  }
+  
+  {
+    Routing::QueryMap query{{ "path",
+      "//Rotary[@name='C']//DataItem[@category='SAMPLE' or @category='CONDITION']"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:ComponentStream[@component='Rotary']//m:SpindleSpeed",
+                          "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:ComponentStream[@component='Rotary']//m:Load",
+                          "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:ComponentStream[@component='Rotary']//m:Unavailable",
+                          "");
+  }
+}
+
+TEST_F(AgentTest, BadPath)
+{
+  using namespace http_server;
+  {
+    PARSE_TEXT_RESPONSE("/bad_path");
+    EXPECT_EQ("No routing matches: GET /bad_path",
+              m_agentTestHelper->m_response.m_body);
+    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    EXPECT_FALSE(m_agentTestHelper->m_dispatched);
+  }
+
+  {
+    PARSE_TEXT_RESPONSE("/bad/path/");
+    EXPECT_EQ("No routing matches: GET /bad/path/",
+              m_agentTestHelper->m_response.m_body);
+    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    EXPECT_FALSE(m_agentTestHelper->m_dispatched);
+  }
+
+  {
+    PARSE_TEXT_RESPONSE("/LinuxCNC/current/blah");
+    EXPECT_EQ("No routing matches: GET /LinuxCNC/current/blah",
+              m_agentTestHelper->m_response.m_body);
+    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    EXPECT_FALSE(m_agentTestHelper->m_dispatched);
+  }
+}
+
+TEST_F(AgentTest, CurrentAt)
+{
+  Routing::QueryMap query;
+  PARSE_XML_RESPONSE_QUERY("/current", query);
+
+  auto agent = m_agentTestHelper->m_agent.get();
+  
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  agent->addAdapter(m_adapter);
+  ASSERT_TRUE(m_adapter);
+
+  // Get the current position
+  int seq = agent->getSequence();
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 1; i <= 100; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    m_adapter->processData(line);
+  }
+
+  // Check each current at all the positions.
+  for (int i = 0; i < 100; i++)
+  {
+    query["at"] = to_string(i + seq);;
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
+                          int32ToString(i + 1).c_str());
+  }
+
+  // Test buffer wrapping
+  // Add a large many events
+  for (int i = 101; i <= 301; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    m_adapter->processData(line);
+  }
+
+  // Check each current at all the positions.
+  for (int i = 100; i < 301; i++)
+  {
+    query["at"] = to_string(i + seq);;
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
+                          int32ToString(i + 1).c_str());
+  }
+
+  // Check the first couple of items in the list
+  for (int j = 0; j < 10; j++)
+  {
+    int i = agent->getSequence() - agent->getBufferSize() - seq + j;
+    query["at"] = to_string(i + seq);;
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
+                          int32ToString(i + 1).c_str());
+
+  }
+
+  // Test out of range...
+  {
+    int i = agent->getSequence() - agent->getBufferSize() - seq - 1;
+    sprintf(line, "'at' must be greater than %d", i + seq);
+    query["at"] = to_string(i + seq);;
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
+  }
+}
+
+TEST_F(AgentTest, CurrentAt64)
+{
+  auto agent = m_agentTestHelper->m_agent.get();
+  Routing::QueryMap query;
+
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  agent->addAdapter(m_adapter);
+  ASSERT_TRUE(m_adapter);
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Initialize the sliding buffer at a very large number.
+  uint64_t start = (((uint64_t)1) << 48) + 1317;
+  agent->setSequence(start);
+
+  // Add many events
+  for (int i = 1; i <= 500; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    m_adapter->processData(line);
+  }
+
+  // Check each current at all the positions.
+  for (uint64_t i = start + 300; i < start + 500; i++)
+  {
+    query["at"] = to_string(i);
+    sprintf(line, "%d", (int)(i - start) + 1);
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
+  }
+}
+
+TEST_F(AgentTest, CurrentAtOutOfRange)
+{
+  auto agent = m_agentTestHelper->m_agent.get();
+  Routing::QueryMap query;
+
+  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  agent->addAdapter(m_adapter);
+  ASSERT_TRUE(m_adapter);
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 1; i <= 200; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    m_adapter->processData(line);
+  }
+
+  int seq = agent->getSequence();
+
+  {
+    query["at"] = to_string(seq);
+    sprintf(line, "'at' must be less than %d", seq);
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
+  }
+
+  seq = agent->getFirstSequence() - 1;
+
+  {
+    query["at"] = to_string(seq);
+    sprintf(line, "'at' must be greater than %d", seq);
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
+  }
+}
+
+TEST_F(AgentTest, AddAdapter)
+{
+  addAdapter();
+}
+
+
+
+#if 0
+
 
 TEST_F(AgentTest, BadCount)
 {
@@ -264,32 +457,6 @@ TEST_F(AgentTest, BadFreq)
   }
 }
 
-TEST_F(AgentTest, GoodPath)
-{
-  {
-    m_agentTestHelper->m_path = "/current?path=//Power";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Power']//m:PowerState",
-                          "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Path']//m:Condition", "");
-  }
-}
-
-TEST_F(AgentTest, XPath)
-{
-  m_agentTestHelper->m_path = "/current";
-  key_value_map query;
-
-  {
-    query["path"] = "//Rotary[@name='C']//DataItem[@category='SAMPLE' or @category='CONDITION']";
-    PARSE_XML_RESPONSE_QUERY(query);
-
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:SpindleSpeed",
-                          "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Load", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Unavailable", "");
-  }
-}
 
 TEST_F(AgentTest, EmptyStream)
 {
@@ -314,22 +481,6 @@ TEST_F(AgentTest, EmptyStream)
     PARSE_XML_RESPONSE_QUERY_KV("from", line);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
-}
-
-TEST_F(AgentTest, BadDevices)
-{
-  {
-    m_agentTestHelper->m_path = "/LinuxCN/probe";
-    PARSE_XML_RESPONSE;
-    string message = (string) "Could not find the device 'LinuxCN'";
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "NO_DEVICE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
-  }
-}
-
-TEST_F(AgentTest, AddAdapter)
-{
-  addAdapter();
 }
 
 TEST_F(AgentTest, AddToBuffer)
@@ -404,145 +555,6 @@ TEST_F(AgentTest, Adapter)
   }
 }
 
-TEST_F(AgentTest, CurrentAt)
-{
-  m_agentTestHelper->m_path = "/current";
-  string key("at"), value;
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  // Get the current position
-  int seq = m_agent->getSequence();
-  char line[80] = {0};
-
-  // Add many events
-  for (int i = 1; i <= 100; i++)
-  {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
-  }
-
-  // Check each current at all the positions.
-  for (int i = 0; i < 100; i++)
-  {
-    value = intToString(i + seq);
-    sprintf(line, "%d", i + 1);
-    PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
-  }
-
-  // Test buffer wrapping
-  // Add a large many events
-  for (int i = 101; i <= 301; i++)
-  {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
-  }
-
-  // Check each current at all the positions.
-  for (int i = 100; i < 301; i++)
-  {
-    value = intToString(i + seq);
-    sprintf(line, "%d", i + 1);
-    PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
-  }
-
-  // Check the first couple of items in the list
-  for (int j = 0; j < 10; j++)
-  {
-    int i = m_agent->getSequence() - m_agent->getBufferSize() - seq + j;
-    value = intToString(i + seq);
-    sprintf(line, "%d", i + 1);
-    PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
-  }
-
-  // Test out of range...
-  {
-    int i = m_agent->getSequence() - m_agent->getBufferSize() - seq - 1;
-    value = intToString(i + seq);
-    sprintf(line, "'at' must be greater than or equal to %d.", i + seq + 1);
-    PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
-  }
-}
-
-TEST_F(AgentTest, CurrentAt64)
-{
-  m_agentTestHelper->m_path = "/current";
-  string key("at"), value;
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  // Get the current position
-  char line[80] = {0};
-
-  // Initialize the sliding buffer at a very large number.
-  uint64_t start = (((uint64_t)1) << 48) + 1317;
-  m_agent->setSequence(start);
-
-  // Add many events
-  for (uint64_t i = 1; i <= 500; i++)
-  {
-    sprintf(line, "TIME|line|%d", (int)i);
-    m_adapter->processData(line);
-  }
-
-  // Check each current at all the positions.
-  for (uint64_t i = start + 300; i < start + 500; i++)
-  {
-    value = int64ToString(i);
-    sprintf(line, "%d", (int)(i - start) + 1);
-    PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", line);
-  }
-}
-
-TEST_F(AgentTest, CurrentAtOutOfRange)
-{
-  m_agentTestHelper->m_path = "/current";
-  string key("at"), value;
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  // Get the current position
-  char line[80] = {0};
-
-  // Add many events
-  for (int i = 1; i <= 200; i++)
-  {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
-  }
-
-  int seq = m_agent->getSequence();
-
-  {
-    value = intToString(seq);
-    sprintf(line, "'at' must be less than or equal to %d.", seq - 1);
-    PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
-  }
-
-  seq = m_agent->getFirstSequence() - 1;
-
-  {
-    value = intToString(seq);
-    sprintf(line, "'at' must be greater than or equal to %d.", seq + 1);
-    PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
-  }
-}
 
 TEST_F(AgentTest, SampleAtNextSeq)
 {

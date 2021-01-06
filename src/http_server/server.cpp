@@ -49,10 +49,10 @@ namespace mtconnect
                                 unsigned short foreign_port,
                                 unsigned short local_port, uint64)
     {
+      Response response(out);
       try
       {
         IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
-        Response response(out);
         parse_http_request(in, incoming, get_max_content_length());
         
         if (incoming.request_type == "PUT" || incoming.request_type == "POST" ||
@@ -76,6 +76,8 @@ namespace mtconnect
         request.m_path = incoming.path;
         request.m_query = incoming.queries;
         request.m_body = incoming.body;
+        request.m_foreignIp = foreign_ip;
+        request.m_foreignPort = foreign_port;
         auto accepts = incoming.headers.find("Accept");
         if (accepts != incoming.headers.end())
           request.m_accepts = accepts->second;
@@ -83,15 +85,7 @@ namespace mtconnect
         if (media != incoming.headers.end())
           request.m_contentType = media->second;
         
-        if (!dispatch(request, response))
-        {
-          g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " <<
-              "No matching route for: " << request.m_verb << " " << request.m_path;
-          response.writeResponse("No routing matches: " + request.m_verb + " "
-                                 + request.m_path, "text/plain", NOT_FOUND);
-        }
-        
-        out.flush();
+        handleRequest(request, response);
       }
       catch (dlib::http_parse_error &e)
       {
@@ -103,6 +97,31 @@ namespace mtconnect
         g_logger << LERROR << "Error processing request from: " << foreign_ip << " - " << e.what();
         write_http_response(out, e);
       }
+    }
+  
+    bool Server::handleRequest(Routing::Request &request, Response &response)
+    {
+      bool res { true };
+      try
+      {
+        if (!dispatch(request, response))
+        {
+          g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - " <<
+              "No matching route for: " << request.m_verb << " " << request.m_path;
+          response.writeResponse("No routing matches: " + request.m_verb + " "
+                                 + request.m_path, "text/plain", BAD_REQUEST);
+          res = false;
+        }
+      }
+      catch (RequestError &e)
+      {
+        g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - " << e.what();
+        response.writeResponse(e.m_body, e.m_contentType, e.m_code);
+        res = false;
+      }
+
+      response.flush();
+      return res;
     }
   }
 }

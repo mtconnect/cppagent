@@ -78,14 +78,7 @@ class AgentTestHelper
   : m_out(), m_incomingIp("127.0.0.1"), m_response(m_out)
   {
   }
-  
-  std::unique_ptr<mtconnect::Agent> m_agent;
-  std::ostringstream m_out;
-  mtconnect::http_server::TestResponse m_response;
-  mtconnect::http_server::Routing::Request m_request;
-  
-  std::string m_incomingIp;
-  
+    
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
                       const mtconnect::http_server::Routing::QueryMap &aQueries,
@@ -102,12 +95,25 @@ class AgentTestHelper
                    const std::string &body,
                    const mtconnect::http_server::Routing::QueryMap &aQueries,
                    const char *path);
+  
+  bool m_dispatched { false };
+  std::unique_ptr<mtconnect::Agent> m_agent;
+  std::ostringstream m_out;
+  mtconnect::http_server::TestResponse m_response;
+  mtconnect::http_server::Routing::Request m_request;
+  
+  std::string m_incomingIp;
 };
 
 #define PARSE_XML_RESPONSE(path)                                                           \
   xmlDocPtr doc = nullptr;                                                                   \
   m_agentTestHelper->responseHelper(__FILE__, __LINE__, {}, &doc, path); \
   ASSERT_TRUE(doc)
+
+#define PARSE_TEXT_RESPONSE(path)                                                           \
+  xmlDocPtr doc = nullptr;                                                                   \
+  m_agentTestHelper->responseHelper(__FILE__, __LINE__, {}, &doc, path);
+
 
 #define PARSE_XML_RESPONSE_QUERY(path, queries)                               \
   xmlDocPtr doc = nullptr;                                              \

@@ -23,6 +23,7 @@
 #include "device.hpp"
 #include "globals.hpp"
 #include "relationships.hpp"
+#include "checkpoint.hpp"
 
 #include <libxml/tree.h>
 
@@ -48,7 +49,7 @@ namespace mtconnect
     void loadDocument(const std::string &aDoc);
 
     // Get std::list of data items in path
-    void getDataItems(std::set<std::string> &filterSet, const std::string &path,
+    void getDataItems(FilterSet &filterSet, const std::string &path,
                       xmlNodePtr node = nullptr);
 
    protected:

@@ -27,14 +27,29 @@ namespace mtconnect
 {
   namespace http_server
   {
-    struct OutgoingThings : public dlib::outgoing_things
-    {
-      OutgoingThings() = default;
-      std::ostream *m_out { nullptr };
-      std::string m_format { nullptr };
-    };
-    
     using IncomingThings = dlib::incoming_things;
+    
+    class RequestError : public std::logic_error
+    {
+    public:
+      RequestError(const char *w)
+      : std::logic_error::logic_error(w)
+      {
+      }
+      RequestError(const char *w, const std::string &body,
+                   const std::string &type,
+                   ResponseCode code)
+      : std::logic_error::logic_error(w), m_body(body), m_contentType(type),
+        m_code(code)
+      {
+      }
+      RequestError(const RequestError &) = default;
+      ~RequestError() override = default;
+      
+      std::string m_contentType;
+      std::string m_body;
+      ResponseCode m_code;
+    };
     
     class Server : public dlib::server_http
     {
@@ -83,6 +98,8 @@ namespace mtconnect
 
         return false;
       }
+      
+      bool handleRequest(Routing::Request &request, Response &response);
       
       void addRounting(const Routing &routing)
       {

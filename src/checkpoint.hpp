@@ -27,23 +27,30 @@
 
 namespace mtconnect
 {
+  using FilterSet = std::set<std::string>;
+  using FilterSetOpt = std::optional<FilterSet>;
+
   class Checkpoint
   {
    public:
+    
     Checkpoint();
-    Checkpoint(const Checkpoint &checkpoint, const std::set<std::string> *filterSet = nullptr);
+    Checkpoint(const Checkpoint &checkpoint,
+               const FilterSetOpt &filterSet = std::nullopt);
     ~Checkpoint();
 
     void addObservation(Observation *event);
     bool dataSetDifference(Observation *event) const;
-    void copy(Checkpoint const &checkpoint, const std::set<std::string> *filterSet = nullptr);
+    void copy(Checkpoint const &checkpoint,
+              const FilterSetOpt &filterSet = std::nullopt);
     void clear();
-    void filter(std::set<std::string> const &filterSet);
+    void filter(const FilterSet &filterSet);
+    bool hasFilter() const { return bool(m_filter); }
 
     const std::map<std::string, ObservationPtr *> &getEvents() const { return m_events; }
 
     void getObservations(ObservationPtrArray &list,
-                         std::set<std::string> const *filterSet = nullptr) const;
+                         const FilterSetOpt &filter = std::nullopt) const;
 
     ObservationPtr *getEventPtr(const std::string &id)
     {
@@ -55,7 +62,6 @@ namespace mtconnect
 
    protected:
     std::map<std::string, ObservationPtr *> m_events;
-    std::set<std::string> m_filter;
-    bool m_hasFilter = false;
+    FilterSetOpt m_filter;
   };
 }  // namespace mtconnect

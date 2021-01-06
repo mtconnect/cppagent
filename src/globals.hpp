@@ -164,12 +164,12 @@ namespace mtconnect
   long getMemorySize();
 
   // Ends with
-  inline bool endsWith(const std::string &str, const std::string &ending)
+  inline bool ends_with(const std::string& value, const std::string  &ending)
   {
-    return (str.length() >= ending.length() &&
-            str.compare(str.length() - ending.length(), ending.length(), ending) == 0);
+      if (ending.size() > value.size()) return false;
+      return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
   }
-
+  
   typedef std::map<std::string, std::string> Attributes;
   
   template <class... Ts>

@@ -482,7 +482,9 @@ namespace mtconnect
     }
   }
 
-  void XmlParser::getDataItems(set<string> &filterSet, const string &inputPath, xmlNodePtr node)
+  void XmlParser::getDataItems(FilterSet &filterSet,
+                               const string &inputPath,
+                               xmlNodePtr node)
   {
     xmlNodePtr root = xmlDocGetRootElement(m_doc);
 
