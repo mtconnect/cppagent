@@ -55,48 +55,91 @@ class JsonPrinterTest : public testing::Test
   }
   FactoryPtr createFileArchetypeFactory()
   {
-    auto fileProperty =
-        make_shared<Factory>(Requirements({Requirement("name", true), Requirement("value", true)}));
+    
+    auto header = make_shared<Factory>(Requirements{
+        Requirement("creationTime", true),
+        Requirement("version", true),
+        Requirement("testIndicator", false),
+        Requirement("instanceId", INTEGER, true),
+        Requirement("sender", true),
+        Requirement("bufferSize", INTEGER, true),
+        Requirement("assetBufferSize", INTEGER, true),
+        Requirement("assetCount", INTEGER, true),
+        Requirement("deviceModelChangeTime", true)
+        });
 
-    auto fileProperties = make_shared<Factory>(Requirements(
-        {Requirement("FileProperty", ENTITY, fileProperty, 1, Requirement::Infinite)}));
-    fileProperties->registerMatchers();
+    auto description = make_shared<Factory>(Requirements{
+        Requirement("manufacturer", false),
+        Requirement("model", false),
+        Requirement("serialNumber", false),
+        Requirement("station", false),
+        Requirement("value", false)});
+    
+    auto component = make_shared<Factory>(Requirements{
+        Requirement("id", true),
+        Requirement("name", false),
+        Requirement("uuid", false),
+    });
 
-    auto fileComment = make_shared<Factory>(
-        Requirements({Requirement("timestamp", true), Requirement("value", true)}));
+    auto components = make_shared<Factory>(
+        Requirements({Requirement("Component", ENTITY, component, 1, Requirement::Infinite)}));
+    components->registerMatchers();
+    components->registerFactory(regex(".+"), component);
 
-    auto fileComments = make_shared<Factory>(
-        Requirements({Requirement("FileComment", ENTITY, fileComment, 1, Requirement::Infinite)}));
-    fileComments->registerMatchers();
+    component->addRequirements({Requirement("Components", ENTITY_LIST, components, false)});
+    component->addRequirements({Requirement("Description", ENTITY, description, false)});
 
-    auto fileArchetype = make_shared<Factory>(Requirements{
-        Requirement("assetId", INTEGER, true), Requirement("deviceUuid", true),
-        Requirement("timestamp", true), Requirement("removed", false), Requirement("name", true),
-        Requirement("mediaType", true), Requirement("applicationCategory", true),
-        Requirement("applicationType", true), Requirement("Description", false),
-        Requirement("FileComments", ENTITY_LIST, fileComments, false),
-        Requirement("FileProperties", ENTITY_LIST, fileProperties, false)});
+    auto device = make_shared<Factory>(*component);
+    device->addRequirements(Requirements{
+        Requirement("name", true),
+        Requirement("uuid", true),
+    });
 
-    auto root =
-        make_shared<Factory>(Requirements{Requirement("FileArchetype", ENTITY, fileArchetype)});
+    auto devices = make_shared<Factory>(
+        Requirements{Requirement("Device", ENTITY, device, 1, Requirement::Infinite)});
+    devices->registerMatchers();
+
+    auto mtconnectDevices = make_shared<Factory>(Requirements{
+        Requirement("Header", ENTITY, header, true),
+        Requirement("Devices", ENTITY_LIST, devices, true),
+    });
+    
+    auto root = make_shared<Factory>(Requirements{Requirement("MTConnectDevices", ENTITY, mtconnectDevices)});
 
     return root;
   }
+
+  auto deviceModel() 
+  {
+    auto doc = string{
+        "<MTConnectDevices>\n"
+        "  <Header creationTime=\"2021-01-07T18:34:15Z\" sender=\"DMZ-MTCNCT\" "
+        "instanceId=\"1609418103\" version=\"1.6.0.6\" assetBufferSize=\"8096\" assetCount=\"60\" "
+        "bufferSize=\"131072\" deviceModelChangeTime=\"2021-01-07T18:34:15Z\"/>\n"
+        "  <Devices>\n"
+        "    <Device id=\"d1\" name=\"foo\" uuid=\"xxx\">\n"
+        "      <Components>\n"
+        "        <Systems id=\"s1\">\n"
+        "          <Description model=\"abc\">Hey Will</Description>\n"
+        "          <Components>\n"
+        "            <Electric id=\"e1\"/>\n"
+        "            <Heating id=\"h1\"/>\n"
+        "          </Components>\n"
+        "        </Systems>\n"
+        "      </Components>\n"
+        "    </Device>\n"
+        "  </Devices>\n"
+        "</MTConnectDevices>\n"};
+    return doc;
+  }
 };
 
-TEST_F(JsonPrinterTest, TestParseSimpleDocument)
+
+TEST_F(JsonPrinterTest, Header)
 {
   auto root = createFileArchetypeFactory();
 
-  auto doc = string{
-      "<FileArchetype applicationCategory=\"ASSEMBLY\" applicationType=\"DATA\" assetId=\"123\" "
-      "deviceUuid=\"duid\" mediaType=\"json\" name=\"xxxx\" timestamp=\"2020-12-01T10:00Z\">\n"
-      "  <Description>Hello there Shaurabh</Description>\n"
-      "  <FileProperties>\n"
-      "    <FileProperty name=\"one\">Round</FileProperty>\n"
-      "    <FileProperty name=\"two\">Flat</FileProperty>\n"
-      "  </FileProperties>\n"
-      "</FileArchetype>\n"};
+  auto doc = deviceModel();
 
   ErrorList errors;
   entity::XmlParser parser;
@@ -107,10 +150,53 @@ TEST_F(JsonPrinterTest, TestParseSimpleDocument)
   entity::JsonPrinter jprinter;
 
   json jdoc;
-  
+  jdoc = jprinter.print(entity);
+  cout << jdoc.dump();
+
+  ASSERT_EQ("DMZ-MTCNCT", jdoc.at("/MTConnectDevices/Header/sender"_json_pointer).get<string>());
+  ASSERT_EQ(8096, jdoc.at("/MTConnectDevices/Header/assetBufferSize"_json_pointer).get<int64_t>());
+}
+
+TEST_F(JsonPrinterTest, Devices)
+{
+  auto root = createFileArchetypeFactory();
+
+  auto doc = deviceModel();
+
+  ErrorList errors;
+  entity::XmlParser parser;
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  entity::JsonPrinter jprinter;
+
+  json jdoc;
   jdoc = jprinter.print(entity);
 
-  ASSERT_EQ(123, jdoc.at("/FileArchetype/assetId"_json_pointer).get<int64_t>());
-  ASSERT_EQ("one", jdoc.at("/FileArchetype/FileProperties/0/FileProperty/name"_json_pointer).get<string>());
-  ASSERT_EQ("Round", jdoc.at("/FileArchetype/FileProperties/0/FileProperty/value"_json_pointer).get<string>());
+  ASSERT_EQ(1, jdoc.at("/MTConnectDevices/Devices"_json_pointer).size());
+  ASSERT_EQ("foo", jdoc.at("/MTConnectDevices/Devices/0/Device/name"_json_pointer).get<string>());
+}
+
+TEST_F(JsonPrinterTest, Components)
+{
+  auto root = createFileArchetypeFactory();
+
+  auto doc = deviceModel();
+
+  ErrorList errors;
+  entity::XmlParser parser;
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  entity::JsonPrinter jprinter;
+
+  json jdoc;
+  jdoc = jprinter.print(entity);
+
+  ASSERT_EQ("abc", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/model"_json_pointer).get<string>());
+  ASSERT_EQ("Hey Will", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/value"_json_pointer).get<string>());
+  ASSERT_EQ(2, jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Components"_json_pointer).size());
+  ASSERT_EQ("h1", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Components/1/Heating/id"_json_pointer).get<string>());
 }
