@@ -1123,17 +1123,17 @@ namespace mtconnect
     auto seq = m_circularBuffer.getSequence();
     if (from)
     {
-      checkRange(printer, *from, firstSeq - 1, seq, "from");
+      checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
     }
     if (to)
     {
-      checkRange(printer, *to, firstSeq - 1, seq, "to");
+      checkRange(printer, *to, firstSeq - 1, seq + 1, "to");
     }
     int countLimit = m_circularBuffer.getBufferSize() + 1;
     checkRange(printer, count, -countLimit, countLimit, "count", true);
     
     auto events = m_circularBuffer.getObservations(count, filterSet,
-                                                    from, firstSeq, end,
+                                                    from, end, firstSeq,
                                                     endOfBuffer);
 
     if (observer)
