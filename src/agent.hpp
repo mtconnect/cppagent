@@ -128,7 +128,7 @@ namespace mtconnect
     auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
     auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
     const auto &getAssets() const { return m_assetBuffer.getAssets(); }
-    auto getFileCache() { return m_cache.get(); }
+    auto getFileCache() { return m_fileCache.get(); }
     
     auto getAssetCount(const std::string &type, bool active = true) const
     {
@@ -210,6 +210,16 @@ namespace mtconnect
                                  const FilterSetOpt &filterSet,
                                  const std::optional<SequenceNumber_t> &at);
     
+    // Sample data collection
+    std::string fetchSampleData(const Printer *printer,
+                                const FilterSetOpt &filterSet,
+                                int count,
+                                const std::optional<SequenceNumber_t> &from,
+                                const std::optional<SequenceNumber_t> &to,
+                                SequenceNumber_t &end,
+                                bool &endOfBuffer, ChangeObserver *observer = nullptr);
+
+    
     // Output an XML Error
     std::string printError(const Printer *printer, const std::string &errorCode,
                            const std::string &text);
@@ -229,9 +239,10 @@ namespace mtconnect
 
     const Printer *printerForAccepts(const std::string &accepts) const;
     
-    void checkRange(const Printer *printer, SequenceNumber_t value,
-                    SequenceNumber_t min, SequenceNumber_t max,
-                    const std::string &param);
+    template<typename T>
+    void checkRange(const Printer *printer, const T value,
+                    const T min, const T max,
+                    const std::string &param, bool notZero = false);
     void checkPath(const Printer *printer,
                    const std::optional<std::string> &path,
                    const Device *device,
@@ -246,7 +257,7 @@ namespace mtconnect
     
     // HTTP Server
     std::unique_ptr<http_server::Server> m_server;
-    std::unique_ptr<http_server::FileCache> m_cache;
+    std::unique_ptr<http_server::FileCache> m_fileCache;
 
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;

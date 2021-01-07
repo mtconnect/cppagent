@@ -190,25 +190,25 @@ TEST_F(AgentTest, BadPath)
 {
   using namespace http_server;
   {
-    PARSE_TEXT_RESPONSE("/bad_path");
-    EXPECT_EQ("No routing matches: GET /bad_path",
-              m_agentTestHelper->m_response.m_body);
+    PARSE_XML_RESPONSE("/bad_path");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /bad_path");
     EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 
   {
-    PARSE_TEXT_RESPONSE("/bad/path/");
-    EXPECT_EQ("No routing matches: GET /bad/path/",
-              m_agentTestHelper->m_response.m_body);
+    PARSE_XML_RESPONSE("/bad/path/");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /bad/path/");
     EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 
   {
-    PARSE_TEXT_RESPONSE("/LinuxCNC/current/blah");
-    EXPECT_EQ("No routing matches: GET /LinuxCNC/current/blah",
-              m_agentTestHelper->m_response.m_body);
+    PARSE_XML_RESPONSE("/LinuxCNC/current/blah");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /LinuxCNC/current/blah");
     EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
@@ -221,9 +221,7 @@ TEST_F(AgentTest, CurrentAt)
 
   auto agent = m_agentTestHelper->m_agent.get();
   
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  addAdapter();
 
   // Get the current position
   int seq = agent->getSequence();
@@ -289,9 +287,7 @@ TEST_F(AgentTest, CurrentAt64)
   auto agent = m_agentTestHelper->m_agent.get();
   Routing::QueryMap query;
 
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  addAdapter();
 
   // Get the current position
   char line[80] = {0};
@@ -322,9 +318,7 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
   auto agent = m_agentTestHelper->m_agent.get();
   Routing::QueryMap query;
 
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  addAdapter();
 
   // Get the current position
   char line[80] = {0};
@@ -362,26 +356,84 @@ TEST_F(AgentTest, AddAdapter)
   addAdapter();
 }
 
+TEST_F(AgentTest, FileDownload)
+{
+  auto agent = m_agentTestHelper->m_agent.get();
+  Routing::QueryMap query;
 
+  string uri("/schemas/MTConnectDevices_1.1.xsd");
 
-#if 0
+  // Register a file with the agent.
+  agent->getFileCache()->registerFile(uri, PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd", "1.1");
 
+  // Reqyest the file...
+  PARSE_TEXT_RESPONSE(uri.c_str());
+  ASSERT_FALSE(m_agentTestHelper->m_response.m_body.empty());
+  ASSERT_TRUE(m_agentTestHelper->m_response.m_body.find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
+}
+
+TEST_F(AgentTest, FailedFileDownload)
+{
+  auto agent = m_agentTestHelper->m_agent.get();
+  Routing::QueryMap query;
+
+  string uri("/schemas/MTConnectDevices_1.1.xsd");
+
+  // Register a file with the agent.
+  agent->getFileCache()->registerFile(uri, "./BadFileName.xsd", "1.1");
+
+  {
+    PARSE_XML_RESPONSE(uri.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
+                          ("Error processing request from:  - No matching route for: GET " + uri).c_str());
+  }
+}
+
+TEST_F(AgentTest, Composition)
+{
+  auto agent = m_agentTestHelper->m_agent.get();
+  addAdapter();
+  m_adapter->setDupCheck(true);
+
+  DataItem *motor = agent->getDataItemByName("LinuxCNC", "zt1");
+  ASSERT_TRUE(motor);
+
+  DataItem *amp = agent->getDataItemByName("LinuxCNC", "zt2");
+  ASSERT_TRUE(amp);
+
+  m_adapter->processData("TIME|zt1|100|zt2|200");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']",
+                          "100");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt2']",
+                          "200");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']@compositionId",
+                          "zmotor");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt2']@compositionId",
+                          "zamp");
+  }
+}
 
 TEST_F(AgentTest, BadCount)
 {
+  int size = m_agentTestHelper->m_agent->getBufferSize() + 1;
   {
     Routing::QueryMap query{{"count", "NON_INTEGER"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must an integer.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Parameter Error processing request from:  - for query parameter 'count': cannot convert string 'NON_INTEGER' to integer");
   }
 
   {
     Routing::QueryMap query{{"count", "-500"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    string value("'count' must be greater than or equal to ");
-    value += int32ToString(-m_agentTestHelper->m_agent->getBufferSize()) + ".";
+    string value("'count' must be greater than ");
+    value += to_string(-size);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
 
@@ -389,15 +441,15 @@ TEST_F(AgentTest, BadCount)
     Routing::QueryMap query{{"count", "0"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must not be 0.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must not be zero(0)");
   }
 
   {
     Routing::QueryMap query{{"count", "500"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    string value("'count' must be less than or equal to ");
-    value += intToString(m_agentTestHelper->m_agent->getBufferSize()) + ".";
+    string value("'count' must be less than ");
+    value += to_string(size);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
 
@@ -405,8 +457,8 @@ TEST_F(AgentTest, BadCount)
     Routing::QueryMap query{{"count", "9999999"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    string value("'count' must be less than or equal to ");
-    value += intToString(m_agentTestHelper->m_agent->getBufferSize()) + ".";
+    string value("'count' must be less than ");
+    value += to_string(size);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
   
@@ -414,43 +466,171 @@ TEST_F(AgentTest, BadCount)
     Routing::QueryMap query{{"count", "-9999999"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    string value("'count' must be greater than or equal to ");
-    value += int32ToString(-m_agentTestHelper->m_agent->getBufferSize()) + ".";
+    string value("'count' must be greater than ");
+    value += to_string(-size);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
 
 }
 
+TEST_F(AgentTest, Adapter)
+{
+  addAdapter();
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|line|204");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|alarm|code|nativeCode|severity|state|description");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[2]", "description");
+  }
+}
+
+TEST_F(AgentTest, SampleAtNextSeq)
+{
+  Routing::QueryMap query;
+  addAdapter();
+  auto agent = m_agentTestHelper->m_agent.get();
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 1; i <= 300; i++)
+  {
+    sprintf(line, "TIME|line|%d", i);
+    m_adapter->processData(line);
+  }
+
+  int seq = agent->getSequence();
+  {
+    query["from"] = to_string(seq);
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
+  }
+}
+
+TEST_F(AgentTest, SampleCount)
+{
+  Routing::QueryMap query;
+  addAdapter();
+  auto agent = m_agentTestHelper->m_agent.get();
+
+  auto seq = agent->getSequence();
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
+    m_adapter->processData(line);
+  }
+
+  {
+    query["path"] = "//DataItem[@name='Xact']";
+    query["from"] = to_string(seq);
+    query["count"] = "10";
+
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + 20).c_str());
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
+
+    // Make sure we got 10 lines
+    for (int j = 0; j < 10; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      ASSERT_XML_PATH_EQUAL(doc, line, to_string(seq + j * 2 + 1).c_str());
+    }
+  }
+}
+
+TEST_F(AgentTest, SampleLastCount)
+{
+  Routing::QueryMap query;
+  addAdapter();
+  auto agent = m_agentTestHelper->m_agent.get();
+
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
+    m_adapter->processData(line);
+  }
+  
+  auto seq = agent->getSequence() - 20;
+
+  {
+    query["path"] = "//DataItem[@name='Xact']";
+    query["count"] = "-10";
+
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq).c_str());
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
+
+    // Make sure we got 10 lines
+    for (int j = 0; j < 10; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      ASSERT_XML_PATH_EQUAL(doc, line, to_string(seq + j * 2 + 1).c_str());
+    }
+  }
+}
+
+#if 0
+
 TEST_F(AgentTest, BadFreq)
 {
-  m_agentTestHelper->m_path = "/sample";
-  key_value_map query;
+  Routing::QueryMap query;
 
   {
-    query["frequency"] = "NON_INTEGER";
-    PARSE_XML_RESPONSE_QUERY(query);
+    query["interval"] = "NON_INTEGER";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be a positive integer.");
   }
 
   {
-    query["frequency"] = "-123";
-    PARSE_XML_RESPONSE_QUERY(query);
+    query["interval"] = "-123";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'frequency' must be a positive integer.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be a positive integer.");
   }
 
   {
-    query["frequency"] = "2147483647";
-    PARSE_XML_RESPONSE_QUERY(query);
+    query["interval"] = "2147483647";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "'frequency' must be less than or equal to 2147483646.");
+                          "'interval' must be less than or equal to 2147483646.");
   }
 
   {
-    query["frequency"] = "999999999999999999";
-    PARSE_XML_RESPONSE_QUERY(query);
+    query["interval"] = "999999999999999999";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
                           "'frequency' must be less than or equal to 2147483646.");
@@ -522,67 +702,6 @@ TEST_F(AgentTest, AddToBuffer)
   }
 }
 
-TEST_F(AgentTest, Adapter)
-{
-  m_agentTestHelper->m_path = "/sample";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("TIME|line|204");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("TIME|alarm|code|nativeCode|severity|state|description");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[2]", "description");
-  }
-}
-
-
-TEST_F(AgentTest, SampleAtNextSeq)
-{
-  m_agentTestHelper->m_path = "/sample";
-  string key("from"), value;
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  // Get the current position
-  char line[80] = {0};
-
-  // Add many events
-  for (int i = 1; i <= 300; i++)
-  {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
-  }
-
-  int seq = m_agent->getSequence();
-
-  {
-    value = intToString(seq);
-    PARSE_XML_RESPONSE_QUERY_KV(key, value);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
-  }
-}
 
 TEST_F(AgentTest, SequenceNumberRollover)
 {
@@ -645,87 +764,6 @@ TEST_F(AgentTest, SequenceNumberRollover)
 
   ASSERT_EQ((uint64_t)0xFFFFFFA0 + 128, m_agent->getSequence());
 #endif
-}
-
-TEST_F(AgentTest, SampleCount)
-{
-  key_value_map kvm;
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  int64_t seq = m_agent->getSequence();
-
-  // Get the current position
-  char line[80] = {0};
-
-  // Add many events
-  for (int i = 0; i < 128; i++)
-  {
-    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
-    m_adapter->processData(line);
-  }
-
-  {
-    m_agentTestHelper->m_path = "/sample";
-    kvm["path"] = "//DataItem[@name='Xact']";
-    kvm["from"] = int64ToString(seq);
-    kvm["count"] = "10";
-
-    PARSE_XML_RESPONSE_QUERY(kvm);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq + 20).c_str());
-
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
-
-    // Make sure we got 10 lines
-    for (int j = 0; j < 10; j++)
-    {
-      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
-      ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j * 2 + 1).c_str());
-    }
-  }
-}
-
-
-TEST_F(AgentTest, SampleLastCount)
-{
-  key_value_map kvm;
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-
-  // Get the current position
-  char line[80] = {0};
-
-  // Add many events
-  for (int i = 0; i < 128; i++)
-  {
-    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
-    m_adapter->processData(line);
-  }
-  
-  int64_t seq = m_agent->getSequence() - 20;
-
-  {
-    m_agentTestHelper->m_path = "/sample";
-    kvm["path"] = "//DataItem[@name='Xact']";
-    kvm["count"] = "-10";
-
-    PARSE_XML_RESPONSE_QUERY(kvm);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq).c_str());
-
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
-
-    // Make sure we got 10 lines
-    for (int j = 0; j < 10; j++)
-    {
-      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
-      ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j * 2 + 1).c_str());
-    }
-  }
 }
 
 
@@ -823,46 +861,6 @@ TEST_F(AgentTest, UUIDChange)
     // TODO: Fix and make sure dom is updated so this xpath will parse correctly.
     // PARSE_XML_RESPONSE_QUERY_KV("path", "//Device[@uuid=\"MK-1234\"]");
     // ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream@uuid", "MK-1234");
-  }
-}
-
-TEST_F(AgentTest, FileDownload)
-{
-  string uri("/schemas/MTConnectDevices_1.1.xsd");
-
-  // Register a file with the agent.
-  m_agent->registerFile(uri, PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd");
-
-  // Reqyest the file...
-  IncomingThings incoming("", "", 0, 0);
-  OutgoingThings outgoing;
-  incoming.request_type = "GET";
-  incoming.path = uri;
-  incoming.queries = m_agentTestHelper->m_queries;
-  incoming.cookies = m_agentTestHelper->m_cookies;
-  incoming.headers = m_agentTestHelper->m_incomingHeaders;
-
-  outgoing.m_out = &m_agentTestHelper->m_out;
-
-  m_agentTestHelper->m_result = m_agent->httpRequest(incoming, outgoing);
-  ASSERT_TRUE(m_agentTestHelper->m_result.empty());
-  ASSERT_TRUE(m_agentTestHelper->m_out.bad());
-  ASSERT_TRUE(m_agentTestHelper->m_out.str().find_last_of("TEST SCHEMA FILE 1234567890\n") !=
-              string::npos);
-}
-
-TEST_F(AgentTest, FailedFileDownload)
-{
-  m_agentTestHelper->m_path = "/schemas/MTConnectDevices_1.1.xsd";
-  string error = "The following path is invalid: " + m_agentTestHelper->m_path;
-
-  // Register a file with the agent.
-  m_agent->registerFile(m_agentTestHelper->m_path, "./BadFileName.xsd");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "UNSUPPORTED");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", error.c_str());
   }
 }
 
@@ -2090,35 +2088,6 @@ TEST_F(AgentTest, BadDataItem)
     PARSE_XML_RESPONSE;
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-  }
-}
-
-TEST_F(AgentTest, Composition)
-{
-  m_agentTestHelper->m_path = "/current";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  m_adapter->setDupCheck(true);
-  ASSERT_TRUE(m_adapter);
-
-  DataItem *motor = m_agent->getDataItemByName("LinuxCNC", "zt1");
-  ASSERT_TRUE(motor);
-
-  DataItem *amp = m_agent->getDataItemByName("LinuxCNC", "zt2");
-  ASSERT_TRUE(amp);
-
-  m_adapter->processData("TIME|zt1|100|zt2|200");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']", "100");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt2']", "200");
-
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']@compositionId",
-                          "zmotor");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt2']@compositionId",
-                          "zamp");
   }
 }
 

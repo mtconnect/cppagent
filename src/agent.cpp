@@ -65,7 +65,7 @@ namespace mtconnect
         m_assetBuffer(maxAssets),
         m_xmlParser(make_unique<XmlParser>()),
         m_server(move(server)),
-        m_cache(move(cache))
+        m_fileCache(move(cache))
   {
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();
@@ -93,11 +93,21 @@ namespace mtconnect
     loadXMLDeviceFile(configXmlPath);
     loadCachedProbe();
     
+    createProbeRoutings();
     createCurrentRoutings();
     createSampleRoutings();
     createAssetRoutings();
     createFileRoutings();
-    createProbeRoutings();
+    
+    m_server->setErrorFunction([this](const std::string &accepts,
+                                     http_server::Response &response,
+                                     const std::string &msg,
+                                     const http_server::ResponseCode code)
+    {
+      auto printer = printerForAccepts(accepts);
+      auto doc = printError(printer, "INVALID_REQUEST", msg);
+      response.writeResponse(doc, printer->mimeType(), code);
+    });
 
     m_initialized = true;
   }
@@ -303,7 +313,7 @@ namespace mtconnect
     auto handler = [&](const Routing::Request &request,
                     Response &response) -> bool
     {
-      auto f = m_cache->getFile(request.m_path);
+      auto f = m_fileCache->getFile(request.m_path);
       if (f)
       {
         response.writeResponse(f->m_buffer.get(), f->m_size,
@@ -579,18 +589,22 @@ namespace mtconnect
 
   const Printer *Agent::printerForAccepts(const std::string &accepts) const
   {
-    stringstream list(accepts);
-    string accept;
-    while (getline(list, accept, ','))
+    if (!accepts.empty())
     {
-      for (const auto &p : m_printers)
+      stringstream list(accepts);
+      string accept;
+      while (getline(list, accept, ','))
       {
-        if (ends_with(accept, p.first))
-          return p.second.get();
+        for (const auto &p : m_printers)
+        {
+          if (ends_with(accept, p.first))
+            return p.second.get();
+        }
       }
     }
-
-    return nullptr;
+    
+    auto xml = m_printers.find("xml");
+    return xml->second.get();
   }
 
   // Methods for service
@@ -632,7 +646,6 @@ namespace mtconnect
     }
     
     auto seqNum = m_circularBuffer.addToBuffer(event);
-
     dataItem->signalObservers(seqNum);
 
     return seqNum;
@@ -642,8 +655,6 @@ namespace mtconnect
                        const string &type, const string &inputTime,
                        entity::ErrorList &errors)
   {
-    // TODO: Error handling for parse errors.
-    
     // Parse the asset
     entity::XmlParser parser;
     
@@ -820,9 +831,10 @@ namespace mtconnect
   }
   
   // Helper
+  template<typename T>
   void Agent::checkRange(const Printer *printer,
-                         SequenceNumber_t value, SequenceNumber_t min,
-                         SequenceNumber_t max, const string &param)
+                         const T value, const T min, const T max,
+                         const string &param, bool notZero)
   {
     using namespace http_server;
     if (value <= min)
@@ -840,6 +852,15 @@ namespace mtconnect
       throw RequestError(str.str().c_str(),
                          printError(printer, "OUT_OF_RANGE", str.str()),
                          printer->mimeType(), BAD_REQUEST);
+    }
+    if (notZero && value == 0)
+    {
+      stringstream str;
+      str << '\'' << param << '\'' << " must not be zero(0)";
+      throw RequestError(str.str().c_str(),
+                         printError(printer, "OUT_OF_RANGE", str.str()),
+                         printer->mimeType(), BAD_REQUEST);
+
     }
   }
 
@@ -976,7 +997,26 @@ namespace mtconnect
                               const std::optional<SequenceNumber_t> &to,
                               const std::optional<std::string> &path)
   {
-    return {"",http_server::OK,""};
+    using namespace http_server;
+    auto printer = getPrinter(format);
+    Device *dev { nullptr };
+    if (device)
+    {
+      dev = checkDevice(printer, *device);
+    }
+    FilterSetOpt filter;
+    if (path || device)
+    {
+      filter = make_optional<FilterSet>();
+      checkPath(printer, path, dev, *filter);
+    }
+
+    // Check if there is a frequency to stream data or not
+    SequenceNumber_t end;
+    bool endOfBuffer;
+    
+    return  { fetchSampleData(printer, filter, count, from, nullopt, end, endOfBuffer),
+      OK, printer->mimeType() };
   }
   
   Agent::RequestResult Agent::streamSampleRequest(http_server::Response &response,
@@ -1051,9 +1091,8 @@ namespace mtconnect
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
     ObservationPtrArray events;
-    uint64_t firstSeq, seq;
-    firstSeq = getFirstSequence();
-    seq = m_circularBuffer.getSequence();
+    auto firstSeq = getFirstSequence();
+    auto seq = m_circularBuffer.getSequence();
     if (at)
     {
       checkRange(printer, *at, firstSeq - 1, seq, "at");
@@ -1067,9 +1106,45 @@ namespace mtconnect
     }
 
     return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
-                                seq, firstSeq, m_circularBuffer.getSequence() - 1,
+                                seq, firstSeq,
+                                m_circularBuffer.getSequence() - 1,
                                 events);
   }
+
+  string Agent::fetchSampleData(const Printer *printer,
+                                const FilterSetOpt &filterSet,
+                                int count,
+                                const std::optional<SequenceNumber_t> &from,
+                                const std::optional<SequenceNumber_t> &to,
+                                SequenceNumber_t &end, bool &endOfBuffer, ChangeObserver *observer)
+  {
+    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+    auto firstSeq = getFirstSequence();
+    auto seq = m_circularBuffer.getSequence();
+    if (from)
+    {
+      checkRange(printer, *from, firstSeq - 1, seq, "from");
+    }
+    if (to)
+    {
+      checkRange(printer, *to, firstSeq - 1, seq, "to");
+    }
+    int countLimit = m_circularBuffer.getBufferSize() + 1;
+    checkRange(printer, count, -countLimit, countLimit, "count", true);
+    
+    auto events = m_circularBuffer.getObservations(count, filterSet,
+                                                    from, firstSeq, end,
+                                                    endOfBuffer);
+
+    if (observer)
+      observer->reset();
+
+    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
+                                end, firstSeq,
+                                m_circularBuffer.getSequence() - 1,
+                                *events);
+  }
+
   
 #if 0
   string Agent::handlePut(const Printer *printer, ostream &out, const string &path,
@@ -1295,100 +1370,6 @@ namespace mtconnect
 
     // TODO: Improve error handling. Iterate errors from parser
     return "<failure>Bad Command:" + command + "</failure>";
-  }
-
-  string Agent::handleFile(const string &uri, OutgoingThings &outgoing)
-  {
-    // Get the mime type for the file.
-    bool unknown = true;
-    auto last = uri.find_last_of("./");
-    string contentType;
-    if (last != string::npos && uri[last] == '.')
-    {
-      auto ext = uri.substr(last + 1u);
-      if (m_mimeTypes.count(ext) > 0)
-      {
-        contentType = m_mimeTypes.at(ext);
-        unknown = false;
-      }
-    }
-
-    if (unknown)
-      contentType = "application/octet-stream";
-
-    // Check if the file is cached
-    RefCountedPtr<CachedFile> cachedFile;
-    auto cached = m_fileCache.find(uri);
-    if (cached != m_fileCache.end())
-      cachedFile = cached->second;
-    else
-    {
-      auto file = m_fileMap.find(uri);
-
-      // Should never happen
-      if (file == m_fileMap.end())
-      {
-        outgoing.http_return = 404;
-        outgoing.http_return_status = "File not found";
-        return "";
-      }
-
-      const auto path = file->second.c_str();
-
-      struct stat fs;
-      auto res = stat(path, &fs);
-      if (res)
-      {
-        outgoing.http_return = 404;
-        outgoing.http_return_status = "File not found";
-        return "";
-      }
-
-      auto fd = open(path, O_RDONLY | O_BINARY);
-      if (res < 0)
-      {
-        outgoing.http_return = 404;
-        outgoing.http_return_status = "File not found";
-        return "";
-      }
-
-      cachedFile.setObject(new CachedFile(fs.st_size), true);
-      auto bytes = read(fd, cachedFile->m_buffer.get(), fs.st_size);
-      close(fd);
-
-      if (bytes < fs.st_size)
-      {
-        outgoing.http_return = 404;
-        outgoing.http_return_status = "File not found";
-        return "";
-      }
-
-      // If this is a small file, cache it.
-      if (bytes <= SMALL_FILE)
-        m_fileCache.insert(pair<string, RefCountedPtr<CachedFile>>(uri, cachedFile));
-    }
-
-    (*outgoing.m_out) << "HTTP/1.1 200 OK\r\n"
-                         "Date: "
-                      << getCurrentTime(HUM_READ)
-                      << "\r\n"
-                         "Server: MTConnectAgent\r\n"
-                         "Connection: close\r\n"
-                         "Content-Length: "
-                      << cachedFile->m_size
-                      << "\r\n"
-                         "Expires: "
-                      << getCurrentTime(
-                             std::chrono::system_clock::now() + std::chrono::seconds(60 * 60 * 24),
-                             HUM_READ)
-                      << "\r\n"
-                         "Content-Type: "
-                      << contentType << "\r\n\r\n";
-
-    outgoing.m_out->write(cachedFile->m_buffer.get(), cachedFile->m_size);
-    outgoing.m_out->setstate(ios::badbit);
-
-    return "";
   }
   
   void Agent::streamData(const Printer *printer, ostream &out, std::set<string> &filterSet,

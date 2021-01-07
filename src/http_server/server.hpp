@@ -51,6 +51,11 @@ namespace mtconnect
       ResponseCode m_code;
     };
     
+    using ErrorFunction = std::function<void(const std::string &accepts,
+                                             Response &response,
+                                             const std::string &msg,
+                                             const ResponseCode code)>;
+    
     class Server : public dlib::server_http
     {
     public:
@@ -59,6 +64,14 @@ namespace mtconnect
       {
         set_listening_port(port);
         set_listening_ip(inter);
+        m_errorFunction = [](const std::string &accepts,
+                             Response &response,
+                             const std::string &msg,
+                             const ResponseCode code)
+        {
+          response.writeResponse(msg, code);
+          return true;
+        };
       }
       
       // Overridden method that is called per web request – not used
@@ -106,6 +119,8 @@ namespace mtconnect
         m_routings.emplace_back(routing);
       }
       
+      void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
+      
     protected:
       // HTTP Protocol
       void on_connect(std::istream &in, std::ostream &out,
@@ -119,8 +134,8 @@ namespace mtconnect
       bool m_putEnabled;
       std::set<std::string> m_putAllowedHosts;
       std::list<Routing> m_routings;
-      
       std::unique_ptr<FileCache> m_fileCache;
+      ErrorFunction m_errorFunction;
     };
   }
 }

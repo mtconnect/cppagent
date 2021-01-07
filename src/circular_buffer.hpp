@@ -150,37 +150,43 @@ namespace mtconnect
       return check;
     }
     
-    std::unique_ptr<ObservationPtrArray> getObservations(std::set<std::string> &filterSet,
-                                                         uint64_t start,
-                                                         int count,
-                                                         uint64_t &firstSeq,
-                                                         uint64_t &end,
+    std::unique_ptr<ObservationPtrArray> getObservations(int count,
+                                                         const FilterSetOpt &filterSet,
+                                                         const std::optional<SequenceNumber_t> start,
+                                                         SequenceNumber_t &end,
+                                                         SequenceNumber_t &firstSeq,
                                                          bool &endOfBuffer)
     {
       auto results = std::make_unique<ObservationPtrArray>();
+      
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       firstSeq = (m_sequence > m_slidingBufferSize) ? m_sequence - m_slidingBufferSize : 1;
-      int limit;
+      int limit, inc;
+      
+      SequenceNumber_t first;
       
       // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
       if (count >= 0)
       {
-        start = (start == NO_START || start <= firstSeq) ? firstSeq : start;
+        first = (!start || *start <= firstSeq) ? firstSeq : *start;
         limit = count;
+        inc = 1;
       }
       else
       {
-        start = (start == NO_START || start >= m_sequence) ? m_sequence - 1 : start;
+        first = (!start || *start >= m_sequence) ? m_sequence - 1 : *start;
         limit = -count;
+        inc = -1;
       }
       
+      
       SequenceNumber_t i;
-      for (i = start; results->size() < limit && i < m_sequence && i >= firstSeq;
-           count >= 0 ? i++ : i--)
+      for (i = first; results->size() < limit && i < m_sequence && i >= firstSeq;
+           i += inc)
       {
         // Filter out according to if it exists in the list
         const std::string &dataId = (*m_slidingBuffer)[i]->getDataItem()->getId();
-        if (filterSet.count(dataId) > 0)
+        if (!filterSet || filterSet->count(dataId) > 0)
         {
           ObservationPtr event = (*m_slidingBuffer)[i];
           results->push_back(event);

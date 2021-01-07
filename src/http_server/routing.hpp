@@ -153,7 +153,14 @@ namespace mtconnect
               auto q = request.m_query.find(p.m_name);
               if (q != request.m_query.end())
               {
-                request.m_parameters.emplace(make_pair(p.m_name, convertValue(q->second, p.m_type)));
+                try {
+                  auto v = convertValue(q->second, p.m_type);
+                  request.m_parameters.emplace(make_pair(p.m_name, v));
+                } catch (ParameterError &e) {
+                  std::string msg = std::string("for query parameter '") +
+                                    p.m_name + "': " + e.what();
+                  throw ParameterError(msg);
+                }
               }
               else if (!std::holds_alternative<std::monostate>(p.m_default))
               {
@@ -167,6 +174,7 @@ namespace mtconnect
         catch (ParameterError &e)
         {
           m_logger << dlib::LDEBUG << "Pattern error: " << e.what();
+          throw e;
         }
         
         return false;
