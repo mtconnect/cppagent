@@ -33,16 +33,18 @@ namespace mtconnect
     json JsonPrinter::print(const EntityPtr entity)
     {
       json jsonObj;
-      list<Property> attributes;
-      list<Property> elements;
+      
       auto &properties = entity->getProperties();
 
       for (auto &e : properties)
       {
         if (holds_alternative<EntityPtr>(e.second))
         {
-          jsonObj[entity->getName()][get<EntityPtr>(e.second)->getName()] =
-              print(get<EntityPtr>(e.second));
+          json j = print(get<EntityPtr>(e.second));
+          if (!j.is_array())
+            j = j[get<EntityPtr>(e.second)->getName()];
+          
+          jsonObj[entity->getName()][get<EntityPtr>(e.second)->getName()] = j;
         }
         else if (holds_alternative<EntityList>(e.second))
         {
@@ -69,6 +71,8 @@ namespace mtconnect
           *jsonPtr = get<int64_t>(arg);
         else if (holds_alternative<double>(arg))
           *jsonPtr = get<double>(arg);
+         else if (holds_alternative<Vector>(arg))
+          *jsonPtr = get<Vector>(arg);
         else
           *jsonPtr = get<string>(arg);
         },
