@@ -30,7 +30,7 @@ namespace mtconnect
   {
     using Property = pair<string, Value>;
 
-    json JsonPrinter::jprint(const EntityPtr entity)
+    json JsonPrinter::print(const EntityPtr entity)
     {
       json jsonObj;
       list<Property> attributes;
@@ -42,7 +42,7 @@ namespace mtconnect
         if (holds_alternative<EntityPtr>(e.second))
         {
           jsonObj[entity->getName()][get<EntityPtr>(e.second)->getName()] =
-              jprint(get<EntityPtr>(e.second));
+              print(get<EntityPtr>(e.second));
         }
         else if (holds_alternative<EntityList>(e.second))
         {
@@ -50,13 +50,22 @@ namespace mtconnect
           jsonObj = json::array();
           for (auto &f : list)
           {
-            jsonObj.emplace_back(jprint(f));
+            jsonObj.emplace_back(print(f));
           }
         }
         else
         {
-          string t;
-          jsonObj[entity->getName()][e.first] = toCharPtr(e.second, t);
+          if (holds_alternative<string>(e.second))
+          {
+            jsonObj[entity->getName()][e.first] = get<string>(e.second);
+          }
+          else
+          {
+            //placeholder for non string type variant instances
+            cout << "The value is not a string." << '\n';
+            string t;
+            jsonObj[entity->getName()][e.first] = toCharPtr(e.second, t);
+          }
         }
       }
       return jsonObj;

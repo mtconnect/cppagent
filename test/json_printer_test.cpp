@@ -108,8 +108,8 @@ TEST_F(JsonPrinterTest, TestParseSimpleDocument)
 
   json jdoc;
   
-  jdoc = jprinter.jprint(entity);
-  cout << jdoc.dump();
+  jdoc = jprinter.print(entity);
+
   ASSERT_EQ("123", jdoc.at("/FileArchetype/assetId"_json_pointer).get<string>());
   ASSERT_EQ("one", jdoc.at("/FileArchetype/FileProperties/0/FileProperty/name"_json_pointer).get<string>());
   ASSERT_EQ("Round", jdoc.at("/FileArchetype/FileProperties/0/FileProperty/value"_json_pointer).get<string>());

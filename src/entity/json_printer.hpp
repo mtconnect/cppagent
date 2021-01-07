@@ -32,7 +32,7 @@ namespace mtconnect
     public:
       JsonPrinter() = default;
 
-      json jprint(const EntityPtr entity);
+      json print(const EntityPtr entity);
     };
   }
 }
