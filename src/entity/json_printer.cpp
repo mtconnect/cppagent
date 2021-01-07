@@ -55,20 +55,24 @@ namespace mtconnect
         }
         else
         {
-          if (holds_alternative<string>(e.second))
-          {
-            jsonObj[entity->getName()][e.first] = get<string>(e.second);
-          }
-          else
-          {
-            //placeholder for non string type variant instances
-            cout << "The value is not a string." << '\n';
-            string t;
-            jsonObj[entity->getName()][e.first] = toCharPtr(e.second, t);
-          }
+          GetValue(e.second, &jsonObj[entity->getName()][e.first]);
         }
       }
       return jsonObj;
+    }
+    void JsonPrinter::GetValue(Value value, json *jsonPtr)
+    {
+      visit([&](Value &&arg) {
+        if (holds_alternative<string>(arg))
+          *jsonPtr = get<string>(arg);
+        else if (holds_alternative<int64_t>(arg))
+          *jsonPtr = get<int64_t>(arg);
+        else if (holds_alternative<double>(arg))
+          *jsonPtr = get<double>(arg);
+        else
+          *jsonPtr = get<string>(arg);
+        },
+          value);
     }
   }
 }

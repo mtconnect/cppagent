@@ -33,6 +33,7 @@ namespace mtconnect
       JsonPrinter() = default;
 
       json print(const EntityPtr entity);
+      void GetValue(Value value, json *jsonPtr);
     };
   }
 }

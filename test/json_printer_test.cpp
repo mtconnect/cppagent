@@ -70,7 +70,7 @@ class JsonPrinterTest : public testing::Test
     fileComments->registerMatchers();
 
     auto fileArchetype = make_shared<Factory>(Requirements{
-        Requirement("assetId", true), Requirement("deviceUuid", true),
+        Requirement("assetId", INTEGER, true), Requirement("deviceUuid", true),
         Requirement("timestamp", true), Requirement("removed", false), Requirement("name", true),
         Requirement("mediaType", true), Requirement("applicationCategory", true),
         Requirement("applicationType", true), Requirement("Description", false),
@@ -110,7 +110,7 @@ TEST_F(JsonPrinterTest, TestParseSimpleDocument)
   
   jdoc = jprinter.print(entity);
 
-  ASSERT_EQ("123", jdoc.at("/FileArchetype/assetId"_json_pointer).get<string>());
+  ASSERT_EQ(123, jdoc.at("/FileArchetype/assetId"_json_pointer).get<int64_t>());
   ASSERT_EQ("one", jdoc.at("/FileArchetype/FileProperties/0/FileProperty/name"_json_pointer).get<string>());
   ASSERT_EQ("Round", jdoc.at("/FileArchetype/FileProperties/0/FileProperty/value"_json_pointer).get<string>());
 }
