@@ -86,26 +86,31 @@ namespace mtconnect
 
     // Get device from device map
     Device *getDeviceByName(const std::string &name);
-    const Device *getDeviceByName(const std::string &name) const;
-    Device *findDeviceByUUIDorName(const std::string &idOrName);
+    Device *getDeviceByName(const std::string &name) const;
+    Device *findDeviceByUUIDorName(const std::string &idOrName) const;
     const auto &getDevices() const { return m_devices; }
 
     // Add the a device from a configuration file
     void addDevice(Device *device);
 
     // Add component events to the sliding buffer
-    unsigned int addToBuffer(DataItem *dataItem, const std::string &value, std::string time = "");
+    unsigned int addToBuffer(DataItem *dataItem, const std::string &value,
+                             std::string time = "");
 
     // Asset management
-    bool addAsset(Device *device, const std::string &id,
+    AssetPtr addAsset(Device *device,
                   const std::string &asset,
-                  const std::string &type,
-                  const std::string &time,
+                  const std::optional<std::string> &id,
+                  const std::optional<std::string> &type,
+                  const std::optional<std::string> &time,
                   entity::ErrorList &errors);
-    bool removeAsset(Device *device, const std::string &id,
-                     const std::string &time);
-    bool removeAllAssets(Device *device, const std::string &type,
-                         const std::string &time);
+    bool removeAsset(Device *device,
+                     const std::string &id,
+                     const std::optional<std::string> time);
+    bool removeAllAssets(const std::optional<std::string> device,
+                         const std::optional<std::string> type,
+                         const std::optional<std::string> time,
+                         AssetList &list);
 
     // Message when adapter has connected and disconnected
     void connecting(Adapter *adapter);
@@ -113,7 +118,7 @@ namespace mtconnect
     void connected(Adapter *adapter, std::vector<Device *> devices);
 
     DataItem *getDataItemByName(const std::string &deviceName,
-                                const std::string &dataItemName)
+                                const std::string &dataItemName) const
     {
       auto dev = getDeviceByName(deviceName);
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
@@ -175,6 +180,7 @@ namespace mtconnect
                                   const std::list<std::string> &ids);
     RequestResult putAssetRequest(const std::string &format,
                                   const std::string &asset,
+                                  const std::optional<std::string> &type,
                                   const std::optional<std::string> &device = std::nullopt,
                                   const std::optional<std::string> &uuid = std::nullopt);
     RequestResult deleteAssetRequest(const std::string &format,
@@ -187,7 +193,18 @@ namespace mtconnect
     void setLogStreamData(bool log) { m_logStreamData = log; }
 
     // Get the printer for a type
-    Printer *getPrinter(const std::string &aType) { return m_printers[aType].get(); }
+    const std::string acceptFormat(const std::string &accepts) const;
+    Printer *getPrinter(const std::string &aType) const {
+      auto printer = m_printers.find(aType);
+      if (printer != m_printers.end())
+        return printer->second.get();
+      else
+        return nullptr;
+    }
+    const Printer *printerForAccepts(const std::string &accepts) const
+    {
+      return getPrinter(acceptFormat(accepts));
+    }
 
    protected:
     // Initialization methods
@@ -198,7 +215,6 @@ namespace mtconnect
     void loadCachedProbe();
     
     // HTTP Routings
-    const std::string acceptFormat(const std::string &accepts) const;
     void createFileRoutings();
     void createProbeRoutings();
     void createSampleRoutings();
@@ -218,15 +234,26 @@ namespace mtconnect
                                 const std::optional<SequenceNumber_t> &to,
                                 SequenceNumber_t &end,
                                 bool &endOfBuffer, ChangeObserver *observer = nullptr);
+    
+    // Asset methods
+    void getAssets(const Printer *printer,
+                   const std::list<std::string> &ids,
+                   AssetList &list);
+    void getAssets(const Printer *printer,
+                   const int32_t count,
+                   const bool removed,
+                   const std::optional<std::string> &type,
+                   const std::optional<std::string> &device,
+                   AssetList &list);
 
     
     // Output an XML Error
     std::string printError(const Printer *printer, const std::string &errorCode,
-                           const std::string &text);
+                           const std::string &text) const;
 
     // Handle the device/path parameters for the xpath search
     std::string devicesAndPath(const std::optional<std::string> &path,
-                               const Device *device);
+                               const Device *device) const;
 
     // Find data items by name/id
     DataItem *getDataItemById(const std::string &id) const
@@ -236,19 +263,18 @@ namespace mtconnect
         return diPos->second;
       return nullptr;
     }
-
-    const Printer *printerForAccepts(const std::string &accepts) const;
     
+    // Verification methods
     template<typename T>
     void checkRange(const Printer *printer, const T value,
                     const T min, const T max,
-                    const std::string &param, bool notZero = false);
+                    const std::string &param, bool notZero = false) const;
     void checkPath(const Printer *printer,
                    const std::optional<std::string> &path,
                    const Device *device,
-                   FilterSet &filter);
+                   FilterSet &filter) const;
     Device *checkDevice(const Printer *printer,
-                        const std::string &uuid);
+                        const std::string &uuid) const;
 
    protected:
     // Unique id based on the time of creation

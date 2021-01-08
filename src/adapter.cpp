@@ -230,7 +230,7 @@ namespace mtconnect
       if (data == m_terminator)
       {
         entity::ErrorList errors;
-        m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time,
+        m_agent->addAsset(m_assetDevice, m_body.str(), m_assetId, m_assetType, m_time,
                           errors);
         m_gatheringAsset = false;
       }
@@ -407,7 +407,7 @@ namespace mtconnect
       else
       {
         entity::ErrorList errors;
-        m_agent->addAsset(device, assetId, rest, type, time, errors);
+        m_agent->addAsset(device, rest, assetId, type, time, errors);
       }
     }
     else if (key == "@UPDATE_ASSET@")
@@ -440,7 +440,10 @@ namespace mtconnect
     else if (key == "@REMOVE_ASSET@")
       m_agent->removeAsset(device, assetId, time);
     else if (key == "@REMOVE_ALL_ASSETS@")
-      m_agent->removeAllAssets(device, value, time);
+    {
+      AssetList list;
+      m_agent->removeAllAssets(device->getUuid(), value, time, list);
+    }
   }
 
   static inline bool is_true(const string &aValue)

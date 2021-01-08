@@ -95,6 +95,14 @@ namespace mtconnect
       
       bool good() const { return m_out.good(); }
       void flush() { m_out.flush(); }
+      static std::string getStatus(uint16_t code)
+      {
+        auto cm = m_status.find(code);
+        if (cm == m_status.end())
+          return "Unknown";
+        else
+          return cm->second;
+      }
 
       virtual void beginMultipartStream()
       {

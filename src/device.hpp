@@ -36,9 +36,9 @@ namespace mtconnect
 
     // Add/get items to/from the device name to data item mapping
     void addDeviceDataItem(DataItem *dataItem);
-    DataItem *getDeviceDataItem(const std::string &name);
+    DataItem *getDeviceDataItem(const std::string &name) const;
     void addAdapter(Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
-    Component *getComponentById(const std::string &aId)
+    Component *getComponentById(const std::string &aId) const
     {
       auto comp = m_componentsById.find(aId);
       if (comp != m_componentsById.end())

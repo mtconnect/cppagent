@@ -96,6 +96,30 @@ class AgentTestHelper
                    const mtconnect::http_server::Routing::QueryMap &aQueries,
                    const char *path);
   
+  auto getAgent() { return m_agent.get(); }
+  
+  auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
+                   const std::string &version = "1.7", int checkpoint = 25,
+                   bool put = false)
+  {
+    auto server = std::make_unique<http::Server>();
+    server->enablePut(put);
+    auto cache = std::make_unique<http::FileCache>();
+    m_agent = std::make_unique<mtconnect::Agent>(server, cache,
+                                                 PROJECT_ROOT_DIR + file,
+                                                 bufferSize, maxAssets, version,
+                                                 checkpoint, true);
+    return m_agent.get();
+  }
+  
+  void printResponse()
+  {
+    std::cout << "Status " << m_response.m_code << " "
+              << http::Response::getStatus(m_response.m_code) << std::endl
+              << m_response.m_body << std::endl << "------------------------"
+              << std::endl;
+  }
+  
   bool m_dispatched { false };
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::ostringstream m_out;

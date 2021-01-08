@@ -68,23 +68,23 @@ namespace mtconnect
       else
         return nullptr;
     }
-    const Index getAssetsForDevice(const std::string &id) const
+    const std::optional<const Index*> getAssetsForDevice(const std::string &id) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       auto idx = m_deviceIndex.find(id);
       if (idx != m_deviceIndex.end())
-        return idx->second;
+        return std::make_optional(&idx->second);
       else
-        return Index{};
+        return std::nullopt;
     }
-    const Index getAssetsForType(const std::string &type) const
+    const std::optional<const Index*> getAssetsForType(const std::string &type) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       auto idx = m_typeIndex.find(type);
       if (idx != m_typeIndex.end())
-        return idx->second;
+        return std::make_optional(&idx->second);
       else
-        return Index{};
+        return std::nullopt;
     }
     TypeCount getCountsByType(bool active = true) const
     {

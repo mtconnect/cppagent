@@ -53,14 +53,10 @@ class AgentTest : public testing::Test
  protected:
   void SetUp() override
   {
-    auto server = make_unique<http_server::Server>();
-    auto cache = make_unique<http_server::FileCache>();
-    
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = make_unique<Agent>(server, cache,
-                                                    PROJECT_ROOT_DIR "/samples/test_config.xml",
-                                                    8, 4, "1.3", 25);
-    m_agentId = intToString(getCurrentTimeInSec());
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.3", 25);
+    m_agentId = to_string(getCurrentTimeInSec());
     m_adapter = nullptr;
   }
 
@@ -117,6 +113,15 @@ TEST_F(AgentTest, Probe)
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Devices/m:Device@name", "LinuxCNC");
   }
+}
+
+TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
+{
+  auto server1 = make_unique<http_server::Server>();
+  auto cache1 = make_unique<http_server::FileCache>();
+  ASSERT_THROW(Agent(server1, cache1,
+                     PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25),
+               std::runtime_error);
 }
 
 TEST_F(AgentTest, BadDevices)
@@ -600,49 +605,11 @@ TEST_F(AgentTest, SampleLastCount)
   }
 }
 
-#if 0
-
-TEST_F(AgentTest, BadFreq)
-{
-  Routing::QueryMap query;
-
-  {
-    query["interval"] = "NON_INTEGER";
-    PARSE_XML_RESPONSE_QUERY("/sample", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be a positive integer.");
-  }
-
-  {
-    query["interval"] = "-123";
-    PARSE_XML_RESPONSE_QUERY("/sample", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be a positive integer.");
-  }
-
-  {
-    query["interval"] = "2147483647";
-    PARSE_XML_RESPONSE_QUERY("/sample", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "'interval' must be less than or equal to 2147483646.");
-  }
-
-  {
-    query["interval"] = "999999999999999999";
-    PARSE_XML_RESPONSE_QUERY("/sample", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "'frequency' must be less than or equal to 2147483646.");
-  }
-}
-
 
 TEST_F(AgentTest, EmptyStream)
 {
   {
-    m_agentTestHelper->m_path = "/current";
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']@name", nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable",
@@ -655,48 +622,47 @@ TEST_F(AgentTest, EmptyStream)
   }
 
   {
-    m_agentTestHelper->m_path = "/sample";
-    char line[80] = {0};
-    sprintf(line, "%d", (int)m_agent->getSequence());
-    PARSE_XML_RESPONSE_QUERY_KV("from", line);
+    auto agent = m_agentTestHelper->m_agent.get();
+    Routing::QueryMap query{{"from", to_string(agent->getSequence())}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 }
 
 TEST_F(AgentTest, AddToBuffer)
 {
+  auto agent = m_agentTestHelper->m_agent.get();
+  Routing::QueryMap query;
+
   string device("LinuxCNC"), key("badKey"), value("ON");
-  auto di1 = m_agent->getDataItemByName(device, key);
+  auto di1 = agent->getDataItemByName(device, key);
   ASSERT_FALSE(di1);
-  int seqNum = m_agent->addToBuffer(di1, value, "NOW");
+  auto seqNum = agent->addToBuffer(di1, value, "NOW");
   ASSERT_EQ(0, seqNum);
 
-  auto event1 = m_agent->getFromBuffer(seqNum);
+  auto event1 = agent->getFromBuffer(seqNum);
   ASSERT_FALSE(event1);
 
   {
-    string last = to_string(m_agent->getSequence());
-    m_agentTestHelper->m_path = "/sample";
-    PARSE_XML_RESPONSE_QUERY_KV("from", last);
+    query["from"] = to_string(agent->getSequence());
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
 
   key = "power";
 
-  auto di2 = m_agent->getDataItemByName(device, key);
-  seqNum = m_agent->addToBuffer(di2, value, "NOW");
-  auto event2 = m_agent->getFromBuffer(seqNum);
+  auto di2 = agent->getDataItemByName(device, key);
+  seqNum = agent->addToBuffer(di2, value, "NOW");
+  auto event2 = agent->getFromBuffer(seqNum);
   ASSERT_EQ(2, (int)event2->refCount());
 
   {
-    m_agentTestHelper->m_path = "/current";
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState", "ON");
   }
 
   {
-    m_agentTestHelper->m_path = "/sample";
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState[1]", "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PowerState[2]", "ON");
   }
@@ -706,15 +672,13 @@ TEST_F(AgentTest, AddToBuffer)
 TEST_F(AgentTest, SequenceNumberRollover)
 {
 #ifndef WIN32
-  key_value_map kvm;
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  auto agent = m_agentTestHelper->m_agent.get();
+  Routing::QueryMap query;
+  addAdapter();
 
   // Set the sequence number near MAX_UINT32
-  m_agent->setSequence(0xFFFFFFA0);
-  int64_t seq = m_agent->getSequence();
+  agent->setSequence(0xFFFFFFA0);
+  SequenceNumber_t seq = agent->getSequence();
   ASSERT_EQ((int64_t)0xFFFFFFA0, seq);
 
   // Get the current position
@@ -727,57 +691,904 @@ TEST_F(AgentTest, SequenceNumberRollover)
     m_adapter->processData(line);
 
     {
-      m_agentTestHelper->m_path = "/current";
-      PARSE_XML_RESPONSE;
+      PARSE_XML_RESPONSE("/current");
       ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence",
-                            int64ToString(seq + i).c_str());
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq + i + 1).c_str());
+                            to_string(seq + i).c_str());
+      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
+                            to_string(seq + i + 1).c_str());
     }
 
     {
-      m_agentTestHelper->m_path = "/sample";
-      kvm["from"] = int64ToString(seq);
-      kvm["count"] = "128";
+      query["from"] = to_string(seq);
+      query["count"] = "128";
 
-      PARSE_XML_RESPONSE_QUERY(kvm);
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq + i + 1).c_str());
+      PARSE_XML_RESPONSE_QUERY("/sample", query);
+      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
+                            to_string(seq + i + 1).c_str());
 
       for (int j = 0; j <= i; j++)
       {
         sprintf(line, "//m:DeviceStream//m:Line[%d]@sequence", j + 1);
-        ASSERT_XML_PATH_EQUAL(doc, line, int64ToString(seq + j).c_str());
+        ASSERT_XML_PATH_EQUAL(doc, line, to_string(seq + j).c_str());
       }
     }
 
     for (int j = 0; j <= i; j++)
     {
-      m_agentTestHelper->m_path = "/sample";
-      kvm["from"] = int64ToString(seq + j);
-      kvm["count"] = "1";
+      query["from"] = to_string(seq + j);
+      query["count"] = "1";
 
-      PARSE_XML_RESPONSE_QUERY(kvm);
+      PARSE_XML_RESPONSE_QUERY("/sample", query);
       ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence",
                             int64ToString(seq + j).c_str());
       ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq + j + 1).c_str());
     }
   }
 
-  ASSERT_EQ((uint64_t)0xFFFFFFA0 + 128, m_agent->getSequence());
+  ASSERT_EQ(uint64_t(0xFFFFFFA0) + 128ul, agent->getSequence());
 #endif
 }
 
+TEST_F(AgentTest, DuplicateCheck)
+{
+  addAdapter();
+  
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|line|204");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+  }
+
+  m_adapter->processData("TIME|line|205");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+  }
+}
+
+TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
+{
+  addAdapter();
+  m_adapter->setDupCheck(true);
+
+  m_adapter->processData("TIME|line|204");
+  m_adapter->processData("TIME|line|204");
+  m_adapter->processData("TIME|line|205");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+  }
+
+  m_adapter->disconnected();
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[4]", "UNAVAILABLE");
+  }
+
+  m_adapter->connected();
+
+  m_adapter->processData("TIME|line|205");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[4]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[5]", "205");
+  }
+}
+
+TEST_F(AgentTest, AutoAvailable)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->m_agent.get();
+  m_adapter->setAutoAvailable(true);
+  auto d = agent->getDevices().front();
+  std::vector<Device *> devices;
+  devices.emplace_back(d);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
+  }
+
+  agent->connected(m_adapter, devices);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
+  }
+
+  agent->disconnected(m_adapter, devices);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
+  }
+
+  agent->connected(m_adapter, devices);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[4]", "AVAILABLE");
+  }
+}
+
+TEST_F(AgentTest, MultipleDisconnect)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->m_agent.get();
+
+  auto d = agent->getDevices().front();
+  std::vector<Device *> devices;
+  devices.emplace_back(d);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 1);
+  }
+
+  agent->connected(m_adapter, devices);
+  m_adapter->processData("TIME|block|GTH");
+  m_adapter->processData("TIME|cmp|normal||||");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][2]", "GTH");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 2);
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 1);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
+  }
+
+  agent->disconnected(m_adapter, devices);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 2);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][2]", "GTH");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][3]", "UNAVAILABLE");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
+  }
+
+  agent->disconnected(m_adapter, devices);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 2);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][3]", "UNAVAILABLE");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
+  }
+
+  agent->connected(m_adapter, devices);
+  m_adapter->processData("TIME|block|GTH");
+  m_adapter->processData("TIME|cmp|normal||||");
+
+  agent->disconnected(m_adapter, devices);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/sample");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 3);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 2);
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 5);
+  }
+}
+
+TEST_F(AgentTest, IgnoreTimestamps)
+{
+  addAdapter();
+
+  m_adapter->processData("TIME|line|204");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
+  }
+
+  m_adapter->setIgnoreTimestamps(true);
+  m_adapter->processData("TIME|line|205");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!TIME");
+  }
+}
+
+TEST_F(AgentTest, InitialTimeSeriesValues)
+{
+  addAdapter();
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']",
+                          "UNAVAILABLE");
+  }
+}
+
+TEST_F(AgentTest, DynamicCalibration)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+  
+  // Add a 10.111000 seconds
+  m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
+  auto di = agent->getDataItemByName("LinuxCNC", "Yact");
+  ASSERT_TRUE(di);
+
+  ASSERT_TRUE(di->hasFactor());
+  ASSERT_EQ(0.01, di->getConversionFactor());
+  ASSERT_EQ(200.0, di->getConversionOffset());
+
+  di = agent->getDataItemByName("LinuxCNC", "Zact");
+  ASSERT_TRUE(di);
+
+  ASSERT_TRUE(di->hasFactor());
+  ASSERT_EQ(0.02, di->getConversionFactor());
+  ASSERT_EQ(300.0, di->getConversionOffset());
+
+  m_adapter->processData("TIME|Yact|200|Zact|600");
+  m_adapter->processData(
+      "TIME|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 "
+      "5118 5117 5117 5119 5119 5118 5118 5118 5118 5118");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='y1']", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='z1']", "18");
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']",
+        "56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.19 56.19 56.18 "
+        "56.18 56.17 56.17 56.19 56.19 56.18 56.18 56.18 56.18 56.18");
+  }
+}
+
+TEST_F(AgentTest, FilterValues13)
+{
+  m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
+  addAdapter();
+  
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|load|100");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+  }
+
+  m_adapter->processData("TIME|load|103");
+  m_adapter->processData("TIME|load|106");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+  }
+
+  m_adapter->processData("TIME|load|106|load|108|load|112");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
+  }
+
+  auto item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "pos");
+  ASSERT_TRUE(item);
+  ASSERT_TRUE(item->hasMinimumDelta());
+
+  ASSERT_FALSE(item->isFiltered(0.0, NAN));
+  ASSERT_TRUE(item->isFiltered(5.0, NAN));
+  ASSERT_FALSE(item->isFiltered(20.0, NAN));
+}
+
+TEST_F(AgentTest, FilterValues)
+{
+  m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
+  addAdapter();
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+  }
+
+  m_adapter->processData("2018-04-27T05:00:32.000666|load|103|pos|25");
+  m_adapter->processData("2018-04-27T05:00:36.888666|load|106|pos|30");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+  }
+
+  m_adapter->processData("2018-04-27T05:00:40.25|load|106|load|108|load|112|pos|35|pos|40");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+  }
+
+  m_adapter->processData("2018-04-27T05:00:47.50|pos|45|pos|50");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[4]", "40");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[5]", "50");
+  }
+}
+
+TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
+{
+  // Test period filter with ignore timestamps
+  m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
+  addAdapter();
+  m_adapter->setIgnoreTimestamps(true);
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+  }
+
+  m_adapter->processData("2018-04-27T05:01:32.000666|load|103|pos|25");
+  dlib::sleep(11 * 1000);
+  m_adapter->processData("2018-04-27T05:01:40.888666|load|106|pos|30");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+  }
+}
+
+TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
+{
+  // Test period filter with relative time
+  m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
+  addAdapter();
+  m_adapter->setRelativeTime(true);
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("0|load|100|pos|20");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+  }
+
+  m_adapter->processData("5000|load|103|pos|25");
+  m_adapter->processData("11000|load|106|pos|30");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
+  }
+
+  DataItem *item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "load");
+  ASSERT_TRUE(item);
+  ASSERT_TRUE(item->hasMinimumDelta());
+
+  ASSERT_FALSE(item->isFiltered(0.0, NAN));
+  ASSERT_TRUE(item->isFiltered(4.0, NAN));
+  ASSERT_FALSE(item->isFiltered(20.0, NAN));
+}
+
+TEST_F(AgentTest, ResetTriggered)
+{
+  addAdapter();
+
+  m_adapter->processData("TIME1|pcount|0");
+  m_adapter->processData("TIME2|pcount|1");
+  m_adapter->processData("TIME3|pcount|2");
+  m_adapter->processData("TIME4|pcount|0:DAY");
+  m_adapter->processData("TIME3|pcount|5");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[2]", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[3]", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[3]@resetTriggered", nullptr);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[4]", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[5]", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[5]@resetTriggered", "DAY");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[6]", "5");
+  }
+}
+
+TEST_F(AgentTest, References)
+{
+  m_agentTestHelper->createAgent("/samples/reference_example.xml");
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+
+  string id = "mf";
+  auto item = agent->getDataItemByName((string) "LinuxCNC", id);
+  auto comp = item->getComponent();
+
+  const auto refs = comp->getReferences();
+  const auto ref = refs[0];
+
+  ASSERT_EQ((string) "c4", ref.m_id);
+  ASSERT_EQ((string) "chuck", ref.m_name);
+  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref.m_type);
+
+  ASSERT_TRUE(ref.m_dataItem) << "DataItem was not resolved";
+
+  const mtconnect::Component::Reference &ref2 = refs[1];
+  ASSERT_EQ((string) "d2", ref2.m_id);
+  ASSERT_EQ((string) "door", ref2.m_name);
+  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref2.m_type);
+
+  const mtconnect::Component::Reference &ref3 = refs[2];
+  ASSERT_EQ((string) "ele", ref3.m_id);
+  ASSERT_EQ((string) "electric", ref3.m_name);
+  ASSERT_EQ(mtconnect::Component::Reference::COMPONENT, ref3.m_type);
+
+  ASSERT_TRUE(ref3.m_component) << "DataItem was not resolved";
+
+
+  // Additional data items should be included
+  {
+    Routing::QueryMap query {{"path", "//BarFeederInterface"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:ComponentStream[@component='BarFeederInterface']//m:MaterialFeed", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Door']//m:DoorState",
+                          "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:ChuckState",
+                          "UNAVAILABLE");
+  }
+}
+
+TEST_F(AgentTest, Discrete)
+{
+  m_agentTestHelper->createAgent("/samples/discrete_example.xml");
+  addAdapter();
+  m_adapter->setDupCheck(true);
+  auto agent = m_agentTestHelper->getAgent();
+
+  auto msg = agent->getDataItemByName("LinuxCNC", "message");
+  ASSERT_TRUE(msg);
+  ASSERT_EQ(true, msg->isDiscreteRep());
+
+  // Validate we are dup checking.
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|line|204");
+  m_adapter->processData("TIME|line|204");
+  m_adapter->processData("TIME|line|205");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|message|Hi|Hello");
+  m_adapter->processData("TIME|message|Hi|Hello");
+  m_adapter->processData("TIME|message|Hi|Hello");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[2]", "Hello");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[3]", "Hello");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[4]", "Hello");
+  }
+}
+
+// ------------------------------
+
+TEST_F(AgentTest, UpcaseValues)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/discrete_example.xml");
+  addAdapter();
+  m_adapter->setDupCheck(true);
+  ASSERT_TRUE(m_adapter->upcaseValue());
+
+  m_adapter->processData("TIME|mode|Hello");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "HELLO");
+  }
+
+  m_adapter->setUpcaseValue(false);
+  m_adapter->processData("TIME|mode|Hello");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "Hello");
+  }
+}
+
+TEST_F(AgentTest, ConditionSequence)
+{
+  addAdapter();
+  m_adapter->setDupCheck(true);
+  auto agent = m_agentTestHelper->getAgent();
+  auto logic = agent->getDataItemByName("LinuxCNC", "lp");
+  ASSERT_TRUE(logic);
+
+  // Validate we are dup checking.
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_COUNT(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Unavailable[@dataItemId='lp']",
+                          1);
+  }
+
+  m_adapter->processData("TIME|lp|NORMAL||||XXX");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal",
+        "XXX");
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+  }
+
+  m_adapter->processData(
+      "TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault",
+        "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault@nativeCode",
+                          "2218");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault@nativeSeverity",
+                          "ALARM_B");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault@qualifier",
+                          "HIGH");
+  }
+
+  m_adapter->processData("TIME|lp|NORMAL||||");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal",
+        1);
+  }
+
+  m_adapter->processData(
+      "TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault",
+        "4200 ALARM_D Power on effective parameter set");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault@nativeCode",
+                          "4200");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault@nativeSeverity",
+                          "ALARM_D");
+  }
+
+  m_adapter->processData(
+      "TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]",
+        "4200 ALARM_D Power on effective parameter set");
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]",
+        "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault[2]@nativeCode",
+                          "2218");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault[2]@nativeSeverity",
+                          "ALARM_B");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault[2]@qualifier",
+                          "HIGH");
+  }
+
+  m_adapter->processData(
+      "TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]",
+        "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault[1]@nativeCode",
+                          "2218");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault[1]@nativeSeverity",
+                          "ALARM_B");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault[1]@qualifier",
+                          "HIGH");
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]",
+        "4200 ALARM_D Power on effective parameter set");
+  }
+
+  m_adapter->processData("TIME|lp|NORMAL|2218|||");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//"
+                          "m:ComponentStream[@component='Controller']/m:Condition/"
+                          "m:Fault[1]@nativeCode",
+                          "4200");
+    ASSERT_XML_PATH_EQUAL(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]",
+        "4200 ALARM_D Power on effective parameter set");
+  }
+
+  m_adapter->processData("TIME|lp|NORMAL||||");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
+    ASSERT_XML_PATH_COUNT(
+        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal",
+        1);
+  }
+}
+
+TEST_F(AgentTest, EmptyLastItemFromAdapter)
+{
+  addAdapter();
+  m_adapter->setDupCheck(true);
+  auto agent = m_agentTestHelper->getAgent();
+
+  auto program = agent->getDataItemByName("LinuxCNC", "program");
+  ASSERT_TRUE(program);
+
+  auto tool_id = agent->getDataItemByName("LinuxCNC", "block");
+  ASSERT_TRUE(tool_id);
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|program|A|block|B");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "A");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "B");
+  }
+
+  m_adapter->processData("TIME|program||block|B");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "B");
+  }
+
+  m_adapter->processData("TIME|program||block|");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
+  }
+
+  m_adapter->processData("TIME|program|A|block|B");
+  m_adapter->processData("TIME|program|A|block|");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "A");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
+  }
+
+  m_adapter->processData("TIME|program|A|block|B|line|C");
+  m_adapter->processData("TIME|program|D|block||line|E");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "D");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", "E");
+  }
+}
+
+TEST_F(AgentTest, ConstantValue)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+  auto di = agent->getDataItemByName("LinuxCNC", "block");
+  ASSERT_TRUE(di);
+  di->addConstrainedValue("UNAVAILABLE");
+
+  ASSERT_TRUE(m_adapter);
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|block|G01X00|Smode|INDEX|line|204");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Block", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode[1]", "SPINDLE");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:RotaryMode", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+  }
+}
+
+TEST_F(AgentTest, BadDataItem)
+{
+  addAdapter();
+  
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+  }
+
+  m_adapter->processData("TIME|bad|ignore|dummy|1244|line|204");
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+  }
+}
+
+
+// --------------------- Adapter Commands ----------------------
 
 TEST_F(AgentTest, AdapterCommands)
 {
-  m_agentTestHelper->m_path = "/probe";
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
 
-  auto device = m_agent->getDeviceByName("LinuxCNC");
+  auto device = agent->getDeviceByName("LinuxCNC");
   ASSERT_TRUE(device);
   ASSERT_FALSE(device->m_preserveUuid);
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
 
   m_adapter->parseBuffer("* uuid: MK-1234\n");
   m_adapter->parseBuffer("* manufacturer: Big Tool\n");
@@ -785,7 +1596,7 @@ TEST_F(AgentTest, AdapterCommands)
   m_adapter->parseBuffer("* station: YYYY\n");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "MK-1234");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "Big Tool");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "XXXX-1234");
@@ -796,26 +1607,24 @@ TEST_F(AgentTest, AdapterCommands)
   m_adapter->parseBuffer("* uuid: XXXXXXX\n");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "MK-1234");
   }
 }
 
 TEST_F(AgentTest, AdapterDeviceCommand)
 {
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/two_devices.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-  m_agentTestHelper->m_path = "/probe";
+  m_agentTestHelper->createAgent("/samples/two_devices.xml");
+  auto agent = m_agentTestHelper->getAgent();
 
-  auto device1 = m_agent->getDeviceByName("Device1");
+  auto device1 = agent->getDeviceByName("Device1");
   ASSERT_TRUE(device1);
-  auto device2 = m_agent->getDeviceByName("Device2");
+  auto device2 = agent->getDeviceByName("Device2");
   ASSERT_TRUE(device2);
-
+  
   m_adapter = new Adapter("*", "server", 7878);
-  m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
+  agent->addAdapter(m_adapter);
   ASSERT_TRUE(nullptr == m_adapter->getDevice());
 
   m_adapter->parseBuffer("* device: device-2\n");
@@ -833,254 +1642,726 @@ TEST_F(AgentTest, AdapterDeviceCommand)
 
 TEST_F(AgentTest, UUIDChange)
 {
-  m_agentTestHelper->m_path = "/probe";
-
-  auto device = m_agent->getDeviceByName("LinuxCNC");
+  auto agent = m_agentTestHelper->getAgent();
+  auto device = agent->getDeviceByName("LinuxCNC");
   ASSERT_TRUE(device);
   ASSERT_FALSE(device->m_preserveUuid);
 
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
+  addAdapter();
+  
   m_adapter->parseBuffer("* uuid: MK-1234\n");
   m_adapter->parseBuffer("* manufacturer: Big Tool\n");
   m_adapter->parseBuffer("* serialNumber: XXXX-1234\n");
   m_adapter->parseBuffer("* station: YYYY\n");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "MK-1234");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "Big Tool");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "XXXX-1234");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
 
-  m_agentTestHelper->m_path = "/current?path=//Device[@uuid=\"MK-1234\"]";
   {
     // TODO: Fix and make sure dom is updated so this xpath will parse correctly.
+    // PARSE_XML_RESPONSE("/current?path=//Device[@uuid=\"MK-1234\"]");
     // PARSE_XML_RESPONSE_QUERY_KV("path", "//Device[@uuid=\"MK-1234\"]");
     // ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream@uuid", "MK-1234");
   }
 }
 
-TEST_F(AgentTest, DuplicateCheck)
+// ------------------------- Asset Tests ---------------------------------
+
+TEST_F(AgentTest, AssetStorage)
 {
-  m_agentTestHelper->m_path = "/sample";
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                              8, 4, "1.3", 4, true);
 
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  m_adapter->setDupCheck(true);
+  ASSERT_TRUE(agent->getServer()->isPutEnabled());
+  string body = "<Part assetId='P1' deviceUuid='LinuxCNC'>TEST</Part>";
+  Routing::QueryMap queries;
+
+  queries["type"] = "Part";
+  queries["device"] = "LinuxCNC";
+
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
 
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
+    PARSE_XML_RESPONSE_PUT("/asset/123", body, queries);
+    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
   }
 
-  m_adapter->processData("TIME|line|204");
-
+  m_agentTestHelper->m_request.m_verb = "GET";
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
+    PARSE_XML_RESPONSE("/asset/123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST");
   }
 
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|205");
-
+  // The device should generate an asset changed event as well.
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged", "123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@assetType", "Part");
   }
 }
 
-TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
+TEST_F(AgentTest, AssetBuffer)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/sample";
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                              8, 4, "1.3", 4, true);
+  string body = "<Part assetId='P1'>TEST 1</Part>";
+  Routing::QueryMap queries;
 
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-  m_adapter->setDupCheck(true);
+  queries["device"] = "000";
+  queries["type"] = "Part";
 
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|205");
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
 
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+    ASSERT_EQ(1, agent->getAssetCount("Part"));
   }
 
-  m_adapter->disconnected();
-
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[4]", "UNAVAILABLE");
+    PARSE_XML_RESPONSE("/asset/P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
   }
 
-  m_adapter->connected();
+  // Make sure replace works properly
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+    ASSERT_EQ(1, agent->getAssetCount("Part"));
+  }
 
-  m_adapter->processData("TIME|line|205");
+  body = "<Part assetId='P2'>TEST 2</Part>";
 
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[4]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[5]", "205");
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+    ASSERT_EQ(2, agent->getAssetCount("Part"));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
+  }
+
+  body = "<Part assetId='P3'>TEST 3</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)3, agent->getAssetCount());
+    ASSERT_EQ(3, agent->getAssetCount("Part"));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 3");
+  }
+
+  body = "<Part assetId='P4'>TEST 4</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 4");
+    ASSERT_EQ(4, agent->getAssetCount("Part"));
+  }
+
+  // Test multiple asset get
+  {
+    PARSE_XML_RESPONSE("/assets");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 4");
+  }
+
+  // Test multiple asset get with filter
+  {
+    PARSE_XML_RESPONSE_QUERY("/assets", queries);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
+  }
+
+  queries["count"] = "2";
+  {
+    PARSE_XML_RESPONSE_QUERY("/assets", queries);
+    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
+  }
+
+  queries.erase("count");
+
+  body = "<Part assetId='P5'>TEST 5</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
+    ASSERT_EQ(4, agent->getAssetCount("Part"));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P5");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 5");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: P1");
+  }
+
+  body = "<Part assetId='P3'>TEST 6</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
+    ASSERT_EQ(4, agent->getAssetCount("Part"));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 6");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
+  }
+
+  body = "<Part assetId='P2'>TEST 7</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
+    ASSERT_EQ(4, agent->getAssetCount("Part"));
+  }
+
+  body = "<Part assetId='P6'>TEST 8</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
+    ASSERT_EQ(4, agent->getAssetCount("Part"));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P6");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 8");
+  }
+
+  // Now since two and three have been modified, asset 4 should be removed.
+  {
+    PARSE_XML_RESPONSE("/asset/P4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: P4");
   }
 }
 
-TEST_F(AgentTest, AutoAvailable)
+TEST_F(AgentTest, AssetError)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/sample";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-
-  m_adapter->setAutoAvailable(true);
-  auto d = m_agent->getDevices()[0];
-  std::vector<Device *> devices;
-  devices.emplace_back(d);
-
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
-  }
-
-  m_agent->connected(m_adapter, devices);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
-  }
-
-  m_agent->disconnected(m_adapter, devices);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
-  }
-
-  m_agent->connected(m_adapter, devices);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[4]", "AVAILABLE");
+    PARSE_XML_RESPONSE("/asset/123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: 123");
   }
 }
 
-TEST_F(AgentTest, MultipleDisconnect)
+TEST_F(AgentTest, AdapterAddAsset)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/sample";
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
 
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+
+  {
+    PARSE_XML_RESPONSE("/asset/P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
+  }
+}
+
+TEST_F(AgentTest, MultiLineAsset)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
   
-  auto d = m_agent->getDevices()[0];
-  std::vector<Device *> devices;
-  devices.emplace_back(d);
+  m_adapter->parseBuffer("TIME|@ASSET@|P1|Part|--multiline--AAAA\n");
+  m_adapter->parseBuffer(
+      "<Part assetId='P1'>\n"
+      "  <PartXXX>TEST 1</PartXXX>\n"
+      "  Some Text\n"
+      "  <Extra>XXX</Extra>\n");
+  m_adapter->parseBuffer(
+      "</Part>\n"
+      "--multiline--AAAA\n");
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
 
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 1);
+    PARSE_XML_RESPONSE("/asset/P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:PartXXX", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:Extra", "XXX");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@deviceUuid", "000");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "TIME");
   }
 
-  m_agent->connected(m_adapter, devices);
-  m_adapter->processData("TIME|block|GTH");
-  m_adapter->processData("TIME|cmp|normal||||");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][2]", "GTH");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 2);
-
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 1);
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
-  }
-
-  m_agent->disconnected(m_adapter, devices);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 2);
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
-
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][2]", "GTH");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][3]", "UNAVAILABLE");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
-  }
-
-  m_agent->disconnected(m_adapter, devices);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 2);
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
-
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//*[@dataItemId='p1'][3]", "UNAVAILABLE");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
-  }
-
-  m_agent->connected(m_adapter, devices);
-  m_adapter->processData("TIME|block|GTH");
-  m_adapter->processData("TIME|cmp|normal||||");
-
-  m_agent->disconnected(m_adapter, devices);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 3);
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 2);
-
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 5);
-  }
-}
-
-TEST_F(AgentTest, IgnoreTimestamps)
-{
-  m_agentTestHelper->m_path = "/sample";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
+  // Make sure we can still add a line and we are out of multiline mode...
   m_adapter->processData("TIME|line|204");
 
   {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
-  }
-
-  m_adapter->setIgnoreTimestamps(true);
-  m_adapter->processData("TIME|line|205");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!TIME");
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", "204");
   }
 }
+
+TEST_F(AgentTest, BadAsset)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+
+  m_adapter->parseBuffer("TIME|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
+  m_adapter->parseBuffer((getFile("asset4.xml") + "\n").c_str());
+  m_adapter->parseBuffer("--multiline--AAAA\n");
+  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+}
+
+TEST_F(AgentTest, AssetRemoval)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                              8, 4, "1.3", 4, true);
+  string body = "<Part assetId='P1'>TEST 1</Part>";
+  Routing::QueryMap query;
+
+  query["device"] = "LinuxCNC";
+  query["type"] = "Part";
+
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, query);
+    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+    ASSERT_EQ(1, agent->getAssetCount("Part"));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
+  }
+
+  // Make sure replace works properly
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, query);
+    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+    ASSERT_EQ(1, agent->getAssetCount("Part"));
+  }
+
+  body = "<Part assetId='P2'>TEST 2</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, query);
+    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+    ASSERT_EQ(2, agent->getAssetCount("Part"));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
+  }
+
+  body = "<Part assetId='P3'>TEST 3</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, query);
+    ASSERT_EQ((unsigned int)3, agent->getAssetCount());
+    ASSERT_EQ(3, agent->getAssetCount("Part"));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/asset/P3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 3");
+  }
+
+  body = "<Part assetId='P2' removed='true'>TEST 2</Part>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, query);
+    ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
+    ASSERT_EQ(3, agent->getAssetCount("Part", false));
+  }
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/assets");
+    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
+  }
+
+  query["removed"] = "true";
+  {
+    PARSE_XML_RESPONSE_QUERY("/assets", query);
+    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]@removed", "true");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 3");
+  }
+}
+
+TEST_F(AgentTest, AssetRemovalByAdapter)
+{
+  addAdapter();
+  Routing::QueryMap query;
+  auto agent = m_agentTestHelper->getAgent();
+  
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+
+  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+
+  m_adapter->processData("TIME|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
+  ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+
+  m_adapter->processData("TIME|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
+  ASSERT_EQ((unsigned int)3, agent->getAssetCount());
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "P3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+
+  m_adapter->processData("TIME|@REMOVE_ASSET@|P2\r");
+  ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/assets");
+    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
+  }
+
+  // TODO: When asset is removed and the content is literal, it will
+  // not regenerate the attributes for the asset.
+  query["removed"] = "true";
+  {
+    PARSE_XML_RESPONSE_QUERY("/assets", query);
+    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
+  }
+}
+
+TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.2", 25);
+  
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
+  }
+}
+
+TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.3", 25);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
+  }
+}
+
+TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.5", 25);
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", "true");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
+  }
+}
+
+TEST_F(AgentTest, AssetPrependId)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+
+  m_adapter->processData("TIME|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+
+  {
+    PARSE_XML_RESPONSE("/asset/0001");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "0001");
+  }
+}
+
+TEST_F(AgentTest, RemoveLastAssetChanged)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+
+  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+
+  m_adapter->processData("TIME|@REMOVE_ASSET@|P1");
+  ASSERT_EQ((unsigned int)1, agent->getAssetCount(false));
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+}
+
+TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                              8, 4, "1.3", 4, true);
+  addAdapter();
+
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+
+  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, agent->getAssetCount(false));
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+
+  {
+    PARSE_XML_RESPONSE_DELETE("/asset/P1");
+  }
+  
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+  }
+}
+
+
+TEST_F(AgentTest, AssetChangedWhenUnavailable)
+{
+  addAdapter();
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "");
+  }
+}
+
+TEST_F(AgentTest, RemoveAllAssets)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+
+  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+
+  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+
+  m_adapter->processData("TIME|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
+  ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+
+  m_adapter->processData("TIME|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
+  ASSERT_EQ((unsigned int)3, agent->getAssetCount());
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "P3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+
+  m_adapter->processData("TIME|@REMOVE_ALL_ASSETS@|Part");
+  ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P3");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
+  }
+  
+  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+
+  {
+    PARSE_XML_RESPONSE("/assets");
+    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
+  }
+
+  // TODO: When asset is removed and the content is literal, it will
+  // not regenerate the attributes for the asset.
+  {
+    Routing::QueryMap q{{ "removed", "true" }};
+    PARSE_XML_RESPONSE_QUERY("/assets", q);
+    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
+  }
+}
+
+TEST_F(AgentTest, AssetProbe)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                              8, 4, "1.3", 4, true);
+  string body = "<Part assetId='P1'>TEST 1</Part>";
+  Routing::QueryMap queries;
+
+  queries["device"] = "LinuxCNC";
+  queries["type"] = "Part";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  }
+  {
+    PARSE_XML_RESPONSE_PUT("/asset/P2", body, queries);
+    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+  }
+
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount@assetType", "Part");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount", "2");
+  }
+}
+
+TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                              8, 4, "1.3", 4, true);
+
+  const string body {
+R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>NEW</Status>
+    </CutterStatus>
+    <Measurements>
+      <FunctionalLength code="LF" maximum="5.2" minimum="4.95" nominal="5" units="MILLIMETER"/>
+      <CuttingDiameterMax code="DC" maximum="1.4" minimum="0.95" nominal="1.25" units="MILLIMETER"/>
+    </Measurements>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC" };
+  
+  Routing::QueryMap queries;
+
+  queries["device"] = "LinuxCNC";
+  queries["type"] = "CuttingTool";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]",
+                          "Asset parsed with errors.");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]",
+                          "FunctionalLength(VALUE): Property VALUE is required and not provided");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]",
+                          "Measurements: Invalid element 'FunctionalLength'");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]",
+                          "CuttingDiameterMax(VALUE): Property VALUE is required and not provided");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]",
+                          "Measurements: Invalid element 'CuttingDiameterMax'");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]",
+                          "Measurements(Measurement): Entity list requirement Measurement must have at least 1 entries, 0 found");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]",
+                          "CuttingToolLifeCycle: Invalid element 'Measurements'");
+  }
+
+
+#if 0
+
+// ------------- Put tests
 
 TEST_F(AgentTest, Put)
 {
@@ -1107,63 +2388,43 @@ TEST_F(AgentTest, Put)
   }
 }
 
-// Test diabling of HTTP PUT or POST
-TEST_F(AgentTest, PutBlocking)
-{
-  key_value_map queries;
-  string body;
+//  ---------------- Srreaming Tests ---------------------
 
-  queries["time"] = "TIME";
-  queries["line"] = "205";
-  queries["power"] = "ON";
-  m_agentTestHelper->m_path = "/LinuxCNC";
+TEST_F(AgentTest, BadInterval)
+{
+  Routing::QueryMap query;
 
   {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Only the HTTP GET request is supported");
+    query["interval"] = "NON_INTEGER";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Parameter Error processing request from:  - for query parameter 'interval': cannot convert string 'NON_INTEGER' to integer");
+  }
+
+  {
+    query["interval"] = "-123";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be a positive integer.");
+  }
+
+  {
+    query["interval"] = "2147483647";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
+                          "'interval' must be less than or equal to 2147483646.");
+  }
+
+  {
+    query["interval"] = "999999999999999999";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
+                          "'frequency' must be less than or equal to 2147483646.");
   }
 }
 
-// Test diabling of HTTP PUT or POST
-TEST_F(AgentTest, PutBlockingFrom)
-{
-  key_value_map queries;
-  string body;
-  m_agent->enablePut();
-
-  m_agent->allowPutFrom("192.168.0.1");
-
-  queries["time"] = "TIME";
-  queries["line"] = "205";
-  m_agentTestHelper->m_path = "/LinuxCNC";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT, POST, and DELETE are not allowed from 127.0.0.1");
-  }
-
-  m_agentTestHelper->m_path = "/LinuxCNC/current";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "UNAVAILABLE");
-  }
-
-  // Retry request after adding ip address
-  m_agentTestHelper->m_path = "/LinuxCNC";
-  m_agent->allowPutFrom("127.0.0.1");
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-  }
-
-  m_agentTestHelper->m_path = "/LinuxCNC/current";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
-  }
-}
 
 TEST_F(AgentTest, StreamData)
 {
@@ -1243,12 +2504,6 @@ TEST_F(AgentTest, StreamData)
   }
 }
 
-TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
-{
-  ASSERT_THROW(new Agent(PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25),
-               std::runtime_error);
-}
-
 TEST_F(AgentTest, StreamDataObserver)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
@@ -1290,1540 +2545,5 @@ TEST_F(AgentTest, StreamDataObserver)
       throw;
     }
   }
-}
-
-TEST_F(AgentTest, RelativeTime)
-{
-  {
-    m_agentTestHelper->m_path = "/sample";
-
-    m_adapter = new Adapter("LinuxCNC", "server", 7878);
-    m_agent->addAdapter(m_adapter);
-    ASSERT_TRUE(m_adapter);
-
-    m_adapter->setRelativeTime(true);
-    m_adapter->setBaseOffset(1000);
-    m_adapter->setBaseTime(1353414802123456LL);  // 2012-11-20 12:33:22.123456 UTC
-
-    // Add a 10.654321 seconds
-    m_adapter->processData("10654|line|204");
-
-    {
-      PARSE_XML_RESPONSE;
-      ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-      ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp",
-                            "2012-11-20T12:33:32.776456Z");
-    }
-  }
-}
-
-TEST_F(AgentTest, RelativeParsedTime)
-{
-  {
-    m_agentTestHelper->m_path = "/sample";
-
-    m_adapter = new Adapter("LinuxCNC", "server", 7878);
-    m_agent->addAdapter(m_adapter);
-    ASSERT_TRUE(m_adapter);
-
-    m_adapter->setRelativeTime(true);
-    m_adapter->setParseTime(true);
-    m_adapter->setBaseOffset(1354165286555666);  // 2012-11-29 05:01:26.555666 UTC
-    m_adapter->setBaseTime(1353414802123456);    // 2012-11-20 12:33:22.123456 UTC
-
-    // Add a 10.111000 seconds
-    m_adapter->processData("2012-11-29T05:01:36.666666|line|100");
-
-    {
-      PARSE_XML_RESPONSE;
-      ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-      ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp",
-                            "2012-11-20T12:33:32.234456Z");
-    }
-  }
-}
-
-TEST_F(AgentTest, RelativeParsedTimeDetection)
-{
-  m_agentTestHelper->m_path = "/sample";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  m_adapter->setRelativeTime(true);
-
-  // Add a 10.111000 seconds
-  m_adapter->processData("2012-11-29T05:01:26.555666|line|100");
-
-  ASSERT_TRUE(m_adapter->isParsingTime());
-  ASSERT_EQ((uint64_t)1354165286555666LL, m_adapter->getBaseOffset());
-}
-
-TEST_F(AgentTest, RelativeOffsetDetection)
-{
-  m_agentTestHelper->m_path = "/sample";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  m_adapter->setRelativeTime(true);
-
-  // Add a 10.111000 seconds
-  m_adapter->processData("1234556|line|100");
-
-  ASSERT_FALSE(m_adapter->isParsingTime());
-  ASSERT_EQ((uint64_t)1234556000LL, m_adapter->getBaseOffset());
-}
-
-TEST_F(AgentTest, DynamicCalibration)
-{
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  // Add a 10.111000 seconds
-  m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
-  auto di = m_agent->getDataItemByName("LinuxCNC", "Yact");
-  ASSERT_TRUE(di);
-
-  ASSERT_TRUE(di->hasFactor());
-  ASSERT_EQ(0.01, di->getConversionFactor());
-  ASSERT_EQ(200.0, di->getConversionOffset());
-
-  di = m_agent->getDataItemByName("LinuxCNC", "Zact");
-  ASSERT_TRUE(di);
-
-  ASSERT_TRUE(di->hasFactor());
-  ASSERT_EQ(0.02, di->getConversionFactor());
-  ASSERT_EQ(300.0, di->getConversionOffset());
-
-  m_adapter->processData("TIME|Yact|200|Zact|600");
-  m_adapter->processData(
-      "TIME|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 "
-      "5118 5117 5117 5119 5119 5118 5118 5118 5118 5118");
-
-  m_agentTestHelper->m_path = "/current";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='y1']", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[@dataItemId='z1']", "18");
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']",
-        "56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.18 56.19 56.19 56.18 "
-        "56.18 56.17 56.17 56.19 56.19 56.18 56.18 56.18 56.18 56.18");
-  }
-}
-
-TEST_F(AgentTest, InitialTimeSeriesValues)
-{
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  m_agentTestHelper->m_path = "/current";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PositionTimeSeries[@dataItemId='x1ts']",
-                          "UNAVAILABLE");
-  }
-}
-
-TEST_F(AgentTest, FilterValues13)
-{
-  m_agent.reset();
-  m_agent =
-      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  m_agentTestHelper->m_path = "/sample";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("TIME|load|100");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
-  }
-
-  m_adapter->processData("TIME|load|103");
-  m_adapter->processData("TIME|load|106");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
-  }
-
-  m_adapter->processData("TIME|load|106|load|108|load|112");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
-  }
-
-  auto item = m_agent->getDataItemByName((string) "LinuxCNC", "pos");
-  ASSERT_TRUE(item);
-  ASSERT_TRUE(item->hasMinimumDelta());
-
-  ASSERT_FALSE(item->isFiltered(0.0, NAN));
-  ASSERT_TRUE(item->isFiltered(5.0, NAN));
-  ASSERT_FALSE(item->isFiltered(20.0, NAN));
-}
-
-TEST_F(AgentTest, FilterValues)
-{
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  m_agentTestHelper->m_path = "/sample";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
-  }
-
-  m_adapter->processData("2018-04-27T05:00:32.000666|load|103|pos|25");
-  m_adapter->processData("2018-04-27T05:00:36.888666|load|106|pos|30");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
-  }
-
-  m_adapter->processData("2018-04-27T05:00:40.25|load|106|load|108|load|112|pos|35|pos|40");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
-  }
-
-  m_adapter->processData("2018-04-27T05:00:47.50|pos|45|pos|50");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[4]", "45");
-  }
-
-  // Test period filter with ignore timestamps
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_adapter->setIgnoreTimestamps(true);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  m_agentTestHelper->m_path = "/sample";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
-  }
-
-  m_adapter->processData("2018-04-27T05:01:32.000666|load|103|pos|25");
-  dlib::sleep(11 * 1000);
-  m_adapter->processData("2018-04-27T05:01:40.888666|load|106|pos|30");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
-  }
-
-  // Test period filter with relative time
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/filter_example.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  m_adapter->setRelativeTime(true);
-  ASSERT_TRUE(m_adapter);
-
-  m_agentTestHelper->m_path = "/sample";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("0|load|100|pos|20");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
-  }
-
-  m_adapter->processData("5000|load|103|pos|25");
-  m_adapter->processData("11000|load|106|pos|30");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
-  }
-
-  DataItem *item = m_agent->getDataItemByName((string) "LinuxCNC", "load");
-  ASSERT_TRUE(item);
-  ASSERT_TRUE(item->hasMinimumDelta());
-
-  ASSERT_FALSE(item->isFiltered(0.0, NAN));
-  ASSERT_TRUE(item->isFiltered(4.0, NAN));
-  ASSERT_FALSE(item->isFiltered(20.0, NAN));
-}
-
-TEST_F(AgentTest, ResetTriggered)
-{
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  m_agentTestHelper->m_path = "/sample";
-
-  m_adapter->processData("TIME1|pcount|0");
-  m_adapter->processData("TIME2|pcount|1");
-  m_adapter->processData("TIME3|pcount|2");
-  m_adapter->processData("TIME4|pcount|0:DAY");
-  m_adapter->processData("TIME3|pcount|5");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[2]", "0");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[3]", "1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[3]@resetTriggered", nullptr);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[4]", "2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[5]", "0");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[5]@resetTriggered", "DAY");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount[6]", "5");
-  }
-}
-
-TEST_F(AgentTest, References)
-{
-  m_agent.reset();
-  m_agent =
-      make_unique<Agent>(PROJECT_ROOT_DIR "/samples/reference_example.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  string id = "mf";
-  auto item = m_agent->getDataItemByName((string) "LinuxCNC", id);
-  auto comp = item->getComponent();
-
-  const auto refs = comp->getReferences();
-  const auto ref = refs[0];
-
-  ASSERT_EQ((string) "c4", ref.m_id);
-  ASSERT_EQ((string) "chuck", ref.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref.m_type);
-
-  ASSERT_TRUE(ref.m_dataItem) << "DataItem was not resolved";
-
-  const mtconnect::Component::Reference &ref2 = refs[1];
-  ASSERT_EQ((string) "d2", ref2.m_id);
-  ASSERT_EQ((string) "door", ref2.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref2.m_type);
-
-  const mtconnect::Component::Reference &ref3 = refs[2];
-  ASSERT_EQ((string) "ele", ref3.m_id);
-  ASSERT_EQ((string) "electric", ref3.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::COMPONENT, ref3.m_type);
-
-  ASSERT_TRUE(ref3.m_component) << "DataItem was not resolved";
-
-  m_agentTestHelper->m_path = "/current";
-  key_value_map query;
-  query["path"] = "//BarFeederInterface";
-
-  // Additional data items should be included
-  {
-    PARSE_XML_RESPONSE_QUERY(query);
-
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:ComponentStream[@component='BarFeederInterface']//m:MaterialFeed", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Door']//m:DoorState",
-                          "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:ChuckState",
-                          "UNAVAILABLE");
-  }
-}
-
-TEST_F(AgentTest, Discrete)
-{
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  m_agentTestHelper->m_path = "/sample";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  m_adapter->setDupCheck(true);
-  ASSERT_TRUE(m_adapter);
-
-  auto msg = m_agent->getDataItemByName("LinuxCNC", "message");
-  ASSERT_TRUE(msg);
-  ASSERT_EQ(true, msg->isDiscreteRep());
-
-  // Validate we are dup checking.
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|205");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
-
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("TIME|message|Hi|Hello");
-  m_adapter->processData("TIME|message|Hi|Hello");
-  m_adapter->processData("TIME|message|Hi|Hello");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[2]", "Hello");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[3]", "Hello");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[4]", "Hello");
-  }
-}
-
-TEST_F(AgentTest, UpcaseValues)
-{
-  m_agentTestHelper->m_path = "/current";
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/discrete_example.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_adapter->setDupCheck(true);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-  ASSERT_TRUE(m_adapter->upcaseValue());
-
-  m_adapter->processData("TIME|mode|Hello");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "HELLO");
-  }
-
-  m_adapter->setUpcaseValue(false);
-  m_adapter->processData("TIME|mode|Hello");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "Hello");
-  }
-}
-
-TEST_F(AgentTest, ConditionSequence)
-{
-  m_agentTestHelper->m_path = "/current";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_adapter->setDupCheck(true);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  auto logic = m_agent->getDataItemByName("LinuxCNC", "lp");
-  ASSERT_TRUE(logic);
-
-  // Validate we are dup checking.
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Unavailable[@dataItemId='lp']",
-                          1);
-  }
-
-  m_adapter->processData("TIME|lp|NORMAL||||XXX");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal",
-        "XXX");
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
-  }
-
-  m_adapter->processData(
-      "TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault",
-        "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault@nativeCode",
-                          "2218");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault@nativeSeverity",
-                          "ALARM_B");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault@qualifier",
-                          "HIGH");
-  }
-
-  m_adapter->processData("TIME|lp|NORMAL||||");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal",
-        1);
-  }
-
-  m_adapter->processData(
-      "TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault",
-        "4200 ALARM_D Power on effective parameter set");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault@nativeCode",
-                          "4200");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault@nativeSeverity",
-                          "ALARM_D");
-  }
-
-  m_adapter->processData(
-      "TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]",
-        "4200 ALARM_D Power on effective parameter set");
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]",
-        "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault[2]@nativeCode",
-                          "2218");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault[2]@nativeSeverity",
-                          "ALARM_B");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault[2]@qualifier",
-                          "HIGH");
-  }
-
-  m_adapter->processData(
-      "TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 2);
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]",
-        "2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault[1]@nativeCode",
-                          "2218");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault[1]@nativeSeverity",
-                          "ALARM_B");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault[1]@qualifier",
-                          "HIGH");
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[2]",
-        "4200 ALARM_D Power on effective parameter set");
-  }
-
-  m_adapter->processData("TIME|lp|NORMAL|2218|||");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//"
-                          "m:ComponentStream[@component='Controller']/m:Condition/"
-                          "m:Fault[1]@nativeCode",
-                          "4200");
-    ASSERT_XML_PATH_EQUAL(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Fault[1]",
-        "4200 ALARM_D Power on effective parameter set");
-  }
-
-  m_adapter->processData("TIME|lp|NORMAL||||");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
-    ASSERT_XML_PATH_COUNT(
-        doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/m:Normal",
-        1);
-  }
-}
-
-TEST_F(AgentTest, EmptyLastItemFromAdapter)
-{
-  m_agentTestHelper->m_path = "/current";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_adapter->setDupCheck(true);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  auto program = m_agent->getDataItemByName("LinuxCNC", "program");
-  ASSERT_TRUE(program);
-
-  auto tool_id = m_agent->getDataItemByName("LinuxCNC", "block");
-  ASSERT_TRUE(tool_id);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("TIME|program|A|block|B");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "A");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "B");
-  }
-
-  m_adapter->processData("TIME|program||block|B");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "B");
-  }
-
-  m_adapter->processData("TIME|program||block|");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
-  }
-
-  m_adapter->processData("TIME|program|A|block|B");
-  m_adapter->processData("TIME|program|A|block|");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "A");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
-  }
-
-  m_adapter->processData("TIME|program|A|block|B|line|C");
-  m_adapter->processData("TIME|program|D|block||line|E");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "D");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", "E");
-  }
-}
-
-TEST_F(AgentTest, ConstantValue)
-{
-  m_agentTestHelper->m_path = "/sample";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  
-  auto di = m_agent->getDataItemByName("LinuxCNC", "block");
-  ASSERT_TRUE(di);
-  di->addConstrainedValue("UNAVAILABLE");
-
-  ASSERT_TRUE(m_adapter);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("TIME|block|G01X00|Smode|INDEX|line|204");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Block", 1);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode[1]", "SPINDLE");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:RotaryMode", 1);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-  }
-}
-
-TEST_F(AgentTest, BadDataItem)
-{
-  m_agentTestHelper->m_path = "/sample";
-
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-  }
-
-  m_adapter->processData("TIME|bad|ignore|dummy|1244|line|204");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
-  }
-}
-
-// -----------------------------------------
-// Asset Related Agent Tests
-
-TEST_F(AgentTest, AssetStorage)
-{
-  m_agent->enablePut();
-  m_agentTestHelper->m_path = "/asset/P1";
-  string body = "<Part assetId='P1' deviceUuid='LinuxCNC'>TEST</Part>";
-  key_value_map queries;
-
-  queries["type"] = "Part";
-  queries["device"] = "LinuxCNC";
-
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, m_agent->getAssetCount());
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST");
-  }
-
-  // The device should generate an asset changed event as well.
-  m_agentTestHelper->m_path = "/current";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged", "P1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@assetType", "Part");
-  }
-}
-
-TEST_F(AgentTest, AssetBuffer)
-{
-  m_agent->enablePut();
-  m_agentTestHelper->m_path = "/asset/P1";
-  string body = "<Part assetId='P1'>TEST 1</Part>";
-  key_value_map queries;
-
-  queries["device"] = "000";
-  queries["type"] = "Part";
-
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, m_agent->getAssetCount());
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-    ASSERT_EQ(1, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
-  }
-
-  // Make sure replace works properly
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-    ASSERT_EQ(1, m_agent->getAssetCount("Part"));
-  }
-
-  m_agentTestHelper->m_path = "/asset/P2";
-  body = "<Part assetId='P2'>TEST 2</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)2, m_agent->getAssetCount());
-    ASSERT_EQ(2, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P3";
-  body = "<Part assetId='P3'>TEST 3</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)3, m_agent->getAssetCount());
-    ASSERT_EQ(3, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 3");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P4";
-  body = "<Part assetId='P4'>TEST 4</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)4, m_agent->getAssetCount());
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 4");
-    ASSERT_EQ(4, m_agent->getAssetCount("Part"));
-  }
-
-  // Test multiple asset get
-  m_agentTestHelper->m_path = "/assets";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 4");
-  }
-
-  // Test multiple asset get with filter
-  m_agentTestHelper->m_path = "/assets";
-  {
-    PARSE_XML_RESPONSE_QUERY(queries);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 4");
-  }
-
-  queries["count"] = "2";
-  {
-    PARSE_XML_RESPONSE_QUERY(queries);
-    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 3");
-  }
-
-  queries.erase("count");
-
-  m_agentTestHelper->m_path = "/asset/P5";
-  body = "<Part assetId='P5'>TEST 5</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)4, m_agent->getAssetCount());
-    ASSERT_EQ(4, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 5");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P1";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: P1");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P3";
-  body = "<Part assetId='P3'>TEST 6</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)4, m_agent->getAssetCount());
-    ASSERT_EQ(4, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 6");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P2";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P2";
-  body = "<Part assetId='P2'>TEST 7</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)4, m_agent->getAssetCount());
-    ASSERT_EQ(4, m_agent->getAssetCount("Part"));
-  }
-
-  m_agentTestHelper->m_path = "/asset/P6";
-  body = "<Part assetId='P6'>TEST 8</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)4, m_agent->getAssetCount());
-    ASSERT_EQ(4, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 8");
-  }
-
-  // Now since two and three have been modified, asset 4 should be removed.
-  m_agentTestHelper->m_path = "/asset/P4";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: P4");
-  }
-}
-
-TEST_F(AgentTest, AssetError)
-{
-  m_agentTestHelper->m_path = "/asset/123";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Could not find asset: 123");
-  }
-}
-
-TEST_F(AgentTest, AdapterAddAsset)
-{
-  addAdapter();
-
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/asset/P1";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
-  }
-}
-
-TEST_F(AgentTest, MultiLineAsset)
-{
-  addAdapter();
-
-  m_adapter->parseBuffer("TIME|@ASSET@|P1|Part|--multiline--AAAA\n");
-  m_adapter->parseBuffer(
-      "<Part assetId='P1'>\n"
-      "  <PartXXX>TEST 1</PartXXX>\n"
-      "  Some Text\n"
-      "  <Extra>XXX</Extra>\n");
-  m_adapter->parseBuffer(
-      "</Part>\n"
-      "--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/asset/P1";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:PartXXX", "TEST 1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:Extra", "XXX");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "P1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@deviceUuid", "000");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "TIME");
-  }
-
-  // Make sure we can still add a line and we are out of multiline mode...
-  m_agentTestHelper->m_path = "/current";
-  m_adapter->processData("TIME|line|204");
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", "204");
-  }
-}
-
-TEST_F(AgentTest, BadAsset)
-{
-  addAdapter();
-
-  m_adapter->parseBuffer("TIME|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
-  m_adapter->parseBuffer((getFile("asset4.xml") + "\n").c_str());
-  m_adapter->parseBuffer("--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)0, m_agent->getAssetCount());
-}
-
-TEST_F(AgentTest, AssetRemoval)
-{
-  m_agent->enablePut();
-  m_agentTestHelper->m_path = "/asset/P1";
-  string body = "<Part assetId='P1'>TEST 1</Part>";
-  key_value_map queries;
-
-  queries["device"] = "LinuxCNC";
-  queries["type"] = "Part";
-
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, m_agent->getAssetCount());
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-    ASSERT_EQ(1, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
-  }
-
-  // Make sure replace works properly
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-    ASSERT_EQ(1, m_agent->getAssetCount("Part"));
-  }
-
-  m_agentTestHelper->m_path = "/asset/P2";
-  body = "<Part assetId='P2'>TEST 2</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)2, m_agent->getAssetCount());
-    ASSERT_EQ(2, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 2");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P3";
-  body = "<Part assetId='P3'>TEST 3</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)3, m_agent->getAssetCount());
-    ASSERT_EQ(3, m_agent->getAssetCount("Part"));
-  }
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 3");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P2";
-  body = "<Part assetId='P2' removed='true'>TEST 2</Part>";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)3, m_agent->getAssetCount(false));
-    ASSERT_EQ(3, m_agent->getAssetCount("Part", false));
-  }
-
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
-  }
-
-  m_agentTestHelper->m_path = "/assets";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
-  }
-
-  m_agentTestHelper->m_queries["removed"] = "true";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]@removed", "true");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
-  }
-}
-
-TEST_F(AgentTest, AssetRemovalByAdapter)
-{
-  addAdapter();
-
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-
-  m_adapter->processData("TIME|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
-  ASSERT_EQ((unsigned int)2, m_agent->getAssetCount());
-
-  m_adapter->processData("TIME|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
-  ASSERT_EQ((unsigned int)3, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "P3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
-  }
-
-  m_adapter->processData("TIME|@REMOVE_ASSET@|P2\r");
-  ASSERT_EQ((unsigned int)3, m_agent->getAssetCount(false));
-
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
-  }
-
-  m_agentTestHelper->m_path = "/assets";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
-  }
-
-  // TODO: When asset is removed and the content is literal, it will
-  // not regenerate the attributes for the asset.
-  m_agentTestHelper->m_queries["removed"] = "true";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
-  }
-}
-
-TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
-{
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.2", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  {
-    m_agentTestHelper->m_path = "/LinuxCNC/probe";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 0);
-  }
-}
-
-TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
-{
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.3", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  {
-    m_agentTestHelper->m_path = "/LinuxCNC/probe";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", nullptr);
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
-  }
-}
-
-TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
-{
-  m_agent.reset();
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 8, 4, "1.5", 25);
-  m_agentTestHelper->m_agent = m_agent.get();
-
-  {
-    m_agentTestHelper->m_path = "/LinuxCNC/probe";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", "true");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
-  }
-}
-
-TEST_F(AgentTest, AssetPrependId)
-{
-  addAdapter();
-
-  m_adapter->processData("TIME|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/asset/0001";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "0001");
-  }
-}
-
-TEST_F(AgentTest, RemoveLastAssetChanged)
-{
-  addAdapter();
-
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "P1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
-  }
-
-  m_adapter->processData("TIME|@REMOVE_ASSET@|P1");
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount(false));
-
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
-  }
-}
-
-TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
-{
-  addAdapter();
-  m_agent->enablePut();
-
-
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount(false));
-
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "P1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
-  }
-
-  m_agentTestHelper->m_path = "/asset/P1";
-  {
-    PARSE_XML_RESPONSE_DELETE;
-  }
-  
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
-  }
-}
-
-
-TEST_F(AgentTest, AssetChangedWhenUnavailable)
-{
-  addAdapter();
-
-  {
-    m_agentTestHelper->m_path = "/current";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "");
-  }
-}
-
-TEST_F(AgentTest, RemoveAllAssets)
-{
-  addAdapter();
-
-  ASSERT_EQ((unsigned int)4, m_agent->getMaxAssets());
-
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-
-  m_adapter->processData("TIME|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
-  ASSERT_EQ((unsigned int)2, m_agent->getAssetCount());
-
-  m_adapter->processData("TIME|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
-  ASSERT_EQ((unsigned int)3, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "P3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
-  }
-
-  m_adapter->processData("TIME|@REMOVE_ALL_ASSETS@|Part");
-  ASSERT_EQ((unsigned int)3, m_agent->getAssetCount(false));
-
-  m_agentTestHelper->m_path = "/current";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
-  }
-  
-  ASSERT_EQ((unsigned int)0, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/assets";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 0);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
-  }
-
-  // TODO: When asset is removed and the content is literal, it will
-  // not regenerate the attributes for the asset.
-  m_agentTestHelper->m_queries["removed"] = "true";
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 2");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 3");
-  }
-}
-
-TEST_F(AgentTest, AssetProbe)
-{
-  m_agent->enablePut();
-  m_agentTestHelper->m_path = "/asset/P1";
-  string body = "<Part assetId='P1'>TEST 1</Part>";
-  key_value_map queries;
-
-  queries["device"] = "LinuxCNC";
-  queries["type"] = "Part";
-
-  m_agentTestHelper->m_path = "/asset/P1";
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-  }
-  m_agentTestHelper->m_path = "/asset/P2";
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    ASSERT_EQ((unsigned int)2, m_agent->getAssetCount());
-  }
-
-  {
-    m_agentTestHelper->m_path = "/probe";
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount@assetType", "Part");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header/m:AssetCounts/m:AssetCount", "2");
-  }
-}
-
-TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
-{
-  m_agent->enablePut();
-  m_agentTestHelper->m_path = "/asset/P1";
-  const string body {
-R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
-  <CuttingToolLifeCycle>
-    <CutterStatus>
-      <Status>NEW</Status>
-    </CutterStatus>
-    <Measurements>
-      <FunctionalLength code="LF" maximum="5.2" minimum="4.95" nominal="5" units="MILLIMETER"/>
-      <CuttingDiameterMax code="DC" maximum="1.4" minimum="0.95" nominal="1.25" units="MILLIMETER"/>
-    </Measurements>
-  </CuttingToolLifeCycle>
-</CuttingTool>
-)DOC" };
-  key_value_map queries;
-
-  queries["device"] = "LinuxCNC";
-  queries["type"] = "Part";
-
-  m_agentTestHelper->m_path = "/asset/P1";
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]",
-                          "Asset parsed with errors: P1");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]",
-                          "FunctionalLength(VALUE): Property VALUE is required and not provided");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]",
-                          "Measurements: Invalid element 'FunctionalLength'");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]",
-                          "CuttingDiameterMax(VALUE): Property VALUE is required and not provided");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]",
-                          "Measurements: Invalid element 'CuttingDiameterMax'");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]",
-                          "Measurements(Measurement): Entity list requirement Measurement must have at least 1 entries, 0 found");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]",
-                          "CuttingToolLifeCycle: Invalid element 'Measurements'");
-  }
-
-}
 #endif
+}

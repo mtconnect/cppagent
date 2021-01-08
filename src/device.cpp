@@ -81,7 +81,7 @@ namespace mtconnect
       m_assetRemoved = dataItem;
   }
 
-  DataItem *Device::getDeviceDataItem(const std::string &name)
+  DataItem *Device::getDeviceDataItem(const std::string &name)  const
   {
     const auto sourcePos = m_deviceDataItemsBySource.find(name);
     if (sourcePos != m_deviceDataItemsBySource.end())

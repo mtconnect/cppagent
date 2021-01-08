@@ -100,3 +100,61 @@ TEST_F(HttpServerTest, TestSimpleRouting)
   request.m_path = "/Device1/current";
   ASSERT_FALSE(m_server->dispatch(request, response));
 }
+
+// Test diabling of HTTP PUT or POST
+TEST_F(HttpServerTest, PutBlocking)
+{
+  key_value_map queries;
+  string body;
+
+  queries["time"] = "TIME";
+  queries["line"] = "205";
+  queries["power"] = "ON";
+  m_agentTestHelper->m_path = "/LinuxCNC";
+
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Only the HTTP GET request is supported");
+  }
+}
+
+// Test diabling of HTTP PUT or POST
+TEST_F(HttpServerTest, PutBlockingFrom)
+{
+  key_value_map queries;
+  string body;
+  m_agent->enablePut();
+
+  m_agent->allowPutFrom("192.168.0.1");
+
+  queries["time"] = "TIME";
+  queries["line"] = "205";
+  m_agentTestHelper->m_path = "/LinuxCNC";
+
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT, POST, and DELETE are not allowed from 127.0.0.1");
+  }
+
+  m_agentTestHelper->m_path = "/LinuxCNC/current";
+
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "UNAVAILABLE");
+  }
+
+  // Retry request after adding ip address
+  m_agentTestHelper->m_path = "/LinuxCNC";
+  m_agent->allowPutFrom("127.0.0.1");
+
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+  }
+
+  m_agentTestHelper->m_path = "/LinuxCNC/current";
+
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
+  }
+}

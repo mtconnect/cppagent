@@ -79,9 +79,7 @@ namespace mtconnect
     // Unique id number for agent instance
     m_instanceId = getCurrentTimeInSec();
 
-    auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
-
-    // TODO: Check Schema version before creating Agent Device. Only > 1.7'
+    // TODO: Check Schema version before creating Agent Device. Only >= 1.7'
     int major, minor;
     char c;
     stringstream vstr(version);
@@ -111,6 +109,55 @@ namespace mtconnect
 
     m_initialized = true;
   }
+  
+  Agent::~Agent()
+  {
+    m_xmlParser.reset();
+    m_agentDevice = nullptr;
+    for (auto &i : m_devices)
+      delete i;
+    m_devices.clear();
+  }
+  
+  void Agent::start()
+  {
+    try
+    {
+      // Start all the adapters
+      for (const auto adapter : m_adapters)
+        adapter->start();
+
+      // Start the server. This blocks until the server stops.
+      m_server->start();
+    }
+    catch (dlib::socket_error &e)
+    {
+      g_logger << LFATAL << "Cannot start server: " << e.what();
+      std::exit(1);
+    }
+  }
+
+  void Agent::stop()
+  {
+    // Stop all adapter threads...
+    g_logger << LINFO << "Shutting down adapters";
+    // Deletes adapter and waits for it to exit.
+    for (const auto adapter : m_adapters)
+      adapter->stop();
+
+    g_logger << LINFO << "Shutting down server";
+    m_server->stop();
+    g_logger << LINFO << "Shutting completed";
+
+    for (const auto adapter : m_adapters)
+      delete adapter;
+
+    m_adapters.clear();
+  }
+  
+  // ---------------------------------------
+  // Agent Device
+  // ---------------------------------------
 
   void Agent::createAgentDevice()
   {
@@ -122,6 +169,10 @@ namespace mtconnect
 
     addDevice(m_agentDevice);
   }
+
+  // ----------------------------------------------
+  // Device management and Initialization
+  // ----------------------------------------------
 
   void Agent::loadXMLDeviceFile(const std::string &configXmlPath)
   {
@@ -150,6 +201,7 @@ namespace mtconnect
       throw f;
     }
   }
+  
 
   void Agent::verifyDevice(Device *device)
   {
@@ -286,22 +338,10 @@ namespace mtconnect
                                                      m_devices));
   }
   
-  const string Agent::acceptFormat(const std::string &accepts) const
-  {
-    std::stringstream list(accepts);
-    std::string accept;
-    while (std::getline(list, accept, ','))
-    {
-      for (const auto &p : m_printers)
-      {
-        if (ends_with(accept, p.first))
-          return p.first;
-      }
-    }
+  // -----------------------------------------------------------
+  // Request Routing
+  // -----------------------------------------------------------
 
-    return "xml";
-  }
-  
   static inline void respond(http_server::Response &response, const Agent::RequestResult &res)
   {
     response.writeResponse(res.m_body, res.m_format, res.m_status);
@@ -385,7 +425,7 @@ namespace mtconnect
       return true;
     };
 
-    string qp("type={string}&removed={string:false}&count={integer:100}");
+    string qp("type={string}&removed={string:false}&count={integer:100}&device={string}");
     m_server->addRounting({ "GET", "/assets?" + qp, handler});
     m_server->addRounting({ "GET", "/asset?" + qp, handler});
     m_server->addRounting({ "GET","/{device}/assets?" + qp, handler});
@@ -400,6 +440,7 @@ namespace mtconnect
                                     Response &response) -> bool {
         respond(response, putAssetRequest(acceptFormat(request.m_accepts),
                                           request.m_body,
+                                          request.parameter<string>("type"),
                                           request.parameter<string>("device"),
                                           request.parameter<string>("uuid")));
         return true;
@@ -438,9 +479,17 @@ namespace mtconnect
         putHandler});
       }
 
+      m_server->addRounting({ "DELETE", "/assets?&device={string}&type={string}",
+        deleteHandler});
+      m_server->addRounting({ "DELETE", "/asset?&device={string}&type={string}",
+        deleteHandler});
       m_server->addRounting({ "DELETE", "/assets/{assets}",
         deleteHandler});
+      m_server->addRounting({ "DELETE", "/asset/{assets}",
+        deleteHandler});
       m_server->addRounting({ "DELETE", "/{device}/assets?type={string}",
+        deleteHandler});
+      m_server->addRounting({ "DELETE", "/{device}/asset?type={string}",
         deleteHandler});
     }
   }
@@ -507,7 +556,11 @@ namespace mtconnect
     m_server->addRounting({ "GET", "/{device}/sample?" + qp, handler});
   }
 
-  const Device *Agent::getDeviceByName(const std::string &name) const
+  // ----------------------------------------------------
+  // Helper Methods
+  // ----------------------------------------------------
+  
+  Device *Agent::getDeviceByName(const std::string &name) const
   {
     auto devPos = m_deviceNameMap.find(name);
     if (devPos != m_deviceNameMap.end())
@@ -525,7 +578,7 @@ namespace mtconnect
     return nullptr;
   }
 
-  Device *Agent::findDeviceByUUIDorName(const std::string &idOrName)
+  Device *Agent::findDeviceByUUIDorName(const std::string &idOrName) const
   {
     auto di = m_deviceUuidMap.find(idOrName);
     if (di == m_deviceUuidMap.end())
@@ -542,72 +595,26 @@ namespace mtconnect
     return nullptr;
   }
 
-  Agent::~Agent()
+  const string Agent::acceptFormat(const std::string &accepts) const
   {
-    m_xmlParser.reset();
-    m_agentDevice = nullptr;
-    for (auto &i : m_devices)
-      delete i;
-    m_devices.clear();
-  }
-
-  void Agent::start()
-  {
-    try
+    std::stringstream list(accepts);
+    std::string accept;
+    while (std::getline(list, accept, ','))
     {
-      // Start all the adapters
-      for (const auto adapter : m_adapters)
-        adapter->start();
-
-      // Start the server. This blocks until the server stops.
-      m_server->start();
-    }
-    catch (dlib::socket_error &e)
-    {
-      g_logger << LFATAL << "Cannot start server: " << e.what();
-      std::exit(1);
-    }
-  }
-
-  void Agent::stop()
-  {
-    // Stop all adapter threads...
-    g_logger << LINFO << "Shutting down adapters";
-    // Deletes adapter and waits for it to exit.
-    for (const auto adapter : m_adapters)
-      adapter->stop();
-
-    g_logger << LINFO << "Shutting down server";
-    m_server->stop();
-    g_logger << LINFO << "Shutting completed";
-
-    for (const auto adapter : m_adapters)
-      delete adapter;
-
-    m_adapters.clear();
-  }
-
-  const Printer *Agent::printerForAccepts(const std::string &accepts) const
-  {
-    if (!accepts.empty())
-    {
-      stringstream list(accepts);
-      string accept;
-      while (getline(list, accept, ','))
+      for (const auto &p : m_printers)
       {
-        for (const auto &p : m_printers)
-        {
-          if (ends_with(accept, p.first))
-            return p.second.get();
-        }
+        if (ends_with(accept, p.first))
+          return p.first;
       }
     }
-    
-    auto xml = m_printers.find("xml");
-    return xml->second.get();
-  }
 
-  // Methods for service
+    return "xml";
+  }
+  // ----------------------------------------------------
+  // Adapter Methods
+  // ----------------------------------------------------
+  
+
   void Agent::addAdapter(Adapter *adapter, bool start)
   {
     adapter->setAgent(*this);
@@ -632,117 +639,6 @@ namespace mtconnect
     }
   }
 
-  unsigned int Agent::addToBuffer(DataItem *dataItem, const string &value, string time)
-  {
-    if (!dataItem)
-      return 0;
-
-    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-
-    RefCountedPtr<Observation> event(new Observation(*dataItem, time, value), true);
-    if (!dataItem->allowDups() && dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(event))
-    {
-      return 0;
-    }
-    
-    auto seqNum = m_circularBuffer.addToBuffer(event);
-    dataItem->signalObservers(seqNum);
-
-    return seqNum;
-  }
-
-  bool Agent::addAsset(Device *device, const string &id, const string &doc,
-                       const string &type, const string &inputTime,
-                       entity::ErrorList &errors)
-  {
-    // Parse the asset
-    entity::XmlParser parser;
-    
-    auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
-    if (!entity)
-    {
-      g_logger << LWARN << "Asset '" << id << " could not be parsed";
-      g_logger << LWARN << doc;
-      for (auto &e : errors)
-        g_logger << LWARN << e->what();
-      return false;
-    }
-
-    auto asset = dynamic_pointer_cast<Asset>(entity);
-    string aid = id;
-    if (aid[0] == '@' || asset->getAssetId()[0] == '@')
-    {
-      if (aid.empty())
-        aid = asset->getAssetId();
-      aid.erase(0, 1);
-      aid.insert(0, device->getUuid());
-    }
-    if (aid != asset->getAssetId())
-    {
-      asset->setAssetId(aid);
-    }
-    
-    auto ts = asset->getTimestamp();
-    if (!ts && !inputTime.empty())
-    {
-      asset->setProperty("timestamp", inputTime);
-    }
-    
-    auto ad = asset->getDeviceUuid();
-    if (!ad)
-    {
-      asset->setProperty("deviceUuid", device->getUuid());
-    }
-
-    auto old = m_assetBuffer.addAsset(asset);
-    
-    auto at = asset->getTimestamp();
-    if (asset->isRemoved())
-      addToBuffer(device->getAssetRemoved(), type + "|" + id, *at);
-    else
-      addToBuffer(device->getAssetChanged(), type + "|" + id, *at);
-
-    return true;
-  }
-  
-
-  bool Agent::removeAsset(Device *device, const std::string &id, const string &inputTime)
-  {
-    // TODO: Error handling for parse errors.
-
-    auto asset = m_assetBuffer.removeAsset(id, inputTime);
-    if (asset)
-    {
-      auto time = asset->getTimestamp();
-      addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, *time);
-      
-      // Check if the asset changed id is the same as this asset.
-      auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
-      if (ptr && (*ptr)->getValue() == id)
-      {
-        addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE",
-                    *time);
-      }
-    }
-
-    return true;
-  }
-
-  bool Agent::removeAllAssets(Device *device, const std::string &type,
-                              const std::string &inputTime)
-  {
-    std::lock_guard<AssetBuffer> lock(m_assetBuffer);
-    auto assets = m_assetBuffer.getAssetsForType(type);
-    auto uuid = device->getUuid();
-    for (auto a : assets)
-    {
-      if (!a.second->getDeviceUuid() || a.second->getDeviceUuid() == uuid)
-        removeAsset(device, a.second->getAssetId(), inputTime);
-    }
-    
-    return true;
-  }
-  
   void Agent::connecting(Adapter *adapter)
   {
     if (m_agentDevice)
@@ -829,12 +725,163 @@ namespace mtconnect
         g_logger << LDEBUG << "Cannot find availability for " << device->getName();
     }
   }
+
+  // ----------------------------------------------------
+  // Observation Add Method
+  // ----------------------------------------------------
   
-  // Helper
+  unsigned int Agent::addToBuffer(DataItem *dataItem, const string &value, string time)
+  {
+    if (!dataItem)
+      return 0;
+
+    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+
+    RefCountedPtr<Observation> event(new Observation(*dataItem, time, value), true);
+    if (!dataItem->allowDups() && dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(event))
+    {
+      return 0;
+    }
+    
+    auto seqNum = m_circularBuffer.addToBuffer(event);
+    dataItem->signalObservers(seqNum);
+
+    return seqNum;
+  }
+  
+  // ----------------------------------------------------
+  // Asset CRUD Methods
+  // ----------------------------------------------------
+
+  AssetPtr Agent::addAsset(Device *device,
+                       const std::string &document,
+                       const std::optional<std::string> &id,
+                       const std::optional<std::string> &type,
+                       const std::optional<std::string> &time,
+                       entity::ErrorList &errors)
+  {
+    // Parse the asset
+    entity::XmlParser parser;
+    
+    auto entity = parser.parse(Asset::getRoot(), document, "1.7", errors);
+    if (!entity)
+    {
+      g_logger << LWARN << "Asset could not be parsed";
+      g_logger << LWARN << document;
+      for (auto &e : errors)
+        g_logger << LWARN << e->what();
+      return nullptr;
+    }
+    
+    auto asset = dynamic_pointer_cast<Asset>(entity);
+    if (type && asset->getType() != *type)
+    {
+      stringstream msg;
+      msg << "Asset types do not match: "
+          << "Parsed type: " << asset->getType() << " does not match "
+          << *type;
+      g_logger << LWARN << msg.str();
+      g_logger << LWARN << document;
+      errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
+      return asset;
+    }
+    
+    string aid = id ? *id : asset->getAssetId();
+    if (aid[0] == '@')
+    {
+      if (aid.empty())
+        aid = asset->getAssetId();
+      aid.erase(0, 1);
+      aid.insert(0, device->getUuid());
+    }
+    if (aid != asset->getAssetId())
+    {
+      asset->setAssetId(aid);
+    }
+    
+    if (time)
+    {
+      asset->setProperty("timestamp", *time);
+    }
+    
+    auto ad = asset->getDeviceUuid();
+    if (!ad)
+    {
+      asset->setProperty("deviceUuid", device->getUuid());
+    }
+
+    auto old = m_assetBuffer.addAsset(asset);
+    
+    auto at = asset->getTimestamp();
+    stringstream msg(asset->getType());
+    msg << asset->getType() << "|" << asset->getAssetId();
+    if (asset->isRemoved())
+      addToBuffer(device->getAssetRemoved(), msg.str(), *at);
+    else
+      addToBuffer(device->getAssetChanged(), msg.str(), *at);
+
+    return asset;
+  }
+
+  bool Agent::removeAsset(Device *device, const std::string &id,
+                          const optional<string> inputTime)
+  {
+    // TODO: Error handling for parse errors.
+    string time = inputTime ? *inputTime : getCurrentTime(GMT_UV_SEC);
+    
+    auto asset = m_assetBuffer.removeAsset(id, time);
+    if (asset)
+    {
+      if (device == nullptr && asset->getDeviceUuid())
+      {
+        auto dp = m_deviceUuidMap.find(*asset->getDeviceUuid());
+        if (dp != m_deviceUuidMap.end())
+          device = dp->second;
+      }
+      if (device == nullptr)
+        device = m_devices.front();
+      
+      auto time = asset->getTimestamp();
+      addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, *time);
+      
+      // Check if the asset changed id is the same as this asset.
+      auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
+      if (ptr && (*ptr)->getValue() == id)
+      {
+        addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE",
+                    *time);
+      }
+    }
+
+    return true;
+  }
+
+  bool Agent::removeAllAssets(const std::optional<std::string> device,
+                              const optional<string> type,
+                              const optional<string> inputTime,
+                              AssetList &list)
+  {
+    string time = inputTime ? *inputTime : getCurrentTime(GMT_UV_SEC);
+
+    std::lock_guard<AssetBuffer> lock(m_assetBuffer);
+    getAssets(nullptr, numeric_limits<int32_t>().max() - 1,
+              false, type, device, list);
+    for (auto a : list)
+    {
+      removeAsset(nullptr, a->getAssetId(), time);
+    }
+      
+    return true;
+  }
+  
+  // -----------------------------------------------
+  // Validation methods
+  // -----------------------------------------------
+
   template<typename T>
   void Agent::checkRange(const Printer *printer,
                          const T value, const T min, const T max,
-                         const string &param, bool notZero)
+                         const string &param, bool notZero) const
   {
     using namespace http_server;
     if (value <= min)
@@ -863,11 +910,11 @@ namespace mtconnect
 
     }
   }
-
+  
   void Agent::checkPath(const Printer *printer,
                         const std::optional<std::string> &path,
                         const Device *device,
-                        FilterSet &filter)
+                        FilterSet &filter) const
   {
     using namespace http_server;
     try
@@ -890,7 +937,7 @@ namespace mtconnect
     }
   }
 
-  Device *Agent::checkDevice(const Printer *printer, const std::string &uuid)
+  Device *Agent::checkDevice(const Printer *printer, const std::string &uuid) const
   {
     using namespace http_server;
     auto dev = findDeviceByUUIDorName(uuid);
@@ -906,7 +953,7 @@ namespace mtconnect
   }
   
   string Agent::devicesAndPath(const std::optional<string> &path,
-                               const Device *device)
+                               const Device *device) const
   {
     string dataPath;
 
@@ -943,7 +990,10 @@ namespace mtconnect
     return dataPath;
   }
   
-  // Agent Requests
+  // -------------------------------------------
+  // ReST API Requests
+  // -------------------------------------------
+  
   Agent::RequestResult Agent::probeRequest(const std::string &format,
                                            const std::optional<std::string> &device)
   {
@@ -1045,45 +1095,121 @@ namespace mtconnect
                              const std::optional<std::string> &type,
                              const std::optional<std::string> &device)
   {
-    return {"",http_server::OK,""};
+    using namespace http_server;
+    auto printer = getPrinter(format);
+    AssetList list;
+    getAssets(printer, count, removed, type, device, list);
+    
+    return { printer->printAssets(m_instanceId, m_assetBuffer.getMaxAssets(),
+                         m_assetBuffer.getCount(), list),
+      OK, printer->mimeType() };
   }
   
   Agent::RequestResult Agent::assetIdsRequest(const std::string &format,
                                 const std::list<std::string> &ids)
   {
-    return {"",http_server::OK,""};
+    using namespace http_server;
+    auto printer = getPrinter(format);
+    
+    AssetList list;
+    getAssets(printer, ids, list);
+    
+    return { printer->printAssets(m_instanceId, m_assetBuffer.getMaxAssets(),
+                         m_assetBuffer.getCount(), list),
+      OK, printer->mimeType()
+    };
   }
   
   Agent::RequestResult Agent::putAssetRequest(const std::string &format,
-                                       const std::string &asset,
-                                       const std::optional<std::string> &device,
-                                       const std::optional<std::string> &uuid)
+                                              const std::string &asset,
+                                              const std::optional<std::string> &type,
+                                              const std::optional<std::string> &device,
+                                              const std::optional<std::string> &uuid)
   {
-    return {"",http_server::OK,""};
+    using namespace http_server;
+    auto printer = getPrinter(format);
+
+    entity::ErrorList errors;
+    auto dev = checkDevice(printer, *device);
+    auto ap = addAsset(dev, asset, uuid, type, nullopt, errors);
+    if (!ap || errors.size() > 0)
+    {
+      ProtoErrorList errorResp;
+      if (!ap)
+        errorResp.emplace_back("INVALID_REQUEST", "Could not parse Asset.");
+      else
+        errorResp.emplace_back("INVALID_REQUEST", "Asset parsed with errors.");
+      for (auto &e : errors)
+      {
+        errorResp.emplace_back("INVALID_REQUEST", e->what());
+      }
+      return { printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
+                                    m_circularBuffer.getSequence(),
+                                    errorResp), http_server::BAD_REQUEST, printer->mimeType() };
+    }
+    
+    AssetList list { ap };
+    return { printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
+                         m_assetBuffer.getCount(), list),
+      OK, printer->mimeType()
+    };
   }
   
   Agent::RequestResult Agent::deleteAssetRequest(const std::string &format,
                                    const std::list<std::string> &ids)
   {
-    return {"",http_server::OK,""};
+    using namespace http_server;
+    auto printer = getPrinter(format);
+    
+    std::lock_guard<AssetBuffer> lock(m_assetBuffer);
+    
+    AssetList list;
+    getAssets(printer, ids, list);
+
+    auto time = getCurrentTime(GMT_UV_SEC);
+    for (auto asset : list)
+    {
+      removeAsset(nullptr, asset->getAssetId(), time);
+    }
+    
+    return { printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
+                         m_assetBuffer.getCount(), list),
+      OK, printer->mimeType() };
   }
   
   Agent::RequestResult Agent::deleteAllAssetsRequest(const std::string &format,
                                        const std::optional<std::string> &device,
                                        const std::optional<std::string> &type)
   {
-    return {"",http_server::OK,""};
+    using namespace http_server;
+    auto printer = getPrinter(format);
+
+    auto time = getCurrentTime(GMT_UV_SEC);
+    AssetList list;
+    removeAllAssets(device, type, time, list);
+        
+    return { printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
+                         m_assetBuffer.getCount(), list),
+      OK, printer->mimeType() };
   }
-  
+
+  // -------------------------------------------
+  // Error formatting
+  // -------------------------------------------
+
   string Agent::printError(const Printer *printer,
                            const string &errorCode,
-                           const string &text)
+                           const string &text) const
   {
     g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
     return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
                                m_circularBuffer.getSequence(), errorCode, text);
   }
   
+  // -------------------------------------------
+  // Data Collection and Formatting
+  // -------------------------------------------
+
   string Agent::fetchCurrentData(const Printer *printer,
                                  const FilterSetOpt &filterSet,
                                  const optional<SequenceNumber_t> &at)
@@ -1144,8 +1270,106 @@ namespace mtconnect
                                 m_circularBuffer.getSequence() - 1,
                                 *events);
   }
+  
+  // -------- Asset Helpers -------
+  
+  void Agent::getAssets(const Printer *printer,
+                        const std::list<std::string> &ids,
+                        AssetList &list)
+  {
+    std::lock_guard<AssetBuffer> lock(m_assetBuffer);
+
+    using namespace http_server;
+    for (auto &id : ids)
+    {
+      auto asset = m_assetBuffer.getAsset(id);
+      if (!asset)
+      {
+        string msg = "Cannot find asset for assetId: " + id;
+        throw RequestError(msg.c_str(),
+                           printError(printer, "ASSET_NOT_FOUND", msg),
+                           printer->mimeType(), NOT_FOUND);
+      }
+      list.emplace_back(asset);
+    }
+    
+    return list;
+  }
+
+  void Agent::getAssets(const Printer *printer,
+                 const int32_t count,
+                 const bool removed,
+                 const std::optional<std::string> &type,
+                 const std::optional<std::string> &device,
+                 AssetList &list)
+  {
+    if (printer)
+      checkRange(printer, count, 1, std::numeric_limits<int32_t>().max(), "count");
+    
+    std::lock_guard<AssetBuffer> lock(m_assetBuffer);
+    
+    Device *dev { nullptr };
+    if (device)
+    {
+      dev = checkDevice(printer, *device);
+    }
+    if (type)
+    {
+      auto iopt = m_assetBuffer.getAssetsForType(*type);
+      if (iopt)
+      {
+        for (auto &ap : **iopt)
+        {
+          // Check if we need to filter
+          if (removed || !ap.second->isRemoved())
+          {
+            if (!device || (ap.second->getDeviceUuid() &&
+                            dev->getUuid() == *ap.second->getDeviceUuid()))
+            {
+              list.emplace_back(ap.second);
+            }
+            
+            if (list.size() >= count)
+              break;
+          }
+        }
+      }
+    }
+    else if (dev != nullptr)
+    {
+      auto iopt = m_assetBuffer.getAssetsForDevice(dev->getUuid());
+      if (iopt)
+      {
+        for (auto &ap : **iopt)
+        {
+          if (removed || !ap.second->isRemoved())
+          {
+            list.emplace_back(ap.second);
+            if (list.size() >= count)
+              break;
+          }
+        }
+      }
+    }
+    else
+    {
+      for (auto &ap : reverse(m_assetBuffer.getAssets()))
+      {
+        if (removed || !ap->isRemoved())
+        {
+          list.emplace_back(ap);
+          if (list.size() >= count)
+            break;
+        }
+      }
+    }
+  }
 
   
+  // -------------------------------------------
+  // End
+  // -------------------------------------------
+
 #if 0
   string Agent::handlePut(const Printer *printer, ostream &out, const string &path,
                           const key_value_map &queries, const string &adapter,
@@ -1201,40 +1425,6 @@ namespace mtconnect
     return "<success/>";
   }
 
-  string Agent::handleStream(const Printer *printer, ostream &out, const string &path, bool current,
-                             unsigned int frequency, uint64_t start, int count,
-                             std::chrono::milliseconds heartbeat)
-  {
-    std::set<string> filter;
-    try
-    {
-      m_xmlParser->getDataItems(filter, path);
-    }
-    catch (exception &e)
-    {
-      return printError(printer, "INVALID_XPATH", e.what());
-    }
-
-    if (filter.empty())
-      return printError(printer, "INVALID_XPATH",
-                        "The path could not be parsed. Invalid syntax: " + path);
-
-    // Check if there is a frequency to stream data or not
-    if (frequency != (unsigned)NO_FREQ)
-    {
-      streamData(printer, out, filter, current, frequency, start, count, heartbeat);
-      return "";
-    }
-    else
-    {
-      uint64_t end;
-      bool endOfBuffer;
-      if (current)
-        return fetchCurrentData(printer, filter, start);
-      else
-        return fetchSampleData(printer, filter, start, count, end, endOfBuffer);
-    }
-  }
   std::string Agent::handleAssets(const Printer *printer, ostream &aOut,
                                   const key_value_map &queries,
                                   const string &list)
@@ -1596,22 +1786,6 @@ namespace mtconnect
 
     out.setstate(ios::badbit);
     // Observer is auto removed from signalers
-  }
-
-  string Agent::fetchSampleData(const Printer *printer, std::set<string> &filterSet, uint64_t start,
-                                int count, uint64_t &end, bool &endOfBuffer,
-                                ChangeObserver *observer)
-  {
-    uint64_t firstSeq;
-    auto results = m_circularBuffer.getObservations(filterSet, start, count,
-                                                    firstSeq, end, endOfBuffer);
-
-    if (observer)
-      observer->reset();
-
-    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
-                                end, firstSeq, m_circularBuffer.getSequence() - 1,
-                                *results);
   }
 #endif
 }  // namespace mtconnect
