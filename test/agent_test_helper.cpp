@@ -60,6 +60,15 @@ void AgentTestHelper::responseHelper(const char *file, int line,
     *doc = xmlParseMemory(m_response.m_body.c_str(), m_response.m_body.size());
 }
 
+void AgentTestHelper::responseStreamHelper(const char *file, int line,
+                                     const Routing::QueryMap &aQueries,
+                                     xmlDocPtr *doc, const char *path)
+{
+  makeRequest(file, line, "GET", "", aQueries, path);
+  if (ends_with(m_response.m_chunkMimeType, "xml"))
+    *doc = xmlParseMemory(m_response.m_chunkBody.c_str(), m_response.m_chunkBody.size());
+}
+
 void AgentTestHelper::putResponseHelper(const char *file, int line, const string &body,
                                         const Routing::QueryMap &aQueries, xmlDocPtr *doc,
                                         const char *path)

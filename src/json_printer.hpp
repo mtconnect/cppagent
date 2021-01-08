@@ -43,7 +43,7 @@ namespace mtconnect
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                             const unsigned int assetCount,
                             const AssetList &assets) const override;
-    std::string mimeType() const override { return "application/json"; }
+    std::string mimeType() const override { return "application/mtconnect+json"; }
 
    protected:
     const std::string &hostname() const;

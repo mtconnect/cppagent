@@ -94,6 +94,7 @@ namespace mtconnect
       }
       
       bool good() const { return m_out.good(); }
+      void setBad() { m_out.setstate(std::ios::badbit); }
       void flush() { m_out.flush(); }
       static std::string getStatus(uint16_t code)
       {
@@ -129,8 +130,8 @@ namespace mtconnect
         {
           using namespace std;
           m_out.setf(ios::hex, ios::basefield);
-          m_out << chunk.length() << "\r\n";
-          m_out << chunk << "\r\n";
+          m_out << chunk.length() << "\r\n"
+                << chunk << "\r\n";
           m_out.flush();
         }
       }

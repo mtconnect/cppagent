@@ -2357,36 +2357,8 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]",
                           "CuttingToolLifeCycle: Invalid element 'Measurements'");
   }
-
-
-#if 0
-
-// ------------- Put tests
-
-TEST_F(AgentTest, Put)
-{
-  key_value_map queries;
-  string body;
-  m_agent->enablePut();
-
-  queries["time"] = "TIME";
-  queries["line"] = "205";
-  queries["power"] = "ON";
-  m_agentTestHelper->m_path = "/LinuxCNC";
-
-  {
-    PARSE_XML_RESPONSE_PUT(body, queries);
-  }
-
-  m_agentTestHelper->m_path = "/LinuxCNC/current";
-
-  {
-    PARSE_XML_RESPONSE;
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "TIME");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
-  }
 }
+
 
 //  ---------------- Srreaming Tests ---------------------
 
@@ -2405,7 +2377,7 @@ TEST_F(AgentTest, BadInterval)
     query["interval"] = "-123";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be a positive integer.");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be greater than -1");
   }
 
   {
@@ -2413,7 +2385,7 @@ TEST_F(AgentTest, BadInterval)
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "'interval' must be less than or equal to 2147483646.");
+                          "'interval' must be less than 2147483647");
   }
 
   {
@@ -2421,25 +2393,22 @@ TEST_F(AgentTest, BadInterval)
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "'frequency' must be less than or equal to 2147483646.");
+                          "'interval' must be greater than -1");
   }
 }
 
 
 TEST_F(AgentTest, StreamData)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
   auto heartbeatFreq{200ms};
 
   // Start a thread...
-  key_value_map query;
+  Routing::QueryMap query;
   query["interval"] = "50";
   query["heartbeat"] = to_string(heartbeatFreq.count());
-  query["from"] = int64ToString(m_agent->getSequence());
-  m_agentTestHelper->m_path = "/LinuxCNC/sample";
+  query["from"] = to_string(agent->getSequence());
 
   // Heartbeat test. Heartbeat should be sent in 200ms. Give
   // 25ms range.
@@ -2455,7 +2424,7 @@ TEST_F(AgentTest, StreamData)
     auto killThread = std::thread{killThreadLambda, this};
     try
     {
-      PARSE_XML_RESPONSE_QUERY(query);
+      PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
       ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
 
       auto delta = system_clock::now() - startTime;
@@ -2489,7 +2458,7 @@ TEST_F(AgentTest, StreamData)
     auto addThread = std::thread{AddThreadLambda, this};
     try
     {
-      PARSE_XML_RESPONSE_QUERY(query);
+      PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
 
       auto delta = system_clock::now() - startTime;
       ASSERT_LT(delta, (minExpectedResponse + 50ms));
@@ -2506,36 +2475,35 @@ TEST_F(AgentTest, StreamData)
 
 TEST_F(AgentTest, StreamDataObserver)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+  
   // Start a thread...
   key_value_map query;
   query["interval"] = "100";
   query["heartbeat"] = "1000";
   query["count"] = "10";
-  query["from"] = int64ToString(m_agent->getSequence());
-  m_agentTestHelper->m_path = "/LinuxCNC/sample";
+  query["from"] = to_string(agent->getSequence());
 
   // Test to make sure the signal will push the sequence number forward and capture
   // the new data.
   {
     auto streamThreadLambda = [](AgentTest *test) {
+      auto agent = test->m_agentTestHelper->getAgent();
       this_thread::sleep_for(test->m_delay);
-      test->m_agent->setSequence(test->m_agent->getSequence() + 20ull);
+      agent->setSequence(agent->getSequence() + 20ull);
       test->m_adapter->processData("TIME|line|204");
       this_thread::sleep_for(120ms);
       test->m_agentTestHelper->m_out.setstate(ios::eofbit);
     };
 
     m_delay = 50ms;
-    auto seq = int64ToString(m_agent->getSequence() + 20ull);
+    auto seq = to_string(agent->getSequence() + 20ull);
 
     auto streamThread = std::thread{streamThreadLambda, this};
     try
     {
-      PARSE_XML_RESPONSE_QUERY(query);
+      PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
       ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
       streamThread.join();
     }
@@ -2545,5 +2513,35 @@ TEST_F(AgentTest, StreamDataObserver)
       throw;
     }
   }
-#endif
 }
+
+#if 0
+
+// ------------- Put tests
+
+TEST_F(AgentTest, Put)
+{
+  key_value_map queries;
+  string body;
+  m_agent->enablePut();
+
+  queries["time"] = "TIME";
+  queries["line"] = "205";
+  queries["power"] = "ON";
+  m_agentTestHelper->m_path = "/LinuxCNC";
+
+  {
+    PARSE_XML_RESPONSE_PUT(body, queries);
+  }
+
+  m_agentTestHelper->m_path = "/LinuxCNC/current";
+
+  {
+    PARSE_XML_RESPONSE;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
+  }
+  
+}
+#endif

@@ -55,6 +55,14 @@ namespace mtconnect
         Response::writeResponse(body, size, code, mimeType, expires);
       }
       
+      void writeMultipartChunk(const std::string &body, const std::string &mimeType) override
+      {
+        m_chunkBody = body;
+        m_chunkMimeType = mimeType;
+        Response::writeMultipartChunk(body, mimeType);
+      }
+
+      
       std::string getHeaderDate() override
       {
         return "TIME+DATE";
@@ -64,6 +72,9 @@ namespace mtconnect
       std::string m_mimeType;
       ResponseCode m_code;
       std::chrono::seconds m_expires;
+      
+      std::string m_chunkBody;
+      std::string m_chunkMimeType;
     };
 
   }
@@ -81,6 +92,9 @@ class AgentTestHelper
     
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
+                      const mtconnect::http_server::Routing::QueryMap &aQueries,
+                      xmlDocPtr *doc, const char *path);
+  void responseStreamHelper(const char *file, int line,
                       const mtconnect::http_server::Routing::QueryMap &aQueries,
                       xmlDocPtr *doc, const char *path);
   void responseHelper(const char *file, int line,
@@ -119,10 +133,19 @@ class AgentTestHelper
               << m_response.m_body << std::endl << "------------------------"
               << std::endl;
   }
+
+  void printResponseStream()
+  {
+    std::cout << "Status " << m_response.m_code << " "
+              << http::Response::getStatus(m_response.m_code) << std::endl
+              << m_out.str() << std::endl << "------------------------"
+              << std::endl;
+  }
+
   
   bool m_dispatched { false };
   std::unique_ptr<mtconnect::Agent> m_agent;
-  std::ostringstream m_out;
+  std::stringstream m_out;
   mtconnect::http_server::TestResponse m_response;
   mtconnect::http_server::Routing::Request m_request;
   
@@ -143,6 +166,12 @@ class AgentTestHelper
   xmlDocPtr doc = nullptr;                                              \
   m_agentTestHelper->responseHelper(__FILE__, __LINE__, queries, &doc, path); \
   ASSERT_TRUE(doc)
+
+#define PARSE_XML_STREAM_QUERY(path, queries)                               \
+  xmlDocPtr doc = nullptr;                                              \
+  m_agentTestHelper->responseStreamHelper(__FILE__, __LINE__, queries, &doc, path); \
+  ASSERT_TRUE(doc)
+
 
 #define PARSE_XML_RESPONSE_PUT(path, body, queries)                                    \
   xmlDocPtr doc = nullptr;                                                       \
