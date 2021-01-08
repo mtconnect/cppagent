@@ -75,6 +75,27 @@ class JsonPrinterTest : public testing::Test
         Requirement("station", false),
         Requirement("value", false)});
     
+    auto dataitem = make_shared<Factory>(Requirements{
+        Requirement("name", false),
+        Requirement("id", true),
+        Requirement("type", true),
+        Requirement("subType", false),
+        Requirement("statistic", false),
+        Requirement("units", false),
+        Requirement("nativeUnits", false),
+        Requirement("category", true),
+        Requirement("coordinateSystem", false),
+        Requirement("coordinateSystemId", false),
+        Requirement("compositionId", false),
+        Requirement("sampleRate", false),
+        Requirement("representation", false),
+        Requirement("significantDigits", false),
+        Requirement("discrete", false),
+        });
+
+    auto dataitems = make_shared<Factory>(Requirements{
+        Requirement("DataItem", ENTITY, dataitem, 1, Requirement::Infinite)});
+
     auto component = make_shared<Factory>(Requirements{
         Requirement("id", true),
         Requirement("name", false),
@@ -88,6 +109,7 @@ class JsonPrinterTest : public testing::Test
 
     component->addRequirements({Requirement("Components", ENTITY_LIST, components, false)});
     component->addRequirements({Requirement("Description", ENTITY, description, false)});
+    component->addRequirements({Requirement("DataItems", ENTITY_LIST, dataitems, false)});
 
     auto device = make_shared<Factory>(*component);
     device->addRequirements(Requirements{
@@ -118,6 +140,11 @@ class JsonPrinterTest : public testing::Test
         "bufferSize=\"131072\" deviceModelChangeTime=\"2021-01-07T18:34:15Z\"/>\n"
         "  <Devices>\n"
         "    <Device id=\"d1\" name=\"foo\" uuid=\"xxx\">\n"
+        "      <DataItems>\n"
+        "        <DataItem category=\"EVENT\" id=\"avail\" name=\"avail\" type=\"AVAILABILITY\"/>\n"
+        "        <DataItem category=\"EVENT\" id=\"d1_asset_chg\" type=\"ASSET_CHANGED\"/>\n"
+        "        <DataItem category=\"EVENT\" id=\"d1_asset_rem\" type=\"ASSET_REMOVED\"/>\n"
+        "      </DataItems\n>"
         "      <Components>\n"
         "        <Systems id=\"s1\">\n"
         "          <Description model=\"abc\">Hey Will</Description>\n"
@@ -133,7 +160,6 @@ class JsonPrinterTest : public testing::Test
     return doc;
   }
 };
-
 
 TEST_F(JsonPrinterTest, Header)
 {
@@ -151,7 +177,6 @@ TEST_F(JsonPrinterTest, Header)
 
   json jdoc;
   jdoc = jprinter.print(entity);
-  cout << jdoc.dump();
 
   ASSERT_EQ("DMZ-MTCNCT", jdoc.at("/MTConnectDevices/Header/sender"_json_pointer).get<string>());
   ASSERT_EQ(8096, jdoc.at("/MTConnectDevices/Header/assetBufferSize"_json_pointer).get<int64_t>());
@@ -195,8 +220,34 @@ TEST_F(JsonPrinterTest, Components)
   json jdoc;
   jdoc = jprinter.print(entity);
 
+  ASSERT_EQ(1, jdoc.at("/MTConnectDevices/Devices/0/Device/Components"_json_pointer).size());
+  ASSERT_EQ("s1", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/id"_json_pointer).get<string>());
+  
   ASSERT_EQ("abc", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/model"_json_pointer).get<string>());
   ASSERT_EQ("Hey Will", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/value"_json_pointer).get<string>());
+  
   ASSERT_EQ(2, jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Components"_json_pointer).size());
   ASSERT_EQ("h1", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Components/1/Heating/id"_json_pointer).get<string>());
+}
+
+TEST_F(JsonPrinterTest, TopLevelDataItems)
+{
+  auto root = createFileArchetypeFactory();
+
+  auto doc = deviceModel();
+
+  ErrorList errors;
+  entity::XmlParser parser;
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  entity::JsonPrinter jprinter;
+
+  json jdoc;
+  jdoc = jprinter.print(entity);
+
+  ASSERT_EQ("AVAILABILITY", jdoc.at("/MTConnectDevices/Devices/0/Device/DataItems/0/DataItem/type"_json_pointer).get<string>());
+  ASSERT_EQ("ASSET_CHANGED", jdoc.at("/MTConnectDevices/Devices/0/Device/DataItems/1/DataItem/type"_json_pointer).get<string>());
+  ASSERT_EQ("ASSET_REMOVED", jdoc.at("/MTConnectDevices/Devices/0/Device/DataItems/2/DataItem/type"_json_pointer).get<string>());
 }
