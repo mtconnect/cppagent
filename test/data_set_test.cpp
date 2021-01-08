@@ -35,29 +35,27 @@ class DataSetTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/data_set.xml", 4, 4, "1.5");
+    m_agentTestHelper = make_unique<AgentTestHelper>();
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.7", 25);
     m_agentId = int64ToString(getCurrentTimeInSec());
+
+    m_checkpoint = nullptr;
     m_adapter = nullptr;
+    m_agentId = int64ToString(getCurrentTimeInSec());
     m_checkpoint = make_unique<Checkpoint>();
 
-    m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
-    std::map<string, string> attributes;
-    auto device = m_agent->getDeviceByName("LinuxCNC");
+    auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_dataItem1 = device->getDeviceDataItem("v1");
   }
 
   void TearDown() override
   {
-    m_agent.reset();
     m_checkpoint.reset();
     m_agentTestHelper.reset();
   }
 
   std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<Agent> m_agent;
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   DataItem *m_dataItem1{nullptr};
@@ -250,13 +248,11 @@ TEST_F(DataSetTest, BadData)
 TEST_F(DataSetTest, Current)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
-  m_agentTestHelper->m_path = "/current";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']",
                           "UNAVAILABLE");
   }
@@ -264,7 +260,7 @@ TEST_F(DataSetTest, Current)
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "3");
@@ -277,7 +273,7 @@ TEST_F(DataSetTest, Current)
   m_adapter->processData("TIME|vars|c=6");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "6");
@@ -290,7 +286,7 @@ TEST_F(DataSetTest, Current)
   m_adapter->processData("TIME|vars|:MANUAL d=10");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "d", "10");
     ASSERT_XML_PATH_EQUAL(doc,
                           "//m:DeviceStream//m:VariableDataSet"
@@ -305,7 +301,7 @@ TEST_F(DataSetTest, Current)
   m_adapter->processData("TIME|vars|c=6");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "c", "6");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[@dataItemId='v1']", "d", "10");
     ASSERT_XML_PATH_EQUAL(doc,
@@ -318,17 +314,15 @@ TEST_F(DataSetTest, Current)
 TEST_F(DataSetTest, Sample)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
   m_adapter->processData("TIME|vars|c=5");
   m_adapter->processData("TIME|vars|a=1 c=8");
 
-  m_agentTestHelper->m_path = "/sample";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
@@ -340,20 +334,18 @@ TEST_F(DataSetTest, Sample)
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@count", "1");
   }
 
-  m_agentTestHelper->m_path = "/current";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "3");
   }
 
-  m_agentTestHelper->m_path = "/sample";
   m_adapter->processData("TIME|vars|c b=5");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
@@ -371,10 +363,8 @@ TEST_F(DataSetTest, Sample)
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@count", "2");
   }
 
-  m_agentTestHelper->m_path = "/current";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "5");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "2");
@@ -383,11 +373,12 @@ TEST_F(DataSetTest, Sample)
 
 TEST_F(DataSetTest, CurrentAt)
 {
+  using namespace http_server;
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
-  auto seq = m_agent->getSequence();
+  auto seq = m_agentTestHelper->m_agent->getSequence();
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
   m_adapter->processData("TIME|vars| c=5 ");
@@ -396,15 +387,15 @@ TEST_F(DataSetTest, CurrentAt)
   m_adapter->processData("TIME|vars|:MANUAL q=hello_there");
   m_adapter->processData("TIME|vars|r=good_bye");
 
-  m_agentTestHelper->m_path = "/current";
-
   {
-    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq - 1));
+    Routing::QueryMap query {{"at", to_string(seq - 1)}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
   }
 
   {
-    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq));
+    Routing::QueryMap query {{"at", to_string(seq)}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
@@ -412,7 +403,8 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 1));
+    Routing::QueryMap query {{"at", to_string(seq + 1)}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "5");
@@ -420,7 +412,8 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 2));
+    Routing::QueryMap query {{"at", to_string(seq + 2)}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
@@ -428,7 +421,8 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 3));
+    Routing::QueryMap query {{"at", to_string(seq + 3)}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "xxx");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "10");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
@@ -436,14 +430,16 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 4));
+    Routing::QueryMap query {{"at", to_string(seq + 4)}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_XML_PATH_EQUAL(doc, "///m:VariableDataSet@resetTriggered", "MANUAL");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 4).c_str());
   }
 
   {
-    PARSE_XML_RESPONSE_QUERY_KV("at", int64ToString(seq + 5));
+    Routing::QueryMap query {{"at", to_string(seq + 5)}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", nullptr);
@@ -451,7 +447,7 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", nullptr);
@@ -488,7 +484,7 @@ TEST_F(DataSetTest, DeleteKey)
 TEST_F(DataSetTest, ResetWithNoItems)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -498,10 +494,8 @@ TEST_F(DataSetTest, ResetWithNoItems)
   m_adapter->processData("TIME|vars|:MANUAL");
   m_adapter->processData("TIME|vars|r=good_bye");
 
-  m_agentTestHelper->m_path = "/sample";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
@@ -525,7 +519,7 @@ TEST_F(DataSetTest, ResetWithNoItems)
 TEST_F(DataSetTest, DuplicateCompression)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -535,10 +529,8 @@ TEST_F(DataSetTest, DuplicateCompression)
   m_adapter->processData("TIME|vars|b=2 d=4 c=3");
   m_adapter->processData("TIME|vars|b=3 e=4");
 
-  m_agentTestHelper->m_path = "/sample";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
@@ -551,10 +543,8 @@ TEST_F(DataSetTest, DuplicateCompression)
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[4]@count", "2");
   }
 
-  m_agentTestHelper->m_path = "/current";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "3");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
@@ -565,10 +555,8 @@ TEST_F(DataSetTest, DuplicateCompression)
 
   m_adapter->processData("TIME|vars|:MANUAL a=1 b=3 c=3 d=4 e=4");
 
-  m_agentTestHelper->m_path = "/sample";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/sample");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "b", "3");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[5]", "c", "3");
@@ -578,10 +566,8 @@ TEST_F(DataSetTest, DuplicateCompression)
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[5]@resetTriggered", "MANUAL");
   }
 
-  m_agentTestHelper->m_path = "/current";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "3");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
@@ -594,15 +580,13 @@ TEST_F(DataSetTest, DuplicateCompression)
 TEST_F(DataSetTest, QuoteDelimeter)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
   m_adapter->processData("TIME|vars|a='1 2 3' b=\"x y z\" c={cats and dogs}");
 
-  m_agentTestHelper->m_path = "/current";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1 2 3");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "x y z");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "cats and dogs");
@@ -611,7 +595,7 @@ TEST_F(DataSetTest, QuoteDelimeter)
 
   m_adapter->processData("TIME|vars|b='u v w' c={chickens and horses");
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1 2 3");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "u v w");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "cats and dogs");
@@ -622,7 +606,7 @@ TEST_F(DataSetTest, QuoteDelimeter)
       "TIME|vars|:MANUAL V123={x1.111 2.2222 3.3333} V124={x1.111 2.2222 3.3333} V1754={\"Part 1\" "
       "2.2222 3.3333}");
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
 
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "V123", "x1.111 2.2222 3.3333");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "V124", "x1.111 2.2222 3.3333");
@@ -634,20 +618,18 @@ TEST_F(DataSetTest, QuoteDelimeter)
 TEST_F(DataSetTest, Discrete)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
-  auto di = m_agent->getDataItemByName("LinuxCNC", "vars2");
+  auto di = m_agentTestHelper->m_agent->getDataItemByName("LinuxCNC", "vars2");
   ASSERT_EQ(true, di->isDiscrete());
 
   m_adapter->processData("TIME|vars2|a=1 b=2 c=3");
   m_adapter->processData("TIME|vars2|c=5");
   m_adapter->processData("TIME|vars2|a=1 c=8");
 
-  m_agentTestHelper->m_path = "/sample";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[1]", "UNAVAILABLE");
     ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "b", "2");
@@ -660,10 +642,8 @@ TEST_F(DataSetTest, Discrete)
     ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[4]@count", "2");
   }
 
-  m_agentTestHelper->m_path = "/current";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[1]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[1]", "c", "8");
@@ -674,13 +654,11 @@ TEST_F(DataSetTest, Discrete)
 TEST_F(DataSetTest, Probe)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
-  m_agentTestHelper->m_path = "/probe";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars']@representation", "DATA_SET");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars2']@representation", "DATA_SET");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='vars2']@discrete", "true");
@@ -689,17 +667,16 @@ TEST_F(DataSetTest, Probe)
 
 TEST_F(DataSetTest, JsonCurrent)
 {
+  using namespace http_server;
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
-  m_agentTestHelper->m_path = "/current";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
+  m_agentTestHelper->m_request.m_accepts = "Application/json";  
   m_adapter->processData("TIME|vars|a=1 b=2 c=3 d=cow");
   
   {
-    PARSE_JSON_RESPONSE;
+    PARSE_JSON_RESPONSE("/current");
     
     auto streams = doc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
     ASSERT_EQ(4_S, streams.size());

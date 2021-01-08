@@ -53,30 +53,12 @@ class AssetBufferTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/test_config.xml", 8, 4, "1.7", 25);
-    m_agentId = intToString(getCurrentTimeInSec());
-    m_adapter = nullptr;
     m_assetBuffer = make_unique<AssetBuffer>(10);
-
-    m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-    m_agentTestHelper->m_queries.clear();
   }
 
   void TearDown() override
   {
-    m_agent.reset();
-    m_adapter = nullptr;
-    m_agentTestHelper.reset();
     m_assetBuffer.reset();
-  }
-
-  void addAdapter()
-  {
-    ASSERT_FALSE(m_adapter);
-    m_adapter = new Adapter("LinuxCNC", "server", 7878);
-    m_agent->addAdapter(m_adapter);
-    ASSERT_TRUE(m_adapter);
   }
   
   AssetPtr makeAsset(const string &type,
@@ -93,13 +75,7 @@ class AssetBufferTest : public testing::Test
   }
 
  public:
-  std::unique_ptr<Agent> m_agent;
-  Adapter *m_adapter{nullptr};
-  std::string m_agentId;
-  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   std::unique_ptr<AssetBuffer> m_assetBuffer;
-
-  std::chrono::milliseconds m_delay{};
 };
 
 TEST_F(AssetBufferTest, AddAsset)

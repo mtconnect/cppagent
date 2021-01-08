@@ -25,29 +25,23 @@ class CoordinateSystemTest : public testing::Test
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/configuration.xml", 4, 4, "1.6");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-    m_adapter = nullptr;
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
-    m_device = m_agent->getDeviceByName("LinuxCNC");
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.7", 25);
+    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
   void TearDown() override
   {
-    m_agent.reset();
     m_checkpoint.reset();
     m_agentTestHelper.reset();
   }
 
   std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<Agent> m_agent;
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   Device *m_device{nullptr};
-
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
@@ -108,9 +102,8 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 
 TEST_F(CoordinateSystemTest, XmlPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/probe");
     
     ASSERT_XML_PATH_COUNT(doc, COORDINATE_SYSTEMS_PATH , 1);
     ASSERT_XML_PATH_COUNT(doc, COORDINATE_SYSTEMS_PATH "/*" , 2);
@@ -133,15 +126,14 @@ TEST_F(CoordinateSystemTest, XmlPrinting)
 
 TEST_F(CoordinateSystemTest, JsonPrinting)
 {
+  auto agent = m_agentTestHelper->getAgent();
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
-  m_agentTestHelper->m_path = "/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
   {
-    PARSE_JSON_RESPONSE;
+    m_agentTestHelper->m_request.m_accepts = "Application/json";
+    PARSE_JSON_RESPONSE("/probe");
         
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);

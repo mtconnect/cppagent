@@ -25,31 +25,19 @@ class SpecificationTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/configuration.xml", 4, 4, "1.7");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-    m_adapter = nullptr;
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
-    auto device = m_agent->getDeviceByName("LinuxCNC");
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.7", 25);
+    auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("c");
   }
 
   void TearDown() override
   {
-    m_agent.reset();
-    m_checkpoint.reset();
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<Agent> m_agent;
-  Adapter *m_adapter{nullptr};
-  std::string m_agentId;
   Component *m_component{nullptr};
-
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
@@ -91,9 +79,8 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
 
 TEST_F(SpecificationTest, XmlPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
     
     ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH , 1);
     ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*" , 3);
@@ -114,9 +101,8 @@ TEST_F(SpecificationTest, XmlPrinting)
 
 TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
     
     // Load spec
     ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@type" , "LOAD");
@@ -142,11 +128,10 @@ TEST_F(SpecificationTest, JsonPrinting)
   m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  m_agentTestHelper->m_request.m_accepts = "Application/json";
   
   {
-    PARSE_JSON_RESPONSE;
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
     
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
@@ -174,11 +159,10 @@ TEST_F(SpecificationTest, JsonPrinting)
 
 TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
+  m_agentTestHelper->m_request.m_accepts = "Application/json";
+
   {
-    PARSE_JSON_RESPONSE;
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
     
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
@@ -311,9 +295,8 @@ TEST_F(SpecificationTest, ParseProcessSpecificationValues)
 
 TEST_F(SpecificationTest, XmlPrintingForProcessSpecification)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
     
     ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/*" , 3);
     ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@id" , "pspec1");
@@ -343,11 +326,10 @@ TEST_F(SpecificationTest, XmlPrintingForProcessSpecification)
 
 TEST_F(SpecificationTest, JsonPrintingForProcessSpecification)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  m_agentTestHelper->m_request.m_accepts = "Application/json";
   
   {
-    PARSE_JSON_RESPONSE;
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
     
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);

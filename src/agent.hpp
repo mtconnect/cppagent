@@ -79,7 +79,7 @@ namespace mtconnect
     void stop();
     
     // HTTP Server
-    auto getServer() { return m_server.get(); }
+    auto getServer() const { return m_server.get(); }
 
     // Add an adapter to the agent
     void addAdapter(Adapter *adapter, bool start = false);

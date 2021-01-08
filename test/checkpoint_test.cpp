@@ -22,6 +22,7 @@
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "checkpoint.hpp"
+#include "agent_test_helper.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -32,9 +33,10 @@ class CheckpointTest : public testing::Test
   void SetUp() override
   {
     // Create an agent with only 16 slots and 8 data items.
-    m_agent = nullptr;
+    m_agentTestHelper = make_unique<AgentTestHelper>();
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.3", 25);
     m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 4, 4, "1.5");
     m_agentId = int64ToString(getCurrentTimeInSec());
     m_checkpoint = make_unique<Checkpoint>();
 
@@ -57,14 +59,13 @@ class CheckpointTest : public testing::Test
 
   void TearDown() override
   {
-    m_agent.reset();
     m_checkpoint.reset();
     m_dataItem1.reset();
     m_dataItem2.reset();
   }
 
+  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<Agent> m_agent;
   std::string m_agentId;
   std::unique_ptr<DataItem> m_dataItem1;
   std::unique_ptr<DataItem> m_dataItem2;
@@ -181,7 +182,7 @@ TEST_F(CheckpointTest, GetObservations)
   p->unrefer();
 
   ObservationPtrArray list;
-  m_checkpoint->getObservations(list, &filter);
+  m_checkpoint->getObservations(list, filter);
 
   ASSERT_EQ(4, (int)list.size());
 
@@ -189,7 +190,7 @@ TEST_F(CheckpointTest, GetObservations)
   filter2.insert(m_dataItem1->getId());
 
   ObservationPtrArray list2;
-  m_checkpoint->getObservations(list2, &filter2);
+  m_checkpoint->getObservations(list2, filter2);
 
   ASSERT_EQ(2, (int)list2.size());
 
@@ -282,7 +283,7 @@ TEST_F(CheckpointTest, CopyAndFilter)
   ASSERT_EQ(4, (int)list.size());
   list.clear();
 
-  Checkpoint check(*m_checkpoint, &filter);
+  Checkpoint check(*m_checkpoint, filter);
   check.getObservations(list);
 
   ASSERT_EQ(2, (int)list.size());
@@ -428,7 +429,7 @@ TEST_F(CheckpointTest, LastConditionNormal)
   p2->unrefer();
   m_checkpoint->addObservation(p2);
 
-  m_checkpoint->getObservations(list, &filter);
+  m_checkpoint->getObservations(list, filter);
   ASSERT_EQ(1, (int)list.size());
 
   p3 = list[0];

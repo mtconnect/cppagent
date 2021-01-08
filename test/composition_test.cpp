@@ -26,26 +26,20 @@ class CompositionTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/configuration.xml", 4, 4, "1.5");
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.7", 25);
 
-    auto device = m_agent->getDeviceByName("LinuxCNC");
+    auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("power");
     m_composition = m_component->getCompositions().front().get();
   }
 
   void TearDown() override
   {
-    m_agent.reset();
-    m_checkpoint.reset();
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<Agent> m_agent;
   Component *m_component{nullptr};
   Composition *m_composition{nullptr};
 
@@ -85,9 +79,8 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
 
 TEST_F(CompositionTest, XmlPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/probe");
 
     ASSERT_XML_PATH_COUNT(doc, COMPOSITION_PATH , 1);
 
@@ -107,11 +100,9 @@ TEST_F(CompositionTest, XmlPrinting)
 
 TEST_F(CompositionTest, JsonPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
   {
-    PARSE_JSON_RESPONSE;
+    m_agentTestHelper->m_request.m_accepts = "Application/json";
+    PARSE_JSON_RESPONSE("/probe");
     
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);

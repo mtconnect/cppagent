@@ -31,23 +31,21 @@ class CuttingToolTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    
-    // Asset types are registered in the agent.
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/solid_model.xml", 4, 4, "1.7");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-    m_adapter = nullptr;
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.7", 25);
+    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
 
-    m_device = m_agent->getDeviceByName("LinuxCNC");
+    // Asset types are registered in the agent.
+    m_adapter = nullptr;
+    m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     
     m_writer = make_unique<XmlWriter>(true);
   }
 
   void TearDown() override
   {
-    m_agent.reset();
     m_agentTestHelper.reset();
     m_writer.reset();
   }
@@ -56,11 +54,10 @@ class CuttingToolTest : public testing::Test
   {
     ASSERT_FALSE(m_adapter);
     m_adapter = new Adapter("LinuxCNC", "server", 7878);
-    m_agent->addAdapter(m_adapter);
+    m_agentTestHelper->m_agent->addAdapter(m_adapter);
     ASSERT_TRUE(m_adapter);
   }
   
-  std::unique_ptr<Agent> m_agent;
   std::string m_agentId;
   Device *m_device{nullptr};
   Adapter *m_adapter{nullptr};
@@ -447,7 +444,7 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
 
 TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
 {
-  auto printer = dynamic_cast<mtconnect::XmlPrinter *>(m_agent->getPrinter("xml"));
+  auto printer = dynamic_cast<mtconnect::XmlPrinter *>(m_agentTestHelper->m_agent->getPrinter("xml"));
   ASSERT_TRUE(printer != nullptr);
 
   printer->clearAssetsNamespaces();
@@ -459,12 +456,10 @@ TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
   m_adapter->parseBuffer("TIME|@ASSET@|XXX.200|CuttingTool|--multiline--AAAA\n");
   m_adapter->parseBuffer((getFile("asset5.xml") + "\n").c_str());
   m_adapter->parseBuffer("--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)1, m_agent->getAssetCount());
-
-  m_agentTestHelper->m_path = "/asset/XXX.200";
+  ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/asset/XXX.200");
     ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife", "0");
     ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@type", "PART_COUNT");
     ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='1']/m:ItemLife@countDirection", "UP");

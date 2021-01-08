@@ -2515,33 +2515,29 @@ TEST_F(AgentTest, StreamDataObserver)
   }
 }
 
-#if 0
-
 // ------------- Put tests
 
 TEST_F(AgentTest, Put)
 {
-  key_value_map queries;
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                              8, 4, "1.3", 4, true);
+
+  Routing::QueryMap queries;
   string body;
-  m_agent->enablePut();
 
   queries["time"] = "TIME";
   queries["line"] = "205";
   queries["power"] = "ON";
-  m_agentTestHelper->m_path = "/LinuxCNC";
 
   {
-    PARSE_XML_RESPONSE_PUT(body, queries);
+    PARSE_XML_RESPONSE_PUT("/LinuxCNC", body, queries);
   }
 
-  m_agentTestHelper->m_path = "/LinuxCNC/current";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "TIME");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
     ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
   }
   
 }
-#endif

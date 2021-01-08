@@ -88,8 +88,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto device = agent->getDevices().front();
+    const auto adapter = device->m_adapters.front();
 
     ASSERT_EQ(std::string("LinuxCNC"), device->getName());
     ASSERT_FALSE(adapter->isDupChecking());
@@ -117,8 +117,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto device = agent->getDevices().front();
+    const auto adapter = device->m_adapters.front();
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
@@ -138,7 +138,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
+    const auto device = agent->getDevices().front();
 
     ASSERT_TRUE(device->m_preserveUuid);
   }
@@ -155,7 +155,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
+    const auto device = agent->getDevices().front();
 
     ASSERT_FALSE(device->m_preserveUuid);
   }
@@ -170,7 +170,7 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
 
-    ASSERT_TRUE(agent->isPutEnabled());
+    ASSERT_TRUE(agent->getServer()->isPutEnabled());
   }
 
   TEST_F(ConfigTest, LimitPut)
@@ -182,8 +182,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->isPutEnabled());
-    ASSERT_TRUE(agent->isPutAllowedFrom(std::string("127.0.0.1")));
+    ASSERT_TRUE(agent->getServer()->isPutEnabled());
+    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("127.0.0.1")));
   }
 
   TEST_F(ConfigTest, LimitPutFromHosts)
@@ -195,9 +195,9 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->isPutEnabled());
-    ASSERT_TRUE(agent->isPutAllowedFrom(std::string("127.0.0.1")));
-    ASSERT_TRUE(agent->isPutAllowedFrom(std::string("192.168.0.1")));
+    ASSERT_TRUE(agent->getServer()->isPutEnabled());
+    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("127.0.0.1")));
+    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("192.168.0.1")));
   }
 
   TEST_F(ConfigTest, Namespaces)
@@ -277,8 +277,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto device = agent->getDevices().front();
+    const auto adapter = device->m_adapters.front();
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }
@@ -292,8 +292,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto device = agent->getDevices().front();
+    const auto adapter = device->m_adapters.front();
 
     ASSERT_TRUE(adapter->isIgnoringTimestamps());
   }
@@ -310,8 +310,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto device = agent->getDevices().front();
+    const auto adapter = device->m_adapters.front();
 
     ASSERT_FALSE(adapter->isIgnoringTimestamps());
   }

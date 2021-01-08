@@ -24,25 +24,20 @@ class KinematicsTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/kinematics.xml", 4, 4, "1.7");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
-    m_device = m_agent->getDeviceByName("LinuxCNC");
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.7", 25);
+    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
   void TearDown() override
   {
-    m_agent.reset();
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Agent> m_agent;
   std::string m_agentId;
   Device *m_device{nullptr};
-
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
@@ -124,9 +119,8 @@ TEST_F(KinematicsTest, ParseCAxisKinematics)
 
 TEST_F(KinematicsTest, ZAxisXmlPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
     
     ASSERT_XML_PATH_COUNT(doc, ZAXIS_MOTION_PATH , 1);
     ASSERT_XML_PATH_EQUAL(doc, ZAXIS_MOTION_PATH "@id" , "zax");
@@ -148,10 +142,9 @@ TEST_F(KinematicsTest, ZAxisXmlPrinting)
 
 TEST_F(KinematicsTest, RotaryXmlPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
-    PARSE_XML_RESPONSE;
-    
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+
     ASSERT_XML_PATH_COUNT(doc, ROTARY_MOTION_PATH , 1);
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "@id" , "spin");
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "@type" , "CONTINUOUS");
@@ -169,12 +162,10 @@ TEST_F(KinematicsTest, RotaryXmlPrinting)
 
 TEST_F(KinematicsTest, ZAxisJsonPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
   {
-    PARSE_JSON_RESPONSE;
-    
+    m_agentTestHelper->m_request.m_accepts = "Application/json";
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
     auto linear = device.at("/Components/0/Axes/Components/0/Linear"_json_pointer);
@@ -208,12 +199,10 @@ TEST_F(KinematicsTest, ZAxisJsonPrinting)
 
 TEST_F(KinematicsTest, RotaryJsonPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
   {
-    PARSE_JSON_RESPONSE;
-    
+    m_agentTestHelper->m_request.m_accepts = "Application/json";
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
     auto rotary = device.at("/Components/0/Axes/Components/1/Rotary"_json_pointer);

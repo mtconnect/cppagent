@@ -34,12 +34,10 @@ class EntityTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/solid_model.xml", 4, 4, "1.7");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
+    m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                   8, 4, "1.7", 25);
+    m_agentId = int64ToString(getCurrentTimeInSec());
     m_device = m_agent->getDeviceByName("LinuxCNC");
   }
 
