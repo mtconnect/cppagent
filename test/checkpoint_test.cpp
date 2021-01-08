@@ -37,7 +37,7 @@ class CheckpointTest : public testing::Test
     m_agentTestHelper->createAgent("/samples/test_config.xml",
                                    8, 4, "1.3", 25);
     m_checkpoint = nullptr;
-    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_agentId = to_string(getCurrentTimeInSec());
     m_checkpoint = make_unique<Checkpoint>();
 
     std::map<string, string> attributes1, attributes2;

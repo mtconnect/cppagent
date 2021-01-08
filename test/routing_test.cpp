@@ -178,7 +178,8 @@ TEST_F(RoutingTest, TestQueryParameterError)
   request.m_verb = "GET";
   request.m_path = "/ABC123/sample";
   request.m_query = {{ "count", "xxx"} };
-  ASSERT_FALSE(r.matches(request, *(m_response.get())));
+  ASSERT_THROW(r.matches(request, *(m_response.get())),
+               ParameterError);
 }
 
 TEST_F(RoutingTest, RegexPatterns)

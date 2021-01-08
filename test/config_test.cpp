@@ -26,6 +26,7 @@
 
 #include <chrono>
 #include <string>
+#include <filesystem>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -35,6 +36,9 @@
 
 static dlib::logger g_logger("config_test");
 
+using namespace std;
+namespace fs = std::filesystem;
+
 namespace
 {
   class ConfigTest : public testing::Test
@@ -43,25 +47,23 @@ namespace
     void SetUp() override
     {
       m_config = std::make_unique<mtconnect::AgentConfiguration>();
-      char buf[1024 * 4];
-      getcwd(buf, sizeof(buf));
-      m_cwd = buf;
+      m_cwd = std::filesystem::current_path();
     }
 
     void TearDown() override
     {
       m_config.reset();
-      if (!m_cwd.empty())
-        chdir(m_cwd.c_str());
+      chdir(m_cwd.string().c_str());
     }
 
     std::unique_ptr<mtconnect::AgentConfiguration> m_config;
-    std::string m_cwd;
+    std::filesystem::path m_cwd;
   };
 
   TEST_F(ConfigTest, BlankConfig)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream str("");
     m_config->loadConfig(str);
 
@@ -73,6 +75,7 @@ namespace
   TEST_F(ConfigTest, BufferSize)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream str("BufferSize = 4\n");
     m_config->loadConfig(str);
 
@@ -203,6 +206,7 @@ namespace
   TEST_F(ConfigTest, Namespaces)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream streams(
         "StreamsNamespaces {\n"
         "x {\n"
@@ -231,6 +235,10 @@ namespace
         "}\n");
 
     m_config->loadConfig(devices);
+    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    ASSERT_TRUE(printer);
     path = printer->getDevicesUrn("y");
     ASSERT_EQ(std::string("urn:example.com:ExampleDevices:1.2"), path);
 
@@ -244,6 +252,10 @@ namespace
         "}\n");
 
     m_config->loadConfig(assets);
+    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    ASSERT_TRUE(printer);
     path = printer->getAssetsUrn("z");
     ASSERT_EQ(std::string("urn:example.com:ExampleAssets:1.2"), path);
 
@@ -257,13 +269,12 @@ namespace
         "}\n");
 
     m_config->loadConfig(errors);
+    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    ASSERT_TRUE(printer);
     path = printer->getErrorUrn("a");
     ASSERT_EQ(std::string("urn:example.com:ExampleErrors:1.2"), path);
-
-    printer->clearDevicesNamespaces();
-    printer->clearErrorNamespaces();
-    printer->clearStreamsNamespaces();
-    printer->clearAssetsNamespaces();
   }
 
   TEST_F(ConfigTest, LegacyTimeout)
@@ -319,6 +330,7 @@ namespace
   TEST_F(ConfigTest, SpecifyMTCNamespace)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream streams(
         "StreamsNamespaces {\n"
         "m {\n"
@@ -344,6 +356,7 @@ namespace
   TEST_F(ConfigTest, SetSchemaVersion)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream streams("SchemaVersion = 1.4\n");
 
     m_config->loadConfig(streams);
@@ -361,6 +374,7 @@ namespace
   TEST_F(ConfigTest, SchemaDirectory)
   {
     chdir(PROJECT_ROOT_DIR "/test");
+    m_config->updateWorkingDirectory();
     std::istringstream schemas(
         "SchemaVersion = 1.3\n"
         "Files {\n"
@@ -399,11 +413,6 @@ namespace
     ASSERT_EQ(std::string("urn:mtconnect.org:MTConnectError:1.3"), path);
     location = printer->getErrorLocation("m");
     ASSERT_EQ(std::string("/schemas/MTConnectError_1.3.xsd"), location);
-
-    printer->clearDevicesNamespaces();
-    printer->clearErrorNamespaces();
-    printer->clearStreamsNamespaces();
-    printer->clearAssetsNamespaces();
   }
 
   TEST_F(ConfigTest, LogFileRollover)
@@ -412,6 +421,7 @@ namespace
 // This test/rollover is fragile on Windows due to file caching.
 // Whilst the agent uses standard C runtime file functions
 // this can not easily be worked around. Better to disable the test.
+    m_config->updateWorkingDirectory();
 #ifndef _WINDOWS
     std::istringstream logger(
         "logger_config {"
@@ -474,6 +484,7 @@ namespace
   TEST_F(ConfigTest, MaxSize)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream logger(
         "logger_config {"
         "max_size = 150\n"

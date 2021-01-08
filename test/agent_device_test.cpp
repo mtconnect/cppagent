@@ -37,8 +37,7 @@ class AgentDeviceTest : public testing::Test
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/test_config.xml",
                                    8, 4, "1.7", 25);
-    m_agentId = int64ToString(getCurrentTimeInSec());
-    m_agentId = intToString(getCurrentTimeInSec());
+    m_agentId = to_string(getCurrentTimeInSec());
     m_adapter = nullptr;
     m_agentDevice = m_agentTestHelper->m_agent->getAgentDevice();
   }
@@ -62,6 +61,7 @@ class AgentDeviceTest : public testing::Test
     m_adapter = new Adapter("LinuxCNC", "127.0.0.1", m_port);
     m_adapter->setReconnectInterval(1s);
     ASSERT_TRUE(m_adapter);
+    m_agentTestHelper->m_agent->addAdapter(m_adapter);
   }
   
   void createListener()
@@ -136,22 +136,18 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
 {
   addAdapter();
-  
   {
-    {
-      PARSE_XML_RESPONSE("/Agent/probe");
-      
-      ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
-      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", "_127.0.0.1_21788");
-      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:21788");
-      
-      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
-                            "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']@type",
-                            "ADAPTER_URI");
-      ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
-                            "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']/m:Constraints/m:Value",
-                            m_adapter->getUrl().c_str());
-    }
+    PARSE_XML_RESPONSE("/Agent/probe");
+    ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", "_127.0.0.1_21788");
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:21788");
+    
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
+                          "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']@type",
+                          "ADAPTER_URI");
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
+                          "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']/m:Constraints/m:Value",
+                          m_adapter->getUrl().c_str());
   }
 }
 
@@ -165,19 +161,17 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
   addAdapter();
   
   {
-    {
-      PARSE_XML_RESPONSE("/Agent/current");
-      
-      ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_STREAM "/*", 2);
-      ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_DEVICE_STREAM "/*", 1);
+    PARSE_XML_RESPONSE("/Agent/current");
+    
+    ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_STREAM "/*", 2);
+    ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_DEVICE_STREAM "/*", 1);
 
-      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_DEVICE_STREAM "/m:Events/m:DeviceAdded",
-                            "000");
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_DEVICE_STREAM "/m:Events/m:DeviceAdded",
+                          "000");
 
-      ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_ADAPTER_STREAM "/*", 2);
-      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
-                            m_adapter->getUrl().c_str());
-    }
+    ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_ADAPTER_STREAM "/*", 2);
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
+                          m_adapter->getUrl().c_str());
   }
 }
 
@@ -187,60 +181,57 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
   addAdapter();
   
   {
-    {
-      PARSE_XML_RESPONSE("/Agent/current");
-            
-      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
-                            m_adapter->getUrl().c_str());
-      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                            "UNAVAILABLE");
+    PARSE_XML_RESPONSE("/Agent/current");
+          
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
+                          m_adapter->getUrl().c_str());
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
+                          "UNAVAILABLE");
 
-    }
-    m_adapter->start();
-    this_thread::sleep_for(100ms);
+  }
+  m_adapter->start();
+  this_thread::sleep_for(100ms);
 
-    {
-      PARSE_XML_RESPONSE("/Agent/current");
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
 
-      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                            "LISTENING");
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
+                          "LISTENING");
 
-    }
-    createListener();
-    this_thread::sleep_for(100ms);
+  }
+  createListener();
+  this_thread::sleep_for(100ms);
 
-    auto res = m_server->accept(m_serverSocket);
-    ASSERT_EQ(0, res);
-    this_thread::sleep_for(100ms);
-    ASSERT_TRUE(m_serverSocket.get());
+  auto res = m_server->accept(m_serverSocket);
+  ASSERT_EQ(0, res);
+  this_thread::sleep_for(100ms);
+  ASSERT_TRUE(m_serverSocket.get());
 
-    {
-      PARSE_XML_RESPONSE("/Agent/current");
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
 
-      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                            "ESTABLISHED");
-      
-    }
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
+                          "ESTABLISHED");
     
-    m_serverSocket->shutdown();
-    m_server.reset();
-    this_thread::sleep_for(100ms);
+  }
+  
+  m_serverSocket->shutdown();
+  m_server.reset();
+  this_thread::sleep_for(100ms);
 
-    {
-      PARSE_XML_RESPONSE("/Agent/current");
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
 
-      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                            "CLOSED");
-      
-    }
-    this_thread::sleep_for(1100ms);
-    {
-      PARSE_XML_RESPONSE("/Agent/current");
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
+                          "CLOSED");
+    
+  }
+  this_thread::sleep_for(1100ms);
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
 
-      ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                            "LISTENING");
-      
-    }
-
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
+                          "LISTENING");
+    
   }
 }

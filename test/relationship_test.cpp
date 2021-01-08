@@ -24,27 +24,20 @@ class RelationshipTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/configuration.xml", 4, 4, "1.5");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-    m_adapter = nullptr;
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
+    m_agentTestHelper->createAgent("/samples/configuration.xml",
+                                   8, 4, "1.7", 25);
+    m_agentId = to_string(getCurrentTimeInSec());
 
-    auto device = m_agent->getDeviceByName("LinuxCNC");
+    auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("c");
   }
 
   void TearDown() override
   {
-    m_agent.reset();
-    m_checkpoint.reset();
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<Agent> m_agent;
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   Component *m_component{nullptr};
@@ -96,9 +89,8 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 
 TEST_F(RelationshipTest, XmlPrinting)
 {
-  m_agentTestHelper->m_path = "/probe";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/probe");
     
     ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH , 1);
     ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH "/*" , 2);
@@ -122,17 +114,16 @@ TEST_F(RelationshipTest, XmlPrinting)
 TEST_F(RelationshipTest, JsonPrinting)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
-  m_agentTestHelper->m_path = "/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
+  m_agentTestHelper->m_request.m_accepts = "Application/json";
+
   {
-    PARSE_JSON_RESPONSE;
+    PARSE_JSON_RESPONSE("/probe");
     
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
-    auto device = devices.at(0).at("/Device"_json_pointer);
+    auto device = devices.at(1).at("/Device"_json_pointer);
 
     auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
     auto relationships = rotary.at("/Configuration/Relationships"_json_pointer);

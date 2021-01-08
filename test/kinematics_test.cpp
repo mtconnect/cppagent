@@ -25,9 +25,9 @@ class KinematicsTest : public testing::Test
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml",
+    m_agentTestHelper->createAgent("/samples/kinematics.xml",
                                    8, 4, "1.7", 25);
-    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_agentId = to_string(getCurrentTimeInSec());
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 

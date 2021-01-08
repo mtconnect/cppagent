@@ -36,13 +36,13 @@ class DataSetTest : public testing::Test
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                   8, 4, "1.7", 25);
-    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_agentTestHelper->createAgent("/samples/data_set.xml",
+                                   8, 4, "1.5", 25);
+    m_agentId = to_string(getCurrentTimeInSec());
 
     m_checkpoint = nullptr;
     m_adapter = nullptr;
-    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_agentId = to_string(getCurrentTimeInSec());
     m_checkpoint = make_unique<Checkpoint>();
 
     auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
@@ -399,7 +399,7 @@ TEST_F(DataSetTest, CurrentAt)
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "3");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", to_string(seq).c_str());
   }
 
   {
@@ -408,7 +408,7 @@ TEST_F(DataSetTest, CurrentAt)
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "5");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 1).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", to_string(seq + 1).c_str());
   }
 
   {
@@ -417,7 +417,7 @@ TEST_F(DataSetTest, CurrentAt)
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 2).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", to_string(seq + 2).c_str());
   }
 
   {
@@ -426,7 +426,7 @@ TEST_F(DataSetTest, CurrentAt)
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "xxx");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "10");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "c", "8");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 3).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", to_string(seq + 3).c_str());
   }
 
   {
@@ -434,7 +434,7 @@ TEST_F(DataSetTest, CurrentAt)
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_XML_PATH_EQUAL(doc, "///m:VariableDataSet@resetTriggered", "MANUAL");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 4).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", to_string(seq + 4).c_str());
   }
 
   {
@@ -443,7 +443,7 @@ TEST_F(DataSetTest, CurrentAt)
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@resetTriggered", nullptr);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", int64ToString(seq + 5).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@sequence", to_string(seq + 5).c_str());
   }
 
   {

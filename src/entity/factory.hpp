@@ -126,7 +126,7 @@ namespace mtconnect
       }
       
       void performConversions(Properties &p, ErrorList &errors) const;
-      bool isSufficient(Properties &properties, ErrorList &errors) const;
+      virtual bool isSufficient(Properties &properties, ErrorList &errors) const;
       
       EntityPtr make(const std::string &name,
                      Properties &p, ErrorList &errors) const

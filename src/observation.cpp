@@ -156,7 +156,7 @@ namespace mtconnect
       if (!m_dataItem->getCompositionId().empty())
         m_attributes.emplace_back(AttributeItem("compositionId", m_dataItem->getCompositionId()));
 
-      m_sequenceStr = int64ToString(m_sequence);
+      m_sequenceStr = to_string(m_sequence);
       m_attributes.emplace_back(AttributeItem("sequence", m_sequenceStr));
 
       if (!m_dataItem->getSubType().empty())
@@ -261,7 +261,7 @@ namespace mtconnect
       }
       else if (m_dataItem->isDataSet())
       {
-        m_attributes.emplace_back(AttributeItem("count", intToString(m_dataSet.size())));
+        m_attributes.emplace_back(AttributeItem("count", to_string(m_dataSet.size())));
         m_sampleCount = m_dataSet.size();
       }
       else if (m_dataItem->isAssetChanged() || m_dataItem->isAssetRemoved())

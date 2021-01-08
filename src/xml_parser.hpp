@@ -43,7 +43,7 @@ namespace mtconnect
     virtual ~XmlParser();
 
     // Parses a file and returns a list of devices
-    std::vector<Device *> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
+    std::list<Device *> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
 
     // Just loads the document, assumed it has already been parsed before.
     void loadDocument(const std::string &aDoc);

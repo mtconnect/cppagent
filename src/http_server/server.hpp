@@ -114,7 +114,7 @@ namespace mtconnect
       
       bool handleRequest(Routing::Request &request, Response &response);
       
-      void addRounting(const Routing &routing)
+      void addRouting(const Routing &routing)
       {
         m_routings.emplace_back(routing);
       }

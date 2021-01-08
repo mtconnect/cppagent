@@ -245,7 +245,7 @@ TEST_F(AgentTest, CurrentAt)
     query["at"] = to_string(i + seq);;
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
-                          int32ToString(i + 1).c_str());
+                          to_string(i + 1).c_str());
   }
 
   // Test buffer wrapping
@@ -262,7 +262,7 @@ TEST_F(AgentTest, CurrentAt)
     query["at"] = to_string(i + seq);;
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
-                          int32ToString(i + 1).c_str());
+                          to_string(i + 1).c_str());
   }
 
   // Check the first couple of items in the list
@@ -272,7 +272,7 @@ TEST_F(AgentTest, CurrentAt)
     query["at"] = to_string(i + seq);;
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
-                          int32ToString(i + 1).c_str());
+                          to_string(i + 1).c_str());
 
   }
 
@@ -720,8 +720,8 @@ TEST_F(AgentTest, SequenceNumberRollover)
 
       PARSE_XML_RESPONSE_QUERY("/sample", query);
       ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence",
-                            int64ToString(seq + j).c_str());
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", int64ToString(seq + j + 1).c_str());
+                            to_string(seq + j).c_str());
+      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + j + 1).c_str());
     }
   }
 

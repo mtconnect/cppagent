@@ -1173,7 +1173,7 @@ namespace mtconnect
         sHostname = "localhost";
     }
     addAttribute(writer, "sender", sHostname);
-    addAttribute(writer, "instanceId", intToString(instanceId));
+    addAttribute(writer, "instanceId", to_string(instanceId));
 
     char version[32] = {0};
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
@@ -1182,21 +1182,21 @@ namespace mtconnect
 
     if (aType == eASSETS || aType == eDEVICES)
     {
-      addAttribute(writer, "assetBufferSize", intToString(assetBufferSize));
-      addAttribute(writer, "assetCount", intToString(assetCount));
+      addAttribute(writer, "assetBufferSize", to_string(assetBufferSize));
+      addAttribute(writer, "assetCount", to_string(assetCount));
     }
 
     if (aType == eDEVICES || aType == eERROR || aType == eSTREAMS)
     {
-      addAttribute(writer, "bufferSize", intToString(bufferSize));
+      addAttribute(writer, "bufferSize", to_string(bufferSize));
     }
 
     if (aType == eSTREAMS)
     {
       // Add additional attribtues for streams
-      addAttribute(writer, "nextSequence", int64ToString(nextSeq));
-      addAttribute(writer, "firstSequence", int64ToString(firstSeq));
-      addAttribute(writer, "lastSequence", int64ToString(lastSeq));
+      addAttribute(writer, "nextSequence", to_string(nextSeq));
+      addAttribute(writer, "firstSequence", to_string(firstSeq));
+      addAttribute(writer, "lastSequence", to_string(lastSeq));
     }
 
     if (aType == eDEVICES && count && !count->empty())
@@ -1205,7 +1205,7 @@ namespace mtconnect
 
       for (const auto &pair : *count)
       {
-        addSimpleElement(writer, "AssetCount", intToString(pair.second),
+        addSimpleElement(writer, "AssetCount", to_string(pair.second),
                          {{"assetType", pair.first}});
       }
     }

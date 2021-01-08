@@ -604,7 +604,7 @@ namespace mtconnect
 
     // Check for schema version
 
-    string m_version = get_with_default(
+    m_version = get_with_default(
         reader, "SchemaVersion", strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
@@ -628,7 +628,7 @@ namespace mtconnect
 
     // Files served by the Agent... allows schema files to be served by
     // agent.
-    loadFiles(reader, cache);
+    loadFiles(xmlPrinter, reader, cache);
 
     // Load namespaces, allow for local file system serving as well.
     loadNamespace(reader, "DevicesNamespaces", cache, xmlPrinter,
@@ -819,14 +819,20 @@ namespace mtconnect
           (xmlPrinter->*callback)(urn, location, block);
           if (ns.is_key_defined("Path") && !location.empty())
           {
-            cache->registerFile(location, ns["Path"], m_version);
+            auto xns = cache->registerFile(location, ns["Path"], m_version);
+            if (!xns)
+            {
+              auto p = ns["Path"];
+              g_logger << LDEBUG << "Cannot register " << urn << " at " << location
+                      << " and path " << p;
+            }
           }
         }
       }
     }
   }
 
-  void AgentConfiguration::loadFiles(ConfigReader &reader,
+  void AgentConfiguration::loadFiles(XmlPrinter *xmlPrinter, ConfigReader &reader,
                                      http_server::FileCache *cache)
   {
     if (reader.is_block_defined("Files"))
@@ -845,7 +851,26 @@ namespace mtconnect
         }
         else
         {
-          cache->registerFiles(file["Location"], file["Path"], m_version);
+          auto namespaces = cache->registerFiles(file["Location"], file["Path"], m_version);
+          for (auto &ns : namespaces)
+          {
+            if (ns.first.find("Devices") != string::npos)
+            {
+              xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
+            }
+            else if (ns.first.find("Streams") != string::npos)
+            {
+              xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
+            }
+            else if (ns.first.find("Assets") != string::npos)
+            {
+              xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
+            }
+            else if (ns.first.find("Error") != string::npos)
+            {
+              xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
+            }
+          }
         }
       }
     }

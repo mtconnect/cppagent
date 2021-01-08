@@ -109,7 +109,7 @@ namespace mtconnect
       {
         if (m_out.ios_base::good())
         {
-          m_boundary = dlib::md5(intToString(time(nullptr)));
+          m_boundary = dlib::md5(std::to_string(time(nullptr)));
           
           m_out << "HTTP/1.1 200 OK\r\n"
                    "Date: " << getHeaderDate() << "\r\n"

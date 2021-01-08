@@ -361,7 +361,7 @@ namespace mtconnect
       }
       return bool(f);
     };
-    m_server->addRounting({ "GET", regex("/.+"), handler});
+    m_server->addRouting({ "GET", regex("/.+"), handler});
   }
   
   void Agent::createProbeRoutings()
@@ -381,11 +381,11 @@ namespace mtconnect
       return true;
     };
 
-    m_server->addRounting({ "GET", "/probe", handler});
-    m_server->addRounting({ "GET", "/{device}/probe", handler});
+    m_server->addRouting({ "GET", "/probe", handler});
+    m_server->addRouting({ "GET", "/{device}/probe", handler});
     // Must be last
-    m_server->addRounting({ "GET", "/", handler});
-    m_server->addRounting({ "GET", "/{device}", handler});
+    m_server->addRouting({ "GET", "/", handler});
+    m_server->addRouting({ "GET", "/{device}", handler});
   }
   
   void Agent::createAssetRoutings()
@@ -426,13 +426,13 @@ namespace mtconnect
     };
 
     string qp("type={string}&removed={string:false}&count={integer:100}&device={string}");
-    m_server->addRounting({ "GET", "/assets?" + qp, handler});
-    m_server->addRounting({ "GET", "/asset?" + qp, handler});
-    m_server->addRounting({ "GET","/{device}/assets?" + qp, handler});
-    m_server->addRounting({ "GET", "/{device}/asset?" + qp, handler});
+    m_server->addRouting({ "GET", "/assets?" + qp, handler});
+    m_server->addRouting({ "GET", "/asset?" + qp, handler});
+    m_server->addRouting({ "GET","/{device}/assets?" + qp, handler});
+    m_server->addRouting({ "GET", "/{device}/asset?" + qp, handler});
     
-    m_server->addRounting({ "GET", "/asset/{assets}", idHandler});
-    m_server->addRounting({ "GET", "/assets/{assets}", idHandler});
+    m_server->addRouting({ "GET", "/asset/{assets}", idHandler});
+    m_server->addRouting({ "GET", "/assets/{assets}", idHandler});
     
     if (m_server->isPutEnabled())
     {
@@ -469,27 +469,27 @@ namespace mtconnect
 
       for (const auto &t : list<string>{"PUT", "POST"})
       {
-        m_server->addRounting({ t, "/asset/{uuid}?device={string}&type={string}",
+        m_server->addRouting({ t, "/asset/{uuid}?device={string}&type={string}",
           putHandler});
-        m_server->addRounting({ t, "/asset?device={string}&type={string}",
+        m_server->addRouting({ t, "/asset?device={string}&type={string}",
           putHandler});
-        m_server->addRounting({ t, "/{device}/asset/{uuid}?type={string}",
+        m_server->addRouting({ t, "/{device}/asset/{uuid}?type={string}",
           putHandler});
-        m_server->addRounting({ t, "/{device}/asset?type={string}",
+        m_server->addRouting({ t, "/{device}/asset?type={string}",
         putHandler});
       }
 
-      m_server->addRounting({ "DELETE", "/assets?&device={string}&type={string}",
+      m_server->addRouting({ "DELETE", "/assets?&device={string}&type={string}",
         deleteHandler});
-      m_server->addRounting({ "DELETE", "/asset?&device={string}&type={string}",
+      m_server->addRouting({ "DELETE", "/asset?&device={string}&type={string}",
         deleteHandler});
-      m_server->addRounting({ "DELETE", "/assets/{assets}",
+      m_server->addRouting({ "DELETE", "/assets/{assets}",
         deleteHandler});
-      m_server->addRounting({ "DELETE", "/asset/{assets}",
+      m_server->addRouting({ "DELETE", "/asset/{assets}",
         deleteHandler});
-      m_server->addRounting({ "DELETE", "/{device}/assets?type={string}",
+      m_server->addRouting({ "DELETE", "/{device}/assets?type={string}",
         deleteHandler});
-      m_server->addRounting({ "DELETE", "/{device}/asset?type={string}",
+      m_server->addRouting({ "DELETE", "/{device}/asset?type={string}",
         deleteHandler});
     }
   }
@@ -518,8 +518,8 @@ namespace mtconnect
     };
 
     string qp("path={string}&at={unsigned_integer}&interval={integer}");
-    m_server->addRounting({ "GET", "/current?" + qp, handler});
-    m_server->addRounting({ "GET", "/{device}/current?" + qp, handler});
+    m_server->addRouting({ "GET", "/current?" + qp, handler});
+    m_server->addRouting({ "GET", "/{device}/current?" + qp, handler});
   }
 
   void Agent::createSampleRoutings()
@@ -552,8 +552,8 @@ namespace mtconnect
     string qp("path={string}&from={unsigned_integer}&"
               "interval={integer}&count={integer:100}&"
               "heartbeat={integer:10000}&to={unsigned_integer}");
-    m_server->addRounting({ "GET", "/sample?" + qp, handler});
-    m_server->addRounting({ "GET", "/{device}/sample?" + qp, handler});
+    m_server->addRouting({ "GET", "/sample?" + qp, handler});
+    m_server->addRouting({ "GET", "/{device}/sample?" + qp, handler});
   }
 
   // ----------------------------------------------------
@@ -1098,7 +1098,7 @@ namespace mtconnect
     if (m_logStreamData)
     {
       string filename = "Stream_" + getCurrentTime(LOCAL) + "_" +
-                        int64ToString((uint64_t)dlib::get_thread_id()) + ".log";
+                        to_string((uint64_t)dlib::get_thread_id()) + ".log";
       log.open(filename.c_str());
     }
     

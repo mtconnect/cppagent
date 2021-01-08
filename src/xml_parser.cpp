@@ -311,7 +311,7 @@ namespace mtconnect
   {
   }
 
-  std::vector<Device *> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
+  std::list<Device *> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
   {
     if (m_doc)
     {
@@ -321,7 +321,7 @@ namespace mtconnect
 
     xmlXPathContextPtr xpathCtx = nullptr;
     xmlXPathObjectPtr devices = nullptr;
-    std::vector<Device *> deviceList;
+    std::list<Device *> deviceList;
 
     try
     {

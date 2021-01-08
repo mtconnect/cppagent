@@ -41,9 +41,9 @@ class TableTest : public testing::Test
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                   8, 4, "1.7", 25);
-    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_agentTestHelper->createAgent("/samples/data_set.xml",
+                                   8, 4, "1.6", 25);
+    m_agentId = to_string(getCurrentTimeInSec());
 
     m_checkpoint = nullptr;
     m_adapter = nullptr;

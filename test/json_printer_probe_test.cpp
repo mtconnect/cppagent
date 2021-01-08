@@ -30,6 +30,7 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "agent.hpp"
+#include "agent_test_helper.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -51,8 +52,12 @@ class JsonPrinterProbeTest : public testing::Test
     m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
     m_printer = std::make_unique<JsonPrinter>("1.5", true);
 
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", 4, 4, "1.5");
-
+    
+    auto server = std::make_unique<http::Server>();
+    auto cache = std::make_unique<http::FileCache>();
+    m_agent = make_unique<Agent>(server, cache,
+                                 PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml",
+                                 4, 4, "1.5");
     m_devices = m_agent->getDevices();
   }
 
@@ -65,7 +70,7 @@ class JsonPrinterProbeTest : public testing::Test
   }
 
   std::unique_ptr<JsonPrinter> m_printer;
-  std::vector<Device *> m_devices;
+  std::list<Device *> m_devices;
 
   std::unique_ptr<Agent> m_agent;
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
@@ -320,9 +325,12 @@ TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
 
 TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
 {
+  auto server = std::make_unique<http::Server>();
+  auto cache = std::make_unique<http::FileCache>();
+
   m_agent.release();
   m_printer = std::make_unique<JsonPrinter>("1.7", true);
-  m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/relationship_test.xml", 4, 4, "1.7");
+  m_agent = make_unique<Agent>(server, cache, PROJECT_ROOT_DIR "/samples/relationship_test.xml", 4, 4, "1.7");
   m_devices = m_agent->getDevices();
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);

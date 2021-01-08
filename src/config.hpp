@@ -59,6 +59,8 @@ namespace mtconnect
     const Agent *getAgent() const { return m_agent.get(); }
 
     const RollingFileLogger *getLogger() const { return m_loggerFile.get(); }
+    
+    void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
    protected:
     Device *defaultDevice();
@@ -73,7 +75,7 @@ namespace mtconnect
     void loadNamespace(ConfigReader &reader, const char *namespaceType,
                        http_server::FileCache *cache,
                        XmlPrinter *printer, NamespaceFunction callback);
-    void loadFiles(ConfigReader &reader, http_server::FileCache *cache);
+    void loadFiles(XmlPrinter *xmlPrinter, ConfigReader &reader, http_server::FileCache *cache);
     void loadStyle(ConfigReader &reader, const char *styleName,
                    http_server::FileCache *cache,
                    XmlPrinter *printer, StyleFunction styleFunction);

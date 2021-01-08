@@ -26,7 +26,7 @@ class SpecificationTest : public testing::Test
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml",
+    m_agentTestHelper->createAgent("/samples/configuration.xml",
                                    8, 4, "1.7", 25);
     auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("c");
@@ -37,6 +37,7 @@ class SpecificationTest : public testing::Test
     m_agentTestHelper.reset();
   }
 
+  Adapter *m_adapter{nullptr};
   Component *m_component{nullptr};
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -125,7 +126,7 @@ TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
 TEST_F(SpecificationTest, JsonPrinting)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
   m_agentTestHelper->m_request.m_accepts = "Application/json";

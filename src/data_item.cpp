@@ -247,7 +247,7 @@ namespace mtconnect
       attributes["nativeScale"] = floatToString(m_nativeScale);
 
     if (m_hasSignificantDigits)
-      attributes["significantDigits"] = intToString(m_significantDigits);
+      attributes["significantDigits"] = to_string(m_significantDigits);
 
     if (!m_coordinateSystem.empty())
       attributes["coordinateSystem"] = m_coordinateSystem;

@@ -60,7 +60,7 @@ class XmlParserTest : public testing::Test
   }
 
   XmlParser *m_xmlParser{nullptr};
-  std::vector<Device *> m_devices;
+  std::list<Device *> m_devices;
 };
 
 TEST_F(XmlParserTest, Constructor)
@@ -229,7 +229,7 @@ TEST_F(XmlParserTest, ExtendedSchema)
 
 TEST_F(XmlParserTest, TimeSeries)
 {
-  const auto dev = m_devices[0];
+  const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
   auto item = dev->getDeviceDataItem("Xact");
@@ -253,7 +253,7 @@ TEST_F(XmlParserTest, TimeSeries)
 
 TEST_F(XmlParserTest, Configuration)
 {
-  const auto dev = m_devices[0];
+  const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
   mtconnect::Component *power = nullptr;
@@ -301,7 +301,7 @@ TEST_F(XmlParserTest, FilteredDataItem13)
            << "/samples/filter_example_1.3.xml";
   }
 
-  Device *dev = m_devices[0];
+  Device *dev = m_devices.front();
   DataItem *di = dev->getDeviceDataItem("c1");
 
   ASSERT_EQ(di->getFilterValue(), 5.0);
@@ -328,11 +328,11 @@ TEST_F(XmlParserTest, FilteredDataItem)
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/filter_example.xml";
   }
 
-  auto di = m_devices[0]->getDeviceDataItem("c1");
+  auto di = m_devices.front()->getDeviceDataItem("c1");
 
   ASSERT_EQ(di->getFilterValue(), 5.0);
   ASSERT_TRUE(di->hasMinimumDelta());
-  di = m_devices[0]->getDeviceDataItem("c2");
+  di = m_devices.front()->getDeviceDataItem("c2");
 
   ASSERT_EQ(di->getFilterPeriod(), 10.0);
   ASSERT_TRUE(di->hasMinimumPeriod());
@@ -359,7 +359,7 @@ TEST_F(XmlParserTest, References)
   }
 
   string id = "mf";
-  const auto item = m_devices[0]->getDeviceDataItem(id);
+  const auto item = m_devices.front()->getDeviceDataItem(id);
   const auto comp = item->getComponent();
 
   comp->resolveReferences();
@@ -415,7 +415,7 @@ TEST_F(XmlParserTest, SourceReferences)
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/reference_example.xml";
   }
 
-  const auto item = m_devices[0]->getDeviceDataItem("bfc");
+  const auto item = m_devices.front()->getDeviceDataItem("bfc");
   ASSERT_TRUE(item != nullptr);
 
   ASSERT_EQ(string(""), item->getSource());
@@ -482,7 +482,7 @@ TEST_F(XmlParserTest, DataItemRelationships)
 
 TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
 {
-  const auto dev = m_devices[0];
+  const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
   ASSERT_EQ(string("1.7"), dev->getMTConnectVersion());

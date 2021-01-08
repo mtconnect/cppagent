@@ -85,7 +85,7 @@ class JsonPrinterStreamTest : public testing::Test
   std::unique_ptr<JsonPrinter> m_printer;
   std::unique_ptr<XmlParser> m_config;
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
-  std::vector<Device *> m_devices;
+  std::list<Device *> m_devices;
 };
 
 TEST_F(JsonPrinterStreamTest, StreamHeader)

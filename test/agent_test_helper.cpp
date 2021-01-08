@@ -93,6 +93,5 @@ void AgentTestHelper::responseHelper(const char *file, int line,
                                      const char *path)
 {
   makeRequest(file, line, "GET", "", aQueries, path);
-  if (ends_with(m_response.m_mimeType, "xml"))
-    doc = nlohmann::json::parse(m_response.m_body);
+  doc = nlohmann::json::parse(m_response.m_body);
 }

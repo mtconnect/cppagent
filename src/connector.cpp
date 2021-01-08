@@ -100,7 +100,7 @@ namespace mtconnect
       if (status < 0)
       {
         g_logger << LWARN << "(Port:" << m_localPort << ")"
-                 << "connect: Could not write initial heartbeat: " << intToString(status);
+                 << "connect: Could not write initial heartbeat: " << to_string(status);
         close();
         return;
       }
@@ -321,7 +321,7 @@ namespace mtconnect
       {
         g_logger << LWARN << "(Port:" << m_localPort << ")"
                  << "sendCommand: Could not write command: '" << command << "' - "
-                 << intToString(status);
+                 << to_string(status);
       }
     }
   }

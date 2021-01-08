@@ -34,7 +34,7 @@ class CuttingToolTest : public testing::Test
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/test_config.xml",
                                    8, 4, "1.7", 25);
-    m_agentId = int64ToString(getCurrentTimeInSec());
+    m_agentId = to_string(getCurrentTimeInSec());
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
 
     // Asset types are registered in the agent.
