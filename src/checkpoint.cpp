@@ -39,7 +39,7 @@ namespace mtconnect
 
   void Checkpoint::clear()
   {
-    for (const auto event : m_events)
+    for (const auto &event : m_events)
       delete event.second;
 
     m_events.clear();
@@ -137,9 +137,9 @@ namespace mtconnect
           // For data sets merge the maps together
           for (auto &e : event->getDataSet())
           {
-            const auto &old = set.find(e);
-            if (old != set.end())
-              set.erase(old);
+            const auto &oe = set.find(e);
+            if (oe != set.end())
+              set.erase(oe);
             if (!e.m_removed)
               set.insert(e);
           }

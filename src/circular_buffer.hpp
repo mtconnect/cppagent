@@ -181,7 +181,7 @@ namespace mtconnect
       
       
       SequenceNumber_t i;
-      for (i = first; results->size() < limit && i < m_sequence && i >= firstSeq;
+      for (i = first; int(results->size()) < limit && i < m_sequence && i >= firstSeq;
            i += inc)
       {
         // Filter out according to if it exists in the list

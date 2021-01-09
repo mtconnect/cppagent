@@ -122,8 +122,8 @@ namespace mtconnect
         else if (holds_alternative<EntityList>(e.second))
         {
           auto &list = get<EntityList>(e.second);
-          for (auto &e : list)
-            print(writer, e);
+          for (auto &en : list)
+            print(writer, en);
         }
         else
         {

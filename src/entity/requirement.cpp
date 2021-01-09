@@ -74,7 +74,7 @@ namespace mtconnect
         else if (holds_alternative<EntityList>(value))
         {
           const auto l = std::get<EntityList>(value);
-          if (l.size() > m_upperMultiplicity || l.size() < m_lowerMultiplicity)
+          if (int(l.size()) > m_upperMultiplicity || int(l.size()) < m_lowerMultiplicity)
           {
             string upper;
             if (m_upperMultiplicity != Infinite)

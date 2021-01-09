@@ -155,6 +155,7 @@ namespace mtconnect
     
     struct Matcher
     {
+      virtual ~Matcher() = default;
       virtual bool matches(const std::string &s) const = 0;
     };
     

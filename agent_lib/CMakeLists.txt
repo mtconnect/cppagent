@@ -124,6 +124,6 @@ target_compile_definitions(
     )
 
 # set_property(SOURCE ${AGENT_SOURCES} PROPERTY COMPILE_FLAGS_DEBUG "${COVERAGE_FLAGS}")
-target_compile_features(agent_lib PUBLIC cxx_std_14)
+target_compile_features(agent_lib PUBLIC ${CXX_COMPILE_FEATURES})
 target_clangformat_setup(agent_lib)
 target_clangtidy_setup(agent_lib)

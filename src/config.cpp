@@ -584,9 +584,9 @@ namespace mtconnect
         m_devicesFile = (*path).string();
       else
       {
-        auto path = checkPath("probe.xml");
-        if (path)
-          m_devicesFile = (*path).string();
+        auto probe = checkPath("probe.xml");
+        if (probe)
+          m_devicesFile = (*probe).string();
       }
     }
     
