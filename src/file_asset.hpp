@@ -18,8 +18,8 @@
 #pragma once
 
 #include "asset.hpp"
-#include "globals.hpp"
 #include "entity.hpp"
+#include "globals.hpp"
 
 #include <map>
 #include <utility>
@@ -29,16 +29,15 @@ namespace mtconnect
 {
   class FileArchetypeAsset : public entity::Entity
   {
-  public:
+   public:
     static entity::FactoryPtr getFactory();
     static void registerAsset();
-
   };
-  
+
   class FileAsset : public FileArchetypeAsset
   {
-  public:
+   public:
     static entity::FactoryPtr getFactory();
     static void registerAsset();
   };
-}
+}  // namespace mtconnect

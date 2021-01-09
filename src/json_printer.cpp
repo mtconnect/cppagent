@@ -43,7 +43,7 @@ namespace mtconnect
   static dlib::logger g_logger("json.printer");
 
   JsonPrinter::JsonPrinter(const string version, bool pretty)
-      : Printer(pretty), m_schemaVersion(version)
+    : Printer(pretty), m_schemaVersion(version)
   {
     char appVersion[32] = {0};
     std::sprintf(appVersion, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR,
@@ -175,24 +175,23 @@ namespace mtconnect
 
     return entries;
   }
-  
+
   std::string JsonPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
-                          const uint64_t nextSeq, const ProtoErrorList &list) const
+                                       const uint64_t nextSeq, const ProtoErrorList &list) const
   {
     json errors = json::array();
     for (auto &e : list)
     {
       string s(e.second);
-      errors.push_back({
-        {"Error", { {"errorCode", e.first}, {"value", trim(s) } }
-          
-        } });
+      errors.push_back({{"Error", {{"errorCode", e.first}, {"value", trim(s)}}
+
+      }});
     }
-    
+
     json doc = json::object(
         {{"MTConnectError",
           {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion)},
-            { "Errors", errors }}}});
+           {"Errors", errors}}}});
 
     return print(doc, m_pretty);
   }
@@ -798,7 +797,7 @@ namespace mtconnect
    public:
     ComponentRef(const Component *component) : m_component(component), m_categoryRef(nullptr) {}
     ComponentRef(const ComponentRef &other)
-        : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
+      : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
     {
     }
 
@@ -960,12 +959,11 @@ namespace mtconnect
   }
 
   std::string JsonPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
-                                       const unsigned int assetCount,
-                                       const AssetList &assets) const
+                                       const unsigned int assetCount, const AssetList &assets) const
   {
     json assetDoc = json::array();
-    //for (const auto asset : assets)
-    //assetDoc.emplace_back(toJson(asset));
+    // for (const auto asset : assets)
+    // assetDoc.emplace_back(toJson(asset));
 
     json doc =
         json::object({{"MTConnectAssets",

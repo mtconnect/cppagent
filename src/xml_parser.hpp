@@ -17,13 +17,13 @@
 
 #pragma once
 
+#include "checkpoint.hpp"
 #include "component.hpp"
 #include "cutting_tool.hpp"
 #include "data_item.hpp"
 #include "device.hpp"
 #include "globals.hpp"
 #include "relationships.hpp"
-#include "checkpoint.hpp"
 
 #include <libxml/tree.h>
 
@@ -49,8 +49,7 @@ namespace mtconnect
     void loadDocument(const std::string &aDoc);
 
     // Get std::list of data items in path
-    void getDataItems(FilterSet &filterSet, const std::string &path,
-                      xmlNodePtr node = nullptr);
+    void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
 
    protected:
     // Main method to process the nodes and return the objects

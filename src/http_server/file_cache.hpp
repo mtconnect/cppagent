@@ -19,31 +19,28 @@
 
 #include "cached_file.hpp"
 
-#include <string>
-#include <list>
 #include <filesystem>
+#include <list>
 #include <optional>
+#include <string>
 
 namespace mtconnect
 {
   namespace http_server
   {
-    using XmlNamespace = std::pair<std::string,std::string>;
+    using XmlNamespace = std::pair<std::string, std::string>;
     using XmlNamespaceList = std::list<XmlNamespace>;
     class FileCache
     {
-    public:
+     public:
       FileCache();
-      
-      XmlNamespaceList registerFiles(const std::string &uri,
-                                     const std::string &path,
+
+      XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
                                      const std::string &version);
-      XmlNamespaceList registerDirectory(const std::string &uri,
-                                         const std::string &path,
+      XmlNamespaceList registerDirectory(const std::string &uri, const std::string &path,
                                          const std::string &version);
-      std::optional<XmlNamespace> registerFile(const std::string &uri,
-                                    const std::string &path,
-                                    const std::string &version);
+      std::optional<XmlNamespace> registerFile(const std::string &uri, const std::string &path,
+                                               const std::string &version);
       CachedFilePtr getFile(const std::string &name);
       bool hasFile(const std::string &name) const
       {
@@ -56,11 +53,11 @@ namespace mtconnect
           s.insert(0, ".");
         m_mimeTypes[s] = type;
       }
-      
-    protected:
+
+     protected:
       std::map<std::string, std::filesystem::path> m_fileMap;
       std::map<std::string, CachedFilePtr> m_fileCache;
       std::map<std::string, std::string> m_mimeTypes;
     };
-  }
-}
+  }  // namespace http_server
+}  // namespace mtconnect

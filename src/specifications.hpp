@@ -33,17 +33,17 @@ namespace mtconnect
   {
    public:
     Specification(const Specification &s)
-        : m_id(s.m_id),
-          m_type(s.m_type),
-          m_subType(s.m_subType),
-          m_units(s.m_units),
-          m_name(s.m_name),
-          m_dataItemIdRef(s.m_dataItemIdRef),
-          m_compositionIdRef(s.m_compositionIdRef),
-          m_coordinateSystemIdRef(s.m_coordinateSystemIdRef),
-          m_originator(s.m_originator),
-          m_hasGroups(s.m_hasGroups),
-          m_class(s.m_class)
+      : m_id(s.m_id),
+        m_type(s.m_type),
+        m_subType(s.m_subType),
+        m_units(s.m_units),
+        m_name(s.m_name),
+        m_dataItemIdRef(s.m_dataItemIdRef),
+        m_compositionIdRef(s.m_compositionIdRef),
+        m_coordinateSystemIdRef(s.m_coordinateSystemIdRef),
+        m_originator(s.m_originator),
+        m_hasGroups(s.m_hasGroups),
+        m_class(s.m_class)
     {
     }
     Specification(const std::string &klass)

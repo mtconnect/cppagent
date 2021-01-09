@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -39,7 +40,6 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
-#include <filesystem>
 
 // If Windows XP
 #if defined(_WINDOWS)
@@ -205,10 +205,7 @@ namespace mtconnect
     }
   }
 
-  AgentConfiguration::~AgentConfiguration()
-  {
-    set_all_logging_output_streams(cout);
-  }
+  AgentConfiguration::~AgentConfiguration() { set_all_logging_output_streams(cout); }
 
 #ifdef _WINDOWS
   static time_t GetFileModificationTime(const string &file)
@@ -309,7 +306,7 @@ namespace mtconnect
         changed =
             (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
       }
-    } while (!changed); // && m_agent->is_running());
+    } while (!changed);  // && m_agent->is_running());
 
 #if 0
     // Restart agent if changed...
@@ -372,7 +369,7 @@ namespace mtconnect
         if (device->getClass() != "Agent")
           return device;
     }
-    
+
     return nullptr;
   }
 
@@ -523,7 +520,7 @@ namespace mtconnect
     if (index != string::npos)
       str.erase(index + 1);
   }
-  
+
   std::optional<fs::path> AgentConfiguration::checkPath(const std::string &name)
   {
     auto work = m_working / name;
@@ -539,7 +536,7 @@ namespace mtconnect
         return exec;
       }
     }
-    
+
     return nullopt;
   }
 
@@ -569,7 +566,7 @@ namespace mtconnect
     m_pretty = get_bool_with_default(reader, "Pretty", false);
 
     m_pidFile = get_with_default(reader, "PidFile", "agent.pid");
-        
+
     if (reader.is_key_defined("Devices"))
     {
       auto name = reader["Devices"];
@@ -589,7 +586,7 @@ namespace mtconnect
           m_devicesFile = (*probe).string();
       }
     }
-    
+
     if (m_devicesFile.empty())
     {
       throw runtime_error(((string) "Please make sure the configuration "
@@ -604,22 +601,20 @@ namespace mtconnect
 
     // Check for schema version
 
-    m_version = get_with_default(
-        reader, "SchemaVersion", strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR));
+    m_version = get_with_default(reader, "SchemaVersion",
+                                 strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
     auto server = make_unique<http_server::Server>(port, serverIp);
     loadAllowPut(reader, server.get());
-    
+
     auto cp = make_unique<http_server::FileCache>();
-    m_agent = make_unique<Agent>(server, cp, m_devicesFile, bufferSize, maxAssets,
-                                 m_version, checkpointFrequency,
-                                 m_pretty);
+    m_agent = make_unique<Agent>(server, cp, m_devicesFile, bufferSize, maxAssets, m_version,
+                                 checkpointFrequency, m_pretty);
     XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
     m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
     auto cache = m_agent->getFileCache();
 
-    
     for (auto device : m_agent->getDevices())
       device->m_preserveUuid = defaultPreserve;
 
@@ -631,14 +626,10 @@ namespace mtconnect
     loadFiles(xmlPrinter, reader, cache);
 
     // Load namespaces, allow for local file system serving as well.
-    loadNamespace(reader, "DevicesNamespaces", cache, xmlPrinter,
-                  &XmlPrinter::addDevicesNamespace);
-    loadNamespace(reader, "StreamsNamespaces", cache, xmlPrinter,
-                  &XmlPrinter::addStreamsNamespace);
-    loadNamespace(reader, "AssetsNamespaces", cache, xmlPrinter,
-                  &XmlPrinter::addAssetsNamespace);
-    loadNamespace(reader, "ErrorNamespaces", cache, xmlPrinter,
-                  &XmlPrinter::addErrorNamespace);
+    loadNamespace(reader, "DevicesNamespaces", cache, xmlPrinter, &XmlPrinter::addDevicesNamespace);
+    loadNamespace(reader, "StreamsNamespaces", cache, xmlPrinter, &XmlPrinter::addStreamsNamespace);
+    loadNamespace(reader, "AssetsNamespaces", cache, xmlPrinter, &XmlPrinter::addAssetsNamespace);
+    loadNamespace(reader, "ErrorNamespaces", cache, xmlPrinter, &XmlPrinter::addErrorNamespace);
 
     loadStyle(reader, "DevicesStyle", cache, xmlPrinter, &XmlPrinter::setDevicesStyle);
     loadStyle(reader, "StreamsStyle", cache, xmlPrinter, &XmlPrinter::setStreamStyle);
@@ -648,8 +639,8 @@ namespace mtconnect
     loadTypes(reader, cache);
   }
 
-  void AgentConfiguration::loadAdapters(ConfigReader &reader,
-                                        bool defaultPreserve, std::chrono::seconds legacyTimeout,
+  void AgentConfiguration::loadAdapters(ConfigReader &reader, bool defaultPreserve,
+                                        std::chrono::seconds legacyTimeout,
                                         std::chrono::milliseconds reconnectInterval,
                                         bool ignoreTimestamps, bool conversionRequired,
                                         bool upcaseValue, bool filterDuplicates)
@@ -757,8 +748,7 @@ namespace mtconnect
     }
   }
 
-  void AgentConfiguration::loadAllowPut(ConfigReader &reader,
-                                        http_server::Server *server)
+  void AgentConfiguration::loadAllowPut(ConfigReader &reader, http_server::Server *server)
   {
     auto putEnabled = get_bool_with_default(reader, "AllowPut", false);
     server->enablePut(putEnabled);
@@ -789,10 +779,8 @@ namespace mtconnect
     }
   }
 
-  void AgentConfiguration::loadNamespace(ConfigReader &reader,
-                                         const char *namespaceType,
-                                         http_server::FileCache *cache,
-                                         XmlPrinter *xmlPrinter,
+  void AgentConfiguration::loadNamespace(ConfigReader &reader, const char *namespaceType,
+                                         http_server::FileCache *cache, XmlPrinter *xmlPrinter,
                                          NamespaceFunction callback)
   {
     // Load namespaces, allow for local file system serving as well.
@@ -823,8 +811,8 @@ namespace mtconnect
             if (!xns)
             {
               auto p = ns["Path"];
-              g_logger << LDEBUG << "Cannot register " << urn << " at " << location
-                      << " and path " << p;
+              g_logger << LDEBUG << "Cannot register " << urn << " at " << location << " and path "
+                       << p;
             }
           }
         }
@@ -877,8 +865,7 @@ namespace mtconnect
   }
 
   void AgentConfiguration::loadStyle(ConfigReader &reader, const char *styleName,
-                                     http_server::FileCache *cache,
-                                     XmlPrinter *xmlPrinter,
+                                     http_server::FileCache *cache, XmlPrinter *xmlPrinter,
                                      StyleFunction styleFunction)
   {
     if (reader.is_block_defined(styleName))
@@ -900,8 +887,7 @@ namespace mtconnect
     }
   }
 
-  void AgentConfiguration::loadTypes(ConfigReader &reader,
-                                     http_server::FileCache *cache)
+  void AgentConfiguration::loadTypes(ConfigReader &reader, http_server::FileCache *cache)
   {
     if (reader.is_block_defined("MimeTypes"))
     {

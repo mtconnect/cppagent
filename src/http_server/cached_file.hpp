@@ -20,10 +20,10 @@
 #include "globals.hpp"
 #include "ref_counted.hpp"
 
-#include <memory>
-#include <filesystem>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
+#include <memory>
 
 namespace mtconnect
 {
@@ -31,15 +31,13 @@ namespace mtconnect
   {
     struct CachedFile;
     using CachedFilePtr = std::shared_ptr<CachedFile>;
-    struct CachedFile : public  std::enable_shared_from_this<CachedFile>
+    struct CachedFile : public std::enable_shared_from_this<CachedFile>
     {
       CachedFile() : m_buffer(nullptr) {}
-      CachedFilePtr getptr() {
-        return shared_from_this();
-      }
+      CachedFilePtr getptr() { return shared_from_this(); }
 
       CachedFile(const CachedFile &file, const std::string &mime)
-      : m_size(file.m_size), m_mimeType(mime)
+        : m_size(file.m_size), m_mimeType(mime)
       {
         m_buffer = std::make_unique<char[]>(file.m_size);
         std::memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
@@ -55,7 +53,7 @@ namespace mtconnect
       {
         m_buffer = std::make_unique<char[]>(m_size);
       }
-      
+
       CachedFile(const std::filesystem::path &path, const std::string &mime)
         : m_buffer(nullptr), m_mimeType(mime)
       {
@@ -64,7 +62,6 @@ namespace mtconnect
         auto file = std::fopen(path.string().c_str(), "r");
         std::fread(m_buffer.get(), 1, m_size, file);
       }
-
 
       ~CachedFile() { m_buffer.reset(); }
 
@@ -83,10 +80,10 @@ namespace mtconnect
         m_buffer = std::make_unique<char[]>(size);
         m_size = size;
       }
-      
+
       std::unique_ptr<char[]> m_buffer;
       size_t m_size = 0;
       std::string m_mimeType;
     };
-  }
-}
+  }  // namespace http_server
+}  // namespace mtconnect

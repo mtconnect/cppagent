@@ -25,8 +25,7 @@ namespace mtconnect
 {
   Checkpoint::Checkpoint() = default;
 
-  Checkpoint::Checkpoint(const Checkpoint &checkpoint,
-                         const FilterSetOpt &filterSet)
+  Checkpoint::Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
   {
     FilterSetOpt filter;
     if (!filterSet && checkpoint.hasFilter())
@@ -158,8 +157,7 @@ namespace mtconnect
       m_events[id] = new ObservationPtr(event);
   }
 
-  void Checkpoint::copy(const Checkpoint &checkpoint,
-                        const FilterSetOpt &filterSet)
+  void Checkpoint::copy(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
   {
     clear();
 
@@ -167,7 +165,7 @@ namespace mtconnect
     {
       m_filter = filterSet;
     }
-    
+
     for (const auto &event : checkpoint.m_events)
     {
       if (!m_filter || m_filter->count(event.first) > 0)
@@ -175,8 +173,7 @@ namespace mtconnect
     }
   }
 
-  void Checkpoint::getObservations(ObservationPtrArray &list,
-                                   const FilterSetOpt &filterSet) const
+  void Checkpoint::getObservations(ObservationPtrArray &list, const FilterSetOpt &filterSet) const
   {
     for (const auto &event : m_events)
     {

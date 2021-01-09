@@ -16,15 +16,17 @@
 //
 
 #include "factory.hpp"
+
 #include <dlib/logger.h>
 
 using namespace std;
 
 namespace mtconnect
 {
-  namespace entity {
+  namespace entity
+  {
     static dlib::logger g_logger("EntityFactory");
-    
+
     void Factory::_dupFactory(FactoryPtr &factory, FactoryMap &factories)
     {
       auto old = factories.find(factory);
@@ -40,7 +42,7 @@ namespace mtconnect
         factory = ptr;
       }
     }
-    
+
     void Factory::_deepCopy(FactoryMap &factories)
     {
       for (auto &r : m_requirements)
@@ -52,33 +54,29 @@ namespace mtconnect
           r.setFactory(factory);
         }
       }
-      
+
       for (auto &f : m_regexFactory)
       {
         _dupFactory(f.second, factories);
       }
-      
+
       for (auto &f : m_stringFactory)
       {
         _dupFactory(f.second, factories);
       }
     }
-    
+
     FactoryPtr Factory::deepCopy() const
     {
       auto copy = make_shared<Factory>(*this);
       map<FactoryPtr, FactoryPtr> factories;
       copy->_deepCopy(factories);
-      
+
       return copy;
     }
 
- 
-    void Factory::LogError(const std::string &what)
-    {
-      g_logger << dlib::LWARN << what;
-    }
-    
+    void Factory::LogError(const std::string &what) { g_logger << dlib::LWARN << what; }
+
     void Factory::performConversions(Properties &properties, ErrorList &errors) const
     {
       for (const auto &r : m_requirements)
@@ -88,12 +86,15 @@ namespace mtconnect
           const auto p = properties.find(r.getName());
           if (p != properties.end() && p->second.index() != r.getType())
           {
-            try {
+            try
+            {
               Value &v = p->second;
               ConvertValueToType(v, r.getType());
-            } catch (PropertyError &e) {
-              g_logger << dlib::LWARN << "Error occurred converting " << r.getName() << ": " <<
-                e.what();
+            }
+            catch (PropertyError &e)
+            {
+              g_logger << dlib::LWARN << "Error occurred converting " << r.getName() << ": "
+                       << e.what();
               e.setProperty(r.getName());
               errors.emplace_back(e.dup());
               properties.erase(p);
@@ -106,10 +107,9 @@ namespace mtconnect
     bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
     {
       std::set<std::string> keys;
-      std::transform(properties.begin(), properties.end(),
-                     std::inserter(keys, keys.end()),
-                        [](const auto &v) { return v.first; });
-      bool success { true };
+      std::transform(properties.begin(), properties.end(), std::inserter(keys, keys.end()),
+                     [](const auto &v) { return v.first; });
+      bool success{true};
       for (const auto &r : m_requirements)
       {
         std::string key;
@@ -122,9 +122,8 @@ namespace mtconnect
         {
           if (r.isRequired())
           {
-            errors.emplace_back(new PropertyError("Property " + r.getName() +
-                                                  " is required and not provided",
-                                                  r.getName()));
+            errors.emplace_back(new PropertyError(
+                "Property " + r.getName() + " is required and not provided", r.getName()));
             success = false;
           }
         }
@@ -155,7 +154,7 @@ namespace mtconnect
           keys.erase(r.getName());
         }
       }
-      
+
       // Check for additional properties
       if (!m_isList && !keys.empty())
       {
@@ -166,9 +165,8 @@ namespace mtconnect
         errors.emplace_back(new PropertyError(os.str()));
         success = false;
       }
-      
+
       return success;
     }
-  }
-}
-
+  }  // namespace entity
+}  // namespace mtconnect

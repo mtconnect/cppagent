@@ -39,146 +39,146 @@ namespace mtconnect
   // For arguments which have no switch char but appear in a special order.
   Option::Option(int order, const char *&charPtr, const char *usage, const char *argDesc,
                  bool required)
-      : name_(nullptr),
-        charPtrPtr_(&charPtr),
-        boolPtr_(nullptr),
-        intPtr_(nullptr),
-        list_(nullptr),
-        type_(eCharacter),
-        order_(order),
-        required_(required),
-        argument_(false),
-        ignoreCase_(false),
-        switch_(false),
-        usage_(usage),
-        isSet_(false),
-        expand_(false),
-        argDesc_(argDesc)
+    : name_(nullptr),
+      charPtrPtr_(&charPtr),
+      boolPtr_(nullptr),
+      intPtr_(nullptr),
+      list_(nullptr),
+      type_(eCharacter),
+      order_(order),
+      required_(required),
+      argument_(false),
+      ignoreCase_(false),
+      switch_(false),
+      usage_(usage),
+      isSet_(false),
+      expand_(false),
+      argDesc_(argDesc)
   {
   }
 
   // For arguments which have no switch char but appear in a special order.
   Option::Option(int order, int &intRef, const char *usage, const char *argDesc, bool required)
-      : name_(nullptr),
-        charPtrPtr_(nullptr),
-        boolPtr_(nullptr),
-        intPtr_(&intRef),
-        list_(nullptr),
-        type_(eInteger),
-        order_(order),
-        required_(required),
-        argument_(false),
-        ignoreCase_(false),
-        switch_(false),
-        usage_(usage),
-        isSet_(false),
-        expand_(false),
-        argDesc_(argDesc)
+    : name_(nullptr),
+      charPtrPtr_(nullptr),
+      boolPtr_(nullptr),
+      intPtr_(&intRef),
+      list_(nullptr),
+      type_(eInteger),
+      order_(order),
+      required_(required),
+      argument_(false),
+      ignoreCase_(false),
+      switch_(false),
+      usage_(usage),
+      isSet_(false),
+      expand_(false),
+      argDesc_(argDesc)
   {
   }
 
   // For the rest of the argumets as in a file list.
   Option::Option(list<string> &list, const char *usage, const char *argDesc, bool required,
                  bool expand)
-      : name_(nullptr),
-        charPtrPtr_(nullptr),
-        boolPtr_(nullptr),
-        intPtr_(nullptr),
-        list_(&list),
-        type_(eList),
-        order_(-1),
-        required_(required),
-        argument_(false),
-        ignoreCase_(false),
-        switch_(false),
-        usage_(usage),
-        isSet_(false),
-        expand_(expand),
-        argDesc_(argDesc)
+    : name_(nullptr),
+      charPtrPtr_(nullptr),
+      boolPtr_(nullptr),
+      intPtr_(nullptr),
+      list_(&list),
+      type_(eList),
+      order_(-1),
+      required_(required),
+      argument_(false),
+      ignoreCase_(false),
+      switch_(false),
+      usage_(usage),
+      isSet_(false),
+      expand_(expand),
+      argDesc_(argDesc)
   {
   }
 
   // Given an agument with a switch char ('-') <name>
   Option::Option(const char *name, const char *&charPtr, const char *usage, const char *argDesc,
                  bool required, bool ignoreCase)
-      : name_(name),
-        charPtrPtr_(&charPtr),
-        boolPtr_(nullptr),
-        intPtr_(nullptr),
-        list_(nullptr),
-        type_(eCharacter),
-        order_(-1),
-        required_(required),
-        argument_(true),
-        ignoreCase_(ignoreCase),
-        switch_(true),
-        usage_(usage),
-        isSet_(false),
-        expand_(false),
-        argDesc_(argDesc)
+    : name_(name),
+      charPtrPtr_(&charPtr),
+      boolPtr_(nullptr),
+      intPtr_(nullptr),
+      list_(nullptr),
+      type_(eCharacter),
+      order_(-1),
+      required_(required),
+      argument_(true),
+      ignoreCase_(ignoreCase),
+      switch_(true),
+      usage_(usage),
+      isSet_(false),
+      expand_(false),
+      argDesc_(argDesc)
   {
   }
 
   // Given an agument with a switch char ('-') <name>
   Option::Option(const char *name, bool &boolRef, const char *usage, bool aArgument,
                  const char *argDesc, bool required, bool ignoreCase)
-      : name_(name),
-        charPtrPtr_(nullptr),
-        boolPtr_(&boolRef),
-        intPtr_(nullptr),
-        list_(nullptr),
-        type_(eBoolean),
-        order_(-1),
-        required_(required),
-        argument_(aArgument),
-        ignoreCase_(ignoreCase),
-        switch_(true),
-        usage_(usage),
-        isSet_(false),
-        expand_(false),
-        argDesc_(argDesc)
+    : name_(name),
+      charPtrPtr_(nullptr),
+      boolPtr_(&boolRef),
+      intPtr_(nullptr),
+      list_(nullptr),
+      type_(eBoolean),
+      order_(-1),
+      required_(required),
+      argument_(aArgument),
+      ignoreCase_(ignoreCase),
+      switch_(true),
+      usage_(usage),
+      isSet_(false),
+      expand_(false),
+      argDesc_(argDesc)
   {
   }
 
   // Given an agument with a switch char ('-') <name>
   Option::Option(const char *name, int &intRef, const char *usage, const char *argDesc,
                  bool required, bool ignoreCase)
-      : name_(name),
-        charPtrPtr_(nullptr),
-        boolPtr_(nullptr),
-        intPtr_(&intRef),
-        list_(nullptr),
-        type_(eInteger),
-        order_(-1),
-        required_(required),
-        argument_(true),
-        ignoreCase_(ignoreCase),
-        switch_(true),
-        usage_(usage),
-        isSet_(false),
-        expand_(false),
-        argDesc_(argDesc)
+    : name_(name),
+      charPtrPtr_(nullptr),
+      boolPtr_(nullptr),
+      intPtr_(&intRef),
+      list_(nullptr),
+      type_(eInteger),
+      order_(-1),
+      required_(required),
+      argument_(true),
+      ignoreCase_(ignoreCase),
+      switch_(true),
+      usage_(usage),
+      isSet_(false),
+      expand_(false),
+      argDesc_(argDesc)
   {
   }
 
   // Given an agument with a switch char ('-') <name>
   Option::Option(const char *name, list<string> &list, const char *usage, const char *argDesc,
                  bool required, bool expand, bool ignoreCase)
-      : name_(name),
-        charPtrPtr_(nullptr),
-        boolPtr_(nullptr),
-        intPtr_(nullptr),
-        list_(&list),
-        type_(eList),
-        order_(-1),
-        required_(required),
-        argument_(true),
-        ignoreCase_(ignoreCase),
-        switch_(true),
-        usage_(usage),
-        isSet_(false),
-        expand_(expand),
-        argDesc_(argDesc)
+    : name_(name),
+      charPtrPtr_(nullptr),
+      boolPtr_(nullptr),
+      intPtr_(nullptr),
+      list_(&list),
+      type_(eList),
+      order_(-1),
+      required_(required),
+      argument_(true),
+      ignoreCase_(ignoreCase),
+      switch_(true),
+      usage_(usage),
+      isSet_(false),
+      expand_(expand),
+      argDesc_(argDesc)
   {
   }
 

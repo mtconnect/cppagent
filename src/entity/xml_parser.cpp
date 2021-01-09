@@ -16,6 +16,7 @@
 //
 
 #include "entity/xml_parser.hpp"
+
 #include "xml_helper.hpp"
 
 #include <dlib/logger.h>
@@ -31,33 +32,33 @@ namespace mtconnect
   namespace entity
   {
     static dlib::logger g_logger("entity.xml_parser");
-    
+
     extern "C" void XMLCDECL entityXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
     {
       va_list args;
-      
+
       char buffer[2048] = {0};
       va_start(args, msg);
       vsnprintf(buffer, 2046u, msg, args);
       buffer[2047] = '0';
       va_end(args);
-      
+
       g_logger << dlib::LERROR << "XML: " << buffer;
     }
-    
+
     string nodeQName(xmlNodePtr node)
     {
-      string qname((const char*) node->name);
-      
+      string qname((const char *)node->name);
+
       if (node->ns && node->ns->prefix &&
-          strncmp((const char *) node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
+          strncmp((const char *)node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
       {
-        qname.insert(0, (const char* ) node->ns->prefix);
+        qname.insert(0, (const char *)node->ns->prefix);
       }
-      
+
       return qname;
     }
-    
+
     inline void trim(string &s)
     {
       auto beg = s.find_first_not_of(" \t\n");
@@ -70,7 +71,7 @@ namespace mtconnect
           s.erase(end);
       }
     }
-    
+
     static Value parseRawNode(xmlNodePtr node)
     {
       stringstream str;
@@ -81,45 +82,43 @@ namespace mtconnect
         auto count = xmlNodeDump(buf, child->doc, child, 0, 0);
         if (count > 0)
         {
-          str << (const char *) buf->content;
+          str << (const char *)buf->content;
         }
         xmlBufferFree(buf);
       }
-      Value content { nullptr };
+      Value content{nullptr};
       if (str.tellp() > 0)
-          content = str.str();
+        content = str.str();
       return content;
     }
 
-        
-    static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node,
-                                  ErrorList &errors)
+    static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors)
     {
       auto qname = nodeQName(node);
       auto ef = factory->factoryFor(qname);
       if (ef)
       {
         Properties properties;
-        EntityList *l { nullptr };
+        EntityList *l{nullptr};
         if (ef->isList())
         {
           l = &properties["LIST"].emplace<EntityList>();
         }
-        
+
         for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
         {
           if (attr->type == XML_ATTRIBUTE_NODE)
           {
-            properties.insert({ (const char *) attr->name,
-              string((const char *) attr->children->content) });
+            properties.insert(
+                {(const char *)attr->name, string((const char *)attr->children->content)});
           }
         }
-              
+
         if (ef->hasRaw())
         {
           auto value = parseRawNode(node);
           if (holds_alternative<string>(value))
-            properties.insert({ "RAW", value });
+            properties.insert({"RAW", value});
         }
         else
         {
@@ -130,13 +129,12 @@ namespace mtconnect
               auto name = nodeQName(child);
               if (ef->isSimpleProperty(name))
               {
-                if (child->children != nullptr &&
-                    child->children->content != nullptr)
+                if (child->children != nullptr && child->children->content != nullptr)
                 {
-                  string s((const char *) child->children->content);
+                  string s((const char *)child->children->content);
                   trim(s);
                   if (!s.empty())
-                    properties.insert({  nodeQName(child), s });
+                    properties.insert({nodeQName(child), s});
                 }
               }
               else
@@ -155,43 +153,44 @@ namespace mtconnect
                   }
                   else
                   {
-                    properties.insert({ ent->getName(), ent });
+                    properties.insert({ent->getName(), ent});
                   }
                 }
                 else
                 {
                   g_logger << dlib::LWARN << "Unexpected element: " << nodeQName(child);
-                  errors.emplace_back(new EntityError("Invalid element '" + nodeQName(child) + "'", qname));
+                  errors.emplace_back(
+                      new EntityError("Invalid element '" + nodeQName(child) + "'", qname));
                 }
               }
             }
             else if (child->type == XML_TEXT_NODE)
             {
-              string s((const char *) child->content);
+              string s((const char *)child->content);
               trim(s);
               if (!s.empty())
-                properties.insert({ "VALUE", s });
+                properties.insert({"VALUE", s});
             }
           }
         }
-        
-        try {
+
+        try
+        {
           auto entity = ef->make(qname, properties, errors);
           return entity;
-        } catch (EntityError &e) {
+        }
+        catch (EntityError &e)
+        {
           e.setEntity(qname);
           errors.emplace_back(e.dup());
         }
       }
-      
+
       return nullptr;
     }
-    
-    
-    EntityPtr XmlParser::parse(FactoryPtr factory,
-                                const string &document,
-                                const string &version,
-                                ErrorList &errors)
+
+    EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, const string &version,
+                               ErrorList &errors)
     {
       EntityPtr entity;
       try
@@ -199,41 +198,40 @@ namespace mtconnect
         xmlInitParser();
         xmlXPathInit();
         xmlSetGenericErrorFunc(nullptr, entityXMLErrorFunc);
-        
-        unique_ptr<xmlDoc,function<void(xmlDocPtr)>> doc(xmlReadMemory(document.c_str(),
-                                                               document.length(),
-                                                               "document.xml", nullptr,
-                                                               XML_PARSE_NOBLANKS),
-                                                        [](xmlDocPtr d){ xmlFreeDoc(d); });
+
+        unique_ptr<xmlDoc, function<void(xmlDocPtr)>> doc(
+            xmlReadMemory(document.c_str(), document.length(), "document.xml", nullptr,
+                          XML_PARSE_NOBLANKS),
+            [](xmlDocPtr d) { xmlFreeDoc(d); });
         xmlNodePtr root = xmlDocGetRootElement(doc.get());
         if (root != nullptr)
           entity = parseXmlNode(factory, root, errors);
         else
           errors.emplace_back(new EntityError("Cannot parse asset"));
       }
-      
+
       catch (EntityError e)
       {
         g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
         errors.emplace_back(e.dup());
         entity.reset();
       }
-      
+
       catch (XmlError e)
       {
         g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
         errors.emplace_back(new EntityError(e.what()));
         entity.reset();
       }
-      
+
       catch (...)
       {
         g_logger << dlib::LERROR << "Cannot parse XML document: unknown error";
         errors.emplace_back(new EntityError("Unknown Error"));
         entity.reset();
       }
-            
+
       return entity;
-    }    
-  }
-}
+    }
+  }  // namespace entity
+}  // namespace mtconnect

@@ -18,52 +18,53 @@
 #pragma once
 
 #include "xml_helper.hpp"
+
 #include <libxml/xmlwriter.h>
 
 namespace mtconnect
 {
   class XmlWriter
   {
-  public:
+   public:
     XmlWriter(bool pretty) : m_writer(nullptr), m_buf(nullptr)
     {
       THROW_IF_XML2_NULL(m_buf = xmlBufferCreate());
       THROW_IF_XML2_NULL(m_writer = xmlNewTextWriterMemory(m_buf, 0));
       if (pretty)
-	{
-	  THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(m_writer, 1));
-	  THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(m_writer, BAD_CAST "  "));
-	}
+      {
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(m_writer, 1));
+        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(m_writer, BAD_CAST "  "));
+      }
     }
-  
+
     ~XmlWriter()
     {
       if (m_writer != nullptr)
-	{
-	  xmlFreeTextWriter(m_writer);
-	  m_writer = nullptr;
-	}
+      {
+        xmlFreeTextWriter(m_writer);
+        m_writer = nullptr;
+      }
       if (m_buf != nullptr)
-	{
-	  xmlBufferFree(m_buf);
-	  m_buf = nullptr;
-	}
+      {
+        xmlBufferFree(m_buf);
+        m_buf = nullptr;
+      }
     }
-  
+
     operator xmlTextWriterPtr() { return m_writer; }
-  
+
     std::string getContent()
     {
       if (m_writer != nullptr)
-	{
-	  THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(m_writer));
-	  xmlFreeTextWriter(m_writer);
-	  m_writer = nullptr;
-	}
+      {
+        THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(m_writer));
+        xmlFreeTextWriter(m_writer);
+        m_writer = nullptr;
+      }
       return std::string((char *)m_buf->content, m_buf->use);
     }
-  
-  protected:
+
+   protected:
     xmlTextWriterPtr m_writer;
     xmlBufferPtr m_buf;
   };
@@ -83,12 +84,12 @@ namespace mtconnect
    public:
     AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}
     AutoElement(xmlTextWriterPtr writer, const char *name, std::string key = "")
-        : m_writer(writer), m_name(name), m_key(std::move(key))
+      : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name);
     }
     AutoElement(xmlTextWriterPtr writer, const std::string &name, std::string key = "")
-        : m_writer(writer), m_name(name), m_key(std::move(key))
+      : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name.c_str());
     }
@@ -122,5 +123,5 @@ namespace mtconnect
     xmlTextWriterPtr m_writer;
     std::string m_name;
     std::string m_key;
-  };  
-}
+  };
+}  // namespace mtconnect

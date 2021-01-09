@@ -37,11 +37,11 @@ namespace mtconnect
 {
   RollingFileLogger::RollingFileLogger(std::string filename, int maxBackupIndex, uint64_t maxSize,
                                        RollingSchedule schedule)
-      : m_name(filename),
-        m_maxBackupIndex(maxBackupIndex),
-        m_maxSize(maxSize),
-        m_schedule(schedule),
-        m_fd(0)
+    : m_name(filename),
+      m_maxBackupIndex(maxBackupIndex),
+      m_maxSize(maxSize),
+      m_schedule(schedule),
+      m_fd(0)
   {
     m_fd = open(filename.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
 

@@ -19,17 +19,17 @@
 
 #include "globals.hpp"
 
-#include <string>
-#include <map>
-#include <sstream>
-#include <variant>
-#include <ostream>
-#include <chrono>
-
 #include <dlib/logger.h>
 #include <dlib/md5.h>
 
-namespace mtconnect 
+#include <chrono>
+#include <map>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <variant>
+
+namespace mtconnect
 {
   namespace http_server
   {
@@ -77,22 +77,16 @@ namespace mtconnect
       GATEWAY_TIMEOUT = 504,
       HTTP_VERSION_NOT_SUPPORTED = 505
     };
-    
+
     class Response
     {
-    public:
-      Response(std::ostream &out)
-      : m_out(out)
-      {
-      }
-      
+     public:
+      Response(std::ostream &out) : m_out(out) {}
+
       virtual ~Response() = default;
-      
-      virtual std::string getHeaderDate()
-      {
-        return getCurrentTime(HUM_READ);
-      }
-      
+
+      virtual std::string getHeaderDate() { return getCurrentTime(HUM_READ); }
+
       bool good() const { return m_out.good(); }
       void setBad() { m_out.setstate(std::ios::badbit); }
       void flush() { m_out.flush(); }
@@ -110,9 +104,11 @@ namespace mtconnect
         if (good())
         {
           m_boundary = dlib::md5(std::to_string(time(nullptr)));
-          
+
           m_out << "HTTP/1.1 200 OK\r\n"
-                   "Date: " << getHeaderDate() << "\r\n"
+                   "Date: "
+                << getHeaderDate()
+                << "\r\n"
                    "Server: MTConnectAgent\r\n"
                    "Expires: -1\r\n"
                    "Connection: close\r\n"
@@ -121,21 +117,20 @@ namespace mtconnect
                 << m_boundary
                 << "\r\n"
                    "Transfer-Encoding: chunked\r\n\r\n";
-        }        
+        }
       }
-      
+
       virtual void writeChunk(const std::string &chunk)
       {
         if (good())
         {
           using namespace std;
           m_out.setf(ios::hex, ios::basefield);
-          m_out << chunk.length() << "\r\n"
-                << chunk << "\r\n";
+          m_out << chunk.length() << "\r\n" << chunk << "\r\n";
           m_out.flush();
         }
       }
-      
+
       virtual void writeMultipartChunk(const std::string &body, const std::string &mimeType)
       {
         if (good())
@@ -143,35 +138,34 @@ namespace mtconnect
           using namespace std;
           ostringstream str;
           m_out.setf(ios::dec, ios::basefield);
-          str << "--" << m_boundary << "\r\n"
-                 "Content-type: " << mimeType << "\r\n"
-                 "Content-length: " << body.length() << "\r\n\r\n"
+          str << "--" << m_boundary
+              << "\r\n"
+                 "Content-type: "
+              << mimeType
+              << "\r\n"
+                 "Content-length: "
+              << body.length() << "\r\n\r\n"
               << body;
 
           writeChunk(str.str());
         }
       }
-      
-      void writeResponse(const std::string &body,
-                         const std::string &mimeType = "text/plain",
+
+      void writeResponse(const std::string &body, const std::string &mimeType = "text/plain",
                          const ResponseCode code = OK,
                          const std::chrono::seconds expires = std::chrono::seconds(0))
       {
         writeResponse(body.c_str(), body.size(), code, mimeType, expires);
       }
 
-      
-      void writeResponse(const std::string &body,
-                         const ResponseCode code,
+      void writeResponse(const std::string &body, const ResponseCode code,
                          const std::string &mimeType = "text/plain",
                          const std::chrono::seconds expires = std::chrono::seconds(0))
       {
         writeResponse(body.c_str(), body.size(), code, mimeType, expires);
       }
-      
-      virtual void writeResponse(const char *body,
-                                 const size_t size,
-                                 const ResponseCode code,
+
+      virtual void writeResponse(const char *body, const size_t size, const ResponseCode code,
                                  const std::string &mimeType = "text/plain",
                                  const std::chrono::seconds expires = std::chrono::seconds(0))
       {
@@ -181,13 +175,13 @@ namespace mtconnect
           string expiry;
           if (expires == 0s)
           {
-            expiry = "Expires: -1\r\n"
-                     "Cache-Control: private, max-age=0\r\n";
+            expiry =
+                "Expires: -1\r\n"
+                "Cache-Control: private, max-age=0\r\n";
           }
           else
           {
-            expiry = getCurrentTime(chrono::system_clock::now() + expires,
-                                    HUM_READ);
+            expiry = getCurrentTime(chrono::system_clock::now() + expires, HUM_READ);
           }
 
           m_out << "HTTP/1.1 " << code << " ";
@@ -197,24 +191,23 @@ namespace mtconnect
           else
             m_out << cm->second;
           m_out << "\r\n"
-                << "Date: " << getHeaderDate() << "\r\n"
+                << "Date: " << getHeaderDate()
+                << "\r\n"
                    "Server: MTConnectAgent\r\n"
-                   "Connection: close\r\n" <<
-                   expiry <<
-                   "Content-Length: " << size << "\r\n"
-                   "Content-Type: " << mimeType << "\r\n\r\n";
+                   "Connection: close\r\n"
+                << expiry << "Content-Length: " << size
+                << "\r\n"
+                   "Content-Type: "
+                << mimeType << "\r\n\r\n";
           m_out.write(body, size);
         }
       }
 
-      
-    protected:
+     protected:
       std::ostream &m_out;
       std::string m_boundary;
       static const std::map<uint16_t, std::string> m_status;
       static const std::map<std::string, uint16_t> m_codes;
     };
-  }
-}
-
-    
+  }  // namespace http_server
+}  // namespace mtconnect

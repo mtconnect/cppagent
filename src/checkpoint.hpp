@@ -33,16 +33,13 @@ namespace mtconnect
   class Checkpoint
   {
    public:
-    
     Checkpoint();
-    Checkpoint(const Checkpoint &checkpoint,
-               const FilterSetOpt &filterSet = std::nullopt);
+    Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
     ~Checkpoint();
 
     void addObservation(Observation *event);
     bool dataSetDifference(Observation *event) const;
-    void copy(Checkpoint const &checkpoint,
-              const FilterSetOpt &filterSet = std::nullopt);
+    void copy(Checkpoint const &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
     void clear();
     void filter(const FilterSet &filterSet);
     bool hasFilter() const { return bool(m_filter); }

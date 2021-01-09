@@ -1,9 +1,9 @@
 
 #pragma once
 
+#include "asset.hpp"
 #include "globals.hpp"
 #include "observation.hpp"
-#include "asset.hpp"
 
 #include <list>
 #include <map>
@@ -16,7 +16,7 @@ namespace mtconnect
   class Asset;
   class CuttingTool;
 
-  using ProtoErrorList = std::list<std::pair<std::string,std::string>>;
+  using ProtoErrorList = std::list<std::pair<std::string, std::string>>;
 
   class Printer
   {
@@ -28,11 +28,10 @@ namespace mtconnect
                                    const uint64_t nextSeq, const std::string &errorCode,
                                    const std::string &errorText) const
     {
-      return printErrors(instanceId, bufferSize, nextSeq,
-                        { { errorCode, errorText } });
+      return printErrors(instanceId, bufferSize, nextSeq, {{errorCode, errorText}});
     }
     virtual std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
-                           const uint64_t nextSeq, const ProtoErrorList &list) const = 0;
+                                    const uint64_t nextSeq, const ProtoErrorList &list) const = 0;
 
     virtual std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                    const uint64_t nextSeq, const unsigned int assetBufferSize,
@@ -43,8 +42,7 @@ namespace mtconnect
     virtual std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                     const uint64_t nextSeq, const uint64_t firstSeq,
                                     const uint64_t lastSeq, ObservationPtrArray &results) const = 0;
-    virtual std::string printAssets(const unsigned int anInstanceId,
-                                    const unsigned int bufferSize,
+    virtual std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                                     const unsigned int assetCount,
                                     AssetList const &assets) const = 0;
     virtual std::string mimeType() const = 0;

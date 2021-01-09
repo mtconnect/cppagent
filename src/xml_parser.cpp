@@ -282,31 +282,30 @@ namespace mtconnect
   }
 
   XmlParser::XmlParser()
-      : m_handlers(
-            {{"Components",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-             {"DataItems",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-             {"References",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-             {"Compositions",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-             {"DataItem", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItem(n, p, d); }},
-             {"Reference",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
-             {"DataItemRef",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
-             {"ComponentRef",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
-             {"Composition",
-              [this](xmlNodePtr n, Component *p, Device *d) {
-                auto c = handleComposition(n);
-                p->addComposition(c);
-              }},
-             {"Description", [](xmlNodePtr n, Component *p,
-                                Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
-             {"Configuration",
-              [](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
+    : m_handlers(
+          {{"Components",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+           {"DataItems",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+           {"References",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+           {"Compositions",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+           {"DataItem", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItem(n, p, d); }},
+           {"Reference", [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+           {"DataItemRef",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+           {"ComponentRef",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+           {"Composition",
+            [this](xmlNodePtr n, Component *p, Device *d) {
+              auto c = handleComposition(n);
+              p->addComposition(c);
+            }},
+           {"Description", [](xmlNodePtr n, Component *p,
+                              Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
+           {"Configuration",
+            [](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
   {
   }
 
@@ -481,9 +480,7 @@ namespace mtconnect
     }
   }
 
-  void XmlParser::getDataItems(FilterSet &filterSet,
-                               const string &inputPath,
-                               xmlNodePtr node)
+  void XmlParser::getDataItems(FilterSet &filterSet, const string &inputPath, xmlNodePtr node)
   {
     xmlNodePtr root = xmlDocGetRootElement(m_doc);
 
@@ -1092,42 +1089,42 @@ namespace mtconnect
   template <class T>
   void handleConfiguration(xmlNodePtr node, T *parent)
   {
-    forEachElement(node, {{{"SensorConfiguration",
-                            [&parent](xmlNodePtr n) {
-                              auto s = handleSensorConfiguration(n);
-                              parent->addConfiguration(s);
-                            }},
-                           {"Relationships",
-                            [&parent](xmlNodePtr n) {
-                              auto r = handleRelationships(n);
-                              parent->addConfiguration(r);
-                            }},
-                           {"CoordinateSystems",
-                            [&parent](xmlNodePtr n) {
-                              auto c = handleCoordinateSystems(n);
-                              parent->addConfiguration(c);
-                            }},
-                           {"Specifications",
-                            [&parent](xmlNodePtr n) {
-                              auto s = handleSpecifications(n);
-                              parent->addConfiguration(s);
-                            }},
-                           {"SolidModel",
-                            [&parent](xmlNodePtr n) {
-                              unique_ptr<ComponentConfiguration> g(
-                                  handleGeometricConfiguration<SolidModel>(n));
-                              parent->addConfiguration(g);
-                            }},
-                           {"Motion",
-                            [&parent](xmlNodePtr n) {
-                              unique_ptr<ComponentConfiguration> g(
-                                  handleGeometricConfiguration<Motion>(n));
-                              parent->addConfiguration(g);
-                            }},
-                           {"OTHERWISE", [&parent](xmlNodePtr n) {
-                              unique_ptr<ComponentConfiguration> ext(
-                                  new ExtendedComponentConfiguration(getRawContent(n)));
-                              parent->addConfiguration(ext);
-                            }}}});
-  }  
+    forEachElement(
+        node,
+        {{{"SensorConfiguration",
+           [&parent](xmlNodePtr n) {
+             auto s = handleSensorConfiguration(n);
+             parent->addConfiguration(s);
+           }},
+          {"Relationships",
+           [&parent](xmlNodePtr n) {
+             auto r = handleRelationships(n);
+             parent->addConfiguration(r);
+           }},
+          {"CoordinateSystems",
+           [&parent](xmlNodePtr n) {
+             auto c = handleCoordinateSystems(n);
+             parent->addConfiguration(c);
+           }},
+          {"Specifications",
+           [&parent](xmlNodePtr n) {
+             auto s = handleSpecifications(n);
+             parent->addConfiguration(s);
+           }},
+          {"SolidModel",
+           [&parent](xmlNodePtr n) {
+             unique_ptr<ComponentConfiguration> g(handleGeometricConfiguration<SolidModel>(n));
+             parent->addConfiguration(g);
+           }},
+          {"Motion",
+           [&parent](xmlNodePtr n) {
+             unique_ptr<ComponentConfiguration> g(handleGeometricConfiguration<Motion>(n));
+             parent->addConfiguration(g);
+           }},
+          {"OTHERWISE", [&parent](xmlNodePtr n) {
+             unique_ptr<ComponentConfiguration> ext(
+                 new ExtendedComponentConfiguration(getRawContent(n)));
+             parent->addConfiguration(ext);
+           }}}});
+  }
 }  // namespace mtconnect

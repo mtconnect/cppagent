@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "globals.hpp"
 #include "entity.hpp"
+#include "globals.hpp"
 
-#include <map>
 #include <list>
+#include <map>
 #include <string>
 
 namespace mtconnect
@@ -32,7 +32,7 @@ namespace mtconnect
 
   class Asset : public entity::Entity
   {
-  public:
+   public:
     Asset(const std::string &name, const entity::Properties &props)
       : entity::Entity(name, props), m_removed(false)
     {
@@ -46,10 +46,10 @@ namespace mtconnect
       }
     }
     ~Asset() override = default;
-    
+
     static entity::FactoryPtr getFactory();
     static entity::FactoryPtr getRoot();
-    
+
     void setProperty(const std::string &key, const entity::Value &v) override
     {
       entity::Value r = v;
@@ -63,23 +63,16 @@ namespace mtconnect
 
       m_properties.insert_or_assign(key, r);
     }
-    void setProperty(const entity::Property &property)
-    {
-      Entity::setProperty(property);
-    }
+    void setProperty(const entity::Property &property) { Entity::setProperty(property); }
 
-
-    const std::string &getType() const
-    {
-      return getName();
-    }
+    const std::string &getType() const { return getName(); }
     const std::string &getAssetId() const
     {
       if (m_assetId.empty())
       {
         const auto &v = getProperty("assetId");
         if (std::holds_alternative<std::string>(v))
-          *const_cast<std::string*>(&m_assetId) = std::get<std::string>(v);
+          *const_cast<std::string *>(&m_assetId) = std::get<std::string>(v);
         else
           throw entity::PropertyError("Asset has no assetId");
       }
@@ -114,17 +107,17 @@ namespace mtconnect
       m_removed = true;
     }
     static void registerAssetType(const std::string &t, entity::FactoryPtr factory);
-    
+
     bool operator==(const Asset &another) const { return getAssetId() == another.getAssetId(); }
-    
-  protected:
+
+   protected:
     std::string m_assetId;
     bool m_removed;
   };
-  
+
   class ExtendedAsset : public Asset
   {
-  public:
+   public:
     static entity::FactoryPtr getFactory();
   };
 }  // namespace mtconnect

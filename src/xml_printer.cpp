@@ -17,17 +17,17 @@
 
 #include "xml_printer.hpp"
 
+#include "asset.hpp"
 #include "composition.hpp"
 #include "coordinate_systems.hpp"
 #include "cutting_tool.hpp"
 #include "device.hpp"
+#include "entity/xml_printer.hpp"
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"
 #include "solid_model.hpp"
 #include "specifications.hpp"
 #include "version.h"
-#include "asset.hpp"
-#include "entity/xml_printer.hpp"
 
 #include <dlib/logger.h>
 #include <dlib/sockets.h>
@@ -104,7 +104,7 @@ namespace mtconnect
   };
 
   XmlPrinter::XmlPrinter(const string version, bool pretty)
-      : Printer(pretty), m_schemaVersion(version)
+    : Printer(pretty), m_schemaVersion(version)
   {
     if (m_schemaVersion.empty())
       m_schemaVersion = strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR);
@@ -304,12 +304,12 @@ namespace mtconnect
    public:
     AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}
     AutoElement(xmlTextWriterPtr writer, const char *name, string key = "")
-        : m_writer(writer), m_name(name), m_key(std::move(key))
+      : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name);
     }
     AutoElement(xmlTextWriterPtr writer, const string &name, string key = "")
-        : m_writer(writer), m_name(name), m_key(std::move(key))
+      : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name.c_str());
     }
@@ -411,10 +411,8 @@ namespace mtconnect
     }
   }
 
-  std::string XmlPrinter::printErrors(const unsigned int instanceId,
-                                      const unsigned int bufferSize,
-                                      const uint64_t nextSeq,
-                                      const ProtoErrorList &list) const
+  std::string XmlPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                                      const uint64_t nextSeq, const ProtoErrorList &list) const
   {
     string ret;
 
@@ -428,7 +426,7 @@ namespace mtconnect
         AutoElement e1(writer, "Errors");
         for (auto &e : list)
         {
-          addSimpleElement(writer, "Error", e.second, {{ "errorCode", e.first }});
+          addSimpleElement(writer, "Error", e.second, {{"errorCode", e.first}});
         }
       }
       closeElement(writer);  // MTConnectError
@@ -446,9 +444,7 @@ namespace mtconnect
     }
 
     return ret;
-
   }
-
 
   string XmlPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
@@ -940,11 +936,9 @@ namespace mtconnect
 
     return ret;
   }
-  
-  string XmlPrinter::printAssets(const unsigned int instanceId,
-                                 const unsigned int bufferSize,
-                                 const unsigned int assetCount,
-                                 const AssetList &assets) const
+
+  string XmlPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
+                                 const unsigned int assetCount, const AssetList &assets) const
   {
     string ret;
     try
@@ -955,7 +949,7 @@ namespace mtconnect
       {
         AutoElement ele(writer, "Assets");
         entity::XmlPrinter printer;
-        
+
         for (const auto &asset : assets)
         {
           printer.print(writer, asset);
@@ -975,7 +969,7 @@ namespace mtconnect
 
     return ret;
   }
-  
+
   void XmlPrinter::addObservation(xmlTextWriterPtr writer, Observation *result) const
   {
     auto dataItem = result->getDataItem();
@@ -1205,8 +1199,7 @@ namespace mtconnect
 
       for (const auto &pair : *count)
       {
-        addSimpleElement(writer, "AssetCount", to_string(pair.second),
-                         {{"assetType", pair.first}});
+        addSimpleElement(writer, "AssetCount", to_string(pair.second), {{"assetType", pair.first}});
       }
     }
   }

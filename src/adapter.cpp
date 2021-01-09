@@ -36,23 +36,23 @@ namespace mtconnect
   // Adapter public methods
   Adapter::Adapter(string device, const string &server, const unsigned int port,
                    std::chrono::seconds legacyTimeout)
-      : Connector(server, port, legacyTimeout),
-        m_agent(nullptr),
-        m_device(nullptr),
-        m_deviceName(std::move(device)),
-        m_running(true),
-        m_dupCheck(false),
-        m_autoAvailable(false),
-        m_ignoreTimestamps(false),
-        m_relativeTime(false),
-        m_conversionRequired(true),
-        m_upcaseValue(true),
-        m_baseTime(0ull),
-        m_baseOffset(0ull),
-        m_parseTime(false),
-        m_gatheringAsset(false),
-        m_assetDevice(nullptr),
-        m_reconnectInterval{10000ms}
+    : Connector(server, port, legacyTimeout),
+      m_agent(nullptr),
+      m_device(nullptr),
+      m_deviceName(std::move(device)),
+      m_running(true),
+      m_dupCheck(false),
+      m_autoAvailable(false),
+      m_ignoreTimestamps(false),
+      m_relativeTime(false),
+      m_conversionRequired(true),
+      m_upcaseValue(true),
+      m_baseTime(0ull),
+      m_baseOffset(0ull),
+      m_parseTime(false),
+      m_gatheringAsset(false),
+      m_assetDevice(nullptr),
+      m_reconnectInterval{10000ms}
   {
     stringstream url;
     url << "shdr://" << server << ':' << port;
@@ -230,8 +230,7 @@ namespace mtconnect
       if (data == m_terminator)
       {
         entity::ErrorList errors;
-        m_agent->addAsset(m_assetDevice, m_body.str(), m_assetId, m_assetType, m_time,
-                          errors);
+        m_agent->addAsset(m_assetDevice, m_body.str(), m_assetId, m_assetType, m_time, errors);
         m_gatheringAsset = false;
       }
       else
@@ -435,7 +434,7 @@ namespace mtconnect
         }
       }
 
-      //m_agent->updateAsset(device, assetId, list, time);
+      // m_agent->updateAsset(device, assetId, list, time);
     }
     else if (key == "@REMOVE_ASSET@")
       m_agent->removeAsset(device, assetId, time);
@@ -457,14 +456,14 @@ namespace mtconnect
     // This will override the settings in the device from the xml
     if (data == "* PROBE")
     {
-//      const Printer *printer = m_agent->getPrinter("xml");
-//      string response = m_agent->handleProbe(printer, m_deviceName);
-//      string probe = "* PROBE LENGTH=";
-//      probe.append(intToString(response.length()));
-//      probe.append("\n");
-//      probe.append(response);
-//      probe.append("\n");
-//      m_connection->write(probe.c_str(), probe.length());
+      //      const Printer *printer = m_agent->getPrinter("xml");
+      //      string response = m_agent->handleProbe(printer, m_deviceName);
+      //      string probe = "* PROBE LENGTH=";
+      //      probe.append(intToString(response.length()));
+      //      probe.append("\n");
+      //      probe.append(response);
+      //      probe.append("\n");
+      //      m_connection->write(probe.c_str(), probe.length());
     }
     else
     {
@@ -549,16 +548,10 @@ namespace mtconnect
     m_baseTime = 0;
     m_agent->disconnected(this, m_allDevices);
   }
-  
-  void Adapter::connecting()
-  {
-    m_agent->connecting(this);
-  }
 
-  void Adapter::connected()
-  {
-    m_agent->connected(this, m_allDevices);
-  }
+  void Adapter::connecting() { m_agent->connecting(this); }
+
+  void Adapter::connected() { m_agent->connected(this, m_allDevices); }
 
   // Adapter private methods
   void Adapter::thread()

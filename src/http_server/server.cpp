@@ -16,6 +16,7 @@
 //
 
 #include "server.hpp"
+
 #include "response.hpp"
 
 #include <dlib/logger.h>
@@ -26,9 +27,9 @@ namespace mtconnect
   {
     using namespace std;
     using namespace dlib;
-    
+
     static dlib::logger g_logger("HttpServer");
-    
+
     void Server::start()
     {
       try
@@ -42,12 +43,10 @@ namespace mtconnect
         std::exit(1);
       }
     }
-    
-    void Server::on_connect(std::istream &in, std::ostream &out,
-                                const std::string &foreign_ip,
-                                const std::string &local_ip,
-                                unsigned short foreign_port,
-                                unsigned short local_port, uint64)
+
+    void Server::on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
+                            const std::string &local_ip, unsigned short foreign_port,
+                            unsigned short local_port, uint64)
     {
       Response response(out);
       std::string accepts;
@@ -65,19 +64,19 @@ namespace mtconnect
           if (!m_putEnabled || !isPutAllowedFrom(foreign_ip))
           {
             stringstream msg;
-            msg << "Error processing request from: " << foreign_ip << " - " <<
-                  "Server is read-only. Only GET verb supported";
+            msg << "Error processing request from: " << foreign_ip << " - "
+                << "Server is read-only. Only GET verb supported";
             g_logger << LERROR << msg.str();
-            
+
             if (m_errorFunction)
               m_errorFunction(accepts, response, msg.str(), FORBIDDEN);
             out.flush();
-           return;
+            return;
           }
         }
-        
+
         read_body(in, incoming);
-        
+
         Routing::Request request;
         request.m_verb = incoming.request_type;
         request.m_path = incoming.path;
@@ -89,7 +88,7 @@ namespace mtconnect
         auto media = incoming.headers.find("Content-Type");
         if (media != incoming.headers.end())
           request.m_contentType = media->second;
-        
+
         handleRequest(request, response);
       }
       catch (dlib::http_parse_error &e)
@@ -97,7 +96,7 @@ namespace mtconnect
         stringstream msg;
         msg << "Error processing request from: " << foreign_ip << " - " << e.what();
         g_logger << LERROR << msg.str();
-                
+
         if (m_errorFunction)
           m_errorFunction(accepts, response, msg.str(), BAD_REQUEST);
       }
@@ -106,25 +105,24 @@ namespace mtconnect
         stringstream msg;
         msg << "Error processing request from: " << foreign_ip << " - " << e.what();
         g_logger << LERROR << msg.str();
-        
+
         if (m_errorFunction)
           m_errorFunction(accepts, response, msg.str(), BAD_REQUEST);
       }
     }
-  
+
     bool Server::handleRequest(Routing::Request &request, Response &response)
     {
-      bool res { true };
+      bool res{true};
       try
       {
         if (!dispatch(request, response))
         {
           stringstream msg;
-          msg << "Error processing request from: " << request.m_foreignIp << " - " <<
-                "No matching route for: " << request.m_verb << " " << request.m_path;
+          msg << "Error processing request from: " << request.m_foreignIp << " - "
+              << "No matching route for: " << request.m_verb << " " << request.m_path;
           g_logger << LERROR << msg.str();
 
-          
           if (m_errorFunction)
             m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
           res = false;
@@ -132,16 +130,18 @@ namespace mtconnect
       }
       catch (RequestError &e)
       {
-        g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - " << e.what();
+        g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - "
+                 << e.what();
         response.writeResponse(e.m_body, e.m_contentType, e.m_code);
         res = false;
       }
       catch (ParameterError &e)
       {
         stringstream msg;
-        msg << "Parameter Error processing request from: " << request.m_foreignIp << " - " << e.what();
+        msg << "Parameter Error processing request from: " << request.m_foreignIp << " - "
+            << e.what();
         g_logger << LERROR << msg.str();
-        
+
         if (m_errorFunction)
           m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
         res = false;
@@ -150,5 +150,5 @@ namespace mtconnect
       response.flush();
       return res;
     }
-  }
-}
+  }  // namespace http_server
+}  // namespace mtconnect

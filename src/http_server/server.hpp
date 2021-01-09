@@ -18,8 +18,8 @@
 #pragma once
 
 #include "file_cache.hpp"
-#include "routing.hpp"
 #include "response.hpp"
+#include "routing.hpp"
 
 #include <dlib/server.h>
 
@@ -28,52 +28,42 @@ namespace mtconnect
   namespace http_server
   {
     using IncomingThings = dlib::incoming_things;
-    
+
     class RequestError : public std::logic_error
     {
-    public:
-      RequestError(const char *w)
-      : std::logic_error::logic_error(w)
-      {
-      }
-      RequestError(const char *w, const std::string &body,
-                   const std::string &type,
+     public:
+      RequestError(const char *w) : std::logic_error::logic_error(w) {}
+      RequestError(const char *w, const std::string &body, const std::string &type,
                    ResponseCode code)
-      : std::logic_error::logic_error(w), m_contentType(type),
-        m_body(body), m_code(code)
+        : std::logic_error::logic_error(w), m_contentType(type), m_body(body), m_code(code)
       {
       }
       RequestError(const RequestError &) = default;
       ~RequestError() override = default;
-      
+
       std::string m_contentType;
       std::string m_body;
       ResponseCode m_code;
     };
-    
-    using ErrorFunction = std::function<void(const std::string &accepts,
-                                             Response &response,
-                                             const std::string &msg,
-                                             const ResponseCode code)>;
-    
+
+    using ErrorFunction = std::function<void(const std::string &accepts, Response &response,
+                                             const std::string &msg, const ResponseCode code)>;
+
     class Server : public dlib::server_http
     {
-    public:
-    public:
+     public:
+     public:
       Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0")
       {
         set_listening_port(port);
         set_listening_ip(inter);
-        m_errorFunction = [](const std::string &accepts,
-                             Response &response,
-                             const std::string &msg,
-                             const ResponseCode code)
-        {
+        m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
+                             const ResponseCode code) {
           response.writeResponse(msg, code);
           return true;
         };
       }
-      
+
       // Overridden method that is called per web request – not used
       // using httpRequest which is called from our own on_connect method.
       const std::string on_request(const dlib::incoming_things &incoming,
@@ -87,11 +77,8 @@ namespace mtconnect
       void start();
 
       // Shutdown
-      void stop()
-      {
-        server::http_1a::clear();
-      }
-      
+      void stop() { server::http_1a::clear(); }
+
       // PUT and POST handling
       void enablePut(bool flag = true) { m_putEnabled = flag; }
       bool isPutEnabled() const { return m_putEnabled; }
@@ -100,7 +87,7 @@ namespace mtconnect
       {
         return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
       }
-      
+
       bool dispatch(Routing::Request &request, Response &response)
       {
         for (auto &r : m_routings)
@@ -111,25 +98,20 @@ namespace mtconnect
 
         return false;
       }
-      
+
       bool handleRequest(Routing::Request &request, Response &response);
-      
-      void addRouting(const Routing &routing)
-      {
-        m_routings.emplace_back(routing);
-      }
-      
+
+      void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
+
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
-      
-    protected:
+
+     protected:
       // HTTP Protocol
-      void on_connect(std::istream &in, std::ostream &out,
-                      const std::string &foreign_ip,
-                      const std::string &local_ip,
-                      unsigned short foreign_port,
+      void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
+                      const std::string &local_ip, unsigned short foreign_port,
                       unsigned short local_port, dlib::uint64) override;
 
-    protected:
+     protected:
       // Put handling controls
       bool m_putEnabled;
       std::set<std::string> m_putAllowedHosts;
@@ -137,5 +119,5 @@ namespace mtconnect
       std::unique_ptr<FileCache> m_fileCache;
       ErrorFunction m_errorFunction;
     };
-  }
-}
+  }  // namespace http_server
+}  // namespace mtconnect

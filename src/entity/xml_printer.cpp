@@ -16,20 +16,22 @@
 //
 
 #include "xml_printer.hpp"
+
 #include "xml_printer_helper.hpp"
-#include <libxml/xmlwriter.h>
+#include <unordered_map>
+
 #include <dlib/logger.h>
 
-#include <unordered_map>
+#include <libxml/xmlwriter.h>
 
 using namespace std;
 
 namespace mtconnect
 {
-  namespace entity 
+  namespace entity
   {
     static dlib::logger g_logger("entity.xml.printer");
-    
+
     const char *toCharPtr(const Value &value, string &temp)
     {
       const string *s;
@@ -44,11 +46,11 @@ namespace mtconnect
       {
         s = &get<string>(value);
       }
-      
+
       return s->c_str();
     }
-          
-    using Property = pair<string,Value>;
+
+    using Property = pair<string, Value>;
     void printProperty(xmlTextWriterPtr writer, const Property &p)
     {
       string t;
@@ -68,7 +70,7 @@ namespace mtconnect
         THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
       }
     }
-    
+
     void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity)
     {
       AutoElement element(writer, entity->getName());
@@ -77,7 +79,7 @@ namespace mtconnect
       list<Property> elements;
       auto &properties = entity->getProperties();
       const auto order = entity->getOrder();
-      
+
       // Partition the properties
       for (const auto &prop : properties)
       {
@@ -87,7 +89,7 @@ namespace mtconnect
         else
           elements.emplace_back(prop);
       }
-      
+
       // Reorder elements if they need to be specially ordered.
       if (order)
       {
@@ -103,16 +105,14 @@ namespace mtconnect
           return it1->second < it2->second;
         });
       }
-      
+
       for (auto &a : attributes)
       {
         string t;
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer,
-                                    BAD_CAST a.first.c_str(),
-                                    BAD_CAST toCharPtr(a.second, t)));
-
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST a.first.c_str(),
+                                                        BAD_CAST toCharPtr(a.second, t)));
       }
-                  
+
       for (auto &e : elements)
       {
         if (holds_alternative<EntityPtr>(e.second))
@@ -131,5 +131,5 @@ namespace mtconnect
         }
       }
     }
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

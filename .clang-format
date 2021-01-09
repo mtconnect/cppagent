@@ -8,6 +8,8 @@ AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: false
+ConstructorInitializerIndentWidth: '2'
+ContinuationIndentWidth: '4'
 BreakBeforeBraces: Allman
 IncludeCategories:
   - Regex:           '^("|<)date/'

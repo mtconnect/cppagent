@@ -18,8 +18,8 @@
 #pragma once
 
 #include "globals.hpp"
-#include "service.hpp"
 #include "http_server/file_cache.hpp"
+#include "service.hpp"
 
 #include <dlib/logger.h>
 
@@ -28,16 +28,18 @@
 
 namespace mtconnect
 {
-  namespace http_server { class Server; }
+  namespace http_server
+  {
+    class Server;
+  }
   class Agent;
   class Device;
   class RollingFileLogger;
   class XmlPrinter;
-  
+
   using ConfigReader = dlib::config_reader::kernel_1a;
 
-  using NamespaceFunction = void (XmlPrinter::*)(const std::string &,
-                                                 const std::string &,
+  using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
                                                  const std::string &);
   using StyleFunction = void (XmlPrinter::*)(const std::string &);
 
@@ -59,32 +61,26 @@ namespace mtconnect
     const Agent *getAgent() const { return m_agent.get(); }
 
     const RollingFileLogger *getLogger() const { return m_loggerFile.get(); }
-    
+
     void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
    protected:
     Device *defaultDevice();
     void loadAdapters(ConfigReader &reader, bool defaultPreserve,
                       std::chrono::seconds legacyTimeout,
-                      std::chrono::milliseconds reconnectInterval,
-                      bool ignoreTimestamps,
-                      bool conversionRequired, bool upcaseValue,
-                      bool filterDuplicates);
-    void loadAllowPut(ConfigReader &reader,
-                      http_server::Server *server);
+                      std::chrono::milliseconds reconnectInterval, bool ignoreTimestamps,
+                      bool conversionRequired, bool upcaseValue, bool filterDuplicates);
+    void loadAllowPut(ConfigReader &reader, http_server::Server *server);
     void loadNamespace(ConfigReader &reader, const char *namespaceType,
-                       http_server::FileCache *cache,
-                       XmlPrinter *printer, NamespaceFunction callback);
+                       http_server::FileCache *cache, XmlPrinter *printer,
+                       NamespaceFunction callback);
     void loadFiles(XmlPrinter *xmlPrinter, ConfigReader &reader, http_server::FileCache *cache);
-    void loadStyle(ConfigReader &reader, const char *styleName,
-                   http_server::FileCache *cache,
+    void loadStyle(ConfigReader &reader, const char *styleName, http_server::FileCache *cache,
                    XmlPrinter *printer, StyleFunction styleFunction);
     void loadTypes(ConfigReader &reader, http_server::FileCache *cache);
 
-    void LoggerHook(const std::string &loggerName,
-                    const dlib::log_level &l,
-                    const dlib::uint64 threadId,
-                    const char *message);
+    void LoggerHook(const std::string &loggerName, const dlib::log_level &l,
+                    const dlib::uint64 threadId, const char *message);
 
     std::optional<std::filesystem::path> checkPath(const std::string &name);
 

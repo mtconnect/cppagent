@@ -16,6 +16,7 @@
 //
 
 #include "file_cache.hpp"
+
 #include "cached_file.hpp"
 
 #include <dlib/logger.h>
@@ -27,44 +28,41 @@ namespace mtconnect
   namespace http_server
   {
     FileCache::FileCache()
-        : m_mimeTypes({{{".xsl", "text/xsl"},
-                        {".xml", "text/xml"},
-                        {".json", "application/json"},
-                        {".css", "text/css"},
-                        {".xsd", "text/xml"},
-                        {".jpg", "image/jpeg"},
-                        {".jpeg", "image/jpeg"},
-                        {".png", "image/png"},
-                        {".ico", "image/x-icon"}}})
+      : m_mimeTypes({{{".xsl", "text/xsl"},
+                      {".xml", "text/xml"},
+                      {".json", "application/json"},
+                      {".css", "text/css"},
+                      {".xsd", "text/xml"},
+                      {".jpg", "image/jpeg"},
+                      {".jpeg", "image/jpeg"},
+                      {".png", "image/png"},
+                      {".ico", "image/x-icon"}}})
     {
     }
-    
+
     static dlib::logger g_logger("file_cache");
     namespace fs = std::filesystem;
-    
-    XmlNamespaceList FileCache::registerFiles(const string &uri,
-                                              const string &pathName,
+
+    XmlNamespaceList FileCache::registerFiles(const string &uri, const string &pathName,
                                               const string &version)
     {
       return registerDirectory(uri, pathName, version);
     }
 
     // Register a file
-    XmlNamespaceList FileCache::registerDirectory(const string &uri,
-                                             const string &pathName,
-                                             const string &version)
+    XmlNamespaceList FileCache::registerDirectory(const string &uri, const string &pathName,
+                                                  const string &version)
     {
       XmlNamespaceList namespaces;
 
       try
       {
         fs::path path(pathName);
-        
+
         if (!fs::exists(path))
         {
-          g_logger << dlib::LWARN << "The following path " <<
-              pathName << " cannot be found, full path: " <<
-              path;
+          g_logger << dlib::LWARN << "The following path " << pathName
+                   << " cannot be found, full path: " << path;
         }
         else if (!fs::is_directory(path))
         {
@@ -89,36 +87,33 @@ namespace mtconnect
       }
       catch (fs::filesystem_error e)
       {
-        g_logger << dlib::LWARN << "The following path " <<
-            pathName << " cannot be accessed: " <<
-            e.what();
+        g_logger << dlib::LWARN << "The following path " << pathName
+                 << " cannot be accessed: " << e.what();
       }
-      
+
       return namespaces;
     }
-    
+
     std::optional<XmlNamespace> FileCache::registerFile(const std::string &uri,
                                                         const std::string &pathName,
                                                         const std::string &version)
     {
       optional<XmlNamespace> ns;
-      
+
       fs::path path(pathName);
       if (!fs::exists(path))
       {
-        g_logger << dlib::LWARN << "The following path " <<
-            pathName << " cannot be found, full path: " <<
-            fs::absolute(path);
+        g_logger << dlib::LWARN << "The following path " << pathName
+                 << " cannot be found, full path: " << fs::absolute(path);
         return nullopt;
       }
       else if (!fs::is_regular_file(path))
       {
-        g_logger << dlib::LWARN << "The following path " <<
-              path << " is not a regular file: " <<
-              fs::absolute(path);
+        g_logger << dlib::LWARN << "The following path " << path
+                 << " is not a regular file: " << fs::absolute(path);
         return nullopt;
       }
-          
+
       // Make sure the uri is using /
       string gen;
       gen.resize(uri.size());
@@ -154,14 +149,14 @@ namespace mtconnect
           ns = make_optional<XmlNamespace>(urn, uri);
         }
       }
-    
+
       return ns;
     }
 
-    
     CachedFilePtr FileCache::getFile(const std::string &name)
     {
-      try {
+      try
+      {
         auto file = m_fileCache.find(name);
         if (file != m_fileCache.end())
         {
@@ -187,11 +182,10 @@ namespace mtconnect
       }
       catch (fs::filesystem_error e)
       {
-        g_logger << dlib::LWARN << "Cannot open file " <<
-                  name << ": " << e.what();
+        g_logger << dlib::LWARN << "Cannot open file " << name << ": " << e.what();
       }
 
       return nullptr;
     }
-  }
-}
+  }  // namespace http_server
+}  // namespace mtconnect

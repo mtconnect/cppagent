@@ -65,7 +65,7 @@ namespace mtconnect
   {
     EntryDefinition() = default;
     EntryDefinition(const EntryDefinition &other)
-        : AbstractDefinition(other), m_cells(other.m_cells)
+      : AbstractDefinition(other), m_cells(other.m_cells)
     {
     }
     virtual ~EntryDefinition() = default;

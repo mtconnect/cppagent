@@ -89,32 +89,31 @@ namespace mtconnect
     GMT_UV_SEC,
     LOCAL
   };
-  
+
   // Slowest frequency allowed
   static const int SLOWEST_FREQ = 2147483646;
-  
+
   // Fastest frequency allowed
   static const int FASTEST_FREQ = 0;
-  
+
   // Default count for sample query
   static const unsigned int DEFAULT_COUNT = 100;
-  
+
   // Code to return when a parameter has no value
   static const int NO_VALUE32 = -1;
   static const uint64_t NO_VALUE64 = UINT64_MAX;
-  
+
   // Code to return for no frequency specified
   static const int NO_FREQ = -2;
-  
+
   // Code to return for no heartbeat specified
   static const int NO_HB = 0;
-  
+
   // Code for no start value specified
   static const uint64_t NO_START = NO_VALUE64;
-  
+
   // Small file size
   static const int SMALL_FILE = 10 * 1024;  // 10k is considered small
-
 
   //####### METHODS #######
   float stringToFloat(const std::string &text);
@@ -159,14 +158,15 @@ namespace mtconnect
   long getMemorySize();
 
   // Ends with
-  inline bool ends_with(const std::string& value, const std::string  &ending)
+  inline bool ends_with(const std::string &value, const std::string &ending)
   {
-      if (ending.size() > value.size()) return false;
-      return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+    if (ending.size() > value.size())
+      return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
   }
-  
+
   typedef std::map<std::string, std::string> Attributes;
-  
+
   template <class... Ts>
   struct overloaded : Ts...
   {
@@ -174,13 +174,15 @@ namespace mtconnect
   };
   template <class... Ts>
   overloaded(Ts...) -> overloaded<Ts...>;
-  
+
   template <typename T>
-  class reverse {
-  private:
-    T& m_iterable;
-  public:
-    explicit reverse(T& iterable) : m_iterable(iterable) {}
+  class reverse
+  {
+   private:
+    T &m_iterable;
+
+   public:
+    explicit reverse(T &iterable) : m_iterable(iterable) {}
     auto begin() const { return std::rbegin(m_iterable); }
     auto end() const { return std::rend(m_iterable); }
   };

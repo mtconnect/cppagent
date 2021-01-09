@@ -38,24 +38,24 @@ namespace mtconnect
 
   // DataItem public methods
   DataItem::DataItem(std::map<string, string> const &attributes)
-      : m_representation(VALUE),
-        m_hasNativeScale(false),
-        m_isDiscrete(false),
-        m_initialized(false),
-        m_hasSignificantDigits(false),
-        m_hasConstraints(false),
-        m_filterValue(0.0),
-        m_filterPeriod(0.0),
-        m_hasMinimumDelta(false),
-        m_hasMinimumPeriod(false),
-        m_lastSampleValue(NAN),
-        m_lastTimeOffset(NAN),
-        m_dataSource(nullptr),
-        m_conversionFactor(1.0),
-        m_conversionOffset(0.0),
-        m_conversionDetermined(false),
-        m_conversionRequired(false),
-        m_hasFactor(false)
+    : m_representation(VALUE),
+      m_hasNativeScale(false),
+      m_isDiscrete(false),
+      m_initialized(false),
+      m_hasSignificantDigits(false),
+      m_hasConstraints(false),
+      m_filterValue(0.0),
+      m_filterPeriod(0.0),
+      m_hasMinimumDelta(false),
+      m_hasMinimumPeriod(false),
+      m_lastSampleValue(NAN),
+      m_lastTimeOffset(NAN),
+      m_dataSource(nullptr),
+      m_conversionFactor(1.0),
+      m_conversionOffset(0.0),
+      m_conversionDetermined(false),
+      m_conversionRequired(false),
+      m_hasFactor(false)
 
   {
     const auto idPos = attributes.find("id");

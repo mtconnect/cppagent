@@ -23,7 +23,6 @@ namespace mtconnect
 {
   namespace http_server
   {
-    dlib::logger Routing::m_logger("http_server.routing");    
+    dlib::logger Routing::m_logger("http_server.routing");
   }
-}
-
+}  // namespace mtconnect

@@ -18,15 +18,13 @@
 #include "agent.hpp"
 
 #include "agent_device.hpp"
+#include "asset.hpp"
+#include "cutting_tool.hpp"
+#include "entity/xml_parser.hpp"
+#include "file_asset.hpp"
+#include "http_server/file_cache.hpp"
 #include "json_printer.hpp"
 #include "xml_printer.hpp"
-#include "asset.hpp"
-#include "file_asset.hpp"
-#include "cutting_tool.hpp"
-
-#include "entity/xml_parser.hpp"
-#include "http_server/file_cache.hpp"
-
 #include <sys/stat.h>
 
 #include <dlib/config_reader.h>
@@ -53,20 +51,19 @@ namespace mtconnect
 
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
-  
+
   // Agent public methods
   Agent::Agent(std::unique_ptr<http_server::Server> &server,
-               std::unique_ptr<http_server::FileCache> &cache,
-               const string &configXmlPath, int bufferSize, int maxAssets,
-               const std::string &version, int checkpointFreq, bool pretty)
-      :
-        m_server(move(server)),
-        m_fileCache(move(cache)),
-        m_xmlParser(make_unique<XmlParser>()),
-        m_circularBuffer(bufferSize, checkpointFreq),
-        m_assetBuffer(maxAssets),
-        m_logStreamData(false),
-        m_pretty(pretty)
+               std::unique_ptr<http_server::FileCache> &cache, const string &configXmlPath,
+               int bufferSize, int maxAssets, const std::string &version, int checkpointFreq,
+               bool pretty)
+    : m_server(move(server)),
+      m_fileCache(move(cache)),
+      m_xmlParser(make_unique<XmlParser>()),
+      m_circularBuffer(bufferSize, checkpointFreq),
+      m_assetBuffer(maxAssets),
+      m_logStreamData(false),
+      m_pretty(pretty)
   {
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();
@@ -91,19 +88,17 @@ namespace mtconnect
     }
     loadXMLDeviceFile(configXmlPath);
     loadCachedProbe();
-    
+
     createProbeRoutings();
     createCurrentRoutings();
     createSampleRoutings();
     createAssetRoutings();
     createPutObservationRoutings();
     createFileRoutings();
-    
-    m_server->setErrorFunction([this](const std::string &accepts,
-                                     http_server::Response &response,
-                                     const std::string &msg,
-                                     const http_server::ResponseCode code)
-    {
+
+    m_server->setErrorFunction([this](const std::string &accepts, http_server::Response &response,
+                                      const std::string &msg,
+                                      const http_server::ResponseCode code) {
       auto printer = printerForAccepts(accepts);
       auto doc = printError(printer, "INVALID_REQUEST", msg);
       response.writeResponse(doc, printer->mimeType(), code);
@@ -111,7 +106,7 @@ namespace mtconnect
 
     m_initialized = true;
   }
-  
+
   Agent::~Agent()
   {
     m_xmlParser.reset();
@@ -120,7 +115,7 @@ namespace mtconnect
       delete i;
     m_devices.clear();
   }
-  
+
   void Agent::start()
   {
     try
@@ -156,7 +151,7 @@ namespace mtconnect
 
     m_adapters.clear();
   }
-  
+
   // ---------------------------------------
   // Agent Device
   // ---------------------------------------
@@ -203,7 +198,6 @@ namespace mtconnect
       throw f;
     }
   }
-  
 
   void Agent::verifyDevice(Device *device)
   {
@@ -333,13 +327,11 @@ namespace mtconnect
   {
     // Reload the document for path resolution
     auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
-    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId,
-                                                     m_circularBuffer.getBufferSize(),
-                                                     getMaxAssets(),    m_assetBuffer.getCount(),
-                                                     m_circularBuffer.getSequence(),
-                                                     m_devices));
+    m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_circularBuffer.getBufferSize(),
+                                                     getMaxAssets(), m_assetBuffer.getCount(),
+                                                     m_circularBuffer.getSequence(), m_devices));
   }
-  
+
   // -----------------------------------------------------------
   // Request Routing
   // -----------------------------------------------------------
@@ -348,64 +340,56 @@ namespace mtconnect
   {
     response.writeResponse(res.m_body, res.m_format, res.m_status);
   }
-  
+
   void Agent::createFileRoutings()
   {
     using namespace http_server;
-    auto handler = [&](const Routing::Request &request,
-                    Response &response) -> bool
-    {
+    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
       auto f = m_fileCache->getFile(request.m_path);
       if (f)
       {
-        response.writeResponse(f->m_buffer.get(), f->m_size,
-                               http_server::OK, f->m_mimeType);
+        response.writeResponse(f->m_buffer.get(), f->m_size, http_server::OK, f->m_mimeType);
       }
       return bool(f);
     };
-    m_server->addRouting({ "GET", regex("/.+"), handler});
+    m_server->addRouting({"GET", regex("/.+"), handler});
   }
-  
+
   void Agent::createProbeRoutings()
   {
     using namespace http_server;
     // Probe
-    auto handler = [&](const Routing::Request &request,
-                                  Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
       auto device = request.parameter<string>("device");
-      
+
       if (device && !ends_with(request.m_path, string("probe")) &&
           findDeviceByUUIDorName(*device) == nullptr)
         return false;
-      
-      respond(response, probeRequest(acceptFormat(request.m_accepts),
-                                     device));
+
+      respond(response, probeRequest(acceptFormat(request.m_accepts), device));
       return true;
     };
 
-    m_server->addRouting({ "GET", "/probe", handler});
-    m_server->addRouting({ "GET", "/{device}/probe", handler});
+    m_server->addRouting({"GET", "/probe", handler});
+    m_server->addRouting({"GET", "/{device}/probe", handler});
     // Must be last
-    m_server->addRouting({ "GET", "/", handler});
-    m_server->addRouting({ "GET", "/{device}", handler});
+    m_server->addRouting({"GET", "/", handler});
+    m_server->addRouting({"GET", "/{device}", handler});
   }
-  
+
   void Agent::createAssetRoutings()
   {
     using namespace http_server;
-    auto handler = [&](const Routing::Request &request,
-                       Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
       auto removed = *request.parameter<string>("removed") == "true";
       auto count = *request.parameter<int32_t>("count");
-      respond(response, assetRequest(acceptFormat(request.m_accepts),
-                                     count, removed,
-                                     request.parameter<string>("type"),
-                                     request.parameter<string>("device")));
+      respond(response,
+              assetRequest(acceptFormat(request.m_accepts), count, removed,
+                           request.parameter<string>("type"), request.parameter<string>("device")));
       return true;
     };
 
-    auto idHandler = [&](const Routing::Request &request,
-                         Response &response) -> bool {
+    auto idHandler = [&](const Routing::Request &request, Response &response) -> bool {
       auto assets = request.parameter<string>("assets");
       if (assets)
       {
@@ -419,37 +403,32 @@ namespace mtconnect
       else
       {
         auto printer = printerForAccepts(request.m_accepts);
-        response.writeResponse(printError(printer,
-                                          "INVALID_REQUEST",
-                                          "No assets given"),
+        response.writeResponse(printError(printer, "INVALID_REQUEST", "No assets given"),
                                printer->mimeType(), http_server::BAD_REQUEST);
       }
       return true;
     };
 
     string qp("type={string}&removed={string:false}&count={integer:100}&device={string}");
-    m_server->addRouting({ "GET", "/assets?" + qp, handler});
-    m_server->addRouting({ "GET", "/asset?" + qp, handler});
-    m_server->addRouting({ "GET","/{device}/assets?" + qp, handler});
-    m_server->addRouting({ "GET", "/{device}/asset?" + qp, handler});
-    
-    m_server->addRouting({ "GET", "/asset/{assets}", idHandler});
-    m_server->addRouting({ "GET", "/assets/{assets}", idHandler});
-    
+    m_server->addRouting({"GET", "/assets?" + qp, handler});
+    m_server->addRouting({"GET", "/asset?" + qp, handler});
+    m_server->addRouting({"GET", "/{device}/assets?" + qp, handler});
+    m_server->addRouting({"GET", "/{device}/asset?" + qp, handler});
+
+    m_server->addRouting({"GET", "/asset/{assets}", idHandler});
+    m_server->addRouting({"GET", "/assets/{assets}", idHandler});
+
     if (m_server->isPutEnabled())
     {
-      auto putHandler = [&](const Routing::Request &request,
-                                    Response &response) -> bool {
-        respond(response, putAssetRequest(acceptFormat(request.m_accepts),
-                                          request.m_body,
+      auto putHandler = [&](const Routing::Request &request, Response &response) -> bool {
+        respond(response, putAssetRequest(acceptFormat(request.m_accepts), request.m_body,
                                           request.parameter<string>("type"),
                                           request.parameter<string>("device"),
                                           request.parameter<string>("uuid")));
         return true;
       };
-      
-      auto deleteHandler = [&](const Routing::Request &request,
-                               Response &response) -> bool {
+
+      auto deleteHandler = [&](const Routing::Request &request, Response &response) -> bool {
         auto assets = request.parameter<string>("assets");
         if (assets)
         {
@@ -471,101 +450,87 @@ namespace mtconnect
 
       for (const auto &t : list<string>{"PUT", "POST"})
       {
-        m_server->addRouting({ t, "/asset/{uuid}?device={string}&type={string}",
-          putHandler});
-        m_server->addRouting({ t, "/asset?device={string}&type={string}",
-          putHandler});
-        m_server->addRouting({ t, "/{device}/asset/{uuid}?type={string}",
-          putHandler});
-        m_server->addRouting({ t, "/{device}/asset?type={string}",
-        putHandler});
+        m_server->addRouting({t, "/asset/{uuid}?device={string}&type={string}", putHandler});
+        m_server->addRouting({t, "/asset?device={string}&type={string}", putHandler});
+        m_server->addRouting({t, "/{device}/asset/{uuid}?type={string}", putHandler});
+        m_server->addRouting({t, "/{device}/asset?type={string}", putHandler});
       }
 
-      m_server->addRouting({ "DELETE", "/assets?&device={string}&type={string}",
-        deleteHandler});
-      m_server->addRouting({ "DELETE", "/asset?&device={string}&type={string}",
-        deleteHandler});
-      m_server->addRouting({ "DELETE", "/assets/{assets}",
-        deleteHandler});
-      m_server->addRouting({ "DELETE", "/asset/{assets}",
-        deleteHandler});
-      m_server->addRouting({ "DELETE", "/{device}/assets?type={string}",
-        deleteHandler});
-      m_server->addRouting({ "DELETE", "/{device}/asset?type={string}",
-        deleteHandler});
+      m_server->addRouting({"DELETE", "/assets?&device={string}&type={string}", deleteHandler});
+      m_server->addRouting({"DELETE", "/asset?&device={string}&type={string}", deleteHandler});
+      m_server->addRouting({"DELETE", "/assets/{assets}", deleteHandler});
+      m_server->addRouting({"DELETE", "/asset/{assets}", deleteHandler});
+      m_server->addRouting({"DELETE", "/{device}/assets?type={string}", deleteHandler});
+      m_server->addRouting({"DELETE", "/{device}/asset?type={string}", deleteHandler});
     }
   }
-  
+
   void Agent::createCurrentRoutings()
   {
     using namespace http_server;
-    auto handler = [&](const Routing::Request &request,
-                                  Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
       auto interval = request.parameter<int32_t>("interval");
       if (interval)
       {
-        respond(response, streamCurrentRequest(response, acceptFormat(request.m_accepts),
-                                               *interval,
+        respond(response, streamCurrentRequest(response, acceptFormat(request.m_accepts), *interval,
                                                request.parameter<string>("device"),
                                                request.parameter<string>("path")));
       }
       else
       {
-        respond(response, currentRequest(acceptFormat(request.m_accepts),
-                                         request.parameter<string>("device"),
-                                         request.parameter<uint64_t>("at"),
-                                         request.parameter<string>("path")));
+        respond(
+            response,
+            currentRequest(acceptFormat(request.m_accepts), request.parameter<string>("device"),
+                           request.parameter<uint64_t>("at"), request.parameter<string>("path")));
       }
       return true;
     };
 
     string qp("path={string}&at={unsigned_integer}&interval={integer}");
-    m_server->addRouting({ "GET", "/current?" + qp, handler});
-    m_server->addRouting({ "GET", "/{device}/current?" + qp, handler});
+    m_server->addRouting({"GET", "/current?" + qp, handler});
+    m_server->addRouting({"GET", "/{device}/current?" + qp, handler});
   }
 
   void Agent::createSampleRoutings()
   {
     using namespace http_server;
-    auto handler = [&](const Routing::Request &request,
-                                  Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
       auto interval = request.parameter<int32_t>("interval");
       if (interval)
       {
-        respond(response, streamSampleRequest(response, acceptFormat(request.m_accepts),
-                                              *interval, *request.parameter<int32_t>("heartbeat"),
+        respond(response, streamSampleRequest(response, acceptFormat(request.m_accepts), *interval,
+                                              *request.parameter<int32_t>("heartbeat"),
                                               *request.parameter<int32_t>("count"),
                                               request.parameter<string>("device"),
                                               request.parameter<uint64_t>("from"),
-                                               request.parameter<string>("path")));
+                                              request.parameter<string>("path")));
       }
       else
       {
-        respond(response, sampleRequest(acceptFormat(request.m_accepts),
-                                        *request.parameter<int32_t>("count"),
-                                        request.parameter<string>("device"),
-                                        request.parameter<uint64_t>("from"),
-                                        request.parameter<uint64_t>("to"),
-                                        request.parameter<string>("path")));
+        respond(
+            response,
+            sampleRequest(acceptFormat(request.m_accepts), *request.parameter<int32_t>("count"),
+                          request.parameter<string>("device"), request.parameter<uint64_t>("from"),
+                          request.parameter<uint64_t>("to"), request.parameter<string>("path")));
       }
       return true;
     };
 
-    string qp("path={string}&from={unsigned_integer}&"
-              "interval={integer}&count={integer:100}&"
-              "heartbeat={integer:10000}&to={unsigned_integer}");
-    m_server->addRouting({ "GET", "/sample?" + qp, handler});
-    m_server->addRouting({ "GET", "/{device}/sample?" + qp, handler});
+    string qp(
+        "path={string}&from={unsigned_integer}&"
+        "interval={integer}&count={integer:100}&"
+        "heartbeat={integer:10000}&to={unsigned_integer}");
+    m_server->addRouting({"GET", "/sample?" + qp, handler});
+    m_server->addRouting({"GET", "/{device}/sample?" + qp, handler});
   }
-  
+
   void Agent::createPutObservationRoutings()
   {
     using namespace http_server;
-    
+
     if (m_server->isPutEnabled())
     {
-      auto handler = [&](const Routing::Request &request,
-                            Response &response) -> bool {
+      auto handler = [&](const Routing::Request &request, Response &response) -> bool {
         if (!request.m_query.empty())
         {
           auto queries = request.m_query;
@@ -573,10 +538,9 @@ namespace mtconnect
           if (ts)
             queries.erase("time");
           auto device = request.parameter<string>("device");
-          
-          respond(response, putObservationRequest(acceptFormat(request.m_accepts),
-                                                  *device, queries,
-                                                  ts));
+
+          respond(response,
+                  putObservationRequest(acceptFormat(request.m_accepts), *device, queries, ts));
           return true;
         }
         else
@@ -584,15 +548,15 @@ namespace mtconnect
           return true;
         }
       };
-      
-      m_server->addRouting({ "PUT", "/{device}?time={string}", handler});
+
+      m_server->addRouting({"PUT", "/{device}?time={string}", handler});
     }
   }
 
   // ----------------------------------------------------
   // Helper Methods
   // ----------------------------------------------------
-  
+
   Device *Agent::getDeviceByName(const std::string &name) const
   {
     auto devPos = m_deviceNameMap.find(name);
@@ -646,7 +610,6 @@ namespace mtconnect
   // ----------------------------------------------------
   // Adapter Methods
   // ----------------------------------------------------
-  
 
   void Agent::addAdapter(Adapter *adapter, bool start)
   {
@@ -692,7 +655,7 @@ namespace mtconnect
       auto di = m_agentDevice->getConnectionStatus(adapter);
       addToBuffer(di, "CLOSED", time);
     }
-    
+
     for (const auto device : devices)
     {
       const auto &dataItems = device->getDeviceDataItems();
@@ -740,7 +703,7 @@ namespace mtconnect
       auto di = m_agentDevice->getConnectionStatus(adapter);
       addToBuffer(di, "ESTABLISHED", time);
     }
-    
+
     if (!adapter->isAutoAvailable())
       return;
 
@@ -762,43 +725,42 @@ namespace mtconnect
   // ----------------------------------------------------
   // Observation Add Method
   // ----------------------------------------------------
-  
+
   unsigned int Agent::addToBuffer(DataItem *dataItem, const string &value, const string &time)
   {
     if (!dataItem)
       return 0;
-    
+
     if (time.empty())
       return 0;
 
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
     RefCountedPtr<Observation> event(new Observation(*dataItem, time, value), true);
-    if (!dataItem->allowDups() && dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(event))
+    if (!dataItem->allowDups() && dataItem->isDataSet() &&
+        !m_circularBuffer.getLatest().dataSetDifference(event))
     {
       return 0;
     }
-    
+
     auto seqNum = m_circularBuffer.addToBuffer(event);
     dataItem->signalObservers(seqNum);
 
     return seqNum;
   }
-  
+
   // ----------------------------------------------------
   // Asset CRUD Methods
   // ----------------------------------------------------
 
-  AssetPtr Agent::addAsset(Device *device,
-                       const std::string &document,
-                       const std::optional<std::string> &id,
-                       const std::optional<std::string> &type,
-                       const std::optional<std::string> &time,
-                       entity::ErrorList &errors)
+  AssetPtr Agent::addAsset(Device *device, const std::string &document,
+                           const std::optional<std::string> &id,
+                           const std::optional<std::string> &type,
+                           const std::optional<std::string> &time, entity::ErrorList &errors)
   {
     // Parse the asset
     entity::XmlParser parser;
-    
+
     auto entity = parser.parse(Asset::getRoot(), document, "1.7", errors);
     if (!entity)
     {
@@ -808,20 +770,19 @@ namespace mtconnect
         g_logger << LWARN << e->what();
       return nullptr;
     }
-    
+
     auto asset = dynamic_pointer_cast<Asset>(entity);
     if (type && asset->getType() != *type)
     {
       stringstream msg;
       msg << "Asset types do not match: "
-          << "Parsed type: " << asset->getType() << " does not match "
-          << *type;
+          << "Parsed type: " << asset->getType() << " does not match " << *type;
       g_logger << LWARN << msg.str();
       g_logger << LWARN << document;
       errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
       return asset;
     }
-    
+
     string aid = id ? *id : asset->getAssetId();
     if (aid[0] == '@')
     {
@@ -834,12 +795,12 @@ namespace mtconnect
     {
       asset->setAssetId(aid);
     }
-    
+
     if (time)
     {
       asset->setProperty("timestamp", *time);
     }
-    
+
     auto ad = asset->getDeviceUuid();
     if (!ad)
     {
@@ -847,7 +808,7 @@ namespace mtconnect
     }
 
     auto old = m_assetBuffer.addAsset(asset);
-    
+
     auto at = asset->getTimestamp();
     stringstream msg(asset->getType());
     msg << asset->getType() << "|" << asset->getAssetId();
@@ -859,12 +820,11 @@ namespace mtconnect
     return asset;
   }
 
-  bool Agent::removeAsset(Device *device, const std::string &id,
-                          const optional<string> inputTime)
+  bool Agent::removeAsset(Device *device, const std::string &id, const optional<string> inputTime)
   {
     // TODO: Error handling for parse errors.
     string time = inputTime ? *inputTime : getCurrentTime(GMT_UV_SEC);
-    
+
     auto asset = m_assetBuffer.removeAsset(id, time);
     if (asset)
     {
@@ -876,47 +836,42 @@ namespace mtconnect
       }
       if (device == nullptr)
         device = m_devices.front();
-      
+
       auto time = asset->getTimestamp();
       addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, *time);
-      
+
       // Check if the asset changed id is the same as this asset.
       auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
       if (ptr && (*ptr)->getValue() == id)
       {
-        addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE",
-                    *time);
+        addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", *time);
       }
     }
 
     return true;
   }
 
-  bool Agent::removeAllAssets(const std::optional<std::string> device,
-                              const optional<string> type,
-                              const optional<string> inputTime,
-                              AssetList &list)
+  bool Agent::removeAllAssets(const std::optional<std::string> device, const optional<string> type,
+                              const optional<string> inputTime, AssetList &list)
   {
     string time = inputTime ? *inputTime : getCurrentTime(GMT_UV_SEC);
 
     std::lock_guard<AssetBuffer> lock(m_assetBuffer);
-    getAssets(nullptr, numeric_limits<int32_t>().max() - 1,
-              false, type, device, list);
+    getAssets(nullptr, numeric_limits<int32_t>().max() - 1, false, type, device, list);
     for (auto a : list)
     {
       removeAsset(nullptr, a->getAssetId(), time);
     }
-      
+
     return true;
   }
-  
+
   // -----------------------------------------------
   // Validation methods
   // -----------------------------------------------
 
-  template<typename T>
-  void Agent::checkRange(const Printer *printer,
-                         const T value, const T min, const T max,
+  template <typename T>
+  void Agent::checkRange(const Printer *printer, const T value, const T min, const T max,
                          const string &param, bool notZero) const
   {
     using namespace http_server;
@@ -924,33 +879,27 @@ namespace mtconnect
     {
       stringstream str;
       str << '\'' << param << '\'' << " must be greater than " << min;
-      throw RequestError(str.str().c_str(),
-                         printError(printer, "OUT_OF_RANGE", str.str()),
+      throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
                          printer->mimeType(), BAD_REQUEST);
     }
     if (value >= max)
     {
       stringstream str;
       str << '\'' << param << '\'' << " must be less than " << max;
-      throw RequestError(str.str().c_str(),
-                         printError(printer, "OUT_OF_RANGE", str.str()),
+      throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
                          printer->mimeType(), BAD_REQUEST);
     }
     if (notZero && value == 0)
     {
       stringstream str;
       str << '\'' << param << '\'' << " must not be zero(0)";
-      throw RequestError(str.str().c_str(),
-                         printError(printer, "OUT_OF_RANGE", str.str()),
+      throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
                          printer->mimeType(), BAD_REQUEST);
-
     }
   }
-  
-  void Agent::checkPath(const Printer *printer,
-                        const std::optional<std::string> &path,
-                        const Device *device,
-                        FilterSet &filter) const
+
+  void Agent::checkPath(const Printer *printer, const std::optional<std::string> &path,
+                        const Device *device, FilterSet &filter) const
   {
     using namespace http_server;
     try
@@ -967,8 +916,7 @@ namespace mtconnect
     if (filter.empty())
     {
       string msg = "The path could not be parsed. Invalid syntax: " + *path;
-      throw RequestError(msg.c_str(),
-                         printError(printer, "INVALID_XPATH", msg),
+      throw RequestError(msg.c_str(), printError(printer, "INVALID_XPATH", msg),
                          printer->mimeType(), BAD_REQUEST);
     }
   }
@@ -980,16 +928,14 @@ namespace mtconnect
     if (!dev)
     {
       string msg("Could not find the device '" + uuid + "'");
-      throw RequestError(msg.c_str(),
-                         printError(printer, "NO_DEVICE", msg),
-                                    printer->mimeType(), NOT_FOUND);
+      throw RequestError(msg.c_str(), printError(printer, "NO_DEVICE", msg), printer->mimeType(),
+                         NOT_FOUND);
     }
-      
+
     return dev;
   }
-  
-  string Agent::devicesAndPath(const std::optional<string> &path,
-                               const Device *device) const
+
+  string Agent::devicesAndPath(const std::optional<string> &path, const Device *device) const
   {
     string dataPath;
 
@@ -1000,7 +946,6 @@ namespace mtconnect
         prefix = "//Devices/Agent";
       else
         prefix = "//Devices/Device[@uuid=\"" + device->getUuid() + "\"]";
-
 
       if (path)
       {
@@ -1025,11 +970,11 @@ namespace mtconnect
 
     return dataPath;
   }
-  
+
   // -------------------------------------------
   // ReST API Requests
   // -------------------------------------------
-  
+
   Agent::RequestResult Agent::probeRequest(const std::string &format,
                                            const std::optional<std::string> &device)
   {
@@ -1047,20 +992,20 @@ namespace mtconnect
     }
 
     auto counts = m_assetBuffer.getCountsByType();
-    return { printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(),
-                                 m_circularBuffer.getSequence(), getMaxAssets(),
-                                 m_assetBuffer.getCount(), deviceList,
-                                 &counts), http_server::OK, printer->mimeType() };
+    return {printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(),
+                                m_circularBuffer.getSequence(), getMaxAssets(),
+                                m_assetBuffer.getCount(), deviceList, &counts),
+            http_server::OK, printer->mimeType()};
   }
-  
+
   Agent::RequestResult Agent::currentRequest(const std::string &format,
-                               const std::optional<std::string> &device,
-                               const std::optional<SequenceNumber_t> &at,
-                               const std::optional<std::string> &path)
+                                             const std::optional<std::string> &device,
+                                             const std::optional<SequenceNumber_t> &at,
+                                             const std::optional<std::string> &path)
   {
     using namespace http_server;
     auto printer = getPrinter(format);
-    Device *dev { nullptr };
+    Device *dev{nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1073,19 +1018,18 @@ namespace mtconnect
     }
 
     // Check if there is a frequency to stream data or not
-    return  { fetchCurrentData(printer, filter, at), OK, printer->mimeType() };
+    return {fetchCurrentData(printer, filter, at), OK, printer->mimeType()};
   }
-  
-  Agent::RequestResult Agent::sampleRequest(const std::string &format,
-                              const int count,
-                              const std::optional<std::string> &device ,
-                              const std::optional<SequenceNumber_t> &from,
-                              const std::optional<SequenceNumber_t> &to,
-                              const std::optional<std::string> &path)
+
+  Agent::RequestResult Agent::sampleRequest(const std::string &format, const int count,
+                                            const std::optional<std::string> &device,
+                                            const std::optional<SequenceNumber_t> &from,
+                                            const std::optional<SequenceNumber_t> &to,
+                                            const std::optional<std::string> &path)
   {
     using namespace http_server;
     auto printer = getPrinter(format);
-    Device *dev { nullptr };
+    Device *dev{nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1100,26 +1044,24 @@ namespace mtconnect
     // Check if there is a frequency to stream data or not
     SequenceNumber_t end;
     bool endOfBuffer;
-    
-    return  { fetchSampleData(printer, filter, count, from, nullopt, end, endOfBuffer),
-      OK, printer->mimeType() };
+
+    return {fetchSampleData(printer, filter, count, from, nullopt, end, endOfBuffer), OK,
+            printer->mimeType()};
   }
-  
+
   Agent::RequestResult Agent::streamSampleRequest(http_server::Response &response,
-                                    const std::string &format,
-                                    const int interval, const int heartbeatIn,
-                                    const int count,
-                                    const std::optional<std::string> &device,
-                                    const std::optional<SequenceNumber_t> &from,
-                                    const std::optional<std::string> &path)
+                                                  const std::string &format, const int interval,
+                                                  const int heartbeatIn, const int count,
+                                                  const std::optional<std::string> &device,
+                                                  const std::optional<SequenceNumber_t> &from,
+                                                  const std::optional<std::string> &path)
   {
     using namespace http_server;
-    
-    
+
     auto printer = getPrinter(format);
     checkRange(printer, interval, -1, numeric_limits<int>().max(), "interval");
     checkRange(printer, heartbeatIn, 1, numeric_limits<int>().max(), "heartbeat");
-    Device *dev { nullptr };
+    Device *dev{nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1129,7 +1071,7 @@ namespace mtconnect
 
     FilterSet filter;
     checkPath(printer, path, dev, filter);
-    
+
     ofstream log;
     if (m_logStreamData)
     {
@@ -1137,7 +1079,7 @@ namespace mtconnect
                         to_string((uint64_t)dlib::get_thread_id()) + ".log";
       log.open(filename.c_str());
     }
-    
+
     // This object will automatically clean up all the observer from the
     // signalers in an exception proof manor.
     ChangeObserver observer;
@@ -1147,7 +1089,7 @@ namespace mtconnect
       m_dataItemMap[item]->addObserver(&observer);
 
     chrono::milliseconds interMilli{interval};
-    SequenceNumber_t start {0};
+    SequenceNumber_t start{0};
     SequenceNumber_t firstSeq = getFirstSequence();
     if (!from || *from < firstSeq)
       start = firstSeq;
@@ -1155,8 +1097,9 @@ namespace mtconnect
       start = *from;
 
     response.beginMultipartStream();
-    
-    try {
+
+    try
+    {
       while (response.good())
       {
         // Remember when we started this grab...
@@ -1175,18 +1118,17 @@ namespace mtconnect
           g_logger << LWARN << "Client fell too far behind, disconnecting";
           throw logic_error("Client can't keep up with event stream, disconnecting");
         }
-        
+
         // end and endOfBuffer are set during the fetch sample data while the
         // mutex is held. This removed the race to check if we are at the end of
-          // the bufffer and setting the next start to the last sequence number
+        // the bufffer and setting the next start to the last sequence number
         // sent.
         content =
-        fetchSampleData(printer, filter, count, start, nullopt, end,
-                        endOfBuffer, &observer);
+            fetchSampleData(printer, filter, count, start, nullopt, end, endOfBuffer, &observer);
 
         if (m_logStreamData)
           log << content << endl;
-        
+
         response.writeMultipartChunk(content, printer->mimeType());
         // Wait for up to frequency ms for something to arrive... Don't wait if
         // we are not at the end of the buffer. Just put the next set after aInterval
@@ -1220,13 +1162,12 @@ namespace mtconnect
           while (delta < heartbeat && observer.wait((heartbeat - delta).count()) &&
                  !observer.wasSignaled())
           {
-            delta =
-            chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
+            delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
           }
-          
+
           {
             std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-            
+
             // Make sure the observer was signaled!
             if (!observer.wasSignaled())
             {
@@ -1247,7 +1188,7 @@ namespace mtconnect
               start = observer.getSequence();
             }
           }
-        
+
           // Now wait the remainder if we triggered before the timer was up.
           delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
           if (delta < interMilli)
@@ -1263,8 +1204,7 @@ namespace mtconnect
       g_logger << LINFO << "Caught a parameter error.";
       if (response.good())
       {
-        response.writeMultipartChunk(printError(printer, "BAD_REQUEST",
-                                                aError.m_body),
+        response.writeMultipartChunk(printError(printer, "BAD_REQUEST", aError.m_body),
                                      printer->mimeType());
       }
     }
@@ -1273,10 +1213,8 @@ namespace mtconnect
       g_logger << LWARN << "Error occurred during streaming data";
       if (response.good())
       {
-        response.writeMultipartChunk(printError(printer, "INTERNAL_ERROR",
-                                                e.what()),
+        response.writeMultipartChunk(printError(printer, "INTERNAL_ERROR", e.what()),
                                      printer->mimeType());
-
       }
     }
     catch (...)
@@ -1284,26 +1222,25 @@ namespace mtconnect
       g_logger << LWARN << "Error occurred during streaming data";
       if (response.good())
       {
-        response.writeMultipartChunk(printError(printer, "INTERNAL_ERROR",
-                                                "Unknown error occurred during streaming"),
-                                     printer->mimeType());
+        response.writeMultipartChunk(
+            printError(printer, "INTERNAL_ERROR", "Unknown error occurred during streaming"),
+            printer->mimeType());
       }
     }
-    
+
     response.setBad();
 
-    return {"",http_server::OK,""};
+    return {"", http_server::OK, ""};
   }
-  
+
   Agent::RequestResult Agent::streamCurrentRequest(http_server::Response &response,
-                                     const std::string &format,
-                                     const int interval,
-                                     const std::optional<std::string> &device,
-                                     const std::optional<std::string> &path)
+                                                   const std::string &format, const int interval,
+                                                   const std::optional<std::string> &device,
+                                                   const std::optional<std::string> &path)
   {
     auto printer = getPrinter(format);
     checkRange(printer, interval, 0, numeric_limits<int>().max(), "interval");
-    Device *dev { nullptr };
+    Device *dev{nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1314,56 +1251,52 @@ namespace mtconnect
       filter = make_optional<FilterSet>();
       checkPath(printer, path, dev, *filter);
     }
-    
+
     response.beginMultipartStream();
     chrono::milliseconds interMilli{interval};
 
     while (response.good())
     {
-      response.writeMultipartChunk(fetchCurrentData(printer, filter, nullopt),
-                                   printer->mimeType());
-      
+      response.writeMultipartChunk(fetchCurrentData(printer, filter, nullopt), printer->mimeType());
+
       this_thread::sleep_for(interMilli);
     }
-    
+
     response.setBad();
 
-    return {"",http_server::OK,""};
+    return {"", http_server::OK, ""};
   }
-  
-  Agent::RequestResult Agent::assetRequest(const std::string &format,
-                             const int32_t count,
-                             const bool removed,
-                             const std::optional<std::string> &type,
-                             const std::optional<std::string> &device)
+
+  Agent::RequestResult Agent::assetRequest(const std::string &format, const int32_t count,
+                                           const bool removed,
+                                           const std::optional<std::string> &type,
+                                           const std::optional<std::string> &device)
   {
     using namespace http_server;
     auto printer = getPrinter(format);
     AssetList list;
     getAssets(printer, count, removed, type, device, list);
-    
-    return { printer->printAssets(m_instanceId, m_assetBuffer.getMaxAssets(),
-                         m_assetBuffer.getCount(), list),
-      OK, printer->mimeType() };
+
+    return {printer->printAssets(m_instanceId, m_assetBuffer.getMaxAssets(),
+                                 m_assetBuffer.getCount(), list),
+            OK, printer->mimeType()};
   }
-  
+
   Agent::RequestResult Agent::assetIdsRequest(const std::string &format,
-                                const std::list<std::string> &ids)
+                                              const std::list<std::string> &ids)
   {
     using namespace http_server;
     auto printer = getPrinter(format);
-    
+
     AssetList list;
     getAssets(printer, ids, list);
-    
-    return { printer->printAssets(m_instanceId, m_assetBuffer.getMaxAssets(),
-                         m_assetBuffer.getCount(), list),
-      OK, printer->mimeType()
-    };
+
+    return {printer->printAssets(m_instanceId, m_assetBuffer.getMaxAssets(),
+                                 m_assetBuffer.getCount(), list),
+            OK, printer->mimeType()};
   }
-  
-  Agent::RequestResult Agent::putAssetRequest(const std::string &format,
-                                              const std::string &asset,
+
+  Agent::RequestResult Agent::putAssetRequest(const std::string &format, const std::string &asset,
                                               const std::optional<std::string> &type,
                                               const std::optional<std::string> &device,
                                               const std::optional<std::string> &uuid)
@@ -1385,26 +1318,25 @@ namespace mtconnect
       {
         errorResp.emplace_back("INVALID_REQUEST", e->what());
       }
-      return { printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
-                                    m_circularBuffer.getSequence(),
-                                    errorResp), http_server::BAD_REQUEST, printer->mimeType() };
+      return {printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
+                                   m_circularBuffer.getSequence(), errorResp),
+              http_server::BAD_REQUEST, printer->mimeType()};
     }
-    
-    AssetList list { ap };
-    return { printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
-                         m_assetBuffer.getCount(), list),
-      OK, printer->mimeType()
-    };
+
+    AssetList list{ap};
+    return {printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
+                                 m_assetBuffer.getCount(), list),
+            OK, printer->mimeType()};
   }
-  
+
   Agent::RequestResult Agent::deleteAssetRequest(const std::string &format,
-                                   const std::list<std::string> &ids)
+                                                 const std::list<std::string> &ids)
   {
     using namespace http_server;
     auto printer = getPrinter(format);
-    
+
     std::lock_guard<AssetBuffer> lock(m_assetBuffer);
-    
+
     AssetList list;
     getAssets(printer, ids, list);
 
@@ -1413,15 +1345,15 @@ namespace mtconnect
     {
       removeAsset(nullptr, asset->getAssetId(), time);
     }
-    
-    return { printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
-                         m_assetBuffer.getCount(), list),
-      OK, printer->mimeType() };
+
+    return {printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
+                                 m_assetBuffer.getCount(), list),
+            OK, printer->mimeType()};
   }
-  
+
   Agent::RequestResult Agent::deleteAllAssetsRequest(const std::string &format,
-                                       const std::optional<std::string> &device,
-                                       const std::optional<std::string> &type)
+                                                     const std::optional<std::string> &device,
+                                                     const std::optional<std::string> &type)
   {
     using namespace http_server;
     auto printer = getPrinter(format);
@@ -1429,16 +1361,15 @@ namespace mtconnect
     auto time = getCurrentTime(GMT_UV_SEC);
     AssetList list;
     removeAllAssets(device, type, time, list);
-        
-    return { printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
-                         m_assetBuffer.getCount(), list),
-      OK, printer->mimeType() };
+
+    return {printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
+                                 m_assetBuffer.getCount(), list),
+            OK, printer->mimeType()};
   }
-  
-  Agent::RequestResult Agent::putObservationRequest(const std::string &format,
-                                                    const std::string &device,
-                                      const http_server::Routing::QueryMap observations,
-                                      const std::optional<std::string> &time)
+
+  Agent::RequestResult Agent::putObservationRequest(
+      const std::string &format, const std::string &device,
+      const http_server::Routing::QueryMap observations, const std::optional<std::string> &time)
   {
     using namespace http_server;
     string ts = time ? *time : getCurrentTime(GMT_UV_SEC);
@@ -1458,37 +1389,36 @@ namespace mtconnect
         addToBuffer(di, qp.second, ts);
       }
     }
-    
+
     if (errorResp.empty())
     {
-      return { "<success/>", OK, "text/xml" };
+      return {"<success/>", OK, "text/xml"};
     }
     else
     {
-      return { printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), errorResp), NOT_FOUND, printer->mimeType() };
+      return {printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
+                                   m_circularBuffer.getSequence(), errorResp),
+              NOT_FOUND, printer->mimeType()};
     }
   }
-
 
   // -------------------------------------------
   // Error formatting
   // -------------------------------------------
 
-  string Agent::printError(const Printer *printer,
-                           const string &errorCode,
+  string Agent::printError(const Printer *printer, const string &errorCode,
                            const string &text) const
   {
     g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
     return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
                                m_circularBuffer.getSequence(), errorCode, text);
   }
-  
+
   // -------------------------------------------
   // Data Collection and Formatting
   // -------------------------------------------
 
-  string Agent::fetchCurrentData(const Printer *printer,
-                                 const FilterSetOpt &filterSet,
+  string Agent::fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
                                  const optional<SequenceNumber_t> &at)
   {
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
@@ -1499,7 +1429,7 @@ namespace mtconnect
     if (at)
     {
       checkRange(printer, *at, firstSeq - 1, seq, "at");
-      
+
       auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
       check->getObservations(events);
     }
@@ -1508,18 +1438,14 @@ namespace mtconnect
       m_circularBuffer.getLatest().getObservations(events, filterSet);
     }
 
-    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
-                                seq, firstSeq,
-                                m_circularBuffer.getSequence() - 1,
-                                events);
+    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq,
+                                m_circularBuffer.getSequence() - 1, events);
   }
 
-  string Agent::fetchSampleData(const Printer *printer,
-                                const FilterSetOpt &filterSet,
-                                int count,
+  string Agent::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
                                 const std::optional<SequenceNumber_t> &from,
-                                const std::optional<SequenceNumber_t> &to,
-                                SequenceNumber_t &end, bool &endOfBuffer, ChangeObserver *observer)
+                                const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
+                                bool &endOfBuffer, ChangeObserver *observer)
   {
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
     auto firstSeq = getFirstSequence();
@@ -1534,25 +1460,20 @@ namespace mtconnect
     }
     int countLimit = m_circularBuffer.getBufferSize() + 1;
     checkRange(printer, count, -countLimit, countLimit, "count", true);
-    
-    auto events = m_circularBuffer.getObservations(count, filterSet,
-                                                    from, end, firstSeq,
-                                                    endOfBuffer);
+
+    auto events =
+        m_circularBuffer.getObservations(count, filterSet, from, end, firstSeq, endOfBuffer);
 
     if (observer)
       observer->reset();
 
-    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(),
-                                end, firstSeq,
-                                m_circularBuffer.getSequence() - 1,
-                                *events);
+    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), end, firstSeq,
+                                m_circularBuffer.getSequence() - 1, *events);
   }
-  
+
   // -------- Asset Helpers -------
-  
-  void Agent::getAssets(const Printer *printer,
-                        const std::list<std::string> &ids,
-                        AssetList &list)
+
+  void Agent::getAssets(const Printer *printer, const std::list<std::string> &ids, AssetList &list)
   {
     std::lock_guard<AssetBuffer> lock(m_assetBuffer);
 
@@ -1563,27 +1484,23 @@ namespace mtconnect
       if (!asset)
       {
         string msg = "Cannot find asset for assetId: " + id;
-        throw RequestError(msg.c_str(),
-                           printError(printer, "ASSET_NOT_FOUND", msg),
+        throw RequestError(msg.c_str(), printError(printer, "ASSET_NOT_FOUND", msg),
                            printer->mimeType(), NOT_FOUND);
       }
       list.emplace_back(asset);
     }
   }
 
-  void Agent::getAssets(const Printer *printer,
-                 const int32_t count,
-                 const bool removed,
-                 const std::optional<std::string> &type,
-                 const std::optional<std::string> &device,
-                 AssetList &list)
+  void Agent::getAssets(const Printer *printer, const int32_t count, const bool removed,
+                        const std::optional<std::string> &type,
+                        const std::optional<std::string> &device, AssetList &list)
   {
     if (printer)
       checkRange(printer, count, 1, std::numeric_limits<int32_t>().max(), "count");
-    
+
     std::lock_guard<AssetBuffer> lock(m_assetBuffer);
-    
-    Device *dev { nullptr };
+
+    Device *dev{nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1598,12 +1515,12 @@ namespace mtconnect
           // Check if we need to filter
           if (removed || !ap.second->isRemoved())
           {
-            if (!device || (ap.second->getDeviceUuid() &&
-                            dev->getUuid() == *ap.second->getDeviceUuid()))
+            if (!device ||
+                (ap.second->getDeviceUuid() && dev->getUuid() == *ap.second->getDeviceUuid()))
             {
               list.emplace_back(ap.second);
             }
-            
+
             if (list.size() >= count)
               break;
           }
@@ -1639,7 +1556,7 @@ namespace mtconnect
       }
     }
   }
-  
+
   // -------------------------------------------
   // End
   // -------------------------------------------

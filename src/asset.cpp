@@ -25,49 +25,45 @@ using namespace std;
 namespace mtconnect
 {
   using namespace entity;
-  
+
   FactoryPtr Asset::getFactory()
   {
-    static auto asset = make_shared<Factory>(Requirements({
-      Requirement("assetId", true ),
-      Requirement("deviceUuid", false ),
-      Requirement("timestamp", false ),
-      Requirement("removed", BOOL, false ) }),
-      [](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<Asset>(name, props);
-      });
-      
+    static auto asset = make_shared<Factory>(
+        Requirements({Requirement("assetId", true), Requirement("deviceUuid", false),
+                      Requirement("timestamp", false), Requirement("removed", BOOL, false)}),
+        [](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<Asset>(name, props);
+        });
+
     return asset;
   }
-  
+
   FactoryPtr ExtendedAsset::getFactory()
   {
     static auto asset = make_shared<Factory>(*Asset::getFactory());
-    asset->addRequirements(Requirements({
-      { "RAW", false }
-    }));
-    
+    asset->addRequirements(Requirements({{"RAW", false}}));
+
     return asset;
   }
-  
-    void Asset::registerAssetType(const std::string &type, FactoryPtr factory)
+
+  void Asset::registerAssetType(const std::string &type, FactoryPtr factory)
   {
     auto root = getRoot();
     root->registerFactory(type, factory);
   }
-  
+
   entity::FactoryPtr Asset::getRoot()
   {
     static auto root = make_shared<Factory>();
-    static bool first { true };
-    
+    static bool first{true};
+
     if (first)
     {
       root->registerFactory(regex(".+"), ExtendedAsset::getFactory());
       root->registerMatchers();
       first = false;
     }
-    
+
     return root;
   }
 

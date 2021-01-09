@@ -32,7 +32,7 @@ namespace mtconnect
   class DataItem;
   class SensorConfiguration;
   class XmlWriter;
-    
+
   class XmlPrinter : public Printer
   {
    public:
@@ -40,7 +40,7 @@ namespace mtconnect
     ~XmlPrinter() override = default;
 
     std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
-                           const uint64_t nextSeq, const ProtoErrorList &list) const override;
+                            const uint64_t nextSeq, const ProtoErrorList &list) const override;
 
     std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                            const uint64_t nextSeq, const unsigned int assetBufferSize,
@@ -50,10 +50,8 @@ namespace mtconnect
     std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
                             ObservationPtrArray &results) const override;
-    std::string printAssets(const unsigned int anInstanceId,
-                            const unsigned int bufferSize,
-                            const unsigned int assetCount,
-                            const AssetList &assets) const override;
+    std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
+                            const unsigned int assetCount, const AssetList &assets) const override;
     std::string mimeType() const override { return "application/mtconnect+xml"; }
 
     void addDevicesNamespace(const std::string &urn, const std::string &location,
@@ -122,7 +120,7 @@ namespace mtconnect
                               const std::set<CellDefinition> &definitions) const;
 
     void addObservation(xmlTextWriterPtr writer, Observation *result) const;
-    
+
    protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;
     std::map<std::string, SchemaNamespace> m_streamsNamespaces;
