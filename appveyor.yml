@@ -20,14 +20,13 @@ platform:
 
 matrix:
   fast_finish: true
+  
 
 # skip unsupported combinations
 init:
 - cmd: |-
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     echo %MSBUILD_FLAGS%
-- sudo sh update-alternatives --set gcc /usr/bin/gcc-9.3
-- sudo sh update-alternatives --set g++ /usr/bin/g++-9.3
 
 before_build:
 - cmd: |-
@@ -39,7 +38,7 @@ before_build:
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version
-- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
+- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DGCC_VERSION=9
     
 
 build:
