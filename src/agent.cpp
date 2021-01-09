@@ -95,6 +95,7 @@ namespace mtconnect
     createCurrentRoutings();
     createSampleRoutings();
     createAssetRoutings();
+    createPutObservationRoutings();
     createFileRoutings();
     
     m_server->setErrorFunction([this](const std::string &accepts,
@@ -555,6 +556,37 @@ namespace mtconnect
     m_server->addRouting({ "GET", "/sample?" + qp, handler});
     m_server->addRouting({ "GET", "/{device}/sample?" + qp, handler});
   }
+  
+  void Agent::createPutObservationRoutings()
+  {
+    using namespace http_server;
+    
+    if (m_server->isPutEnabled())
+    {
+      auto handler = [&](const Routing::Request &request,
+                            Response &response) -> bool {
+        if (!request.m_query.empty())
+        {
+          auto queries = request.m_query;
+          auto ts = request.parameter<string>("time");
+          if (ts)
+            queries.erase("time");
+          auto device = request.parameter<string>("device");
+          
+          respond(response, putObservationRequest(acceptFormat(request.m_accepts),
+                                                  *device, queries,
+                                                  ts));
+          return true;
+        }
+        else
+        {
+          return true;
+        }
+      };
+      
+      m_server->addRouting({ "PUT", "/{device}?time={string}", handler});
+    }
+  }
 
   // ----------------------------------------------------
   // Helper Methods
@@ -644,7 +676,7 @@ namespace mtconnect
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      addToBuffer(di, "LISTENING");
+      addToBuffer(di, "LISTENING", getCurrentTime(GMT_UV_SEC));
     }
   }
 
@@ -730,9 +762,12 @@ namespace mtconnect
   // Observation Add Method
   // ----------------------------------------------------
   
-  unsigned int Agent::addToBuffer(DataItem *dataItem, const string &value, string time)
+  unsigned int Agent::addToBuffer(DataItem *dataItem, const string &value, const string &time)
   {
     if (!dataItem)
+      return 0;
+    
+    if (time.empty())
       return 0;
 
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
@@ -1398,6 +1433,41 @@ namespace mtconnect
                          m_assetBuffer.getCount(), list),
       OK, printer->mimeType() };
   }
+  
+  Agent::RequestResult Agent::putObservationRequest(const std::string &format,
+                                                    const std::string &device,
+                                      const http_server::Routing::QueryMap observations,
+                                      const std::optional<std::string> &time)
+  {
+    using namespace http_server;
+    string ts = time ? *time : getCurrentTime(GMT_UV_SEC);
+    auto printer = getPrinter(format);
+    auto dev = checkDevice(printer, device);
+
+    ProtoErrorList errorResp;
+    for (auto &qp : observations)
+    {
+      auto di = dev->getDeviceDataItem(qp.first);
+      if (di == nullptr)
+      {
+        errorResp.emplace_back("BAD_REQUEST", "Cannot find data item: " + qp.first);
+      }
+      else
+      {
+        addToBuffer(di, qp.second, ts);
+      }
+    }
+    
+    if (errorResp.empty())
+    {
+      return { "<success/>", OK, "text/xml" };
+    }
+    else
+    {
+      return { printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(), errorResp), NOT_FOUND, printer->mimeType() };
+    }
+  }
+
 
   // -------------------------------------------
   // Error formatting

@@ -95,7 +95,7 @@ namespace mtconnect
 
     // Add component events to the sliding buffer
     unsigned int addToBuffer(DataItem *dataItem, const std::string &value,
-                             std::string time = "");
+                             const std::string &time);
 
     // Asset management
     AssetPtr addAsset(Device *device,
@@ -188,6 +188,10 @@ namespace mtconnect
     RequestResult deleteAllAssetsRequest(const std::string &format,
                                          const std::optional<std::string> &device = std::nullopt,
                                          const std::optional<std::string> &type = std::nullopt);
+    RequestResult putObservationRequest(const std::string &format,
+                                        const std::string &device,
+                                        const http_server::Routing::QueryMap observations,
+                                        const std::optional<std::string> &time = std::nullopt);
 
     // For debugging
     void setLogStreamData(bool log) { m_logStreamData = log; }
@@ -215,6 +219,7 @@ namespace mtconnect
     void loadCachedProbe();
     
     // HTTP Routings
+    void createPutObservationRoutings();
     void createFileRoutings();
     void createProbeRoutings();
     void createSampleRoutings();

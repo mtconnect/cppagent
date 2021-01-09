@@ -87,8 +87,7 @@ TEST_F(HttpServerTest, TestSimpleRouting)
        "Cache-Control: private, max-age=0\r\nContent-Length: 11\r\n"
        "Content-Type: text/plain\r\n"
        "\r\n"
-       "All Devices\r\n"
-       "\r\n";
+  "All Devices";
   out.flush();
   EXPECT_EQ(r1, out.str());
   EXPECT_EQ(200, response.m_code);
