@@ -168,18 +168,18 @@ namespace mtconnect
 
     public:
       Requirement(const std::string &name, ValueType type, bool required = true)
-        : m_name(name), m_type(type), m_upperMultiplicity(1),
-          m_lowerMultiplicity(required ? 1 : 0)
+        : m_name(name), m_upperMultiplicity(1),
+          m_lowerMultiplicity(required ? 1 : 0), m_type(type)
       {
       }
       Requirement(const std::string &name, bool required, ValueType type = STRING)
-      : m_name(name), m_type(type), m_upperMultiplicity(1),
-        m_lowerMultiplicity(required ? 1 : 0)
+      : m_name(name), m_upperMultiplicity(1),
+        m_lowerMultiplicity(required ? 1 : 0), m_type(type)
       {
       }
       Requirement(const std::string &name, ValueType type, int lower, int upper)
-      : m_name(name), m_type(type), m_lowerMultiplicity(lower),
-        m_upperMultiplicity(upper)
+      : m_name(name), m_upperMultiplicity(upper),
+        m_lowerMultiplicity(lower), m_type(type)
       {
       }
       Requirement(const std::string &name, ValueType type, FactoryPtr &o,
@@ -188,8 +188,8 @@ namespace mtconnect
                   int lower, int upper);
       Requirement(const std::string &name, const ControlledVocab &vocab,
                   bool required = true)
-      : m_name(name), m_type(STRING), m_lowerMultiplicity(required ? 1 : 0),
-        m_upperMultiplicity(1)
+      : m_name(name), m_upperMultiplicity(1),
+        m_lowerMultiplicity(required ? 1 : 0), m_type(STRING)
       {
         std::stringstream str;
         for (auto &s : vocab)
@@ -199,8 +199,8 @@ namespace mtconnect
       }
       Requirement(const std::string &name, const std::regex &pattern,
                   bool required = true)
-      : m_name(name), m_type(STRING), m_lowerMultiplicity(required ? 1 : 0),
-        m_upperMultiplicity(1), m_pattern(pattern)
+      : m_name(name), m_upperMultiplicity(1),
+        m_lowerMultiplicity(required ? 1 : 0), m_type(STRING), m_pattern(pattern)
       {
       }
 

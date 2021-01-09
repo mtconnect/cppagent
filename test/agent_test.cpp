@@ -1273,7 +1273,6 @@ TEST_F(AgentTest, Discrete)
 
 TEST_F(AgentTest, UpcaseValues)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/discrete_example.xml");
   addAdapter();
   m_adapter->setDupCheck(true);
   ASSERT_TRUE(m_adapter->upcaseValue());
@@ -2103,7 +2102,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
 
 TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.2", 25);
+  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.2", 25);
   
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -2115,7 +2114,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.3", 25);
+  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.3", 25);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -2127,7 +2126,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.5", 25);
+  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.5", 25);
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
@@ -2305,8 +2304,8 @@ TEST_F(AgentTest, AssetProbe)
 
 TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                              8, 4, "1.3", 4, true);
+  m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                 8, 4, "1.3", 4, true);
 
   const string body {
 R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
@@ -2519,8 +2518,8 @@ TEST_F(AgentTest, StreamDataObserver)
 
 TEST_F(AgentTest, Put)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                              8, 4, "1.3", 4, true);
+  m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                 8, 4, "1.3", 4, true);
 
   Routing::QueryMap queries;
   string body;

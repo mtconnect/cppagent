@@ -956,7 +956,7 @@ namespace mtconnect
         AutoElement ele(writer, "Assets");
         entity::XmlPrinter printer;
         
-        for (const auto asset : assets)
+        for (const auto &asset : assets)
         {
           printer.print(writer, asset);
         }
@@ -1131,7 +1131,7 @@ namespace mtconnect
     string mtcLocation;
 
     // Add in the other namespaces if they exist
-    for (const auto ns : *namespaces)
+    for (const auto &ns : *namespaces)
     {
       // Skip the mtconnect ns (always m)
       if (ns.first != "m")

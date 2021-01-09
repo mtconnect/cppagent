@@ -58,8 +58,7 @@ namespace
 
     auto const expectedExeTime = 500ms;
     auto const expectedSeq = uint64_t{100};
-    auto threadLambda = [&expectedExeTime,
-                         &expectedSeq](mtconnect::ChangeSignaler *changeSignaler) {
+    auto threadLambda = [&expectedExeTime](mtconnect::ChangeSignaler *changeSignaler) {
       std::this_thread::sleep_for(expectedExeTime);
       changeSignaler->signalObservers(expectedSeq);
     };

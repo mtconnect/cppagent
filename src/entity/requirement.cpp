@@ -31,8 +31,8 @@ namespace mtconnect
 
     Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f,
                              bool required)
-    : m_name(name), m_type(type), m_upperMultiplicity(1),
-    m_lowerMultiplicity(required ? 1 : 0)
+    : m_name(name), m_upperMultiplicity(1),
+    m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
       if (type == ENTITY_LIST)
       {
@@ -43,7 +43,7 @@ namespace mtconnect
     
     Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f,
                              int lower, int upper)
-    : m_name(name), m_type(type), m_upperMultiplicity(upper), m_lowerMultiplicity(lower)
+    : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
     {
       if (type == ENTITY_LIST)
       {

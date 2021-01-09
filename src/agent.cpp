@@ -59,13 +59,14 @@ namespace mtconnect
                std::unique_ptr<http_server::FileCache> &cache,
                const string &configXmlPath, int bufferSize, int maxAssets,
                const std::string &version, int checkpointFreq, bool pretty)
-      : m_logStreamData(false),
-        m_circularBuffer(bufferSize, checkpointFreq),
-        m_pretty(pretty),        
-        m_assetBuffer(maxAssets),
-        m_xmlParser(make_unique<XmlParser>()),
+      :
         m_server(move(server)),
-        m_fileCache(move(cache))
+        m_fileCache(move(cache)),
+        m_xmlParser(make_unique<XmlParser>()),
+        m_circularBuffer(bufferSize, checkpointFreq),
+        m_assetBuffer(maxAssets),
+        m_logStreamData(false),
+        m_pretty(pretty)
   {
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();

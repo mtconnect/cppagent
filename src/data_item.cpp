@@ -41,6 +41,7 @@ namespace mtconnect
       : m_representation(VALUE),
         m_hasNativeScale(false),
         m_isDiscrete(false),
+        m_initialized(false),
         m_hasSignificantDigits(false),
         m_hasConstraints(false),
         m_filterValue(0.0),
@@ -54,8 +55,8 @@ namespace mtconnect
         m_conversionOffset(0.0),
         m_conversionDetermined(false),
         m_conversionRequired(false),
-        m_hasFactor(false),
-        m_initialized(false)
+        m_hasFactor(false)
+
   {
     const auto idPos = attributes.find("id");
     if (idPos != attributes.end())

@@ -4,8 +4,8 @@ branches:
   - master
 # clone_folder: c:\projects\cppagent_dev
 image:
-- Visual Studio 2019
 - Ubuntu2004
+- Visual Studio 2019
 
 configuration:
 - Release
@@ -26,8 +26,8 @@ init:
 - cmd: |-
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     echo %MSBUILD_FLAGS%
-# - sh: sudo apt-get update
-# - sh: sudo apt-get --yes install libxml2-dev
+- sudo sh update-alternatives --set gcc /usr/bin/gcc-9.3
+- sudo sh update-alternatives --set g++ /usr/bin/g++-9.3
 
 before_build:
 - cmd: |-
@@ -35,6 +35,7 @@ before_build:
     cd build
     cmake --version
     cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
+
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version

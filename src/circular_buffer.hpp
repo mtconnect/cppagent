@@ -31,7 +31,7 @@ namespace mtconnect
   {
   public:
     CircularBuffer(unsigned int bufferSize, int checkpointFreq)
-      : m_checkpointFreq(checkpointFreq), m_sequence(1ull)
+      : m_sequence(1ull), m_checkpointFreq(checkpointFreq)
     {
       // Sequence number and sliding buffer for data
       m_slidingBufferSize = 1 << bufferSize;

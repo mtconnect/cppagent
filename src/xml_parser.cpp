@@ -197,7 +197,6 @@ namespace mtconnect
     ThreeSpace v;
 
     stringstream s(cdata);
-    Translation l;
     s >> v.m_1 >> v.m_2 >> v.m_3;
     if (s.rdstate() & std::istream::failbit)
     {
@@ -307,7 +306,7 @@ namespace mtconnect
              {"Description", [](xmlNodePtr n, Component *p,
                                 Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
              {"Configuration",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
+              [](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
   {
   }
 
@@ -1116,13 +1115,13 @@ namespace mtconnect
                            {"SolidModel",
                             [&parent](xmlNodePtr n) {
                               unique_ptr<ComponentConfiguration> g(
-                                  move(handleGeometricConfiguration<SolidModel>(n)));
+                                  handleGeometricConfiguration<SolidModel>(n));
                               parent->addConfiguration(g);
                             }},
                            {"Motion",
                             [&parent](xmlNodePtr n) {
                               unique_ptr<ComponentConfiguration> g(
-                                  move(handleGeometricConfiguration<Motion>(n)));
+                                  handleGeometricConfiguration<Motion>(n));
                               parent->addConfiguration(g);
                             }},
                            {"OTHERWISE", [&parent](xmlNodePtr n) {

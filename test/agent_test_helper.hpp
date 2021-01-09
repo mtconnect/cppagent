@@ -86,7 +86,7 @@ class AgentTestHelper
 {
  public:
   AgentTestHelper()
-  : m_out(), m_incomingIp("127.0.0.1"), m_response(m_out)
+  : m_out(), m_response(m_out), m_incomingIp("127.0.0.1")
   {
   }
     
