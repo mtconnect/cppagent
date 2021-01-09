@@ -38,7 +38,8 @@ before_build:
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version
-- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DGCC_VERSION=9
+- sh: export GCC_VERSION=9
+- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
     
 
 build:
