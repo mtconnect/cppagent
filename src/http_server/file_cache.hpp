@@ -22,6 +22,7 @@
 #include <string>
 #include <list>
 #include <filesystem>
+#include <optional>
 
 namespace mtconnect
 {

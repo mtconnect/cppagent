@@ -205,9 +205,9 @@ namespace mtconnect
 
 
     // For mutex locking
-    void lock() { m_sequenceLock.lock(); }
-    void unlock() { m_sequenceLock.unlock(); }
-    void try_lock() { m_sequenceLock.try_lock(); }
+    auto lock() { return m_sequenceLock.lock(); }
+    auto unlock() { return m_sequenceLock.unlock(); }
+    auto try_lock() { return m_sequenceLock.try_lock(); }
     
   protected:
     // Access control to the buffer

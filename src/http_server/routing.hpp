@@ -23,6 +23,7 @@
 #include <set>
 #include <sstream>
 #include <variant>
+#include <optional>
 
 #include <dlib/logger.h>
 

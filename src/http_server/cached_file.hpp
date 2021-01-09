@@ -29,7 +29,7 @@ namespace mtconnect
 {
   namespace http_server
   {
-    class CachedFile;
+    struct CachedFile;
     using CachedFilePtr = std::shared_ptr<CachedFile>;
     struct CachedFile : public  std::enable_shared_from_this<CachedFile>
     {
@@ -61,7 +61,7 @@ namespace mtconnect
       {
         m_size = std::filesystem::file_size(path);
         m_buffer = std::make_unique<char[]>(m_size);
-        auto file = std::fopen(path.c_str(), "r");
+        auto file = std::fopen(path.string().c_str(), "r");
         std::fread(m_buffer.get(), 1, m_size, file);
       }
 

@@ -68,7 +68,7 @@ namespace mtconnect
         }
         else if (!fs::is_directory(path))
         {
-          auto ns = registerFile(path, uri, version);
+          auto ns = registerFile(path.string(), uri, version);
           if (ns)
             namespaces.emplace_back(*ns);
         }
@@ -78,10 +78,10 @@ namespace mtconnect
 
           for (auto &file : fs::directory_iterator(path))
           {
-            string name = file.path().filename();
+            string name = (file.path().filename()).string();
             fs::path uri = baseUri / name;
 
-            auto ns = registerFile(uri, file.path(), version);
+            auto ns = registerFile(uri.generic_string(), (file.path()).string(), version);
             if (ns)
               namespaces.emplace_back(*ns);
           }
@@ -119,8 +119,13 @@ namespace mtconnect
         return nullopt;
       }
           
-      m_fileMap.emplace(uri, fs::absolute(path));
-      string name = path.filename();
+      // Make sure the uri is using /
+      string gen;
+      gen.resize(uri.size());
+      replace_copy(uri.begin(), uri.end(), gen.begin(), L'\\', L'/');
+
+      m_fileMap.emplace(gen, fs::absolute(path));
+      string name = path.filename().string();
 
       // Check if the file name maps to a standard MTConnect schema file.
       if (!name.find("MTConnect") && name.substr(name.length() - 4u, 4u) == ".xsd" &&

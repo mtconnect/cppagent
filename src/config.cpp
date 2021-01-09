@@ -182,7 +182,7 @@ namespace mtconnect
                    << " in current directory, searching exe path: " << m_exePath;
           cerr << "Cannot find " << m_configFile
                << " in current directory, searching exe path: " << m_exePath << endl;
-          m_configFile = m_exePath / m_configFile;
+          m_configFile = (m_exePath / m_configFile).string();
         }
         else
         {
@@ -575,18 +575,18 @@ namespace mtconnect
       auto name = reader["Devices"];
       auto path = checkPath(name);
       if (path)
-        m_devicesFile = *path;
+        m_devicesFile = (*path).string();
     }
     else
     {
       auto path = checkPath("Devices.xml");
       if (path)
-        m_devicesFile = *path;
+        m_devicesFile = (*path).string();
       else
       {
         auto path = checkPath("probe.xml");
         if (path)
-          m_devicesFile = *path;
+          m_devicesFile = (*path).string();
       }
     }
     

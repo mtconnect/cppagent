@@ -174,9 +174,9 @@ namespace mtconnect
     }
 
     // For mutex locking
-    void lock() { m_bufferLock.lock(); }
-    void unlock() { m_bufferLock.unlock(); }
-    void try_lock() { m_bufferLock.try_lock(); }
+    auto lock() { return m_bufferLock.lock(); }
+    auto unlock() { return m_bufferLock.unlock(); }
+    auto try_lock() { return m_bufferLock.try_lock(); }
     
   protected:
     AssetPtr updateAsset(const std::string &id,
