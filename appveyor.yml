@@ -21,9 +21,6 @@ platform:
 matrix:
   fast_finish: true
   
-environment:
-  GCC_VERSION: 9
-
 # skip unsupported combinations
 init:
 - cmd: |-
@@ -36,7 +33,8 @@ before_build:
     cd build
     cmake --version
     cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
-
+- sh: export CC=/usr/bin/gcc-9
+- sh: export CXX=/usr/bin/g++-9
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version
