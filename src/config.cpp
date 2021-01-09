@@ -372,8 +372,8 @@ namespace mtconnect
         if (device->getClass() != "Agent")
           return device;
     }
-    else
-      return nullptr;
+    
+    return nullptr;
   }
 
   static std::string timestamp()

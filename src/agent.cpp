@@ -1568,8 +1568,6 @@ namespace mtconnect
       }
       list.emplace_back(asset);
     }
-    
-    return list;
   }
 
   void Agent::getAssets(const Printer *printer,

@@ -21,7 +21,7 @@
 
 #include <string>
 #include <map>
-#include <strstream>
+#include <sstream>
 #include <variant>
 #include <ostream>
 #include <chrono>
@@ -107,7 +107,7 @@ namespace mtconnect
 
       virtual void beginMultipartStream()
       {
-        if (m_out.ios_base::good())
+        if (good())
         {
           m_boundary = dlib::md5(std::to_string(time(nullptr)));
           
@@ -126,7 +126,7 @@ namespace mtconnect
       
       virtual void writeChunk(const std::string &chunk)
       {
-        if (m_out.ios_base::good())
+        if (good())
         {
           using namespace std;
           m_out.setf(ios::hex, ios::basefield);
@@ -138,7 +138,7 @@ namespace mtconnect
       
       virtual void writeMultipartChunk(const std::string &body, const std::string &mimeType)
       {
-        if (m_out.ios_base::good())
+        if (good())
         {
           using namespace std;
           ostringstream str;
@@ -175,7 +175,7 @@ namespace mtconnect
                                  const std::string &mimeType = "text/plain",
                                  const std::chrono::seconds expires = std::chrono::seconds(0))
       {
-        if (m_out.ios_base::good())
+        if (good())
         {
           using namespace std;
           string expiry;

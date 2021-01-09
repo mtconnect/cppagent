@@ -21,7 +21,7 @@
 #include <regex>
 #include <list>
 #include <set>
-#include <strstream>
+#include <sstream>
 #include <variant>
 
 #include <dlib/logger.h>
@@ -293,6 +293,10 @@ namespace mtconnect
             return r;
           }
         }
+        
+        throw ParameterError("Unknown type for conversion: " + std::to_string(int(t)));
+
+        return ParameterValue();
       }
       
     protected:

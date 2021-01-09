@@ -23,6 +23,7 @@
 #include <memory>
 #include <filesystem>
 #include <cstdio>
+#include <cstring>
 
 namespace mtconnect
 {
@@ -41,13 +42,13 @@ namespace mtconnect
       : m_size(file.m_size), m_mimeType(mime)
       {
         m_buffer = std::make_unique<char[]>(file.m_size);
-        memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
+        std::memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
       }
 
       CachedFile(char *buffer, size_t size) : m_buffer(nullptr), m_size(size)
       {
         m_buffer = std::make_unique<char[]>(m_size);
-        memcpy(m_buffer.get(), buffer, size);
+        std::memcpy(m_buffer.get(), buffer, size);
       }
 
       CachedFile(size_t size) : m_buffer(nullptr), m_size(size)
@@ -71,7 +72,7 @@ namespace mtconnect
       {
         m_buffer.reset();
         m_buffer = std::make_unique<char[]>(file.m_size);
-        memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
+        std::memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
         m_size = file.m_size;
         return *this;
       }
