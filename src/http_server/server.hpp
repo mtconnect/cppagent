@@ -52,7 +52,6 @@ namespace mtconnect
     class Server : public dlib::server_http
     {
      public:
-     public:
       Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0")
       {
         set_listening_port(port);
