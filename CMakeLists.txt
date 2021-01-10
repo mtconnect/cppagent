@@ -8,6 +8,8 @@ set(AGENT_VERSION_RC "RC3")
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
+set(USE_FOLDERS ON)
+
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
