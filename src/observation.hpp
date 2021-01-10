@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "component.hpp"
-#include "data_item.hpp"
+#include "device_model/component.hpp"
+#include "device_model/data_item.hpp"
 #include "globals.hpp"
 #include "ref_counted.hpp"
 

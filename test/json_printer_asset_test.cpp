@@ -30,8 +30,8 @@
 
 #include "checkpoint.hpp"
 #include "assets/cutting_tool.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
+#include "device_model/data_item.hpp"
+#include "device_model/device.hpp"
 #include "globals.hpp"
 #include "json_helper.hpp"
 #include "json_printer.hpp"

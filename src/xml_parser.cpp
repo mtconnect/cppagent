@@ -17,13 +17,13 @@
 
 #include "xml_parser.hpp"
 
-#include "composition.hpp"
-#include "coordinate_systems.hpp"
 #include "assets/cutting_tool.hpp"
-#include "motion.hpp"
-#include "sensor_configuration.hpp"
-#include "solid_model.hpp"
-#include "specifications.hpp"
+#include "device_model/composition.hpp"
+#include "device_model/coordinate_systems.hpp"
+#include "device_model/motion.hpp"
+#include "device_model/sensor_configuration.hpp"
+#include "device_model/solid_model.hpp"
+#include "device_model/specifications.hpp"
 #include "xml_printer.hpp"
 
 #include <dlib/logger.h>

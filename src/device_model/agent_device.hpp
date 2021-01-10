@@ -18,7 +18,7 @@
 #pragma once
 #include "component.hpp"
 #include "data_item.hpp"
-#include "device.hpp"
+#include "device_model/device.hpp"
 #include "globals.hpp"
 
 #include <map>

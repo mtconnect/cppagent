@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "agent_device.hpp"
+#include "device_model/agent_device.hpp"
 #include "adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"

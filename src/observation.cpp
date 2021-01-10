@@ -17,7 +17,7 @@
 
 #include "observation.hpp"
 
-#include "data_item.hpp"
+#include "device_model/data_item.hpp"
 
 #include <dlib/logger.h>
 #include <dlib/threads.h>

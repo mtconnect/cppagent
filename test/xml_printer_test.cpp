@@ -21,8 +21,8 @@
 
 #include "assets/asset.hpp"
 #include "checkpoint.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
+#include "device_model/data_item.hpp"
+#include "device_model/device.hpp"
 #include "globals.hpp"
 #include "observation.hpp"
 #include "test_globals.hpp"

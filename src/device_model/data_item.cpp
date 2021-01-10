@@ -19,7 +19,7 @@
 #include "data_item.hpp"
 
 #include "adapter.hpp"
-#include "device.hpp"
+#include "device_model/device.hpp"
 
 #include <array>
 #include <map>

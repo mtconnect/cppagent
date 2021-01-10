@@ -19,7 +19,7 @@
 
 #include "agent.hpp"
 #include "connector.hpp"
-#include "data_item.hpp"
+#include "device_model/data_item.hpp"
 #include "globals.hpp"
 
 #include <dlib/sockets.h>

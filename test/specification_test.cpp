@@ -6,7 +6,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "specifications.hpp"
+#include "device_model/specifications.hpp"
 
 #include <cstdio>
 #include <fstream>

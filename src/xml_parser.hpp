@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "checkpoint.hpp"
-#include "component.hpp"
 #include "assets/cutting_tool.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
+#include "checkpoint.hpp"
+#include "device_model/component.hpp"
+#include "device_model/data_item.hpp"
+#include "device_model/device.hpp"
+#include "device_model/relationships.hpp"
 #include "globals.hpp"
-#include "relationships.hpp"
 
 #include <libxml/tree.h>
 

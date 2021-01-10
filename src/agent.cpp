@@ -17,11 +17,11 @@
 
 #include "agent.hpp"
 
-#include "agent_device.hpp"
 #include "assets/asset.hpp"
 #include "assets/cutting_tool.hpp"
-#include "entity/xml_parser.hpp"
 #include "assets/file_asset.hpp"
+#include "device_model/agent_device.hpp"
+#include "entity/xml_parser.hpp"
 #include "http_server/file_cache.hpp"
 #include "json_printer.hpp"
 #include "xml_printer.hpp"

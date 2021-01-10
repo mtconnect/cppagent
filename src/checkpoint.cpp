@@ -17,7 +17,7 @@
 
 #include "checkpoint.hpp"
 
-#include "data_item.hpp"
+#include "device_model/data_item.hpp"
 
 using namespace std;
 

@@ -18,15 +18,15 @@
 #include "xml_printer.hpp"
 
 #include "assets/asset.hpp"
-#include "composition.hpp"
-#include "coordinate_systems.hpp"
 #include "assets/cutting_tool.hpp"
-#include "device.hpp"
+#include "device_model/composition.hpp"
+#include "device_model/coordinate_systems.hpp"
+#include "device_model/device.hpp"
+#include "device_model/relationships.hpp"
+#include "device_model/sensor_configuration.hpp"
+#include "device_model/solid_model.hpp"
+#include "device_model/specifications.hpp"
 #include "entity/xml_printer.hpp"
-#include "relationships.hpp"
-#include "sensor_configuration.hpp"
-#include "solid_model.hpp"
-#include "specifications.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>

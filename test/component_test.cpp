@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "component.hpp"
-#include "device.hpp"
+#include "device_model/component.hpp"
+#include "device_model/device.hpp"
 
 using namespace std;
 using namespace mtconnect;

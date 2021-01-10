@@ -17,13 +17,13 @@
 
 #include "json_printer.hpp"
 
-#include "composition.hpp"
-#include "coordinate_systems.hpp"
-#include "device.hpp"
-#include "relationships.hpp"
-#include "sensor_configuration.hpp"
-#include "solid_model.hpp"
-#include "specifications.hpp"
+#include "device_model/composition.hpp"
+#include "device_model/coordinate_systems.hpp"
+#include "device_model/device.hpp"
+#include "device_model/relationships.hpp"
+#include "device_model/sensor_configuration.hpp"
+#include "device_model/solid_model.hpp"
+#include "device_model/specifications.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>

@@ -20,7 +20,7 @@
 #include "agent.hpp"
 #include "composition.hpp"
 #include "data_item.hpp"
-#include "device.hpp"
+#include "device_model/device.hpp"
 
 #include <cstdlib>
 #include <stdexcept>
