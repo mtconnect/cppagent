@@ -18,7 +18,7 @@
 #pragma once
 
 #include "adapter.hpp"
-#include "asset_buffer.hpp"
+#include "assets/asset_buffer.hpp"
 #include "checkpoint.hpp"
 #include "circular_buffer.hpp"
 #include "http_server/server.hpp"

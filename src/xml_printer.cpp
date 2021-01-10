@@ -17,10 +17,10 @@
 
 #include "xml_printer.hpp"
 
-#include "asset.hpp"
+#include "assets/asset.hpp"
 #include "composition.hpp"
 #include "coordinate_systems.hpp"
-#include "cutting_tool.hpp"
+#include "assets/cutting_tool.hpp"
 #include "device.hpp"
 #include "entity/xml_printer.hpp"
 #include "relationships.hpp"

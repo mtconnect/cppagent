@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "asset.hpp"
+#include "assets/asset.hpp"
 #include "globals.hpp"
 #include "printer.hpp"
 

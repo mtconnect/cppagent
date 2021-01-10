@@ -18,10 +18,10 @@
 #include "agent.hpp"
 
 #include "agent_device.hpp"
-#include "asset.hpp"
-#include "cutting_tool.hpp"
+#include "assets/asset.hpp"
+#include "assets/cutting_tool.hpp"
 #include "entity/xml_parser.hpp"
-#include "file_asset.hpp"
+#include "assets/file_asset.hpp"
 #include "http_server/file_cache.hpp"
 #include "json_printer.hpp"
 #include "xml_printer.hpp"

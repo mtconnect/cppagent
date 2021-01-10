@@ -24,7 +24,7 @@
 #include "agent_test_helper.hpp"
 #include "test_globals.hpp"
 #include "xml_printer.hpp"
-#include "file_asset.hpp"
+#include "assets/file_asset.hpp"
 
 #include <dlib/server.h>
 

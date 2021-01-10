@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "asset.hpp"
+#include "assets/asset.hpp"
 #include "checkpoint.hpp"
 #include "data_item.hpp"
 #include "device.hpp"

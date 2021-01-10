@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "cutting_tool.hpp"
+#include "assets/cutting_tool.hpp"
 #include "globals.hpp"
 #include "printer.hpp"
 

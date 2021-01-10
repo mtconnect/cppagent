@@ -19,7 +19,7 @@
 
 #include "composition.hpp"
 #include "coordinate_systems.hpp"
-#include "cutting_tool.hpp"
+#include "assets/cutting_tool.hpp"
 #include "motion.hpp"
 #include "sensor_configuration.hpp"
 #include "solid_model.hpp"

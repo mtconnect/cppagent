@@ -19,7 +19,7 @@
 
 #include "checkpoint.hpp"
 #include "component.hpp"
-#include "cutting_tool.hpp"
+#include "assets/cutting_tool.hpp"
 #include "data_item.hpp"
 #include "device.hpp"
 #include "globals.hpp"

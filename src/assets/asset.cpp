@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "asset.hpp"
+#include "assets/asset.hpp"
 
 #include <map>
 #include <utility>

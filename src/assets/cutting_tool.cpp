@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "cutting_tool.hpp"
+#include "assets/cutting_tool.hpp"
 
 #include "printer.hpp"
 

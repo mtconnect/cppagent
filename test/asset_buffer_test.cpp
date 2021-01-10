@@ -21,7 +21,7 @@
 
 #include "adapter.hpp"
 #include "agent.hpp"
-#include "asset_buffer.hpp"
+#include "assets/asset_buffer.hpp"
 #include "agent_test_helper.hpp"
 #include "test_globals.hpp"
 #include "xml_printer.hpp"

@@ -29,7 +29,7 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "checkpoint.hpp"
-#include "cutting_tool.hpp"
+#include "assets/cutting_tool.hpp"
 #include "data_item.hpp"
 #include "device.hpp"
 #include "globals.hpp"
