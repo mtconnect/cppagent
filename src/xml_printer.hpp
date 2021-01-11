@@ -52,7 +52,7 @@ namespace mtconnect
                             ObservationPtrArray &results) const override;
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                             const unsigned int assetCount, const AssetList &assets) const override;
-    std::string mimeType() const override { return "application/mtconnect+xml"; }
+    std::string mimeType() const override { return "text/xml"; }
 
     void addDevicesNamespace(const std::string &urn, const std::string &location,
                              const std::string &prefix);

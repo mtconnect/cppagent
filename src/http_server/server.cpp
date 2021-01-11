@@ -76,10 +76,14 @@ namespace mtconnect
         }
 
         read_body(in, incoming);
+        auto path = incoming.path;
+        auto qp = path.find_first_of('?');
+        if (qp != string::npos)
+          path.erase(qp);
 
         Routing::Request request;
         request.m_verb = incoming.request_type;
-        request.m_path = incoming.path;
+        request.m_path = path;
         request.m_query = incoming.queries;
         request.m_body = incoming.body;
         request.m_foreignIp = foreign_ip;
