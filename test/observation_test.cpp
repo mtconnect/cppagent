@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "data_item.hpp"
+#include "device_model/data_item.hpp"
 #include "observation.hpp"
 #include "test_globals.hpp"
 

@@ -40,29 +40,27 @@ class TableTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
+    m_agentTestHelper = make_unique<AgentTestHelper>();
+    m_agentTestHelper->createAgent("/samples/data_set.xml",
+                                   8, 4, "1.6", 25);
+    m_agentId = to_string(getCurrentTimeInSec());
+
     m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/data_set.xml", 4, 4, "1.5");
-    m_agentId = int64ToString(getCurrentTimeInSec());
     m_adapter = nullptr;
     m_checkpoint = make_unique<Checkpoint>();
 
-    m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
     std::map<string, string> attributes;
-    auto device = m_agent->getDeviceByName("LinuxCNC");
+    auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_dataItem1 = device->getDeviceDataItem("wp1");
   }
 
   void TearDown() override
   {
-    m_agent.reset();
     m_checkpoint.reset();
     m_agentTestHelper.reset();
   }
 
   std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<Agent> m_agent;
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   DataItem *m_dataItem1{nullptr};
@@ -129,13 +127,11 @@ TEST_F(TableTest, Current)
 {
   
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
-  m_agentTestHelper->m_path = "/current";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:WorkpieceOffsetTable[@dataItemId='wp1']",
                           "UNAVAILABLE");
   }
@@ -143,7 +139,7 @@ TEST_F(TableTest, Current)
   m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc,
                           "//m:DeviceStream//m:WorkpieceOffsetTable"
                           "[@dataItemId='wp1']@count",
@@ -165,7 +161,7 @@ TEST_F(TableTest, Current)
   m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=11.0}");
 
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc,
                           "//m:DeviceStream//m:WorkpieceOffsetTable"
                           "[@dataItemId='wp1']@count",
@@ -189,16 +185,15 @@ TEST_F(TableTest, Current)
 TEST_F(TableTest, JsonCurrent)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
-  m_agentTestHelper->m_path = "/current";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  m_agentTestHelper->m_request.m_accepts = "Application/json";
   
   m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
 
   {
-    PARSE_JSON_RESPONSE;
+    PARSE_JSON_RESPONSE("/current");
     
     auto streams = doc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
     ASSERT_EQ(4_S, streams.size());
@@ -246,16 +241,15 @@ TEST_F(TableTest, JsonCurrent)
 TEST_F(TableTest, JsonCurrentText)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
-  m_agentTestHelper->m_path = "/current";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  m_agentTestHelper->m_request.m_accepts = "Application/json";
   
   m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0 s='string with space'} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
   
   {
-    PARSE_JSON_RESPONSE;
+    PARSE_JSON_RESPONSE("/current");
     
     auto streams = doc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
     ASSERT_EQ(4_S, streams.size());
@@ -295,13 +289,11 @@ TEST_F(TableTest, JsonCurrentText)
 TEST_F(TableTest, XmlCellDefinitions)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
-  m_agentTestHelper->m_path = "/probe";
-
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Path//m:DataItem[@id='wp1']/m:Definition/m:Description",
                           "A Complex Workpiece Offset Table");
     
@@ -343,14 +335,13 @@ TEST_F(TableTest, XmlCellDefinitions)
 TEST_F(TableTest, JsonDefinitionTest)
 {
   m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agent->addAdapter(m_adapter);
+  m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
-  m_agentTestHelper->m_path = "/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
+  m_agentTestHelper->m_request.m_accepts = "Application/json";
   
   {
-    PARSE_JSON_RESPONSE;
+    PARSE_JSON_RESPONSE("/probe");
     
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);

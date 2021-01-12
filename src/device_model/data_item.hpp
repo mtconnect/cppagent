@@ -17,8 +17,8 @@
 
 #pragma once
 #include "change_observer.hpp"
-#include "component.hpp"
 #include "definitions.hpp"
+#include "device_model/component.hpp"
 #include "globals.hpp"
 
 #include <dlib/threads.h>

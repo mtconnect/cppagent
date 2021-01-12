@@ -90,27 +90,6 @@ namespace mtconnect
     return value;
   }
 
-  string int64ToString(uint64_t i)
-  {
-    ostringstream stm;
-    stm << i;
-    return stm.str();
-  }
-
-  string int32ToString(int i)
-  {
-    ostringstream stm;
-    stm << i;
-    return stm.str();
-  }
-
-  string intToString(unsigned int i)
-  {
-    ostringstream stm;
-    stm << i;
-    return stm.str();
-  }
-
   string floatToString(double f)
   {
     char s[32] = {0};

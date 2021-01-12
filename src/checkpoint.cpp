@@ -17,7 +17,7 @@
 
 #include "checkpoint.hpp"
 
-#include "data_item.hpp"
+#include "device_model/data_item.hpp"
 
 using namespace std;
 
@@ -25,19 +25,20 @@ namespace mtconnect
 {
   Checkpoint::Checkpoint() = default;
 
-  Checkpoint::Checkpoint(const Checkpoint &checkpoint, const std::set<std::string> *filterSet)
+  Checkpoint::Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
   {
-    if (!filterSet && checkpoint.m_hasFilter)
-      filterSet = &checkpoint.m_filter;
+    FilterSetOpt filter;
+    if (!filterSet && checkpoint.hasFilter())
+      filter = checkpoint.m_filter;
     else
-      m_hasFilter = false;
+      filter = filterSet;
 
-    copy(checkpoint, filterSet);
+    copy(checkpoint, filter);
   }
 
   void Checkpoint::clear()
   {
-    for (const auto event : m_events)
+    for (const auto &event : m_events)
       delete event.second;
 
     m_events.clear();
@@ -47,7 +48,7 @@ namespace mtconnect
 
   void Checkpoint::addObservation(Observation *event)
   {
-    if (m_hasFilter && !m_filter.count(event->getDataItem()->getId()))
+    if (m_filter && m_filter->count(event->getDataItem()->getId()) == 0)
     {
       return;
     }
@@ -135,9 +136,9 @@ namespace mtconnect
           // For data sets merge the maps together
           for (auto &e : event->getDataSet())
           {
-            const auto &old = set.find(e);
-            if (old != set.end())
-              set.erase(old);
+            const auto &oe = set.find(e);
+            if (oe != set.end())
+              set.erase(oe);
             if (!e.m_removed)
               set.insert(e);
           }
@@ -156,27 +157,23 @@ namespace mtconnect
       m_events[id] = new ObservationPtr(event);
   }
 
-  void Checkpoint::copy(Checkpoint const &checkpoint, const std::set<std::string> *filterSet)
+  void Checkpoint::copy(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
   {
     clear();
 
     if (filterSet)
     {
-      m_hasFilter = true;
-      m_filter = *filterSet;
+      m_filter = filterSet;
     }
-    else if (m_hasFilter)
-      filterSet = &m_filter;
 
     for (const auto &event : checkpoint.m_events)
     {
-      if (!filterSet || filterSet->count(event.first) > 0)
+      if (!m_filter || m_filter->count(event.first) > 0)
         m_events[event.first] = new ObservationPtr(event.second->getObject());
     }
   }
 
-  void Checkpoint::getObservations(ObservationPtrArray &list,
-                                   std::set<string> const *filterSet) const
+  void Checkpoint::getObservations(ObservationPtrArray &list, const FilterSetOpt &filterSet) const
   {
     for (const auto &event : m_events)
     {
@@ -194,17 +191,17 @@ namespace mtconnect
     }
   }
 
-  void Checkpoint::filter(std::set<std::string> const &filterSet)
+  void Checkpoint::filter(const FilterSet &filterSet)
   {
     m_filter = filterSet;
 
-    if (filterSet.empty())
+    if (m_filter->empty())
       return;
 
     auto it = m_events.begin();
     while (it != m_events.end())
     {
-      if (!m_filter.count(it->first))
+      if (!m_filter->count(it->first))
       {
 #ifdef _WINDOWS
         it = m_events.erase(it);

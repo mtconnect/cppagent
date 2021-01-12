@@ -17,13 +17,13 @@
 
 #include "json_printer.hpp"
 
-#include "composition.hpp"
-#include "coordinate_systems.hpp"
-#include "device.hpp"
-#include "relationships.hpp"
-#include "sensor_configuration.hpp"
-#include "solid_model.hpp"
-#include "specifications.hpp"
+#include "device_model/composition.hpp"
+#include "device_model/coordinate_systems.hpp"
+#include "device_model/device.hpp"
+#include "device_model/relationships.hpp"
+#include "device_model/sensor_configuration.hpp"
+#include "device_model/solid_model.hpp"
+#include "device_model/specifications.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>
@@ -43,7 +43,7 @@ namespace mtconnect
   static dlib::logger g_logger("json.printer");
 
   JsonPrinter::JsonPrinter(const string version, bool pretty)
-      : Printer(pretty), m_schemaVersion(version)
+    : Printer(pretty), m_schemaVersion(version)
   {
     char appVersion[32] = {0};
     std::sprintf(appVersion, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR,
@@ -154,18 +154,6 @@ namespace mtconnect
     return doc;
   }
 
-  std::string JsonPrinter::printError(const unsigned int instanceId, const unsigned int bufferSize,
-                                      const uint64_t nextSeq, const std::string &errorCode,
-                                      const std::string &errorText) const
-  {
-    json doc = json::object(
-        {{"MTConnectError",
-          {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion)},
-           {"Errors", {{"Error", {{"errorCode", errorCode}, {"text", trim(errorText)}}}}}}}});
-
-    return print(doc, m_pretty);
-  }
-
   static inline json toJson(const set<CellDefinition> &definitions)
   {
     json entries = json::object();
@@ -186,6 +174,26 @@ namespace mtconnect
     }
 
     return entries;
+  }
+
+  std::string JsonPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                                       const uint64_t nextSeq, const ProtoErrorList &list) const
+  {
+    json errors = json::array();
+    for (auto &e : list)
+    {
+      string s(e.second);
+      errors.push_back({{"Error", {{"errorCode", e.first}, {"value", trim(s)}}
+
+      }});
+    }
+
+    json doc = json::object(
+        {{"MTConnectError",
+          {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion)},
+           {"Errors", errors}}}});
+
+    return print(doc, m_pretty);
   }
 
   static inline json toJson(const DataItemDefinition &definition)
@@ -602,7 +610,7 @@ namespace mtconnect
   std::string JsonPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const unsigned int assetBufferSize,
                                       const unsigned int assetCount,
-                                      const std::vector<Device *> &devices,
+                                      const std::list<Device *> &devices,
                                       const std::map<std::string, int> *count) const
   {
     json devicesDoc = json::array();
@@ -789,7 +797,7 @@ namespace mtconnect
    public:
     ComponentRef(const Component *component) : m_component(component), m_categoryRef(nullptr) {}
     ComponentRef(const ComponentRef &other)
-        : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
+      : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
     {
     }
 
@@ -950,187 +958,12 @@ namespace mtconnect
     return array;
   }
 
-  inline static void addIdentity(json &obj, Asset *asset)
-  {
-    auto &identity = asset->getIdentity();
-    for (auto &key : identity)
-    {
-      obj[key.first] = key.second;
-    }
-  }
-
-  inline static void addCuttingToolIdentity(json &obj, const AssetKeys &identity)
-  {
-    for (auto &key : identity)
-    {
-      if (key.first == "manufacturers")
-      {
-        obj["manufacturers"] = split(key.second);
-      }
-      else
-        obj[key.first] = key.second;
-    }
-  }
-
-  static set<string> IntegerKeys = {"negativeOverlap", "positiveOverlap",  "Location",
-                                    "maximumCount",    "ReconditionCount", "significantDigits",
-                                    "ToolLife"};
-
-  static set<string> DoubleKeys = {
-      "maximum", "minimum", "nominal", "ProcessSpindleSpeed", "ProcessFeedRate", "Measurement"};
-
-  inline static void addValue(json &obj, const string &key, const string &value, bool attr)
-  {
-    string name = attr ? key : "value";
-    if (IntegerKeys.count(key) > 0)
-      obj[name] = atoi(value.c_str());
-    else if (DoubleKeys.count(key) > 0)
-    {
-      char *ep;
-      obj[name] = strtod(value.c_str(), &ep);
-    }
-    else
-    {
-      obj[name] = value;
-    }
-  }
-
-  inline static json toJson(CuttingToolValuePtr &value, const std::string &kind = "")
-  {
-    json obj = json::object();
-    string type = kind.empty() ? value->m_key : kind;
-    for (auto &p : value->m_properties)
-      addValue(obj, p.first, p.second, true);
-    if (!value->m_value.empty())
-      addValue(obj, type, value->m_value, false);
-    return obj;
-  }
-
-  inline static json toJson(CuttingItemPtr &item)
-  {
-    json obj = json::object();
-
-    addCuttingToolIdentity(obj, item->m_identity);
-
-    for (auto &prop : item->m_values)
-      obj[prop.first] = toJson(prop.second);
-
-    if (!item->m_lives.empty())
-    {
-      json lives = json::array();
-      for (auto &s : item->m_lives)
-      {
-        lives.emplace_back(toJson(s));
-      }
-      obj["ItemLife"] = lives;
-    }
-
-    if (!item->m_measurements.empty())
-    {
-      json measurements = json::array();
-      for (auto &m : item->m_measurements)
-      {
-        measurements.emplace_back(json::object({{m.first, toJson(m.second, "Measurement")}}));
-      }
-
-      obj["Measurements"] = measurements;
-    }
-
-    return json::object({{"CuttingItem", obj}});
-  }
-
-  inline static json toJson(CuttingTool *tool)
-  {
-    json obj = json::object();
-    if (!tool->m_status.empty())
-    {
-      json status = json::array();
-      for (auto &s : tool->m_status)
-        status.emplace_back(s);
-      obj["CutterStatus"] = status;
-    }
-
-    if (!tool->m_lives.empty())
-    {
-      json lives = json::array();
-      for (auto &s : tool->m_lives)
-      {
-        lives.emplace_back(toJson(s));
-      }
-      obj["ToolLife"] = lives;
-    }
-
-    for (auto &prop : tool->m_values)
-    {
-      if (prop.first != "CuttingToolDefinition")
-        obj[prop.first] = toJson(prop.second);
-    }
-
-    if (!tool->m_measurements.empty())
-    {
-      json measurements = json::array();
-      for (auto &m : tool->m_measurements)
-      {
-        measurements.emplace_back(json::object({{m.first, toJson(m.second, "Measurement")}}));
-      }
-
-      obj["Measurements"] = measurements;
-    }
-
-    if (!tool->m_items.empty())
-    {
-      json items = json::array();
-      for (auto &item : tool->m_items)
-        items.emplace_back(toJson(item));
-
-      obj["CuttingItems"] = items;
-    }
-
-    return obj;
-  }
-
-  inline static json toJson(AssetPtr asset)
-  {
-    json obj =
-        json::object({{"assetId", asset->getAssetId()}, {"timestamp", asset->getTimestamp()}});
-
-    if (!asset->getDeviceUuid().empty())
-      obj["deviceUuid"] = asset->getDeviceUuid();
-
-    if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
-    {
-      auto *tool = dynamic_cast<CuttingTool *>(asset.getObject());
-      addCuttingToolIdentity(obj, tool->getIdentity());
-      obj["Description"] = tool->getDescription();
-
-      if (tool->m_values.count("CuttingToolDefinition") > 0)
-      {
-        auto &def = tool->m_values["CuttingToolDefinition"];
-        obj["CuttingToolDefinition"] =
-            json::object({{"format", def->m_properties["format"]}, {"text", def->m_value}});
-      }
-      auto life = toJson(tool);
-      if (!life.empty())
-        obj["CuttingToolLifeCycle"] = toJson(tool);
-    }
-    else
-    {
-      addIdentity(obj, asset.getObject());
-      obj["text"] = asset->getContent(nullptr);
-    }
-
-    json doc = json::object({{asset->getType(), obj}});
-
-    return doc;
-  }
-
   std::string JsonPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
-                                       const unsigned int assetCount,
-                                       std::vector<AssetPtr> const &assets) const
+                                       const unsigned int assetCount, const AssetList &assets) const
   {
     json assetDoc = json::array();
-    for (const auto asset : assets)
-      assetDoc.emplace_back(toJson(asset));
+    // for (const auto asset : assets)
+    // assetDoc.emplace_back(toJson(asset));
 
     json doc =
         json::object({{"MTConnectAssets",
@@ -1141,9 +974,4 @@ namespace mtconnect
     return print(doc, m_pretty);
   }
 
-  std::string JsonPrinter::printCuttingTool(CuttingToolPtr const tool) const
-  {
-    AssetPtr asset(tool);
-    return toJson(asset);
-  }
 }  // namespace mtconnect

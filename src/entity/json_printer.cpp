@@ -30,7 +30,7 @@ namespace mtconnect
   {
     using Property = pair<string, Value>;
 
-    json JsonPrinter::print(const EntityPtr entity)
+    json JsonPrinter::print(const EntityPtr entity) const
     {
       json jsonObj;
       
@@ -57,25 +57,28 @@ namespace mtconnect
         }
         else
         {
-          GetValue(e.second, &jsonObj[entity->getName()][e.first]);
+          jsonObj[entity->getName()][e.first]  = GetValue(e.second);
         }
       }
       return jsonObj;
     }
-    void JsonPrinter::GetValue(Value value, json *jsonPtr)
+    json JsonPrinter::GetValue(const Value &value) const
     {
-      visit([&](Value &&arg) {
+      return visit([&](Value &&arg)->json {
+            json j;
         if (holds_alternative<string>(arg))
-          *jsonPtr = get<string>(arg);
+              j = get<string>(arg);
         else if (holds_alternative<int64_t>(arg))
-          *jsonPtr = get<int64_t>(arg);
+           j = get<int64_t>(arg);
         else if (holds_alternative<double>(arg))
-          *jsonPtr = get<double>(arg);
-         else if (holds_alternative<Vector>(arg))
-          *jsonPtr = get<Vector>(arg);
+          j = get<double>(arg);
+        else if (holds_alternative<Vector>(arg))
+          j = get<Vector>(arg);
         else
-          *jsonPtr = get<string>(arg);
-        },
+          j = get<string>(arg);
+        
+        return j;
+          },
           value);
     }
   }

@@ -26,7 +26,7 @@ if(NOT TARGET dlib::dlib)
   if(EXISTS "${_link_library}")
     message(STATUS "  * Reusing previously built dlib library")
   else()
-    message(STATUS "  * Donwload dlib library")
+    message(STATUS "  * Download dlib library")
     FetchContent_Populate(dlibprovider)
 
     message(STATUS "  * Patch dlib library")

@@ -68,7 +68,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
 {
   auto fileProperty = make_shared<Factory>(Requirements({
     Requirement("name", true ),
-    Requirement("value", true) }));
+    Requirement("VALUE", true) }));
   
   auto fileProperties = make_shared<Factory>(  Requirements({
     Requirement("FileProperty", ENTITY, fileProperty,
@@ -77,7 +77,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   
   auto fileComment = make_shared<Factory>(Requirements({
     Requirement("timestamp", true ),
-    Requirement("value", true) }));
+    Requirement("VALUE", true) }));
   
   auto fileComments = make_shared<Factory>(Requirements({
     Requirement("FileComment", ENTITY, fileComment,
@@ -132,12 +132,12 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   auto it = fps->begin();
   ASSERT_EQ("FileProperty", (*it)->getName());
   ASSERT_EQ("one", get<string>((*it)->getProperty("name")));
-  ASSERT_EQ("Round", get<string>((*it)->getProperty("value")));
+  ASSERT_EQ("Round", get<string>((*it)->getProperty("VALUE")));
   
   it++;
   ASSERT_EQ("FileProperty", (*it)->getName());
   ASSERT_EQ("two", get<string>((*it)->getProperty("name")));
-  ASSERT_EQ("Flat", get<string>((*it)->getProperty("value")));
+  ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
 }
 
 TEST_F(EntityParserTest, TestRecursiveEntityLists)
@@ -214,8 +214,8 @@ TEST_F(EntityParserTest, TestRecursiveEntityListFailure)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(1, errors.size());
   ASSERT_FALSE(entity);
-  ASSERT_EQ(string("Property uuid is required and not provided"),
-            errors.front().what());
+  ASSERT_EQ(string("Device(uuid): Property uuid is required and not provided"),
+            errors.front()->what());
 }
 
 TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
@@ -237,10 +237,10 @@ TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
   entity::XmlParser parser;
   
   auto entity = parser.parse(root, doc, "1.7", errors);
-  ASSERT_EQ(1, errors.size());
+  ASSERT_EQ(2, errors.size());
   ASSERT_TRUE(entity);
-  ASSERT_EQ(string("Entity list requirement Component must have at least 1 entries, 0 found"),
-            errors.front().what());
+  ASSERT_EQ(string("Components(Component): Entity list requirement Component must have at least 1 entries, 0 found"),
+            errors.front()->what());
   ASSERT_EQ("Device", entity->getName());
   ASSERT_EQ("d1", get<string>(entity->getProperty("id")));
   ASSERT_EQ("foo", get<string>(entity->getProperty("name")));
@@ -256,4 +256,40 @@ TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
   
   auto sl = systems->getList("Components");
   ASSERT_FALSE(sl);
+}
+
+TEST_F(EntityParserTest, TestRawContent)
+{
+  auto definition = make_shared<Factory>(Requirements({
+    Requirement("format", false),
+    Requirement("RAW", true)
+  }));
+  
+  auto root = make_shared<Factory>(Requirements({
+    Requirement("Definition", ENTITY, definition, true)
+  }));
+
+  auto doc = R"DOC(
+<Definition format="XML">
+  <SomeContent with="stuff">
+    And some text
+  </SomeContent>
+  <AndMoreContent/>
+  And random text as well.
+</Definition>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  
+  auto expected = R"DOC(<SomeContent with="stuff">
+    And some text
+  </SomeContent><AndMoreContent/>
+  And random text as well.
+)DOC";
+  
+  ASSERT_EQ("XML", get<string>(entity->getProperty("format")));
+  ASSERT_EQ(expected, get<string>(entity->getProperty("RAW")));
 }

@@ -16,23 +16,25 @@
 //
 
 #include "requirement.hpp"
+
 #include "entity.hpp"
 #include "factory.hpp"
-#include <cstdlib>
-#include <cctype>
+
 #include <dlib/logger.h>
+
+#include <cctype>
+#include <cstdlib>
 
 using namespace std;
 
 namespace mtconnect
 {
-  namespace entity {
+  namespace entity
+  {
     static dlib::logger g_logger("EntityRequirement");
 
-    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f,
-                             bool required)
-    : m_name(name), m_type(type), m_upperMultiplicity(1),
-    m_lowerMultiplicity(required ? 1 : 0)
+    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f, bool required)
+      : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
       if (type == ENTITY_LIST)
       {
@@ -40,10 +42,10 @@ namespace mtconnect
       }
       m_factory = f;
     }
-    
-    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f,
-                             int lower, int upper)
-    : m_name(name), m_type(type), m_upperMultiplicity(upper), m_lowerMultiplicity(lower)
+
+    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f, int lower,
+                             int upper)
+      : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
     {
       if (type == ENTITY_LIST)
       {
@@ -51,7 +53,7 @@ namespace mtconnect
       }
       m_factory = f;
     }
-    
+
     bool Requirement::isMetBy(const Value &value, bool isList) const
     {
       // Is this a multiple entry
@@ -59,97 +61,105 @@ namespace mtconnect
       {
         if (!m_factory)
         {
-          throw PropertyRequirementError("For entity or list requirement " + m_name + ", no factory");
+          throw PropertyError("For entity or list requirement " + m_name + ", no factory", m_name);
         }
         if (holds_alternative<EntityPtr>(value))
         {
           const auto e = get<EntityPtr>(value);
           if (!matches(e->getName()))
           {
-            throw PropertyRequirementError("Requirement " + m_name +
-                                           " does not have a matching entity name: " +
-                                           e->getName());
+            throw PropertyError(
+                "Requirement " + m_name + " does not have a matching entity name: " + e->getName(),
+                m_name);
           }
         }
         else if (holds_alternative<EntityList>(value))
         {
           const auto l = std::get<EntityList>(value);
-          if (l.size() > m_upperMultiplicity || l.size() < m_lowerMultiplicity)
+          if (int(l.size()) > m_upperMultiplicity || int(l.size()) < m_lowerMultiplicity)
           {
             string upper;
             if (m_upperMultiplicity != Infinite)
               upper = " and no more than " + to_string(m_upperMultiplicity);
-            throw PropertyRequirementError("Entity list requirement " + m_name +
-                                           " must have at least " +
-                                           to_string(m_lowerMultiplicity) +
-                                           upper + " entries, " + to_string(l.size()) +
-                                           " found");
+            throw PropertyError("Entity list requirement " + m_name + " must have at least " +
+                                    to_string(m_lowerMultiplicity) + upper + " entries, " +
+                                    to_string(l.size()) + " found",
+                                m_name);
           }
           for (const auto &e : l)
           {
             if (!matches(e->getName()))
             {
-              throw PropertyRequirementError("Entity list requirement " + m_name +
-                                             " does not match requirement with name " + e->getName());
+              throw PropertyError("Entity list requirement " + m_name +
+                                      " does not match requirement with name " + e->getName(),
+                                  m_name);
             }
           }
         }
         else
         {
-          throw PropertyRequirementError("Entity or list requirement " + m_name +
-                                         " does not have correct type");
+          throw PropertyError(
+              "Entity or list requirement " + m_name + " does not have correct type", m_name);
         }
       }
       else
       {
         if (value.index() != m_type)
         {
-          throw PropertyTypeError("Incorrect type for property " + m_name);
+          throw PropertyError("Incorrect type for property " + m_name);
         }
-        if (std::holds_alternative<std::string>(value) &&
-            std::get<std::string>(value).empty())
+        if (std::holds_alternative<std::string>(value))
         {
-          throw PropertyRequirementError("Value of " + m_name + " is empty");
+          auto &v = std::get<std::string>(value);
+          if (v.empty())
+          {
+            throw PropertyError("Value of " + m_name + " is empty", m_name);
+          }
+          if (m_pattern && !std::regex_match(v, *m_pattern))
+          {
+            throw PropertyError("Invalid value for '" + m_name + "': '" + v + "' is not allowed",
+                                m_name);
+          }
         }
       }
-      
+
       return true;
     }
-    
+
     struct StringConverter
     {
-      StringConverter(const string &s) : m_string(s)
-      {
-      }
-      
+      StringConverter(const string &s) : m_string(s) {}
+
       operator double() const
       {
         char *ep = nullptr;
         const char *sp = m_string.c_str();
         double r = strtod(sp, &ep);
         if (ep == sp)
-          throw PropertyConversionError("cannot convert string '" + m_string + "' to double");
-        
+          throw PropertyError("cannot convert string '" + m_string + "' to double");
+
         return r;
       }
-      
+
       operator int64_t() const
       {
         char *ep = nullptr;
         const char *sp = m_string.c_str();
         int64_t r = strtoll(sp, &ep, 10);
         if (ep == sp)
-          throw PropertyConversionError("cannot convert string '" + m_string + "' to integer");
-        
+          throw PropertyError("cannot convert string '" + m_string + "' to integer");
+
         return r;
       }
-      
+
+      operator bool() const { return m_string == "true"; }
+
       operator Vector() const
       {
         char *np(nullptr);
         const char *cp = m_string.c_str();
         Vector r;
-        
+
         while (cp && *cp != '\0')
         {
           if (isspace(*cp))
@@ -157,7 +167,7 @@ namespace mtconnect
             cp++;
             continue;
           }
-          
+
           double v = strtod(cp, &np);
           if (cp != np)
           {
@@ -165,136 +175,179 @@ namespace mtconnect
           }
           else
           {
-            throw PropertyConversionError("cannot convert string '" + m_string + "' to vector");
+            throw PropertyError("cannot convert string '" + m_string + "' to vector");
           }
           cp = np;
         }
 
         if (r.size() == 0)
-          throw PropertyConversionError("cannot convert string '" + m_string + "' to vector");
+          throw PropertyError("cannot convert string '" + m_string + "' to vector");
 
         return r;
       }
-      
+
       const string &m_string;
     };
-    
+
     bool ConvertValueToType(Value &value, ValueType type)
     {
       bool converted = false;
       if (value.index() != type)
       {
-        visit(overloaded {
-          [&](const string &arg) {
-            StringConverter s(arg);
-            switch (type) {
-              case INTEGER:
-                value = int64_t(s);
-                converted = true;
-                break;
+        visit(overloaded{[&](const string &arg) {
+                           StringConverter s(arg);
+                           switch (type)
+                           {
+                             case INTEGER:
+                               value = int64_t(s);
+                               converted = true;
+                               break;
 
-              case DOUBLE:
-                value = double(s);
-                converted = true;
-                break;
+                             case DOUBLE:
+                               value = double(s);
+                               converted = true;
+                               break;
 
-              case VECTOR:
-                value = Vector(s);
-                converted = true;
-                break;
+                             case BOOL:
+                               value = bool(s);
+                               converted = true;
+                               break;
 
-              default:
-                throw PropertyConversionError("Cannot convert a string to a non-scalar");
-                break;
-            }
-          },
-          [&](double arg) {
-            switch (type) {
-              case STRING:
-              {
-                stringstream s;
-                s << arg;
-                value = s.str();
-                converted = true;
-                break;
-              }
-              case INTEGER:
-                value = int64_t(arg);
-                converted = true;
-                break;
-                
-              case VECTOR:
-              {
-                Vector v{arg};
-                value = v;
-                converted = true;
-                break;
-              }
-                
-              default:
-                throw PropertyConversionError("Cannot convert a double to a non-scalar");
-                break;
-            }
+                             case VECTOR:
+                               value = Vector(s);
+                               converted = true;
+                               break;
 
-          },
-          [&](int64_t arg) {
-            switch (type) {
-              case STRING:
-                value = to_string(arg);
-                converted = true;
-                break;
-                
-              case DOUBLE:
-                value = double(arg);
-                converted = true;
-                break;
-                
-              case VECTOR:
-              {
-                Vector v{double(arg)};
-                value = v;
-                converted = true;
-                break;
-              }
-                
-              default:
-                throw PropertyConversionError("Cannot convert a integer to a non-scalar");
-                break;
-            }
-          },
-          [&](const Vector &arg) {
-            switch (type) {
-              case STRING:
-              {
-                if (arg.size() > 0)
-                {
-                  stringstream s;
-                  for (auto &v : arg)
-                    s << v << ' ';
-                  auto str = s.str();
-                  str.erase(str.length() - 1);
-                  value = str;
-                  converted = true;
-                  break;
-                }
-                else
-                {
-                  throw PropertyConversionError("Cannot convert a empty Vector to a string");
-                }
-              }
-              
-              default:
-                throw PropertyConversionError("Cannot convert a Vector to anything other than a string");
-                break;
-            }
-          },
-          [&](auto arg) {
-            converted = false;
-          }
-        }, value);
+                             default:
+                               throw PropertyError("Cannot convert a string to a non-scalar");
+                               break;
+                           }
+                         },
+                         [&](double arg) {
+                           switch (type)
+                           {
+                             case STRING:
+                             {
+                               stringstream s;
+                               s << arg;
+                               value = s.str();
+                               converted = true;
+                               break;
+                             }
+                             case INTEGER:
+                               value = int64_t(arg);
+                               converted = true;
+                               break;
+
+                             case BOOL:
+                               value = arg != 0.0;
+                               converted = true;
+                               break;
+
+                             case VECTOR:
+                             {
+                               Vector v{arg};
+                               value = v;
+                               converted = true;
+                               break;
+                             }
+
+                             default:
+                               throw PropertyError("Cannot convert a double to a non-scalar");
+                               break;
+                           }
+                         },
+                         [&](int64_t arg) {
+                           switch (type)
+                           {
+                             case STRING:
+                               value = to_string(arg);
+                               converted = true;
+                               break;
+
+                             case DOUBLE:
+                               value = double(arg);
+                               converted = true;
+                               break;
+
+                             case BOOL:
+                               value = arg != 0;
+                               converted = true;
+                               break;
+
+                             case VECTOR:
+                             {
+                               Vector v{double(arg)};
+                               value = v;
+                               converted = true;
+                               break;
+                             }
+
+                             default:
+                               throw PropertyError("Cannot convert a integer to a non-scalar");
+                               break;
+                           }
+                         },
+                         [&](const Vector &arg) {
+                           switch (type)
+                           {
+                             case STRING:
+                             {
+                               if (arg.size() > 0)
+                               {
+                                 stringstream s;
+                                 for (auto &v : arg)
+                                   s << v << ' ';
+                                 auto str = s.str();
+                                 str.erase(str.length() - 1);
+                                 value = str;
+                                 converted = true;
+                                 break;
+                               }
+                               else
+                               {
+                                 throw PropertyError("Cannot convert a empty Vector to a string");
+                               }
+                             }
+
+                             default:
+                               throw PropertyError(
+                                   "Cannot convert a Vector to anything other than a string");
+                               break;
+                           }
+                         },
+                         [&](const bool b) {
+                           switch (type)
+                           {
+                             case INTEGER:
+                               value = int64_t(b);
+                               converted = true;
+                               break;
+
+                             case DOUBLE:
+                               value = double(b);
+                               converted = true;
+                               break;
+
+                             case STRING:
+                               value = b ? string("true") : string("false");
+                               converted = true;
+                               break;
+
+                             case VECTOR:
+                               value = Vector(double(b));
+                               converted = true;
+                               break;
+
+                             default:
+                               throw PropertyError("Cannot convert a string to a non-scalar");
+                               break;
+                           }
+                         },
+                         [&](const auto &arg) { converted = false; }},
+              value);
       }
       return converted;
     }
-  }
-}
-
+  }  // namespace entity
+}  // namespace mtconnect

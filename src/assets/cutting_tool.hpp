@@ -19,7 +19,6 @@
 
 #include "asset.hpp"
 #include "globals.hpp"
-#include "entity.hpp"
 
 #include <map>
 #include <utility>
@@ -27,15 +26,18 @@
 
 namespace mtconnect
 {
-  class FileArchetypeAsset : public entity::Entity
+  class CuttingToolArchetype : public Asset
   {
-  public:
+   public:
     static entity::FactoryPtr getFactory();
+    static void registerAsset();
   };
-  
-  class FileAsset : public FileArchetypeAsset
+
+  class CuttingTool : public Asset
   {
-  public:
+   public:
     static entity::FactoryPtr getFactory();
+    static void registerAsset();
   };
-}
+
+}  // namespace mtconnect

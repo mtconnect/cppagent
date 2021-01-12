@@ -30,10 +30,10 @@ using namespace mtconnect;
 
 TEST(GlobalsTest, IntToString)
 {
-  ASSERT_EQ((string) "1234", intToString(1234));
-  ASSERT_EQ((string) "0", intToString(0));
-  ASSERT_EQ((string) "123456789", intToString(123456789));
-  ASSERT_EQ((string) "1", intToString(1));
+  ASSERT_EQ((string) "1234", to_string(1234));
+  ASSERT_EQ((string) "0", to_string(0));
+  ASSERT_EQ((string) "123456789", to_string(123456789));
+  ASSERT_EQ((string) "1", to_string(1));
 }
 
 TEST(GlobalsTest, FloatToString)
@@ -208,5 +208,5 @@ TEST(GlobalsTest, ParseTimeMilli)
 
 TEST(GlobalsTest, Int64ToString)
 {
-  ASSERT_EQ((string) "8805345009", int64ToString(8805345009ULL));
+  ASSERT_EQ((string) "8805345009", to_string(8805345009ULL));
 }

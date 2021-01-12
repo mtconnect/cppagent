@@ -73,7 +73,7 @@ class JsonPrinterTest : public testing::Test
         Requirement("model", false),
         Requirement("serialNumber", false),
         Requirement("station", false),
-        Requirement("value", false)});
+        Requirement("VALUE", false)});
     
     auto dataitem = make_shared<Factory>(Requirements{
         Requirement("name", false),
@@ -224,7 +224,7 @@ TEST_F(JsonPrinterTest, Components)
   ASSERT_EQ("s1", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/id"_json_pointer).get<string>());
   
   ASSERT_EQ("abc", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/model"_json_pointer).get<string>());
-  ASSERT_EQ("Hey Will", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/value"_json_pointer).get<string>());
+  ASSERT_EQ("Hey Will", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/VALUE"_json_pointer).get<string>());
   
   ASSERT_EQ(2, jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Components"_json_pointer).size());
   ASSERT_EQ("h1", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Components/1/Heating/id"_json_pointer).get<string>());

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "cutting_tool.hpp"
+#include "assets/cutting_tool.hpp"
 #include "globals.hpp"
 #include "printer.hpp"
 
@@ -29,26 +29,20 @@ namespace mtconnect
     JsonPrinter(const std::string version = "", bool pretty = false);
     ~JsonPrinter() override = default;
 
-    std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
-                           const uint64_t nextSeq, const std::string &errorCode,
-                           const std::string &errorText) const override;
+    std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                            const uint64_t nextSeq, const ProtoErrorList &list) const override;
 
     std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                            const uint64_t nextSeq, const unsigned int assetBufferSize,
-                           const unsigned int assetCount, const std::vector<Device *> &devices,
+                           const unsigned int assetCount, const std::list<Device *> &devices,
                            const std::map<std::string, int> *count = nullptr) const override;
 
     std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
                             ObservationPtrArray &results) const override;
-
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
-                            const unsigned int assetCount,
-                            std::vector<AssetPtr> const &assets) const override;
-
-    std::string printCuttingTool(CuttingToolPtr const tool) const override;
-
-    std::string mimeType() const override { return "application/json"; }
+                            const unsigned int assetCount, const AssetList &assets) const override;
+    std::string mimeType() const override { return "application/mtconnect+json"; }
 
    protected:
     const std::string &hostname() const;

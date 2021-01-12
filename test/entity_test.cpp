@@ -24,30 +24,28 @@ static inline int64_t operator "" _i64( unsigned long long int i )
 {
   return int64_t(i);
 }
+static inline string operator "" _s( const char * s, size_t l )
+{
+  return string(s);
+}
 
 class EntityTest : public testing::Test
 {
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/solid_model.xml", 4, 4, "1.7");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
-    m_device = m_agent->getDeviceByName("LinuxCNC");
-    
-    
+    m_agentTestHelper->createAgent("/samples/solid_model.xml",
+                                   8, 4, "1.7", 25);
+    m_agentId = to_string(getCurrentTimeInSec());
+    m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
   void TearDown() override
   {
-    m_agent.reset();
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Agent> m_agent;
   std::string m_agentId;
   Device *m_device{nullptr};
 
@@ -64,7 +62,8 @@ TEST_F(EntityTest, TestSimpleFactory)
     Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
 
-  Properties simple({ { "id", "abc" }, { "name", "xxx" }, {"size", 10_i64 }});
+  Properties simple({ { "id", "abc"_s }, { "name", "xxx"_s },
+		      {"size", 10_i64 }});
   
   auto entity = root->create("simple", simple);
   ASSERT_TRUE(entity);
@@ -81,7 +80,7 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   
   auto second = make_shared<Factory>(Requirements({
     Requirement("key", true ),
-    Requirement("value", true) }));
+    Requirement("VALUE", true) }));
   
   auto simple = make_shared<Factory>(Requirements{
     Requirement("name", true ),
@@ -97,15 +96,15 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   auto sfact = fact->factoryFor("second");
   ASSERT_TRUE(sfact);
   
-  Properties sndp { {"key", "1" }, {"value", "arf"}};
+  Properties sndp { {"key", "1"_s }, {"VALUE", "arf"_s }};
   auto se = fact->create("second", sndp);
   ASSERT_TRUE(se);
   ASSERT_EQ(2, se->getProperties().size());
   ASSERT_EQ("1", get<std::string>(se->getProperty("key")));
-  ASSERT_EQ("arf", get<std::string>(se->getProperty("value")));
+  ASSERT_EQ("arf", get<std::string>(se->getProperty("VALUE")));
 
   Properties simpp {
-    { "id", "abc" }, { "name", "xxx" }, { "size", 10_i64 },
+		    { "id", "abc"_s }, { "name", "xxx"_s }, { "size", 10_i64 },
     { "second", se }
   };
   
@@ -121,7 +120,7 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   ASSERT_TRUE(v);
   ASSERT_EQ(2, v->getProperties().size());
   ASSERT_EQ("1", get<std::string>(v->getProperty("key")));
-  ASSERT_EQ("arf", get<std::string>(v->getProperty("value")));
+  ASSERT_EQ("arf", get<std::string>(v->getProperty("VALUE")));
 
 }
 
@@ -131,7 +130,7 @@ TEST_F(EntityTest, TestSimpleEntityList)
   
   auto second = make_shared<Factory>(Requirements({
     Requirement("key", true ),
-    Requirement("value", true) }));
+    Requirement("VALUE", true) }));
   
   auto seconds = make_shared<Factory>(Requirements({
     Requirement("second", ENTITY, second,
@@ -156,19 +155,19 @@ TEST_F(EntityTest, TestSimpleEntityList)
   auto secondFact = secondsFact->factoryFor("second");
   ASSERT_TRUE(secondFact);
   
-  Properties sndp1 { {"key", "1" }, {"value", "arf"}};
+  Properties sndp1 { {"key", "1"_s }, {"VALUE", "arf"_s}};
   auto se1 = secondsFact->create("second", sndp1);
   ASSERT_TRUE(se1);
   ASSERT_EQ(2, se1->getProperties().size());
   ASSERT_EQ("1", get<std::string>(se1->getProperty("key")));
-  ASSERT_EQ("arf", get<std::string>(se1->getProperty("value")));
+  ASSERT_EQ("arf", get<std::string>(se1->getProperty("VALUE")));
   
-  Properties sndp2 { {"key", "2" }, {"value", "meow"}};
+  Properties sndp2 { {"key", "2"_s }, {"VALUE", "meow"_s}};
   auto se2 = secondsFact->create("second", sndp2);
   ASSERT_TRUE(se2);
   ASSERT_EQ(2, se2->getProperties().size());
   ASSERT_EQ("2", get<std::string>(se2->getProperty("key")));
-  ASSERT_EQ("meow", get<std::string>(se2->getProperty("value")));
+  ASSERT_EQ("meow", get<std::string>(se2->getProperty("VALUE")));
 
   ErrorList errors;
   EntityList list { se1, se2 };
@@ -177,7 +176,7 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_TRUE(se3);
   
   Properties simpp {
-    { "id", "abc" }, { "name", "xxx" }, {"size", 10_i64 },
+    { "id", "abc"_s }, { "name", "xxx"_s }, {"size", 10_i64 },
     { "seconds", se3 }
   };
   
@@ -198,13 +197,13 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_NE(l->end(), it);
   ASSERT_EQ(2, (*it)->getProperties().size());
   ASSERT_EQ("1", get<std::string>((*it)->getProperty("key")));
-  ASSERT_EQ("arf", get<std::string>((*it)->getProperty("value")));
+  ASSERT_EQ("arf", get<std::string>((*it)->getProperty("VALUE")));
   
   it++;
   ASSERT_NE(l->end(), it);
   ASSERT_EQ(2, (*it)->getProperties().size());
   ASSERT_EQ("2", get<std::string>((*it)->getProperty("key")));
-  ASSERT_EQ("meow", get<std::string>((*it)->getProperty("value")));
+  ASSERT_EQ("meow", get<std::string>((*it)->getProperty("VALUE")));
 }
 
 TEST_F(EntityTest, MissingProperty)
@@ -216,15 +215,15 @@ TEST_F(EntityTest, MissingProperty)
     Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
   
-  Properties simple { { "name", "xxx" }, {"size", 10_i64 }};
+  Properties simple { { "name", "xxx"_s }, {"size", 10_i64 }};
   
   ErrorList errors;
   auto entity = root->create("simple", simple, errors);
   ASSERT_FALSE(entity);
   
   ASSERT_EQ(1, errors.size());
-  ASSERT_EQ(string("Property id is required and not provided"),
-            errors.begin()->what());
+  ASSERT_EQ(string("simple(id): Property id is required and not provided"),
+            string(errors.front()->what()));
 }
 
 TEST_F(EntityTest, MissingOptionalProperty)
@@ -236,7 +235,7 @@ TEST_F(EntityTest, MissingOptionalProperty)
     Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
   
-  Properties simple { { "id", "abc" }, { "name", "xxx" }};
+  Properties simple { { "id", "abc"_s }, { "name", "xxx"_s }};
   
   ErrorList errors;
   auto entity = root->create("simple", simple, errors);
@@ -258,15 +257,15 @@ TEST_F(EntityTest, UnexpectedProperty)
     Requirement("size", false, INTEGER) }));
   root->registerFactory("simple", simpleFact);
   
-  Properties simple { { "id", "abc" }, { "name", "xxx" }, { "junk", "junk" }};
+  Properties simple { { "id", "abc"_s }, { "name", "xxx"_s }, { "junk", "junk"_s }};
   
   ErrorList errors;
   auto entity = root->create("simple", simple, errors);
   ASSERT_FALSE(entity);
   
   ASSERT_EQ(1, errors.size());
-  ASSERT_EQ(string("The following keys were present and not expected: junk,"),
-            errors.begin()->what());
+  ASSERT_EQ(string("simple(): The following keys were present and not expected: junk,"),
+            string(errors.front()->what()));
 }
 
 TEST_F(EntityTest, EntityListAnyEntities)
@@ -275,7 +274,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
   
   auto second = make_shared<Factory>(Requirements({
     Requirement("key", true ),
-    Requirement("value", true) }));
+    Requirement("VALUE", true) }));
   
   auto seconds = make_shared<Factory>(Requirements({
     Requirement("something", ENTITY, second,
@@ -302,21 +301,21 @@ TEST_F(EntityTest, EntityListAnyEntities)
   
   ErrorList errors;
 
-  Properties sndp1 { {"key", "1" }, {"value", "arf"}};
+  Properties sndp1 { {"key", "1"_s }, {"VALUE", "arf"_s }};
   auto se1 = secondsFact->create("dog", sndp1, errors);
   ASSERT_EQ(0, errors.size());
   ASSERT_TRUE(se1);
   ASSERT_EQ(2, se1->getProperties().size());
   ASSERT_EQ("1", get<std::string>(se1->getProperty("key")));
-  ASSERT_EQ("arf", get<std::string>(se1->getProperty("value")));
+  ASSERT_EQ("arf", get<std::string>(se1->getProperty("VALUE")));
   
-  Properties sndp2 { {"key", "2" }, {"value", "meow"}};
+  Properties sndp2 { {"key", "2"_s }, {"VALUE", "meow"_s }};
   auto se2 = secondsFact->create("cat", sndp2, errors);
   ASSERT_EQ(0, errors.size());
   ASSERT_TRUE(se2);
   ASSERT_EQ(2, se2->getProperties().size());
   ASSERT_EQ("2", get<std::string>(se2->getProperty("key")));
-  ASSERT_EQ("meow", get<std::string>(se2->getProperty("value")));
+  ASSERT_EQ("meow", get<std::string>(se2->getProperty("VALUE")));
   
   EntityList list { se1, se2 };
   auto se3 = fact->create("seconds", list, errors);
@@ -324,7 +323,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_TRUE(se3);
   
   Properties simpp {
-    { "id", "abc" }, { "name", "xxx" }, {"size", 10_i64 },
+    { "id", "abc"_s }, { "name", "xxx"_s }, {"size", 10_i64 },
     { "seconds", se3 }
   };
   
@@ -345,19 +344,19 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_EQ(2, (*it)->getProperties().size());
   ASSERT_EQ("dog", (*it)->getName());
   ASSERT_EQ("1", get<std::string>((*it)->getProperty("key")));
-  ASSERT_EQ("arf", get<std::string>((*it)->getProperty("value")));
+  ASSERT_EQ("arf", get<std::string>((*it)->getProperty("VALUE")));
   
   it++;
   ASSERT_NE(l->end(), it);
   ASSERT_EQ(2, (*it)->getProperties().size());
   ASSERT_EQ("cat", (*it)->getName());
   ASSERT_EQ("2", get<std::string>((*it)->getProperty("key")));
-  ASSERT_EQ("meow", get<std::string>((*it)->getProperty("value")));
+  ASSERT_EQ("meow", get<std::string>((*it)->getProperty("VALUE")));
 }
 
 TEST_F(EntityTest, TestRequirementIntegerConversions)
 {
-  Value v("123");
+  Value v("123"_s);
   ASSERT_TRUE(holds_alternative<string>(v));
   Requirement r1("integer", INTEGER);
   ASSERT_TRUE(r1.convertType(v));
@@ -371,8 +370,8 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("123", get<string>(v));
 
-  v = "aaa";
-  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+  v = "aaa"_s;
+  ASSERT_THROW(r1.convertType(v), PropertyError);
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("aaa", get<string>(v));
 
@@ -386,10 +385,10 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 
   v = 123_i64;
   Requirement r4("entity", ENTITY);
-  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r4.convertType(v), PropertyError);
 
   Requirement r5("entity_list", ENTITY_LIST);
-  ASSERT_THROW(r5.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r5.convertType(v), PropertyError);
   
   v = 1234.0;
   ASSERT_TRUE(holds_alternative<double>(v));
@@ -428,7 +427,7 @@ TEST_F(EntityTest, TestRequirementStringConversion)
 
 TEST_F(EntityTest, TestRequirementDoubleConversions)
 {
-  Value v("123.24");
+  Value v("123.24"_s);
   ASSERT_TRUE(holds_alternative<string>(v));
   Requirement r1("double", entity::DOUBLE);
   ASSERT_TRUE(r1.convertType(v));
@@ -444,13 +443,13 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
 
   v = 123.24;
   Requirement r4("entity", ENTITY);
-  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r4.convertType(v), PropertyError);
   
   Requirement r5("entity_list", ENTITY_LIST);
-  ASSERT_THROW(r5.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r5.convertType(v), PropertyError);
   
-  v = "aaa";
-  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+  v = "aaa"_s;
+  ASSERT_THROW(r1.convertType(v), PropertyError);
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("aaa", get<string>(v));
 
@@ -465,7 +464,7 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
 
 TEST_F(EntityTest, TestRequirementVectorConversions)
 {
-  Value v("1.234 3.456 6.7889");
+  Value v("1.234 3.456 6.7889"_s);
   ASSERT_TRUE(holds_alternative<string>(v));
   Requirement r1("vector", VECTOR);
   ASSERT_TRUE(r1.convertType(v));
@@ -475,10 +474,10 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   ASSERT_EQ(3.456, get<Vector>(v)[1]);
   ASSERT_EQ(6.7889, get<Vector>(v)[2]);
   
-  v = "aaaa bbb cccc";
-  ASSERT_THROW(r1.convertType(v), PropertyConversionError);
+  v = "aaaa bbb cccc"_s;
+  ASSERT_THROW(r1.convertType(v), PropertyError);
 
-  v = "  1.234     3.456       6.7889    ";
+  v = "  1.234     3.456       6.7889    "_s;
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
   ASSERT_EQ(3, get<Vector>(v).size());
@@ -487,14 +486,50 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   ASSERT_EQ(6.7889, get<Vector>(v)[2]);
 
   Requirement r2("entity", ENTITY);
-  ASSERT_THROW(r2.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r2.convertType(v), PropertyError);
   
   Requirement r3("entity_list", ENTITY_LIST);
-  ASSERT_THROW(r3.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r3.convertType(v), PropertyError);
 
   Requirement r4("entity_list", entity::DOUBLE);
-  ASSERT_THROW(r4.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r4.convertType(v), PropertyError);
 
   Requirement r6("entity_list", INTEGER);
-  ASSERT_THROW(r6.convertType(v), PropertyConversionError);
+  ASSERT_THROW(r6.convertType(v), PropertyError);
+}
+
+TEST_F(EntityTest, TestControlledVocabulary)
+{
+  FactoryPtr root = make_shared<Factory>();
+  FactoryPtr simpleFact = make_shared<Factory>(Requirements({
+    {"name", true }, {"id", true},
+    {"type", {"BIG", "SMALL", "OTHER"}, true} }));
+  root->registerFactory("simple", simpleFact);
+  
+  Properties simple {
+    { "id", "abc"_s },
+    { "name", "xxx"_s },
+    { "type", "BIG"_s }
+  };
+  
+  ErrorList errors;
+  auto entity = root->create("simple", simple, errors);
+  ASSERT_EQ(0, errors.size());
+
+  ASSERT_TRUE(entity);
+  ASSERT_EQ(3, entity->getProperties().size());
+  ASSERT_EQ("simple", entity->getName());
+  ASSERT_EQ("abc", get<std::string>(entity->getProperty("id")));
+  ASSERT_EQ("xxx", get<std::string>(entity->getProperty("name")));
+  ASSERT_EQ("BIG", get<std::string>(entity->getProperty("type")));
+
+  Properties fail {
+    { "id", "abc"_s },
+    { "name", "xxx"_s },
+    { "type", "BAD"_s }
+  };
+  
+  auto entity2 = root->create("simple", fail, errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_EQ("simple(type): Invalid value for 'type': 'BAD' is not allowed", string(errors.front()->what()));
 }

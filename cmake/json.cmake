@@ -9,7 +9,7 @@ set(agent_json_lib_version_tag "v3.7.3")
 
 if(NOT TARGET json)
   message(STATUS "Make JSON library (${agent_json_lib_version_tag}) available.")
-  message(STATUS "  * Donwload JSON library")
+  message(STATUS "  * Download JSON library")
   include(FetchContent)
   FetchContent_Declare(
     jsonprovider

@@ -20,8 +20,8 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "checkpoint.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
+#include "device_model/data_item.hpp"
+#include "device_model/device.hpp"
 #include "globals.hpp"
 #include "json_helper.hpp"
 #include "json_printer.hpp"
@@ -62,7 +62,7 @@ TEST_F(JsonPrinterErrorTest, PrintError)
   ASSERT_EQ(false, jdoc.at("/MTConnectError/Header/testIndicator"_json_pointer).get<bool>());
 
   ASSERT_EQ(string("BAD_BAD"),
-            jdoc.at("/MTConnectError/Errors/Error/errorCode"_json_pointer).get<string>());
+            jdoc.at("/MTConnectError/Errors/0/Error/errorCode"_json_pointer).get<string>());
   ASSERT_EQ(string("Never do that again"),
-            jdoc.at("/MTConnectError/Errors/Error/text"_json_pointer).get<string>());
+            jdoc.at("/MTConnectError/Errors/0/Error/value"_json_pointer).get<string>());
 }

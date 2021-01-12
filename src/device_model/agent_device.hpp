@@ -15,36 +15,33 @@
 //    limitations under the License.
 //
 
-#include "asset.hpp"
+#pragma once
+#include "component.hpp"
+#include "data_item.hpp"
+#include "device_model/device.hpp"
+#include "globals.hpp"
 
 #include <map>
-#include <utility>
-
-using namespace std;
 
 namespace mtconnect
 {
-  Asset::Asset(std::string asssetId, std::string type, std::string content, const bool removed)
-      : m_assetId(std::move(asssetId)),
-        m_content(std::move(content)),
-        m_type(std::move(type)),
-        m_removed(removed)
-  {
-  }
+  class Adapter;
 
-  Asset::~Asset() = default;
-
-  void Asset::addIdentity(const std::string &key, const std::string &value)
+  class AgentDevice : public Device
   {
-    if (key == "deviceUuid")
-      m_deviceUuid = value;
-    else if (key == "timestamp")
-      m_timestamp = value;
-    else if (key == "removed")
-      m_removed = value == "true";
-    else if (key == "assetId")
-      m_assetId = value;
-    else
-      m_identity[key] = value;
-  }
+   public:
+    // Constructor that sets variables from an attribute map
+    AgentDevice(const Attributes &attributes);
+    ~AgentDevice() override = default;
+
+    void addAdapter(const Adapter *adapter);
+
+    DataItem *getConnectionStatus(const Adapter *adapter);
+
+   protected:
+    void addRequiredDataItems();
+
+   protected:
+    Component *m_adapters{nullptr};
+  };
 }  // namespace mtconnect

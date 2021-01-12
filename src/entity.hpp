@@ -17,6 +17,6 @@
 
 #pragma once
 
-#include "entity/requirement.hpp"
 #include "entity/entity.hpp"
 #include "entity/factory.hpp"
+#include "entity/requirement.hpp"

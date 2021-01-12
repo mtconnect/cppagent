@@ -4,8 +4,8 @@ branches:
   - master
 # clone_folder: c:\projects\cppagent_dev
 image:
-- Ubuntu1804
-- Visual Studio 2017
+- Ubuntu2004
+- Visual Studio 2019
 
 configuration:
 - Release
@@ -20,26 +20,21 @@ platform:
 
 matrix:
   fast_finish: true
-
+  
 # skip unsupported combinations
 init:
 - cmd: |-
-    set arch=
-    if "%arch%"=="Win64" ( set arch= Win64)
-    echo %arch%
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
-    if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( set generator="Visual Studio 15 2017%arch%" )
-    echo %generator%
     echo %MSBUILD_FLAGS%
-# - sh: sudo apt-get update
-# - sh: sudo apt-get --yes install libxml2-dev
 
 before_build:
 - cmd: |-
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -G %generator%
+    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
+- sh: export CC=/usr/bin/gcc-9
+- sh: export CXX=/usr/bin/g++-9
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version

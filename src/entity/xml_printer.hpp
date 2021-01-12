@@ -27,14 +27,14 @@ extern "C"
 
 namespace mtconnect
 {
-  namespace entity 
+  namespace entity
   {
-    class XmlPrinter 
+    class XmlPrinter
     {
-    public:
+     public:
       XmlPrinter() = default;
-          
+
       void print(xmlTextWriterPtr writer, const EntityPtr entity);
     };
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

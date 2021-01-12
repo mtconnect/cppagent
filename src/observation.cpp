@@ -17,7 +17,7 @@
 
 #include "observation.hpp"
 
-#include "data_item.hpp"
+#include "device_model/data_item.hpp"
 
 #include <dlib/logger.h>
 #include <dlib/threads.h>
@@ -76,9 +76,9 @@ namespace mtconnect
     }
   }
 
-  Observation::Observation(DataItem &dataItem, const string &time,
-                           const string &value, uint64_t sequence)
-      : m_level(ELevel::NORMAL), m_isFloat(false), m_sampleCount(0), m_hasAttributes(false)
+  Observation::Observation(DataItem &dataItem, const string &time, const string &value,
+                           uint64_t sequence)
+    : m_level(ELevel::NORMAL), m_isFloat(false), m_sampleCount(0), m_hasAttributes(false)
   {
     m_dataItem = &dataItem;
     m_isTimeSeries = m_dataItem->isTimeSeries();
@@ -109,19 +109,19 @@ namespace mtconnect
   }
 
   Observation::Observation(const Observation &observation)
-      : RefCounted(observation),
-        m_dataItem(observation.m_dataItem),
-        m_sequence(observation.m_sequence),
-        m_time(observation.m_time),
-        m_duration(observation.m_duration),
-        m_rest(observation.m_rest),
-        m_level(ELevel::NORMAL),
-        m_value(observation.m_value),
-        m_isFloat(false),
-        m_isTimeSeries(observation.m_isTimeSeries),
-        m_hasAttributes(false),
-        m_code(observation.m_code),
-        m_resetTriggered(observation.m_resetTriggered)
+    : RefCounted(observation),
+      m_dataItem(observation.m_dataItem),
+      m_sequence(observation.m_sequence),
+      m_time(observation.m_time),
+      m_duration(observation.m_duration),
+      m_rest(observation.m_rest),
+      m_level(ELevel::NORMAL),
+      m_value(observation.m_value),
+      m_isFloat(false),
+      m_isTimeSeries(observation.m_isTimeSeries),
+      m_hasAttributes(false),
+      m_code(observation.m_code),
+      m_resetTriggered(observation.m_resetTriggered)
   {
     if (m_isTimeSeries)
     {
@@ -156,7 +156,7 @@ namespace mtconnect
       if (!m_dataItem->getCompositionId().empty())
         m_attributes.emplace_back(AttributeItem("compositionId", m_dataItem->getCompositionId()));
 
-      m_sequenceStr = int64ToString(m_sequence);
+      m_sequenceStr = to_string(m_sequence);
       m_attributes.emplace_back(AttributeItem("sequence", m_sequenceStr));
 
       if (!m_dataItem->getSubType().empty())
@@ -261,7 +261,7 @@ namespace mtconnect
       }
       else if (m_dataItem->isDataSet())
       {
-        m_attributes.emplace_back(AttributeItem("count", intToString(m_dataSet.size())));
+        m_attributes.emplace_back(AttributeItem("count", to_string(m_dataSet.size())));
         m_sampleCount = m_dataSet.size();
       }
       else if (m_dataItem->isAssetChanged() || m_dataItem->isAssetRemoved())

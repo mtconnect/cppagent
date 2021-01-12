@@ -27,6 +27,8 @@ namespace mtconnect
   {
    public:
     MTConnectService();
+    virtual ~MTConnectService() = default;
+
     virtual int main(int argc, char const *argv[]);
     virtual void initialize(int argc, char const *argv[]) = 0;
     virtual void stop() = 0;

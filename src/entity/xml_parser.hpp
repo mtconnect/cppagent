@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "globals.hpp"
-#include "requirement.hpp"
 #include "entity.hpp"
 #include "factory.hpp"
+#include "globals.hpp"
+#include "requirement.hpp"
 
 #include <map>
 #include <utility>
@@ -32,15 +32,12 @@ namespace mtconnect
   {
     class XmlParser
     {
-    public:
+     public:
       XmlParser() = default;
       ~XmlParser() = default;
-      
-      EntityPtr parse(FactoryPtr factory,
-                       const std::string &document,
-                       const std::string &version,
-                       ErrorList &errors);
-      
+
+      EntityPtr parse(FactoryPtr factory, const std::string &document, const std::string &version,
+                      ErrorList &errors);
     };
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

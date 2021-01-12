@@ -18,37 +18,31 @@
 #pragma once
 
 #include "requirement.hpp"
+#include <unordered_map>
 
 namespace mtconnect
 {
   namespace entity
   {
-    using ErrorList = std::list<PropertyError>;
     using Properties = std::map<std::string, Value>;
     using OrderList = std::list<std::string>;
-    using OrderListPtr = std::shared_ptr<OrderList>;
+    using OrderMap = std::unordered_map<std::string, int>;
+    using OrderMapPtr = std::shared_ptr<OrderMap>;
+    using Property = std::pair<std::string, Value>;
 
     class Entity : public std::enable_shared_from_this<Entity>
     {
-    public:
-      Entity(const std::string &name, const Properties &props)
-        : m_name(name), m_properties(props)
+     public:
+      Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
       {
       }
       Entity(const Entity &entity) = default;
-      virtual ~Entity()
-      {
-      }
-      
-      std::shared_ptr<Entity> getptr() {
-        return shared_from_this();
-      }
+      virtual ~Entity() {}
+
+      EntityPtr getptr() { return shared_from_this(); }
 
       const std::string &getName() const { return m_name; }
-      const Properties &getProperties() const
-      {
-        return m_properties;
-      }
+      const Properties &getProperties() const { return m_properties; }
       const Value &getProperty(const std::string &n) const
       {
         static Value noValue{nullptr};
@@ -58,33 +52,36 @@ namespace mtconnect
         else
           return it->second;
       }
+      virtual void setProperty(const std::string &key, const Value &v)
+      {
+        m_properties.insert_or_assign(key, v);
+      }
+      void setProperty(const Property &property) { setProperty(property.first, property.second); }
 
-      const Value &getValue() const { return getProperty("value"); }
-      std::optional<EntityList> getList(const std::string &name) const {
+      const Value &getValue() const { return getProperty("VALUE"); }
+      std::optional<EntityList> getList(const std::string &name) const
+      {
         auto &v = getProperty(name);
         auto *p = std::get_if<EntityPtr>(&v);
         if (p)
         {
-          auto &lv = (*p)->getProperty("list");
+          auto &lv = (*p)->getProperty("LIST");
           auto *l = std::get_if<EntityList>(&lv);
           if (l)
             return *l;
         }
-        
+
         return std::nullopt;
       }
-      
-      void setOrder(const OrderListPtr order)
-      {
-        m_order = order;
-      }
-      const OrderListPtr getOrder() const { return m_order; }
-      
+
+      void setOrder(const OrderMapPtr order) { m_order = order; }
+      const OrderMapPtr getOrder() const { return m_order; }
+
       // Entity Factory
-    protected:
+     protected:
       std::string m_name;
       Properties m_properties;
-      OrderListPtr m_order;
+      OrderMapPtr m_order;
     };
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

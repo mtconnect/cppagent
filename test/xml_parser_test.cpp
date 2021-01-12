@@ -60,7 +60,7 @@ class XmlParserTest : public testing::Test
   }
 
   XmlParser *m_xmlParser{nullptr};
-  std::vector<Device *> m_devices;
+  std::list<Device *> m_devices;
 };
 
 TEST_F(XmlParserTest, Constructor)
@@ -229,7 +229,7 @@ TEST_F(XmlParserTest, ExtendedSchema)
 
 TEST_F(XmlParserTest, TimeSeries)
 {
-  const auto dev = m_devices[0];
+  const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
   auto item = dev->getDeviceDataItem("Xact");
@@ -253,7 +253,7 @@ TEST_F(XmlParserTest, TimeSeries)
 
 TEST_F(XmlParserTest, Configuration)
 {
-  const auto dev = m_devices[0];
+  const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
   mtconnect::Component *power = nullptr;
@@ -269,128 +269,6 @@ TEST_F(XmlParserTest, Configuration)
   ASSERT_FALSE(power->getConfiguration().empty());
 }
 
-TEST_F(XmlParserTest, ParseAsset)
-{
-  auto document = getFile("asset1.xml");
-  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
-
-  ASSERT_EQ((string) "KSSP300R4SD43L240", tool->getIdentity().at("toolId"));
-  ASSERT_EQ((string) "KSSP300R4SD43L240.1", tool->getAssetId());
-  ASSERT_EQ((string) "1", tool->getIdentity().at("serialNumber"));
-  ASSERT_EQ((string) "KMT,Parlec", tool->getIdentity().at("manufacturers"));
-  ASSERT_EQ((string) "2011-05-11T13:55:22", tool->getTimestamp());
-  ASSERT_EQ(false, tool->isRemoved());
-
-  // Top Level
-  ASSERT_EQ((string) "ISO 13399...", tool->m_values.at("CuttingToolDefinition")->m_value);
-  ASSERT_EQ((string) "EXPRESS",
-            tool->m_values.at("CuttingToolDefinition")->m_properties.at("format"));
-  ASSERT_EQ((string) "Cutting tool ...", tool->getDescription());
-
-  // Status
-  ASSERT_EQ((string) "NEW", tool->m_status[0]);
-
-  // Values
-  ASSERT_EQ((string) "10000", tool->m_values.at("ProcessSpindleSpeed")->m_value);
-  ASSERT_EQ((string) "222", tool->m_values.at("ProcessFeedRate")->m_value);
-  ASSERT_EQ((unsigned int)1, tool->m_values.at("ProcessFeedRate")->refCount());
-
-  // Measurements
-  ASSERT_EQ((string) "73.25", tool->m_measurements.at("BodyDiameterMax")->m_value);
-  ASSERT_EQ((string) "76.2", tool->m_measurements.at("CuttingDiameterMax")->m_value);
-  ASSERT_EQ((unsigned int)1, tool->m_measurements.at("BodyDiameterMax")->refCount());
-
-  // Items
-  ASSERT_EQ((string) "24", tool->m_itemCount);
-
-  // Item
-  ASSERT_EQ((size_t)6, tool->m_items.size());
-  CuttingItemPtr item = tool->m_items[0];
-  ASSERT_EQ((unsigned int)2, item->refCount());
-
-  ASSERT_EQ((string) "SDET43PDER8GB", item->m_identity.at("itemId"));
-  ASSERT_EQ((string) "FLANGE: 1-4, ROW: 1", item->m_values.at("Locus")->m_value);
-  ASSERT_EQ((string) "12.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
-  ASSERT_EQ((unsigned int)1, item->m_measurements.at("CuttingEdgeLength")->refCount());
-}
-
-TEST_F(XmlParserTest, ParseOtherAsset)
-{
-  string document =
-      "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
-      "serialNumber=\"A1234\" deviceUuid=\"XXX\" >Data</Workpiece>";
-  std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
-  AssetPtr asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
-
-  ASSERT_TRUE(asset.getObject());
-  ASSERT_EQ((string) "XXX123", asset->getAssetId());
-  ASSERT_EQ((string) "2014-04-14T01:22:33.123", asset->getTimestamp());
-  ASSERT_EQ((string) "XXX", asset->getDeviceUuid());
-  ASSERT_EQ((string) "Data", asset->getContent(printer.get()));
-  ASSERT_EQ(false, asset->isRemoved());
-
-  document =
-      "<Workpiece assetId=\"XXX123\" timestamp=\"2014-04-14T01:22:33.123\" "
-      "serialNumber=\"A1234\" deviceUuid=\"XXX\" removed=\"true\">Data</Workpiece>";
-  asset = m_xmlParser->parseAsset("XXX", "Workpiece", document);
-
-  ASSERT_TRUE(asset.getObject());
-  ASSERT_EQ(true, asset->isRemoved());
-}
-
-TEST_F(XmlParserTest, ParseRemovedAsset)
-{
-  auto document = getFile("asset3.xml");
-  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
-
-  ASSERT_EQ(true, tool->isRemoved());
-}
-
-TEST_F(XmlParserTest, UpdateAsset)
-{
-  auto document = getFile("asset1.xml");
-  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
-
-  string replacement =
-      "<CuttingDiameterMax code=\"DC\" nominal=\"76.2\" maximum=\"76.213\" "
-      "minimum=\"76.187\">10.123</CuttingDiameterMax>";
-  m_xmlParser->updateAsset(asset, "CuttingTool", replacement);
-
-  CuttingItemPtr item = tool->m_items[0];
-  ASSERT_EQ((string) "10.123", tool->m_measurements.at("CuttingDiameterMax")->m_value);
-
-  // Test cutting item replacement
-  ASSERT_EQ((string) "12.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
-
-  replacement =
-      "<CuttingItem indices=\"1-4\" itemId=\"SDET43PDER8GB\" manufacturers=\"KMT\" "
-      "grade=\"KC725M\">"
-      "<Locus>FLANGE: 1-4, ROW: 1</Locus>"
-      "<Measurements>"
-      "<CuttingEdgeLength code=\"L\" nominal=\"12.7\" minimum=\"12.675\" "
-      "maximum=\"12.725\">14.7</CuttingEdgeLength>"
-      "<WiperEdgeLength code=\"BS\" nominal=\"2.56\">2.56</WiperEdgeLength>"
-      "<IncribedCircleDiameter code=\"IC\" nominal=\"12.7\">12.7</IncribedCircleDiameter>"
-      "<CornerRadius code=\"RE\" nominal=\"0.8\">0.8</CornerRadius>"
-      "</Measurements>"
-      "</CuttingItem>";
-
-  m_xmlParser->updateAsset(asset, "CuttingTool", replacement);
-
-  item = tool->m_items[0];
-  ASSERT_EQ((string) "14.7", item->m_measurements.at("CuttingEdgeLength")->m_value);
-}
-
-TEST_F(XmlParserTest, BadAsset)
-{
-  auto xml = getFile("asset4.xml");
-
-  auto asset = m_xmlParser->parseAsset("XXX", "CuttingTool", xml);
-  ASSERT_TRUE(!asset);
-}
 
 TEST_F(XmlParserTest, NoNamespace)
 {
@@ -423,7 +301,7 @@ TEST_F(XmlParserTest, FilteredDataItem13)
            << "/samples/filter_example_1.3.xml";
   }
 
-  Device *dev = m_devices[0];
+  Device *dev = m_devices.front();
   DataItem *di = dev->getDeviceDataItem("c1");
 
   ASSERT_EQ(di->getFilterValue(), 5.0);
@@ -450,11 +328,11 @@ TEST_F(XmlParserTest, FilteredDataItem)
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/filter_example.xml";
   }
 
-  auto di = m_devices[0]->getDeviceDataItem("c1");
+  auto di = m_devices.front()->getDeviceDataItem("c1");
 
   ASSERT_EQ(di->getFilterValue(), 5.0);
   ASSERT_TRUE(di->hasMinimumDelta());
-  di = m_devices[0]->getDeviceDataItem("c2");
+  di = m_devices.front()->getDeviceDataItem("c2");
 
   ASSERT_EQ(di->getFilterPeriod(), 10.0);
   ASSERT_TRUE(di->hasMinimumPeriod());
@@ -481,7 +359,7 @@ TEST_F(XmlParserTest, References)
   }
 
   string id = "mf";
-  const auto item = m_devices[0]->getDeviceDataItem(id);
+  const auto item = m_devices.front()->getDeviceDataItem(id);
   const auto comp = item->getComponent();
 
   comp->resolveReferences();
@@ -537,31 +415,13 @@ TEST_F(XmlParserTest, SourceReferences)
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/reference_example.xml";
   }
 
-  const auto item = m_devices[0]->getDeviceDataItem("bfc");
+  const auto item = m_devices.front()->getDeviceDataItem("bfc");
   ASSERT_TRUE(item != nullptr);
 
   ASSERT_EQ(string(""), item->getSource());
   ASSERT_EQ(string("mf"), item->getSourceDataItemId());
   ASSERT_EQ(string("ele"), item->getSourceComponentId());
   ASSERT_EQ(string("xxx"), item->getSourceCompositionId());
-}
-
-TEST_F(XmlParserTest, ExtendedAsset)
-{
-  auto document = getFile("ext_asset.xml");
-  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
-
-  ASSERT_EQ(((size_t)1), tool->m_values.count("x:Color"));
-}
-
-TEST_F(XmlParserTest, ExtendedAssetFragment)
-{
-  auto document = getFile("ext_asset_2.xml");
-  AssetPtr asset = m_xmlParser->parseAsset("XXX", "CuttingTool", document);
-  CuttingToolPtr tool = (CuttingTool *)asset.getObject();
-
-  ASSERT_EQ(((size_t)1), tool->m_values.count("x:Color"));
 }
 
 TEST_F(XmlParserTest, DataItemRelationships)
@@ -622,7 +482,7 @@ TEST_F(XmlParserTest, DataItemRelationships)
 
 TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
 {
-  const auto dev = m_devices[0];
+  const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
   ASSERT_EQ(string("1.7"), dev->getMTConnectVersion());

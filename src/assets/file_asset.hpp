@@ -16,32 +16,28 @@
 //
 
 #pragma once
-#include "component.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
+
+#include "asset.hpp"
+#include "entity.hpp"
 #include "globals.hpp"
 
 #include <map>
+#include <utility>
+#include <vector>
 
 namespace mtconnect
 {
-  class Adapter;
-
-  class AgentDevice : public Device
+  class FileArchetypeAsset : public entity::Entity
   {
    public:
-    // Constructor that sets variables from an attribute map
-    AgentDevice(const Attributes &attributes);
-    ~AgentDevice() override = default;
+    static entity::FactoryPtr getFactory();
+    static void registerAsset();
+  };
 
-    void addAdapter(const Adapter *adapter);
-    
-    DataItem *getConnectionStatus(const Adapter *adapter);
-    
-   protected:
-    void addRequiredDataItems();
-
-   protected:
-    Component *m_adapters{nullptr};
+  class FileAsset : public FileArchetypeAsset
+  {
+   public:
+    static entity::FactoryPtr getFactory();
+    static void registerAsset();
   };
 }  // namespace mtconnect

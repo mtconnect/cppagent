@@ -46,11 +46,11 @@ namespace mtconnect
       };
 
       Reference(std::string id, std::string name, ReferenceType type)
-          : m_type(type),
-            m_id(std::move(id)),
-            m_name(std::move(name)),
-            m_dataItem(nullptr),
-            m_component(nullptr)
+        : m_type(type),
+          m_id(std::move(id)),
+          m_name(std::move(name)),
+          m_dataItem(nullptr),
+          m_component(nullptr)
       {
       }
 

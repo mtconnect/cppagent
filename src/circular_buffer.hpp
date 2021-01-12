@@ -17,62 +17,66 @@
 
 #pragma once
 
-#include "globals.hpp"
 #include "checkpoint.hpp"
+#include "globals.hpp"
+
 #include <dlib/sliding_buffer.h>
+
 #include <memory>
 #include <mutex>
 
 namespace mtconnect
 {
-  class CircularBuffer 
+  using SequenceNumber_t = uint64_t;
+
+  class CircularBuffer
   {
-  public:
+   public:
     CircularBuffer(unsigned int bufferSize, int checkpointFreq)
-      : m_checkpointFreq(checkpointFreq), m_sequence(1ull)
+      : m_sequence(1ull), m_checkpointFreq(checkpointFreq)
     {
       // Sequence number and sliding buffer for data
       m_slidingBufferSize = 1 << bufferSize;
       m_slidingBuffer = std::make_unique<dlib::sliding_buffer_kernel_1<ObservationPtr>>();
       m_slidingBuffer->set_size(bufferSize);
       m_checkpointCount = (m_slidingBufferSize / m_checkpointFreq) + 1;
-      
+
       // Create the checkpoints at a regular frequency
       m_checkpoints.reserve(m_checkpointCount);
       for (auto i = 0; i < m_checkpointCount; i++)
-        m_checkpoints.emplace_back();      
+        m_checkpoints.emplace_back();
     }
-    
+
     ~CircularBuffer()
     {
       m_slidingBuffer.reset();
-      m_checkpoints.clear();      
+      m_checkpoints.clear();
     }
-    
+
     Observation *getFromBuffer(uint64_t seq) const { return (*m_slidingBuffer)[seq]; }
     auto getIndexAt(uint64_t at) { return m_slidingBuffer->get_element_id(at); }
-      
-    uint64_t getSequence() const { return m_sequence; }
+
+    SequenceNumber_t getSequence() const { return m_sequence; }
     unsigned int getBufferSize() const { return m_slidingBufferSize; }
 
-    uint64_t getFirstSequence() const
+    SequenceNumber_t getFirstSequence() const
     {
       if (m_sequence > m_slidingBufferSize)
         return m_sequence - m_slidingBufferSize;
       else
         return 1ull;
     }
-    
-    void setSequence(uint64_t seq) { m_sequence = seq; }
 
-    uint64_t addToBuffer(Observation *event)
+    void setSequence(SequenceNumber_t seq) { m_sequence = seq; }
+
+    SequenceNumber_t addToBuffer(Observation *event)
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
       auto seq = m_sequence;
 
       event->setSequence(seq);
-      
+
       (*m_slidingBuffer)[seq] = event;
       m_latest.addObservation(event);
 
@@ -87,7 +91,7 @@ namespace mtconnect
         // Copy the checkpoint from the current into the slot
         m_checkpoints[index / m_checkpointFreq].copy(m_latest);
       }
-      
+
       // See if the next sequence has an event. If the event exists it
       // should be added to the first checkpoint.
       m_sequence++;
@@ -96,7 +100,7 @@ namespace mtconnect
         // Keep the last checkpoint up to date with the last.
         m_first.addObservation((*m_slidingBuffer)[m_sequence]);
       }
-      
+
       return seq;
     }
 
@@ -104,9 +108,9 @@ namespace mtconnect
     Checkpoint &getLatest() { return m_latest; }
     Checkpoint &getFirst() { return m_first; }
     auto getCheckoointFreq() { return m_checkpointFreq; }
-    auto getCheckpointCount() {return m_checkpointCount; }
+    auto getCheckpointCount() { return m_checkpointCount; }
 
-    std::unique_ptr<Checkpoint> getCheckpointAt(uint64_t at, std::set<std::string> &filterSet)
+    std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at, const FilterSetOpt &filterSet)
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
@@ -116,9 +120,9 @@ namespace mtconnect
       auto checkIndex = pos / m_checkpointFreq;
       auto closestCp = checkIndex * m_checkpointFreq;
       unsigned long index;
-      
+
       Checkpoint *ref(nullptr);
-      
+
       // Compute the closest checkpoint. If the checkpoint is after the
       // first checkpoint and before the next incremental checkpoint,
       // use first.
@@ -134,79 +138,79 @@ namespace mtconnect
         index = closestCp + 1;
         ref = &m_checkpoints[checkIndex];
       }
-      
-      auto check = std::make_unique<Checkpoint>(*ref, &filterSet);
-      
+
+      auto check = std::make_unique<Checkpoint>(*ref, filterSet);
+
       // Roll forward from the checkpoint.
       for (; index <= pos; index++)
       {
         Observation *o = (*m_slidingBuffer)[index];
         check->addObservation(o);
       }
-      
+
       return check;
     }
-    
-    std::unique_ptr<ObservationPtrArray> getObservations(std::set<std::string> &filterSet,
-                                                         uint64_t start,
-                                                         int count,
-                                                         uint64_t &firstSeq,
-                                                         uint64_t &end,
-                                                         bool &endOfBuffer)
+
+    std::unique_ptr<ObservationPtrArray> getObservations(
+        int count, const FilterSetOpt &filterSet, const std::optional<SequenceNumber_t> start,
+        SequenceNumber_t &end, SequenceNumber_t &firstSeq, bool &endOfBuffer)
     {
       auto results = std::make_unique<ObservationPtrArray>();
+
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       firstSeq = (m_sequence > m_slidingBufferSize) ? m_sequence - m_slidingBufferSize : 1;
-      int limit;
-      
+      int limit, inc;
+
+      SequenceNumber_t first;
+
       // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
       if (count >= 0)
       {
-        start = (start == NO_START || start <= firstSeq) ? firstSeq : start;
+        first = (!start || *start <= firstSeq) ? firstSeq : *start;
         limit = count;
+        inc = 1;
       }
       else
       {
-        start = (start == NO_START || start >= m_sequence) ? m_sequence - 1 : start;
+        first = (!start || *start >= m_sequence) ? m_sequence - 1 : *start;
         limit = -count;
+        inc = -1;
       }
-      
-      uint64_t i;
-      for (i = start; results->size() < limit && i < m_sequence && i >= firstSeq;
-           count >= 0 ? i++ : i--)
+
+      SequenceNumber_t i;
+      for (i = first; int(results->size()) < limit && i < m_sequence && i >= firstSeq; i += inc)
       {
         // Filter out according to if it exists in the list
         const std::string &dataId = (*m_slidingBuffer)[i]->getDataItem()->getId();
-        if (filterSet.count(dataId) > 0)
+        if (!filterSet || filterSet->count(dataId) > 0)
         {
           ObservationPtr event = (*m_slidingBuffer)[i];
           results->push_back(event);
         }
       }
-      
+
       end = i;
-      
+
       if (count >= 0)
         endOfBuffer = i >= m_sequence;
       else
         endOfBuffer = i <= firstSeq;
-            
+
       return results;
     }
 
-
     // For mutex locking
-    void lock() { m_sequenceLock.lock(); }
-    void unlock() { m_sequenceLock.unlock(); }
-    void try_lock() { m_sequenceLock.try_lock(); }
-    
-  protected:
+    auto lock() { return m_sequenceLock.lock(); }
+    auto unlock() { return m_sequenceLock.unlock(); }
+    auto try_lock() { return m_sequenceLock.try_lock(); }
+
+   protected:
     // Access control to the buffer
     std::recursive_mutex m_sequenceLock;
-    
+
     // Sequence number
-    uint64_t m_sequence;
-    
+    SequenceNumber_t m_sequence;
+
     // The sliding/circular buffer to hold all of the events/sample data
     std::unique_ptr<dlib::sliding_buffer_kernel_1<ObservationPtr>> m_slidingBuffer;
     unsigned int m_slidingBufferSize;
@@ -219,4 +223,4 @@ namespace mtconnect
     int m_checkpointFreq;
     long long m_checkpointCount;
   };
-}
+}  // namespace mtconnect

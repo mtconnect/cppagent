@@ -31,9 +31,7 @@ namespace mtconnect
     struct Calibration
     {
       Calibration(std::string date, std::string nextDate, std::string initials)
-          : m_date(std::move(date)),
-            m_nextDate(std::move(nextDate)),
-            m_initials(std::move(initials))
+        : m_date(std::move(date)), m_nextDate(std::move(nextDate)), m_initials(std::move(initials))
       {
       }
       Calibration(const Calibration &other)
@@ -52,9 +50,9 @@ namespace mtconnect
      public:
       Channel(std::string calibrationDate, std::string nextCalibrationDate, std::string initials,
               std::map<std::string, std::string> attrs)
-          : m_attributes(std::move(attrs)),
-            m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
-                          std::move(initials))
+        : m_attributes(std::move(attrs)),
+          m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
+                        std::move(initials))
       {
       }
       Channel(const Channel &other)
@@ -77,10 +75,10 @@ namespace mtconnect
    public:
     SensorConfiguration(std::string firmwareVer, std::string calibrationDate,
                         std::string nextCalibrationDate, std::string initials, std::string rest)
-        : m_firmwareVersion(std::move(firmwareVer)),
-          m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
-                        std::move(initials)),
-          m_rest(std::move(rest))
+      : m_firmwareVersion(std::move(firmwareVer)),
+        m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
+                      std::move(initials)),
+        m_rest(std::move(rest))
     {
     }
     ~SensorConfiguration() override = default;

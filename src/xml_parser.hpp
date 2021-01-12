@@ -17,12 +17,13 @@
 
 #pragma once
 
-#include "component.hpp"
-#include "cutting_tool.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
+#include "assets/cutting_tool.hpp"
+#include "checkpoint.hpp"
+#include "device_model/component.hpp"
+#include "device_model/data_item.hpp"
+#include "device_model/device.hpp"
+#include "device_model/relationships.hpp"
 #include "globals.hpp"
-#include "relationships.hpp"
 
 #include <libxml/tree.h>
 
@@ -42,22 +43,13 @@ namespace mtconnect
     virtual ~XmlParser();
 
     // Parses a file and returns a list of devices
-    std::vector<Device *> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
+    std::list<Device *> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
 
     // Just loads the document, assumed it has already been parsed before.
     void loadDocument(const std::string &aDoc);
 
     // Get std::list of data items in path
-    void getDataItems(std::set<std::string> &filterSet, const std::string &path,
-                      xmlNodePtr node = nullptr);
-
-    // Get an asset object representing a parsed XML Asset document. This can be
-    // full document or a fragment.
-    AssetPtr parseAsset(const std::string &assetId, const std::string &type,
-                        const std::string &content);
-
-    // Modify
-    void updateAsset(AssetPtr assetPtr, const std::string &type, const std::string &content);
+    void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
 
    protected:
     // Main method to process the nodes and return the objects
@@ -84,16 +76,6 @@ namespace mtconnect
 
     // Perform loading of references and set up relationships
     void handleReference(xmlNodePtr reference, Component *parent = nullptr);
-
-    // Asset Parser
-    AssetPtr handleAsset(xmlNodePtr asset, const std::string &assetId, const std::string &type,
-                         const std::string &content, xmlDocPtr doc);
-
-    // Cutting Tool Parser
-    static CuttingToolPtr handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc);
-    static CuttingToolValuePtr parseCuttingToolNode(xmlNodePtr node, xmlDocPtr doc);
-    static void parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDocPtr doc);
-    static CuttingItemPtr parseCuttingItem(xmlNodePtr node, xmlDocPtr doc);
 
    protected:
     // LibXML XML Doc
