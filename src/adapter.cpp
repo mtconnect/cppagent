@@ -494,41 +494,45 @@ namespace mtconnect
         string value = data.substr(index + 1);
         trim(value);
         
-        std::string oldName = m_device->getName();
-        std::string oldUuid = m_device->getUuid();
         bool deviceChanged { false };
+        std::string oldName, oldUuid;
+        if (m_device)
+        {
+          oldName = m_device->getName();
+          oldUuid = m_device->getUuid();
+        }
 
-        if (key == "uuid" && !m_device->m_preserveUuid)
+        if (m_device && key == "uuid" && !m_device->m_preserveUuid)
         {
           m_device->setUuid(value);
           deviceChanged = true;
         }
-        else if (key == "manufacturer")
+        else if (m_device && key == "manufacturer")
         {
           m_device->setManufacturer(value);
           deviceChanged = true;
         }
-        else if (key == "station")
+        else if (m_device && key == "station")
         {
           m_device->setStation(value);
           deviceChanged = true;
         }
-        else if (key == "serialNumber")
+        else if (m_device && key == "serialNumber")
         {
           m_device->setSerialNumber(value);
           deviceChanged = true;
         }
-        else if (key == "description")
+        else if (m_device && key == "description")
         {
           m_device->setDescription(value);
           deviceChanged = true;
         }
-        else if (key == "nativeName")
+        else if (m_device && key == "nativeName")
         {
           m_device->setNativeName(value);
           deviceChanged = true;
         }
-        else if (key == "calibration")
+        else if (m_device && key == "calibration")
         {
           parseCalibration(value);
           deviceChanged = true;
