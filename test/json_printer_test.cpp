@@ -178,8 +178,10 @@ TEST_F(JsonPrinterTest, Header)
   json jdoc;
   jdoc = jprinter.print(entity);
 
-  ASSERT_EQ("DMZ-MTCNCT", jdoc.at("/MTConnectDevices/Header/sender"_json_pointer).get<string>());
-  ASSERT_EQ(8096, jdoc.at("/MTConnectDevices/Header/assetBufferSize"_json_pointer).get<int64_t>());
+  auto header = jdoc.at("/MTConnectDevices/Header"_json_pointer);
+  
+  ASSERT_EQ("DMZ-MTCNCT", header.at("/sender"_json_pointer).get<string>());
+  ASSERT_EQ(8096, header.at("/assetBufferSize"_json_pointer).get<int64_t>());
 }
 
 TEST_F(JsonPrinterTest, Devices)
@@ -199,8 +201,10 @@ TEST_F(JsonPrinterTest, Devices)
   json jdoc;
   jdoc = jprinter.print(entity);
 
-  ASSERT_EQ(1, jdoc.at("/MTConnectDevices/Devices"_json_pointer).size());
-  ASSERT_EQ("foo", jdoc.at("/MTConnectDevices/Devices/0/Device/name"_json_pointer).get<string>());
+  auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+
+  ASSERT_EQ(1, devices.size());
+  ASSERT_EQ("foo", devices.at("/0/Device/name"_json_pointer).get<string>());
 }
 
 TEST_F(JsonPrinterTest, Components)
@@ -220,14 +224,19 @@ TEST_F(JsonPrinterTest, Components)
   json jdoc;
   jdoc = jprinter.print(entity);
 
-  ASSERT_EQ(1, jdoc.at("/MTConnectDevices/Devices/0/Device/Components"_json_pointer).size());
-  ASSERT_EQ("s1", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/id"_json_pointer).get<string>());
+  auto components = jdoc.at("/MTConnectDevices/Devices/0/Device/Components"_json_pointer);
+
+  ASSERT_EQ(1, components.size());
+
+  auto systems = components.at("/0/Systems"_json_pointer);
   
-  ASSERT_EQ("abc", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/model"_json_pointer).get<string>());
-  ASSERT_EQ("Hey Will", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Description/VALUE"_json_pointer).get<string>());
+  ASSERT_EQ("s1", systems.at("/id"_json_pointer).get<string>());
   
-  ASSERT_EQ(2, jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Components"_json_pointer).size());
-  ASSERT_EQ("h1", jdoc.at("/MTConnectDevices/Devices/0/Device/Components/0/Systems/Components/1/Heating/id"_json_pointer).get<string>());
+  ASSERT_EQ("abc", systems.at("/Description/model"_json_pointer).get<string>());
+  ASSERT_EQ("Hey Will", systems.at("/Description/VALUE"_json_pointer).get<string>());
+  
+  ASSERT_EQ(2, systems.at("/Components"_json_pointer).size());
+  ASSERT_EQ("h1", systems.at("/Components/1/Heating/id"_json_pointer).get<string>());
 }
 
 TEST_F(JsonPrinterTest, TopLevelDataItems)
@@ -247,7 +256,8 @@ TEST_F(JsonPrinterTest, TopLevelDataItems)
   json jdoc;
   jdoc = jprinter.print(entity);
 
-  ASSERT_EQ("AVAILABILITY", jdoc.at("/MTConnectDevices/Devices/0/Device/DataItems/0/DataItem/type"_json_pointer).get<string>());
-  ASSERT_EQ("ASSET_CHANGED", jdoc.at("/MTConnectDevices/Devices/0/Device/DataItems/1/DataItem/type"_json_pointer).get<string>());
-  ASSERT_EQ("ASSET_REMOVED", jdoc.at("/MTConnectDevices/Devices/0/Device/DataItems/2/DataItem/type"_json_pointer).get<string>());
+  auto dataitems = jdoc.at("/MTConnectDevices/Devices/0/Device/DataItems"_json_pointer);
+  ASSERT_EQ("AVAILABILITY", dataitems.at("/0/DataItem/type"_json_pointer).get<string>());
+  ASSERT_EQ("ASSET_CHANGED", dataitems.at("/1/DataItem/type"_json_pointer).get<string>());
+  ASSERT_EQ("ASSET_REMOVED", dataitems.at("/2/DataItem/type"_json_pointer).get<string>());
 }
