@@ -368,81 +368,99 @@ namespace mtconnect
   void Adapter::processAsset(istringstream &toParse, const string &inputKey, const string &value,
                              const string &time)
   {
-    Device *device(nullptr);
-    string key = inputKey, dev;
-    if (splitKey(key, dev))
-      device = m_agent->getDeviceByName(dev);
-    else
-      device = m_device;
-
-    string assetId;
-    if (value[0] == '@')
-      assetId = device->getUuid() + value.substr(1);
-    else
-      assetId = value;
-
-    if (key == "@ASSET@")
+    string key, dev;
+    try
     {
-      string type, rest;
-      getline(toParse, type, '|');
-      getline(toParse, rest);
-
-      // Chck for an update and parse key value pairs. If only a type
-      // is presented, then assume the remainder is a complete doc.
-
-      // if the rest of the line begins with --multiline--... then
-      // set multiline and accumulate until a completed document is found
-      if (rest.find("--multiline--") != rest.npos)
-      {
-        m_assetDevice = device;
-        m_gatheringAsset = true;
-        m_terminator = rest;
-        m_time = time;
-        m_assetType = type;
-        m_assetId = assetId;
-        m_body.str("");
-        m_body.clear();
-      }
+      Device *device(nullptr);
+      key = inputKey;
+      if (splitKey(key, dev))
+        device = m_agent->getDeviceByName(dev);
       else
       {
-        entity::ErrorList errors;
-        m_agent->addAsset(device, rest, assetId, type, time, errors);
+        device = m_device;
+        dev = device->getUuid();
       }
-    }
-    else if (key == "@UPDATE_ASSET@")
-    {
-      string assetKey, assetValue;
-      AssetChangeList list;
-      getline(toParse, assetKey, '|');
-      if (assetKey[0] == '<')
+      
+      if (device == nullptr)
       {
-        do
-        {
-          pair<string, string> kv("xml", assetKey);
-          list.emplace_back(kv);
-        } while (getline(toParse, assetKey, '|'));
+        g_logger << LERROR << "Cannot find device: " << dev << " for asset request";
+        return;
       }
+      
+      string assetId;
+      if (value[0] == '@')
+        assetId = device->getUuid() + value.substr(1);
       else
+        assetId = value;
+      
+      if (key == "@ASSET@")
       {
-        while (getline(toParse, assetValue, '|'))
+        string type, rest;
+        getline(toParse, type, '|');
+        getline(toParse, rest);
+        
+        // Chck for an update and parse key value pairs. If only a type
+        // is presented, then assume the remainder is a complete doc.
+        
+        // if the rest of the line begins with --multiline--... then
+        // set multiline and accumulate until a completed document is found
+        if (rest.find("--multiline--") != rest.npos)
         {
-          pair<string, string> kv(assetKey, assetValue);
-          list.emplace_back(kv);
-
-          if (!getline(toParse, assetKey, '|'))
-            break;
+          m_assetDevice = device;
+          m_gatheringAsset = true;
+          m_terminator = rest;
+          m_time = time;
+          m_assetType = type;
+          m_assetId = assetId;
+          m_body.str("");
+          m_body.clear();
+        }
+        else
+        {
+          entity::ErrorList errors;
+          m_agent->addAsset(device, rest, assetId, type, time, errors);
         }
       }
-
-      // m_agent->updateAsset(device, assetId, list, time);
+      else if (key == "@UPDATE_ASSET@")
+      {
+        string assetKey, assetValue;
+        AssetChangeList list;
+        getline(toParse, assetKey, '|');
+        if (assetKey[0] == '<')
+        {
+          do
+          {
+            pair<string, string> kv("xml", assetKey);
+            list.emplace_back(kv);
+          } while (getline(toParse, assetKey, '|'));
+        }
+        else
+        {
+          while (getline(toParse, assetValue, '|'))
+          {
+            pair<string, string> kv(assetKey, assetValue);
+            list.emplace_back(kv);
+            
+            if (!getline(toParse, assetKey, '|'))
+              break;
+          }
+        }
+        
+        // m_agent->updateAsset(device, assetId, list, time);
+      }
+      else if (key == "@REMOVE_ASSET@")
+        m_agent->removeAsset(device, assetId, time);
+      else if (key == "@REMOVE_ALL_ASSETS@")
+      {
+        AssetList list;
+        m_agent->removeAllAssets(device->getUuid(), value, time, list);
+      }
     }
-    else if (key == "@REMOVE_ASSET@")
-      m_agent->removeAsset(device, assetId, time);
-    else if (key == "@REMOVE_ALL_ASSETS@")
+    catch (std::logic_error &e)
     {
-      AssetList list;
-      m_agent->removeAllAssets(device->getUuid(), value, time, list);
+      g_logger << LERROR << "Asset request: " << key << " failed: " << e.what();
     }
+
   }
 
   static inline bool is_true(const string &aValue)
@@ -475,21 +493,50 @@ namespace mtconnect
         trim(key);
         string value = data.substr(index + 1);
         trim(value);
+        
+        bool deviceChanged { false };
+        std::string oldName, oldUuid;
+        if (m_device)
+        {
+          oldName = m_device->getName();
+          oldUuid = m_device->getUuid();
+        }
 
-        if (key == "uuid" && !m_device->m_preserveUuid)
+        if (m_device && key == "uuid" && !m_device->m_preserveUuid)
+        {
           m_device->setUuid(value);
-        else if (key == "manufacturer")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "manufacturer")
+        {
           m_device->setManufacturer(value);
-        else if (key == "station")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "station")
+        {
           m_device->setStation(value);
-        else if (key == "serialNumber")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "serialNumber")
+        {
           m_device->setSerialNumber(value);
-        else if (key == "description")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "description")
+        {
           m_device->setDescription(value);
-        else if (key == "nativeName")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "nativeName")
+        {
           m_device->setNativeName(value);
-        else if (key == "calibration")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "calibration")
+        {
           parseCalibration(value);
+          deviceChanged = true;
+        }
         else if (key == "conversionRequired")
           m_conversionRequired = is_true(value);
         else if (key == "relativeTime")
@@ -516,6 +563,11 @@ namespace mtconnect
         else
         {
           g_logger << LWARN << "Unknown command '" << data << "' for device '" << m_deviceName;
+        }
+        
+        if (deviceChanged)
+        {
+          m_agent->deviceChanged(m_device, oldUuid, oldName);
         }
       }
     }
