@@ -18,7 +18,6 @@
 #include <nlohmann/json.hpp>
 #include <dlib/logger.h>
 
-#include "xml_printer.cpp"
 #include "json_printer.hpp"
 
 using namespace std;
@@ -69,8 +68,8 @@ namespace mtconnect
         [&](const double &arg)-> json {return arg;},
         [&](const Vector &arg)-> json {return arg;},
         [&](const auto &arg)-> json {
-        cout << "Unrecognized Type";
-        return "";
+          cout << "Unrecognized Type";
+          return "";
         },},
       value);
     }
