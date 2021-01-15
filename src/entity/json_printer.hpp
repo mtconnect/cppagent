@@ -33,6 +33,8 @@ namespace mtconnect
       JsonPrinter() = default;
 
       json print(const EntityPtr entity) const;
+      
+    protected:
       json GetValue(const Value &value) const;
     };
   }  // namespace entity

@@ -24,6 +24,7 @@
 #include "device_model/sensor_configuration.hpp"
 #include "device_model/solid_model.hpp"
 #include "device_model/specifications.hpp"
+#include "entity/json_printer.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>
@@ -961,9 +962,11 @@ namespace mtconnect
   std::string JsonPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
                                        const unsigned int assetCount, const AssetList &assets) const
   {
+    entity::JsonPrinter printer;
+    
     json assetDoc = json::array();
-    // for (const auto asset : assets)
-    // assetDoc.emplace_back(toJson(asset));
+    for (const auto &asset : assets)
+      assetDoc.emplace_back(printer.print(asset));
 
     json doc =
         json::object({{"MTConnectAssets",
