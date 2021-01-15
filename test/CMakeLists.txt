@@ -73,6 +73,8 @@ add_agent_test(json_printer_asset TRUE json)
 add_agent_test(json_printer_error TRUE json)
 add_agent_test(json_printer_probe TRUE json)
 add_agent_test(json_printer_stream TRUE json)
+
+add_agent_test(json_parser TRUE json)
 add_agent_test(json_printer TRUE json)
 
 add_agent_test(xml_parser TRUE xml)
