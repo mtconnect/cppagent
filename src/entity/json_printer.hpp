@@ -18,22 +18,22 @@
 #pragma once
 
 #include "entity.hpp"
+
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
-
 namespace mtconnect
 {
-  namespace entity 
+  namespace entity
   {
-    class JsonPrinter 
+    class JsonPrinter
     {
-    public:
+     public:
       JsonPrinter() = default;
 
       json print(const EntityPtr entity) const;
       json GetValue(const Value &value) const;
     };
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

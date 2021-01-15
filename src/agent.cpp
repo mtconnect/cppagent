@@ -322,10 +322,8 @@ namespace mtconnect
                  << " after initialialization not supported yet";
     }
   }
-  
-  void Agent::deviceChanged(Device *device,
-                            const std::string &oldUuid,
-                            const std::string &oldName)
+
+  void Agent::deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName)
   {
     if (device->getUuid() != oldUuid)
     {
@@ -337,15 +335,15 @@ namespace mtconnect
       m_deviceUuidMap.erase(oldUuid);
       m_deviceUuidMap[device->getUuid()] = device;
     }
-    
+
     if (device->getName() != oldName)
     {
       m_deviceNameMap.erase(oldName);
       m_deviceNameMap[device->getName()] = device;
     }
-    
+
     loadCachedProbe();
-    
+
     if (m_agentDevice)
     {
       if (device->getUuid() != oldUuid)
@@ -1450,7 +1448,7 @@ namespace mtconnect
     g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
     if (printer)
       return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
-                               m_circularBuffer.getSequence(), errorCode, text);
+                                 m_circularBuffer.getSequence(), errorCode, text);
     else
       return errorCode + ": " + text;
   }

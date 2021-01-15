@@ -90,8 +90,7 @@ namespace mtconnect
 
     // Add the a device from a configuration file
     void addDevice(Device *device);
-    void deviceChanged(Device *device, const std::string &oldUuid,
-                       const std::string &oldName);
+    void deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName);
 
     // Add component events to the sliding buffer
     unsigned int addToBuffer(DataItem *dataItem, const std::string &value, const std::string &time);

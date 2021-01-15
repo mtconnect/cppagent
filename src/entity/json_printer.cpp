@@ -15,10 +15,11 @@
 //    limitations under the License.
 //
 
-#include <nlohmann/json.hpp>
+#include "json_printer.hpp"
+
 #include <dlib/logger.h>
 
-#include "json_printer.hpp"
+#include <nlohmann/json.hpp>
 
 using namespace std;
 using json = nlohmann::json;
@@ -32,46 +33,44 @@ namespace mtconnect
     json JsonPrinter::print(const EntityPtr entity) const
     {
       json jsonObj;
-      
+
       auto &properties = entity->getProperties();
 
       for (auto &e : properties)
       {
         visit(overloaded{
-            [&](const EntityPtr &arg) {
-                json j = print(arg);
-                if (!j.is_array())
-                  j = j[arg->getName()];
-                jsonObj[entity->getName()][arg->getName()] = j;
-              },
-            [&](const EntityList &arg) {
-                auto &list = arg;
-                jsonObj = json::array();
-                for (auto &f : list)
-                {
-                    jsonObj.emplace_back(print(f));
-                }
-            },
-            [&](const auto arg){
-                jsonObj[entity->getName()][e.first]  = GetValue(arg);
-            }},
+                  [&](const EntityPtr &arg) {
+                    json j = print(arg);
+                    if (!j.is_array())
+                      j = j[arg->getName()];
+                    jsonObj[entity->getName()][arg->getName()] = j;
+                  },
+                  [&](const EntityList &arg) {
+                    auto &list = arg;
+                    jsonObj = json::array();
+                    for (auto &f : list)
+                    {
+                      jsonObj.emplace_back(print(f));
+                    }
+                  },
+                  [&](const auto arg) { jsonObj[entity->getName()][e.first] = GetValue(arg); }},
               e.second);
       }
       return jsonObj;
     }
     json JsonPrinter::GetValue(const Value &value) const
     {
-    
-    return visit(overloaded{
-        [&](const string &arg)-> json {return arg;},
-        [&](const int64_t &arg)-> json {return arg;},
-        [&](const double &arg)-> json {return arg;},
-        [&](const Vector &arg)-> json {return arg;},
-        [&](const auto &arg)-> json {
-          cout << "Unrecognized Type";
-          return "";
-        },},
-      value);
+      return visit(overloaded{
+                       [&](const string &arg) -> json { return arg; },
+                       [&](const int64_t &arg) -> json { return arg; },
+                       [&](const double &arg) -> json { return arg; },
+                       [&](const Vector &arg) -> json { return arg; },
+                       [&](const auto &arg) -> json {
+                         cout << "Unrecognized Type";
+                         return "";
+                       },
+                   },
+                   value);
     }
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

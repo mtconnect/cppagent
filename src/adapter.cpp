@@ -380,28 +380,28 @@ namespace mtconnect
         device = m_device;
         dev = device->getUuid();
       }
-      
+
       if (device == nullptr)
       {
         g_logger << LERROR << "Cannot find device: " << dev << " for asset request";
         return;
       }
-      
+
       string assetId;
       if (value[0] == '@')
         assetId = device->getUuid() + value.substr(1);
       else
         assetId = value;
-      
+
       if (key == "@ASSET@")
       {
         string type, rest;
         getline(toParse, type, '|');
         getline(toParse, rest);
-        
+
         // Chck for an update and parse key value pairs. If only a type
         // is presented, then assume the remainder is a complete doc.
-        
+
         // if the rest of the line begins with --multiline--... then
         // set multiline and accumulate until a completed document is found
         if (rest.find("--multiline--") != rest.npos)
@@ -440,12 +440,12 @@ namespace mtconnect
           {
             pair<string, string> kv(assetKey, assetValue);
             list.emplace_back(kv);
-            
+
             if (!getline(toParse, assetKey, '|'))
               break;
           }
         }
-        
+
         // m_agent->updateAsset(device, assetId, list, time);
       }
       else if (key == "@REMOVE_ASSET@")
@@ -460,7 +460,6 @@ namespace mtconnect
     {
       g_logger << LERROR << "Asset request: " << key << " failed: " << e.what();
     }
-
   }
 
   static inline bool is_true(const string &aValue)
@@ -493,8 +492,8 @@ namespace mtconnect
         trim(key);
         string value = data.substr(index + 1);
         trim(value);
-        
-        bool deviceChanged { false };
+
+        bool deviceChanged{false};
         std::string oldName, oldUuid;
         if (m_device)
         {
@@ -564,7 +563,7 @@ namespace mtconnect
         {
           g_logger << LWARN << "Unknown command '" << data << "' for device '" << m_deviceName;
         }
-        
+
         if (deviceChanged)
         {
           m_agent->deviceChanged(m_device, oldUuid, oldName);

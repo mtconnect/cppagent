@@ -16,8 +16,10 @@
 //
 
 #include "entity/json_parser.hpp"
-#include <nlohmann/json.hpp>
+
 #include <dlib/logger.h>
+
+#include <nlohmann/json.hpp>
 
 using namespace std;
 using json = nlohmann::json;
@@ -27,23 +29,24 @@ namespace mtconnect
   namespace entity
   {
     static dlib::logger g_logger("entity.json_parser");
-    
-    static EntityPtr parseJson(FactoryPtr factory, string entity_name, json jNode, ErrorList& errors) 
+
+    static EntityPtr parseJson(FactoryPtr factory, string entity_name, json jNode,
+                               ErrorList& errors)
     {
       auto ef = factory->factoryFor(entity_name);
-      
+
       if (ef)
       {
         Properties properties;
         EntityList* l{nullptr};
-        
-        if (ef->isList() and jNode.size()>0)
+
+        if (ef->isList() and jNode.size() > 0)
         {
           l = &properties["LIST"].emplace<EntityList>();
         }
 
         for (auto& [key, value] : jNode.items())
-        { 
+        {
           if (value.is_string())
           {
             properties.insert({key, string{value}});
@@ -60,7 +63,7 @@ namespace mtconnect
             properties.insert({key, bool(value)});
           }
         }
-        
+
         if (ef->hasRaw())
         {
           properties.insert({"RAW", string{jNode["RAW"].dump()}});
@@ -102,7 +105,8 @@ namespace mtconnect
               else
               {
                 cout << "Unexpected element: " << it.key();
-                errors.emplace_back(new EntityError("Invalid element '" + it.key() + "'", entity_name));
+                errors.emplace_back(
+                    new EntityError("Invalid element '" + it.key() + "'", entity_name));
               }
             }
           }
@@ -138,5 +142,5 @@ namespace mtconnect
       }
       return entity;
     }
-  }
+  }  // namespace entity
 }  // namespace mtconnect
