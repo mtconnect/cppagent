@@ -177,7 +177,7 @@ TEST_F(JsonPrinterTest, Header)
 
   json jdoc;
   jdoc = jprinter.print(entity);
-
+  
   auto header = jdoc.at("/MTConnectDevices/Header"_json_pointer);
   
   ASSERT_EQ("DMZ-MTCNCT", header.at("/sender"_json_pointer).get<string>());
@@ -200,7 +200,7 @@ TEST_F(JsonPrinterTest, Devices)
 
   json jdoc;
   jdoc = jprinter.print(entity);
-
+  
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
 
   ASSERT_EQ(1, devices.size());
@@ -260,4 +260,45 @@ TEST_F(JsonPrinterTest, TopLevelDataItems)
   ASSERT_EQ("AVAILABILITY", dataitems.at("/0/DataItem/type"_json_pointer).get<string>());
   ASSERT_EQ("ASSET_CHANGED", dataitems.at("/1/DataItem/type"_json_pointer).get<string>());
   ASSERT_EQ("ASSET_REMOVED", dataitems.at("/2/DataItem/type"_json_pointer).get<string>());
+}
+
+TEST_F(JsonPrinterTest, ElementListWithProperty)
+{
+  auto item =
+      make_shared<Factory>(Requirements{{"itemId", true}});
+  
+  auto items = make_shared<Factory>(Requirements{
+     {"count", INTEGER, true},
+    {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
+
+  auto lifeCycle = make_shared<Factory>(Requirements{
+    {"CuttingItems", ENTITY_LIST, items, true }});
+
+  auto root = make_shared<Factory>(Requirements{
+    {"Root", ENTITY, lifeCycle, true}
+  });
+
+  string doc = R"DOC(
+<Root>
+  <CuttingItems count="2">
+    <CuttingItem itemId="1"/>
+    <CuttingItem itemId="2"/>
+  </CuttingItems>
+</Root>
+)DOC";
+ 
+  ErrorList errors;
+  entity::XmlParser parser;
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  entity::JsonPrinter jprinter;
+
+  json jdoc;
+  jdoc = jprinter.print(entity);
+    
+  ASSERT_EQ(2, jdoc.at("/Root/CuttingItems/count"_json_pointer).get<int>());
+  ASSERT_EQ("1", jdoc.at("/Root/CuttingItems/list/0/CuttingItem/itemId"_json_pointer).get<string>());
+  ASSERT_EQ("2", jdoc.at("/Root/CuttingItems/list/1/CuttingItem/itemId"_json_pointer).get<string>());
 }

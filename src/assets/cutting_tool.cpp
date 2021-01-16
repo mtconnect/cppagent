@@ -94,10 +94,14 @@ namespace mtconnect
                            "Measurements", "CuttingItems"});
 
       tool = make_shared<Factory>(*Asset::getFactory());
-      tool->addRequirements(
-          Requirements{Requirement("toolId", true), Requirement("Description", false),
-                       Requirement("CuttingToolDefinition", ENTITY, definition, false),
-                       Requirement("CuttingToolLifeCycle", ENTITY, lifeCycle, false)});
+      tool->addRequirements(Requirements{
+        {"toolId", true },
+        {"serialNumber", false},
+        {"manufacturers", false},
+        {"Description", false },
+        {"CuttingToolDefinition", ENTITY, definition, false},
+        {"CuttingToolLifeCycle", ENTITY, lifeCycle, false}
+      });
     }
     return tool;
   }
@@ -140,7 +144,7 @@ namespace mtconnect
                        {"VALUE", true}});
 
       tool = CuttingToolArchetype::getFactory()->deepCopy();
-      tool->addRequirements({{"serialNumber", STRING, true}});
+      tool->getRequirement("serialNumber")->makeRequired();
       tool->getRequirement("toolId")->makeRequired();
 
       auto lifeCycle = tool->factoryFor("CuttingToolLifeCycle");

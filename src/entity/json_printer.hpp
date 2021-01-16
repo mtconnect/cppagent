@@ -35,6 +35,7 @@ namespace mtconnect
       json print(const EntityPtr entity) const;
       
     protected:
+      json printEntity(const EntityPtr entity) const;
       json GetValue(const Value &value) const;
     };
   }  // namespace entity

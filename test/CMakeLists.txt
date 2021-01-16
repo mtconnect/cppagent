@@ -64,6 +64,8 @@ add_agent_test(specification TRUE device_model)
 add_agent_test(entity TRUE entity)
 add_agent_test(entity_parser TRUE entity)
 add_agent_test(entity_printer TRUE entity)
+add_agent_test(json_parser TRUE entity)
+add_agent_test(json_printer TRUE entity)
 
 add_agent_test(file_cache FALSE http_server)
 add_agent_test(http_server FALSE http_server)
@@ -73,9 +75,6 @@ add_agent_test(json_printer_asset TRUE json)
 add_agent_test(json_printer_error TRUE json)
 add_agent_test(json_printer_probe TRUE json)
 add_agent_test(json_printer_stream TRUE json)
-
-add_agent_test(json_parser TRUE json)
-add_agent_test(json_printer TRUE json)
 
 add_agent_test(xml_parser TRUE xml)
 add_agent_test(xml_printer TRUE xml)

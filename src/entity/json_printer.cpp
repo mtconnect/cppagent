@@ -32,30 +32,45 @@ namespace mtconnect
 
     json JsonPrinter::print(const EntityPtr entity) const
     {
+      return json::object({{ entity->getName(), printEntity(entity) }});
+    }
+    
+    json JsonPrinter::printEntity(const EntityPtr entity) const
+    {
       json jsonObj;
-
-      auto &properties = entity->getProperties();
-
-      for (auto &e : properties)
+      
+      for (auto &e : entity->getProperties())
       {
         visit(overloaded{
                   [&](const EntityPtr &arg) {
-                    json j = print(arg);
-                    if (!j.is_array())
-                      j = j[arg->getName()];
-                    jsonObj[entity->getName()][arg->getName()] = j;
+                    json j = printEntity(arg);
+                    jsonObj[e.first] = j;
                   },
                   [&](const EntityList &arg) {
-                    auto &list = arg;
-                    jsonObj = json::array();
-                    for (auto &f : list)
+                    auto array = json::array();
+                    for (auto &f : arg)
                     {
-                      jsonObj.emplace_back(print(f));
+                      auto obj = json::object({{ f->getName(), printEntity(f) }});
+                      array.emplace_back(obj);
                     }
+                    
+                    if (entity->hasListWithAttribute())
+                      jsonObj["list"] = array;
+                    else if (e.first == "LIST")
+                      jsonObj = array;
+                    else
+                      jsonObj[e.first] = array;
                   },
-                  [&](const auto arg) { jsonObj[entity->getName()][e.first] = GetValue(arg); }},
+                  [&](const auto arg) {
+                    if (e.first == "VALUE")
+                      jsonObj["value"] = GetValue(arg);
+                    else
+                      jsonObj[e.first] = GetValue(arg);
+                  }},
               e.second);
       }
+      
+      //cout << "---------------" << endl << std::setw(2) << jsonObj << endl;
       return jsonObj;
     }
     json JsonPrinter::GetValue(const Value &value) const
