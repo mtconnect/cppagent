@@ -195,7 +195,7 @@ TEST_F(JsonPrinterAssetTest, CuttingMeasurements)
   ASSERT_EQ("BDX"_S, diameter.at("/BodyDiameterMax/code"_json_pointer).get<string>());
   ASSERT_EQ(73.25, diameter.at("/BodyDiameterMax/value"_json_pointer).get<double>());
 
-  auto length = measurements.at(1);
+  auto length = measurements.at(4);
   ASSERT_TRUE(length.is_object());
   ASSERT_EQ("LF"_S, length.at("/BodyLengthMax/code"_json_pointer).get<string>());
   ASSERT_EQ(120.65, length.at("/BodyLengthMax/nominal"_json_pointer).get<double>());

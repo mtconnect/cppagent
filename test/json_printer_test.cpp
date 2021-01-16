@@ -233,7 +233,7 @@ TEST_F(JsonPrinterTest, Components)
   ASSERT_EQ("s1", systems.at("/id"_json_pointer).get<string>());
   
   ASSERT_EQ("abc", systems.at("/Description/model"_json_pointer).get<string>());
-  ASSERT_EQ("Hey Will", systems.at("/Description/VALUE"_json_pointer).get<string>());
+  ASSERT_EQ("Hey Will", systems.at("/Description/value"_json_pointer).get<string>());
   
   ASSERT_EQ(2, systems.at("/Components"_json_pointer).size());
   ASSERT_EQ("h1", systems.at("/Components/1/Heating/id"_json_pointer).get<string>());
