@@ -62,7 +62,7 @@ namespace mtconnect
                       jsonObj[e.first] = array;
                   },
                   [&](const auto arg) {
-                    if (e.first == "VALUE")
+                    if (e.first == "VALUE" || e.first == "RAW")
                       jsonObj["value"] = GetValue(arg);
                     else
                       jsonObj[e.first] = GetValue(arg);

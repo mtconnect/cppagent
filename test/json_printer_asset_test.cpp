@@ -251,8 +251,6 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
   AssetList assetList{asset};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
-
-  cout << doc;
   
   auto tool = jdoc.at(
       "/MTConnectAssets/Assets/0/"
@@ -261,7 +259,7 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
   auto def = tool.at("/CuttingToolDefinition"_json_pointer);
   ASSERT_TRUE(def.is_object());
   ASSERT_EQ("EXPRESS"_S, def.at("/format"_json_pointer).get<string>());
-  ASSERT_EQ(string("Some Express..."), def.at("/text"_json_pointer).get<string>());
+  ASSERT_EQ(string("Some Express..."), def.at("/value"_json_pointer).get<string>());
 }
 
 #if 0
