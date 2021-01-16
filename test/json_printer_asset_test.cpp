@@ -213,11 +213,13 @@ TEST_F(JsonPrinterAssetTest, CuttingItem)
   AssetList assetList{asset};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
-
-  auto items = jdoc.at(
+  
+  auto cuttingItems = jdoc.at(
       "/MTConnectAssets/Assets/0/"
       "CuttingTool/CuttingToolLifeCycle/"
       "CuttingItems"_json_pointer);
+  ASSERT_EQ(24, cuttingItems["count"].get<int>());
+  auto items = cuttingItems["list"];
   ASSERT_TRUE(items.is_array());
   ASSERT_EQ(6_S, items.size());
 
@@ -227,17 +229,17 @@ TEST_F(JsonPrinterAssetTest, CuttingItem)
   ASSERT_EQ("1-4"_S, item.at("/CuttingItem/indices"_json_pointer).get<string>());
   ASSERT_EQ(string("SDET43PDER8GB"), item.at("/CuttingItem/itemId"_json_pointer).get<string>());
   ASSERT_EQ(string("KC725M"), item.at("/CuttingItem/grade"_json_pointer).get<string>());
-  ASSERT_EQ(string("KMT"), item.at("/CuttingItem/manufacturers/0"_json_pointer).get<string>());
+  ASSERT_EQ(string("KMT"), item.at("/CuttingItem/manufacturers"_json_pointer).get<string>());
   ASSERT_EQ(string("FLANGE: 1-4, ROW: 1"),
-            item.at("/CuttingItem/Locus/value"_json_pointer).get<string>());
+            item.at("/CuttingItem/Locus"_json_pointer).get<string>());
 
   auto measurements = item.at("/CuttingItem/Measurements"_json_pointer);
   ASSERT_TRUE(measurements.is_array());
   ASSERT_EQ(4_S, measurements.size());
 
-  ASSERT_EQ("RE"_S, measurements.at("/0/CornerRadius/code"_json_pointer).get<string>());
-  ASSERT_EQ(0.8, measurements.at("/0/CornerRadius/nominal"_json_pointer).get<double>());
-  ASSERT_EQ(0.8, measurements.at("/0/CornerRadius/value"_json_pointer).get<double>());
+  ASSERT_EQ("RE"_S, measurements.at("/3/CornerRadius/code"_json_pointer).get<string>());
+  ASSERT_EQ(0.8, measurements.at("/3/CornerRadius/nominal"_json_pointer).get<double>());
+  ASSERT_EQ(0.8, measurements.at("/3/CornerRadius/value"_json_pointer).get<double>());
 }
 
 TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
