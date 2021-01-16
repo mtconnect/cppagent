@@ -40,33 +40,40 @@ namespace mtconnect
         Properties properties;
         EntityList* l{nullptr};
 
-        if (ef->isList() and jNode.size() > 0)
+        if (ef->isList() && jNode.size() > 0)
         {
           l = &properties["LIST"].emplace<EntityList>();
         }
 
         for (auto& [key, value] : jNode.items())
         {
+          string property_key = key;
+          
+          if (key == "value" && !ef->hasRaw())
+            property_key = "VALUE";
+          else if (key == "value" && ef->hasRaw())
+            continue;
+          
           if (value.is_string())
           {
-            properties.insert({key, string{value}});
+            properties.insert({property_key, string{value}});
           }
           else if (value.is_number())
           {
-            if (jNode[key].get<double>() == jNode[key].get<int64_t>())
-              properties.insert({key, int64_t(value)});
+            if (jNode[property_key].get<double>() == jNode[property_key].get<int64_t>())
+              properties.insert({property_key, int64_t(value)});
             else
-              properties.insert({key, double(value)});
+              properties.insert({property_key, double(value)});
           }
           else if (value.is_boolean())
           {
-            properties.insert({key, bool(value)});
+            properties.insert({property_key, bool(value)});
           }
         }
 
         if (ef->hasRaw())
         {
-          properties.insert({"RAW", string{jNode["RAW"].dump()}});
+          properties.insert({"RAW", string{jNode["value"]}});
         }
         else
         {
@@ -89,7 +96,7 @@ namespace mtconnect
               }
             }
           }
-          else if (jNode.is_array() and jNode.size() > 0)
+          else if (jNode.is_array() && jNode.size() > 0)
           {
             for (auto const& i : jNode)
             {
