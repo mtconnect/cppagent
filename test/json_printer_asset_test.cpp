@@ -252,6 +252,8 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
 
+  cout << doc;
+  
   auto tool = jdoc.at(
       "/MTConnectAssets/Assets/0/"
       "CuttingToolArchetype"_json_pointer);
