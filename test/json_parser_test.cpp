@@ -88,8 +88,8 @@ TEST_F(JsonParserTest, TestParseSimpleDocument)
                         "name":"xxxx", "assetId":"uuid", "deviceUuid":"duid", "timestamp":"2020-12-01T10:00Z",
                         "mediaType":"json", "applicationCategory":"ASSEMBLY", "applicationType":"DATA",
                         "FileProperties":[
-                            {"FileProperty":{"name":"one", "VALUE":"Round"}},
-                            {"FileProperty":{"name":"two", "VALUE":"Flat"}}]
+                            {"FileProperty":{"name":"one", "value":"Round"}},
+                            {"FileProperty":{"name":"two", "value":"Flat"}}]
                         }
     }
   )";
@@ -122,7 +122,6 @@ TEST_F(JsonParserTest, TestParseSimpleDocument)
   ASSERT_EQ("two", get<string>((*it)->getProperty("name")));
   ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
 }
-
 
 
 TEST_F(JsonParserTest, TestRecursiveEntityLists)
@@ -175,7 +174,6 @@ TEST_F(JsonParserTest, TestRecursiveEntityLists)
   ASSERT_EQ("Heating", (*sli)->getName());
   ASSERT_EQ("h1", get<string>((*sli)->getProperty("id")));
 }
-
 
 
 TEST_F(JsonParserTest, TestRecursiveEntityListFailure)
@@ -260,10 +258,8 @@ TEST_F(JsonParserTest, TestRawContent)
   auto doc = R"(
   {
     "Definition":{"format":"JSON",
-                  "RAW":{"SomeContent": {"with":"stuff",
-                                    "VALUE":"And some text"},
-                    "AndMoreContent": {},
-                    "VALUE":"And random text as well."}}
+                  "value":"{\"SomeContent\": {\"with\":\"stuff\",\\n\"value\":\"And some text\"},\\n\"AndMoreContent\": {},\\n\"value\":\"And random text as well.\"}"
+                }
   }
 )";
 
@@ -273,4 +269,7 @@ TEST_F(JsonParserTest, TestRawContent)
   auto entity = parser.parse(root, doc, "1.7", errors);
 
   ASSERT_EQ("JSON", get<string>(entity->getProperty("format")));
+
+  string expected =  "{\"SomeContent\": {\"with\":\"stuff\",\\n\"value\":\"And some text\"},\\n\"AndMoreContent\": {},\\n\"value\":\"And random text as well.\"}";
+  ASSERT_EQ(expected, get<string>(entity->getProperty("RAW")));
 }
