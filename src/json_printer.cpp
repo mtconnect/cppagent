@@ -963,7 +963,7 @@ namespace mtconnect
                                        const unsigned int assetCount, const AssetList &assets) const
   {
     entity::JsonPrinter printer;
-    
+
     json assetDoc = json::array();
     for (const auto &asset : assets)
       assetDoc.emplace_back(printer.print(asset));

@@ -41,7 +41,8 @@ namespace mtconnect
 
       EntityPtr getptr() { return shared_from_this(); }
 
-      bool hasListWithAttribute() const {
+      bool hasListWithAttribute() const
+      {
         return (m_properties.count("LIST") > 0 && m_properties.size() > 1);
       }
       const std::string &getName() const { return m_name; }

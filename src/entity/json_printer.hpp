@@ -32,11 +32,13 @@ namespace mtconnect
      public:
       JsonPrinter() = default;
 
-      json print(const EntityPtr entity) const;
-      
-    protected:
+      json print(const EntityPtr entity) const
+      {
+        return json::object({{entity->getName(), printEntity(entity)}});
+      }
+
+     protected:
       json printEntity(const EntityPtr entity) const;
-      json GetValue(const Value &value) const;
     };
   }  // namespace entity
 }  // namespace mtconnect

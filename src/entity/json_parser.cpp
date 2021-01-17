@@ -48,12 +48,12 @@ namespace mtconnect
         for (auto& [key, value] : jNode.items())
         {
           string property_key = key;
-          
+
           if (key == "value" && !ef->hasRaw())
             property_key = "VALUE";
           else if (key == "value" && ef->hasRaw())
             continue;
-          
+
           if (value.is_string())
           {
             properties.insert({property_key, string{value}});

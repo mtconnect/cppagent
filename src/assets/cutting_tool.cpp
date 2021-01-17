@@ -94,14 +94,12 @@ namespace mtconnect
                            "Measurements", "CuttingItems"});
 
       tool = make_shared<Factory>(*Asset::getFactory());
-      tool->addRequirements(Requirements{
-        {"toolId", true },
-        {"serialNumber", false},
-        {"manufacturers", false},
-        {"Description", false },
-        {"CuttingToolDefinition", ENTITY, definition, false},
-        {"CuttingToolLifeCycle", ENTITY, lifeCycle, false}
-      });
+      tool->addRequirements(Requirements{{"toolId", true},
+                                         {"serialNumber", false},
+                                         {"manufacturers", false},
+                                         {"Description", false},
+                                         {"CuttingToolDefinition", ENTITY, definition, false},
+                                         {"CuttingToolLifeCycle", ENTITY, lifeCycle, false}});
     }
     return tool;
   }

@@ -158,10 +158,10 @@ TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
   ASSERT_TRUE(toolLife.is_array());
   auto life = toolLife.at(0);
   ASSERT_TRUE(life.is_object());
-  ASSERT_EQ(string("PART_COUNT"), life.at("/ToolLife/type"_json_pointer).get<string>());
-  ASSERT_EQ(string("DOWN"), life.at("/ToolLife/countDirection"_json_pointer).get<string>());
-  ASSERT_EQ(300.0, life.at("/ToolLife/limit"_json_pointer).get<double>());
-  ASSERT_EQ(200.0, life.at("/ToolLife/value"_json_pointer).get<double>());
+  ASSERT_EQ(string("PART_COUNT"), life.at("/type"_json_pointer).get<string>());
+  ASSERT_EQ(string("DOWN"), life.at("/countDirection"_json_pointer).get<string>());
+  ASSERT_EQ(300.0, life.at("/limit"_json_pointer).get<double>());
+  ASSERT_EQ(200.0, life.at("/value"_json_pointer).get<double>());
 
   auto speed = lifeCycle.at("/ProcessSpindleSpeed"_json_pointer);
   ASSERT_EQ(13300.0, speed.at("/maximum"_json_pointer).get<double>());
@@ -213,6 +213,8 @@ TEST_F(JsonPrinterAssetTest, CuttingItem)
   AssetList assetList{asset};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
+  
+  cout << doc;
   
   auto cuttingItems = jdoc.at(
       "/MTConnectAssets/Assets/0/"
