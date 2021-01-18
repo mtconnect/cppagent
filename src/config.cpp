@@ -645,6 +645,8 @@ namespace mtconnect
                                         bool ignoreTimestamps, bool conversionRequired,
                                         bool upcaseValue, bool filterDuplicates)
   {
+    using namespace adapter;
+    
     Device *device;
     if (reader.is_block_defined("Adapters"))
     {

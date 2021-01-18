@@ -1,6 +1,10 @@
 set(AGENT_SOURCES
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr_parser.hpp"
+
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.hpp"
   
@@ -20,8 +24,6 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/circular_buffer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/connector.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/connector.hpp"
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/agent_device.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/agent_device.cpp"

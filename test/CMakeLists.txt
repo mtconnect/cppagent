@@ -79,12 +79,14 @@ add_agent_test(json_printer_stream TRUE json)
 add_agent_test(xml_parser TRUE xml)
 add_agent_test(xml_printer TRUE xml)
 
-add_agent_test(adapter FALSE core)
+add_agent_test(adapter FALSE adapter)
+add_agent_test(connector FALSE adapter)
+add_agent_test(shdr_parser FALSE adapter)
+
 add_agent_test(agent TRUE core)
 add_agent_test(asset_buffer TRUE core)
 add_agent_test(config FALSE core)
 add_agent_test(change_observer FALSE core)
-add_agent_test(connector FALSE core)
 add_agent_test(globals FALSE core)
 
 add_agent_test(checkpoint FALSE core)

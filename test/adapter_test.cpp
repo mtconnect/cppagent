@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 
 #include <map>
 #include <sstream>
@@ -83,7 +83,7 @@ TEST(AdapterTest, EscapedLine)
     std::istringstream toParse(test.first);
     for (const std::string &expected : test.second)
     {
-      mtconnect::Adapter::getEscapedLine(toParse, value);
+      mtconnect::adapter::Adapter::getEscapedLine(toParse, value);
       ASSERT_EQ(expected, value);
     }
   }

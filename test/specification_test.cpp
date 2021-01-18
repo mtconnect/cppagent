@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
@@ -37,7 +37,7 @@ class SpecificationTest : public testing::Test
     m_agentTestHelper.reset();
   }
 
-  Adapter *m_adapter{nullptr};
+  adapter::Adapter *m_adapter{nullptr};
   Component *m_component{nullptr};
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -125,7 +125,7 @@ TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
 
 TEST_F(SpecificationTest, JsonPrinting)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_adapter = new adapter::Adapter("LinuxCNC", "server", 7878);
   m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   

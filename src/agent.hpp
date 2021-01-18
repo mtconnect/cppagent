@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "assets/asset_buffer.hpp"
 #include "checkpoint.hpp"
 #include "circular_buffer.hpp"
@@ -37,12 +37,12 @@
 
 namespace mtconnect
 {
-  class Adapter;
+  namespace adapter { class Adapter; }
   class Observation;
   class DataItem;
   class Device;
   class AgentDevice;
-
+  
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
   class Agent
@@ -80,7 +80,7 @@ namespace mtconnect
     auto getServer() const { return m_server.get(); }
 
     // Add an adapter to the agent
-    void addAdapter(Adapter *adapter, bool start = false);
+    void addAdapter(adapter::Adapter *adapter, bool start = false);
 
     // Get device from device map
     Device *getDeviceByName(const std::string &name);
@@ -105,9 +105,9 @@ namespace mtconnect
                          const std::optional<std::string> time, AssetList &list);
 
     // Message when adapter has connected and disconnected
-    void connecting(Adapter *adapter);
-    void disconnected(Adapter *adapter, std::vector<Device *> devices);
-    void connected(Adapter *adapter, std::vector<Device *> devices);
+    void connecting(adapter::Adapter *adapter);
+    void disconnected(adapter::Adapter *adapter, std::vector<Device *> devices);
+    void connected(adapter::Adapter *adapter, std::vector<Device *> devices);
 
     DataItem *getDataItemByName(const std::string &deviceName,
                                 const std::string &dataItemName) const
@@ -270,7 +270,7 @@ namespace mtconnect
     AssetBuffer m_assetBuffer;
 
     // Data containers
-    std::list<Adapter *> m_adapters;
+    std::list<adapter::Adapter *> m_adapters;
     std::list<Device *> m_devices;
     std::map<std::string, Device *> m_deviceNameMap;
     std::map<std::string, Device *> m_deviceUuidMap;

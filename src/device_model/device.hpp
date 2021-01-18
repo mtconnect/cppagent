@@ -25,7 +25,7 @@
 namespace mtconnect
 {
   class Component;
-  class Adapter;
+  namespace adapter { class Adapter; }
 
   class Device : public Component
   {
@@ -37,7 +37,7 @@ namespace mtconnect
     // Add/get items to/from the device name to data item mapping
     void addDeviceDataItem(DataItem *dataItem);
     DataItem *getDeviceDataItem(const std::string &name) const;
-    void addAdapter(Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
+    void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
     Component *getComponentById(const std::string &aId) const
     {
       auto comp = m_componentsById.find(aId);
@@ -59,7 +59,7 @@ namespace mtconnect
 
     void addDataItem(DataItem *dataItem) override;
 
-    std::vector<Adapter *> m_adapters;
+    std::vector<adapter::Adapter *> m_adapters;
     bool m_preserveUuid;
     bool m_availabilityAdded;
 

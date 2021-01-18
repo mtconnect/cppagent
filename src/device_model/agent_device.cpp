@@ -17,7 +17,7 @@
 
 #include "agent_device.hpp"
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 
 #include <dlib/logger.h>
 #include <dlib/misc_api.h>
@@ -36,12 +36,12 @@ namespace mtconnect
     addChild(m_adapters);
   }
 
-  DataItem *AgentDevice::getConnectionStatus(const Adapter *adapter)
+  DataItem *AgentDevice::getConnectionStatus(const adapter::Adapter *adapter)
   {
     return getDeviceDataItem(adapter->getIdentity() + "_connection_status");
   }
 
-  void AgentDevice::addAdapter(const Adapter *adapter)
+  void AgentDevice::addAdapter(const adapter::Adapter *adapter)
   {
     auto id = adapter->getIdentity();
 

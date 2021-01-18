@@ -15,35 +15,10 @@
 //    limitations under the License.
 //
 
-#pragma once
-#include "component.hpp"
-#include "data_item.hpp"
-#include "device_model/device.hpp"
-#include "globals.hpp"
+// Ensure that gtest is the first header otherwise Windows raises an error
+#include <gtest/gtest.h>
+// Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include <map>
+#include "adapter/shdr_parser.hpp"
 
-namespace mtconnect
-{
-  namespace adapter
-  {
-    class Adapter;
-  }
-  class AgentDevice : public Device
-  {
-   public:
-    // Constructor that sets variables from an attribute map
-    AgentDevice(const Attributes &attributes);
-    ~AgentDevice() override = default;
 
-    void addAdapter(const adapter::Adapter *adapter);
-
-    DataItem *getConnectionStatus(const adapter::Adapter *adapter);
-
-   protected:
-    void addRequiredDataItems();
-
-   protected:
-    Component *m_adapters{nullptr};
-  };
-}  // namespace mtconnect

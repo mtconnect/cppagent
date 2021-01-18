@@ -18,7 +18,7 @@
 
 #include "data_item.hpp"
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "device_model/device.hpp"
 
 #include <array>
@@ -180,7 +180,7 @@ namespace mtconnect
 
   DataItem::~DataItem() = default;
 
-  void DataItem::setDataSource(Adapter *source)
+  void DataItem::setDataSource(adapter::Adapter *source)
   {
     if (m_dataSource != source)
       m_dataSource = source;

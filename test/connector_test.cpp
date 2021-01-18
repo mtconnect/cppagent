@@ -24,7 +24,7 @@ namespace date
 };
 using namespace date;
 
-#include "connector.hpp"
+#include "adapter/connector.hpp"
 
 #include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
 
@@ -36,6 +36,7 @@ using namespace date;
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
 
 class TestConnector : public Connector
 {

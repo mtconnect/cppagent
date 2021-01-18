@@ -31,7 +31,7 @@
 
 namespace mtconnect
 {
-  class Adapter;
+  namespace adapter { class Adapter; }
 
   class DataItem : public ChangeSignaler
   {
@@ -257,8 +257,8 @@ namespace mtconnect
     std::string convertValue(const std::string &value);
     float convertValue(float value);
 
-    Adapter *getDataSource() const { return m_dataSource; }
-    void setDataSource(Adapter *source);
+    adapter::Adapter *getDataSource() const { return m_dataSource; }
+    void setDataSource(adapter::Adapter *source);
     bool operator<(const DataItem &another) const;
 
     bool operator==(DataItem &another) const { return m_id == another.m_id; }
@@ -376,7 +376,7 @@ namespace mtconnect
     std::map<std::string, std::string> m_attributes;
 
     // The data source for this data item
-    Adapter *m_dataSource;
+    adapter::Adapter *m_dataSource;
 
     // Conversion factor
     double m_conversionFactor;

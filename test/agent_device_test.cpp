@@ -20,13 +20,14 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "device_model/agent_device.hpp"
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
 
 class AgentDeviceTest : public testing::Test
 {

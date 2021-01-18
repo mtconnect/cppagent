@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
@@ -34,6 +34,7 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
 
 class TableTest : public testing::Test
 {
@@ -61,7 +62,7 @@ class TableTest : public testing::Test
   }
 
   std::unique_ptr<Checkpoint> m_checkpoint;
-  Adapter *m_adapter{nullptr};
+  adapter::Adapter *m_adapter{nullptr};
   std::string m_agentId;
   DataItem *m_dataItem1{nullptr};
 
@@ -126,7 +127,7 @@ TEST_F(TableTest, InitialSet)
 TEST_F(TableTest, Current)
 {
   
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_adapter = new adapter::Adapter("LinuxCNC", "server", 7878);
   m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
 
@@ -184,7 +185,7 @@ TEST_F(TableTest, Current)
 
 TEST_F(TableTest, JsonCurrent)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_adapter = new adapter::Adapter("LinuxCNC", "server", 7878);
   m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   
@@ -240,7 +241,7 @@ TEST_F(TableTest, JsonCurrent)
 
 TEST_F(TableTest, JsonCurrentText)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
+  m_adapter = new adapter::Adapter("LinuxCNC", "server", 7878);
   m_agentTestHelper->m_agent->addAdapter(m_adapter);
   ASSERT_TRUE(m_adapter);
   

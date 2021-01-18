@@ -647,7 +647,7 @@ namespace mtconnect
   // Adapter Methods
   // ----------------------------------------------------
 
-  void Agent::addAdapter(Adapter *adapter, bool start)
+  void Agent::addAdapter(adapter::Adapter *adapter, bool start)
   {
     adapter->setAgent(*this);
     m_adapters.emplace_back(adapter);
@@ -671,7 +671,7 @@ namespace mtconnect
     }
   }
 
-  void Agent::connecting(Adapter *adapter)
+  void Agent::connecting(adapter::Adapter *adapter)
   {
     if (m_agentDevice)
     {
@@ -681,7 +681,7 @@ namespace mtconnect
   }
 
   // Add values for related data items UNAVAILABLE
-  void Agent::disconnected(Adapter *adapter, std::vector<Device *> devices)
+  void Agent::disconnected(adapter::Adapter *adapter, std::vector<Device *> devices)
   {
     auto time = getCurrentTime(GMT_UV_SEC);
     g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
@@ -731,7 +731,7 @@ namespace mtconnect
     }
   }
 
-  void Agent::connected(Adapter *adapter, std::vector<Device *> devices)
+  void Agent::connected(adapter::Adapter *adapter, std::vector<Device *> devices)
   {
     auto time = getCurrentTime(GMT_UV_SEC);
     if (m_agentDevice)

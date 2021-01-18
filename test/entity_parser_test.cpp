@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "json_helper.hpp"
 #include "entity.hpp"

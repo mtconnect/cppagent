@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "test_globals.hpp"
@@ -43,6 +43,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::http_server;
+using namespace mtconnect::adapter;
 
 class AgentTest : public testing::Test
 {
