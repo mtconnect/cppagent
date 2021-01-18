@@ -6,7 +6,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "solid_model.hpp"
+#include "device_model/solid_model.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -24,26 +24,21 @@ class SolidModelTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/solid_model.xml", 4, 4, "1.7");
-    m_agentId = int64ToString(getCurrentTimeInSec());
-
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->m_agent = m_agent.get();
-
-    m_device = m_agent->getDeviceByName("LinuxCNC");
+    m_agentTestHelper->createAgent("/samples/solid_model.xml",
+                                   8, 4, "1.7", 25);
+    m_agentId = to_string(getCurrentTimeInSec());
+    m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
   void TearDown() override
   {
-    m_agent.reset();
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Agent> m_agent;
+  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   std::string m_agentId;
   Device *m_device{nullptr};
-
-  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
 TEST_F(SolidModelTest, ParseDeviceSolidModel)
@@ -121,9 +116,8 @@ TEST_F(SolidModelTest, ParseRotarySolidModel)
 
 TEST_F(SolidModelTest, DeviceXmlPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
-    PARSE_XML_RESPONSE;
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
     
     ASSERT_XML_PATH_COUNT(doc, DEVICE_SOLID_MODEL_PATH , 1);
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@id" , "dm");
@@ -143,10 +137,9 @@ TEST_F(SolidModelTest, DeviceXmlPrinting)
 
 TEST_F(SolidModelTest, RotaryXmlPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
   {
-    PARSE_XML_RESPONSE;
-    
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+
     ASSERT_XML_PATH_COUNT(doc, ROTARY_SOLID_MODEL_PATH , 1);
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@id" , "cm");
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@mediaType" , "STL");
@@ -162,12 +155,10 @@ TEST_F(SolidModelTest, RotaryXmlPrinting)
 
 TEST_F(SolidModelTest, DeviceJsonPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
   {
-    PARSE_JSON_RESPONSE;
-        
+    m_agentTestHelper->m_request.m_accepts = "Application/json";
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
 
@@ -198,12 +189,10 @@ TEST_F(SolidModelTest, DeviceJsonPrinting)
 
 TEST_F(SolidModelTest, RotaryJsonPrinting)
 {
-  m_agentTestHelper->m_path = "/LinuxCNC/probe";
-  m_agentTestHelper->m_incomingHeaders["Accept"] = "Application/json";
-  
   {
-    PARSE_JSON_RESPONSE;
-    
+    m_agentTestHelper->m_request.m_accepts = "Application/json";
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
     auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);

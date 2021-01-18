@@ -18,7 +18,7 @@
 #define __STDC_LIMIT_MACROS 1
 #include "adapter.hpp"
 
-#include "device.hpp"
+#include "device_model/device.hpp"
 
 #include <dlib/logger.h>
 
@@ -36,23 +36,23 @@ namespace mtconnect
   // Adapter public methods
   Adapter::Adapter(string device, const string &server, const unsigned int port,
                    std::chrono::seconds legacyTimeout)
-      : Connector(server, port, legacyTimeout),
-        m_agent(nullptr),
-        m_device(nullptr),
-        m_deviceName(std::move(device)),
-        m_running(true),
-        m_dupCheck(false),
-        m_autoAvailable(false),
-        m_ignoreTimestamps(false),
-        m_relativeTime(false),
-        m_conversionRequired(true),
-        m_upcaseValue(true),
-        m_baseTime(0ull),
-        m_baseOffset(0ull),
-        m_parseTime(false),
-        m_gatheringAsset(false),
-        m_assetDevice(nullptr),
-        m_reconnectInterval{10000ms}
+    : Connector(server, port, legacyTimeout),
+      m_agent(nullptr),
+      m_device(nullptr),
+      m_deviceName(std::move(device)),
+      m_running(true),
+      m_dupCheck(false),
+      m_autoAvailable(false),
+      m_ignoreTimestamps(false),
+      m_relativeTime(false),
+      m_conversionRequired(true),
+      m_upcaseValue(true),
+      m_baseTime(0ull),
+      m_baseOffset(0ull),
+      m_parseTime(false),
+      m_gatheringAsset(false),
+      m_assetDevice(nullptr),
+      m_reconnectInterval{10000ms}
   {
     stringstream url;
     url << "shdr://" << server << ':' << port;
@@ -229,7 +229,8 @@ namespace mtconnect
     {
       if (data == m_terminator)
       {
-        m_agent->addAsset(m_assetDevice, m_assetId, m_body.str(), m_assetType, m_time);
+        entity::ErrorList errors;
+        m_agent->addAsset(m_assetDevice, m_body.str(), m_assetId, m_assetType, m_time, errors);
         m_gatheringAsset = false;
       }
       else
@@ -367,75 +368,98 @@ namespace mtconnect
   void Adapter::processAsset(istringstream &toParse, const string &inputKey, const string &value,
                              const string &time)
   {
-    Device *device(nullptr);
-    string key = inputKey, dev;
-    if (splitKey(key, dev))
-      device = m_agent->getDeviceByName(dev);
-    else
-      device = m_device;
-
-    string assetId;
-    if (value[0] == '@')
-      assetId = device->getUuid() + value.substr(1);
-    else
-      assetId = value;
-
-    if (key == "@ASSET@")
+    string key, dev;
+    try
     {
-      string type, rest;
-      getline(toParse, type, '|');
-      getline(toParse, rest);
-
-      // Chck for an update and parse key value pairs. If only a type
-      // is presented, then assume the remainder is a complete doc.
-
-      // if the rest of the line begins with --multiline--... then
-      // set multiline and accumulate until a completed document is found
-      if (rest.find("--multiline--") != rest.npos)
-      {
-        m_assetDevice = device;
-        m_gatheringAsset = true;
-        m_terminator = rest;
-        m_time = time;
-        m_assetType = type;
-        m_assetId = assetId;
-        m_body.str("");
-        m_body.clear();
-      }
-      else
-        m_agent->addAsset(device, assetId, rest, type, time);
-    }
-    else if (key == "@UPDATE_ASSET@")
-    {
-      string assetKey, assetValue;
-      AssetChangeList list;
-      getline(toParse, assetKey, '|');
-      if (assetKey[0] == '<')
-      {
-        do
-        {
-          pair<string, string> kv("xml", assetKey);
-          list.emplace_back(kv);
-        } while (getline(toParse, assetKey, '|'));
-      }
+      Device *device(nullptr);
+      key = inputKey;
+      if (splitKey(key, dev))
+        device = m_agent->getDeviceByName(dev);
       else
       {
-        while (getline(toParse, assetValue, '|'))
-        {
-          pair<string, string> kv(assetKey, assetValue);
-          list.emplace_back(kv);
+        device = m_device;
+        dev = device->getUuid();
+      }
 
-          if (!getline(toParse, assetKey, '|'))
-            break;
+      if (device == nullptr)
+      {
+        g_logger << LERROR << "Cannot find device: " << dev << " for asset request";
+        return;
+      }
+
+      string assetId;
+      if (value[0] == '@')
+        assetId = device->getUuid() + value.substr(1);
+      else
+        assetId = value;
+
+      if (key == "@ASSET@")
+      {
+        string type, rest;
+        getline(toParse, type, '|');
+        getline(toParse, rest);
+
+        // Chck for an update and parse key value pairs. If only a type
+        // is presented, then assume the remainder is a complete doc.
+
+        // if the rest of the line begins with --multiline--... then
+        // set multiline and accumulate until a completed document is found
+        if (rest.find("--multiline--") != rest.npos)
+        {
+          m_assetDevice = device;
+          m_gatheringAsset = true;
+          m_terminator = rest;
+          m_time = time;
+          m_assetType = type;
+          m_assetId = assetId;
+          m_body.str("");
+          m_body.clear();
+        }
+        else
+        {
+          entity::ErrorList errors;
+          m_agent->addAsset(device, rest, assetId, type, time, errors);
         }
       }
+      else if (key == "@UPDATE_ASSET@")
+      {
+        string assetKey, assetValue;
+        AssetChangeList list;
+        getline(toParse, assetKey, '|');
+        if (assetKey[0] == '<')
+        {
+          do
+          {
+            pair<string, string> kv("xml", assetKey);
+            list.emplace_back(kv);
+          } while (getline(toParse, assetKey, '|'));
+        }
+        else
+        {
+          while (getline(toParse, assetValue, '|'))
+          {
+            pair<string, string> kv(assetKey, assetValue);
+            list.emplace_back(kv);
 
-      m_agent->updateAsset(device, assetId, list, time);
+            if (!getline(toParse, assetKey, '|'))
+              break;
+          }
+        }
+
+        // m_agent->updateAsset(device, assetId, list, time);
+      }
+      else if (key == "@REMOVE_ASSET@")
+        m_agent->removeAsset(device, assetId, time);
+      else if (key == "@REMOVE_ALL_ASSETS@")
+      {
+        AssetList list;
+        m_agent->removeAllAssets(device->getUuid(), value, time, list);
+      }
     }
-    else if (key == "@REMOVE_ASSET@")
-      m_agent->removeAsset(device, assetId, time);
-    else if (key == "@REMOVE_ALL_ASSETS@")
-      m_agent->removeAllAssets(device, value, time);
+    catch (std::logic_error &e)
+    {
+      g_logger << LERROR << "Asset request: " << key << " failed: " << e.what();
+    }
   }
 
   static inline bool is_true(const string &aValue)
@@ -449,14 +473,14 @@ namespace mtconnect
     // This will override the settings in the device from the xml
     if (data == "* PROBE")
     {
-      const Printer *printer = m_agent->getPrinter("xml");
-      string response = m_agent->handleProbe(printer, m_deviceName);
-      string probe = "* PROBE LENGTH=";
-      probe.append(intToString(response.length()));
-      probe.append("\n");
-      probe.append(response);
-      probe.append("\n");
-      m_connection->write(probe.c_str(), probe.length());
+      //      const Printer *printer = m_agent->getPrinter("xml");
+      //      string response = m_agent->handleProbe(printer, m_deviceName);
+      //      string probe = "* PROBE LENGTH=";
+      //      probe.append(intToString(response.length()));
+      //      probe.append("\n");
+      //      probe.append(response);
+      //      probe.append("\n");
+      //      m_connection->write(probe.c_str(), probe.length());
     }
     else
     {
@@ -469,20 +493,49 @@ namespace mtconnect
         string value = data.substr(index + 1);
         trim(value);
 
-        if (key == "uuid" && !m_device->m_preserveUuid)
+        bool deviceChanged{false};
+        std::string oldName, oldUuid;
+        if (m_device)
+        {
+          oldName = m_device->getName();
+          oldUuid = m_device->getUuid();
+        }
+
+        if (m_device && key == "uuid" && !m_device->m_preserveUuid)
+        {
           m_device->setUuid(value);
-        else if (key == "manufacturer")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "manufacturer")
+        {
           m_device->setManufacturer(value);
-        else if (key == "station")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "station")
+        {
           m_device->setStation(value);
-        else if (key == "serialNumber")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "serialNumber")
+        {
           m_device->setSerialNumber(value);
-        else if (key == "description")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "description")
+        {
           m_device->setDescription(value);
-        else if (key == "nativeName")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "nativeName")
+        {
           m_device->setNativeName(value);
-        else if (key == "calibration")
+          deviceChanged = true;
+        }
+        else if (m_device && key == "calibration")
+        {
           parseCalibration(value);
+          deviceChanged = true;
+        }
         else if (key == "conversionRequired")
           m_conversionRequired = is_true(value);
         else if (key == "relativeTime")
@@ -509,6 +562,11 @@ namespace mtconnect
         else
         {
           g_logger << LWARN << "Unknown command '" << data << "' for device '" << m_deviceName;
+        }
+
+        if (deviceChanged)
+        {
+          m_agent->deviceChanged(m_device, oldUuid, oldName);
         }
       }
     }
@@ -541,16 +599,10 @@ namespace mtconnect
     m_baseTime = 0;
     m_agent->disconnected(this, m_allDevices);
   }
-  
-  void Adapter::connecting()
-  {
-    m_agent->connecting(this);
-  }
 
-  void Adapter::connected()
-  {
-    m_agent->connected(this, m_allDevices);
-  }
+  void Adapter::connecting() { m_agent->connecting(this); }
+
+  void Adapter::connected() { m_agent->connected(this, m_allDevices); }
 
   // Adapter private methods
   void Adapter::thread()

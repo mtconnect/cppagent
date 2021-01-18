@@ -1,13 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<MTConnectAssets xmlns:m="urn:mtconnect.org:MTConnectAssets:1.2" xmlns="urn:mtconnect.org:MTConnectAssets:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectAssets:1.2 ../MTConnectAssets_1.2.xsd">
-	<Header creationTime="2011-05-11T13:55:22" assetBufferSize="1024" sender="localhost" assetCount="2" version="1.2" instanceId="1234"/>
-	<Assets>
 		<CuttingTool serialNumber="1" toolId="KSSP300R4SD43L240" timestamp="2011-05-11T13:55:22" assetId="KSSP300R4SD43L240.1" manufacturers="KMT,Parlec">
 			<Description>Cutting tool ...</Description>
 			<CuttingToolDefinition format="EXPRESS">ISO 13399...</CuttingToolDefinition>
 			<CuttingToolLifeCycle>
 				<CutterStatus><Status>NEW</Status></CutterStatus>
-				<ToolLife type="PART_COUNT" countDirection="DOWN" maximum="300">200</ToolLife>
+				<ToolLife type="PART_COUNT" countDirection="DOWN" limit="300">200</ToolLife>
 				<ProcessSpindleSpeed maximum="13300" nominal="605">10000</ProcessSpindleSpeed>
 				<ProcessFeedRate>222</ProcessFeedRate>
 				<ConnectionCodeMachineSide>CV50</ConnectionCodeMachineSide>
@@ -78,5 +74,3 @@
 				</CuttingItems>
 			</CuttingToolLifeCycle>
 		</CuttingTool>
-	</Assets>
-</MTConnectAssets>

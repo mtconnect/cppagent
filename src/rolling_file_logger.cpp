@@ -37,11 +37,11 @@ namespace mtconnect
 {
   RollingFileLogger::RollingFileLogger(std::string filename, int maxBackupIndex, uint64_t maxSize,
                                        RollingSchedule schedule)
-      : m_name(filename),
-        m_maxBackupIndex(maxBackupIndex),
-        m_maxSize(maxSize),
-        m_schedule(schedule),
-        m_fd(0)
+    : m_name(filename),
+      m_maxBackupIndex(maxBackupIndex),
+      m_maxSize(maxSize),
+      m_schedule(schedule),
+      m_fd(0)
   {
     m_fd = open(filename.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
 
@@ -126,7 +126,7 @@ namespace mtconnect
     _close(m_fd);
 
     // Remove the last file
-    std::string name = m_file.full_name() + "." + intToString(m_maxBackupIndex);
+    std::string name = m_file.full_name() + "." + to_string(m_maxBackupIndex);
 
     if (file_exists(name))
       ::remove(name.c_str());
@@ -134,11 +134,11 @@ namespace mtconnect
     // Roll over old log files.
     for (int i = m_maxBackupIndex - 1; i >= 1; i--)
     {
-      std::string from = m_file.full_name() + "." + intToString(i);
+      std::string from = m_file.full_name() + "." + to_string(i);
 
       if (file_exists(from))
       {
-        name = m_file.full_name() + "." + intToString(i + 1);
+        name = m_file.full_name() + "." + to_string(i + 1);
         ::rename(from.c_str(), name.c_str());
       }
     }

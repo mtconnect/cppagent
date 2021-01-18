@@ -20,7 +20,7 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "adapter.hpp"
-#include "data_item.hpp"
+#include "device_model/data_item.hpp"
 
 #include <dlib/misc_api.h>
 

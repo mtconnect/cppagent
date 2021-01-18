@@ -15,36 +15,29 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include "asset.hpp"
+#include "globals.hpp"
 
 #include <map>
 #include <utility>
-
-using namespace std;
+#include <vector>
 
 namespace mtconnect
 {
-  Asset::Asset(std::string asssetId, std::string type, std::string content, const bool removed)
-      : m_assetId(std::move(asssetId)),
-        m_content(std::move(content)),
-        m_type(std::move(type)),
-        m_removed(removed)
+  class CuttingToolArchetype : public Asset
   {
-  }
+   public:
+    static entity::FactoryPtr getFactory();
+    static void registerAsset();
+  };
 
-  Asset::~Asset() = default;
-
-  void Asset::addIdentity(const std::string &key, const std::string &value)
+  class CuttingTool : public Asset
   {
-    if (key == "deviceUuid")
-      m_deviceUuid = value;
-    else if (key == "timestamp")
-      m_timestamp = value;
-    else if (key == "removed")
-      m_removed = value == "true";
-    else if (key == "assetId")
-      m_assetId = value;
-    else
-      m_identity[key] = value;
-  }
+   public:
+    static entity::FactoryPtr getFactory();
+    static void registerAsset();
+  };
+
 }  // namespace mtconnect

@@ -16,32 +16,25 @@
 //
 
 #pragma once
-#include "component.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
-#include "globals.hpp"
 
-#include <map>
+#define strfy(line) #line
+#define THROW_IF_XML2_ERROR(expr)                                             \
+  if ((expr) < 0)                                                             \
+  {                                                                           \
+    throw XmlError("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
+  }
+#define THROW_IF_XML2_NULL(expr)                                              \
+  if (!(expr))                                                                \
+  {                                                                           \
+    throw XmlError("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
+  }
 
 namespace mtconnect
 {
-  class Adapter;
-
-  class AgentDevice : public Device
+  class XmlError : public std::logic_error
   {
    public:
-    // Constructor that sets variables from an attribute map
-    AgentDevice(const Attributes &attributes);
-    ~AgentDevice() override = default;
-
-    void addAdapter(const Adapter *adapter);
-    
-    DataItem *getConnectionStatus(const Adapter *adapter);
-    
-   protected:
-    void addRequiredDataItems();
-
-   protected:
-    Component *m_adapters{nullptr};
+    using std::logic_error::logic_error;
   };
+
 }  // namespace mtconnect

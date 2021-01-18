@@ -35,7 +35,7 @@ namespace mtconnect
     m_adapters = new Component("Adapters", {{"id", "__adapters__"}});
     addChild(m_adapters);
   }
-  
+
   DataItem *AgentDevice::getConnectionStatus(const Adapter *adapter)
   {
     return getDeviceDataItem(adapter->getIdentity() + "_connection_status");
@@ -70,8 +70,8 @@ namespace mtconnect
     {
       auto di = new DataItem({{"type", "OBSERVATION_UPDATE_RATE"},
                               {"id", id + "_observation_update_rate"},
-                              {"units", "COUNT/SECOND" },
-                              {"statistic", "AVERAGE" },
+                              {"units", "COUNT/SECOND"},
+                              {"statistic", "AVERAGE"},
                               {"category", "SAMPLE"}});
       di->setComponent(*comp);
       comp->addDataItem(di);
@@ -80,8 +80,8 @@ namespace mtconnect
     {
       auto di = new DataItem({{"type", "ASSET_UPDATE_RATE"},
                               {"id", id + "_asset_update_rate"},
-                              {"units", "COUNT/SECOND" },
-                              {"statistic", "AVERAGE" },
+                              {"units", "COUNT/SECOND"},
+                              {"statistic", "AVERAGE"},
                               {"category", "SAMPLE"}});
       di->setComponent(*comp);
       comp->addDataItem(di);

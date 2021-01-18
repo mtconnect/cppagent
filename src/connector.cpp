@@ -31,14 +31,14 @@ namespace mtconnect
 
   // Connector public methods
   Connector::Connector(string server, unsigned int port, seconds legacyTimeout)
-      : m_server(std::move(server)),
-        m_port(port),
-        m_localPort(0),
-        m_connected(false),
-        m_realTime(false),
-        m_heartbeatFrequency{HEARTBEAT_FREQ},
-        m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
-        m_connectActive(false)
+    : m_server(std::move(server)),
+      m_port(port),
+      m_localPort(0),
+      m_connected(false),
+      m_realTime(false),
+      m_heartbeatFrequency{HEARTBEAT_FREQ},
+      m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
+      m_connectActive(false)
   {
     m_connectionMutex = new dlib::mutex;
     m_connectionClosed = new dlib::signaler(*m_connectionMutex);
@@ -78,7 +78,7 @@ namespace mtconnect
   {
     m_connected = false;
     connecting();
-    
+
     const char *ping = "* PING\n";
 
     AutoSignal sig(m_connectionMutex, m_connectionClosed, &m_connectActive);
@@ -100,7 +100,7 @@ namespace mtconnect
       if (status < 0)
       {
         g_logger << LWARN << "(Port:" << m_localPort << ")"
-                 << "connect: Could not write initial heartbeat: " << intToString(status);
+                 << "connect: Could not write initial heartbeat: " << to_string(status);
         close();
         return;
       }
@@ -321,7 +321,7 @@ namespace mtconnect
       {
         g_logger << LWARN << "(Port:" << m_localPort << ")"
                  << "sendCommand: Could not write command: '" << command << "' - "
-                 << intToString(status);
+                 << to_string(status);
       }
     }
   }

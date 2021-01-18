@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "component.hpp"
-#include "data_item.hpp"
+#include "device_model/component.hpp"
+#include "device_model/data_item.hpp"
 #include "globals.hpp"
 #include "ref_counted.hpp"
 
@@ -34,7 +34,7 @@ namespace mtconnect
   struct AttributeItem : public std::pair<const char *, std::string>
   {
     AttributeItem(const char *f, const std::string &s, bool force = false)
-        : std::pair<const char *, std::string>(f, s), m_force(force)
+      : std::pair<const char *, std::string>(f, s), m_force(force)
     {
     }
 
@@ -46,14 +46,6 @@ namespace mtconnect
   class Observation;
   using ObservationPtr = RefCountedPtr<Observation>;
   using ObservationPtrArray = dlib::array<ObservationPtr>;
-
-  template <class... Ts>
-  struct overloaded : Ts...
-  {
-    using Ts::operator()...;
-  };
-  template <class... Ts>
-  overloaded(Ts...) -> overloaded<Ts...>;
 
   struct DataSetEntry;
   using DataSet = std::set<DataSetEntry>;
@@ -77,15 +69,15 @@ namespace mtconnect
   struct DataSetEntry
   {
     DataSetEntry(std::string key, std::string &value, bool removed = false)
-        : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {
     }
     DataSetEntry(std::string key, DataSet &value, bool removed = false)
-        : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {
     }
     DataSetEntry(std::string key, DataSetValue value, bool removed = false)
-        : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {
     }
     DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
@@ -121,8 +113,8 @@ namespace mtconnect
 
    public:
     // Initialize with the data item reference, sequence number, time and value
-    Observation(DataItem &dataItem, const std::string &time,
-                const std::string &value, uint64_t sequence = 0);
+    Observation(DataItem &dataItem, const std::string &time, const std::string &value,
+                uint64_t sequence = 0);
 
     // Copy constructor
     Observation(const Observation &observation);
