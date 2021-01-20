@@ -20,6 +20,8 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "adapter/shdr_parser.hpp"
+#include "adapter/timestamp_extractor.hpp"
+#include "adapter/shdr_tokenizer.hpp"
 
 #include <chrono>
 
@@ -115,8 +117,7 @@ using namespace date;
 using namespace date::literals;
 
 TEST(ShdrParserTest, TestTimeExtraction)
-{
-  
+{  
   TokenList tokens { "2021-01-19T12:00:00.12345Z", "hello" };
   Context context;
   
@@ -124,7 +125,7 @@ TEST(ShdrParserTest, TestTimeExtraction)
   auto end = tokens.end();
   
   ShdrObservation obsservation;
-  TimeStampExtractor::extractTimestamp(obsservation, token, end, context);
+  TimestampExtractor::extractTimestamp(obsservation, token, end, context);
 
   ASSERT_EQ("hello", *token);
   ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", obsservation.m_timestamp));
