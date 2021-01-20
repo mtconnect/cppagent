@@ -90,31 +90,6 @@ namespace mtconnect
     LOCAL
   };
 
-  // Slowest frequency allowed
-  static const int SLOWEST_FREQ = 2147483646;
-
-  // Fastest frequency allowed
-  static const int FASTEST_FREQ = 0;
-
-  // Default count for sample query
-  static const unsigned int DEFAULT_COUNT = 100;
-
-  // Code to return when a parameter has no value
-  static const int NO_VALUE32 = -1;
-  static const uint64_t NO_VALUE64 = UINT64_MAX;
-
-  // Code to return for no frequency specified
-  static const int NO_FREQ = -2;
-
-  // Code to return for no heartbeat specified
-  static const int NO_HB = 0;
-
-  // Code for no start value specified
-  static const uint64_t NO_START = NO_VALUE64;
-
-  // Small file size
-  static const int SMALL_FILE = 10 * 1024;  // 10k is considered small
-
   //####### METHODS #######
   float stringToFloat(const std::string &text);
   int stringToInt(const std::string &text, int outOfRangeDefault = 0);
@@ -151,11 +126,6 @@ namespace mtconnect
   void replaceIllegalCharacters(std::string &data);
 
   std::string addNamespace(const std::string aPath, const std::string aPrefix);
-
-  bool isMTConnectUrn(const char *aUrn);
-
-  // Get memory size of process in k
-  long getMemorySize();
 
   // Ends with
   inline bool ends_with(const std::string &value, const std::string &ending)

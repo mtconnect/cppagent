@@ -308,6 +308,7 @@ namespace mtconnect
       }
     } while (!changed);  // && m_agent->is_running());
 
+    // TODO: Put monitor thread back in place
 #if 0
     // Restart agent if changed...
     // stop agent and signal to warm start

@@ -28,6 +28,7 @@
 #include <utility>
 
 using namespace std;
+using namespace std::literals;
 
 namespace mtconnect
 {
@@ -43,17 +44,7 @@ namespace mtconnect
     m_device(nullptr),
     m_deviceName(std::move(device)),
     m_running(true),
-    m_dupCheck(false),
     m_autoAvailable(false),
-    m_ignoreTimestamps(false),
-    m_relativeTime(false),
-    m_conversionRequired(true),
-    m_upcaseValue(true),
-    m_baseTime(0ull),
-    m_baseOffset(0ull),
-    m_parseTime(false),
-    m_gatheringAsset(false),
-    m_assetDevice(nullptr),
     m_reconnectInterval{10000ms}
     {
       stringstream url;
@@ -100,511 +91,37 @@ namespace mtconnect
       }
     }
     
-    inline static bool splitKey(string &key, string &dev)
-    {
-      auto found = key.find_first_of(':');
-      if (found == string::npos)
-        return false;
-      else
-      {
-        dev = key.substr(0, found);
-        key.erase(0, found + 1);
-        return true;
-      }
-    }
-    
-    inline static void trim(std::string &str)
-    {
-      auto index = str.find_first_not_of(" \r\t");
-      if (index != string::npos && index > 0)
-        str.erase(0, index);
-      index = str.find_last_not_of(" \r\t");
-      if (index != string::npos)
-        str.erase(index + 1);
-    }
-    
-    inline string Adapter::extractTime(const string &time, double &anOffset)
-    {
-      // Check how to handle time. If the time is relative, then we need to compute the first
-      // offsets, otherwise, if this function is being used as an API, add the current time.
-      string result;
-      if (m_relativeTime)
-      {
-        uint64_t offset;
-        
-        if (!m_baseTime)
-        {
-          m_baseTime = getCurrentTimeInMicros();
-          
-          if (time.find('T') != string::npos)
-          {
-            m_parseTime = true;
-            m_baseOffset = parseTimeMicro(time);
-          }
-          else
-            m_baseOffset = (uint64_t)(atof(time.c_str()) * 1000.0);
-          
-          offset = 0;
-        }
-        else if (m_parseTime)
-          offset = parseTimeMicro(time) - m_baseOffset;
-        else
-          offset = ((uint64_t)(atof(time.c_str()) * 1000.0)) - m_baseOffset;
-        
-        // convert microseconds to seconds
-        anOffset = offset / 1000000.0;
-        result = getRelativeTimeString(m_baseTime + offset);
-      }
-      else if (m_ignoreTimestamps || time.empty())
-      {
-        anOffset = getCurrentTimeInSec();
-        result = getCurrentTime(GMT_UV_SEC);
-      }
-      else
-      {
-        anOffset = parseTimeMicro(time) / 1000000.0;
-        result = time;
-      }
-      
-      return result;
-    }
-    
-    void Adapter::getEscapedLine(istringstream &stream, string &store)
-    {
-      store.clear();
-      getline(stream, store, '|');
-      if (!store.empty() && store.front() == '"' && store.back() == '\\')
-      {
-        store.back() = '|';
-        string additionalContent;
-        while (store.back() != '"')
-        {
-          additionalContent.clear();
-          getline(stream, additionalContent, '|');
-          if (additionalContent.empty())
-            break;
-          
-          if (additionalContent.back() != '\\')
-          {
-            store.append(additionalContent);
-            break;
-          }
-          
-          additionalContent.back() = '|';
-          store.append(additionalContent);
-        }
-        
-        if (store.back() == '"')
-        {
-          // Correctly escaped text, removing quotes
-          store = store.substr(1, store.size() - 2);
-        }
-        else
-        {
-          // Faulty escaped text, reverting to first pipe
-          const auto firstPipe = std::find(store.cbegin(), store.cend(), '|');
-          const auto transformedPipesCount = std::count(std::next(firstPipe), store.cend(), '|');
-          auto offset = -1 * (std::distance(firstPipe, store.cend()) + transformedPipesCount);
-          if (stream.eof())
-            offset += 1;
-          stream.seekg(offset, std::ios_base::cur);
-          auto newPipe = store.find("|");
-          store.erase(newPipe);
-          store.append("\\");
-        }
-      }
-    }
-    
-    /**
-     * Expected data to parse in SDHR format:
-     *   Time|Alarm|Code|NativeCode|Severity|State|Description
-     *   Time|Item|Value
-     *   Time|Item1|Value1|Item2|Value2...
-     *
-     * Support for assets:
-     *   Time|@ASSET@|id|type|<...>...</...>
-     */
-    
     void Adapter::processData(const string &data)
     {
-      if (m_gatheringAsset)
+      if (m_terminator)
       {
-        if (data == m_terminator)
+        if (data == *m_terminator)
         {
-          entity::ErrorList errors;
-          m_agent->addAsset(m_assetDevice, m_body.str(), m_assetId, m_assetType, m_time, errors);
-          m_gatheringAsset = false;
+          if (m_handler && m_handler->m_processData)
+            m_handler->m_processData(m_body.str(), m_context);
+          m_terminator.reset();
+          m_body.str("");
         }
         else
         {
-          m_body << data << endl;
+          m_body << endl << data;
         }
         
         return;
       }
-      
-      istringstream toParse(data);
-      string key, value;
-      
-      getline(toParse, key, '|');
-      double offset = NAN;
-      string time = extractTime(key, offset);
-      
-      getline(toParse, key, '|');
-      
-      // Data item name has a @, it is an asset special prefix.
-      if (key.find('@') != string::npos)
+            
+      size_t multi;
+      if ((multi = data.find("__multiline__"sv)) != string::npos)
       {
-        getline(toParse, value, '|');
-        trim(value);
-        processAsset(toParse, key, value, time);
+        m_body.str("");
+        m_body << data.substr(0, multi);
+        m_terminator = data.substr(multi);
+        return;
       }
-      else
-      {
-        getEscapedLine(toParse, value);
-        if (processDataItem(toParse, data, key, value, time, offset, true))
-        {
-          // Look for more key->value pairings in the rest of the data
-          while (getline(toParse, key, '|'))
-          {
-            getEscapedLine(toParse, value);
-            processDataItem(toParse, data, key, value, time, offset);
-          }
-        }
-      }
+      
+      if (m_handler && m_handler->m_processData)
+        m_handler->m_processData(data, m_context);
     }
-    
-    bool Adapter::processDataItem(istringstream &toParse, const string &line, const string &inputKey,
-                                  const string &inputValue, const string &time, double anOffset,
-                                  bool first)
-    {
-      string dev, key = inputKey;
-      Device *device(nullptr);
-      DataItem *dataItem(nullptr);
-      bool more = true;
-      
-      if (splitKey(key, dev))
-        device = m_agent->getDeviceByName(dev);
-      else
-      {
-        dev = m_deviceName;
-        device = m_device;
-      }
-      
-      if (device)
-      {
-        dataItem = device->getDeviceDataItem(key);
-        
-        if (!dataItem)
-        {
-          if (m_logOnce.count(key) > 0)
-            g_logger << LTRACE << "(" << device->getName() << ") Could not find data item: " << key;
-          else
-          {
-            g_logger << LWARN << "(" << device->getName() << ") Could not find data item: " << key
-            << " from line '" << line << "'";
-            m_logOnce.insert(key);
-          }
-        }
-        else if (dataItem->hasConstantValue())
-        {
-          if (!m_logOnce.count(key))
-          {
-            g_logger << LDEBUG << "(" << device->getName() << ") Ignoring value for: " << key
-            << ", constant value";
-            m_logOnce.insert(key);
-          }
-        }
-        else
-        {
-          string rest, value;
-          if (first && (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage() ||
-                        dataItem->isTimeSeries()))
-          {
-            getline(toParse, rest);
-            value = inputValue + "|" + rest;
-            if (!rest.empty())
-              value = inputValue + "|" + rest;
-            else
-              value = inputValue;
-            more = false;
-          }
-          else
-          {
-            if (m_upcaseValue && !dataItem->isDataSet())
-            {
-              value.resize(inputValue.length());
-              transform(inputValue.begin(), inputValue.end(), value.begin(), ::toupper);
-            }
-            else
-              value = inputValue;
-          }
-          
-          dataItem->setDataSource(this);
-          
-          trim(value);
-          string check = value;
-          
-          if (dataItem->hasResetTrigger())
-          {
-            auto found = value.find_first_of(':');
-            if (found != string::npos)
-              check.erase(found);
-          }
-          
-          if (!isDuplicate(dataItem, check, anOffset))
-            m_agent->addToBuffer(dataItem, value, time);
-          else if (m_dupCheck)
-            g_logger << LTRACE << "Dropping duplicate value for " << key << " of " << value;
-        }
-      }
-      else
-      {
-        g_logger << LDEBUG << "Could not find device: " << dev;
-        // Continue on processing the rest of the fields. Assume key/value pairs...
-      }
-      
-      return more;
-    }
-    
-    void Adapter::processAsset(istringstream &toParse, const string &inputKey, const string &value,
-                               const string &time)
-    {
-      string key, dev;
-      try
-      {
-        Device *device(nullptr);
-        key = inputKey;
-        if (splitKey(key, dev))
-          device = m_agent->getDeviceByName(dev);
-        else
-        {
-          device = m_device;
-          dev = device->getUuid();
-        }
-        
-        if (device == nullptr)
-        {
-          g_logger << LERROR << "Cannot find device: " << dev << " for asset request";
-          return;
-        }
-        
-        string assetId;
-        if (value[0] == '@')
-          assetId = device->getUuid() + value.substr(1);
-        else
-          assetId = value;
-        
-        if (key == "@ASSET@")
-        {
-          string type, rest;
-          getline(toParse, type, '|');
-          getline(toParse, rest);
-          
-          // Chck for an update and parse key value pairs. If only a type
-          // is presented, then assume the remainder is a complete doc.
-          
-          // if the rest of the line begins with --multiline--... then
-          // set multiline and accumulate until a completed document is found
-          if (rest.find("--multiline--") != rest.npos)
-          {
-            m_assetDevice = device;
-            m_gatheringAsset = true;
-            m_terminator = rest;
-            m_time = time;
-            m_assetType = type;
-            m_assetId = assetId;
-            m_body.str("");
-            m_body.clear();
-          }
-          else
-          {
-            entity::ErrorList errors;
-            m_agent->addAsset(device, rest, assetId, type, time, errors);
-          }
-        }
-        else if (key == "@UPDATE_ASSET@")
-        {
-          string assetKey, assetValue;
-          AssetChangeList list;
-          getline(toParse, assetKey, '|');
-          if (assetKey[0] == '<')
-          {
-            do
-            {
-              pair<string, string> kv("xml", assetKey);
-              list.emplace_back(kv);
-            } while (getline(toParse, assetKey, '|'));
-          }
-          else
-          {
-            while (getline(toParse, assetValue, '|'))
-            {
-              pair<string, string> kv(assetKey, assetValue);
-              list.emplace_back(kv);
-              
-              if (!getline(toParse, assetKey, '|'))
-                break;
-            }
-          }
-          
-          // m_agent->updateAsset(device, assetId, list, time);
-        }
-        else if (key == "@REMOVE_ASSET@")
-          m_agent->removeAsset(device, assetId, time);
-        else if (key == "@REMOVE_ALL_ASSETS@")
-        {
-          AssetList list;
-          m_agent->removeAllAssets(device->getUuid(), value, time, list);
-        }
-      }
-      catch (std::logic_error &e)
-      {
-        g_logger << LERROR << "Asset request: " << key << " failed: " << e.what();
-      }
-    }
-    
-    static inline bool is_true(const string &aValue)
-    {
-      return (aValue == "yes" || aValue == "true" || aValue == "1");
-    }
-    
-    void Adapter::protocolCommand(const std::string &data)
-    {
-      // Handle initial push of settings for uuid, serial number and manufacturer.
-      // This will override the settings in the device from the xml
-      if (data == "* PROBE")
-      {
-        //      const Printer *printer = m_agent->getPrinter("xml");
-        //      string response = m_agent->handleProbe(printer, m_deviceName);
-        //      string probe = "* PROBE LENGTH=";
-        //      probe.append(intToString(response.length()));
-        //      probe.append("\n");
-        //      probe.append(response);
-        //      probe.append("\n");
-        //      m_connection->write(probe.c_str(), probe.length());
-      }
-      else
-      {
-        size_t index = data.find(':', 2);
-        if (index != string::npos)
-        {
-          // Slice from the second character to the :, without the colon
-          string key = data.substr(2, index - 2);
-          trim(key);
-          string value = data.substr(index + 1);
-          trim(value);
-          
-          bool deviceChanged{false};
-          std::string oldName, oldUuid;
-          if (m_device)
-          {
-            oldName = m_device->getName();
-            oldUuid = m_device->getUuid();
-          }
-          
-          if (m_device && key == "uuid" && !m_device->m_preserveUuid)
-          {
-            m_device->setUuid(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "manufacturer")
-          {
-            m_device->setManufacturer(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "station")
-          {
-            m_device->setStation(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "serialNumber")
-          {
-            m_device->setSerialNumber(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "description")
-          {
-            m_device->setDescription(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "nativeName")
-          {
-            m_device->setNativeName(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "calibration")
-          {
-            parseCalibration(value);
-            deviceChanged = true;
-          }
-          else if (key == "conversionRequired")
-            m_conversionRequired = is_true(value);
-          else if (key == "relativeTime")
-            m_relativeTime = is_true(value);
-          else if (key == "realTime")
-            m_realTime = is_true(value);
-          else if (key == "device")
-          {
-            auto device = m_agent->findDeviceByUUIDorName(value);
-            if (device)
-            {
-              m_device = device;
-              g_logger << LINFO << "Device name given by the adapter " << value
-              << ", has been assigned to cfg " << m_deviceName;
-              m_deviceName = value;
-            }
-            else
-            {
-              g_logger << LERROR << "Cannot find device for device command: " << value;
-              throw std::invalid_argument(string("Cannot find device for device name or uuid: ") +
-                                          value);
-            }
-          }
-          else
-          {
-            g_logger << LWARN << "Unknown command '" << data << "' for device '" << m_deviceName;
-          }
-          
-          if (deviceChanged)
-          {
-            m_agent->deviceChanged(m_device, oldUuid, oldName);
-          }
-        }
-      }
-    }
-    
-    void Adapter::parseCalibration(const std::string &aLine)
-    {
-      istringstream toParse(aLine);
-      
-      // Look for name|factor|offset triples
-      string name, factor, offset;
-      while (getline(toParse, name, '|') && getline(toParse, factor, '|') &&
-             getline(toParse, offset, '|'))
-      {
-        // Convert to a floating point number
-        auto di = m_device->getDeviceDataItem(name);
-        if (!di)
-          g_logger << LWARN << "Cannot find data item to calibrate for " << name;
-        else
-        {
-          double fact_value = strtod(factor.c_str(), nullptr);
-          double off_value = strtod(offset.c_str(), nullptr);
-          di->setConversionFactor(fact_value, off_value);
-        }
-      }
-    }
-    
-    void Adapter::disconnected()
-    {
-      m_baseTime = 0;
-      m_agent->disconnected(this, m_allDevices);
-    }
-    
-    void Adapter::connecting() { m_agent->connecting(this); }
-    
-    void Adapter::connected() { m_agent->connected(this, m_allDevices); }
     
     // Adapter private methods
     void Adapter::thread()
@@ -648,5 +165,6 @@ namespace mtconnect
       }
       g_logger << LINFO << "Adapter thread stopped";
     }
+
   }
 }  // namespace mtconnect

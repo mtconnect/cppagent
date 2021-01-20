@@ -29,6 +29,8 @@
 #include <string>
 #include <vector>
 
+#include <date/tz.h>
+
 // Don't include WinSock.h when processing <windows.h>
 #ifdef _WINDOWS
 #define _WINSOCKAPI_
@@ -320,33 +322,4 @@ namespace mtconnect
 
     return newPath;
   }
-
-  bool isMTConnectUrn(const char *aUrn)
-  {
-    return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27u);
-  }
-
-#if 0
-  long getMemorySize()
-  {
-    long size = 0l;
-
-#ifdef _WINDOWS
-    HANDLE myself = GetCurrentProcess();
-    PROCESS_MEMORY_COUNTERS memory;
-
-    if (GetProcessMemoryInfo(myself, &memory, sizeof(memory)))
-      size = (long)(memory.PeakWorkingSetSize / 1024l);
-
-#else
-    struct rusage memory;
-
-    if (!getrusage(RUSAGE_SELF, &memory))
-      size = memory.ru_maxrss;
-
-#endif
-
-    return size;
-  }
-#endif
 }  // namespace mtconnect

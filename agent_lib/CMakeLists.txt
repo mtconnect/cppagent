@@ -4,6 +4,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr_parser.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr_parser.cpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.hpp"

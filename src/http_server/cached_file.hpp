@@ -33,6 +33,9 @@ namespace mtconnect
     using CachedFilePtr = std::shared_ptr<CachedFile>;
     struct CachedFile : public std::enable_shared_from_this<CachedFile>
     {
+      // Small file size
+      static const int SMALL_FILE = 10 * 1024;  // 10k is considered small
+
       CachedFile() : m_buffer(nullptr) {}
       CachedFilePtr getptr() { return shared_from_this(); }
 
