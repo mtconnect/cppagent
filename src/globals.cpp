@@ -17,6 +17,8 @@
 
 #include "globals.hpp"
 
+#include <date/tz.h>
+
 #include <chrono>
 #include <cstdio>
 #include <cstring>
@@ -28,8 +30,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <date/tz.h>
 
 // Don't include WinSock.h when processing <windows.h>
 #ifdef _WINDOWS

@@ -32,36 +32,36 @@ using namespace std::literals;
 
 namespace mtconnect
 {
-  namespace  adapter
+  namespace adapter
   {
     static dlib::logger g_logger("input.adapter");
-    
+
     // Adapter public methods
     Adapter::Adapter(string device, const string &server, const unsigned int port,
                      std::chrono::seconds legacyTimeout)
-    : Connector(server, port, legacyTimeout),
-    m_agent(nullptr),
-    m_device(nullptr),
-    m_deviceName(std::move(device)),
-    m_running(true),
-    m_autoAvailable(false),
-    m_reconnectInterval{10000ms}
+      : Connector(server, port, legacyTimeout),
+        m_agent(nullptr),
+        m_device(nullptr),
+        m_deviceName(std::move(device)),
+        m_running(true),
+        m_autoAvailable(false),
+        m_reconnectInterval{10000ms}
     {
       stringstream url;
       url << "shdr://" << server << ':' << port;
       m_url = url.str();
-      
+
       stringstream identity;
       identity << '_' << server << '_' << port;
       m_identity = identity.str();
     }
-    
+
     Adapter::~Adapter()
     {
       if (m_running)
         stop();
     }
-    
+
     void Adapter::stop()
     {
       // Will stop threaded object gracefully Adapter::thread()
@@ -69,7 +69,7 @@ namespace mtconnect
       close();
       wait();
     }
-    
+
     void Adapter::setAgent(Agent &agent)
     {
       m_agent = &agent;
@@ -80,7 +80,7 @@ namespace mtconnect
         m_allDevices.emplace_back(m_device);
       }
     }
-    
+
     void Adapter::addDevice(string &device)
     {
       auto dev = m_agent->getDeviceByName(device);
@@ -90,7 +90,7 @@ namespace mtconnect
         dev->addAdapter(this);
       }
     }
-    
+
     void Adapter::processData(const string &data)
     {
       if (m_terminator)
@@ -106,10 +106,10 @@ namespace mtconnect
         {
           m_body << endl << data;
         }
-        
+
         return;
       }
-            
+
       size_t multi;
       if ((multi = data.find("__multiline__"sv)) != string::npos)
       {
@@ -118,11 +118,11 @@ namespace mtconnect
         m_terminator = data.substr(multi);
         return;
       }
-      
+
       if (m_handler && m_handler->m_processData)
         m_handler->m_processData(data, m_context);
     }
-    
+
     // Adapter private methods
     void Adapter::thread()
     {
@@ -132,39 +132,39 @@ namespace mtconnect
         {
           // Start the connection to the socket
           connect();
-          
+
           // make sure we're closed...
           close();
         }
         catch (std::invalid_argument &err)
         {
           g_logger << LERROR << "Adapter for " << m_deviceName
-          << "'s thread threw an argument error, stopping adapter: " << err.what();
+                   << "'s thread threw an argument error, stopping adapter: " << err.what();
           stop();
         }
         catch (std::exception &err)
         {
           g_logger << LERROR << "Adapter for " << m_deviceName
-          << "'s thread threw an exceotion, stopping adapter: " << err.what();
+                   << "'s thread threw an exceotion, stopping adapter: " << err.what();
           stop();
         }
         catch (...)
         {
           g_logger << LERROR << "Thread for adapter " << m_deviceName
-          << "'s thread threw an unhandled exception, stopping adapter";
+                   << "'s thread threw an unhandled exception, stopping adapter";
           stop();
         }
-        
+
         if (!m_running)
           break;
-        
+
         // Try to reconnect every 10 seconds
         g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval.count()
-        << " milliseconds";
+                 << " milliseconds";
         this_thread::sleep_for(m_reconnectInterval);
       }
       g_logger << LINFO << "Adapter thread stopped";
     }
 
-  }
+  }  // namespace adapter
 }  // namespace mtconnect

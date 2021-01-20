@@ -15,8 +15,9 @@
 //    limitations under the License.
 //
 
-#include "shdr_parser.hpp"
 #include "data_item_mapper.hpp"
+
+#include "shdr_parser.hpp"
 
 using namespace std;
 
@@ -25,16 +26,17 @@ namespace mtconnect
   namespace adapter
   {
     static dlib::logger g_logger("ShdrParser");
-    
-    inline static std::pair<std::string,std::optional<std::string>> splitKey(const std::string &key)
+
+    inline static std::pair<std::string, std::optional<std::string>> splitKey(
+        const std::string &key)
     {
       auto c = key.find(':');
       if (c != string::npos)
-        return { key.substr(c + 1, string::npos), key.substr(0, c - 1) };
+        return {key.substr(c + 1, string::npos), key.substr(0, c - 1)};
       else
         return {key, nullopt};
     }
-    
+
     inline optional<double> getDuration(std::string &timestamp)
     {
       optional<double> duration;
@@ -42,62 +44,56 @@ namespace mtconnect
       auto pos = timestamp.find('@');
       if (pos != string::npos)
       {
-        auto read = pos + 1;;
+        auto read = pos + 1;
+        ;
         duration = std::stod(timestamp, &read);
         if (read == pos + 1)
           duration.reset();
         timestamp = timestamp.erase(pos);
       }
-      
+
       return duration;
     }
     
+    inline static string &upcase(string &s)
+    {
+      std::transform(s.begin(), s.end(), s.begin(),
+                     [](unsigned char c) -> unsigned char { return std::toupper(c); });
+      return s;
+    }
+
     // --------------------------------------
     // Mapping to data items
-    
-    entity::Requirements DataItemMapper::m_condition {
-      { "level", true },
-      { "nativeCode", false },
-      { "nativeSeverity", false },
-      { "qualifier", false },
-      { "value", false }
+    entity::Requirements DataItemMapper::m_condition{{"level", true},
+                                                     {"nativeCode", false},
+                                                     {"nativeSeverity", false},
+                                                     {"qualifier", false},
+                                                     {"value", false}};
+    entity::Requirements DataItemMapper::m_timeseries{{"count", entity::INTEGER, true},
+                                                      {"frequency", entity::DOUBLE, true},
+                                                      {"value", entity::VECTOR, true}};
+    entity::Requirements DataItemMapper::m_message{{"nativeCode", false}, {"value", false}};
+    entity::Requirements DataItemMapper::m_sample{
+        {"value", entity::DOUBLE, false},
     };
-    entity::Requirements DataItemMapper::m_timeseries {
-      { "count", entity::INTEGER, true },
-      { "frequency", entity::DOUBLE, true },
-      { "value", entity::VECTOR, true }
+    entity::Requirements DataItemMapper::m_event{
+        {"value", false},
     };
-    entity::Requirements DataItemMapper::m_message {
-      { "nativeCode", false },
-      { "value", false }
-    };
-    entity::Requirements DataItemMapper::m_asset {
-      { "assetId", false },
-      { "type", false }
-    };
-    entity::Requirements DataItemMapper::m_sample {
-      { "value", entity::DOUBLE, false },
-    };
-    entity::Requirements DataItemMapper::m_event {
-      { "value", false },
-    };
-    
-    void DataItemMapper::mapTokensToAsset(ShdrObservation &obs,
-                                       TokenList::const_iterator &token,
-                                       const TokenList::const_iterator &end)
-    {
-      
-    }
-    
-    inline void zipProperties(entity::Properties &properties,
-                              const entity::Requirements &reqs,
+
+    inline void zipProperties(entity::Properties &properties, const entity::Requirements &reqs,
                               TokenList::const_iterator &token,
-                              const TokenList::const_iterator &end)
+                              const TokenList::const_iterator &end,
+                              bool upc = false)
     {
       auto req = reqs.begin();
       while (token != end && req != reqs.end())
       {
         entity::Value value(*token);
+        if (upc)
+        {
+          upcase(get<string>(value));
+        }
+        
         try
         {
           if (req->convertType(value))
@@ -111,54 +107,76 @@ namespace mtconnect
         }
         catch (entity::PropertyError &e)
         {
-          g_logger << dlib::LWARN << "Cannot convert value for: " << *token
-                    << " - " << e.what();
+          g_logger << dlib::LWARN << "Cannot convert value for: " << *token << " - " << e.what();
         }
-        
+
         token++;
         req++;
       }
     }
-    
+
+    void DataItemMapper::mapTokensToAsset(ShdrObservation &obs, TokenList::const_iterator &token,
+                                          const TokenList::const_iterator &end, Context &)
+    {
+      obs.m_observed.emplace<DataItemObservation>();
+      if (*token == "@ASSET@")
+      {
+        auto &observation = get<AssetObservation>(obs.m_observed);
+        obs.m_properties.emplace("assetId", *++token);
+        obs.m_properties.emplace("type", *++token);
+        observation.m_body = *token;
+      }
+      else if (*token == "REMOVE_ALL_ASSETS@")
+      {
+        obs.m_observed = AssetCommand::REMOVE_ALL;
+        obs.m_properties.emplace("type", *++token);
+      }
+      else if (*token == "REMOVE_ASSETS@")
+      {
+        obs.m_observed = AssetCommand::REMOVE_ASSET;
+        obs.m_properties.emplace("assetId", *++token);
+      }
+      else
+      {
+        g_logger << dlib::LWARN << "Unsupported Asset Command: " << *token;
+      }
+      token++;
+    }
+
     void DataItemMapper::mapTokensToDataItems(ShdrObservation &obs,
-                                         TokenList::const_iterator &token,
-                                         const TokenList::const_iterator &end,
-                                         Context &context)
+                                              TokenList::const_iterator &token,
+                                              const TokenList::const_iterator &end,
+                                              Context &context)
     {
       // Asset maping
-      if ((*token)[0] == '@')
-      {
-        mapTokensToAsset(obs, token, end);
-        return;
-      }
+      obs.m_observed.emplace<DataItemObservation>();
+      auto &observation = get<DataItemObservation>(obs.m_observed);
 
-      ShdrDataItemObservation observation{obs};
-      
       while (token != end)
       {
         string deviceId;
         auto dataItemKey = splitKey(*token++);
-        observation.m_device = context.m_getDevice(dataItemKey.second.value_or(""));
-        observation.m_dataItem = context.m_getDataItem(observation.m_device, dataItemKey.first);
-        
+        obs.m_device = context.m_getDevice(dataItemKey.second.value_or(""));
+        observation.m_dataItem = context.m_getDataItem(obs.m_device, dataItemKey.first);
+
         if (observation.m_dataItem == nullptr)
         {
           // resync to next item
           if (context.m_logOnce.count(dataItemKey.first) > 0)
-            g_logger << LTRACE << "(" << observation.m_device->getName()
+            g_logger << LTRACE << "(" << obs.m_device->getName()
                      << ") Could not find data item: " << dataItemKey.first;
           else
           {
-            g_logger << LWARN << "(" << observation.m_device->getName()
+            g_logger << LWARN << "(" << obs.m_device->getName()
                      << ") Could not find data item: " << dataItemKey.first;
             context.m_logOnce.insert(dataItemKey.first);
           }
 
           continue;
         }
-        
-        entity::Requirements *reqs { nullptr };
-        
+
+        entity::Requirements *reqs{nullptr};
+
         // Extract the remaining tokens
         if (observation.m_dataItem->getCategory() == DataItem::SAMPLE)
         {
@@ -186,12 +204,14 @@ namespace mtconnect
         {
           reqs = &m_condition;
         }
-        
+
         if (reqs != nullptr)
-          zipProperties(observation.m_properties, *reqs, token, end);
+        {
+          zipProperties(obs.m_properties, *reqs, token, end, context.m_upcaseValue);
+        }
         else
           g_logger << LWARN << "Cannot find requirements for " << dataItemKey.first;
       }
     }
-  }
-}
+  }  // namespace adapter
+}  // namespace mtconnect

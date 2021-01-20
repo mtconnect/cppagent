@@ -32,7 +32,6 @@ namespace mtconnect
   namespace entity
   {
     static dlib::logger g_logger("EntityRequirement");
-    
 
     Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f, bool required)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)

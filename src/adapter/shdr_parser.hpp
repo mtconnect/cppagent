@@ -20,8 +20,9 @@
 #include "adapter.hpp"
 #include "entity/entity.hpp"
 
-#include <regex>
 #include <chrono>
+#include <regex>
+#include <variant>
 
 namespace mtconnect
 {
@@ -29,54 +30,46 @@ namespace mtconnect
   {
     using TokenList = std::list<std::string>;
 
+    enum AssetCommand
+    {
+      REMOVE_ALL,
+      REMOVE_ASSET
+    };
+
+    struct DataItemObservation
+    {
+      bool m_unavailable{false};
+      const DataItem *m_dataItem{nullptr};
+    };
+
+    struct AssetObservation
+    {
+      std::string m_body;
+    };
+
+    using Observed =
+        std::variant<std::monostate, DataItemObservation, AssetObservation, AssetCommand>;
+
     struct ShdrObservation
     {
       ShdrObservation() = default;
       ShdrObservation(const ShdrObservation &) = default;
-      
+
       Timestamp m_timestamp;
       std::optional<double> m_duration;
-      const Device     *m_device { nullptr };
+      const Device *m_device{nullptr};
       entity::Properties m_properties;
-    };
-    
-    struct ShdrDataItemObservation : ShdrObservation
-    {
-      ShdrDataItemObservation() = default;
-      ShdrDataItemObservation(const ShdrDataItemObservation &o) = default;
 
-      bool m_unavailable {false};
-      const DataItem *m_dataItem {nullptr};
+      Observed m_observed;
     };
-    
-    struct ShdrAssetObservation : ShdrObservation
-    {
-      ShdrAssetObservation() = default;
-      ShdrAssetObservation(const ShdrAssetObservation &o) = default;
-      std::string m_body;
-    };
-    
-    struct ShdrAssetCommand : ShdrObservation
-    {
-      ShdrAssetCommand() = default;
-      ShdrAssetCommand(const ShdrAssetCommand &o) = default;
-      enum Command
-      {
-        REMOVE_ALL,
-        REMOVE_ASSET
-      };
-      
-      Command m_command { REMOVE_ALL };
-    };
-        
+
     class ShdrParser
     {
-    public:
+     public:
       void processData(const std::string &data, Context &context);
-      
-    protected:
-    };
-    
 
-  }
-}
+     protected:
+    };
+
+  }  // namespace adapter
+}  // namespace mtconnect

@@ -20,33 +20,33 @@
 #include "adapter.hpp"
 #include "entity/entity.hpp"
 
-#include <regex>
 #include <chrono>
+#include <regex>
 
 namespace mtconnect
 {
   class Agent;
-  
+
   namespace adapter
   {
     using TokenList = std::list<std::string>;
 
     class ShdrTokenizer
     {
-    public:
+     public:
       ShdrTokenizer() = default;
-      
-      template<typename T>
+
+      template <typename T>
       inline static std::string remove(const T &range, const char c)
       {
         using namespace std;
         string res;
         copy_if(range.first, range.second, std::back_inserter(res),
                 [&c](const char m) { return c != m; });
-                
+
         return res;
       }
-      
+
       inline static std::string trim(const std::string &str)
       {
         using namespace std;
@@ -62,19 +62,17 @@ namespace mtconnect
           return str.substr(first, last - first + 1);
       }
 
-      
       static TokenList tokenize(const std::string &data)
       {
         using namespace std;
-        
+
         TokenList tokens;
         string text(data);
 
         while (!text.empty())
         {
           smatch match;
-          auto res = regex_search(text.cbegin(), text.cend(), match,
-                                  m_pattern);
+          auto res = regex_search(text.cbegin(), text.cend(), match, m_pattern);
           if (res)
           {
             // Match 2 is a quoted string with escaped \| and match 5 is
@@ -117,12 +115,12 @@ namespace mtconnect
             text.clear();
           }
         }
-        
+
         return tokens;
       }
-      
-    protected:
+
+     protected:
       static std::regex m_pattern;
-    };    
-  }
-}
+    };
+  }  // namespace adapter
+}  // namespace mtconnect

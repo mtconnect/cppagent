@@ -23,19 +23,16 @@
 namespace mtconnect
 {
   class Agent;
-  
+
   namespace adapter
   {
-    struct ShdrObservation;    
-    
+    struct ShdrObservation;
+
     class TimestampExtractor
     {
-    public:
-      static void extractTimestamp(ShdrObservation &obs,
-                                   TokenList::const_iterator &token,
-                                   const TokenList::const_iterator &end,
-                                   Context &context);
-      
+     public:
+      static void extractTimestamp(ShdrObservation &obs, TokenList::const_iterator &token,
+                                   const TokenList::const_iterator &end, Context &context);
     };
-  }
-}
+  }  // namespace adapter
+}  // namespace mtconnect

@@ -37,12 +37,15 @@
 
 namespace mtconnect
 {
-  namespace adapter { class Adapter; }
+  namespace adapter
+  {
+    class Adapter;
+  }
   class Observation;
   class DataItem;
   class Device;
   class AgentDevice;
-  
+
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
   class Agent

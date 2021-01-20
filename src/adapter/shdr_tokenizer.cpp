@@ -23,12 +23,13 @@ namespace mtconnect
 {
   namespace adapter
   {
+    const auto EXP =
+        "^("
+        R"RE("(([^"\\\|]*(\\\|)?)+)")RE"
+        "|"
+        R"RE(([^|]*))RE"
+        R"RE()(\||$))RE";
+    std::regex ShdrTokenizer::m_pattern(EXP, std::regex::optimize | std::regex::ECMAScript);
 
-    const auto EXP = "^(" R"RE("(([^"\\\|]*(\\\|)?)+)")RE" "|"
-                          R"RE(([^|]*))RE" R"RE()(\||$))RE";
-    std::regex ShdrTokenizer::m_pattern(EXP,
-                                        std::regex::optimize |
-                                        std::regex::ECMAScript);
-
-  }
-}
+  }  // namespace adapter
+}  // namespace mtconnect

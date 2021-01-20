@@ -31,7 +31,10 @@
 
 namespace mtconnect
 {
-  namespace adapter { class Adapter; }
+  namespace adapter
+  {
+    class Adapter;
+  }
 
   class DataItem : public ChangeSignaler
   {

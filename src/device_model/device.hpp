@@ -25,7 +25,10 @@
 namespace mtconnect
 {
   class Component;
-  namespace adapter { class Adapter; }
+  namespace adapter
+  {
+    class Adapter;
+  }
 
   class Device : public Component
   {

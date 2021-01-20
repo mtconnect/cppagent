@@ -16,14 +16,14 @@
 //
 
 #include "shdr_parser.hpp"
-#include "timestamp_extractor.hpp"
-#include "shdr_tokenizer.hpp"
-#include "data_item_mapper.hpp"
-#include "shdr_tokenizer.hpp"
-#include "data_item_mapper.hpp"
+
 #include "agent.hpp"
+#include "data_item_mapper.hpp"
+#include "shdr_tokenizer.hpp"
+#include "timestamp_extractor.hpp"
 
 #include <date/date.h>
+
 #include <optional>
 
 using namespace std;
@@ -32,30 +32,32 @@ namespace mtconnect
 {
   namespace adapter
   {
-
     static dlib::logger g_logger("ShdrParser");
 
-    
     void ShdrParser::processData(const std::string &data, Context &context)
     {
       using namespace std;
-      
+
       auto tokens = ShdrTokenizer::tokenize(data);
       if (!tokens.empty())
       {
         auto token = tokens.cbegin();
         auto end = tokens.end();
-        
+
         ShdrObservation obsservation;
         TimestampExtractor::extractTimestamp(obsservation, token, end, context);
-        // Extract time
-        
-        // Map data items
-        
+
+        if ((*token)[0] == '@')
+        {
+          DataItemMapper::mapTokensToAsset(obsservation, token, end, context);
+        }
+        else
+        {
+          DataItemMapper::mapTokensToDataItems(obsservation, token, end, context);
+        }
       }
     }
 
-    
 #if 0
     
     
@@ -384,9 +386,7 @@ namespace mtconnect
     void Adapter::connecting() { m_agent->connecting(this); }
     
     void Adapter::connected() { m_agent->connected(this, m_allDevices); }
-    
-
 
 #endif
-  }
-}
+  }  // namespace adapter
+}  // namespace mtconnect

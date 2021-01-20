@@ -308,7 +308,7 @@ namespace mtconnect
             [](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
   {
   }
-  
+
   inline static bool isMTConnectUrn(const char *aUrn)
   {
     return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27u);

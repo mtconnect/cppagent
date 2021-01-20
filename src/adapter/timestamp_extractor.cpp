@@ -15,10 +15,12 @@
 //    limitations under the License.
 //
 
-#include "shdr_parser.hpp"
 #include "timestamp_extractor.hpp"
 
+#include "shdr_parser.hpp"
+
 #include <date/date.h>
+
 #include <optional>
 
 using namespace std;
@@ -27,7 +29,6 @@ namespace mtconnect
 {
   namespace adapter
   {
-
     static dlib::logger g_logger("TimestampExtractor");
 
     inline optional<double> getDuration(std::string &timestamp)
@@ -37,7 +38,8 @@ namespace mtconnect
       auto pos = timestamp.find('@');
       if (pos != string::npos)
       {
-        auto read = pos + 1;;
+        auto read = pos + 1;
+        ;
         auto dur{timestamp.substr(read)};
         duration = std::stod(dur, &read);
         if (read == pos + 1)
@@ -45,10 +47,10 @@ namespace mtconnect
         else
           timestamp = timestamp.erase(pos);
       }
-      
+
       return duration;
     }
-    
+
     void TimestampExtractor::extractTimestamp(ShdrObservation &obs,
                                               TokenList::const_iterator &token,
                                               const TokenList::const_iterator &end,
@@ -57,19 +59,19 @@ namespace mtconnect
       using namespace date;
 
       // Extract duration
-      
+
       string timestamp = *token++;
       obs.m_duration = getDuration(timestamp);
-      
+
       if (context.m_ignoreTimestamps || timestamp.empty())
       {
         Timestamp now = context.m_now ? context.m_now() : chrono::system_clock::now();
         obs.m_timestamp = now;
         return;
       }
-      
+
       Timestamp ts;
-      bool has_t{ timestamp.find('T') != string::npos };
+      bool has_t{timestamp.find('T') != string::npos};
       if (has_t)
       {
         istringstream in(timestamp);
@@ -78,14 +80,14 @@ namespace mtconnect
         {
           ts = context.m_now ? context.m_now() : chrono::system_clock::now();
         }
-        
+
         if (!context.m_relativeTime)
         {
           obs.m_timestamp = ts;
           return;
         }
       }
-      
+
       // Handle double offset
       Timestamp now = context.m_now ? context.m_now() : chrono::system_clock::now();
       double offset;
@@ -93,7 +95,7 @@ namespace mtconnect
       {
         offset = stod(timestamp);
       }
-      
+
       if (!context.m_base)
       {
         context.m_base = now;
@@ -111,10 +113,9 @@ namespace mtconnect
         }
         else
         {
-          obs.m_timestamp = *context.m_base +
-            Micros(int64_t(offset * 1000.0)) - context.m_offset;
+          obs.m_timestamp = *context.m_base + Micros(int64_t(offset * 1000.0)) - context.m_offset;
         }
       }
-    }    
-  }
-}
+    }
+  }  // namespace adapter
+}  // namespace mtconnect
