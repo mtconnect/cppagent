@@ -38,10 +38,12 @@ namespace mtconnect
       if (pos != string::npos)
       {
         auto read = pos + 1;;
-        duration = std::stod(timestamp, &read);
+        auto dur{timestamp.substr(read)};
+        duration = std::stod(dur, &read);
         if (read == pos + 1)
           duration.reset();
-        timestamp = timestamp.erase(pos);
+        else
+          timestamp = timestamp.erase(pos);
       }
       
       return duration;

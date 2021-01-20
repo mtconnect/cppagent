@@ -111,22 +111,3 @@ TEST(ShdrParserTest, EscapedLine)
     EXPECT_EQ(tokens, test.second) << " given text: " << test.first;
   }
 }
-
-using namespace std::literals;
-using namespace date;
-using namespace date::literals;
-
-TEST(ShdrParserTest, TestTimeExtraction)
-{  
-  TokenList tokens { "2021-01-19T12:00:00.12345Z", "hello" };
-  Context context;
-  
-  auto token = tokens.cbegin();
-  auto end = tokens.end();
-  
-  ShdrObservation obsservation;
-  TimestampExtractor::extractTimestamp(obsservation, token, end, context);
-
-  ASSERT_EQ("hello", *token);
-  ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", obsservation.m_timestamp));
-}
