@@ -59,52 +59,6 @@ namespace mtconnect
 #if 0
     
     
-    inline string Adapter::extractTime(const string &time, double &anOffset)
-    {
-      // Check how to handle time. If the time is relative, then we need to compute the first
-      // offsets, otherwise, if this function is being used as an API, add the current time.
-      string result;
-      if (m_relativeTime)
-      {
-        uint64_t offset;
-        
-        if (!m_baseTime)
-        {
-          m_baseTime = getCurrentTimeInMicros();
-          
-          if (time.find('T') != string::npos)
-          {
-            m_parseTime = true;
-            m_baseOffset = parseTimeMicro(time);
-          }
-          else
-            m_baseOffset = (uint64_t)(atof(time.c_str()) * 1000.0);
-          
-          offset = 0;
-        }
-        else if (m_parseTime)
-          offset = parseTimeMicro(time) - m_baseOffset;
-        else
-          offset = ((uint64_t)(atof(time.c_str()) * 1000.0)) - m_baseOffset;
-        
-        // convert microseconds to seconds
-        anOffset = offset / 1000000.0;
-        result = getRelativeTimeString(m_baseTime + offset);
-      }
-      else if (m_ignoreTimestamps || time.empty())
-      {
-        anOffset = getCurrentTimeInSec();
-        result = getCurrentTime(GMT_UV_SEC);
-      }
-      else
-      {
-        anOffset = parseTimeMicro(time) / 1000000.0;
-        result = time;
-      }
-      
-      return result;
-    }
-        
     bool Adapter::processDataItem(istringstream &toParse, const string &line, const string &inputKey,
                                   const string &inputValue, const string &time, double anOffset,
                                   bool first)

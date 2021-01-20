@@ -56,10 +56,12 @@ namespace mtconnect
 
       // Extract duration
       
-      const string &timestamp = *token++;
-      Timestamp now = context.m_now ? context.m_now() : chrono::system_clock::now();
+      string timestamp = *token++;
+      obs.m_duration = getDuration(timestamp);
+      
       if (context.m_ignoreTimestamps || timestamp.empty())
       {
+        Timestamp now = context.m_now ? context.m_now() : chrono::system_clock::now();
         obs.m_timestamp = now;
         return;
       }
@@ -70,6 +72,11 @@ namespace mtconnect
       {
         istringstream in(timestamp);
         in >> std::setw(6) >> parse("%FT%T", ts);
+        if (!in.good())
+        {
+          ts = context.m_now ? context.m_now() : chrono::system_clock::now();
+        }
+        
         if (!context.m_relativeTime)
         {
           obs.m_timestamp = ts;
@@ -78,6 +85,7 @@ namespace mtconnect
       }
       
       // Handle double offset
+      Timestamp now = context.m_now ? context.m_now() : chrono::system_clock::now();
       double offset;
       if (!has_t)
       {
