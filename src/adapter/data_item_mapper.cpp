@@ -81,16 +81,13 @@ namespace mtconnect
                                         {"severity", false},
                                         {"state", true},
                                         {"VALUE", false}};
-    static entity::Requirements s_timeseries{{"count", entity::INTEGER, true},
-                                             {"frequency", entity::DOUBLE, true},
+    static entity::Requirements s_timeseries{{"sampleCount", entity::INTEGER, true},
+                                             {"sampleRate", entity::DOUBLE, true},
                                              {"VALUE", entity::VECTOR, true}};
     static entity::Requirements s_message{{"nativeCode", false}, {"VALUE", false}};
-    static entity::Requirements s_sample{
-        {"VALUE", entity::DOUBLE, false},
-    };
-    static entity::Requirements s_event{
-        {"VALUE", false},
-    };
+    static entity::Requirements s_sample{{"VALUE", entity::DOUBLE, false}};
+    static entity::Requirements s_event{{"VALUE", false}};
+    static entity::Requirements s_dataSet{{"VALUE", entity::DATA_SET, false}};
 
     static inline std::string extractResetTrigger(const DataItem *dataItem,
                                                   TokenList::const_iterator &token,
@@ -104,7 +101,7 @@ namespace mtconnect
         string trig, value;
         if (dataItem->isSample())
         {
-          trig = token->substr(pos);
+          trig = token->substr(pos + 1);
           value = token->substr(0, pos);
         }
         else
@@ -134,6 +131,7 @@ namespace mtconnect
         if (unavailable(*token) && (req->getName() == "VALUE" || req->getName() == "level"))
         {
           observation.m_unavailable = true;
+          obs.m_properties.insert_or_assign(req->getName(), "UNAVAILABLE");
           token++;
           req++;
           continue;
@@ -141,15 +139,15 @@ namespace mtconnect
 
         entity::Value value = extractResetTrigger(observation.m_dataItem, token, obs.m_properties);
 
-        if (upc && req->getType() == entity::STRING &&
-            (observation.m_dataItem->isTable() || observation.m_dataItem->isDataSet()))
+        if (upc && req->getType() == entity::STRING && !observation.m_dataItem->isTable() &&
+            !observation.m_dataItem->isDataSet())
         {
           upcase(get<string>(value));
         }
 
         try
         {
-          if (req->convertType(value))
+          if (req->convertType(value, observation.m_dataItem->isTable()))
           {
             obs.m_properties.insert_or_assign(req->getName(), value);
           }
@@ -212,6 +210,8 @@ namespace mtconnect
           reqs = &s_message;
         else if (observation.m_dataItem->isAlarm())
           reqs = &s_alarm;
+        else if (observation.m_dataItem->isDataSet() || observation.m_dataItem->isTable())
+          reqs = &s_dataSet;
         else
           reqs = &s_event;
       }
@@ -225,13 +225,7 @@ namespace mtconnect
       {
         zipProperties(obs, *reqs, token, end, context.m_upcaseValue);
         const char *field = observation.m_dataItem->isCondition() ? "level" : "VALUE";
-        if (obs.m_properties.count(field) > 0)
-        {
-          auto &v = obs.m_properties[field];
-          observation.m_unavailable = unavailable(get<string>(v));
-          upcase(get<string>(v));
-        }
-        else
+        if (obs.m_properties.count(field) == 0)
         {
           observation.m_unavailable = true;
           obs.m_properties[field] = "UNAVAILABLE";

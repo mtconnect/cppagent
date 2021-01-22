@@ -67,7 +67,7 @@ namespace mtconnect
       NULL_VALUE = 9
     };
 
-    bool ConvertValueToType(Value &value, ValueType type);
+    bool ConvertValueToType(Value &value, ValueType type, bool table = false);
 
     class EntityError : public std::logic_error
     {
@@ -226,11 +226,11 @@ namespace mtconnect
       }
       void makeRequired() { m_lowerMultiplicity = 1; }
 
-      bool convertType(Value &v) const
+      bool convertType(Value &v, bool table = false) const
       {
         try
         {
-          return ConvertValueToType(v, m_type);
+          return ConvertValueToType(v, m_type, table);
         }
         catch (PropertyError &e)
         {

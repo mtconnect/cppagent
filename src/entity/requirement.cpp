@@ -189,7 +189,7 @@ namespace mtconnect
       const string &m_string;
     };
 
-    bool ConvertValueToType(Value &value, ValueType type)
+    bool ConvertValueToType(Value &value, ValueType type, bool table)
     {
       bool converted = false;
       if (value.index() != type)
@@ -217,6 +217,15 @@ namespace mtconnect
                                value = Vector(s);
                                converted = true;
                                break;
+
+                             case DATA_SET:
+                             {
+                               string v{arg};
+                               value.emplace<DataSet>();
+                               get<DataSet>(value).parse(v, table);
+                               converted = true;
+                               break;
+                             }
 
                              default:
                                throw PropertyError("Cannot convert a string to a non-scalar");
