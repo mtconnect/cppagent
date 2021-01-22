@@ -45,7 +45,7 @@ namespace mtconnect
 
   class AgentConfiguration : public MTConnectService
   {
-   public:
+  public:
     AgentConfiguration();
     virtual ~AgentConfiguration();
 
@@ -64,7 +64,7 @@ namespace mtconnect
 
     void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
-   protected:
+  protected:
     Device *defaultDevice();
     void loadAdapters(ConfigReader &reader, bool defaultPreserve,
                       std::chrono::seconds legacyTimeout,
@@ -86,7 +86,7 @@ namespace mtconnect
 
     void monitorThread();
 
-   protected:
+  protected:
     std::unique_ptr<Agent> m_agent;
     std::unique_ptr<RollingFileLogger> m_loggerFile;
     std::string m_version;

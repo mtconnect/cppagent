@@ -32,7 +32,7 @@ namespace mtconnect
 
   class Checkpoint
   {
-   public:
+  public:
     Checkpoint();
     Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
     ~Checkpoint();
@@ -57,7 +57,7 @@ namespace mtconnect
       return nullptr;
     }
 
-   protected:
+  protected:
     std::map<std::string, ObservationPtr *> m_events;
     FilterSetOpt m_filter;
   };

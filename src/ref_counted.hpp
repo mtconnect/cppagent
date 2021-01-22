@@ -24,7 +24,7 @@ namespace mtconnect
   template <class T>
   class RefCountedPtr
   {
-   public:
+  public:
     // Constructors
     RefCountedPtr() { m_object = nullptr; }
 
@@ -63,7 +63,7 @@ namespace mtconnect
 
     bool operator<(const RefCountedPtr &another);
 
-   protected:
+  protected:
     T *m_object;
   };
 
@@ -96,7 +96,7 @@ namespace mtconnect
 
   class RefCounted
   {
-   public:
+  public:
     RefCounted() { m_refCount.store(1); }
 
     RefCounted(const RefCounted &aRef) { m_refCount.store(1); }
@@ -115,7 +115,7 @@ namespace mtconnect
 
     unsigned int refCount() { return m_refCount.load(); }
 
-   protected:
+  protected:
     // Reference count
     std::atomic_int m_refCount;
   };

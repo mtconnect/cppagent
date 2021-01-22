@@ -32,7 +32,7 @@ namespace mtconnect
   {
     class JsonParser
     {
-     public:
+    public:
       JsonParser() = default;
       ~JsonParser() = default;
 

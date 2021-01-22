@@ -29,7 +29,7 @@ namespace mtconnect
 
   class ChangeObserver
   {
-   public:
+  public:
     ChangeObserver() = default;
 
     virtual ~ChangeObserver();
@@ -65,14 +65,14 @@ namespace mtconnect
       m_sequence = UINT64_MAX;
     }
 
-   private:
+  private:
     mutable std::recursive_mutex m_mutex;
     mutable std::condition_variable_any m_cv;
 
     std::vector<ChangeSignaler *> m_signalers;
     volatile uint64_t m_sequence = UINT64_MAX;
 
-   protected:
+  protected:
     friend class ChangeSignaler;
     void addSignaler(ChangeSignaler *sig);
     bool removeSignaler(ChangeSignaler *sig);
@@ -80,7 +80,7 @@ namespace mtconnect
 
   class ChangeSignaler
   {
-   public:
+  public:
     // Observer Management
     void addObserver(ChangeObserver *observer);
     bool removeObserver(ChangeObserver *observer);
@@ -89,7 +89,7 @@ namespace mtconnect
 
     virtual ~ChangeSignaler();
 
-   protected:
+  protected:
     // Observer Lists
     mutable std::recursive_mutex m_observerMutex;
     std::vector<ChangeObserver *> m_observers;

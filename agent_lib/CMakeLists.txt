@@ -1,6 +1,8 @@
 set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/asset_mapper.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/asset_mapper.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/data_item_mapper.hpp"
@@ -81,6 +83,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/routing.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/routing.cpp"
   
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/data_set.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation.cpp"

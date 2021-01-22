@@ -148,10 +148,10 @@ namespace mtconnect
   template <typename T>
   class reverse
   {
-   private:
+  private:
     T &m_iterable;
 
-   public:
+  public:
     explicit reverse(T &iterable) : m_iterable(iterable) {}
     auto begin() const { return std::rbegin(m_iterable); }
     auto end() const { return std::rend(m_iterable); }

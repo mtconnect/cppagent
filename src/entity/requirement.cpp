@@ -347,6 +347,10 @@ namespace mtconnect
                          [&](const auto &arg) { converted = false; }},
               value);
       }
+      else
+      {
+        converted = true;
+      }
       return converted;
     }
   }  // namespace entity

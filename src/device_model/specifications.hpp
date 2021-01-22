@@ -31,7 +31,7 @@ namespace mtconnect
 {
   class Specification
   {
-   public:
+  public:
     Specification(const Specification &s)
       : m_id(s.m_id),
         m_type(s.m_type),
@@ -53,7 +53,7 @@ namespace mtconnect
     }
     virtual ~Specification() = default;
 
-   public:
+  public:
     typedef std::map<std::string, double> Group;
 
     // Attributes
@@ -105,7 +105,7 @@ namespace mtconnect
     bool hasGroups() const { return m_hasGroups; }
     const std::string &getClass() const { return m_class; }
 
-   protected:
+  protected:
     std::map<std::string, Group> m_groups;
     bool m_hasGroups;
     std::string m_class;
@@ -113,7 +113,7 @@ namespace mtconnect
 
   class Specifications : public ComponentConfiguration
   {
-   public:
+  public:
     Specifications() = default;
     virtual ~Specifications() = default;
 
@@ -127,7 +127,7 @@ namespace mtconnect
       m_specifications.emplace_back(std::move(s));
     }
 
-   protected:
+  protected:
     std::list<std::unique_ptr<Specification>> m_specifications;
   };
 }  // namespace mtconnect

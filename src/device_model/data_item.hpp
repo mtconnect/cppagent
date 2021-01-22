@@ -38,7 +38,7 @@ namespace mtconnect
 
   class DataItem : public ChangeSignaler
   {
-   public:
+  public:
     // Enumeration for data item category
     enum ECategory
     {
@@ -71,7 +71,7 @@ namespace mtconnect
       std::string m_idRef;
     };
 
-   public:
+  public:
     // Construct a data item with appropriate attributes mapping
     DataItem(std::map<std::string, std::string> const &attributes);
 
@@ -263,8 +263,7 @@ namespace mtconnect
     adapter::Adapter *getDataSource() const { return m_dataSource; }
     void setDataSource(adapter::Adapter *source);
     bool operator<(const DataItem &another) const;
-
-    bool operator==(DataItem &another) const { return m_id == another.m_id; }
+    bool operator==(const DataItem &another) const { return m_id == another.m_id; }
 
     const char *getCategoryText() const
     {
@@ -286,12 +285,12 @@ namespace mtconnect
 
     std::list<Relationship> &getRelationships() { return m_relationships; }
 
-   protected:
+  protected:
     double simpleFactor(const std::string &units);
     std::map<std::string, std::string> buildAttributes() const;
     void computeConversionFactors();
 
-   protected:
+  protected:
     // Unique ID for each component
     std::string m_id;
 

@@ -32,6 +32,103 @@ namespace mtconnect
   {
     static dlib::logger g_logger("entity.xml.printer");
 
+    static inline void addAttribute(xmlTextWriterPtr writer, const char *key,
+                                    const std::string &value)
+    {
+      if (!value.empty())
+        THROW_IF_XML2_ERROR(
+            xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST value.c_str()));
+    }
+
+    static inline void addAttributes(xmlTextWriterPtr writer,
+                                     const std::map<string, string> &attributes)
+    {
+      for (const auto &attr : attributes)
+      {
+        if (!attr.second.empty())
+        {
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
+                                                          BAD_CAST attr.second.c_str()));
+        }
+      }
+    }
+
+    static void addSimpleElement(xmlTextWriterPtr writer, const string &element, const string &body,
+                                 const map<string, string> &attributes = {}, bool raw = false)
+    {
+      AutoElement ele(writer, element);
+
+      if (!attributes.empty())
+        addAttributes(writer, attributes);
+
+      if (!body.empty())
+      {
+        xmlChar *text = nullptr;
+        if (!raw)
+          text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
+        else
+          text = BAD_CAST body.c_str();
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
+        if (!raw)
+          xmlFree(text);
+      }
+    }
+
+    void printDataSet(xmlTextWriterPtr writer, const std::string &name, const DataSet &set)
+    {
+      AutoElement ele(writer);
+      if (name != "VALUE")
+      {
+        ele.reset(name);
+      }
+
+      for (auto &e : set)
+      {
+        THROW_IF_XML2_ERROR(
+            xmlTextWriterWriteAttribute(writer, BAD_CAST "key", BAD_CAST e.m_key.c_str()));
+
+        map<string, string> attrs = {{"key", e.m_key}};
+        if (e.m_removed)
+        {
+          attrs["removed"] = "true";
+        }
+        visit(overloaded{[&writer, &attrs](const string &st) {
+                           addSimpleElement(writer, "Entry", st, attrs);
+                         },
+                         [&writer, &attrs](const int64_t &i) {
+                           addSimpleElement(writer, "Entry", to_string(i), attrs);
+                         },
+                         [&writer, &attrs](const double &d) {
+                           addSimpleElement(writer, "Entry", to_string(d), attrs);
+                         },
+                         [&writer, &attrs](const DataSet &row) {
+                           // Table
+                           AutoElement ele(writer, "Entry");
+                           addAttributes(writer, attrs);
+                           for (auto &c : row)
+                           {
+                             map<string, string> attrs = {{"key", c.m_key}};
+                             visit(overloaded{
+                                       [&writer, &attrs](const string &s) {
+                                         addSimpleElement(writer, "Cell", s, attrs);
+                                       },
+                                       [&writer, &attrs](const int64_t &i) {
+                                         addSimpleElement(writer, "Cell", to_string(i), attrs);
+                                       },
+                                       [&writer, &attrs](const double &d) {
+                                         addSimpleElement(writer, "Cell", floatToString(d), attrs);
+                                       },
+                                       [](auto &a) {
+                                         g_logger << dlib::LERROR
+                                                  << "Invalid type for DataSetVariant cell";
+                                       }},
+                                   c.m_value);
+                           }
+                         }},
+              e.m_value);
+      }
+    }
+
     const char *toCharPtr(const Value &value, string &temp)
     {
       const string *s;
@@ -115,20 +212,14 @@ namespace mtconnect
 
       for (auto &e : elements)
       {
-        if (holds_alternative<EntityPtr>(e.second))
-        {
-          print(writer, get<EntityPtr>(e.second));
-        }
-        else if (holds_alternative<EntityList>(e.second))
-        {
-          auto &list = get<EntityList>(e.second);
-          for (auto &en : list)
-            print(writer, en);
-        }
-        else
-        {
-          printProperty(writer, e);
-        }
+        visit(overloaded{[&writer, this](const EntityPtr &v) { print(writer, v); },
+                         [&writer, this](const EntityList &list) {
+                           for (auto &en : list)
+                             print(writer, en);
+                         },
+                         [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
+                         [&writer, &e](const auto &v) { printProperty(writer, e); }},
+              e.second);
       }
     }
   }  // namespace entity

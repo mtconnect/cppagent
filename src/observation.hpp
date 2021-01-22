@@ -17,10 +17,14 @@
 
 #pragma once
 
+#include "data_set.hpp"
 #include "device_model/component.hpp"
 #include "device_model/data_item.hpp"
+#include "entity/entity.hpp"
 #include "globals.hpp"
 #include "ref_counted.hpp"
+
+#include <date/date.h>
 
 #include <cmath>
 #include <set>
@@ -31,6 +35,179 @@
 
 namespace mtconnect
 {
+  class Observation2;
+  using Observation2Ptr = std::shared_ptr<Observation2>;
+  class Observation2 : public entity::Entity
+  {
+  public:
+    using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
+
+    using entity::Entity::Entity;
+    static entity::FactoryPtr getFactory();
+    ~Observation2() override = default;
+
+    static Observation2Ptr makeObservation(const DataItem *dataItem, entity::Properties &props,
+                                           entity::ErrorList &errors);
+
+    void setDataItem(const DataItem *dataItem)
+    {
+      m_dataItem = dataItem;
+      setProperty("dataItemId", m_dataItem->getId());
+      if (!m_dataItem->getName().empty())
+        setProperty("name", m_dataItem->getName());
+      if (!m_dataItem->getCompositionId().empty())
+        setProperty("compositionId", m_dataItem->getCompositionId());
+      if (!m_dataItem->getSubType().empty())
+        setProperty("subType", m_dataItem->getSubType());
+      if (!m_dataItem->getStatistic().empty())
+        setProperty("statistic", m_dataItem->getStatistic());
+    }
+
+    void setTimestamp(const Timestamp &ts)
+    {
+      m_timestamp = ts;
+      setProperty("timestamp", date::format("%FT%TZ", m_timestamp));
+    }
+
+    void setSequence(int64_t sequence)
+    {
+      m_sequence = sequence;
+      setProperty("sequence", sequence);
+    }
+
+    void makeUnavailable()
+    {
+      m_unavailable = true;
+      setProperty("VALUE", "UNAVAILABLE");
+    }
+
+    bool operator<(const Observation2 &another) const
+    {
+      if ((*m_dataItem) < (*another.m_dataItem))
+        return true;
+      else if (*m_dataItem == *another.m_dataItem)
+        return m_sequence < another.m_sequence;
+      else
+        return false;
+    }
+
+    void clearResetTriggered() { m_properties.erase("resetTriggered"); }
+
+  protected:
+    Timestamp m_timestamp;
+    bool m_unavailable{false};
+    const DataItem *m_dataItem{nullptr};
+    uint64_t m_sequence{0};
+  };
+
+  class Sample : public Observation2
+  {
+  public:
+    using Observation2::Observation2;
+    static entity::FactoryPtr getFactory();
+    ~Sample() override = default;
+  };
+
+  class Timeseries : public Observation2
+  {
+  public:
+    using Observation2::Observation2;
+    static entity::FactoryPtr getFactory();
+    ~Timeseries() override = default;
+  };
+
+  class Condition : public Observation2
+  {
+  public:
+    using ConditionPtr = std::shared_ptr<Condition>;
+    enum Level
+    {
+      NORMAL,
+      WARNING,
+      FAULT,
+      UNAVAILABLE
+    };
+
+    using Observation2::Observation2;
+    static entity::FactoryPtr getFactory();
+    ~Condition() override = default;
+
+    ConditionPtr getptr() { return std::dynamic_pointer_cast<Condition>(Entity::getptr()); }
+
+    void getConditonList(std::list<ConditionPtr> &list)
+    {
+      if (m_prev)
+        m_prev->getConditonList(list);
+
+      list.emplace_back(getptr());
+    }
+
+    void setLevel() {}
+
+    void normal()
+    {
+      m_level = NORMAL;
+      m_properties.erase("nativeCode");
+      m_properties.erase("nativeSeverity");
+      m_properties.erase("qualifier");
+      m_properties.erase("statistic");
+      m_properties.erase("VALUE");
+    }
+
+    ConditionPtr getFirst()
+    {
+      if (m_prev)
+        return m_prev->getFirst();
+
+      return getptr();
+    }
+
+    Level m_level{NORMAL};
+    ConditionPtr m_prev;
+  };
+
+  class Event : public Observation2
+  {
+  public:
+    using Observation2::Observation2;
+    static entity::FactoryPtr getFactory();
+    ~Event() override = default;
+  };
+
+  class DataSetEvent : public Event
+  {
+  public:
+    using Event::Event;
+    static entity::FactoryPtr getFactory();
+    ~DataSetEvent() override = default;
+  };
+
+  class AssetEvent : public Event
+  {
+  public:
+    using Event::Event;
+    static entity::FactoryPtr getFactory();
+    ~AssetEvent() override = default;
+  };
+
+  class Message : public Event
+  {
+  public:
+    using Event::Event;
+    static entity::FactoryPtr getFactory();
+    ~Message() override = default;
+  };
+
+  class Alarm : public Event
+  {
+  public:
+    using Event::Event;
+    static entity::FactoryPtr getFactory();
+    ~Alarm() override = default;
+  };
+
+  // --------------------------------------------------------------------------
+
   struct AttributeItem : public std::pair<const char *, std::string>
   {
     AttributeItem(const char *f, const std::string &s, bool force = false)
@@ -47,59 +224,9 @@ namespace mtconnect
   using ObservationPtr = RefCountedPtr<Observation>;
   using ObservationPtrArray = dlib::array<ObservationPtr>;
 
-  struct DataSetEntry;
-  using DataSet = std::set<DataSetEntry>;
-  using DataSetValue = std::variant<DataSet, std::string, int64_t, double>;
-
-  struct DataSetValueSame
-  {
-    DataSetValueSame(const DataSetValue &other) : m_other(other) {}
-
-    bool operator()(const DataSet &v);
-    template <class T>
-    bool operator()(const T &v)
-    {
-      return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
-    }
-
-   private:
-    const DataSetValue &m_other;
-  };
-
-  struct DataSetEntry
-  {
-    DataSetEntry(std::string key, std::string &value, bool removed = false)
-      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-    {
-    }
-    DataSetEntry(std::string key, DataSet &value, bool removed = false)
-      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-    {
-    }
-    DataSetEntry(std::string key, DataSetValue value, bool removed = false)
-      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-    {
-    }
-    DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
-    DataSetEntry(const DataSetEntry &other) = default;
-
-    std::string m_key;
-    DataSetValue m_value;
-    bool m_removed;
-
-    bool operator==(const DataSetEntry &other) const { return m_key == other.m_key; }
-    bool operator<(const DataSetEntry &other) const { return m_key < other.m_key; }
-
-    bool same(const DataSetEntry &other) const
-    {
-      return m_key == other.m_key && m_removed == other.m_removed &&
-             std::visit(DataSetValueSame(other.m_value), m_value);
-    }
-  };
-
   class Observation : public RefCounted
   {
-   public:
+  public:
     enum ELevel
     {
       NORMAL,
@@ -111,7 +238,7 @@ namespace mtconnect
     static const unsigned int NumLevels = 4;
     static const std::string SLevels[];
 
-   public:
+  public:
     // Initialize with the data item reference, sequence number, time and value
     Observation(DataItem &dataItem, const std::string &time, const std::string &value,
                 uint64_t sequence = 0);
@@ -189,11 +316,11 @@ namespace mtconnect
       m_attributes.clear();
     }
 
-   protected:
+  protected:
     // Virtual destructor
-    ~Observation() override;
+    ~Observation() override = default;
 
-   protected:
+  protected:
     // Holds the data item from the device
     DataItem *m_dataItem;
 
@@ -235,11 +362,9 @@ namespace mtconnect
     // For data sets
     DataSet m_dataSet;
 
-   protected:
+  protected:
     // Convert the value to the agent unit standards
     void convertValue(const std::string &value);
-
-    void parseDataSet(DataSet &dataSet, const std::string &s, bool table);
   };
 
   inline Observation::ELevel Observation::getLevel()

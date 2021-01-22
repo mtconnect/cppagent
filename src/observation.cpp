@@ -18,6 +18,7 @@
 #include "observation.hpp"
 
 #include "device_model/data_item.hpp"
+#include "entity/factory.hpp"
 
 #include <dlib/logger.h>
 #include <dlib/threads.h>
@@ -35,30 +36,202 @@ using namespace std;
 
 namespace mtconnect
 {
-  static std::mutex g_attributeMutex;
+  using namespace entity;
+
   static dlib::logger g_logger("Observation");
 
-  const string Observation::SLevels[NumLevels] = {"Normal", "Warning", "Fault", "Unavailable"};
-
-  bool DataSetValueSame::operator()(const DataSet &v)
+  FactoryPtr Observation2::getFactory()
   {
-    if (!std::holds_alternative<DataSet>(m_other))
-      return false;
+    static auto factory =
+        make_shared<Factory>(Requirements({{"dataItemId", true},
+                                           {"timestamp", true},
+                                           {"sequence", true},
+                                           {"subType", false},
+                                           {"name", false},
+                                           {"compositionId", false}}),
+                             [](const std::string &name, Properties &props) -> EntityPtr {
+                               return make_shared<Observation2>(name, props);
+                             });
 
-    const auto &oset = std::get<DataSet>(m_other);
+    return factory;
+  }
 
-    if (v.size() != oset.size())
-      return false;
+  Observation2Ptr Observation2::makeObservation(const DataItem *dataItem, Properties &props,
+                                                entity::ErrorList &errors)
+  {
+    Observation2Ptr obs;
 
-    for (const auto &e1 : v)
+    if (dataItem->isTimeSeries())
     {
-      const auto &e2 = oset.find(e1);
-      if (e2 == oset.end() || !visit(DataSetValueSame(e2->m_value), e1.m_value))
-        return false;
+      Timeseries::getFactory()->make(dataItem->getElementName(), props, errors);
+    }
+    else if (dataItem->isDataSet() || dataItem->isTable())
+    {
+      DataSetEvent::getFactory()->make(dataItem->getElementName(), props, errors);
+    }
+    else if (dataItem->getType() == "ASSET_CHANGED" || dataItem->getType() == "ASSET_REMOVED")
+    {
+      AssetEvent::getFactory()->make(dataItem->getElementName(), props, errors);
+    }
+    else if (dataItem->isMessage())
+    {
+      Message::getFactory()->make(dataItem->getElementName(), props, errors);
+    }
+    else if (dataItem->isCondition())
+    {
+      Condition::getFactory()->make(dataItem->getElementName(), props, errors);
+    }
+    else if (dataItem->isAlarm())
+    {
+      Alarm::getFactory()->make(dataItem->getElementName(), props, errors);
+    }
+    else if (dataItem->isSample())
+    {
+      Sample::getFactory()->make(dataItem->getElementName(), props, errors);
+    }
+    else if (dataItem->isEvent())
+    {
+      Event::getFactory()->make(dataItem->getElementName(), props, errors);
+    }
+    else
+    {
+      g_logger << dlib::LWARN
+               << "Could not parse properties for data item: " << dataItem->getName();
+      throw EntityError("Invalid properties for data item");
     }
 
-    return true;
+    return obs;
   }
+
+  FactoryPtr Event::getFactory()
+  {
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory = make_shared<Factory>(*Observation2::getFactory());
+      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<Event>(name, props);
+      });
+      factory->addRequirements(Requirements{{"VALUE", false}});
+    }
+
+    return factory;
+  }
+
+  FactoryPtr DataSetEvent::getFactory()
+  {
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory = make_shared<Factory>(*Observation2::getFactory());
+      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<DataSetEvent>(name, props);
+      });
+      factory->addRequirements(Requirements{{"count", INTEGER, false}, {"VALUE", DATA_SET, false}});
+    }
+
+    return factory;
+  }
+
+  FactoryPtr Sample::getFactory()
+  {
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory = make_shared<Factory>(*Observation2::getFactory());
+      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<Sample>(name, props);
+      });
+      factory->addRequirements(Requirements({{"sampleRate", DOUBLE, false},
+                                             {"resetTriggered", false},
+                                             {"statistic", false},
+                                             {"duration", DOUBLE, false},
+                                             {"VALUE", DOUBLE, false}}));
+    }
+    return factory;
+  }
+
+  FactoryPtr Timeseries::getFactory()
+  {
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory = make_shared<Factory>(*Sample::getFactory());
+      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<Timeseries>(name, props);
+      });
+      factory->addRequirements(
+          Requirements({{"sampleCount", INTEGER, false}, {"VALUE", VECTOR, false}}));
+    }
+    return factory;
+  }
+
+  FactoryPtr Condition::getFactory()
+  {
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory = make_shared<Factory>(*Observation2::getFactory());
+      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<Condition>(name, props);
+      });
+      factory->addRequirements(Requirements{{"type", true},
+                                            {"nativeCode", false},
+                                            {"nativeSeverity", false},
+                                            {"qualifier", false},
+                                            {"statistic", false},
+                                            {"VALUE", false}});
+    }
+
+    return factory;
+  }
+
+  FactoryPtr AssetEvent::getFactory()
+  {
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory = make_shared<Factory>(*Event::getFactory());
+      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<AssetEvent>(name, props);
+      });
+      factory->addRequirements(Requirements({{"assetType", INTEGER, false}}));
+    }
+    return factory;
+  }
+
+  FactoryPtr Message::getFactory()
+  {
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory = make_shared<Factory>(*Event::getFactory());
+      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<Message>(name, props);
+      });
+      factory->addRequirements(Requirements({{"nativeCode", false}}));
+    }
+    return factory;
+  }
+
+  FactoryPtr Alarm::getFactory()
+  {
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory = make_shared<Factory>(*Event::getFactory());
+      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<Alarm>(name, props);
+      });
+      factory->addRequirements(Requirements(
+          {{"code", true}, {"nativeCode", false}, {"state", false}, {"severity", false}}));
+    }
+    return factory;
+  }
+
+  static std::mutex g_attributeMutex;
+
+  const string Observation::SLevels[NumLevels] = {"Normal", "Warning", "Fault", "Unavailable"};
 
   inline static bool splitValue(string &key, string &value)
   {
@@ -134,8 +307,6 @@ namespace mtconnect
       m_sampleCount = m_dataSet.size();
     }
   }
-
-  Observation::~Observation() = default;
 
   const AttributeList &Observation::getAttributes()
   {
@@ -285,115 +456,6 @@ namespace mtconnect
     }
   }
 
-#define WS_RE "[ \t]*"
-#define KEY_RE "([^ \t=]+)"
-#define DQ_RE "\"([^\\\\\"]+(\\\\\")?)+\""
-#define SQ_RE "'([^\\\\']+(\\\\')?)+'"
-#define CB_RE "\\{([^\\}\\\\]+(\\\\\\})?)+\\}"
-#define VAL_RE "[^ \t]+"
-
-  static const char *reg = WS_RE KEY_RE "(=(" DQ_RE "|" SQ_RE "|" CB_RE "|" VAL_RE ")?)?";
-  static const char *int_reg = "[+-]?[0-9]+";
-  static const char *float_reg = "[+-]?[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?";
-  static regex tokenizer(reg);
-  static regex int_regex(int_reg);
-  static regex float_regex(float_reg);
-
-  static DataSetValue dataSetValue(const string &value)
-  {
-    if (regex_match(value, float_regex))
-      return DataSetValue(stod(value));
-    else if (regex_match(value, int_regex))
-      return DataSetValue((int64_t)stoll(value));
-    else
-      return DataSetValue(value);
-  }
-
-  // Split the data set entries by space delimiters and account for the
-  // use of single and double quotes as well as curly braces
-  void Observation::parseDataSet(DataSet &dataSet, const string &s, bool table)
-  {
-    smatch m;
-    string rest(s);
-
-    try
-    {
-      // Search for key value pairs. Handle quoted text.
-      while (regex_search(rest, m, tokenizer))
-      {
-        string key, value;
-        bool removed = false;
-        if (!m[3].matched)
-        {
-          key = m[1];
-          if (!m[2].matched)
-            removed = true;
-          else
-            value.clear();
-        }
-        else
-        {
-          key = m[1];
-          string v = m[3];
-
-          // Check for invalid termination of string
-          if ((v.front() == '"' && v.back() != '"') || (v.front() == '\'' && v.back() != '\'') ||
-              (v.front() == '{' && v.back() != '}'))
-          {
-            // consider the rest of the set invalid, issue warning.
-            break;
-          }
-
-          if (v.front() == '"' || v.front() == '\'' || v.front() == '{')
-            value = v.substr(1, v.size() - 2);
-          else
-            value = v;
-
-          // character remove escape
-
-          size_t pos = 0;
-          do
-          {
-            pos = value.find('\\', pos);
-            if (pos != string::npos)
-            {
-              value.erase(pos, 1);
-              pos++;
-            }
-          } while (pos != string::npos && pos < value.size());
-        }
-
-        // Map the value.
-        if (table)
-        {
-          DataSet set;
-          parseDataSet(set, value, false);
-          dataSet.emplace(key, set, removed);
-        }
-        else
-        {
-          dataSet.emplace(key, dataSetValue(value), removed);
-        }
-
-        // Parse the rest of the string...
-        rest = m.suffix();
-      }
-    }
-
-    catch (regex_error &e)
-    {
-      g_logger << dlib::LWARN << "Error parsing \"" << rest << "\", \nReason: " << e.what();
-    }
-
-    // If there is leftover text, the text was invalid.
-    // Warn that it is being discarded
-    if (!rest.empty())
-    {
-      g_logger << dlib::LWARN << "Cannot parse complete string, malformed data set: '" << rest
-               << "'";
-    }
-  }
-
   void Observation::convertValue(const string &value)
   {
     // Check if the type is an alarm or if it doesn't have units
@@ -458,7 +520,7 @@ namespace mtconnect
         }
       }
 
-      parseDataSet(m_dataSet, set, m_dataItem->isTable());
+      m_dataSet.parse(set, m_dataItem->isTable());
     }
     else if (m_dataItem->conversionRequired())
       m_value = m_dataItem->convertValue(value);

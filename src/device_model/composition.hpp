@@ -33,7 +33,7 @@ namespace mtconnect
 {
   class Composition
   {
-   public:
+  public:
     Composition() = default;
     Composition(const Composition &) = default;
     ~Composition() = default;
@@ -59,7 +59,7 @@ namespace mtconnect
 
     std::map<std::string, std::string> m_attributes;
 
-   protected:
+  protected:
     std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
     std::optional<Description> m_description;
   };

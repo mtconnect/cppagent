@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "data_set.hpp"
 #include "requirement.hpp"
 #include <unordered_map>
 
@@ -32,7 +33,7 @@ namespace mtconnect
 
     class Entity : public std::enable_shared_from_this<Entity>
     {
-     public:
+    public:
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
       {
       }
@@ -82,7 +83,7 @@ namespace mtconnect
       const OrderMapPtr getOrder() const { return m_order; }
 
       // Entity Factory
-     protected:
+    protected:
       std::string m_name;
       Properties m_properties;
       OrderMapPtr m_order;

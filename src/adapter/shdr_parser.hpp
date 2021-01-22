@@ -65,10 +65,16 @@ namespace mtconnect
 
     class ShdrParser
     {
-     public:
+    public:
+      using Handler = std::function<void(Observation2Ptr &observation)>;
       void processData(const std::string &data, Context &context);
+      void processCommand(const std::string &data, Context &context);
 
-     protected:
+      Handler m_handler;
+
+    protected:
+      void mapTokens(TokenList::const_iterator &token, const TokenList::const_iterator &end,
+                     Context &context);
     };
 
   }  // namespace adapter

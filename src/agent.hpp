@@ -50,7 +50,7 @@ namespace mtconnect
 
   class Agent
   {
-   public:
+  public:
     struct RequestResult
     {
       RequestResult(){};
@@ -194,7 +194,7 @@ namespace mtconnect
       return getPrinter(acceptFormat(accepts));
     }
 
-   protected:
+  protected:
     // Initialization methods
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
@@ -250,7 +250,7 @@ namespace mtconnect
                    const Device *device, FilterSet &filter) const;
     Device *checkDevice(const Printer *printer, const std::string &uuid) const;
 
-   protected:
+  protected:
     // Unique id based on the time of creation
     uint64_t m_instanceId;
     bool m_initialized{false};

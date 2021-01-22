@@ -59,7 +59,7 @@ namespace mtconnect
 
   class Relationships : public ComponentConfiguration
   {
-   public:
+  public:
     Relationships() = default;
     ~Relationships() override = default;
 
@@ -74,7 +74,7 @@ namespace mtconnect
       return m_relationships;
     }
 
-   protected:
+  protected:
     std::list<std::unique_ptr<Relationship>> m_relationships;
   };
 }  // namespace mtconnect

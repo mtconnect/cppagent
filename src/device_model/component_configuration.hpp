@@ -28,26 +28,26 @@ namespace mtconnect
 {
   class ComponentConfiguration
   {
-   public:
+  public:
     ComponentConfiguration() = default;
     virtual ~ComponentConfiguration() = default;
   };
 
   class ExtendedComponentConfiguration : public ComponentConfiguration
   {
-   public:
+  public:
     ExtendedComponentConfiguration(const std::string &content) : m_content(content) {}
     ~ExtendedComponentConfiguration() override = default;
 
     const std::string &getContent() const { return m_content; }
 
-   protected:
+  protected:
     std::string m_content;
   };
 
   class GeometricConfiguration : public ComponentConfiguration
   {
-   public:
+  public:
     GeometricConfiguration() = default;
     virtual ~GeometricConfiguration() = default;
 

@@ -28,11 +28,7 @@ namespace mtconnect
   {
     struct ShdrObservation;
 
-    class TimestampExtractor
-    {
-     public:
-      static void extractTimestamp(ShdrObservation &obs, TokenList::const_iterator &token,
-                                   const TokenList::const_iterator &end, Context &context);
-    };
+    void ExtractTimestamp(ShdrObservation &obs, TokenList::const_iterator &token,
+                          const TokenList::const_iterator &end, Context &context);
   }  // namespace adapter
 }  // namespace mtconnect

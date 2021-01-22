@@ -40,7 +40,7 @@ namespace mtconnect
 
     class Routing
     {
-     public:
+    public:
       enum ParameterType
       {
         NONE = 0,
@@ -182,7 +182,7 @@ namespace mtconnect
         return false;
       }
 
-     protected:
+    protected:
       void pathParameters(std::string s)
       {
         std::regex reg("\\{([^}]+)\\}");
@@ -300,7 +300,7 @@ namespace mtconnect
         return ParameterValue();
       }
 
-     protected:
+    protected:
       std::string m_verb;
       std::regex m_pattern;
       std::string m_patternText;

@@ -31,7 +31,7 @@ namespace mtconnect
   }
   class AgentDevice : public Device
   {
-   public:
+  public:
     // Constructor that sets variables from an attribute map
     AgentDevice(const Attributes &attributes);
     ~AgentDevice() override = default;
@@ -40,10 +40,10 @@ namespace mtconnect
 
     DataItem *getConnectionStatus(const adapter::Adapter *adapter);
 
-   protected:
+  protected:
     void addRequiredDataItems();
 
-   protected:
+  protected:
     Component *m_adapters{nullptr};
   };
 }  // namespace mtconnect

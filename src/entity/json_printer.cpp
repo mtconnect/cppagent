@@ -28,13 +28,53 @@ namespace mtconnect
 {
   namespace entity
   {
+    static dlib::logger g_logger("entity.xml.printer");
+
     using Property = pair<string, Value>;
+
+    inline static json toJson(const DataSet &set)
+    {
+      json value;
+      for (auto &e : set)
+      {
+        if (e.m_removed)
+        {
+          value[e.m_key] = json::object({{"removed", true}});
+        }
+        else
+        {
+          visit(overloaded{[&value, &e](const std::string &st) { value[e.m_key] = st; },
+                           [&value, &e](const int64_t &i) { value[e.m_key] = i; },
+                           [&value, &e](const double &d) { value[e.m_key] = d; },
+                           [&value, &e](const DataSet &arg) {
+                             auto row = json::object();
+                             for (auto &c : arg)
+                             {
+                               visit(overloaded{
+                                         [&row, &c](const std::string &st) { row[c.m_key] = st; },
+                                         [&row, &c](const int64_t &i) { row[c.m_key] = i; },
+                                         [&row, &c](const double &d) { row[c.m_key] = d; },
+                                         [](auto &a) {
+                                           g_logger << dlib::LERROR
+                                                    << "Invalid  variant type for table cell";
+                                         }},
+                                     c.m_value);
+                             }
+                             value[e.m_key] = row;
+                           }},
+                e.m_value);
+        }
+      }
+
+      return value;
+    }
 
     inline static json getValue(const Value &value)
     {
       return visit(overloaded{[](const EntityPtr &) -> json { return nullptr; },
                               [](const std::monostate &) -> json { return nullptr; },
                               [](const EntityList &) -> json { return nullptr; },
+                              [](const DataSet &v) -> json { return toJson(v); },
                               [](const auto &arg) -> json { return arg; }},
                    value);
     }
@@ -70,7 +110,7 @@ namespace mtconnect
                            else
                              jsonObj = array;
                          },
-                         [&](const auto arg) {
+                         [&](const auto &arg) {
                            if (e.first == "VALUE" || e.first == "RAW")
                              jsonObj["value"] = getValue(arg);
                            else

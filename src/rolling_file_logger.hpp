@@ -30,7 +30,7 @@ namespace mtconnect
 {
   class RollingFileLogger
   {
-   public:
+  public:
     enum RollingSchedule
     {
       DAILY,
@@ -49,11 +49,11 @@ namespace mtconnect
 
     uint64_t getMaxSize() const { return m_maxSize; }
 
-   protected:
+  protected:
     void rollover(uint64_t size);
     std::time_t getFileAge();
 
-   private:
+  private:
     std::mutex m_fileLock;
 
     std::string m_name;

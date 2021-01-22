@@ -32,7 +32,7 @@ namespace mtconnect
 
   class Asset : public entity::Entity
   {
-   public:
+  public:
     Asset(const std::string &name, const entity::Properties &props)
       : entity::Entity(name, props), m_removed(false)
     {
@@ -110,14 +110,14 @@ namespace mtconnect
 
     bool operator==(const Asset &another) const { return getAssetId() == another.getAssetId(); }
 
-   protected:
+  protected:
     std::string m_assetId;
     bool m_removed;
   };
 
   class ExtendedAsset : public Asset
   {
-   public:
+  public:
     static entity::FactoryPtr getFactory();
   };
 }  // namespace mtconnect

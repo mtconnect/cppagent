@@ -59,7 +59,7 @@ namespace mtconnect
 
   class XmlWriter
   {
-   public:
+  public:
     XmlWriter(bool pretty) : m_writer(nullptr), m_buf(nullptr)
     {
       THROW_IF_XML2_NULL(m_buf = xmlBufferCreate());
@@ -98,7 +98,7 @@ namespace mtconnect
       return string((char *)m_buf->content, m_buf->use);
     }
 
-   protected:
+  protected:
     xmlTextWriterPtr m_writer;
     xmlBufferPtr m_buf;
   };
@@ -301,7 +301,7 @@ namespace mtconnect
 
   class AutoElement
   {
-   public:
+  public:
     AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}
     AutoElement(xmlTextWriterPtr writer, const char *name, string key = "")
       : m_writer(writer), m_name(name), m_key(std::move(key))
@@ -339,7 +339,7 @@ namespace mtconnect
     const string &key() const { return m_key; }
     const string &name() const { return m_name; }
 
-   protected:
+  protected:
     xmlTextWriterPtr m_writer;
     string m_name;
     string m_key;

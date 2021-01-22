@@ -28,14 +28,14 @@ namespace mtconnect
 {
   class CuttingToolArchetype : public Asset
   {
-   public:
+  public:
     static entity::FactoryPtr getFactory();
     static void registerAsset();
   };
 
   class CuttingTool : public Asset
   {
-   public:
+  public:
     static entity::FactoryPtr getFactory();
     static void registerAsset();
   };

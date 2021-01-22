@@ -1,4 +1,3 @@
-//
 // Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
@@ -17,24 +16,21 @@
 
 #pragma once
 
-#define strfy(line) #line
-#define THROW_IF_XML2_ERROR(expr)                                             \
-  if ((expr) < 0)                                                             \
-  {                                                                           \
-    throw XmlError("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
-  }
-#define THROW_IF_XML2_NULL(expr)                                              \
-  if (!(expr))                                                                \
-  {                                                                           \
-    throw XmlError("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
-  }
+#include "adapter.hpp"
+#include "entity/entity.hpp"
+#include "shdr_parser.hpp"
+
+#include <chrono>
+#include <regex>
 
 namespace mtconnect
 {
-  class XmlError : public std::logic_error
+  namespace adapter
   {
-  public:
-    using std::logic_error::logic_error;
-  };
+    struct ShdrObservation;
 
+    // Takes a tokenized set of fields and maps them to timestamp and data items
+    void MapTokensToAsset(ShdrObservation &obs, TokenList::const_iterator &token,
+                          const TokenList::const_iterator &end, Context &context);
+  }  // namespace adapter
 }  // namespace mtconnect

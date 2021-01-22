@@ -56,7 +56,7 @@ namespace mtconnect
 
     class AutoSignal
     {
-     public:
+    public:
       AutoSignal(dlib::mutex *mutex, dlib::signaler *signal, bool *var)
         : m(mutex), s(signal), v(var)
       {
@@ -71,7 +71,7 @@ namespace mtconnect
         s->signal();
       }
 
-     private:
+    private:
       dlib::mutex *m;
       dlib::signaler *s;
       bool *v;

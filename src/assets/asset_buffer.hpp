@@ -30,7 +30,7 @@ namespace mtconnect
 {
   class AssetBuffer
   {
-   public:
+  public:
     using Index = std::map<std::string, AssetPtr>;
     using SecondaryIndex = std::map<std::string, Index>;
     using TypeCount = std::map<std::string, int>;
@@ -171,11 +171,11 @@ namespace mtconnect
     auto unlock() { return m_bufferLock.unlock(); }
     auto try_lock() { return m_bufferLock.try_lock(); }
 
-   protected:
+  protected:
     AssetPtr updateAsset(const std::string &id, Index::iterator &it, AssetPtr asset);
     void adjustCount(AssetPtr asset, int delta);
 
-   protected:
+  protected:
     // Access control to the buffer
     mutable std::recursive_mutex m_bufferLock;
 

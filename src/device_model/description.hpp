@@ -30,7 +30,7 @@ namespace mtconnect
 {
   class Description
   {
-   public:
+  public:
     Description() = default;
     Description(const Description &another) = default;
     Description(std::string body) : m_body(std::move(body)) {}
@@ -47,6 +47,6 @@ namespace mtconnect
     std::string m_body;
     std::map<std::string, std::string> m_attributes;
 
-   protected:
+  protected:
   };
 }  // namespace mtconnect

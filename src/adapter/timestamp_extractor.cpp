@@ -51,10 +51,8 @@ namespace mtconnect
       return duration;
     }
 
-    void TimestampExtractor::extractTimestamp(ShdrObservation &obs,
-                                              TokenList::const_iterator &token,
-                                              const TokenList::const_iterator &end,
-                                              Context &context)
+    void ExtractTimestamp(ShdrObservation &obs, TokenList::const_iterator &token,
+                          const TokenList::const_iterator &end, Context &context)
     {
       using namespace date;
 

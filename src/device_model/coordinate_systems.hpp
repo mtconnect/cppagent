@@ -49,7 +49,7 @@ namespace mtconnect
 
   class CoordinateSystems : public ComponentConfiguration
   {
-   public:
+  public:
     CoordinateSystems() = default;
     virtual ~CoordinateSystems() = default;
 
@@ -66,7 +66,7 @@ namespace mtconnect
       m_coordinateSystems.emplace_back(std::move(s));
     }
 
-   protected:
+  protected:
     std::list<std::unique_ptr<CoordinateSystem>> m_coordinateSystems;
   };
 }  // namespace mtconnect

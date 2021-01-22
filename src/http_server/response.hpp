@@ -80,7 +80,7 @@ namespace mtconnect
 
     class Response
     {
-     public:
+    public:
       Response(std::ostream &out) : m_out(out) {}
 
       virtual ~Response() = default;
@@ -203,7 +203,7 @@ namespace mtconnect
         }
       }
 
-     protected:
+    protected:
       std::ostream &m_out;
       std::string m_boundary;
       static const std::map<uint16_t, std::string> m_status;

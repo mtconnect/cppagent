@@ -18,7 +18,9 @@
 #include "shdr_parser.hpp"
 
 #include "agent.hpp"
+#include "asset_mapper.hpp"
 #include "data_item_mapper.hpp"
+#include "observation.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
 
@@ -34,222 +36,107 @@ namespace mtconnect
   {
     static dlib::logger g_logger("ShdrParser");
 
+    void ShdrParser::mapTokens(TokenList::const_iterator &token,
+                               const TokenList::const_iterator &end, Context &context)
+    {
+      ShdrObservation timestamp;
+      ExtractTimestamp(timestamp, token, end, context);
+      while (token != end)
+      {
+        TokenList::const_iterator start = token;
+        try
+        {
+          entity::ErrorList errors;
+          ShdrObservation observation(timestamp);
+          if ((*token)[0] == '@')
+          {
+            MapTokensToAsset(observation, token, end, context);
+
+            // Send downstream
+            auto obs = get<AssetObservation>(observation.m_observed);
+          }
+          else
+          {
+            MapTokensToDataItem(observation, token, end, context);
+
+            // TODO: Forward observation to Agent
+            // Build an observation
+            Observation2Ptr outgoing;
+            auto obs = get<DataItemObservation>(observation.m_observed);
+            if (obs.m_dataItem == nullptr)
+            {
+              throw entity::EntityError("Could not find data item");
+            }
+
+            if (obs.m_dataItem->getCategory())
+            {
+              auto out =
+                  Observation2::makeObservation(obs.m_dataItem, observation.m_properties, errors);
+              if (errors.empty())
+              {
+                if (obs.m_unavailable)
+                  out->makeUnavailable();
+
+                out->setTimestamp(timestamp.m_timestamp);
+
+                // Deliver
+                if (m_handler)
+                  m_handler(out);
+              }
+              else
+              {
+                for (auto &e : errors)
+                {
+                  g_logger << dlib::LWARN << "Error while parsing tokens: " << e->what();
+                  for (auto it = start; it != token; it++)
+                    g_logger << dlib::LWARN << "    token: " << *it;
+                }
+              }
+            }
+          }
+        }
+        catch (entity::EntityError &e)
+        {
+          g_logger << dlib::LERROR << "Could not create observation: " << e.what();
+          for (auto it = start; it != token; it++)
+            g_logger << dlib::LWARN << "    token: " << *it;
+        }
+      }
+    }
+
     void ShdrParser::processData(const std::string &data, Context &context)
     {
       using namespace std;
 
-      auto tokens = ShdrTokenizer::tokenize(data);
-      if (!tokens.empty())
+      try
       {
-        auto token = tokens.cbegin();
-        auto end = tokens.end();
-
-        ShdrObservation obsservation;
-        TimestampExtractor::extractTimestamp(obsservation, token, end, context);
-
-        if ((*token)[0] == '@')
+        auto tokens = ShdrTokenizer::tokenize(data);
+        if (tokens.size() > 2)
         {
-          DataItemMapper::mapTokensToAsset(obsservation, token, end, context);
+          auto token = tokens.cbegin();
+          auto end = tokens.end();
+
+          mapTokens(token, end, context);
         }
         else
         {
-          DataItemMapper::mapTokensToDataItems(obsservation, token, end, context);
+          g_logger << dlib::LWARN << "Insufficient tokens in line: " << data;
         }
+      }
+
+      catch (std::logic_error &e)
+      {
+        g_logger << dlib::LWARN << "Error (" << e.what() << ") with line: " << data;
+      }
+
+      catch (...)
+      {
+        g_logger << dlib::LWARN << "Unknown Error on line: " << data;
       }
     }
 
 #if 0
     
-    
-    bool Adapter::processDataItem(istringstream &toParse, const string &line, const string &inputKey,
-                                  const string &inputValue, const string &time, double anOffset,
-                                  bool first)
-    {
-      string dev, key = inputKey;
-      Device *device(nullptr);
-      DataItem *dataItem(nullptr);
-      bool more = true;
-      
-      if (splitKey(key, dev))
-        device = m_agent->getDeviceByName(dev);
-      else
-      {
-        dev = m_deviceName;
-        device = m_device;
-      }
-      
-      if (device)
-      {
-        dataItem = device->getDeviceDataItem(key);
-        
-        if (!dataItem)
-        {
-          if (m_logOnce.count(key) > 0)
-            g_logger << LTRACE << "(" << device->getName() << ") Could not find data item: " << key;
-          else
-          {
-            g_logger << LWARN << "(" << device->getName() << ") Could not find data item: " << key
-            << " from line '" << line << "'";
-            m_logOnce.insert(key);
-          }
-        }
-        else if (dataItem->hasConstantValue())
-        {
-          if (!m_logOnce.count(key))
-          {
-            g_logger << LDEBUG << "(" << device->getName() << ") Ignoring value for: " << key
-            << ", constant value";
-            m_logOnce.insert(key);
-          }
-        }
-        else
-        {
-          string rest, value;
-          if (first && (dataItem->isCondition() || dataItem->isAlarm() || dataItem->isMessage() ||
-                        dataItem->isTimeSeries()))
-          {
-            getline(toParse, rest);
-            value = inputValue + "|" + rest;
-            if (!rest.empty())
-              value = inputValue + "|" + rest;
-            else
-              value = inputValue;
-            more = false;
-          }
-          else
-          {
-            if (m_upcaseValue && !dataItem->isDataSet())
-            {
-              value.resize(inputValue.length());
-              transform(inputValue.begin(), inputValue.end(), value.begin(), ::toupper);
-            }
-            else
-              value = inputValue;
-          }
-          
-          dataItem->setDataSource(this);
-          
-          trim(value);
-          string check = value;
-          
-          if (dataItem->hasResetTrigger())
-          {
-            auto found = value.find_first_of(':');
-            if (found != string::npos)
-              check.erase(found);
-          }
-          
-          if (!isDuplicate(dataItem, check, anOffset))
-            m_agent->addToBuffer(dataItem, value, time);
-          else if (m_dupCheck)
-            g_logger << LTRACE << "Dropping duplicate value for " << key << " of " << value;
-        }
-      }
-      else
-      {
-        g_logger << LDEBUG << "Could not find device: " << dev;
-        // Continue on processing the rest of the fields. Assume key/value pairs...
-      }
-      
-      return more;
-    }
-    
-    void Adapter::processAsset(istringstream &toParse, const string &inputKey, const string &value,
-                               const string &time)
-    {
-      string key, dev;
-      try
-      {
-        Device *device(nullptr);
-        key = inputKey;
-        if (splitKey(key, dev))
-          device = m_agent->getDeviceByName(dev);
-        else
-        {
-          device = m_device;
-          dev = device->getUuid();
-        }
-        
-        if (device == nullptr)
-        {
-          g_logger << LERROR << "Cannot find device: " << dev << " for asset request";
-          return;
-        }
-        
-        string assetId;
-        if (value[0] == '@')
-          assetId = device->getUuid() + value.substr(1);
-        else
-          assetId = value;
-        
-        if (key == "@ASSET@")
-        {
-          string type, rest;
-          getline(toParse, type, '|');
-          getline(toParse, rest);
-          
-          // Chck for an update and parse key value pairs. If only a type
-          // is presented, then assume the remainder is a complete doc.
-          
-          // if the rest of the line begins with --multiline--... then
-          // set multiline and accumulate until a completed document is found
-          if (rest.find("--multiline--") != rest.npos)
-          {
-            m_assetDevice = device;
-            m_gatheringAsset = true;
-            m_terminator = rest;
-            m_time = time;
-            m_assetType = type;
-            m_assetId = assetId;
-            m_body.str("");
-            m_body.clear();
-          }
-          else
-          {
-            entity::ErrorList errors;
-            m_agent->addAsset(device, rest, assetId, type, time, errors);
-          }
-        }
-        else if (key == "@UPDATE_ASSET@")
-        {
-          string assetKey, assetValue;
-          AssetChangeList list;
-          getline(toParse, assetKey, '|');
-          if (assetKey[0] == '<')
-          {
-            do
-            {
-              pair<string, string> kv("xml", assetKey);
-              list.emplace_back(kv);
-            } while (getline(toParse, assetKey, '|'));
-          }
-          else
-          {
-            while (getline(toParse, assetValue, '|'))
-            {
-              pair<string, string> kv(assetKey, assetValue);
-              list.emplace_back(kv);
-              
-              if (!getline(toParse, assetKey, '|'))
-                break;
-            }
-          }
-          
-          // m_agent->updateAsset(device, assetId, list, time);
-        }
-        else if (key == "@REMOVE_ASSET@")
-          m_agent->removeAsset(device, assetId, time);
-        else if (key == "@REMOVE_ALL_ASSETS@")
-        {
-          AssetList list;
-          m_agent->removeAllAssets(device->getUuid(), value, time, list);
-        }
-      }
-      catch (std::logic_error &e)
-      {
-        g_logger << LERROR << "Asset request: " << key << " failed: " << e.what();
-      }
-    }
     void Adapter::protocolCommand(const std::string &data)
     {
       // Handle initial push of settings for uuid, serial number and manufacturer.

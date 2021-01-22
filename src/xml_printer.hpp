@@ -35,7 +35,7 @@ namespace mtconnect
 
   class XmlPrinter : public Printer
   {
-   public:
+  public:
     XmlPrinter(const std::string version = "", bool pretty = false);
     ~XmlPrinter() override = default;
 
@@ -87,7 +87,7 @@ namespace mtconnect
     std::string getStreamsLocation(const std::string &prefix);
     std::string getAssetsLocation(const std::string &prefix);
 
-   protected:
+  protected:
     enum EDocumentType
     {
       eERROR,
@@ -121,7 +121,7 @@ namespace mtconnect
 
     void addObservation(xmlTextWriterPtr writer, Observation *result) const;
 
-   protected:
+  protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;
     std::map<std::string, SchemaNamespace> m_streamsNamespaces;
     std::map<std::string, SchemaNamespace> m_errorNamespaces;

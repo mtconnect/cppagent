@@ -29,7 +29,7 @@ namespace mtconnect
 {
   class SolidModel : public GeometricConfiguration
   {
-   public:
+  public:
     SolidModel(const SolidModel &s) = default;
     SolidModel() = default;
     ~SolidModel() override = default;

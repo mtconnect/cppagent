@@ -29,14 +29,14 @@ namespace mtconnect
 
     class Factory : public Matcher, public std::enable_shared_from_this<Factory>
     {
-     public:
+    public:
       using Function =
           std::function<std::shared_ptr<Entity>(const std::string &name, Properties &)>;
       using RegexPair = std::pair<std::regex, FactoryPtr>;
       using StringFactory = std::map<std::string, FactoryPtr>;
       using RegexFactory = std::list<RegexPair>;
 
-     public:
+    public:
       // Factory Methods
       static auto createEntity(const std::string &name, Properties &p)
       {
@@ -58,6 +58,7 @@ namespace mtconnect
 
       FactoryPtr getptr() { return shared_from_this(); }
 
+      void setFunction(Function f) { m_function = f; }
       void setOrder(OrderList list)
       {
         m_order = std::make_shared<OrderMap>();
@@ -106,9 +107,6 @@ namespace mtconnect
         }
         registerEntityRequirements();
       }
-
-      void setFunction(Function f) { m_function = f; }
-
       void performConversions(Properties &p, ErrorList &errors) const;
       virtual bool isSufficient(Properties &properties, ErrorList &errors) const;
 
@@ -250,13 +248,13 @@ namespace mtconnect
         m_regexFactory.clear();
       }
 
-     protected:
+    protected:
       using FactoryMap = std::map<FactoryPtr, FactoryPtr>;
       static void LogError(const std::string &what);
       void _deepCopy(FactoryMap &factories);
       static void _dupFactory(FactoryPtr &factory, FactoryMap &factories);
 
-     protected:
+    protected:
       Requirements m_requirements;
       Function m_function;
       OrderMapPtr m_order;

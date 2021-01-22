@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "data_set.hpp"
 #include "globals.hpp"
 
 #include <atomic>
@@ -47,7 +48,7 @@ namespace mtconnect
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
     using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
-                               bool, Vector, nullptr_t>;
+                               bool, Vector, DataSet, nullptr_t>;
     using FactoryPtr = std::shared_ptr<Factory>;
     using ControlledVocab = std::list<std::string>;
     using Pattern = std::optional<std::regex>;
@@ -62,14 +63,15 @@ namespace mtconnect
       DOUBLE = 5,
       BOOL = 6,
       VECTOR = 7,
-      NULL_VALUE = 8
+      DATA_SET = 8,
+      NULL_VALUE = 9
     };
 
     bool ConvertValueToType(Value &value, ValueType type);
 
     class EntityError : public std::logic_error
     {
-     public:
+    public:
       explicit EntityError(const std::string &s, const std::string &e = "")
         : std::logic_error(s), m_entity(e)
       {
@@ -100,13 +102,13 @@ namespace mtconnect
       virtual EntityError *dup() const noexcept { return new EntityError(*this); }
       const std::string &getEntity() const { return m_entity; }
 
-     protected:
+    protected:
       std::string m_text;
       std::string m_entity;
     };
     class PropertyError : public EntityError
     {
-     public:
+    public:
       explicit PropertyError(const std::string &s, const std::string &p = "",
                              const std::string &e = "")
         : EntityError(s, e), m_property(p)
@@ -138,7 +140,7 @@ namespace mtconnect
       EntityError *dup() const noexcept override { return new PropertyError(*this); }
       const std::string &getProperty() const { return m_property; }
 
-     protected:
+    protected:
       std::string m_property;
     };
 
@@ -154,10 +156,10 @@ namespace mtconnect
 
     class Requirement
     {
-     public:
+    public:
       const static auto Infinite{std::numeric_limits<int>::max()};
 
-     public:
+    public:
       Requirement(const std::string &name, ValueType type, bool required = true)
         : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
       {
@@ -251,7 +253,7 @@ namespace mtconnect
         }
       }
 
-     protected:
+    protected:
       std::string m_name;
       int m_upperMultiplicity;
       int m_lowerMultiplicity;

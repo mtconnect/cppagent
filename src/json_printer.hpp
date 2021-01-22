@@ -25,7 +25,7 @@ namespace mtconnect
 {
   class JsonPrinter : public Printer
   {
-   public:
+  public:
     JsonPrinter(const std::string version = "", bool pretty = false);
     ~JsonPrinter() override = default;
 
@@ -44,7 +44,7 @@ namespace mtconnect
                             const unsigned int assetCount, const AssetList &assets) const override;
     std::string mimeType() const override { return "application/mtconnect+json"; }
 
-   protected:
+  protected:
     const std::string &hostname() const;
     std::string m_schemaVersion;
     std::string m_version;

@@ -32,7 +32,7 @@ namespace mtconnect
   {
     class XmlParser
     {
-     public:
+    public:
       XmlParser() = default;
       ~XmlParser() = default;
 

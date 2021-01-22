@@ -762,7 +762,7 @@ namespace mtconnect
 
   class CategoryRef
   {
-   public:
+  public:
     CategoryRef(const char *cat) : m_category(cat) {}
     CategoryRef(const CategoryRef &other) = default;
 
@@ -788,14 +788,14 @@ namespace mtconnect
       return ret;
     }
 
-   protected:
+  protected:
     string m_category;
     vector<ObservationPtr> m_events;
   };
 
   class ComponentRef
   {
-   public:
+  public:
     ComponentRef(const Component *component) : m_component(component), m_categoryRef(nullptr) {}
     ComponentRef(const ComponentRef &other)
       : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
@@ -845,7 +845,7 @@ namespace mtconnect
       return ret;
     }
 
-   protected:
+  protected:
     const Component *m_component;
     vector<CategoryRef> m_categories;
     CategoryRef *m_categoryRef;
@@ -853,7 +853,7 @@ namespace mtconnect
 
   class DeviceRef
   {
-   public:
+  public:
     DeviceRef(const Device *device) : m_device(device), m_componentRef(nullptr) {}
     DeviceRef(const DeviceRef &other) : m_device(other.m_device), m_components(other.m_components)
     {
@@ -893,7 +893,7 @@ namespace mtconnect
       return ret;
     }
 
-   protected:
+  protected:
     const Device *m_device;
     vector<ComponentRef> m_components;
     ComponentRef *m_componentRef;
@@ -942,21 +942,6 @@ namespace mtconnect
     return print(doc, m_pretty);
 
     return print(doc, m_pretty);
-  }
-
-  inline static json split(const string &v, const char s = ',')
-  {
-    json array = json::array();
-    stringstream ss(v);
-    while (ss.good())
-    {
-      string ele;
-      getline(ss, ele, s);
-      if (!ele.empty())
-        array.emplace_back(ele);
-    }
-
-    return array;
   }
 
   std::string JsonPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,

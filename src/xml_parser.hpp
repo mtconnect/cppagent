@@ -36,7 +36,7 @@ namespace mtconnect
 
   class XmlParser
   {
-   public:
+  public:
     // Constructor to set the open the correct file
     XmlParser();
 
@@ -51,7 +51,7 @@ namespace mtconnect
     // Get std::list of data items in path
     void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
 
-   protected:
+  protected:
     // Main method to process the nodes and return the objects
     Component *handleNode(xmlNodePtr node, Component *parent = nullptr, Device *device = nullptr);
 
@@ -77,7 +77,7 @@ namespace mtconnect
     // Perform loading of references and set up relationships
     void handleReference(xmlNodePtr reference, Component *parent = nullptr);
 
-   protected:
+  protected:
     // LibXML XML Doc
     xmlDocPtr m_doc = nullptr;
     std::map<std::string, std::function<void(xmlNodePtr, Component *, Device *)>> m_handlers;

@@ -30,21 +30,8 @@ namespace mtconnect
     struct ShdrObservation;
 
     // Takes a tokenized set of fields and maps them to timestamp and data items
-    class DataItemMapper
-    {
-     public:
-      static void mapTokensToDataItems(ShdrObservation &obs, TokenList::const_iterator &token,
-                                       const TokenList::const_iterator &end, Context &context);
-      static void mapTokensToAsset(ShdrObservation &obs, TokenList::const_iterator &token,
-                                   const TokenList::const_iterator &end, Context &context);
+    void MapTokensToDataItem(ShdrObservation &obs, TokenList::const_iterator &token,
+                             const TokenList::const_iterator &end, Context &context);
 
-     protected:
-      // Property sets
-      static entity::Requirements m_condition;
-      static entity::Requirements m_timeseries;
-      static entity::Requirements m_message;
-      static entity::Requirements m_sample;
-      static entity::Requirements m_event;
-    };
   }  // namespace adapter
 }  // namespace mtconnect

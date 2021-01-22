@@ -88,7 +88,7 @@ namespace mtconnect
 
     class Adapter : public Connector, public threaded_object
     {
-     public:
+    public:
       // Associate adapter with a device & connect to the server & port
       Adapter(std::string device, const std::string &server, const unsigned int port,
               std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
@@ -176,7 +176,7 @@ namespace mtconnect
       // For the additional devices associated with this adapter
       void addDevice(std::string &device);
 
-     protected:
+    protected:
       void parseCalibration(const std::string &calibString);
       void processAsset(std::istringstream &toParse, const std::string &key,
                         const std::string &value, const std::string &time);
@@ -185,7 +185,7 @@ namespace mtconnect
                            const std::string &time, double offset, bool first = false);
       std::string extractTime(const std::string &time, double &offset);
 
-     protected:
+    protected:
       // Pointer to the agent
       Context m_context;
 
@@ -212,7 +212,7 @@ namespace mtconnect
       // Timeout for reconnection attempts, given in milliseconds
       std::chrono::milliseconds m_reconnectInterval;
 
-     private:
+    private:
       // Inherited and is run as part of the threaded_object
       void thread() override;
     };

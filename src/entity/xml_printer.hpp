@@ -31,7 +31,7 @@ namespace mtconnect
   {
     class XmlPrinter
     {
-     public:
+    public:
       XmlPrinter() = default;
 
       void print(xmlTextWriterPtr writer, const EntityPtr entity);

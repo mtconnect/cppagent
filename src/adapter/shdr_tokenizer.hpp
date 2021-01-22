@@ -33,7 +33,7 @@ namespace mtconnect
 
     class ShdrTokenizer
     {
-     public:
+    public:
       ShdrTokenizer() = default;
 
       template <typename T>
@@ -119,7 +119,7 @@ namespace mtconnect
         return tokens;
       }
 
-     protected:
+    protected:
       static std::regex m_pattern;
     };
   }  // namespace adapter

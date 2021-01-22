@@ -35,7 +35,7 @@ namespace mtconnect
   {
     class Connector
     {
-     public:
+    public:
       // Instantiate the server by assigning it a server and port/
       Connector(std::string server, unsigned int port,
                 std::chrono::seconds legacyTimout = std::chrono::seconds{600});
@@ -80,11 +80,11 @@ namespace mtconnect
 
       void setRealTime(bool realTime = true) { m_realTime = realTime; }
 
-     protected:
+    protected:
       void startHeartbeats(const std::string &buf);
       void close();
 
-     protected:
+    protected:
       // Name of the server to connect to
       std::string m_server;
 
@@ -117,7 +117,7 @@ namespace mtconnect
       dlib::mutex *m_connectionMutex;
       dlib::signaler *m_connectionClosed;
 
-     private:
+    private:
       // Size of buffer to read at a time from the socket
       static const unsigned int SOCKET_BUFFER_SIZE = 8192;
     };

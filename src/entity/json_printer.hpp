@@ -29,7 +29,7 @@ namespace mtconnect
   {
     class JsonPrinter
     {
-     public:
+    public:
       JsonPrinter() = default;
 
       json print(const EntityPtr entity) const
@@ -37,7 +37,7 @@ namespace mtconnect
         return json::object({{entity->getName(), printEntity(entity)}});
       }
 
-     protected:
+    protected:
       json printEntity(const EntityPtr entity) const;
     };
   }  // namespace entity

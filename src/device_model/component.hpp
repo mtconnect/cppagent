@@ -36,7 +36,7 @@ namespace mtconnect
 
   class Component
   {
-   public:
+  public:
     struct Reference
     {
       enum ReferenceType
@@ -61,7 +61,7 @@ namespace mtconnect
       Component *m_component;
     };
 
-   public:
+  public:
     // Take in a class name & mapping of attributes
     Component(const std::string &className, const std::map<std::string, std::string> &attributes,
               const std::string &prefix = "");
@@ -153,13 +153,13 @@ namespace mtconnect
 
     void resolveReferences();
 
-   protected:
+  protected:
     // Return a map of attributes of all the component specs
     std::map<std::string, std::string> buildAttributes() const;
     void reBuildAttributes() { m_attributes = buildAttributes(); }
     void setParent(Component *parent);
 
-   protected:
+  protected:
     // Unique ID for each component
     std::string m_id;
 

@@ -25,7 +25,7 @@ namespace mtconnect
 {
   class MTConnectService
   {
-   public:
+  public:
     MTConnectService();
     virtual ~MTConnectService() = default;
 
@@ -38,7 +38,7 @@ namespace mtconnect
     std::string const &name() const { return m_name; }
     void setDebug(bool debug) { m_isDebug = debug; }
 
-   protected:
+  protected:
     std::string m_name;
     std::string m_configFile;
     std::string m_pidFile;

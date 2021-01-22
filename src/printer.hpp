@@ -20,7 +20,7 @@ namespace mtconnect
 
   class Printer
   {
-   public:
+  public:
     Printer(bool pretty = false) : m_pretty(pretty) {}
     virtual ~Printer() = default;
 
@@ -47,7 +47,7 @@ namespace mtconnect
                                     AssetList const &assets) const = 0;
     virtual std::string mimeType() const = 0;
 
-   protected:
+  protected:
     bool m_pretty;
   };
 }  // namespace mtconnect

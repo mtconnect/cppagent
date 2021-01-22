@@ -32,7 +32,7 @@ namespace mtconnect
 
   class Device : public Component
   {
-   public:
+  public:
     // Constructor that sets variables from an attribute map
     Device(const Attributes &attributes, const std::string block = "Device");
     ~Device() override;
@@ -73,7 +73,7 @@ namespace mtconnect
     DataItem *getAssetChanged() const { return m_assetChanged; }
     DataItem *getAssetRemoved() const { return m_assetRemoved; }
 
-   protected:
+  protected:
     // The iso841Class of the device
     unsigned int m_iso841Class;
     std::string m_mtconnectVersion;

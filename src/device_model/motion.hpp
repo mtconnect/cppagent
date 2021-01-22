@@ -29,7 +29,7 @@ namespace mtconnect
 {
   class Motion : public GeometricConfiguration
   {
-   public:
+  public:
     Motion(const Motion &s) = default;
     Motion() = default;
     ~Motion() override = default;

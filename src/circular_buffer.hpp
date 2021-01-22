@@ -31,7 +31,7 @@ namespace mtconnect
 
   class CircularBuffer
   {
-   public:
+  public:
     CircularBuffer(unsigned int bufferSize, int checkpointFreq)
       : m_sequence(1ull), m_checkpointFreq(checkpointFreq)
     {
@@ -204,7 +204,7 @@ namespace mtconnect
     auto unlock() { return m_sequenceLock.unlock(); }
     auto try_lock() { return m_sequenceLock.try_lock(); }
 
-   protected:
+  protected:
     // Access control to the buffer
     std::recursive_mutex m_sequenceLock;
 
