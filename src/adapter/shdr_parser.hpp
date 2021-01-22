@@ -66,8 +66,17 @@ namespace mtconnect
     class ShdrParser
     {
     public:
-      using ObservationHandler = std::function<void(Observation2Ptr &observation)>;
-      using AssetHandler = std::function<void(AssetPtr &asset)>;
+      using ObservationHandler = std::function<void(Observation2Ptr &)>;
+      //AssetPtr addAsset(Device *device, const std::string &asset,
+      //                  const std::optional<std::string> &id, const std::optional<std::string> &type,
+      //                  const std::optional<std::string> &time, entity::ErrorList &errors);
+
+      using AssetHandler = std::function<void(const Device *,
+                                              const std::string &, // body
+                                              const std::optional<std::string> &, // asset id
+                                              const std::optional<std::string> &, // asset type
+                                              const std::optional<std::string> &, // timestamp
+                                              entity::ErrorList &)>;
       void processData(const std::string &data, Context &context);
       void processCommand(const std::string &data, Context &context);
 

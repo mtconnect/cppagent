@@ -137,7 +137,7 @@ namespace mtconnect
           continue;
         }
 
-        entity::Value value = extractResetTrigger(observation.m_dataItem, token, obs.m_properties);
+        entity::Value value{extractResetTrigger(observation.m_dataItem, token, obs.m_properties)};
 
         if (upc && req->getType() == entity::STRING && !observation.m_dataItem->isTable() &&
             !observation.m_dataItem->isDataSet())

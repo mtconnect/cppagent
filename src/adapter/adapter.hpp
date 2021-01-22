@@ -54,10 +54,13 @@ namespace mtconnect
       using GetDataItem =
           std::function<const DataItem *(const Device *device, const std::string &id)>;
       using Now = std::function<Timestamp()>;
-
+      using DeviceChanged = std::function<void(Device*,const std::string&,
+                                                        const std::string&)>;
+      
       GetDevice m_getDevice;
       GetDataItem m_getDataItem;
       Now m_now;
+      DeviceChanged m_deviceChanged;
 
       // Logging Context
       std::set<std::string> m_logOnce;

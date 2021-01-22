@@ -47,7 +47,7 @@ namespace mtconnect
     ~Observation2() override = default;
 
     static Observation2Ptr makeObservation(const DataItem *dataItem, entity::Properties &props,
-                                           entity::ErrorList &errors);
+                                           const Timestamp &timestamp, entity::ErrorList &errors);
 
     void setDataItem(const DataItem *dataItem)
     {
@@ -92,7 +92,7 @@ namespace mtconnect
     }
 
     void clearResetTriggered() { m_properties.erase("resetTriggered"); }
-
+    
   protected:
     Timestamp m_timestamp;
     bool m_unavailable{false};

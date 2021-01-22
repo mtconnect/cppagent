@@ -39,6 +39,8 @@ namespace mtconnect
     void ShdrParser::mapTokens(TokenList::const_iterator &token,
                                const TokenList::const_iterator &end, Context &context)
     {
+      using namespace mtconnect::entity;
+      
       ShdrObservation timestamp;
       ExtractTimestamp(timestamp, token, end, context);
       while (token != end)
@@ -52,8 +54,17 @@ namespace mtconnect
           {
             MapTokensToAsset(observation, token, end, context);
 
+            // TODO: Check if the timestamp should be passed as a chrono
             // Send downstream
             auto obs = get<AssetObservation>(observation.m_observed);
+            auto timestamp = date::format("%FT%TZ", observation.m_timestamp);
+            if (m_assetHandler)
+              m_assetHandler(observation.m_device, obs.m_body,
+                             OptionallyGet<string>("assetId", observation.m_properties),
+                             OptionallyGet<string>("type", observation.m_properties),
+                             timestamp, errors);
+            else
+              g_logger << dlib::LWARN << "Asset handler was not provided";
           }
           else
           {
@@ -68,32 +79,30 @@ namespace mtconnect
               throw entity::EntityError("Could not find data item");
             }
 
-            if (obs.m_dataItem->getCategory())
+            
+            auto out =
+            Observation2::makeObservation(obs.m_dataItem, observation.m_properties,
+                                          observation.m_timestamp, errors);
+            if (errors.empty())
             {
-              auto out =
-                  Observation2::makeObservation(obs.m_dataItem, observation.m_properties, errors);
-              if (errors.empty())
-              {
-                if (obs.m_unavailable)
-                  out->makeUnavailable();
-
-                out->setTimestamp(timestamp.m_timestamp);
-
-                // Deliver
-                if (m_observationHandler)
-                  m_observationHandler(out);
-              }
+              if (obs.m_unavailable)
+                out->makeUnavailable();
+              
+              out->setTimestamp(timestamp.m_timestamp);
+              
+              // Deliver
+              if (m_observationHandler)
+                m_observationHandler(out);
               else
-              {
-                // Continue on and try to recover... log errors first.
-                for (auto &e : errors)
-                {
-                  g_logger << dlib::LWARN << "Error while parsing tokens: " << e->what();
-                  for (auto it = start; it != token; it++)
-                    g_logger << dlib::LWARN << "    token: " << *it;
-                }
-              }
+                g_logger << dlib::LWARN << "Observation handler was not provided";
             }
+          }
+          // Continue on and try to recover... log errors first.
+          for (auto &e : errors)
+          {
+            g_logger << dlib::LWARN << "Error while parsing tokens: " << e->what();
+            for (auto it = start; it != token; it++)
+              g_logger << dlib::LWARN << "    token: " << *it;
           }
         }
         catch (entity::EntityError &e)
@@ -191,14 +200,6 @@ namespace mtconnect
           string value = data.substr(index + 1);
           trim(value);
           
-          bool deviceChanged{false};
-          std::string oldName, oldUuid;
-          if (device)
-          {
-            oldName = device->getName();
-            oldUuid = device->getUuid();
-          }
-          
           static auto deviceCommands = std::map<string,std::function<void(Device*,const string&)>>({
             { "uuid", [](Device *d,const string &v) { d->setUuid(v); } },
             { "manufacturer", [](Device *d,const string &v) {d->setManufacturer(v); } },
@@ -214,8 +215,14 @@ namespace mtconnect
           {
             if (device != nullptr)
             {
+              auto oldName = device->getName();
+              auto oldUuid = device->getUuid();
+
               s->second(device, value);
-              deviceChanged = true;
+              if (context.m_deviceChanged)
+                context.m_deviceChanged(device, oldUuid, oldName);
+              else
+                g_logger << LWARN << "No function registered for device changed";
             }
             else
             {
@@ -247,11 +254,6 @@ namespace mtconnect
           else
           {
             g_logger << LWARN << "Unknown command '" << data;
-          }
-          
-          if (deviceChanged)
-          {
-            //m_agent->deviceChanged(device, oldUuid, oldName);
           }
         }
       }

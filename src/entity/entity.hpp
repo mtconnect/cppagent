@@ -30,6 +30,16 @@ namespace mtconnect
     using OrderMap = std::unordered_map<std::string, int>;
     using OrderMapPtr = std::shared_ptr<OrderMap>;
     using Property = std::pair<std::string, Value>;
+    
+    template<typename T>
+    inline std::optional<T> OptionallyGet(const std::string &key, const Properties &props)
+    {
+      auto p = props.find(key);
+      if (p != props.end())
+        return std::get<T>(p->second);
+      else
+        return std::nullopt;
+    }
 
     class Entity : public std::enable_shared_from_this<Entity>
     {
@@ -50,7 +60,7 @@ namespace mtconnect
       const Properties &getProperties() const { return m_properties; }
       const Value &getProperty(const std::string &n) const
       {
-        static Value noValue{nullptr};
+        static Value noValue{std::monostate()};
         auto it = m_properties.find(n);
         if (it == m_properties.end())
           return noValue;
@@ -62,6 +72,7 @@ namespace mtconnect
         m_properties.insert_or_assign(key, v);
       }
       void setProperty(const Property &property) { setProperty(property.first, property.second); }
+      bool hasProperty(const std::string &n) const { return m_properties.find(n) != m_properties.end(); }
 
       const Value &getValue() const { return getProperty("VALUE"); }
       std::optional<EntityList> getList(const std::string &name) const

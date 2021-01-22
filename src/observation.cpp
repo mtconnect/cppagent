@@ -42,10 +42,13 @@ namespace mtconnect
 
   FactoryPtr Observation2::getFactory()
   {
-    static auto factory =
+    static FactoryPtr factory;
+    if (!factory)
+    {
+      factory =
         make_shared<Factory>(Requirements({{"dataItemId", true},
                                            {"timestamp", true},
-                                           {"sequence", true},
+                                           {"sequence", false},
                                            {"subType", false},
                                            {"name", false},
                                            {"compositionId", false}}),
@@ -53,53 +56,52 @@ namespace mtconnect
                                return make_shared<Observation2>(name, props);
                              });
 
+      factory->registerFactory("Events:Message", Message::getFactory());
+      factory->registerFactory("Events:AssetChanged", AssetEvent::getFactory());
+      factory->registerFactory("Events:AssetRemoved", AssetEvent::getFactory());
+      factory->registerFactory("Events:Alarm", Alarm::getFactory());
+
+      factory->registerFactory(regex(".+TimeSeries$"), Timeseries::getFactory());
+      factory->registerFactory(regex(".+DataSet$"), DataSetEvent::getFactory());
+      factory->registerFactory(regex(".+Table$"), DataSetEvent::getFactory());
+      factory->registerFactory(regex("^Condition:.+"), Condition::getFactory());
+      factory->registerFactory(regex("^Samples:.+"), Sample::getFactory());
+      factory->registerFactory(regex("^Events:.+"), Event::getFactory());
+    }
     return factory;
   }
 
   Observation2Ptr Observation2::makeObservation(const DataItem *dataItem, Properties &props,
-                                                entity::ErrorList &errors)
+                                                const Timestamp &timestamp, entity::ErrorList &errors)
   {
-    Observation2Ptr obs;
-
-    if (dataItem->isTimeSeries())
-    {
-      Timeseries::getFactory()->make(dataItem->getElementName(), props, errors);
-    }
-    else if (dataItem->isDataSet() || dataItem->isTable())
-    {
-      DataSetEvent::getFactory()->make(dataItem->getElementName(), props, errors);
-    }
-    else if (dataItem->getType() == "ASSET_CHANGED" || dataItem->getType() == "ASSET_REMOVED")
-    {
-      AssetEvent::getFactory()->make(dataItem->getElementName(), props, errors);
-    }
-    else if (dataItem->isMessage())
-    {
-      Message::getFactory()->make(dataItem->getElementName(), props, errors);
-    }
-    else if (dataItem->isCondition())
-    {
-      Condition::getFactory()->make(dataItem->getElementName(), props, errors);
-    }
-    else if (dataItem->isAlarm())
-    {
-      Alarm::getFactory()->make(dataItem->getElementName(), props, errors);
-    }
-    else if (dataItem->isSample())
-    {
-      Sample::getFactory()->make(dataItem->getElementName(), props, errors);
-    }
-    else if (dataItem->isEvent())
-    {
-      Event::getFactory()->make(dataItem->getElementName(), props, errors);
-    }
-    else
+    props.insert_or_assign("dataItemId", dataItem->getId());
+    if (!dataItem->getName().empty())
+      props.insert_or_assign("name", dataItem->getName());
+    if (!dataItem->getCompositionId().empty())
+      props.insert_or_assign("compositionId", dataItem->getCompositionId());
+    if (!dataItem->getSubType().empty())
+      props.insert_or_assign("subType", dataItem->getSubType());
+    if (!dataItem->getStatistic().empty())
+      props.insert_or_assign("statistic", dataItem->getStatistic());
+    props.insert_or_assign("timestamp", date::format("%FT%TZ", timestamp));
+    
+    string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedElementName();
+    auto ent = getFactory()->create(key, props, errors);
+    if (!ent)
     {
       g_logger << dlib::LWARN
-               << "Could not parse properties for data item: " << dataItem->getName();
+      << "Could not parse properties for data item: " << dataItem->getName();
+      for (auto &e : errors)
+      {
+        g_logger << dlib::LWARN << "   Error: " << e->what();
+      }
       throw EntityError("Invalid properties for data item");
     }
 
+    auto obs = dynamic_pointer_cast<Observation2>(ent);
+    obs->m_timestamp = timestamp;
+    obs->m_dataItem = dataItem;
+    
     return obs;
   }
 
@@ -228,6 +230,10 @@ namespace mtconnect
     }
     return factory;
   }
+  
+  // --------------------------------------------------------------------
+  // --------------------------------------------------------------------
+  // --------------------------------------------------------------------
 
   static std::mutex g_attributeMutex;
 
