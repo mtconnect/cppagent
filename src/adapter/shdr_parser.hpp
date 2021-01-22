@@ -66,12 +66,13 @@ namespace mtconnect
     class ShdrParser
     {
     public:
-      using Handler = std::function<void(Observation2Ptr &observation)>;
+      using ObservationHandler = std::function<void(Observation2Ptr &observation)>;
+      using AssetHandler = std::function<void(AssetPtr &asset)>;
       void processData(const std::string &data, Context &context);
       void processCommand(const std::string &data, Context &context);
 
-      Handler m_handler;
-
+      ObservationHandler m_observationHandler;
+      AssetHandler m_assetHandler;
     protected:
       void mapTokens(TokenList::const_iterator &token, const TokenList::const_iterator &end,
                      Context &context);

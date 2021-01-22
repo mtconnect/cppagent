@@ -80,11 +80,12 @@ namespace mtconnect
                 out->setTimestamp(timestamp.m_timestamp);
 
                 // Deliver
-                if (m_handler)
-                  m_handler(out);
+                if (m_observationHandler)
+                  m_observationHandler(out);
               }
               else
               {
+                // Continue on and try to recover... log errors first.
                 for (auto &e : errors)
                 {
                   g_logger << dlib::LWARN << "Error while parsing tokens: " << e->what();
@@ -134,17 +135,44 @@ namespace mtconnect
         g_logger << dlib::LWARN << "Unknown Error on line: " << data;
       }
     }
-
-#if 0
     
-    void Adapter::protocolCommand(const std::string &data)
+    static inline void parseCalibration(Device *device, const std::string &aLine)
     {
+      istringstream toParse(aLine);
+      
+      // Look for name|factor|offset triples
+      string name, factor, offset;
+      while (getline(toParse, name, '|') && getline(toParse, factor, '|') &&
+             getline(toParse, offset, '|'))
+      {
+        // Convert to a floating point number
+        auto di = device->getDeviceDataItem(name);
+        if (!di)
+          g_logger << LWARN << "Cannot find data item to calibrate for " << name;
+        else
+        {
+          double fact_value = strtod(factor.c_str(), nullptr);
+          double off_value = strtod(offset.c_str(), nullptr);
+          di->setConversionFactor(fact_value, off_value);
+        }
+      }
+    }
+    
+    static inline bool is_true(const string &aValue)
+    {
+      return (aValue == "yes" || aValue == "true" || aValue == "1");
+    }
+
+    void ShdrParser::processCommand(const std::string &data, Context &context)
+    {
+      auto device = const_cast<Device*>(context.m_getDevice(context.m_defaultDevice));
+      
       // Handle initial push of settings for uuid, serial number and manufacturer.
       // This will override the settings in the device from the xml
       if (data == "* PROBE")
       {
         //      const Printer *printer = m_agent->getPrinter("xml");
-        //      string response = m_agent->handleProbe(printer, m_deviceName);
+        //      string response = m_agent->handleProbe(printer, deviceName);
         //      string probe = "* PROBE LENGTH=";
         //      probe.append(intToString(response.length()));
         //      probe.append("\n");
@@ -165,62 +193,49 @@ namespace mtconnect
           
           bool deviceChanged{false};
           std::string oldName, oldUuid;
-          if (m_device)
+          if (device)
           {
-            oldName = m_device->getName();
-            oldUuid = m_device->getUuid();
+            oldName = device->getName();
+            oldUuid = device->getUuid();
           }
           
-          if (m_device && key == "uuid" && !m_device->m_preserveUuid)
+          static auto deviceCommands = std::map<string,std::function<void(Device*,const string&)>>({
+            { "uuid", [](Device *d,const string &v) { d->setUuid(v); } },
+            { "manufacturer", [](Device *d,const string &v) {d->setManufacturer(v); } },
+            { "station", [](Device *d,const string &v) {d->setManufacturer(v); } },
+            { "serialNumber", [](Device *d,const string &v) {d->setStation(v); } },
+            { "description", [](Device *d,const string &v) {d->setDescription(v); } },
+            { "nativeName", [](Device *d,const string &v) {d->setNativeName(v); } },
+            { "calibration", [](Device *d,const string &v) { parseCalibration(d, v); } },
+          });
+          
+          auto s = deviceCommands.find(key);
+          if (s != deviceCommands.end())
           {
-            m_device->setUuid(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "manufacturer")
-          {
-            m_device->setManufacturer(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "station")
-          {
-            m_device->setStation(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "serialNumber")
-          {
-            m_device->setSerialNumber(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "description")
-          {
-            m_device->setDescription(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "nativeName")
-          {
-            m_device->setNativeName(value);
-            deviceChanged = true;
-          }
-          else if (m_device && key == "calibration")
-          {
-            parseCalibration(value);
-            deviceChanged = true;
+            if (device != nullptr)
+            {
+              s->second(device, value);
+              deviceChanged = true;
+            }
+            else
+            {
+              g_logger << LWARN << "Device command '" << key << "' cannot be performed without a default device";
+            }
           }
           else if (key == "conversionRequired")
-            m_conversionRequired = is_true(value);
+            context .m_conversionRequired = is_true(value);
           else if (key == "relativeTime")
-            m_relativeTime = is_true(value);
+            context.m_relativeTime = is_true(value);
           else if (key == "realTime")
-            m_realTime = is_true(value);
+            context.m_realTime = is_true(value);
+          // TODO: Set default device
           else if (key == "device")
           {
-            auto device = m_agent->findDeviceByUUIDorName(value);
+            auto device = const_cast<Device*>(context.m_getDevice(value));
             if (device)
             {
-              m_device = device;
               g_logger << LINFO << "Device name given by the adapter " << value
-              << ", has been assigned to cfg " << m_deviceName;
-              m_deviceName = value;
+              << ", has been assigned to cfg ";
             }
             else
             {
@@ -231,49 +246,15 @@ namespace mtconnect
           }
           else
           {
-            g_logger << LWARN << "Unknown command '" << data << "' for device '" << m_deviceName;
+            g_logger << LWARN << "Unknown command '" << data;
           }
           
           if (deviceChanged)
           {
-            m_agent->deviceChanged(m_device, oldUuid, oldName);
+            //m_agent->deviceChanged(device, oldUuid, oldName);
           }
         }
       }
     }
-    
-    void Adapter::parseCalibration(const std::string &aLine)
-    {
-      istringstream toParse(aLine);
-      
-      // Look for name|factor|offset triples
-      string name, factor, offset;
-      while (getline(toParse, name, '|') && getline(toParse, factor, '|') &&
-             getline(toParse, offset, '|'))
-      {
-        // Convert to a floating point number
-        auto di = m_device->getDeviceDataItem(name);
-        if (!di)
-          g_logger << LWARN << "Cannot find data item to calibrate for " << name;
-        else
-        {
-          double fact_value = strtod(factor.c_str(), nullptr);
-          double off_value = strtod(offset.c_str(), nullptr);
-          di->setConversionFactor(fact_value, off_value);
-        }
-      }
-    }
-    
-    void Adapter::disconnected()
-    {
-      m_baseTime = 0;
-      m_agent->disconnected(this, m_allDevices);
-    }
-    
-    void Adapter::connecting() { m_agent->connecting(this); }
-    
-    void Adapter::connected() { m_agent->connected(this, m_allDevices); }
-
-#endif
   }  // namespace adapter
 }  // namespace mtconnect

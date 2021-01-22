@@ -40,7 +40,7 @@ TEST(TimestampExtractorTest, TestTimeExtraction)
   auto end = tokens.end();
   
   ShdrObservation obsservation;
-  TimestampExtractor::extractTimestamp(obsservation, token, end, context);
+  ExtractTimestamp(obsservation, token, end, context);
 
   ASSERT_EQ("hello", *token);
   ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", obsservation.m_timestamp));
@@ -55,7 +55,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
   auto end = tokens.end();
   
   ShdrObservation obsservation;
-  TimestampExtractor::extractTimestamp(obsservation, token, end, context);
+  ExtractTimestamp(obsservation, token, end, context);
 
   ASSERT_EQ("hello", *token);
   ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", obsservation.m_timestamp));
@@ -77,14 +77,14 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
   auto end = tokens.end();
   
   ShdrObservation obsservation;
-  TimestampExtractor::extractTimestamp(obsservation, token, end, context);
+  ExtractTimestamp(obsservation, token, end, context);
 
   ASSERT_EQ("hello", *token);
   ASSERT_EQ("2021-01-19T10:00:00.000000Z", format("%FT%TZ", obsservation.m_timestamp));
   
   tokens = { "2000.0", "hello" };
   token = tokens.cbegin();
-  TimestampExtractor::extractTimestamp(obsservation, token, end, context);
+  ExtractTimestamp(obsservation, token, end, context);
 
   ASSERT_EQ("2021-01-19T10:00:01.000000Z", format("%FT%TZ", obsservation.m_timestamp));
 }
@@ -103,12 +103,12 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
   auto end = tokens.end();
   
   ShdrObservation obsservation;
-  TimestampExtractor::extractTimestamp(obsservation, token, end, context);
+  ExtractTimestamp(obsservation, token, end, context);
   ASSERT_EQ("2021-01-19T10:00:00.000000Z", format("%FT%TZ", obsservation.m_timestamp));
   
   tokens = { "2021-01-19T10:01:10Z", "hello" };
   token = tokens.cbegin();
-  TimestampExtractor::extractTimestamp(obsservation, token, end, context);
+  ExtractTimestamp(obsservation, token, end, context);
 
   ASSERT_EQ("2021-01-19T10:00:10.000000Z", format("%FT%TZ", obsservation.m_timestamp));
 }

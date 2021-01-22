@@ -68,7 +68,9 @@ namespace mtconnect
       bool m_dupCheck{false};
       bool m_conversionRequired{false};
       bool m_upcaseValue{false};
-
+      bool m_realTime{false};
+      
+      std::string m_defaultDevice;
       std::optional<Timestamp> m_base;
       Micros m_offset;
     };
@@ -125,6 +127,8 @@ namespace mtconnect
 
       void setUpcaseValue(bool flag) { m_context.m_upcaseValue = flag; }
       bool upcaseValue() const { return m_context.m_upcaseValue; }
+      
+      auto &getTerminator() const { return m_terminator; }
 
       // Inherited method to incoming data from the server
       void processData(const std::string &data) override;

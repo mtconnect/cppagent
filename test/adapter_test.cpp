@@ -35,9 +35,10 @@ TEST(AdapterTest, MultilineData)
 {
   auto adapter = make_unique<Adapter>("device", "localhost", 7878);
   auto handler = make_unique<Handler>();
+  Context context;
   
   string data;
-  handler->m_processData = [&](const string &d) { data = d; };
+  handler->m_processData = [&](const string &d, Context &c) { data = d; };
   adapter->setHandler(handler);
   
   adapter->processData("Simple Pass Through");
