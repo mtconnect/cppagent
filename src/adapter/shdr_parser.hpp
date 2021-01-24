@@ -19,6 +19,7 @@
 
 #include "adapter.hpp"
 #include "entity/entity.hpp"
+#include "observation/observation.hpp"
 
 #include <chrono>
 #include <regex>
@@ -66,7 +67,7 @@ namespace mtconnect
     class ShdrParser
     {
     public:
-      using ObservationHandler = std::function<void(observation::Observation2Ptr &)>;
+      using ObservationHandler = std::function<void(observation::ObservationPtr &)>;
       // AssetPtr addAsset(Device *device, const std::string &asset,
       //                  const std::optional<std::string> &id, const std::optional<std::string>
       //                  &type, const std::optional<std::string> &time, entity::ErrorList &errors);

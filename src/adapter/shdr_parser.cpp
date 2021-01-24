@@ -20,7 +20,7 @@
 #include "agent.hpp"
 #include "asset_mapper.hpp"
 #include "data_item_mapper.hpp"
-#include "observation.hpp"
+#include "observation/observation.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
 
@@ -71,17 +71,16 @@ namespace mtconnect
           {
             MapTokensToDataItem(observation, token, end, context);
 
-            // TODO: Forward observation to Agent
             // Build an observation
-            Observation2Ptr outgoing;
+            ObservationPtr outgoing;
             auto obs = get<DataItemObservation>(observation.m_observed);
             if (obs.m_dataItem == nullptr)
             {
               throw entity::EntityError("Could not find data item");
             }
 
-            auto out = Observation2::makeObservation(obs.m_dataItem, observation.m_properties,
-                                                     observation.m_timestamp, errors);
+            auto out = observation::Observation::make(obs.m_dataItem, observation.m_properties,
+                                                                 observation.m_timestamp, errors);
             if (errors.empty())
             {
               if (obs.m_unavailable)

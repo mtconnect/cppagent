@@ -618,6 +618,8 @@ namespace mtconnect
 
     for (auto device : m_agent->getDevices())
       device->m_preserveUuid = defaultPreserve;
+    
+    createHandlers();
 
     loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,
                  conversionRequired, upcaseValue, filterDuplicates);
@@ -639,6 +641,44 @@ namespace mtconnect
 
     loadTypes(reader, cache);
   }
+  
+  void AgentConfiguration::createHandlers()
+  {
+    // Wiring for adapter to agent
+    m_shdrParser = make_unique<adapter::ShdrParser>();
+    m_shdrParser->m_observationHandler = [this](observation::ObservationPtr &observation){
+      m_agent->addToBuffer(observation);
+    };
+    m_shdrParser->m_assetHandler = [this](const Device *device,
+                                          const std::string &body,
+                                          const std::optional<std::string> &assetId,
+                                          const std::optional<std::string> &type,
+                                          const std::optional<std::string> &timestamp,
+                                          entity::ErrorList &errors){
+      // TODO: Fix asset handling. Should take AssetPtr.
+    };
+    
+    m_adapterHandler = make_unique<adapter::Handler>();
+    m_adapterHandler->m_processData = [this](const std::string &data, adapter::Context &context) {
+      m_shdrParser->processData(data, context);
+    };
+    m_adapterHandler->m_protocolCommand = [this](const std::string &command, adapter::Context &context) {
+      // TODO: Handle commands
+    };
+    m_adapterHandler->m_connected = [this](const adapter::Adapter &adapter, adapter::Context &context)
+    {
+      m_agent->connected(adapter, adapter.getAllDevices());
+    };
+    m_adapterHandler->m_disconnected = [this](const adapter::Adapter &adapter, adapter::Context &context)
+    {
+      m_agent->disconnected(adapter, adapter.getAllDevices());
+    };
+    m_adapterHandler->m_connecting = [this](const adapter::Adapter &adapter, adapter::Context &context)
+    {
+      m_agent->connecting(adapter);
+    };    
+  }
+
 
   void AgentConfiguration::loadAdapters(ConfigReader &reader, bool defaultPreserve,
                                         std::chrono::seconds legacyTimeout,
@@ -683,9 +723,9 @@ namespace mtconnect
 
         const string host = get_with_default(adapter, "Host", (string) "localhost");
         auto port = get_with_default(adapter, "Port", 7878);
-
+                
         g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
-        auto adp = new Adapter(deviceName, host, port,
+        auto adp = new Adapter(m_agent->getContext(), host, port,
                                get_with_default(adapter, "LegacyTimeout", legacyTimeout));
 
         device->m_preserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
@@ -730,6 +770,8 @@ namespace mtconnect
           }
         }
 
+        auto handler = make_unique<adapter::Handler>(*m_adapterHandler);
+        adp->setHandler(handler);
         m_agent->addAdapter(adp, false);
       }
     }
@@ -737,12 +779,14 @@ namespace mtconnect
     {
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
-      auto adp = new Adapter(device->getName(), "localhost", 7878, legacyTimeout);
+      auto adp = new Adapter(m_agent->getContext(), "localhost", 7878, legacyTimeout);
 
       adp->setIgnoreTimestamps(ignoreTimestamps || adp->isIgnoringTimestamps());
       adp->setReconnectInterval(reconnectInterval);
       device->m_preserveUuid = defaultPreserve;
-
+      
+      auto handler = make_unique<adapter::Handler>(*m_adapterHandler);
+      adp->setHandler(handler);
       m_agent->addAdapter(adp, false);
     }
     else

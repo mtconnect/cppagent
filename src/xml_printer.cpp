@@ -56,6 +56,7 @@ using namespace std;
 namespace mtconnect
 {
   static dlib::logger g_logger("xml.printer");
+  using namespace observation;
 
   class XmlWriter
   {
@@ -273,18 +274,6 @@ namespace mtconnect
       {
         THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
                                                         BAD_CAST attr.second.c_str()));
-      }
-    }
-  }
-
-  void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes)
-  {
-    for (const auto &attr : attributes)
-    {
-      if (!attr.second.empty() || attr.m_force)
-      {
-        THROW_IF_XML2_ERROR(
-            xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first, BAD_CAST attr.second.c_str()));
       }
     }
   }
@@ -862,7 +851,7 @@ namespace mtconnect
 
   string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
-                                 const uint64_t lastSeq, ObservationPtrArray &observations) const
+                                 const uint64_t lastSeq, ObservationList &observations) const
   {
     string ret;
 
@@ -877,9 +866,8 @@ namespace mtconnect
       // Sort the vector by category.
       if (observations.size() > 0)
       {
-        dlib::qsort_array<ObservationPtrArray, ObservationComparer>(
-            observations, 0ul, observations.size() - 1ul, ObservationCompare);
-
+        observations.sort(ObservationCompare);
+        
         AutoElement deviceElement(writer);
         {
           AutoElement componentStreamElement(writer);
@@ -970,96 +958,10 @@ namespace mtconnect
     return ret;
   }
 
-  void XmlPrinter::addObservation(xmlTextWriterPtr writer, Observation *result) const
+  void XmlPrinter::addObservation(xmlTextWriterPtr writer, ObservationPtr result) const
   {
-    auto dataItem = result->getDataItem();
-    string name;
-
-    if (dataItem->isCondition())
-    {
-      name = result->getLevelString();
-    }
-    else
-    {
-      if (!dataItem->getPrefix().empty())
-      {
-        auto ns = m_streamsNamespaces.find(dataItem->getPrefix());
-        if (ns != m_streamsNamespaces.end())
-          name = dataItem->getPrefixedElementName();
-      }
-
-      if (name.empty())
-        name = dataItem->getElementName();
-    }
-
-    AutoElement ele(writer, name);
-    addAttributes(writer, result->getAttributes());
-
-    if (result->isTimeSeries() && result->getValue() != "UNAVAILABLE")
-    {
-      ostringstream ostr;
-      ostr.precision(6);
-      const auto &v = result->getTimeSeries();
-
-      for (auto &e : v)
-        ostr << e << ' ';
-
-      string str = ostr.str();
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
-    }
-    else if (result->isDataSet() && result->getValue() != "UNAVAILABLE")
-    {
-      const DataSet &set = result->getDataSet();
-      for (auto &e : set)
-      {
-        map<string, string> attrs = {{"key", e.m_key}};
-        if (e.m_removed)
-        {
-          attrs["removed"] = "true";
-        }
-        visit(overloaded{[&writer, &attrs](const string &st) {
-                           addSimpleElement(writer, "Entry", st, attrs);
-                         },
-                         [&writer, &attrs](const int64_t &i) {
-                           addSimpleElement(writer, "Entry", to_string(i), attrs);
-                         },
-                         [&writer, &attrs](const double &d) {
-                           addSimpleElement(writer, "Entry", to_string(d), attrs);
-                         },
-                         [&writer, &attrs](const DataSet &row) {
-                           // Table
-                           AutoElement ele(writer, "Entry");
-                           addAttributes(writer, attrs);
-                           for (auto &c : row)
-                           {
-                             map<string, string> attrs = {{"key", c.m_key}};
-                             visit(overloaded{
-                                       [&writer, &attrs](const string &s) {
-                                         addSimpleElement(writer, "Cell", s, attrs);
-                                       },
-                                       [&writer, &attrs](const int64_t &i) {
-                                         addSimpleElement(writer, "Cell", to_string(i), attrs);
-                                       },
-                                       [&writer, &attrs](const double &d) {
-                                         addSimpleElement(writer, "Cell", floatToString(d), attrs);
-                                       },
-                                       [](auto &a) {
-                                         g_logger << dlib::LERROR
-                                                  << "Invalid type for DataSetVariant cell";
-                                       }},
-                                   c.m_value);
-                           }
-                         }},
-              e.m_value);
-      }
-    }
-    else if (!result->getValue().empty())
-    {
-      auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST result->getValue().c_str());
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-      xmlFree(text);
-      text = nullptr;
-    }
+    entity::XmlPrinter printer;
+    printer.print(writer, result);
   }
 
   void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,

@@ -25,6 +25,7 @@
 #include <libxml/xmlwriter.h>
 
 using namespace std;
+using namespace mtconnect::observation;
 
 namespace mtconnect
 {

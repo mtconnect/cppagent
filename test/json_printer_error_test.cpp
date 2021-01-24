@@ -19,13 +19,13 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "checkpoint.hpp"
+#include "observation/checkpoint.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
 #include "globals.hpp"
 #include "json_helper.hpp"
 #include "json_printer.hpp"
-#include "observation.hpp"
+#include "observation/observation.hpp"
 
 #include <nlohmann/json.hpp>
 

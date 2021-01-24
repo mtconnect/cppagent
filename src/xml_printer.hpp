@@ -49,7 +49,7 @@ namespace mtconnect
 
     std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
-                            ObservationPtrArray &results) const override;
+                            observation::ObservationList &results) const override;
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                             const unsigned int assetCount, const AssetList &assets) const override;
     std::string mimeType() const override { return "text/xml"; }
@@ -119,7 +119,7 @@ namespace mtconnect
     void printCellDefinitions(xmlTextWriterPtr writer,
                               const std::set<CellDefinition> &definitions) const;
 
-    void addObservation(xmlTextWriterPtr writer, Observation *result) const;
+    void addObservation(xmlTextWriterPtr writer, observation::ObservationPtr result) const;
 
   protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;

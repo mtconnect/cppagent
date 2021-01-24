@@ -55,6 +55,8 @@ using namespace std;
 
 namespace mtconnect
 {
+  using namespace observation;
+  
   static dlib::logger g_logger("xml.parser");
 
   template <class T>

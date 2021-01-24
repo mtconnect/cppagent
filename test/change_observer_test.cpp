@@ -19,13 +19,16 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "change_observer.hpp"
+#include "observation/change_observer.hpp"
 
 #include <chrono>
 #include <thread>
 
-namespace
+
+
+namespace mtconnect
 {
+  using namespace observation;
   class ChangeObserverTest : public testing::Test
   {
    protected:

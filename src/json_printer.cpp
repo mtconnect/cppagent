@@ -41,6 +41,8 @@ using json = nlohmann::json;
 
 namespace mtconnect
 {
+  using namespace observation;
+  
   static dlib::logger g_logger("json.printer");
 
   JsonPrinter::JsonPrinter(const string version, bool pretty)
@@ -629,135 +631,8 @@ namespace mtconnect
 
   inline json toJson(const ObservationPtr &observation)
   {
-    auto dataItem = observation->getDataItem();
-    string name;
-
-    if (dataItem->isCondition())
-    {
-      name = observation->getLevelString();
-    }
-    else
-    {
-      if (!dataItem->getPrefix().empty())
-      {
-        name = dataItem->getPrefixedElementName();
-      }
-
-      if (name.empty())
-        name = dataItem->getElementName();
-    }
-
-    json value;
-
-    if (observation->isUnavailable())
-    {
-      value = observation->getValue();
-    }
-    else if (observation->isTimeSeries())
-    {
-      ostringstream ostr;
-      ostr.precision(6);
-      const auto &v = observation->getTimeSeries();
-
-      value = json::array();
-
-      for (auto &e : v)
-        value.emplace_back(e);
-    }
-    else if (observation->isDataSet())
-    {
-      value = json::object();
-
-      const DataSet &set = observation->getDataSet();
-      for (auto &e : set)
-      {
-        if (e.m_removed)
-        {
-          value[e.m_key] = json::object({{"removed", true}});
-        }
-        else
-        {
-          visit(overloaded{[&value, &e](const std::string &st) { value[e.m_key] = st; },
-                           [&value, &e](const int64_t &i) { value[e.m_key] = i; },
-                           [&value, &e](const double &d) { value[e.m_key] = d; },
-                           [&value, &e](const DataSet &arg) {
-                             auto row = json::object();
-                             for (auto &c : arg)
-                             {
-                               visit(overloaded{
-                                         [&row, &c](const std::string &st) { row[c.m_key] = st; },
-                                         [&row, &c](const int64_t &i) { row[c.m_key] = i; },
-                                         [&row, &c](const double &d) { row[c.m_key] = d; },
-                                         [](auto &a) {
-                                           g_logger << dlib::LERROR
-                                                    << "Invalid  variant type for table cell";
-                                         }},
-                                     c.m_value);
-                             }
-                             value[e.m_key] = row;
-                           }},
-                e.m_value);
-        }
-      }
-    }
-    else if (dataItem->getCategory() == DataItem::SAMPLE)
-    {
-      if (!observation->getValue().empty())
-      {
-        if (dataItem->is3D())
-        {
-          value = json::array();
-          stringstream s(observation->getValue());
-          int i;
-          for (i = 0; s && i < 3; i++)
-          {
-            double v;
-            s >> v;
-            value.emplace_back(v);
-          }
-          if (i < 3)
-          {
-            for (; i < 3; i++)
-              value.emplace_back(0.0);
-          }
-        }
-        else
-        {
-          char *ep;
-          value = strtod(observation->getValue().c_str(), &ep);
-        }
-      }
-      else
-      {
-        value = 0;
-      }
-    }
-    else
-    {
-      value = observation->getValue();
-    }
-
-    json obj = json::object();
-    for (const auto &attr : observation->getAttributes())
-    {
-      if (strcmp(attr.first, "sequence") == 0)
-      {
-        obj["sequence"] = observation->getSequence();
-      }
-      else if (strcmp(attr.first, "sampleCount") == 0 or strcmp(attr.first, "sampleRate") == 0 or
-               strcmp(attr.first, "duration") == 0)
-      {
-        char *ep;
-        obj[attr.first] = strtod(attr.second.c_str(), &ep);
-      }
-      else
-      {
-        obj[attr.first] = attr.second;
-      }
-    }
-    obj["value"] = value;
-
-    return json::object({{name, obj}});
+    entity::JsonPrinter printer;
+    return printer.print(observation);
   }
 
   class CategoryRef
@@ -902,14 +777,13 @@ namespace mtconnect
   std::string JsonPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const uint64_t firstSeq,
                                        const uint64_t lastSeq,
-                                       ObservationPtrArray &observations) const
+                                       ObservationList &observations) const
   {
     json streams = json::array();
 
     if (observations.size() > 0)
     {
-      dlib::qsort_array<ObservationPtrArray, ObservationComparer>(
-          observations, 0ul, observations.size() - 1ul, ObservationCompare);
+      observations.sort(ObservationCompare);
 
       vector<DeviceRef> devices;
       DeviceRef *deviceRef = nullptr;

@@ -25,7 +25,6 @@ class CoordinateSystemTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_checkpoint = nullptr;
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/configuration.xml",
                                    8, 4, "1.6", 25);
@@ -35,11 +34,9 @@ class CoordinateSystemTest : public testing::Test
 
   void TearDown() override
   {
-    m_checkpoint.reset();
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Checkpoint> m_checkpoint;
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   Device *m_device{nullptr};

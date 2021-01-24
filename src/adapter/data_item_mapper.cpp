@@ -15,8 +15,9 @@
 //    limitations under the License.
 //
 
+#include "entity/factory.hpp"
 #include "data_item_mapper.hpp"
-
+#include "device_model/device.hpp"
 #include "shdr_parser.hpp"
 
 using namespace std;
@@ -85,6 +86,7 @@ namespace mtconnect
                                              {"sampleRate", entity::DOUBLE, true},
                                              {"VALUE", entity::VECTOR, true}};
     static entity::Requirements s_message{{"nativeCode", false}, {"VALUE", false}};
+    static entity::Requirements s_threeSpaceSample{{"VALUE", entity::VECTOR, false}};
     static entity::Requirements s_sample{{"VALUE", entity::DOUBLE, false}};
     static entity::Requirements s_assetEvent{{"assetType", false}, {"VALUE", false}};
     static entity::Requirements s_event{{"VALUE", false}};
@@ -124,15 +126,16 @@ namespace mtconnect
                               TokenList::const_iterator &token,
                               const TokenList::const_iterator &end, bool upc = false)
     {
-      auto req = reqs.begin();
       auto &observation = get<DataItemObservation>(obs.m_observed);
-      while (token != end && req != reqs.end())
+      for (auto req = reqs.begin(); token != end && req != reqs.end(); token++, req++)
       {
+        if (token->empty())
+        {
+          continue;
+        }
         if (unavailable(*token) && (req->getName() == "VALUE" || req->getName() == "level"))
         {
           observation.m_unavailable = true;
-          token++;
-          req++;
           continue;
         }
 
@@ -160,9 +163,6 @@ namespace mtconnect
           g_logger << dlib::LWARN << "Cannot convert value for: " << *token << " - " << e.what();
           throw;
         }
-
-        token++;
-        req++;
       }
     }
 
@@ -200,6 +200,8 @@ namespace mtconnect
       {
         if (observation.m_dataItem->isTimeSeries())
           reqs = &s_timeseries;
+        else if (observation.m_dataItem->is3D())
+          reqs = &s_threeSpaceSample;
         else
           reqs = &s_sample;
       }

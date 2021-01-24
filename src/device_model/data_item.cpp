@@ -322,76 +322,47 @@ namespace mtconnect
     return camel;
   }
 
-  bool DataItem::conversionRequired()
+  double DataItem::convertValue(double value) const
   {
-    if (!m_conversionDetermined)
-    {
-      m_conversionDetermined = true;
-      m_conversionRequired = !m_nativeUnits.empty();
-    }
-
-    return m_conversionRequired;
-  }
-
-  float DataItem::convertValue(float value)
-  {
-    if (!m_conversionDetermined)
-      conversionRequired();
-
-    if (!m_conversionRequired)
-    {
+    if (!conversionRequired())
       return value;
-    }
-    else if (m_hasFactor)
+    
+    if (m_hasFactor)
     {
-      return static_cast<float>((value + m_conversionOffset) * m_conversionFactor);
+      return static_cast<double>((value + m_conversionOffset) * m_conversionFactor);
     }
     else
     {
-      computeConversionFactors();
+      const_cast<DataItem*>(this)->computeConversionFactors();
       return convertValue(value);
     }
   }
 
-  string DataItem::convertValue(const string &value)
+  void DataItem::convertValue(entity::Value &value) const
   {
     // Check if the type is an alarm or if it doesn't have units
-
-    if (!m_conversionRequired)
-    {
-      return value;
-    }
-    else if (m_hasFactor)
+    if (!conversionRequired())
+      return;
+    
+    if (m_hasFactor)
     {
       if (m_threeD)
       {
-        ostringstream result;
-        string::size_type start = 0ul;
-
-        for (int i = 0; i < 3; i++)
+        auto &vector = std::get<entity::Vector>(value);
+        for (auto &v : vector)
         {
-          auto pos = value.find(' ', start);
-          result << floatToString((atof(value.substr(start, pos).c_str()) + m_conversionOffset) *
-                                  m_conversionFactor);
-
-          if (pos != string::npos)
-          {
-            start = value.find_first_not_of(' ', pos);
-            result << " ";
-          }
+          v = convertValue(v);
         }
-
-        return result.str();
       }
       else
       {
-        return floatToString((atof(value.c_str()) + m_conversionOffset) * m_conversionFactor);
+        value = convertValue(std::get<double>(value));
       }
     }
     else
     {
-      computeConversionFactors();
-      return convertValue(value);
+      const_cast<DataItem*>(this)->computeConversionFactors();
+      convertValue(value);
     }
   }
 

@@ -44,7 +44,7 @@ protected:
     m_context.m_getDataItem = [this](const Device *, const std::string &name) { return m_dataItems[name].get(); };
     
     m_parser = make_unique<ShdrParser>();
-    m_parser->m_observationHandler = [this](Observation2Ptr &observation){
+    m_parser->m_observationHandler = [this](ObservationPtr &observation){
       m_observations.emplace_back(observation);
     };
   }
@@ -65,7 +65,7 @@ protected:
     return r;
   }
  
-  std::list<Observation2Ptr> m_observations;
+  std::list<ObservationPtr> m_observations;
   std::map<string,unique_ptr<DataItem>> m_dataItems;
   Context m_context;
   unique_ptr<ShdrParser> m_parser;
@@ -93,7 +93,7 @@ TEST_F(ShdrParserTest, SimpleTokens)
 
 }
 
-TEST_F(ShdrParserTest, EscapedLine)
+TEST_F(ShdrParserTest, escaped_line)
 {
   std::map<std::string, std::list<std::string>> data;
   // correctly escaped
@@ -143,7 +143,9 @@ TEST_F(ShdrParserTest, EscapedLine)
   data["y|\"a\\|"] = {"y", "\"a\\", ""};
   data["y|\"a\\|z"] = {"y", "\"a\\", "z"};
   data[R"(y|"a\|"z)"] = {"y", "\"a\\", "\"z"};
-
+  data["x|y||z"] = { "x", "y", "", "z"};
+  
+  
   ShdrTokenizer tok;
   
   for (const auto &test : data)
@@ -171,6 +173,7 @@ TEST_F(ShdrParserTest, create_one_simple_event)
   ASSERT_EQ(typeid(Event), typeid(r));
   ASSERT_EQ("Hello.Kitty", get<string>(o->getValue()));
   ASSERT_EQ(ts, get<Timestamp>(o->getProperty("timestamp")));
+  EXPECT_EQ("Program", o->getName());
 }
 
 TEST_F(ShdrParserTest, create_two_simple_events)
@@ -189,6 +192,7 @@ TEST_F(ShdrParserTest, create_two_simple_events)
     ASSERT_EQ(typeid(Event), typeid(r));
     ASSERT_EQ("Hello.Kitty", get<string>(o->getValue()));
     ASSERT_EQ(ts, get<Timestamp>(o->getProperty("timestamp")));
+    EXPECT_EQ("Program", o->getName());
   }
 
   {
@@ -197,6 +201,7 @@ TEST_F(ShdrParserTest, create_two_simple_events)
     ASSERT_EQ(typeid(Event), typeid(r));
     ASSERT_EQ("Goodbye.Kitty", get<string>(o->getValue()));
     ASSERT_EQ(ts, get<Timestamp>(o->getProperty("timestamp")));
+    EXPECT_EQ("Program", o->getName());
   }
 }
 
@@ -214,6 +219,7 @@ TEST_F(ShdrParserTest, create_a_asset_removed_observation)
   ASSERT_EQ("ABC123", get<string>(o->getValue()));
   ASSERT_EQ("CuttingTool", get<string>(o->getProperty("assetType")));
   ASSERT_EQ(ts, get<Timestamp>(o->getProperty("timestamp")));
+  EXPECT_EQ("AssetRemoved", o->getName());
 }
 
 TEST_F(ShdrParserTest, create_simple_sample)
@@ -228,6 +234,7 @@ TEST_F(ShdrParserTest, create_simple_sample)
   ASSERT_EQ(typeid(Sample), typeid(r));
   ASSERT_EQ(1234.5, get<double>(o->getValue()));
   ASSERT_EQ(ts, get<Timestamp>(o->getProperty("timestamp")));
+  EXPECT_EQ("Position", o->getName());
 }
 
 
@@ -244,6 +251,7 @@ TEST_F(ShdrParserTest, create_unavailable_sample)
   ASSERT_TRUE(o->isUnavailable());
   ASSERT_EQ("UNAVAILABLE", o->getValue<string>());
   ASSERT_EQ(ts, o->get<Timestamp>("timestamp"));
+  EXPECT_EQ("Position", o->getName());
 }
 
 TEST_F(ShdrParserTest, create_sample_time_series)
@@ -266,6 +274,7 @@ TEST_F(ShdrParserTest, create_sample_time_series)
     EXPECT_EQ(ts, o->get<Timestamp>("timestamp"));
     EXPECT_EQ(10, o->get<int64_t>("sampleCount"));
     EXPECT_EQ(100.0, o->get<double>("sampleRate"));
+    EXPECT_EQ("PositionTimeSeries", o->getName());
   }
   
   {
@@ -274,6 +283,7 @@ TEST_F(ShdrParserTest, create_sample_time_series)
     ASSERT_EQ(typeid(Sample), typeid(r));
     ASSERT_EQ(200.0, o->getValue<double>());
     ASSERT_EQ(ts, get<Timestamp>(o->getProperty("timestamp")));
+    EXPECT_EQ("Position", o->getName());
   }
 }
 
@@ -292,7 +302,8 @@ TEST_F(ShdrParserTest, create_data_set_observation)
   ASSERT_EQ(typeid(DataSetEvent), typeid(r));
   EXPECT_EQ(ts, o->get<Timestamp>("timestamp"));
   EXPECT_EQ(4, o->get<int64_t>("count"));
-  
+  EXPECT_EQ("UserVariableDataSet", o->getName());
+
   auto &value = o->getValue<DataSet>();
   ASSERT_EQ(4, value.size());
   EXPECT_EQ(1, value.get<int64_t>("a"));
@@ -316,6 +327,7 @@ TEST_F(ShdrParserTest, create_table_observation)
   ASSERT_EQ(typeid(DataSetEvent), typeid(r));
   EXPECT_EQ(ts, o->get<Timestamp>("timestamp"));
   EXPECT_EQ(2, o->get<int64_t>("count"));
+  EXPECT_EQ("UserVariableTable", o->getName());
   
   auto &value = o->getValue<DataSet>();
   ASSERT_EQ(2, value.size());
@@ -330,4 +342,79 @@ TEST_F(ShdrParserTest, create_table_observation)
   ASSERT_EQ(2, dsb.size());
   EXPECT_EQ("abc", dsb.get<string>("s"));
   EXPECT_EQ(1.2, dsb.get<double>("t"));
+}
+
+TEST_F(ShdrParserTest, create_3d_sample)
+{
+  makeDataItem({{"id", "a"}, {"type", "PATH_POSITION"}, {"category", "SAMPLE"},
+    {"units", "MILLIMETER_3D"}
+  });
+  m_parser->processData("2021-01-19T10:01:00Z|a|1.2 2.3 3.4", m_context);
+
+  ASSERT_EQ(1, m_observations.size());
+  auto o = m_observations.front();
+  auto &r = *o.get();
+  ASSERT_EQ(typeid(ThreeSpaceSample), typeid(r));
+  EXPECT_EQ("PathPosition", o->getName());
+  
+  auto &value = o->getValue<entity::Vector>();
+  ASSERT_EQ(3, value.size());
+
+  ASSERT_EQ(1.2, value[0]);
+  ASSERT_EQ(2.3, value[1]);
+  ASSERT_EQ(3.4, value[2]);
+  
+  m_observations.clear();
+  m_parser->processData("2021-01-19T10:01:00Z|a|1.2 2.3", m_context);
+  ASSERT_EQ(0, m_observations.size());
+}
+
+TEST_F(ShdrParserTest, create_condition)
+{
+  makeDataItem({{"id", "a"}, {"type", "SYSTEM"}, {"category", "CONDITION"}});
+  
+  // <level>|<native_code>|<native_severity>|<qualifier>|<message>
+  m_parser->processData("2021-01-19T10:01:00Z|a|normal||||", m_context);
+  
+  {
+    ASSERT_EQ(1, m_observations.size());
+    auto o = m_observations.front();
+    auto &r = *o.get();
+    ASSERT_EQ(typeid(Condition), typeid(r));
+    EXPECT_EQ("Normal", o->getName());
+    EXPECT_EQ("SYSTEM", o->get<string>("type"));
+  }
+  
+  m_observations.clear();
+  m_parser->processData("2021-01-19T10:01:00Z|a|fault|ABC|100|HIGH|Message", m_context);
+
+  {
+    ASSERT_EQ(1, m_observations.size());
+    auto o = m_observations.front();
+    auto &r = *o.get();
+    ASSERT_EQ(typeid(Condition), typeid(r));
+    EXPECT_EQ("Fault", o->getName());
+    EXPECT_EQ("SYSTEM", o->get<string>("type"));
+    EXPECT_EQ("ABC", o->get<string>("nativeCode"));
+    EXPECT_EQ("100", o->get<string>("nativeSeverity"));
+    EXPECT_EQ("HIGH", o->get<string>("qualifier"));
+    EXPECT_EQ("Message", o->getValue<string>());
+  }
+
+  m_observations.clear();
+  m_parser->processData("2021-01-19T10:01:00Z|a|warning|ABC|100||Message", m_context);
+
+  {
+    ASSERT_EQ(1, m_observations.size());
+    auto o = m_observations.front();
+    auto &r = *o.get();
+    ASSERT_EQ(typeid(Condition), typeid(r));
+    EXPECT_EQ("Warning", o->getName());
+    EXPECT_EQ("SYSTEM", o->get<string>("type"));
+    EXPECT_EQ("ABC", o->get<string>("nativeCode"));
+    EXPECT_EQ("100", o->get<string>("nativeSeverity"));
+    EXPECT_EQ("Message", o->getValue<string>());
+    EXPECT_FALSE(o->hasProperty("qualifier"));
+  }
+
 }

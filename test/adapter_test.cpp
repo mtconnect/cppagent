@@ -33,9 +33,9 @@ using namespace mtconnect::adapter;
 
 TEST(AdapterTest, MultilineData)
 {
-  auto adapter = make_unique<Adapter>("device", "localhost", 7878);
-  auto handler = make_unique<Handler>();
   Context context;
+  auto adapter = make_unique<Adapter>(context, "localhost", 7878);
+  auto handler = make_unique<Handler>();
   
   string data;
   handler->m_processData = [&](const string &d, Context &c) { data = d; };

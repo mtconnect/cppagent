@@ -37,12 +37,11 @@ namespace mtconnect
     static dlib::logger g_logger("input.adapter");
 
     // Adapter public methods
-    Adapter::Adapter(string device, const string &server, const unsigned int port,
+    Adapter::Adapter(const Context &context, const string &server, const unsigned int port,
                      std::chrono::seconds legacyTimeout)
       : Connector(server, port, legacyTimeout),
-        m_agent(nullptr),
+        m_context(context),
         m_device(nullptr),
-        m_deviceName(std::move(device)),
         m_running(true),
         m_autoAvailable(false),
         m_reconnectInterval{10000ms}
@@ -70,24 +69,16 @@ namespace mtconnect
       wait();
     }
 
-    void Adapter::setAgent(Agent &agent)
-    {
-      m_agent = &agent;
-      m_device = m_agent->getDeviceByName(m_deviceName);
-      if (m_device)
-      {
-        m_device->addAdapter(this);
-        m_allDevices.emplace_back(m_device);
-      }
-    }
-
+    // TODO: Remove this method, should be part of shdr parser.
     void Adapter::addDevice(string &device)
     {
-      auto dev = m_agent->getDeviceByName(device);
+      auto dev = m_context.m_getDevice(device);
       if (dev)
       {
-        m_allDevices.emplace_back(dev);
-        dev->addAdapter(this);
+        // TODO: Fix const issues. Should be weak pointer to device
+        Device *d = const_cast<Device*>(dev);
+        m_allDevices.emplace_back(d);
+        d->addAdapter(this);
       }
     }
 

@@ -19,8 +19,8 @@
 
 #include "adapter/adapter.hpp"
 #include "assets/asset_buffer.hpp"
-#include "checkpoint.hpp"
-#include "circular_buffer.hpp"
+#include "observation/checkpoint.hpp"
+#include "observation/circular_buffer.hpp"
 #include "http_server/server.hpp"
 #include "printer.hpp"
 #include "service.hpp"
@@ -78,6 +78,12 @@ namespace mtconnect
     // Start and stop
     void start();
     void stop();
+    
+    // Adapter Context
+    const adapter::Context &getContext()
+    {
+      return m_context;
+    }
 
     // HTTP Server
     auto getServer() const { return m_server.get(); }
@@ -96,7 +102,11 @@ namespace mtconnect
     void deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName);
 
     // Add component events to the sliding buffer
-    unsigned int addToBuffer(DataItem *dataItem, const std::string &value, const std::string &time);
+    observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation);
+    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, entity::Properties props,
+                                              std::optional<adapter::Timestamp> timestamp = std::nullopt);
+    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, const std::string &value,
+                                              std::optional<adapter::Timestamp> timestamp = std::nullopt);
 
     // Asset management
     AssetPtr addAsset(Device *device, const std::string &asset,
@@ -108,9 +118,9 @@ namespace mtconnect
                          const std::optional<std::string> time, AssetList &list);
 
     // Message when adapter has connected and disconnected
-    void connecting(adapter::Adapter *adapter);
-    void disconnected(adapter::Adapter *adapter, std::vector<Device *> devices);
-    void connected(adapter::Adapter *adapter, std::vector<Device *> devices);
+    void connecting(const adapter::Adapter &adapter);
+    void disconnected(const adapter::Adapter &adapter, const std::vector<Device *> &devices);
+    void connected(const adapter::Adapter &adapter, const std::vector<Device *> &devices);
 
     DataItem *getDataItemByName(const std::string &deviceName,
                                 const std::string &dataItemName) const
@@ -119,8 +129,8 @@ namespace mtconnect
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
 
-    Observation *getFromBuffer(uint64_t seq) const { return m_circularBuffer.getFromBuffer(seq); }
-    SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
+    observation::ObservationPtr getFromBuffer(uint64_t seq) const { return m_circularBuffer.getFromBuffer(seq); }
+    observation::SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
     unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
     auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
     auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
@@ -132,7 +142,7 @@ namespace mtconnect
       return m_assetBuffer.getCountForType(type, active);
     }
 
-    SequenceNumber_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
+    observation::SequenceNumber_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
 
     // For testing...
     void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
@@ -143,18 +153,18 @@ namespace mtconnect
                                const std::optional<std::string> &device = std::nullopt);
     RequestResult currentRequest(const std::string &format,
                                  const std::optional<std::string> &device = std::nullopt,
-                                 const std::optional<SequenceNumber_t> &at = std::nullopt,
+                                 const std::optional<observation::SequenceNumber_t> &at = std::nullopt,
                                  const std::optional<std::string> &path = std::nullopt);
     RequestResult sampleRequest(const std::string &format, const int count = 100,
                                 const std::optional<std::string> &device = std::nullopt,
-                                const std::optional<SequenceNumber_t> &from = std::nullopt,
-                                const std::optional<SequenceNumber_t> &to = std::nullopt,
+                                const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
+                                const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt);
     RequestResult streamSampleRequest(http_server::Response &response, const std::string &format,
                                       const int interval, const int heartbeat,
                                       const int count = 100,
                                       const std::optional<std::string> &device = std::nullopt,
-                                      const std::optional<SequenceNumber_t> &from = std::nullopt,
+                                      const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
                                       const std::optional<std::string> &path = std::nullopt);
     RequestResult streamCurrentRequest(http_server::Response &response, const std::string &format,
                                        const int interval,
@@ -211,14 +221,14 @@ namespace mtconnect
     void createAssetRoutings();
 
     // Current Data Collection
-    std::string fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
-                                 const std::optional<SequenceNumber_t> &at);
+    std::string fetchCurrentData(const Printer *printer, const observation::FilterSetOpt &filterSet,
+                                 const std::optional<observation::SequenceNumber_t> &at);
 
     // Sample data collection
-    std::string fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
-                                const std::optional<SequenceNumber_t> &from,
-                                const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                bool &endOfBuffer, ChangeObserver *observer = nullptr);
+    std::string fetchSampleData(const Printer *printer, const observation::FilterSetOpt &filterSet, int count,
+                                const std::optional<observation::SequenceNumber_t> &from,
+                                const std::optional<observation::SequenceNumber_t> &to, observation::SequenceNumber_t &end,
+                                bool &endOfBuffer, observation::ChangeObserver *observer = nullptr);
 
     // Asset methods
     void getAssets(const Printer *printer, const std::list<std::string> &ids, AssetList &list);
@@ -247,7 +257,7 @@ namespace mtconnect
     void checkRange(const Printer *printer, const T value, const T min, const T max,
                     const std::string &param, bool notZero = false) const;
     void checkPath(const Printer *printer, const std::optional<std::string> &path,
-                   const Device *device, FilterSet &filter) const;
+                   const Device *device, observation::FilterSet &filter) const;
     Device *checkDevice(const Printer *printer, const std::string &uuid) const;
 
   protected:
@@ -264,7 +274,7 @@ namespace mtconnect
     std::map<std::string, std::unique_ptr<Printer>> m_printers;
 
     // Circular Buffer
-    CircularBuffer m_circularBuffer;
+    observation::CircularBuffer m_circularBuffer;
 
     // Agent Device
     AgentDevice *m_agentDevice{nullptr};
@@ -282,5 +292,7 @@ namespace mtconnect
     // For debugging
     bool m_logStreamData;
     bool m_pretty;
+    
+    adapter::Context m_context;
   };
 }  // namespace mtconnect

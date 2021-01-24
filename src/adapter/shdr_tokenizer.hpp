@@ -95,11 +95,7 @@ namespace mtconnect
             else if (suff.first != suff.second)
             {
               // Normal next token, grab the suffix after the '|' character
-              auto f = suff.first;
-              if (*f == '|')
-                f++;
-              // Check for an empty trailing token
-              text = string(f, suff.second);
+              text = string(suff.first, suff.second);
               if (text.empty())
                 tokens.emplace_back("");
             }

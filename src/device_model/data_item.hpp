@@ -16,10 +16,11 @@
 //
 
 #pragma once
-#include "change_observer.hpp"
+#include "observation/change_observer.hpp"
 #include "definitions.hpp"
 #include "device_model/component.hpp"
 #include "globals.hpp"
+#include "entity/requirement.hpp"
 
 #include <dlib/threads.h>
 
@@ -36,7 +37,7 @@ namespace mtconnect
     class Adapter;
   }
 
-  class DataItem : public ChangeSignaler
+  class DataItem : public observation::ChangeSignaler
   {
   public:
     // Enumeration for data item category
@@ -256,9 +257,18 @@ namespace mtconnect
       m_hasMinimumPeriod = true;
     }
 
-    bool conversionRequired();
-    std::string convertValue(const std::string &value);
-    float convertValue(float value);
+    bool conversionRequired() const
+    {
+      if (!m_conversionDetermined)
+      {
+        const_cast<DataItem*>(this)->m_conversionDetermined = true;
+        const_cast<DataItem*>(this)->m_conversionRequired = !m_nativeUnits.empty();
+      }
+      
+      return m_conversionRequired;
+    }
+    void convertValue(entity::Value &value) const;
+    double convertValue(double value) const;
 
     adapter::Adapter *getDataSource() const { return m_dataSource; }
     void setDataSource(adapter::Adapter *source);

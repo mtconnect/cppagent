@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "agent.hpp"
 #include "connector.hpp"
 #include "device_model/data_item.hpp"
 #include "globals.hpp"
@@ -50,15 +49,22 @@ namespace mtconnect
 
     struct Context
     {
+      Context() = default;
+      ~Context() = default;
+      Context(const Context &) = default;
+      
       using GetDevice = std::function<const Device *(const std::string &id)>;
       using GetDataItem =
           std::function<const DataItem *(const Device *device, const std::string &id)>;
       using Now = std::function<Timestamp()>;
       using DeviceChanged = std::function<void(Device *, const std::string &, const std::string &)>;
 
+      // Functions to handle get information
       GetDevice m_getDevice;
       GetDataItem m_getDataItem;
-      Now m_now;
+      Now m_now{ []{ return std::chrono::system_clock::now(); }};
+      
+      // Notification methods
       DeviceChanged m_deviceChanged;
 
       // Logging Context
@@ -94,7 +100,7 @@ namespace mtconnect
     {
     public:
       // Associate adapter with a device & connect to the server & port
-      Adapter(std::string device, const std::string &server, const unsigned int port,
+      Adapter(const Context &context, const std::string &server, const unsigned int port,
               std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
 
       // Virtual destructor
@@ -103,11 +109,11 @@ namespace mtconnect
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
 
       // Set pointer to the agent
-      void setAgent(Agent &agent);
       bool isDupChecking() const { return m_context.m_dupCheck; }
       void setDupCheck(bool flag) { m_context.m_dupCheck = flag; }
       Device *getDevice() const { return m_device; }
       const auto &getDeviceName() const { return m_deviceName; }
+      auto &getAllDevices() const { return m_allDevices; }
 
       bool isAutoAvailable() const { return m_autoAvailable; }
       void setAutoAvailable(bool flag) { m_autoAvailable = flag; }
@@ -195,7 +201,6 @@ namespace mtconnect
       // Pointer to the agent
       Context m_context;
 
-      Agent *m_agent;
       Device *m_device;
       std::vector<Device *> m_allDevices;
 

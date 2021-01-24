@@ -32,8 +32,9 @@ namespace mtconnect
 
     using Property = pair<string, Value>;
 
-    inline static json toJson(const DataSet &set)
+    inline static json toJson(const observation::DataSet &set)
     {
+      using namespace observation;
       json value;
       for (auto &e : set)
       {
@@ -76,7 +77,7 @@ namespace mtconnect
       return visit(overloaded{[](const EntityPtr &) -> json { return nullptr; },
                               [](const std::monostate &) -> json { return nullptr; },
                               [](const EntityList &) -> json { return nullptr; },
-                              [](const DataSet &v) -> json { return toJson(v); },
+                              [](const observation::DataSet &v) -> json { return toJson(v); },
                               [](const Timestamp &v) -> json { return toJson(v); },
                               [](const auto &arg) -> json { return arg; }},
                    value);

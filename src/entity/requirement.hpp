@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "data_set.hpp"
+#include "observation/data_set.hpp"
 #include "globals.hpp"
 
 #include <atomic>
@@ -49,7 +49,7 @@ namespace mtconnect
     using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
     using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
-                               bool, Vector, DataSet, Timestamp, nullptr_t>;
+                               bool, Vector, observation::DataSet, Timestamp, nullptr_t>;
 
     class Factory;
     using FactoryPtr = std::shared_ptr<Factory>;

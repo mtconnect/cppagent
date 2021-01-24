@@ -20,17 +20,19 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "assets/asset.hpp"
-#include "checkpoint.hpp"
+#include "observation/checkpoint.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
 #include "globals.hpp"
-#include "observation.hpp"
+#include "observation/observation.hpp"
+#include "observation/checkpoint.hpp"
 #include "test_globals.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::observation;
 
 class XmlPrinterTest : public testing::Test
 {
@@ -56,10 +58,10 @@ class XmlPrinterTest : public testing::Test
   std::list<mtconnect::Device *> m_devices;
 
   // Construct a component event and set it as the data item's latest event
-  mtconnect::Observation *addEventToCheckpoint(mtconnect::Checkpoint &checkpoint, const char *name,
+  ObservationPtr addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
                                                uint64_t sequence, std::string value);
 
-  mtconnect::Observation *newEvent(const char *name, uint64_t sequence, std::string value);
+  ObservationPtr newEvent(const char *name, uint64_t sequence, std::string value);
 };
 
 TEST_F(XmlPrinterTest, PrintError)

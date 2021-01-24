@@ -229,7 +229,8 @@ TEST_F(DataItemTest, Conversion)
 
   DataItem item5(attributes4);
 
-  Adapter adapter("", "", 0);
+  Context context;
+  Adapter adapter(context, "", 0);
   adapter.setConversionRequired(false);
 
   item5.setDataSource(&adapter);

@@ -125,10 +125,6 @@ TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
 
 TEST_F(SpecificationTest, JsonPrinting)
 {
-  m_adapter = new adapter::Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-  
   m_agentTestHelper->m_request.m_accepts = "Application/json";
   
   {

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "assets/cutting_tool.hpp"
-#include "checkpoint.hpp"
+#include "observation/checkpoint.hpp"
 #include "device_model/component.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
@@ -49,7 +49,7 @@ namespace mtconnect
     void loadDocument(const std::string &aDoc);
 
     // Get std::list of data items in path
-    void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
+    void getDataItems(observation::FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
 
   protected:
     // Main method to process the nodes and return the objects

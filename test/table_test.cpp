@@ -35,6 +35,7 @@ using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
+using namespace mtconnect::observation;
 
 class TableTest : public testing::Test
 {

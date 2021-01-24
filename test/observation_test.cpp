@@ -20,13 +20,18 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "device_model/data_item.hpp"
-#include "observation.hpp"
+#include "observation/observation.hpp"
 #include "test_globals.hpp"
 
 #include <list>
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
+using namespace mtconnect::entity;
+using namespace mtconnect::observation;
+using namespace std::literals;
+using namespace date::literals;
 
 class ObservationTest : public testing::Test
 {
@@ -37,7 +42,7 @@ class ObservationTest : public testing::Test
 
     attributes1["id"] = "1";
     attributes1["name"] = "DataItemTest1";
-    attributes1["type"] = "ALARM";
+    attributes1["type"] = "PROGRAM";
     attributes1["category"] = "EVENT";
     m_dataItem1 = make_unique<DataItem>(attributes1);
 
@@ -49,81 +54,73 @@ class ObservationTest : public testing::Test
     attributes2["category"] = "SAMPLE";
     m_dataItem2 = make_unique<DataItem>(attributes2);
 
-    string time("NOW"), value("CODE|NATIVE|CRITICAL|ACTIVE|DESCRIPTION");
-    m_compEventA = new Observation(*m_dataItem1, time, value, 2);
-
-    time = "LATER";
-    value = "1.1231";
-    m_compEventB = new Observation(*m_dataItem2, time, value, 4);
+    m_time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+    
+    ErrorList errors;
+    m_compEventA = Observation::make(m_dataItem1.get(), {{ "VALUE", "Test" }}, m_time, errors);
+    m_compEventA->setSequence(2);
+    
+    m_compEventB = Observation::make(m_dataItem2.get(), {{ "VALUE", 1.1231 }}, m_time + 10min, errors);
+    m_compEventB->setSequence(4);
   }
 
   void TearDown() override
   {
-    m_compEventA->unrefer();
-    m_compEventB->unrefer();
+    m_compEventA.reset();
+    m_compEventB.reset();
     m_dataItem1.reset();
     m_dataItem2.reset();
   }
 
-  Observation *m_compEventA{nullptr};
-  Observation *m_compEventB{nullptr};
+  ObservationPtr m_compEventA;
+  ObservationPtr m_compEventB;
   std::unique_ptr<DataItem> m_dataItem1;
   std::unique_ptr<DataItem> m_dataItem2;
+  Timestamp m_time;
 
   // Helper to test values
   void testValueHelper(std::map<std::string, std::string> &attributes,
-                       const std::string &nativeUnits, float expected, const std::string &value,
+                       const std::string &nativeUnits, float expected, const double value,
                        const char *file, int line);
 };
+
+void ObservationTest::testValueHelper(std::map<string, string> &attributes,
+                                      const string &nativeUnits, float expected,
+                                      double value, const char *file, int line)
+{
+  attributes["nativeUnits"] = nativeUnits;
+  DataItem dataItem(attributes);
+
+  ErrorList errors;
+  ObservationPtr sample = Observation::make(&dataItem, {{"VALUE", value}}, m_time, errors);
+
+  stringstream message;
+  double diff = abs(expected - sample->getValue<double>());
+  message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected
+          << " and actual " << sample->getValue<double>() << " differ (" << diff << ") by more than 0.001";
+
+  failIf(diff > 0.001, message.str(), __FILE__, __LINE__);
+}
+
 
 #define TEST_VALUE(attributes, nativeUnits, expected, value) \
   testValueHelper(attributes, nativeUnits, expected, value, __FILE__, __LINE__)
 
-TEST_F(ObservationTest, Constructors)
-{
-  auto ce = new Observation(*m_compEventA);
-
-  // Copy constructor allocates different objects, so it has different addresses
-  ASSERT_TRUE(m_compEventA != ce);
-
-  // But the values should be the same
-  ASSERT_TRUE(m_compEventA->getDataItem() == ce->getDataItem());
-  ASSERT_TRUE(m_compEventA->getValue() == ce->getValue());
-
-  ce->unrefer();
-}
-
 TEST_F(ObservationTest, GetAttributes)
 {
-  const auto &attr_list1 = m_compEventA->getAttributes();
-  map<string, string> attributes1;
+  ASSERT_EQ("1", m_compEventA->get<string>("dataItemId"));
+  ASSERT_EQ(m_time, m_compEventA->get<Timestamp>("timestamp"));
+  ASSERT_FALSE(m_compEventA->hasProperty("subType"));
+  ASSERT_EQ("DataItemTest1", m_compEventA->get<string>("name"));
+  ASSERT_EQ(2, m_compEventA->get<int64_t>("sequence"));
 
-  for (const auto &attr : attr_list1)
-    attributes1[attr.first] = attr.second;
+  ASSERT_EQ("Test", m_compEventA->getValue<string>());
 
-  ASSERT_EQ((string) "1", attributes1["dataItemId"]);
-  ASSERT_EQ((string) "NOW", attributes1["timestamp"]);
-  ASSERT_TRUE(attributes1["subType"].empty());
-  ASSERT_EQ((string) "DataItemTest1", attributes1["name"]);
-  ASSERT_EQ((string) "2", attributes1["sequence"]);
-
-  // Alarm data
-  ASSERT_EQ((string) "CODE", attributes1["code"]);
-  ASSERT_EQ((string) "NATIVE", attributes1["nativeCode"]);
-  ASSERT_EQ((string) "CRITICAL", attributes1["severity"]);
-  ASSERT_EQ((string) "ACTIVE", attributes1["state"]);
-
-  const auto &attr_list2 = m_compEventB->getAttributes();
-  map<string, string> attributes2;
-
-  for (const auto &attr : attr_list2)
-    attributes2[attr.first] = attr.second;
-
-  ASSERT_EQ((string) "3", attributes2["dataItemId"]);
-  ASSERT_EQ((string) "LATER", attributes2["timestamp"]);
-  ASSERT_EQ((string) "ACTUAL", attributes2["subType"]);
-  ASSERT_EQ((string) "DataItemTest2", attributes2["name"]);
-  ASSERT_EQ((string) "4", attributes2["sequence"]);
+  ASSERT_EQ("3", m_compEventB->get<string>("dataItemId"));
+  ASSERT_EQ(m_time + 10min, m_compEventB->get<Timestamp>("timestamp"));
+  ASSERT_EQ("ACTUAL", m_compEventB->get<string>("subType"));
+  ASSERT_EQ("DataItemTest2", m_compEventB->get<string>("name"));
+  ASSERT_EQ(4, m_compEventB->get<int64_t>("sequence"));
 }
 
 TEST_F(ObservationTest, Getters)
@@ -131,8 +128,8 @@ TEST_F(ObservationTest, Getters)
   ASSERT_TRUE(m_dataItem1.get() == m_compEventA->getDataItem());
   ASSERT_TRUE(m_dataItem2.get() == m_compEventB->getDataItem());
 
-  ASSERT_EQ((string) "DESCRIPTION", m_compEventA->getValue());
-  ASSERT_EQ((string) "1.1231", m_compEventB->getValue());
+  ASSERT_EQ("Test", m_compEventA->getValue<string>());
+  ASSERT_EQ(1.1231, m_compEventB->getValue<double>());
 }
 
 TEST_F(ObservationTest, ConvertValue)
@@ -143,15 +140,13 @@ TEST_F(ObservationTest, ConvertValue)
   attributes["type"] = "ACCELERATION";
   attributes["category"] = "SAMPLE";
 
-  string time("NOW"), value("2.0");
-
-  TEST_VALUE(attributes, "REVOLUTION/MINUTE", 2.0f, value);
-  TEST_VALUE(attributes, "REVOLUTION/SECOND", 2.0f * 60.0f, value);
-  TEST_VALUE(attributes, "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, value);
-  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f), value);
+  TEST_VALUE(attributes, "REVOLUTION/MINUTE", 2.0f, 2.0);
+  TEST_VALUE(attributes, "REVOLUTION/SECOND", 2.0f * 60.0f, 2.0);
+  TEST_VALUE(attributes, "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f), 2.0);
 
   attributes["nativeScale"] = "0.5";
-  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), value);
+  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), 2.0);
 }
 
 TEST_F(ObservationTest, ConvertSimpleUnits)
@@ -162,42 +157,22 @@ TEST_F(ObservationTest, ConvertSimpleUnits)
   attributes["type"] = "ACCELERATION";
   attributes["category"] = "SAMPLE";
 
-  string value("2.0");
-
-  TEST_VALUE(attributes, "INCH", 2.0f * 25.4f, value);
-  TEST_VALUE(attributes, "FOOT", 2.0f * 304.8f, value);
-  TEST_VALUE(attributes, "CENTIMETER", 2.0f * 10.0f, value);
-  TEST_VALUE(attributes, "DECIMETER", 2.0f * 100.0f, value);
-  TEST_VALUE(attributes, "METER", 2.0f * 1000.0f, value);
-  TEST_VALUE(attributes, "FAHRENHEIT", (2.0f - 32.0f) * (5.0f / 9.0f), value);
-  TEST_VALUE(attributes, "POUND", 2.0f * 0.45359237f, value);
-  TEST_VALUE(attributes, "GRAM", 2.0f / 1000.0f, value);
-  TEST_VALUE(attributes, "RADIAN", 2.0f * 57.2957795f, value);
-  TEST_VALUE(attributes, "MINUTE", 2.0f * 60.0f, value);
-  TEST_VALUE(attributes, "HOUR", 2.0f * 3600.0f, value);
-  TEST_VALUE(attributes, "MILLIMETER", 2.0f, value);
-  TEST_VALUE(attributes, "PERCENT", 2.0f, value);
+  TEST_VALUE(attributes, "INCH", 2.0f * 25.4f, 2.0);
+  TEST_VALUE(attributes, "FOOT", 2.0f * 304.8f, 2.0);
+  TEST_VALUE(attributes, "CENTIMETER", 2.0f * 10.0f, 2.0);
+  TEST_VALUE(attributes, "DECIMETER", 2.0f * 100.0f, 2.0);
+  TEST_VALUE(attributes, "METER", 2.0f * 1000.0f, 2.0);
+  TEST_VALUE(attributes, "FAHRENHEIT", (2.0f - 32.0f) * (5.0f / 9.0f), 2.0);
+  TEST_VALUE(attributes, "POUND", 2.0f * 0.45359237f, 2.0);
+  TEST_VALUE(attributes, "GRAM", 2.0f / 1000.0f, 2.0);
+  TEST_VALUE(attributes, "RADIAN", 2.0f * 57.2957795f, 2.0);
+  TEST_VALUE(attributes, "MINUTE", 2.0f * 60.0f, 2.0);
+  TEST_VALUE(attributes, "HOUR", 2.0f * 3600.0f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER", 2.0f, 2.0);
+  TEST_VALUE(attributes, "PERCENT", 2.0f, 2.0);
 }
 
-void ObservationTest::testValueHelper(std::map<string, string> &attributes,
-                                      const string &nativeUnits, float expected,
-                                      const string &value, const char *file, int line)
-{
-  string time("NOW");
-
-  attributes["nativeUnits"] = nativeUnits;
-  DataItem dataItem(attributes);
-
-  ObservationPtr event(new Observation(dataItem, time, value, 123), true);
-
-  stringstream message;
-  double diff = abs(expected - atof(event->getValue().c_str()));
-  message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected
-          << " and actual " << event->getValue() << " differ (" << diff << ") by more than 0.001";
-
-  failIf(diff > 0.001, message.str(), __FILE__, __LINE__);
-}
-
+#if 0
 TEST_F(ObservationTest, RefCounts)
 {
   string time("NOW"), value("111");
@@ -442,3 +417,4 @@ TEST_F(ObservationTest, AssetChanged)
 
   d.reset();
 }
+#endif

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "data_set.hpp"
+#include "observation/data_set.hpp"
 #include "requirement.hpp"
 #include <unordered_map>
 
@@ -76,6 +76,7 @@ namespace mtconnect
       {
         return m_properties.find(n) != m_properties.end();
       }
+      void setName(const std::string &name) { m_name = name; }
 
       const Value &getValue() const { return getProperty("VALUE"); }
       std::optional<EntityList> getList(const std::string &name) const
@@ -92,15 +93,19 @@ namespace mtconnect
 
         return std::nullopt;
       }
+       void setValue(const Value &v)
+      {
+        setProperty("VALUE", v);
+      }
 
       template <typename T>
-      const T get(const std::string &name) const
+      const T &get(const std::string &name) const
       {
         return std::get<T>(getProperty(name));
       }
 
       template <typename T>
-      const T getValue() const
+      const T &getValue() const
       {
         return std::get<T>(getValue());
       }

@@ -134,6 +134,15 @@ namespace mtconnect
       return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
   }
+  
+  inline bool iequals(const std::string& a, const std::string& b)
+  {
+      return std::equal(a.begin(), a.end(), b.begin(),
+                        [](char a, char b) {
+                            return tolower(a) == tolower(b);
+                        });
+  }
+
 
   typedef std::map<std::string, std::string> Attributes;
 

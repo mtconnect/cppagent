@@ -25,6 +25,7 @@
 #include "http_server/file_cache.hpp"
 #include "json_printer.hpp"
 #include "xml_printer.hpp"
+#include "observation/observation.hpp"
 #include <sys/stat.h>
 
 #include <dlib/config_reader.h>
@@ -43,6 +44,7 @@
 #include <thread>
 
 using namespace std;
+using namespace mtconnect::observation;
 
 namespace mtconnect
 {
@@ -65,6 +67,14 @@ namespace mtconnect
       m_logStreamData(false),
       m_pretty(pretty)
   {
+    m_context.m_getDevice = [this](const string &name){ return findDeviceByUUIDorName(name); };
+    m_context.m_getDataItem = [](const Device *device, const string &name){
+      return device->getDeviceDataItem(name);
+    };
+    m_context.m_deviceChanged = [this](Device *device, const string &oldUuid, const string &oldName) {
+      deviceChanged(device, oldUuid, oldName);
+    };
+    
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();
     FileArchetypeAsset::registerAsset();
@@ -268,7 +278,7 @@ namespace mtconnect
         else if (d->hasConstantValue())
           value = &(d->getConstrainedValues()[0]);
 
-        addToBuffer(d, *value, time);
+        addToBuffer(d, *value);
         if (!m_dataItemMap.count(d->getId()))
           m_dataItemMap[d->getId()] = d;
         else
@@ -314,7 +324,7 @@ namespace mtconnect
         if (m_agentDevice && device != m_agentDevice)
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
-          addToBuffer(d, device->getUuid(), getCurrentTime(GMT_UV_SEC));
+          addToBuffer(d, device->getUuid());
         }
       }
       else
@@ -330,7 +340,7 @@ namespace mtconnect
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_removed");
-        addToBuffer(d, oldUuid, getCurrentTime(GMT_UV_SEC));
+        addToBuffer(d, oldUuid);
       }
       m_deviceUuidMap.erase(oldUuid);
       m_deviceUuidMap[device->getUuid()] = device;
@@ -349,12 +359,12 @@ namespace mtconnect
       if (device->getUuid() != oldUuid)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_added");
-        addToBuffer(d, device->getUuid(), getCurrentTime(GMT_UV_SEC));
+        addToBuffer(d, device->getUuid());
       }
       else
       {
         auto d = m_agentDevice->getDeviceDataItem("device_changed");
-        addToBuffer(d, device->getUuid(), getCurrentTime(GMT_UV_SEC));
+        addToBuffer(d, device->getUuid());
       }
     }
   }
@@ -649,7 +659,6 @@ namespace mtconnect
 
   void Agent::addAdapter(adapter::Adapter *adapter, bool start)
   {
-    adapter->setAgent(*this);
     m_adapters.emplace_back(adapter);
 
     const auto dev = getDeviceByName(adapter->getDeviceName());
@@ -671,25 +680,25 @@ namespace mtconnect
     }
   }
 
-  void Agent::connecting(adapter::Adapter *adapter)
+  void Agent::connecting(const adapter::Adapter &adapter)
   {
     if (m_agentDevice)
     {
-      auto di = m_agentDevice->getConnectionStatus(adapter);
-      addToBuffer(di, "LISTENING", getCurrentTime(GMT_UV_SEC));
+      auto di = m_agentDevice->getConnectionStatus(&adapter);
+      addToBuffer(di, "LISTENING");
     }
   }
 
   // Add values for related data items UNAVAILABLE
-  void Agent::disconnected(adapter::Adapter *adapter, std::vector<Device *> devices)
+  void Agent::disconnected(const adapter::Adapter &adapter, const std::vector<Device *> &devices)
   {
     auto time = getCurrentTime(GMT_UV_SEC);
     g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
     if (m_agentDevice)
     {
-      auto di = m_agentDevice->getConnectionStatus(adapter);
-      addToBuffer(di, "CLOSED", time);
+      auto di = m_agentDevice->getConnectionStatus(&adapter);
+      addToBuffer(di, "CLOSED");
     }
 
     for (const auto device : devices)
@@ -698,8 +707,8 @@ namespace mtconnect
       for (const auto &dataItemAssoc : dataItems)
       {
         auto dataItem = dataItemAssoc.second;
-        if (dataItem && (dataItem->getDataSource() == adapter ||
-                         (adapter->isAutoAvailable() && !dataItem->getDataSource() &&
+        if (dataItem && (dataItem->getDataSource() == &adapter ||
+                         (adapter.isAutoAvailable() && !dataItem->getDataSource() &&
                           dataItem->getType() == "AVAILABILITY")))
         {
           auto ptr = m_circularBuffer.getLatest().getEventPtr(dataItem->getId());
@@ -709,20 +718,20 @@ namespace mtconnect
             const string *value = nullptr;
             if (dataItem->isCondition())
             {
-              if ((*ptr)->getLevel() != Observation::UNAVAILABLE)
+              if (ptr->isUnavailable())
                 value = &g_conditionUnavailable;
             }
             else if (dataItem->hasConstraints())
             {
               const auto &values = dataItem->getConstrainedValues();
-              if (values.size() > 1 && (*ptr)->getValue() != g_unavailable)
+              if (values.size() > 1 && !ptr->isUnavailable())
                 value = &g_unavailable;
             }
-            else if ((*ptr)->getValue() != g_unavailable)
+            else if (!ptr->isUnavailable())
               value = &g_unavailable;
 
-            if (value && !adapter->isDuplicate(dataItem, *value, NAN))
-              addToBuffer(dataItem, *value, time);
+            if (value && !adapter.isDuplicate(dataItem, *value, NAN))
+              addToBuffer(dataItem, *value);
           }
         }
         else if (!dataItem)
@@ -731,16 +740,16 @@ namespace mtconnect
     }
   }
 
-  void Agent::connected(adapter::Adapter *adapter, std::vector<Device *> devices)
+  void Agent::connected(const adapter::Adapter &adapter, const std::vector<Device *> &devices)
   {
     auto time = getCurrentTime(GMT_UV_SEC);
     if (m_agentDevice)
     {
-      auto di = m_agentDevice->getConnectionStatus(adapter);
-      addToBuffer(di, "ESTABLISHED", time);
+      auto di = m_agentDevice->getConnectionStatus(&adapter);
+      addToBuffer(di, "ESTABLISHED");
     }
 
-    if (!adapter->isAutoAvailable())
+    if (!adapter.isAutoAvailable())
       return;
 
     for (const auto device : devices)
@@ -751,7 +760,7 @@ namespace mtconnect
       if (device->getAvailability())
       {
         g_logger << LDEBUG << "Adding availabilty event for " << device->getAvailability()->getId();
-        addToBuffer(device->getAvailability(), g_available, time);
+        addToBuffer(device->getAvailability(), g_available);
       }
       else
         g_logger << LDEBUG << "Cannot find availability for " << device->getName();
@@ -762,28 +771,54 @@ namespace mtconnect
   // Observation Add Method
   // ----------------------------------------------------
 
-  unsigned int Agent::addToBuffer(DataItem *dataItem, const string &value, const string &time)
+  SequenceNumber_t Agent::addToBuffer(ObservationPtr &observation)
   {
-    if (!dataItem)
-      return 0;
-
-    if (time.empty())
-      return 0;
-
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
-    RefCountedPtr<Observation> event(new Observation(*dataItem, time, value), true);
+    auto dataItem = observation->getDataItem();    
     if (!dataItem->allowDups() && dataItem->isDataSet() &&
-        !m_circularBuffer.getLatest().dataSetDifference(event))
+        !m_circularBuffer.getLatest().dataSetDifference(observation))
     {
       return 0;
     }
-
-    auto seqNum = m_circularBuffer.addToBuffer(event);
+    
+    auto seqNum = m_circularBuffer.addToBuffer(observation);
     dataItem->signalObservers(seqNum);
-
     return seqNum;
+
+    return 0;
   }
+  
+  SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, entity::Properties props,
+                                      std::optional<adapter::Timestamp> timestamp)
+  {
+    entity::ErrorList errors;
+    
+    adapter::Timestamp ts = timestamp ? *timestamp : m_context.m_now();
+    auto observation = observation::Observation::make(dataItem, props,
+                                                                 ts, errors);
+    if (observation && errors.empty())
+    {
+      return addToBuffer(observation);
+    }
+    else
+    {
+      g_logger << LERROR << "Cannot add observation: ";
+      for (auto &e : errors)
+      {
+        g_logger << LERROR << "Cannot add observation: " << e->what();
+      }
+    }
+    
+    return 0;
+  }
+  
+  SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, const std::string &value,
+                                      std::optional<adapter::Timestamp> timestamp)
+  {
+    return addToBuffer(dataItem, {{"VALUE", value}}, timestamp);
+  }
+
 
   // ----------------------------------------------------
   // Asset CRUD Methods
@@ -845,13 +880,14 @@ namespace mtconnect
 
     auto old = m_assetBuffer.addAsset(asset);
 
+    // TODO: Fix timestamp handling
     auto at = asset->getTimestamp();
     stringstream msg(asset->getType());
     msg << asset->getType() << "|" << asset->getAssetId();
     if (asset->isRemoved())
-      addToBuffer(device->getAssetRemoved(), msg.str(), *at);
+      addToBuffer(device->getAssetRemoved(), msg.str()); //, *at);
     else
-      addToBuffer(device->getAssetChanged(), msg.str(), *at);
+      addToBuffer(device->getAssetChanged(), msg.str()); //, *at);
 
     return asset;
   }
@@ -873,14 +909,15 @@ namespace mtconnect
       if (device == nullptr)
         device = m_devices.front();
 
+      // TODO: Handle Asset Timestamp
       auto time = asset->getTimestamp();
-      addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, *time);
+      addToBuffer(device->getAssetRemoved(), {{ "assetType", asset->getType()}, {"VALUE", id}}); //, *time);
 
       // Check if the asset changed id is the same as this asset.
       auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
-      if (ptr && (*ptr)->getValue() == id)
+      if (ptr && ptr->getValue<string>() == id)
       {
-        addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", *time);
+        addToBuffer(device->getAssetRemoved(), {{ "assetType", asset->getType()}, {"VALUE", "UNAVAILABLE"}}); //, *time);
       }
     }
 
@@ -1408,7 +1445,22 @@ namespace mtconnect
       const http_server::Routing::QueryMap observations, const std::optional<std::string> &time)
   {
     using namespace http_server;
-    string ts = time ? *time : getCurrentTime(GMT_UV_SEC);
+
+    adapter::Timestamp ts;
+    if (time)
+    {
+      istringstream in(*time);
+      in >> std::setw(6) >> date::parse("%FT%T", ts);
+      if (!in.good())
+      {
+        ts = m_context.m_now();
+      }
+    }
+    else
+    {
+      ts = m_context.m_now();
+    }
+        
     auto printer = getPrinter(format);
     auto dev = checkDevice(printer, device);
 
@@ -1462,7 +1514,7 @@ namespace mtconnect
   {
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
-    ObservationPtrArray events;
+    ObservationList events;
     auto firstSeq = getFirstSequence();
     auto seq = m_circularBuffer.getSequence();
     if (at)

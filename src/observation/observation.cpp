@@ -42,7 +42,7 @@ namespace mtconnect
   {
     static dlib::logger g_logger("Observation");
 
-    FactoryPtr Observation2::getFactory()
+    FactoryPtr Observation::getFactory()
     {
       static FactoryPtr factory;
       if (!factory)
@@ -54,7 +54,7 @@ namespace mtconnect
                                                      {"name", false},
                                                      {"compositionId", false}}),
                                        [](const std::string &name, Properties &props) -> EntityPtr {
-                                         return make_shared<Observation2>(name, props);
+                                         return make_shared<Observation>(name, props);
                                        });
 
         factory->registerFactory("Events:Message", Message::getFactory());
@@ -66,16 +66,19 @@ namespace mtconnect
         factory->registerFactory(regex(".+DataSet$"), DataSetEvent::getFactory());
         factory->registerFactory(regex(".+Table$"), DataSetEvent::getFactory());
         factory->registerFactory(regex("^Condition:.+"), Condition::getFactory());
+        factory->registerFactory(regex("^Samples:.+:3D$"), ThreeSpaceSample::getFactory());
         factory->registerFactory(regex("^Samples:.+"), Sample::getFactory());
         factory->registerFactory(regex("^Events:.+"), Event::getFactory());
       }
       return factory;
     }
 
-    Observation2Ptr Observation2::makeObservation(const DataItem *dataItem, Properties &props,
-                                                  const Timestamp &timestamp,
-                                                  entity::ErrorList &errors)
+    ObservationPtr Observation::make(const DataItem *dataItem,
+                                     const Properties &incompingProps,
+                                     const Timestamp &timestamp,
+                                     entity::ErrorList &errors)
     {
+      auto props = entity::Properties(incompingProps);
       props.insert_or_assign("dataItemId", dataItem->getId());
       if (!dataItem->getName().empty())
         props.insert_or_assign("name", dataItem->getName());
@@ -85,9 +88,22 @@ namespace mtconnect
         props.insert_or_assign("subType", dataItem->getSubType());
       if (!dataItem->getStatistic().empty())
         props.insert_or_assign("statistic", dataItem->getStatistic());
+      if (dataItem->isCondition())
+        props.insert_or_assign("type", dataItem->getType());
       props.insert_or_assign("timestamp", timestamp);
-
+      
+      string level;
+      auto l = props.find("level");
+      if (l != props.end())
+      {
+        level = std::get<string>(l->second);
+        props.erase(l);
+      }
+      
       string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedElementName();
+      if (dataItem->is3D())
+        key += ":3D";
+
       auto ent = getFactory()->create(key, props, errors);
       if (!ent)
       {
@@ -100,10 +116,21 @@ namespace mtconnect
         throw EntityError("Invalid properties for data item");
       }
 
-      auto obs = dynamic_pointer_cast<Observation2>(ent);
+      auto obs = dynamic_pointer_cast<Observation>(ent);
       obs->m_timestamp = timestamp;
       obs->m_dataItem = dataItem;
-
+      if (dataItem->isSample())
+      {
+        if (dataItem->conversionRequired())
+        {
+          auto &value = obs->m_properties["VALUE"];
+          dataItem->convertValue(value);
+        }
+      }
+      if (!dataItem->isCondition())
+        obs->setEntityName();
+      else
+        dynamic_pointer_cast<Condition>(obs)->setLevel(level);
       return obs;
     }
 
@@ -112,7 +139,7 @@ namespace mtconnect
       static FactoryPtr factory;
       if (!factory)
       {
-        factory = make_shared<Factory>(*Observation2::getFactory());
+        factory = make_shared<Factory>(*Observation::getFactory());
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<Event>(name, props);
         });
@@ -127,7 +154,7 @@ namespace mtconnect
       static FactoryPtr factory;
       if (!factory)
       {
-        factory = make_shared<Factory>(*Observation2::getFactory());
+        factory = make_shared<Factory>(*Observation::getFactory());
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           auto ent = make_shared<DataSetEvent>(name, props);
           auto v = ent->m_properties.find("VALUE");
@@ -150,7 +177,7 @@ namespace mtconnect
       static FactoryPtr factory;
       if (!factory)
       {
-        factory = make_shared<Factory>(*Observation2::getFactory());
+        factory = make_shared<Factory>(*Observation::getFactory());
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<Sample>(name, props);
         });
@@ -162,6 +189,21 @@ namespace mtconnect
       }
       return factory;
     }
+    
+    FactoryPtr ThreeSpaceSample::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Sample::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<ThreeSpaceSample>(name, props);
+        });
+        factory->addRequirements(Requirements({{"VALUE", VECTOR, 3, 3}}));
+      }
+      return factory;
+    }
+
 
     FactoryPtr Timeseries::getFactory()
     {
@@ -180,7 +222,8 @@ namespace mtconnect
           return ent;
         });
         factory->addRequirements(
-            Requirements({{"sampleCount", INTEGER, false}, {"VALUE", VECTOR, false}}));
+            Requirements({{"sampleCount", INTEGER, false}, {"VALUE", VECTOR,
+                          0, entity::Requirement::Infinite}}));
       }
       return factory;
     }
@@ -190,9 +233,16 @@ namespace mtconnect
       static FactoryPtr factory;
       if (!factory)
       {
-        factory = make_shared<Factory>(*Observation2::getFactory());
+        factory = make_shared<Factory>(*Observation::getFactory());
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-          return make_shared<Condition>(name, props);
+          auto cond =  make_shared<Condition>(name, props);
+          if (cond)
+          {
+            auto code = cond->m_properties.find("nativeCode");
+            if (code != cond->m_properties.end())
+              cond->m_code = std::get<string>(code->second);
+          }
+          return cond;
         });
         factory->addRequirements(Requirements{{"type", true},
                                               {"nativeCode", false},
@@ -247,10 +297,77 @@ namespace mtconnect
       }
       return factory;
     }
+    
+    bool Condition::replace(ConditionPtr &old, ConditionPtr &_new)
+    {
+      if (!m_prev)
+        return false;
+
+      if (m_prev == old)
+      {
+        _new->m_prev = old->m_prev;
+        m_prev = _new;
+        return true;
+      }
+
+      return m_prev->replace(old, _new);
+    }
+
+    ConditionPtr Condition::deepCopy()
+    {
+      auto n = make_shared<Condition>(*this);
+
+      if (m_prev)
+      {
+        n->m_prev = m_prev->deepCopy();
+      }
+
+      return n;
+    }
+
+    ConditionPtr Condition::deepCopyAndRemove(ConditionPtr &old)
+    {
+      if (this->getptr() == old)
+      {
+        if (m_prev)
+          return m_prev->deepCopy();
+        else
+          return nullptr;
+      }
+
+      auto n = make_shared<Condition>(*this);
+
+      if (m_prev)
+      {
+        n->m_prev = m_prev->deepCopyAndRemove(old);
+      }
+
+      return n;
+    }
+
   }  // namespace observation
   // --------------------------------------------------------------------
   // --------------------------------------------------------------------
   // --------------------------------------------------------------------
+  
+#if 0
+  Observation *Observation::getFirst()
+  {
+    if (m_prev.getObject())
+      return m_prev->getFirst();
+    else
+      return this;
+  }
+
+  void Observation::getList(std::list<ObservationPtr> &list)
+  {
+    if (m_prev.getObject())
+      m_prev->getList(list);
+
+    list.emplace_back(this);
+  }
+
+
 
   static std::mutex g_attributeMutex;
 
@@ -550,84 +667,5 @@ namespace mtconnect
     else
       m_value = value;
   }
-
-  Observation *Observation::getFirst()
-  {
-    if (m_prev.getObject())
-      return m_prev->getFirst();
-    else
-      return this;
-  }
-
-  void Observation::getList(std::list<ObservationPtr> &list)
-  {
-    if (m_prev.getObject())
-      m_prev->getList(list);
-
-    list.emplace_back(this);
-  }
-
-  Observation *Observation::find(const std::string &code)
-  {
-    if (m_code == code)
-      return this;
-
-    if (m_prev.getObject())
-      return m_prev->find(code);
-
-    return nullptr;
-  }
-
-  bool Observation::replace(Observation *oldObservation, Observation *newObservation)
-  {
-    auto obj = m_prev.getObject();
-
-    if (!obj)
-      return false;
-
-    if (obj == oldObservation)
-    {
-      newObservation->m_prev = oldObservation->m_prev;
-      m_prev = newObservation;
-      return true;
-    }
-
-    return m_prev->replace(oldObservation, newObservation);
-  }
-
-  Observation *Observation::deepCopy()
-  {
-    auto n = new Observation(*this);
-
-    if (m_prev.getObject())
-    {
-      n->m_prev = m_prev->deepCopy();
-      n->m_prev->unrefer();
-    }
-
-    return n;
-  }
-
-  Observation *Observation::deepCopyAndRemove(Observation *old)
-  {
-    if (this == old)
-    {
-      if (m_prev.getObject())
-        return m_prev->deepCopy();
-      else
-        return nullptr;
-    }
-
-    auto n = new Observation(*this);
-
-    if (m_prev.getObject())
-    {
-      n->m_prev = m_prev->deepCopyAndRemove(old);
-
-      if (n->m_prev.getObject())
-        n->m_prev->unrefer();
-    }
-
-    return n;
-  }
+#endif
 }  // namespace mtconnect

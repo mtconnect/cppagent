@@ -20,6 +20,7 @@
 #include "globals.hpp"
 #include "http_server/file_cache.hpp"
 #include "service.hpp"
+#include "adapter/shdr_parser.hpp"
 
 #include <dlib/logger.h>
 
@@ -78,6 +79,8 @@ namespace mtconnect
     void loadStyle(ConfigReader &reader, const char *styleName, http_server::FileCache *cache,
                    XmlPrinter *printer, StyleFunction styleFunction);
     void loadTypes(ConfigReader &reader, http_server::FileCache *cache);
+    
+    void createHandlers();
 
     void LoggerHook(const std::string &loggerName, const dlib::log_level &l,
                     const dlib::uint64 threadId, const char *message);
@@ -88,6 +91,8 @@ namespace mtconnect
 
   protected:
     std::unique_ptr<Agent> m_agent;
+    std::unique_ptr<adapter::ShdrParser> m_shdrParser;
+    std::unique_ptr<adapter::Handler> m_adapterHandler;
     std::unique_ptr<RollingFileLogger> m_loggerFile;
     std::string m_version;
     bool m_monitorFiles = false;
