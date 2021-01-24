@@ -40,7 +40,8 @@ namespace mtconnect
                                const TokenList::const_iterator &end, Context &context)
     {
       using namespace mtconnect::entity;
-      
+      using namespace mtconnect::observation;
+
       ShdrObservation timestamp;
       ExtractTimestamp(timestamp, token, end, context);
       while (token != end)
@@ -61,8 +62,8 @@ namespace mtconnect
             if (m_assetHandler)
               m_assetHandler(observation.m_device, obs.m_body,
                              OptionallyGet<string>("assetId", observation.m_properties),
-                             OptionallyGet<string>("type", observation.m_properties),
-                             timestamp, errors);
+                             OptionallyGet<string>("type", observation.m_properties), timestamp,
+                             errors);
             else
               g_logger << dlib::LWARN << "Asset handler was not provided";
           }
@@ -79,17 +80,13 @@ namespace mtconnect
               throw entity::EntityError("Could not find data item");
             }
 
-            
-            auto out =
-            Observation2::makeObservation(obs.m_dataItem, observation.m_properties,
-                                          observation.m_timestamp, errors);
+            auto out = Observation2::makeObservation(obs.m_dataItem, observation.m_properties,
+                                                     observation.m_timestamp, errors);
             if (errors.empty())
             {
               if (obs.m_unavailable)
                 out->makeUnavailable();
-              
-              out->setTimestamp(timestamp.m_timestamp);
-              
+
               // Deliver
               if (m_observationHandler)
                 m_observationHandler(out);
@@ -144,11 +141,11 @@ namespace mtconnect
         g_logger << dlib::LWARN << "Unknown Error on line: " << data;
       }
     }
-    
+
     static inline void parseCalibration(Device *device, const std::string &aLine)
     {
       istringstream toParse(aLine);
-      
+
       // Look for name|factor|offset triples
       string name, factor, offset;
       while (getline(toParse, name, '|') && getline(toParse, factor, '|') &&
@@ -166,7 +163,7 @@ namespace mtconnect
         }
       }
     }
-    
+
     static inline bool is_true(const string &aValue)
     {
       return (aValue == "yes" || aValue == "true" || aValue == "1");
@@ -174,8 +171,8 @@ namespace mtconnect
 
     void ShdrParser::processCommand(const std::string &data, Context &context)
     {
-      auto device = const_cast<Device*>(context.m_getDevice(context.m_defaultDevice));
-      
+      auto device = const_cast<Device *>(context.m_getDevice(context.m_defaultDevice));
+
       // Handle initial push of settings for uuid, serial number and manufacturer.
       // This will override the settings in the device from the xml
       if (data == "* PROBE")
@@ -199,17 +196,18 @@ namespace mtconnect
           trim(key);
           string value = data.substr(index + 1);
           trim(value);
-          
-          static auto deviceCommands = std::map<string,std::function<void(Device*,const string&)>>({
-            { "uuid", [](Device *d,const string &v) { d->setUuid(v); } },
-            { "manufacturer", [](Device *d,const string &v) {d->setManufacturer(v); } },
-            { "station", [](Device *d,const string &v) {d->setManufacturer(v); } },
-            { "serialNumber", [](Device *d,const string &v) {d->setStation(v); } },
-            { "description", [](Device *d,const string &v) {d->setDescription(v); } },
-            { "nativeName", [](Device *d,const string &v) {d->setNativeName(v); } },
-            { "calibration", [](Device *d,const string &v) { parseCalibration(d, v); } },
-          });
-          
+
+          static auto deviceCommands =
+              std::map<string, std::function<void(Device *, const string &)>>({
+                  {"uuid", [](Device *d, const string &v) { d->setUuid(v); }},
+                  {"manufacturer", [](Device *d, const string &v) { d->setManufacturer(v); }},
+                  {"station", [](Device *d, const string &v) { d->setManufacturer(v); }},
+                  {"serialNumber", [](Device *d, const string &v) { d->setStation(v); }},
+                  {"description", [](Device *d, const string &v) { d->setDescription(v); }},
+                  {"nativeName", [](Device *d, const string &v) { d->setNativeName(v); }},
+                  {"calibration", [](Device *d, const string &v) { parseCalibration(d, v); }},
+              });
+
           auto s = deviceCommands.find(key);
           if (s != deviceCommands.end())
           {
@@ -226,11 +224,12 @@ namespace mtconnect
             }
             else
             {
-              g_logger << LWARN << "Device command '" << key << "' cannot be performed without a default device";
+              g_logger << LWARN << "Device command '" << key
+                       << "' cannot be performed without a default device";
             }
           }
           else if (key == "conversionRequired")
-            context .m_conversionRequired = is_true(value);
+            context.m_conversionRequired = is_true(value);
           else if (key == "relativeTime")
             context.m_relativeTime = is_true(value);
           else if (key == "realTime")
@@ -238,11 +237,11 @@ namespace mtconnect
           // TODO: Set default device
           else if (key == "device")
           {
-            auto device = const_cast<Device*>(context.m_getDevice(value));
+            auto device = const_cast<Device *>(context.m_getDevice(value));
             if (device)
             {
               g_logger << LINFO << "Device name given by the adapter " << value
-              << ", has been assigned to cfg ";
+                       << ", has been assigned to cfg ";
             }
             else
             {

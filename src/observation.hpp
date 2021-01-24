@@ -35,177 +35,180 @@
 
 namespace mtconnect
 {
-  class Observation2;
-  using Observation2Ptr = std::shared_ptr<Observation2>;
-  class Observation2 : public entity::Entity
+  namespace observation
   {
-  public:
-    using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
-
-    using entity::Entity::Entity;
-    static entity::FactoryPtr getFactory();
-    ~Observation2() override = default;
-
-    static Observation2Ptr makeObservation(const DataItem *dataItem, entity::Properties &props,
-                                           const Timestamp &timestamp, entity::ErrorList &errors);
-
-    void setDataItem(const DataItem *dataItem)
+    class Observation2;
+    using Observation2Ptr = std::shared_ptr<Observation2>;
+    class Observation2 : public entity::Entity
     {
-      m_dataItem = dataItem;
-      setProperty("dataItemId", m_dataItem->getId());
-      if (!m_dataItem->getName().empty())
-        setProperty("name", m_dataItem->getName());
-      if (!m_dataItem->getCompositionId().empty())
-        setProperty("compositionId", m_dataItem->getCompositionId());
-      if (!m_dataItem->getSubType().empty())
-        setProperty("subType", m_dataItem->getSubType());
-      if (!m_dataItem->getStatistic().empty())
-        setProperty("statistic", m_dataItem->getStatistic());
-    }
+    public:
+      using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
-    void setTimestamp(const Timestamp &ts)
-    {
-      m_timestamp = ts;
-      setProperty("timestamp", date::format("%FT%TZ", m_timestamp));
-    }
+      using entity::Entity::Entity;
+      static entity::FactoryPtr getFactory();
+      ~Observation2() override = default;
 
-    void setSequence(int64_t sequence)
-    {
-      m_sequence = sequence;
-      setProperty("sequence", sequence);
-    }
+      static Observation2Ptr makeObservation(const DataItem *dataItem, entity::Properties &props,
+                                             const Timestamp &timestamp, entity::ErrorList &errors);
 
-    void makeUnavailable()
-    {
-      m_unavailable = true;
-      setProperty("VALUE", "UNAVAILABLE");
-    }
+      void setDataItem(const DataItem *dataItem)
+      {
+        m_dataItem = dataItem;
+        setProperty("dataItemId", m_dataItem->getId());
+        if (!m_dataItem->getName().empty())
+          setProperty("name", m_dataItem->getName());
+        if (!m_dataItem->getCompositionId().empty())
+          setProperty("compositionId", m_dataItem->getCompositionId());
+        if (!m_dataItem->getSubType().empty())
+          setProperty("subType", m_dataItem->getSubType());
+        if (!m_dataItem->getStatistic().empty())
+          setProperty("statistic", m_dataItem->getStatistic());
+      }
 
-    bool operator<(const Observation2 &another) const
-    {
-      if ((*m_dataItem) < (*another.m_dataItem))
-        return true;
-      else if (*m_dataItem == *another.m_dataItem)
-        return m_sequence < another.m_sequence;
-      else
-        return false;
-    }
+      void setTimestamp(const Timestamp &ts)
+      {
+        m_timestamp = ts;
+        setProperty("timestamp", date::format("%FT%TZ", m_timestamp));
+      }
 
-    void clearResetTriggered() { m_properties.erase("resetTriggered"); }
-    
-  protected:
-    Timestamp m_timestamp;
-    bool m_unavailable{false};
-    const DataItem *m_dataItem{nullptr};
-    uint64_t m_sequence{0};
-  };
+      void setSequence(int64_t sequence)
+      {
+        m_sequence = sequence;
+        setProperty("sequence", sequence);
+      }
 
-  class Sample : public Observation2
-  {
-  public:
-    using Observation2::Observation2;
-    static entity::FactoryPtr getFactory();
-    ~Sample() override = default;
-  };
+      void makeUnavailable()
+      {
+        m_unavailable = true;
+        setProperty("VALUE", "UNAVAILABLE");
+      }
+      bool isUnavailable() const { return m_unavailable; }
 
-  class Timeseries : public Observation2
-  {
-  public:
-    using Observation2::Observation2;
-    static entity::FactoryPtr getFactory();
-    ~Timeseries() override = default;
-  };
+      bool operator<(const Observation2 &another) const
+      {
+        if ((*m_dataItem) < (*another.m_dataItem))
+          return true;
+        else if (*m_dataItem == *another.m_dataItem)
+          return m_sequence < another.m_sequence;
+        else
+          return false;
+      }
 
-  class Condition : public Observation2
-  {
-  public:
-    using ConditionPtr = std::shared_ptr<Condition>;
-    enum Level
-    {
-      NORMAL,
-      WARNING,
-      FAULT,
-      UNAVAILABLE
+      void clearResetTriggered() { m_properties.erase("resetTriggered"); }
+
+    protected:
+      Timestamp m_timestamp;
+      bool m_unavailable{false};
+      const DataItem *m_dataItem{nullptr};
+      uint64_t m_sequence{0};
     };
 
-    using Observation2::Observation2;
-    static entity::FactoryPtr getFactory();
-    ~Condition() override = default;
-
-    ConditionPtr getptr() { return std::dynamic_pointer_cast<Condition>(Entity::getptr()); }
-
-    void getConditonList(std::list<ConditionPtr> &list)
+    class Sample : public Observation2
     {
-      if (m_prev)
-        m_prev->getConditonList(list);
+    public:
+      using Observation2::Observation2;
+      static entity::FactoryPtr getFactory();
+      ~Sample() override = default;
+    };
 
-      list.emplace_back(getptr());
-    }
-
-    void setLevel() {}
-
-    void normal()
+    class Timeseries : public Observation2
     {
-      m_level = NORMAL;
-      m_properties.erase("nativeCode");
-      m_properties.erase("nativeSeverity");
-      m_properties.erase("qualifier");
-      m_properties.erase("statistic");
-      m_properties.erase("VALUE");
-    }
+    public:
+      using Observation2::Observation2;
+      static entity::FactoryPtr getFactory();
+      ~Timeseries() override = default;
+    };
 
-    ConditionPtr getFirst()
+    class Condition : public Observation2
     {
-      if (m_prev)
-        return m_prev->getFirst();
+    public:
+      using ConditionPtr = std::shared_ptr<Condition>;
+      enum Level
+      {
+        NORMAL,
+        WARNING,
+        FAULT,
+        UNAVAILABLE
+      };
 
-      return getptr();
-    }
+      using Observation2::Observation2;
+      static entity::FactoryPtr getFactory();
+      ~Condition() override = default;
 
-    Level m_level{NORMAL};
-    ConditionPtr m_prev;
-  };
+      ConditionPtr getptr() { return std::dynamic_pointer_cast<Condition>(Entity::getptr()); }
 
-  class Event : public Observation2
-  {
-  public:
-    using Observation2::Observation2;
-    static entity::FactoryPtr getFactory();
-    ~Event() override = default;
-  };
+      void getConditonList(std::list<ConditionPtr> &list)
+      {
+        if (m_prev)
+          m_prev->getConditonList(list);
 
-  class DataSetEvent : public Event
-  {
-  public:
-    using Event::Event;
-    static entity::FactoryPtr getFactory();
-    ~DataSetEvent() override = default;
-  };
+        list.emplace_back(getptr());
+      }
 
-  class AssetEvent : public Event
-  {
-  public:
-    using Event::Event;
-    static entity::FactoryPtr getFactory();
-    ~AssetEvent() override = default;
-  };
+      void setLevel() {}
 
-  class Message : public Event
-  {
-  public:
-    using Event::Event;
-    static entity::FactoryPtr getFactory();
-    ~Message() override = default;
-  };
+      void normal()
+      {
+        m_level = NORMAL;
+        m_properties.erase("nativeCode");
+        m_properties.erase("nativeSeverity");
+        m_properties.erase("qualifier");
+        m_properties.erase("statistic");
+        m_properties.erase("VALUE");
+      }
 
-  class Alarm : public Event
-  {
-  public:
-    using Event::Event;
-    static entity::FactoryPtr getFactory();
-    ~Alarm() override = default;
-  };
+      ConditionPtr getFirst()
+      {
+        if (m_prev)
+          return m_prev->getFirst();
 
+        return getptr();
+      }
+
+      Level m_level{NORMAL};
+      ConditionPtr m_prev;
+    };
+
+    class Event : public Observation2
+    {
+    public:
+      using Observation2::Observation2;
+      static entity::FactoryPtr getFactory();
+      ~Event() override = default;
+    };
+
+    class DataSetEvent : public Event
+    {
+    public:
+      using Event::Event;
+      static entity::FactoryPtr getFactory();
+      ~DataSetEvent() override = default;
+    };
+
+    class AssetEvent : public Event
+    {
+    public:
+      using Event::Event;
+      static entity::FactoryPtr getFactory();
+      ~AssetEvent() override = default;
+    };
+
+    class Message : public Event
+    {
+    public:
+      using Event::Event;
+      static entity::FactoryPtr getFactory();
+      ~Message() override = default;
+    };
+
+    class Alarm : public Event
+    {
+    public:
+      using Event::Event;
+      static entity::FactoryPtr getFactory();
+      ~Alarm() override = default;
+    };
+  }  // namespace observation
   // --------------------------------------------------------------------------
 
   struct AttributeItem : public std::pair<const char *, std::string>

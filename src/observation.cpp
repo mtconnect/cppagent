@@ -38,199 +38,216 @@ namespace mtconnect
 {
   using namespace entity;
 
-  static dlib::logger g_logger("Observation");
-
-  FactoryPtr Observation2::getFactory()
+  namespace observation
   {
-    static FactoryPtr factory;
-    if (!factory)
+    static dlib::logger g_logger("Observation");
+
+    FactoryPtr Observation2::getFactory()
     {
-      factory =
-        make_shared<Factory>(Requirements({{"dataItemId", true},
-                                           {"timestamp", true},
-                                           {"sequence", false},
-                                           {"subType", false},
-                                           {"name", false},
-                                           {"compositionId", false}}),
-                             [](const std::string &name, Properties &props) -> EntityPtr {
-                               return make_shared<Observation2>(name, props);
-                             });
-
-      factory->registerFactory("Events:Message", Message::getFactory());
-      factory->registerFactory("Events:AssetChanged", AssetEvent::getFactory());
-      factory->registerFactory("Events:AssetRemoved", AssetEvent::getFactory());
-      factory->registerFactory("Events:Alarm", Alarm::getFactory());
-
-      factory->registerFactory(regex(".+TimeSeries$"), Timeseries::getFactory());
-      factory->registerFactory(regex(".+DataSet$"), DataSetEvent::getFactory());
-      factory->registerFactory(regex(".+Table$"), DataSetEvent::getFactory());
-      factory->registerFactory(regex("^Condition:.+"), Condition::getFactory());
-      factory->registerFactory(regex("^Samples:.+"), Sample::getFactory());
-      factory->registerFactory(regex("^Events:.+"), Event::getFactory());
-    }
-    return factory;
-  }
-
-  Observation2Ptr Observation2::makeObservation(const DataItem *dataItem, Properties &props,
-                                                const Timestamp &timestamp, entity::ErrorList &errors)
-  {
-    props.insert_or_assign("dataItemId", dataItem->getId());
-    if (!dataItem->getName().empty())
-      props.insert_or_assign("name", dataItem->getName());
-    if (!dataItem->getCompositionId().empty())
-      props.insert_or_assign("compositionId", dataItem->getCompositionId());
-    if (!dataItem->getSubType().empty())
-      props.insert_or_assign("subType", dataItem->getSubType());
-    if (!dataItem->getStatistic().empty())
-      props.insert_or_assign("statistic", dataItem->getStatistic());
-    props.insert_or_assign("timestamp", date::format("%FT%TZ", timestamp));
-    
-    string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedElementName();
-    auto ent = getFactory()->create(key, props, errors);
-    if (!ent)
-    {
-      g_logger << dlib::LWARN
-      << "Could not parse properties for data item: " << dataItem->getName();
-      for (auto &e : errors)
+      static FactoryPtr factory;
+      if (!factory)
       {
-        g_logger << dlib::LWARN << "   Error: " << e->what();
+        factory = make_shared<Factory>(Requirements({{"dataItemId", true},
+                                                     {"timestamp", TIMESTAMP, true},
+                                                     {"sequence", false},
+                                                     {"subType", false},
+                                                     {"name", false},
+                                                     {"compositionId", false}}),
+                                       [](const std::string &name, Properties &props) -> EntityPtr {
+                                         return make_shared<Observation2>(name, props);
+                                       });
+
+        factory->registerFactory("Events:Message", Message::getFactory());
+        factory->registerFactory("Events:AssetChanged", AssetEvent::getFactory());
+        factory->registerFactory("Events:AssetRemoved", AssetEvent::getFactory());
+        factory->registerFactory("Events:Alarm", Alarm::getFactory());
+
+        factory->registerFactory(regex(".+TimeSeries$"), Timeseries::getFactory());
+        factory->registerFactory(regex(".+DataSet$"), DataSetEvent::getFactory());
+        factory->registerFactory(regex(".+Table$"), DataSetEvent::getFactory());
+        factory->registerFactory(regex("^Condition:.+"), Condition::getFactory());
+        factory->registerFactory(regex("^Samples:.+"), Sample::getFactory());
+        factory->registerFactory(regex("^Events:.+"), Event::getFactory());
       }
-      throw EntityError("Invalid properties for data item");
+      return factory;
     }
 
-    auto obs = dynamic_pointer_cast<Observation2>(ent);
-    obs->m_timestamp = timestamp;
-    obs->m_dataItem = dataItem;
-    
-    return obs;
-  }
-
-  FactoryPtr Event::getFactory()
-  {
-    static FactoryPtr factory;
-    if (!factory)
+    Observation2Ptr Observation2::makeObservation(const DataItem *dataItem, Properties &props,
+                                                  const Timestamp &timestamp,
+                                                  entity::ErrorList &errors)
     {
-      factory = make_shared<Factory>(*Observation2::getFactory());
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<Event>(name, props);
-      });
-      factory->addRequirements(Requirements{{"VALUE", false}});
+      props.insert_or_assign("dataItemId", dataItem->getId());
+      if (!dataItem->getName().empty())
+        props.insert_or_assign("name", dataItem->getName());
+      if (!dataItem->getCompositionId().empty())
+        props.insert_or_assign("compositionId", dataItem->getCompositionId());
+      if (!dataItem->getSubType().empty())
+        props.insert_or_assign("subType", dataItem->getSubType());
+      if (!dataItem->getStatistic().empty())
+        props.insert_or_assign("statistic", dataItem->getStatistic());
+      props.insert_or_assign("timestamp", timestamp);
+
+      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedElementName();
+      auto ent = getFactory()->create(key, props, errors);
+      if (!ent)
+      {
+        g_logger << dlib::LWARN
+                 << "Could not parse properties for data item: " << dataItem->getName();
+        for (auto &e : errors)
+        {
+          g_logger << dlib::LWARN << "   Error: " << e->what();
+        }
+        throw EntityError("Invalid properties for data item");
+      }
+
+      auto obs = dynamic_pointer_cast<Observation2>(ent);
+      obs->m_timestamp = timestamp;
+      obs->m_dataItem = dataItem;
+
+      return obs;
     }
 
-    return factory;
-  }
-
-  FactoryPtr DataSetEvent::getFactory()
-  {
-    static FactoryPtr factory;
-    if (!factory)
+    FactoryPtr Event::getFactory()
     {
-      factory = make_shared<Factory>(*Observation2::getFactory());
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<DataSetEvent>(name, props);
-      });
-      factory->addRequirements(Requirements{{"count", INTEGER, false}, {"VALUE", DATA_SET, false}});
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Observation2::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<Event>(name, props);
+        });
+        factory->addRequirements(Requirements{{"VALUE", false}});
+      }
+
+      return factory;
     }
 
-    return factory;
-  }
-
-  FactoryPtr Sample::getFactory()
-  {
-    static FactoryPtr factory;
-    if (!factory)
+    FactoryPtr DataSetEvent::getFactory()
     {
-      factory = make_shared<Factory>(*Observation2::getFactory());
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<Sample>(name, props);
-      });
-      factory->addRequirements(Requirements({{"sampleRate", DOUBLE, false},
-                                             {"resetTriggered", false},
-                                             {"statistic", false},
-                                             {"duration", DOUBLE, false},
-                                             {"VALUE", DOUBLE, false}}));
-    }
-    return factory;
-  }
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Observation2::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          auto ent = make_shared<DataSetEvent>(name, props);
+          auto v = ent->m_properties.find("VALUE");
+          if (v != ent->m_properties.end())
+          {
+            auto &ds = std::get<DataSet>(v->second);
+            ent->m_properties.insert_or_assign("count", int64_t(ds.size()));
+          }
+          return ent;
+        });
+        factory->addRequirements(
+            Requirements{{"count", INTEGER, false}, {"VALUE", DATA_SET, false}});
+      }
 
-  FactoryPtr Timeseries::getFactory()
-  {
-    static FactoryPtr factory;
-    if (!factory)
+      return factory;
+    }
+
+    FactoryPtr Sample::getFactory()
     {
-      factory = make_shared<Factory>(*Sample::getFactory());
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<Timeseries>(name, props);
-      });
-      factory->addRequirements(
-          Requirements({{"sampleCount", INTEGER, false}, {"VALUE", VECTOR, false}}));
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Observation2::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<Sample>(name, props);
+        });
+        factory->addRequirements(Requirements({{"sampleRate", DOUBLE, false},
+                                               {"resetTriggered", false},
+                                               {"statistic", false},
+                                               {"duration", DOUBLE, false},
+                                               {"VALUE", DOUBLE, false}}));
+      }
+      return factory;
     }
-    return factory;
-  }
 
-  FactoryPtr Condition::getFactory()
-  {
-    static FactoryPtr factory;
-    if (!factory)
+    FactoryPtr Timeseries::getFactory()
     {
-      factory = make_shared<Factory>(*Observation2::getFactory());
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<Condition>(name, props);
-      });
-      factory->addRequirements(Requirements{{"type", true},
-                                            {"nativeCode", false},
-                                            {"nativeSeverity", false},
-                                            {"qualifier", false},
-                                            {"statistic", false},
-                                            {"VALUE", false}});
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Sample::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          auto ent = make_shared<Timeseries>(name, props);
+          auto v = ent->m_properties.find("VALUE");
+          if (v != ent->m_properties.end())
+          {
+            auto &ts = std::get<entity::Vector>(v->second);
+            ent->m_properties.insert_or_assign("sampleCount", int64_t(ts.size()));
+          }
+          return ent;
+        });
+        factory->addRequirements(
+            Requirements({{"sampleCount", INTEGER, false}, {"VALUE", VECTOR, false}}));
+      }
+      return factory;
     }
 
-    return factory;
-  }
-
-  FactoryPtr AssetEvent::getFactory()
-  {
-    static FactoryPtr factory;
-    if (!factory)
+    FactoryPtr Condition::getFactory()
     {
-      factory = make_shared<Factory>(*Event::getFactory());
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<AssetEvent>(name, props);
-      });
-      factory->addRequirements(Requirements({{"assetType", INTEGER, false}}));
-    }
-    return factory;
-  }
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Observation2::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<Condition>(name, props);
+        });
+        factory->addRequirements(Requirements{{"type", true},
+                                              {"nativeCode", false},
+                                              {"nativeSeverity", false},
+                                              {"qualifier", false},
+                                              {"statistic", false},
+                                              {"VALUE", false}});
+      }
 
-  FactoryPtr Message::getFactory()
-  {
-    static FactoryPtr factory;
-    if (!factory)
-    {
-      factory = make_shared<Factory>(*Event::getFactory());
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<Message>(name, props);
-      });
-      factory->addRequirements(Requirements({{"nativeCode", false}}));
+      return factory;
     }
-    return factory;
-  }
 
-  FactoryPtr Alarm::getFactory()
-  {
-    static FactoryPtr factory;
-    if (!factory)
+    FactoryPtr AssetEvent::getFactory()
     {
-      factory = make_shared<Factory>(*Event::getFactory());
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return make_shared<Alarm>(name, props);
-      });
-      factory->addRequirements(Requirements(
-          {{"code", true}, {"nativeCode", false}, {"state", false}, {"severity", false}}));
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Event::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<AssetEvent>(name, props);
+        });
+        factory->addRequirements(Requirements({{"assetType", false}}));
+      }
+      return factory;
     }
-    return factory;
-  }
-  
+
+    FactoryPtr Message::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Event::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<Message>(name, props);
+        });
+        factory->addRequirements(Requirements({{"nativeCode", false}}));
+      }
+      return factory;
+    }
+
+    FactoryPtr Alarm::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Event::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<Alarm>(name, props);
+        });
+        factory->addRequirements(Requirements(
+            {{"code", true}, {"nativeCode", false}, {"state", false}, {"severity", false}}));
+      }
+      return factory;
+    }
+  }  // namespace observation
   // --------------------------------------------------------------------
   // --------------------------------------------------------------------
   // --------------------------------------------------------------------

@@ -54,9 +54,8 @@ namespace mtconnect
       using GetDataItem =
           std::function<const DataItem *(const Device *device, const std::string &id)>;
       using Now = std::function<Timestamp()>;
-      using DeviceChanged = std::function<void(Device*,const std::string&,
-                                                        const std::string&)>;
-      
+      using DeviceChanged = std::function<void(Device *, const std::string &, const std::string &)>;
+
       GetDevice m_getDevice;
       GetDataItem m_getDataItem;
       Now m_now;
@@ -72,7 +71,7 @@ namespace mtconnect
       bool m_conversionRequired{false};
       bool m_upcaseValue{false};
       bool m_realTime{false};
-      
+
       std::string m_defaultDevice;
       std::optional<Timestamp> m_base;
       Micros m_offset;
@@ -130,7 +129,7 @@ namespace mtconnect
 
       void setUpcaseValue(bool flag) { m_context.m_upcaseValue = flag; }
       bool upcaseValue() const { return m_context.m_upcaseValue; }
-      
+
       auto &getTerminator() const { return m_terminator; }
 
       // Inherited method to incoming data from the server

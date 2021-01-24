@@ -30,8 +30,8 @@ namespace mtconnect
     using OrderMap = std::unordered_map<std::string, int>;
     using OrderMapPtr = std::shared_ptr<OrderMap>;
     using Property = std::pair<std::string, Value>;
-    
-    template<typename T>
+
+    template <typename T>
     inline std::optional<T> OptionallyGet(const std::string &key, const Properties &props)
     {
       auto p = props.find(key);
@@ -72,7 +72,10 @@ namespace mtconnect
         m_properties.insert_or_assign(key, v);
       }
       void setProperty(const Property &property) { setProperty(property.first, property.second); }
-      bool hasProperty(const std::string &n) const { return m_properties.find(n) != m_properties.end(); }
+      bool hasProperty(const std::string &n) const
+      {
+        return m_properties.find(n) != m_properties.end();
+      }
 
       const Value &getValue() const { return getProperty("VALUE"); }
       std::optional<EntityList> getList(const std::string &name) const
@@ -88,6 +91,24 @@ namespace mtconnect
         }
 
         return std::nullopt;
+      }
+
+      template <typename T>
+      const T get(const std::string &name) const
+      {
+        return std::get<T>(getProperty(name));
+      }
+
+      template <typename T>
+      const T getValue() const
+      {
+        return std::get<T>(getValue());
+      }
+
+      template <typename T>
+      const std::optional<T> maybeGet(const std::string &name) const
+      {
+        return OptionallyGet<T>(name, m_properties);
       }
 
       void setOrder(const OrderMapPtr order) { m_order = order; }

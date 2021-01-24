@@ -20,10 +20,14 @@
 #include "entity.hpp"
 #include "factory.hpp"
 
+#include <date/date.h>
+
 #include <dlib/logger.h>
 
 #include <cctype>
+#include <chrono>
 #include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -154,6 +158,14 @@ namespace mtconnect
 
       operator bool() const { return m_string == "true"; }
 
+      operator Timestamp() const
+      {
+        Timestamp ts;
+        istringstream in(m_string);
+        in >> std::setw(6) >> date::parse("%FT%T", ts);
+        return ts;
+      }
+
       operator Vector() const
       {
         char *np(nullptr);
@@ -227,6 +239,11 @@ namespace mtconnect
                                break;
                              }
 
+                             case TIMESTAMP:
+                               value = Timestamp(s);
+                               converted = true;
+                               break;
+
                              default:
                                throw PropertyError("Cannot convert a string to a non-scalar");
                                break;
@@ -261,6 +278,11 @@ namespace mtconnect
                                break;
                              }
 
+                             case TIMESTAMP:
+                               value = std::chrono::system_clock::from_time_t(arg);
+                               converted = true;
+                               break;
+
                              default:
                                throw PropertyError("Cannot convert a double to a non-scalar");
                                break;
@@ -291,6 +313,11 @@ namespace mtconnect
                                converted = true;
                                break;
                              }
+
+                             case TIMESTAMP:
+                               value = std::chrono::system_clock::from_time_t(arg);
+                               converted = true;
+                               break;
 
                              default:
                                throw PropertyError("Cannot convert a integer to a non-scalar");
@@ -353,6 +380,35 @@ namespace mtconnect
                                break;
                            }
                          },
+                         [&](const Timestamp &arg) {
+                           switch (type)
+                           {
+                             case INTEGER:
+                               value = int64_t(chrono::system_clock::to_time_t(arg));
+                               converted = true;
+                               break;
+
+                             case DOUBLE:
+                               value = double(arg.time_since_epoch().count());
+                               converted = true;
+                               break;
+
+                             case STRING:
+                               value = date::format("%FT%TZ", arg);
+                               converted = true;
+                               break;
+
+                             case VECTOR:
+                               value = Vector(double(arg.time_since_epoch().count()));
+                               converted = true;
+                               break;
+
+                             default:
+                               throw PropertyError("Cannot convert a string to a non-scalar");
+                               break;
+                           }
+                         },
+                         [&](const nullptr_t &arg) { converted = true; },
                          [&](const auto &arg) { converted = false; }},
               value);
       }

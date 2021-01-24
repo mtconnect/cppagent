@@ -86,6 +86,7 @@ namespace mtconnect
                                              {"VALUE", entity::VECTOR, true}};
     static entity::Requirements s_message{{"nativeCode", false}, {"VALUE", false}};
     static entity::Requirements s_sample{{"VALUE", entity::DOUBLE, false}};
+    static entity::Requirements s_assetEvent{{"assetType", false}, {"VALUE", false}};
     static entity::Requirements s_event{{"VALUE", false}};
     static entity::Requirements s_dataSet{{"VALUE", entity::DATA_SET, false}};
 
@@ -127,11 +128,9 @@ namespace mtconnect
       auto &observation = get<DataItemObservation>(obs.m_observed);
       while (token != end && req != reqs.end())
       {
-        // TODO: Handle unavailable and resetTriggered
         if (unavailable(*token) && (req->getName() == "VALUE" || req->getName() == "level"))
         {
           observation.m_unavailable = true;
-          obs.m_properties.insert_or_assign(req->getName(), "UNAVAILABLE");
           token++;
           req++;
           continue;
@@ -212,6 +211,9 @@ namespace mtconnect
           reqs = &s_alarm;
         else if (observation.m_dataItem->isDataSet() || observation.m_dataItem->isTable())
           reqs = &s_dataSet;
+        else if (observation.m_dataItem->isAssetChanged() ||
+                 observation.m_dataItem->isAssetRemoved())
+          reqs = &s_assetEvent;
         else
           reqs = &s_event;
       }
@@ -228,7 +230,6 @@ namespace mtconnect
         if (obs.m_properties.count(field) == 0)
         {
           observation.m_unavailable = true;
-          obs.m_properties[field] = "UNAVAILABLE";
         }
       }
       else

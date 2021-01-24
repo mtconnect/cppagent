@@ -39,6 +39,11 @@ namespace mtconnect
     using base = std::set<DataSetEntry>;
     using base::base;
 
+    template <typename T>
+    const T &get(const std::string &key) const;
+    template <typename T>
+    const std::optional<T> maybeGet(const std::string &key) const;
+
     void parse(const std::string &s, bool table);
   };
 
@@ -89,6 +94,22 @@ namespace mtconnect
              std::visit(DataSetValueSame(other.m_value), m_value);
     }
   };
+
+  template <typename T>
+  const T &DataSet::get(const std::string &key) const
+  {
+    return std::get<T>(find(DataSetEntry(key))->m_value);
+  }
+
+  template <typename T>
+  const std::optional<T> DataSet::maybeGet(const std::string &key) const
+  {
+    auto v = find(DataSetEntry(key));
+    if (v == end())
+      return std::nullopt;
+    else
+      return get<T>(v->m_value);
+  }
 
   inline bool DataSetValueSame::operator()(const DataSet &v)
   {

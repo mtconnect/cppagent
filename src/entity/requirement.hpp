@@ -43,12 +43,15 @@ namespace mtconnect
   namespace entity
   {
     class Entity;
-    class Factory;
     using EntityPtr = std::shared_ptr<Entity>;
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
+    using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
+
     using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
-                               bool, Vector, DataSet, nullptr_t>;
+                               bool, Vector, DataSet, Timestamp, nullptr_t>;
+
+    class Factory;
     using FactoryPtr = std::shared_ptr<Factory>;
     using ControlledVocab = std::list<std::string>;
     using Pattern = std::optional<std::regex>;
@@ -64,7 +67,8 @@ namespace mtconnect
       BOOL = 6,
       VECTOR = 7,
       DATA_SET = 8,
-      NULL_VALUE = 9
+      TIMESTAMP = 9,
+      NULL_VALUE = 10
     };
 
     bool ConvertValueToType(Value &value, ValueType type, bool table = false);
