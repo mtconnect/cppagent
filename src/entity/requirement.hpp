@@ -47,7 +47,7 @@ namespace mtconnect
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
     using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
-                               bool, Vector, nullptr_t>;
+                               bool, Vector, std::nullptr_t>;
     using FactoryPtr = std::shared_ptr<Factory>;
     using ControlledVocab = std::list<std::string>;
     using Pattern = std::optional<std::regex>;
