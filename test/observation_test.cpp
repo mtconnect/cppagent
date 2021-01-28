@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,27 +81,28 @@ class ObservationTest : public testing::Test
   // Helper to test values
   void testValueHelper(std::map<std::string, std::string> &attributes,
                        const std::string &nativeUnits, float expected, const double value,
-                       const char *file, int line);
+                       const char *file, int line)
+  {
+    attributes["nativeUnits"] = nativeUnits;
+    DataItem dataItem(attributes);
+
+    ErrorList errors;
+    ObservationPtr sample = Observation::make(&dataItem, {{"VALUE", value}}, m_time, errors);
+
+    stringstream message;
+    double diff = abs(expected - sample->getValue<double>());
+    message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected
+            << " and actual " << sample->getValue<double>() << " differ (" << diff << ") by more than 0.001";
+
+    failIf(diff > 0.001, message.str(), __FILE__, __LINE__);
+  }
+
 };
 
-void ObservationTest::testValueHelper(std::map<string, string> &attributes,
-                                      const string &nativeUnits, float expected,
-                                      double value, const char *file, int line)
+inline ConditionPtr Cond(ObservationPtr ptr)
 {
-  attributes["nativeUnits"] = nativeUnits;
-  DataItem dataItem(attributes);
-
-  ErrorList errors;
-  ObservationPtr sample = Observation::make(&dataItem, {{"VALUE", value}}, m_time, errors);
-
-  stringstream message;
-  double diff = abs(expected - sample->getValue<double>());
-  message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected
-          << " and actual " << sample->getValue<double>() << " differ (" << diff << ") by more than 0.001";
-
-  failIf(diff > 0.001, message.str(), __FILE__, __LINE__);
+  return dynamic_pointer_cast<Condition>(ptr);
 }
-
 
 #define TEST_VALUE(attributes, nativeUnits, expected, value) \
   testValueHelper(attributes, nativeUnits, expected, value, __FILE__, __LINE__)
@@ -172,105 +173,48 @@ TEST_F(ObservationTest, ConvertSimpleUnits)
   TEST_VALUE(attributes, "PERCENT", 2.0f, 2.0);
 }
 
-#if 0
-TEST_F(ObservationTest, RefCounts)
+TEST_F(ObservationTest, ConditionEventChaining)
 {
-  string time("NOW"), value("111");
-  auto event = new Observation(*m_dataItem1, time, value, 123);
+  DataItem dataItem({{"id", "c1"}, {"category", "CONDITION"},
+    {"type","TEMPERATURE"}
+  });
+  
+  ErrorList errors;
+  ConditionPtr event1 = Cond(Observation::make(&dataItem, {{"level", "FAULT"}}, m_time, errors));
+  ConditionPtr event2 = Cond(Observation::make(&dataItem, {{"level", "FAULT"}}, m_time, errors));
+  ConditionPtr event3 = Cond(Observation::make(&dataItem, {{"level", "FAULT"}}, m_time, errors));
 
-  ASSERT_TRUE(event->refCount() == 1);
-
-  event->referTo();
-  ASSERT_TRUE(event->refCount() == 2);
-
-  event->referTo();
-  ASSERT_TRUE(event->refCount() == 3);
-
-  event->unrefer();
-  ASSERT_TRUE(event->refCount() == 2);
-
-  event->unrefer();
-  ASSERT_TRUE(event->refCount() == 1);
-
-  {
-    ObservationPtr prt(event);
-    ASSERT_TRUE(event->refCount() == 2);
-  }
-
-  ASSERT_TRUE(event->refCount() == 1);
-  event->referTo();
-  ASSERT_TRUE(event->refCount() == 2);
-  {
-    ObservationPtr prt(event, true);
-    ASSERT_TRUE(event->refCount() == 2);
-  }
-  ASSERT_TRUE(event->refCount() == 1);
-
-  {
-    ObservationPtr prt;
-    prt = event;
-    ASSERT_TRUE(prt->refCount() == 2);
-  }
-  ASSERT_TRUE(event->refCount() == 1);
-}
-
-TEST_F(ObservationTest, StlLists)
-{
-  std::vector<ObservationPtr> vector;
-
-  string time("NOW"), value("111");
-  auto event = new Observation(*m_dataItem1, time, value, 123);
-
-  ASSERT_EQ(1, (int)event->refCount());
-  vector.emplace_back(event);
-  ASSERT_EQ(2, (int)event->refCount());
-
-  std::list<ObservationPtr> list;
-  list.emplace_back(event);
-  ASSERT_EQ(3, (int)event->refCount());
-}
-
-TEST_F(ObservationTest, EventChaining)
-{
-  string time("NOW"), value("111");
-  ObservationPtr event1(new Observation(*m_dataItem1, time, value), true);
-  ObservationPtr event2(new Observation(*m_dataItem1, time, value), true);
-  ObservationPtr event3(new Observation(*m_dataItem1, time, value), true);
-
-  ASSERT_TRUE(event1.getObject() == event1->getFirst());
+  ASSERT_TRUE(event1 == event1->getFirst());
 
   event1->appendTo(event2);
-  ASSERT_TRUE(event1->getFirst() == event2.getObject());
+  ASSERT_TRUE(event1->getFirst() == event2);
 
   event2->appendTo(event3);
-  ASSERT_TRUE(event1->getFirst() == event3.getObject());
+  ASSERT_TRUE(event1->getFirst() == event3);
 
-  ASSERT_EQ(1, (int)event1->refCount());
-  ASSERT_EQ(2, (int)event2->refCount());
-  ASSERT_EQ(2, (int)event3->refCount());
+  ASSERT_EQ(1, event1.use_count());
+  ASSERT_EQ(2, event2.use_count());
+  ASSERT_EQ(2, event3.use_count());
 
-  std::list<ObservationPtr> list;
-  event1->getList(list);
-  ASSERT_EQ(3, (int)list.size());
-  ASSERT_TRUE(list.front().getObject() == event3.getObject());
-  ASSERT_TRUE(list.back().getObject() == event1.getObject());
+  ConditionList list;
+  event1->getConditionList(list);
+  ASSERT_EQ(3, list.size());
+  ASSERT_TRUE(list.front() == event3);
+  ASSERT_TRUE(list.back() == event1);
 
-  std::list<ObservationPtr> list2;
-  event2->getList(list2);
-  ASSERT_EQ(2, (int)list2.size());
-  ASSERT_TRUE(list2.front().getObject() == event3.getObject());
-  ASSERT_TRUE(list2.back().getObject() == event2.getObject());
+  ConditionList list2;
+  event2->getConditionList(list2);
+  ASSERT_EQ(2, list2.size());
+  ASSERT_TRUE(list2.front() == event3);
+  ASSERT_TRUE(list2.back() == event2);
 }
 
+#if 0
 TEST_F(ObservationTest, Condition)
 {
-  string time("NOW");
-  std::map<string, string> attributes1;
-  attributes1["id"] = "1";
-  attributes1["name"] = "DataItemTest1";
-  attributes1["type"] = "TEMPERATURE";
-  attributes1["category"] = "CONDITION";
-  auto d = make_unique<DataItem>(attributes1);
+  DataItem d({{"id", "c1"}, {"category", "CONDITION"},
+    {"type","TEMPERATURE"}, {"name", "DataItemTest1"}
+  });
 
   ObservationPtr event1(new Observation(*d, time, (string) "FAULT|4321|1|HIGH|Overtemp", 123),
                         true);

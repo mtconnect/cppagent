@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,21 +15,13 @@
 //    limitations under the License.
 //
 
-#include "shdr_tokenizer.hpp"
+#pragma once
 
-using namespace std;
+#include "entity/entity.hpp"
 
 namespace mtconnect
 {
-  namespace adapter
+  namespace source
   {
-    const auto EXP =
-        "^("
-        R"RE("(([^"\\\|]*(\\\|)?)+)")RE"
-        "|"
-        R"RE(([^|]*))RE"
-        R"RE()(\||$))RE";
-    std::regex ShdrTokenizer::m_pattern(EXP, std::regex::optimize | std::regex::ECMAScript);
-
-  }  // namespace adapter
+  }
 }  // namespace mtconnect

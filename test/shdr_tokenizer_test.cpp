@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,36 +19,38 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/shdr_parser.hpp"
-#include "adapter/timestamp_extractor.hpp"
-#include "adapter/shdr_tokenizer.hpp"
+#include "source/shdr_tokenizer.hpp"
+#include "source/timestamp_extractor.hpp"
+#include "entity/entity.hpp"
 
 #include <chrono>
 
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source;
 using namespace mtconnect::observation;
 using namespace std;
 using namespace date::literals;
 using namespace std::literals;
 
-class ShdrParserTest : public testing::Test
+class ShdrTokenizerTest : public testing::Test
 {
 protected:
   void SetUp() override
   {
-    set_all_logging_output_streams(cout);
-    set_all_logging_levels(LDEBUG);
+    dlib::set_all_logging_output_streams(cout);
+    dlib::set_all_logging_levels(dlib::LDEBUG);
 
-    m_context.m_getDevice = [](const std::string &uuid) { return nullptr; };
-    m_context.m_getDataItem = [this](const Device *, const std::string &name) { return m_dataItems[name].get(); };
-    
-    m_parser = make_unique<ShdrParser>();
-    m_parser->m_observationHandler = [this](ObservationPtr &observation){
-      m_observations.emplace_back(observation);
-    };
+    m_tokenizer = make_shared<ShdrTokenizer>();
   }
+  
+  void TearDown() override
+  {
+    m_tokenizer.reset();
+  }
+  
+  shared_ptr<ShdrTokenizer> m_tokenizer;
 
+#if 0
   void TearDown() override
   {
     m_dataItems.clear();
@@ -69,9 +71,26 @@ protected:
   std::map<string,unique_ptr<DataItem>> m_dataItems;
   Context m_context;
   unique_ptr<ShdrParser> m_parser;
+#endif
 };
 
-TEST_F(ShdrParserTest, SimpleTokens)
+inline std::list<std::string> extract(const Properties &props)
+{
+  std::list<string> list;
+  for (auto &p : props)
+    list.emplace_back(get<string>(p.second));
+  
+  return list;
+}
+
+template<typename T>
+inline bool isOfType(const EntityPtr &p)
+{
+  const auto &o = *p;
+  return typeid(T) == typeid(o);
+}
+
+TEST_F(ShdrTokenizerTest, SimpleTokens)
 {
   std::map<std::string, std::list<std::string>> data {
     { "   |hello   |   kitty| cat | ", { "", "hello", "kitty", "cat", "" } },
@@ -81,19 +100,19 @@ TEST_F(ShdrParserTest, SimpleTokens)
     { R"D(hello|xxx={b="12345", c="xxxxx"}}|bbb)D",
       { "hello", R"D(xxx={b="12345", c="xxxxx"}})D", "bbb" } },
   };
-  
-  ShdrTokenizer tok;
-  
+    
   for (const auto &test : data)
   {
-    std::string value;
-    auto tokens = tok.tokenize(test.first);
-    EXPECT_EQ(tokens, test.second) << " given text: " << test.first;
+    auto data = std::make_shared<entity::Entity>("Data", Properties{{"VALUE", test.first}});
+    auto entity = (*m_tokenizer)(data);
+    ASSERT_TRUE(entity);
+    auto tokens = dynamic_pointer_cast<Tokens>(entity);
+    ASSERT_TRUE(tokens);
+    EXPECT_EQ(test.second, tokens->m_tokens) << " given text: " << test.first;
   }
-
 }
 
-TEST_F(ShdrParserTest, escaped_line)
+TEST_F(ShdrTokenizerTest, escaped_line)
 {
   std::map<std::string, std::list<std::string>> data;
   // correctly escaped
@@ -145,17 +164,18 @@ TEST_F(ShdrParserTest, escaped_line)
   data[R"(y|"a\|"z)"] = {"y", "\"a\\", "\"z"};
   data["x|y||z"] = { "x", "y", "", "z"};
   
-  
-  ShdrTokenizer tok;
-  
   for (const auto &test : data)
   {
-    std::string value;
-    auto tokens = tok.tokenize(test.first);
-    EXPECT_EQ(tokens, test.second) << " given text: " << test.first;
+    auto data = std::make_shared<entity::Entity>("Data", Properties{{"VALUE", test.first}});
+    auto entity = (*m_tokenizer)(data);
+    ASSERT_TRUE(entity);
+    auto tokens = dynamic_pointer_cast<Tokens>(entity);
+    ASSERT_TRUE(tokens);
+    EXPECT_EQ(test.second, tokens->m_tokens) << " given text: " << test.first;
   }
 }
 
+#if 0
 inline DataSetEntry operator"" _E(const char *c, std::size_t)
 {
   return DataSetEntry(c);
@@ -418,3 +438,4 @@ TEST_F(ShdrParserTest, create_condition)
   }
 
 }
+#endif

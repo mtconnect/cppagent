@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,96 +19,107 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/shdr_parser.hpp"
-#include "adapter/timestamp_extractor.hpp"
+#include "source/shdr_tokenizer.hpp"
+#include "source/timestamp_extractor.hpp"
 
 #include <chrono>
 
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source;
+using namespace mtconnect::entity;
 using namespace std;
 using namespace std::literals;
 using namespace date;
 using namespace date::literals;
 
 TEST(TimestampExtractorTest, TestTimeExtraction)
-{  
-  TokenList tokens { "2021-01-19T12:00:00.12345Z", "hello" };
-  Context context;
-  
-  auto token = tokens.cbegin();
-  auto end = tokens.end();
-  
-  ShdrObservation obsservation;
-  ExtractTimestamp(obsservation, token, end, context);
+{
+  auto tokens = make_shared<Tokens>("Tokens", Properties());
+  tokens->m_tokens = { "2021-01-19T12:00:00.12345Z", "hello" };
 
-  ASSERT_EQ("hello", *token);
-  ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", obsservation.m_timestamp));
+  auto extractor = make_shared<ExtractTimestamp>();
+  auto out = (*extractor)(tokens);
+  auto timestamped = dynamic_pointer_cast<Timestamped>(out);
+  ASSERT_TRUE(timestamped);
+
+  ASSERT_EQ(1, out->getProperties().size());
+  ASSERT_EQ("hello", timestamped->m_tokens.front());
+  ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", timestamped->m_timestamp));
+  ASSERT_FALSE(timestamped->m_duration);
 }
 
 TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
 {
-  TokenList tokens { "2021-01-19T12:00:00.12345Z@100.0", "hello" };
-  Context context;
-  
-  auto token = tokens.cbegin();
-  auto end = tokens.end();
-  
-  ShdrObservation obsservation;
-  ExtractTimestamp(obsservation, token, end, context);
+  auto tokens = make_shared<Tokens>("Tokens", Properties());
+  tokens->m_tokens = { "2021-01-19T12:00:00.12345Z@100.0", "hello" };
 
-  ASSERT_EQ("hello", *token);
-  ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", obsservation.m_timestamp));
-  ASSERT_TRUE(obsservation.m_duration);
-  ASSERT_EQ(100.0, *obsservation.m_duration);
+  auto extractor = make_shared<ExtractTimestamp>();
+  auto out = (*extractor)(tokens);
+  auto timestamped = dynamic_pointer_cast<Timestamped>(out);
+  ASSERT_TRUE(timestamped);
+
+  ASSERT_EQ(1, out->getProperties().size());
+  ASSERT_EQ("hello", timestamped->m_tokens.front());
+  ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", timestamped->m_timestamp));
+  ASSERT_TRUE(timestamped->m_duration);
+  ASSERT_EQ(100.0, *timestamped->m_duration);
 }
 
 TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
 {
-  TokenList tokens { "1000.0", "hello" };
-  Context context;
-  context.m_now = []() -> Timestamp {
+  auto tokens = make_shared<Tokens>("Tokens", Properties());
+  tokens->m_tokens = { "1000.0", "hello" };
+
+  auto extractor = make_shared<ExtractTimestamp>();
+  extractor->m_now = []() -> Timestamp {
     // 2021-01-19T10:00:00Z
     return std::chrono::system_clock::from_time_t(1611050400);
   };
-  context.m_relativeTime = true;
+  extractor->m_relativeTime = true;
   
-  auto token = tokens.cbegin();
-  auto end = tokens.end();
+  auto out = (*extractor)(tokens);
+  auto timestamped = dynamic_pointer_cast<Timestamped>(out);
+  ASSERT_TRUE(timestamped);
   
-  ShdrObservation obsservation;
-  ExtractTimestamp(obsservation, token, end, context);
+  ASSERT_EQ(1, out->getProperties().size());
+  ASSERT_EQ("hello", timestamped->m_tokens.front());
+  ASSERT_EQ("2021-01-19T10:00:00.000000Z", format("%FT%TZ", timestamped->m_timestamp));
 
-  ASSERT_EQ("hello", *token);
-  ASSERT_EQ("2021-01-19T10:00:00.000000Z", format("%FT%TZ", obsservation.m_timestamp));
-  
-  tokens = { "2000.0", "hello" };
-  token = tokens.cbegin();
-  ExtractTimestamp(obsservation, token, end, context);
+  tokens = make_shared<Tokens>("Tokens", Properties{});
+  tokens->m_tokens = { "2000.0", "hello" };
 
-  ASSERT_EQ("2021-01-19T10:00:01.000000Z", format("%FT%TZ", obsservation.m_timestamp));
+  out = (*extractor)(tokens);
+  timestamped = dynamic_pointer_cast<Timestamped>(out);
+  ASSERT_TRUE(timestamped);
+
+  ASSERT_EQ("2021-01-19T10:00:01.000000Z", format("%FT%TZ", timestamped->m_timestamp));
 }
 
 TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
 {
-  TokenList tokens { "2021-01-19T10:01:00Z", "hello" };
-  Context context;
-  context.m_now = []() -> Timestamp {
+  auto tokens = make_shared<Tokens>("Tokens", Properties{});
+  tokens->m_tokens = {"2021-01-19T10:01:00Z", "hello"};
+
+  auto extractor = make_shared<ExtractTimestamp>();
+  extractor->m_now = []() -> Timestamp {
     // 2021-01-19T10:00:00Z
     return std::chrono::system_clock::from_time_t(1611050400);
   };
-  context.m_relativeTime = true;
+  extractor->m_relativeTime = true;
   
-  auto token = tokens.cbegin();
-  auto end = tokens.end();
-  
-  ShdrObservation obsservation;
-  ExtractTimestamp(obsservation, token, end, context);
-  ASSERT_EQ("2021-01-19T10:00:00.000000Z", format("%FT%TZ", obsservation.m_timestamp));
-  
-  tokens = { "2021-01-19T10:01:10Z", "hello" };
-  token = tokens.cbegin();
-  ExtractTimestamp(obsservation, token, end, context);
+  auto out = (*extractor)(tokens);
+  auto timestamped = dynamic_pointer_cast<Timestamped>(out);
+  ASSERT_TRUE(timestamped);
 
-  ASSERT_EQ("2021-01-19T10:00:10.000000Z", format("%FT%TZ", obsservation.m_timestamp));
+  ASSERT_EQ(1, out->getProperties().size());
+  ASSERT_EQ("hello", timestamped->m_tokens.front());
+  ASSERT_EQ("2021-01-19T10:00:00.000000Z", format("%FT%TZ", timestamped->m_timestamp));
+
+  tokens = make_shared<Tokens>("Tokens", Properties{});
+  tokens->m_tokens = {"2021-01-19T10:01:10Z", "hello"};
+  out = (*extractor)(tokens);
+  timestamped = dynamic_pointer_cast<Timestamped>(out);
+  ASSERT_TRUE(timestamped);
+
+  ASSERT_EQ("2021-01-19T10:00:10.000000Z", format("%FT%TZ", timestamped->m_timestamp));  
 }

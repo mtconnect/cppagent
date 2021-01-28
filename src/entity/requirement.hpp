@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "observation/data_set.hpp"
 #include "globals.hpp"
+#include "observation/data_set.hpp"
 
 #include <atomic>
 #include <cmath>
@@ -46,10 +46,9 @@ namespace mtconnect
     using EntityPtr = std::shared_ptr<Entity>;
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
-    using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
     using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
-                               bool, Vector, observation::DataSet, Timestamp, nullptr_t>;
+                               bool, Vector, observation::DataSet, Timestamp, std::nullptr_t>;
 
     class Factory;
     using FactoryPtr = std::shared_ptr<Factory>;

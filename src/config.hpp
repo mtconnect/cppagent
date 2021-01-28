@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,10 @@
 
 #pragma once
 
+#include "adapter/adapter.hpp"
 #include "globals.hpp"
 #include "http_server/file_cache.hpp"
 #include "service.hpp"
-#include "adapter/shdr_parser.hpp"
 
 #include <dlib/logger.h>
 
@@ -67,10 +67,7 @@ namespace mtconnect
 
   protected:
     Device *defaultDevice();
-    void loadAdapters(ConfigReader &reader, bool defaultPreserve,
-                      std::chrono::seconds legacyTimeout,
-                      std::chrono::milliseconds reconnectInterval, bool ignoreTimestamps,
-                      bool conversionRequired, bool upcaseValue, bool filterDuplicates);
+    void loadAdapters(ConfigReader &reader, const ConfigOptions &options);
     void loadAllowPut(ConfigReader &reader, http_server::Server *server);
     void loadNamespace(ConfigReader &reader, const char *namespaceType,
                        http_server::FileCache *cache, XmlPrinter *printer,
@@ -79,7 +76,7 @@ namespace mtconnect
     void loadStyle(ConfigReader &reader, const char *styleName, http_server::FileCache *cache,
                    XmlPrinter *printer, StyleFunction styleFunction);
     void loadTypes(ConfigReader &reader, http_server::FileCache *cache);
-    
+
     void createHandlers();
 
     void LoggerHook(const std::string &loggerName, const dlib::log_level &l,
@@ -91,7 +88,6 @@ namespace mtconnect
 
   protected:
     std::unique_ptr<Agent> m_agent;
-    std::unique_ptr<adapter::ShdrParser> m_shdrParser;
     std::unique_ptr<adapter::Handler> m_adapterHandler;
     std::unique_ptr<RollingFileLogger> m_loggerFile;
     std::string m_version;

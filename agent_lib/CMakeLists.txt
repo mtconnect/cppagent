@@ -25,18 +25,18 @@ set(AGENT_SOURCES
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/asset_mapper.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/asset_mapper.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/data_item_mapper.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/data_item_mapper.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr_parser.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr_parser.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr_tokenizer.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr_tokenizer.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/timestamp_extractor.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/timestamp_extractor.hpp"
+
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/pipeline.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/transform.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/shdr_tokenizer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/shdr_token_mapper.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/shdr_token_mapper.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/timestamp_extractor.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/timestamp_extractor.hpp"
+  
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/asset.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/asset.hpp"

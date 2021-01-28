@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,8 +24,8 @@
 #include "entity/xml_parser.hpp"
 #include "http_server/file_cache.hpp"
 #include "json_printer.hpp"
-#include "xml_printer.hpp"
 #include "observation/observation.hpp"
+#include "xml_printer.hpp"
 #include <sys/stat.h>
 
 #include <dlib/config_reader.h>
@@ -49,8 +49,6 @@ using namespace mtconnect::observation;
 namespace mtconnect
 {
   static const string g_unavailable("UNAVAILABLE");
-  static const string g_conditionUnavailable("UNAVAILABLE|||");
-
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
 
@@ -67,14 +65,6 @@ namespace mtconnect
       m_logStreamData(false),
       m_pretty(pretty)
   {
-    m_context.m_getDevice = [this](const string &name){ return findDeviceByUUIDorName(name); };
-    m_context.m_getDataItem = [](const Device *device, const string &name){
-      return device->getDeviceDataItem(name);
-    };
-    m_context.m_deviceChanged = [this](Device *device, const string &oldUuid, const string &oldName) {
-      deviceChanged(device, oldUuid, oldName);
-    };
-    
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();
     FileArchetypeAsset::registerAsset();
@@ -274,7 +264,7 @@ namespace mtconnect
         // Check for single valued constrained data items.
         const string *value = &g_unavailable;
         if (d->isCondition())
-          value = &g_conditionUnavailable;
+          value = &g_unavailable;
         else if (d->hasConstantValue())
           value = &(d->getConstrainedValues()[0]);
 
@@ -605,6 +595,9 @@ namespace mtconnect
 
   Device *Agent::getDeviceByName(const std::string &name) const
   {
+    if (name.empty())
+      return defaultDevice();
+
     auto devPos = m_deviceNameMap.find(name);
     if (devPos != m_deviceNameMap.end())
       return devPos->second;
@@ -614,6 +607,9 @@ namespace mtconnect
 
   Device *Agent::getDeviceByName(const std::string &name)
   {
+    if (name.empty())
+      return defaultDevice();
+
     auto devPos = m_deviceNameMap.find(name);
     if (devPos != m_deviceNameMap.end())
       return devPos->second;
@@ -623,6 +619,9 @@ namespace mtconnect
 
   Device *Agent::findDeviceByUUIDorName(const std::string &idOrName) const
   {
+    if (idOrName.empty())
+      return defaultDevice();
+
     auto di = m_deviceUuidMap.find(idOrName);
     if (di == m_deviceUuidMap.end())
     {
@@ -661,9 +660,10 @@ namespace mtconnect
   {
     m_adapters.emplace_back(adapter);
 
-    const auto dev = getDeviceByName(adapter->getDeviceName());
-    if (dev && dev->m_availabilityAdded)
-      adapter->setAutoAvailable(true);
+    // const auto dev = getDeviceByName(adapter->getDeviceName());
+    // TODO: Notify pipeline that auto available is needed
+    // if (dev && dev->m_availabilityAdded)
+    //  adapter->setAutoAvailable(true);
 
     if (start)
       adapter->start();
@@ -692,6 +692,7 @@ namespace mtconnect
   // Add values for related data items UNAVAILABLE
   void Agent::disconnected(const adapter::Adapter &adapter, const std::vector<Device *> &devices)
   {
+#if 0
     auto time = getCurrentTime(GMT_UV_SEC);
     g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
@@ -719,7 +720,7 @@ namespace mtconnect
             if (dataItem->isCondition())
             {
               if (ptr->isUnavailable())
-                value = &g_conditionUnavailable;
+                value = &g_unavailable;
             }
             else if (dataItem->hasConstraints())
             {
@@ -738,10 +739,12 @@ namespace mtconnect
           g_logger << LWARN << "No data Item for " << dataItemAssoc.first;
       }
     }
+#endif
   }
 
   void Agent::connected(const adapter::Adapter &adapter, const std::vector<Device *> &devices)
   {
+#if 0
     auto time = getCurrentTime(GMT_UV_SEC);
     if (m_agentDevice)
     {
@@ -765,38 +768,50 @@ namespace mtconnect
       else
         g_logger << LDEBUG << "Cannot find availability for " << device->getName();
     }
+#endif
   }
 
   // ----------------------------------------------------
   // Observation Add Method
   // ----------------------------------------------------
 
-  SequenceNumber_t Agent::addToBuffer(ObservationPtr &observation)
+  SequenceNumber_t Agent::addToBuffer(ObservationPtr &observation, bool dupCheck)
   {
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
-    auto dataItem = observation->getDataItem();    
-    if (!dataItem->allowDups() && dataItem->isDataSet() &&
-        !m_circularBuffer.getLatest().dataSetDifference(observation))
+    auto dataItem = observation->getDataItem();
+    if (!dataItem->allowDups())
     {
-      return 0;
+      if (dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(observation))
+      {
+        return 0;
+      }
+      else if (dupCheck && dataItem->getRepresentation() == DataItem::VALUE)
+      {
+        // Convert to string
+        auto value = observation->getValue();
+        entity::ConvertValueToType(value, entity::STRING);
+        if (const_cast<DataItem *>(dataItem)->isDuplicate(std::get<string>(value)))
+        {
+          return 0;
+        }
+      }
     }
-    
+
     auto seqNum = m_circularBuffer.addToBuffer(observation);
     dataItem->signalObservers(seqNum);
     return seqNum;
 
     return 0;
   }
-  
+
   SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, entity::Properties props,
-                                      std::optional<adapter::Timestamp> timestamp)
+                                      std::optional<Timestamp> timestamp, bool dupCheck)
   {
     entity::ErrorList errors;
-    
-    adapter::Timestamp ts = timestamp ? *timestamp : m_context.m_now();
-    auto observation = observation::Observation::make(dataItem, props,
-                                                                 ts, errors);
+
+    Timestamp ts = timestamp ? *timestamp : chrono::system_clock::now();
+    auto observation = observation::Observation::make(dataItem, props, ts, errors);
     if (observation && errors.empty())
     {
       return addToBuffer(observation);
@@ -809,16 +824,18 @@ namespace mtconnect
         g_logger << LERROR << "Cannot add observation: " << e->what();
       }
     }
-    
+
     return 0;
   }
-  
-  SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, const std::string &value,
-                                      std::optional<adapter::Timestamp> timestamp)
-  {
-    return addToBuffer(dataItem, {{"VALUE", value}}, timestamp);
-  }
 
+  SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, const std::string &value,
+                                      std::optional<Timestamp> timestamp, bool dupCheck)
+  {
+    if (dataItem->isCondition())
+      return addToBuffer(dataItem, {{"level", value}}, timestamp);
+    else
+      return addToBuffer(dataItem, {{"VALUE", value}}, timestamp);
+  }
 
   // ----------------------------------------------------
   // Asset CRUD Methods
@@ -885,9 +902,9 @@ namespace mtconnect
     stringstream msg(asset->getType());
     msg << asset->getType() << "|" << asset->getAssetId();
     if (asset->isRemoved())
-      addToBuffer(device->getAssetRemoved(), msg.str()); //, *at);
+      addToBuffer(device->getAssetRemoved(), msg.str());  //, *at);
     else
-      addToBuffer(device->getAssetChanged(), msg.str()); //, *at);
+      addToBuffer(device->getAssetChanged(), msg.str());  //, *at);
 
     return asset;
   }
@@ -911,13 +928,15 @@ namespace mtconnect
 
       // TODO: Handle Asset Timestamp
       auto time = asset->getTimestamp();
-      addToBuffer(device->getAssetRemoved(), {{ "assetType", asset->getType()}, {"VALUE", id}}); //, *time);
+      addToBuffer(device->getAssetRemoved(),
+                  {{"assetType", asset->getType()}, {"VALUE", id}});  //, *time);
 
       // Check if the asset changed id is the same as this asset.
       auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
       if (ptr && ptr->getValue<string>() == id)
       {
-        addToBuffer(device->getAssetRemoved(), {{ "assetType", asset->getType()}, {"VALUE", "UNAVAILABLE"}}); //, *time);
+        addToBuffer(device->getAssetRemoved(),
+                    {{"assetType", asset->getType()}, {"VALUE", "UNAVAILABLE"}});  //, *time);
       }
     }
 
@@ -1446,21 +1465,21 @@ namespace mtconnect
   {
     using namespace http_server;
 
-    adapter::Timestamp ts;
+    Timestamp ts;
     if (time)
     {
       istringstream in(*time);
       in >> std::setw(6) >> date::parse("%FT%T", ts);
       if (!in.good())
       {
-        ts = m_context.m_now();
+        ts = chrono::system_clock::now();
       }
     }
     else
     {
-      ts = m_context.m_now();
+      ts = chrono::system_clock::now();
     }
-        
+
     auto printer = getPrinter(format);
     auto dev = checkDevice(printer, device);
 

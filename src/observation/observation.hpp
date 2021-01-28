@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ namespace mtconnect
     class Observation;
     using ObservationPtr = std::shared_ptr<Observation>;
     using ObservationList = std::list<ObservationPtr>;
-    
+
     class Observation : public entity::Entity
     {
     public:
@@ -50,11 +50,9 @@ namespace mtconnect
       static entity::FactoryPtr getFactory();
       ~Observation() override = default;
 
-      static ObservationPtr make(const DataItem *dataItem,
-                                 const entity::Properties &props,
-                                 const Timestamp &timestamp,
-                                 entity::ErrorList &errors);
-      
+      static ObservationPtr make(const DataItem *dataItem, const entity::Properties &props,
+                                 const Timestamp &timestamp, entity::ErrorList &errors);
+
       void setDataItem(const DataItem *dataItem)
       {
         m_dataItem = dataItem;
@@ -68,11 +66,9 @@ namespace mtconnect
         if (!m_dataItem->getStatistic().empty())
           setProperty("statistic", m_dataItem->getStatistic());
       }
-      
-      const DataItem *getDataItem() const
-      {
-        return m_dataItem;
-      }
+
+      const DataItem *getDataItem() const { return m_dataItem; }
+      auto getSequence() const { return m_sequence; }
 
       void setTimestamp(const Timestamp &ts)
       {
@@ -92,10 +88,7 @@ namespace mtconnect
         setProperty("VALUE", "UNAVAILABLE");
       }
       bool isUnavailable() const { return m_unavailable; }
-      virtual void setEntityName()
-      {
-        Entity::setName(m_dataItem->getPrefixedElementName());
-      }
+      virtual void setEntityName() { Entity::setName(m_dataItem->getPrefixedElementName()); }
 
       bool operator<(const Observation &another) const
       {
@@ -142,6 +135,7 @@ namespace mtconnect
 
     class Condition;
     using ConditionPtr = std::shared_ptr<Condition>;
+    using ConditionList = std::list<ConditionPtr>;
 
     class Condition : public Observation
     {
@@ -180,7 +174,6 @@ namespace mtconnect
           throw entity::PropertyError("Invalid Condition LeveL: " + s);
       }
 
-      
       void normal()
       {
         m_level = NORMAL;
@@ -192,33 +185,33 @@ namespace mtconnect
         m_properties.erase("VALUE");
         setEntityName();
       }
-      
+
       void makeUnavailable() override
       {
         m_unavailable = true;
         m_level = UNAVAILABLE;
         setEntityName();
       }
-      
+
       void setEntityName() override
       {
         switch (m_level)
         {
-        case NORMAL:
-          setName("Normal");
-          break;
+          case NORMAL:
+            setName("Normal");
+            break;
 
-        case WARNING:
-          setName("Warning");
-          break;
+          case WARNING:
+            setName("Warning");
+            break;
 
-        case FAULT:
-          setName("Fault");
-          break;
+          case FAULT:
+            setName("Fault");
+            break;
 
-        case UNAVAILABLE:
-          setName("Unavailable");
-          break;
+          case UNAVAILABLE:
+            setName("Unavailable");
+            break;
         }
       }
 
@@ -229,15 +222,15 @@ namespace mtconnect
 
         return getptr();
       }
-      
-      void getConditonList(std::list<ConditionPtr> &list)
+
+      void getConditionList(ConditionList &list)
       {
         if (m_prev)
-          m_prev->getConditonList(list);
+          m_prev->getConditionList(list);
 
         list.emplace_back(getptr());
       }
-      
+
       ConditionPtr find(const std::string &code)
       {
         if (m_code == code)
@@ -252,18 +245,18 @@ namespace mtconnect
       bool replace(ConditionPtr &old, ConditionPtr &_new);
       ConditionPtr deepCopy();
       ConditionPtr deepCopyAndRemove(ConditionPtr &old);
-      
+
       const std::string &getCode() const { return m_code; }
       Level getLevel() const { return m_level; }
       ConditionPtr getPrev() const { return m_prev; }
       void appendTo(ConditionPtr cond) { m_prev = cond; }
-      
+
     protected:
       std::string m_code;
       Level m_level{NORMAL};
       ConditionPtr m_prev;
     };
-    
+
     class Event : public Observation
     {
     public:
@@ -278,19 +271,15 @@ namespace mtconnect
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~DataSetEvent() override = default;
-      
+
       const DataSet &getDataSet() const
       {
         const entity::Value &v = getProperty("VALuE");
         return std::get<DataSet>(v);
       }
-      void setDataSet(const DataSet &set)
-      {
-        setProperty("VALUE", set);
-      }
-      
+      void setDataSet(const DataSet &set) { setProperty("VALUE", set); }
     };
-    
+
     using DataSetEventPtr = std::shared_ptr<DataSetEvent>;
 
     class AssetEvent : public Event
@@ -316,8 +305,8 @@ namespace mtconnect
       static entity::FactoryPtr getFactory();
       ~Alarm() override = default;
     };
-    
+
     using ObservationComparer = bool (*)(ObservationPtr &, ObservationPtr &);
-    inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2) { return aE1 < aE2; }
+    inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2) { return *aE1 < *aE2; }
   }  // namespace observation
 }  // namespace mtconnect

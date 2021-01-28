@@ -81,9 +81,10 @@ add_agent_test(xml_printer TRUE xml)
 
 add_agent_test(adapter FALSE adapter)
 add_agent_test(connector FALSE adapter)
-add_agent_test(shdr_parser FALSE adapter)
-add_agent_test(timestamp_extractor FALSE adapter)
-add_agent_test(data_item_mapping FALSE adapter)
+
+add_agent_test(shdr_tokenizer FALSE source)
+add_agent_test(timestamp_extractor FALSE source)
+add_agent_test(data_item_mapping FALSE source)
 
 add_agent_test(agent TRUE core)
 add_agent_test(asset_buffer TRUE core)

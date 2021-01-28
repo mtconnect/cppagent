@@ -1,4 +1,5 @@
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+//
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,21 +17,20 @@
 
 #pragma once
 
-#include "adapter.hpp"
 #include "entity/entity.hpp"
-#include "shdr_parser.hpp"
-
-#include <chrono>
-#include <regex>
 
 namespace mtconnect
 {
-  namespace adapter
+  namespace source
   {
-    struct ShdrObservation;
+    // A source manages a data source and the transformations to an
+    // destination. The transformations are linked together. Source is
+    // a state monad managing the other monads that perform the
+    // transformtion on the Entities.
 
-    // Takes a tokenized set of fields and maps them to timestamp and data items
-    void MapTokensToAsset(ShdrObservation &obs, TokenList::const_iterator &token,
-                          const TokenList::const_iterator &end, Context &context);
-  }  // namespace adapter
+    class Source
+    {
+    public:
+    };
+  }  // namespace source
 }  // namespace mtconnect

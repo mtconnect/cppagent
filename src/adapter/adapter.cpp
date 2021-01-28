@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,7 @@
 
 using namespace std;
 using namespace std::literals;
+using namespace date::literals;
 
 namespace mtconnect
 {
@@ -37,15 +38,17 @@ namespace mtconnect
     static dlib::logger g_logger("input.adapter");
 
     // Adapter public methods
-    Adapter::Adapter(const Context &context, const string &server, const unsigned int port,
-                     std::chrono::seconds legacyTimeout)
-      : Connector(server, port, legacyTimeout),
-        m_context(context),
-        m_device(nullptr),
+    Adapter::Adapter(const Handler &handler, const string &server, const unsigned int port,
+                     const ConfigOptions &options)
+      : Connector(server, port, 60s),
+        m_handler(new Handler(handler)),
         m_running(true),
-        m_autoAvailable(false),
         m_reconnectInterval{10000ms}
     {
+      auto timeout = options.find("LegacyTimeout");
+      if (timeout != options.end())
+        m_legacyTimeout = get<Seconds>(timeout->second);
+
       stringstream url;
       url << "shdr://" << server << ':' << port;
       m_url = url.str();
@@ -69,19 +72,6 @@ namespace mtconnect
       wait();
     }
 
-    // TODO: Remove this method, should be part of shdr parser.
-    void Adapter::addDevice(string &device)
-    {
-      auto dev = m_context.m_getDevice(device);
-      if (dev)
-      {
-        // TODO: Fix const issues. Should be weak pointer to device
-        Device *d = const_cast<Device*>(dev);
-        m_allDevices.emplace_back(d);
-        d->addAdapter(this);
-      }
-    }
-
     void Adapter::processData(const string &data)
     {
       if (m_terminator)
@@ -89,7 +79,7 @@ namespace mtconnect
         if (data == *m_terminator)
         {
           if (m_handler && m_handler->m_processData)
-            m_handler->m_processData(m_body.str(), m_context);
+            m_handler->m_processData(m_body.str());
           m_terminator.reset();
           m_body.str("");
         }
@@ -111,7 +101,7 @@ namespace mtconnect
       }
 
       if (m_handler && m_handler->m_processData)
-        m_handler->m_processData(data, m_context);
+        m_handler->m_processData(data);
     }
 
     // Adapter private methods
@@ -129,19 +119,19 @@ namespace mtconnect
         }
         catch (std::invalid_argument &err)
         {
-          g_logger << LERROR << "Adapter for " << m_deviceName
+          g_logger << LERROR << "Adapter for " << m_url
                    << "'s thread threw an argument error, stopping adapter: " << err.what();
           stop();
         }
         catch (std::exception &err)
         {
-          g_logger << LERROR << "Adapter for " << m_deviceName
+          g_logger << LERROR << "Adapter for " << m_url
                    << "'s thread threw an exceotion, stopping adapter: " << err.what();
           stop();
         }
         catch (...)
         {
-          g_logger << LERROR << "Thread for adapter " << m_deviceName
+          g_logger << LERROR << "Thread for adapter " << m_url
                    << "'s thread threw an unhandled exception, stopping adapter";
           stop();
         }

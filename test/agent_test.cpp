@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +44,7 @@ using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::http_server;
 using namespace mtconnect::adapter;
+using namespace mtconnect::observation;
 
 class AgentTest : public testing::Test
 {
@@ -70,11 +71,10 @@ class AgentTest : public testing::Test
   void addAdapter()
   {
     ASSERT_FALSE(m_adapter);
-    m_adapter = new Adapter("LinuxCNC", "server", 7878);
-    m_agentTestHelper->m_agent->addAdapter(m_adapter);
+    m_adapter = m_agentTestHelper->addAdapter("localhost", 7878, m_agentTestHelper->m_agent->defaultDevice()->getName());
     ASSERT_TRUE(m_adapter);
   }
-
+  
  public:
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
@@ -619,7 +619,6 @@ TEST_F(AgentTest, EmptyStream)
         doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier",
         nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode", "SPINDLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ToolGroup", "UNAVAILABLE");
   }
 
   {
@@ -636,11 +635,7 @@ TEST_F(AgentTest, AddToBuffer)
   Routing::QueryMap query;
 
   string device("LinuxCNC"), key("badKey"), value("ON");
-  auto di1 = agent->getDataItemByName(device, key);
-  ASSERT_FALSE(di1);
-  auto seqNum = agent->addToBuffer(di1, value, "NOW");
-  ASSERT_EQ(0, seqNum);
-
+  auto seqNum = 0;
   auto event1 = agent->getFromBuffer(seqNum);
   ASSERT_FALSE(event1);
 
@@ -653,9 +648,9 @@ TEST_F(AgentTest, AddToBuffer)
   key = "power";
 
   auto di2 = agent->getDataItemByName(device, key);
-  seqNum = agent->addToBuffer(di2, value, "NOW");
+  seqNum = m_agentTestHelper->addToBuffer(di2, value, "NOW");
   auto event2 = agent->getFromBuffer(seqNum);
-  ASSERT_EQ(2, (int)event2->refCount());
+  ASSERT_EQ(3, event2.use_count());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -801,7 +796,8 @@ TEST_F(AgentTest, AutoAvailable)
 {
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
-  m_adapter->setAutoAvailable(true);
+  auto adapter = m_agentTestHelper->m_adapter;
+  adapter->setAutoAvailable(true);
   auto d = agent->getDevices().front();
   std::vector<Device *> devices;
   devices.emplace_back(d);
@@ -811,7 +807,7 @@ TEST_F(AgentTest, AutoAvailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
   }
 
-  agent->connected(m_adapter, devices);
+  agent->connected(*adapter, devices);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -819,7 +815,7 @@ TEST_F(AgentTest, AutoAvailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
   }
 
-  agent->disconnected(m_adapter, devices);
+  agent->disconnected(*adapter, devices);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -828,7 +824,7 @@ TEST_F(AgentTest, AutoAvailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
   }
 
-  agent->connected(m_adapter, devices);
+  agent->connected(*adapter, devices);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -843,6 +839,7 @@ TEST_F(AgentTest, MultipleDisconnect)
 {
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
+  auto adapter = m_agentTestHelper->m_adapter;
 
   auto d = agent->getDevices().front();
   std::vector<Device *> devices;
@@ -854,7 +851,7 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 1);
   }
 
-  agent->connected(m_adapter, devices);
+  agent->connected(*adapter, devices);
   m_adapter->processData("TIME|block|GTH");
   m_adapter->processData("TIME|cmp|normal||||");
 
@@ -868,7 +865,7 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
   }
 
-  agent->disconnected(m_adapter, devices);
+  agent->disconnected(*adapter, devices);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -880,7 +877,7 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
   }
 
-  agent->disconnected(m_adapter, devices);
+  agent->disconnected(*adapter, devices);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -891,11 +888,11 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
   }
 
-  agent->connected(m_adapter, devices);
+  agent->connected(*adapter, devices);
   m_adapter->processData("TIME|block|GTH");
   m_adapter->processData("TIME|cmp|normal||||");
 
-  agent->disconnected(m_adapter, devices);
+  agent->disconnected(*adapter, devices);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -1622,22 +1619,22 @@ TEST_F(AgentTest, AdapterDeviceCommand)
   auto device2 = agent->getDeviceByName("Device2");
   ASSERT_TRUE(device2);
   
-  m_adapter = new Adapter("*", "server", 7878);
-  ASSERT_TRUE(m_adapter);
-  agent->addAdapter(m_adapter);
-  ASSERT_TRUE(nullptr == m_adapter->getDevice());
+  auto adapter = m_agentTestHelper->addAdapter("server", 7878);
+  ASSERT_TRUE(adapter);
 
-  m_adapter->parseBuffer("* device: device-2\n");
-  ASSERT_TRUE(device2 == m_adapter->getDevice());
+  ASSERT_TRUE(nullptr == adapter->getDevice());
 
-  m_adapter->parseBuffer("* device: device-1\n");
-  ASSERT_TRUE(device1 == m_adapter->getDevice());
+  adapter->parseBuffer("* device: device-2\n");
+  ASSERT_TRUE(device2 == adapter->getDevice());
 
-  m_adapter->parseBuffer("* device: Device2\n");
-  ASSERT_TRUE(device2 == m_adapter->getDevice());
+  adapter->parseBuffer("* device: device-1\n");
+  ASSERT_TRUE(device1 == adapter->getDevice());
 
-  m_adapter->parseBuffer("* device: Device1\n");
-  ASSERT_TRUE(device1 == m_adapter->getDevice());
+  adapter->parseBuffer("* device: Device2\n");
+  ASSERT_TRUE(device2 == adapter->getDevice());
+
+  adapter->parseBuffer("* device: Device1\n");
+  ASSERT_TRUE(device1 == adapter->getDevice());
 }
 
 TEST_F(AgentTest, UUIDChange)

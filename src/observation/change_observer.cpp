@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,62 +29,62 @@ namespace mtconnect
       for (const auto signaler : m_signalers)
         signaler->removeObserver(this);
     }
-    
+
     void ChangeObserver::addSignaler(ChangeSignaler *sig) { m_signalers.emplace_back(sig); }
-    
+
     bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
     {
       auto newEndPos = std::remove(m_signalers.begin(), m_signalers.end(), sig);
       if (newEndPos == m_signalers.end())
         return false;
-      
+
       m_signalers.erase(newEndPos);
       return true;
     }
-    
+
     // Signaler Management
     ChangeSignaler::~ChangeSignaler()
     {
       std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-      
+
       for (const auto observer : m_observers)
         observer->removeSignaler(this);
     }
-    
+
     void ChangeSignaler::addObserver(ChangeObserver *observer)
     {
       std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-      
+
       m_observers.emplace_back(observer);
       observer->addSignaler(this);
     }
-    
+
     bool ChangeSignaler::removeObserver(ChangeObserver *observer)
     {
       std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-      
+
       auto newEndPos = std::remove(m_observers.begin(), m_observers.end(), observer);
       if (newEndPos == m_observers.end())
         return false;
-      
+
       m_observers.erase(newEndPos);
       return true;
     }
-    
+
     bool ChangeSignaler::hasObserver(ChangeObserver *observer) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-      
+
       auto foundPos = std::find(m_observers.begin(), m_observers.end(), observer);
       return foundPos != m_observers.end();
     }
-    
+
     void ChangeSignaler::signalObservers(uint64_t sequence) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-      
+
       for (const auto observer : m_observers)
         observer->signal(sequence);
     }
-  }
+  }  // namespace observation
 }  // namespace mtconnect

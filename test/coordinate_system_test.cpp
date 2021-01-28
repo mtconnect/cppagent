@@ -124,11 +124,6 @@ TEST_F(CoordinateSystemTest, XmlPrinting)
 
 TEST_F(CoordinateSystemTest, JsonPrinting)
 {
-  auto agent = m_agentTestHelper->getAgent();
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-  
   {
     m_agentTestHelper->m_request.m_accepts = "Application/json";
     PARSE_JSON_RESPONSE("/probe");

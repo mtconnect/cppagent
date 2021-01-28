@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,6 @@
 
 #include "timestamp_extractor.hpp"
 
-#include "shdr_parser.hpp"
-
 #include <date/date.h>
 
 #include <optional>
@@ -27,7 +25,7 @@ using namespace std;
 
 namespace mtconnect
 {
-  namespace adapter
+  namespace source
   {
     static dlib::logger g_logger("TimestampExtractor");
 
@@ -51,20 +49,17 @@ namespace mtconnect
       return duration;
     }
 
-    void ExtractTimestamp(ShdrObservation &obs, TokenList::const_iterator &token,
-                          const TokenList::const_iterator &end, Context &context)
+    void ExtractTimestamp::extractTimestamp(const std::string &token, TimestampedPtr &entity)
     {
       using namespace date;
 
       // Extract duration
+      string timestamp = token;
+      entity->m_duration = getDuration(timestamp);
 
-      string timestamp = *token++;
-      obs.m_duration = getDuration(timestamp);
-
-      if (context.m_ignoreTimestamps || timestamp.empty())
+      if (timestamp.empty())
       {
-        Timestamp now = context.m_now ? context.m_now() : chrono::system_clock::now();
-        obs.m_timestamp = now;
+        entity->m_timestamp = now();
         return;
       }
 
@@ -76,44 +71,44 @@ namespace mtconnect
         in >> std::setw(6) >> parse("%FT%T", ts);
         if (!in.good())
         {
-          ts = context.m_now ? context.m_now() : chrono::system_clock::now();
+          ts = now();
         }
 
-        if (!context.m_relativeTime)
+        if (!m_relativeTime)
         {
-          obs.m_timestamp = ts;
+          entity->m_timestamp = ts;
           return;
         }
       }
 
       // Handle double offset
-      Timestamp now = context.m_now ? context.m_now() : chrono::system_clock::now();
+      auto n = now();
       double offset;
       if (!has_t)
       {
         offset = stod(timestamp);
       }
 
-      if (!context.m_base)
+      if (!m_base)
       {
-        context.m_base = now;
+        m_base = n;
         if (has_t)
-          context.m_offset = now - ts;
+          m_offset = n - ts;
         else
-          context.m_offset = Micros(int64_t(offset * 1000.0));
-        obs.m_timestamp = now;
+          m_offset = Micros(int64_t(offset * 1000.0));
+        entity->m_timestamp = n;
       }
       else
       {
         if (has_t)
         {
-          obs.m_timestamp = ts + context.m_offset;
+          entity->m_timestamp = ts + m_offset;
         }
         else
         {
-          obs.m_timestamp = *context.m_base + Micros(int64_t(offset * 1000.0)) - context.m_offset;
+          entity->m_timestamp = *m_base + Micros(int64_t(offset * 1000.0)) - m_offset;
         }
       }
     }
-  }  // namespace adapter
+  }  // namespace source
 }  // namespace mtconnect

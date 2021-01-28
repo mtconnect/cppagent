@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,8 @@ namespace mtconnect
   {
     static auto asset = make_shared<Factory>(
         Requirements({Requirement("assetId", true), Requirement("deviceUuid", false),
-                      Requirement("timestamp", false), Requirement("removed", BOOL, false)}),
+                      Requirement("timestamp", TIMESTAMP, false),
+                      Requirement("removed", BOOL, false)}),
         [](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<Asset>(name, props);
         });

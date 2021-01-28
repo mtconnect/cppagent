@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,9 +37,11 @@
 #include <ctime>
 #include <fstream>
 #include <limits>
+#include <list>
 #include <map>
 #include <sstream>
 #include <string>
+#include <variant>
 
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef _WINDOWS
@@ -134,15 +136,12 @@ namespace mtconnect
       return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
   }
-  
-  inline bool iequals(const std::string& a, const std::string& b)
-  {
-      return std::equal(a.begin(), a.end(), b.begin(),
-                        [](char a, char b) {
-                            return tolower(a) == tolower(b);
-                        });
-  }
 
+  inline bool iequals(const std::string &a, const std::string &b)
+  {
+    return std::equal(a.begin(), a.end(), b.begin(),
+                      [](char a, char b) { return tolower(a) == tolower(b); });
+  }
 
   typedef std::map<std::string, std::string> Attributes;
 
@@ -165,6 +164,14 @@ namespace mtconnect
     auto begin() const { return std::rbegin(m_iterable); }
     auto end() const { return std::rend(m_iterable); }
   };
+
+  using Milliseconds = std::chrono::milliseconds;
+  using Seconds = std::chrono::seconds;
+  using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
+  using StringList = std::list<std::string>;
+  using ConfigOption = std::variant<std::monostate, bool, int, std::string, double, Seconds,
+                                    Milliseconds, StringList>;
+  using ConfigOptions = std::map<std::string, ConfigOption>;
 
 #ifdef _WINDOWS
 #include <io.h>

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,26 +31,25 @@ namespace mtconnect
   {
     using FilterSet = std::set<std::string>;
     using FilterSetOpt = std::optional<FilterSet>;
-    
+
     class Checkpoint
     {
     public:
       Checkpoint() = default;
       Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
       ~Checkpoint();
-      
+
       void addObservation(ObservationPtr event);
       bool dataSetDifference(ObservationPtr event) const;
       void copy(Checkpoint const &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
       void clear();
       void filter(const FilterSet &filterSet);
       bool hasFilter() const { return bool(m_filter); }
-      
+
       const std::map<std::string, ObservationPtr> &getEvents() const { return m_events; }
-      
-      void getObservations(ObservationList &list,
-                           const FilterSetOpt &filter = std::nullopt) const;
-      
+
+      void getObservations(ObservationList &list, const FilterSetOpt &filter = std::nullopt) const;
+
       ObservationPtr getEventPtr(const std::string &id)
       {
         auto pos = m_events.find(id);
@@ -58,7 +57,7 @@ namespace mtconnect
           return pos->second;
         return nullptr;
       }
-      
+
     protected:
       bool addObservation(ConditionPtr event, ObservationPtr &old);
       bool addObservation(const DataSetEventPtr event, ObservationPtr &old);
@@ -67,5 +66,5 @@ namespace mtconnect
       std::map<std::string, ObservationPtr> m_events;
       FilterSetOpt m_filter;
     };
-  }
+  }  // namespace observation
 }  // namespace mtconnect

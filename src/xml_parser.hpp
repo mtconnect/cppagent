@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,12 +18,12 @@
 #pragma once
 
 #include "assets/cutting_tool.hpp"
-#include "observation/checkpoint.hpp"
 #include "device_model/component.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
 #include "device_model/relationships.hpp"
 #include "globals.hpp"
+#include "observation/checkpoint.hpp"
 
 #include <libxml/tree.h>
 
@@ -49,7 +49,8 @@ namespace mtconnect
     void loadDocument(const std::string &aDoc);
 
     // Get std::list of data items in path
-    void getDataItems(observation::FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
+    void getDataItems(observation::FilterSet &filterSet, const std::string &path,
+                      xmlNodePtr node = nullptr);
 
   protected:
     // Main method to process the nodes and return the objects

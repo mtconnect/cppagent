@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +16,11 @@
 //
 
 #pragma once
-#include "observation/change_observer.hpp"
 #include "definitions.hpp"
 #include "device_model/component.hpp"
-#include "globals.hpp"
 #include "entity/requirement.hpp"
+#include "globals.hpp"
+#include "observation/change_observer.hpp"
 
 #include <dlib/threads.h>
 
@@ -261,10 +261,10 @@ namespace mtconnect
     {
       if (!m_conversionDetermined)
       {
-        const_cast<DataItem*>(this)->m_conversionDetermined = true;
-        const_cast<DataItem*>(this)->m_conversionRequired = !m_nativeUnits.empty();
+        const_cast<DataItem *>(this)->m_conversionDetermined = true;
+        const_cast<DataItem *>(this)->m_conversionRequired = !m_nativeUnits.empty();
       }
-      
+
       return m_conversionRequired;
     }
     void convertValue(entity::Value &value) const;

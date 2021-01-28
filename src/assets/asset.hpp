@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,14 +36,8 @@ namespace mtconnect
     Asset(const std::string &name, const entity::Properties &props)
       : entity::Entity(name, props), m_removed(false)
     {
-      auto rp = m_properties.find("removed");
-      if (rp != m_properties.end())
-      {
-        if (std::holds_alternative<bool>(rp->second))
-          m_removed = std::get<bool>(rp->second);
-        else
-          entity::ConvertValueToType(rp->second, entity::BOOL);
-      }
+      auto removed = maybeGet<bool>("removed");
+      m_removed = removed && *removed;
     }
     ~Asset() override = default;
 
@@ -92,11 +86,11 @@ namespace mtconnect
       else
         return std::nullopt;
     }
-    const std::optional<std::string> getTimestamp() const
+    const std::optional<Timestamp> getTimestamp() const
     {
       const auto &v = getProperty("timestamp");
-      if (std::holds_alternative<std::string>(v))
-        return std::get<std::string>(v);
+      if (std::holds_alternative<Timestamp>(v))
+        return std::get<Timestamp>(v);
       else
         return std::nullopt;
     }

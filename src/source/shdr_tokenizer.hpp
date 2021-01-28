@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "adapter.hpp"
 #include "entity/entity.hpp"
+#include "transform.hpp"
 
 #include <chrono>
 #include <regex>
@@ -27,14 +27,40 @@ namespace mtconnect
 {
   class Agent;
 
-  namespace adapter
+  namespace source
   {
     using TokenList = std::list<std::string>;
-
-    class ShdrTokenizer
+    class Tokens : public entity::Entity
     {
     public:
-      ShdrTokenizer() = default;
+      using entity::Entity::Entity;
+      Tokens(const Tokens &) = default;
+
+      TokenList m_tokens;
+    };
+
+    class ShdrTokenizer : public Transform
+    {
+    public:
+      using Transform::Transform;
+
+      const entity::EntityPtr operator()(const entity::EntityPtr data) override
+      {
+        auto body = data->maybeGetValue<std::string>();
+        if (body)
+        {
+          auto result = std::make_shared<Tokens>("Tokens", entity::Properties());
+          result->m_tokens = tokenize(*body);
+          return next(result);
+        }
+        else
+        {
+          throw entity::EntityError("Cannot find data for tokenization");
+          return nullptr;
+        }
+      }
+
+      ~ShdrTokenizer() = default;
 
       template <typename T>
       inline static std::string remove(const T &range, const char c)
@@ -116,7 +142,13 @@ namespace mtconnect
       }
 
     protected:
-      static std::regex m_pattern;
+      static inline const char *EXP =
+          "^("
+          R"RE("(([^"\\\|]*(\\\|)?)+)")RE"
+          "|"
+          R"RE(([^|]*))RE"
+          R"RE()(\||$))RE";
+      inline static std::regex m_pattern{EXP, std::regex::optimize | std::regex::ECMAScript};
     };
-  }  // namespace adapter
+  }  // namespace source
 }  // namespace mtconnect

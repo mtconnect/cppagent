@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,10 +93,8 @@ namespace mtconnect
 
         return std::nullopt;
       }
-       void setValue(const Value &v)
-      {
-        setProperty("VALUE", v);
-      }
+      void setValue(const Value &v) { setProperty("VALUE", v); }
+      void erase(const std::string &name) { m_properties.erase(name); }
 
       template <typename T>
       const T &get(const std::string &name) const
@@ -115,9 +113,16 @@ namespace mtconnect
       {
         return OptionallyGet<T>(name, m_properties);
       }
+      template <typename T>
+      const std::optional<T> maybeGetValue() const
+      {
+        return OptionallyGet<T>("VALUE", m_properties);
+      }
 
       void setOrder(const OrderMapPtr order) { m_order = order; }
       const OrderMapPtr getOrder() const { return m_order; }
+      auto find(const std::string &name) { return m_properties.find(name); }
+      auto erase(Properties::iterator &it) { return m_properties.erase(it); }
 
       // Entity Factory
     protected:

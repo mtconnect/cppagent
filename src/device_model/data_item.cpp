@@ -1,6 +1,6 @@
 //
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -185,11 +185,14 @@ namespace mtconnect
     if (m_dataSource != source)
       m_dataSource = source;
 
+      // TODO: Need to get from data source
+#if 0
     if (!m_dataSource->conversionRequired())
     {
       m_conversionRequired = false;
       m_conversionDetermined = true;
     }
+#endif
   }
 
   std::map<string, string> DataItem::buildAttributes() const
@@ -326,14 +329,14 @@ namespace mtconnect
   {
     if (!conversionRequired())
       return value;
-    
+
     if (m_hasFactor)
     {
       return static_cast<double>((value + m_conversionOffset) * m_conversionFactor);
     }
     else
     {
-      const_cast<DataItem*>(this)->computeConversionFactors();
+      const_cast<DataItem *>(this)->computeConversionFactors();
       return convertValue(value);
     }
   }
@@ -343,7 +346,7 @@ namespace mtconnect
     // Check if the type is an alarm or if it doesn't have units
     if (!conversionRequired())
       return;
-    
+
     if (m_hasFactor)
     {
       if (m_threeD)
@@ -361,7 +364,7 @@ namespace mtconnect
     }
     else
     {
-      const_cast<DataItem*>(this)->computeConversionFactors();
+      const_cast<DataItem *>(this)->computeConversionFactors();
       convertValue(value);
     }
   }

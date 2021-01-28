@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,10 +73,8 @@ namespace mtconnect
       return factory;
     }
 
-    ObservationPtr Observation::make(const DataItem *dataItem,
-                                     const Properties &incompingProps,
-                                     const Timestamp &timestamp,
-                                     entity::ErrorList &errors)
+    ObservationPtr Observation::make(const DataItem *dataItem, const Properties &incompingProps,
+                                     const Timestamp &timestamp, entity::ErrorList &errors)
     {
       auto props = entity::Properties(incompingProps);
       props.insert_or_assign("dataItemId", dataItem->getId());
@@ -91,15 +89,35 @@ namespace mtconnect
       if (dataItem->isCondition())
         props.insert_or_assign("type", dataItem->getType());
       props.insert_or_assign("timestamp", timestamp);
-      
+
+      bool unavailable{false};
       string level;
       auto l = props.find("level");
       if (l != props.end())
       {
         level = std::get<string>(l->second);
+        if (iequals(level, "unavailable"))
+          unavailable = true;
         props.erase(l);
       }
-      
+      else if (l == props.end() && dataItem->isCondition())
+      {
+        unavailable = true;
+      }
+
+      // Check for unavailable
+      auto v = props.find("VALUE");
+      if (v != props.end() && holds_alternative<string>(v->second) &&
+          iequals(std::get<string>(v->second), "unavailable"))
+      {
+        unavailable = true;
+        props.erase(v);
+      }
+      else if (v == props.end() && !dataItem->isCondition())
+      {
+        unavailable = true;
+      }
+
       string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedElementName();
       if (dataItem->is3D())
         key += ":3D";
@@ -127,6 +145,8 @@ namespace mtconnect
           dataItem->convertValue(value);
         }
       }
+      if (unavailable)
+        obs->makeUnavailable();
       if (!dataItem->isCondition())
         obs->setEntityName();
       else
@@ -189,7 +209,7 @@ namespace mtconnect
       }
       return factory;
     }
-    
+
     FactoryPtr ThreeSpaceSample::getFactory()
     {
       static FactoryPtr factory;
@@ -203,7 +223,6 @@ namespace mtconnect
       }
       return factory;
     }
-
 
     FactoryPtr Timeseries::getFactory()
     {
@@ -222,8 +241,8 @@ namespace mtconnect
           return ent;
         });
         factory->addRequirements(
-            Requirements({{"sampleCount", INTEGER, false}, {"VALUE", VECTOR,
-                          0, entity::Requirement::Infinite}}));
+            Requirements({{"sampleCount", INTEGER, false},
+                          {"VALUE", VECTOR, 0, entity::Requirement::Infinite}}));
       }
       return factory;
     }
@@ -235,7 +254,7 @@ namespace mtconnect
       {
         factory = make_shared<Factory>(*Observation::getFactory());
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-          auto cond =  make_shared<Condition>(name, props);
+          auto cond = make_shared<Condition>(name, props);
           if (cond)
           {
             auto code = cond->m_properties.find("nativeCode");
@@ -293,11 +312,11 @@ namespace mtconnect
           return make_shared<Alarm>(name, props);
         });
         factory->addRequirements(Requirements(
-            {{"code", true}, {"nativeCode", false}, {"state", false}, {"severity", false}}));
+            {{"code", false}, {"nativeCode", false}, {"state", false}, {"severity", false}}));
       }
       return factory;
     }
-    
+
     bool Condition::replace(ConditionPtr &old, ConditionPtr &_new)
     {
       if (!m_prev)
@@ -349,7 +368,7 @@ namespace mtconnect
   // --------------------------------------------------------------------
   // --------------------------------------------------------------------
   // --------------------------------------------------------------------
-  
+
 #if 0
   Observation *Observation::getFirst()
   {

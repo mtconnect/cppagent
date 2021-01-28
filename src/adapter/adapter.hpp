@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,49 +44,10 @@ namespace mtconnect
   {
     class Adapter;
 
-    using Micros = std::chrono::microseconds;
-    using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
-
-    struct Context
-    {
-      Context() = default;
-      ~Context() = default;
-      Context(const Context &) = default;
-      
-      using GetDevice = std::function<const Device *(const std::string &id)>;
-      using GetDataItem =
-          std::function<const DataItem *(const Device *device, const std::string &id)>;
-      using Now = std::function<Timestamp()>;
-      using DeviceChanged = std::function<void(Device *, const std::string &, const std::string &)>;
-
-      // Functions to handle get information
-      GetDevice m_getDevice;
-      GetDataItem m_getDataItem;
-      Now m_now{ []{ return std::chrono::system_clock::now(); }};
-      
-      // Notification methods
-      DeviceChanged m_deviceChanged;
-
-      // Logging Context
-      std::set<std::string> m_logOnce;
-
-      // Time handling
-      bool m_ignoreTimestamps{false};
-      bool m_relativeTime{false};
-      bool m_dupCheck{false};
-      bool m_conversionRequired{false};
-      bool m_upcaseValue{false};
-      bool m_realTime{false};
-
-      std::string m_defaultDevice;
-      std::optional<Timestamp> m_base;
-      Micros m_offset;
-    };
-
     struct Handler
     {
-      using ProcessData = std::function<void(const std::string &, Context &context)>;
-      using Connect = std::function<void(const Adapter &, Context &context)>;
+      using ProcessData = std::function<void(const std::string &)>;
+      using Connect = std::function<void(const Adapter &)>;
 
       ProcessData m_processData;
       ProcessData m_protocolCommand;
@@ -100,8 +61,9 @@ namespace mtconnect
     {
     public:
       // Associate adapter with a device & connect to the server & port
-      Adapter(const Context &context, const std::string &server, const unsigned int port,
-              std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
+      Adapter(const Handler &context, const std::string &server, const unsigned int port,
+              const ConfigOptions &options);
+      Adapter(const Adapter &) = delete;
 
       // Virtual destructor
       ~Adapter() override;
@@ -109,32 +71,11 @@ namespace mtconnect
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
 
       // Set pointer to the agent
-      bool isDupChecking() const { return m_context.m_dupCheck; }
-      void setDupCheck(bool flag) { m_context.m_dupCheck = flag; }
-      Device *getDevice() const { return m_device; }
-      const auto &getDeviceName() const { return m_deviceName; }
-      auto &getAllDevices() const { return m_allDevices; }
-
-      bool isAutoAvailable() const { return m_autoAvailable; }
-      void setAutoAvailable(bool flag) { m_autoAvailable = flag; }
-
-      bool isIgnoringTimestamps() const { return m_context.m_ignoreTimestamps; }
-      void setIgnoreTimestamps(bool flag) { m_context.m_ignoreTimestamps = flag; }
-
       void setReconnectInterval(std::chrono::milliseconds interval)
       {
         m_reconnectInterval = interval;
       }
       std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
-
-      void setRelativeTime(bool flag) { m_context.m_relativeTime = flag; }
-      bool getRelativeTime() const { return m_context.m_relativeTime; }
-
-      void setConversionRequired(bool flag) { m_context.m_conversionRequired = flag; }
-      bool conversionRequired() const { return m_context.m_conversionRequired; }
-
-      void setUpcaseValue(bool flag) { m_context.m_upcaseValue = flag; }
-      bool upcaseValue() const { return m_context.m_upcaseValue; }
 
       auto &getTerminator() const { return m_terminator; }
 
@@ -143,31 +84,31 @@ namespace mtconnect
       void protocolCommand(const std::string &data) override
       {
         if (m_handler && m_handler->m_protocolCommand)
-          m_handler->m_protocolCommand(data, m_context);
+          m_handler->m_protocolCommand(data);
       }
 
       // Method called when connection is lost.
       void connecting() override
       {
         if (m_handler && m_handler->m_connecting)
-          m_handler->m_connecting(*this, m_context);
+          m_handler->m_connecting(*this);
       }
       void disconnected() override
       {
-        m_context.m_base.reset();
         if (m_handler && m_handler->m_disconnected)
-          m_handler->m_disconnected(*this, m_context);
+          m_handler->m_disconnected(*this);
       }
       void connected() override
       {
         if (m_handler && m_handler->m_connected)
-          m_handler->m_connected(*this, m_context);
+          m_handler->m_connected(*this);
       }
 
       // Agent Device methods
       const std::string &getUrl() const { return m_url; }
       const std::string &getIdentity() const { return m_identity; }
 
+#if 0
       bool isDuplicate(DataItem *dataItem, const std::string &value, double timeOffset) const
       {
         if (!dataItem->allowDups())
@@ -181,6 +122,7 @@ namespace mtconnect
         else
           return false;
       }
+#endif
 
       // Stop
       void stop();
@@ -198,24 +140,14 @@ namespace mtconnect
       std::string extractTime(const std::string &time, double &offset);
 
     protected:
-      // Pointer to the agent
-      Context m_context;
-
-      Device *m_device;
-      std::vector<Device *> m_allDevices;
-
       std::unique_ptr<Handler> m_handler;
 
       // Name of device associated with adapter
-      std::string m_deviceName;
       std::string m_url;
       std::string m_identity;
 
       // If the connector has been running
       bool m_running;
-
-      // Check for dups
-      bool m_autoAvailable;
 
       std::optional<std::string> m_terminator;
       std::stringstream m_body;

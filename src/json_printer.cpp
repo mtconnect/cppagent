@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ using json = nlohmann::json;
 namespace mtconnect
 {
   using namespace observation;
-  
+
   static dlib::logger g_logger("json.printer");
 
   JsonPrinter::JsonPrinter(const string version, bool pretty)
@@ -776,8 +776,7 @@ namespace mtconnect
 
   std::string JsonPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const uint64_t firstSeq,
-                                       const uint64_t lastSeq,
-                                       ObservationList &observations) const
+                                       const uint64_t lastSeq, ObservationList &observations) const
   {
     json streams = json::array();
 

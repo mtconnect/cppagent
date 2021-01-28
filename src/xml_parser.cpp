@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,7 +56,7 @@ using namespace std;
 namespace mtconnect
 {
   using namespace observation;
-  
+
   static dlib::logger g_logger("xml.parser");
 
   template <class T>

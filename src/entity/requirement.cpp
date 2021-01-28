@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -131,17 +131,16 @@ namespace mtconnect
           auto &v = std::get<entity::Vector>(value);
           if (v.size() > m_upperMultiplicity)
           {
-            throw PropertyError("Vector size " + to_string(v.size()) +
-                                " is greater than " + to_string(m_upperMultiplicity),
+            throw PropertyError("Vector size " + to_string(v.size()) + " is greater than " +
+                                    to_string(m_upperMultiplicity),
                                 m_name);
           }
           if (m_lowerMultiplicity != 0 && v.size() < m_lowerMultiplicity)
           {
-            throw PropertyError("Vector size " + to_string(v.size()) +
-                                " is less than " + to_string(m_lowerMultiplicity),
+            throw PropertyError("Vector size " + to_string(v.size()) + " is less than " +
+                                    to_string(m_lowerMultiplicity),
                                 m_name);
           }
-
         }
       }
 
