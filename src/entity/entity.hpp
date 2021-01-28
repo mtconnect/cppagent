@@ -44,6 +44,7 @@ namespace mtconnect
     class Entity : public std::enable_shared_from_this<Entity>
     {
     public:
+      Entity() {}
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
       {
       }

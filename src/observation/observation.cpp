@@ -186,7 +186,9 @@ namespace mtconnect
           return ent;
         });
         factory->addRequirements(
-            Requirements{{"count", INTEGER, false}, {"VALUE", DATA_SET, false}});
+            Requirements{{"count", INTEGER, false}, {"VALUE", DATA_SET, false},
+          {"resetTriggered", false}
+        });
       }
 
       return factory;

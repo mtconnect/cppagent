@@ -19,29 +19,24 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/shdr_parser.hpp"
-#include "adapter/timestamp_extractor.hpp"
-#include "adapter/data_item_mapper.hpp"
-
+#include "source/shdr_token_mapper.hpp"
+#include "source/timestamp_extractor.hpp"
+#include "observation/observation.hpp"
 #include <chrono>
 
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source;
+using namespace mtconnect::observation;
 using namespace std;
-
-class MockDevice : public Device
-{
-public:
-  
-};
 
 class DataItemMappingTest : public testing::Test
 {
 protected:
   void SetUp() override
   {
-    m_context.m_getDevice = [](const std::string &uuid) { return nullptr; };
-    m_context.m_getDataItem = [this](const Device *, const std::string &name) { return m_dataItems[name].get(); };
+    m_mapper = make_shared<ShdrTokenMapper>();
+    m_mapper->m_getDevice = [](const std::string &uuid) { return nullptr; };
+    m_mapper->m_getDataItem = [this](const Device *, const std::string &name) { return m_dataItems[name].get(); };
   }
 
 
@@ -58,9 +53,18 @@ protected:
     
     return r;
   }
+  
+  TimestampedPtr makeTimestamped(TokenList tokens)
+  {
+    auto ts = make_shared<Timestamped>();
+    ts->m_tokens = tokens;
+    ts->m_timestamp = chrono::system_clock::now();
+    ts->setProperty("timestamp", ts->m_timestamp);
+    return ts;
+  }
  
+  shared_ptr<ShdrTokenMapper> m_mapper;
   std::map<string,unique_ptr<DataItem>> m_dataItems;
-  Context m_context;
 };
 
 inline DataSetEntry operator"" _E(const char *c, std::size_t)
@@ -71,95 +75,90 @@ inline DataSetEntry operator"" _E(const char *c, std::size_t)
 TEST_F(DataItemMappingTest, SimpleEvent)
 {
   auto di = makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
-  TokenList tokens{"a", "READY"};
+  auto ts = makeTimestamped({"a", "READY"});
   
-  ShdrObservation obs;
-  auto token = tokens.cbegin();
-  MapTokensToDataItem(obs, token, tokens.end(), m_context);
-  auto &dio = get<DataItemObservation>(obs.m_observed);
+  auto observations = (*m_mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
+    
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+  auto obs = oblist.front();
+  auto event = dynamic_pointer_cast<Event>(obs);
+  ASSERT_TRUE(event);
   
-  ASSERT_EQ(di, dio.m_dataItem);
-  ASSERT_TRUE(holds_alternative<string>(obs.m_properties["VALUE"]));
-  ASSERT_EQ("READY", get<string>(obs.m_properties["VALUE"]));
+  ASSERT_EQ(di, event->getDataItem());
+  ASSERT_TRUE(event->hasProperty("VALUE"));
+  ASSERT_EQ("READY", event->getValue<string>());
 }
 
 TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
 {
   auto di = makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
-  TokenList tokens{"a", "unavailable"};
+  auto ts = makeTimestamped({"a", "unavailable"});
   
-  ShdrObservation obs;
-  auto token = tokens.cbegin();
-  MapTokensToDataItem(obs, token, tokens.end(), m_context);
-  auto &dio = get<DataItemObservation>(obs.m_observed);
+  auto observations = (*m_mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
+    
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+  auto event = dynamic_pointer_cast<Event>(oblist.front());
+  ASSERT_TRUE(event);
   
-  ASSERT_EQ(di, dio.m_dataItem);
-  ASSERT_TRUE(holds_alternative<string>(obs.m_properties["VALUE"]));
-  ASSERT_EQ("UNAVAILABLE", get<string>(obs.m_properties["VALUE"]));
-  ASSERT_TRUE(dio.m_unavailable);
+  ASSERT_EQ(di, event->getDataItem());
+  ASSERT_EQ("UNAVAILABLE", event->getValue<string>());
+  ASSERT_TRUE(event->isUnavailable());
 }
 
 TEST_F(DataItemMappingTest, TwoSimpleEvents)
 {
   auto di = makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
-  TokenList tokens{"a", "READY", "a", "ACTIVE"};
-  auto token = tokens.cbegin();
-
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
+  auto ts = makeTimestamped({"a", "READY", "a", "ACTIVE"});
+  
+  auto observations = (*m_mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
     
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(holds_alternative<string>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("READY", get<string>(obs.m_properties["VALUE"]));
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(2, oblist.size());
+
+  auto oi = oblist.begin();
+    
+  {
+    auto event = dynamic_pointer_cast<Event>(*oi++);
+    ASSERT_TRUE(event);
+    ASSERT_EQ(di, event->getDataItem());
+    ASSERT_EQ("READY", event->getValue<string>());
   }
   
   {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(holds_alternative<string>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("ACTIVE", get<string>(obs.m_properties["VALUE"]));
+    auto event = dynamic_pointer_cast<Event>(*oi++);
+    ASSERT_TRUE(event);
+    ASSERT_EQ(di, event->getDataItem());
+    ASSERT_EQ("ACTIVE", event->getValue<string>());
   }
-
 }
 
 TEST_F(DataItemMappingTest, Message)
 {
   auto di = makeDataItem({{"id", "a"}, {"type", "MESSAGE"}, {"category", "EVENT"}});
-  TokenList tokens{"a", "A123", "some text"};
-  auto token = tokens.cbegin();
-  
-  m_context.m_upcaseValue = false;
+  auto ts = makeTimestamped({"a", "A123", "some text"});
+
+  auto observations = (*m_mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
+    
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
 
   {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
+    auto event = dynamic_pointer_cast<Message>(oblist.front());
+    ASSERT_TRUE(event);
+    ASSERT_EQ(di, event->getDataItem());
     ASSERT_TRUE(di->isMessage());
-    ASSERT_TRUE(holds_alternative<string>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("some text", get<string>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("A123", get<string>(obs.m_properties["nativeCode"]));
-  }
-  
-  token = tokens.cbegin();
-
-  m_context.m_upcaseValue = true;
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(di->isMessage());
-    ASSERT_TRUE(holds_alternative<string>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("SOME TEXT", get<string>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("A123", get<string>(obs.m_properties["nativeCode"]));
+    ASSERT_EQ("some text", event->getValue<string>());
+    ASSERT_EQ("A123", event->get<string>("nativeCode"));
   }
 }
 
@@ -168,19 +167,19 @@ TEST_F(DataItemMappingTest, SampleTest)
   auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
     {"units", "MILLIMETER"}
   });
-  TokenList tokens{"a", "1.23456"};
-  auto token = tokens.cbegin();
-  
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
+  auto ts = makeTimestamped({"a", "1.23456"});
+  auto observations = (*m_mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
     
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(di->isSample());
-    ASSERT_TRUE(holds_alternative<double>(obs.m_properties["VALUE"]));
-    ASSERT_EQ(1.23456, get<double>(obs.m_properties["VALUE"]));
-  }
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto sample = dynamic_pointer_cast<Sample>(oblist.front());
+  ASSERT_TRUE(sample);
+  ASSERT_EQ(di, sample->getDataItem());
+  ASSERT_TRUE(di->isSample());
+  ASSERT_EQ(1.23456, sample->getValue<double>());
 }
 
 TEST_F(DataItemMappingTest, SampleTestFormatIssue)
@@ -188,38 +187,32 @@ TEST_F(DataItemMappingTest, SampleTestFormatIssue)
   makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
     {"units", "MILLIMETER"}
   });
-  TokenList tokens{"a", "ABC"};
-  auto token = tokens.cbegin();
-  
-  {
-    ShdrObservation obs;
-    ASSERT_THROW(MapTokensToDataItem(obs, token, tokens.end(), m_context),
-                 entity::EntityError);
-  }
+  auto ts = makeTimestamped({"a", "ABC"});
+  auto observations = (*m_mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(0, oblist.size());
+  // entity::EntityError
 }
-
 
 TEST_F(DataItemMappingTest, SampleTimeseries)
 {
   auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
     {"units", "MILLIMETER"}, {"representation", "TIME_SERIES"}
   });
-  TokenList tokens{"a", "5", "100", "1.1 1.2 1.3 1.4 1.5"};
-  auto token = tokens.cbegin();
-  
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(di->isSample());
-    ASSERT_TRUE(di->isTimeSeries());
-    ASSERT_TRUE(holds_alternative<entity::Vector>(obs.m_properties["VALUE"]));
-    ASSERT_EQ(entity::Vector({1.1, 1.2, 1.3, 1.4, 1.5}), get<entity::Vector>(obs.m_properties["VALUE"]));
-    ASSERT_EQ(5, get<int64_t>(obs.m_properties["sampleCount"]));
-    ASSERT_EQ(100, get<double>(obs.m_properties["sampleRate"]));
-  }
+  auto ts = makeTimestamped({"a", "5", "100", "1.1 1.2 1.3 1.4 1.5"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto sample = dynamic_pointer_cast<Timeseries>(oblist.front());
+  ASSERT_TRUE(sample);
+  ASSERT_EQ(di, sample->getDataItem());
+  ASSERT_TRUE(di->isTimeSeries());
+  ASSERT_EQ(entity::Vector({1.1, 1.2, 1.3, 1.4, 1.5}), sample->getValue<entity::Vector>());
+  ASSERT_EQ(5, sample->get<int64_t>("sampleCount"));
+  ASSERT_EQ(100.0, sample->get<double>("sampleRate"));
 }
 
 TEST_F(DataItemMappingTest, SampleResetTrigger)
@@ -228,20 +221,18 @@ TEST_F(DataItemMappingTest, SampleResetTrigger)
     {"units", "MILLIMETER"}
   });
   di->setResetTrigger("MANUAL");
-  TokenList tokens{"a", "1.23456:MANUAL"};
-  auto token = tokens.cbegin();
-  
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(di->isSample());
-    ASSERT_TRUE(holds_alternative<double>(obs.m_properties["VALUE"]));
-    ASSERT_EQ(1.23456, get<double>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("MANUAL", get<string>(obs.m_properties["resetTriggered"]));
-  }
+  auto ts = makeTimestamped({"a", "1.23456:MANUAL"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto sample = dynamic_pointer_cast<Sample>(oblist.front());
+  ASSERT_TRUE(sample);
+
+  ASSERT_EQ(di, sample->getDataItem());
+  ASSERT_TRUE(di->isSample());
+  ASSERT_EQ(1.23456, sample->getValue<double>());
+  ASSERT_EQ("MANUAL", sample->get<string>("resetTriggered"));
 }
 
 TEST_F(DataItemMappingTest, Condition)
@@ -250,23 +241,20 @@ TEST_F(DataItemMappingTest, Condition)
   });
 //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
-  TokenList tokens{"a", "fault", "A123", "bad", "HIGH", "Something Bad"};
-  auto token = tokens.cbegin();
-  ASSERT_TRUE(di->isCondition());
+  auto ts = makeTimestamped({"a", "fault", "A123", "bad", "HIGH", "Something Bad"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto cond = dynamic_pointer_cast<Condition>(oblist.front());
+  ASSERT_TRUE(cond);
   
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(di->isCondition());
-    ASSERT_TRUE(holds_alternative<string>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("Something Bad", get<string>(obs.m_properties["VALUE"]));
-    ASSERT_EQ("A123", get<string>(obs.m_properties["nativeCode"]));
-    ASSERT_EQ("HIGH", get<string>(obs.m_properties["qualifier"]));
-    ASSERT_EQ("fault", get<string>(obs.m_properties["level"]));
-  }
+  ASSERT_EQ(di, cond->getDataItem());
+  ASSERT_TRUE(di->isCondition());
+  ASSERT_EQ("Something Bad", cond->getValue<string>());
+  ASSERT_EQ("A123", cond->get<string>("nativeCode"));
+  ASSERT_EQ("HIGH", cond->get<string>("qualifier"));
+  ASSERT_EQ("Fault", cond->getName());
 }
 
 TEST_F(DataItemMappingTest, ConditionNormal)
@@ -275,44 +263,42 @@ TEST_F(DataItemMappingTest, ConditionNormal)
   });
 //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
-  TokenList tokens{"a", "normal", "", "", "", ""};
-  auto token = tokens.cbegin();
-  ASSERT_TRUE(di->isCondition());
+  auto ts = makeTimestamped({"a", "normal", "", "", "", ""});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto cond = dynamic_pointer_cast<Condition>(oblist.front());
+  ASSERT_TRUE(cond);
   
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(di->isCondition());
-    ASSERT_TRUE(holds_alternative<string>(obs.m_properties["VALUE"]));
-    ASSERT_TRUE(get<string>(obs.m_properties["VALUE"]).empty());
-    ASSERT_TRUE(get<string>(obs.m_properties["nativeCode"]).empty());
-    ASSERT_TRUE(get<string>(obs.m_properties["qualifier"]).empty());
-    ASSERT_EQ("normal", get<string>(obs.m_properties["level"]));
-  }
+  ASSERT_EQ(di, cond->getDataItem());
+  ASSERT_TRUE(di->isCondition());
+  ASSERT_FALSE(cond->hasProperty("VALUE"));
+  ASSERT_FALSE(cond->hasProperty("nativeCode"));
+  ASSERT_FALSE(cond->hasProperty("qualifier"));
+  ASSERT_EQ("Normal", cond->getName());
 }
+
 
 TEST_F(DataItemMappingTest, ConditionNormalPartial)
 {
   auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "CONDITION"}});
 //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
-  TokenList tokens{"a", "normal"};
-  auto token = tokens.cbegin();
-  ASSERT_TRUE(di->isCondition());
+  auto ts = makeTimestamped({"a", "normal"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto cond = dynamic_pointer_cast<Condition>(oblist.front());
+  ASSERT_TRUE(cond);
   
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_TRUE(di->isCondition());
-    ASSERT_EQ(1, obs.m_properties.size());
-    ASSERT_EQ("normal", get<string>(obs.m_properties["level"]));
-  }
+  ASSERT_EQ(di, cond->getDataItem());
+  ASSERT_TRUE(di->isCondition());
+  ASSERT_FALSE(cond->hasProperty("VALUE"));
+  ASSERT_FALSE(cond->hasProperty("nativeCode"));
+  ASSERT_FALSE(cond->hasProperty("qualifier"));
+  ASSERT_EQ("Normal", cond->getName());
 }
 
 TEST_F(DataItemMappingTest, DataSet)
@@ -321,25 +307,22 @@ TEST_F(DataItemMappingTest, DataSet)
     { "representation", "DATA_SET" }
   });
 
-  TokenList tokens{"a", "a=1 b=2 c={abc}"};
-  auto token = tokens.cbegin();
-  ASSERT_TRUE(di->isDataSet());
+  auto ts = makeTimestamped({"a", "a=1 b=2 c={abc}"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto set = dynamic_pointer_cast<DataSetEvent>(oblist.front());
+  ASSERT_TRUE(set);
+  ASSERT_EQ("SomethingDataSet", set->getName());
+
+  ASSERT_EQ(di, set->getDataItem());
   
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_EQ(1, obs.m_properties.size());
-    ASSERT_TRUE(holds_alternative<DataSet>(obs.m_properties["VALUE"]));
-    
-    auto &ds = get<DataSet>(obs.m_properties["VALUE"]);
-    ASSERT_EQ(3, ds.size());
-    ASSERT_EQ(1, get<int64_t>(ds.find("a"_E)->m_value));
-    ASSERT_EQ(2, get<int64_t>(ds.find("b"_E)->m_value));
-    ASSERT_EQ("abc", get<string>(ds.find("c"_E)->m_value));
-  }
+  auto &ds = set->getValue<DataSet>();
+  ASSERT_EQ(3, ds.size());
+  ASSERT_EQ(1, get<int64_t>(ds.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(ds.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(ds.find("c"_E)->m_value));
 }
 
 TEST_F(DataItemMappingTest, Table)
@@ -348,76 +331,70 @@ TEST_F(DataItemMappingTest, Table)
     { "representation", "TABLE" }
   });
 
-  TokenList tokens{"a", "a={c=1 n=3.0} b={d=2 e=3} c={x=abc y=def}"};
-  auto token = tokens.cbegin();
-  ASSERT_TRUE(di->isTable());
+  auto ts = makeTimestamped({"a", "a={c=1 n=3.0} b={d=2 e=3} c={x=abc y=def}"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto set = dynamic_pointer_cast<DataSetEvent>(oblist.front());
+  ASSERT_TRUE(set);
+
+  ASSERT_EQ(di, set->getDataItem());
+  ASSERT_EQ("SomethingTable", set->getName());
   
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    auto &dio = get<DataItemObservation>(obs.m_observed);
-    
-    ASSERT_EQ(di, dio.m_dataItem);
-    ASSERT_EQ(1, obs.m_properties.size());
-    ASSERT_TRUE(holds_alternative<DataSet>(obs.m_properties["VALUE"]));
-    
-    auto &ds = get<DataSet>(obs.m_properties["VALUE"]);
-    ASSERT_EQ(3, ds.size());
-    auto a = get<DataSet>(ds.find("a"_E)->m_value);
-    ASSERT_EQ(2, a.size());
-    ASSERT_EQ(1, get<int64_t>(a.find("c"_E)->m_value));
-    ASSERT_EQ(3.0, get<double>(a.find("n"_E)->m_value));
-
-    auto b = get<DataSet>(ds.find("b"_E)->m_value);
-    ASSERT_EQ(2, a.size());
-    ASSERT_EQ(2, get<int64_t>(b.find("d"_E)->m_value));
-    ASSERT_EQ(3, get<int64_t>(b.find("e"_E)->m_value));
-
-    auto c = get<DataSet>(ds.find("c"_E)->m_value);
-    ASSERT_EQ(2, c.size());
-    ASSERT_EQ("abc", get<string>(c.find("x"_E)->m_value));
-    ASSERT_EQ("def", get<string>(c.find("y"_E)->m_value));
-  }
+  auto &ds = set->getValue<DataSet>();
+  ASSERT_EQ(3, ds.size());
+  auto a = get<DataSet>(ds.find("a"_E)->m_value);
+  ASSERT_EQ(2, a.size());
+  ASSERT_EQ(1, get<int64_t>(a.find("c"_E)->m_value));
+  ASSERT_EQ(3.0, get<double>(a.find("n"_E)->m_value));
+  
+  auto b = get<DataSet>(ds.find("b"_E)->m_value);
+  ASSERT_EQ(2, a.size());
+  ASSERT_EQ(2, get<int64_t>(b.find("d"_E)->m_value));
+  ASSERT_EQ(3, get<int64_t>(b.find("e"_E)->m_value));
+  
+  auto c = get<DataSet>(ds.find("c"_E)->m_value);
+  ASSERT_EQ(2, c.size());
+  ASSERT_EQ("abc", get<string>(c.find("x"_E)->m_value));
+  ASSERT_EQ("def", get<string>(c.find("y"_E)->m_value));
 }
 
 TEST_F(DataItemMappingTest, DataSetResetTriggered)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"},
+  makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"},
     { "representation", "DATA_SET" }
   });
 
-  TokenList tokens{"a", ":MANUAL a=1 b=2 c={abc}"};
-  auto token = tokens.cbegin();
-  ASSERT_TRUE(di->isDataSet());
-  
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
-    
-    ASSERT_EQ(2, obs.m_properties.size());
-    ASSERT_EQ("MANUAL", get<string>(obs.m_properties["resetTriggered"]));
-    auto &ds = get<DataSet>(obs.m_properties["VALUE"]);
-    ASSERT_EQ(3, ds.size());
-  }
+  auto ts = makeTimestamped({"a", ":MANUAL a=1 b=2 c={abc}"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto set = dynamic_pointer_cast<DataSetEvent>(oblist.front());
+  ASSERT_TRUE(set);
+
+  ASSERT_EQ("SomethingDataSet", set->getName());
+  ASSERT_EQ("MANUAL", set->get<string>("resetTriggered"));
+  auto &ds = set->getValue<DataSet>();
+  ASSERT_EQ(3, ds.size());
 }
 
 TEST_F(DataItemMappingTest, TableResetTriggered)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"},
+  makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"},
     { "representation", "TABLE" }
   });
 
-  TokenList tokens{"a", ":DAY a={c=1 n=3.0} b={d=2 e=3} c={x=abc y=def}"};
-  auto token = tokens.cbegin();
-  ASSERT_TRUE(di->isTable());
-  
-  {
-    ShdrObservation obs;
-    MapTokensToDataItem(obs, token, tokens.end(), m_context);
+  auto ts = makeTimestamped({"a", ":DAY a={c=1 n=3.0} b={d=2 e=3} c={x=abc y=def}"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+
+  auto set = dynamic_pointer_cast<DataSetEvent>(oblist.front());
+  ASSERT_TRUE(set);
     
-    ASSERT_EQ(2, obs.m_properties.size());
-    ASSERT_EQ("DAY", get<string>(obs.m_properties["resetTriggered"]));
-    auto &ds = get<DataSet>(obs.m_properties["VALUE"]);
-    ASSERT_EQ(3, ds.size());
-  }
+  ASSERT_EQ("DAY", set->get<string>("resetTriggered"));
+  auto &ds = set->getValue<DataSet>();
+  ASSERT_EQ(3, ds.size());
 }

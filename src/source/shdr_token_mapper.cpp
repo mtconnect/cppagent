@@ -134,7 +134,7 @@ namespace mtconnect
       Properties props;
       for (auto req = reqs.begin(); token != end && req != reqs.end(); token++, req++)
       {
-        const string &tok = *token++;
+        const string &tok = *token;
 
         if (tok.empty())
         {
@@ -228,12 +228,6 @@ namespace mtconnect
       if (reqs != nullptr)
       {
         auto res = zipProperties(dataItem, timestamp, *reqs, token, end, errors);
-        const char *field = dataItem->isCondition() ? "level" : "VALUE";
-        if (!res->hasProperty(field))
-        {
-          res->makeUnavailable();
-        }
-
         return res;
       }
       else
@@ -334,6 +328,7 @@ namespace mtconnect
           }
         }
 
+        res->m_tokens.clear();
         res->setValue(entities);
         return next(res);
       }
