@@ -29,6 +29,8 @@ using namespace mtconnect;
 using namespace mtconnect::source;
 using namespace mtconnect::observation;
 using namespace std;
+using namespace std::literals;
+using namespace std::chrono_literals;
 
 class DuplicateFilterTest : public testing::Test
 {
@@ -56,11 +58,11 @@ protected:
   }
   
   
-  const EntityPtr observe(TokenList tokens)
+  const EntityPtr observe(TokenList tokens, Timestamp now = chrono::system_clock::now())
   {
     auto ts = make_shared<Timestamped>();
     ts->m_tokens = tokens;
-    ts->m_timestamp = chrono::system_clock::now();
+    ts->m_timestamp = now;
     ts->setProperty("timestamp", ts->m_timestamp);
 
     return (*m_mapper)(ts);
@@ -114,26 +116,80 @@ TEST_F(DuplicateFilterTest, test_simple_sample)
 
 TEST_F(DuplicateFilterTest, test_minimum_delta)
 {
-  auto a = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
+  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
     {"units", "MILLIMETER"}
   });
-  a->setMinmumDelta(1.0);
   
   auto filter = make_shared<DuplicateFilter>();
   filter->bindTo(m_mapper);
 
   auto rate = make_shared<RateFilter>();
+  rate->addMinimumDelta("a", 1.0);
   rate->bindTo(filter);
 
-  auto os1 = observe({"a", "1.5"});
-  auto list1 = os1->getValue<EntityList>();
-  ASSERT_EQ(1, list1.size());
-  
-  auto os2 = observe({"a", "1.5"});
-  auto list2 = os2->getValue<EntityList>();
-  ASSERT_EQ(0, list2.size());
+  {
+    auto os = observe({"a", "1.5"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+  }
+  {
+    auto os = observe({"a", "1.6"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+  {
+    auto os = observe({"a", "1.8"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+  {
+    auto os = observe({"a", "2.8"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+  }
+  {
+    auto os = observe({"a", "2.0"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+  {
+    auto os = observe({"a", "1.7"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+  }
+}
 
-  auto os3 = observe({"a", "1.6"});
-  auto list3 = os3->getValue<EntityList>();
-  ASSERT_EQ(1, list3.size());
+TEST_F(DuplicateFilterTest, test_period_filter)
+{
+  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
+    {"units", "MILLIMETER"}
+  });
+  
+  Timestamp now = chrono::system_clock::now();
+
+  auto rate = make_shared<RateFilter>();
+  rate->addMinimumDuration("a", 10.0s);
+  rate->bindTo(m_mapper);
+  
+  {
+    auto os = observe({"a", "1.5"}, now);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+  }
+  {
+    auto os = observe({"a", "1.5"}, now + 2s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+  {
+    auto os = observe({"a", "1.5"}, now + 5s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+  {
+    auto os = observe({"a", "1.5"}, now + 11s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+  }
+
 }

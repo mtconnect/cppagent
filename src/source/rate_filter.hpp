@@ -27,10 +27,9 @@ namespace mtconnect
     {
     public:
       
-      bool filterMinimumDelta(const DataItem *di, double value)
+      bool filterMinimumDelta(const std::string &id, double value, double fv)
       {
-        auto last = m_lastSampleValue.find(di->getId());
-        double fv = di->getFilterValue();
+        auto last = m_lastSampleValue.find(id);
         if (last != m_lastSampleValue.end())
         {
           double lv = last->second;
@@ -42,21 +41,21 @@ namespace mtconnect
         }
         else
         {
-          m_lastSampleValue[di->getId()] = value;
+          m_lastSampleValue[id] = value;
         }
         
         return true;
       }
       
-      bool filterPeriod(const DataItem *di, Timestamp &value)
+      bool filterPeriod(const std::string &id, Timestamp &value,
+                        const std::chrono::duration<double> md)
       {
         using namespace std;
-        auto last = m_lastTimeOffset.find(di->getId());
-        auto fv = chrono::duration<double>(di->getFilterPeriod());
+        auto last = m_lastTimeOffset.find(id);
         if (last != m_lastTimeOffset.end())
         {
           auto lv = last->second;
-          if (value < (lv + (fv)))
+          if (value < (lv + md))
           {
             return false;
           }
@@ -64,7 +63,7 @@ namespace mtconnect
         }
         else
         {
-          m_lastTimeOffset[di->getId()] = value;
+          m_lastTimeOffset[id] = value;
         }
         
         return true;
@@ -78,24 +77,28 @@ namespace mtconnect
             o)
         {
           auto di = o->getDataItem();
+          auto &id = di->getId();
           if (o->isUnavailable())
           {
-            m_lastSampleValue.erase(di->getId());
-            m_lastTimeOffset.erase(di->getId());
+            m_lastSampleValue.erase(id);
+            m_lastTimeOffset.erase(id);
             return next(entity);
           }
           
-          if (di->isSample() && di->hasMinimumDelta())
+          if (di->isSample())
           {
-            double value = o->getValue<double>();
-            if (!filterMinimumDelta(di, value))
-              return EntityPtr();
+            if (auto md = m_minimumDelta.find(id); md !=  m_minimumDelta.end())
+            {
+              double value = o->getValue<double>();
+              if (!filterMinimumDelta(di->getId(), value, md->second))
+                return EntityPtr();
+            }
           }
-                    
-          if (di->hasMinimumPeriod())
+          
+          if (auto md = m_minimumDuration.find(id); md != m_minimumDuration.end())
           {
             auto value = o->getTimestamp();
-            if (!filterPeriod(di, value))
+            if (!filterPeriod(di->getId(), value, md->second))
               return EntityPtr();
           }
         }
@@ -110,8 +113,27 @@ namespace mtconnect
         using namespace observation;
         trans->bind<Event, Sample, Message, Alarm>(this->getptr());
       }
-      
+
+      void addMinimumDelta(const std::string &id, double d)
+      {
+        m_minimumDelta[id] = d;
+      }
+      void addMinimumDelta(const DataItem *di, double d)
+      {
+        m_minimumDelta[di->getId()] = d;
+      }
+      void addMinimumDuration(const std::string &id, const std::chrono::duration<double> &d)
+      {
+        m_minimumDuration[id] = d;
+      }
+      void addMinimumDuration(const DataItem *di, const std::chrono::duration<double> &d)
+      {
+        m_minimumDuration[di->getId()] = d;
+      }
+
     protected:
+      std::unordered_map<std::string, double> m_minimumDelta;
+      std::unordered_map<std::string, std::chrono::duration<double>> m_minimumDuration;
       std::unordered_map<std::string, double> m_lastSampleValue;
       std::unordered_map<std::string, Timestamp> m_lastTimeOffset;
     };
