@@ -31,6 +31,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/pipeline.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/transform.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/duplicate_filter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/rate_filter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/shdr_tokenizer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/shdr_token_mapper.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/shdr_token_mapper.cpp"

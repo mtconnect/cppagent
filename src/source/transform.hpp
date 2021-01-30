@@ -18,6 +18,7 @@
 #pragma once
 
 #include "entity/entity.hpp"
+#include <any>
 
 namespace mtconnect
 {
@@ -44,24 +45,38 @@ namespace mtconnect
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
-
+            
       const entity::EntityPtr next(const entity::EntityPtr entity)
       {
+        using namespace std;
+        
+        if (m_always)
+          return (*m_always)(entity);
+        
         auto &r = *entity.get();
-        auto next = m_next.find(std::type_index(typeid(r)));
+        auto next = m_next.find(type_index(typeid(r)));
         if (next != m_next.end())
           return (*next->second)(entity);
         else
           return entity;
       }
 
-      template <typename T>
+      template <typename T, typename ... Ts>
       void bind(TransformPtr trans)
       {
-        m_next[std::type_index(typeid(T))] = trans;
+        if constexpr (std::is_same_v<T, std::any>)
+          m_always = trans;
+        else
+        {
+          if (m_next.count(std::type_index(typeid(T))) == 0)
+            m_next[std::type_index(typeid(T))] = trans;
+          
+          ((m_next.count(std::type_index(typeid(Ts))) == 0 ? m_next[std::type_index(typeid(Ts))] = trans : 0), ...);
+        }
       }
 
       std::string m_name;
+      TransformPtr m_always;
       TransformMap m_next;
     };
 

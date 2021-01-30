@@ -35,6 +35,8 @@ namespace mtconnect
     public:
       using entity::Entity::Entity;
       Tokens(const Tokens &) = default;
+      Tokens() = default;
+      Tokens(const Tokens &ts, TokenList list) : Entity(ts), m_tokens(list) {}
 
       TokenList m_tokens;
     };
@@ -140,7 +142,14 @@ namespace mtconnect
 
         return tokens;
       }
+      
+      void bindTo(TransformPtr trans)
+      {
+        // Use as wildcard
+        trans->bind<std::any>(this->getptr());
+      }
 
+      
     protected:
       static inline const char *EXP =
           "^("

@@ -67,13 +67,6 @@ namespace mtconnect
       return duration;
     }
 
-    inline static string &upcase(string &s)
-    {
-      std::transform(s.begin(), s.end(), s.begin(),
-                     [](unsigned char c) -> unsigned char { return std::toupper(c); });
-      return s;
-    }
-
     // --------------------------------------
     // Mapping to data items
     static entity::Requirements s_condition{{"level", true},
@@ -150,14 +143,8 @@ namespace mtconnect
 
         try
         {
-          if (req->convertType(value, dataItem->isTable()))
-          {
-            props.insert_or_assign(req->getName(), value);
-          }
-          else
-          {
-            g_logger << dlib::LWARN << "Cannot convert value for: " << *token;
-          }
+          req->convertType(value, dataItem->isTable());
+          props.insert_or_assign(req->getName(), value);
         }
         catch (entity::PropertyError &e)
         {
@@ -284,7 +271,8 @@ namespace mtconnect
     {
       if (auto timestamped = std::dynamic_pointer_cast<Timestamped>(entity))
       {
-        auto res = std::make_shared<Observations>(*timestamped);
+        // Don't copy the tokens.
+        auto res = std::make_shared<Observations>(*timestamped, TokenList{});
         EntityList entities;
 
         auto tokens = timestamped->m_tokens;
@@ -306,14 +294,15 @@ namespace mtconnect
             else
             {
               out = mapTokensToDataItem(timestamped->m_timestamp, token, end, errors);
-              // TODO: This may need to be virtual w/ Observation
               if (out && timestamped->m_duration)
                 out->setProperty("duration", *timestamped->m_duration);
             }
 
             if (out && errors.empty())
             {
-              entities.push_back(out);
+              auto fwd = next(out);
+              if (fwd)
+                entities.emplace_back(fwd);
             }
           }
           catch (entity::EntityError &e)
@@ -328,7 +317,6 @@ namespace mtconnect
           }
         }
 
-        res->m_tokens.clear();
         res->setValue(entities);
         return next(res);
       }

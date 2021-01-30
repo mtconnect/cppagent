@@ -36,7 +36,10 @@ namespace mtconnect
       using Tokens::Tokens;
       Timestamped(const Timestamped &ts) = default;
       Timestamped(const Tokens &ptr) : Tokens(ptr) {}
-
+      Timestamped(const Timestamped &ts, TokenList list)
+        : Tokens(ts, list), m_timestamp(ts.m_timestamp), m_duration(ts.m_duration)
+      {
+      }
       ~Timestamped() = default;
       Timestamp m_timestamp;
       std::optional<double> m_duration;
@@ -79,10 +82,17 @@ namespace mtconnect
 
       void extractTimestamp(const std::string &token, TimestampedPtr &ts);
       inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
-
+      
+      void bindTo(TransformPtr trans)
+      {
+        trans->bind<Tokens>(this->getptr());
+      }
+      
+      Now m_now;
+      
+    protected:
       std::optional<Timestamp> m_base;
       Micros m_offset;
-      Now m_now;
       bool m_relativeTime{false};
     };
 
@@ -110,6 +120,11 @@ namespace mtconnect
         res->setProperty("timestamp", res->m_timestamp);
 
         return next(res);
+      }
+      
+      void bindTo(TransformPtr trans)
+      {
+        trans->bind<Tokens>(this->getptr());
       }
     };
   }  // namespace source

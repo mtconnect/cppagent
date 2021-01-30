@@ -17,6 +17,7 @@
 #pragma once
 
 #include "entity/entity.hpp"
+#include "observation/observation.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
 #include "transform.hpp"
@@ -43,6 +44,13 @@ namespace mtconnect
       using Timestamped::Timestamped;
     };
 
+    inline static std::string &upcase(std::string &s)
+    {
+      std::transform(s.begin(), s.end(), s.begin(),
+                     [](unsigned char c) -> unsigned char { return std::toupper(c); });
+      return s;
+    }
+
     using namespace entity;
     class ShdrTokenMapper : public Transform
     {
@@ -63,8 +71,44 @@ namespace mtconnect
       GetDevice m_getDevice;
       GetDataItem m_getDataItem;
 
+      void bindTo(TransformPtr trans)
+      {
+        trans->bind<Timestamped>(this->getptr());
+      }
+
+    protected:
       // Logging Context
       std::set<std::string> m_logOnce;
+    };
+
+    class UpcaseValue : public Transform
+    {
+    public:
+      const EntityPtr operator()(const EntityPtr entity) override
+      {
+        using namespace observation;
+        using T = std::decay_t<decltype(*entity.get())>;
+        if (std::is_same<T, Event>())
+        {
+          auto event = std::dynamic_pointer_cast<Event>(entity);
+          auto nos = std::make_shared<Event>(*event.get());
+          upcase(std::get<std::string>(nos->getValue()));
+          return next(nos);
+        }
+        else
+        {
+          return next(entity);
+        }
+      }
+      
+      void bindTo(TransformPtr trans)
+      {
+        // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
+        // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
+        using namespace observation;
+        trans->bind<Event>(this->getptr());
+      }
+
     };
 
   }  // namespace source

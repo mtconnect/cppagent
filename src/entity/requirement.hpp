@@ -55,19 +55,20 @@ namespace mtconnect
     using ControlledVocab = std::list<std::string>;
     using Pattern = std::optional<std::regex>;
 
-    enum ValueType
+    enum ValueType : int16_t
     {
-      EMPTY = 0,
-      ENTITY = 1,
-      ENTITY_LIST = 2,
-      STRING = 3,
-      INTEGER = 4,
-      DOUBLE = 5,
-      BOOL = 6,
-      VECTOR = 7,
-      DATA_SET = 8,
-      TIMESTAMP = 9,
-      NULL_VALUE = 10
+      EMPTY = 0x0,
+      ENTITY = 0x1,
+      ENTITY_LIST = 0x2,
+      STRING = 0x3,
+      INTEGER = 0x4,
+      DOUBLE = 0x5,
+      BOOL = 0x6,
+      VECTOR = 0x7,
+      DATA_SET = 0x8,
+      TIMESTAMP = 0x9,
+      NULL_VALUE = 0xA,
+      USTRING = 0x10 | STRING
     };
 
     bool ConvertValueToType(Value &value, ValueType type, bool table = false);

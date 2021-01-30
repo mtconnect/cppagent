@@ -2,10 +2,6 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
-#include "agent_test_helper.hpp"
-#include "json_helper.hpp"
 #include "entity.hpp"
 
 #include <cstdio>
@@ -15,7 +11,6 @@
 #include <sstream>
 #include <string>
 
-using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
@@ -34,22 +29,12 @@ class EntityTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/solid_model.xml",
-                                   8, 4, "1.7", 25);
-    m_agentId = to_string(getCurrentTimeInSec());
-    m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
   void TearDown() override
   {
-    m_agentTestHelper.reset();
   }
 
-  std::string m_agentId;
-  Device *m_device{nullptr};
-
-  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
 
@@ -469,33 +454,42 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   Requirement r1("vector", VECTOR);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
-  ASSERT_EQ(3, get<Vector>(v).size());
-  ASSERT_EQ(1.234, get<Vector>(v)[0]);
-  ASSERT_EQ(3.456, get<Vector>(v)[1]);
-  ASSERT_EQ(6.7889, get<Vector>(v)[2]);
+  EXPECT_EQ(3, get<Vector>(v).size());
+  EXPECT_EQ(1.234, get<Vector>(v)[0]);
+  EXPECT_EQ(3.456, get<Vector>(v)[1]);
+  EXPECT_EQ(6.7889, get<Vector>(v)[2]);
   
   v = "aaaa bbb cccc"_s;
-  ASSERT_THROW(r1.convertType(v), PropertyError);
+  EXPECT_THROW(r1.convertType(v), PropertyError);
 
   v = "  1.234     3.456       6.7889    "_s;
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
-  ASSERT_EQ(3, get<Vector>(v).size());
-  ASSERT_EQ(1.234, get<Vector>(v)[0]);
-  ASSERT_EQ(3.456, get<Vector>(v)[1]);
-  ASSERT_EQ(6.7889, get<Vector>(v)[2]);
+  EXPECT_EQ(3, get<Vector>(v).size());
+  EXPECT_EQ(1.234, get<Vector>(v)[0]);
+  EXPECT_EQ(3.456, get<Vector>(v)[1]);
+  EXPECT_EQ(6.7889, get<Vector>(v)[2]);
 
   Requirement r2("entity", ENTITY);
-  ASSERT_THROW(r2.convertType(v), PropertyError);
+  EXPECT_THROW(r2.convertType(v), PropertyError);
   
   Requirement r3("entity_list", ENTITY_LIST);
-  ASSERT_THROW(r3.convertType(v), PropertyError);
+  EXPECT_THROW(r3.convertType(v), PropertyError);
 
   Requirement r4("entity_list", entity::DOUBLE);
-  ASSERT_THROW(r4.convertType(v), PropertyError);
+  EXPECT_THROW(r4.convertType(v), PropertyError);
 
   Requirement r6("entity_list", INTEGER);
-  ASSERT_THROW(r6.convertType(v), PropertyError);
+  EXPECT_THROW(r6.convertType(v), PropertyError);
+}
+
+TEST_F(EntityTest, TestRequirementUpperCaseStringConversion)
+{
+  Value v("hello kitty");
+  ASSERT_TRUE(holds_alternative<string>(v));
+  Requirement r1("string", USTRING);
+  ASSERT_TRUE(r1.convertType(v));
+  ASSERT_EQ("HELLO KITTY", get<string>(v));  
 }
 
 TEST_F(EntityTest, TestControlledVocabulary)

@@ -40,17 +40,19 @@ namespace mtconnect
       else
         return std::nullopt;
     }
-
+    
     class Entity : public std::enable_shared_from_this<Entity>
     {
     public:
+      using super = std::nullptr_t;
+
       Entity() {}
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
       {
       }
       Entity(const Entity &entity) = default;
       virtual ~Entity() {}
-
+      
       EntityPtr getptr() { return shared_from_this(); }
 
       bool hasListWithAttribute() const
@@ -78,7 +80,23 @@ namespace mtconnect
         return m_properties.find(n) != m_properties.end();
       }
       void setName(const std::string &name) { m_name = name; }
+      void applyTo(const std::string &name, std::function<void(Value &v)> f)
+      {
+        auto p = m_properties.find(name);
+        if (p != m_properties.end())
+          f(p->second);
+      }
+      void applyToValue(std::function<void(Value &v)> f) { applyTo("VALUE", f); }
 
+      Value &getValue()
+      {
+        static Value null;
+        auto p = m_properties.find("VALUE");
+        if (p != m_properties.end())
+          return p->second;
+        else
+          return null;
+      }
       const Value &getValue() const { return getProperty("VALUE"); }
       std::optional<EntityList> getList(const std::string &name) const
       {
@@ -130,6 +148,6 @@ namespace mtconnect
       std::string m_name;
       Properties m_properties;
       OrderMapPtr m_order;
-    };
+    };    
   }  // namespace entity
 }  // namespace mtconnect

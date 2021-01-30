@@ -37,6 +37,10 @@ namespace mtconnect
 {
   namespace observation
   {
+    // Types of Observations:
+    // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
+    // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
+    
     class Observation;
     using ObservationPtr = std::shared_ptr<Observation>;
     using ObservationList = std::list<ObservationPtr>;
@@ -45,6 +49,7 @@ namespace mtconnect
     {
     public:
       using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
+      using super = entity::Entity;
 
       using entity::Entity::Entity;
       static entity::FactoryPtr getFactory();
@@ -75,6 +80,7 @@ namespace mtconnect
         m_timestamp = ts;
         setProperty("timestamp", date::format("%FT%TZ", m_timestamp));
       }
+      auto getTimestamp() const { return m_timestamp; }
 
       void setSequence(int64_t sequence)
       {
@@ -108,10 +114,12 @@ namespace mtconnect
       const DataItem *m_dataItem{nullptr};
       uint64_t m_sequence{0};
     };
-
+    
     class Sample : public Observation
     {
     public:
+      using super = Observation;
+
       using Observation::Observation;
       static entity::FactoryPtr getFactory();
       ~Sample() override = default;
@@ -120,18 +128,23 @@ namespace mtconnect
     class ThreeSpaceSample : public Sample
     {
     public:
+      using super = Sample;
+
       using Sample::Sample;
       static entity::FactoryPtr getFactory();
       ~ThreeSpaceSample() override = default;
     };
-
-    class Timeseries : public Observation
+    
+    class Timeseries : public Sample
     {
     public:
-      using Observation::Observation;
+      using super = Sample;
+
+      using Sample::Sample;
       static entity::FactoryPtr getFactory();
       ~Timeseries() override = default;
     };
+    
 
     class Condition;
     using ConditionPtr = std::shared_ptr<Condition>;
@@ -140,6 +153,8 @@ namespace mtconnect
     class Condition : public Observation
     {
     public:
+      using super = Observation;
+
       enum Level
       {
         NORMAL,
@@ -260,6 +275,8 @@ namespace mtconnect
     class Event : public Observation
     {
     public:
+      using super = Observation;
+
       using Observation::Observation;
       static entity::FactoryPtr getFactory();
       ~Event() override = default;
@@ -268,6 +285,8 @@ namespace mtconnect
     class DataSetEvent : public Event
     {
     public:
+      using super = Event;
+
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~DataSetEvent() override = default;
@@ -285,14 +304,20 @@ namespace mtconnect
     class AssetEvent : public Event
     {
     public:
+      using super = Event;
+
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~AssetEvent() override = default;
+      
+    protected:
     };
 
     class Message : public Event
     {
     public:
+      using super = Event;
+
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~Message() override = default;
@@ -301,6 +326,8 @@ namespace mtconnect
     class Alarm : public Event
     {
     public:
+      using super = Event;
+
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~Alarm() override = default;
