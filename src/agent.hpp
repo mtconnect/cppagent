@@ -41,7 +41,6 @@ namespace mtconnect
   {
     class Adapter;
   }
-  class Observation;
   class DataItem;
   class Device;
   class AgentDevice;
@@ -107,14 +106,11 @@ namespace mtconnect
     void deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName);
 
     // Add component events to the sliding buffer
-    observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation,
-                                              bool dupCheck = false);
+    observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation);
     observation::SequenceNumber_t addToBuffer(DataItem *dataItem, entity::Properties props,
-                                              std::optional<Timestamp> timestamp = std::nullopt,
-                                              bool dupCheck = false);
+                                              std::optional<Timestamp> timestamp = std::nullopt);
     observation::SequenceNumber_t addToBuffer(DataItem *dataItem, const std::string &value,
-                                              std::optional<Timestamp> timestamp = std::nullopt,
-                                              bool dupCheck = false);
+                                              std::optional<Timestamp> timestamp = std::nullopt);
 
     // Asset management
     AssetPtr addAsset(Device *device, const std::string &asset,

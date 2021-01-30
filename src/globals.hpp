@@ -172,6 +172,15 @@ namespace mtconnect
   using ConfigOption = std::variant<std::monostate, bool, int, std::string, double, Seconds,
                                     Milliseconds, StringList>;
   using ConfigOptions = std::map<std::string, ConfigOption>;
+  template<typename T>
+  const std::optional<T> GetOption(const ConfigOptions &options, const std::string &name)
+  {
+    auto v = options.find(name);
+    if (v != options.end())
+      return std::get<T>(v->second);
+    else
+      return std::nullopt;
+  }
 
 #ifdef _WINDOWS
 #include <io.h>

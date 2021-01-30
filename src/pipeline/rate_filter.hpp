@@ -21,7 +21,7 @@
 
 namespace mtconnect
 {
-  namespace source
+  namespace pipeline
   {
     class RateFilter : public Transform
     {
@@ -107,12 +107,13 @@ namespace mtconnect
         return next(entity);
       }
       
-      void bindTo(TransformPtr trans)
+      TransformPtr bindTo(TransformPtr trans)
       {
         // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
         // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
         using namespace observation;
         trans->bind<Event, Sample, Message, Alarm>(this->getptr());
+        return getptr();
       }
 
       void addMinimumDelta(const std::string &id, double d)

@@ -61,7 +61,7 @@ namespace mtconnect
     {
     public:
       // Associate adapter with a device & connect to the server & port
-      Adapter(const Handler &context, const std::string &server, const unsigned int port,
+      Adapter(const Handler &handler, const std::string &server, const unsigned int port,
               const ConfigOptions &options);
       Adapter(const Adapter &) = delete;
 

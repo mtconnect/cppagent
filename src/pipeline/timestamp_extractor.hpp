@@ -24,7 +24,7 @@ namespace mtconnect
 {
   class Agent;
 
-  namespace source
+  namespace pipeline
   {
     using namespace entity;
     using Micros = std::chrono::microseconds;
@@ -83,9 +83,10 @@ namespace mtconnect
       void extractTimestamp(const std::string &token, TimestampedPtr &ts);
       inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
       
-      void bindTo(TransformPtr trans)
+      TransformPtr bindTo(TransformPtr trans)
       {
         trans->bind<Tokens>(this->getptr());
+        return getptr();
       }
       
       Now m_now;
@@ -122,9 +123,10 @@ namespace mtconnect
         return next(res);
       }
       
-      void bindTo(TransformPtr trans)
+      TransformPtr bindTo(TransformPtr trans)
       {
         trans->bind<Tokens>(this->getptr());
+        return getptr();
       }
     };
   }  // namespace source

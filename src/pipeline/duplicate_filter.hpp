@@ -21,7 +21,7 @@
 
 namespace mtconnect
 {
-  namespace source
+  namespace pipeline
   {
     class DuplicateFilter : public Transform
     {
@@ -52,12 +52,13 @@ namespace mtconnect
         return next(entity);
       }
       
-      void bindTo(TransformPtr trans)
+      TransformPtr bindTo(TransformPtr trans)
       {
         // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
         // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
         using namespace observation;
         trans->bind<Event, Sample, ThreeSpaceSample, Message, Alarm>(this->getptr());
+        return getptr();
       }
       
     protected:

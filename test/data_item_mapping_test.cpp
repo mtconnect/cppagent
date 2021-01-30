@@ -25,7 +25,7 @@
 #include <chrono>
 
 using namespace mtconnect;
-using namespace mtconnect::source;
+using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
 using namespace std;
 

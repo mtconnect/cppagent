@@ -22,7 +22,7 @@
 
 namespace mtconnect
 {
-  namespace source
+  namespace pipeline
   {
     // A transform takes an entity and transforms it to another
     // entity. The transform is an object with the overloaded

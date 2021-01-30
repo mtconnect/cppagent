@@ -30,7 +30,7 @@ namespace mtconnect
   class Device;
   class DataItem;
 
-  namespace source
+  namespace pipeline
   {
     class AssetCommand : public Timestamped
     {
@@ -71,9 +71,10 @@ namespace mtconnect
       GetDevice m_getDevice;
       GetDataItem m_getDataItem;
 
-      void bindTo(TransformPtr trans)
+      TransformPtr bindTo(TransformPtr trans)
       {
         trans->bind<Timestamped>(this->getptr());
+        return getptr();
       }
 
     protected:
@@ -101,12 +102,13 @@ namespace mtconnect
         }
       }
       
-      void bindTo(TransformPtr trans)
+      TransformPtr bindTo(TransformPtr trans)
       {
         // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
         // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
         using namespace observation;
         trans->bind<Event>(this->getptr());
+        return getptr();
       }
 
     };

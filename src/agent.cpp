@@ -775,7 +775,7 @@ namespace mtconnect
   // Observation Add Method
   // ----------------------------------------------------
 
-  SequenceNumber_t Agent::addToBuffer(ObservationPtr &observation, bool dupCheck)
+  SequenceNumber_t Agent::addToBuffer(ObservationPtr &observation)
   {
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
@@ -785,16 +785,6 @@ namespace mtconnect
       if (dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(observation))
       {
         return 0;
-      }
-      else if (dupCheck && dataItem->getRepresentation() == DataItem::VALUE)
-      {
-        // Convert to string
-        auto value = observation->getValue();
-        entity::ConvertValueToType(value, entity::STRING);
-        if (const_cast<DataItem *>(dataItem)->isDuplicate(std::get<string>(value)))
-        {
-          return 0;
-        }
       }
     }
 
@@ -806,7 +796,7 @@ namespace mtconnect
   }
 
   SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, entity::Properties props,
-                                      std::optional<Timestamp> timestamp, bool dupCheck)
+                                      std::optional<Timestamp> timestamp)
   {
     entity::ErrorList errors;
 
@@ -829,7 +819,7 @@ namespace mtconnect
   }
 
   SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, const std::string &value,
-                                      std::optional<Timestamp> timestamp, bool dupCheck)
+                                      std::optional<Timestamp> timestamp)
   {
     if (dataItem->isCondition())
       return addToBuffer(dataItem, {{"level", value}}, timestamp);

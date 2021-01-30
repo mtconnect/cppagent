@@ -25,7 +25,7 @@ using namespace std;
 
 namespace mtconnect
 {
-  namespace source
+  namespace pipeline
   {
     static dlib::logger g_logger("TimestampExtractor");
 

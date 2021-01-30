@@ -27,7 +27,7 @@ namespace mtconnect
 {
   class Agent;
 
-  namespace source
+  namespace pipeline
   {
     using TokenList = std::list<std::string>;
     class Tokens : public entity::Entity
@@ -143,10 +143,11 @@ namespace mtconnect
         return tokens;
       }
       
-      void bindTo(TransformPtr trans)
+      TransformPtr bindTo(TransformPtr trans)
       {
         // Use as wildcard
         trans->bind<std::any>(this->getptr());
+        return getptr();
       }
 
       

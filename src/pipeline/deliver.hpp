@@ -17,18 +17,34 @@
 
 #pragma once
 
-#include "entity/entity.hpp"
-#include "config.hpp"
-#include "agent.hpp"
+#include "transform.hpp"
 
 namespace mtconnect
 {
-  namespace source
+  class Agent;
+  
+  namespace pipeline
   {
-    class Pipeline
+    class DeliverObservation : public Transform
     {
     public:
+      DeliverObservation(Agent *agent) : m_agent(agent) {}
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+      TransformPtr bindTo(TransformPtr trans);
       
+    protected:
+      Agent *m_agent { nullptr };
+    };
+
+    class DeliverAsset : public Transform
+    {
+    public:
+      DeliverAsset(Agent *agent) : m_agent(agent) {}
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+      TransformPtr bindTo(TransformPtr trans);
+      
+    protected:
+      Agent *m_agent { nullptr };
     };
   }
 }  // namespace mtconnect

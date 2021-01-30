@@ -19,14 +19,14 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "source/shdr_token_mapper.hpp"
-#include "source/duplicate_filter.hpp"
-#include "source/rate_filter.hpp"
+#include "pipeline/shdr_token_mapper.hpp"
+#include "pipeline/duplicate_filter.hpp"
+#include "pipeline/rate_filter.hpp"
 #include "observation/observation.hpp"
 #include <chrono>
 
 using namespace mtconnect;
-using namespace mtconnect::source;
+using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
 using namespace std;
 using namespace std::literals;

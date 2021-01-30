@@ -28,7 +28,7 @@ using namespace std;
 namespace mtconnect
 {
   using namespace observation;
-  namespace source
+  namespace pipeline
   {
     static dlib::logger g_logger("DataItemMapper");
 

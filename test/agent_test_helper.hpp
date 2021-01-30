@@ -22,8 +22,10 @@
 #include "http_server/response.hpp"
 #include "http_server/routing.hpp"
 #include "adapter/adapter.hpp"
-#include "source/shdr_tokenizer.hpp"
+#include "pipeline/pipeline.hpp"
 #include <dlib/server.h>
+#include "config.hpp"
+#include "agent.hpp"
 
 #include <chrono>
 #include <iosfwd>
@@ -91,18 +93,6 @@ class AgentTestHelper
   AgentTestHelper()
   : m_out(), m_response(m_out), m_incomingIp("127.0.0.1")
   {
-    m_shdrParser = std::make_unique<adpt::ShdrParser>();
-    m_shdrParser->m_observationHandler = [this](observe::ObservationPtr &observation, bool dupCheck){
-      m_agent->addToBuffer(observation, dupCheck);
-    };
-    m_shdrParser->m_assetHandler = [](const mtconnect::Device *device,
-                                          const std::string &body,
-                                          const std::optional<std::string> &assetId,
-                                          const std::optional<std::string> &type,
-                                          const std::optional<std::string> &timestamp,
-                                          mtconnect::entity::ErrorList &errors){
-      // TODO: Fix asset handling. Should take AssetPtr.
-    };
   }
     
   // Helper method to test expected string, given optional query, & run tests
@@ -144,51 +134,18 @@ class AgentTestHelper
   auto addAdapter(const std::string &host = "localhost", uint16_t port = 7878,
                   const std::string &device = "")
   {
-    auto context = m_agent->getContext();
-    context.m_defaultDevice = device;
-    m_adapter = new adpt::Adapter(context, host, port);
+    using namespace mtconnect;
+    ConfigOptions options;
+    adpt::Handler handler;
+    m_adapter = new adpt::Adapter(handler, host, port, options);
     m_agent->addAdapter(m_adapter);
-    
-    auto adapterHandler = std::make_unique<adpt::Handler>();
-    adapterHandler->m_processData = [this](const std::string &data, adpt::Context &context) {
-      m_shdrParser->processData(data, context);
-    };
-    adapterHandler->m_protocolCommand = [](const std::string &command, adpt::Context &context) {
-      // TODO: Handle commands
-    };
-    adapterHandler->m_connected = [this](const adpt::Adapter &adapter, adpt::Context &context)
-    {
-      m_agent->connected(adapter, adapter.getAllDevices());
-    };
-    adapterHandler->m_disconnected = [this](const adpt::Adapter &adapter, adpt::Context &context)
-    {
-      m_agent->disconnected(adapter, adapter.getAllDevices());
-    };
-    adapterHandler->m_connecting = [this](const adpt::Adapter &adapter, adpt::Context &context)
-    {
-      m_agent->connecting(adapter);
-    };
-    m_adapter->setHandler(adapterHandler);
-    
+
     return m_adapter;
   }
   
   uint64_t addToBuffer(mtconnect::DataItem *di, const std::string &shdr, const std::string &time)
   {
-    auto context = m_agent->getContext();
-    auto tokens = source::ShdrTokenizer::tokenize(shdr);
-    tokens.push_front(di->getId());
-
-    std::string ts = time;
-    if (time == "NOW" || time == "TIME")
-    {
-      auto t = mtconnect::Timestamp(std::chrono::system_clock::now());
-      ts = date::format("%FT%TZ", t);
-    }
-    tokens.push_front(ts);
-
-    auto s = tokens.cbegin();
-    return m_shdrParser->mapTokens(s, tokens.end(), context);
+    return 0;
   }
   
   void printResponse()
@@ -207,7 +164,7 @@ class AgentTestHelper
               << std::endl;
   }
 
-  std::unique_ptr<adpt::ShdrParser> m_shdrParser;
+  std::unique_ptr<mtconnect::pipeline::Pipeline> m_pipeline;
   adpt::Adapter *m_adapter{nullptr};
   bool m_dispatched { false };
   std::unique_ptr<mtconnect::Agent> m_agent;
