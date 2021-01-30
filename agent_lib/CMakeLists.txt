@@ -38,6 +38,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/shdr_token_mapper.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/timestamp_extractor.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/timestamp_extractor.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/deliver.hpp"
   
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/asset.cpp"

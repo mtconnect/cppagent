@@ -18,38 +18,28 @@
 #pragma once
 
 #include "transform.hpp"
+#include "agent.hpp"
 
 namespace mtconnect
 {
   namespace source
   {
-    class DuplicateFilter : public Transform
+    class DeliverObservation : public Transform
     {
     public:
-      ~DuplicateFilter() override = default;
       
       const EntityPtr operator()(const EntityPtr entity) override
       {
         using namespace observation;
-        if (auto o = std::dynamic_pointer_cast<Observation>(entity);
-            o)
+        if (auto &o = std::dynamic_pointer_cast<Observation>(entity); m_agent && o)
         {
-          auto di = o->getDataItem();
-          if (!di->allowDups() && !di->isTimeSeries() && !di->isDataSet() &&
-              (di->isEvent() || di->isSample()))
-          {
-            auto old = m_values.find(o->getDataItem()->getId());
-            if (old != m_values.end() && old->second == o->getValue())
-              return EntityPtr();
-            
-            if (old == m_values.end())
-              m_values[o->getDataItem()->getId()] = o->getValue();
-            else if (old->second != o->getValue())
-              old->second = o->getValue();
-          }
+          m_agent->addToBuffer(o);
         }
-        
-        return next(entity);
+        else
+        {
+          throw EntityError("Unexpected entity type, cannot convert to observation in DeliverObservation");
+        }
+        return entity;	
       }
       
       void bindTo(TransformPtr trans)
@@ -57,13 +47,42 @@ namespace mtconnect
         // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
         // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
         using namespace observation;
-        trans->bind<Event, Sample, ThreeSpaceSample, Message, Alarm>(this->getptr());
+        trans->bind<Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
+                    AssetEvent, ThreeSpaceSmple, Condition, AssetEvent>(this->getptr());
       }
+
+      Agent *m_agent { nullptr };
       
     protected:
-      std::unordered_map<std::string, entity::Value> m_values;
     };
 
+    class DeliverAsset : public Transform
+    {
+    public:
+      
+      const EntityPtr operator()(const EntityPtr entity) override
+      {
+        if (auto &a = std::dynamic_pointer_cast<Asset>(entity); m_agent && a)
+        {
+          // m_agent->addAsset(a);
+        }
+        else
+        {
+          throw EntityError("Unexpected entity type, cannot convert to asset in DeliverObservation");
+        }
+
+        return entity;
+      }
+      
+      void bindTo(TransformPtr trans)
+      {
+        trans->bind<Asset, CuttingToolArchetype, CuttingTool,
+                    FileAsset, FileArchetypeAsset >(this->getptr());
+      }
+
+      Agent *m_agent { nullptr };
+      
+    protected:
+    };
   }
-  
 }  // namespace mtconnect

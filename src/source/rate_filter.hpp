@@ -26,7 +26,8 @@ namespace mtconnect
     class RateFilter : public Transform
     {
     public:
-      
+      ~RateFilter() override = default;
+
       bool filterMinimumDelta(const std::string &id, double value, double fv)
       {
         auto last = m_lastSampleValue.find(id);
@@ -35,7 +36,7 @@ namespace mtconnect
           double lv = last->second;
           if (value > (lv - fv) && value < (lv + fv))
           {
-            return false;
+            return true;
           }
           last->second = value;
         }
@@ -44,7 +45,7 @@ namespace mtconnect
           m_lastSampleValue[id] = value;
         }
         
-        return true;
+        return false;
       }
       
       bool filterPeriod(const std::string &id, Timestamp &value,
@@ -57,7 +58,7 @@ namespace mtconnect
           auto lv = last->second;
           if (value < (lv + md))
           {
-            return false;
+            return true;
           }
           last->second = value;
         }
@@ -66,7 +67,7 @@ namespace mtconnect
           m_lastTimeOffset[id] = value;
         }
         
-        return true;
+        return false;
       }
             
       const EntityPtr operator()(const EntityPtr entity) override
@@ -90,7 +91,7 @@ namespace mtconnect
             if (auto md = m_minimumDelta.find(id); md !=  m_minimumDelta.end())
             {
               double value = o->getValue<double>();
-              if (!filterMinimumDelta(di->getId(), value, md->second))
+              if (filterMinimumDelta(di->getId(), value, md->second))
                 return EntityPtr();
             }
           }
@@ -98,7 +99,7 @@ namespace mtconnect
           if (auto md = m_minimumDuration.find(id); md != m_minimumDuration.end())
           {
             auto value = o->getTimestamp();
-            if (!filterPeriod(di->getId(), value, md->second))
+            if (filterPeriod(di->getId(), value, md->second))
               return EntityPtr();
           }
         }

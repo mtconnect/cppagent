@@ -18,10 +18,17 @@
 #pragma once
 
 #include "entity/entity.hpp"
+#include "config.hpp"
+#include "agent.hpp"
 
 namespace mtconnect
 {
   namespace source
   {
+    class Pipeline
+    {
+    public:
+      
+    };
   }
 }  // namespace mtconnect
