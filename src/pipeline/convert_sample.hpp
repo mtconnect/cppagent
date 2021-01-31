@@ -25,34 +25,34 @@ namespace mtconnect
 {
   namespace pipeline
   {
-    class DeliverObservation : public Transform
+    class ConvertSample : public Transform
     {
     public:
-      using Deliver = std::function<void(observation::ObservationPtr)>;
       
-      DeliverObservation()
+      ConvertSample()
       {
-        m_guard = TypeGuard<observation::Observation>();
+        using namespace observation;
+        m_guard = TypeGuard<Sample>() || TypeGuard<Observation>(SKIP);
       }
-      DeliverObservation(Deliver fun) : m_deliver(fun) {}
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
-      
-      Deliver m_deliver;
-    };
-
-    class DeliverAsset : public Transform
-    {
-    public:
-      using Deliver = std::function<void(AssetPtr)>;
-
-      DeliverAsset()
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
       {
-        m_guard = TypeGuard<Asset>();
+        using namespace observation;
+        using namespace entity;
+        auto sample = std::dynamic_pointer_cast<Sample>(entity);
+        if (sample)
+        {
+          auto di = sample->getDataItem();
+          if (di->conversionRequired())
+          {
+            auto ns = sample->copy();
+            Value &value = ns->getValue();
+            di->convertValue(value);
+            
+            return next(ns);
+          }
+        }
+        return next(entity);
       }
-      DeliverAsset(Deliver fun) : m_deliver(fun) {}
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
-      
-      Deliver m_deliver;
     };
   }
 }  // namespace mtconnect

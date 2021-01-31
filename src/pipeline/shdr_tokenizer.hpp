@@ -44,25 +44,25 @@ namespace mtconnect
     class ShdrTokenizer : public Transform
     {
     public:
-      using Transform::Transform;
+      ShdrTokenizer(const ShdrTokenizer &) = default;
+      ShdrTokenizer()
+      {
+        m_guard = [](const entity::EntityPtr e) -> GuardAction {
+          if (!e->hasValue())
+            throw entity::EntityError("Cannot find data for tokenization");
+          return RUN;
+        };
+      }
+      ~ShdrTokenizer() = default;
 
       const entity::EntityPtr operator()(const entity::EntityPtr data) override
       {
-        auto body = data->maybeGetValue<std::string>();
-        if (body)
-        {
-          auto result = std::make_shared<Tokens>("Tokens", entity::Properties());
-          result->m_tokens = tokenize(*body);
-          return next(result);
-        }
-        else
-        {
-          throw entity::EntityError("Cannot find data for tokenization");
-          return nullptr;
-        }
+        auto &body = data->getValue<std::string>();
+        auto result = std::make_shared<Tokens>("Tokens", entity::Properties());
+        result->m_tokens = tokenize(body);
+        return next(result);
       }
 
-      ~ShdrTokenizer() = default;
 
       template <typename T>
       inline static std::string remove(const T &range, const char c)
@@ -142,14 +142,6 @@ namespace mtconnect
 
         return tokens;
       }
-      
-      TransformPtr bindTo(TransformPtr trans)
-      {
-        // Use as wildcard
-        trans->bind<std::any>(this->getptr());
-        return getptr();
-      }
-
       
     protected:
       static inline const char *EXP =

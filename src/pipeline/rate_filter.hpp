@@ -26,6 +26,12 @@ namespace mtconnect
     class RateFilter : public Transform
     {
     public:
+      RateFilter()
+      {
+        using namespace observation;
+        m_guard = TypeGuard<Event, Sample>() || TypeGuard<Observation>(SKIP);
+      }
+      
       ~RateFilter() override = default;
 
       bool filterMinimumDelta(const std::string &id, double value, double fv)
@@ -74,48 +80,41 @@ namespace mtconnect
       {
         using namespace std;
         using namespace observation;
-        if (auto o = std::dynamic_pointer_cast<Observation>(entity);
-            o)
+        if (m_minimumDelta.size() > 0 || m_minimumDuration.size() > 0)
         {
-          auto di = o->getDataItem();
-          auto &id = di->getId();
-          if (o->isUnavailable())
+          if (auto o = std::dynamic_pointer_cast<Observation>(entity);
+              o)
           {
-            m_lastSampleValue.erase(id);
-            m_lastTimeOffset.erase(id);
-            return next(entity);
-          }
-          
-          if (di->isSample())
-          {
-            if (auto md = m_minimumDelta.find(id); md !=  m_minimumDelta.end())
+            auto di = o->getDataItem();
+            auto &id = di->getId();
+            if (o->isUnavailable())
             {
-              double value = o->getValue<double>();
-              if (filterMinimumDelta(di->getId(), value, md->second))
+              m_lastSampleValue.erase(id);
+              m_lastTimeOffset.erase(id);
+              return next(entity);
+            }
+            
+            if (di->isSample())
+            {
+              if (auto md = m_minimumDelta.find(id); md !=  m_minimumDelta.end())
+              {
+                double value = o->getValue<double>();
+                if (filterMinimumDelta(di->getId(), value, md->second))
+                  return EntityPtr();
+              }
+            }
+            
+            if (auto md = m_minimumDuration.find(id); md != m_minimumDuration.end())
+            {
+              auto value = o->getTimestamp();
+              if (filterPeriod(di->getId(), value, md->second))
                 return EntityPtr();
             }
           }
-          
-          if (auto md = m_minimumDuration.find(id); md != m_minimumDuration.end())
-          {
-            auto value = o->getTimestamp();
-            if (filterPeriod(di->getId(), value, md->second))
-              return EntityPtr();
-          }
         }
-        
         return next(entity);
       }
       
-      TransformPtr bindTo(TransformPtr trans)
-      {
-        // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
-        // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
-        using namespace observation;
-        trans->bind<Event, Sample, Message, Alarm>(this->getptr());
-        return getptr();
-      }
-
       void addMinimumDelta(const std::string &id, double d)
       {
         m_minimumDelta[id] = d;

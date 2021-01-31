@@ -79,6 +79,7 @@ namespace mtconnect
       {
         return m_properties.find(n) != m_properties.end();
       }
+      bool hasValue() const { return hasProperty("VALUE"); }
       void setName(const std::string &name) { m_name = name; }
       void applyTo(const std::string &name, std::function<void(Value &v)> f)
       {

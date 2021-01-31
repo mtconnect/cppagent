@@ -26,6 +26,13 @@ namespace mtconnect
     class DuplicateFilter : public Transform
     {
     public:
+      DuplicateFilter(const DuplicateFilter &) = default;
+      DuplicateFilter()
+      {
+        using namespace observation;
+        m_guard = ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>() ||
+                  TypeGuard<Observation>(SKIP);
+      }
       ~DuplicateFilter() override = default;
       
       const EntityPtr operator()(const EntityPtr entity) override
@@ -35,30 +42,20 @@ namespace mtconnect
             o)
         {
           auto di = o->getDataItem();
-          if (!di->allowDups() && !di->isTimeSeries() && !di->isDataSet() &&
-              (di->isEvent() || di->isSample()))
+          if (!di->allowDups())
           {
-            auto old = m_values.find(o->getDataItem()->getId());
+            auto old = m_values.find(di->getId());
             if (old != m_values.end() && old->second == o->getValue())
               return EntityPtr();
             
             if (old == m_values.end())
-              m_values[o->getDataItem()->getId()] = o->getValue();
+              m_values[di->getId()] = o->getValue();
             else if (old->second != o->getValue())
               old->second = o->getValue();
           }
         }
         
         return next(entity);
-      }
-      
-      TransformPtr bindTo(TransformPtr trans)
-      {
-        // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
-        // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
-        using namespace observation;
-        trans->bind<Event, Sample, ThreeSpaceSample, Message, Alarm>(this->getptr());
-        return getptr();
       }
       
     protected:

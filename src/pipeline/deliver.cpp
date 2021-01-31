@@ -30,48 +30,33 @@ namespace mtconnect
     const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
     {
       using namespace observation;
-      if (auto o = std::dynamic_pointer_cast<Observation>(entity); m_agent && o)
-      {
-        m_agent->addToBuffer(o);
-      }
-      else
+      auto o = std::dynamic_pointer_cast<Observation>(entity);
+      if (!o)
       {
         throw EntityError("Unexpected entity type, cannot convert to observation in DeliverObservation");
       }
+      else if (m_deliver)
+      {
+        m_deliver(o);
+      }
+      
       return entity;
-    }
-
-    TransformPtr DeliverObservation::bindTo(TransformPtr trans)
-    {
-      // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
-      // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
-      using namespace observation;
-      trans->bind<Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
-                  AssetEvent, ThreeSpaceSample, Condition, AssetEvent>(this->getptr());
-      return getptr();
     }
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
     {
-      if (auto a = std::dynamic_pointer_cast<Asset>(entity); m_agent && a)
-      {
-        // m_agent->addAsset(a);
-      }
-      else
+      auto a = std::dynamic_pointer_cast<Asset>(entity);
+      if (!a)
       {
         throw EntityError("Unexpected entity type, cannot convert to asset in DeliverObservation");
       }
+      else if (m_deliver)
+      {
+        m_deliver(a);
+      }
 
       return entity;
-    }
-    
-    TransformPtr DeliverAsset::bindTo(TransformPtr trans)
-    {
-      trans->bind<Asset, CuttingToolArchetype, CuttingTool,
-                  FileAsset, FileArchetypeAsset >(this->getptr());
-      return getptr();
-    }
-
+    }    
   }
 }
 

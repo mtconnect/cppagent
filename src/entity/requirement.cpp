@@ -110,7 +110,7 @@ namespace mtconnect
       }
       else
       {
-        if (value.index() != m_type)
+        if (value.index() != (m_type & 0xF))
         {
           throw PropertyError("Incorrect type for property " + m_name);
         }

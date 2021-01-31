@@ -49,7 +49,11 @@ namespace mtconnect
     class ExtractTimestamp : public Transform
     {
     public:
-      using Transform::Transform;
+      ExtractTimestamp(const ExtractTimestamp &) = default;
+      ExtractTimestamp()
+      {
+        m_guard = TypeGuard<Tokens>();
+      }
       ~ExtractTimestamp() override = default;
 
       using Now = std::function<Timestamp()>;
@@ -83,18 +87,12 @@ namespace mtconnect
       void extractTimestamp(const std::string &token, TimestampedPtr &ts);
       inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
       
-      TransformPtr bindTo(TransformPtr trans)
-      {
-        trans->bind<Tokens>(this->getptr());
-        return getptr();
-      }
-      
       Now m_now;
-      
+      bool m_relativeTime{false};
+
     protected:
       std::optional<Timestamp> m_base;
       Micros m_offset;
-      bool m_relativeTime{false};
     };
 
     class IgnoreTimestamp : public ExtractTimestamp
@@ -121,13 +119,7 @@ namespace mtconnect
         res->setProperty("timestamp", res->m_timestamp);
 
         return next(res);
-      }
-      
-      TransformPtr bindTo(TransformPtr trans)
-      {
-        trans->bind<Tokens>(this->getptr());
-        return getptr();
-      }
+      }      
     };
   }  // namespace source
 }  // namespace mtconnect

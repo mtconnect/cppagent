@@ -40,6 +40,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/timestamp_extractor.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/deliver.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/deliver.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/guard.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/convert_sample.hpp"
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/asset.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/assets/asset.hpp"

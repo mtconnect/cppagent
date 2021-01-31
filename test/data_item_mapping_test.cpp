@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "source/shdr_token_mapper.hpp"
-#include "source/timestamp_extractor.hpp"
+#include "pipeline/shdr_token_mapper.hpp"
+#include "pipeline/timestamp_extractor.hpp"
 #include "observation/observation.hpp"
 #include <chrono>
 
@@ -37,8 +37,8 @@ protected:
     m_mapper = make_shared<ShdrTokenMapper>();
     m_mapper->m_getDevice = [](const std::string &uuid) { return nullptr; };
     m_mapper->m_getDataItem = [this](const Device *, const std::string &name) { return m_dataItems[name].get(); };
+    m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
   }
-
 
   void TearDown() override
   {

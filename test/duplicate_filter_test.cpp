@@ -40,6 +40,7 @@ protected:
     m_mapper = make_shared<ShdrTokenMapper>();
     m_mapper->m_getDevice = [](const std::string &uuid) { return nullptr; };
     m_mapper->m_getDataItem = [this](const Device *, const std::string &name) { return m_dataItems[name].get(); };
+    m_mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>()));
   }
 
 
@@ -77,7 +78,7 @@ TEST_F(DuplicateFilterTest, test_simple_event)
   makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
 
   auto filter = make_shared<DuplicateFilter>();
-  filter->bindTo(m_mapper);
+  m_mapper->bind(filter);
 
   auto os1 = observe({"a", "READY"});
   auto list1 = os1->getValue<EntityList>();
@@ -99,7 +100,7 @@ TEST_F(DuplicateFilterTest, test_simple_sample)
   });
 
   auto filter = make_shared<DuplicateFilter>();
-  filter->bindTo(m_mapper);
+  m_mapper->bind(filter);
 
   auto os1 = observe({"a", "1.5"});
   auto list1 = os1->getValue<EntityList>();
@@ -121,11 +122,11 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
   });
   
   auto filter = make_shared<DuplicateFilter>();
-  filter->bindTo(m_mapper);
+  m_mapper->bind(filter);
 
   auto rate = make_shared<RateFilter>();
   rate->addMinimumDelta("a", 1.0);
-  rate->bindTo(filter);
+  filter->bind(rate);
 
   {
     auto os = observe({"a", "1.5"});
@@ -169,7 +170,7 @@ TEST_F(DuplicateFilterTest, test_period_filter)
 
   auto rate = make_shared<RateFilter>();
   rate->addMinimumDuration("a", 10.0s);
-  rate->bindTo(m_mapper);
+  m_mapper->bind(rate);
   
   {
     auto os = observe({"a", "1.5"}, now);

@@ -54,6 +54,8 @@ namespace mtconnect
       using entity::Entity::Entity;
       static entity::FactoryPtr getFactory();
       ~Observation() override = default;
+      virtual ObservationPtr copy() const { return std::make_shared<Observation>(); }
+      
 
       static ObservationPtr make(const DataItem *dataItem, const entity::Properties &props,
                                  const Timestamp &timestamp, entity::ErrorList &errors);
@@ -123,6 +125,8 @@ namespace mtconnect
       using Observation::Observation;
       static entity::FactoryPtr getFactory();
       ~Sample() override = default;
+      
+      ObservationPtr copy() const override { return std::make_shared<Sample>(*this); }
     };
 
     class ThreeSpaceSample : public Sample
@@ -143,6 +147,8 @@ namespace mtconnect
       using Sample::Sample;
       static entity::FactoryPtr getFactory();
       ~Timeseries() override = default;
+      
+      ObservationPtr copy() const override { return std::make_shared<Timeseries>(*this); }
     };
     
 
@@ -166,6 +172,7 @@ namespace mtconnect
       using Observation::Observation;
       static entity::FactoryPtr getFactory();
       ~Condition() override = default;
+      ObservationPtr copy() const override { return std::make_shared<Condition>(*this); }
 
       ConditionPtr getptr() { return std::dynamic_pointer_cast<Condition>(Entity::getptr()); }
 
@@ -280,6 +287,7 @@ namespace mtconnect
       using Observation::Observation;
       static entity::FactoryPtr getFactory();
       ~Event() override = default;
+      ObservationPtr copy() const override { return std::make_shared<Event>(*this); }
     };
 
     class DataSetEvent : public Event
@@ -290,6 +298,7 @@ namespace mtconnect
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~DataSetEvent() override = default;
+      ObservationPtr copy() const override { return std::make_shared<DataSetEvent>(*this); }
 
       const DataSet &getDataSet() const
       {
@@ -309,7 +318,8 @@ namespace mtconnect
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~AssetEvent() override = default;
-      
+      ObservationPtr copy() const override { return std::make_shared<AssetEvent>(*this); }
+
     protected:
     };
 
@@ -321,6 +331,7 @@ namespace mtconnect
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~Message() override = default;
+      ObservationPtr copy() const override { return std::make_shared<Message>(*this); }
     };
 
     class Alarm : public Event
@@ -331,7 +342,8 @@ namespace mtconnect
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~Alarm() override = default;
-    };
+      ObservationPtr copy() const override { return std::make_shared<Alarm>(*this); }
+   };
 
     using ObservationComparer = bool (*)(ObservationPtr &, ObservationPtr &);
     inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2) { return *aE1 < *aE2; }

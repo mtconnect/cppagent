@@ -55,6 +55,11 @@ namespace mtconnect
     class ShdrTokenMapper : public Transform
     {
     public:
+      ShdrTokenMapper(const ShdrTokenMapper &) = default;
+      ShdrTokenMapper()
+      {
+        m_guard = TypeGuard<Timestamped>();
+      }
       const EntityPtr operator()(const EntityPtr entity) override;
 
       // Takes a tokenized set of fields and maps them to timestamp and data items
@@ -71,12 +76,6 @@ namespace mtconnect
       GetDevice m_getDevice;
       GetDataItem m_getDataItem;
 
-      TransformPtr bindTo(TransformPtr trans)
-      {
-        trans->bind<Timestamped>(this->getptr());
-        return getptr();
-      }
-
     protected:
       // Logging Context
       std::set<std::string> m_logOnce;
@@ -85,32 +84,23 @@ namespace mtconnect
     class UpcaseValue : public Transform
     {
     public:
+      UpcaseValue(const UpcaseValue &) = default;
+      UpcaseValue()
+      {
+        m_guard = ExactTypeGuard<observation::Event>(SKIP);
+      }
+      
       const EntityPtr operator()(const EntityPtr entity) override
       {
         using namespace observation;
-        using T = std::decay_t<decltype(*entity.get())>;
-        if (std::is_same<T, Event>())
-        {
-          auto event = std::dynamic_pointer_cast<Event>(entity);
-          auto nos = std::make_shared<Event>(*event.get());
-          upcase(std::get<std::string>(nos->getValue()));
-          return next(nos);
-        }
-        else
-        {
-          return next(entity);
-        }
+        auto event = std::dynamic_pointer_cast<Event>(entity);
+        if (!entity)
+          throw EntityError("Unexpected Entity type in UpcaseValue: ", entity->getName());
+        auto nos = std::make_shared<Event>(*event.get());
+        
+        upcase(std::get<std::string>(nos->getValue()));
+        return next(nos);
       }
-      
-      TransformPtr bindTo(TransformPtr trans)
-      {
-        // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
-        // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
-        using namespace observation;
-        trans->bind<Event>(this->getptr());
-        return getptr();
-      }
-
     };
 
   }  // namespace source

@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "source/shdr_tokenizer.hpp"
-#include "source/timestamp_extractor.hpp"
+#include "pipeline/shdr_tokenizer.hpp"
+#include "pipeline/timestamp_extractor.hpp"
 #include "entity/entity.hpp"
 
 #include <chrono>
@@ -41,6 +41,7 @@ protected:
     dlib::set_all_logging_levels(dlib::LDEBUG);
 
     m_tokenizer = make_shared<ShdrTokenizer>();
+    m_tokenizer->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
   }
   
   void TearDown() override
@@ -49,29 +50,6 @@ protected:
   }
   
   shared_ptr<ShdrTokenizer> m_tokenizer;
-
-#if 0
-  void TearDown() override
-  {
-    m_dataItems.clear();
-    m_parser.reset();
-    m_observations.clear();
-  }
-  
-  DataItem *makeDataItem(std::map<string,string> attributes)
-  {
-    auto di = make_unique<DataItem>(attributes);
-    DataItem *r = di.get();
-    m_dataItems.emplace(attributes["id"], move(di));
-    
-    return r;
-  }
- 
-  std::list<ObservationPtr> m_observations;
-  std::map<string,unique_ptr<DataItem>> m_dataItems;
-  Context m_context;
-  unique_ptr<ShdrParser> m_parser;
-#endif
 };
 
 inline std::list<std::string> extract(const Properties &props)

@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "source/shdr_tokenizer.hpp"
-#include "source/timestamp_extractor.hpp"
+#include "pipeline/shdr_tokenizer.hpp"
+#include "pipeline/timestamp_extractor.hpp"
 
 #include <chrono>
 
@@ -38,6 +38,7 @@ TEST(TimestampExtractorTest, TestTimeExtraction)
   tokens->m_tokens = { "2021-01-19T12:00:00.12345Z", "hello" };
 
   auto extractor = make_shared<ExtractTimestamp>();
+  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
   auto out = (*extractor)(tokens);
   auto timestamped = dynamic_pointer_cast<Timestamped>(out);
   ASSERT_TRUE(timestamped);
@@ -54,6 +55,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
   tokens->m_tokens = { "2021-01-19T12:00:00.12345Z@100.0", "hello" };
 
   auto extractor = make_shared<ExtractTimestamp>();
+  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
   auto out = (*extractor)(tokens);
   auto timestamped = dynamic_pointer_cast<Timestamped>(out);
   ASSERT_TRUE(timestamped);
@@ -71,6 +73,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
   tokens->m_tokens = { "1000.0", "hello" };
 
   auto extractor = make_shared<ExtractTimestamp>();
+  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
   extractor->m_now = []() -> Timestamp {
     // 2021-01-19T10:00:00Z
     return std::chrono::system_clock::from_time_t(1611050400);
@@ -101,6 +104,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
   tokens->m_tokens = {"2021-01-19T10:01:00Z", "hello"};
 
   auto extractor = make_shared<ExtractTimestamp>();
+  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
   extractor->m_now = []() -> Timestamp {
     // 2021-01-19T10:00:00Z
     return std::chrono::system_clock::from_time_t(1611050400);

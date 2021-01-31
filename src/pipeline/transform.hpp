@@ -19,6 +19,7 @@
 
 #include "entity/entity.hpp"
 #include <any>
+#include "guard.hpp"
 
 namespace mtconnect
 {
@@ -34,50 +35,80 @@ namespace mtconnect
 
     class Transform;
     using TransformPtr = std::shared_ptr<Transform>;
-    using TransformMap = std::unordered_map<std::type_index, TransformPtr>;
+    using TransformList = std::list<TransformPtr>;
 
     class Transform : public std::enable_shared_from_this<Transform>
     {
     public:
-      virtual ~Transform() = default;
       Transform(const Transform &) = default;
       Transform() = default;
+      virtual ~Transform() = default;
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
             
       const entity::EntityPtr next(const entity::EntityPtr entity)
       {
-        using namespace std;
-        
-        if (m_always)
-          return (*m_always)(entity);
-        
-        auto &r = *entity.get();
-        auto next = m_next.find(type_index(typeid(r)));
-        if (next != m_next.end())
-          return (*next->second)(entity);
-        else
+        if (m_next.empty())
           return entity;
-      }
-
-      template <typename T, typename ... Ts>
-      void bind(TransformPtr trans)
-      {
-        if constexpr (std::is_same_v<T, std::any>)
-          m_always = trans;
-        else
+        
+        using namespace std;
+        using namespace entity;
+        
+        for (auto &t : m_next)
         {
-          if (m_next.count(std::type_index(typeid(T))) == 0)
-            m_next[std::type_index(typeid(T))] = trans;
-          
-          ((m_next.count(std::type_index(typeid(Ts))) == 0 ? m_next[std::type_index(typeid(Ts))] = trans : 0), ...);
+          switch (t->check(entity))
+          {
+          case RUN:
+            return (*t)(entity);
+            
+          case SKIP:
+            return t->next(entity);
+                            
+          case DISPARATE:
+            // Move on to the next
+            break;
+          }
         }
+        
+        throw EntityError("Cannot find matching transform for " + entity->getName());
+        
+        return EntityPtr();
       }
 
+      TransformPtr bind(TransformPtr trans)
+      {
+        m_next.emplace_back(trans);
+        return trans;
+      }
+      
+      GuardAction check(const entity::EntityPtr entity)
+      {
+        if (!m_guard)
+          return RUN;
+        else
+          return m_guard(entity);
+      }
+      const Guard &getGuard() const { return m_guard; }
+      void setGuard(const Guard &guard) { m_guard = guard; }
+
+    protected:
       std::string m_name;
-      TransformPtr m_always;
-      TransformMap m_next;
+      TransformList m_next;
+      Guard        m_guard;
+    };
+    
+    class NullTransform : public Transform
+    {
+    public:
+      NullTransform(Guard guard)
+      {
+        m_guard = guard;
+      }
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+      {
+        return entity;
+      }
     };
 
   }  // namespace source
