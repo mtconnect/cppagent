@@ -87,7 +87,8 @@ namespace mtconnect
       UpcaseValue(const UpcaseValue &) = default;
       UpcaseValue()
       {
-        m_guard = ExactTypeGuard<observation::Event>(SKIP);
+        using namespace observation;
+        m_guard = ExactTypeGuard<Event>() || TypeGuard<Observation>(SKIP);
       }
       
       const EntityPtr operator()(const EntityPtr entity) override

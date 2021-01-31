@@ -628,8 +628,6 @@ namespace mtconnect
     for (auto device : m_agent->getDevices())
       device->m_preserveUuid = defaultPreserve;
 
-    createHandlers();
-
     ConfigOptions options;
     options["PreserveUUID"] = defaultPreserve;
     options["LegacyTimeout"] = legacyTimeout;
@@ -657,27 +655,6 @@ namespace mtconnect
     loadStyle(reader, "ErrorStyle", cache, xmlPrinter, &XmlPrinter::setErrorStyle);
 
     loadTypes(reader, cache);
-  }
-
-  void AgentConfiguration::createHandlers()
-  {
-    // Wiring for adapter to agent
-    m_adapterHandler = make_unique<adapter::Handler>();
-    m_adapterHandler->m_processData = [this](const std::string &data) {
-      // m_shdrParser->processData(data);
-    };
-    m_adapterHandler->m_protocolCommand = [this](const std::string &command) {
-      // TODO: Handle commands
-    };
-    m_adapterHandler->m_connected = [this](const adapter::Adapter &adapter) {
-      // m_agent->connected(adapter);
-    };
-    m_adapterHandler->m_disconnected = [this](const adapter::Adapter &adapter) {
-      // m_agent->disconnected(adapter, adapter.getAllDevices());
-    };
-    m_adapterHandler->m_connecting = [this](const adapter::Adapter &adapter) {
-      m_agent->connecting(adapter);
-    };
   }
 
   void AgentConfiguration::loadAdapters(ConfigReader &reader, const ConfigOptions &options)
@@ -760,8 +737,9 @@ namespace mtconnect
 
         g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
 
-        auto adp = new Adapter(*m_adapterHandler, host, port, adapterOptions);
-
+        auto adp = new Adapter(host, port, adapterOptions);
+        auto pipeline = new pipeline::AdapterPipeline(adapterOptions, m_agent.get(), adp);
+        m_pipelines.emplace_back(std::move(pipeline));
         m_agent->addAdapter(adp, false);
       }
     }
@@ -769,7 +747,9 @@ namespace mtconnect
     {
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
-      auto adp = new Adapter(*m_adapterHandler, "localhost", 7878, options);
+      auto adp = new Adapter("localhost", 7878, options);
+      auto pipeline = new pipeline::AdapterPipeline(options, m_agent.get(), adp);
+      m_pipelines.emplace_back(std::move(pipeline));
       m_agent->addAdapter(adp, false);
     }
     else

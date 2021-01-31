@@ -137,7 +137,10 @@ namespace mtconnect
       auto obs = dynamic_pointer_cast<Observation>(ent);
       obs->m_timestamp = timestamp;
       obs->m_dataItem = dataItem;
-      if (dataItem->isSample())
+      
+      if (unavailable)
+        obs->makeUnavailable();
+      else if (dataItem->isSample())
       {
         if (dataItem->conversionRequired())
         {
@@ -145,8 +148,6 @@ namespace mtconnect
           dataItem->convertValue(value);
         }
       }
-      if (unavailable)
-        obs->makeUnavailable();
       if (!dataItem->isCondition())
         obs->setEntityName();
       else

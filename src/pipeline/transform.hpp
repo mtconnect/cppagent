@@ -65,7 +65,7 @@ namespace mtconnect
           case SKIP:
             return t->next(entity);
                             
-          case DISPARATE:
+          case DISREGARD:
             // Move on to the next
             break;
           }

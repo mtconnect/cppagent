@@ -173,7 +173,7 @@ namespace mtconnect
                                     Milliseconds, StringList>;
   using ConfigOptions = std::map<std::string, ConfigOption>;
   template<typename T>
-  const std::optional<T> GetOption(const ConfigOptions &options, const std::string &name)
+  inline const std::optional<T> GetOption(const ConfigOptions &options, const std::string &name)
   {
     auto v = options.find(name);
     if (v != options.end())
@@ -181,6 +181,16 @@ namespace mtconnect
     else
       return std::nullopt;
   }
+  
+  inline bool IsOptionSet(const ConfigOptions &options, const std::string &name)
+  {
+    auto v = options.find(name);
+    if (v != options.end())
+      return std::get<bool>(v->second);
+    else
+      return false;
+  }
+  
 
 #ifdef _WINDOWS
 #include <io.h>

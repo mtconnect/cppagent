@@ -61,7 +61,7 @@ namespace mtconnect
     {
     public:
       // Associate adapter with a device & connect to the server & port
-      Adapter(const Handler &handler, const std::string &server, const unsigned int port,
+      Adapter(const std::string &server, const unsigned int port,
               const ConfigOptions &options);
       Adapter(const Adapter &) = delete;
 
@@ -107,22 +107,6 @@ namespace mtconnect
       // Agent Device methods
       const std::string &getUrl() const { return m_url; }
       const std::string &getIdentity() const { return m_identity; }
-
-#if 0
-      bool isDuplicate(DataItem *dataItem, const std::string &value, double timeOffset) const
-      {
-        if (!dataItem->allowDups())
-        {
-          if (dataItem->hasMinimumDelta() || dataItem->hasMinimumPeriod())
-            return dataItem->isFiltered(dataItem->convertValue(stringToFloat(value.c_str())),
-                                        timeOffset);
-          else
-            return m_context.m_dupCheck && dataItem->isDuplicate(value);
-        }
-        else
-          return false;
-      }
-#endif
 
       // Stop
       void stop();

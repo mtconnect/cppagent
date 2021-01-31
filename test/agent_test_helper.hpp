@@ -131,13 +131,14 @@ class AgentTestHelper
     return m_agent.get();
   }
   
-  auto addAdapter(const std::string &host = "localhost", uint16_t port = 7878,
+  auto addAdapter(mtconnect::ConfigOptions options = {},
+                  const std::string &host = "localhost", uint16_t port = 7878,
                   const std::string &device = "")
   {
     using namespace mtconnect;
-    ConfigOptions options;
-    adpt::Handler handler;
-    m_adapter = new adpt::Adapter(handler, host, port, options);
+    m_adapter = new adpt::Adapter(host, port, options);
+    m_pipeline = std::make_unique<pipeline::AdapterPipeline>(options, m_agent.get(),
+                                                      m_adapter);
     m_agent->addAdapter(m_adapter);
 
     return m_adapter;
@@ -164,7 +165,7 @@ class AgentTestHelper
               << std::endl;
   }
 
-  std::unique_ptr<mtconnect::pipeline::Pipeline> m_pipeline;
+  std::unique_ptr<mtconnect::pipeline::AdapterPipeline> m_pipeline;
   adpt::Adapter *m_adapter{nullptr};
   bool m_dispatched { false };
   std::unique_ptr<mtconnect::Agent> m_agent;

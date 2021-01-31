@@ -52,6 +52,7 @@ namespace mtconnect
     
     class AdapterPipeline : public Pipeline
     {
+    public:
       AdapterPipeline(const ConfigOptions &options, Agent *agent, adapter::Adapter *adapter);
       void build() override;
 

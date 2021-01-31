@@ -38,10 +38,9 @@ namespace mtconnect
     static dlib::logger g_logger("input.adapter");
 
     // Adapter public methods
-    Adapter::Adapter(const Handler &handler, const string &server, const unsigned int port,
+    Adapter::Adapter(const string &server, const unsigned int port,
                      const ConfigOptions &options)
       : Connector(server, port, 60s),
-        m_handler(new Handler(handler)),
         m_running(true),
         m_reconnectInterval{10000ms}
     {

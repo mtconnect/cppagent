@@ -24,7 +24,7 @@ namespace mtconnect
   namespace pipeline
   {
     enum GuardAction {
-      DISPARATE,
+      DISREGARD,
       RUN,
       SKIP
     };
@@ -42,7 +42,7 @@ namespace mtconnect
 
       GuardAction operator()(const entity::EntityPtr entity)
       {
-        return DISPARATE;
+        return DISREGARD;
       }
       auto &operator||(Guard other)
       {
@@ -77,7 +77,7 @@ namespace mtconnect
         else if (m_alternative)
           return m_alternative(entity);
         else
-          return DISPARATE;
+          return DISREGARD;
       }
       auto &operator||(Guard other)
       {
@@ -110,7 +110,7 @@ namespace mtconnect
         else if (m_alternative)
           return m_alternative(entity);
         else
-          return DISPARATE;
+          return DISREGARD;
       }
       auto &operator||(Guard other)
       {

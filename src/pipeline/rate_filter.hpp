@@ -18,20 +18,17 @@
 #pragma once
 
 #include "transform.hpp"
+#include "observation/observation.hpp"
 
 namespace mtconnect
 {
+  class Agent;
   namespace pipeline
   {
     class RateFilter : public Transform
     {
     public:
-      RateFilter()
-      {
-        using namespace observation;
-        m_guard = TypeGuard<Event, Sample>() || TypeGuard<Observation>(SKIP);
-      }
-      
+      RateFilter(Agent *);      
       ~RateFilter() override = default;
 
       bool filterMinimumDelta(const std::string &id, double value, double fv)
@@ -76,10 +73,12 @@ namespace mtconnect
         return false;
       }
             
-      const EntityPtr operator()(const EntityPtr entity) override
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
       {
         using namespace std;
         using namespace observation;
+        using namespace entity;
+        
         if (m_minimumDelta.size() > 0 || m_minimumDuration.size() > 0)
         {
           if (auto o = std::dynamic_pointer_cast<Observation>(entity);

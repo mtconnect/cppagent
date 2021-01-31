@@ -55,16 +55,17 @@ namespace mtconnect
         auto entity = make_shared<Entity>("Data", Properties{{"VALUE", data}});
         run(entity);
       };
+      m_adapter->setHandler(m_handler);
 
-      TransformPtr next = make_shared<ShdrTokenizer>();
+      TransformPtr next = m_start = make_shared<ShdrTokenizer>();
 
       // Optional type based transforms
-      if (auto o = GetOption<bool>(m_options, "IgnoreTimestamps"); o && *o)
+      if (IsOptionSet(m_options, "IgnoreTimestamps"))
         next = next->bind(make_shared<IgnoreTimestamp>());
       else
       {
         auto extract = make_shared<ExtractTimestamp>();
-        if (auto rel = GetOption<bool>(m_options, "RelativeTime"); rel && *rel)
+        if (IsOptionSet(m_options, "RelativeTime"))
           extract->m_relativeTime = true;
         next = next->bind(extract);
       }
@@ -89,40 +90,22 @@ namespace mtconnect
       auto asset = mapper->bind(make_shared<DeliverAsset>());
             
       // Branched flow
-      auto upopt = GetOption<bool>(m_options, "UpcaseDataItemValue");
-      if (upopt && *upopt)
+      if (IsOptionSet(m_options, "UpcaseDataItemValue"))
         next = next->bind(make_shared<UpcaseValue>());
       
-      auto dupopt = GetOption<bool>(m_options, "FilterDuplicates");
-      if (dupopt && *dupopt)
+      if (IsOptionSet(m_options, "FilterDuplicates"))
         next = next->bind(make_shared<DuplicateFilter>());
-      auto rate = make_shared<RateFilter>();
+      auto rate = make_shared<RateFilter>(m_agent);      
       next = next->bind(rate);
-      
-      // Scan DataItems for rate filters...
-      // TODO: Move to rate_filter.cpp
-      for (auto &device : m_agent->getDevices())
-      {
-        for (auto &dip : device->getDeviceDataItems())
-        {
-          auto di = dip.second;
-          if (di->hasMinimumDelta())
-            rate->addMinimumDelta(dip.first, di->getFilterValue());
-          if (di->hasMinimumPeriod())
-            rate->addMinimumDuration(dip.first, chrono::duration<double>(di->getFilterPeriod()));
-        }
-      }
-      
+
       // Convert values
-      auto convopt = GetOption<bool>(m_options, "ConversionRequired");
-      if (convopt && *convopt)
+      if (IsOptionSet(m_options, "ConversionRequired"))
         next = next->bind(make_shared<ConvertSample>());
       
       // Deliver
       next->bind(make_shared<DeliverObservation>([this](ObservationPtr obs){
         m_agent->addToBuffer(obs);
       }));
-      m_adapter->setHandler(m_handler);
     }
 
   }
