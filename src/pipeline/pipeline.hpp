@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "transform.hpp"
 #include "observation/observation.hpp"
-#include "pipeline_contract.hpp"
 #include "pipeline_context.hpp"
+#include "pipeline_contract.hpp"
+#include "transform.hpp"
 
 namespace mtconnect
 {
@@ -29,41 +29,37 @@ namespace mtconnect
   class DataItem;
   class Asset;
   using AssetPtr = std::shared_ptr<Asset>;
-    
+
   namespace adapter
   {
     class Adapter;
     struct Handler;
-  }
+  }  // namespace adapter
   namespace pipeline
-  {        
+  {
     class Pipeline
     {
     public:
       Pipeline(const ConfigOptions &options, PipelineContextPtr context)
-      : m_start(std::make_shared<Start>()),
-        m_options(options), m_context(context)
-      {}
+        : m_start(std::make_shared<Start>()), m_options(options), m_context(context)
+      {
+      }
       virtual ~Pipeline() = default;
       virtual void build() = 0;
-      
-      const entity::EntityPtr run(const entity::EntityPtr entity)
-      {
-        return m_start->next(entity);
-      }
-      
+
+      const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
+
       TransformPtr bind(TransformPtr transform)
       {
         m_start->bind(transform);
         return transform;
       }
-      
+
     protected:
       class Start : public Transform
       {
       public:
-        Start()
-        : Transform("Start")
+        Start() : Transform("Start")
         {
           m_guard = [](const entity::EntityPtr entity) { return SKIP; };
         }
@@ -74,10 +70,10 @@ namespace mtconnect
           return entity::EntityPtr();
         }
       };
-      
+
       TransformPtr m_start;
       ConfigOptions m_options;
       PipelineContextPtr m_context;
-    };    
-  }
+    };
+  }  // namespace pipeline
 }  // namespace mtconnect

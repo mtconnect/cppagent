@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "transform.hpp"
-#include "observation/observation.hpp"
 #include "assets/asset.hpp"
+#include "observation/observation.hpp"
+#include "transform.hpp"
 
 namespace mtconnect
 {
@@ -28,8 +28,7 @@ namespace mtconnect
     class ConvertSample : public Transform
     {
     public:
-      ConvertSample()
-      : Transform("ConvertSample")
+      ConvertSample() : Transform("ConvertSample")
       {
         using namespace observation;
         m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
@@ -47,12 +46,12 @@ namespace mtconnect
             auto ns = sample->copy();
             Value &value = ns->getValue();
             di->convertValue(value);
-            
+
             return next(ns);
           }
         }
         return next(entity);
       }
     };
-  }
+  }  // namespace pipeline
 }  // namespace mtconnect

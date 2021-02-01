@@ -16,6 +16,7 @@
 //
 
 #include "deliver.hpp"
+
 #include "agent.hpp"
 #include "assets/cutting_tool.hpp"
 #include "assets/file_asset.hpp"
@@ -24,7 +25,7 @@ namespace mtconnect
 {
   using namespace observation;
   using namespace entity;
-  
+
   namespace pipeline
   {
     const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
@@ -33,11 +34,12 @@ namespace mtconnect
       auto o = std::dynamic_pointer_cast<Observation>(entity);
       if (!o)
       {
-        throw EntityError("Unexpected entity type, cannot convert to observation in DeliverObservation");
+        throw EntityError(
+            "Unexpected entity type, cannot convert to observation in DeliverObservation");
       }
 
       m_contract->deliverObservation(o);
-      
+
       return entity;
     }
 
@@ -48,12 +50,10 @@ namespace mtconnect
       {
         throw EntityError("Unexpected entity type, cannot convert to asset in DeliverObservation");
       }
-      
+
       m_contract->deliverAsset(a);
 
       return entity;
-    }    
-  }
-}
-
- 
+    }
+  }  // namespace pipeline
+}  // namespace mtconnect

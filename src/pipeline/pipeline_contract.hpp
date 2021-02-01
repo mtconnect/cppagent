@@ -26,13 +26,13 @@ namespace mtconnect
   {
     class Observation;
     using ObservationPtr = std::shared_ptr<Observation>;
-  }
+  }  // namespace observation
   namespace entity
   {
     class Entity;
     using EntityPtr = std::shared_ptr<Entity>;
-  }
-  
+  }  // namespace entity
+
   namespace pipeline
   {
     class PipelineContract
@@ -40,16 +40,16 @@ namespace mtconnect
     public:
       PipelineContract() = default;
       virtual ~PipelineContract() = default;
-      
+
       using EachDataItem = std::function<void(const DataItem *di)>;
 
       virtual DataItem *findDataItem(const std::string &, const std::string &) = 0;
       virtual void eachDataItem(EachDataItem fun) = 0;
-      virtual void deliverObservation(observation::ObservationPtr ) = 0;
-      virtual void deliverAsset(AssetPtr ) = 0;
-      virtual void deliverAssetCommand(entity::EntityPtr ) = 0;
-      virtual void deliverCommand(entity::EntityPtr ) = 0;
-      virtual void deliverConnectStatus(entity::EntityPtr ) = 0;
+      virtual void deliverObservation(observation::ObservationPtr) = 0;
+      virtual void deliverAsset(AssetPtr) = 0;
+      virtual void deliverAssetCommand(entity::EntityPtr) = 0;
+      virtual void deliverCommand(entity::EntityPtr) = 0;
+      virtual void deliverConnectStatus(entity::EntityPtr) = 0;
     };
-  }
-}
+  }  // namespace pipeline
+}  // namespace mtconnect

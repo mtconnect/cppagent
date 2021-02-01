@@ -40,7 +40,7 @@ namespace mtconnect
     // Types of Observations:
     // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
     // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
-    
+
     class Observation;
     using ObservationPtr = std::shared_ptr<Observation>;
     using ObservationList = std::list<ObservationPtr>;
@@ -55,7 +55,6 @@ namespace mtconnect
       static entity::FactoryPtr getFactory();
       ~Observation() override = default;
       virtual ObservationPtr copy() const { return std::make_shared<Observation>(); }
-      
 
       static ObservationPtr make(const DataItem *dataItem, const entity::Properties &props,
                                  const Timestamp &timestamp, entity::ErrorList &errors);
@@ -116,7 +115,7 @@ namespace mtconnect
       const DataItem *m_dataItem{nullptr};
       uint64_t m_sequence{0};
     };
-    
+
     class Sample : public Observation
     {
     public:
@@ -125,7 +124,7 @@ namespace mtconnect
       using Observation::Observation;
       static entity::FactoryPtr getFactory();
       ~Sample() override = default;
-      
+
       ObservationPtr copy() const override { return std::make_shared<Sample>(*this); }
     };
 
@@ -138,7 +137,7 @@ namespace mtconnect
       static entity::FactoryPtr getFactory();
       ~ThreeSpaceSample() override = default;
     };
-    
+
     class Timeseries : public Sample
     {
     public:
@@ -147,10 +146,9 @@ namespace mtconnect
       using Sample::Sample;
       static entity::FactoryPtr getFactory();
       ~Timeseries() override = default;
-      
+
       ObservationPtr copy() const override { return std::make_shared<Timeseries>(*this); }
     };
-    
 
     class Condition;
     using ConditionPtr = std::shared_ptr<Condition>;
@@ -343,7 +341,7 @@ namespace mtconnect
       static entity::FactoryPtr getFactory();
       ~Alarm() override = default;
       ObservationPtr copy() const override { return std::make_shared<Alarm>(*this); }
-   };
+    };
 
     using ObservationComparer = bool (*)(ObservationPtr &, ObservationPtr &);
     inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2) { return *aE1 < *aE2; }

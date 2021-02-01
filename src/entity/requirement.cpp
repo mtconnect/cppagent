@@ -295,7 +295,8 @@ namespace mtconnect
       template <typename U, typename T>
       void operator()(const U &arg, T &t)
       {
-        g_logger << dlib::LDEBUG << "Cannot convert from " << typeid(U).name() << " to " << typeid(T).name();
+        g_logger << dlib::LDEBUG << "Cannot convert from " << typeid(U).name() << " to "
+                 << typeid(T).name();
       }
       // Default
 

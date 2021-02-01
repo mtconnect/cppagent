@@ -15,11 +15,14 @@
 //    limitations under the License.
 //
 
-#include "transform.hpp"
 #include "period_filter.hpp"
+
 #include "agent.hpp"
 #include "device_model/device.hpp"
+#include "transform.hpp"
+
 #include <date/date.h>
+
 #include <chrono>
 
 using namespace std;
@@ -29,17 +32,18 @@ namespace mtconnect
   namespace pipeline
   {
     PeriodFilter::PeriodFilter(PipelineContextPtr context)
-    : Transform("PeriodFilter"), m_state(context->getSharedState<State>(m_name)),
-      m_contract(context->m_contract.get())
+      : Transform("PeriodFilter"),
+        m_state(context->getSharedState<State>(m_name)),
+        m_contract(context->m_contract.get())
     {
       using namespace observation;
       m_guard = TypeGuard<Event, Sample>(RUN) || TypeGuard<Observation>(SKIP);
 
       // Scan DataItems for rate filters...
       m_contract->eachDataItem([this](const DataItem *di) {
-          if (di->hasMinimumPeriod())
-            addMinimumDuration(di->getId(), chrono::duration<double>(di->getFilterPeriod()));
+        if (di->hasMinimumPeriod())
+          addMinimumDuration(di->getId(), chrono::duration<double>(di->getFilterPeriod()));
       });
     }
-  }
-}
+  }  // namespace pipeline
+}  // namespace mtconnect

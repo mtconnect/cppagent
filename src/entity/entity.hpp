@@ -40,7 +40,7 @@ namespace mtconnect
       else
         return std::nullopt;
     }
-    
+
     class Entity : public std::enable_shared_from_this<Entity>
     {
     public:
@@ -52,7 +52,7 @@ namespace mtconnect
       }
       Entity(const Entity &entity) = default;
       virtual ~Entity() {}
-      
+
       EntityPtr getptr() { return shared_from_this(); }
 
       bool hasListWithAttribute() const
@@ -149,6 +149,6 @@ namespace mtconnect
       std::string m_name;
       Properties m_properties;
       OrderMapPtr m_order;
-    };    
+    };
   }  // namespace entity
 }  // namespace mtconnect

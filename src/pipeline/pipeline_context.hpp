@@ -18,21 +18,25 @@
 #pragma once
 
 #include "pipeline_contract.hpp"
+
 #include <memory>
 
 namespace mtconnect
 {
   namespace pipeline
   {
-    struct TransformState { virtual ~TransformState() {} };
+    struct TransformState
+    {
+      virtual ~TransformState() {}
+    };
     using TransformStatePtr = std::shared_ptr<TransformState>;
 
     class PipelineContext : public std::enable_shared_from_this<PipelineContext>
     {
     public:
       auto getptr() { return shared_from_this(); }
-      
-      template<typename T>
+
+      template <typename T>
       std::shared_ptr<T> getSharedState(const std::string &name)
       {
         auto &state = m_sharedState[name];
@@ -40,7 +44,7 @@ namespace mtconnect
           state = std::make_shared<T>();
         return std::dynamic_pointer_cast<T>(state);
       }
-            
+
       std::unique_ptr<PipelineContract> m_contract;
 
     protected:
@@ -48,5 +52,5 @@ namespace mtconnect
       SharedState m_sharedState;
     };
     using PipelineContextPtr = std::shared_ptr<PipelineContext>;
-  }
-}
+  }  // namespace pipeline
+}  // namespace mtconnect

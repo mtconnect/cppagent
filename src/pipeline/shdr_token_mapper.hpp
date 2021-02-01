@@ -50,7 +50,7 @@ namespace mtconnect
     public:
       ShdrTokenMapper(const ShdrTokenMapper &) = default;
       ShdrTokenMapper(PipelineContextPtr context)
-      : Transform("ShdrTokenMapper"), m_contract(context->m_contract.get())
+        : Transform("ShdrTokenMapper"), m_contract(context->m_contract.get())
       {
         m_guard = TypeGuard<Timestamped>(RUN);
       }
@@ -79,13 +79,12 @@ namespace mtconnect
     {
     public:
       UpcaseValue(const UpcaseValue &) = default;
-      UpcaseValue()
-      : Transform("UpcaseValue")
+      UpcaseValue() : Transform("UpcaseValue")
       {
         using namespace observation;
         m_guard = ExactTypeGuard<Event>(RUN) || TypeGuard<Observation>(SKIP);
       }
-      
+
       const EntityPtr operator()(const EntityPtr entity) override
       {
         using namespace observation;
@@ -93,11 +92,11 @@ namespace mtconnect
         if (!entity)
           throw EntityError("Unexpected Entity type in UpcaseValue: ", entity->getName());
         auto nos = std::make_shared<Event>(*event.get());
-        
+
         upcase(std::get<std::string>(nos->getValue()));
         return next(nos);
       }
     };
 
-  }  // namespace source
+  }  // namespace pipeline
 }  // namespace mtconnect

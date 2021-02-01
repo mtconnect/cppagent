@@ -629,7 +629,7 @@ namespace mtconnect
 
     for (auto device : m_agent->getDevices())
       device->m_preserveUuid = defaultPreserve;
-    
+
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
     m_pipelineContext->m_contract = m_agent->makePipelineContract();

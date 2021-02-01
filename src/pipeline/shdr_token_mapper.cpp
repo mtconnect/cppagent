@@ -323,5 +323,5 @@ namespace mtconnect
 
       return nullptr;
     }
-  }  // namespace source
+  }  // namespace pipeline
 }  // namespace mtconnect

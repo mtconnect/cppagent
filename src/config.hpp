@@ -18,10 +18,10 @@
 #pragma once
 
 #include "adapter/adapter.hpp"
+#include "adapter/adapter_pipeline.hpp"
 #include "globals.hpp"
 #include "http_server/file_cache.hpp"
 #include "service.hpp"
-#include "adapter/adapter_pipeline.hpp"
 
 #include <dlib/logger.h>
 

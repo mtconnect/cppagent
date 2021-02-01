@@ -41,7 +41,7 @@ namespace mtconnect
   namespace observation
   {
     static dlib::logger g_logger("Observation");
-    
+
     FactoryPtr Observation::getFactory()
     {
       static FactoryPtr factory;
@@ -137,7 +137,7 @@ namespace mtconnect
       auto obs = dynamic_pointer_cast<Observation>(ent);
       obs->m_timestamp = timestamp;
       obs->m_dataItem = dataItem;
-      
+
       if (unavailable)
         obs->makeUnavailable();
       else if (dataItem->isSample())
@@ -186,8 +186,9 @@ namespace mtconnect
           }
           return ent;
         });
-        factory->addRequirements(Requirements{
-            {"count", INTEGER, false}, {"VALUE", DATA_SET, false}, {"resetTriggered", USTRING, false}});
+        factory->addRequirements(Requirements{{"count", INTEGER, false},
+                                              {"VALUE", DATA_SET, false},
+                                              {"resetTriggered", USTRING, false}});
       }
 
       return factory;
@@ -312,8 +313,10 @@ namespace mtconnect
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<Alarm>(name, props);
         });
-        factory->addRequirements(Requirements(
-            {{"code", false}, {"nativeCode", false}, {"state", USTRING, false}, {"severity", false}}));
+        factory->addRequirements(Requirements({{"code", false},
+                                               {"nativeCode", false},
+                                               {"state", USTRING, false},
+                                               {"severity", false}}));
       }
       return factory;
     }

@@ -22,10 +22,10 @@
 #include "http_server/server.hpp"
 #include "observation/checkpoint.hpp"
 #include "observation/circular_buffer.hpp"
+#include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
-#include "pipeline/pipeline_contract.hpp"
 
 #include <chrono>
 #include <list>
@@ -47,7 +47,7 @@ namespace mtconnect
   class AgentDevice;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
-  
+
   class Agent
   {
   public:
@@ -219,7 +219,7 @@ namespace mtconnect
 
   protected:
     friend class AgentPipelineContract;
-    
+
     // Initialization methods
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
@@ -309,15 +309,13 @@ namespace mtconnect
     bool m_logStreamData;
     bool m_pretty;
   };
-  
+
   class AgentPipelineContract : public pipeline::PipelineContract
   {
   public:
-    AgentPipelineContract(Agent *agent)
-    : m_agent(agent)
-    {}
+    AgentPipelineContract(Agent *agent) : m_agent(agent) {}
     ~AgentPipelineContract() = default;
-    
+
     DataItem *findDataItem(const std::string &device, const std::string &name) override
     {
       Device *dev = m_agent->findDeviceByUUIDorName(device);
@@ -334,25 +332,12 @@ namespace mtconnect
         fun(di.second);
       }
     }
-    void deliverObservation(observation::ObservationPtr obs) override
-    {
-      m_agent->addToBuffer(obs);
-    }
-    void deliverAsset(AssetPtr )override
-    {
-    }
-    void deliverAssetCommand(entity::EntityPtr ) override
-    {
-    }
-    void deliverCommand(entity::EntityPtr )override
-    {
+    void deliverObservation(observation::ObservationPtr obs) override { m_agent->addToBuffer(obs); }
+    void deliverAsset(AssetPtr) override {}
+    void deliverAssetCommand(entity::EntityPtr) override {}
+    void deliverCommand(entity::EntityPtr) override {}
+    void deliverConnectStatus(entity::EntityPtr) override {}
 
-    }
-    void deliverConnectStatus(entity::EntityPtr )override
-    {
-
-    }
-    
   protected:
     Agent *m_agent;
   };
@@ -361,5 +346,5 @@ namespace mtconnect
   {
     return std::make_unique<AgentPipelineContract>(this);
   }
-  
+
 }  // namespace mtconnect

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "transform.hpp"
 #include "observation/observation.hpp"
+#include "transform.hpp"
 
 namespace mtconnect
 {
@@ -33,10 +33,10 @@ namespace mtconnect
         std::unordered_map<std::string, std::chrono::duration<double>> m_minimumDuration;
         std::unordered_map<std::string, Timestamp> m_lastTimeOffset;
       };
-      
+
       PeriodFilter(PipelineContextPtr context);
       ~PeriodFilter() override = default;
-      
+
       bool filterPeriod(const std::string &id, Timestamp &value,
                         const std::chrono::duration<double> md)
       {
@@ -55,20 +55,19 @@ namespace mtconnect
         {
           m_state->m_lastTimeOffset[id] = value;
         }
-        
+
         return false;
       }
-            
+
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override
       {
         using namespace std;
         using namespace observation;
         using namespace entity;
-        
+
         if (m_state->m_minimumDuration.size() > 0)
         {
-          if (auto o = std::dynamic_pointer_cast<Observation>(entity);
-              o)
+          if (auto o = std::dynamic_pointer_cast<Observation>(entity); o)
           {
             auto di = o->getDataItem();
             auto &id = di->getId();
@@ -77,8 +76,9 @@ namespace mtconnect
               m_state->m_lastTimeOffset.erase(id);
               return next(entity);
             }
-                        
-            if (auto md = m_state->m_minimumDuration.find(id); md != m_state->m_minimumDuration.end())
+
+            if (auto md = m_state->m_minimumDuration.find(id);
+                md != m_state->m_minimumDuration.end())
             {
               auto value = o->getTimestamp();
               if (filterPeriod(di->getId(), value, md->second))
@@ -88,7 +88,7 @@ namespace mtconnect
         }
         return next(entity);
       }
-      
+
       void addMinimumDuration(const std::string &id, const std::chrono::duration<double> &d)
       {
         m_state->m_minimumDuration[id] = d;
@@ -97,10 +97,10 @@ namespace mtconnect
       {
         m_state->m_minimumDuration[di->getId()] = d;
       }
-      
+
     protected:
       std::shared_ptr<State> m_state;
       PipelineContract *m_contract;
     };
-  }
+  }  // namespace pipeline
 }  // namespace mtconnect

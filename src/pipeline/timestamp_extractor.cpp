@@ -110,5 +110,5 @@ namespace mtconnect
         }
       }
     }
-  }  // namespace source
+  }  // namespace pipeline
 }  // namespace mtconnect

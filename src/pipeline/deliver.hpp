@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "transform.hpp"
-#include "observation/observation.hpp"
 #include "assets/asset.hpp"
+#include "observation/observation.hpp"
+#include "transform.hpp"
 
 namespace mtconnect
 {
@@ -30,12 +30,12 @@ namespace mtconnect
     public:
       using Deliver = std::function<void(observation::ObservationPtr)>;
       DeliverObservation(PipelineContextPtr context)
-      : Transform("DeliverAsset"), m_contract(context->m_contract.get())
+        : Transform("DeliverAsset"), m_contract(context->m_contract.get())
       {
         m_guard = TypeGuard<observation::Observation>(RUN);
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
-      
+
     protected:
       PipelineContract *m_contract;
     };
@@ -45,48 +45,42 @@ namespace mtconnect
     public:
       using Deliver = std::function<void(AssetPtr)>;
       DeliverAsset(PipelineContextPtr context)
-      : Transform("DeliverAsset"), m_contract(context->m_contract.get())
+        : Transform("DeliverAsset"), m_contract(context->m_contract.get())
       {
         m_guard = TypeGuard<Asset>(RUN);
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
-      
+
     protected:
       PipelineContract *m_contract;
     };
-    
+
     class DeliverConnectionStatus : public Transform
     {
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
       DeliverConnectionStatus(PipelineContextPtr context)
-      : Transform("DeliverConnectionStatus"), m_contract(context->m_contract.get())
+        : Transform("DeliverConnectionStatus"), m_contract(context->m_contract.get())
       {
         m_guard = EntityNameGuard("ConnectionStatus", RUN);
       }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-      {
-        return entity;
-      }
-      
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
+
     protected:
       PipelineContract *m_contract;
     };
-    
+
     class DeliverAssetCommand : public Transform
     {
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
       DeliverAssetCommand(PipelineContextPtr context)
-      : Transform("AssetCommand"), m_contract(context->m_contract.get())
+        : Transform("AssetCommand"), m_contract(context->m_contract.get())
       {
         m_guard = EntityNameGuard("ConnectionStatus", RUN);
       }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-      {
-        return entity;
-     }
-      
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
+
     protected:
       PipelineContract *m_contract;
     };
@@ -96,17 +90,14 @@ namespace mtconnect
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
       DeliverCommand(PipelineContextPtr context)
-      : Transform("DeliverCommand"), m_contract(context->m_contract.get())
+        : Transform("DeliverCommand"), m_contract(context->m_contract.get())
       {
         m_guard = EntityNameGuard("Command", RUN);
       }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-      {
-        return entity;
-      }
-      
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
+
     protected:
       PipelineContract *m_contract;
     };
-  }
+  }  // namespace pipeline
 }  // namespace mtconnect

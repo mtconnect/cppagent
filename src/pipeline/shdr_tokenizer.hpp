@@ -45,11 +45,7 @@ namespace mtconnect
     {
     public:
       ShdrTokenizer(const ShdrTokenizer &) = default;
-      ShdrTokenizer()
-      : Transform("ShdrTokenizer")
-      {
-        m_guard = EntityNameGuard("Data", RUN);
-      }
+      ShdrTokenizer() : Transform("ShdrTokenizer") { m_guard = EntityNameGuard("Data", RUN); }
       ~ShdrTokenizer() = default;
 
       const entity::EntityPtr operator()(const entity::EntityPtr data) override
@@ -138,7 +134,7 @@ namespace mtconnect
 
         return tokens;
       }
-      
+
     protected:
       static inline const char *EXP =
           "^("
@@ -148,5 +144,5 @@ namespace mtconnect
           R"RE()(\||$))RE";
       inline static std::regex m_pattern{EXP, std::regex::optimize | std::regex::ECMAScript};
     };
-  }  // namespace source
+  }  // namespace pipeline
 }  // namespace mtconnect

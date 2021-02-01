@@ -23,7 +23,8 @@ namespace mtconnect
 {
   namespace pipeline
   {
-    enum GuardAction {
+    enum GuardAction
+    {
       CONTINUE,
       RUN,
       SKIP
@@ -33,22 +34,13 @@ namespace mtconnect
     class GuardCls
     {
     public:
-      GuardCls(GuardAction match)
-      : m_match(match)
-      {
-      }
+      GuardCls(GuardAction match) : m_match(match) {}
       GuardCls(const GuardCls &) = default;
 
-      GuardAction operator()(const entity::EntityPtr entity)
-      {
-        return m_match;
-      }
-      
-      void setAlternative(Guard &alt)
-      {
-        m_alternative = alt;
-      }
-      
+      GuardAction operator()(const entity::EntityPtr entity) { return m_match; }
+
+      void setAlternative(Guard &alt) { m_alternative = alt; }
+
       GuardAction check(bool matched, const entity::EntityPtr entity)
       {
         if (matched)
@@ -58,54 +50,54 @@ namespace mtconnect
         else
           return CONTINUE;
       }
-            
+
     protected:
       Guard m_alternative;
       GuardAction m_match;
     };
-        
-    template<typename ... Ts>
+
+    template <typename... Ts>
     class TypeGuard : public GuardCls
     {
     public:
       using GuardCls::GuardCls;
-      
-      template<typename T, typename ... R>
+
+      template <typename T, typename... R>
       constexpr bool match(const entity::Entity *ep)
       {
         if constexpr ((sizeof...(R)) == 0)
-          return dynamic_cast<const T*>(ep);
+          return dynamic_cast<const T *>(ep);
         else
-          return dynamic_cast<const T*>(ep) != nullptr || match<R ...>(ep);
+          return dynamic_cast<const T *>(ep) != nullptr || match<R...>(ep);
       }
-      
+
       GuardAction operator()(const entity::EntityPtr entity)
       {
         return check(match<Ts...>(entity.get()), entity);
       }
-      
+
       auto &operator||(Guard other)
       {
         m_alternative = other;
         return *this;
       }
     };
-    
-    template<typename ... Ts>
+
+    template <typename... Ts>
     class ExactTypeGuard : public GuardCls
     {
     public:
       using GuardCls::GuardCls;
-      
-      template<typename T, typename ... R>
+
+      template <typename T, typename... R>
       constexpr bool match(const std::type_info &ti)
       {
         if constexpr ((sizeof...(R)) == 0)
           return typeid(T) == ti;
         else
-          return typeid(T) == ti || match<R ...>(ti);
+          return typeid(T) == ti || match<R...>(ti);
       }
-      
+
       GuardAction operator()(const entity::EntityPtr entity)
       {
         auto &e = *entity.get();
@@ -118,14 +110,11 @@ namespace mtconnect
         return *this;
       }
     };
-    
+
     class EntityNameGuard : public GuardCls
     {
     public:
-      EntityNameGuard(const std::string &name, GuardAction match)
-      : GuardCls(match), m_name(name)
-      {
-      }
+      EntityNameGuard(const std::string &name, GuardAction match) : GuardCls(match), m_name(name) {}
       GuardAction operator()(const entity::EntityPtr entity)
       {
         return check(entity->getName() == m_name, entity);
@@ -135,10 +124,10 @@ namespace mtconnect
         m_alternative = other;
         return *this;
       }
-      
+
     protected:
       std::string m_name;
     };
 
-  }
-}
+  }  // namespace pipeline
+}  // namespace mtconnect

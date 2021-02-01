@@ -15,11 +15,14 @@
 //    limitations under the License.
 //
 
-#include "transform.hpp"
 #include "delta_filter.hpp"
+
 #include "agent.hpp"
 #include "device_model/device.hpp"
+#include "transform.hpp"
+
 #include <date/date.h>
+
 #include <chrono>
 
 using namespace std;
@@ -29,17 +32,18 @@ namespace mtconnect
   namespace pipeline
   {
     DeltaFilter::DeltaFilter(PipelineContextPtr context)
-    : Transform("RateFilter"), m_state(context->getSharedState<State>(m_name)),
-      m_contract(context->m_contract.get())
+      : Transform("RateFilter"),
+        m_state(context->getSharedState<State>(m_name)),
+        m_contract(context->m_contract.get())
     {
       using namespace observation;
       m_guard = ExactTypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
 
       // Scan DataItems for rate filters...
       m_contract->eachDataItem([this](const DataItem *di) {
-          if (di->hasMinimumDelta())
-            addMinimumDelta(di->getId(), di->getFilterValue());
+        if (di->hasMinimumDelta())
+          addMinimumDelta(di->getId(), di->getFilterValue());
       });
     }
-  }
-}
+  }  // namespace pipeline
+}  // namespace mtconnect

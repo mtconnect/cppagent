@@ -17,9 +17,9 @@
 
 #pragma once
 
+#include "observation/observation.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/transform.hpp"
-#include "observation/observation.hpp"
 
 namespace mtconnect
 {
@@ -28,7 +28,7 @@ namespace mtconnect
   class DataItem;
   class Asset;
   using AssetPtr = std::shared_ptr<Asset>;
-    
+
   namespace adapter
   {
     class AdapterPipeline : public pipeline::Pipeline
@@ -36,8 +36,8 @@ namespace mtconnect
     public:
       AdapterPipeline(const ConfigOptions &options, pipeline::PipelineContextPtr context);
       void build() override;
-      
+
       std::unique_ptr<adapter::Handler> makeHandler();
     };
-  }
-}
+  }  // namespace adapter
+}  // namespace mtconnect

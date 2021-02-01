@@ -18,13 +18,13 @@
 #pragma once
 
 #include "entity/entity.hpp"
-#include "pipeline_context.hpp"
 #include "guard.hpp"
+#include "pipeline_context.hpp"
 
 namespace mtconnect
 {
   class DataItem;
-  
+
   namespace pipeline
   {
     // A transform takes an entity and transforms it to another
@@ -41,8 +41,8 @@ namespace mtconnect
 
     using ApplyDataItem = std::function<void(const DataItem *di)>;
     using EachDataItem = std::function<void(ApplyDataItem)>;
-    using FindDataItem = std::function<DataItem*(const std::string &, const std::string &)>;
-    
+    using FindDataItem = std::function<DataItem *(const std::string &, const std::string &)>;
+
     class Transform : public std::enable_shared_from_this<Transform>
     {
     public:
@@ -52,33 +52,33 @@ namespace mtconnect
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
-            
+
       const entity::EntityPtr next(const entity::EntityPtr entity)
       {
         if (m_next.empty())
           return entity;
-        
+
         using namespace std;
         using namespace entity;
-        
+
         for (auto &t : m_next)
         {
           switch (t->check(entity))
           {
-          case RUN:
-            return (*t)(entity);
-            
-          case SKIP:
-            return t->next(entity);
-                            
-          case CONTINUE:
-            // Move on to the next
-            break;
+            case RUN:
+              return (*t)(entity);
+
+            case SKIP:
+              return t->next(entity);
+
+            case CONTINUE:
+              // Move on to the next
+              break;
           }
         }
-        
+
         throw EntityError("Cannot find matching transform for " + entity->getName());
-        
+
         return EntityPtr();
       }
 
@@ -87,7 +87,7 @@ namespace mtconnect
         m_next.emplace_back(trans);
         return trans;
       }
-      
+
       GuardAction check(const entity::EntityPtr entity)
       {
         if (!m_guard)
@@ -101,22 +101,15 @@ namespace mtconnect
     protected:
       std::string m_name;
       TransformList m_next;
-      Guard        m_guard;
+      Guard m_guard;
     };
-    
+
     class NullTransform : public Transform
     {
     public:
-      NullTransform(Guard guard)
-      : Transform("NullTransform")
-      {
-        m_guard = guard;
-      }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-      {
-        return entity;
-      }
+      NullTransform(Guard guard) : Transform("NullTransform") { m_guard = guard; }
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
     };
 
-  }  // namespace source
+  }  // namespace pipeline
 }  // namespace mtconnect

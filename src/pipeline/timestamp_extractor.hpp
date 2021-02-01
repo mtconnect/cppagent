@@ -50,8 +50,8 @@ namespace mtconnect
     {
     public:
       ExtractTimestamp(const ExtractTimestamp &) = default;
-      ExtractTimestamp(const std::string name = "ExtractTimestamp")
-      : Transform(name)
+      ExtractTimestamp(bool relativeTime)
+        : Transform("ExtractTimestamp"), m_relativeTime(relativeTime)
       {
         m_guard = TypeGuard<Tokens>(RUN);
       }
@@ -87,11 +87,11 @@ namespace mtconnect
 
       void extractTimestamp(const std::string &token, TimestampedPtr &ts);
       inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
-      
+
       Now m_now;
-      bool m_relativeTime{false};
 
     protected:
+      bool m_relativeTime{false};
       std::optional<Timestamp> m_base;
       Micros m_offset;
     };
@@ -121,7 +121,7 @@ namespace mtconnect
         res->setProperty("timestamp", res->m_timestamp);
 
         return next(res);
-      }      
+      }
     };
-  }  // namespace source
+  }  // namespace pipeline
 }  // namespace mtconnect

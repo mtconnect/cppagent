@@ -184,7 +184,7 @@ namespace mtconnect
     }
 
     bool hasFilter() { return isSample() && (m_hasMinimumDelta || m_hasMinimumPeriod); }
-    
+
     // Filter checking
     bool isFiltered(const double value, const double timeOffset)
     {

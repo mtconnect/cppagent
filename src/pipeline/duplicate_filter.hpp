@@ -30,46 +30,45 @@ namespace mtconnect
       {
         std::unordered_map<std::string, entity::Value> m_values;
       };
-      
+
       DuplicateFilter(const DuplicateFilter &) = default;
       DuplicateFilter(PipelineContextPtr context)
-      : Transform("DuplicateFilter"), m_state(context->getSharedState<State>(m_name))
+        : Transform("DuplicateFilter"), m_state(context->getSharedState<State>(m_name))
       {
         using namespace observation;
         m_guard = ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>(RUN) ||
                   TypeGuard<Observation>(SKIP);
       }
       ~DuplicateFilter() override = default;
-      
-      const EntityPtr operator()(const EntityPtr entity) override
+
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
       {
         using namespace observation;
-        if (auto o = std::dynamic_pointer_cast<Observation>(entity);
-            o)
+        if (auto o = std::dynamic_pointer_cast<Observation>(entity); o)
         {
           auto &values = m_state->m_values;
-          
+
           auto di = o->getDataItem();
           if (!di->allowDups())
           {
             auto old = values.find(di->getId());
             if (old != values.end() && old->second == o->getValue())
-              return EntityPtr();
-            
+              return entity::EntityPtr();
+
             if (old == values.end())
               values[di->getId()] = o->getValue();
             else if (old->second != o->getValue())
               old->second = o->getValue();
           }
         }
-        
+
         return next(entity);
       }
-      
+
     protected:
       std::shared_ptr<State> m_state;
     };
 
-  }
-  
+  }  // namespace pipeline
+
 }  // namespace mtconnect
