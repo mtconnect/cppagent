@@ -32,8 +32,8 @@ namespace mtconnect
       };
       
       DuplicateFilter(const DuplicateFilter &) = default;
-      DuplicateFilter(std::shared_ptr<State> state)
-      : Transform("DuplicateFilter"), m_state(state)
+      DuplicateFilter(PipelineContextPtr context)
+      : Transform("DuplicateFilter"), m_state(context->getSharedState<State>(m_name))
       {
         using namespace observation;
         m_guard = ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>(RUN) ||

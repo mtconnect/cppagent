@@ -22,7 +22,7 @@
 #include "agent_test_helper.hpp"
 #include "pipeline/shdr_token_mapper.hpp"
 #include "pipeline/duplicate_filter.hpp"
-#include "pipeline/rate_filter.hpp"
+#include "pipeline/delta_filter.hpp"
 #include "pipeline/deliver.hpp"
 #include "pipeline/pipeline.hpp"
 #include "observation/observation.hpp"

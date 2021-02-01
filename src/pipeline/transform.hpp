@@ -18,7 +18,7 @@
 #pragma once
 
 #include "entity/entity.hpp"
-#include "pipeline_contract.hpp"
+#include "pipeline_context.hpp"
 #include "guard.hpp"
 
 namespace mtconnect
@@ -43,9 +43,6 @@ namespace mtconnect
     using EachDataItem = std::function<void(ApplyDataItem)>;
     using FindDataItem = std::function<DataItem*(const std::string &, const std::string &)>;
     
-    struct TransformState { virtual ~TransformState() {} };
-    using TransformStatePtr = std::shared_ptr<TransformState>;
-
     class Transform : public std::enable_shared_from_this<Transform>
     {
     public:

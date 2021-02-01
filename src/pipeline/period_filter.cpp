@@ -16,7 +16,7 @@
 //
 
 #include "transform.hpp"
-#include "rate_filter.hpp"
+#include "period_filter.hpp"
 #include "agent.hpp"
 #include "device_model/device.hpp"
 #include <date/date.h>
@@ -28,16 +28,15 @@ namespace mtconnect
 {
   namespace pipeline
   {
-    RateFilter::RateFilter(std::shared_ptr<State> state, PipelineContract *contract)
-    : Transform("RateFilter"), m_state(state), m_contract(contract)
+    PeriodFilter::PeriodFilter(PipelineContextPtr context)
+    : Transform("PeriodFilter"), m_state(context->getSharedState<State>(m_name)),
+      m_contract(context->m_contract.get())
     {
       using namespace observation;
       m_guard = TypeGuard<Event, Sample>(RUN) || TypeGuard<Observation>(SKIP);
 
       // Scan DataItems for rate filters...
       m_contract->eachDataItem([this](const DataItem *di) {
-          if (di->hasMinimumDelta())
-            addMinimumDelta(di->getId(), di->getFilterValue());
           if (di->hasMinimumPeriod())
             addMinimumDuration(di->getId(), chrono::duration<double>(di->getFilterPeriod()));
       });

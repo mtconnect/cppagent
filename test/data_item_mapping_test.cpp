@@ -21,6 +21,7 @@
 
 #include "pipeline/shdr_token_mapper.hpp"
 #include "pipeline/timestamp_extractor.hpp"
+#include "pipeline/pipeline_context.hpp"
 #include "observation/observation.hpp"
 #include <chrono>
 
@@ -29,15 +30,36 @@ using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
 using namespace std;
 
+class MockPipelineContract : public PipelineContract
+{
+public:
+  MockPipelineContract(std::map<string,unique_ptr<DataItem>> &items)
+  : m_dataItems(items)
+  {
+  }
+  DataItem *findDataItem(const std::string &device, const std::string &name) override
+  {
+    return m_dataItems[name].get();
+  }
+  void eachDataItem(EachDataItem fun) override {}
+  void deliverObservation(observation::ObservationPtr obs) override {}
+  void deliverAsset(AssetPtr )override {}
+  void deliverAssetCommand(entity::EntityPtr ) override {}
+  void deliverCommand(entity::EntityPtr )override {}
+  void deliverConnectStatus(entity::EntityPtr )override {}
+  
+  std::map<string,unique_ptr<DataItem>> &m_dataItems;
+};
+
 class DataItemMappingTest : public testing::Test
 {
 protected:
   void SetUp() override
   {
-    m_mapper = make_shared<ShdrTokenMapper>();
-    m_mapper->m_getDevice = [](const std::string &uuid) { return nullptr; };
-    m_mapper->m_getDataItem = [this](const Device *, const std::string &name) { return m_dataItems[name].get(); };
-    m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
+    m_context = make_shared<PipelineContext>();
+    m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
+    m_mapper = make_shared<ShdrTokenMapper>(m_context);
+    m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
 
   void TearDown() override
@@ -62,7 +84,8 @@ protected:
     ts->setProperty("timestamp", ts->m_timestamp);
     return ts;
   }
- 
+
+  shared_ptr<PipelineContext> m_context;
   shared_ptr<ShdrTokenMapper> m_mapper;
   std::map<string,unique_ptr<DataItem>> m_dataItems;
 };

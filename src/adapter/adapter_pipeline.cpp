@@ -21,7 +21,8 @@
 #include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/shdr_token_mapper.hpp"
 #include "pipeline/duplicate_filter.hpp"
-#include "pipeline/rate_filter.hpp"
+#include "pipeline/delta_filter.hpp"
+#include "pipeline/period_filter.hpp"
 #include "pipeline/timestamp_extractor.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"
@@ -83,13 +84,11 @@ namespace mtconnect
       return handler;
     }
 
-
     void AdapterPipeline::build()
     {
       TransformPtr next = bind(make_shared<ShdrTokenizer>());
-      //bind(make_shared<DeliverConnectionStatus>());
-      //bind(make_shared<DeliverAssetCommand>());
-      //bind(make_shared<DeliverProcessCommand>());
+      bind(make_shared<DeliverConnectionStatus>(m_context));
+      bind(make_shared<DeliverCommand>(m_context));
       
       // Optional type based transforms
       if (IsOptionSet(m_options, "IgnoreTimestamps"))
@@ -103,36 +102,34 @@ namespace mtconnect
       }
       
       // Token mapping to data items and assets
-      auto mapper = make_shared<ShdrTokenMapper>(m_context->m_contract.get());
+      auto mapper = make_shared<ShdrTokenMapper>(m_context);
       next = next->bind(mapper);
       
       // Handle the observations and send to nowhere
       mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
 
       // Go directly to asset delivery
-      auto asset = mapper->bind(make_shared<DeliverAsset>(m_context->m_contract.get()));
-            
-      // Branched flow
+      mapper->bind(make_shared<DeliverAsset>(m_context));
+      mapper->bind(make_shared<DeliverAssetCommand>(m_context));
+
+      // Uppercase Events
       if (IsOptionSet(m_options, "UpcaseDataItemValue"))
         next = next->bind(make_shared<UpcaseValue>());
       
+      // Filter dups, by delta, and by period
       if (IsOptionSet(m_options, "FilterDuplicates"))
       {
-        auto state = m_context->getSharedState<DuplicateFilter::State>("DuplicationFilter");
-        next = next->bind(make_shared<DuplicateFilter>(state));
+        next = next->bind(make_shared<DuplicateFilter>(m_context));
       }
-      {
-        auto state = m_context->getSharedState<RateFilter::State>("RateFilter");
-        auto rate = make_shared<RateFilter>(state, m_context->m_contract.get());
-        next = next->bind(rate);
-      }
+      next = next->bind(make_shared<DeltaFilter>(m_context));
+      next = next->bind(make_shared<PeriodFilter>(m_context));
 
       // Convert values
       if (IsOptionSet(m_options, "ConversionRequired"))
         next = next->bind(make_shared<ConvertSample>());
       
       // Deliver
-      next->bind(make_shared<DeliverObservation>(m_context->m_contract.get()));
+      next->bind(make_shared<DeliverObservation>(m_context));
     }
   }
 }

@@ -25,19 +25,17 @@ namespace mtconnect
   class Agent;
   namespace pipeline
   {
-    class RateFilter : public Transform
+    class DeltaFilter : public Transform
     {
     public:
       struct State : TransformState
       {
         std::unordered_map<std::string, double> m_minimumDelta;
-        std::unordered_map<std::string, std::chrono::duration<double>> m_minimumDuration;
         std::unordered_map<std::string, double> m_lastSampleValue;
-        std::unordered_map<std::string, Timestamp> m_lastTimeOffset;
       };
       
-      RateFilter(std::shared_ptr<State> state, PipelineContract *contract);
-      ~RateFilter() override = default;
+      DeltaFilter(PipelineContextPtr context);
+      ~DeltaFilter() override = default;
 
       bool filterMinimumDelta(const std::string &id, double value, double fv)
       {
@@ -58,36 +56,14 @@ namespace mtconnect
         
         return false;
       }
-      
-      bool filterPeriod(const std::string &id, Timestamp &value,
-                        const std::chrono::duration<double> md)
-      {
-        using namespace std;
-        auto last = m_state->m_lastTimeOffset.find(id);
-        if (last != m_state->m_lastTimeOffset.end())
-        {
-          auto lv = last->second;
-          if (value < (lv + md))
-          {
-            return true;
-          }
-          last->second = value;
-        }
-        else
-        {
-          m_state->m_lastTimeOffset[id] = value;
-        }
-        
-        return false;
-      }
-            
+                  
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override
       {
         using namespace std;
         using namespace observation;
         using namespace entity;
         
-        if (m_state->m_minimumDelta.size() > 0 || m_state->m_minimumDuration.size() > 0)
+        if (m_state->m_minimumDelta.size() > 0)
         {
           if (auto o = std::dynamic_pointer_cast<Observation>(entity);
               o)
@@ -97,7 +73,6 @@ namespace mtconnect
             if (o->isUnavailable())
             {
               m_state->m_lastSampleValue.erase(id);
-              m_state->m_lastTimeOffset.erase(id);
               return next(entity);
             }
             
@@ -109,13 +84,6 @@ namespace mtconnect
                 if (filterMinimumDelta(di->getId(), value, md->second))
                   return EntityPtr();
               }
-            }
-            
-            if (auto md = m_state->m_minimumDuration.find(id); md != m_state->m_minimumDuration.end())
-            {
-              auto value = o->getTimestamp();
-              if (filterPeriod(di->getId(), value, md->second))
-                return EntityPtr();
             }
           }
         }
@@ -129,14 +97,6 @@ namespace mtconnect
       void addMinimumDelta(const DataItem *di, double d)
       {
         m_state->m_minimumDelta[di->getId()] = d;
-      }
-      void addMinimumDuration(const std::string &id, const std::chrono::duration<double> &d)
-      {
-        m_state->m_minimumDuration[id] = d;
-      }
-      void addMinimumDuration(const DataItem *di, const std::chrono::duration<double> &d)
-      {
-        m_state->m_minimumDuration[di->getId()] = d;
       }
       
     protected:

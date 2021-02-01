@@ -49,8 +49,8 @@ namespace mtconnect
     {
     public:
       ShdrTokenMapper(const ShdrTokenMapper &) = default;
-      ShdrTokenMapper(PipelineContract *contract)
-      : Transform("ShdrTokenMapper"), m_contract(contract)
+      ShdrTokenMapper(PipelineContextPtr context)
+      : Transform("ShdrTokenMapper"), m_contract(context->m_contract.get())
       {
         m_guard = TypeGuard<Timestamped>(RUN);
       }

@@ -20,6 +20,7 @@
 #include "transform.hpp"
 #include "observation/observation.hpp"
 #include "pipeline_contract.hpp"
+#include "pipeline_context.hpp"
 
 namespace mtconnect
 {
@@ -35,29 +36,7 @@ namespace mtconnect
     struct Handler;
   }
   namespace pipeline
-  {    
-    class PipelineContext : public std::enable_shared_from_this<PipelineContext>
-    {
-    public:
-      auto getptr() { return shared_from_this(); }
-      
-      template<typename T>
-      std::shared_ptr<T> getSharedState(const std::string &name)
-      {
-        auto &state = m_sharedState[name];
-        if (!state)
-          state = std::make_shared<T>();
-        return std::dynamic_pointer_cast<T>(state);
-      }
-            
-      std::unique_ptr<PipelineContract> m_contract;
-
-    protected:
-      using SharedState = std::unordered_map<std::string, TransformStatePtr>;
-      SharedState m_sharedState;
-    };
-    using PipelineContextPtr = std::shared_ptr<PipelineContext>;
-    
+  {        
     class Pipeline
     {
     public:

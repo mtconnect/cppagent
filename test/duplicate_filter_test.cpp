@@ -19,9 +19,11 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include "pipeline/pipeline.hpp"
 #include "pipeline/shdr_token_mapper.hpp"
 #include "pipeline/duplicate_filter.hpp"
-#include "pipeline/rate_filter.hpp"
+#include "pipeline/delta_filter.hpp"
+#include "pipeline/period_filter.hpp"
 #include "observation/observation.hpp"
 #include <chrono>
 
@@ -32,15 +34,36 @@ using namespace std;
 using namespace std::literals;
 using namespace std::chrono_literals;
 
+class MockPipelineContract : public PipelineContract
+{
+public:
+  MockPipelineContract(std::map<string,unique_ptr<DataItem>> &items)
+  : m_dataItems(items)
+  {
+  }
+  DataItem *findDataItem(const std::string &device, const std::string &name) override
+  {
+    return m_dataItems[name].get();
+  }
+  void eachDataItem(EachDataItem fun) override {}
+  void deliverObservation(observation::ObservationPtr obs) override {}
+  void deliverAsset(AssetPtr )override {}
+  void deliverAssetCommand(entity::EntityPtr ) override {}
+  void deliverCommand(entity::EntityPtr )override {}
+  void deliverConnectStatus(entity::EntityPtr )override {}
+  
+  std::map<string,unique_ptr<DataItem>> &m_dataItems;
+};
+
 class DuplicateFilterTest : public testing::Test
 {
 protected:
   void SetUp() override
   {
-    m_mapper = make_shared<ShdrTokenMapper>();
-    m_mapper->m_getDevice = [](const std::string &uuid) { return nullptr; };
-    m_mapper->m_getDataItem = [this](const Device *, const std::string &name) { return m_dataItems[name].get(); };
-    m_mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>()));
+    m_context = make_shared<PipelineContext>();
+    m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
+    m_mapper = make_shared<ShdrTokenMapper>(m_context);
+    m_mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
   }
 
 
@@ -71,13 +94,14 @@ protected:
  
   shared_ptr<ShdrTokenMapper> m_mapper;
   std::map<string,unique_ptr<DataItem>> m_dataItems;
+  shared_ptr<PipelineContext> m_context;
 };
 
 TEST_F(DuplicateFilterTest, test_simple_event)
 {
   makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
 
-  auto filter = make_shared<DuplicateFilter>();
+  auto filter = make_shared<DuplicateFilter>(m_context);
   m_mapper->bind(filter);
 
   auto os1 = observe({"a", "READY"});
@@ -99,7 +123,7 @@ TEST_F(DuplicateFilterTest, test_simple_sample)
     {"units", "MILLIMETER"}
   });
 
-  auto filter = make_shared<DuplicateFilter>();
+  auto filter = make_shared<DuplicateFilter>(m_context);
   m_mapper->bind(filter);
 
   auto os1 = observe({"a", "1.5"});
@@ -121,10 +145,10 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
     {"units", "MILLIMETER"}
   });
   
-  auto filter = make_shared<DuplicateFilter>();
+  auto filter = make_shared<DuplicateFilter>(m_context);
   m_mapper->bind(filter);
 
-  auto rate = make_shared<RateFilter>();
+  auto rate = make_shared<DeltaFilter>(m_context);
   rate->addMinimumDelta("a", 1.0);
   filter->bind(rate);
 
@@ -168,7 +192,7 @@ TEST_F(DuplicateFilterTest, test_period_filter)
   
   Timestamp now = chrono::system_clock::now();
 
-  auto rate = make_shared<RateFilter>();
+  auto rate = make_shared<PeriodFilter>(m_context);
   rate->addMinimumDuration("a", 10.0s);
   m_mapper->bind(rate);
   
