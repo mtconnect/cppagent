@@ -18,7 +18,7 @@
 #pragma once
 
 #include "entity/entity.hpp"
-#include <any>
+#include "pipeline_contract.hpp"
 #include "guard.hpp"
 
 namespace mtconnect

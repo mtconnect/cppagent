@@ -28,14 +28,14 @@ namespace mtconnect
 {
   namespace pipeline
   {
-    RateFilter::RateFilter(std::shared_ptr<State> state, EachDataItem &each)
-    : Transform("RateFilter"), m_state(state)
+    RateFilter::RateFilter(std::shared_ptr<State> state, PipelineContract *contract)
+    : Transform("RateFilter"), m_state(state), m_contract(contract)
     {
       using namespace observation;
       m_guard = TypeGuard<Event, Sample>(RUN) || TypeGuard<Observation>(SKIP);
 
       // Scan DataItems for rate filters...
-      each([this](const DataItem *di) {
+      m_contract->eachDataItem([this](const DataItem *di) {
           if (di->hasMinimumDelta())
             addMinimumDelta(di->getId(), di->getFilterValue());
           if (di->hasMinimumPeriod())

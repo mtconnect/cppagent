@@ -19,6 +19,7 @@
 
 #include "transform.hpp"
 #include "observation/observation.hpp"
+#include "pipeline_contract.hpp"
 
 namespace mtconnect
 {
@@ -49,25 +50,7 @@ namespace mtconnect
         return std::dynamic_pointer_cast<T>(state);
       }
             
-      // Lookup funcitons
-      FindDataItem m_findDataItem;
-      EachDataItem m_eachDataItem;
-      
-      // Delivery funcitons
-      using DeliverObservation = std::function<void(observation::ObservationPtr)>;
-      DeliverObservation m_deliverObservation;
-      
-      using DeliverAsset = std::function<void(AssetPtr)>;
-      DeliverAsset m_deliverAsset;
-      
-      using DeliverAssetCommand = std::function<void(entity::EntityPtr)>;
-      DeliverAssetCommand m_deliverAssetCommand;
-      
-      using DeliverProtocolCommand = std::function<void(entity::EntityPtr)>;
-      DeliverProtocolCommand m_deliverProtocolCommand;
-      
-      using DeliverConnectionStatus = std::function<void(entity::EntityPtr)>;
-      DeliverConnectionStatus m_deliverConnectionStatus;
+      std::unique_ptr<PipelineContract> m_contract;
 
     protected:
       using SharedState = std::unordered_map<std::string, TransformStatePtr>;
@@ -116,15 +99,6 @@ namespace mtconnect
       TransformPtr m_start;
       ConfigOptions m_options;
       PipelineContextPtr m_context;
-    };
-    
-    class AdapterPipeline : public Pipeline
-    {
-    public:
-      AdapterPipeline(const ConfigOptions &options, PipelineContextPtr context);
-      void build() override;
-      
-      std::unique_ptr<adapter::Handler> makeHandler();
-    };
+    };    
   }
 }  // namespace mtconnect

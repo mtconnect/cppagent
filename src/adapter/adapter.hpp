@@ -20,7 +20,7 @@
 #include "connector.hpp"
 #include "device_model/data_item.hpp"
 #include "globals.hpp"
-#include "pipeline/pipeline.hpp"
+#include "adapter_pipeline.hpp"
 
 #include <date/tz.h>
 
@@ -64,7 +64,7 @@ namespace mtconnect
       // Associate adapter with a device & connect to the server & port
       Adapter(const std::string &server, const unsigned int port,
               const ConfigOptions &options,
-              std::unique_ptr<pipeline::AdapterPipeline> &pipeline);
+              std::unique_ptr<AdapterPipeline> &pipeline);
       Adapter(const Adapter &) = delete;
 
       // Virtual destructor
@@ -127,7 +127,7 @@ namespace mtconnect
 
     protected:
       std::unique_ptr<Handler> m_handler;
-      std::unique_ptr<pipeline::AdapterPipeline> m_pipeline;
+      std::unique_ptr<AdapterPipeline> m_pipeline;
       
       // Name of device associated with adapter
       std::string m_url;

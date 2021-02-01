@@ -49,8 +49,8 @@ namespace mtconnect
     {
     public:
       ShdrTokenMapper(const ShdrTokenMapper &) = default;
-      ShdrTokenMapper()
-      : Transform("ShdrTokenMapper")
+      ShdrTokenMapper(PipelineContract *contract)
+      : Transform("ShdrTokenMapper"), m_contract(contract)
       {
         m_guard = TypeGuard<Timestamped>(RUN);
       }
@@ -62,15 +62,10 @@ namespace mtconnect
       EntityPtr mapTokesnToAsset(const Timestamp &timestamp, TokenList::const_iterator &token,
                                  const TokenList::const_iterator &end, ErrorList &errors);
 
-      using GetDataItem =
-          std::function<const DataItem *(const std::string &device, const std::string &id)>;
-
-      // Functions to handle get information
-      GetDataItem m_getDataItem;
-
     protected:
       // Logging Context
       std::set<std::string> m_logOnce;
+      PipelineContract *m_contract;
     };
 
     inline static std::string &upcase(std::string &s)

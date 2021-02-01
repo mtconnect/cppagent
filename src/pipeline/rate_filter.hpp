@@ -36,7 +36,7 @@ namespace mtconnect
         std::unordered_map<std::string, Timestamp> m_lastTimeOffset;
       };
       
-      RateFilter(std::shared_ptr<State> state, EachDataItem &each);      
+      RateFilter(std::shared_ptr<State> state, PipelineContract *contract);
       ~RateFilter() override = default;
 
       bool filterMinimumDelta(const std::string &id, double value, double fv)
@@ -141,6 +141,7 @@ namespace mtconnect
       
     protected:
       std::shared_ptr<State> m_state;
+      PipelineContract *m_contract;
     };
   }
 }  // namespace mtconnect

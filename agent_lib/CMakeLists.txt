@@ -27,9 +27,11 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.cpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline_contract.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/transform.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/duplicate_filter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/rate_filter.hpp"

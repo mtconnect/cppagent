@@ -35,10 +35,8 @@ namespace mtconnect
       {
         throw EntityError("Unexpected entity type, cannot convert to observation in DeliverObservation");
       }
-      else if (m_deliver)
-      {
-        m_deliver(o);
-      }
+
+      m_contract->deliverObservation(o);
       
       return entity;
     }
@@ -50,10 +48,8 @@ namespace mtconnect
       {
         throw EntityError("Unexpected entity type, cannot convert to asset in DeliverObservation");
       }
-      else if (m_deliver)
-      {
-        m_deliver(a);
-      }
+      
+      m_contract->deliverAsset(a);
 
       return entity;
     }    

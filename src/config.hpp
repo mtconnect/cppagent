@@ -21,7 +21,7 @@
 #include "globals.hpp"
 #include "http_server/file_cache.hpp"
 #include "service.hpp"
-#include "pipeline/pipeline.hpp"
+#include "adapter/adapter_pipeline.hpp"
 
 #include <dlib/logger.h>
 
@@ -33,10 +33,6 @@ namespace mtconnect
   namespace http_server
   {
     class Server;
-  }
-  namespace pipeline
-  {
-    class AdapterPipeline;
   }
   class Agent;
   class Device;

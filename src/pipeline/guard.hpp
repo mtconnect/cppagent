@@ -41,7 +41,7 @@ namespace mtconnect
 
       GuardAction operator()(const entity::EntityPtr entity)
       {
-        return CONTINUE;
+        return m_match;
       }
       
       void setAlternative(Guard &alt)

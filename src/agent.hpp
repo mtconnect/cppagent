@@ -25,6 +25,7 @@
 #include "printer.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
+#include "pipeline/pipeline_contract.hpp"
 
 #include <chrono>
 #include <list>
@@ -46,7 +47,7 @@ namespace mtconnect
   class AgentDevice;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
-
+  
   class Agent
   {
   public:
@@ -80,6 +81,7 @@ namespace mtconnect
 
     // HTTP Server
     auto getServer() const { return m_server.get(); }
+    std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
 
     // Add an adapter to the agent
     void addAdapter(adapter::Adapter *adapter, bool start = false);
@@ -216,6 +218,8 @@ namespace mtconnect
     }
 
   protected:
+    friend class AgentPipelineContract;
+    
     // Initialization methods
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
@@ -305,4 +309,57 @@ namespace mtconnect
     bool m_logStreamData;
     bool m_pretty;
   };
+  
+  class AgentPipelineContract : public pipeline::PipelineContract
+  {
+  public:
+    AgentPipelineContract(Agent *agent)
+    : m_agent(agent)
+    {}
+    ~AgentPipelineContract() = default;
+    
+    DataItem *findDataItem(const std::string &device, const std::string &name) override
+    {
+      Device *dev = m_agent->findDeviceByUUIDorName(device);
+      if (dev != nullptr)
+      {
+        return dev->getDeviceDataItem(name);
+      }
+      return nullptr;
+    }
+    void eachDataItem(EachDataItem fun) override
+    {
+      for (auto &di : m_agent->m_dataItemMap)
+      {
+        fun(di.second);
+      }
+    }
+    void deliverObservation(observation::ObservationPtr obs) override
+    {
+      m_agent->addToBuffer(obs);
+    }
+    void deliverAsset(AssetPtr )override
+    {
+    }
+    void deliverAssetCommand(entity::EntityPtr ) override
+    {
+    }
+    void deliverCommand(entity::EntityPtr )override
+    {
+
+    }
+    void deliverConnectStatus(entity::EntityPtr )override
+    {
+
+    }
+    
+  protected:
+    Agent *m_agent;
+  };
+
+  inline std::unique_ptr<pipeline::PipelineContract> Agent::makePipelineContract()
+  {
+    return std::make_unique<AgentPipelineContract>(this);
+  }
+  
 }  // namespace mtconnect

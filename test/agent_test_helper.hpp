@@ -133,30 +133,7 @@ class AgentTestHelper
                                                  checkpoint, true);
     
     m_context = std::make_shared<pipeline::PipelineContext>();
-    m_context->m_deliverObservation = [this](const entity::EntityPtr entity) {
-      auto o = std::dynamic_pointer_cast<observation::Observation>(entity);
-      m_agent->addToBuffer(o);
-    };
-    m_context->m_findDataItem = [this](const std::string &device,
-                                       const std::string &name) -> DataItem*
-    {
-      Device *dev = m_agent->findDeviceByUUIDorName(device);
-      if (dev != nullptr)
-      {
-        return dev->getDeviceDataItem(name);
-      }
-      return nullptr;
-    };
-    m_context->m_eachDataItem = [this](ApplyDataItem fun){
-      auto &devices = m_agent->getDevices();
-      for (auto dev : devices)
-      {
-        for (auto di : dev->getDataItems())
-        {
-          fun(di);
-        }
-      }
-    };
+    m_context->m_contract = m_agent->makePipelineContract();
     return m_agent.get();
   }
   
@@ -165,7 +142,7 @@ class AgentTestHelper
                   const std::string &device = "")
   {
     using namespace mtconnect;
-    using namespace mtconnect::pipeline;
+    using namespace mtconnect::adapter;
     auto pipeline = std::make_unique<AdapterPipeline>(options, m_context);
     m_adapter = new adpt::Adapter(host, port, options, pipeline);
     m_agent->addAdapter(m_adapter);

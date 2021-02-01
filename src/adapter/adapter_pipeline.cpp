@@ -15,26 +15,27 @@
 //    limitations under the License.
 //
 
-#include "pipeline.hpp"
+#include "adapter_pipeline.hpp"
 #include "agent.hpp"
 #include "config.hpp"
-#include "shdr_tokenizer.hpp"
-#include "shdr_token_mapper.hpp"
-#include "duplicate_filter.hpp"
-#include "rate_filter.hpp"
-#include "timestamp_extractor.hpp"
-#include "convert_sample.hpp"
-#include "deliver.hpp"
+#include "pipeline/shdr_tokenizer.hpp"
+#include "pipeline/shdr_token_mapper.hpp"
+#include "pipeline/duplicate_filter.hpp"
+#include "pipeline/rate_filter.hpp"
+#include "pipeline/timestamp_extractor.hpp"
+#include "pipeline/convert_sample.hpp"
+#include "pipeline/deliver.hpp"
 
 using namespace std;
 
 namespace mtconnect
 {
-  using namespace adapter;
   using namespace observation;
   using namespace entity;
+  using namespace entity;
+  using namespace pipeline;
   
-  namespace pipeline
+  namespace adapter
   {
     AdapterPipeline::AdapterPipeline(const ConfigOptions &options, PipelineContextPtr context)
     : Pipeline(options, context)
@@ -102,15 +103,14 @@ namespace mtconnect
       }
       
       // Token mapping to data items and assets
-      auto mapper = make_shared<ShdrTokenMapper>();
+      auto mapper = make_shared<ShdrTokenMapper>(m_context->m_contract.get());
       next = next->bind(mapper);
-      mapper->m_getDataItem = m_context->m_findDataItem;
       
       // Handle the observations and send to nowhere
       mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
 
       // Go directly to asset delivery
-      auto asset = mapper->bind(make_shared<DeliverAsset>(m_context->m_deliverAsset));
+      auto asset = mapper->bind(make_shared<DeliverAsset>(m_context->m_contract.get()));
             
       // Branched flow
       if (IsOptionSet(m_options, "UpcaseDataItemValue"))
@@ -123,7 +123,7 @@ namespace mtconnect
       }
       {
         auto state = m_context->getSharedState<RateFilter::State>("RateFilter");
-        auto rate = make_shared<RateFilter>(state, m_context->m_eachDataItem);
+        auto rate = make_shared<RateFilter>(state, m_context->m_contract.get());
         next = next->bind(rate);
       }
 
@@ -132,10 +132,7 @@ namespace mtconnect
         next = next->bind(make_shared<ConvertSample>());
       
       // Deliver
-      next->bind(make_shared<DeliverObservation>(m_context->m_deliverObservation));
+      next->bind(make_shared<DeliverObservation>(m_context->m_contract.get()));
     }
-
   }
 }
-
- 

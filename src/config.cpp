@@ -619,6 +619,8 @@ namespace mtconnect
     loadAllowPut(reader, server.get());
 
     auto cp = make_unique<http_server::FileCache>();
+
+    // Make the Agent
     m_agent = make_unique<Agent>(server, cp, m_devicesFile, bufferSize, maxAssets, m_version,
                                  checkpointFrequency, m_pretty);
     XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
@@ -627,6 +629,10 @@ namespace mtconnect
 
     for (auto device : m_agent->getDevices())
       device->m_preserveUuid = defaultPreserve;
+    
+    // Make the PipelineContext
+    m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
+    m_pipelineContext->m_contract = m_agent->makePipelineContract();
 
     ConfigOptions options;
     options["PreserveUUID"] = defaultPreserve;
@@ -738,7 +744,7 @@ namespace mtconnect
 
         g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
 
-        auto pipeline = make_unique<AdapterPipeline>(adapterOptions, m_pipelineContext);
+        auto pipeline = make_unique<adapter::AdapterPipeline>(adapterOptions, m_pipelineContext);
         auto adp = new Adapter(host, port, adapterOptions, pipeline);
         m_agent->addAdapter(adp, false);
       }
@@ -747,7 +753,7 @@ namespace mtconnect
     {
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
-      auto pipeline = make_unique<pipeline::AdapterPipeline>(options, m_pipelineContext);
+      auto pipeline = make_unique<adapter::AdapterPipeline>(options, m_pipelineContext);
       auto adp = new Adapter("localhost", 7878, options, pipeline);
       m_agent->addAdapter(adp, false);
     }

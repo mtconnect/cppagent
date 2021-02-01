@@ -162,7 +162,7 @@ namespace mtconnect
                                                    ErrorList &errors)
     {
       auto dataItemKey = splitKey(*token++);
-      auto dataItem = m_getDataItem(dataItemKey.second.value_or(""), dataItemKey.first);
+      auto dataItem = m_contract->findDataItem(dataItemKey.second.value_or(""), dataItemKey.first);
 
       if (dataItem == nullptr)
       {
