@@ -28,23 +28,19 @@ namespace mtconnect
 {
   namespace pipeline
   {
-    RateFilter::RateFilter(Agent *agent)
+    RateFilter::RateFilter(std::shared_ptr<State> state, EachDataItem &each)
+    : Transform("RateFilter"), m_state(state)
     {
       using namespace observation;
-      m_guard = TypeGuard<Event, Sample>() || TypeGuard<Observation>(SKIP);
+      m_guard = TypeGuard<Event, Sample>(RUN) || TypeGuard<Observation>(SKIP);
 
       // Scan DataItems for rate filters...
-      for (auto &device : agent->getDevices())
-      {
-        for (auto &dip : device->getDeviceDataItems())
-        {
-          auto di = dip.second;
+      each([this](const DataItem *di) {
           if (di->hasMinimumDelta())
-            addMinimumDelta(dip.first, di->getFilterValue());
+            addMinimumDelta(di->getId(), di->getFilterValue());
           if (di->hasMinimumPeriod())
-            addMinimumDuration(dip.first, chrono::duration<double>(di->getFilterPeriod()));
-        }
-      }
+            addMinimumDuration(di->getId(), chrono::duration<double>(di->getFilterPeriod()));
+      });
     }
   }
 }

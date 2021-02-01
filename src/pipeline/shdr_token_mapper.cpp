@@ -162,19 +162,16 @@ namespace mtconnect
                                                    ErrorList &errors)
     {
       auto dataItemKey = splitKey(*token++);
-      auto device = m_getDevice(dataItemKey.second.value_or(""));
-      auto dataItem = m_getDataItem(device, dataItemKey.first);
+      auto dataItem = m_getDataItem(dataItemKey.second.value_or(""), dataItemKey.first);
 
       if (dataItem == nullptr)
       {
         // resync to next item
         if (m_logOnce.count(dataItemKey.first) > 0)
-          g_logger << dlib::LTRACE << "(" << device->getName()
-                   << ") Could not find data item: " << dataItemKey.first;
+          g_logger << dlib::LTRACE << "Could not find data item: " << dataItemKey.first;
         else
         {
-          g_logger << dlib::LWARN << "(" << device->getName()
-                   << ") Could not find data item: " << dataItemKey.first;
+          g_logger << dlib::LTRACE << "Could not find data item: " << dataItemKey.first;
           m_logOnce.insert(dataItemKey.first);
         }
 
@@ -214,8 +211,7 @@ namespace mtconnect
       // TODO: Check for UNAVAILABLE
       if (reqs != nullptr)
       {
-        auto res = zipProperties(dataItem, timestamp, *reqs, token, end, errors);
-        return res;
+        return zipProperties(dataItem, timestamp, *reqs, token, end, errors);
       }
       else
       {

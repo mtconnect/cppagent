@@ -36,11 +36,12 @@ namespace mtconnect
   namespace adapter
   {
     static dlib::logger g_logger("input.adapter");
-
+    
     // Adapter public methods
     Adapter::Adapter(const string &server, const unsigned int port,
-                     const ConfigOptions &options)
+                     const ConfigOptions &options, std::unique_ptr<pipeline::AdapterPipeline> &pipeline)
       : Connector(server, port, 60s),
+        m_pipeline(std::move(pipeline)),
         m_running(true),
         m_reconnectInterval{10000ms}
     {
@@ -55,6 +56,9 @@ namespace mtconnect
       stringstream identity;
       identity << '_' << server << '_' << port;
       m_identity = identity.str();
+      
+      m_handler = m_pipeline->makeHandler();      
+      m_pipeline->build();
     }
 
     Adapter::~Adapter()

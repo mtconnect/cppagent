@@ -36,29 +36,60 @@ namespace mtconnect
   
   namespace pipeline
   {
-    AdapterPipeline::AdapterPipeline(const ConfigOptions &options, Agent *agent,
-                                     Adapter *adapter)
-    : Pipeline(options, agent), m_adapter(adapter),
-        m_handler(make_unique<adapter::Handler>())
+    AdapterPipeline::AdapterPipeline(const ConfigOptions &options, PipelineContextPtr context)
+    : Pipeline(options, context)
     {
-      // Build the pipeline for an adapter
-      m_handler->m_connecting = [](const Adapter &adapter){};
-      m_handler->m_connected = [](const Adapter &adapter){};
-      m_handler->m_disconnected = [](const Adapter &adapter){};
-      
-      build();
     }
-
-    void AdapterPipeline::build()
+    
+    std::unique_ptr<adapter::Handler> AdapterPipeline::makeHandler()
     {
-      m_handler->m_processData = [this](const std::string &data) {
+      auto handler = make_unique<adapter::Handler>();
+      
+      // Build the pipeline for an adapter
+      handler->m_connecting = [this](const Adapter &adapter) {
+        auto entity = make_shared<Entity>("ConnectionStatus",
+                                          Properties{
+          { "VALUE", "CONNECTING" },
+          { "id", adapter.getIdentity() }
+        });
+        run(entity);
+      };
+      handler->m_connected = [this](const Adapter &adapter) {
+        auto entity = make_shared<Entity>("ConnectionStatus",
+                                          Properties{
+          { "VALUE", "CONNECTED" },
+          { "id", adapter.getIdentity() }
+        });
+        run(entity);
+      };
+      handler->m_disconnected = [this](const Adapter &adapter) {
+        auto entity = make_shared<Entity>("ConnectionStatus",
+                                          Properties{
+          { "VALUE", "DISCONNECTED" },
+          { "id", adapter.getIdentity() }
+        });
+        run(entity);
+      };
+      handler->m_processData = [this](const std::string &data) {
         auto entity = make_shared<Entity>("Data", Properties{{"VALUE", data}});
         run(entity);
       };
-      m_adapter->setHandler(m_handler);
+      handler->m_protocolCommand = [this](const std::string &data) {
+        auto entity = make_shared<Entity>("ProtocolCommand", Properties{{"VALUE", data}});
+        run(entity);
+      };
+      
+      return handler;
+    }
 
-      TransformPtr next = m_start = make_shared<ShdrTokenizer>();
 
+    void AdapterPipeline::build()
+    {
+      TransformPtr next = bind(make_shared<ShdrTokenizer>());
+      //bind(make_shared<DeliverConnectionStatus>());
+      //bind(make_shared<DeliverAssetCommand>());
+      //bind(make_shared<DeliverProcessCommand>());
+      
       // Optional type based transforms
       if (IsOptionSet(m_options, "IgnoreTimestamps"))
         next = next->bind(make_shared<IgnoreTimestamp>());
@@ -69,43 +100,39 @@ namespace mtconnect
           extract->m_relativeTime = true;
         next = next->bind(extract);
       }
-
-      // Map to data items
-      //m_handler->m_protocolCommand...
       
       // Token mapping to data items and assets
       auto mapper = make_shared<ShdrTokenMapper>();
       next = next->bind(mapper);
-      mapper->m_getDevice = [this](const std::string &id){
-        return m_agent->findDeviceByUUIDorName(id);
-      };
-      mapper->m_getDataItem = [](const Device *device, const std::string &id){
-        return device->getDeviceDataItem(id);
-      };
+      mapper->m_getDataItem = m_context->m_findDataItem;
       
       // Handle the observations and send to nowhere
-      mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>()));
+      mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
 
       // Go directly to asset delivery
-      auto asset = mapper->bind(make_shared<DeliverAsset>());
+      auto asset = mapper->bind(make_shared<DeliverAsset>(m_context->m_deliverAsset));
             
       // Branched flow
       if (IsOptionSet(m_options, "UpcaseDataItemValue"))
         next = next->bind(make_shared<UpcaseValue>());
       
       if (IsOptionSet(m_options, "FilterDuplicates"))
-        next = next->bind(make_shared<DuplicateFilter>());
-      auto rate = make_shared<RateFilter>(m_agent);      
-      next = next->bind(rate);
+      {
+        auto state = m_context->getSharedState<DuplicateFilter::State>("DuplicationFilter");
+        next = next->bind(make_shared<DuplicateFilter>(state));
+      }
+      {
+        auto state = m_context->getSharedState<RateFilter::State>("RateFilter");
+        auto rate = make_shared<RateFilter>(state, m_context->m_eachDataItem);
+        next = next->bind(rate);
+      }
 
       // Convert values
       if (IsOptionSet(m_options, "ConversionRequired"))
         next = next->bind(make_shared<ConvertSample>());
       
       // Deliver
-      next->bind(make_shared<DeliverObservation>([this](ObservationPtr obs){
-        m_agent->addToBuffer(obs);
-      }));
+      next->bind(make_shared<DeliverObservation>(m_context->m_deliverObservation));
     }
 
   }

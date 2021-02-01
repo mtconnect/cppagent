@@ -44,21 +44,15 @@ namespace mtconnect
       using Timestamped::Timestamped;
     };
 
-    inline static std::string &upcase(std::string &s)
-    {
-      std::transform(s.begin(), s.end(), s.begin(),
-                     [](unsigned char c) -> unsigned char { return std::toupper(c); });
-      return s;
-    }
-
     using namespace entity;
     class ShdrTokenMapper : public Transform
     {
     public:
       ShdrTokenMapper(const ShdrTokenMapper &) = default;
       ShdrTokenMapper()
+      : Transform("ShdrTokenMapper")
       {
-        m_guard = TypeGuard<Timestamped>();
+        m_guard = TypeGuard<Timestamped>(RUN);
       }
       const EntityPtr operator()(const EntityPtr entity) override;
 
@@ -68,12 +62,10 @@ namespace mtconnect
       EntityPtr mapTokesnToAsset(const Timestamp &timestamp, TokenList::const_iterator &token,
                                  const TokenList::const_iterator &end, ErrorList &errors);
 
-      using GetDevice = std::function<const Device *(const std::string &id)>;
       using GetDataItem =
-          std::function<const DataItem *(const Device *device, const std::string &id)>;
+          std::function<const DataItem *(const std::string &device, const std::string &id)>;
 
       // Functions to handle get information
-      GetDevice m_getDevice;
       GetDataItem m_getDataItem;
 
     protected:
@@ -81,14 +73,22 @@ namespace mtconnect
       std::set<std::string> m_logOnce;
     };
 
+    inline static std::string &upcase(std::string &s)
+    {
+      std::transform(s.begin(), s.end(), s.begin(),
+                     [](unsigned char c) -> unsigned char { return std::toupper(c); });
+      return s;
+    }
+
     class UpcaseValue : public Transform
     {
     public:
       UpcaseValue(const UpcaseValue &) = default;
       UpcaseValue()
+      : Transform("UpcaseValue")
       {
         using namespace observation;
-        m_guard = ExactTypeGuard<Event>() || TypeGuard<Observation>(SKIP);
+        m_guard = ExactTypeGuard<Event>(RUN) || TypeGuard<Observation>(SKIP);
       }
       
       const EntityPtr operator()(const EntityPtr entity) override

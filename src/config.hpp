@@ -91,7 +91,7 @@ namespace mtconnect
 
   protected:
     std::unique_ptr<Agent> m_agent;
-    std::list<std::unique_ptr<pipeline::AdapterPipeline>> m_pipelines;
+    pipeline::PipelineContextPtr m_pipelineContext;
     std::unique_ptr<adapter::Handler> m_adapterHandler;
     std::unique_ptr<RollingFileLogger> m_loggerFile;
     std::string m_version;

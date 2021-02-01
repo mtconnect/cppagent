@@ -660,6 +660,7 @@ namespace mtconnect
   void AgentConfiguration::loadAdapters(ConfigReader &reader, const ConfigOptions &options)
   {
     using namespace adapter;
+    using namespace pipeline;
 
     Device *device;
     if (reader.is_block_defined("Adapters"))
@@ -737,9 +738,8 @@ namespace mtconnect
 
         g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
 
-        auto adp = new Adapter(host, port, adapterOptions);
-        auto pipeline = new pipeline::AdapterPipeline(adapterOptions, m_agent.get(), adp);
-        m_pipelines.emplace_back(std::move(pipeline));
+        auto pipeline = make_unique<AdapterPipeline>(adapterOptions, m_pipelineContext);
+        auto adp = new Adapter(host, port, adapterOptions, pipeline);
         m_agent->addAdapter(adp, false);
       }
     }
@@ -747,9 +747,8 @@ namespace mtconnect
     {
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
-      auto adp = new Adapter("localhost", 7878, options);
-      auto pipeline = new pipeline::AdapterPipeline(options, m_agent.get(), adp);
-      m_pipelines.emplace_back(std::move(pipeline));
+      auto pipeline = make_unique<pipeline::AdapterPipeline>(options, m_pipelineContext);
+      auto adp = new Adapter("localhost", 7878, options, pipeline);
       m_agent->addAdapter(adp, false);
     }
     else

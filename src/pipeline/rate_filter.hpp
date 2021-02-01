@@ -28,13 +28,21 @@ namespace mtconnect
     class RateFilter : public Transform
     {
     public:
-      RateFilter(Agent *);      
+      struct State : TransformState
+      {
+        std::unordered_map<std::string, double> m_minimumDelta;
+        std::unordered_map<std::string, std::chrono::duration<double>> m_minimumDuration;
+        std::unordered_map<std::string, double> m_lastSampleValue;
+        std::unordered_map<std::string, Timestamp> m_lastTimeOffset;
+      };
+      
+      RateFilter(std::shared_ptr<State> state, EachDataItem &each);      
       ~RateFilter() override = default;
 
       bool filterMinimumDelta(const std::string &id, double value, double fv)
       {
-        auto last = m_lastSampleValue.find(id);
-        if (last != m_lastSampleValue.end())
+        auto last = m_state->m_lastSampleValue.find(id);
+        if (last != m_state->m_lastSampleValue.end())
         {
           double lv = last->second;
           if (value > (lv - fv) && value < (lv + fv))
@@ -45,7 +53,7 @@ namespace mtconnect
         }
         else
         {
-          m_lastSampleValue[id] = value;
+          m_state->m_lastSampleValue[id] = value;
         }
         
         return false;
@@ -55,8 +63,8 @@ namespace mtconnect
                         const std::chrono::duration<double> md)
       {
         using namespace std;
-        auto last = m_lastTimeOffset.find(id);
-        if (last != m_lastTimeOffset.end())
+        auto last = m_state->m_lastTimeOffset.find(id);
+        if (last != m_state->m_lastTimeOffset.end())
         {
           auto lv = last->second;
           if (value < (lv + md))
@@ -67,7 +75,7 @@ namespace mtconnect
         }
         else
         {
-          m_lastTimeOffset[id] = value;
+          m_state->m_lastTimeOffset[id] = value;
         }
         
         return false;
@@ -79,7 +87,7 @@ namespace mtconnect
         using namespace observation;
         using namespace entity;
         
-        if (m_minimumDelta.size() > 0 || m_minimumDuration.size() > 0)
+        if (m_state->m_minimumDelta.size() > 0 || m_state->m_minimumDuration.size() > 0)
         {
           if (auto o = std::dynamic_pointer_cast<Observation>(entity);
               o)
@@ -88,14 +96,14 @@ namespace mtconnect
             auto &id = di->getId();
             if (o->isUnavailable())
             {
-              m_lastSampleValue.erase(id);
-              m_lastTimeOffset.erase(id);
+              m_state->m_lastSampleValue.erase(id);
+              m_state->m_lastTimeOffset.erase(id);
               return next(entity);
             }
             
             if (di->isSample())
             {
-              if (auto md = m_minimumDelta.find(id); md !=  m_minimumDelta.end())
+              if (auto md = m_state->m_minimumDelta.find(id); md !=  m_state->m_minimumDelta.end())
               {
                 double value = o->getValue<double>();
                 if (filterMinimumDelta(di->getId(), value, md->second))
@@ -103,7 +111,7 @@ namespace mtconnect
               }
             }
             
-            if (auto md = m_minimumDuration.find(id); md != m_minimumDuration.end())
+            if (auto md = m_state->m_minimumDuration.find(id); md != m_state->m_minimumDuration.end())
             {
               auto value = o->getTimestamp();
               if (filterPeriod(di->getId(), value, md->second))
@@ -116,26 +124,23 @@ namespace mtconnect
       
       void addMinimumDelta(const std::string &id, double d)
       {
-        m_minimumDelta[id] = d;
+        m_state->m_minimumDelta[id] = d;
       }
       void addMinimumDelta(const DataItem *di, double d)
       {
-        m_minimumDelta[di->getId()] = d;
+        m_state->m_minimumDelta[di->getId()] = d;
       }
       void addMinimumDuration(const std::string &id, const std::chrono::duration<double> &d)
       {
-        m_minimumDuration[id] = d;
+        m_state->m_minimumDuration[id] = d;
       }
       void addMinimumDuration(const DataItem *di, const std::chrono::duration<double> &d)
       {
-        m_minimumDuration[di->getId()] = d;
+        m_state->m_minimumDuration[di->getId()] = d;
       }
-
+      
     protected:
-      std::unordered_map<std::string, double> m_minimumDelta;
-      std::unordered_map<std::string, std::chrono::duration<double>> m_minimumDuration;
-      std::unordered_map<std::string, double> m_lastSampleValue;
-      std::unordered_map<std::string, Timestamp> m_lastTimeOffset;
+      std::shared_ptr<State> m_state;
     };
   }
 }  // namespace mtconnect

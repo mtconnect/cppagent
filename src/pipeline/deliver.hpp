@@ -29,12 +29,11 @@ namespace mtconnect
     {
     public:
       using Deliver = std::function<void(observation::ObservationPtr)>;
-      
-      DeliverObservation()
+      DeliverObservation(Deliver fun)
+      : Transform("DeliverAsset"), m_deliver(fun)
       {
-        m_guard = TypeGuard<observation::Observation>();
+        m_guard = TypeGuard<observation::Observation>(RUN);
       }
-      DeliverObservation(Deliver fun) : m_deliver(fun) {}
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
       
       Deliver m_deliver;
@@ -44,12 +43,50 @@ namespace mtconnect
     {
     public:
       using Deliver = std::function<void(AssetPtr)>;
-
-      DeliverAsset()
+      DeliverAsset(Deliver fun)
+      : Transform("DeliverAsset"), m_deliver(fun)
       {
-        m_guard = TypeGuard<Asset>();
+        m_guard = TypeGuard<Asset>(RUN);
       }
-      DeliverAsset(Deliver fun) : m_deliver(fun) {}
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+      
+      Deliver m_deliver;
+    };
+    
+    class DeliverConnectionStatus : public Transform
+    {
+      using Deliver = std::function<void(entity::EntityPtr)>;
+      DeliverConnectionStatus(Deliver fun)
+      : Transform("DeliverConnectionStatus"), m_deliver(fun)
+      {
+        m_guard = EntityNameGuard("ConnectionStatus", RUN);
+      }
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+      
+      Deliver m_deliver;
+    };
+    
+    class DeliverAssetCommand : public Transform
+    {
+      using Deliver = std::function<void(entity::EntityPtr)>;
+      DeliverAssetCommand(Deliver fun)
+      : Transform("AssetCommand"), m_deliver(fun)
+      {
+        m_guard = EntityNameGuard("ConnectionStatus", RUN);
+      }
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+      
+      Deliver m_deliver;
+    };
+
+    class DeliverProcessCommand : public Transform
+    {
+      using Deliver = std::function<void(entity::EntityPtr)>;
+      DeliverProcessCommand(Deliver fun)
+      : Transform("DeliverProcessCommand"), m_deliver(fun)
+      {
+        m_guard = EntityNameGuard("ProcessCommand", RUN);
+      }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
       
       Deliver m_deliver;

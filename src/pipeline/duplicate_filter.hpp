@@ -26,11 +26,17 @@ namespace mtconnect
     class DuplicateFilter : public Transform
     {
     public:
+      struct State : TransformState
+      {
+        std::unordered_map<std::string, entity::Value> m_values;
+      };
+      
       DuplicateFilter(const DuplicateFilter &) = default;
-      DuplicateFilter()
+      DuplicateFilter(std::shared_ptr<State> state)
+      : Transform("DuplicateFilter"), m_state(state)
       {
         using namespace observation;
-        m_guard = ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>() ||
+        m_guard = ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>(RUN) ||
                   TypeGuard<Observation>(SKIP);
       }
       ~DuplicateFilter() override = default;
@@ -41,15 +47,17 @@ namespace mtconnect
         if (auto o = std::dynamic_pointer_cast<Observation>(entity);
             o)
         {
+          auto &values = m_state->m_values;
+          
           auto di = o->getDataItem();
           if (!di->allowDups())
           {
-            auto old = m_values.find(di->getId());
-            if (old != m_values.end() && old->second == o->getValue())
+            auto old = values.find(di->getId());
+            if (old != values.end() && old->second == o->getValue())
               return EntityPtr();
             
-            if (old == m_values.end())
-              m_values[di->getId()] = o->getValue();
+            if (old == values.end())
+              values[di->getId()] = o->getValue();
             else if (old->second != o->getValue())
               old->second = o->getValue();
           }
@@ -59,7 +67,7 @@ namespace mtconnect
       }
       
     protected:
-      std::unordered_map<std::string, entity::Value> m_values;
+      std::shared_ptr<State> m_state;
     };
 
   }

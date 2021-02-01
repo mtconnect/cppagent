@@ -50,9 +50,10 @@ namespace mtconnect
     {
     public:
       ExtractTimestamp(const ExtractTimestamp &) = default;
-      ExtractTimestamp()
+      ExtractTimestamp(const std::string name = "ExtractTimestamp")
+      : Transform(name)
       {
-        m_guard = TypeGuard<Tokens>();
+        m_guard = TypeGuard<Tokens>(RUN);
       }
       ~ExtractTimestamp() override = default;
 
@@ -98,7 +99,8 @@ namespace mtconnect
     class IgnoreTimestamp : public ExtractTimestamp
     {
     public:
-      using ExtractTimestamp::ExtractTimestamp;
+      IgnoreTimestamp() : ExtractTimestamp("IgnoreTimestamp") {}
+      IgnoreTimestamp(const IgnoreTimestamp &) = default;
       ~IgnoreTimestamp() override = default;
 
       const EntityPtr operator()(const EntityPtr ptr) override

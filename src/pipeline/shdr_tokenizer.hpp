@@ -46,12 +46,9 @@ namespace mtconnect
     public:
       ShdrTokenizer(const ShdrTokenizer &) = default;
       ShdrTokenizer()
+      : Transform("ShdrTokenizer")
       {
-        m_guard = [](const entity::EntityPtr e) -> GuardAction {
-          if (!e->hasValue())
-            throw entity::EntityError("Cannot find data for tokenization");
-          return RUN;
-        };
+        m_guard = EntityNameGuard("Data", RUN);
       }
       ~ShdrTokenizer() = default;
 
@@ -62,7 +59,6 @@ namespace mtconnect
         result->m_tokens = tokenize(body);
         return next(result);
       }
-
 
       template <typename T>
       inline static std::string remove(const T &range, const char c)

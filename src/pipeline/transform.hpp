@@ -23,6 +23,8 @@
 
 namespace mtconnect
 {
+  class DataItem;
+  
   namespace pipeline
   {
     // A transform takes an entity and transforms it to another
@@ -37,11 +39,18 @@ namespace mtconnect
     using TransformPtr = std::shared_ptr<Transform>;
     using TransformList = std::list<TransformPtr>;
 
+    using ApplyDataItem = std::function<void(const DataItem *di)>;
+    using EachDataItem = std::function<void(ApplyDataItem)>;
+    using FindDataItem = std::function<DataItem*(const std::string &, const std::string &)>;
+    
+    struct TransformState { virtual ~TransformState() {} };
+    using TransformStatePtr = std::shared_ptr<TransformState>;
+
     class Transform : public std::enable_shared_from_this<Transform>
     {
     public:
       Transform(const Transform &) = default;
-      Transform() = default;
+      Transform(const std::string &name) : m_name(name) {}
       virtual ~Transform() = default;
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
@@ -65,7 +74,7 @@ namespace mtconnect
           case SKIP:
             return t->next(entity);
                             
-          case DISREGARD:
+          case CONTINUE:
             // Move on to the next
             break;
           }
@@ -102,6 +111,7 @@ namespace mtconnect
     {
     public:
       NullTransform(Guard guard)
+      : Transform("NullTransform")
       {
         m_guard = guard;
       }

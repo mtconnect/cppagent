@@ -28,11 +28,11 @@ namespace mtconnect
     class ConvertSample : public Transform
     {
     public:
-      
       ConvertSample()
+      : Transform("ConvertSample")
       {
         using namespace observation;
-        m_guard = TypeGuard<Sample>() || TypeGuard<Observation>(SKIP);
+        m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override
       {

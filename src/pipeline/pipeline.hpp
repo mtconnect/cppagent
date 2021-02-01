@@ -17,48 +17,114 @@
 
 #pragma once
 
-#include "entity/entity.hpp"
 #include "transform.hpp"
+#include "observation/observation.hpp"
 
 namespace mtconnect
 {
   class Agent;
+  class Device;
+  class DataItem;
+  class Asset;
+  using AssetPtr = std::shared_ptr<Asset>;
+    
   namespace adapter
   {
     class Adapter;
     struct Handler;
   }
   namespace pipeline
-  {
+  {    
+    class PipelineContext : public std::enable_shared_from_this<PipelineContext>
+    {
+    public:
+      auto getptr() { return shared_from_this(); }
+      
+      template<typename T>
+      std::shared_ptr<T> getSharedState(const std::string &name)
+      {
+        auto &state = m_sharedState[name];
+        if (!state)
+          state = std::make_shared<T>();
+        return std::dynamic_pointer_cast<T>(state);
+      }
+            
+      // Lookup funcitons
+      FindDataItem m_findDataItem;
+      EachDataItem m_eachDataItem;
+      
+      // Delivery funcitons
+      using DeliverObservation = std::function<void(observation::ObservationPtr)>;
+      DeliverObservation m_deliverObservation;
+      
+      using DeliverAsset = std::function<void(AssetPtr)>;
+      DeliverAsset m_deliverAsset;
+      
+      using DeliverAssetCommand = std::function<void(entity::EntityPtr)>;
+      DeliverAssetCommand m_deliverAssetCommand;
+      
+      using DeliverProtocolCommand = std::function<void(entity::EntityPtr)>;
+      DeliverProtocolCommand m_deliverProtocolCommand;
+      
+      using DeliverConnectionStatus = std::function<void(entity::EntityPtr)>;
+      DeliverConnectionStatus m_deliverConnectionStatus;
+
+    protected:
+      using SharedState = std::unordered_map<std::string, TransformStatePtr>;
+      SharedState m_sharedState;
+    };
+    using PipelineContextPtr = std::shared_ptr<PipelineContext>;
+    
     class Pipeline
     {
     public:
-      Pipeline(const ConfigOptions &options, Agent *agent)
-      : m_agent(agent), m_options(options)
+      Pipeline(const ConfigOptions &options, PipelineContextPtr context)
+      : m_start(std::make_shared<Start>()),
+        m_options(options), m_context(context)
       {}
       virtual ~Pipeline() = default;
       virtual void build() = 0;
       
       const entity::EntityPtr run(const entity::EntityPtr entity)
       {
-        return (*m_start)(entity);
+        return m_start->next(entity);
+      }
+      
+      TransformPtr bind(TransformPtr transform)
+      {
+        m_start->bind(transform);
+        return transform;
       }
       
     protected:
+      class Start : public Transform
+      {
+      public:
+        Start()
+        : Transform("Start")
+        {
+          m_guard = [](const entity::EntityPtr entity) { return SKIP; };
+        }
+        ~Start() override = default;
+
+        const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+        {
+          return entity::EntityPtr();
+        }
+      };
+      
       TransformPtr m_start;
-      Agent *m_agent;
       ConfigOptions m_options;
+      PipelineContextPtr m_context;
     };
     
     class AdapterPipeline : public Pipeline
     {
     public:
-      AdapterPipeline(const ConfigOptions &options, Agent *agent, adapter::Adapter *adapter);
+      AdapterPipeline(const ConfigOptions &options, PipelineContextPtr context);
       void build() override;
-
-    protected:
-      adapter::Adapter *m_adapter;
-      std::unique_ptr<adapter::Handler> m_handler;
+      
+      std::unique_ptr<adapter::Handler> makeHandler();
     };
   }
 }  // namespace mtconnect
