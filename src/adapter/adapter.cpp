@@ -43,7 +43,8 @@ namespace mtconnect
       : Connector(server, port, 60s),
         m_pipeline(std::move(pipeline)),
         m_running(true),
-        m_reconnectInterval{10000ms}
+        m_reconnectInterval{10000ms},
+        m_options(options)
     {
       auto timeout = options.find("LegacyTimeout");
       if (timeout != options.end())
@@ -58,7 +59,8 @@ namespace mtconnect
       m_identity = identity.str();
 
       m_handler = m_pipeline->makeHandler();
-      m_pipeline->build();
+      if (m_pipeline->hasContract())
+        m_pipeline->build();
     }
 
     Adapter::~Adapter()

@@ -48,8 +48,6 @@ namespace mtconnect
       m_filterPeriod(0.0),
       m_hasMinimumDelta(false),
       m_hasMinimumPeriod(false),
-      m_lastSampleValue(NAN),
-      m_lastTimeOffset(NAN),
       m_dataSource(nullptr),
       m_conversionFactor(1.0),
       m_conversionOffset(0.0),

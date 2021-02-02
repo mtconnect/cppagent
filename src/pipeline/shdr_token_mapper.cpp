@@ -209,7 +209,6 @@ namespace mtconnect
         reqs = &s_condition;
       }
 
-      // TODO: Check for UNAVAILABLE
       if (reqs != nullptr)
       {
         return zipProperties(dataItem, timestamp, *reqs, token, end, errors);

@@ -59,24 +59,19 @@ class AgentTest : public testing::Test
     m_agentTestHelper->createAgent("/samples/test_config.xml",
                                    8, 4, "1.3", 25);
     m_agentId = to_string(getCurrentTimeInSec());
-    m_adapter = nullptr;
   }
 
   void TearDown() override
   {
-    m_adapter = nullptr;
     m_agentTestHelper.reset();
   }
 
   void addAdapter()
   {
-    ASSERT_FALSE(m_adapter);
-    m_adapter = m_agentTestHelper->addAdapter("localhost", 7878, m_agentTestHelper->m_agent->defaultDevice()->getName());
-    ASSERT_TRUE(m_adapter);
+    m_agentTestHelper->addAdapter({}, "localhost", 7878, m_agentTestHelper->m_agent->defaultDevice()->getName());
   }
   
  public:
-  Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 

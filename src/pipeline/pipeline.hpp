@@ -54,6 +54,9 @@ namespace mtconnect
         m_start->bind(transform);
         return transform;
       }
+      
+      bool hasContext() const { return bool(m_context); }
+      bool hasContract() const { return bool(m_context) && bool(m_context->m_contract); }
 
     protected:
       class Start : public Transform

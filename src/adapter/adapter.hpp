@@ -114,6 +114,8 @@ namespace mtconnect
 
       // For the additional devices associated with this adapter
       void addDevice(std::string &device);
+      
+      const ConfigOptions &getOptions() const { return m_options; }
 
     protected:
       void parseCalibration(const std::string &calibString);
@@ -140,6 +142,8 @@ namespace mtconnect
 
       // Timeout for reconnection attempts, given in milliseconds
       std::chrono::milliseconds m_reconnectInterval;
+      
+      ConfigOptions m_options;
 
     private:
       // Inherited and is run as part of the threaded_object

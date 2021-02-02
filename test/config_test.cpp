@@ -37,6 +37,7 @@
 static dlib::logger g_logger("config_test");
 
 using namespace std;
+using namespace mtconnect;
 namespace fs = std::filesystem;
 
 namespace
@@ -92,12 +93,13 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto device = agent->getDevices().front();
+    ASSERT_GT(0, device->m_adapters.size());
     const auto adapter = device->m_adapters.front();
 
     ASSERT_EQ(std::string("LinuxCNC"), device->getName());
-    ASSERT_FALSE(adapter->isDupChecking());
-    ASSERT_FALSE(adapter->isAutoAvailable());
-    ASSERT_FALSE(adapter->isIgnoringTimestamps());
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "FilterDuplicates"));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "AutoAvailable"));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
     ASSERT_TRUE(device->m_preserveUuid);
   }
 
@@ -121,13 +123,15 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto device = agent->getDevices().front();
+    ASSERT_GT(0, device->m_adapters.size());
     const auto adapter = device->m_adapters.front();
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
-    ASSERT_TRUE(adapter->isDupChecking());
-    ASSERT_TRUE(adapter->isAutoAvailable());
-    ASSERT_TRUE(adapter->isIgnoringTimestamps());
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "FilterDuplicates"));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "AutoAvailable"));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
+    
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
     ASSERT_TRUE(device->m_preserveUuid);
   }
@@ -289,6 +293,7 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto device = agent->getDevices().front();
+    ASSERT_GT(0, device->m_adapters.size());
     const auto adapter = device->m_adapters.front();
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
@@ -304,9 +309,10 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto device = agent->getDevices().front();
+    ASSERT_GT(0, device->m_adapters.size());
     const auto adapter = device->m_adapters.front();
 
-    ASSERT_TRUE(adapter->isIgnoringTimestamps());
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
   }
 
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
@@ -322,9 +328,10 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto device = agent->getDevices().front();
+    ASSERT_GT(0, device->m_adapters.size());
     const auto adapter = device->m_adapters.front();
 
-    ASSERT_FALSE(adapter->isIgnoringTimestamps());
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
   }
 
   TEST_F(ConfigTest, SpecifyMTCNamespace)

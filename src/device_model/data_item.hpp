@@ -170,55 +170,7 @@ namespace mtconnect
     // Transform a name to camel casing
     static std::string getCamelType(const std::string &type, std::string &prefix);
 
-    // Duplicate Checking
-    bool isDuplicate(const std::string &value)
-    {
-      // Do not dup check for time series.
-      if (m_representation != VALUE || m_isDiscrete)
-        return false;
-      else if (value == m_lastValue)
-        return true;
-
-      m_lastValue = value;
-      return false;
-    }
-
     bool hasFilter() { return isSample() && (m_hasMinimumDelta || m_hasMinimumPeriod); }
-
-    // Filter checking
-    bool isFiltered(const double value, const double timeOffset)
-    {
-      if (m_hasMinimumDelta && m_category == SAMPLE)
-      {
-        if (!ISNAN(m_lastSampleValue))
-        {
-          if (value > (m_lastSampleValue - m_filterValue) &&
-              value < (m_lastSampleValue + m_filterValue))
-          {
-            // Filter value
-            return true;
-          }
-        }
-
-        m_lastSampleValue = value;
-      }
-
-      if (m_hasMinimumPeriod)
-      {
-        if (!ISNAN(m_lastTimeOffset) && !ISNAN(timeOffset))
-        {
-          if (timeOffset < (m_lastTimeOffset + m_filterPeriod))
-          {
-            // Filter value
-            return true;
-          }
-        }
-
-        m_lastTimeOffset = timeOffset;
-      }
-
-      return false;
-    }
 
     // Constraints
     bool hasConstraints() const { return m_hasConstraints; }
@@ -380,11 +332,6 @@ namespace mtconnect
 
     // Component that data item is associated with
     Component *m_component;
-
-    // Duplicate and filter checking
-    std::string m_lastValue;
-    double m_lastSampleValue;
-    double m_lastTimeOffset;
 
     // Attrubutes
     std::map<std::string, std::string> m_attributes;
