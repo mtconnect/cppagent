@@ -221,11 +221,20 @@ namespace mtconnect
 
       return m_conversionRequired;
     }
-    void convertValue(entity::Value &value) const;
+    entity::Value &convertValue(entity::Value &value) const;
     double convertValue(double value) const;
 
     adapter::Adapter *getDataSource() const { return m_dataSource; }
     void setDataSource(adapter::Adapter *source);
+    void setConversionRequired(bool required)
+    {
+      if (!required)
+      {
+        m_conversionRequired = false;
+        m_conversionDetermined = true;
+      }
+    }
+    
     bool operator<(const DataItem &another) const;
     bool operator==(const DataItem &another) const { return m_id == another.m_id; }
 

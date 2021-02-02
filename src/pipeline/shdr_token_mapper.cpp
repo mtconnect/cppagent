@@ -237,7 +237,10 @@ namespace mtconnect
 
         XmlParser parser;
         res = parser.parse(Asset::getRoot(), body, "1.7", errors);
-        res->setProperty("timestamp", timestamp);
+        if (res)
+          res->setProperty("timestamp", timestamp);
+        else
+          res = EntityPtr();
       }
       else
       {

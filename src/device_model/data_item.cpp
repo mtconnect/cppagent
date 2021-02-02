@@ -339,15 +339,15 @@ namespace mtconnect
     }
   }
 
-  void DataItem::convertValue(entity::Value &value) const
+  entity::Value &DataItem::convertValue(entity::Value &value) const
   {
     // Check if the type is an alarm or if it doesn't have units
     if (!conversionRequired())
-      return;
+      return value;
 
     if (m_hasFactor)
     {
-      if (m_threeD)
+      if (std::holds_alternative<entity::Vector>(value))
       {
         auto &vector = std::get<entity::Vector>(value);
         for (auto &v : vector)
@@ -355,7 +355,7 @@ namespace mtconnect
           v = convertValue(v);
         }
       }
-      else
+      else if (std::holds_alternative<double>(value))
       {
         value = convertValue(std::get<double>(value));
       }
@@ -365,6 +365,8 @@ namespace mtconnect
       const_cast<DataItem *>(this)->computeConversionFactors();
       convertValue(value);
     }
+    
+    return value;
   }
 
   void DataItem::computeConversionFactors()

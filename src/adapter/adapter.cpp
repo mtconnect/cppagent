@@ -96,8 +96,7 @@ namespace mtconnect
         return;
       }
 
-      size_t multi;
-      if ((multi = data.find("__multiline__"sv)) != string::npos)
+      if (size_t multi = data.find("--multiline--"); multi != string::npos)
       {
         m_body.str("");
         m_body << data.substr(0, multi);

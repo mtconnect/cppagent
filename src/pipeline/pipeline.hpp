@@ -46,6 +46,10 @@ namespace mtconnect
       }
       virtual ~Pipeline() = default;
       virtual void build() = 0;
+      void clear()
+      {
+        m_start = std::make_shared<Start>();
+      }
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
 

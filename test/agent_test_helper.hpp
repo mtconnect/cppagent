@@ -150,8 +150,18 @@ class AgentTestHelper
     return m_adapter;
   }
   
-  uint64_t addToBuffer(mtconnect::DataItem *di, const std::string &shdr, const std::string &time)
+  uint64_t addToBuffer(mtconnect::DataItem *di, const mtconnect::entity::Properties &shdr,
+                       const mtconnect::Timestamp &time)
   {
+    using namespace mtconnect;
+    using namespace mtconnect::observation;
+    using namespace mtconnect::entity;
+    ErrorList errors;
+    auto obs = Observation::make(di, shdr, time, errors);
+    if (errors.size() == 0 && obs)
+    {
+      return m_agent->addToBuffer(obs);
+    }
     return 0;
   }
   

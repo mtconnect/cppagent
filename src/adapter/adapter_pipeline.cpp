@@ -79,6 +79,7 @@ namespace mtconnect
 
     void AdapterPipeline::build()
     {
+      clear();
       TransformPtr next = bind(make_shared<ShdrTokenizer>());
       bind(make_shared<DeliverConnectionStatus>(m_context));
       bind(make_shared<DeliverCommand>(m_context));

@@ -791,8 +791,6 @@ namespace mtconnect
     auto seqNum = m_circularBuffer.addToBuffer(observation);
     dataItem->signalObservers(seqNum);
     return seqNum;
-
-    return 0;
   }
 
   SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, entity::Properties props,

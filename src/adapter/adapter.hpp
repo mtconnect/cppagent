@@ -116,6 +116,12 @@ namespace mtconnect
       void addDevice(std::string &device);
       
       const ConfigOptions &getOptions() const { return m_options; }
+      void setOptions(const ConfigOptions &options)
+      {
+        for (auto &o :  options)
+          m_options.insert_or_assign(o.first, o.second);
+        m_pipeline->build();
+      }
 
     protected:
       void parseCalibration(const std::string &calibString);
