@@ -37,8 +37,8 @@ TEST(TimestampExtractorTest, TestTimeExtraction)
   auto tokens = make_shared<Tokens>("Tokens", Properties());
   tokens->m_tokens = { "2021-01-19T12:00:00.12345Z", "hello" };
 
-  auto extractor = make_shared<ExtractTimestamp>();
-  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
+  auto extractor = make_shared<ExtractTimestamp>(false);
+  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   auto out = (*extractor)(tokens);
   auto timestamped = dynamic_pointer_cast<Timestamped>(out);
   ASSERT_TRUE(timestamped);
@@ -54,8 +54,8 @@ TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
   auto tokens = make_shared<Tokens>("Tokens", Properties());
   tokens->m_tokens = { "2021-01-19T12:00:00.12345Z@100.0", "hello" };
 
-  auto extractor = make_shared<ExtractTimestamp>();
-  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
+  auto extractor = make_shared<ExtractTimestamp>(false);
+  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   auto out = (*extractor)(tokens);
   auto timestamped = dynamic_pointer_cast<Timestamped>(out);
   ASSERT_TRUE(timestamped);
@@ -72,13 +72,12 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
   auto tokens = make_shared<Tokens>("Tokens", Properties());
   tokens->m_tokens = { "1000.0", "hello" };
 
-  auto extractor = make_shared<ExtractTimestamp>();
-  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
+  auto extractor = make_shared<ExtractTimestamp>(true);
+  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   extractor->m_now = []() -> Timestamp {
     // 2021-01-19T10:00:00Z
     return std::chrono::system_clock::from_time_t(1611050400);
   };
-  extractor->m_relativeTime = true;
   
   auto out = (*extractor)(tokens);
   auto timestamped = dynamic_pointer_cast<Timestamped>(out);
@@ -103,13 +102,12 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
   auto tokens = make_shared<Tokens>("Tokens", Properties{});
   tokens->m_tokens = {"2021-01-19T10:01:00Z", "hello"};
 
-  auto extractor = make_shared<ExtractTimestamp>();
-  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>()));
+  auto extractor = make_shared<ExtractTimestamp>(true);
+  extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   extractor->m_now = []() -> Timestamp {
     // 2021-01-19T10:00:00Z
     return std::chrono::system_clock::from_time_t(1611050400);
   };
-  extractor->m_relativeTime = true;
   
   auto out = (*extractor)(tokens);
   auto timestamped = dynamic_pointer_cast<Timestamped>(out);

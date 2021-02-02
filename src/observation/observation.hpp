@@ -300,10 +300,14 @@ namespace mtconnect
 
       const DataSet &getDataSet() const
       {
-        const entity::Value &v = getProperty("VALuE");
+        const entity::Value &v = getValue();
         return std::get<DataSet>(v);
       }
-      void setDataSet(const DataSet &set) { setProperty("VALUE", set); }
+      void setDataSet(const DataSet &set)
+      {
+        setValue(set);
+        setProperty("count", int64_t(set.size()));
+      }
     };
 
     using DataSetEventPtr = std::shared_ptr<DataSetEvent>;

@@ -782,7 +782,7 @@ namespace mtconnect
     auto dataItem = observation->getDataItem();
     if (!dataItem->allowDups())
     {
-      if (dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(observation))
+      if (!observation->isUnavailable() && dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(observation))
       {
         return 0;
       }

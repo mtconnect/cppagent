@@ -43,12 +43,11 @@ class DataSetTest : public testing::Test
     m_agentId = to_string(getCurrentTimeInSec());
 
     m_checkpoint = nullptr;
-    m_adapter = nullptr;
     m_agentId = to_string(getCurrentTimeInSec());
     m_checkpoint = make_unique<Checkpoint>();
 
     auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
-    m_dataItem1 = device->getDeviceDataItem("v1");
+    m_dataItem1 = device->getDeviceDataItem("v1");    
   }
 
   void TearDown() override
@@ -58,12 +57,16 @@ class DataSetTest : public testing::Test
   }
 
   std::unique_ptr<Checkpoint> m_checkpoint;
-  Adapter *m_adapter{nullptr};
   std::string m_agentId;
   DataItem *m_dataItem1{nullptr};
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
+
+using namespace mtconnect::entity;
+using namespace std::literals;
+using namespace chrono_literals;
+using namespace date::literals;
 
 inline DataSetEntry operator"" _E(const char *c, std::size_t)
 {
@@ -81,75 +84,71 @@ TEST_F(DataSetTest, DataItem)
 
 TEST_F(DataSetTest, InitialSet)
 {
-  string value("a=1 b=2 c=3 d=4");
-  auto ce = new Observation(*m_dataItem1, "time", value);
-
-  ASSERT_EQ((size_t)4, ce->getDataSet().size());
-  auto &al = ce->getAttributes();
-  std::map<string, string> attrs;
-
-  for (const auto &attr : al)
-    attrs[attr.first] = attr.second;
-
-  ASSERT_EQ((string) "4", attrs.at("count"));
-
-  auto map1 = ce->getDataSet();
-
-  ASSERT_EQ(1, get<int64_t>(map1.find("a"_E)->m_value));
-  ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
-  ASSERT_EQ(3, get<int64_t>(map1.find("c"_E)->m_value));
-  ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
+  ErrorList errors;
+  auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
+  
+  auto ds = ce->getValue<DataSet>();
+  
+  ASSERT_EQ(4, ds.size());
+  ASSERT_EQ(4, ce->get<int64_t>("count"));
+  
+  ASSERT_EQ(1, get<int64_t>(ds.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(ds.find("b"_E)->m_value));
+  ASSERT_EQ(3, get<int64_t>(ds.find("c"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(ds.find("d"_E)->m_value));
 
   m_checkpoint->addObservation(ce);
-  auto c2 = *m_checkpoint->getEventPtr("v1");
-  auto al2 = c2->getAttributes();
+  auto ce2 = m_checkpoint->getEventPtr("v1");
+  auto ds2 = ce2->getValue<DataSet>();
 
-  attrs.clear();
-  for (const auto &attr : al2)
-    attrs[attr.first] = attr.second;
+  ASSERT_EQ(4, ce2->get<int64_t>("count"));
 
-  ASSERT_EQ((string) "4", attrs.at("count"));
-
-  auto map2 = c2->getDataSet();
-  ASSERT_EQ(1, get<int64_t>(map2.find("a"_E)->m_value));
-  ASSERT_EQ(2, get<int64_t>(map2.find("b"_E)->m_value));
-  ASSERT_EQ(3, get<int64_t>(map2.find("c"_E)->m_value));
-  ASSERT_EQ(4, get<int64_t>(map2.find("d"_E)->m_value));
-
-  ce->unrefer();
+  ASSERT_EQ(1, get<int64_t>(ds2.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(ds2.find("b"_E)->m_value));
+  ASSERT_EQ(3, get<int64_t>(ds2.find("c"_E)->m_value));
+  ASSERT_EQ(4, get<int64_t>(ds2.find("d"_E)->m_value));
 }
 
-#if 0
 TEST_F(DataSetTest, UpdateOneElement)
 {
+  ErrorList errors;
+  auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+
   string value("a=1 b=2 c=3 d=4");
-  ObservationPtr ce(new Observation(*m_dataItem1, "time", value));
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
-  auto cecp = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)4, cecp->getDataSet().size());
+  auto cecp = m_checkpoint->getEventPtr("v1");
+  ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  string value2("c=5");
-  ObservationPtr ce2(new Observation(*m_dataItem1, "time", value2));
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
-  auto ce3 = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)4, ce3->getDataSet().size());
+  auto ce3 = m_checkpoint->getEventPtr("v1");
+  ASSERT_EQ(4, ce3->getValue<DataSet>().size());
 
-  auto map1 = ce3->getDataSet();
+  auto map1 = ce3->getValue<DataSet>();
   ASSERT_EQ(1, get<int64_t>(map1.find("a"_E)->m_value));
   ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
   ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
 
-  string value3("e=6");
-  ObservationPtr ce4(new Observation(*m_dataItem1, "time", value3));
+  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "e=6"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
-  auto ce5 = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)5, ce5->getDataSet().size());
+  auto ce5 = m_checkpoint->getEventPtr("v1");
+  ASSERT_EQ(5, ce5->getValue<DataSet>().size());
 
-  auto map2 = ce5->getDataSet();
+  auto map2 = ce5->getValue<DataSet>();
   ASSERT_EQ(1, get<int64_t>(map2.find("a"_E)->m_value));
   ASSERT_EQ(2, get<int64_t>(map2.find("b"_E)->m_value));
   ASSERT_EQ(5, get<int64_t>(map2.find("c"_E)->m_value));
@@ -159,35 +158,44 @@ TEST_F(DataSetTest, UpdateOneElement)
 
 TEST_F(DataSetTest, UpdateMany)
 {
-  string value("a=1 b=2 c=3 d=4");
-  ObservationPtr ce(new Observation(*m_dataItem1, "time", value));
+  ErrorList errors;
+  auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
-  auto cecp = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)4, cecp->getDataSet().size());
+  auto cecp = m_checkpoint->getEventPtr("v1");
+  ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  string value2("c=5 e=6");
-  ObservationPtr ce2(new Observation(*m_dataItem1, "time", value2));
+
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5 e=6"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
-  auto ce3 = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)5, ce3->getDataSet().size());
+  auto ce3 = m_checkpoint->getEventPtr("v1");
 
-  auto map1 = ce3->getDataSet();
+  auto map1 = ce3->getValue<DataSet>();
+  ASSERT_EQ(5, map1.size());
+
   ASSERT_EQ(1, get<int64_t>(map1.find("a"_E)->m_value));
   ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
   ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
-
-  string value3("e=7 a=8 f=9");
-  ObservationPtr ce4(new Observation(*m_dataItem1, "time", value3));
+  
+  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "e=7 a=8 f=9"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
-  auto ce5 = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)6, ce5->getDataSet().size());
+  auto ce5 = m_checkpoint->getEventPtr("v1");
 
-  auto map2 = ce5->getDataSet();
+  auto map2 = ce5->getValue<DataSet>();
+  ASSERT_EQ(6, map2.size());
+
   ASSERT_EQ(8, get<int64_t>(map2.find("a"_E)->m_value));
   ASSERT_EQ(2, get<int64_t>(map2.find("b"_E)->m_value));
   ASSERT_EQ(5, get<int64_t>(map2.find("c"_E)->m_value));
@@ -198,51 +206,67 @@ TEST_F(DataSetTest, UpdateMany)
 
 TEST_F(DataSetTest, Reset)
 {
-  string value("a=1 b=2 c=3 d=4");
-  ObservationPtr ce(new Observation(*m_dataItem1, "time", value));
+  ErrorList errors;
+  auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
-  auto cecp = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)4, cecp->getDataSet().size());
 
-  string value2(":MANUAL c=5 e=6");
-  ObservationPtr ce2(new Observation(*m_dataItem1, "time", value2));
+  auto cecp = m_checkpoint->getEventPtr("v1");
+  ASSERT_EQ(4, cecp->getValue<DataSet>().size());
+
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5 e=6"},
+    {"resetTriggered", "MANUAL"}
+  },
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
-  auto ce3 = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)2, ce3->getDataSet().size());
+  auto ce3 = m_checkpoint->getEventPtr("v1");
+  auto map1 = ce3->getValue<DataSet>();
+  ASSERT_EQ(2, map1.size());
 
-  auto map1 = ce3->getDataSet();
   ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
 
-  string value3("x=pop y=hop");
-  ObservationPtr ce4(new Observation(*m_dataItem1, "time", value3));
+  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "x=pop y=hop"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
-  auto ce5 = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)4, ce5->getDataSet().size());
+  auto ce5 = m_checkpoint->getEventPtr("v1");
+  auto map2 = ce5->getValue<DataSet>();
+  ASSERT_EQ(4, map2.size());
 
-  auto map2 = ce5->getDataSet();
   ASSERT_EQ((string) "pop", get<string>(map2.find("x"_E)->m_value));
   ASSERT_EQ((string) "hop", get<string>(map2.find("y"_E)->m_value));
 }
 
 TEST_F(DataSetTest, BadData)
 {
-  string value("12356");
-  auto ce = new Observation(*m_dataItem1, "time", value);
+  ErrorList errors;
+  auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  ASSERT_EQ((size_t)1, ce->getDataSet().size());
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "12356"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
+  m_checkpoint->addObservation(ce);
 
-  string value1("  a=2      b3=xxx");
-  auto ce2 = new Observation(*m_dataItem1, "time", value1);
+  ASSERT_EQ(1, ce->getValue<DataSet>().size());
 
-  ASSERT_EQ((size_t)2, ce2->getDataSet().size());
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "  a=2      b3=xxx"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
+  m_checkpoint->addObservation(ce2);
+  
+  ASSERT_EQ(2, ce2->getValue<DataSet>().size());
 
-  auto map1 = ce2->getDataSet();
+  auto map1 = ce2->getValue<DataSet>();
   ASSERT_EQ(2, get<int64_t>(map1.find("a"_E)->m_value));
-  ASSERT_EQ((string) "xxx", get<string>(map1.find("b3"_E)->m_value));
+  ASSERT_EQ("xxx", get<string>(map1.find("b3"_E)->m_value));
 }
 
 #define ASSERT_DATA_SET_ENTRY(doc, var, key, expected) \
@@ -250,9 +274,7 @@ TEST_F(DataSetTest, BadData)
 
 TEST_F(DataSetTest, Current)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -260,7 +282,7 @@ TEST_F(DataSetTest, Current)
                           "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|vars|a=1 b=2 c=3");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -273,7 +295,7 @@ TEST_F(DataSetTest, Current)
                           "3");
   }
 
-  m_adapter->processData("TIME|vars|c=6");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|c=6");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -286,7 +308,7 @@ TEST_F(DataSetTest, Current)
                           "3");
   }
 
-  m_adapter->processData("TIME|vars|:MANUAL d=10");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|:MANUAL d=10");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -301,7 +323,7 @@ TEST_F(DataSetTest, Current)
                           "MANUAL");
   }
 
-  m_adapter->processData("TIME|vars|c=6");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|c=6");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -316,13 +338,11 @@ TEST_F(DataSetTest, Current)
 
 TEST_F(DataSetTest, Sample)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
-  m_adapter->processData("TIME|vars|a=1 b=2 c=3");
-  m_adapter->processData("TIME|vars|c=5");
-  m_adapter->processData("TIME|vars|a=1 c=8");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|c=5");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 c=8");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -345,7 +365,7 @@ TEST_F(DataSetTest, Sample)
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "3");
   }
 
-  m_adapter->processData("TIME|vars|c b=5");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|c b=5");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -376,19 +396,16 @@ TEST_F(DataSetTest, Sample)
 
 TEST_F(DataSetTest, CurrentAt)
 {
-  using namespace http_server;
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-
+  using namespace mtconnect::http_server;
+  m_agentTestHelper->addAdapter();
   auto seq = m_agentTestHelper->m_agent->getSequence();
 
-  m_adapter->processData("TIME|vars|a=1 b=2 c=3");
-  m_adapter->processData("TIME|vars| c=5 ");
-  m_adapter->processData("TIME|vars|c=8");
-  m_adapter->processData("TIME|vars|b=10   a=xxx");
-  m_adapter->processData("TIME|vars|:MANUAL q=hello_there");
-  m_adapter->processData("TIME|vars|r=good_bye");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
+  m_agentTestHelper->m_adapter->processData("TIME|vars| c=5 ");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|c=8");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|b=10   a=xxx");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|:MANUAL q=hello_there");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|r=good_bye");
 
   {
     Routing::QueryMap query {{"at", to_string(seq - 1)}};
@@ -459,24 +476,31 @@ TEST_F(DataSetTest, CurrentAt)
 
 TEST_F(DataSetTest, DeleteKey)
 {
-  string value("a=1 b=2 c=3 d=4");
-  ObservationPtr ce(new Observation(*m_dataItem1, "time", value));
+  ErrorList errors;
+  auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
-  auto cecp = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)4, cecp->getDataSet().size());
+  auto cecp = m_checkpoint->getEventPtr("v1");
+  ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  string value2("c e=6 a");
-  ObservationPtr ce2(new Observation(*m_dataItem1, "time", value2));
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c e=6 a"}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
-  auto ce3 = *m_checkpoint->getEventPtr("v1");
-  ASSERT_EQ((size_t)3, ce3->getDataSet().size());
-
-  auto &ds = ce2->getDataSet();
+  auto &ds = ce2->getValue<DataSet>();
   ASSERT_TRUE(ds.find("a"_E)->m_removed);
+  ASSERT_TRUE(ds.find("c"_E)->m_removed);
 
-  auto map1 = ce3->getDataSet();
+  auto ce3 = m_checkpoint->getEventPtr("v1");
+  auto &map1 = ce3->getValue<DataSet>();
+  ASSERT_EQ(3, map1.size());
+  
+
   ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
@@ -486,16 +510,14 @@ TEST_F(DataSetTest, DeleteKey)
 
 TEST_F(DataSetTest, ResetWithNoItems)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
-  m_adapter->processData("TIME|vars|a=1 b=2 c=3");
-  m_adapter->processData("TIME|vars| c=5 ");
-  m_adapter->processData("TIME|vars|c=8");
-  m_adapter->processData("TIME|vars|b=10   a=xxx");
-  m_adapter->processData("TIME|vars|:MANUAL");
-  m_adapter->processData("TIME|vars|r=good_bye");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
+  m_agentTestHelper->m_adapter->processData("TIME|vars| c=5 ");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|c=8");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|b=10   a=xxx");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|:MANUAL");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|r=good_bye");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -521,16 +543,14 @@ TEST_F(DataSetTest, ResetWithNoItems)
 
 TEST_F(DataSetTest, DuplicateCompression)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
-  m_adapter->processData("TIME|vars|a=1 b=2 c=3");
-  m_adapter->processData("TIME|vars|b=2");
-  m_adapter->processData("TIME|vars|b=2 d=4");
-  m_adapter->processData("TIME|vars|b=2 d=4 c=3");
-  m_adapter->processData("TIME|vars|b=2 d=4 c=3");
-  m_adapter->processData("TIME|vars|b=3 e=4");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|b=2");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|b=2 d=4");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|b=2 d=4 c=3");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|b=2 d=4 c=3");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|b=3 e=4");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -556,7 +576,7 @@ TEST_F(DataSetTest, DuplicateCompression)
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "5");
   }
 
-  m_adapter->processData("TIME|vars|:MANUAL a=1 b=3 c=3 d=4 e=4");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|:MANUAL a=1 b=3 c=3 d=4 e=4");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -582,11 +602,9 @@ TEST_F(DataSetTest, DuplicateCompression)
 
 TEST_F(DataSetTest, QuoteDelimeter)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
-  m_adapter->processData("TIME|vars|a='1 2 3' b=\"x y z\" c={cats and dogs}");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a='1 2 3' b=\"x y z\" c={cats and dogs}");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -596,7 +614,7 @@ TEST_F(DataSetTest, QuoteDelimeter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "3");
   }
 
-  m_adapter->processData("TIME|vars|b='u v w' c={chickens and horses");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|b='u v w' c={chickens and horses");
   {
     PARSE_XML_RESPONSE("/current");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1 2 3");
@@ -605,7 +623,7 @@ TEST_F(DataSetTest, QuoteDelimeter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "3");
   }
 
-  m_adapter->processData(
+  m_agentTestHelper->m_adapter->processData(
       "TIME|vars|:MANUAL V123={x1.111 2.2222 3.3333} V124={x1.111 2.2222 3.3333} V1754={\"Part 1\" "
       "2.2222 3.3333}");
   {
@@ -620,16 +638,14 @@ TEST_F(DataSetTest, QuoteDelimeter)
 
 TEST_F(DataSetTest, Discrete)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
   auto di = m_agentTestHelper->m_agent->getDataItemByName("LinuxCNC", "vars2");
   ASSERT_EQ(true, di->isDiscrete());
 
-  m_adapter->processData("TIME|vars2|a=1 b=2 c=3");
-  m_adapter->processData("TIME|vars2|c=5");
-  m_adapter->processData("TIME|vars2|a=1 c=8");
+  m_agentTestHelper->m_adapter->processData("TIME|vars2|a=1 b=2 c=3");
+  m_agentTestHelper->m_adapter->processData("TIME|vars2|c=5");
+  m_agentTestHelper->m_adapter->processData("TIME|vars2|a=1 c=8");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -656,9 +672,7 @@ TEST_F(DataSetTest, Discrete)
 
 TEST_F(DataSetTest, Probe)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
   {
     PARSE_XML_RESPONSE("/probe");
@@ -671,12 +685,10 @@ TEST_F(DataSetTest, Probe)
 TEST_F(DataSetTest, JsonCurrent)
 {
   using namespace http_server;
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
   m_agentTestHelper->m_request.m_accepts = "Application/json";  
-  m_adapter->processData("TIME|vars|a=1 b=2 c=3 d=cow");
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3 d=cow");
   
   {
     PARSE_JSON_RESPONSE("/current");
@@ -709,7 +721,7 @@ TEST_F(DataSetTest, JsonCurrent)
     ASSERT_TRUE(offsets.is_object());
     
     
-    ASSERT_EQ(string("4"), offsets.at("/VariableDataSet/count"_json_pointer).get<string>());
+    ASSERT_EQ(4, offsets.at("/VariableDataSet/count"_json_pointer).get<int>());
 
     ASSERT_EQ(1, offsets.at("/VariableDataSet/value/a"_json_pointer).get<int>());
     ASSERT_EQ(2, offsets.at("/VariableDataSet/value/b"_json_pointer).get<int>());
@@ -718,4 +730,3 @@ TEST_F(DataSetTest, JsonCurrent)
 
   }
 }
-#endif

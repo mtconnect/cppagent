@@ -85,9 +85,6 @@ namespace mtconnect
 
       for (auto &e : set)
       {
-        THROW_IF_XML2_ERROR(
-            xmlTextWriterWriteAttribute(writer, BAD_CAST "key", BAD_CAST e.m_key.c_str()));
-
         map<string, string> attrs = {{"key", e.m_key}};
         if (e.m_removed)
         {

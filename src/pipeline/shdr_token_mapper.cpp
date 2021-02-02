@@ -107,7 +107,8 @@ namespace mtconnect
         {
           auto ef = token.find_first_of(" \t", pos);
           trig = token.substr(1, ef - 1);
-          value = token.substr(ef + 1);
+          if (ef != string::npos)
+            value = token.substr(ef + 1);
         }
         properties.insert_or_assign("resetTriggered", upcase(trig));
         return value;
@@ -222,7 +223,7 @@ namespace mtconnect
       return nullptr;
     }
 
-    EntityPtr ShdrTokenMapper::mapTokesnToAsset(const Timestamp &timestamp,
+    EntityPtr ShdrTokenMapper::mapTokensToAsset(const Timestamp &timestamp,
                                                 TokenList::const_iterator &token,
                                                 const TokenList::const_iterator &end,
                                                 ErrorList &errors)
@@ -285,7 +286,7 @@ namespace mtconnect
             entity::ErrorList errors;
             if ((*token)[0] == '@')
             {
-              out = mapTokesnToAsset(timestamped->m_timestamp, token, end, errors);
+              out = mapTokensToAsset(timestamped->m_timestamp, token, end, errors);
             }
             else
             {

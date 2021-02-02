@@ -46,24 +46,24 @@ namespace mtconnect
       void filter(const FilterSet &filterSet);
       bool hasFilter() const { return bool(m_filter); }
 
-      const std::map<std::string, ObservationPtr> &getEvents() const { return m_events; }
+      const std::map<std::string, ObservationPtr> &getEvents() const { return m_observations; }
 
       void getObservations(ObservationList &list, const FilterSetOpt &filter = std::nullopt) const;
 
       ObservationPtr getEventPtr(const std::string &id)
       {
-        auto pos = m_events.find(id);
-        if (pos != m_events.end())
+        auto pos = m_observations.find(id);
+        if (pos != m_observations.end())
           return pos->second;
         return nullptr;
       }
 
     protected:
-      bool addObservation(ConditionPtr event, ObservationPtr &old);
-      bool addObservation(const DataSetEventPtr event, ObservationPtr &old);
+      void addObservation(ConditionPtr event, ObservationPtr &&old);
+      void addObservation(const DataSetEventPtr event, ObservationPtr &&old);
 
     protected:
-      std::map<std::string, ObservationPtr> m_events;
+      std::map<std::string, ObservationPtr> m_observations;
       FilterSetOpt m_filter;
     };
   }  // namespace observation

@@ -295,8 +295,10 @@ namespace mtconnect
       template <typename U, typename T>
       void operator()(const U &arg, T &t)
       {
-        g_logger << dlib::LDEBUG << "Cannot convert from " << typeid(U).name() << " to "
-                 << typeid(T).name();
+        stringstream s;
+        s << "Cannot convert from " << typeid(U).name() << " to "
+          << typeid(T).name();
+        throw PropertyError(s.str());
       }
       // Default
 
@@ -342,7 +344,7 @@ namespace mtconnect
           break;
 
         default:
-          return false;
+          throw PropertyError("Cannot convert non-scaler types");
       }
 
       ValueConverter vc(type, table);

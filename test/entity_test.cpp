@@ -382,7 +382,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_EQ(1234_i64, get<int64_t>(v));
   
   v = nullptr;
-  ASSERT_FALSE(r1.convertType(v));
+  ASSERT_THROW(r1.convertType(v), PropertyError);
 }
 
 TEST_F(EntityTest, TestRequirementStringConversion)

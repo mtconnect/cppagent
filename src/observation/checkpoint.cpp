@@ -36,13 +36,12 @@ namespace mtconnect
       copy(checkpoint, filter);
     }
 
-    void Checkpoint::clear() { m_events.clear(); }
+    void Checkpoint::clear() { m_observations.clear(); }
 
     Checkpoint::~Checkpoint() { clear(); }
 
-    bool Checkpoint::addObservation(ConditionPtr event, ObservationPtr &old)
+    void Checkpoint::addObservation(ConditionPtr event, ObservationPtr &&old)
     {
-      bool assigned = false;
       Condition *cond = dynamic_cast<Condition *>(old.get());
       if (cond->getLevel() != Condition::NORMAL && event->getLevel() != Condition::NORMAL &&
           cond->getLevel() != Condition::UNAVAILABLE && event->getLevel() != Condition::UNAVAILABLE)
@@ -60,6 +59,7 @@ namespace mtconnect
         // Chain the event
         if (old)
           event->appendTo(dynamic_pointer_cast<Condition>(old));
+        old = event;
       }
       else if (event->getLevel() == Condition::NORMAL)
       {
@@ -86,15 +86,11 @@ namespace mtconnect
             // previous normal was not found
             // (*ptr) = event;
           }
-
-          assigned = true;
         }
       }
-
-      return assigned;
     }
 
-    bool Checkpoint::addObservation(const DataSetEventPtr event, ObservationPtr &old)
+    void Checkpoint::addObservation(const DataSetEventPtr event, ObservationPtr &&old)
     {
       if (!event->isUnavailable() && !old->isUnavailable() && !event->hasProperty("resetTriggered"))
       {
@@ -113,12 +109,14 @@ namespace mtconnect
 
         // Replace the old event with a copy of the new event with sets merged
         // Do not modify the new event.
-        old = make_unique<DataSetEvent>(*event);
-        old->setProperty("VALUE", set);
-        return true;
+        auto n = make_shared<DataSetEvent>(*event);
+        n->setDataSet(set);
+        old = n;
       }
       else
-        return false;
+      {
+        old = event;
+      }
     }
 
     void Checkpoint::addObservation(ObservationPtr event)
@@ -130,31 +128,30 @@ namespace mtconnect
 
       auto item = event->getDataItem();
       const auto &id = item->getId();
-      auto old = m_events.find(id);
+      auto old = m_observations.find(id);
 
-      if (old != m_events.end())
+      if (old != m_observations.end())
       {
-        bool assigned = false;
-
         if (item->isCondition())
         {
           auto cond = dynamic_pointer_cast<Condition>(event);
           // Chain event only if it is normal or unavailable and the
           // previous condition was not normal or unavailable
-          assigned = addObservation(cond, old->second);
+          addObservation(cond, std::forward<ObservationPtr>(old->second));
         }
         else if (item->isDataSet())
         {
           auto set = dynamic_pointer_cast<DataSetEvent>(event);
-          assigned = addObservation(set, old->second);
+          addObservation(set, std::forward<ObservationPtr>(old->second));
         }
-
-        if (!assigned)
+        else
+        {
           old->second = event;
+        }
       }
       else
       {
-        m_events[id] = dynamic_pointer_cast<Observation>(event->getptr());
+        m_observations[id] = dynamic_pointer_cast<Observation>(event->getptr());
       }
     }
 
@@ -167,16 +164,16 @@ namespace mtconnect
         m_filter = filterSet;
       }
 
-      for (const auto &event : checkpoint.m_events)
+      for (const auto &event : checkpoint.m_observations)
       {
         if (!m_filter || m_filter->count(event.first) > 0)
-          m_events[event.first] = dynamic_pointer_cast<Observation>(event.second->getptr());
+          m_observations[event.first] = dynamic_pointer_cast<Observation>(event.second->getptr());
       }
     }
 
     void Checkpoint::getObservations(ObservationList &list, const FilterSetOpt &filterSet) const
     {
-      for (const auto &event : m_events)
+      for (const auto &event : m_observations)
       {
         auto e = event.second;
 
@@ -204,8 +201,8 @@ namespace mtconnect
       if (m_filter->empty())
         return;
 
-      auto it = m_events.begin();
-      while (it != m_events.end())
+      auto it = m_observations.begin();
+      while (it != m_observations.end())
       {
         if (!m_filter->count(it->first))
         {
@@ -213,7 +210,7 @@ namespace mtconnect
           it = m_events.erase(it);
 #else
           auto pos = it++;
-          m_events.erase(pos);
+          m_observations.erase(pos);
 #endif
         }
         else
@@ -231,13 +228,13 @@ namespace mtconnect
           !event->hasProperty("resetTriggered"))
       {
         const auto &id = item->getId();
-        const auto ptr = m_events.find(id);
+        const auto ptr = m_observations.find(id);
 
-        if (ptr != m_events.end())
+        if (ptr != m_observations.end() && !ptr->second->isUnavailable())
         {
           const auto old = dynamic_pointer_cast<DataSetEvent>(ptr->second);
-
           auto &set = old->getDataSet();
+          
           DataSet eventSet = setEvent->getDataSet();
           bool changed = false;
 
@@ -256,7 +253,9 @@ namespace mtconnect
           }
 
           if (changed)
+          {
             setEvent->setDataSet(eventSet);
+          }
 
           return !eventSet.empty();
         }

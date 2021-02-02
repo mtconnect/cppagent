@@ -38,7 +38,6 @@ class CuttingToolTest : public testing::Test
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
 
     // Asset types are registered in the agent.
-    m_adapter = nullptr;
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     
     m_writer = make_unique<XmlWriter>(true);
@@ -52,15 +51,11 @@ class CuttingToolTest : public testing::Test
 
   void addAdapter()
   {
-    ASSERT_FALSE(m_adapter);
-    m_adapter = new Adapter("LinuxCNC", "server", 7878);
-    m_agentTestHelper->m_agent->addAdapter(m_adapter);
-    ASSERT_TRUE(m_adapter);
+    m_agentTestHelper->addAdapter();
   }
   
   std::string m_agentId;
   Device *m_device{nullptr};
-  Adapter *m_adapter{nullptr};
   
   std::unique_ptr<XmlWriter> m_writer;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
@@ -453,9 +448,9 @@ TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
 
   addAdapter();
 
-  m_adapter->parseBuffer("TIME|@ASSET@|XXX.200|CuttingTool|--multiline--AAAA\n");
-  m_adapter->parseBuffer((getFile("asset5.xml") + "\n").c_str());
-  m_adapter->parseBuffer("--multiline--AAAA\n");
+  m_agentTestHelper->m_adapter->parseBuffer("TIME|@ASSET@|XXX.200|CuttingTool|--multiline--AAAA\n");
+  m_agentTestHelper->m_adapter->parseBuffer((getFile("asset5.xml") + "\n").c_str());
+  m_agentTestHelper->m_adapter->parseBuffer("--multiline--AAAA\n");
   ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
 
   {

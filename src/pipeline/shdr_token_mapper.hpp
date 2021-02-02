@@ -59,7 +59,7 @@ namespace mtconnect
       // Takes a tokenized set of fields and maps them to timestamp and data items
       EntityPtr mapTokensToDataItem(const Timestamp &timestamp, TokenList::const_iterator &token,
                                     const TokenList::const_iterator &end, ErrorList &errors);
-      EntityPtr mapTokesnToAsset(const Timestamp &timestamp, TokenList::const_iterator &token,
+      EntityPtr mapTokensToAsset(const Timestamp &timestamp, TokenList::const_iterator &token,
                                  const TokenList::const_iterator &end, ErrorList &errors);
 
     protected:
