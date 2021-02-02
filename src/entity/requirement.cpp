@@ -338,7 +338,15 @@ namespace mtconnect
         case DATA_SET:
           out.emplace<DATA_SET>();
           break;
-
+          
+        case TABLE:
+          if (value.index() == DATA_SET)
+            return false;
+          
+          table = true;
+          out.emplace<DATA_SET>();
+          break;
+          
         case TIMESTAMP:
           out.emplace<TIMESTAMP>();
           break;

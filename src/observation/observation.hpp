@@ -311,6 +311,14 @@ namespace mtconnect
     };
 
     using DataSetEventPtr = std::shared_ptr<DataSetEvent>;
+    
+    class TableEvent : public DataSetEvent
+    {
+    public:
+      using DataSetEvent::DataSetEvent;
+      static entity::FactoryPtr getFactory();
+      ObservationPtr copy() const override { return std::make_shared<TableEvent>(*this); }
+    };
 
     class AssetEvent : public Event
     {

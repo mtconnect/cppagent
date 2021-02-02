@@ -64,7 +64,7 @@ namespace mtconnect
 
         factory->registerFactory(regex(".+TimeSeries$"), Timeseries::getFactory());
         factory->registerFactory(regex(".+DataSet$"), DataSetEvent::getFactory());
-        factory->registerFactory(regex(".+Table$"), DataSetEvent::getFactory());
+        factory->registerFactory(regex(".+Table$"), TableEvent::getFactory());
         factory->registerFactory(regex("^Condition:.+"), Condition::getFactory());
         factory->registerFactory(regex("^Samples:.+:3D$"), ThreeSpaceSample::getFactory());
         factory->registerFactory(regex("^Samples:.+"), Sample::getFactory());
@@ -193,6 +193,30 @@ namespace mtconnect
 
       return factory;
     }
+    
+    FactoryPtr TableEvent::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*DataSetEvent::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          auto ent = make_shared<TableEvent>(name, props);
+          auto v = ent->m_properties.find("VALUE");
+          if (v != ent->m_properties.end())
+          {
+            auto &ds = std::get<DataSet>(v->second);
+            ent->m_properties.insert_or_assign("count", int64_t(ds.size()));
+          }
+          return ent;
+        });
+
+        factory->addRequirements(Requirements{{"VALUE", TABLE, false}});
+      }
+
+      return factory;
+    }
+
 
     FactoryPtr Sample::getFactory()
     {

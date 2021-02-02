@@ -68,7 +68,8 @@ namespace mtconnect
       DATA_SET = 0x8,
       TIMESTAMP = 0x9,
       NULL_VALUE = 0xA,
-      USTRING = 0x10 | STRING
+      USTRING = 0x10 | STRING,
+      TABLE = 0x10 | DATA_SET
     };
 
     bool ConvertValueToType(Value &value, ValueType type, bool table = false);

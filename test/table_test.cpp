@@ -36,6 +36,10 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace mtconnect::observation;
+using namespace mtconnect::entity;
+using namespace std::literals;
+using namespace chrono_literals;
+using namespace date::literals;
 
 class TableTest : public testing::Test
 {
@@ -48,7 +52,6 @@ class TableTest : public testing::Test
     m_agentId = to_string(getCurrentTimeInSec());
 
     m_checkpoint = nullptr;
-    m_adapter = nullptr;
     m_checkpoint = make_unique<Checkpoint>();
 
     std::map<string, string> attributes;
@@ -63,7 +66,6 @@ class TableTest : public testing::Test
   }
 
   std::unique_ptr<Checkpoint> m_checkpoint;
-  adapter::Adapter *m_adapter{nullptr};
   std::string m_agentId;
   DataItem *m_dataItem1{nullptr};
 
@@ -88,32 +90,28 @@ TEST_F(TableTest, DataItem)
 TEST_F(TableTest, InitialSet)
 {
   string value("G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
-  auto ce = new Observation(*m_dataItem1, "time", value, 2);
+  ErrorList errors;
+  auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", value}},
+                              time, errors);
+  ASSERT_EQ(0, errors.size());
+  auto set1 = ce->getValue<DataSet>();
 
-  ASSERT_EQ((size_t)3, ce->getDataSet().size());
-  auto &al = ce->getAttributes();
-  std::map<string, string> attrs;
+  ASSERT_EQ(3, set1.size());
+  ASSERT_EQ(3, ce->get<int64_t>("count"));
 
-  for (const auto &attr : al)
-    attrs[attr.first] = attr.second;
-
-  ASSERT_EQ((string) "3", attrs.at("count"));
-
-  auto set1 = ce->getDataSet();
   auto g531 = get<DataSet>(set1.find("G53.1"_E)->m_value);
   ASSERT_EQ((size_t) 3, g531.size());
   ASSERT_EQ(1.0, get<double>(g531.find("X"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(g531.find("Y"_E)->m_value));
   ASSERT_EQ(3.0, get<double>(g531.find("Z"_E)->m_value));
 
-  auto set2 = ce->getDataSet();
   auto g532 = get<DataSet>(set1.find("G53.2"_E)->m_value);
   ASSERT_EQ((size_t) 3, g532.size());
   ASSERT_EQ(4.0, get<double>(g532.find("X"_E)->m_value));
   ASSERT_EQ(5.0, get<double>(g532.find("Y"_E)->m_value));
   ASSERT_EQ(6.0, get<double>(g532.find("Z"_E)->m_value));
 
-  auto set3 = ce->getDataSet();
   auto g533 = get<DataSet>(set1.find("G53.3"_E)->m_value);
   ASSERT_EQ((size_t) 4, g533.size());
   ASSERT_EQ(7.0, get<double>(g533.find("X"_E)->m_value));
@@ -128,9 +126,7 @@ TEST_F(TableTest, InitialSet)
 TEST_F(TableTest, Current)
 {
   
-  m_adapter = new adapter::Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -138,7 +134,7 @@ TEST_F(TableTest, Current)
                           "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -160,7 +156,7 @@ TEST_F(TableTest, Current)
     ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "U", "10");
   }
   
-  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=11.0}");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=11.0}");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -186,13 +182,10 @@ TEST_F(TableTest, Current)
 
 TEST_F(TableTest, JsonCurrent)
 {
-  m_adapter = new adapter::Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-  
+  m_agentTestHelper->addAdapter();
   m_agentTestHelper->m_request.m_accepts = "Application/json";
   
-  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
+  m_agentTestHelper->m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
 
   {
     PARSE_JSON_RESPONSE("/current");
@@ -224,7 +217,7 @@ TEST_F(TableTest, JsonCurrent)
     }
     ASSERT_TRUE(offsets.is_object());
     
-    ASSERT_EQ(string("3"), offsets.at("/WorkpieceOffsetTable/count"_json_pointer).get<string>());
+    ASSERT_EQ(3, offsets.at("/WorkpieceOffsetTable/count"_json_pointer).get<int>());
 
     ASSERT_EQ(1.0, offsets.at("/WorkpieceOffsetTable/value/G53.1/X"_json_pointer).get<double>());
     ASSERT_EQ(2.0, offsets.at("/WorkpieceOffsetTable/value/G53.1/Y"_json_pointer).get<double>());
@@ -242,13 +235,11 @@ TEST_F(TableTest, JsonCurrent)
 
 TEST_F(TableTest, JsonCurrentText)
 {
-  m_adapter = new adapter::Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-  
+  m_agentTestHelper->addAdapter();
+
   m_agentTestHelper->m_request.m_accepts = "Application/json";
   
-  m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0 s='string with space'} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
+  m_agentTestHelper->m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0 s='string with space'} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
   
   {
     PARSE_JSON_RESPONSE("/current");
@@ -280,7 +271,7 @@ TEST_F(TableTest, JsonCurrentText)
     }
     ASSERT_TRUE(offsets.is_object());
     
-    ASSERT_EQ(string("3"), offsets.at("/WorkpieceOffsetTable/count"_json_pointer).get<string>());
+    ASSERT_EQ(3, offsets.at("/WorkpieceOffsetTable/count"_json_pointer).get<int>());
     
     ASSERT_EQ(string("string with space"), offsets.at("/WorkpieceOffsetTable/value/G53.1/s"_json_pointer).get<string>());
     
@@ -290,9 +281,7 @@ TEST_F(TableTest, JsonCurrentText)
 
 TEST_F(TableTest, XmlCellDefinitions)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
+  m_agentTestHelper->addAdapter();
 
   {
     PARSE_XML_RESPONSE("/probe");
@@ -336,10 +325,8 @@ TEST_F(TableTest, XmlCellDefinitions)
 
 TEST_F(TableTest, JsonDefinitionTest)
 {
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  m_agentTestHelper->m_agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-  
+  m_agentTestHelper->addAdapter();
+
   m_agentTestHelper->m_request.m_accepts = "Application/json";
   
   {
