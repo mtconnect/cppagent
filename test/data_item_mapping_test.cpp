@@ -297,7 +297,7 @@ TEST_F(DataItemMappingTest, ConditionNormal)
   
   ASSERT_EQ(di, cond->getDataItem());
   ASSERT_TRUE(di->isCondition());
-  ASSERT_FALSE(cond->hasProperty("VALUE"));
+  ASSERT_TRUE(cond->hasProperty("VALUE"));
   ASSERT_FALSE(cond->hasProperty("nativeCode"));
   ASSERT_FALSE(cond->hasProperty("qualifier"));
   ASSERT_EQ("Normal", cond->getName());

@@ -217,6 +217,8 @@ namespace mtconnect
       if (reqs != nullptr)
       {
         auto obs =  zipProperties(dataItem, timestamp, *reqs, token, end, errors);
+        if (dataItem->hasConstantValue())
+          return nullptr;
         if (obs && source)
           dataItem->setDataSource(*source);
         return obs;
@@ -246,14 +248,15 @@ namespace mtconnect
 
         XmlParser parser;
         res = parser.parse(Asset::getRoot(), body, "1.7", errors);
-        if (res)
+        if (auto asset = dynamic_pointer_cast<Asset>(res))
         {
-          res->setProperty("timestamp", timestamp);
+          asset->setAssetId(assetId);
+          asset->setProperty("timestamp", timestamp);
           if (m_defaultDevice)
           {
             Device *dev = m_contract->findDevice(*m_defaultDevice);
             if (dev != nullptr)
-              res->setProperty("deviceUuid", dev->getUuid());
+              asset->setProperty("deviceUuid", dev->getUuid());
           }
         }
         else
@@ -261,11 +264,12 @@ namespace mtconnect
       }
       else
       {
-        auto ac = make_shared<AssetCommand>("", Properties{});
+        auto ac = make_shared<AssetCommand>("AssetCommand", Properties{});
         ac->m_timestamp = timestamp;
         if (command == "@REMOVE_ALL_ASSETS@")
         {
-          ac->setName("RemoveAll");
+          ac->setName("AssetCommand");
+          ac->setValue("RemoveAll");
           if (token != end)
             ac->setProperty("type", *token++);
           if (m_defaultDevice)
@@ -274,7 +278,7 @@ namespace mtconnect
         }
         else if (command == "@REMOVE_ASSET@")
         {
-          ac->setName("RemoveAsset");
+          ac->setValue("RemoveAsset");
           ac->setProperty("assetId", *token++);
           if (m_defaultDevice)
             ac->setProperty("device", *m_defaultDevice);

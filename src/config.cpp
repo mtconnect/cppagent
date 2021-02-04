@@ -627,9 +627,6 @@ namespace mtconnect
     m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
     auto cache = m_agent->getFileCache();
 
-    for (auto device : m_agent->getDevices())
-      device->m_preserveUuid = defaultPreserve;
-
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
     m_pipelineContext->m_contract = m_agent->makePipelineContract();
@@ -644,6 +641,9 @@ namespace mtconnect
     options["FilterDuplicates"] = filterDuplicates;
 
     m_agent->initialize(m_pipelineContext, options);
+
+    for (auto device : m_agent->getDevices())
+      device->m_preserveUuid = defaultPreserve;
 
     loadAdapters(reader, options);
 
@@ -754,10 +754,15 @@ namespace mtconnect
     }
     else if ((device = defaultDevice()))
     {
+      ConfigOptions adapterOptions{options};
+      
+      auto deviceName = device->getName();
+      adapterOptions["Device"] = deviceName;
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
+
       auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-      auto adp = new Adapter("localhost", 7878, options, pipeline);
+      auto adp = new Adapter("localhost", 7878, adapterOptions, pipeline);
       m_agent->addAdapter(adp, false);
     }
     else

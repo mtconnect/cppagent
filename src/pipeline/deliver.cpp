@@ -70,6 +70,8 @@ namespace mtconnect
 
     const entity::EntityPtr DeliverCommand::operator()(const entity::EntityPtr entity)
     {
+      if (m_defaultDevice)
+        entity->setProperty("device", *m_defaultDevice);
       m_contract->deliverCommand(entity);
       return entity;
     }

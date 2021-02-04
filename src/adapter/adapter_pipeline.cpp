@@ -68,7 +68,7 @@ namespace mtconnect
         run(entity);
       };
       handler->m_command = [this](const std::string &data, const std::string &source) {
-        auto entity = make_shared<Entity>("ProtocolCommand", Properties{{"VALUE", data}, {"source", source}});
+        auto entity = make_shared<Entity>("Command", Properties{{"VALUE", data}, {"source", source}});
         run(entity);
       };
 
@@ -92,7 +92,7 @@ namespace mtconnect
 
       
       bind(make_shared<DeliverConnectionStatus>(m_context, devices, IsOptionSet(options, "AutoAvailable")));
-      bind(make_shared<DeliverCommand>(m_context));
+      bind(make_shared<DeliverCommand>(m_context, device));
 
       // Optional type based transforms
       if (IsOptionSet(m_options, "IgnoreTimestamps"))

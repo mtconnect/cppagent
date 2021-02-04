@@ -57,7 +57,7 @@ class AgentTest : public testing::Test
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                   8, 4, "1.3", 25);
+                                   8, 4, "1.3", 25, true);
     m_agentId = to_string(getCurrentTimeInSec());
   }
 
@@ -1930,7 +1930,7 @@ TEST_F(AgentTest, MultiLineAsset)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:Extra", "XXX");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@deviceUuid", "000");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "2021-02-01T12:00:00.000000Z");
   }
 
   // Make sure we can still add a line and we are out of multiline mode...
@@ -1955,21 +1955,19 @@ TEST_F(AgentTest, BadAsset)
 
 TEST_F(AgentTest, AssetRemoval)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                              8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
   Routing::QueryMap query;
 
   query["device"] = "LinuxCNC";
   query["type"] = "Part";
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, m_agentTestHelper->m_agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, m_agentTestHelper->m_agent->getAssetCount());
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
-    ASSERT_EQ(1, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
+    ASSERT_EQ(1, m_agentTestHelper->m_agent->getAssetCount("Part"));
   }
 
   {
@@ -1981,16 +1979,16 @@ TEST_F(AgentTest, AssetRemoval)
   // Make sure replace works properly
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
-    ASSERT_EQ(1, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
+    ASSERT_EQ(1, m_agentTestHelper->m_agent->getAssetCount("Part"));
   }
 
   body = "<Part assetId='P2'>TEST 2</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
-    ASSERT_EQ(2, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)2, m_agentTestHelper->m_agent->getAssetCount());
+    ASSERT_EQ(2, m_agentTestHelper->m_agent->getAssetCount("Part"));
   }
 
   {
@@ -2003,8 +2001,8 @@ TEST_F(AgentTest, AssetRemoval)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)3, agent->getAssetCount());
-    ASSERT_EQ(3, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)3, m_agentTestHelper->m_agent->getAssetCount());
+    ASSERT_EQ(3, m_agentTestHelper->m_agent->getAssetCount("Part"));
   }
 
   {
@@ -2017,8 +2015,8 @@ TEST_F(AgentTest, AssetRemoval)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
-    ASSERT_EQ(3, agent->getAssetCount("Part", false));
+    ASSERT_EQ((unsigned int)3, m_agentTestHelper->m_agent->getAssetCount(false));
+    ASSERT_EQ(3, m_agentTestHelper->m_agent->getAssetCount("Part", false));
   }
 
   {
@@ -2217,8 +2215,6 @@ TEST_F(AgentTest, AssetChangedWhenUnavailable)
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "");
   }
 }
 
@@ -2524,7 +2520,7 @@ TEST_F(AgentTest, Put)
   Routing::QueryMap queries;
   string body;
 
-  queries["time"] = "TIME";
+  queries["time"] = "2021-02-01T12:00:00Z";
   queries["line"] = "205";
   queries["power"] = "ON";
 
@@ -2534,7 +2530,7 @@ TEST_F(AgentTest, Put)
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "2021-02-01T12:00:00.000000Z");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
     ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
   }

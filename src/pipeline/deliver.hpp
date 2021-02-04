@@ -93,8 +93,9 @@ namespace mtconnect
     {
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
-      DeliverCommand(PipelineContextPtr context)
-        : Transform("DeliverCommand"), m_contract(context->m_contract.get())
+      DeliverCommand(PipelineContextPtr context, const std::optional<std::string> &device)
+        : Transform("DeliverCommand"), m_contract(context->m_contract.get()),
+          m_defaultDevice(device)
       {
         m_guard = EntityNameGuard("Command", RUN);
       }
@@ -102,6 +103,7 @@ namespace mtconnect
 
     protected:
       PipelineContract *m_contract;
+      std::optional<std::string> m_defaultDevice;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

@@ -83,11 +83,7 @@ namespace mtconnect
 
       // Inherited method to incoming data from the server
       void processData(const std::string &data) override;
-      void protocolCommand(const std::string &data) override
-      {
-        if (m_handler && m_handler->m_command)
-          m_handler->m_command(data, getIdentity());
-      }
+      void protocolCommand(const std::string &data) override;
 
       // Method called when connection is lost.
       void connecting() override

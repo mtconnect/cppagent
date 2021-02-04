@@ -92,14 +92,17 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices().front();
-    ASSERT_GT(0, device->m_adapters.size());
-    const auto adapter = device->m_adapters.front();
+    const auto adapter = agent->getAdapters().front();
 
-    ASSERT_EQ(std::string("LinuxCNC"), device->getName());
+    auto deviceName = GetOption<string>(adapter->getOptions(), "Device");
+    ASSERT_TRUE(deviceName);
+    ASSERT_EQ("LinuxCNC", *deviceName);
+
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "FilterDuplicates"));
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "AutoAvailable"));
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
+    
+    auto device = agent->findDeviceByUUIDorName(*deviceName);
     ASSERT_TRUE(device->m_preserveUuid);
   }
 

@@ -713,6 +713,34 @@ namespace mtconnect
       g_logger << LERROR << "Unexpected connection status received: " << value;
     }
   }
+  
+  void AgentPipelineContract::deliverCommand(entity::EntityPtr entity)
+  {
+    static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
+    auto value = entity->getValue<string>();
+    smatch match;
+    
+    if (std::regex_match(value, match, pattern))
+    {
+      auto device = entity->maybeGet<string>("device");
+      auto command = match[1].str();
+      auto param = match[2].str();
+      
+      if (!device)
+      {
+        g_logger << LERROR << "Invalid command: " << command << ", device not specified";
+      }
+      else
+      {
+        g_logger << LDEBUG << "Processing command: " << command << ": " << value;
+        m_agent->receiveCommand(*device, command, param);
+      }
+    }
+    else
+    {
+      g_logger << LWARN << "Cannot parse command: " << value;
+    }
+  }
 
   void Agent::connecting(const std::string &adapter)
   {
@@ -1553,7 +1581,7 @@ namespace mtconnect
   
   void AgentPipelineContract::deliverAssetCommand(entity::EntityPtr command)
   {
-    const std::string &cmd = command->getName();
+    const std::string &cmd = command->getValue<string>();
     if (cmd == "RemoveAsset")
     {
       string id = command->get<string>("assetId");
@@ -1574,6 +1602,77 @@ namespace mtconnect
     {
       g_logger << LERROR << "Invalid assent command: " << cmd;
     }
+  }
+
+  void Agent::receiveCommand(const std::string &deviceName,
+                             const std::string &command,
+                             const std::string &value)
+  {
+    Device *device {nullptr};
+    device = findDeviceByUUIDorName(deviceName);
+    
+    std::string oldName, oldUuid;
+    if (device)
+    {
+      oldName = device->getName();
+      oldUuid = device->getUuid();
+    }
+
+    if (device)
+    {
+      if (command == "uuid" && !device->m_preserveUuid)
+      {
+        device->setUuid(value);
+      }
+      else if (command == "manufacturer")
+      {
+        device->setManufacturer(value);
+      }
+      else if (command == "station")
+      {
+        device->setStation(value);
+      }
+      else if (command == "serialNumber")
+      {
+        device->setSerialNumber(value);
+      }
+      else if (command == "description")
+      {
+        device->setDescription(value);
+      }
+      else if (command == "nativeName")
+      {
+        device->setNativeName(value);
+      }
+      else if (command == "calibration")
+      {
+        istringstream line(value);
+
+        // Look for name|factor|offset triples
+        string name, factor, offset;
+        while (getline(line, name, '|') && getline(line, factor, '|') &&
+               getline(line, offset, '|'))
+        {
+          // Convert to a floating point number
+          auto di = device->getDeviceDataItem(name);
+          if (!di)
+            g_logger << LWARN << "Cannot find data item to calibrate for " << name;
+          else
+          {
+            double fact_value = strtod(factor.c_str(), nullptr);
+            double off_value = strtod(offset.c_str(), nullptr);
+            di->setConversionFactor(fact_value, off_value);
+          }
+        }
+      }
+      else
+      {
+        g_logger << LWARN << "Unknown command '" << command << "' for device '" << deviceName;
+        return;
+      }
+    }
+    
+    deviceChanged(device, oldUuid, oldName);
   }
 
   

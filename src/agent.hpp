@@ -136,6 +136,9 @@ namespace mtconnect
                       bool autoAvailable);
     void connected(const std::string &adapter, const StringList &devices,
                    bool autoAvailable);
+    
+    // Message protocol command
+    void receiveCommand(const std::string &device, const std::string &command, const std::string &value);
 
     DataItem *getDataItemByName(const std::string &deviceName,
                                 const std::string &dataItemName) const
@@ -357,8 +360,7 @@ namespace mtconnect
     void deliverAssetCommand(entity::EntityPtr command) override;
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
-
-    void deliverCommand(entity::EntityPtr) override {}
+    void deliverCommand(entity::EntityPtr) override;
 
   protected:
     Agent *m_agent;

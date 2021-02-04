@@ -273,7 +273,7 @@ namespace mtconnect
       }
 
       // ------------ Bool
-      void operator()(const bool arg, string &v) { v = arg ? "tue" : "false"; }
+      void operator()(const bool arg, string &v) { v = arg ? "true" : "false"; }
       void operator()(const bool arg, Vector &v) { v.emplace_back(arg); }
       void operator()(const bool arg, int64_t &v) { v = arg; }
       void operator()(const bool arg, double &v) { v = arg; }
