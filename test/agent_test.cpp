@@ -82,10 +82,20 @@ TEST_F(AgentTest, Constructor)
 {
   auto server1 = make_unique<http_server::Server>();
   auto cache1 = make_unique<http_server::FileCache>();
-  ASSERT_THROW(Agent(server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7"), std::runtime_error);
+  unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7");
+  auto context = std::make_shared<pipeline::PipelineContext>();
+  context->m_contract = agent->makePipelineContract();
+
+  ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
+  agent.reset();
+  
   auto server2 = make_unique<http_server::Server>();
   auto cache2 = make_unique<http_server::FileCache>();
-  ASSERT_NO_THROW(Agent(server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7"));
+  agent = make_unique<Agent>(server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7");
+  
+  context = std::make_shared<pipeline::PipelineContext>();
+  context->m_contract = agent->makePipelineContract();
+  ASSERT_NO_THROW(agent->initialize(context, {}));
 }
 
 TEST_F(AgentTest, Probe)
@@ -115,9 +125,11 @@ TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
   auto server1 = make_unique<http_server::Server>();
   auto cache1 = make_unique<http_server::FileCache>();
-  ASSERT_THROW(Agent(server1, cache1,
-                     PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25),
-               std::runtime_error);
+  unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 17, 8, "1.5");
+  auto context = std::make_shared<pipeline::PipelineContext>();
+  context->m_contract = agent->makePipelineContract();
+
+  ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
 }
 
 TEST_F(AgentTest, BadDevices)
@@ -907,7 +919,7 @@ TEST_F(AgentTest, IgnoreTimestamps)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00.000000Z");
   }
 
   m_agentTestHelper->m_adapter->setOptions({{"IgnoreTimestamps", true}});
@@ -916,8 +928,8 @@ TEST_F(AgentTest, IgnoreTimestamps)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00.000000Z");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!2021-02-01T12:00:00.000000Z");
   }
 }
 

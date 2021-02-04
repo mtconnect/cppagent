@@ -117,10 +117,6 @@ namespace mtconnect
         if (std::holds_alternative<std::string>(value))
         {
           auto &v = std::get<std::string>(value);
-          if (v.empty())
-          {
-            throw PropertyError("Value of " + m_name + " is empty", m_name);
-          }
           if (m_pattern && !std::regex_match(v, *m_pattern))
           {
             throw PropertyError("Invalid value for '" + m_name + "': '" + v + "' is not allowed",

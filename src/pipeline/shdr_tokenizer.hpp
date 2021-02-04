@@ -51,7 +51,10 @@ namespace mtconnect
       const entity::EntityPtr operator()(const entity::EntityPtr data) override
       {
         auto &body = data->getValue<std::string>();
-        auto result = std::make_shared<Tokens>("Tokens", entity::Properties());
+        entity::Properties props;
+        if (auto source = data->maybeGet<std::string>("source"))
+          props["source"] = *source;
+        auto result = std::make_shared<Tokens>("Tokens", props);
         result->m_tokens = tokenize(body);
         return next(result);
       }

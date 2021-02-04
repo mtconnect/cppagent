@@ -57,7 +57,7 @@ namespace mtconnect
 
             if (old == values.end())
               values[di->getId()] = o->getValue();
-            else if (old->second != o->getValue())
+            else
               old->second = o->getValue();
           }
         }

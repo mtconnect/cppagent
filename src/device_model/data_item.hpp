@@ -336,7 +336,9 @@ namespace mtconnect
     std::vector<std::string> m_values;
     bool m_hasConstraints;
 
+    // Filters
     double m_filterValue;
+    
     // Period filter, in seconds
     double m_filterPeriod;
     bool m_hasMinimumDelta;

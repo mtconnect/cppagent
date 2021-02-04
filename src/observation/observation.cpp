@@ -58,6 +58,7 @@ namespace mtconnect
                                        });
 
         factory->registerFactory("Events:Message", Message::getFactory());
+        factory->registerFactory("Events:MessageDiscrete", Message::getFactory());
         factory->registerFactory("Events:AssetChanged", AssetEvent::getFactory());
         factory->registerFactory("Events:AssetRemoved", AssetEvent::getFactory());
         factory->registerFactory("Events:Alarm", Alarm::getFactory());
@@ -111,13 +112,15 @@ namespace mtconnect
       {
         // Check for unavailable
         auto v = props.find("VALUE");
-        if (v != props.end() && holds_alternative<string>(v->second) &&
-            iequals(std::get<string>(v->second), "unavailable"))
+        if (v != props.end() && holds_alternative<string>(v->second))
         {
-          unavailable = true;
-          props.erase(v);
+          if (iequals(std::get<string>(v->second), "unavailable"))
+          {
+            unavailable = true;
+            props.erase(v);
+          }
         }
-        else if (v == props.end() && !dataItem->isCondition())
+        else if (v == props.end())
         {
           unavailable = true;
         }
@@ -168,7 +171,9 @@ namespace mtconnect
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<Event>(name, props);
         });
-        factory->addRequirements(Requirements{{"VALUE", false}});
+        factory->addRequirements(Requirements{{"VALUE", false},
+          {"resetTriggered", USTRING, false}
+        });
       }
 
       return factory;

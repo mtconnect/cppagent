@@ -752,7 +752,7 @@ namespace mtconnect
       {
         auto dataItem = dataItemAssoc.second;
         if (dataItem && ((dataItem->getDataSource() && *dataItem->getDataSource() == adapter) ||
-                         (autoAvailable && dataItem->getDataSource() &&
+                         (autoAvailable && !dataItem->getDataSource() &&
                           dataItem->getType() == "AVAILABILITY")))
         {
           auto ptr = m_circularBuffer.getLatest().getEventPtr(dataItem->getId());
@@ -760,12 +760,7 @@ namespace mtconnect
           if (ptr)
           {
             const string *value = nullptr;
-            if (dataItem->isCondition())
-            {
-              if (ptr->isUnavailable())
-                value = &g_unavailable;
-            }
-            else if (dataItem->hasConstraints())
+            if (dataItem->hasConstraints())
             {
               const auto &values = dataItem->getConstrainedValues();
               if (values.size() > 1 && !ptr->isUnavailable())
@@ -884,9 +879,14 @@ namespace mtconnect
     Device *device = nullptr;
     auto uuid = asset->getDeviceUuid();
     if (uuid)
-      device = m_deviceUuidMap[*uuid];
+      device = findDeviceByUUIDorName(*uuid);
     else
       device = defaultDevice();
+    
+    if (asset->getDeviceUuid() && *asset->getDeviceUuid() != device->getUuid())
+    {
+      asset->setProperty("deviceUuid", device->getUuid());
+    }
     
     string aid = asset->getAssetId();
     if (aid[0] == '@')

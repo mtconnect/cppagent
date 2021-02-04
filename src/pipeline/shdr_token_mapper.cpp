@@ -98,7 +98,7 @@ namespace mtconnect
           (pos = token.find(':')) != string::npos)
       {
         string trig, value;
-        if (dataItem->isSample())
+        if (!dataItem->isDataSet())
         {
           trig = token.substr(pos + 1);
           value = token.substr(0, pos);
@@ -130,13 +130,16 @@ namespace mtconnect
       {
         const string &tok = *token;
 
-        if (tok.empty())
+        if (req->getName() == "VALUE" || req->getName() == "level")
         {
-          continue;
+          if (unavailable(tok))
+          {
+            unavail = true;
+            continue;
+          }
         }
-        if (unavailable(tok) && (req->getName() == "VALUE" || req->getName() == "level"))
+        else if (tok.empty())
         {
-          unavail = true;
           continue;
         }
 
@@ -244,15 +247,17 @@ namespace mtconnect
         XmlParser parser;
         res = parser.parse(Asset::getRoot(), body, "1.7", errors);
         if (res)
+        {
           res->setProperty("timestamp", timestamp);
+          if (m_defaultDevice)
+          {
+            Device *dev = m_contract->findDevice(*m_defaultDevice);
+            if (dev != nullptr)
+              res->setProperty("deviceUuid", dev->getUuid());
+          }
+        }
         else
           res = EntityPtr();
-        if (m_defaultDevice)
-        {
-          Device *dev = m_contract->findDevice(*m_defaultDevice);
-          if (dev != nullptr)
-            res->setProperty("deviceUuid", dev->getUuid());
-        }
       }
       else
       {

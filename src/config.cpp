@@ -684,9 +684,9 @@ namespace mtconnect
         const auto &adapter = adapters.block(block);
         string deviceName;
         if (adapter.is_key_defined("Device"))
-          adapterOptions["Device"] = adapter["Device"];
+          deviceName = adapter["Device"];
         else
-          adapterOptions["Device"] = block;
+          deviceName = block;
 
         device = m_agent->getDeviceByName(deviceName);
 
@@ -697,6 +697,7 @@ namespace mtconnect
           if (device)
           {
             deviceName = device->getName();
+            adapterOptions["Device"] = deviceName;
             g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
           }
         }

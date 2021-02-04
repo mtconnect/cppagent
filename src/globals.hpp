@@ -139,7 +139,8 @@ namespace mtconnect
 
   inline bool iequals(const std::string &a, const std::string &b)
   {
-    return std::equal(a.begin(), a.end(), b.begin(),
+    return a.size() == b.size() &&
+      std::equal(a.begin(), a.end(), b.begin(),
                       [](char a, char b) { return tolower(a) == tolower(b); });
   }
 

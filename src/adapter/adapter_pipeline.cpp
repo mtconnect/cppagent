@@ -119,10 +119,7 @@ namespace mtconnect
         next = next->bind(make_shared<UpcaseValue>());
 
       // Filter dups, by delta, and by period
-      if (IsOptionSet(m_options, "FilterDuplicates"))
-      {
-        next = next->bind(make_shared<DuplicateFilter>(m_context));
-      }
+      next = next->bind(make_shared<DuplicateFilter>(m_context));
       next = next->bind(make_shared<DeltaFilter>(m_context));
       next = next->bind(make_shared<PeriodFilter>(m_context));
 
