@@ -130,17 +130,29 @@ namespace mtconnect
         else if (std::holds_alternative<entity::Vector>(value))
         {
           auto &v = std::get<entity::Vector>(value);
-          if (v.size() > m_upperMultiplicity)
+          if (m_size)
           {
-            throw PropertyError("Vector size " + to_string(v.size()) + " is greater than " +
-                                    to_string(m_upperMultiplicity),
-                                m_name);
+            if (v.size() != *m_size)
+            {
+              throw PropertyError("Vector size " + to_string(v.size()) + " is not equal to " +
+                                  to_string(*m_size),
+                                  m_name);
+            }
           }
-          if (m_lowerMultiplicity != 0 && v.size() < m_lowerMultiplicity)
+          else
           {
-            throw PropertyError("Vector size " + to_string(v.size()) + " is less than " +
-                                    to_string(m_lowerMultiplicity),
-                                m_name);
+            if (v.size() > m_upperMultiplicity)
+            {
+              throw PropertyError("Vector size " + to_string(v.size()) + " is greater than " +
+                                  to_string(m_upperMultiplicity),
+                                  m_name);
+            }
+            if (m_lowerMultiplicity != 0 && v.size() < m_lowerMultiplicity)
+            {
+              throw PropertyError("Vector size " + to_string(v.size()) + " is less than " +
+                                  to_string(m_lowerMultiplicity),
+                                  m_name);
+            }
           }
         }
       }
@@ -235,6 +247,7 @@ namespace mtconnect
       // ------------ int 64
       void operator()(const int64_t arg, string &v) { v = to_string(arg); }
       void operator()(const int64_t arg, bool &v) { v = arg != 0; }
+      void operator()(const int64_t arg, double &v) { v = double(arg); }
       void operator()(const int64_t arg, Vector &v) { v.emplace_back(arg); }
       void operator()(const int64_t arg, Timestamp &v)
       {

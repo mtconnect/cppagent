@@ -224,8 +224,11 @@ namespace mtconnect
     entity::Value &convertValue(entity::Value &value) const;
     double convertValue(double value) const;
 
-    adapter::Adapter *getDataSource() const { return m_dataSource; }
-    void setDataSource(adapter::Adapter *source);
+    const std::optional<std::string> &getDataSource() const { return m_dataSource; }
+    void setDataSource(const std::string &source)
+    {
+      m_dataSource = source;
+    }
     void setConversionRequired(bool required)
     {
       if (!required)
@@ -346,7 +349,7 @@ namespace mtconnect
     std::map<std::string, std::string> m_attributes;
 
     // The data source for this data item
-    adapter::Adapter *m_dataSource;
+    std::optional<std::string> m_dataSource;
 
     // Conversion factor
     double m_conversionFactor;

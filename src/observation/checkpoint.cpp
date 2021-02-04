@@ -42,6 +42,7 @@ namespace mtconnect
 
     void Checkpoint::addObservation(ConditionPtr event, ObservationPtr &&old)
     {
+      bool assign = true;
       Condition *cond = dynamic_cast<Condition *>(old.get());
       if (cond->getLevel() != Condition::NORMAL && event->getLevel() != Condition::NORMAL &&
           cond->getLevel() != Condition::UNAVAILABLE && event->getLevel() != Condition::UNAVAILABLE)
@@ -59,7 +60,6 @@ namespace mtconnect
         // Chain the event
         if (old)
           event->appendTo(dynamic_pointer_cast<Condition>(old));
-        old = event;
       }
       else if (event->getLevel() == Condition::NORMAL)
       {
@@ -79,6 +79,7 @@ namespace mtconnect
               n->normal();
               old = n;
             }
+            assign = false;
           }
           else
           {
@@ -88,6 +89,8 @@ namespace mtconnect
           }
         }
       }
+      if (assign)
+        old = event;
     }
 
     void Checkpoint::addObservation(const DataSetEventPtr event, ObservationPtr &&old)

@@ -92,32 +92,36 @@ namespace mtconnect
 
       bool unavailable{false};
       string level;
-      auto l = props.find("level");
-      if (l != props.end())
+      if (dataItem->isCondition())
       {
-        level = std::get<string>(l->second);
-        if (iequals(level, "unavailable"))
+        auto l = props.find("level");
+        if (l != props.end())
+        {
+          level = std::get<string>(l->second);
+          if (iequals(level, "unavailable"))
+            unavailable = true;
+          props.erase(l);
+        }
+        else if (l == props.end())
+        {
           unavailable = true;
-        props.erase(l);
+        }
       }
-      else if (l == props.end() && dataItem->isCondition())
+      else
       {
-        unavailable = true;
+        // Check for unavailable
+        auto v = props.find("VALUE");
+        if (v != props.end() && holds_alternative<string>(v->second) &&
+            iequals(std::get<string>(v->second), "unavailable"))
+        {
+          unavailable = true;
+          props.erase(v);
+        }
+        else if (v == props.end() && !dataItem->isCondition())
+        {
+          unavailable = true;
+        }
       }
-
-      // Check for unavailable
-      auto v = props.find("VALUE");
-      if (v != props.end() && holds_alternative<string>(v->second) &&
-          iequals(std::get<string>(v->second), "unavailable"))
-      {
-        unavailable = true;
-        props.erase(v);
-      }
-      else if (v == props.end() && !dataItem->isCondition())
-      {
-        unavailable = true;
-      }
-
       string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedElementName();
       if (dataItem->is3D())
         key += ":3D";
@@ -245,7 +249,7 @@ namespace mtconnect
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<ThreeSpaceSample>(name, props);
         });
-        factory->addRequirements(Requirements({{"VALUE", VECTOR, 3, 3}}));
+        factory->addRequirements(Requirements({{"VALUE", VECTOR, 3, false}}));
       }
       return factory;
     }

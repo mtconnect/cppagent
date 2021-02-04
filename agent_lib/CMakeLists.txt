@@ -1,6 +1,8 @@
 set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent_loopback_pipeline.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent_loopback_pipeline.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/globals.cpp"

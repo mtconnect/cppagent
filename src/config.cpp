@@ -643,6 +643,8 @@ namespace mtconnect
     options["UpcaseDataItemValue"] = upcaseValue;
     options["FilterDuplicates"] = filterDuplicates;
 
+    m_agent->initialize(m_pipelineContext, options);
+
     loadAdapters(reader, options);
 
     // Files served by the Agent... allows schema files to be served by
@@ -682,9 +684,9 @@ namespace mtconnect
         const auto &adapter = adapters.block(block);
         string deviceName;
         if (adapter.is_key_defined("Device"))
-          adapterOptions["deviceName"] = adapter["Device"];
+          adapterOptions["Device"] = adapter["Device"];
         else
-          adapterOptions["deviceName"] = block;
+          adapterOptions["Device"] = block;
 
         device = m_agent->getDeviceByName(deviceName);
 
@@ -744,7 +746,7 @@ namespace mtconnect
 
         g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
 
-        auto pipeline = make_unique<adapter::AdapterPipeline>(adapterOptions, m_pipelineContext);
+        auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
         auto adp = new Adapter(host, port, adapterOptions, pipeline);
         m_agent->addAdapter(adp, false);
       }
@@ -753,7 +755,7 @@ namespace mtconnect
     {
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
-      auto pipeline = make_unique<adapter::AdapterPipeline>(options, m_pipelineContext);
+      auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
       auto adp = new Adapter("localhost", 7878, options, pipeline);
       m_agent->addAdapter(adp, false);
     }

@@ -93,6 +93,8 @@ class AgentTestHelper
   AgentTestHelper()
   : m_out(), m_response(m_out), m_incomingIp("127.0.0.1")
   {
+    dlib::set_all_logging_output_streams(std::cout);
+    dlib::set_all_logging_levels(dlib::LDEBUG);
   }
     
   // Helper method to test expected string, given optional query, & run tests
@@ -134,6 +136,7 @@ class AgentTestHelper
     
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
+    m_agent->initialize(m_context, {});
     return m_agent.get();
   }
   
@@ -143,7 +146,7 @@ class AgentTestHelper
   {
     using namespace mtconnect;
     using namespace mtconnect::adapter;
-    auto pipeline = std::make_unique<AdapterPipeline>(options, m_context);
+    auto pipeline = std::make_unique<AdapterPipeline>(m_context);
     m_adapter = new adpt::Adapter(host, port, options, pipeline);
     m_agent->addAdapter(m_adapter);
 

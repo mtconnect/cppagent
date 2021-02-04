@@ -36,9 +36,9 @@ namespace mtconnect
     addChild(m_adapters);
   }
 
-  DataItem *AgentDevice::getConnectionStatus(const adapter::Adapter *adapter)
+  DataItem *AgentDevice::getConnectionStatus(const std::string &adapter)
   {
-    return getDeviceDataItem(adapter->getIdentity() + "_connection_status");
+    return getDeviceDataItem(adapter + "_connection_status");
   }
 
   void AgentDevice::addAdapter(const adapter::Adapter *adapter)

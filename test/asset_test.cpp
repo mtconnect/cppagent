@@ -62,7 +62,7 @@ TEST_F(AssetTest, TestExtendedAsset)
   entity::XmlPrinter printer;
   printer.print(*m_writer, entity);
 
-  auto expected = R"DOC(<ExtendedAsset assetId="EXT1" deviceUuid="local" timestamp="2020-12-20T12:00:00Z"><SomeContent><WithSubNodes/></SomeContent><AndOtherContent/></ExtendedAsset>
+  auto expected = R"DOC(<ExtendedAsset assetId="EXT1" deviceUuid="local" timestamp="2020-12-20T12:00:00.000000Z"><SomeContent><WithSubNodes/></SomeContent><AndOtherContent/></ExtendedAsset>
 )DOC";
   
   ASSERT_EQ(expected, m_writer->getContent());

@@ -16,34 +16,23 @@
 //
 
 #pragma once
-#include "component.hpp"
-#include "data_item.hpp"
-#include "device_model/device.hpp"
-#include "globals.hpp"
 
-#include <map>
+#include "globals.hpp"
+#include "pipeline/pipeline.hpp"
+#include "pipeline/pipeline_context.hpp"
 
 namespace mtconnect
 {
-  namespace adapter
-  {
-    class Adapter;
-  }
-  class AgentDevice : public Device
+  class AgentLoopbackPipeline : public pipeline::Pipeline
   {
   public:
-    // Constructor that sets variables from an attribute map
-    AgentDevice(const Attributes &attributes);
-    ~AgentDevice() override = default;
-
-    void addAdapter(const adapter::Adapter *adapter);
-
-    DataItem *getConnectionStatus(const std::string &adapter);
-
+    AgentLoopbackPipeline(pipeline::PipelineContextPtr context)
+    : pipeline::Pipeline(context)
+    {
+    }
+    void build(const ConfigOptions &options) override;
+    
   protected:
-    void addRequiredDataItems();
-
-  protected:
-    Component *m_adapters{nullptr};
+    ConfigOptions m_options;
   };
-}  // namespace mtconnect
+}

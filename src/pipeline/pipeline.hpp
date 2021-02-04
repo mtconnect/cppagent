@@ -40,12 +40,12 @@ namespace mtconnect
     class Pipeline
     {
     public:
-      Pipeline(const ConfigOptions &options, PipelineContextPtr context)
-        : m_start(std::make_shared<Start>()), m_options(options), m_context(context)
+      Pipeline(PipelineContextPtr context)
+        : m_start(std::make_shared<Start>()), m_context(context)
       {
       }
       virtual ~Pipeline() = default;
-      virtual void build() = 0;
+      virtual void build(const ConfigOptions &options) = 0;
       void clear()
       {
         m_start = std::make_shared<Start>();
@@ -79,7 +79,6 @@ namespace mtconnect
       };
 
       TransformPtr m_start;
-      ConfigOptions m_options;
       PipelineContextPtr m_context;
     };
   }  // namespace pipeline

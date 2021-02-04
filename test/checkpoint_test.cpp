@@ -98,42 +98,49 @@ TEST_F(CheckpointTest, AddObservations)
 
   auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   ASSERT_TRUE(p1);
-  ASSERT_EQ(1, p1.use_count());
+  EXPECT_EQ(1, p1.use_count());
   m_checkpoint->addObservation(p1);
-  ASSERT_EQ(2, p1.use_count());
+  EXPECT_EQ(2, p1.use_count());
 
   auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
   ASSERT_TRUE(p2);
   m_checkpoint->addObservation(p2);
   
-  auto prev = dynamic_pointer_cast<Condition>(p2)->getPrev();
-  ASSERT_TRUE(prev);
-  ASSERT_EQ(p1, prev);
+  {
+    auto prev = dynamic_pointer_cast<Condition>(p2)->getPrev();
+    ASSERT_TRUE(prev);
+    EXPECT_EQ(p1, prev);
+  }
   
   auto p3 = observation::Observation::make(m_dataItem1.get(), normal, time, errors);
   ASSERT_TRUE(p3);
   m_checkpoint->addObservation(p3);
 
-  prev = dynamic_pointer_cast<Condition>(p3)->getPrev();
-  ASSERT_FALSE(prev);
-  ASSERT_EQ(2, p1.use_count());
-  ASSERT_EQ(1, p2.use_count());
-
+  {
+    auto prev = dynamic_pointer_cast<Condition>(p3)->getPrev();
+    ASSERT_FALSE(prev);
+  }
+  
+  EXPECT_EQ(2, p1.use_count());
+  EXPECT_EQ(1, p2.use_count());
+  
   auto p4 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   m_checkpoint->addObservation(p4);
 
-  prev = dynamic_pointer_cast<Condition>(p4)->getPrev();
-  ASSERT_FALSE(prev);
-  ASSERT_EQ(1, p3.use_count());
+  {
+    auto prev = dynamic_pointer_cast<Condition>(p4)->getPrev();
+    ASSERT_FALSE(prev);
+  }
+  EXPECT_EQ(1, p3.use_count());
   
   auto p5 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
   m_checkpoint->addObservation(p5);
-  ASSERT_EQ(2, p5.use_count());
+  EXPECT_EQ(2, p5.use_count());
 
   auto p6 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
   m_checkpoint->addObservation(p6);
-  ASSERT_EQ(2, p6.use_count());
-  ASSERT_EQ(1, p5.use_count());
+  EXPECT_EQ(2, p6.use_count());
+  EXPECT_EQ(1, p5.use_count());
 }
 
 TEST_F(CheckpointTest, Copy)
@@ -455,7 +462,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   ASSERT_FALSE(Cond(p5)->getPrev());
   
   // Check cleanup
-  ObservationPtr p7 = m_checkpoint->getEvents().at(std::string("1"));
+  ObservationPtr p7 = m_checkpoint->getObservations().at(std::string("1"));
   ASSERT_TRUE(p7);
   ASSERT_EQ(2, p7.use_count());
   ASSERT_NE(p5, p7);

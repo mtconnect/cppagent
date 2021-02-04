@@ -18,11 +18,13 @@
 #pragma once
 
 #include "adapter/adapter.hpp"
+#include "agent_loopback_pipeline.hpp"
 #include "assets/asset_buffer.hpp"
 #include "http_server/server.hpp"
 #include "observation/checkpoint.hpp"
 #include "observation/circular_buffer.hpp"
 #include "pipeline/pipeline_contract.hpp"
+#include "pipeline/pipeline.hpp"
 #include "printer.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
@@ -47,7 +49,7 @@ namespace mtconnect
   class AgentDevice;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
-
+  
   class Agent
   {
   public:
@@ -74,7 +76,10 @@ namespace mtconnect
 
     // Virtual destructor
     ~Agent();
-
+    
+    // Make loopback pipeline
+    void initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options);
+    
     // Start and stop
     void start();
     void stop();
@@ -85,7 +90,8 @@ namespace mtconnect
 
     // Add an adapter to the agent
     void addAdapter(adapter::Adapter *adapter, bool start = false);
-
+    const auto &getAdapters() const { return m_adapters; }
+    
     // Get device from device map
     Device *getDeviceByName(const std::string &name);
     Device *getDeviceByName(const std::string &name) const;
@@ -115,18 +121,21 @@ namespace mtconnect
                                               std::optional<Timestamp> timestamp = std::nullopt);
 
     // Asset management
+    void addAsset(AssetPtr asset);
     AssetPtr addAsset(Device *device, const std::string &asset,
                       const std::optional<std::string> &id, const std::optional<std::string> &type,
                       const std::optional<std::string> &time, entity::ErrorList &errors);
-    bool removeAsset(Device *device, const std::string &id, const std::optional<std::string> time);
+    bool removeAsset(Device *device, const std::string &id, const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,
                          const std::optional<std::string> type,
-                         const std::optional<std::string> time, AssetList &list);
+                         const std::optional<Timestamp> time, AssetList &list);
 
     // Message when adapter has connected and disconnected
-    void connecting(const adapter::Adapter &adapter);
-    void disconnected(const adapter::Adapter &adapter, const std::vector<Device *> &devices);
-    void connected(const adapter::Adapter &adapter, const std::vector<Device *> &devices);
+    void connecting(const std::string &adapter);
+    void disconnected(const std::string &adapter, const StringList &devices,
+                      bool autoAvailable);
+    void connected(const std::string &adapter, const StringList &devices,
+                   bool autoAvailable);
 
     DataItem *getDataItemByName(const std::string &deviceName,
                                 const std::string &dataItemName) const
@@ -304,7 +313,14 @@ namespace mtconnect
     std::map<std::string, Device *> m_deviceNameMap;
     std::map<std::string, Device *> m_deviceUuidMap;
     std::map<std::string, DataItem *> m_dataItemMap;
+    
+    // Loopback
+    std::unique_ptr<AgentLoopbackPipeline> m_loopback;
 
+    // Xml Config
+    std::string m_version;
+    std::string m_configXmlPath;
+    
     // For debugging
     bool m_logStreamData;
     bool m_pretty;
@@ -316,6 +332,10 @@ namespace mtconnect
     AgentPipelineContract(Agent *agent) : m_agent(agent) {}
     ~AgentPipelineContract() = default;
 
+    Device *findDevice(const std::string &device) override
+    {
+      return m_agent->findDeviceByUUIDorName(device);
+    }
     DataItem *findDataItem(const std::string &device, const std::string &name) override
     {
       Device *dev = m_agent->findDeviceByUUIDorName(device);
@@ -333,10 +353,12 @@ namespace mtconnect
       }
     }
     void deliverObservation(observation::ObservationPtr obs) override { m_agent->addToBuffer(obs); }
-    void deliverAsset(AssetPtr) override {}
-    void deliverAssetCommand(entity::EntityPtr) override {}
+    void deliverAsset(AssetPtr asset) override { m_agent->addAsset(asset); }
+    void deliverAssetCommand(entity::EntityPtr command) override;
+    void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
+                              bool autoAvailable) override;
+
     void deliverCommand(entity::EntityPtr) override {}
-    void deliverConnectStatus(entity::EntityPtr) override {}
 
   protected:
     Agent *m_agent;

@@ -39,49 +39,59 @@ namespace mtconnect
 
   namespace adapter
   {
-    AdapterPipeline::AdapterPipeline(const ConfigOptions &options, PipelineContextPtr context)
-      : Pipeline(options, context)
-    {
-    }
-
     std::unique_ptr<adapter::Handler> AdapterPipeline::makeHandler()
     {
       auto handler = make_unique<adapter::Handler>();
 
       // Build the pipeline for an adapter
-      handler->m_connecting = [this](const Adapter &adapter) {
+      handler->m_connecting = [this](const std::string &id) {
         auto entity = make_shared<Entity>(
-            "ConnectionStatus", Properties{{"VALUE", "CONNECTING"}, {"id", adapter.getIdentity()}});
+            "ConnectionStatus", Properties{{"VALUE", "CONNECTING"}, {"id", id}});
         run(entity);
       };
-      handler->m_connected = [this](const Adapter &adapter) {
+      handler->m_connected = [this](const std::string &id) {
         auto entity = make_shared<Entity>(
-            "ConnectionStatus", Properties{{"VALUE", "CONNECTED"}, {"id", adapter.getIdentity()}});
+            "ConnectionStatus", Properties{{"VALUE", "CONNECTED"}, {"id", id}});
         run(entity);
       };
-      handler->m_disconnected = [this](const Adapter &adapter) {
+      handler->m_disconnected = [this](const std::string &id) {
         auto entity = make_shared<Entity>(
             "ConnectionStatus",
-            Properties{{"VALUE", "DISCONNECTED"}, {"id", adapter.getIdentity()}});
+            Properties{{"VALUE", "DISCONNECTED"}, {"id", id}});
         run(entity);
       };
-      handler->m_processData = [this](const std::string &data) {
-        auto entity = make_shared<Entity>("Data", Properties{{"VALUE", data}});
+      handler->m_processData = [this](const std::string &data, const std::string &source) {
+        auto entity = make_shared<Entity>("Data",
+                                          Properties{{"VALUE", data},
+          {"source", source}
+        });
         run(entity);
       };
-      handler->m_protocolCommand = [this](const std::string &data) {
-        auto entity = make_shared<Entity>("ProtocolCommand", Properties{{"VALUE", data}});
+      handler->m_command = [this](const std::string &data, const std::string &source) {
+        auto entity = make_shared<Entity>("ProtocolCommand", Properties{{"VALUE", data}, {"source", source}});
         run(entity);
       };
 
       return handler;
     }
 
-    void AdapterPipeline::build()
+    void AdapterPipeline::build(const ConfigOptions &options)
     {
       clear();
+      m_options = options;
+      
       TransformPtr next = bind(make_shared<ShdrTokenizer>());
-      bind(make_shared<DeliverConnectionStatus>(m_context));
+      
+      StringList devices;
+      auto list = GetOption<StringList>(options, "AdditionalDevices");
+      if (list)
+        devices = *list;
+      auto device = GetOption<string>(options, "Device");
+      if (device)
+        devices.emplace_front(*device);
+
+      
+      bind(make_shared<DeliverConnectionStatus>(m_context, devices, IsOptionSet(options, "AutoAvailable")));
       bind(make_shared<DeliverCommand>(m_context));
 
       // Optional type based transforms
@@ -94,7 +104,7 @@ namespace mtconnect
       }
 
       // Token mapping to data items and assets
-      auto mapper = make_shared<ShdrTokenMapper>(m_context);
+      auto mapper = make_shared<ShdrTokenMapper>(m_context, GetOption<string>(m_options, "Device").value_or(""));
       next = next->bind(mapper);
 
       // Handle the observations and send to nowhere

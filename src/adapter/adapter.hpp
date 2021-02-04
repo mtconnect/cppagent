@@ -47,11 +47,12 @@ namespace mtconnect
 
     struct Handler
     {
-      using ProcessData = std::function<void(const std::string &)>;
-      using Connect = std::function<void(const Adapter &)>;
+      using ProcessData = std::function<void(const std::string &data,
+                                             const std::string &source)>;
+      using Connect = std::function<void(const std::string &source)>;
 
       ProcessData m_processData;
-      ProcessData m_protocolCommand;
+      ProcessData m_command;
 
       Connect m_connecting;
       Connect m_connected;
@@ -84,25 +85,25 @@ namespace mtconnect
       void processData(const std::string &data) override;
       void protocolCommand(const std::string &data) override
       {
-        if (m_handler && m_handler->m_protocolCommand)
-          m_handler->m_protocolCommand(data);
+        if (m_handler && m_handler->m_command)
+          m_handler->m_command(data, getIdentity());
       }
 
       // Method called when connection is lost.
       void connecting() override
       {
         if (m_handler && m_handler->m_connecting)
-          m_handler->m_connecting(*this);
+          m_handler->m_connecting(getIdentity());
       }
       void disconnected() override
       {
         if (m_handler && m_handler->m_disconnected)
-          m_handler->m_disconnected(*this);
+          m_handler->m_disconnected(getIdentity());
       }
       void connected() override
       {
         if (m_handler && m_handler->m_connected)
-          m_handler->m_connected(*this);
+          m_handler->m_connected(getIdentity());
       }
 
       // Agent Device methods
@@ -120,7 +121,7 @@ namespace mtconnect
       {
         for (auto &o :  options)
           m_options.insert_or_assign(o.first, o.second);
-        m_pipeline->build();
+        m_pipeline->build(m_options);
       }
 
     protected:

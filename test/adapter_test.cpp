@@ -34,28 +34,28 @@ using namespace mtconnect::adapter;
 TEST(AdapterTest, MultilineData)
 {
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
-  auto pipeline = make_unique<AdapterPipeline>(ConfigOptions{}, context);
+  auto pipeline = make_unique<AdapterPipeline>(context);
   auto adapter = make_unique<Adapter>("localhost", 7878, ConfigOptions{}, pipeline);
   
   auto handler = make_unique<Handler>();
   string data;
-  handler->m_processData = [&](const string &d) { data = d; };
+  handler->m_processData = [&](const string &d, const string &s) { data = d; };
   adapter->setHandler(handler);
   
   adapter->processData("Simple Pass Through");
   EXPECT_EQ("Simple Pass Through", data);
   
   EXPECT_FALSE(adapter->getTerminator());
-  adapter->processData("A multiline message: __multiline__ABC1234");
+  adapter->processData("A multiline message: --multiline--ABC1234");
   EXPECT_TRUE(adapter->getTerminator());
-  EXPECT_EQ("__multiline__ABC1234", *adapter->getTerminator());
+  EXPECT_EQ("--multiline--ABC1234", *adapter->getTerminator());
   adapter->processData("Another Line...");
-  adapter->processData("__multiline__ABC---");
-  adapter->processData("__multiline__ABC1234");
+  adapter->processData("--multiline--ABC---");
+  adapter->processData("--multiline--ABC1234");
   
   const auto exp = R"DOC(A multiline message: 
 Another Line...
-__multiline__ABC---)DOC";
+--multiline--ABC---)DOC";
   EXPECT_EQ(exp, data);
 }
 

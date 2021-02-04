@@ -37,6 +37,7 @@ public:
   : m_dataItems(items)
   {
   }
+  Device *findDevice(const std::string &) override { return nullptr; }
   DataItem *findDataItem(const std::string &device, const std::string &name) override
   {
     return m_dataItems[name].get();
@@ -46,7 +47,7 @@ public:
   void deliverAsset(AssetPtr )override {}
   void deliverAssetCommand(entity::EntityPtr ) override {}
   void deliverCommand(entity::EntityPtr )override {}
-  void deliverConnectStatus(entity::EntityPtr )override {}
+  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool )override {}
   
   std::map<string,unique_ptr<DataItem>> &m_dataItems;
 };
@@ -58,7 +59,7 @@ protected:
   {
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
-    m_mapper = make_shared<ShdrTokenMapper>(m_context);
+    m_mapper = make_shared<ShdrTokenMapper>(m_context, "");
     m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
 

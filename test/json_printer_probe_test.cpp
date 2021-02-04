@@ -53,26 +53,27 @@ class JsonPrinterProbeTest : public testing::Test
     m_printer = std::make_unique<JsonPrinter>("1.5", true);
 
     
-    auto server = std::make_unique<http::Server>();
-    auto cache = std::make_unique<http::FileCache>();
-    m_agent = make_unique<Agent>(server, cache,
-                                 PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml",
-                                 4, 4, "1.5");
-    m_devices = m_agent->getDevices();
+    m_agentTestHelper = make_unique<AgentTestHelper>();
+    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml",
+                                   8, 4, "1.5", 25);
+
+    // Asset types are registered in the agent.
+    m_devices = m_agentTestHelper->m_agent->getDevices();
   }
 
   void TearDown() override
   {
-    m_agent.reset();
+    m_agentTestHelper.reset();
     m_xmlPrinter.reset();
     m_printer.reset();
     m_devices.clear();
   }
 
   std::unique_ptr<JsonPrinter> m_printer;
+  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
+
   std::list<Device *> m_devices;
 
-  std::unique_ptr<Agent> m_agent;
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
 };
 
@@ -81,6 +82,7 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
+    
   ASSERT_EQ(string("MTConnectDevices"), it.key());
   ASSERT_EQ(123, jdoc.at("/MTConnectDevices/Header/instanceId"_json_pointer).get<int32_t>());
   ASSERT_EQ(9999, jdoc.at("/MTConnectDevices/Header/bufferSize"_json_pointer).get<int32_t>());
@@ -328,10 +330,10 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   auto server = std::make_unique<http::Server>();
   auto cache = std::make_unique<http::FileCache>();
 
-  m_agent.release();
+  m_agentTestHelper->createAgent("/samples/relationship_test.xml",
+                                 8, 4, "1.7", 25);
   m_printer = std::make_unique<JsonPrinter>("1.7", true);
-  m_agent = make_unique<Agent>(server, cache, PROJECT_ROOT_DIR "/samples/relationship_test.xml", 4, 4, "1.7");
-  m_devices = m_agent->getDevices();
+  m_devices = m_agentTestHelper->m_agent->getDevices();
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
 

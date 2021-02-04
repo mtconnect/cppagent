@@ -59,15 +59,19 @@ namespace mtconnect
     {
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
-      DeliverConnectionStatus(PipelineContextPtr context)
-        : Transform("DeliverConnectionStatus"), m_contract(context->m_contract.get())
+      DeliverConnectionStatus(PipelineContextPtr context, const StringList &devices,
+                              bool autoAvailable)
+        : Transform("DeliverConnectionStatus"), m_contract(context->m_contract.get()),
+          m_devices(devices), m_autoAvailable(autoAvailable)
       {
         m_guard = EntityNameGuard("ConnectionStatus", RUN);
       }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
 
     protected:
       PipelineContract *m_contract;
+      std::list<std::string> m_devices;
+      bool m_autoAvailable;
     };
 
     class DeliverAssetCommand : public Transform
@@ -75,11 +79,11 @@ namespace mtconnect
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
       DeliverAssetCommand(PipelineContextPtr context)
-        : Transform("AssetCommand"), m_contract(context->m_contract.get())
+        : Transform("DeliverAssetCommand"), m_contract(context->m_contract.get())
       {
-        m_guard = EntityNameGuard("ConnectionStatus", RUN);
+        m_guard = EntityNameGuard("AssetCommand", RUN);
       }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
 
     protected:
       PipelineContract *m_contract;
@@ -94,7 +98,7 @@ namespace mtconnect
       {
         m_guard = EntityNameGuard("Command", RUN);
       }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
 
     protected:
       PipelineContract *m_contract;

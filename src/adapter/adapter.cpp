@@ -60,7 +60,7 @@ namespace mtconnect
 
       m_handler = m_pipeline->makeHandler();
       if (m_pipeline->hasContract())
-        m_pipeline->build();
+        m_pipeline->build(m_options);      
     }
 
     Adapter::~Adapter()
@@ -84,7 +84,7 @@ namespace mtconnect
         if (data == *m_terminator)
         {
           if (m_handler && m_handler->m_processData)
-            m_handler->m_processData(m_body.str());
+            m_handler->m_processData(m_body.str(), getIdentity());
           m_terminator.reset();
           m_body.str("");
         }
@@ -105,7 +105,7 @@ namespace mtconnect
       }
 
       if (m_handler && m_handler->m_processData)
-        m_handler->m_processData(data);
+        m_handler->m_processData(data, getIdentity());
     }
 
     // Adapter private methods

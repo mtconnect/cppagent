@@ -790,16 +790,17 @@ TEST_F(AgentTest, AutoAvailable)
   addAdapter({{"AutoAvailable", true}});
   auto agent = m_agentTestHelper->m_agent.get();
   auto adapter = m_agentTestHelper->m_adapter;
+  auto id = adapter->getIdentity();
   auto d = agent->getDevices().front();
-  std::vector<Device *> devices;
-  devices.emplace_back(d);
+  StringList devices;
+  devices.emplace_back(d->getName());
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
   }
 
-  agent->connected(*adapter, devices);
+  agent->connected(id, devices, true);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -807,7 +808,7 @@ TEST_F(AgentTest, AutoAvailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
   }
 
-  agent->disconnected(*adapter, devices);
+  agent->disconnected(id, devices, true);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -816,7 +817,7 @@ TEST_F(AgentTest, AutoAvailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
   }
 
-  agent->connected(*adapter, devices);
+  agent->connected(id, devices, true);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -832,10 +833,11 @@ TEST_F(AgentTest, MultipleDisconnect)
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
   auto adapter = m_agentTestHelper->m_adapter;
+  auto id = adapter->getIdentity();
 
   auto d = agent->getDevices().front();
-  std::vector<Device *> devices;
-  devices.emplace_back(d);
+  StringList devices;
+  devices.emplace_back(d->getName());
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -843,7 +845,8 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 1);
   }
 
-  agent->connected(*adapter, devices);
+  agent->connected(id, devices, false);
+
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|GTH");
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|cmp|normal||||");
 
@@ -857,7 +860,7 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
   }
 
-  agent->disconnected(*adapter, devices);
+  agent->disconnected(id, devices, false);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -869,7 +872,7 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
   }
 
-  agent->disconnected(*adapter, devices);
+  agent->disconnected(id, devices, false);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -880,11 +883,11 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
   }
 
-  agent->connected(*adapter, devices);
+  agent->connected(id, devices, false);
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|GTH");
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|cmp|normal||||");
 
-  agent->disconnected(*adapter, devices);
+  agent->disconnected(id, devices, false);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");

@@ -177,6 +177,14 @@ namespace mtconnect
         : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
       {
       }
+      Requirement(const std::string &name, ValueType type, int size, bool required = true)
+        : m_name(name),
+          m_upperMultiplicity(1),
+          m_lowerMultiplicity(required ? 1 : 0),
+          m_size(size),
+          m_type(type)
+      {
+      }
       Requirement(const std::string &name, ValueType type, FactoryPtr &o, bool required = true);
       Requirement(const std::string &name, ValueType type, FactoryPtr &o, int lower, int upper);
       Requirement(const std::string &name, const ControlledVocab &vocab, bool required = true)
@@ -211,6 +219,7 @@ namespace mtconnect
         m_upperMultiplicity = o.m_upperMultiplicity;
         m_factory = o.m_factory;
         m_matcher = o.m_matcher;
+        m_size = o.m_size;
         return *this;
       }
 
@@ -218,6 +227,7 @@ namespace mtconnect
       bool isOptional() const { return !isRequired(); }
       int getUpperMultiplicity() const { return m_upperMultiplicity; }
       int getLowerMultiplicity() const { return m_lowerMultiplicity; }
+      std::optional<int> getSize() const { return m_size; }
       const auto &getMatcher() const { return m_matcher; }
       void setMatcher(MatcherPtr m) { m_matcher = m; }
       const std::string &getName() const { return m_name; }
@@ -262,6 +272,7 @@ namespace mtconnect
       std::string m_name;
       int m_upperMultiplicity;
       int m_lowerMultiplicity;
+      std::optional<int> m_size;
       ValueType m_type;
       MatcherPtr m_matcher;
       FactoryPtr m_factory;

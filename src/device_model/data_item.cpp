@@ -40,6 +40,7 @@ namespace mtconnect
   DataItem::DataItem(std::map<string, string> const &attributes)
     : m_representation(VALUE),
       m_hasNativeScale(false),
+      m_threeD(false),
       m_isDiscrete(false),
       m_initialized(false),
       m_hasSignificantDigits(false),
@@ -48,13 +49,11 @@ namespace mtconnect
       m_filterPeriod(0.0),
       m_hasMinimumDelta(false),
       m_hasMinimumPeriod(false),
-      m_dataSource(nullptr),
       m_conversionFactor(1.0),
       m_conversionOffset(0.0),
       m_conversionDetermined(false),
       m_conversionRequired(false),
       m_hasFactor(false)
-
   {
     const auto idPos = attributes.find("id");
     if (idPos != attributes.end())
@@ -109,8 +108,6 @@ namespace mtconnect
     else
       m_prefixedCamelType = m_camelType;
 
-    m_threeD = false;
-
     const auto subTypePos = attributes.find("subType");
     if (subTypePos != attributes.end())
       m_subType = subTypePos->second;
@@ -140,6 +137,7 @@ namespace mtconnect
       m_units = unitsPos->second;
       if (m_nativeUnits.empty())
         m_nativeUnits = m_units;
+      m_threeD = ends_with(m_units, "3D"s);
     }
 
     const auto statisticPos = attributes.find("statistic");
@@ -177,21 +175,6 @@ namespace mtconnect
   }
 
   DataItem::~DataItem() = default;
-
-  void DataItem::setDataSource(adapter::Adapter *source)
-  {
-    if (m_dataSource != source)
-      m_dataSource = source;
-
-      // TODO: Need to get from data source
-#if 0
-    if (!m_dataSource->conversionRequired())
-    {
-      m_conversionRequired = false;
-      m_conversionDetermined = true;
-    }
-#endif
-  }
 
   std::map<string, string> DataItem::buildAttributes() const
   {

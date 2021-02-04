@@ -37,7 +37,7 @@ using namespace std;
 using namespace std::literals;
 using namespace std::chrono_literals;
 
-class PipelineTest : public testing::Test
+class PipelineDeliverTest : public testing::Test
 {
  protected:
   void SetUp() override
@@ -59,7 +59,7 @@ class PipelineTest : public testing::Test
   Device *m_device{nullptr};
 };
 
-TEST_F(PipelineTest, test_simple_flow)
+TEST_F(PipelineDeliverTest, test_simple_flow)
 {
   m_agentTestHelper->addAdapter();
   auto seq = m_agentTestHelper->m_agent->getSequence();
@@ -72,7 +72,7 @@ TEST_F(PipelineTest, test_simple_flow)
   ASSERT_EQ("2021-01-22T12:33:45.123000Z", date::format("%FT%TZ", obs->getTimestamp()));
 }
 
-TEST_F(PipelineTest, filter_duplicates)
+TEST_F(PipelineDeliverTest, filter_duplicates)
 {
   ConfigOptions options{{"FilterDuplicates", true}};
   m_agentTestHelper->addAdapter(options);
@@ -95,7 +95,7 @@ TEST_F(PipelineTest, filter_duplicates)
 }
 
 //a01c7f30
-TEST_F(PipelineTest, filter_upcase)
+TEST_F(PipelineDeliverTest, filter_upcase)
 {
   ConfigOptions options{{"UpcaseDataItemValue", true}};
   m_agentTestHelper->addAdapter(options);

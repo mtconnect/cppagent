@@ -125,7 +125,7 @@ TEST_F(JsonPrinterAssetTest, CuttingTool)
             cuttingTool.at("/CuttingTool/toolId"_json_pointer).get<string>());
   ASSERT_EQ(string("KSSP300R4SD43L240.1"),
             cuttingTool.at("/CuttingTool/assetId"_json_pointer).get<string>());
-  ASSERT_EQ(string("2011-05-11T13:55:22"),
+  ASSERT_EQ(string("2011-05-11T13:55:22.000000Z"),
             cuttingTool.at("/CuttingTool/timestamp"_json_pointer).get<string>());
   ASSERT_EQ(string("KMT,Parlec"),
             cuttingTool.at("/CuttingTool/manufacturers"_json_pointer).get<string>());

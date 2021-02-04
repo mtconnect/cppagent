@@ -20,6 +20,7 @@
 namespace mtconnect
 {
   class DataItem;
+  class Device;
   class Asset;
   using AssetPtr = std::shared_ptr<Asset>;
   namespace observation
@@ -44,14 +45,15 @@ namespace mtconnect
       using EachDataItem = std::function<void(const DataItem *di)>;
 
       // TODO: Need to handle auto available in pipeline
-      
-      virtual DataItem *findDataItem(const std::string &, const std::string &) = 0;
+      virtual Device *findDevice(const std::string &device) = 0;;
+      virtual DataItem *findDataItem(const std::string &device, const std::string &name) = 0;
       virtual void eachDataItem(EachDataItem fun) = 0;
       virtual void deliverObservation(observation::ObservationPtr) = 0;
       virtual void deliverAsset(AssetPtr) = 0;
       virtual void deliverAssetCommand(entity::EntityPtr) = 0;
       virtual void deliverCommand(entity::EntityPtr) = 0;
-      virtual void deliverConnectStatus(entity::EntityPtr) = 0;
+      virtual void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
+                                        bool autoAvailable) = 0;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

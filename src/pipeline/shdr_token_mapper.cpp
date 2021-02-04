@@ -158,12 +158,14 @@ namespace mtconnect
     }
 
     EntityPtr ShdrTokenMapper::mapTokensToDataItem(const Timestamp &timestamp,
+                                                   const std::optional<std::string> &source,
                                                    TokenList::const_iterator &token,
                                                    const TokenList::const_iterator &end,
                                                    ErrorList &errors)
     {
       auto dataItemKey = splitKey(*token++);
-      auto dataItem = m_contract->findDataItem(dataItemKey.second.value_or(""), dataItemKey.first);
+      string device = dataItemKey.second.value_or(m_defaultDevice.value_or(""));
+      auto dataItem = m_contract->findDataItem(device, dataItemKey.first);
 
       if (dataItem == nullptr)
       {
@@ -211,7 +213,10 @@ namespace mtconnect
 
       if (reqs != nullptr)
       {
-        return zipProperties(dataItem, timestamp, *reqs, token, end, errors);
+        auto obs =  zipProperties(dataItem, timestamp, *reqs, token, end, errors);
+        if (obs && source)
+          dataItem->setDataSource(*source);
+        return obs;
       }
       else
       {
@@ -223,6 +228,7 @@ namespace mtconnect
     }
 
     EntityPtr ShdrTokenMapper::mapTokensToAsset(const Timestamp &timestamp,
+                                                const std::optional<std::string> &source,
                                                 TokenList::const_iterator &token,
                                                 const TokenList::const_iterator &end,
                                                 ErrorList &errors)
@@ -241,6 +247,12 @@ namespace mtconnect
           res->setProperty("timestamp", timestamp);
         else
           res = EntityPtr();
+        if (m_defaultDevice)
+        {
+          Device *dev = m_contract->findDevice(*m_defaultDevice);
+          if (dev != nullptr)
+            res->setProperty("deviceUuid", dev->getUuid());
+        }
       }
       else
       {
@@ -251,11 +263,16 @@ namespace mtconnect
           ac->setName("RemoveAll");
           if (token != end)
             ac->setProperty("type", *token++);
+          if (m_defaultDevice)
+            ac->setProperty("device", *m_defaultDevice);
+
         }
         else if (command == "@REMOVE_ASSET@")
         {
           ac->setName("RemoveAsset");
           ac->setProperty("assetId", *token++);
+          if (m_defaultDevice)
+            ac->setProperty("device", *m_defaultDevice);
         }
         else
         {
@@ -285,14 +302,15 @@ namespace mtconnect
           ErrorList errors;
           try
           {
+            auto source = entity->maybeGet<string>("source");
             entity::ErrorList errors;
             if ((*token)[0] == '@')
             {
-              out = mapTokensToAsset(timestamped->m_timestamp, token, end, errors);
+              out = mapTokensToAsset(timestamped->m_timestamp, source, token, end, errors);
             }
             else
             {
-              out = mapTokensToDataItem(timestamped->m_timestamp, token, end, errors);
+              out = mapTokensToDataItem(timestamped->m_timestamp, source, token, end, errors);
               if (out && timestamped->m_duration)
                 out->setProperty("duration", *timestamped->m_duration);
             }
