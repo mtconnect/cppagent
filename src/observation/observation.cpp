@@ -171,9 +171,8 @@ namespace mtconnect
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<Event>(name, props);
         });
-        factory->addRequirements(Requirements{{"VALUE", false},
-          {"resetTriggered", USTRING, false}
-        });
+        factory->addRequirements(
+            Requirements{{"VALUE", false}, {"resetTriggered", USTRING, false}});
       }
 
       return factory;
@@ -202,7 +201,7 @@ namespace mtconnect
 
       return factory;
     }
-    
+
     FactoryPtr TableEvent::getFactory()
     {
       static FactoryPtr factory;
@@ -225,7 +224,6 @@ namespace mtconnect
 
       return factory;
     }
-
 
     FactoryPtr Sample::getFactory()
     {

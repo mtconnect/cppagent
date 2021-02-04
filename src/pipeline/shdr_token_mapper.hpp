@@ -49,8 +49,10 @@ namespace mtconnect
     {
     public:
       ShdrTokenMapper(const ShdrTokenMapper &) = default;
-      ShdrTokenMapper(PipelineContextPtr context, const std::optional<std::string> &device = std::nullopt)
-        : Transform("ShdrTokenMapper"), m_contract(context->m_contract.get()),
+      ShdrTokenMapper(PipelineContextPtr context,
+                      const std::optional<std::string> &device = std::nullopt)
+        : Transform("ShdrTokenMapper"),
+          m_contract(context->m_contract.get()),
           m_defaultDevice(device)
       {
         m_guard = TypeGuard<Timestamped>(RUN);
@@ -58,9 +60,13 @@ namespace mtconnect
       const EntityPtr operator()(const EntityPtr entity) override;
 
       // Takes a tokenized set of fields and maps them to timestamp and data items
-      EntityPtr mapTokensToDataItem(const Timestamp &timestamp, const std::optional<std::string> &source, TokenList::const_iterator &token,
+      EntityPtr mapTokensToDataItem(const Timestamp &timestamp,
+                                    const std::optional<std::string> &source,
+                                    TokenList::const_iterator &token,
                                     const TokenList::const_iterator &end, ErrorList &errors);
-      EntityPtr mapTokensToAsset(const Timestamp &timestamp, const std::optional<std::string> &source, TokenList::const_iterator &token,
+      EntityPtr mapTokensToAsset(const Timestamp &timestamp,
+                                 const std::optional<std::string> &source,
+                                 TokenList::const_iterator &token,
                                  const TokenList::const_iterator &end, ErrorList &errors);
 
     protected:

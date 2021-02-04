@@ -47,8 +47,7 @@ namespace mtconnect
 
     struct Handler
     {
-      using ProcessData = std::function<void(const std::string &data,
-                                             const std::string &source)>;
+      using ProcessData = std::function<void(const std::string &data, const std::string &source)>;
       using Connect = std::function<void(const std::string &source)>;
 
       ProcessData m_processData;
@@ -111,11 +110,11 @@ namespace mtconnect
 
       // For the additional devices associated with this adapter
       void addDevice(std::string &device);
-      
+
       const ConfigOptions &getOptions() const { return m_options; }
       void setOptions(const ConfigOptions &options)
       {
-        for (auto &o :  options)
+        for (auto &o : options)
           m_options.insert_or_assign(o.first, o.second);
         m_pipeline->build(m_options);
       }
@@ -145,7 +144,7 @@ namespace mtconnect
 
       // Timeout for reconnection attempts, given in milliseconds
       std::chrono::milliseconds m_reconnectInterval;
-      
+
       ConfigOptions m_options;
 
     private:

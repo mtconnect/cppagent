@@ -45,30 +45,27 @@ namespace mtconnect
 
       // Build the pipeline for an adapter
       handler->m_connecting = [this](const std::string &id) {
-        auto entity = make_shared<Entity>(
-            "ConnectionStatus", Properties{{"VALUE", "CONNECTING"}, {"id", id}});
+        auto entity = make_shared<Entity>("ConnectionStatus",
+                                          Properties{{"VALUE", "CONNECTING"}, {"id", id}});
         run(entity);
       };
       handler->m_connected = [this](const std::string &id) {
-        auto entity = make_shared<Entity>(
-            "ConnectionStatus", Properties{{"VALUE", "CONNECTED"}, {"id", id}});
+        auto entity =
+            make_shared<Entity>("ConnectionStatus", Properties{{"VALUE", "CONNECTED"}, {"id", id}});
         run(entity);
       };
       handler->m_disconnected = [this](const std::string &id) {
-        auto entity = make_shared<Entity>(
-            "ConnectionStatus",
-            Properties{{"VALUE", "DISCONNECTED"}, {"id", id}});
+        auto entity = make_shared<Entity>("ConnectionStatus",
+                                          Properties{{"VALUE", "DISCONNECTED"}, {"id", id}});
         run(entity);
       };
       handler->m_processData = [this](const std::string &data, const std::string &source) {
-        auto entity = make_shared<Entity>("Data",
-                                          Properties{{"VALUE", data},
-          {"source", source}
-        });
+        auto entity = make_shared<Entity>("Data", Properties{{"VALUE", data}, {"source", source}});
         run(entity);
       };
       handler->m_command = [this](const std::string &data, const std::string &source) {
-        auto entity = make_shared<Entity>("Command", Properties{{"VALUE", data}, {"source", source}});
+        auto entity =
+            make_shared<Entity>("Command", Properties{{"VALUE", data}, {"source", source}});
         run(entity);
       };
 
@@ -79,9 +76,9 @@ namespace mtconnect
     {
       clear();
       m_options = options;
-      
+
       TransformPtr next = bind(make_shared<ShdrTokenizer>());
-      
+
       StringList devices;
       auto list = GetOption<StringList>(options, "AdditionalDevices");
       if (list)
@@ -90,8 +87,8 @@ namespace mtconnect
       if (device)
         devices.emplace_front(*device);
 
-      
-      bind(make_shared<DeliverConnectionStatus>(m_context, devices, IsOptionSet(options, "AutoAvailable")));
+      bind(make_shared<DeliverConnectionStatus>(m_context, devices,
+                                                IsOptionSet(options, "AutoAvailable")));
       bind(make_shared<DeliverCommand>(m_context, device));
 
       // Optional type based transforms
@@ -104,7 +101,8 @@ namespace mtconnect
       }
 
       // Token mapping to data items and assets
-      auto mapper = make_shared<ShdrTokenMapper>(m_context, GetOption<string>(m_options, "Device").value_or(""));
+      auto mapper = make_shared<ShdrTokenMapper>(
+          m_context, GetOption<string>(m_options, "Device").value_or(""));
       next = next->bind(mapper);
 
       // Handle the observations and send to nowhere

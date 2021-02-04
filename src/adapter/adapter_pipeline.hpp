@@ -34,15 +34,12 @@ namespace mtconnect
     class AdapterPipeline : public pipeline::Pipeline
     {
     public:
-      AdapterPipeline(pipeline::PipelineContextPtr context)
-      : Pipeline(context)
-      {
-      }
-      
+      AdapterPipeline(pipeline::PipelineContextPtr context) : Pipeline(context) {}
+
       void build(const ConfigOptions &options) override;
 
       std::unique_ptr<adapter::Handler> makeHandler();
-      
+
     protected:
       ConfigOptions m_options;
     };

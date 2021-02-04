@@ -237,7 +237,7 @@ namespace mtconnect
         {
           const auto old = dynamic_pointer_cast<DataSetEvent>(ptr->second);
           auto &set = old->getDataSet();
-          
+
           DataSet eventSet = setEvent->getDataSet();
           bool changed = false;
 

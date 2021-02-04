@@ -225,10 +225,7 @@ namespace mtconnect
     double convertValue(double value) const;
 
     const std::optional<std::string> &getDataSource() const { return m_dataSource; }
-    void setDataSource(const std::string &source)
-    {
-      m_dataSource = source;
-    }
+    void setDataSource(const std::string &source) { m_dataSource = source; }
     void setConversionRequired(bool required)
     {
       if (!required)
@@ -237,7 +234,7 @@ namespace mtconnect
         m_conversionDetermined = true;
       }
     }
-    
+
     bool operator<(const DataItem &another) const;
     bool operator==(const DataItem &another) const { return m_id == another.m_id; }
 
@@ -338,7 +335,7 @@ namespace mtconnect
 
     // Filters
     double m_filterValue;
-    
+
     // Period filter, in seconds
     double m_filterPeriod;
     bool m_hasMinimumDelta;

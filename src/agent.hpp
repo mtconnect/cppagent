@@ -23,8 +23,8 @@
 #include "http_server/server.hpp"
 #include "observation/checkpoint.hpp"
 #include "observation/circular_buffer.hpp"
-#include "pipeline/pipeline_contract.hpp"
 #include "pipeline/pipeline.hpp"
+#include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
@@ -49,7 +49,7 @@ namespace mtconnect
   class AgentDevice;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
-  
+
   class Agent
   {
   public:
@@ -76,10 +76,10 @@ namespace mtconnect
 
     // Virtual destructor
     ~Agent();
-    
+
     // Make loopback pipeline
     void initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options);
-    
+
     // Start and stop
     void start();
     void stop();
@@ -91,7 +91,7 @@ namespace mtconnect
     // Add an adapter to the agent
     void addAdapter(adapter::Adapter *adapter, bool start = false);
     const auto &getAdapters() const { return m_adapters; }
-    
+
     // Get device from device map
     Device *getDeviceByName(const std::string &name);
     Device *getDeviceByName(const std::string &name) const;
@@ -125,20 +125,20 @@ namespace mtconnect
     AssetPtr addAsset(Device *device, const std::string &asset,
                       const std::optional<std::string> &id, const std::optional<std::string> &type,
                       const std::optional<std::string> &time, entity::ErrorList &errors);
-    bool removeAsset(Device *device, const std::string &id, const std::optional<Timestamp> time = std::nullopt);
+    bool removeAsset(Device *device, const std::string &id,
+                     const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,
-                         const std::optional<std::string> type,
-                         const std::optional<Timestamp> time, AssetList &list);
+                         const std::optional<std::string> type, const std::optional<Timestamp> time,
+                         AssetList &list);
 
     // Message when adapter has connected and disconnected
     void connecting(const std::string &adapter);
-    void disconnected(const std::string &adapter, const StringList &devices,
-                      bool autoAvailable);
-    void connected(const std::string &adapter, const StringList &devices,
-                   bool autoAvailable);
-    
+    void disconnected(const std::string &adapter, const StringList &devices, bool autoAvailable);
+    void connected(const std::string &adapter, const StringList &devices, bool autoAvailable);
+
     // Message protocol command
-    void receiveCommand(const std::string &device, const std::string &command, const std::string &value);
+    void receiveCommand(const std::string &device, const std::string &command,
+                        const std::string &value);
 
     DataItem *getDataItemByName(const std::string &deviceName,
                                 const std::string &dataItemName) const
@@ -316,14 +316,14 @@ namespace mtconnect
     std::map<std::string, Device *> m_deviceNameMap;
     std::map<std::string, Device *> m_deviceUuidMap;
     std::map<std::string, DataItem *> m_dataItemMap;
-    
+
     // Loopback
     std::unique_ptr<AgentLoopbackPipeline> m_loopback;
 
     // Xml Config
     std::string m_version;
     std::string m_configXmlPath;
-    
+
     // For debugging
     bool m_logStreamData;
     bool m_pretty;

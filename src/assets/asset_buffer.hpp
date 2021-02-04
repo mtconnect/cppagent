@@ -54,7 +54,8 @@ namespace mtconnect
     {
       return removeAsset(asset->getAssetId(), time);
     }
-    AssetPtr removeAsset(const std::string &id, const std::optional<Timestamp> &time = std::nullopt);
+    AssetPtr removeAsset(const std::string &id,
+                         const std::optional<Timestamp> &time = std::nullopt);
 
     AssetPtr getAsset(const std::string &id)
     {

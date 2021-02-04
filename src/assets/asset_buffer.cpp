@@ -151,8 +151,7 @@ namespace mtconnect
     return old;
   }
 
-  AssetPtr AssetBuffer::removeAsset(const std::string &id,
-                                    const std::optional<Timestamp> &time)
+  AssetPtr AssetBuffer::removeAsset(const std::string &id, const std::optional<Timestamp> &time)
   {
     AssetPtr asset;
     std::lock_guard<std::recursive_mutex> lock(m_bufferLock);

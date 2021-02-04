@@ -348,7 +348,7 @@ namespace mtconnect
       const_cast<DataItem *>(this)->computeConversionFactors();
       convertValue(value);
     }
-    
+
     return value;
   }
 

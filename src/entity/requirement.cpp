@@ -130,9 +130,9 @@ namespace mtconnect
           {
             if (v.size() != *m_size)
             {
-              throw PropertyError("Vector size " + to_string(v.size()) + " is not equal to " +
-                                  to_string(*m_size),
-                                  m_name);
+              throw PropertyError(
+                  "Vector size " + to_string(v.size()) + " is not equal to " + to_string(*m_size),
+                  m_name);
             }
           }
           else
@@ -140,13 +140,13 @@ namespace mtconnect
             if (v.size() > m_upperMultiplicity)
             {
               throw PropertyError("Vector size " + to_string(v.size()) + " is greater than " +
-                                  to_string(m_upperMultiplicity),
+                                      to_string(m_upperMultiplicity),
                                   m_name);
             }
             if (m_lowerMultiplicity != 0 && v.size() < m_lowerMultiplicity)
             {
               throw PropertyError("Vector size " + to_string(v.size()) + " is less than " +
-                                  to_string(m_lowerMultiplicity),
+                                      to_string(m_lowerMultiplicity),
                                   m_name);
             }
           }
@@ -305,8 +305,7 @@ namespace mtconnect
       void operator()(const U &arg, T &t)
       {
         stringstream s;
-        s << "Cannot convert from " << typeid(U).name() << " to "
-          << typeid(T).name();
+        s << "Cannot convert from " << typeid(U).name() << " to " << typeid(T).name();
         throw PropertyError(s.str());
       }
       // Default
@@ -347,15 +346,15 @@ namespace mtconnect
         case DATA_SET:
           out.emplace<DATA_SET>();
           break;
-          
+
         case TABLE:
           if (value.index() == DATA_SET)
             return false;
-          
+
           table = true;
           out.emplace<DATA_SET>();
           break;
-          
+
         case TIMESTAMP:
           out.emplace<TIMESTAMP>();
           break;

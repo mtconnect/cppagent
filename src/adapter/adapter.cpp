@@ -60,7 +60,7 @@ namespace mtconnect
 
       m_handler = m_pipeline->makeHandler();
       if (m_pipeline->hasContract())
-        m_pipeline->build(m_options);      
+        m_pipeline->build(m_options);
     }
 
     Adapter::~Adapter()
@@ -107,24 +107,21 @@ namespace mtconnect
       if (m_handler && m_handler->m_processData)
         m_handler->m_processData(data, getIdentity());
     }
-    
-    inline bool is_true(const std::string &value)
-    {
-      return value == "yes" || value == "true";
-    }
-    
+
+    inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }
+
     void Adapter::protocolCommand(const std::string &data)
     {
       static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
       smatch match;
-      
+
       if (std::regex_match(data, match, pattern))
       {
         auto command = match[1].str();
         auto value = match[2].str();
 
         ConfigOptions options;
-        
+
         if (command == "conversionRequired")
           options["ConversionRequired"] = is_true(value);
         else if (command == "relativeTime")
@@ -133,14 +130,13 @@ namespace mtconnect
           options["RealTime"] = is_true(value);
         else if (command == "device")
           options["Device"] = value;
-        
+
         if (options.size() > 0)
           setOptions(options);
         else if (m_handler && m_handler->m_command)
           m_handler->m_command(data, getIdentity());
       }
     }
-
 
     // Adapter private methods
     void Adapter::thread()

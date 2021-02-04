@@ -61,8 +61,10 @@ namespace mtconnect
       using Deliver = std::function<void(entity::EntityPtr)>;
       DeliverConnectionStatus(PipelineContextPtr context, const StringList &devices,
                               bool autoAvailable)
-        : Transform("DeliverConnectionStatus"), m_contract(context->m_contract.get()),
-          m_devices(devices), m_autoAvailable(autoAvailable)
+        : Transform("DeliverConnectionStatus"),
+          m_contract(context->m_contract.get()),
+          m_devices(devices),
+          m_autoAvailable(autoAvailable)
       {
         m_guard = EntityNameGuard("ConnectionStatus", RUN);
       }
@@ -94,7 +96,8 @@ namespace mtconnect
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
       DeliverCommand(PipelineContextPtr context, const std::optional<std::string> &device)
-        : Transform("DeliverCommand"), m_contract(context->m_contract.get()),
+        : Transform("DeliverCommand"),
+          m_contract(context->m_contract.get()),
           m_defaultDevice(device)
       {
         m_guard = EntityNameGuard("Command", RUN);

@@ -55,13 +55,13 @@ namespace mtconnect
 
       return entity;
     }
-    
+
     const entity::EntityPtr DeliverConnectionStatus::operator()(const entity::EntityPtr entity)
     {
       m_contract->deliverConnectStatus(entity, m_devices, m_autoAvailable);
       return entity;
     }
-    
+
     const entity::EntityPtr DeliverAssetCommand::operator()(const entity::EntityPtr entity)
     {
       m_contract->deliverAssetCommand(entity);

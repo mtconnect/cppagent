@@ -16,6 +16,7 @@
 //
 
 #include "agent_loopback_pipeline.hpp"
+
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"
 #include "pipeline/delta_filter.hpp"
@@ -33,8 +34,8 @@ namespace mtconnect
   void AgentLoopbackPipeline::build(const ConfigOptions &options)
   {
     clear();
-    TransformPtr next = m_start;    
-    
+    TransformPtr next = m_start;
+
     if (IsOptionSet(m_options, "UpcaseDataItemValue"))
       next = next->bind(make_shared<UpcaseValue>());
 
@@ -48,6 +49,6 @@ namespace mtconnect
       next = next->bind(make_shared<ConvertSample>());
 
     // Deliver
-    next->bind(make_shared<DeliverObservation>(m_context));    
-  }  
-}
+    next->bind(make_shared<DeliverObservation>(m_context));
+  }
+}  // namespace mtconnect

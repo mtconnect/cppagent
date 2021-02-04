@@ -311,7 +311,7 @@ namespace mtconnect
     };
 
     using DataSetEventPtr = std::shared_ptr<DataSetEvent>;
-    
+
     class TableEvent : public DataSetEvent
     {
     public:

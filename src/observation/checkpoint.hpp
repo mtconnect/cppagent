@@ -46,7 +46,10 @@ namespace mtconnect
       void filter(const FilterSet &filterSet);
       bool hasFilter() const { return bool(m_filter); }
 
-      const std::map<std::string, ObservationPtr> &getObservations() const { return m_observations; }
+      const std::map<std::string, ObservationPtr> &getObservations() const
+      {
+        return m_observations;
+      }
 
       void getObservations(ObservationList &list, const FilterSetOpt &filter = std::nullopt) const;
 

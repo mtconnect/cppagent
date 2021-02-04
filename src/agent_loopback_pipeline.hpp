@@ -26,13 +26,10 @@ namespace mtconnect
   class AgentLoopbackPipeline : public pipeline::Pipeline
   {
   public:
-    AgentLoopbackPipeline(pipeline::PipelineContextPtr context)
-    : pipeline::Pipeline(context)
-    {
-    }
+    AgentLoopbackPipeline(pipeline::PipelineContextPtr context) : pipeline::Pipeline(context) {}
     void build(const ConfigOptions &options) override;
-    
+
   protected:
     ConfigOptions m_options;
   };
-}
+}  // namespace mtconnect

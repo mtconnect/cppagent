@@ -51,7 +51,7 @@ namespace mtconnect
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
-  
+
   // Agent public methods
   Agent::Agent(std::unique_ptr<http_server::Server> &server,
                std::unique_ptr<http_server::FileCache> &cache, const string &configXmlPath,
@@ -79,7 +79,7 @@ namespace mtconnect
     // Unique id number for agent instance
     m_instanceId = getCurrentTimeInSec();
   }
-  
+
   void Agent::initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options)
   {
     m_loopback = std::make_unique<AgentLoopbackPipeline>(context);
@@ -687,10 +687,9 @@ namespace mtconnect
       }
     }
   }
-  
+
   void AgentPipelineContract::deliverConnectStatus(entity::EntityPtr entity,
-                                                   const StringList &devices,
-                                                   bool autoAvailable)
+                                                   const StringList &devices, bool autoAvailable)
   {
     auto value = entity->getValue<string>();
     if (value == "CONNECTING")
@@ -699,33 +698,30 @@ namespace mtconnect
     }
     else if (value == "CONNECTED")
     {
-      m_agent->connected(entity->get<string>("id"), devices,
-                         autoAvailable);
-
+      m_agent->connected(entity->get<string>("id"), devices, autoAvailable);
     }
     else if (value == "DISCONNECTED")
     {
-      m_agent->disconnected(entity->get<string>("id"), devices,
-                            autoAvailable);
+      m_agent->disconnected(entity->get<string>("id"), devices, autoAvailable);
     }
     else
     {
       g_logger << LERROR << "Unexpected connection status received: " << value;
     }
   }
-  
+
   void AgentPipelineContract::deliverCommand(entity::EntityPtr entity)
   {
     static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
     auto value = entity->getValue<string>();
     smatch match;
-    
+
     if (std::regex_match(value, match, pattern))
     {
       auto device = entity->maybeGet<string>("device");
       auto command = match[1].str();
       auto param = match[2].str();
-      
+
       if (!device)
       {
         g_logger << LERROR << "Invalid command: " << command << ", device not specified";
@@ -752,8 +748,7 @@ namespace mtconnect
   }
 
   // Add values for related data items UNAVAILABLE
-  void Agent::disconnected(const std::string &adapter,
-                           const StringList &devices,
+  void Agent::disconnected(const std::string &adapter, const StringList &devices,
                            bool autoAvailable)
   {
     g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
@@ -770,8 +765,8 @@ namespace mtconnect
       Device *device = findDeviceByUUIDorName(name);
       if (device == nullptr)
       {
-        g_logger << LWARN << "Cannot find device " << name << " when adapter " <<
-                adapter << "disconnected";
+        g_logger << LWARN << "Cannot find device " << name << " when adapter " << adapter
+                 << "disconnected";
         continue;
       }
 
@@ -807,8 +802,7 @@ namespace mtconnect
     }
   }
 
-  void Agent::connected(const std::string &adapter, const StringList &devices,
-                        bool autoAvailable)
+  void Agent::connected(const std::string &adapter, const StringList &devices, bool autoAvailable)
   {
     if (m_agentDevice)
     {
@@ -824,8 +818,8 @@ namespace mtconnect
       Device *device = findDeviceByUUIDorName(name);
       if (device == nullptr)
       {
-        g_logger << LWARN << "Cannot find device " << name << " when adapter " <<
-                adapter << "connected";
+        g_logger << LWARN << "Cannot find device " << name << " when adapter " << adapter
+                 << "connected";
         continue;
       }
       g_logger << LDEBUG
@@ -852,7 +846,8 @@ namespace mtconnect
     auto dataItem = observation->getDataItem();
     if (!dataItem->allowDups())
     {
-      if (!observation->isUnavailable() && dataItem->isDataSet() && !m_circularBuffer.getLatest().dataSetDifference(observation))
+      if (!observation->isUnavailable() && dataItem->isDataSet() &&
+          !m_circularBuffer.getLatest().dataSetDifference(observation))
       {
         return 0;
       }
@@ -910,12 +905,12 @@ namespace mtconnect
       device = findDeviceByUUIDorName(*uuid);
     else
       device = defaultDevice();
-    
+
     if (asset->getDeviceUuid() && *asset->getDeviceUuid() != device->getUuid())
     {
       asset->setProperty("deviceUuid", device->getUuid());
     }
-    
+
     string aid = asset->getAssetId();
     if (aid[0] == '@')
     {
@@ -933,10 +928,10 @@ namespace mtconnect
 
     // TODO: Fix timestamp handling
     DataItem *cdi = asset->isRemoved() ? device->getAssetRemoved() : device->getAssetChanged();
-    addToBuffer(cdi, {{"assetType", asset->getType()},
-      {"VALUE", asset->getAssetId() }}, asset->getTimestamp());
+    addToBuffer(cdi, {{"assetType", asset->getType()}, {"VALUE", asset->getAssetId()}},
+                asset->getTimestamp());
   }
-  
+
   AssetPtr Agent::addAsset(Device *device, const std::string &document,
                            const std::optional<std::string> &id,
                            const std::optional<std::string> &type,
@@ -956,7 +951,7 @@ namespace mtconnect
     }
 
     auto asset = dynamic_pointer_cast<Asset>(entity);
-    
+
     if (type && asset->getType() != *type)
     {
       stringstream msg;
@@ -979,7 +974,7 @@ namespace mtconnect
       asset->setProperty("deviceUuid", device->getUuid());
 
     addAsset(asset);
-    
+
     return asset;
   }
 
@@ -998,8 +993,7 @@ namespace mtconnect
       if (device == nullptr)
         device = defaultDevice();
 
-      addToBuffer(device->getAssetRemoved(),
-                  {{"assetType", asset->getType()}, {"VALUE", id}},
+      addToBuffer(device->getAssetRemoved(), {{"assetType", asset->getType()}, {"VALUE", id}},
                   asset->getTimestamp());
 
       // Check if the asset changed id is the same as this asset.
@@ -1578,7 +1572,7 @@ namespace mtconnect
               NOT_FOUND, printer->mimeType()};
     }
   }
-  
+
   void AgentPipelineContract::deliverAssetCommand(entity::EntityPtr command)
   {
     const std::string &cmd = command->getValue<string>();
@@ -1604,13 +1598,12 @@ namespace mtconnect
     }
   }
 
-  void Agent::receiveCommand(const std::string &deviceName,
-                             const std::string &command,
+  void Agent::receiveCommand(const std::string &deviceName, const std::string &command,
                              const std::string &value)
   {
-    Device *device {nullptr};
+    Device *device{nullptr};
     device = findDeviceByUUIDorName(deviceName);
-    
+
     std::string oldName, oldUuid;
     if (device)
     {
@@ -1650,8 +1643,7 @@ namespace mtconnect
 
         // Look for name|factor|offset triples
         string name, factor, offset;
-        while (getline(line, name, '|') && getline(line, factor, '|') &&
-               getline(line, offset, '|'))
+        while (getline(line, name, '|') && getline(line, factor, '|') && getline(line, offset, '|'))
         {
           // Convert to a floating point number
           auto di = device->getDeviceDataItem(name);
@@ -1671,11 +1663,10 @@ namespace mtconnect
         return;
       }
     }
-    
+
     deviceChanged(device, oldUuid, oldName);
   }
 
-  
   // -------------------------------------------
   // Error formatting
   // -------------------------------------------

@@ -216,7 +216,7 @@ namespace mtconnect
 
       if (reqs != nullptr)
       {
-        auto obs =  zipProperties(dataItem, timestamp, *reqs, token, end, errors);
+        auto obs = zipProperties(dataItem, timestamp, *reqs, token, end, errors);
         if (dataItem->hasConstantValue())
           return nullptr;
         if (obs && source)
@@ -274,7 +274,6 @@ namespace mtconnect
             ac->setProperty("type", *token++);
           if (m_defaultDevice)
             ac->setProperty("device", *m_defaultDevice);
-
         }
         else if (command == "@REMOVE_ASSET@")
         {

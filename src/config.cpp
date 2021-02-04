@@ -755,7 +755,7 @@ namespace mtconnect
     else if ((device = defaultDevice()))
     {
       ConfigOptions adapterOptions{options};
-      
+
       auto deviceName = device->getName();
       adapterOptions["Device"] = deviceName;
       g_logger << LINFO << "Adding default adapter for " << device->getName()
