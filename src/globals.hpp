@@ -34,11 +34,13 @@
 #include <date/date.h>
 
 #include <chrono>
+#include <date/date.h>
 #include <ctime>
 #include <fstream>
 #include <limits>
 #include <list>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <variant>
@@ -167,6 +169,7 @@ namespace mtconnect
   };
 
   using Milliseconds = std::chrono::milliseconds;
+  using Microseconds = std::chrono::microseconds;
   using Seconds = std::chrono::seconds;
   using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
   using StringList = std::list<std::string>;
@@ -190,6 +193,21 @@ namespace mtconnect
       return std::get<bool>(v->second);
     else
       return false;
+  }
+  
+  inline std::string format(const Timestamp &ts)
+  {
+    using namespace std;
+    string time = date::format("%FT%T", date::floor<Microseconds>(ts));
+    auto pos = time.find_last_not_of("0");
+    if (pos != string::npos)
+    {
+      if (time[pos] != '.')
+        pos++;
+      time.erase(pos);
+    }
+    time.append("Z");
+    return time;
   }
 
 #ifdef _WINDOWS

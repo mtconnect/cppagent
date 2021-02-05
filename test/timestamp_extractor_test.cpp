@@ -45,7 +45,7 @@ TEST(TimestampExtractorTest, TestTimeExtraction)
 
   ASSERT_EQ(1, out->getProperties().size());
   ASSERT_EQ("hello", timestamped->m_tokens.front());
-  ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", timestamped->m_timestamp));
+  ASSERT_EQ("2021-01-19T12:00:00.12345Z", format(timestamped->m_timestamp));
   ASSERT_FALSE(timestamped->m_duration);
 }
 
@@ -62,7 +62,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
 
   ASSERT_EQ(1, out->getProperties().size());
   ASSERT_EQ("hello", timestamped->m_tokens.front());
-  ASSERT_EQ("2021-01-19T12:00:00.123450Z", format("%FT%TZ", timestamped->m_timestamp));
+  ASSERT_EQ("2021-01-19T12:00:00.12345Z", format(timestamped->m_timestamp));
   ASSERT_TRUE(timestamped->m_duration);
   ASSERT_EQ(100.0, *timestamped->m_duration);
 }
@@ -85,7 +85,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
   
   ASSERT_EQ(1, out->getProperties().size());
   ASSERT_EQ("hello", timestamped->m_tokens.front());
-  ASSERT_EQ("2021-01-19T10:00:00.000000Z", format("%FT%TZ", timestamped->m_timestamp));
+  ASSERT_EQ("2021-01-19T10:00:00Z", format(timestamped->m_timestamp));
 
   tokens = make_shared<Tokens>("Tokens", Properties{});
   tokens->m_tokens = { "2000.0", "hello" };
@@ -94,7 +94,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
   timestamped = dynamic_pointer_cast<Timestamped>(out);
   ASSERT_TRUE(timestamped);
 
-  ASSERT_EQ("2021-01-19T10:00:01.000000Z", format("%FT%TZ", timestamped->m_timestamp));
+  ASSERT_EQ("2021-01-19T10:00:01Z", format(timestamped->m_timestamp));
 }
 
 TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
@@ -115,7 +115,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
 
   ASSERT_EQ(1, out->getProperties().size());
   ASSERT_EQ("hello", timestamped->m_tokens.front());
-  ASSERT_EQ("2021-01-19T10:00:00.000000Z", format("%FT%TZ", timestamped->m_timestamp));
+  ASSERT_EQ("2021-01-19T10:00:00Z", format(timestamped->m_timestamp));
 
   tokens = make_shared<Tokens>("Tokens", Properties{});
   tokens->m_tokens = {"2021-01-19T10:01:10Z", "hello"};
@@ -123,5 +123,5 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
   timestamped = dynamic_pointer_cast<Timestamped>(out);
   ASSERT_TRUE(timestamped);
 
-  ASSERT_EQ("2021-01-19T10:00:10.000000Z", format("%FT%TZ", timestamped->m_timestamp));  
+  ASSERT_EQ("2021-01-19T10:00:10Z", format(timestamped->m_timestamp));
 }

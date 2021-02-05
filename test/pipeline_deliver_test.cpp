@@ -69,7 +69,7 @@ TEST_F(PipelineDeliverTest, test_simple_flow)
   ASSERT_TRUE(obs);
   ASSERT_EQ("Xpos", obs->getDataItem()->getName());
   ASSERT_EQ(100.0, obs->getValue<double>());
-  ASSERT_EQ("2021-01-22T12:33:45.123000Z", date::format("%FT%TZ", obs->getTimestamp()));
+  ASSERT_EQ("2021-01-22T12:33:45.123Z", format(obs->getTimestamp()));
 }
 
 TEST_F(PipelineDeliverTest, filter_duplicates)

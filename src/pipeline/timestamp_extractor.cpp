@@ -52,6 +52,10 @@ namespace mtconnect
     void ExtractTimestamp::extractTimestamp(const std::string &token, TimestampedPtr &entity)
     {
       using namespace date;
+      using namespace chrono;
+      using namespace chrono_literals;
+      using namespace date::literals;
+      using namespace date;
 
       // Extract duration
       string timestamp = token;
@@ -82,7 +86,7 @@ namespace mtconnect
       }
 
       // Handle double offset
-      auto n = now();
+      Timestamp n = now();
       double offset;
       if (!has_t)
       {
@@ -93,9 +97,13 @@ namespace mtconnect
       {
         m_base = n;
         if (has_t)
-          m_offset = n - ts;
+        {
+          auto t1 = round<Microseconds, system_clock>(ts);
+          auto t2 = round<Microseconds, system_clock>(n);
+          m_offset = t2 - t1;
+        }
         else
-          m_offset = Micros(int64_t(offset * 1000.0));
+          m_offset = Microseconds(int64_t(offset * 1000.0));
         entity->m_timestamp = n;
       }
       else
@@ -106,7 +114,7 @@ namespace mtconnect
         }
         else
         {
-          entity->m_timestamp = *m_base + Micros(int64_t(offset * 1000.0)) - m_offset;
+          entity->m_timestamp = *m_base + Microseconds(int64_t(offset * 1000.0)) - m_offset;
         }
       }
     }

@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "globals.hpp"
 #include "shdr_tokenizer.hpp"
 #include "transform.hpp"
 
@@ -27,8 +28,6 @@ namespace mtconnect
   namespace pipeline
   {
     using namespace entity;
-    using Micros = std::chrono::microseconds;
-    using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
     class Timestamped : public Tokens
     {
@@ -93,7 +92,7 @@ namespace mtconnect
     protected:
       bool m_relativeTime{false};
       std::optional<Timestamp> m_base;
-      Micros m_offset;
+      Microseconds m_offset;
     };
 
     class IgnoreTimestamp : public ExtractTimestamp

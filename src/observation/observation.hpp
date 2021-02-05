@@ -48,7 +48,6 @@ namespace mtconnect
     class Observation : public entity::Entity
     {
     public:
-      using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
       using super = entity::Entity;
 
       using entity::Entity::Entity;
@@ -79,7 +78,7 @@ namespace mtconnect
       void setTimestamp(const Timestamp &ts)
       {
         m_timestamp = ts;
-        setProperty("timestamp", date::format("%FT%TZ", m_timestamp));
+        setProperty("timestamp", m_timestamp);
       }
       auto getTimestamp() const { return m_timestamp; }
 
@@ -91,8 +90,9 @@ namespace mtconnect
 
       virtual void makeUnavailable()
       {
+        using namespace std::literals;
         m_unavailable = true;
-        setProperty("VALUE", "UNAVAILABLE");
+        setProperty("VALUE", "UNAVAILABLE"s);
       }
       bool isUnavailable() const { return m_unavailable; }
       virtual void setEntityName() { Entity::setName(m_dataItem->getPrefixedElementName()); }

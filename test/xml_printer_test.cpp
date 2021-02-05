@@ -457,20 +457,20 @@ TEST_F(XmlPrinterTest, Condition)
   addEventToCheckpoint(checkpoint, "power", 1, "ON"_value);
   
   addEventToCheckpoint(checkpoint, "ctmp", 18, Properties{{
-    {"level", "WARNING" },
-    {"nativeCode", "OTEMP"},
-    {"nativeSeverity", "1"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Spindle Overtemp"}
+    {"level", "WARNING"s },
+    {"nativeCode", "OTEMP"s},
+    {"nativeSeverity", "1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Spindle Overtemp"s}
   }});
   addEventToCheckpoint(checkpoint, "cmp", 18, Properties{{
-    {"level", "NORMAL" },
+    {"level", "NORMAL"s },
   }});
   addEventToCheckpoint(checkpoint, "lp", 18, Properties{{
-    {"level", "FAULT" },
-    {"nativeCode", "LOGIC"},
-    {"nativeSeverity", "2"},
-    {"VALUE", "PLC Error"}
+    {"level", "FAULT"s },
+    {"nativeCode", "LOGIC"s},
+    {"nativeSeverity", "2"s},
+    {"VALUE", "PLC Error"s}
   }});
 
   ObservationList list;
@@ -568,8 +568,8 @@ TEST_F(XmlPrinterTest, TimeSeries)
   {
     ObservationList events;
     ptr = newEvent("Xts", 10843512, Properties{
-      {"sampleCount", 6},
-      {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"}});
+      {"sampleCount", int64_t(6)},
+      {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"s}});
     events.push_back(ptr);
 
     PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
@@ -584,9 +584,9 @@ TEST_F(XmlPrinterTest, TimeSeries)
   {
     ObservationList events;
     ptr = newEvent("Xts", 10843512, Properties{
-      {"sampleCount", 6},
-      {"sampleRate", 46200},
-      {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"}});
+      {"sampleCount", int64_t(6)},
+      {"sampleRate", 46200.0},
+      {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"s}});
 
     events.push_back(ptr);
 
@@ -604,9 +604,9 @@ TEST_F(XmlPrinterTest, NonPrintableCharacters)
 {
   ObservationList events;
   ObservationPtr ptr = newEvent("zlc", 10843512, Properties{{
-    {"level", "fault" },
-    {"nativeCode", "500"},
-    {"VALUE", "OVER TRAVEL : +Z? "}
+    {"level", "fault"s },
+    {"nativeCode", "500"s},
+    {"VALUE", "OVER TRAVEL : +Z? "s}
   }});
 
   events.push_back(ptr);
@@ -619,9 +619,9 @@ TEST_F(XmlPrinterTest, EscapedXMLCharacters)
 {
   ObservationList events;
   ObservationPtr ptr = newEvent("zlc", 10843512, Properties{{
-    {"level", "fault" },
-    {"nativeCode", "500"},
-    {"VALUE", "A duck > a foul & < cat '"}
+    {"level", "fault"s },
+    {"nativeCode", "500"s},
+    {"VALUE", "A duck > a foul & < cat '"s}
   }});
 
   events.push_back(ptr);

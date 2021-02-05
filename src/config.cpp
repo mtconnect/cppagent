@@ -385,8 +385,7 @@ namespace mtconnect
 
   static std::string timestamp()
   {
-    return date::format("%Y-%m-%dT%H:%M:%SZ",
-                        date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
+    return format(                      date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
   }
 
   void AgentConfiguration::LoggerHook(const std::string &loggerName, const dlib::log_level &l,

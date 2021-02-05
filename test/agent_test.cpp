@@ -919,7 +919,7 @@ TEST_F(AgentTest, IgnoreTimestamps)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00.000000Z");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00Z");
   }
 
   m_agentTestHelper->m_adapter->setOptions({{"IgnoreTimestamps", true}});
@@ -928,8 +928,8 @@ TEST_F(AgentTest, IgnoreTimestamps)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00.000000Z");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!2021-02-01T12:00:00.000000Z");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00Z");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!2021-02-01T12:00:00Z");
   }
 }
 
@@ -1930,7 +1930,7 @@ TEST_F(AgentTest, MultiLineAsset)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:Extra", "XXX");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@deviceUuid", "000");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "2021-02-01T12:00:00.000000Z");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "2021-02-01T12:00:00Z");
   }
 
   // Make sure we can still add a line and we are out of multiline mode...
@@ -2530,7 +2530,7 @@ TEST_F(AgentTest, Put)
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "2021-02-01T12:00:00.000000Z");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "2021-02-01T12:00:00Z");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
     ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
   }

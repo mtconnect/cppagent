@@ -269,7 +269,7 @@ namespace mtconnect
         if (command == "@REMOVE_ALL_ASSETS@")
         {
           ac->setName("AssetCommand");
-          ac->setValue("RemoveAll");
+          ac->setValue("RemoveAll"s);
           if (token != end)
             ac->setProperty("type", *token++);
           if (m_defaultDevice)
@@ -277,7 +277,7 @@ namespace mtconnect
         }
         else if (command == "@REMOVE_ASSET@")
         {
-          ac->setValue("RemoveAsset");
+          ac->setValue("RemoveAsset"s);
           ac->setProperty("assetId", *token++);
           if (m_defaultDevice)
             ac->setProperty("device", *m_defaultDevice);

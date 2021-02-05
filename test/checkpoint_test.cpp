@@ -77,24 +77,24 @@ TEST_F(CheckpointTest, AddObservations)
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
   auto warning1 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE1"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto warning2 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE2"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto normal = entity::Properties{
-    {"level", "NORMAL"}
+    {"level", "NORMAL"s}
   };
   auto unavailable = entity::Properties{
-    {"level", "UNAVAILABLE"}
+    {"level", "UNAVAILABLE"s}
   };
-  auto value = entity::Properties{{"VALUE", "123"}};
+  auto value = entity::Properties{{"VALUE", "123"s}};
 
   auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   ASSERT_TRUE(p1);
@@ -148,18 +148,18 @@ TEST_F(CheckpointTest, Copy)
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
   auto warning1 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE1"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto warning2 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE2"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
-  auto value = entity::Properties{{"VALUE", "123"}};
+  auto value = entity::Properties{{"VALUE", "123"s}};
   
   auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   m_checkpoint->addObservation(p1);
@@ -181,18 +181,18 @@ TEST_F(CheckpointTest, GetObservations)
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
   auto warning1 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE1"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto warning2 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE2"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
-  auto value = entity::Properties{{"VALUE", "123"}};
+  auto value = entity::Properties{{"VALUE", "123"s}};
   FilterSet filter;
   filter.insert(m_dataItem1->getId());
   filter.insert(m_dataItem2->getId());
@@ -237,18 +237,18 @@ TEST_F(CheckpointTest, Filter)
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
   auto warning1 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE1"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto warning2 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE2"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
-  auto value = entity::Properties{{"VALUE", "123"}};
+  auto value = entity::Properties{{"VALUE", "123"s}};
   FilterSet filter;
   filter.insert(m_dataItem1->getId());
 
@@ -288,24 +288,24 @@ TEST_F(CheckpointTest, CopyAndFilter)
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
   auto warning1 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE1"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto warning2 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE2"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto warning3 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE3"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE3"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
-  auto value = entity::Properties{{"VALUE", "123"}};
+  auto value = entity::Properties{{"VALUE", "123"s}};
   FilterSet filter;
   filter.insert(m_dataItem1->getId());
   
@@ -357,44 +357,44 @@ TEST_F(CheckpointTest, ConditionChaining)
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
   auto warning1 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE1"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto warning2 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE2"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto warning3 = entity::Properties{
-    {"level", "WARNING"},
-    {"nativeCode", "CODE3"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE3"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto fault2 = entity::Properties{
-    {"level", "FAULT"},
-    {"nativeCode", "CODE2"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "FAULT"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto normal = entity::Properties{
-    {"level", "NORMAL"}
+    {"level", "NORMAL"s}
   };
   auto normal1 = entity::Properties{
-    {"nativeCode", "CODE1"},
-    {"level", "NORMAL"}
+    {"nativeCode", "CODE1"s},
+    {"level", "NORMAL"s}
   };
   auto normal2 = entity::Properties{
-    {"nativeCode", "CODE2"},
-    {"level", "NORMAL"}
+    {"nativeCode", "CODE2"s},
+    {"level", "NORMAL"s}
   };
   auto unavailable = entity::Properties{
-    {"level", "UNAVAILABLE"}
+    {"level", "UNAVAILABLE"s}
   };
-  auto value = entity::Properties{{"VALUE", "123"}};
+  auto value = entity::Properties{{"VALUE", "123"s}};
 
   FilterSet filter;
   filter.insert(m_dataItem1->getId());
@@ -491,14 +491,14 @@ TEST_F(CheckpointTest, LastConditionNormal)
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
   auto fault1 = entity::Properties{
-    {"level", "FAULT"},
-    {"nativeCode", "CODE1"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Over..."},
+    {"level", "FAULT"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
   };
   auto normal1 = entity::Properties{
-    {"nativeCode", "CODE1"},
-    {"level", "NORMAL"}
+    {"nativeCode", "CODE1"s},
+    {"level", "NORMAL"s}
   };
 
   FilterSet filter;

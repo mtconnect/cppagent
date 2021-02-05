@@ -1001,7 +1001,7 @@ namespace mtconnect
       if (ptr && ptr->getValue<string>() == id)
       {
         addToBuffer(device->getAssetChanged(),
-                    {{"assetType", asset->getType()}, {"VALUE", "UNAVAILABLE"}});
+                    {{"assetType", asset->getType()}, {"VALUE", "UNAVAILABLE"s}});
       }
     }
 

@@ -57,7 +57,7 @@ class ObservationTest : public testing::Test
     m_time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
     
     ErrorList errors;
-    m_compEventA = Observation::make(m_dataItem1.get(), {{ "VALUE", "Test" }}, m_time, errors);
+    m_compEventA = Observation::make(m_dataItem1.get(), {{ "VALUE", "Test"s }}, m_time, errors);
     m_compEventA->setSequence(2);
     
     m_compEventB = Observation::make(m_dataItem2.get(), {{ "VALUE", 1.1231 }}, m_time + 10min, errors);
@@ -180,9 +180,9 @@ TEST_F(ObservationTest, ConditionEventChaining)
   });
   
   ErrorList errors;
-  ConditionPtr event1 = Cond(Observation::make(&dataItem, {{"level", "FAULT"}}, m_time, errors));
-  ConditionPtr event2 = Cond(Observation::make(&dataItem, {{"level", "FAULT"}}, m_time, errors));
-  ConditionPtr event3 = Cond(Observation::make(&dataItem, {{"level", "FAULT"}}, m_time, errors));
+  ConditionPtr event1 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
+  ConditionPtr event2 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
+  ConditionPtr event3 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
 
   ASSERT_TRUE(event1 == event1->getFirst());
 

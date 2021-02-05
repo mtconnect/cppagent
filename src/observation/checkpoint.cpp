@@ -210,7 +210,7 @@ namespace mtconnect
         if (!m_filter->count(it->first))
         {
 #ifdef _WINDOWS
-          it = m_events.erase(it);
+          it = m_observations.erase(it);
 #else
           auto pos = it++;
           m_observations.erase(pos);

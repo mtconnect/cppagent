@@ -28,6 +28,7 @@
 
 using json = nlohmann::json;
 using namespace std;
+using namespace std::literals;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace mtconnect::observation;
@@ -86,7 +87,7 @@ TEST_F(DataSetTest, InitialSet)
 {
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   
@@ -118,7 +119,7 @@ TEST_F(DataSetTest, UpdateOneElement)
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
   string value("a=1 b=2 c=3 d=4");
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
@@ -126,7 +127,7 @@ TEST_F(DataSetTest, UpdateOneElement)
   auto cecp = m_checkpoint->getEventPtr("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5"}},
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
@@ -140,7 +141,7 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
 
-  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "e=6"}},
+  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "e=6"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
@@ -161,7 +162,7 @@ TEST_F(DataSetTest, UpdateMany)
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
@@ -170,7 +171,7 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5 e=6"}},
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5 e=6"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
@@ -186,7 +187,7 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
   
-  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "e=7 a=8 f=9"}},
+  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "e=7 a=8 f=9"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
@@ -209,7 +210,7 @@ TEST_F(DataSetTest, Reset)
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
@@ -218,7 +219,7 @@ TEST_F(DataSetTest, Reset)
   auto cecp = m_checkpoint->getEventPtr("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5 e=6"},
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5 e=6"s},
     {"resetTriggered", "MANUAL"}
   },
                               time, errors);
@@ -232,7 +233,7 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
 
-  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "x=pop y=hop"}},
+  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "x=pop y=hop"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
@@ -250,14 +251,14 @@ TEST_F(DataSetTest, BadData)
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "12356"}},
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "12356"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
   ASSERT_EQ(1, ce->getValue<DataSet>().size());
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "  a=2      b3=xxx"}},
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "  a=2      b3=xxx"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
@@ -479,7 +480,7 @@ TEST_F(DataSetTest, DeleteKey)
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"}},
+  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
@@ -487,7 +488,7 @@ TEST_F(DataSetTest, DeleteKey)
   auto cecp = m_checkpoint->getEventPtr("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c e=6 a"}},
+  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c e=6 a"s}},
                               time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);

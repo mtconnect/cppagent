@@ -111,7 +111,7 @@ Properties operator "" _value(long double value)
   return Properties{{"VALUE", double(value)}};
 }
 
-Properties operator "" _value(const char *value, unsigned long s)
+Properties operator "" _value(const char *value, size_t s)
 {
   return Properties{{"VALUE", string(value)}};
 }
@@ -248,7 +248,7 @@ TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem)
   ASSERT_EQ(string("AUTOMATIC"), mode.at("/ControllerMode/value"_json_pointer).get<string>());
   ASSERT_EQ(string("if36ff60"), mode.at("/ControllerMode/dataItemId"_json_pointer).get<string>());
   ASSERT_EQ(string("mode"), mode.at("/ControllerMode/name"_json_pointer).get<string>());
-  ASSERT_EQ(date::format("%FT%TZ", now), mode.at("/ControllerMode/timestamp"_json_pointer).get<string>());
+  ASSERT_EQ(format(now), mode.at("/ControllerMode/timestamp"_json_pointer).get<string>());
   ASSERT_EQ(uint64_t(10254804), mode.at("/ControllerMode/sequence"_json_pointer).get<uint64_t>());
 
   auto samples = stream.at("/Samples"_json_pointer);
@@ -261,22 +261,22 @@ TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem)
   ASSERT_EQ(20.0, pos.at("/PathPosition/value/1"_json_pointer).get<double>());
   ASSERT_EQ(30.0, pos.at("/PathPosition/value/2"_json_pointer).get<double>());
   ASSERT_EQ(string("r186cd60"), pos.at("/PathPosition/dataItemId"_json_pointer).get<string>());
-  ASSERT_EQ(date::format("%FT%TZ", now), pos.at("/PathPosition/timestamp"_json_pointer).get<string>());
+  ASSERT_EQ(format(now), pos.at("/PathPosition/timestamp"_json_pointer).get<string>());
   ASSERT_EQ(uint64_t(10254805), pos.at("/PathPosition/sequence"_json_pointer).get<uint64_t>());
 }
 
 TEST_F(JsonPrinterStreamTest, ConditionDataItem)
 {
   Timestamp now = chrono::system_clock::now();
-  auto time = date::format("%FT%TZ", now);
+  auto time = format(now);
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "a5b23650", 10254804,
                              Properties{
-    {"level", "fault"},
-    {"nativeCode", "syn"},
-    {"nativeSeverity", "ack"},
-    {"qualifier", "HIGH"},
-    {"VALUE", "Syntax error"}
+    {"level", "fault"s},
+    {"nativeCode", "syn"s},
+    {"nativeSeverity", "ack"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Syntax error"s}
   }, now);
   ObservationList list;
   checkpoint.getObservations(list);
@@ -310,13 +310,13 @@ TEST_F(JsonPrinterStreamTest, ConditionDataItem)
 TEST_F(JsonPrinterStreamTest, TimeSeries)
 {
   Timestamp now = chrono::system_clock::now();
-  auto time = date::format("%FT%TZ", now);
+  auto time = format(now);
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "tc9edc70", 10254804,
                              Properties{
-    {"sampleCount", 10},
+    {"sampleCount", int64_t(10)},
     {"sampleRate", 100.0},
-    {"VALUE", Vector{1.0, 2.0, 3, 4, 5.0, 6, 7, 8.8, 9.0, 10.2}}
+    {"VALUE", Vector{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.8, 9.0, 10.2}}
   }, now);
   ObservationList list;
   checkpoint.getObservations(list);
@@ -365,17 +365,17 @@ TEST_F(JsonPrinterStreamTest, TimeSeries)
 TEST_F(JsonPrinterStreamTest, AssetChanged)
 {
   Timestamp now = chrono::system_clock::now();
-  auto time = date::format("%FT%TZ", now);
+  auto time = format(now);
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "e4a300e0", 10254804,
                              Properties{
-    {"assetType", "CuttingTool"},
-    {"VALUE", "31d416a0-33c7"}
+    {"assetType", "CuttingTool"s},
+    {"VALUE", "31d416a0-33c7"s}
   }, now);
   addObservationToCheckpoint(checkpoint, "f2df7550", 10254805,
                              Properties{
-    {"assetType", "QIF"},
-    {"VALUE", "400477d0-33c7"}
+    {"assetType", "QIF"s},
+    {"VALUE", "400477d0-33c7"s}
   }, now);
   ObservationList list;
   checkpoint.getObservations(list);
@@ -417,10 +417,10 @@ TEST_F(JsonPrinterStreamTest, AssetChanged)
 TEST_F(JsonPrinterStreamTest, ResetTrigger)
 {
   Timestamp now = chrono::system_clock::now();
-  auto time = date::format("%FT%TZ", now);
+  auto time = format(now);
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "qb9212c0", 10254804,
-                             Properties{{"VALUE", 10.0}, {"resetTriggered", "ACTION_COMPLETE"}},
+                             Properties{{"VALUE", 10.0}, {"resetTriggered", "ACTION_COMPLETE"s}},
                              now, 100.0);  // Amperage
   ObservationList list;
   checkpoint.getObservations(list);
@@ -455,10 +455,10 @@ TEST_F(JsonPrinterStreamTest, ResetTrigger)
 TEST_F(JsonPrinterStreamTest, Message)
 {
   Timestamp now = chrono::system_clock::now();
-  auto time = date::format("%FT%TZ", now);
+  auto time = format(now);
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "m17f1750", 10254804,
-                             Properties{{"nativeCode", "XXXX"}, {"VALUE", "XXX is on the roof"}}, now);  
+                             Properties{{"nativeCode", "XXXX"s}, {"VALUE", "XXX is on the roof"s}}, now);
   ObservationList list;
   checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
@@ -492,7 +492,7 @@ TEST_F(JsonPrinterStreamTest, Unavailability)
   addObservationToCheckpoint(checkpoint, "m17f1750", 10254804, "UNAVAILABLE"_value);  // asset changed
   addObservationToCheckpoint(checkpoint, "dcbc0570", 10254804, "UNAVAILABLE"_value);  // X Position
   addObservationToCheckpoint(checkpoint, "a5b23650", 10254804,
-                             Properties{{"level", "unavailable"}});  // Motion Program Condition
+                             Properties{{"level", "unavailable"s}});  // Motion Program Condition
   ObservationList list;
   checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);

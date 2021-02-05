@@ -29,6 +29,7 @@
 #include "pipeline/timestamp_extractor.hpp"
 
 using namespace std;
+using namespace std::literals;
 
 namespace mtconnect
 {
@@ -46,17 +47,17 @@ namespace mtconnect
       // Build the pipeline for an adapter
       handler->m_connecting = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "CONNECTING"}, {"id", id}});
+                                          Properties{{"VALUE", "CONNECTING"s}, {"id", id}});
         run(entity);
       };
       handler->m_connected = [this](const std::string &id) {
         auto entity =
-            make_shared<Entity>("ConnectionStatus", Properties{{"VALUE", "CONNECTED"}, {"id", id}});
+            make_shared<Entity>("ConnectionStatus", Properties{{"VALUE", "CONNECTED"s}, {"id", id}});
         run(entity);
       };
       handler->m_disconnected = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "DISCONNECTED"}, {"id", id}});
+                                          Properties{{"VALUE", "DISCONNECTED"s}, {"id", id}});
         run(entity);
       };
       handler->m_processData = [this](const std::string &data, const std::string &source) {

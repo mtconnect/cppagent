@@ -284,7 +284,7 @@ namespace mtconnect
       }
 
       // ------------ Timestamp
-      void operator()(const Timestamp &arg, string &v) { v = date::format("%FT%TZ", arg); }
+      void operator()(const Timestamp &arg, string &v) { v = format(arg); }
       void operator()(const Timestamp &arg, int64_t &v)
       {
         v = chrono::system_clock::to_time_t(arg);
@@ -295,9 +295,9 @@ namespace mtconnect
         v.emplace_back(arg.time_since_epoch().count());
       }
       template <typename T>
-      void operator()(const Timestamp &arg, T &&)
+      void operator()(const Timestamp &arg, T &)
       {
-        throw PropertyError("Cannot convert a bool to a non-scalar");
+        throw PropertyError("Cannot convert a Timestamp to a non-scalar");
       }
 
       // -- Catch all

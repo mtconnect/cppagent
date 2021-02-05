@@ -118,8 +118,8 @@ TEST_F(DataItemMappingTest, SimpleEvent)
 
 TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
-  auto ts = makeTimestamped({"a", "unavailable"});
+  auto di = makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  auto ts = makeTimestamped({"a", "unavailable"s});
   
   auto observations = (*m_mapper)(ts);
   auto &r = *observations;
@@ -129,9 +129,9 @@ TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
   ASSERT_EQ(1, oblist.size());
   auto event = dynamic_pointer_cast<Event>(oblist.front());
   ASSERT_TRUE(event);
-  
+
   ASSERT_EQ(di, event->getDataItem());
-  ASSERT_EQ("UNAVAILABLE", event->getValue<string>());
+  ASSERT_EQ("UNAVAILABLE"s, event->getValue<string>());
   ASSERT_TRUE(event->isUnavailable());
 }
 

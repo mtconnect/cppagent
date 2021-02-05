@@ -70,7 +70,7 @@ namespace mtconnect
       return value;
     }
 
-    inline static json toJson(const Timestamp &t) { return date::format("%FT%TZ", t); }
+    inline static json toJson(const Timestamp &t) { return format(t); }
 
     inline static json getValue(const Value &value)
     {
