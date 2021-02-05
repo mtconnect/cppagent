@@ -50,6 +50,12 @@ namespace mtconnect
       Transform(const std::string &name) : m_name(name) {}
       virtual ~Transform() = default;
 
+      virtual void stop()
+      {
+        for (auto &t : m_next)
+          t->stop();
+      }
+      
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
 

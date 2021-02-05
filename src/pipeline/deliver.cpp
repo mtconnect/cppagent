@@ -28,6 +28,8 @@ namespace mtconnect
 
   namespace pipeline
   {
+    static dlib::logger g_logger("agent_device");
+
     const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
     {
       using namespace observation;
@@ -39,9 +41,50 @@ namespace mtconnect
       }
 
       m_contract->deliverObservation(o);
+      (*m_count)++;
 
       return entity;
     }
+    
+    void ComputeMetrics::operator()()
+
+    {
+      using namespace std;
+      using namespace chrono;
+      using namespace chrono_literals;
+      
+      if (!m_dataItem)
+        return;
+      
+      auto di = m_contract->findDataItem("Agent", *m_dataItem);
+      if (di == nullptr)
+        return;
+      
+      size_t last{0};
+      double lastAvg{0.0};
+      while (m_running)
+      {
+        auto count = *m_count;
+        auto delta = count - last;
+        
+        double avg = delta + exp(-(10.0/60.0)) * (lastAvg - delta);
+        g_logger << dlib::LDEBUG << *m_dataItem << " - Agerage for last 1 minutes: " << (avg/10.0);
+        g_logger << dlib::LDEBUG << *m_dataItem << " - Delta for last 10 seconds: " << (double(delta)/10.0);
+
+        last = count;
+        if (avg != lastAvg)
+        {
+          ErrorList errors;
+          auto obs = Observation::make(di, Properties{{"VALUE", double(delta)/10.0 }},
+                                       system_clock::now(), errors);
+          m_contract->deliverObservation(obs);
+          lastAvg = avg;
+        }
+        
+        this_thread::sleep_for(10s);
+      }
+    }
+
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
     {

@@ -57,7 +57,7 @@ namespace mtconnect
       stringstream identity;
       identity << '_' << server << '_' << port;
       m_identity = identity.str();
-
+      m_options["AdapterIdentity"] = m_identity;
       m_handler = m_pipeline->makeHandler();
       if (m_pipeline->hasContract())
         m_pipeline->build(m_options);

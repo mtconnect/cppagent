@@ -43,9 +43,16 @@ namespace mtconnect
       Pipeline(PipelineContextPtr context) : m_start(std::make_shared<Start>()), m_context(context)
       {
       }
-      virtual ~Pipeline() = default;
+      virtual ~Pipeline()
+      {
+        m_start->stop();
+      }
       virtual void build(const ConfigOptions &options) = 0;
-      void clear() { m_start = std::make_shared<Start>(); }
+      void clear()
+      {
+        m_start->stop();
+        m_start = std::make_shared<Start>();
+      }
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
 

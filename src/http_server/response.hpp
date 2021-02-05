@@ -145,7 +145,7 @@ namespace mtconnect
               << "\r\n"
                  "Content-length: "
               << body.length() << "\r\n\r\n"
-              << body;
+              << body << "\r\n\r\n";
 
           writeChunk(str.str());
         }

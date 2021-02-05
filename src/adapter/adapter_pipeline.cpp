@@ -79,6 +79,7 @@ namespace mtconnect
       m_options = options;
 
       TransformPtr next = bind(make_shared<ShdrTokenizer>());
+      auto identity = GetOption<string>(options, "AdapterIdentity");
 
       StringList devices;
       auto list = GetOption<StringList>(options, "AdditionalDevices");
@@ -110,7 +111,11 @@ namespace mtconnect
       mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
 
       // Go directly to asset delivery
-      mapper->bind(make_shared<DeliverAsset>(m_context));
+      std::optional<string> assetMetrics;
+      if (identity)
+        assetMetrics = *identity + "_asset_update_rate";
+
+      mapper->bind(make_shared<DeliverAsset>(m_context, assetMetrics));
       mapper->bind(make_shared<DeliverAssetCommand>(m_context));
 
       // Uppercase Events
@@ -127,7 +132,11 @@ namespace mtconnect
         next = next->bind(make_shared<ConvertSample>());
 
       // Deliver
-      next->bind(make_shared<DeliverObservation>(m_context));
+      std::optional<string> obsMetrics;
+      if (identity)
+        obsMetrics = *identity + "_observation_update_rate";
+      next->bind(make_shared<DeliverObservation>(m_context,
+                                                 obsMetrics));
     }
   }  // namespace adapter
 }  // namespace mtconnect

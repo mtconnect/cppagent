@@ -25,35 +25,95 @@ namespace mtconnect
 {
   namespace pipeline
   {
-    class DeliverObservation : public Transform
+    struct ComputeMetrics
+    {
+      ComputeMetrics(PipelineContract *contract,
+                            const std::optional<std::string> &dataItem,
+                            std::shared_ptr<size_t> &count)
+      : m_count(count), m_contract(contract), m_dataItem(dataItem)
+      {
+      }
+      
+      void operator()();
+      
+      void stop()
+      {
+        m_running = false;
+      }
+      
+      bool m_running{true};
+      std::shared_ptr<size_t> m_count;
+      PipelineContract *m_contract{nullptr};
+      std::optional<std::string> m_dataItem;
+    };
+    
+    class MeteredTransform : public Transform
+    {
+    public:
+      MeteredTransform(const std::string &name, PipelineContextPtr context,
+                         const std::optional<std::string> &metricsDataItem = std::nullopt)
+        : Transform(name),
+          m_contract(context->m_contract.get()),
+          m_count(std::make_shared<size_t>(0)),
+          m_metrics(m_contract, metricsDataItem, m_count)
+      {
+        m_hasMetrics = bool(metricsDataItem);
+      }
+      
+      void stop() override
+      {
+        m_metrics.stop();
+        if (m_metricsThread.joinable())
+          m_metricsThread.join();
+        
+        Transform::stop();
+      }
+      
+      void start()
+      {
+        if (m_hasMetrics)
+          m_metricsThread = std::thread(metricsThread, std::ref(m_metrics));
+      }
+    
+    protected:
+      static void metricsThread(ComputeMetrics &metrics)
+      {
+        metrics();
+      }
+      
+      PipelineContract *m_contract;
+      std::shared_ptr<size_t> m_count;
+      std::thread m_metricsThread;
+      ComputeMetrics m_metrics;
+      bool m_hasMetrics{false};
+    };
+    
+    class DeliverObservation : public MeteredTransform
     {
     public:
       using Deliver = std::function<void(observation::ObservationPtr)>;
-      DeliverObservation(PipelineContextPtr context)
-        : Transform("DeliverAsset"), m_contract(context->m_contract.get())
+      DeliverObservation(PipelineContextPtr context,
+                         const std::optional<std::string> &metricDataItem = std::nullopt)
+        : MeteredTransform("DeliverAsset", context, metricDataItem)
       {
         m_guard = TypeGuard<observation::Observation>(RUN);
+        start();
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
-
-    protected:
-      PipelineContract *m_contract;
     };
 
-    class DeliverAsset : public Transform
+    class DeliverAsset : public MeteredTransform
     {
     public:
       using Deliver = std::function<void(AssetPtr)>;
-      DeliverAsset(PipelineContextPtr context)
-        : Transform("DeliverAsset"), m_contract(context->m_contract.get())
+      DeliverAsset(PipelineContextPtr context, const std::optional<std::string> &metricsDataItem = std::nullopt)
+        : MeteredTransform("DeliverAsset", context, metricsDataItem)
       {
         m_guard = TypeGuard<Asset>(RUN);
+        start();
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
-
-    protected:
-      PipelineContract *m_contract;
-    };
+   };
 
     class DeliverConnectionStatus : public Transform
     {
