@@ -176,7 +176,7 @@ namespace mtconnect
     std::string m_uuid;
 
     // If receiving data, a sample rate is needed
-    float m_sampleInterval;
+    double m_sampleInterval;
 
     // Description of itself
     std::map<std::string, std::string> m_description;

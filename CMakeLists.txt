@@ -29,7 +29,7 @@ set(CXX_COMPILE_FEATURES cxx_std_17)
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
 # The first type will be used as the default build type if the user does not specify one.
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs")
 if(NOT CMAKE_BUILD_TYPE)
   list(GET CMAKE_CONFIGURATION_TYPES 0 _default_build_type)
   message(STATUS "Setting build type to '${_default_build_type}'.")

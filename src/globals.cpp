@@ -56,161 +56,6 @@ using namespace std::chrono;
 
 namespace mtconnect
 {
-  float stringToFloat(const std::string &text)
-  {
-    float value = 0.0;
-    try
-    {
-      value = stof(text);
-    }
-    catch (const std::out_of_range &)
-    {
-      value = 0.0;
-    }
-    catch (const std::invalid_argument &)
-    {
-      value = 0.0;
-    }
-    return value;
-  }
-
-  int stringToInt(const std::string &text, int outOfRangeDefault)
-  {
-    int value = 0.0;
-    try
-    {
-      value = stoi(text);
-    }
-    catch (const std::out_of_range &)
-    {
-      value = outOfRangeDefault;
-    }
-    catch (const std::invalid_argument &)
-    {
-      value = 0;
-    }
-    return value;
-  }
-
-  string floatToString(double f)
-  {
-    char s[32] = {0};
-    sprintf(s, "%.7g", f);
-    return (string)s;
-  }
-
-  string toUpperCase(string &text)
-  {
-    std::transform(text.begin(), text.end(), text.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
-
-    return text;
-  }
-
-  bool isNonNegativeInteger(const string &s)
-  {
-    for (const char c : s)
-    {
-      if (!isdigit(c))
-        return false;
-    }
-
-    return true;
-  }
-
-  bool isInteger(const string &s)
-  {
-    auto iter = s.cbegin();
-    if (*iter == '-' || *iter == '+')
-      ++iter;
-
-    for (; iter != s.end(); iter++)
-    {
-      if (!isdigit(*iter))
-        return false;
-    }
-
-    return true;
-  }
-
-  std::string getCurrentTime(TimeFormat format)
-  {
-    return getCurrentTime(system_clock::now(), format);
-  }
-
-  std::string getCurrentTime(time_point<system_clock> timePoint, TimeFormat format)
-  {
-    constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
-
-    switch (format)
-    {
-      case HUM_READ:
-        return date::format("%a, %d %b %Y %H:%M:%S GMT", date::floor<seconds>(timePoint));
-      case GMT:
-        return date::format(ISO_8601_FMT, date::floor<seconds>(timePoint));
-      case GMT_UV_SEC:
-        return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
-      case LOCAL:
-        auto time = system_clock::to_time_t(timePoint);
-        struct tm timeinfo = {0};
-        localtime_r(&time, &timeinfo);
-        char timestamp[64] = {0};
-        strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
-        return timestamp;
-    }
-
-    return "";
-  }
-
-  template <class timePeriod>
-  uint64_t getCurrentTimeIn()
-  {
-    return duration_cast<timePeriod>(system_clock::now().time_since_epoch()).count();
-  }
-
-  uint64_t getCurrentTimeInMicros() { return getCurrentTimeIn<microseconds>(); }
-
-  uint64_t getCurrentTimeInSec() { return getCurrentTimeIn<seconds>(); }
-
-  string getRelativeTimeString(uint64_t aTime)
-  {
-    char timeBuffer[50] = {0};
-    time_t seconds;
-    struct tm *timeinfo;
-
-    seconds = aTime / 1000000ull;
-    const int micros = static_cast<int>(aTime % 1000000ull);
-
-    timeinfo = gmtime(&seconds);
-    strftime(timeBuffer, 50, "%Y-%m-%dT%H:%M:%S", timeinfo);
-    sprintf(timeBuffer + strlen(timeBuffer), ".%06dZ", micros);
-
-    return string(timeBuffer);
-  }
-
-  void replaceIllegalCharacters(string &data)
-  {
-    for (auto i = 0u; i < data.length(); i++)
-    {
-      char c = data[i];
-
-      switch (c)
-      {
-        case '&':
-          data.replace(i, 1, "&amp;");
-          break;
-
-        case '<':
-          data.replace(i, 1, "&lt;");
-          break;
-
-        case '>':
-          data.replace(i, 1, "&gt;");
-          break;
-      }
-    }
-  }
-
   uint64_t parseTimeMicro(const std::string &aTime)
   {
     struct tm timeinfo;
@@ -256,7 +101,7 @@ namespace mtconnect
     return time + ms_v;
   }
 
-  static string::size_type insertPrefix(string &aPath, string::size_type &aPos,
+  inline string::size_type insertPrefix(string &aPath, string::size_type &aPos,
                                         const string aPrefix)
   {
     aPath.insert(aPos, aPrefix);
@@ -266,7 +111,7 @@ namespace mtconnect
     return aPos;
   }
 
-  static bool hasNamespace(const string &aPath, string::size_type aStart)
+  inline bool hasNamespace(const string &aPath, string::size_type aStart)
   {
     string::size_type len = aPath.length(), pos = aStart;
 

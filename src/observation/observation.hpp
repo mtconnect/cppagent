@@ -191,7 +191,7 @@ namespace mtconnect
         else if (iequals("unavailable", s))
           setLevel(UNAVAILABLE);
         else
-          throw entity::PropertyError("Invalid Condition LeveL: " + s);
+          throw entity::PropertyError("Invalid Condition Level: " + s);
       }
 
       void normal()

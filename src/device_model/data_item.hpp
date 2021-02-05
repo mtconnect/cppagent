@@ -99,7 +99,7 @@ namespace mtconnect
     const std::string &getStatistic() const { return m_statistic; }
     const std::string &getSampleRate() const { return m_sampleRate; }
     const std::string &getCompositionId() const { return m_compositionId; }
-    float getNativeScale() const { return m_nativeScale; }
+    double getNativeScale() const { return m_nativeScale; }
     double getConversionFactor() const { return m_conversionFactor; }
     double getConversionOffset() const { return m_conversionOffset; }
     bool hasFactor() const { return m_hasFactor; }
@@ -298,7 +298,7 @@ namespace mtconnect
     std::string m_compositionId;
 
     // Native scale of data item
-    float m_nativeScale;
+    double m_nativeScale;
     bool m_hasNativeScale;
     bool m_threeD;
     bool m_isMessage;

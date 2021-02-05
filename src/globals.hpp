@@ -94,31 +94,131 @@ namespace mtconnect
   };
 
   //####### METHODS #######
-  float stringToFloat(const std::string &text);
-  int stringToInt(const std::string &text, int outOfRangeDefault = 0);
+  inline double stringToFloat(const std::string &text)
+  {
+    double value = 0.0;
+    try
+    {
+      value = stof(text);
+    }
+    catch (const std::out_of_range &)
+    {
+      value = 0.0;
+    }
+    catch (const std::invalid_argument &)
+    {
+      value = 0.0;
+    }
+    return value;
+  }
+  
+  inline int stringToInt(const std::string &text, int outOfRangeDefault)
+  {
+    int value = 0.0;
+    try
+    {
+      value = stoi(text);
+    }
+    catch (const std::out_of_range &)
+    {
+      value = outOfRangeDefault;
+    }
+    catch (const std::invalid_argument &)
+    {
+      value = 0;
+    }
+    return value;
+  }
+
 
   // Convert a float to string
-  std::string floatToString(double f);
+  inline std::string floatToString(double f)
+  {
+    char s[32] = {0};
+    sprintf(s, "%.8g", f);
+    return std::string(s);
+  }
 
   // Convert a string to the same string with all upper case letters
-  std::string toUpperCase(std::string &text);
+  inline std::string toUpperCase(std::string &text)
+  {
+    std::transform(text.begin(), text.end(), text.begin(),
+                   [](unsigned char c) { return std::toupper(c); });
 
+    return text;
+  }
+  
   // Check if each char in a string is a positive integer
-  bool isNonNegativeInteger(const std::string &s);
-  bool isInteger(const std::string &s);
+  inline bool isNonNegativeInteger(const std::string &s)
+  {
+    for (const char c : s)
+    {
+      if (!isdigit(c))
+        return false;
+    }
+
+    return true;
+  }
+
+  inline bool isInteger(const std::string &s)
+  {
+    auto iter = s.cbegin();
+    if (*iter == '-' || *iter == '+')
+      ++iter;
+
+    for (; iter != s.end(); iter++)
+    {
+      if (!isdigit(*iter))
+        return false;
+    }
+
+    return true;
+  }
 
   // Get a specified time formatted
-  std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint,
-                             TimeFormat format);
+  inline std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint, TimeFormat format)
+  {
+    using namespace std;
+    using namespace std::chrono;
+    constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
+
+    switch (format)
+    {
+      case HUM_READ:
+        return date::format("%a, %d %b %Y %H:%M:%S GMT", date::floor<seconds>(timePoint));
+      case GMT:
+        return date::format(ISO_8601_FMT, date::floor<seconds>(timePoint));
+      case GMT_UV_SEC:
+        return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
+      case LOCAL:
+        auto time = system_clock::to_time_t(timePoint);
+        struct tm timeinfo = {0};
+        localtime_r(&time, &timeinfo);
+        char timestamp[64] = {0};
+        strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
+        return timestamp;
+    }
+
+    return "";
+  }
 
   // Get the current time formatted
-  std::string getCurrentTime(TimeFormat format);
+  inline std::string getCurrentTime(TimeFormat format)
+  {
+    return getCurrentTime(std::chrono::system_clock::now(), format);
+  }
+
+  template <class timePeriod>
+  inline uint64_t getCurrentTimeIn()
+  {
+    return std::chrono::duration_cast<timePeriod>(std::chrono::system_clock::now().time_since_epoch()).count();
+  }
+
 
   // time_t to the ms
-  uint64_t getCurrentTimeInMicros();
+  inline uint64_t getCurrentTimeInMicros() { return getCurrentTimeIn<std::chrono::microseconds>(); }
 
-  // Get the relative time from using an uint64 offset in ms to time_t as a web time
-  std::string getRelativeTimeString(uint64_t aTime);
+  inline uint64_t getCurrentTimeInSec() { return getCurrentTimeIn<std::chrono::seconds>(); }
 
   // Get the current time in number of seconds as an integer
   uint64_t getCurrentTimeInSec();
@@ -126,20 +226,52 @@ namespace mtconnect
   uint64_t parseTimeMicro(const std::string &aTime);
 
   // Replace illegal XML characters with the correct corresponding characters
-  void replaceIllegalCharacters(std::string &data);
+  inline void replaceIllegalCharacters(std::string &data)
+  {
+    for (auto i = 0u; i < data.length(); i++)
+    {
+      char c = data[i];
+
+      switch (c)
+      {
+        case '&':
+          data.replace(i, 1, "&amp;");
+          break;
+
+        case '<':
+          data.replace(i, 1, "&lt;");
+          break;
+
+        case '>':
+          data.replace(i, 1, "&gt;");
+          break;
+      }
+    }
+  }
 
   std::string addNamespace(const std::string aPath, const std::string aPrefix);
 
   // Ends with
-  inline bool ends_with(const std::string &value, const std::string &ending)
+  inline bool ends_with(const std::string &value, const std::string_view &ending)
   {
     if (ending.size() > value.size())
       return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
   }
 
-  inline bool iequals(const std::string &a, const std::string &b)
+  inline bool starts_with(const std::string &value, const std::string_view &beginning)
   {
+    if (beginning.size() > value.size())
+      return false;
+    return std::equal(beginning.begin(), beginning.end(), value.begin());
+  }
+
+  
+  inline bool iequals(const std::string &a, const std::string_view &b)
+  {
+    if (a.size() != b.size())
+      return false;
+    
     return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b) {
              return tolower(a) == tolower(b);
            });

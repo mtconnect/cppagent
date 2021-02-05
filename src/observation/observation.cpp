@@ -63,13 +63,14 @@ namespace mtconnect
         factory->registerFactory("Events:AssetRemoved", AssetEvent::getFactory());
         factory->registerFactory("Events:Alarm", Alarm::getFactory());
 
-        factory->registerFactory(regex(".+TimeSeries$"), Timeseries::getFactory());
-        factory->registerFactory(regex(".+DataSet$"), DataSetEvent::getFactory());
-        factory->registerFactory(regex(".+Table$"), TableEvent::getFactory());
-        factory->registerFactory(regex("^Condition:.+"), Condition::getFactory());
-        factory->registerFactory(regex("^Samples:.+:3D$"), ThreeSpaceSample::getFactory());
-        factory->registerFactory(regex("^Samples:.+"), Sample::getFactory());
-        factory->registerFactory(regex("^Events:.+"), Event::getFactory());
+        //regex(".+TimeSeries$")
+        factory->registerFactory([](const std::string &name) { return ends_with(name, "TimeSeries"); }, Timeseries::getFactory());
+        factory->registerFactory([](const std::string &name) { return ends_with(name, "DataSet"); }, DataSetEvent::getFactory());
+        factory->registerFactory([](const std::string &name) { return ends_with(name, "Table"); }, TableEvent::getFactory());
+        factory->registerFactory([](const std::string &name) { return starts_with(name, "Condition:"); }, Condition::getFactory());
+        factory->registerFactory([](const std::string &name) { return starts_with(name, "Samples:") && ends_with(name, ":3D"); }, ThreeSpaceSample::getFactory());
+        factory->registerFactory([](const std::string &name) { return starts_with(name, "Samples:"); }, Sample::getFactory());
+        factory->registerFactory([](const std::string &name) { return starts_with(name, "Events:"); }, Event::getFactory());
       }
       return factory;
     }
@@ -157,7 +158,7 @@ namespace mtconnect
       }
       if (!dataItem->isCondition())
         obs->setEntityName();
-      else
+      else if (!unavailable)
         dynamic_pointer_cast<Condition>(obs)->setLevel(level);
       return obs;
     }

@@ -55,7 +55,7 @@ namespace mtconnect
         }
       }
 
-      for (auto &f : m_regexFactory)
+      for (auto &f : m_matchFactory)
       {
         _dupFactory(f.second, factories);
       }

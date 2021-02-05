@@ -44,7 +44,7 @@ namespace mtconnect
     {
       auto c = key.find(':');
       if (c != string::npos)
-        return {key.substr(c + 1, string::npos), key.substr(0, c - 1)};
+        return {key.substr(c + 1, string::npos), key.substr(0, c)};
       else
         return {key, nullopt};
     }

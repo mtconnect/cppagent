@@ -32,9 +32,10 @@ namespace mtconnect
     public:
       using Function =
           std::function<std::shared_ptr<Entity>(const std::string &name, Properties &)>;
-      using RegexPair = std::pair<std::regex, FactoryPtr>;
+      using Matcher = std::function<bool(const std::string &)>;
+      using MatchPair = std::pair<Matcher, FactoryPtr>;
       using StringFactory = std::map<std::string, FactoryPtr>;
-      using RegexFactory = std::list<RegexPair>;
+      using MatchFactory = std::list<MatchPair>;
 
     public:
       // Factory Methods
@@ -149,7 +150,14 @@ namespace mtconnect
 
       bool registerFactory(const std::regex &exp, FactoryPtr factory)
       {
-        m_regexFactory.emplace_back(make_pair(exp, factory));
+        auto matcher = [exp](const std::string &name) { return std::regex_match(name, exp); };
+        m_matchFactory.emplace_back(make_pair(matcher, factory));
+        return true;
+      }
+
+      bool registerFactory(const Matcher &matcher, FactoryPtr factory)
+      {
+        m_matchFactory.emplace_back(make_pair(matcher, factory));
         return true;
       }
 
@@ -160,9 +168,9 @@ namespace mtconnect
           return it->second;
         else
         {
-          for (const auto &r : m_regexFactory)
+          for (const auto &r : m_matchFactory)
           {
-            if (std::regex_match(name, r.first))
+            if (r.first(name))
               return r.second;
           }
         }
@@ -245,7 +253,7 @@ namespace mtconnect
       void clear()
       {
         m_stringFactory.clear();
-        m_regexFactory.clear();
+        m_matchFactory.clear();
       }
 
     protected:
@@ -260,7 +268,7 @@ namespace mtconnect
       OrderMapPtr m_order;
 
       StringFactory m_stringFactory;
-      RegexFactory m_regexFactory;
+      MatchFactory m_matchFactory;
       bool m_isList{false};
       bool m_hasRaw{false};
       std::set<std::string> m_propertySets;
