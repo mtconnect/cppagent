@@ -55,7 +55,7 @@ namespace mtconnect
         if (auto source = data->maybeGet<std::string>("source"))
           props["source"] = *source;
         auto result = std::make_shared<Tokens>("Tokens", props);
-        result->m_tokens = tokenize(body);
+        tokenize(body, result->m_tokens);
         return next(result);
       }
 
@@ -84,68 +84,87 @@ namespace mtconnect
         else
           return str.substr(first, last - first + 1);
       }
-
-      static TokenList tokenize(const std::string &data)
+      
+      static inline void tokenize(const std::string &data, TokenList &tokens)
       {
         using namespace std;
-
-        TokenList tokens;
-        string text(data);
-
-        while (!text.empty())
+        auto cp = data.c_str();
+        std::string token;
+        bool copied{false};
+        while (*cp != '\0')
         {
-          smatch match;
-          auto res = regex_search(text.cbegin(), text.cend(), match, m_pattern);
-          if (res)
+          while (*cp != '\0' && isspace(*cp))
+            cp++;
+          
+          auto start = cp, orig = cp;
+          const char *end = 0;
+          if (*cp == '"')
           {
-            // Match 2 is a quoted string with escaped \| and match 5 is
-            // a simple pipe delimeter. Must be terminated with end of string or
-            // trailing pipe. Trim the text
-            if (match[2].matched)
-              tokens.emplace_back(trim(remove(match[2], '\\')));
-            else if (match[5].matched)
-              tokens.emplace_back(trim(match[5]));
-
-            // Check the suffix to see what we need to do next
-            auto &suff = match.suffix();
-            if (suff.first == suff.second && match[6].matched && match[6] == "|")
+            cp = ++start;
+            while (*cp != '\0')
             {
-              // If the text has just a pipe at the end, then we have an
-              // empty trailing token
-              text.clear();
-              tokens.emplace_back("");
+              if (*cp == '\\')
+              {
+                if (!copied)
+                {
+                  token = start;
+                  size_t dist = cp - start;
+                  start = token.c_str();
+                  cp = start + dist;
+                  copied = true;
+                }
+                memmove(const_cast<char*>(cp), cp + 1, strlen(cp));
+              }
+              else if (*cp == '|')
+              {
+                break;
+              }
+              else if (*cp == '"')
+              {
+                // Make sure there is a | or the string ends after the
+                // terminal ". Skip spaces.
+                auto nc = cp + 1;
+                while (*nc != '\0' && isspace(*nc))
+                  nc++;
+                if (*nc == '|' || *nc == '\0')
+                  end = cp;
+                else
+                  break;
+              }
+              
+              if (*cp != '\0')
+                cp++;
             }
-            else if (suff.first != suff.second)
+            // If there was no terminating '"'
+            if (end == 0 && copied)
             {
-              // Normal next token, grab the suffix after the '|' character
-              text = string(suff.first, suff.second);
-              if (text.empty())
-                tokens.emplace_back("");
-            }
-            else
-            {
-              // Nothing left
-              text.clear();
+              // Undo copy
+              cp = start = orig;
+              while (*cp != '|' && *cp != '\0')
+                cp++;
             }
           }
           else
           {
-            cout << "Cound not match: " << text << endl;
-            text.clear();
+            while (*cp != '|' && *cp != '\0')
+              cp++;
           }
+          
+          if (end == 0)
+            end = cp;
+
+          while (end > start && isspace(*(end - 1)))
+            end--;
+
+          tokens.emplace_back(start, end);
+          
+          // Handle terminal '|'
+          if (*cp == '|' && *(cp + 1) == '\0')
+            tokens.emplace_back("");
+          if (*cp != '\0')
+            cp++;
         }
-
-        return tokens;
       }
-
-    protected:
-      static inline const char *EXP =
-          "^("
-          R"RE("(([^"\\\|]*(\\\|)?)+)")RE"
-          "|"
-          R"RE(([^|]*))RE"
-          R"RE()(\||$))RE";
-      inline static std::regex m_pattern{EXP, std::regex::optimize | std::regex::ECMAScript};
     };
   }  // namespace pipeline
 }  // namespace mtconnect
