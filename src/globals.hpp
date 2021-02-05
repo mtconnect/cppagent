@@ -34,7 +34,6 @@
 #include <date/date.h>
 
 #include <chrono>
-#include <date/date.h>
 #include <ctime>
 #include <fstream>
 #include <limits>
@@ -194,7 +193,7 @@ namespace mtconnect
     else
       return false;
   }
-  
+
   inline std::string format(const Timestamp &ts)
   {
     using namespace std;

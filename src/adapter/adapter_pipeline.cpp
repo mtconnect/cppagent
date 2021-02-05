@@ -51,8 +51,8 @@ namespace mtconnect
         run(entity);
       };
       handler->m_connected = [this](const std::string &id) {
-        auto entity =
-            make_shared<Entity>("ConnectionStatus", Properties{{"VALUE", "CONNECTED"s}, {"id", id}});
+        auto entity = make_shared<Entity>("ConnectionStatus",
+                                          Properties{{"VALUE", "CONNECTED"s}, {"id", id}});
         run(entity);
       };
       handler->m_disconnected = [this](const std::string &id) {
