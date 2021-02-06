@@ -43,6 +43,7 @@
 #include <sstream>
 #include <string>
 #include <variant>
+#include <time.h>
 
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef _WINDOWS
@@ -175,6 +176,8 @@ namespace mtconnect
     return true;
   }
 
+  void mt_localtime(const time_t *time, struct tm *buf);
+
   // Get a specified time formatted
   inline std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint, TimeFormat format)
   {
@@ -193,7 +196,7 @@ namespace mtconnect
       case LOCAL:
         auto time = system_clock::to_time_t(timePoint);
         struct tm timeinfo = {0};
-        localtime_r(&time, &timeinfo);
+        mt_localtime(&time, &timeinfo);
         char timestamp[64] = {0};
         strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
         return timestamp;
@@ -201,6 +204,7 @@ namespace mtconnect
 
     return "";
   }
+  
 
   // Get the current time formatted
   inline std::string getCurrentTime(TimeFormat format)
