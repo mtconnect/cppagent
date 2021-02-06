@@ -44,9 +44,7 @@ namespace mtconnect
 
       using EachDataItem = std::function<void(const DataItem *di)>;
 
-      // TODO: Need to handle auto available in pipeline
       virtual Device *findDevice(const std::string &device) = 0;
-      ;
       virtual DataItem *findDataItem(const std::string &device, const std::string &name) = 0;
       virtual void eachDataItem(EachDataItem fun) = 0;
       virtual void deliverObservation(observation::ObservationPtr) = 0;

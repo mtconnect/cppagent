@@ -243,12 +243,6 @@ TEST_F(DataItemTest, Conversion)
 
   DataItem item5(attributes4);
 
-  // TODO: Need to rebuild pipeline w/o conversion and change options
-  
-//  Context context;
-//  Adapter adapter(context, "", 0);
-//  adapter.setConversionRequired(false);
-
   item5.setConversionRequired(false);
   ASSERT_TRUE(!item5.conversionRequired());
 

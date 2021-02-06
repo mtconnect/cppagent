@@ -671,6 +671,11 @@ TEST_F(AgentTest, SampleToParameter)
       ASSERT_XML_PATH_EQUAL(doc, line, to_string(start + j * 2 + 1).c_str());
     }
   }
+  
+  // TODO: Test negative conditions
+  // count < 0
+  // to > nextSequence
+  // to > from
 }
 
 
@@ -2597,3 +2602,44 @@ TEST_F(AgentTest, Put)
   }
   
 }
+
+#if 0
+// Test diabling of HTTP PUT or POST. This is handled before the request. Tested
+// in the server
+TEST_F(AgentTest, PutBlockingFrom)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                 8, 4, "1.3", 4, true);
+  
+  Routing::QueryMap queries;
+  string body;
+
+  m_agentTestHelper->m_server->allowPutFrom("192.168.0.1");
+
+  queries["time"] = "TIME";
+  queries["line"] = "205";
+  
+
+  {
+    PARSE_XML_RESPONSE_PUT("/LinuxCNC", body, queries);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT, POST, and DELETE are not allowed from 127.0.0.1");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "UNAVAILABLE");
+  }
+
+  // Retry request after adding ip address
+  m_agentTestHelper->m_server->allowPutFrom("127.0.0.1");
+
+  {
+    PARSE_XML_RESPONSE_PUT("/LinuxCNC", body, queries);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
+  }
+}
+#endif

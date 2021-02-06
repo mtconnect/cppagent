@@ -85,7 +85,6 @@ namespace mtconnect
     m_loopback = std::make_unique<AgentLoopbackPipeline>(context);
     m_loopback->build(options);
 
-    // TODO: Check Schema version before creating Agent Device. Only >= 1.7'
     int major, minor;
     char c;
     stringstream vstr(m_version);
@@ -668,11 +667,6 @@ namespace mtconnect
   {
     m_adapters.emplace_back(adapter);
 
-    // const auto dev = getDeviceByName(adapter->getDeviceName());
-    // TODO: Notify pipeline that auto available is needed
-    // if (dev && dev->m_availabilityAdded)
-    //  adapter->setAutoAvailable(true);
-
     if (start)
       adapter->start();
 
@@ -758,8 +752,7 @@ namespace mtconnect
       auto di = m_agentDevice->getConnectionStatus(adapter);
       addToBuffer(di, "CLOSED");
     }
-
-    // TODO: Clean up shared state for pipeline context
+    
     for (auto &name : devices)
     {
       Device *device = findDeviceByUUIDorName(name);
@@ -926,7 +919,6 @@ namespace mtconnect
 
     auto old = m_assetBuffer.addAsset(asset);
 
-    // TODO: Fix timestamp handling
     DataItem *cdi = asset->isRemoved() ? device->getAssetRemoved() : device->getAssetChanged();
     addToBuffer(cdi, {{"assetType", asset->getType()}, {"VALUE", asset->getAssetId()}},
                 asset->getTimestamp());

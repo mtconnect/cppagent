@@ -36,15 +36,6 @@
 #define _WINSOCKAPI_
 #include <windows.h>
 #include <winsock2.h>
-#endif
-
-#if 0
-#ifdef _WINDOWS
-#include <psapi.h>
-#endif
-#endif
-
-#ifdef _WINDOWS
 #define localtime_r(t, tm) localtime_s(tm, t)
 #define gmtime_r(t, tm) gmtime_s(tm, t)
 

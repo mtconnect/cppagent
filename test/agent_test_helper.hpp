@@ -128,6 +128,7 @@ class AgentTestHelper
 
     auto server = std::make_unique<http::Server>();
     server->enablePut(put);
+    m_server = server.get();
     auto cache = std::make_unique<http::FileCache>();
     m_agent = std::make_unique<mtconnect::Agent>(server, cache,
                                                  PROJECT_ROOT_DIR + file,
@@ -189,6 +190,7 @@ class AgentTestHelper
               << std::endl;
   }
 
+  http::Server *m_server{nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   adpt::Adapter *m_adapter{nullptr};
   bool m_dispatched { false };
