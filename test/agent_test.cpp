@@ -2488,7 +2488,8 @@ TEST_F(AgentTest, StreamData)
       ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
 
       auto delta = system_clock::now() - startTime;
-      ASSERT_TRUE(delta < (heartbeatFreq + 25ms));
+      //cout << "Delta: " << delta.count() << endl;
+      ASSERT_TRUE(delta < (heartbeatFreq + 35ms));
       ASSERT_TRUE(delta > heartbeatFreq);
       killThread.join();
     }
@@ -2521,6 +2522,7 @@ TEST_F(AgentTest, StreamData)
       PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
 
       auto delta = system_clock::now() - startTime;
+      //cout << "Delta: " << delta.count() << endl;
       ASSERT_LT(delta, (minExpectedResponse + 50ms));
       ASSERT_GT(delta, minExpectedResponse);
       addThread.join();
