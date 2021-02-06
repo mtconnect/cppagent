@@ -68,7 +68,7 @@ namespace mtconnect
         auto delta = count - last;
         
         double avg = delta + exp(-(10.0/60.0)) * (lastAvg - delta);
-        g_logger << dlib::LDEBUG << *m_dataItem << " - Agerage for last 1 minutes: " << (avg/10.0);
+        g_logger << dlib::LDEBUG << *m_dataItem << " - Average for last 1 minutes: " << (avg/10.0);
         g_logger << dlib::LDEBUG << *m_dataItem << " - Delta for last 10 seconds: " << (double(delta)/10.0);
 
         last = count;

@@ -658,7 +658,6 @@ TEST_F(AgentTest, SampleToParameter)
     query["from"] = to_string(seq - 10);
 
     PARSE_XML_RESPONSE_QUERY("/sample", query);
-    m_agentTestHelper->printResponse();
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + 1).c_str());
 
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 5);
