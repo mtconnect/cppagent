@@ -1203,7 +1203,7 @@ namespace mtconnect
     SequenceNumber_t end;
     bool endOfBuffer;
 
-    return {fetchSampleData(printer, filter, count, from, nullopt, end, endOfBuffer), OK,
+    return {fetchSampleData(printer, filter, count, from, to, end, endOfBuffer), OK,
             printer->mimeType()};
   }
 
@@ -1718,19 +1718,23 @@ namespace mtconnect
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
     auto firstSeq = getFirstSequence();
     auto seq = m_circularBuffer.getSequence();
+    int upperCountLimit = m_circularBuffer.getBufferSize() + 1;
+    int lowerCountLimit = -upperCountLimit;
+
     if (from)
     {
       checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
     }
     if (to)
     {
-      checkRange(printer, *to, firstSeq - 1, seq + 1, "to");
+      auto lower = from ? *from : firstSeq;
+      checkRange(printer, *to, lower, seq + 1, "to");
+      lowerCountLimit = 0;
     }
-    int countLimit = m_circularBuffer.getBufferSize() + 1;
-    checkRange(printer, count, -countLimit, countLimit, "count", true);
+    checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
 
     auto events =
-        m_circularBuffer.getObservations(count, filterSet, from, end, firstSeq, endOfBuffer);
+        m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
 
     if (observer)
       observer->reset();

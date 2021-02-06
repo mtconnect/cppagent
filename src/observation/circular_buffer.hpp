@@ -156,6 +156,7 @@ namespace mtconnect
 
       std::unique_ptr<ObservationList> getObservations(int count, const FilterSetOpt &filterSet,
                                                        const std::optional<SequenceNumber_t> start,
+                                                       const std::optional<SequenceNumber_t> to,
                                                        SequenceNumber_t &end,
                                                        SequenceNumber_t &firstSeq,
                                                        bool &endOfBuffer)
@@ -171,13 +172,23 @@ namespace mtconnect
         // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
         if (count >= 0)
         {
-          first = (!start || *start <= firstSeq) ? firstSeq : *start;
+          if (to)
+          {
+            if (start && *start > firstSeq)
+              firstSeq = *start;
+            first = *to;
+            inc = -1;
+          }
+          else
+          {
+            first = (start && *start > firstSeq) ? *start : firstSeq;
+            inc = 1;
+          }
           limit = count;
-          inc = 1;
         }
         else
         {
-          first = (!start || *start >= m_sequence) ? m_sequence - 1 : *start;
+          first = (start && *start < m_sequence) ?  *start : m_sequence - 1;
           limit = -count;
           inc = -1;
         }
@@ -194,7 +205,10 @@ namespace mtconnect
           }
         }
 
-        end = i;
+        if (to)
+          end = first < m_sequence ? first + 1 : m_sequence;
+        else
+          end = i;
 
         if (count >= 0)
           endOfBuffer = i >= m_sequence;

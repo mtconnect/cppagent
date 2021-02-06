@@ -612,6 +612,67 @@ TEST_F(AgentTest, SampleLastCount)
   }
 }
 
+TEST_F(AgentTest, SampleToParameter)
+{
+  Routing::QueryMap query;
+  addAdapter();
+  auto agent = m_agentTestHelper->m_agent.get();
+
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d|Xact|%d", i, i);
+    m_agentTestHelper->m_adapter->processData(line);
+  }
+  
+  auto seq = agent->getSequence() - 20;
+
+  {
+    query["path"] = "//DataItem[@name='Xact']";
+    query["count"] = "10";
+    query["to"] = to_string(seq);
+
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + 1).c_str());
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
+
+    // Make sure we got 10 lines
+    int start = seq - 20;
+    for (int j = 0; j < 10; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      ASSERT_XML_PATH_EQUAL(doc, line, to_string(start + j * 2 + 1).c_str());
+    }
+  }
+
+
+  {
+    query["path"] = "//DataItem[@name='Xact']";
+    query["count"] = "10";
+    query["to"] = to_string(seq);
+    query["from"] = to_string(seq - 10);
+
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    m_agentTestHelper->printResponse();
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + 1).c_str());
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 5);
+
+    // Make sure we got 10 lines
+    int start = seq - 10;
+    for (int j = 0; j < 5; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      ASSERT_XML_PATH_EQUAL(doc, line, to_string(start + j * 2 + 1).c_str());
+    }
+  }
+}
+
 
 TEST_F(AgentTest, EmptyStream)
 {
