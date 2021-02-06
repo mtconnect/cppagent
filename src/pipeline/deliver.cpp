@@ -59,7 +59,7 @@ namespace mtconnect
       auto di = m_contract->findDataItem("Agent", *m_dataItem);
       if (di == nullptr)
         return;
-      
+            
       size_t last{0};
       double lastAvg{0.0};
       while (m_running)
@@ -80,7 +80,6 @@ namespace mtconnect
           m_contract->deliverObservation(obs);
           lastAvg = avg;
         }
-        
         this_thread::sleep_for(10s);
       }
     }

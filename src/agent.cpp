@@ -116,6 +116,8 @@ namespace mtconnect
 
   Agent::~Agent()
   {
+    for (auto adp : m_adapters)
+      delete adp;
     m_xmlParser.reset();
     m_agentDevice = nullptr;
     for (auto &i : m_devices)

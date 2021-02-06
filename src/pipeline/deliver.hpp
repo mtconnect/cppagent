@@ -55,37 +55,48 @@ namespace mtconnect
         : Transform(name),
           m_contract(context->m_contract.get()),
           m_count(std::make_shared<size_t>(0)),
-          m_metrics(m_contract, metricsDataItem, m_count)
+          m_dataItem(metricsDataItem)
       {
-        m_hasMetrics = bool(metricsDataItem);
       }
+      
+      ~MeteredTransform() override = default;
       
       void stop() override
       {
-        m_metrics.stop();
-        if (m_metricsThread.joinable())
-          m_metricsThread.join();
-        
+        using namespace std;
+        if (m_metrics)
+        {
+          m_metrics->stop();
+          if (m_metricsThread.joinable())
+            m_metricsThread.join();
+          m_metrics.reset();
+        }
         Transform::stop();
       }
       
       void start()
       {
-        if (m_hasMetrics)
+        if (m_dataItem)
+        {
+          m_metrics = std::make_shared<ComputeMetrics>(m_contract, m_dataItem, m_count);
           m_metricsThread = std::thread(metricsThread, std::ref(m_metrics));
+        }
       }
     
     protected:
-      static void metricsThread(ComputeMetrics &metrics)
+      friend struct ComputeMetrics;
+      
+      static void metricsThread(std::shared_ptr<ComputeMetrics> &metrics)
       {
-        metrics();
+        if (metrics->m_running)
+          (*metrics)();
       }
       
       PipelineContract *m_contract;
       std::shared_ptr<size_t> m_count;
       std::thread m_metricsThread;
-      ComputeMetrics m_metrics;
-      bool m_hasMetrics{false};
+      std::shared_ptr<ComputeMetrics> m_metrics;
+      std::optional<std::string> m_dataItem;
     };
     
     class DeliverObservation : public MeteredTransform
@@ -94,7 +105,7 @@ namespace mtconnect
       using Deliver = std::function<void(observation::ObservationPtr)>;
       DeliverObservation(PipelineContextPtr context,
                          const std::optional<std::string> &metricDataItem = std::nullopt)
-        : MeteredTransform("DeliverAsset", context, metricDataItem)
+        : MeteredTransform("DeliverObservation", context, metricDataItem)
       {
         m_guard = TypeGuard<observation::Observation>(RUN);
         start();
