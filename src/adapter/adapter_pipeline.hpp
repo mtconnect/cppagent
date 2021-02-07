@@ -37,7 +37,6 @@ namespace mtconnect
       AdapterPipeline(pipeline::PipelineContextPtr context) : Pipeline(context) {}
 
       void build(const ConfigOptions &options) override;
-
       std::unique_ptr<adapter::Handler> makeHandler();
 
     protected:

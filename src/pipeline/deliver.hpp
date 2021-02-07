@@ -74,24 +74,22 @@ namespace mtconnect
         Transform::stop();
       }
       
-      void start()
+      void start() override
       {
         if (m_dataItem)
         {
-          m_metrics = std::make_shared<ComputeMetrics>(m_contract, m_dataItem, m_count);
-          m_metricsThread = std::thread(metricsThread, std::ref(m_metrics));
+          auto metrics = m_metrics = std::make_shared<ComputeMetrics>(m_contract, m_dataItem, m_count);
+          
+          m_metricsThread = std::thread([metrics]() {
+            if (metrics->m_running)
+              (*metrics)();
+          });
         }
       }
     
     protected:
       friend struct ComputeMetrics;
-      
-      static void metricsThread(std::shared_ptr<ComputeMetrics> &metrics)
-      {
-        if (metrics->m_running)
-          (*metrics)();
-      }
-      
+            
       PipelineContract *m_contract;
       std::shared_ptr<size_t> m_count;
       std::thread m_metricsThread;
@@ -108,7 +106,6 @@ namespace mtconnect
         : MeteredTransform("DeliverObservation", context, metricDataItem)
       {
         m_guard = TypeGuard<observation::Observation>(RUN);
-        start();
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
     };
@@ -121,7 +118,6 @@ namespace mtconnect
         : MeteredTransform("DeliverAsset", context, metricsDataItem)
       {
         m_guard = TypeGuard<Asset>(RUN);
-        start();
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
    };

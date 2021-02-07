@@ -53,6 +53,11 @@ namespace mtconnect
         m_start->stop();
         m_start = std::make_shared<Start>();
       }
+      virtual void start()
+      {
+        if (m_start)
+          m_start->start();        
+      }
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
 

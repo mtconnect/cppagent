@@ -58,7 +58,7 @@ namespace mtconnect
       Connect m_disconnected;
     };
 
-    class Adapter : public Connector, public threaded_object
+    class Adapter : public Connector
     {
     public:
       // Associate adapter with a device & connect to the server & port
@@ -105,7 +105,12 @@ namespace mtconnect
       const std::string &getUrl() const { return m_url; }
       const std::string &getIdentity() const { return m_identity; }
 
-      // Stop
+      // Start and Stop
+      void start()
+      {
+        m_thread = std::thread([this]() { thread(); });
+        m_pipeline->start();
+      }
       void stop();
 
       // For the additional devices associated with this adapter
@@ -120,13 +125,7 @@ namespace mtconnect
       }
 
     protected:
-      void parseCalibration(const std::string &calibString);
-      void processAsset(std::istringstream &toParse, const std::string &key,
-                        const std::string &value, const std::string &time);
-      bool processDataItem(std::istringstream &toParse, const std::string &line,
-                           const std::string &key, const std::string &value,
-                           const std::string &time, double offset, bool first = false);
-      std::string extractTime(const std::string &time, double &offset);
+      void thread();
 
     protected:
       std::unique_ptr<Handler> m_handler;
@@ -138,6 +137,7 @@ namespace mtconnect
 
       // If the connector has been running
       bool m_running;
+      std::thread m_thread;
 
       std::optional<std::string> m_terminator;
       std::stringstream m_body;
@@ -147,9 +147,7 @@ namespace mtconnect
 
       ConfigOptions m_options;
 
-    private:
-      // Inherited and is run as part of the threaded_object
-      void thread() override;
+      
     };
   }  // namespace adapter
 }  // namespace mtconnect

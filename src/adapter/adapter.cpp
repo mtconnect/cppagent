@@ -74,7 +74,8 @@ namespace mtconnect
       // Will stop threaded object gracefully Adapter::thread()
       m_running = false;
       close();
-      wait();
+      if (m_thread.joinable())
+        m_thread.join();
     }
 
     void Adapter::processData(const string &data)

@@ -55,7 +55,12 @@ namespace mtconnect
         for (auto &t : m_next)
           t->stop();
       }
-      
+      virtual void start()
+      {
+        for (auto &t : m_next)
+          t->start();
+      }
+
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
 

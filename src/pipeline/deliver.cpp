@@ -28,7 +28,7 @@ namespace mtconnect
 
   namespace pipeline
   {
-    static dlib::logger g_logger("agent_device");
+    static dlib::logger g_logger("pipeline.deliver");
 
     const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
     {
@@ -52,14 +52,18 @@ namespace mtconnect
       using namespace std;
       using namespace chrono;
       using namespace chrono_literals;
-      
+            
       if (!m_dataItem)
         return;
       
       auto di = m_contract->findDataItem("Agent", *m_dataItem);
       if (di == nullptr)
+      {
+        g_logger << LWARN << "Could not find data item: " <<
+          *m_dataItem << ", exiting metrics";
         return;
-            
+      }
+
       size_t last{0};
       double lastAvg{0.0};
       while (m_running)
