@@ -221,12 +221,7 @@ namespace mtconnect
       }
 
       // ----------------- double
-      void operator()(const double arg, string &v)
-      {
-        stringstream s;
-        s << arg;
-        v = s.str();
-      }
+      void operator()(const double arg, string &v) { v = format(arg); }
       void operator()(const double arg, int64_t &v) { v = arg; }
       void operator()(const double arg, bool &v) { v = arg != 0.0; }
       void operator()(const double arg, Vector &v) { v.emplace_back(arg); }
@@ -262,7 +257,7 @@ namespace mtconnect
         {
           stringstream s;
           for (auto &v : arg)
-            s << v << ' ';
+            s << format(v) << ' ';
           v = string_view(s.str().c_str(), s.str().size() - 1);
         }
       }

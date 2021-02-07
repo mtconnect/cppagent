@@ -92,7 +92,7 @@ TEST_F(ComponentTest, GetAttributes)
   ASSERT_EQ((string) "3", attributes2.at("id"));
   ASSERT_EQ((string) "ComponentTest2", attributes2.at("name"));
   ASSERT_EQ((string) "UnivUniqId2", attributes2.at("uuid"));
-  ASSERT_EQ((string) "123.4", attributes2.at("sampleInterval"));
+  ASSERT_EQ((string) "123.400001525879", attributes2.at("sampleInterval"));
 }
 
 TEST_F(ComponentTest, Description)

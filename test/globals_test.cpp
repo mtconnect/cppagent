@@ -38,10 +38,10 @@ TEST(GlobalsTest, IntToString)
 
 TEST(GlobalsTest, FloatToString)
 {
-  ASSERT_EQ((string) "1.234", floatToString(1.234));
-  ASSERT_EQ((string) "0", floatToString(0.0));
-  ASSERT_EQ((string) "0.123456", floatToString(.123456));
-  ASSERT_EQ((string) "1", floatToString(1.0));
+  ASSERT_EQ((string) "1.234", format(1.234));
+  ASSERT_EQ((string) "0", format(0.0));
+  ASSERT_EQ((string) "0.123456", format(.123456));
+  ASSERT_EQ((string) "1", format(1.0));
 }
 
 TEST(GlobalsTest, ToUpperCase)

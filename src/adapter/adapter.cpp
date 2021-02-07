@@ -63,21 +63,6 @@ namespace mtconnect
         m_pipeline->build(m_options);
     }
 
-    Adapter::~Adapter()
-    {
-      if (m_running)
-        stop();
-    }
-
-    void Adapter::stop()
-    {
-      // Will stop threaded object gracefully Adapter::thread()
-      m_running = false;
-      close();
-      if (m_thread.joinable())
-        m_thread.join();
-    }
-
     void Adapter::processData(const string &data)
     {
       if (m_terminator)

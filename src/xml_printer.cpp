@@ -555,7 +555,7 @@ namespace mtconnect
         {
           AutoElement ele(writer, group.first);
           for (const auto &limit : group.second)
-            addSimpleElement(writer, limit.first, floatToString(limit.second));
+            addSimpleElement(writer, limit.first, format(limit.second));
         }
       }
       else
@@ -564,7 +564,7 @@ namespace mtconnect
         if (group)
         {
           for (const auto &limit : *group)
-            addSimpleElement(writer, limit.first, floatToString(limit.second));
+            addSimpleElement(writer, limit.first, format(limit.second));
         }
       }
     }
@@ -760,14 +760,14 @@ namespace mtconnect
       if (dataItem->hasMinimumDelta())
       {
         map<string, string> attributes;
-        auto value = floatToString(dataItem->getFilterValue());
+        auto value = format(dataItem->getFilterValue());
         addSimpleElement(writer, "Filter", value, {{"type", "MINIMUM_DELTA"}});
       }
 
       if (dataItem->hasMinimumPeriod())
       {
         map<string, string> attributes;
-        auto value = floatToString(dataItem->getFilterPeriod());
+        auto value = format(dataItem->getFilterPeriod());
         attributes["type"] = "PERIOD";
         addSimpleElement(writer, "Filter", value, {{"type", "PERIOD"}});
       }

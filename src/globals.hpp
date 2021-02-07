@@ -44,6 +44,7 @@
 #include <string>
 #include <variant>
 #include <time.h>
+#include <charconv>
 
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef _WINDOWS
@@ -133,11 +134,12 @@ namespace mtconnect
 
 
   // Convert a float to string
-  inline std::string floatToString(double f)
+  inline std::string format(double value)
   {
-    char s[32] = {0};
-    sprintf(s, "%.8g", f);
-    return std::string(s);
+    std::stringstream s;
+    int precision = std::numeric_limits<double>::digits10;
+    s << std::setprecision(precision) << value;
+    return s.str();
   }
 
   // Convert a string to the same string with all upper case letters

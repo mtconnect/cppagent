@@ -107,7 +107,7 @@ begin
         f, r = l.chomp.split('|', 2)
       
         if fast
-          sleep 0.01
+          sleep 0.001
         elsif scenario
           if f == nil
             f = 1

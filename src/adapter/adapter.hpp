@@ -67,7 +67,11 @@ namespace mtconnect
       Adapter(const Adapter &) = delete;
 
       // Virtual destructor
-      ~Adapter() override;
+      ~Adapter() override
+      {
+        if (m_running)
+          stop();
+      }
 
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
 
@@ -111,7 +115,14 @@ namespace mtconnect
         m_thread = std::thread([this]() { thread(); });
         m_pipeline->start();
       }
-      void stop();
+      void stop()
+      {
+        // Will stop threaded object gracefully Adapter::thread()
+        m_running = false;
+        close();
+        if (m_thread.joinable())
+          m_thread.join();
+      }
 
       // For the additional devices associated with this adapter
       void addDevice(std::string &device);

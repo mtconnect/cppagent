@@ -229,7 +229,7 @@ namespace mtconnect
       attributes["units"] = m_units;
 
     if (m_hasNativeScale)
-      attributes["nativeScale"] = floatToString(m_nativeScale);
+      attributes["nativeScale"] = format(m_nativeScale);
 
     if (m_hasSignificantDigits)
       attributes["significantDigits"] = to_string(m_significantDigits);

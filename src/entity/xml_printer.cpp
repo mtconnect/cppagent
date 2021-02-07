@@ -97,7 +97,7 @@ namespace mtconnect
                            addSimpleElement(writer, "Entry", to_string(i), attrs);
                          },
                          [&writer, &attrs](const double &d) {
-                           addSimpleElement(writer, "Entry", to_string(d), attrs);
+                           addSimpleElement(writer, "Entry", format(d), attrs);
                          },
                          [&writer, &attrs](const DataSet &row) {
                            // Table
@@ -114,7 +114,7 @@ namespace mtconnect
                                          addSimpleElement(writer, "Cell", to_string(i), attrs);
                                        },
                                        [&writer, &attrs](const double &d) {
-                                         addSimpleElement(writer, "Cell", floatToString(d), attrs);
+                                         addSimpleElement(writer, "Cell", format(d), attrs);
                                        },
                                        [](auto &a) {
                                          g_logger << dlib::LERROR

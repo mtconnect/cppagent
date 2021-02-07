@@ -88,7 +88,7 @@ namespace mtconnect
       attributes["name"] = m_name;
 
     if (m_sampleInterval != 0.0f)
-      attributes["sampleInterval"] = floatToString(m_sampleInterval);
+      attributes["sampleInterval"] = format(m_sampleInterval);
 
     if (!m_uuid.empty())
       attributes["uuid"] = m_uuid;
