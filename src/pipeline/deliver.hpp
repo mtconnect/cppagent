@@ -59,18 +59,14 @@ namespace mtconnect
       {
       }
       
-      ~MeteredTransform() override = default;
+      ~MeteredTransform() override
+      {
+        stopThread();
+      }
       
       void stop() override
       {
-        using namespace std;
-        if (m_metrics)
-        {
-          m_metrics->stop();
-          if (m_metricsThread.joinable())
-            m_metricsThread.join();
-          m_metrics.reset();
-        }
+        stopThread();
         Transform::stop();
       }
       
@@ -89,6 +85,18 @@ namespace mtconnect
     
     protected:
       friend struct ComputeMetrics;
+      
+      void stopThread()
+      {
+        using namespace std;
+        if (m_metrics)
+        {
+          m_metrics->stop();
+          if (m_metricsThread.joinable())
+            m_metricsThread.join();
+          m_metrics.reset();
+        }
+      }
             
       PipelineContract *m_contract;
       std::shared_ptr<size_t> m_count;

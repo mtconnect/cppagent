@@ -20,6 +20,8 @@
 #include "entity.hpp"
 
 #include <set>
+#include <map>
+#include <unordered_map>
 
 namespace mtconnect
 {
@@ -34,7 +36,7 @@ namespace mtconnect
           std::function<std::shared_ptr<Entity>(const std::string &name, Properties &)>;
       using Matcher = std::function<bool(const std::string &)>;
       using MatchPair = std::pair<Matcher, FactoryPtr>;
-      using StringFactory = std::map<std::string, FactoryPtr>;
+      using StringFactory = std::unordered_map<std::string, FactoryPtr>;
       using MatchFactory = std::list<MatchPair>;
 
     public:

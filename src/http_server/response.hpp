@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <variant>
+#include <unordered_map>
 
 namespace mtconnect
 {
@@ -206,8 +207,8 @@ namespace mtconnect
     protected:
       std::ostream &m_out;
       std::string m_boundary;
-      static const std::map<uint16_t, std::string> m_status;
-      static const std::map<std::string, uint16_t> m_codes;
+      static const std::unordered_map<uint16_t, std::string> m_status;
+      static const std::unordered_map<std::string, uint16_t> m_codes;
     };
   }  // namespace http_server
 }  // namespace mtconnect

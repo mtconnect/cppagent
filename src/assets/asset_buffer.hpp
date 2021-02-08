@@ -23,6 +23,7 @@
 
 #include <list>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <mutex>
 
@@ -32,10 +33,10 @@ namespace mtconnect
   {
   public:
     using Index = std::map<std::string, AssetPtr>;
-    using SecondaryIndex = std::map<std::string, Index>;
+    using SecondaryIndex = std::unordered_map<std::string, Index>;
     using TypeCount = std::map<std::string, int>;
     using Buffer = AssetList;
-    using RemoveCount = std::map<std::string, size_t>;
+    using RemoveCount = std::unordered_map<std::string, size_t>;
 
     AssetBuffer(size_t max) : m_maxAssets(max) {}
     ~AssetBuffer() = default;

@@ -32,6 +32,7 @@
 #include <chrono>
 #include <list>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <set>
 #include <sstream>
@@ -313,9 +314,9 @@ namespace mtconnect
     // Data containers
     std::list<adapter::Adapter *> m_adapters;
     std::list<Device *> m_devices;
-    std::map<std::string, Device *> m_deviceNameMap;
-    std::map<std::string, Device *> m_deviceUuidMap;
-    std::map<std::string, DataItem *> m_dataItemMap;
+    std::unordered_map<std::string, Device *> m_deviceNameMap;
+    std::unordered_map<std::string, Device *> m_deviceUuidMap;
+    std::unordered_map<std::string, DataItem *> m_dataItemMap;
 
     // Loopback
     std::unique_ptr<AgentLoopbackPipeline> m_loopback;

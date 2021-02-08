@@ -21,6 +21,7 @@
 #include "globals.hpp"
 
 #include <map>
+#include <unordered_map>
 
 namespace mtconnect
 {
@@ -55,7 +56,7 @@ namespace mtconnect
     }
 
     // Return the mapping of Device to data items
-    const std::map<std::string, DataItem *> &getDeviceDataItems() const
+    const std::unordered_map<std::string, DataItem *> &getDeviceDataItems() const
     {
       return m_deviceDataItemsById;
     }
@@ -83,9 +84,9 @@ namespace mtconnect
     DataItem *m_assetRemoved;
 
     // Mapping of device names to data items
-    std::map<std::string, DataItem *> m_deviceDataItemsByName;
-    std::map<std::string, DataItem *> m_deviceDataItemsById;
-    std::map<std::string, DataItem *> m_deviceDataItemsBySource;
-    std::map<std::string, Component *> m_componentsById;
+    std::unordered_map<std::string, DataItem *> m_deviceDataItemsByName;
+    std::unordered_map<std::string, DataItem *> m_deviceDataItemsById;
+    std::unordered_map<std::string, DataItem *> m_deviceDataItemsBySource;
+    std::unordered_map<std::string, Component *> m_componentsById;
   };
 }  // namespace mtconnect

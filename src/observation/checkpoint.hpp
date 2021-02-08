@@ -20,6 +20,7 @@
 #include "globals.hpp"
 #include "observation.hpp"
 
+#include <unordered_map>
 #include <map>
 #include <set>
 #include <string>
@@ -46,7 +47,7 @@ namespace mtconnect
       void filter(const FilterSet &filterSet);
       bool hasFilter() const { return bool(m_filter); }
 
-      const std::map<std::string, ObservationPtr> &getObservations() const
+      const std::unordered_map<std::string, ObservationPtr> &getObservations() const
       {
         return m_observations;
       }
@@ -66,7 +67,7 @@ namespace mtconnect
       void addObservation(const DataSetEventPtr event, ObservationPtr &&old);
 
     protected:
-      std::map<std::string, ObservationPtr> m_observations;
+      std::unordered_map<std::string, ObservationPtr> m_observations;
       FilterSetOpt m_filter;
     };
   }  // namespace observation
