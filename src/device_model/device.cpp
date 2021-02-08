@@ -18,7 +18,6 @@
 #include "device.hpp"
 
 #include <dlib/logger.h>
-#include <dlib/misc_api.h>
 
 using namespace std;
 

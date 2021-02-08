@@ -22,7 +22,6 @@
 #include "device_model/data_item.hpp"
 #include "entity/entity.hpp"
 #include "globals.hpp"
-#include "ref_counted.hpp"
 
 #include <date/date.h>
 

@@ -46,10 +46,6 @@ using namespace mtconnect::entity;
 
 class AssetBufferTest : public testing::Test
 {
- public:
-  typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
-  using queue_type = dlib::queue<std::string>::kernel_1a_c;
-
  protected:
   void SetUp() override
   {

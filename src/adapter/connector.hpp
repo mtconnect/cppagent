@@ -22,8 +22,10 @@
 #include <dlib/server.h>
 #include <dlib/sockets.h>
 
+#include <thread>
 #include <chrono>
 #include <mutex>
+#include <condition_variable>
 
 #define HEARTBEAT_FREQ 60000
 
@@ -111,11 +113,11 @@ namespace mtconnect
       std::chrono::time_point<std::chrono::system_clock> m_lastHeartbeat;
       std::chrono::time_point<std::chrono::system_clock> m_lastSent;
 
+      
       std::mutex m_commandLock;
-
-      bool m_connectActive;
-      dlib::mutex *m_connectionMutex;
-      dlib::signaler *m_connectionClosed;
+      bool m_connectionActive;
+      std::mutex m_connectionMutex;;
+      std::condition_variable m_connectionCondition;
 
     private:
       // Size of buffer to read at a time from the socket

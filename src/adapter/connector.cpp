@@ -40,42 +40,14 @@ namespace mtconnect
         m_realTime(false),
         m_heartbeatFrequency{HEARTBEAT_FREQ},
         m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
-        m_connectActive(false)
+        m_connectionActive(false)
     {
-      m_connectionMutex = new dlib::mutex;
-      m_connectionClosed = new dlib::signaler(*m_connectionMutex);
     }
 
     Connector::~Connector()
     {
-      delete m_connectionClosed;
-      m_connectionClosed = nullptr;
-      delete m_connectionMutex;
-      m_connectionMutex = nullptr;
+      close();
     }
-
-    class AutoSignal
-    {
-    public:
-      AutoSignal(dlib::mutex *mutex, dlib::signaler *signal, bool *var)
-        : m(mutex), s(signal), v(var)
-      {
-        dlib::auto_mutex lock(*m);
-        *v = true;
-      }
-
-      ~AutoSignal()
-      {
-        dlib::auto_mutex lock(*m);
-        *v = false;
-        s->signal();
-      }
-
-    private:
-      dlib::mutex *m;
-      dlib::signaler *s;
-      bool *v;
-    };
 
     void Connector::connect()
     {
@@ -84,10 +56,10 @@ namespace mtconnect
 
       const char *ping = "* PING\n";
 
-      AutoSignal sig(m_connectionMutex, m_connectionClosed, &m_connectActive);
-
       try
       {
+        m_connectionActive = true;
+        
         // Connect to server:port, failure will throw dlib::socket_error exception
         // Using a smart pointer to ensure connection is deleted if exception thrown
         g_logger << LDEBUG << "Connecting to data source: " << m_server << " on port: " << m_port;
@@ -229,8 +201,6 @@ namespace mtconnect
 
         g_logger << LERROR << "(Port:" << m_localPort << ")"
                  << "connect: Connection exited with status: " << status;
-        m_connectActive = false;
-        close();
       }
       catch (dlib::socket_error &e)
       {
@@ -242,6 +212,17 @@ namespace mtconnect
         g_logger << LERROR << "(Port:" << m_localPort << ")"
                  << "connect: Exception in connect: " << e.what();
       }
+      catch (...)
+      {
+        g_logger << LERROR << "(Port:" << m_localPort << ")"
+                 << "connect: Unknown Exception in connect";
+      }
+      {
+        std::lock_guard<std::mutex> lk(m_connectionMutex);
+        m_connectionActive = false;
+        m_connectionCondition.notify_all();
+      }
+      close();
     }
 
     void Connector::parseBuffer(const char *buffer)
@@ -360,19 +341,29 @@ namespace mtconnect
 
     void Connector::close()
     {
-      dlib::auto_mutex lock(*m_connectionMutex);
-
       if (m_connected && m_connection.get())
       {
         // Shutdown the socket and close the connection.
-        m_connected = false;
-        m_connection->shutdown();
+        try
+        {
+          m_connected = false;
+          m_connection->shutdown();
+        }
+        catch (exception &e)
+        {
+          g_logger << LERROR << "(Port:" << m_localPort << ")"
+          << "close: Exception when shutting down connection: " << e.what();
+        }
 
-        g_logger << LWARN << "(Port:" << m_localPort << ")"
+        g_logger << LDEBUG << "(Port:" << m_localPort << ")"
                  << "Waiting for connect method to exit and signal connection closed";
-        if (m_connectActive)
-          m_connectionClosed->wait();
-
+        
+        if (m_connectionActive)
+        {
+          std::unique_lock<std::mutex> lk(m_connectionMutex);
+          m_connectionCondition.wait(lk, [this]() { return !m_connectionActive; });
+        }
+        
         // Destroy the connection object.
         m_connection.reset();
 

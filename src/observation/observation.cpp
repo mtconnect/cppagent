@@ -21,7 +21,6 @@
 #include "entity/factory.hpp"
 
 #include <dlib/logger.h>
-#include <dlib/threads.h>
 
 #include <mutex>
 #include <regex>
