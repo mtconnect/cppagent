@@ -145,7 +145,6 @@ namespace mtconnect
       return s->c_str();
     }
 
-    using Property = pair<string, Value>;
     void printProperty(xmlTextWriterPtr writer, const Property &p)
     {
       string t;

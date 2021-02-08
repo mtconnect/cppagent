@@ -136,9 +136,32 @@ namespace mtconnect
   inline std::string format(double value)
   {
     std::stringstream s;
-    int precision = std::numeric_limits<double>::digits10;
+    constexpr int precision = std::numeric_limits<double>::digits10;
     s << std::setprecision(precision) << value;
     return s.str();
+  }
+  
+  class format_double_stream
+  {
+  protected:
+    double val;
+    
+  public:
+    format_double_stream(double v) { val = v; }
+    
+    template <class _CharT, class _Traits>
+    inline friend std::basic_ostream<_CharT, _Traits>&
+    operator<<(std::basic_ostream<_CharT, _Traits>& os, const format_double_stream& fmter)
+    {
+      constexpr int precision = std::numeric_limits<double>::digits10;
+      os << std::setprecision(precision) << fmter.val;
+      return os;
+    }
+  };
+  
+  inline format_double_stream formatted(double v)
+  {
+    return format_double_stream(v);
   }
 
   // Convert a string to the same string with all upper case letters

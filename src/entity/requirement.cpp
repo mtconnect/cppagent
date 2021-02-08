@@ -257,7 +257,7 @@ namespace mtconnect
         {
           stringstream s;
           for (auto &v : arg)
-            s << format(v) << ' ';
+            s << formatted(v) << ' ';
           v = string_view(s.str().c_str(), s.str().size() - 1);
         }
       }

@@ -1683,25 +1683,29 @@ namespace mtconnect
   string Agent::fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
                                  const optional<SequenceNumber_t> &at)
   {
-    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+    ObservationList observations;
+    SequenceNumber_t firstSeq, seq;
 
-    ObservationList events;
-    auto firstSeq = getFirstSequence();
-    auto seq = m_circularBuffer.getSequence();
-    if (at)
     {
-      checkRange(printer, *at, firstSeq - 1, seq, "at");
+      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
-      auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
-      check->getObservations(events);
-    }
-    else
-    {
-      m_circularBuffer.getLatest().getObservations(events, filterSet);
-    }
+      firstSeq = getFirstSequence();
+      seq = m_circularBuffer.getSequence();
+      if (at)
+      {
+        checkRange(printer, *at, firstSeq - 1, seq, "at");
 
+        auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
+        check->getObservations(observations);
+      }
+      else
+      {
+        m_circularBuffer.getLatest().getObservations(observations, filterSet);
+      }
+    }
+    
     return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq,
-                                m_circularBuffer.getSequence() - 1, events);
+                                seq - 1, observations);
   }
 
   string Agent::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
@@ -1709,32 +1713,37 @@ namespace mtconnect
                                 const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
                                 bool &endOfBuffer, ChangeObserver *observer)
   {
-    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-    auto firstSeq = getFirstSequence();
-    auto seq = m_circularBuffer.getSequence();
-    int upperCountLimit = m_circularBuffer.getBufferSize() + 1;
-    int lowerCountLimit = -upperCountLimit;
-
-    if (from)
+    std::unique_ptr<ObservationList> observations;
+    SequenceNumber_t firstSeq, lastSeq;
+    
     {
-      checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
+      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+      firstSeq = getFirstSequence();
+      auto seq = m_circularBuffer.getSequence();
+      lastSeq = seq - 1;
+      int upperCountLimit = m_circularBuffer.getBufferSize() + 1;
+      int lowerCountLimit = -upperCountLimit;
+      
+      if (from)
+      {
+        checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
+      }
+      if (to)
+      {
+        auto lower = from ? *from : firstSeq;
+        checkRange(printer, *to, lower, seq + 1, "to");
+        lowerCountLimit = 0;
+      }
+      checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
+      
+      observations = m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
+      
+      if (observer)
+        observer->reset();
     }
-    if (to)
-    {
-      auto lower = from ? *from : firstSeq;
-      checkRange(printer, *to, lower, seq + 1, "to");
-      lowerCountLimit = 0;
-    }
-    checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
-
-    auto events =
-        m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
-
-    if (observer)
-      observer->reset();
-
+    
     return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), end, firstSeq,
-                                m_circularBuffer.getSequence() - 1, *events);
+                                lastSeq, *observations);
   }
 
   // -------- Asset Helpers -------

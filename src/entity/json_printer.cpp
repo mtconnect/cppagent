@@ -30,8 +30,6 @@ namespace mtconnect
   {
     static dlib::logger g_logger("entity.xml.printer");
 
-    using Property = pair<string, Value>;
-
     inline static json toJson(const observation::DataSet &set)
     {
       using namespace observation;

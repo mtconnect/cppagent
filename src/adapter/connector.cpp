@@ -215,8 +215,9 @@ namespace mtconnect
                  << "connect: Unknown Exception in connect";
       }
       {
-        std::lock_guard<std::mutex> lk(m_connectionMutex);
+        std::unique_lock<std::mutex> lk(m_connectionMutex);
         m_connectionActive = false;
+        lk.unlock();
         m_connectionCondition.notify_all();
       }
       close();
