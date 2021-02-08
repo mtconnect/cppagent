@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "utilities.hpp"
+#include <unordered_map>
 
 #include <dlib/logger.h>
 #include <dlib/md5.h>
@@ -28,7 +29,6 @@
 #include <sstream>
 #include <string>
 #include <variant>
-#include <unordered_map>
 
 namespace mtconnect
 {

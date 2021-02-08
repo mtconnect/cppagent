@@ -27,65 +27,59 @@ namespace mtconnect
   {
     struct ComputeMetrics
     {
-      ComputeMetrics(PipelineContract *contract,
-                            const std::optional<std::string> &dataItem,
-                            std::shared_ptr<size_t> &count)
-      : m_count(count), m_contract(contract), m_dataItem(dataItem)
+      ComputeMetrics(PipelineContract *contract, const std::optional<std::string> &dataItem,
+                     std::shared_ptr<size_t> &count)
+        : m_count(count), m_contract(contract), m_dataItem(dataItem)
       {
       }
-      
+
       void operator()();
-      
-      void stop()
-      {
-        m_running = false;
-      }
-      
+
+      void stop() { m_running = false; }
+
       bool m_running{true};
       std::shared_ptr<size_t> m_count;
       PipelineContract *m_contract{nullptr};
       std::optional<std::string> m_dataItem;
     };
-    
+
     class MeteredTransform : public Transform
     {
     public:
       MeteredTransform(const std::string &name, PipelineContextPtr context,
-                         const std::optional<std::string> &metricsDataItem = std::nullopt)
+                       const std::optional<std::string> &metricsDataItem = std::nullopt)
         : Transform(name),
           m_contract(context->m_contract.get()),
           m_count(std::make_shared<size_t>(0)),
           m_dataItem(metricsDataItem)
       {
       }
-      
-      ~MeteredTransform() override
-      {
-        stopThread();
-      }
-      
+
+      ~MeteredTransform() override { stopThread(); }
+
       void stop() override
       {
         stopThread();
         Transform::stop();
       }
-      
+
       void start() override
       {
         if (m_dataItem)
         {
-          auto metrics = m_metrics = std::make_shared<ComputeMetrics>(m_contract, m_dataItem, m_count);
-          
+          auto metrics = m_metrics =
+              std::make_shared<ComputeMetrics>(m_contract, m_dataItem, m_count);
+
           m_metricsThread = std::thread([metrics]() {
             if (metrics->m_running)
               (*metrics)();
           });
         }
       }
-    
+
     protected:
       friend struct ComputeMetrics;
-      
+
       void stopThread()
       {
         using namespace std;
@@ -97,14 +91,14 @@ namespace mtconnect
           m_metrics.reset();
         }
       }
-            
+
       PipelineContract *m_contract;
       std::shared_ptr<size_t> m_count;
       std::thread m_metricsThread;
       std::shared_ptr<ComputeMetrics> m_metrics;
       std::optional<std::string> m_dataItem;
     };
-    
+
     class DeliverObservation : public MeteredTransform
     {
     public:
@@ -122,13 +116,14 @@ namespace mtconnect
     {
     public:
       using Deliver = std::function<void(AssetPtr)>;
-      DeliverAsset(PipelineContextPtr context, const std::optional<std::string> &metricsDataItem = std::nullopt)
+      DeliverAsset(PipelineContextPtr context,
+                   const std::optional<std::string> &metricsDataItem = std::nullopt)
         : MeteredTransform("DeliverAsset", context, metricsDataItem)
       {
         m_guard = TypeGuard<Asset>(RUN);
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
-   };
+    };
 
     class DeliverConnectionStatus : public Transform
     {

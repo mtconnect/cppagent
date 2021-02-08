@@ -23,10 +23,10 @@
 #include "observation/checkpoint.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 #include "observation/observation.hpp"
 #include "observation/checkpoint.hpp"
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 

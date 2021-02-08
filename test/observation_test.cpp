@@ -21,7 +21,7 @@
 
 #include "device_model/data_item.hpp"
 #include "observation/observation.hpp"
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 
 #include <list>
 

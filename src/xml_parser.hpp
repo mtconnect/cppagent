@@ -22,8 +22,8 @@
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
 #include "device_model/relationships.hpp"
-#include "globals.hpp"
 #include "observation/checkpoint.hpp"
+#include "utilities.hpp"
 
 #include <libxml/tree.h>
 

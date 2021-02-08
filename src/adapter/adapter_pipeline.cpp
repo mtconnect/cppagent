@@ -135,8 +135,7 @@ namespace mtconnect
       std::optional<string> obsMetrics;
       if (identity)
         obsMetrics = *identity + "_observation_update_rate";
-      next->bind(make_shared<DeliverObservation>(m_context,
-                                                 obsMetrics));
+      next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
     }
   }  // namespace adapter
 }  // namespace mtconnect

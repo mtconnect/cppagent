@@ -19,7 +19,7 @@
 #include "component.hpp"
 #include "data_item.hpp"
 #include "device_model/device.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <map>
 

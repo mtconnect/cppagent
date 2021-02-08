@@ -22,7 +22,7 @@
 #include "observation/checkpoint.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 #include "json_helper.hpp"
 #include "json_printer.hpp"
 #include "observation/observation.hpp"

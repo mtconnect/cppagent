@@ -19,8 +19,8 @@
 
 #include "entity.hpp"
 #include "factory.hpp"
-#include "globals.hpp"
 #include "requirement.hpp"
+#include "utilities.hpp"
 
 #include <map>
 #include <utility>

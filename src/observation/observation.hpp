@@ -21,7 +21,7 @@
 #include "device_model/component.hpp"
 #include "device_model/data_item.hpp"
 #include "entity/entity.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <date/date.h>
 

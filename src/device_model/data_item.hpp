@@ -19,8 +19,8 @@
 #include "definitions.hpp"
 #include "device_model/component.hpp"
 #include "entity/requirement.hpp"
-#include "globals.hpp"
 #include "observation/change_observer.hpp"
+#include "utilities.hpp"
 
 #include <dlib/threads.h>
 

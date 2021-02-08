@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <date/tz.h>
 
@@ -47,11 +47,8 @@ using namespace std::chrono;
 
 namespace mtconnect
 {
-  void mt_localtime(const time_t *time, struct tm *buf)
-  {
-    localtime_r(time, buf);
-  }
-  
+  void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
+
   uint64_t parseTimeMicro(const std::string &aTime)
   {
     struct tm timeinfo;

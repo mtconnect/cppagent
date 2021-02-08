@@ -254,9 +254,9 @@ namespace mtconnect
   static void capitalize(string::iterator start, string::iterator end)
   {
     // Exceptions to the rule
-    const static std::unordered_map<string, string> exceptions = {{"AC", "AC"},   {"DC", "DC"},
-                                                        {"PH", "PH"},   {"IP", "IP"},
-                                                        {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+    const static std::unordered_map<string, string> exceptions = {
+        {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
+        {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
 
     const auto &w = exceptions.find(string(start, end));
     if (w != exceptions.end())

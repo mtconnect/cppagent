@@ -754,7 +754,7 @@ namespace mtconnect
       auto di = m_agentDevice->getConnectionStatus(adapter);
       addToBuffer(di, "CLOSED");
     }
-    
+
     for (auto &name : devices)
     {
       Device *device = findDeviceByUUIDorName(name);

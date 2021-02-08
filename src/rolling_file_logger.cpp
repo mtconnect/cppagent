@@ -17,7 +17,7 @@
 
 #include "rolling_file_logger.hpp"
 
-#include "globals.hpp"
+#include "utilities.hpp"
 #include <sys/stat.h>
 
 #include <cstdio>

@@ -20,7 +20,7 @@
 #include "adapter_pipeline.hpp"
 #include "connector.hpp"
 #include "device_model/data_item.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <date/tz.h>
 
@@ -158,8 +158,6 @@ namespace mtconnect
       std::chrono::milliseconds m_reconnectInterval;
 
       ConfigOptions m_options;
-
-      
     };
   }  // namespace adapter
 }  // namespace mtconnect

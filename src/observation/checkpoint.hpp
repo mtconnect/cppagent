@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "globals.hpp"
 #include "observation.hpp"
-
+#include "utilities.hpp"
 #include <unordered_map>
+
 #include <map>
 #include <set>
 #include <string>

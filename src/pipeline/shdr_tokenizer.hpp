@@ -84,7 +84,7 @@ namespace mtconnect
         else
           return str.substr(first, last - first + 1);
       }
-      
+
       static inline void tokenize(const std::string &data, TokenList &tokens)
       {
         using namespace std;
@@ -95,7 +95,7 @@ namespace mtconnect
         {
           while (*cp != '\0' && isspace(*cp))
             cp++;
-          
+
           auto start = cp, orig = cp;
           const char *end = 0;
           if (*cp == '"')
@@ -113,7 +113,7 @@ namespace mtconnect
                   cp = start + dist;
                   copied = true;
                 }
-                memmove(const_cast<char*>(cp), cp + 1, strlen(cp));
+                memmove(const_cast<char *>(cp), cp + 1, strlen(cp));
               }
               else if (*cp == '|')
               {
@@ -131,7 +131,7 @@ namespace mtconnect
                 else
                   break;
               }
-              
+
               if (*cp != '\0')
                 cp++;
             }
@@ -149,7 +149,7 @@ namespace mtconnect
             while (*cp != '|' && *cp != '\0')
               cp++;
           }
-          
+
           if (end == 0)
             end = cp;
 
@@ -157,7 +157,7 @@ namespace mtconnect
             end--;
 
           tokens.emplace_back(start, end);
-          
+
           // Handle terminal '|'
           if (*cp == '|' && *(cp + 1) == '\0')
             tokens.emplace_back("");

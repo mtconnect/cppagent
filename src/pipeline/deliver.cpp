@@ -45,22 +45,21 @@ namespace mtconnect
 
       return entity;
     }
-    
+
     void ComputeMetrics::operator()()
 
     {
       using namespace std;
       using namespace chrono;
       using namespace chrono_literals;
-            
+
       if (!m_dataItem)
         return;
-      
+
       auto di = m_contract->findDataItem("Agent", *m_dataItem);
       if (di == nullptr)
       {
-        g_logger << LWARN << "Could not find data item: " <<
-          *m_dataItem << ", exiting metrics";
+        g_logger << LWARN << "Could not find data item: " << *m_dataItem << ", exiting metrics";
         return;
       }
 
@@ -70,16 +69,18 @@ namespace mtconnect
       {
         auto count = *m_count;
         auto delta = count - last;
-        
-        double avg = delta + exp(-(10.0/60.0)) * (lastAvg - delta);
-        g_logger << dlib::LDEBUG << *m_dataItem << " - Average for last 1 minutes: " << (avg/10.0);
-        g_logger << dlib::LDEBUG << *m_dataItem << " - Delta for last 10 seconds: " << (double(delta)/10.0);
+
+        double avg = delta + exp(-(10.0 / 60.0)) * (lastAvg - delta);
+        g_logger << dlib::LDEBUG << *m_dataItem
+                 << " - Average for last 1 minutes: " << (avg / 10.0);
+        g_logger << dlib::LDEBUG << *m_dataItem
+                 << " - Delta for last 10 seconds: " << (double(delta) / 10.0);
 
         last = count;
         if (avg != lastAvg)
         {
           ErrorList errors;
-          auto obs = Observation::make(di, Properties{{"VALUE", double(delta)/10.0 }},
+          auto obs = Observation::make(di, Properties{{"VALUE", double(delta) / 10.0}},
                                        system_clock::now(), errors);
           m_contract->deliverObservation(obs);
           lastAvg = avg;
@@ -87,7 +88,6 @@ namespace mtconnect
         this_thread::sleep_for(10s);
       }
     }
-
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
     {

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <dlib/logger.h>
 

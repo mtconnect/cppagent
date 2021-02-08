@@ -19,7 +19,7 @@
 
 #include "asset.hpp"
 #include "entity.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <map>
 #include <utility>

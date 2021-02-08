@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 
 #include <libxml/tree.h>
 #include <libxml/xpathInternals.h>

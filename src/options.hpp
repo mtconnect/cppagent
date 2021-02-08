@@ -16,7 +16,7 @@
 //
 
 #pragma once
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <string>

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 #include "http_server/server.hpp"
 #include "http_server/response.hpp"
 #include "http_server/routing.hpp"

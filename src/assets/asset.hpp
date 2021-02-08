@@ -18,7 +18,7 @@
 #pragma once
 
 #include "entity.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <map>

@@ -18,7 +18,7 @@
 #pragma once
 
 #include "geometry.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <map>
 #include <string>

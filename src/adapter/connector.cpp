@@ -44,10 +44,7 @@ namespace mtconnect
     {
     }
 
-    Connector::~Connector()
-    {
-      close();
-    }
+    Connector::~Connector() { close(); }
 
     void Connector::connect()
     {
@@ -59,7 +56,7 @@ namespace mtconnect
       try
       {
         m_connectionActive = true;
-        
+
         // Connect to server:port, failure will throw dlib::socket_error exception
         // Using a smart pointer to ensure connection is deleted if exception thrown
         g_logger << LDEBUG << "Connecting to data source: " << m_server << " on port: " << m_port;
@@ -352,18 +349,18 @@ namespace mtconnect
         catch (exception &e)
         {
           g_logger << LERROR << "(Port:" << m_localPort << ")"
-          << "close: Exception when shutting down connection: " << e.what();
+                   << "close: Exception when shutting down connection: " << e.what();
         }
 
         g_logger << LDEBUG << "(Port:" << m_localPort << ")"
                  << "Waiting for connect method to exit and signal connection closed";
-        
+
         if (m_connectionActive)
         {
           std::unique_lock<std::mutex> lk(m_connectionMutex);
           m_connectionCondition.wait(lk, [this]() { return !m_connectionActive; });
         }
-        
+
         // Destroy the connection object.
         m_connection.reset();
 

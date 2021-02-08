@@ -18,10 +18,10 @@
 #pragma once
 
 #include "entity.hpp"
-
-#include <set>
-#include <map>
 #include <unordered_map>
+
+#include <map>
+#include <set>
 
 namespace mtconnect
 {

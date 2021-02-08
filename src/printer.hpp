@@ -2,8 +2,8 @@
 #pragma once
 
 #include "assets/asset.hpp"
-#include "globals.hpp"
 #include "observation/observation.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <map>

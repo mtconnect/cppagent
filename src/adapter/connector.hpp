@@ -17,15 +17,15 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "utilities.hpp"
+#include <condition_variable>
 
 #include <dlib/server.h>
 #include <dlib/sockets.h>
 
-#include <thread>
 #include <chrono>
 #include <mutex>
-#include <condition_variable>
+#include <thread>
 
 #define HEARTBEAT_FREQ 60000
 
@@ -113,10 +113,10 @@ namespace mtconnect
       std::chrono::time_point<std::chrono::system_clock> m_lastHeartbeat;
       std::chrono::time_point<std::chrono::system_clock> m_lastSent;
 
-      
       std::mutex m_commandLock;
       bool m_connectionActive;
-      std::mutex m_connectionMutex;;
+      std::mutex m_connectionMutex;
+      ;
       std::condition_variable m_connectionCondition;
 
     private:

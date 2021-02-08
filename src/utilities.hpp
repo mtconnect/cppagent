@@ -36,15 +36,15 @@
 #include <chrono>
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <limits>
 #include <list>
 #include <map>
 #include <optional>
 #include <sstream>
 #include <string>
-#include <variant>
 #include <time.h>
-#include <iomanip>
+#include <variant>
 
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef _WINDOWS
@@ -113,7 +113,7 @@ namespace mtconnect
     }
     return value;
   }
-  
+
   inline int stringToInt(const std::string &text, int outOfRangeDefault)
   {
     int value = 0.0;
@@ -132,7 +132,6 @@ namespace mtconnect
     return value;
   }
 
-
   // Convert a float to string
   inline std::string format(double value)
   {
@@ -150,7 +149,7 @@ namespace mtconnect
 
     return text;
   }
-  
+
   // Check if each char in a string is a positive integer
   inline bool isNonNegativeInteger(const std::string &s)
   {
@@ -181,7 +180,8 @@ namespace mtconnect
   void mt_localtime(const time_t *time, struct tm *buf);
 
   // Get a specified time formatted
-  inline std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint, TimeFormat format)
+  inline std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint,
+                                    TimeFormat format)
   {
     using namespace std;
     using namespace std::chrono;
@@ -206,7 +206,6 @@ namespace mtconnect
 
     return "";
   }
-  
 
   // Get the current time formatted
   inline std::string getCurrentTime(TimeFormat format)
@@ -217,9 +216,10 @@ namespace mtconnect
   template <class timePeriod>
   inline uint64_t getCurrentTimeIn()
   {
-    return std::chrono::duration_cast<timePeriod>(std::chrono::system_clock::now().time_since_epoch()).count();
+    return std::chrono::duration_cast<timePeriod>(
+               std::chrono::system_clock::now().time_since_epoch())
+        .count();
   }
-
 
   // time_t to the ms
   inline uint64_t getCurrentTimeInMicros() { return getCurrentTimeIn<std::chrono::microseconds>(); }
@@ -272,12 +272,11 @@ namespace mtconnect
     return std::equal(beginning.begin(), beginning.end(), value.begin());
   }
 
-  
   inline bool iequals(const std::string &a, const std::string_view &b)
   {
     if (a.size() != b.size())
       return false;
-    
+
     return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b) {
              return tolower(a) == tolower(b);
            });

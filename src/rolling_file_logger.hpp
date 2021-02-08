@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <dlib/dir_nav.h>
 #include <dlib/threads.h>

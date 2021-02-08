@@ -62,14 +62,28 @@ namespace mtconnect
         factory->registerFactory("Events:AssetRemoved", AssetEvent::getFactory());
         factory->registerFactory("Events:Alarm", Alarm::getFactory());
 
-        //regex(".+TimeSeries$")
-        factory->registerFactory([](const std::string &name) { return ends_with(name, "TimeSeries"); }, Timeseries::getFactory());
-        factory->registerFactory([](const std::string &name) { return ends_with(name, "DataSet"); }, DataSetEvent::getFactory());
-        factory->registerFactory([](const std::string &name) { return ends_with(name, "Table"); }, TableEvent::getFactory());
-        factory->registerFactory([](const std::string &name) { return starts_with(name, "Condition:"); }, Condition::getFactory());
-        factory->registerFactory([](const std::string &name) { return starts_with(name, "Samples:") && ends_with(name, ":3D"); }, ThreeSpaceSample::getFactory());
-        factory->registerFactory([](const std::string &name) { return starts_with(name, "Samples:"); }, Sample::getFactory());
-        factory->registerFactory([](const std::string &name) { return starts_with(name, "Events:"); }, Event::getFactory());
+        // regex(".+TimeSeries$")
+        factory->registerFactory(
+            [](const std::string &name) { return ends_with(name, "TimeSeries"); },
+            Timeseries::getFactory());
+        factory->registerFactory([](const std::string &name) { return ends_with(name, "DataSet"); },
+                                 DataSetEvent::getFactory());
+        factory->registerFactory([](const std::string &name) { return ends_with(name, "Table"); },
+                                 TableEvent::getFactory());
+        factory->registerFactory(
+            [](const std::string &name) { return starts_with(name, "Condition:"); },
+            Condition::getFactory());
+        factory->registerFactory(
+            [](const std::string &name) {
+              return starts_with(name, "Samples:") && ends_with(name, ":3D");
+            },
+            ThreeSpaceSample::getFactory());
+        factory->registerFactory(
+            [](const std::string &name) { return starts_with(name, "Samples:"); },
+            Sample::getFactory());
+        factory->registerFactory(
+            [](const std::string &name) { return starts_with(name, "Events:"); },
+            Event::getFactory());
       }
       return factory;
     }

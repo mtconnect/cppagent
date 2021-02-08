@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <date/date.h>
 

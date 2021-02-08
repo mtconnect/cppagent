@@ -19,7 +19,7 @@
 
 #include "component_configuration.hpp"
 #include "geometry.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <map>
 #include <utility>

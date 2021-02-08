@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "globals.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_context.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

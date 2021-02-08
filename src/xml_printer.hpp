@@ -18,8 +18,8 @@
 #pragma once
 
 #include "assets/asset.hpp"
-#include "globals.hpp"
 #include "printer.hpp"
+#include "utilities.hpp"
 
 extern "C"
 {

@@ -106,20 +106,20 @@ namespace mtconnect
                            for (auto &c : row)
                            {
                              map<string, string> attrs = {{"key", c.m_key}};
-                             visit(overloaded{
-                                       [&writer, &attrs](const string &s) {
-                                         addSimpleElement(writer, "Cell", s, attrs);
-                                       },
-                                       [&writer, &attrs](const int64_t &i) {
-                                         addSimpleElement(writer, "Cell", to_string(i), attrs);
-                                       },
-                                       [&writer, &attrs](const double &d) {
-                                         addSimpleElement(writer, "Cell", format(d), attrs);
-                                       },
-                                       [](auto &a) {
-                                         g_logger << dlib::LERROR
-                                                  << "Invalid type for DataSetVariant cell";
-                                       }},
+                             visit(overloaded{[&writer, &attrs](const string &s) {
+                                                addSimpleElement(writer, "Cell", s, attrs);
+                                              },
+                                              [&writer, &attrs](const int64_t &i) {
+                                                addSimpleElement(writer, "Cell", to_string(i),
+                                                                 attrs);
+                                              },
+                                              [&writer, &attrs](const double &d) {
+                                                addSimpleElement(writer, "Cell", format(d), attrs);
+                                              },
+                                              [](auto &a) {
+                                                g_logger << dlib::LERROR
+                                                         << "Invalid type for DataSetVariant cell";
+                                              }},
                                    c.m_value);
                            }
                          }},

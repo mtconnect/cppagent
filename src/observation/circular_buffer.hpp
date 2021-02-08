@@ -18,7 +18,7 @@
 #pragma once
 
 #include "checkpoint.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <dlib/sliding_buffer.h>
 
@@ -188,7 +188,7 @@ namespace mtconnect
         }
         else
         {
-          first = (start && *start < m_sequence) ?  *start : m_sequence - 1;
+          first = (start && *start < m_sequence) ? *start : m_sequence - 1;
           limit = -count;
           inc = -1;
         }

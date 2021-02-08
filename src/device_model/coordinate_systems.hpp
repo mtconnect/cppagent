@@ -18,7 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <utility>
 #include <vector>

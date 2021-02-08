@@ -43,10 +43,7 @@ namespace mtconnect
       Pipeline(PipelineContextPtr context) : m_start(std::make_shared<Start>()), m_context(context)
       {
       }
-      virtual ~Pipeline()
-      {
-        m_start->stop();
-      }
+      virtual ~Pipeline() { m_start->stop(); }
       virtual void build(const ConfigOptions &options) = 0;
       void clear()
       {
@@ -56,7 +53,7 @@ namespace mtconnect
       virtual void start()
       {
         if (m_start)
-          m_start->start();        
+          m_start->start();
       }
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }

@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "globals.hpp"
 #include "shdr_tokenizer.hpp"
 #include "transform.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

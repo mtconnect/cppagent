@@ -22,7 +22,7 @@
 #include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 #include "xml_printer.hpp"
 #include "assets/file_asset.hpp"
 

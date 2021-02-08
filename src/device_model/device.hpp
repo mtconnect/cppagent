@@ -18,10 +18,10 @@
 #pragma once
 #include "component.hpp"
 #include "data_item.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
+#include <unordered_map>
 
 #include <map>
-#include <unordered_map>
 
 namespace mtconnect
 {

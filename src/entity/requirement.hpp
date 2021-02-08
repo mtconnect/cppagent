@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "globals.hpp"
 #include "observation/data_set.hpp"
+#include "utilities.hpp"
 
 #include <atomic>
 #include <cmath>

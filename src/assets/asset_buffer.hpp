@@ -19,11 +19,11 @@
 
 #include "asset.hpp"
 #include "entity.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
+#include <unordered_map>
 
 #include <list>
 #include <map>
-#include <unordered_map>
 #include <memory>
 #include <mutex>
 

@@ -18,8 +18,8 @@
 #pragma once
 
 #include "assets/cutting_tool.hpp"
-#include "globals.hpp"
 #include "printer.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

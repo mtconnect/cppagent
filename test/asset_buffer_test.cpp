@@ -23,7 +23,7 @@
 #include "agent.hpp"
 #include "assets/asset_buffer.hpp"
 #include "agent_test_helper.hpp"
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 #include "xml_printer.hpp"
 #include "entity.hpp"
 #include <dlib/server.h>
