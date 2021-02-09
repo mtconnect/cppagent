@@ -49,7 +49,6 @@ namespace mtconnect
 
           auto di = o->getDataItem();
           auto &id = di->getId();
-          auto filter = di->getFilterValue();
           
           if (o->isUnavailable())
           {
@@ -57,6 +56,7 @@ namespace mtconnect
             return next(entity);
           }
           
+          auto filter = di->getFilterValue();
           double value = o->getValue<double>();
           if (filterMinimumDelta(id, value, filter))
             return EntityPtr();
@@ -66,7 +66,7 @@ namespace mtconnect
       }
       
     protected:
-      bool filterMinimumDelta(const std::string &id, double value, double fv)
+      bool filterMinimumDelta(const std::string &id, const double value, const double fv)
       {
         auto last = m_state->m_lastSampleValue.find(id);
         if (last != m_state->m_lastSampleValue.end())

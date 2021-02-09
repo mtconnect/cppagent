@@ -49,7 +49,6 @@ namespace mtconnect
 
           auto di = o->getDataItem();
           auto &id = di->getId();
-          auto minDuration = chrono::duration<double>(di->getFilterPeriod());
           
           if (o->isUnavailable())
           {
@@ -57,6 +56,7 @@ namespace mtconnect
             return next(entity);
           }
           
+          auto minDuration = chrono::duration<double>(di->getFilterPeriod());
           auto ts = o->getTimestamp();
           if (filterPeriod(id, ts, minDuration))
             return EntityPtr();
@@ -65,7 +65,7 @@ namespace mtconnect
       }
       
     protected:
-      bool filterPeriod(const std::string &id, Timestamp &ts,
+      bool filterPeriod(const std::string &id, const Timestamp &ts,
                         const std::chrono::duration<double> md)
       {
         using namespace std;
