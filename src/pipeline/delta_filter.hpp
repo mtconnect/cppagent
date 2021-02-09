@@ -30,13 +30,42 @@ namespace mtconnect
     public:
       struct State : TransformState
       {
-        std::unordered_map<std::string, double> m_minimumDelta;
         std::unordered_map<std::string, double> m_lastSampleValue;
       };
 
       DeltaFilter(PipelineContextPtr context);
       ~DeltaFilter() override = default;
 
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+      {
+        using namespace std;
+        using namespace observation;
+        using namespace entity;
+
+        if (auto o = std::dynamic_pointer_cast<Observation>(entity);
+            o && o->getDataItem()->hasMinimumDelta())
+        {
+          std::lock_guard<TransformState> guard(*m_state);
+
+          auto di = o->getDataItem();
+          auto &id = di->getId();
+          auto filter = di->getFilterValue();
+          
+          if (o->isUnavailable())
+          {
+            m_state->m_lastSampleValue.erase(id);
+            return next(entity);
+          }
+          
+          double value = o->getValue<double>();
+          if (filterMinimumDelta(id, value, filter))
+            return EntityPtr();
+        }
+        
+        return next(entity);
+      }
+      
+    protected:
       bool filterMinimumDelta(const std::string &id, double value, double fv)
       {
         auto last = m_state->m_lastSampleValue.find(id);
@@ -55,47 +84,6 @@ namespace mtconnect
         }
 
         return false;
-      }
-
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-      {
-        using namespace std;
-        using namespace observation;
-        using namespace entity;
-
-        std::lock_guard<TransformState> guard(*m_state);
-
-        if (m_state->m_minimumDelta.size() > 0)
-        {
-          if (auto o = std::dynamic_pointer_cast<Observation>(entity); o)
-          {
-            auto di = o->getDataItem();
-            auto &id = di->getId();
-            if (o->isUnavailable())
-            {
-              m_state->m_lastSampleValue.erase(id);
-              return next(entity);
-            }
-
-            if (di->isSample())
-            {
-              if (auto md = m_state->m_minimumDelta.find(id); md != m_state->m_minimumDelta.end())
-              {
-                double value = o->getValue<double>();
-                if (filterMinimumDelta(di->getId(), value, md->second))
-                  return EntityPtr();
-              }
-            }
-          }
-        }
-        return next(entity);
-      }
-
-      void addMinimumDelta(const std::string &id, double d) { m_state->m_minimumDelta[id] = d; }
-      void addMinimumDelta(const DataItem *di, double d)
-      {
-        std::lock_guard<TransformState> guard(*m_state);
-        m_state->m_minimumDelta[di->getId()] = d;
       }
 
     protected:

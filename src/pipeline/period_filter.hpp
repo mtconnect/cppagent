@@ -30,7 +30,6 @@ namespace mtconnect
     public:
       struct State : TransformState
       {
-        std::unordered_map<std::string, std::chrono::duration<double>> m_minimumDuration;
         std::unordered_map<std::string, Timestamp> m_lastTimeOffset;
       };
 
@@ -43,46 +42,30 @@ namespace mtconnect
         using namespace observation;
         using namespace entity;
 
-        std::lock_guard<TransformState> guard(*m_state);
-
-        if (m_state->m_minimumDuration.size() > 0)
+        if (auto o = std::dynamic_pointer_cast<Observation>(entity);
+            o && o->getDataItem()->hasMinimumPeriod())
         {
-          if (auto o = std::dynamic_pointer_cast<Observation>(entity);
-              o && o->getDataItem()->hasMinimumPeriod())
-          {
-            auto di = o->getDataItem();
-            auto &id = di->getId();
-            if (o->isUnavailable())
-            {
-              m_state->m_lastTimeOffset.erase(id);
-              return next(entity);
-            }
+          std::lock_guard<TransformState> guard(*m_state);
 
-            if (auto md = m_state->m_minimumDuration.find(id);
-                md != m_state->m_minimumDuration.end())
-            {
-              auto value = o->getTimestamp();
-              if (filterPeriod(di->getId(), value, md->second))
-                return EntityPtr();
-            }
+          auto di = o->getDataItem();
+          auto &id = di->getId();
+          auto minDuration = chrono::duration<double>(di->getFilterPeriod());
+          
+          if (o->isUnavailable())
+          {
+            m_state->m_lastTimeOffset.erase(id);
+            return next(entity);
           }
+          
+          auto ts = o->getTimestamp();
+          if (filterPeriod(id, ts, minDuration))
+            return EntityPtr();
         }
         return next(entity);
       }
-
-      void addMinimumDuration(const std::string &id, const std::chrono::duration<double> &d)
-      {
-        std::lock_guard<TransformState> guard(*m_state);
-        m_state->m_minimumDuration[id] = d;
-      }
-      void addMinimumDuration(const DataItem *di, const std::chrono::duration<double> &d)
-      {
-        std::lock_guard<TransformState> guard(*m_state);
-        m_state->m_minimumDuration[di->getId()] = d;
-      }
-
+      
     protected:
-      bool filterPeriod(const std::string &id, Timestamp &value,
+      bool filterPeriod(const std::string &id, Timestamp &ts,
                         const std::chrono::duration<double> md)
       {
         using namespace std;
@@ -91,15 +74,15 @@ namespace mtconnect
         if (last != m_state->m_lastTimeOffset.end())
         {
           auto lv = last->second;
-          if (value < (lv + md))
+          if (ts < (lv + md))
           {
             return true;
           }
-          last->second = value;
+          last->second = ts;
         }
         else
         {
-          m_state->m_lastTimeOffset[id] = value;
+          m_state->m_lastTimeOffset[id] = ts;
         }
 
         return false;

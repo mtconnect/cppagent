@@ -142,15 +142,15 @@ TEST_F(DuplicateFilterTest, test_simple_sample)
 
 TEST_F(DuplicateFilterTest, test_minimum_delta)
 {
-  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
+  auto a = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
     {"units", "MILLIMETER"}
   });
+  a->setMinmumDelta(1.0);
   
   auto filter = make_shared<DuplicateFilter>(m_context);
   m_mapper->bind(filter);
 
   auto rate = make_shared<DeltaFilter>(m_context);
-  rate->addMinimumDelta("a", 1.0);
   filter->bind(rate);
 
   {
@@ -195,7 +195,6 @@ TEST_F(DuplicateFilterTest, test_period_filter)
   Timestamp now = chrono::system_clock::now();
 
   auto rate = make_shared<PeriodFilter>(m_context);
-  rate->addMinimumDuration("a", 10.0s);
   m_mapper->bind(rate);
   
   {

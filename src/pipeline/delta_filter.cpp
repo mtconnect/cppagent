@@ -38,12 +38,6 @@ namespace mtconnect
     {
       using namespace observation;
       m_guard = ExactTypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
-
-      // Scan DataItems for rate filters...
-      m_contract->eachDataItem([this](const DataItem *di) {
-        if (di->hasMinimumDelta())
-          addMinimumDelta(di->getId(), di->getFilterValue());
-      });
     }
   }  // namespace pipeline
 }  // namespace mtconnect

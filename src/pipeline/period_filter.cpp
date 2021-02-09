@@ -38,12 +38,6 @@ namespace mtconnect
     {
       using namespace observation;
       m_guard = TypeGuard<Event, Sample>(RUN) || TypeGuard<Observation>(SKIP);
-
-      // Scan DataItems for rate filters...
-      m_contract->eachDataItem([this](const DataItem *di) {
-        if (di->hasMinimumPeriod())
-          addMinimumDuration(di->getId(), chrono::duration<double>(di->getFilterPeriod()));
-      });
     }
   }  // namespace pipeline
 }  // namespace mtconnect
