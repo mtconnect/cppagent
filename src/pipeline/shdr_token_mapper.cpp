@@ -177,7 +177,7 @@ namespace mtconnect
           g_logger << dlib::LTRACE << "Could not find data item: " << dataItemKey.first;
         else
         {
-          g_logger << dlib::LDEBUG << "Could not find data item: " << dataItemKey.first;
+          g_logger << dlib::LINFO << "Could not find data item: " << dataItemKey.first;
           m_logOnce.insert(dataItemKey.first);
         }
 
@@ -299,7 +299,7 @@ namespace mtconnect
         auto res = std::make_shared<Observations>(*timestamped, TokenList{});
         EntityList entities;
 
-        auto tokens = timestamped->m_tokens;
+        auto &tokens = timestamped->m_tokens;
         auto token = tokens.cbegin();
         auto end = tokens.end();
 
