@@ -246,6 +246,8 @@ namespace mtconnect
           m_buffer = m_buffer.substr(0, newLine);
         }
 
+        // TODO: Use string Views and skip getline. Use
+        // find_first_of and then clip to subview of line.
         // Search the buffer for new complete lines
         string line;
         stringstream stream(m_buffer, stringstream::in);
@@ -253,11 +255,15 @@ namespace mtconnect
         while (!stream.eof())
         {
           getline(stream, line);
-          g_logger << LTRACE << "(Port:" << m_localPort << ")"
-                   << "Received line: '" << line << '\'';
+          g_logger << LTRACE << "(Port:" << m_localPort
+                   << ") Received line: '" << line << '\'';
 
           if (line.empty())
             continue;
+          
+          auto end = line.find_last_not_of(" \t\n\r");
+          if (end != string::npos)
+            line.erase(end + 1);
 
           // Check for heartbeats
           if (line[0] == '*')

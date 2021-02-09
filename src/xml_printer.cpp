@@ -108,7 +108,7 @@ namespace mtconnect
     : Printer(pretty), m_schemaVersion(version)
   {
     if (m_schemaVersion.empty())
-      m_schemaVersion = strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR);
+      m_schemaVersion = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
   }
 
   void XmlPrinter::addDevicesNamespace(const std::string &urn, const std::string &location,

@@ -124,9 +124,6 @@ namespace mtconnect
           m_thread.join();
       }
 
-      // For the additional devices associated with this adapter
-      void addDevice(std::string &device);
-
       const ConfigOptions &getOptions() const { return m_options; }
       void setOptions(const ConfigOptions &options)
       {

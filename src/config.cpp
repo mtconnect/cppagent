@@ -53,7 +53,8 @@
 #include <mach-o/dyld.h>
 #endif
 
-#define strfy(line) #line
+#define _strfy(line) #line
+#define strfy(line) _strfy(line)
 
 using namespace std;
 using namespace dlib;
@@ -609,9 +610,8 @@ namespace mtconnect
     m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
 
     // Check for schema version
-
     m_version = get_with_default(reader, "SchemaVersion",
-                                 strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR));
+                                 to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
     auto server = make_unique<http_server::Server>(port, serverIp);
@@ -699,6 +699,10 @@ namespace mtconnect
             adapterOptions["Device"] = deviceName;
             g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
           }
+        }
+        else
+        {
+          adapterOptions["Device"] = device->getName();
         }
         if (!device)
         {

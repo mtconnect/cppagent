@@ -80,7 +80,8 @@ namespace mtconnect
         if (avg != lastAvg)
         {
           ErrorList errors;
-          auto obs = Observation::make(di, Properties{{"VALUE", double(delta) / 10.0}},
+          auto obs = Observation::make(di, Properties{{"VALUE", double(delta) / 10.0},
+            { "duration", 10.0}},
                                        system_clock::now(), errors);
           m_contract->deliverObservation(obs);
           lastAvg = avg;
@@ -98,6 +99,7 @@ namespace mtconnect
       }
 
       m_contract->deliverAsset(a);
+      (*m_count)++;
 
       return entity;
     }

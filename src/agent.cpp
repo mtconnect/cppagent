@@ -922,8 +922,11 @@ namespace mtconnect
     auto old = m_assetBuffer.addAsset(asset);
 
     DataItem *cdi = asset->isRemoved() ? device->getAssetRemoved() : device->getAssetChanged();
-    addToBuffer(cdi, {{"assetType", asset->getType()}, {"VALUE", asset->getAssetId()}},
-                asset->getTimestamp());
+    if (cdi)
+      addToBuffer(cdi, {{"assetType", asset->getType()}, {"VALUE", asset->getAssetId()}},
+                  asset->getTimestamp());
+    else
+      g_logger << LERROR << "Cannot find data item for asset removed or changed. Schema Version: " << m_version;
   }
 
   AssetPtr Agent::addAsset(Device *device, const std::string &document,
@@ -1704,8 +1707,7 @@ namespace mtconnect
       }
     }
     
-    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq,
-                                seq - 1, observations);
+    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq, seq - 1, observations);
   }
 
   string Agent::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,

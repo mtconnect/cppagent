@@ -70,7 +70,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_EQ(size_t(1), agent->getDevices().size());
+    ASSERT_EQ(size_t(2), agent->getDevices().size());
   }
 
   TEST_F(ConfigTest, BufferSize)
@@ -165,7 +165,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices().front();
+    const auto device = agent->findDeviceByUUIDorName("LinuxCNC");
 
     ASSERT_FALSE(device->m_preserveUuid);
   }

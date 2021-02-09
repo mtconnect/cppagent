@@ -87,7 +87,14 @@ namespace mtconnect
         devices = *list;
       auto device = GetOption<string>(options, "Device");
       if (device)
+      {
         devices.emplace_front(*device);
+        auto dp = m_context->m_contract->findDevice(*device);
+        if (dp)
+        {
+          dp->setOptions(options);
+        }
+      }
 
       bind(make_shared<DeliverConnectionStatus>(m_context, devices,
                                                 IsOptionSet(options, "AutoAvailable")));
