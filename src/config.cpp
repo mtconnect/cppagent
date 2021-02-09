@@ -610,8 +610,9 @@ namespace mtconnect
     m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
 
     // Check for schema version
-    m_version = get_with_default(reader, "SchemaVersion",
-                                 to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
+    m_version =
+        get_with_default(reader, "SchemaVersion",
+                         to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
     auto server = make_unique<http_server::Server>(port, serverIp);

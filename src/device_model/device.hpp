@@ -37,7 +37,7 @@ namespace mtconnect
     // Constructor that sets variables from an attribute map
     Device(const Attributes &attributes, const std::string block = "Device");
     ~Device() override;
-    
+
     void setOptions(const ConfigOptions &options);
 
     // Add/get items to/from the device name to data item mapping

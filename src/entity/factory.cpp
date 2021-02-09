@@ -17,8 +17,9 @@
 
 #include "factory.hpp"
 
-#include <dlib/logger.h>
 #include <unordered_set>
+
+#include <dlib/logger.h>
 
 using namespace std;
 
@@ -109,7 +110,7 @@ namespace mtconnect
     {
       for (auto &p : properties)
         p.first.clearMark();
-      
+
       bool success{true};
       for (const auto &r : m_requirements)
       {

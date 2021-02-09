@@ -33,7 +33,19 @@ namespace mtconnect
         std::unordered_map<std::string, double> m_lastSampleValue;
       };
 
-      DeltaFilter(PipelineContextPtr context);
+      DeltaFilter(PipelineContextPtr context)
+        : Transform("RateFilter"),
+          m_state(context->getSharedState<State>(m_name)),
+          m_contract(context->m_contract.get())
+      {
+        using namespace observation;
+        constexpr static auto lambda = [](const Sample &s) {
+          return s.getDataItem()->hasMinimumDelta();
+        };
+        m_guard = LambdaGuard<Sample, ExactTypeGuard<Sample>>(lambda, RUN) ||
+                  TypeGuard<Observation>(SKIP);
+      }
+
       ~DeltaFilter() override = default;
 
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override
@@ -42,29 +54,26 @@ namespace mtconnect
         using namespace observation;
         using namespace entity;
 
-        if (auto o = std::dynamic_pointer_cast<Observation>(entity);
-            o && o->getDataItem()->hasMinimumDelta())
-        {
-          std::lock_guard<TransformState> guard(*m_state);
+        std::lock_guard<TransformState> guard(*m_state);
 
-          auto di = o->getDataItem();
-          auto &id = di->getId();
-          
-          if (o->isUnavailable())
-          {
-            m_state->m_lastSampleValue.erase(id);
-            return next(entity);
-          }
-          
-          auto filter = di->getFilterValue();
-          double value = o->getValue<double>();
-          if (filterMinimumDelta(id, value, filter))
-            return EntityPtr();
+        auto o = std::dynamic_pointer_cast<Observation>(entity);
+        auto di = o->getDataItem();
+        auto &id = di->getId();
+
+        if (o->isUnavailable())
+        {
+          m_state->m_lastSampleValue.erase(id);
+          return next(entity);
         }
-        
+
+        auto filter = di->getFilterValue();
+        double value = o->getValue<double>();
+        if (filterMinimumDelta(id, value, filter))
+          return EntityPtr();
+
         return next(entity);
       }
-      
+
     protected:
       bool filterMinimumDelta(const std::string &id, const double value, const double fv)
       {

@@ -71,9 +71,11 @@ namespace mtconnect
           return dynamic_cast<const T *>(ep) != nullptr || match<R...>(ep);
       }
 
+      constexpr bool matches(const entity::EntityPtr &entity) { return match<Ts...>(entity.get()); }
+
       GuardAction operator()(const entity::EntityPtr entity)
       {
-        return check(match<Ts...>(entity.get()), entity);
+        return check(matches(entity), entity);
       }
 
       auto &operator||(Guard other)
@@ -98,11 +100,16 @@ namespace mtconnect
           return typeid(T) == ti || match<R...>(ti);
       }
 
-      GuardAction operator()(const entity::EntityPtr entity)
+      constexpr bool matches(const entity::EntityPtr &entity)
       {
         auto &e = *entity.get();
         auto &ti = typeid(e);
-        return check(match<Ts...>(ti), entity);
+        return match<Ts...>(ti);
+      }
+
+      GuardAction operator()(const entity::EntityPtr entity)
+      {
+        return check(matches(entity), entity);
       }
       auto &operator||(Guard other)
       {
@@ -115,9 +122,12 @@ namespace mtconnect
     {
     public:
       EntityNameGuard(const std::string &name, GuardAction match) : GuardCls(match), m_name(name) {}
+
+      bool matches(const entity::EntityPtr &entity) { return entity->getName() == m_name; }
+
       GuardAction operator()(const entity::EntityPtr entity)
       {
-        return check(entity->getName() == m_name, entity);
+        return check(matches(entity), entity);
       }
       auto &operator||(Guard other)
       {
@@ -127,6 +137,42 @@ namespace mtconnect
 
     protected:
       std::string m_name;
+    };
+
+    template <typename L, typename B>
+    class LambdaGuard : public B
+    {
+    public:
+      using Lambda = std::function<bool(const L &)>;
+
+      LambdaGuard(Lambda guard, GuardAction match) : B(match), m_lambda(guard) {}
+      LambdaGuard(const LambdaGuard &) = default;
+      ~LambdaGuard() = default;
+
+      bool matches(const entity::EntityPtr &entity)
+      {
+        bool matched = B::matches(entity);
+        if (matched)
+        {
+          auto o = dynamic_cast<const L *>(entity.get());
+          matched = o != nullptr && m_lambda(*o);
+        }
+
+        return matched;
+      }
+
+      GuardAction operator()(const entity::EntityPtr entity)
+      {
+        return B::check(matches(entity), entity);
+      }
+      auto &operator||(Guard other)
+      {
+        B::m_alternative = other;
+        return *this;
+      }
+
+    protected:
+      Lambda m_lambda;
     };
 
   }  // namespace pipeline

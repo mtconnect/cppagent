@@ -28,24 +28,16 @@ namespace mtconnect
     struct PropertyKey : public std::string
     {
       using std::string::string;
-      PropertyKey(const PropertyKey &s)
-      : std::string(s)
-      {}
-      PropertyKey(const std::string &s)
-      : std::string(s)
-      {}
-      PropertyKey(const std::string &&s)
-      : std::string(s)
-      {}
-      PropertyKey(const char *s)
-      : std::string(s)
-      {}
+      PropertyKey(const PropertyKey &s) : std::string(s) {}
+      PropertyKey(const std::string &s) : std::string(s) {}
+      PropertyKey(const std::string &&s) : std::string(s) {}
+      PropertyKey(const char *s) : std::string(s) {}
 
-      void clearMark() const { const_cast<PropertyKey*>(this)->m_mark = false; }
-      void setMark() const { const_cast<PropertyKey*>(this)->m_mark = true; }
-      bool m_mark { false };
+      void clearMark() const { const_cast<PropertyKey *>(this)->m_mark = false; }
+      void setMark() const { const_cast<PropertyKey *>(this)->m_mark = true; }
+      bool m_mark{false};
     };
-    
+
     using Properties = std::map<PropertyKey, Value>;
     using OrderList = std::list<std::string>;
     using OrderMap = std::unordered_map<std::string, int>;

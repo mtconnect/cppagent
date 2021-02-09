@@ -255,12 +255,11 @@ namespace mtconnect
         while (!stream.eof())
         {
           getline(stream, line);
-          g_logger << LTRACE << "(Port:" << m_localPort
-                   << ") Received line: '" << line << '\'';
+          g_logger << LTRACE << "(Port:" << m_localPort << ") Received line: '" << line << '\'';
 
           if (line.empty())
             continue;
-          
+
           auto end = line.find_last_not_of(" \t\n\r");
           if (end != string::npos)
             line.erase(end + 1);

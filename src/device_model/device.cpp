@@ -49,13 +49,12 @@ namespace mtconnect
   }
 
   Device::~Device() = default;
-  
+
   void Device::setOptions(const ConfigOptions &options)
   {
     if (auto opt = GetOption<bool>(options, "PreserveUUID"))
       m_preserveUuid = *opt;
   }
-
 
   // TODO: Clean up these initialization methods for data items
   void Device::addDeviceDataItem(DataItem *dataItem)

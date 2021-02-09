@@ -926,7 +926,8 @@ namespace mtconnect
       addToBuffer(cdi, {{"assetType", asset->getType()}, {"VALUE", asset->getAssetId()}},
                   asset->getTimestamp());
     else
-      g_logger << LERROR << "Cannot find data item for asset removed or changed. Schema Version: " << m_version;
+      g_logger << LERROR << "Cannot find data item for asset removed or changed. Schema Version: "
+               << m_version;
   }
 
   AssetPtr Agent::addAsset(Device *device, const std::string &document,
@@ -1706,8 +1707,9 @@ namespace mtconnect
         m_circularBuffer.getLatest().getObservations(observations, filterSet);
       }
     }
-    
-    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq, seq - 1, observations);
+
+    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq,
+                                seq - 1, observations);
   }
 
   string Agent::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
@@ -1717,7 +1719,7 @@ namespace mtconnect
   {
     std::unique_ptr<ObservationList> observations;
     SequenceNumber_t firstSeq, lastSeq;
-    
+
     {
       std::lock_guard<CircularBuffer> lock(m_circularBuffer);
       firstSeq = getFirstSequence();
@@ -1725,7 +1727,7 @@ namespace mtconnect
       lastSeq = seq - 1;
       int upperCountLimit = m_circularBuffer.getBufferSize() + 1;
       int lowerCountLimit = -upperCountLimit;
-      
+
       if (from)
       {
         checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
@@ -1737,13 +1739,14 @@ namespace mtconnect
         lowerCountLimit = 0;
       }
       checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
-      
-      observations = m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
-      
+
+      observations =
+          m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
+
       if (observer)
         observer->reset();
     }
-    
+
     return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), end, firstSeq,
                                 lastSeq, *observations);
   }
