@@ -46,11 +46,11 @@ namespace mtconnect
         using namespace observation;
         if (auto o = std::dynamic_pointer_cast<Observation>(entity); o)
         {
-          auto &values = m_state->m_values;
-
           auto di = o->getDataItem();
           if (!di->allowDups())
           {
+            std::lock_guard<TransformState> guard(*m_state);
+            auto &values = m_state->m_values;
             auto old = values.find(di->getId());
             if (old != values.end() && old->second == o->getValue())
               return entity::EntityPtr();

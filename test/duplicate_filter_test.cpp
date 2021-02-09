@@ -187,9 +187,10 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
 
 TEST_F(DuplicateFilterTest, test_period_filter)
 {
-  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
+  auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
     {"units", "MILLIMETER"}
   });
+  di->setMinmumPeriod(10.0);
   
   Timestamp now = chrono::system_clock::now();
 

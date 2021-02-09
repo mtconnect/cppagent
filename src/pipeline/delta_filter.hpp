@@ -63,6 +63,8 @@ namespace mtconnect
         using namespace observation;
         using namespace entity;
 
+        std::lock_guard<TransformState> guard(*m_state);
+
         if (m_state->m_minimumDelta.size() > 0)
         {
           if (auto o = std::dynamic_pointer_cast<Observation>(entity); o)
@@ -92,6 +94,7 @@ namespace mtconnect
       void addMinimumDelta(const std::string &id, double d) { m_state->m_minimumDelta[id] = d; }
       void addMinimumDelta(const DataItem *di, double d)
       {
+        std::lock_guard<TransformState> guard(*m_state);
         m_state->m_minimumDelta[di->getId()] = d;
       }
 

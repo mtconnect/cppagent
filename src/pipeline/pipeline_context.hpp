@@ -20,6 +20,7 @@
 #include "pipeline_contract.hpp"
 
 #include <memory>
+#include <mutex>
 
 namespace mtconnect
 {
@@ -27,6 +28,12 @@ namespace mtconnect
   {
     struct TransformState
     {
+      // For mutex locking
+      auto lock() { return m_mutex.lock(); }
+      auto unlock() { return m_mutex.unlock(); }
+      auto try_lock() { return m_mutex.try_lock(); }
+
+      std::mutex m_mutex;
       virtual ~TransformState() {}
     };
     using TransformStatePtr = std::shared_ptr<TransformState>;
